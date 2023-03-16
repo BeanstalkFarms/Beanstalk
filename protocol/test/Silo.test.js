@@ -28,11 +28,14 @@ describe('Silo', function () {
     this.season.deployStemsUpgrade();
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.metadata = await ethers.getContractAt('MetadataFacet', this.diamond.address);
+    this.diamondLoupe = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address);
+
+
     this.bean = await ethers.getContractAt('Bean', BEAN);
     await this.season.lightSunrise();
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
-    await this.bean.connect(user3).approve(this.silo.address, '100000000000');
     await this.bean.connect(user4).approve(this.silo.address, '100000000000'); 
     await this.bean.mint(userAddress, to6('10000'));
     await this.bean.mint(user2Address, to6('10000'));
@@ -40,8 +43,8 @@ describe('Silo', function () {
     await this.bean.mint(user4Address, to6('10000'));
     await this.silo.mow(userAddress, this.bean.address);
 
-    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
-    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
+    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
   });
 
   beforeEach(async function () {
@@ -68,7 +71,7 @@ describe('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL) //we deposited at stem of 2, need to withdraw from 2
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), 0x00, EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
     })
 
     it('properly updates the total balances', async function () {
@@ -148,6 +151,302 @@ describe('Silo', function () {
     });
   });
 
+  describe("ERC1155 Deposits", async function () {
+    before(async function () {
+      await this.bean.mint(user3Address, to6('10000'));
+      await this.bean.connect(user3).approve(this.silo.address, '100000000000');
+    })
+    it('mints an ERC1155 when depositing an whitelisted asset', async function () {
+      // we use user 3 as user 1 + user 2 has already deposited - this makes it more clear
+      this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+      expect(await this.silo.balanceOf(user3Address, depositID)).to.eq(to6('1000'));
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        user3Address,
+        ethers.constants.AddressZero, 
+        user3Address,
+        depositID, 
+        to6('1000')
+      );
+    });
+
+    it('adds to the ERC1155 balance when depositing an whitelisted asset', async function () {
+      // user 1 already deposited 1000, so we expect the balanceOf to be 2000e6 here. 
+      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        ethers.constants.AddressZero, // from
+        userAddress, // to
+        depositID, // depositID
+        to6('1000') // amt
+      );
+      expect(await this.silo.balanceOf(userAddress, depositID)).to.eq(to6('2000'));
+    });
+
+
+    it('removes ERC1155 balance when withdrawing an whitelisted asset', async function () {
+      // user 1 already deposited 1000, so we expect the balanceOf to be 500e6 here. 
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      
+      this.result = await this.silo.connect(user).withdrawDeposit(this.bean.address, stem, to6('500'), 0x00, EXTERNAL)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        userAddress, // from
+        ethers.constants.AddressZero, // to
+        depositID, // depositID
+        to6('500') // amt
+      );
+      expect(await this.silo.balanceOf(userAddress, depositID)).to.eq(to6('500'));
+    });
+
+    it('transfers an ERC1155 deposit', async function () {
+      // transfering a deposit from user 1, to user 3
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('1000'));
+      expect(await this.silo.balanceOfStalk(user3Address)).to.eq(to6('0'));
+      
+      // get roots
+      roots = await this.silo.balanceOfRoots(userAddress);
+      console.log("roots of user:",roots);
+      expect(await this.silo.balanceOfRoots(user3Address)).to.eq('0');
+
+
+      this.result = await this.silo.connect(user).safeTransferFrom(
+        userAddress,
+        user3Address,
+        depositID,
+        to6('1000'),
+        0x00
+      )
+
+      expect(await this.silo.balanceOfStalk(user3Address)).to.eq(toStalk('1000'));
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq(to6('0'));
+      
+      expect(await this.silo.balanceOfRoots(user3Address)).to.eq(roots);
+      expect(await this.silo.balanceOfRoots(userAddress)).to.eq('0');
+
+      expect(await this.silo.balanceOf(userAddress, depositID)).to.eq(to6('0'));
+      expect(await this.silo.balanceOf(user3Address, depositID)).to.eq(to6('1000'));
+
+      // transfer deposit has two events, one burns and one mints 
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator 
+        userAddress, // from
+        ethers.constants.AddressZero, // to
+        depositID, // depositID
+        to6('1000') // amt
+      );
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        ethers.constants.AddressZero, // from
+        user3Address, // to
+        depositID, // depositID
+        to6('1000') // amt
+      );
+    });
+
+    it('batch transfers an ERC1155 deposit', async function () {
+      // skip to next season, user 1 deposits again, and batch transfers the ERC1155 to user 3
+      season = this.season.season()
+      stem0 = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID0 = await this.silo.getDepositId(this.bean.address, stem0)
+
+      await this.season.farmSunrise();  
+
+      season = this.season.season()
+      stem1 = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID1 = await this.silo.getDepositId(this.bean.address, stem1)
+
+      
+      this.result = await this.silo.connect(user).deposit(
+        this.bean.address, 
+        to6('1000'), 
+        0x00, 
+        EXTERNAL
+      )
+      roots = await this.silo.balanceOfRoots(userAddress);
+
+
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('2000.2')); // 2 stalk was grown because of the season
+      expect(await this.silo.balanceOfStalk(user3Address)).to.eq(toStalk('0'));
+
+      this.result = await this.silo.connect(user).safeBatchTransferFrom(
+        userAddress,
+        user3Address,
+        [depositID0, depositID1],
+        [ to6('1000'), to6('1000')],
+        0x00
+      )
+
+      expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('0'));
+      expect(await this.silo.balanceOfStalk(user3Address)).to.eq(toStalk('2000.2'));
+
+      expect(await this.silo.balanceOfRoots(userAddress)).to.eq('0');
+      expect(await this.silo.balanceOfRoots(user3Address)).to.eq(roots);
+
+      expect(await this.silo.balanceOf(userAddress, depositID0)).to.eq(to6('0'));
+      expect(await this.silo.balanceOf(userAddress, depositID1)).to.eq(to6('0'));
+      expect(await this.silo.balanceOf(user3Address, depositID0)).to.eq(to6('1000'));
+      expect(await this.silo.balanceOf(user3Address, depositID1)).to.eq(to6('1000'));
+
+      // transfer deposit emits 
+      // - 1 event for burning all deposits, and 1 event per deposit for minting
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        userAddress, // from
+        ethers.constants.AddressZero, // to
+        depositID0, // depositID
+        to6('1000') // amt
+      );
+      
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        userAddress, // from
+        ethers.constants.AddressZero, // to
+        depositID1, // depositID
+        to6('1000') // amt
+      );
+
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        ethers.constants.AddressZero, // from
+        user3Address, // to
+        depositID0, // depositID
+        to6('1000') // amt
+    );
+
+      // transfer deposit has two events, 
+      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
+        userAddress, // operator
+        ethers.constants.AddressZero, // from
+        user3Address, // to
+        depositID1, // depositID
+        to6('1000') // amt
+      );
+    });
+
+    it('properly gives the correct batch balances', async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+ 
+      let b = await this.silo.balanceOfBatch(
+        [userAddress,user2Address],
+        [depositID,depositID]
+      )
+      expect(b[0]).to.eq(to6('1000'));
+      expect(b[1]).to.eq(to6('1000'));
+
+    });
+
+    it('properly gives the correct depositID', async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+      // first 20 bytes is the address,
+      // next 12 bytes is the stem
+      // since this deposit was created 1 season after the asset was whitelisted, the amt is 2
+      expect(depositID).to.eq('0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab000000000000000000000002');
+    });
+
+    it("properly emits an event when a user approves for all", async function () {
+      await expect(this.silo.connect(user).setApprovalForAll(user2Address, true))
+        .to.emit(this.silo, 'ApprovalForAll')
+        .withArgs(userAddress, user2Address, true);
+      expect(await this.silo.isApprovedForAll(userAddress, user2Address)).to.eq(true);
+    });
+
+    it("properly emits URI for when correctly setting metadata:", async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
+      await expect(this.metadata.connect(user).setMetadata(
+        depositID, // depositId,
+        this.bean.address, // token,
+        stem, // stem
+        0 // id (set to 0, but can be anything)
+      )).to.emit(this.metadata, 'URI').withArgs(
+        "",
+        depositID
+      )
+    });
+
+    it("reverts when incorrectly setting metadata:", async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB999999999999999999999999';     
+      await expect(this.metadata.connect(user).setMetadata(
+        depositID, // depositId,
+        this.bean.address, // token,
+        stem, // stem
+        0 // id (set to 0, but can be anything)
+      )).to.be.revertedWith("Silo: invalid depositId");
+    });
+
+    it("properly gives an URI", async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
+      await this.metadata.connect(user).setMetadata(
+        depositID, // depositId,
+        this.bean.address, // token,
+        stem, // stem
+        0 // id (set to 0, but can be anything)
+      )
+      expect(await this.metadata.uri(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpnaUlHaGxhV2RvZEQwaU16a2lJSFpwWlhkQ2IzZzlJakFnTUNBek9DQXpPU0lnWm1sc2JEMGlibTl1WlNJZ2VHMXNibk05SW1oMGRIQTZMeTkzZDNjdWR6TXViM0puTHpJd01EQXZjM1puSWo0S1BISmxZM1FnZVQwaU1DNDFNVGsxTXpFaUlIZHBaSFJvUFNJek55NDVOakk1SWlCb1pXbG5hSFE5SWpNM0xqazJNamtpSUhKNFBTSXhPQzQ1T0RFMElpQm1hV3hzUFNJak0wVkNPVFJGSWk4K0NqeHdZWFJvSUdROUlrMHlOQzR6TVRNMUlEUXVOVEU1TlROTU1UTXVNakk1SURNMExqRXpNamhETVRNdU1qSTVJRE0wTGpFek1qZ2dNQzQ1TXpnNE5ESWdNVE11TVRZMk55QXlOQzR6TVRNMUlEUXVOVEU1TlROYUlpQm1hV3hzUFNKM2FHbDBaU0l2UGdvOGNHRjBhQ0JrUFNKTk1UVXVPREEwTnlBek1pNHlPVFUxVERJekxqVTVORElnTVRFdU1USTNRekl6TGpVNU5ESWdNVEV1TVRJM0lETTNMamswT1RjZ01qSXVOelF3TkNBeE5TNDRNRFEzSURNeUxqSTVOVFZhSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284TDNOMlp6ND0iLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn19");
+    });
+
+    // TODO: need to add with the correct interface
+    it("properly gives the correct ERC-165 identifier", async function () {
+      expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(false);
+    });
+
+  });
+
+});
+
+describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
+  before(async function () {
+
+    try {
+      await network.provider.request({
+        method: "hardhat_reset",
+        params: [
+          {
+            forking: {
+              jsonRpcUrl: process.env.FORKING_RPC,
+              blockNumber: 16664100 //a random semi-recent block
+            },
+          },
+        ],
+      });
+    } catch(error) {
+      console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
+      console.log(error);
+      return
+    }
+
+    const signer = await impersonateBeanstalkOwner()
+    await mintEth(signer.address);
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: ['SiloFacet', 'ConvertFacet', 'WhitelistFacet', 'MockAdminFacet'],
+      // libraryNames: ['LibLegacyTokenSilo'],
+      initFacetName: 'InitBipNewSilo',
+      bip: false,
+      object: false,
+      verbose: false,
+      account: signer
   describe("Earned Beans issuance during vesting period", async function () {
     before(async function () {
       this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)

@@ -10,6 +10,7 @@ import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
 
+
 /**
  * @title SiloFacet
  * @author Publius, Brean
@@ -44,12 +45,14 @@ contract SiloFacet is TokenSilo {
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
+     * note: changed added a generic bytes calldata to allow for ERC721 + ERC1155 deposits
      * 
      * FIXME(logic): return `(amount, bdv(, season))`
      */
     function deposit(
         address token,
         uint256 amount,
+        bytes calldata,
         LibTransfer.From mode
     ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
@@ -81,11 +84,17 @@ contract SiloFacet is TokenSilo {
      * Typically, a Farmer wants to withdraw more recent Deposits first, since
      * these require less Stalk to be burned. This functionality is the default
      * provided by the Beanstalk SDK, but is NOT provided at the contract level.
+     * 
+     * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
+     * 1) it would need a different way to make a deposit (hashing)
+     * 2) it conserves backwards compatibility
+     * alternative solution: make the input a bytes32 depositID
      */
     function withdrawDeposit(
         address token,
-        int128 stem,
+        int96 grownStalkPerBdv,
         uint256 amount,
+        bytes calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, stem, amount);
@@ -105,10 +114,12 @@ contract SiloFacet is TokenSilo {
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in stems is minimal.
      */
+    
     function withdrawDeposits(
         address token,
-        int128[] calldata stems,
+        int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts,
+        bytes[] calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
@@ -132,14 +143,19 @@ contract SiloFacet is TokenSilo {
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
      * change in deposited BDV. See {Silo-_mow}.
+     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
+     * 1) it would need a different way to make a deposit (hashing)
+     * 2) it conserves backwards compatibility later 
+     * alternative solution: make the input a bytes32 depositID
      */
     function transferDeposit(
         address sender,
         address recipient,
         address token,
-        int128 stem,
-        uint256 amount
-    ) external payable nonReentrant returns (uint256 bdv) {
+        int96 grownStalkPerBdv,
+        uint256 amount,
+        bytes calldata
+    ) public payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
         }
@@ -169,9 +185,10 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        int128[] calldata stem,
-        uint256[] calldata amounts
-    ) external payable nonReentrant returns (uint256[] memory bdvs) {
+        int96[] calldata grownStalkPerBdv,
+        uint256[] calldata amounts,
+        bytes[] calldata
+    ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
@@ -185,6 +202,63 @@ contract SiloFacet is TokenSilo {
         LibSilo._mow(recipient, token);
         bdvs = _transferDeposits(sender, recipient, token, stem, amounts);
     }
+
+    // ERC1155 safeTransferFrom
+
+    }
+            );
+        }
+                depositsData
+                amounts[i],
+                cumulativeGrownStalkPerBDV, 
+                recipient,
+                token, 
+                sender, 
+            transferDeposit(
+                );
+                    bytes32(depositIDs[i])
+                LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
+            (token, cumulativeGrownStalkPerBDV) = 
+        for(uint i; i < depositIDs.length; i++) {
+        int96 cumulativeGrownStalkPerBDV;
+        address token;
+        // allowance requirements are checked in transferDeposit
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
+        require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+    ) external override {
+        bytes calldata depositsData
+        uint256[] calldata amounts, 
+        uint256[] calldata depositIDs, 
+        address recipient, 
+        address sender, 
+    function safeBatchTransferFrom(
+    // and must emit 2 transfer events per deposit. 
+    // unlike transferDeposits, safeBatchTransferFrom does not assume the deposits come from the same token,
+
+    }
+        );
+            depositData
+            cumulativeGrownStalkPerBDV, 
+            amount,
+            token, 
+            LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
+                bytes32(depositId)
+        transferDeposit(
+            );
+            sender, 
+            recipient,
+        uint256 depositId, 
+        uint256 amount,
+        bytes calldata depositData
+    ) external override {
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
+        // allowance requirements are checked in transferDeposit
+        (address token, int96 cumulativeGrownStalkPerBDV) = 
+        address sender, 
+        address recipient, 
+    function safeTransferFrom(
+    /// @dev ERC1155 safeTransferFrom does not need reentrancy protection,
+    // as the transferDeposit function already has this protection.
 
     //////////////////////// UPDATE SILO ////////////////////////
 

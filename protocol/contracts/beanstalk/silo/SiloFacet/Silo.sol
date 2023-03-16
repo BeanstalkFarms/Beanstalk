@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
+import "~/libraries/LibBytes.sol";
 
 /**
  * @title Silo
@@ -116,7 +117,7 @@ contract Silo is SiloExit {
         
         // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
-
+        
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,

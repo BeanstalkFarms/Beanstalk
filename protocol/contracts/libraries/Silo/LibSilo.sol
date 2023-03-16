@@ -10,6 +10,7 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
+import "~/libraries/LibSafeMathSigned96.sol";
 import "../LibSafeMath128.sol";
 import "./LibTokenSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
@@ -38,6 +39,7 @@ library LibSilo {
     // using SafeMath for uint128;
     using LibSafeMath128 for uint128;
     using LibSafeMathSigned128 for int128;
+    using LibSafeMathSigned96 for int96;
     using LibPRBMath for uint256;
     using SafeCast for uint256;
     
@@ -106,6 +108,7 @@ library LibSilo {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
         }
         
+        
         // increment user and total stalk
         s.s.stalk = s.s.stalk.add(stalk);
         s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
@@ -133,7 +136,7 @@ library LibSilo {
 
         uint256 roots;
         if (s.s.roots == 0) {
-            roots = uint256(stalk.mul(C.getRootsBase()));
+            roots = stalk.mul(C.getRootsBase());
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (block.number - s.season.sunriseBlock <= 25) {
@@ -509,12 +512,18 @@ library LibSilo {
      * and the deposited bdv amount, and return
      *
      */
-    function stalkReward(int128 startStalkPerBDV, int128 endStalkPerBDV, uint128 bdv) //are the types what we want here?
+    function stalkReward(int96 startStalkPerBDV, int96 endStalkPerBDV, uint128 bdv) //are the types what we want here?
         internal
         pure
         returns (uint256)
     {
-        int128 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int128(bdv));
+        
+        // 
+        
+        // 
+        
+        int96 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int96(bdv));
+        
         return uint128(reward);
     }
 

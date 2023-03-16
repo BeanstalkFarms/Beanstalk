@@ -44,8 +44,8 @@ describe('Sop', function () {
     await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'))
     await this.beanMetapool.connect(user).approve(this.silo.address, to18('100000000000'))
     await this.beanMetapool.connect(user).add_liquidity([to6('1000'), to18('1000')], to18('2000'))
-    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
-    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
+    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
   })
 
   beforeEach(async function () {

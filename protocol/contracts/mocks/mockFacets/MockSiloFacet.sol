@@ -59,8 +59,13 @@ contract MockSiloFacet is SiloFacet {
         s.a[msg.sender].bean.deposits[_s] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
+        
         uint256 seeds = amount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeBeanAddress()));
+        
+        
+        
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        
         LibSilo.mintStalk(msg.sender, stalk);
         mintSeeds(msg.sender, seeds);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);
@@ -290,6 +295,7 @@ contract MockSiloFacet is SiloFacet {
         } else if (token == C.curveMetapoolAddress()) {
             return 4;
         }
+        
         return 1; //return 1 instead of zero so we can use 1 for testing purposes on stuff that hasn't been whitelisted (like in Convert.test)
     }
 }

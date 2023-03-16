@@ -22,7 +22,7 @@
     "ethers": "^5.5.2",
     "ganache-cli": "^6.12.2",
     "hardhat": "^2.4.3",
-    "hardhat-contract-sizer": "^2.0.3",
+    "hardhat-contract-sizer": "^2.8.0",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-preprocessor": "^0.1.5",
     "json-bigint": "^1.0.0",

@@ -13,7 +13,8 @@ import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/Convert/LibConvert.sol";
 import "~/libraries/LibInternal.sol";
 import "../ReentrancyGuard.sol";
-import "./SiloFacet/TokenSilo.sol";
+import "~/libraries/LibBytes.sol";
+
 
 /**
  * @author Publius
@@ -43,21 +44,35 @@ contract ConvertFacet is ReentrancyGuard {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        int128[] stems,
+        int96[] grownStalkPerBdvs,
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
     );
 
+    event TransferBatch(
+        address indexed operator, 
+        address indexed from, 
+        address indexed to, 
+        uint256[] ids, 
+        uint256[] values
+    );
+
+    struct AssetsRemoved {
+        uint256 tokensRemoved;
+        uint256 stalkRemoved;
+        uint256 bdvRemoved;
+    }
+
     function convert(
         bytes calldata convertData,
-        int128[] memory stems,
+        int96[] memory grownStalkPerBdvs,
         uint256[] memory amounts
     )
         external
         payable
         nonReentrant
-        returns (int128 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (int96 toCumulativeGrownStalk, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
@@ -193,7 +208,7 @@ contract ConvertFacet is ReentrancyGuard {
 
     function _withdrawTokens(
         address token,
-        int128[] memory stems,
+        int96[] memory grownStalkPerBdvs,
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256, uint256) {
@@ -204,11 +219,31 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
-        uint256[] memory bdvsRemoved = new uint256[](stems.length);
-        while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
+        {
+        uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
+        uint256[] memory depositIds = new uint256[](grownStalkPerBdvs.length);
+        while ((i < grownStalkPerBdvs.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
                 //keeping track of stalk removed must happen before we actually remove the deposit
                 //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
+                
+                depositBDV = LibTokenSilo.removeDepositFromAccount(
+                    msg.sender,
+                    token,
+                    stems[i],
+                    amounts[i]
+                );
+                bdvsRemoved[i] = depositBDV;
+                a.stalkRemoved = a.stalkRemoved.add(
+                    LibSilo.stalkReward(
+                        stems[i],
+                        LibTokenSilo.stemTipForToken(IERC20(token)),
+                        depositBDV.toUint128()
+                    )
+                );
+                
+            } else {
+                amounts[i] = maxTokens.sub(a.tokensRemoved);
                 
                 depositBDV = LibTokenSilo.removeDepositFromAccount(
                     msg.sender,
@@ -225,31 +260,24 @@ contract ConvertFacet is ReentrancyGuard {
                         depositBDV.toUint128()
                     )
                 );
-
-            } else {
-                amounts[i] = maxTokens.sub(a.tokensRemoved);
-                depositBDV = LibTokenSilo.removeDepositFromAccount(
-                    msg.sender,
-                    token,
-                    stems[i],
-                    amounts[i]
-                );
-
-                bdvsRemoved[i] = depositBDV;
-                a.stalkRemoved = a.stalkRemoved.add(
-                    LibSilo.stalkReward(
-                        stems[i],
-                        LibTokenSilo.stemTipForToken(IERC20(token)),
-                        depositBDV.toUint128()
-                    )
-                );
+                
             }
+            
+            
+            
+            
             a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
             a.bdvRemoved = a.bdvRemoved.add(depositBDV);
             
+            
+            depositIds[i] = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(
+                token,
+                grownStalkPerBdvs[i]
+            ));
             i++;
         }
-        for (i; i < stems.length; ++i) amounts[i] = 0;
+        for (i; i < grownStalkPerBdvs.length; ++i) amounts[i] = 0;
+        
 
         emit RemoveDeposits(
             msg.sender,
@@ -259,6 +287,18 @@ contract ConvertFacet is ReentrancyGuard {
             a.tokensRemoved,
             bdvsRemoved
         );
+        // we emit 2 events for ERC1155 compatibility:
+        // event 1: "Burn" ERC1155 deposit that was being converted from
+        // event 2: "Mint" ERC1155 deposit being converted into: 
+        // event 1 is emmitted here, the 2nd event is emitted in libtokensilo.addDepositToAccount
+        emit TransferBatch(
+            msg.sender, 
+            msg.sender,
+            address(0), 
+            depositIds, 
+            amounts
+        );
+        }
 
         require(
             a.tokensRemoved == maxTokens,
@@ -277,7 +317,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         uint256 grownStalk //stalk grown previously by this deposit
-    ) internal returns (int128 _cumulativeGrownStalk) {
+    ) internal returns (int96 _cumulativeGrownStalk) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
         //calculate cumulativeGrownStalk index we need to deposit at from grownStalk and bdv
