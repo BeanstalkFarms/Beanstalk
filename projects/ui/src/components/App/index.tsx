@@ -48,7 +48,6 @@ import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
 
 import { FC } from '~/types';
-import Snowflakes from './theme/winter/Snowflakes';
 
 import PodMarketPage from '~/pages/market/pods';
 import PodMarketBuy from '~/components/Market/PodsV2/Actions/Buy';
