@@ -97,15 +97,6 @@ contract TokenSilo is Silo {
     // note add/remove withdrawal(s) are removed as claiming is removed
     // FIXME: to discuss with subgraph team to update
 
-    /**
-     */
-    event DepositApproval(
-        address indexed owner,
-        address indexed spender,
-        address token,
-        uint256 amount
-    );
-
     //////////////////////// UTILITIES ////////////////////////
 
     /**
@@ -169,20 +160,6 @@ contract TokenSilo is Silo {
         returns (Storage.SiloSettings memory)
     {
         return s.ss[token];
-    }
-
-    /**
-     * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `owner`.
-     * @param owner The account that has given `spender` approval to transfer Deposits. 
-     * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
-     * @param token Whitelisted ERC20 token.
-     */
-    function depositAllowance(
-        address owner,
-        address spender,
-        address token
-    ) public view virtual returns (uint256) {
-        return s.a[owner].depositAllowances[spender][token];
     }
 
     //////////////////////// DEPOSIT ////////////////////////
@@ -387,23 +364,5 @@ contract TokenSilo is Silo {
         return bdvs;
     }
 
-    //////////////////////// APPROVE ////////////////////////
-
-    function _spendDepositAllowance(
-        address owner,
-        address spender,
-        address token,
-        uint256 amount
-    ) internal virtual {
-        uint256 currentAllowance = depositAllowance(owner, spender, token);
-        if (currentAllowance != type(uint256).max) {
-            require(currentAllowance >= amount, "Silo: insufficient allowance");
-            _approveDeposit(owner, spender, token, currentAllowance - amount);
-        }
-    }
         
-    function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
-        s.a[account].depositAllowances[spender][token] = amount;
-        emit DepositApproval(account, spender, token, amount);
-    }
 }

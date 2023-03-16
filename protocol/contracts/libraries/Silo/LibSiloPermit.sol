@@ -32,6 +32,16 @@ library LibSiloPermit {
     bytes32 private constant DEPOSIT_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address token,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
 
+
+    /**
+     */
+    event DepositApproval(
+        address indexed owner,
+        address indexed spender,
+        address token,
+        uint256 amount
+    );
+
     /**
      * @dev Verifies the integrity of a Silo Deposit permit. 
      *
@@ -175,5 +185,36 @@ library LibSiloPermit {
      */
     function _hashTypedDataV4(bytes32 structHash) internal view returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), structHash));
+    }
+
+
+    function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].depositAllowances[spender][token] = amount;
+        emit DepositApproval(account, spender, token, amount);
+    }
+
+    //////////////////////// APPROVE ////////////////////////
+
+    function _spendDepositAllowance(
+        address owner,
+        address spender,
+        address token,
+        uint256 amount
+    ) internal {
+        uint256 currentAllowance = depositAllowance(owner, spender, token);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Silo: insufficient allowance");
+            _approveDeposit(owner, spender, token, currentAllowance - amount);
+        }
+    }
+    
+    function depositAllowance(
+        address owner,
+        address spender,
+        address token
+    ) public view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[owner].depositAllowances[spender][token];
     }
 }

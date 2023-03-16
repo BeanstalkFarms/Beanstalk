@@ -43,6 +43,8 @@ library LibTokenSilo {
         uint256 bdv
     );
 
+
+
     //////////////////////// ACCOUNTING: TOTALS ////////////////////////
     
     /**
@@ -269,6 +271,7 @@ library LibTokenSilo {
         amount = s.a[account].deposits[token][stem].amount;
         bdv = s.a[account].deposits[token][stem].bdv;
     }
+    
     /**
      * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
      * Note this is stored as 1e6, i.e. 1_000_000 units of this is equal to 1 old seed.

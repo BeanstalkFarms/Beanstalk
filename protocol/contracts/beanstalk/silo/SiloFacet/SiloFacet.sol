@@ -141,7 +141,7 @@ contract SiloFacet is TokenSilo {
         uint256 amount
     ) external payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
-            _spendDepositAllowance(sender, msg.sender, token, amount);
+            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
         }
         LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
@@ -176,7 +176,7 @@ contract SiloFacet is TokenSilo {
         for (uint256 i = 0; i < amounts.length; i++) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
             if (sender != msg.sender) {
-                _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
+                LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amounts[i]);
             }
         }
        
@@ -184,146 +184,6 @@ contract SiloFacet is TokenSilo {
         // Need to update the recipient's Silo as well.
         LibSilo._mow(recipient, token);
         bdvs = _transferDeposits(sender, recipient, token, stem, amounts);
-    }
-
-    //////////////////////// APPROVE ////////////////////////
-
-    /** 
-     * @notice Approve `spender` to Transfer Deposits for `msg.sender`.     
-     *
-     * Sets the allowance to `amount`.
-     * 
-     * @dev Gas optimization: We neglect to check whether `token` is actually
-     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
-     * therefore it cannot be Transferred.
-     */
-    function approveDeposit(
-        address spender,
-        address token,
-        uint256 amount
-    ) external payable nonReentrant {
-        require(spender != address(0), "approve from the zero address");
-        require(token != address(0), "approve to the zero address");
-        _approveDeposit(msg.sender, spender, token, amount);
-    }
-
-    /** 
-     * @notice Increase the Transfer allowance for `spender`.
-     * 
-     * @dev Gas optimization: We neglect to check whether `token` is actually
-     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
-     * therefore it cannot be Transferred.
-     *
-     * FIXME(doc): why does this return `true`?
-     */
-    function increaseDepositAllowance(
-        address spender,
-        address token,
-        uint256 addedValue
-    ) public virtual nonReentrant returns (bool) {
-        _approveDeposit(
-            msg.sender,
-            spender,
-            token,
-            depositAllowance(msg.sender, spender, token).add(addedValue)
-        );
-        return true;
-    }
-
-    /** 
-     * @notice Decrease the Transfer allowance for `spender`.
-     * 
-     * @dev Gas optimization: We neglect to check whether `token` is actually
-     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
-     * therefore it cannot be Transferred.
-     * 
-     * FIXME(doc): why does this return `true`?
-     */
-    function decreaseDepositAllowance(
-        address spender,
-        address token,
-        uint256 subtractedValue
-    ) public virtual nonReentrant returns (bool) {
-        uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
-        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
-        _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
-        return true;
-    }
-
-    //////////////////////// PERMIT ////////////////////////
-
-    /*
-     * Farm balances and silo deposits support EIP-2612 permits, 
-     * which allows Farmers to delegate use of their Farm balances 
-     * through permits without the need for a separate transaction.
-     * https://eips.ethereum.org/EIPS/eip-2612 
-     */
-    
-    /** 
-     * @notice permits multiple deposits.
-     * @param owner address to give permit
-     * @param spender address to permit
-     * @param tokens array of ERC20s to permit
-     * @param values array of amount (corresponding to tokens) to permit
-     * @param deadline expiration of signature (unix time) 
-     * @param v recovery id
-     * @param r ECDSA signature output
-     * @param s ECDSA signature output
-     */
-    function permitDeposits(
-        address owner,
-        address spender,
-        address[] calldata tokens,
-        uint256[] calldata values,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable nonReentrant {
-        LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
-        for (uint256 i; i < tokens.length; ++i) {
-            _approveDeposit(owner, spender, tokens[i], values[i]);
-        }
-    }
-
-    /** 
-     * @notice Increases the Deposit Transfer allowance of `spender`.
-     * 
-     * @param owner address to give permit
-     * @param spender address to permit
-     * @param token ERC20 to permit
-     * @param value amount to permit
-     * @param deadline expiration of signature (unix time) 
-     * @param v recovery id
-     * @param r ECDSA signature output
-     * @param s ECDSA signature output
-     */
-    function permitDeposit(
-        address owner,
-        address spender,
-        address token,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable nonReentrant {
-        LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
-        _approveDeposit(owner, spender, token, value);
-    }
-
-    /** 
-     * @notice Returns the current nonce for Deposit permits.
-     */ 
-    function depositPermitNonces(address owner) public view virtual returns (uint256) {
-        return LibSiloPermit.nonces(owner);
-    }
-
-    /**
-     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
-     */
-    function depositPermitDomainSeparator() external view returns (bytes32) {
-        return LibSiloPermit._domainSeparatorV4();
     }
 
     //////////////////////// UPDATE SILO ////////////////////////
