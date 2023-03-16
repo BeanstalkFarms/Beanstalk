@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {IBean} from "../../interfaces/IBean.sol";
 import {AppStorage} from "../AppStorage.sol";
 import "~/C.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius
@@ -27,7 +26,6 @@ contract InitBipNewSilo {
     
     
     function init() external {
-        console.log("InitBipNewSilo.init() got called");
         
         //update all silo info for current Silo-able assets
 

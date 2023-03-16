@@ -485,12 +485,12 @@ contract SiloFacet is TokenSilo {
             grownStalkPerBdv,
             amount
         );
-        console.log('enrootDeposit ogBDV: ', ogBDV);
+        
         emit RemoveDeposit(msg.sender, token, grownStalkPerBdv, amount, ogBDV); // Remove Deposit does not emit an event, while Add Deposit does.
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        console.log('newBDV: ', newBDV);
+        
         LibTokenSilo.addDepositToAccount(msg.sender, token, grownStalkPerBdv, amount, newBDV); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
@@ -502,7 +502,7 @@ contract SiloFacet is TokenSilo {
                                 LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)),
                                 uint128(deltaBDV))
         );
-        console.log('deltaStalk: ', deltaStalk);
+        
         LibSilo.mintStalk(msg.sender, deltaStalk);
     }
 

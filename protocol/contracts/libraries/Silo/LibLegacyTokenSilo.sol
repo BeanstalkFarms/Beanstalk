@@ -14,7 +14,6 @@ import "./LibTokenSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "~/libraries/LibSafeMathSigned96.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -138,9 +137,9 @@ library LibLegacyTokenSilo {
         s.a[account].legacyDeposits[token][season].amount += uint128(amount);
         s.a[account].legacyDeposits[token][season].bdv += uint128(bdv);
 
-        console.log('legacy addDepositToAccount season: ', season);
-        console.log('legacy addDepositToAccount amount: ', amount);
-        console.log('legacy addDepositToAccount bdv: ', bdv);
+        
+        
+        
 
         emit AddDeposit(account, token, season, amount, bdv);
     }
@@ -171,7 +170,7 @@ library LibLegacyTokenSilo {
         uint32 season,
         uint256 amount
     ) internal returns (uint256 crateBDV) {
-        console.log('removeDepositFromAccount season: ', season);
+        
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 crateAmount;
@@ -292,8 +291,8 @@ library LibLegacyTokenSilo {
         uint32 season
     ) internal view returns (uint128, uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log('tokenDeposit season: ', season);
-        console.log('tokenDeposit token: ', token);
+        
+        
 
         if (LibUnripeSilo.isUnripeBean(token)){
             (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
@@ -303,7 +302,7 @@ library LibLegacyTokenSilo {
             (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
             return (uint128(amount), uint128(bdv));
         }
-        console.log('returning legacy deposit amount');
+        
         return (
             s.a[account].legacyDeposits[token][season].amount,
             s.a[account].legacyDeposits[token][season].bdv
@@ -366,15 +365,15 @@ library LibLegacyTokenSilo {
         view
         returns (bool)
     {
-        // console.log('isDepositSeason: ', address(token));
-        console.log('isDepositSeason logging grownStalkPerBdv:');
-        console.logInt(grownStalkPerBdv);
+        // 
+        
+        
         
         if (seedsPerBdv == 0) {
             return false; //shortcut since we know it's a newer token?
         }
 
-        console.log('isDepositSeason seedsPerBdv: ', seedsPerBdv);
+        
         return
             grownStalkPerBdv <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
             uint256(-grownStalkPerBdv) % seedsPerBdv == 0;
@@ -398,14 +397,14 @@ library LibLegacyTokenSilo {
 
         //find the difference between the input season and the Silo v3 epoch season
 
-        console.log('seasonToGrownStalkPerBdv s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
-        console.log('seasonToGrownStalkPerBdv season: ', season);
-        console.log('seasonToGrownStalkPerBdv s.season.current: ', s.season.current);
-        console.log('seasonToGrownStalkPerBdv seedsPerBdv: ', seedsPerBdv);
+        
+        
+        
+        
         
         int96 firstPart = int96(season)-int96(s.season.grownStalkPerBdvStartSeason);
-        console.log('seasonToGrownStalkPerBdv firstPart: ');
-        console.logInt(firstPart);
+        
+        
 
         //using regular - here because we want it to overflow negative
         grownStalkPerBdv = (int96(season)-int96(s.season.grownStalkPerBdvStartSeason)).mul(int96(seedsPerBdv));
@@ -417,31 +416,31 @@ library LibLegacyTokenSilo {
         returns (uint32 season)
     {
         // require(grownStalkPerBdv > 0);
-        console.log('grownStalkPerBdvToSeason logging grown stalk per bdv');
-        console.logInt(grownStalkPerBdv);
+        
+        
         AppStorage storage s = LibAppStorage.diamondStorage();
         // uint256 seedsPerBdv = getSeedsPerToken(address(token));
 
         require(seedsPerBdv > 0, "Silo: Token not supported");
 
         // uint32 lastUpdateSeasonStored = s.ss[address(token)].lastUpdateSeason;
-        // console.log('grownStalkPerBdvToSeason lastUpdateSeasonStored: ', lastUpdateSeasonStored);
+        // 
 
-        // console.log('grownStalkPerBdvToSeason token: ', address(token));
-        // console.log('s.ss[address(token)]: ', s.ss[address(token)]);
-        console.log('grownStalkPerBdvToSeason seedsPerBdv: ', seedsPerBdv);
-        // console.log('grownStalkPerBdv: %d', grownStalkPerBdv);
-        // console.log('uint256(-grownStalkPerBdv).div(seedsPerBdv): ', uint256(-grownStalkPerBdv).div(seedsPerBdv));
+        // 
+        // 
+        
+        // 
+        // 
 
         // uint256 seasonAs256 = uint256(int128(s.ss[address(token)].lastCumulativeGrownStalkPerBdv).sub(grownStalkPerBdv)).div(seedsPerBdv);
-        // console.log('seasonAs256: ', seasonAs256);
+        // 
 
         int96 diff = grownStalkPerBdv.div(int96(seedsPerBdv));
-        console.log('diff: ');
-        console.logInt(diff);
+        
+        
         //using regular + here becauase we want to "overflow" (which for signed just means add negative)
         season = uint256(int96(s.season.grownStalkPerBdvStartSeason) + diff).toUint32();
-        console.log('grownStalkPerBdvToSeason season: ', season);
+        
         // season = seasonAs256.toUint32();
     }
 

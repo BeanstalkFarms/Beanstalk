@@ -187,6 +187,7 @@ describe('Silo', function () {
       expect(await this.silo.balanceOf(userAddress, depositID)).to.eq(to6('2000'));
     });
 
+
     it('removes ERC1155 balance when withdrawing an whitelisted asset', async function () {
       // user 1 already deposited 1000, so we expect the balanceOf to be 500e6 here. 
       season = this.season.season()
@@ -332,7 +333,31 @@ describe('Silo', function () {
         to6('1000') // amt
       );
     });
-    
+
+    it('properly gives the correct batch balances', async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+ 
+      let b = await this.silo.balanceOfBatch(
+        [userAddress,user2Address],
+        [depositID,depositID]
+      )
+      expect(b[0]).to.eq(to6('1000'));
+      expect(b[1]).to.eq(to6('1000'));
+
+    });
+
+    it('properly gives the correct depositID', async function () {
+      season = this.season.season()
+      stem = this.silo.seasonToGrownStalkPerBdv(this.bean.address, season)
+      depositID = await this.silo.getDepositId(this.bean.address, stem)
+      // first 20 bytes is the address,
+      // next 12 bytes is the stem
+      // since this deposit was created 1 season after the asset was whitelisted, the amt is 2
+      expect(depositID).to.eq('0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab000000000000000000000002');
+    });
+
     it("properly emits an event when a user approves for all", async function () {
       await expect(this.silo.connect(user).setApprovalForAll(user2Address, true))
         .to.emit(this.silo, 'ApprovalForAll')
@@ -377,8 +402,9 @@ describe('Silo', function () {
         stem, // stem
         0 // id (set to 0, but can be anything)
       )
-      expect(await this.metadata.tokenURI(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn0iaW1hZ2UiOiBkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlNemdpSUdobGFXZG9kRDBpTXpraUlIWnBaWGRDYjNnOUlqQWdNQ0F6T0NBek9TSWdabWxzYkQwaWJtOXVaU0lnZUcxc2JuTTlJbWgwZEhBNkx5OTNkM2N1ZHpNdWIzSm5Mekl3TURBdmMzWm5JajRLUEhKbFkzUWdlVDBpTUM0MU1UazFNekVpSUhkcFpIUm9QU0l6Tnk0NU5qSTVJaUJvWldsbmFIUTlJak0zTGprMk1qa2lJSEo0UFNJeE9DNDVPREUwSWlCbWFXeHNQU0lqTTBWQ09UUkZJaTgrQ2p4d1lYUm9JR1E5SWsweU5DNHpNVE0xSURRdU5URTVOVE5NTVRNdU1qSTVJRE0wTGpFek1qaERNVE11TWpJNUlETTBMakV6TWpnZ01DNDVNemc0TkRJZ01UTXVNVFkyTnlBeU5DNHpNVE0xSURRdU5URTVOVE5hSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284Y0dGMGFDQmtQU0pOTVRVdU9EQTBOeUF6TWk0eU9UVTFUREl6TGpVNU5ESWdNVEV1TVRJM1F6SXpMalU1TkRJZ01URXVNVEkzSURNM0xqazBPVGNnTWpJdU56UXdOQ0F4TlM0NE1EUTNJRE15TGpJNU5UVmFJaUJtYVd4c1BTSjNhR2wwWlNJdlBnbzhMM04yWno0PX0=");
+      expect(await this.metadata.tokenURI(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn0sICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlNemdpSUdobGFXZG9kRDBpTXpraUlIWnBaWGRDYjNnOUlqQWdNQ0F6T0NBek9TSWdabWxzYkQwaWJtOXVaU0lnZUcxc2JuTTlJbWgwZEhBNkx5OTNkM2N1ZHpNdWIzSm5Mekl3TURBdmMzWm5JajRLUEhKbFkzUWdlVDBpTUM0MU1UazFNekVpSUhkcFpIUm9QU0l6Tnk0NU5qSTVJaUJvWldsbmFIUTlJak0zTGprMk1qa2lJSEo0UFNJeE9DNDVPREUwSWlCbWFXeHNQU0lqTTBWQ09UUkZJaTgrQ2p4d1lYUm9JR1E5SWsweU5DNHpNVE0xSURRdU5URTVOVE5NTVRNdU1qSTVJRE0wTGpFek1qaERNVE11TWpJNUlETTBMakV6TWpnZ01DNDVNemc0TkRJZ01UTXVNVFkyTnlBeU5DNHpNVE0xSURRdU5URTVOVE5hSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284Y0dGMGFDQmtQU0pOTVRVdU9EQTBOeUF6TWk0eU9UVTFUREl6TGpVNU5ESWdNVEV1TVRJM1F6SXpMalU1TkRJZ01URXVNVEkzSURNM0xqazBPVGNnTWpJdU56UXdOQ0F4TlM0NE1EUTNJRE15TGpJNU5UVmFJaUJtYVd4c1BTSjNhR2wwWlNJdlBnbzhMM04yWno0PSJ9");
     });
+
   });
 
 });

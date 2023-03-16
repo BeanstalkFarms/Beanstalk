@@ -209,14 +209,14 @@ contract TokenSilo is Silo, IERC1155 {
         address token,
         uint256 amount
     ) internal {
-        console.log('_deposit: ', amount);
+        
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,
             LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), // TODO: may need to generalize this for all standards, just not ERC20
             amount
         );
-        console.log('_deposit now mint stalk: ', stalk);
+        
         LibSilo.mintStalk(account, stalk);
     }
 
@@ -238,7 +238,7 @@ contract TokenSilo is Silo, IERC1155 {
             grownStalkPerBdv,
             amount
         );
-        console.log('_withdrawDeposit stalkRemoved: ', stalkRemoved);
+        
         // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
@@ -301,8 +301,8 @@ contract TokenSilo is Silo, IERC1155 {
         uint256 stalk
     ) private {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
-        console.log('_withdraw amount: ', amount);
-        console.log('_withdraw stalk: ', stalk);
+        
+        
         LibSilo.burnStalk(account, stalk); // Burn Stalk
     }
 
@@ -330,21 +330,21 @@ contract TokenSilo is Silo, IERC1155 {
         )
     {
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, grownStalkPerBdv, amount);
-        console.log('s.ss[token].stalk: ', s.ss[token].stalkIssuedPerBdv);
-        console.log('bdvRemoved.mul(s.ss[token].stalk: ', bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
-        console.log('removeDepositFromAccount grownStalkPerBdv: ');
-        console.logInt(grownStalkPerBdv);
+        
+        
+        
+        
 
-        console.log('removeDepositFromAccount cumulativeGrownStalkPerBdv: ');
-        console.logInt(LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)));
-        console.log('removeDepositFromAccount bdvRemoved: ', bdvRemoved);
+        
+        
+        
 
         uint256 stalkReward = LibSilo.stalkReward(
                 grownStalkPerBdv, //this is the index of when it was deposited
                 LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token)), //this is latest for this token
                 bdvRemoved.toUint128()
             );
-        console.log('removeDepositFromAccount stalkReward: ', stalkReward);
+        
 
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
@@ -355,7 +355,7 @@ contract TokenSilo is Silo, IERC1155 {
                 bdvRemoved.toUint128()
             )
         );
-        console.log('removeDepositFromAccount stalkRemoved: ', stalkRemoved);
+        
 
         // "removing" a deposit is equivalent to "burning" an ERC1155 token.
         uint256 depositData = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv));
@@ -377,7 +377,7 @@ contract TokenSilo is Silo, IERC1155 {
         int96[] calldata grownStalkPerBdvs,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
-        console.log('removeDepositsFromAccount: ', account);
+        
         //make bdv array and add here?
         uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
         uint256[] memory removedDepositIDs = new uint256[](grownStalkPerBdvs.length);
@@ -392,7 +392,7 @@ contract TokenSilo is Silo, IERC1155 {
             removedDepositIDs[i] = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdvs[i]));
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            console.log('s.ss[token].stalkIssuedPerBdv: ', s.ss[token].stalkIssuedPerBdv);
+            
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     grownStalkPerBdvs[i],
@@ -400,13 +400,13 @@ contract TokenSilo is Silo, IERC1155 {
                     crateBdv.toUint128()
                 )
             );
-            console.log('ar.stalkRemoved from: ', i, ar.stalkRemoved);
+            
         }
-        console.log('1 ar.stalkRemoved: ', ar.stalkRemoved);
+        
         ar.stalkRemoved = ar.stalkRemoved.add(
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
-        console.log('2 ar.stalkRemoved: ', ar.stalkRemoved);
+        
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
         emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);

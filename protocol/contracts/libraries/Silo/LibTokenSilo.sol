@@ -14,7 +14,7 @@ import "~/libraries/LibSafeMathSigned128.sol";
 import "~/libraries/LibSafeMathSigned96.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibBytes.sol";
-import "hardhat/console.sol";
+
 
 /**
  * @title LibTokenSilo
@@ -121,7 +121,7 @@ library LibTokenSilo {
     ) internal returns (uint256) {
         require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.logInt(grownStalkPerBdv);
+        
         incrementTotalDeposited(token, amount); // Update Totals        
         addDepositToAccount(account, token, grownStalkPerBdv, amount, bdv); // Add to Account
         return (
@@ -300,29 +300,29 @@ library LibTokenSilo {
         address token,
         int96 grownStalkPerBdv
     ) internal view returns (uint256 amount, uint256 bdv) {
-        console.log('get tokenDeposit: ', account, token);
-        console.log('tokenDeposit logging grown stalk per bdv:');
-        console.logInt(grownStalkPerBdv);
+        
+        
+        
         AppStorage storage s = LibAppStorage.diamondStorage();
         bytes32 depositId = LibBytes.packAddressAndCumulativeStalkPerBDV(token, grownStalkPerBdv);
         amount = s.a[account].deposits[depositId].amount;
         bdv = s.a[account].deposits[depositId].bdv;
-        console.log('1 tokenDeposit amount: ', amount);
-        console.log('1 tokenDeposit bdv: ', bdv);
+        
+        
         uint256 seedsPerToken = LibLegacyTokenSilo.getSeedsPerToken(token);
         
         if (LibLegacyTokenSilo.isDepositSeason(seedsPerToken, grownStalkPerBdv)) {
-            console.log('yes grownStalkPerBdv deposit was a season');
+            
             (uint legacyAmount, uint legacyBdv) =
                 LibLegacyTokenSilo.tokenDeposit(account, address(token), LibLegacyTokenSilo.grownStalkPerBdvToSeason(seedsPerToken, grownStalkPerBdv));
             amount = amount.add(legacyAmount);
             bdv = bdv.add(legacyBdv);
             
         } else {
-            console.log('not a deposit season');
+            
         }
-        console.log('2 tokenDeposit amount: ', amount);
-        console.log('2 tokenDeposit bdv: ', bdv);
+        
+        
     }
     /**
      * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
@@ -349,10 +349,10 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
-        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastCumulativeGrownStalkPerBdv: ', uint256(s.ss[address(token)].lastCumulativeGrownStalkPerBdv));
-        console.log('cumulativeGrownStalkPerBdv s.season.current: ', s.season.current);
-        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].lastUpdateSeason: ', s.ss[address(token)].lastUpdateSeason);
-        console.log('cumulativeGrownStalkPerBdv s.ss[address(token)].stalkEarnedPerSeason: ', s.ss[address(token)].stalkEarnedPerSeason);
+        
+        
+        
+        
 
         //need to take into account the lastUpdateSeason for this token here
 
@@ -361,7 +361,7 @@ library LibTokenSilo {
         _cumulativeGrownStalkPerBdv = s.ss[address(token)].lastCumulativeGrownStalkPerBdv +
             int96(int96(s.ss[address(token)].stalkEarnedPerSeason).mul(int96(s.season.current)-int96(s.ss[address(token)].lastUpdateSeason)).div(1e6)) //round here
         ;
-        console.log('cumulativeGrownStalkPerBdv _cumulativeGrownStalkPerBdv: ', uint256(_cumulativeGrownStalkPerBdv));
+        
     }
 
     function grownStalkForDeposit(
@@ -378,9 +378,9 @@ library LibTokenSilo {
         require(grownStalkPerBdv <= _cumulativeGrownStalkPerBdv, "Silo: Invalid Deposit");
         uint deltaGrownStalkPerBdv = uint(cumulativeGrownStalkPerBdv(token).sub(grownStalkPerBdv));
         (, uint bdv) = tokenDeposit(account, address(token), grownStalkPerBdv);
-        console.log('grownStalkForDeposit bdv: ', bdv);
+        
         grownStalk = deltaGrownStalkPerBdv.mul(bdv);
-        console.log('grownStalkForDeposit grownStalk: ', grownStalk);
+        
     }
 
     //this does not include stalk that has not been mowed
@@ -419,12 +419,12 @@ library LibTokenSilo {
     {
         //first get current latest grown stalk index
         int96 latestCumulativeGrownStalkPerBdvForToken = cumulativeGrownStalkPerBdv(token);
-        console.log('grownStalkAndBdvToCumulativeGrownStalk latestCumulativeGrownStalkPerBdvForToken:');
-        console.logInt(latestCumulativeGrownStalkPerBdvForToken);
+        
+        
         //then calculate how much stalk each individual bdv has grown
         int96 grownStalkPerBdv = int96(grownStalk.div(bdv));
-        console.log('grownStalkAndBdvToCumulativeGrownStalk grownStalkPerBdv:');
-        console.logInt(grownStalkPerBdv);
+        
+        
         //then subtract from the current latest index, so we get the index the deposit should have happened at
         //note that we want this to be able to "subtraction overflow" aka go below zero, because
         //there will be many cases where you'd want to convert and need to go far back enough in the

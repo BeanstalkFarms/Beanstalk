@@ -60,13 +60,13 @@ contract MockSiloFacet is SiloFacet {
         s.a[msg.sender].bean.deposits[_s] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
-        console.log('mockUnripeBeanDeposit amount: ', amount);
+        
         uint256 seeds = amount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeBeanAddress()));
-        console.log('mockUnripeBeanDeposit _season(): ', _season());
-        console.log('mockUnripeBeanDeposit _s: ', _s);
-        console.log('s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv: ', s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv);
+        
+        
+        
         uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
-        console.log('mockUnripeBeanDeposit stalk: ', stalk);
+        
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);
         s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv = uint128(newBdv);
@@ -79,7 +79,7 @@ contract MockSiloFacet is SiloFacet {
         else return amount.mul(AMOUNT_TO_BDV_BEAN_LUSD).div(1e18);
     }
 
-    function getSeedsPerToken(address token) public view override returns (uint256) { //could be pure without console log?
+    function getSeedsPerToken(address token) public view override returns (uint256) { //could be pure without 
         if (token == C.beanAddress()) {
             return 2;
         } else if (token == C.unripeBeanAddress()) {
@@ -89,7 +89,7 @@ contract MockSiloFacet is SiloFacet {
         } else if (token == C.curveMetapoolAddress()) {
             return 4;
         }
-        console.log('returning 1 seed here');
+        
         return 1; //return 1 instead of zero so we can use 1 for testing purposes on stuff that hasn't been whitelisted (like in Convert.test)
     }
 }

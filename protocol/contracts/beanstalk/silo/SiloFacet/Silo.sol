@@ -113,8 +113,8 @@ contract Silo is SiloExit {
    function _mow(address account, address token) internal {
         uint32 _lastUpdate = lastUpdate(account);
 
-        console.log('_lastUpdate: ', _lastUpdate);
-        console.log('s.season.grownStalkPerBdvStartSeason: ', s.season.grownStalkPerBdvStartSeason);
+        
+        
 
         //if last update > 0 and < grownStalkPerBdvStartSeason
         //require that user account seeds be zero
@@ -143,7 +143,7 @@ contract Silo is SiloExit {
     }
 
     function __mow(address account, address token) private {
-        console.log('__mow, current season:', s.season.current);
+        
 
         int96 _cumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
         int96 _lastCumulativeGrownStalkPerBdv =  s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv;
@@ -152,7 +152,7 @@ contract Silo is SiloExit {
         if (_bdv > 0) {
              // if account mowed the same token in the same season, skip
             if (_lastCumulativeGrownStalkPerBdv == _cumulativeGrownStalkPerBdv) {
-                console.log('mow status lastCumulativeGrownStalkPerBdv was the same for token: ', token);
+                
                 return;
             }
 
@@ -162,7 +162,7 @@ contract Silo is SiloExit {
                 _cumulativeGrownStalkPerBdv,
                 _bdv
             ); // to remove 
-            console.log('__mow grownStalk: ', grownStalk);
+            
 
             // per the zero withdraw update, if a user plants within the morning, 
             // addtional roots will need to be issued, to properly calculate the earned beans. 
@@ -176,7 +176,7 @@ contract Silo is SiloExit {
                 )
             );
         }
-        console.log('mow status bdv was zero for token: ', token);
+        
 
         // If this `account` has no BDV, skip to save gas. Still need to update lastCumulativeGrownStalkPerBdv 
         // (happen on initial deposit, since mow is called before any deposit)
@@ -251,7 +251,7 @@ contract Silo is SiloExit {
                 migrateData.totalBdv += d.bdv;
             }
 
-            // console.log('totalBdv: ', totalBdv);
+            // 
 
             //init mow status for this token
             s.a[account].mowStatuses[token].lastCumulativeGrownStalkPerBdv = LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(token));
@@ -262,14 +262,14 @@ contract Silo is SiloExit {
                 migrateData.totalGrownStalkForToken, 
                 migrateData.totalBdv
             );
-            // console.log('grownStalkIndexToDepositAt: ');
-            // console.logInt(grownStalkIndexToDepositAt);
+            // 
+            // 
             //now we need to deposit totalBdv and totalGrownStalkForToken into the new silo
             LibTokenSilo.deposit(account, token, grownStalkIndexToDepositAt, migrateData.totalBdv);
         }
 
-        // console.log('seedsTotalBasedOnInputDeposits: ', seedsTotalBasedOnInputDeposits);
-        console.log('s.a[account].s.seeds: ', s.a[account].s.seeds);
+        // 
+        
         
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
         if((s.a[account].s.seeds + 4 - seedsTotalBasedOnInputDeposits) > 100) {
@@ -366,7 +366,7 @@ contract Silo is SiloExit {
      * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
      */
     function handleRainAndSops(address account, uint32 _lastUpdate) private {
-        console.log('handleRainAndSops s.a[account].lastSop: ', s.a[account].lastSop);
+        
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
             s.a[account].lastSop = s.season.rainStart;
@@ -376,9 +376,9 @@ contract Silo is SiloExit {
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > _lastUpdate) {
             s.a[account].sop.plenty = balanceOfPlenty(account);
-            console.log('s.a[account].sop.plenty: ', s.a[account].sop.plenty);
+            
             s.a[account].lastSop = s.season.lastSop;
-            console.log('s.a[account].lastSop: ', s.a[account].lastSop);
+            
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
@@ -390,13 +390,13 @@ contract Silo is SiloExit {
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.season.lastSop == s.season.rainStart) {
                 s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
-                console.log('s.a[account].sop.plentyPerRoot: ', s.a[account].sop.plentyPerRoot);
+                
             }
         } else if (s.a[account].lastRain > 0) {
             // Reset Last Rain if not raining.
             s.a[account].lastRain = 0;
         }
-        console.log('end handleRainAndSops s.a[account].lastSop: ', s.a[account].lastSop);
+        
     }
 
 }
