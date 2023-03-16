@@ -321,7 +321,7 @@ library LibSilo {
         return;
     }
 
-    function lastUpdate(address account) public view returns (uint32) {
+    function lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
     }
@@ -374,7 +374,7 @@ library LibSilo {
     } 
 
     function balanceOfPlenty(address account)
-        public
+        internal
         view
         returns (uint256 plenty)
     {

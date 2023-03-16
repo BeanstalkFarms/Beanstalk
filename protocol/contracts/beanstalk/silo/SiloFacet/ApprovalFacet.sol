@@ -18,12 +18,18 @@ import "../../ReentrancyGuard.sol";
 import "../SiloFacet/TokenSilo.sol";
 
 /**
- * @author pizzaman1337
+ * @author publius, pizzaman1337
  * @title Handles Approval related functions for the Silo
  **/
 contract ApprovalFacet is ReentrancyGuard {
     using SafeMath for uint256;
 
+    event DepositApproval(
+        address indexed owner,
+        address indexed spender,
+        address token,
+        uint256 amount
+    );
 
 
     //////////////////////// APPROVE ////////////////////////

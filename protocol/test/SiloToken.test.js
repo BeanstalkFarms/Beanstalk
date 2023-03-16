@@ -34,6 +34,7 @@ describe('Silo Token', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
     this.approval = await ethers.getContractAt('ApprovalFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
@@ -963,7 +964,9 @@ describe('Silo Token', function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+
+        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '50')
       })
@@ -998,7 +1001,7 @@ describe('Silo Token', function () {
       })
 
       it('properly updates users token allowance', async function () {
-        expect(await this.silo.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('50')
+        expect(await this.approval.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('50')
       })
     })
 
@@ -1020,7 +1023,7 @@ describe('Silo Token', function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '100');
       })
@@ -1055,7 +1058,7 @@ describe('Silo Token', function () {
       })
 
       it('properly updates users token allowance', async function () {
-        expect(await this.silo.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('0')
+        expect(await this.approval.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('0')
       })
     })
 
@@ -1066,7 +1069,7 @@ describe('Silo Token', function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '200');
+        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '200');
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
         await this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'])
@@ -1110,7 +1113,7 @@ describe('Silo Token', function () {
       })
 
       it('properly updates users token allowance', async function () {
-        expect(await this.silo.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('125')
+        expect(await this.approval.depositAllowance(userAddress, ownerAddress, this.siloToken.address)).to.be.equal('125')
       })
     })
 
@@ -1148,7 +1151,7 @@ describe('Silo Token', function () {
 
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
         //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
-        await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
         
         this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
@@ -1193,7 +1196,7 @@ describe('Silo Token', function () {
 
         // const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 
-        await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
 
         this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
       })
@@ -1238,7 +1241,7 @@ describe('Silo Token', function () {
         )
 
 
-        await this.silo.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10', '11']], [[to6('5'), to6('5')]]);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10', '11']], [[to6('5'), to6('5')]]);
 
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 
@@ -1277,61 +1280,61 @@ describe('Silo Token', function () {
   describe("Deposit Approval", async function () {
     describe("approve allowance", async function () {
       beforeEach(async function () {
-        this.result = await this.silo.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+        this.result = await this.approval.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
       })
 
       it('properly updates users token allowance', async function () {
-        expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('100')
+        expect(await this.approval.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('100')
       })
 
       it('emits DepositApproval event', async function () {
-        await expect(this.result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '100');
+        await expect(this.result).to.emit(this.approval, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '100');
       });
     })
 
     describe("increase and decrease allowance", async function () {
       beforeEach(async function () {
-        await this.silo.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+        await this.approval.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
       })
 
       it('properly increase users token allowance', async function () {
-        await this.silo.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
-        expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('200')
+        await this.approval.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
+        expect(await this.approval.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('200')
       })
 
       it('properly decrease users token allowance', async function () {
-        await this.silo.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '25')
-        expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('75')
+        await this.approval.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '25')
+        expect(await this.approval.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('75')
       })
 
       it('decrease users token allowance below zero', async function () {
-        await expect(this.silo.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '101')).to.revertedWith('Silo: decreased allowance below zero');
+        await expect(this.approval.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '101')).to.revertedWith('Silo: decreased allowance below zero');
       })
 
       it('emits DepositApproval event on increase', async function () {
-        const result = await this.silo.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '25');
-        await expect(result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '125');
+        const result = await this.approval.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '25');
+        await expect(result).to.emit(this.approval, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '125');
       });
 
       it('emits DepositApproval event on decrease', async function () {
-        const result = await this.silo.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '25');
-        await expect(result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '75');
+        const result = await this.approval.connect(user).decreaseDepositAllowance(user2Address, this.siloToken.address, '25');
+        await expect(result).to.emit(this.approval, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '75');
       });
     })
 
     describe("Approve Deposit Permit", async function () {
       describe('reverts', function () {
         it('reverts if depositPermitDomainSeparator is invalid', async function () {
-          expect(await this.silo.connect(user).depositPermitDomainSeparator()).to.be.equal("0xf47372c4b0d604ded919ee3604a1b1e88c7cd7d7d2fcfffc36f016e19bede4ef");
+          expect(await this.approval.connect(user).depositPermitDomainSeparator()).to.be.equal("0xf47372c4b0d604ded919ee3604a1b1e88c7cd7d7d2fcfffc36f016e19bede4ef");
         });
       });
   
       describe("single token permit", async function() {
         describe('reverts', function () {
           it('reverts if permit expired', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '1000', nonce, 1000);
-            await expect(this.silo.connect(user).permitDeposit(
+            await expect(this.approval.connect(user).permitDeposit(
               signature.owner, 
               signature.spender, 
               signature.token, 
@@ -1344,9 +1347,9 @@ describe('Silo Token', function () {
           });
   
           it('reverts if permit invalid signature', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '1000', nonce);
-            await expect(this.silo.connect(user).permitDeposit(
+            await expect(this.approval.connect(user).permitDeposit(
               user2Address, 
               signature.spender, 
               signature.token, 
@@ -1362,9 +1365,9 @@ describe('Silo Token', function () {
             await this.season.teleportSunrise(10);
             this.season.deployStemsUpgrade();
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '500', nonce);
-            await this.silo.connect(user2).permitDeposit(
+            await this.approval.connect(user2).permitDeposit(
               signature.owner, 
               signature.spender, 
               signature.token, 
@@ -1391,9 +1394,9 @@ describe('Silo Token', function () {
             // Create permit
             await this.season.teleportSunrise(10);
             this.season.deployStemsUpgrade();
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '1000', nonce);
-            this.result = await this.silo.connect(user).permitDeposit(
+            this.result = await this.approval.connect(user).permitDeposit(
               signature.owner, 
               signature.spender, 
               signature.token, 
@@ -1448,15 +1451,15 @@ describe('Silo Token', function () {
           });
   
           it("properly updates user permit nonce", async function() {
-            expect(await this.silo.depositPermitNonces(userAddress)).to.be.equal('1')
+            expect(await this.approval.depositPermitNonces(userAddress)).to.be.equal('1')
           });
   
           it('properly updates user token allowance', async function () {
-            expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('1000')
+            expect(await this.approval.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('1000')
           });
   
           it('emits DepositApproval event', async function () {
-            await expect(this.result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '1000');
+            await expect(this.result).to.emit(this.approval, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '1000');
           });
         });
       });
@@ -1469,9 +1472,9 @@ describe('Silo Token', function () {
           });
 
           it('reverts if permit expired', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['1000'], nonce, 1000);
-            await expect(this.silo.connect(user).permitDeposits(
+            await expect(this.approval.connect(user).permitDeposits(
               signature.owner, 
               signature.spender, 
               signature.tokens, 
@@ -1484,9 +1487,9 @@ describe('Silo Token', function () {
           });
   
           it('reverts if permit invalid signature', async function () {
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['1000'], nonce);
-            await expect(this.silo.connect(user).permitDeposits(
+            await expect(this.approval.connect(user).permitDeposits(
               user2Address, 
               signature.spender, 
               signature.tokens, 
@@ -1500,9 +1503,9 @@ describe('Silo Token', function () {
   
           it("reverts when transfer too much", async function() {
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['500'], nonce);
-            await this.silo.connect(user2).permitDeposits(
+            await this.approval.connect(user2).permitDeposits(
               signature.owner, 
               signature.spender, 
               signature.tokens, 
@@ -1531,9 +1534,9 @@ describe('Silo Token', function () {
             this.season.deployStemsUpgrade();
 
             // Create permit
-            const nonce = await this.silo.connect(user).depositPermitNonces(userAddress);
+            const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['1000'], nonce);
-            this.result = await this.silo.connect(user).permitDeposits(
+            this.result = await this.approval.connect(user).permitDeposits(
               signature.owner, 
               signature.spender, 
               signature.tokens, 
@@ -1588,15 +1591,15 @@ describe('Silo Token', function () {
           });
   
           it("properly updates user permit nonce", async function() {
-            expect(await this.silo.depositPermitNonces(userAddress)).to.be.equal('1')
+            expect(await this.approval.depositPermitNonces(userAddress)).to.be.equal('1')
           });
   
           it('properly updates user token allowance', async function () {
-            expect(await this.silo.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('1000')
+            expect(await this.approval.depositAllowance(userAddress, user2Address, this.siloToken.address)).to.be.equal('1000')
           });
   
           it('emits DepositApproval event', async function () {
-            await expect(this.result).to.emit(this.silo, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '1000');
+            await expect(this.result).to.emit(this.approval, 'DepositApproval').withArgs(userAddress ,user2Address, this.siloToken.address, '1000');
           });
         });
       });
