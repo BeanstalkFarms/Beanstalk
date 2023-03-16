@@ -170,6 +170,34 @@ export const BeanstalkPalette = {
         greenLight: '#D0DFDB',
       },
     },
+    spring: {
+      black: '#000000', // Text
+      grey: '#657265', // How Silo Works text
+      lightishGrey: '#9E9E9E', // Disabled Button text
+      lightGrey: '#DDDDDD', // Chart Number Grey / Disabled Button border
+      white: '#FFFFFF', // Container color
+      beanstalkGreen: '#46B955', // CTA button
+      washedGreen: '#C8EACC', // Pop Up bubble
+      lightestGreen: '#EDF8EE', // Rewards bubble, Liquidity Graph shadow
+      darkBlue: '#1F78B4', // APY text
+      blue: '#C1DEFD', // Nav Bar blue
+      lightBlue: '#DBEDFD', // APY bubble
+      lightestBlue: '#F5FAFE', // Settings modal
+      red: '#DA2C38', // Burn Stalk/Seed
+      washedRed: '#F0ABAF', // Chop Conditions text
+      lightestRed: '#FBEAB', // Burn Stalk/Seed output row bubble
+      chart: { // Used in Balances chart
+        primaryLight: '#EDF8EE',
+        blue: '#6B9AC4',
+        blueLight: '#D0D7DD',
+        purple: '#4059AD',
+        purpleLight: '#AAB3D2',
+        yellow: '#F4B942',
+        yellowLight: '#FBE3B3',
+        green: '#97D8C4',
+        greenLight: '#D0DFDB',
+      },
+    }
   },
 };
 
@@ -232,13 +260,13 @@ const muiThemeBase: ThemeOptions = {
   palette: {
     divider: BeanstalkPalette.blue,
     primary: {
-      main: BeanstalkPalette.theme.winter.primary,
-      dark: '#146054',
-      light: BeanstalkPalette.theme.winter.primaryHover,
+      main: BeanstalkPalette.logoGreen,
+      dark: BeanstalkPalette.supportGreen,
+      light: BeanstalkPalette.lightestGreen,
       contrastText: '#ffffff',
     },
     secondary: {
-      main: BeanstalkPalette.blue,
+      main: BeanstalkPalette.mediumGreen,
       contrastText: '#ffffff',
     },
     light: {
@@ -269,11 +297,11 @@ const muiThemeBase: ThemeOptions = {
       light: BeanstalkPalette.lightestGrey
     },
     background: {
-      default: BeanstalkPalette.theme.winter.iceBlue,
+      default: '#DBF5FF',
       paper: BeanstalkPalette.offWhite,
     },
     error: {
-      main: BeanstalkPalette.theme.winter.red,
+      main: BeanstalkPalette.theme.spring.red,
     }
   },
 
@@ -405,7 +433,7 @@ const muiThemeBase: ThemeOptions = {
             borderColor: BeanstalkPalette.lightestGrey,
             ':hover': {
               borderColor: 'primary.main',
-              background: BeanstalkPalette.theme.winter.primaryHover
+              background: BeanstalkPalette.lightestGreen
             }
           })
         },
@@ -432,7 +460,7 @@ const muiThemeBase: ThemeOptions = {
             borderColor: 'divider',
             ':hover': {
               borderColor: 'primary.main',
-              background: BeanstalkPalette.theme.winter.primaryHover
+              background: BeanstalkPalette.lightestGreen
             }
           })
         }
@@ -738,8 +766,8 @@ const muiThemeBase: ThemeOptions = {
             color: 'primary',
           },
           style: (t) => t.theme.unstable_sx({
-            color: BeanstalkPalette.theme.winter.primary,
-            backgroundColor: hexToRgba(BeanstalkPalette.theme.winter.primary, 0.1),
+            color: BeanstalkPalette.logoGreen,
+            backgroundColor: hexToRgba(BeanstalkPalette.logoGreen, 0.1),
 
           }),
         },

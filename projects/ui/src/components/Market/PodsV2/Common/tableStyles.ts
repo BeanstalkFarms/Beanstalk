@@ -19,7 +19,7 @@ export const scrollbarStyles = {
   },
   '& ::-webkit-scrollbar-thumb': {
     borderRadius: 2,
-    background: BeanstalkPalette.theme.winter.primary,
+    background: 'primary.main',
   },
   // '& ::-webkit-scrollbar-thumb:hover': {
   //   background: BeanstalkPalette.theme.winter.blueLight,
