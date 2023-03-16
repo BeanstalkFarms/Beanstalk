@@ -38,7 +38,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await mintEth(signer.address);
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
-        facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet'],
+        facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
         // libraryNames: ['LibLegacyTokenSilo'],
         initFacetName: 'InitBipNewSilo',
         bip: false,
@@ -55,6 +55,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond);
   
       this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+      this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond);
       this.convert = await ethers.getContractAt('ConvertFacet', this.diamond);
       this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond);
       this.bean = await ethers.getContractAt('Bean', BEAN);
@@ -149,7 +150,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.connect(depositorSigner);
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
   
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
@@ -174,7 +175,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.connect(depositorSigner);
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons);
+        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons);
   
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
@@ -205,7 +206,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
     
-        await this.silo.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
   
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
@@ -250,7 +251,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
         const depositorSigner = await impersonateSigner(depositorAddress);
         await mintEth(depositorAddress);
-        await this.silo.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+        await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts);
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
 
@@ -279,7 +280,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             this.stalkBeforeTotal = await this.silo.totalStalk();
         
             //need an array of all the tokens that have been deposited and their corresponding seasons
-            await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons, amounts);
+            await this.migrate.mowAndMigrate(this.depositorAddress, tokens, seasons, amounts);
         });
 
         it('properly migrates the user balances', async function () {
@@ -314,7 +315,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             this.stalkBeforeTotal = await this.silo.totalStalk();
         
             //need an array of all the tokens that have been deposited and their corresponding seasons
-            await this.silo.mowAndMigrate(this.depositorAddress, tokens, seasons);
+            await this.migrate.mowAndMigrate(this.depositorAddress, tokens, seasons);
         });
 
         it('properly migrates the user balances', async function () {
@@ -336,7 +337,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.connect(depositorSigner);
     
         // migrate will fail since user has no deposits here (they should use )
-        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith('SafeMath: division by zero');
+        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith('SafeMath: division by zero');
   
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed')
       })*/
@@ -346,7 +347,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d'];
         const seasons = [[5510],[6004,6846,6668]];  
       
-        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith("deSynced seeds, account can migrate");
+        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons)).to.be.revertedWith("deSynced seeds, account can migrate");
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
       })
   
@@ -357,7 +358,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorSigner = await impersonateSigner(depositorAddress);
         await mintEth(depositorAddress);
       
-        await this.silo.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons);
+        await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons);
         await this.silo.mow(depositorAddress, this.beanMetapool.address);
       })*/
   
@@ -378,7 +379,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         }
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await expect(this.silo.mowAndMigrate(depositorAddress, tokens, seasons, seasons)).to.be.revertedWith('seeds misaligned');
+        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, seasons)).to.be.revertedWith('seeds misaligned');
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
       })
     });
@@ -412,6 +413,29 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.season.fastForward(5);
         expect(await this.silo.stemTipForToken(this.beanMetapool.address)).to.eq(10);
       });
+    });
+
+    describe('fractional seeds', function () {
+      it('change rate to something fractional and check stemTipForToken', async function () {
+        this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+        const beanstalkOwner = await impersonateBeanstalkOwner()
+        await this.season.teleportSunrise(await this.silo.stemStartSeason());
+  
+        expect(await this.silo.stemTipForToken(this.beanMetapool.address)).to.eq(0);
+  
+        //change rate to 2.5 and check after 1 season
+        await this.whitelist.connect(beanstalkOwner).updateStalkPerBdvPerSeasonForToken(this.beanMetapool.address, 2.5*1e6);
+        await this.season.siloSunrise(0);
+        expect(await this.silo.stemTipForToken(this.beanMetapool.address)).to.eq(2);
+        //in theory should be 2.5 after one season but because of rounding is 2
+
+        //change rate to 3.5 and check after 5 seasons
+        await this.whitelist.connect(beanstalkOwner).updateStalkPerBdvPerSeasonForToken(this.beanMetapool.address, 3.5*1e6);
+        await this.season.fastForward(5);
+        expect(await this.silo.stemTipForToken(this.beanMetapool.address)).to.eq(19); //in theory should equal 20 but because of rounding down twice it's 19
+      });
+
+      //write a test that Mows after a fractional seeds season goes by and checks... something?
     });
   
     describe('Silo interaction tests after deploying grown stalk per bdv', function () {

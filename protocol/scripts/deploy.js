@@ -101,6 +101,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
   let [
     bdvFacet,
     curveFacet,
+    migrationFacet,
+    approvalFacet,
     convertFacet,
     farmFacet,
     fieldFacet,
@@ -120,6 +122,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     [ 
       'BDVFacet',
       'CurveFacet',
+      'MigrationFacet',
+      'ApprovalFacet',
       'MockConvertFacet',
       'FarmFacet',
       'MockFieldFacet',
@@ -140,6 +144,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     [ 
       'BDVFacet',
       'CurveFacet',
+      'MigrationFacet',
+      'ApprovalFacet',
       'ConvertFacet',
       'FarmFacet',
       'FieldFacet',
@@ -178,6 +184,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     facets: [
       ['BDVFacet', bdvFacet],
       ['CurveFacet', curveFacet],
+      ['MigrationFacet', migrationFacet],
+      ['ApprovalFacet', approvalFacet],
       ['ConvertFacet', convertFacet],
       ['FarmFacet', farmFacet],
       ['FieldFacet', fieldFacet],
@@ -222,6 +230,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     diamondLoupeFacet: diamondLoupeFacet,
     bdvFacet,
     convertFacet,
+    migrationFacet,
+    approvalFacet,
     farmFacet,
     fieldFacet,
     fundraiserFacet,
