@@ -32,6 +32,8 @@ describe('Silo', function () {
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.metadata = await ethers.getContractAt('MetadataFacet', this.diamond.address);
+    this.diamondLoupe = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address);
+
 
     this.bean = await ethers.getContractAt('Bean', BEAN);
     await this.season.lightSunrise();
@@ -402,7 +404,12 @@ describe('Silo', function () {
         stem, // stem
         0 // id (set to 0, but can be anything)
       )
-      expect(await this.metadata.tokenURI(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn0sICJpbWFnZSI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlNemdpSUdobGFXZG9kRDBpTXpraUlIWnBaWGRDYjNnOUlqQWdNQ0F6T0NBek9TSWdabWxzYkQwaWJtOXVaU0lnZUcxc2JuTTlJbWgwZEhBNkx5OTNkM2N1ZHpNdWIzSm5Mekl3TURBdmMzWm5JajRLUEhKbFkzUWdlVDBpTUM0MU1UazFNekVpSUhkcFpIUm9QU0l6Tnk0NU5qSTVJaUJvWldsbmFIUTlJak0zTGprMk1qa2lJSEo0UFNJeE9DNDVPREUwSWlCbWFXeHNQU0lqTTBWQ09UUkZJaTgrQ2p4d1lYUm9JR1E5SWsweU5DNHpNVE0xSURRdU5URTVOVE5NTVRNdU1qSTVJRE0wTGpFek1qaERNVE11TWpJNUlETTBMakV6TWpnZ01DNDVNemc0TkRJZ01UTXVNVFkyTnlBeU5DNHpNVE0xSURRdU5URTVOVE5hSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284Y0dGMGFDQmtQU0pOTVRVdU9EQTBOeUF6TWk0eU9UVTFUREl6TGpVNU5ESWdNVEV1TVRJM1F6SXpMalU1TkRJZ01URXVNVEkzSURNM0xqazBPVGNnTWpJdU56UXdOQ0F4TlM0NE1EUTNJRE15TGpJNU5UVmFJaUJtYVd4c1BTSjNhR2wwWlNJdlBnbzhMM04yWno0PSJ9");
+      expect(await this.metadata.uri(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpnaUlHaGxhV2RvZEQwaU16a2lJSFpwWlhkQ2IzZzlJakFnTUNBek9DQXpPU0lnWm1sc2JEMGlibTl1WlNJZ2VHMXNibk05SW1oMGRIQTZMeTkzZDNjdWR6TXViM0puTHpJd01EQXZjM1puSWo0S1BISmxZM1FnZVQwaU1DNDFNVGsxTXpFaUlIZHBaSFJvUFNJek55NDVOakk1SWlCb1pXbG5hSFE5SWpNM0xqazJNamtpSUhKNFBTSXhPQzQ1T0RFMElpQm1hV3hzUFNJak0wVkNPVFJGSWk4K0NqeHdZWFJvSUdROUlrMHlOQzR6TVRNMUlEUXVOVEU1TlROTU1UTXVNakk1SURNMExqRXpNamhETVRNdU1qSTVJRE0wTGpFek1qZ2dNQzQ1TXpnNE5ESWdNVE11TVRZMk55QXlOQzR6TVRNMUlEUXVOVEU1TlROYUlpQm1hV3hzUFNKM2FHbDBaU0l2UGdvOGNHRjBhQ0JrUFNKTk1UVXVPREEwTnlBek1pNHlPVFUxVERJekxqVTVORElnTVRFdU1USTNRekl6TGpVNU5ESWdNVEV1TVRJM0lETTNMamswT1RjZ01qSXVOelF3TkNBeE5TNDRNRFEzSURNeUxqSTVOVFZhSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284TDNOMlp6ND0iLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn19");
+    });
+
+    // TODO: need to add with the correct interface
+    it("properly gives the correct ERC-165 identifier", async function () {
+      expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(false);
     });
 
   });
