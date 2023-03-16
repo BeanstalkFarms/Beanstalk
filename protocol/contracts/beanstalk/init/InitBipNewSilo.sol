@@ -8,15 +8,20 @@ pragma experimental ABIEncoderV2;
 import {IBean} from "../../interfaces/IBean.sol";
 import {AppStorage} from "../AppStorage.sol";
 import "~/C.sol";
+import {IERC1155} from "~/interfaces/IERC1155.sol";
+import {LibDiamond} from "~/libraries/LibDiamond.sol";
+
 
 /**
  * @author Publius
- * @title InitBip8 runs the code for BIP-8.
+ * @title InitBipNewSilo runs the code for the silo update.
 **/
 
 contract InitBipNewSilo {
 
     AppStorage internal s;
+    LibDiamond.DiamondStorage internal ds;
+
 
     event UpdatedStalkPerBdvPerSeason(
         address indexed token,
@@ -27,6 +32,9 @@ contract InitBipNewSilo {
     
     function init() external {
         
+        // this adds the ERC1155 indentifier to the diamond:
+        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
+
         //update all silo info for current Silo-able assets
 
         uint32 currentSeason = s.season.current;

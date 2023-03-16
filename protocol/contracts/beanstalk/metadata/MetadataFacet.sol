@@ -41,7 +41,7 @@ contract MetadataFacet is IERC1155Receiver {
     // this is because a new ERC1155 id is created each season, per whitelisted token. 
     // currently, the metadata stoes the token address, the id of the token, and the CumulativeStalkPerBDV.
 
-    function tokenURI(uint256 depositId) external view returns (string memory) {
+    function uri(uint256 depositId) external view returns (string memory) {
         Storage.Metadata memory depositMetadata = getDepositMetadata(depositId);
         require(depositMetadata.token != address(0), "Silo: metadata does not exist");
         bytes memory attributes = abi.encodePacked(
@@ -57,9 +57,9 @@ contract MetadataFacet is IERC1155Receiver {
                 '{',
                     '"name": "Beanstalk Deposit", ',
                     '"description": "A Beanstalk Deposit", ',
-                    string(abi.encodePacked('"attributes": ', attributes)),
-                    string(abi.encodePacked(', "image": "', imageURI())),
-                '"}'
+                    string(abi.encodePacked('"image": "', imageURI())),
+                    string(abi.encodePacked('", "attributes": ', attributes)),
+                '}'
             ))
         ));
     }
