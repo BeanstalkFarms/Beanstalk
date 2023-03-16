@@ -92,7 +92,7 @@ contract SiloFacet is TokenSilo {
      */
     function withdrawDeposit(
         address token,
-        int96 grownStalkPerBdv,
+        int96 stem,
         uint256 amount,
         bytes calldata,
         LibTransfer.To mode
@@ -117,7 +117,7 @@ contract SiloFacet is TokenSilo {
     
     function withdrawDeposits(
         address token,
-        int96[] calldata grownStalkPerBdvs,
+        int96[] calldata stems,
         uint256[] calldata amounts,
         bytes[] calldata,
         LibTransfer.To mode
@@ -152,7 +152,7 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        int96 grownStalkPerBdv,
+        int96 stem,
         uint256 amount,
         bytes calldata
     ) public payable nonReentrant returns (uint256 bdv) {
@@ -185,7 +185,7 @@ contract SiloFacet is TokenSilo {
         address sender,
         address recipient,
         address token,
-        int96[] calldata grownStalkPerBdv,
+        int96[] calldata stem,
         uint256[] calldata amounts,
         bytes[] calldata
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
@@ -205,60 +205,60 @@ contract SiloFacet is TokenSilo {
 
     // ERC1155 safeTransferFrom
 
-    }
-            );
-        }
-                depositsData
-                amounts[i],
-                cumulativeGrownStalkPerBDV, 
-                recipient,
-                token, 
-                sender, 
-            transferDeposit(
-                );
-                    bytes32(depositIDs[i])
-                LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
-            (token, cumulativeGrownStalkPerBDV) = 
-        for(uint i; i < depositIDs.length; i++) {
-        int96 cumulativeGrownStalkPerBDV;
-        address token;
-        // allowance requirements are checked in transferDeposit
-        require(recipient != address(0), "ERC1155: transfer to the zero address");
-        require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
-    ) external override {
-        bytes calldata depositsData
-        uint256[] calldata amounts, 
-        uint256[] calldata depositIDs, 
-        address recipient, 
+    /// @dev ERC1155 safeTransferFrom does not need reentrancy protection,
+    // as the transferDeposit function already has this protection.
+    function safeTransferFrom(
         address sender, 
-    function safeBatchTransferFrom(
-    // and must emit 2 transfer events per deposit. 
-    // unlike transferDeposits, safeBatchTransferFrom does not assume the deposits come from the same token,
-
-    }
-        );
-            depositData
-            cumulativeGrownStalkPerBDV, 
-            amount,
-            token, 
-            LibBytes.getAddressAndCumulativeStalkPerBDVFromBytes(
-                bytes32(depositId)
-        transferDeposit(
-            );
-            sender, 
-            recipient,
+        address recipient, 
         uint256 depositId, 
         uint256 amount,
         bytes calldata depositData
-    ) external override {
+    ) external {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = 
+            LibBytes.getAddressAndStemFromBytes(
+                bytes32(depositId)
+            );
+        transferDeposit(
+            sender, 
+            recipient,
+            token, 
+            cumulativeGrownStalkPerBDV, 
+            amount,
+            depositData
+        );
+    }
+
+    // unlike transferDeposits, safeBatchTransferFrom does not assume the deposits come from the same token,
+    // and must emit 2 transfer events per deposit. 
+    function safeBatchTransferFrom(
         address sender, 
         address recipient, 
-    function safeTransferFrom(
-    /// @dev ERC1155 safeTransferFrom does not need reentrancy protection,
-    // as the transferDeposit function already has this protection.
+        uint256[] calldata depositIDs, 
+        uint256[] calldata amounts, 
+        bytes calldata depositsData
+    ) external {
+        require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
+        // allowance requirements are checked in transferDeposit
+        address token;
+        int96 cumulativeGrownStalkPerBDV;
+        for(uint i; i < depositIDs.length; i++) {
+            (token, cumulativeGrownStalkPerBDV) = 
+                LibBytes.getAddressAndStemFromBytes(
+                    bytes32(depositIDs[i])
+                );
+            transferDeposit(
+                sender, 
+                recipient,
+                token, 
+                cumulativeGrownStalkPerBDV, 
+                amounts[i],
+                depositsData
+            );
+        }
+    }
 
     //////////////////////// UPDATE SILO ////////////////////////
 

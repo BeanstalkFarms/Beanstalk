@@ -58,7 +58,7 @@ contract Account {
 
     // This struct stores the mow status for each Silo-able token, for each farmer. This gets updated each time a farmer mows, or adds/removes deposits.
     struct MowStatus {
-        int96 lastCumulativeGrownStalkPerBdv; // the last cumulative grown stalk per bdv index at which the farmer mowed
+        int96 lastStem; // the last cumulative grown stalk per bdv index at which the farmer mowed
         uint128 bdv; // bdv of all of a farmer's deposits of this token type
     }
 
@@ -295,7 +295,8 @@ contract Storage {
         /*
          * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
          */
-		int96 lastCumulativeGrownStalkPerBdv;
+		int96 milestoneStem;
+        /// @dev  7 bytes of additional storage space is available here.
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
@@ -322,7 +323,7 @@ contract Storage {
     */
     struct Metadata {
         address token; // the address of the token for a deposit
-        int96 grownStalkPerBDV; // the grown stalk per BDV assoiated with the deposit
+        int96 stem; // the grown stalk per BDV assoiated with the deposit
         uint256 id; // the id of the deposit
     }
 }

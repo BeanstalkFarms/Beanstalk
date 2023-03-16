@@ -17,7 +17,7 @@ import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @title MetadataFacet
- * @author Brean
+ * @author brean
  * @notice MetadataFacet is a contract that provides metadata for beanstalk ERC1155 deposits, 
  * as well as other auxiliary functions related to ERC1155 deposits.
  *
@@ -39,7 +39,7 @@ contract MetadataFacet is IERC1155Receiver {
 
     // for gas effiency, the metadata of an given deposit is not initalized until it is needed. 
     // this is because a new ERC1155 id is created each season, per whitelisted token. 
-    // currently, the metadata stoes the token address, the id of the token, and the CumulativeStalkPerBDV.
+    // currently, the metadata stoes the token address, the id of the token, and the Stem.
 
     function uri(uint256 depositId) external view returns (string memory) {
         Storage.Metadata memory depositMetadata = getDepositMetadata(depositId);
@@ -48,8 +48,8 @@ contract MetadataFacet is IERC1155Receiver {
             '{',
                 '"token address": "', LibStrings.toHexString(uint256(depositMetadata.token), 20),
                 '", "id": ', depositMetadata.id.toString(),
-                ', "stem": ', uint256(depositMetadata.grownStalkPerBDV).toString(),
-                ', "total stalk": ', uint256(LibTokenSilo.cumulativeGrownStalkPerBdv(IERC20(depositMetadata.token))).toString(),
+                ', "stem": ', uint256(depositMetadata.stem).toString(),
+                ', "total stalk": ', uint256(LibTokenSilo.stemTipForToken(IERC20(depositMetadata.token))).toString(),
                 ', "seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
             '}'
         );
@@ -67,17 +67,17 @@ contract MetadataFacet is IERC1155Receiver {
     function setMetadata(
         uint256 depositId,
         address token, 
-        int96 grownStalkPerBDV,
-        uint256 id
+        int96 stem,
+        uint256 // this should be the id of the token, but currently, only ERC20 tokens are supported.
     ) public returns (bool) {
-        require(bytes32(depositId) == LibBytes.packAddressAndCumulativeStalkPerBDV(token,grownStalkPerBDV), "Silo: invalid depositId");
+        require(bytes32(depositId) == LibBytes.packAddressAndStem(token,stem), "Silo: invalid depositId");
         // currently, deposits only support ERC20, which does not have an ID assoicated with a token.
         // in the future, deposits will support ERC721 and ERC1155 tokens, which will need an ID assoicated.
         // thus, the signature will include the id for future support. 
         Storage.Metadata memory depositMetadata;
         depositMetadata.token = token;
         depositMetadata.id = 0;
-        depositMetadata.grownStalkPerBDV = grownStalkPerBDV;
+        depositMetadata.stem = stem;
         s.metadata[bytes32(depositId)] = depositMetadata;
         emit URI("", depositId);
         return true;

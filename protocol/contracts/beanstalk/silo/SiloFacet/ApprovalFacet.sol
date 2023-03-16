@@ -18,12 +18,13 @@ import "../../ReentrancyGuard.sol";
 import "../SiloFacet/TokenSilo.sol";
 
 /**
- * @author pizzaman1337
+ * @author pizzaman1337, brean
  * @title Handles Approval related functions for the Silo
  **/
 contract ApprovalFacet is ReentrancyGuard {
     using SafeMath for uint256;
 
+    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
 
 
     //////////////////////// APPROVE ////////////////////////
@@ -179,5 +180,21 @@ contract ApprovalFacet is ReentrancyGuard {
         address token
     ) public view virtual returns (uint256) {
         return s.a[owner].depositAllowances[spender][token];
+    }
+
+    // ERC1155 Approvals
+    function setApprovalForAll(
+        address spender, 
+        bool approved
+    ) external {
+        s.a[msg.sender].isApprovedForAll[spender] = approved;
+        emit ApprovalForAll(msg.sender, spender, approved);
+    }
+
+    function isApprovedForAll(
+        address _owner, 
+        address _operator
+    ) external view returns (bool) {
+        return s.a[_owner].isApprovedForAll[_operator];
     }
 }

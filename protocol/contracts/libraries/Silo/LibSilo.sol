@@ -9,9 +9,9 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibPRBMath.sol";
-import "~/libraries/LibSafeMathSigned128.sol";
 import "~/libraries/LibSafeMathSigned96.sol";
 import "../LibSafeMath128.sol";
+import {LibBytes} from "../LibBytes.sol";
 import "./LibTokenSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 
@@ -38,7 +38,6 @@ library LibSilo {
     using SafeMath for uint256;
     // using SafeMath for uint128;
     using LibSafeMath128 for uint128;
-    using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
     using LibPRBMath for uint256;
     using SafeCast for uint256;
@@ -70,7 +69,7 @@ library LibSilo {
     event RemoveDeposit(
         address indexed account,
         address indexed token,
-        int128 stem,
+        int96 stem,
         uint256 amount,
         uint256 bdv
     );
@@ -78,7 +77,7 @@ library LibSilo {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        int128[] stems,
+        int96[] stems,
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
@@ -89,6 +88,19 @@ library LibSilo {
         uint256 stalkRemoved;
         uint256 bdvRemoved;
     }
+
+    // ERC1155 events
+
+    /**
+     * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
+     */
+    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+
+    /**
+     * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
+     * transfers.
+     */
+    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
 
     //////////////////////// MINT ////////////////////////
 
@@ -253,10 +265,8 @@ library LibSilo {
      *  - {SiloFacet-transferDeposit(s)}
      */
    function _mow(address account, address token) internal {
-        uint32 _lastUpdate = lastUpdate(account);
-
-
         AppStorage storage s = LibAppStorage.diamondStorage();
+        uint32 _lastUpdate = lastUpdate(account);
 
         //if last update > 0 and < stemStartSeason
         //require that user account seeds be zero
@@ -295,8 +305,8 @@ library LibSilo {
     function __mow(address account, address token) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        int128 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
-        int128 _lastStem =  s.a[account].mowStatuses[token].lastStem;
+        int96 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
+        int96 _lastStem =  s.a[account].mowStatuses[token].lastStem;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
         if (_bdv > 0) {
@@ -324,7 +334,7 @@ library LibSilo {
         return;
     }
 
-    function lastUpdate(address account) public view returns (uint32) {
+    function lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
     }
@@ -363,10 +373,10 @@ library LibSilo {
     }
 
     function _balanceOfGrownStalk(
-        int128 lastStem,
-        int128 endStalkPerBDV,
+        int96 lastStem,
+        int96 endStalkPerBDV,
         uint128 bdv
-    ) internal view returns (uint256)
+    ) internal pure returns (uint256)
     {
         return
             stalkReward(
@@ -377,7 +387,7 @@ library LibSilo {
     } 
 
     function balanceOfPlenty(address account)
-        public
+        internal
         view
         returns (uint256 plenty)
     {
@@ -433,7 +443,7 @@ library LibSilo {
     function _removeDepositFromAccount(
         address account,
         address token,
-        int128 stem,
+        int96 stem,
         uint256 amount
     )
         internal
@@ -442,9 +452,9 @@ library LibSilo {
             uint256 bdvRemoved
         )
     {
-        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
-
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
@@ -455,6 +465,14 @@ library LibSilo {
             )
         );
 
+        // "removing" a deposit is equivalent to "burning" an ERC1155 token.
+        emit TransferSingle(
+            msg.sender, // operator
+            account, // from
+            address(0), // to
+            uint256(LibBytes.packAddressAndStem(token, stem)), // id
+            amount // amount
+        );
         emit RemoveDeposit(account, token, stem, amount, bdvRemoved);
     }
 
@@ -469,13 +487,15 @@ library LibSilo {
     function _removeDepositsFromAccount(
         address account,
         address token,
-        int128[] calldata stems,
+        int96[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (AssetsRemoved memory ar) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         //make bdv array and add here?
         uint256[] memory bdvsRemoved = new uint256[](stems.length);
+        uint256[] memory removedDepositIDs = new uint256[](stems.length);
+
         for (uint256 i; i < stems.length; ++i) {
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
@@ -484,6 +504,7 @@ library LibSilo {
                 amounts[i]
             );
             bdvsRemoved[i] = crateBdv;
+            removedDepositIDs[i] = uint256(LibBytes.packAddressAndStem(token, stems[i]));
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
 
@@ -501,9 +522,11 @@ library LibSilo {
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        //need to add BDV array here
+        // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
+        emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
         emit RemoveDeposits(account, token, stems, amounts, ar.tokensRemoved, bdvsRemoved);
     }
+
     
     //////////////////////// UTILITIES ////////////////////////
 

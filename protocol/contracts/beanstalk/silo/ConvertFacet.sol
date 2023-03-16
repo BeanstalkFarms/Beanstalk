@@ -44,7 +44,7 @@ contract ConvertFacet is ReentrancyGuard {
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        int96[] grownStalkPerBdvs,
+        int96[] stems,
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
@@ -66,13 +66,13 @@ contract ConvertFacet is ReentrancyGuard {
 
     function convert(
         bytes calldata convertData,
-        int96[] memory grownStalkPerBdvs,
+        int96[] memory stems,
         uint256[] memory amounts
     )
         external
         payable
         nonReentrant
-        returns (int96 toCumulativeGrownStalk, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
@@ -112,7 +112,7 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function enrootDeposit(
         address token,
-        int128 stem,
+        int96 stem,
         uint256 amount
     ) external nonReentrant mowSender(token) {
         // First, remove Deposit and Redeposit with new BDV
@@ -162,7 +162,7 @@ contract ConvertFacet is ReentrancyGuard {
      */
     function enrootDeposits(
         address token,
-        int128[] calldata stems,
+        int96[] calldata stems,
         uint256[] calldata amounts
     ) external nonReentrant mowSender(token) {
         // First, remove Deposits because every deposit is in a different season,
@@ -174,7 +174,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newStalk;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
-        int128 _lastStem = LibTokenSilo.stemTipForToken(IERC20(token)); //need for present season
+        int96 _lastStem = LibTokenSilo.stemTipForToken(IERC20(token)); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
         // Iterate through all stems, redeposit the tokens with new BDV and
@@ -208,7 +208,7 @@ contract ConvertFacet is ReentrancyGuard {
 
     function _withdrawTokens(
         address token,
-        int96[] memory grownStalkPerBdvs,
+        int96[] memory stems,
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256, uint256) {
@@ -220,9 +220,9 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 depositBDV;
         uint256 i = 0;
         {
-        uint256[] memory bdvsRemoved = new uint256[](grownStalkPerBdvs.length);
-        uint256[] memory depositIds = new uint256[](grownStalkPerBdvs.length);
-        while ((i < grownStalkPerBdvs.length) && (a.tokensRemoved < maxTokens)) {
+        uint256[] memory bdvsRemoved = new uint256[](stems.length);
+        uint256[] memory depositIds = new uint256[](stems.length);
+        while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
             if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
                 //keeping track of stalk removed must happen before we actually remove the deposit
                 //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
@@ -270,13 +270,13 @@ contract ConvertFacet is ReentrancyGuard {
             a.bdvRemoved = a.bdvRemoved.add(depositBDV);
             
             
-            depositIds[i] = uint256(LibBytes.packAddressAndCumulativeStalkPerBDV(
+            depositIds[i] = uint256(LibBytes.packAddressAndStem(
                 token,
-                grownStalkPerBdvs[i]
+                stems[i]
             ));
             i++;
         }
-        for (i; i < grownStalkPerBdvs.length; ++i) amounts[i] = 0;
+        for (i; i < stems.length; ++i) amounts[i] = 0;
         
 
         emit RemoveDeposits(
@@ -320,13 +320,13 @@ contract ConvertFacet is ReentrancyGuard {
     ) internal returns (int96 _cumulativeGrownStalk) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        //calculate cumulativeGrownStalk index we need to deposit at from grownStalk and bdv
+        //calculate stem index we need to deposit at from grownStalk and bdv
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
         //then in affect we lose that partial season's worth of stalk when we deposit
         //so here we need to update grownStalk to be the amount you'd have with the above deposit
         
         /// @dev the two functions were combined into one function to save gas.
-        // _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToCumulativeGrownStalk(IERC20(token), grownStalk, bdv);
+        // _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
         // TODO: better name for this function?
         (grownStalk, _cumulativeGrownStalk) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);

@@ -410,43 +410,8 @@ describe('Silo', function () {
     it("properly gives the correct ERC-165 identifier", async function () {
       expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(false);
     });
-
   });
-
-});
-
-describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
-  before(async function () {
-
-    try {
-      await network.provider.request({
-        method: "hardhat_reset",
-        params: [
-          {
-            forking: {
-              jsonRpcUrl: process.env.FORKING_RPC,
-              blockNumber: 16664100 //a random semi-recent block
-            },
-          },
-        ],
-      });
-    } catch(error) {
-      console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
-      console.log(error);
-      return
-    }
-
-    const signer = await impersonateBeanstalkOwner()
-    await mintEth(signer.address);
-    await upgradeWithNewFacets({
-      diamondAddress: BEANSTALK,
-      facetNames: ['SiloFacet', 'ConvertFacet', 'WhitelistFacet', 'MockAdminFacet'],
-      // libraryNames: ['LibLegacyTokenSilo'],
-      initFacetName: 'InitBipNewSilo',
-      bip: false,
-      object: false,
-      verbose: false,
-      account: signer
+  
   describe("Earned Beans issuance during vesting period", async function () {
     before(async function () {
       this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
