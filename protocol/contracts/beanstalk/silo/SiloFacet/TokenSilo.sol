@@ -185,10 +185,7 @@ contract TokenSilo is Silo, IERC1155 {
         address token
     ) public view virtual returns (uint256) {
         if(s.a[owner].isApprovedForAll[spender] == true) return type(uint256).max;
-        // token approvals are now stored as a bytes32 in preperation for multitoken standard support.
-        // thus, for ERC20 deposits, we use the token address as the approval key (no cumulativeStalkPerBDV)
-        // TODO: how should this work with ERC1155? we either have to approve all ERC1155 deposits, or approve a singular id
-        return s.a[owner].depositAllowances[spender][bytes32(uint256(token))];
+        return s.a[owner].depositAllowances[spender][token];
     }
 
     //////////////////////// DEPOSIT ////////////////////////
@@ -525,7 +522,7 @@ contract TokenSilo is Silo, IERC1155 {
     }
         
     function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
-        s.a[account].depositAllowances[spender][bytes32(uint256(token))] = amount;
+        s.a[account].depositAllowances[spender][token] = amount;
         emit DepositApproval(account, spender, token, amount);
     }
     
