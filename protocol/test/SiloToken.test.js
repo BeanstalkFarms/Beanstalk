@@ -1172,7 +1172,7 @@ describe('Silo Token', function () {
       it('emits Remove and Add Deposit event', async function () {
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
-        await expect(this.result).to.emit(this.convert, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
     });
 
@@ -1218,7 +1218,7 @@ describe('Silo Token', function () {
       it('emits Remove and Add Deposit event', async function () {
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
         await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
-        await expect(this.result).to.emit(this.convert, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
+        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
       });
     });
 

@@ -33,14 +33,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 toAmount
     );
 
-    event AddDeposit(
-        address indexed account,
-        address indexed token,
-        int96 stem,
-        uint256 amount,
-        uint256 bdv
-    );
-
     event RemoveDeposit(
         address indexed account,
         address indexed token,
