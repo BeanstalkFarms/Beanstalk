@@ -385,7 +385,7 @@ describe('Curve Convert', function () {
       it('not enough Beans', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
-        const grownStalkPerBdvMetapool = await this.silo.seasonToGrownStalkPerBdv(this.beanMetapool.address, '10');
+        const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
 
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('250'), this.beanMetapool.address), [stemMetapool], [to18('200')]))
           .to.be.revertedWith('Curve: Insufficient Output');
@@ -395,7 +395,7 @@ describe('Curve Convert', function () {
         const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('1')], to18('0.5'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
-        await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('190'), this.beanMetapool.address), [grownStalkPerBdvMetapool], ['1000']))
+        await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('190'), this.beanMetapool.address), [stemMetapool], ['1000']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
     });

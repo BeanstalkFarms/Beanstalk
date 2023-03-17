@@ -128,7 +128,7 @@ describe('Silo Token', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
-        console.log('await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address): ', await this.silo.cumulativeGrownStalkPerBdv(this.siloToken.address));
+        console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
         this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
       });
   
@@ -223,13 +223,13 @@ describe('Silo Token', function () {
   describe('withdraw', function () {
     beforeEach(async function () {
       await this.season.teleportSunrise(10);
-      // this.season.deployGrownStalkPerBdv();
+      // this.season.deployStemsUpgrade();
       await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL);
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, grownStalkPerBdv, '1001', 0x00, EXTERNAL)).to.revertedWith('Must line up with season');
+        const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
+        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', 0x00, EXTERNAL)).to.revertedWith('Silo: Crate balance too low');
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {
@@ -242,7 +242,7 @@ describe('Silo Token', function () {
         beforeEach(async function () {
           const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
           userBalanceBefore = await this.siloToken.balanceOf(userAddress);
-          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, grownStalkPerBdv, '1000', 0x00, EXTERNAL);
+          this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1000', 0x00, EXTERNAL);
         });
     
         it('properly updates the total balances', async function () {
@@ -278,7 +278,7 @@ describe('Silo Token', function () {
       
       describe('withdraw part of a bean crate', function () {
         beforeEach(async function () {
-          const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
+          const grownStalkPerBdv = await this.silo.seasonToStem(this.siloToken.address, '10');
           this.result = await this.silo.connect(user).withdrawDeposit(this.siloToken.address, grownStalkPerBdv, '500', 0x00, EXTERNAL);
         });
     
@@ -440,7 +440,7 @@ describe('Silo Token', function () {
       })
       
       it('revert if withdrawn too much', async function () {
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+        const grownStalkPerBdv = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
         await expect(this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, grownStalkPerBdv, to6('11'), 0x00, EXTERNAL)).to.be.revertedWith('Silo: Crate balance too low.')
       });
       
@@ -813,15 +813,15 @@ describe('Silo Token', function () {
       
       it('returns the correct value', async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
+        const grownStalkPerBdv = await this.silo.seasonToStem(this.siloToken.address, '10');
         this.result = await this.silo.connect(user).callStatic.transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv, '50', 0x00)
         expect(this.result).to.be.equal('50')
       })
 
       beforeEach(async function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-        this.result = await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv, '50', 0x00)
+        const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
+        this.result = await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '50', 0x00)
       })
 
       it('removes the deposit from the sender', async function () {
@@ -857,9 +857,9 @@ describe('Silo Token', function () {
     describe("Single all", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
+        const grownStalkPerBdv = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(user).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv, '100', 0x00)
       })
 
@@ -901,14 +901,14 @@ describe('Silo Token', function () {
         // await this.season.siloSunrise('0')
         // await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
 
-        const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-        const grownStalkPerBdv11 = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '11');
-        this.result = await this.silo.connect(user).callStatic.transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10, grownStalkPerBdv11], ['50','25'], [ 0x00, 0x00])
+        const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
+        const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
+        this.result = await this.silo.connect(user).callStatic.transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'], [ 0x00, 0x00])
       })
 
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
@@ -916,7 +916,7 @@ describe('Silo Token', function () {
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
         
-        this.result = await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10, grownStalkPerBdv11], ['50','25'], [0x00,0x00])
+        this.result = await this.silo.connect(user).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'], [0x00,0x00])
       })
 
       it('removes the deposit from the sender', async function () {
@@ -961,11 +961,11 @@ describe('Silo Token', function () {
     describe("Single with allowance", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
-        await this.silo.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-        await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv, '50', 0x00)
+        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
+        await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '50', 0x00)
       })
 
       it('removes the deposit from the sender', async function () {
@@ -1005,12 +1005,12 @@ describe('Silo Token', function () {
     describe("Single with no allowance", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
       })
 
       it('reverts with no allowance', async function () {
-        const grownStalkPerBdv = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
+        const grownStalkPerBdv = await this.silo.seasonToStem(this.siloToken.address, '10');
         await expect(this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv, '50', 0x00)).to.revertedWith('Silo: insufficient allowance');
       })
     })
@@ -1019,10 +1019,10 @@ describe('Silo Token', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
-        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
         await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
-        await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '100');
+        await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '100', 0x00);
       })
 
       it('removes the deposit from the sender', async function () {
@@ -1062,14 +1062,14 @@ describe('Silo Token', function () {
     describe("Multiple with allowance", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
         await this.season.siloSunrise('0')
-        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
+        await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
         await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '200');
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
-        await this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'])
+        await this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'], [0x00, 0x00])
       })
 
       it('removes the deposit from the sender', async function () {
@@ -1117,16 +1117,16 @@ describe('Silo Token', function () {
     describe("Multiple with no allowance", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
+        this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', 0x00, EXTERNAL)
       })
 
       it('reverts with no allowance', async function () {
-        const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-        const grownStalkPerBdv11 = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '11');
-        await expect(this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10, grownStalkPerBdv11], ['50','25'], [0x00, 0x00])).to.revertedWith('Silo: insufficient allowance');
+        const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
+        const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
+        await expect(this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'], [0x00, 0x00])).to.revertedWith('Silo: insufficient allowance');
       })
     })
   })
@@ -1135,8 +1135,8 @@ describe('Silo Token', function () {
     describe("1 deposit, some", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
-        await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), 0x00, EXTERNAL)
+        this.season.deployStemsUpgrade();
+
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL)
         await this.silo.connect(user).mockUnripeBeanDeposit(10, to6('5'))
 
@@ -1171,16 +1171,16 @@ describe('Silo Token', function () {
 
       it('emits Remove and Add Deposit event', async function () {
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
+        await expect(this.result).to.emit(this.convert, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
     });
 
     describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        this.season.deployGrownStalkPerBdv();
-        await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), 0x00, EXTERNAL)
+        this.season.deployStemsUpgrade();
+
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL) //need to do legacy deposit to simulate pre-stems upgrade
         await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
         
@@ -1217,8 +1217,8 @@ describe('Silo Token', function () {
 
       it('emits Remove and Add Deposit event', async function () {
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
-        await expect(this.result).to.emit(this.silo, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
-        await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
+        await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
+        await expect(this.result).to.emit(this.convert, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
       });
     });
 
@@ -1228,7 +1228,6 @@ describe('Silo Token', function () {
         await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
 
         await this.season.lightSunrise()
-        await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), 0x00, EXTERNAL)
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL)
         
         this.season.deployStemsUpgrade();
@@ -1362,7 +1361,7 @@ describe('Silo Token', function () {
           it("reverts when transfer too much", async function() {
             await this.season.teleportSunrise(10);
             this.season.deployStemsUpgrade();
-            await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
+            await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
             const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokenPermit(user, userAddress, user2Address, this.siloToken.address, '500', nonce);
             await this.approval.connect(user2).permitDeposit(
@@ -1378,11 +1377,11 @@ describe('Silo Token', function () {
   
             const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await expect(
-              this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv10, '1000', 0x00)
+              this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, stem10, '1000', 0x00)
             ).to.be.revertedWith("Silo: insufficient allowance")
   
             await expect(
-              this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10], ['1000'], [0x00])
+              this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10], ['1000'], [0x00])
             ).to.be.revertedWith("Silo: insufficient allowance")
           });
         });
@@ -1407,9 +1406,9 @@ describe('Silo Token', function () {
           });
   
           it("allow transfer all single deposit", async function() {
-            const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+            const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
-            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv10, '1000', 0x00)
+            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, stem10, '1000', 0x00)
   
             const user1Deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem10)
             expect(user1Deposit[0]).to.equal('0');
@@ -1421,9 +1420,9 @@ describe('Silo Token', function () {
           });
   
           it("allow transfer all multiple deposits", async function() {
-            const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+            const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
-            await this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10], ['1000'], [0x00])
+            await this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10], ['1000'], [0x00])
   
             const user1Deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem10)
             expect(user1Deposit[0]).to.equal('0');
@@ -1435,9 +1434,9 @@ describe('Silo Token', function () {
           });
   
           it("allow transfer some deposit", async function() {
-            const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+            const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
-            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv10, '400', 0x00)
+            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, stem10, '400', 0x00)
   
             const user1Deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem10)
             expect(user1Deposit[0]).to.equal('600');
@@ -1500,7 +1499,7 @@ describe('Silo Token', function () {
           });
   
           it("reverts when transfer too much", async function() {
-            await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
+            await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
             const nonce = await this.approval.connect(user).depositPermitNonces(userAddress);
             const signature = await signSiloDepositTokensPermit(user, userAddress, user2Address, [this.siloToken.address], ['500'], nonce);
             await this.approval.connect(user2).permitDeposits(
@@ -1517,11 +1516,11 @@ describe('Silo Token', function () {
             const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
   
             await expect(
-              this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv10, '1000', 0x00)
+              this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, stem10, '1000', 0x00)
             ).to.be.revertedWith("Silo: insufficient allowance")
   
             await expect(
-              this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10], ['1000'],[0x00])
+              this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10], ['1000'],[0x00])
             ).to.be.revertedWith("Silo: insufficient allowance")
           });
         });
@@ -1547,9 +1546,9 @@ describe('Silo Token', function () {
           });
   
           it("allow transfer all deposit", async function() {
-            const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+            const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
-            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv10, '1000', 0x00)
+            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, stem10, '1000', 0x00)
   
             const user1Deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem10)
             expect(user1Deposit[0]).to.equal('0');
@@ -1561,9 +1560,9 @@ describe('Silo Token', function () {
           });
   
           it("allow transfer all deposits", async function() {
-            const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+            const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
-            await this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [grownStalkPerBdv10], ['1000'], [0x00])
+            await this.silo.connect(user2).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10], ['1000'], [0x00])
   
             const user1Deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem10)
             expect(user1Deposit[0]).to.equal('0');
@@ -1575,9 +1574,9 @@ describe('Silo Token', function () {
           });
   
           it("allow transfer some deposit", async function() {
-            const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(UNRIPE_BEAN, '10');
+            const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
             await this.silo.connect(user).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL)
-            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, grownStalkPerBdv10, '400', 0x00)
+            await this.silo.connect(user2).transferDeposit(userAddress, user2Address, this.siloToken.address, stem10, '400', 0x00)
   
             const user1Deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, stem10)
             expect(user1Deposit[0]).to.equal('600');
@@ -1615,8 +1614,8 @@ describe('Silo Token', function () {
       await network.provider.send("evm_setAutomine", [false]);
       await this.silo.connect(flashLoanExploiter).deposit(this.siloToken.address, '1000', 0x00, EXTERNAL);
       await this.season.connect(user).siloSunrise(100);
-      const grownStalkPerBdv10 = await this.silo.seasonToGrownStalkPerBdv(this.siloToken.address, '10');
-      this.result = await this.silo.connect(flashLoanExploiter).withdrawDeposit(this.siloToken.address, grownStalkPerBdv10, '1000', 0x00, EXTERNAL)
+      const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
+      this.result = await this.silo.connect(flashLoanExploiter).withdrawDeposit(this.siloToken.address, stem10, '1000', 0x00, EXTERNAL)
       await network.provider.send("evm_mine");
       await network.provider.send("evm_setAutomine", [true]);
       getStartTime = await time.latest();
