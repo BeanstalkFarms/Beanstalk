@@ -15,13 +15,19 @@
     "pre-commit": "lint-staged"
   },
   "dependencies": {
+    "@beanstalk/sdk": "workspace:*",
+    "ethers": "^5",
     "prettier": "2.7.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.4.4",
+    "styled-components": "5.3.9",
+    "wagmi": "0.12.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "@types/styled-components": "^5",
     "@typescript-eslint/eslint-plugin": "4.13.0",
     "@typescript-eslint/parser": "4.13.0",
     "@vitejs/plugin-react": "^2.0.0",
