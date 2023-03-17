@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FC } from "src/types";
 import styled from "styled-components";
+import { ConnectKitButton } from "connectkit";
+
 export const Frame: FC<{}> = ({ children }) => {
   return (
     <Container>
@@ -12,8 +14,9 @@ export const Frame: FC<{}> = ({ children }) => {
         <NavLinks>
           <Link to="/swap">Swap</Link>
           <Link to="/wells">Wells</Link>
+          <Link to="/silo">Silo</Link>
         </NavLinks>
-        <div>Connect</div>
+        <ConnectKitButton showBalance/>
       </NavContainer>
       <ContentContaine>{children}</ContentContaine>
     </Container>
