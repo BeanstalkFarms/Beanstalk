@@ -25,8 +25,11 @@ library LibLambdaConvert {
         )
     {
         (inAmount, tokenIn) = convertData.lambdaConvert();
-        LibInternal.mow(msg.sender, tokenIn); //this convert function used to be pure, had to remove pure in order to mow
-        LibInternal.mow(msg.sender, tokenOut);
+        LibInternal.mow(msg.sender, tokenIn);
+        if (tokenIn != tokenOut) {
+            LibInternal.mow(msg.sender, tokenOut);
+        }
+        
         tokenOut = tokenIn;
         outAmount = inAmount;
     }
