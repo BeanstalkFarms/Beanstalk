@@ -270,7 +270,16 @@ library LibLegacyTokenSilo {
         return seeds.mul(seasons);
     }
 
-    function isDepositSeason(uint256 seedsPerBdv, int96 stem)
+    /** 
+     * @notice Determines if the given stem corresponds to a seasons-based deposit
+     * @param seedsPerBdv Seeds per bdv for the token you want to see if the stem corresponds
+     * to a seasons-based deposit for
+     * @param season The season you want to to see if the stem corresponds to a seasons-based deposit
+     *
+     * @dev This function was used when support for accessing old deposits without requiring migration
+     * was supported, after support was removed this function is no longer necessary.
+     */
+    /*function isDepositSeason(uint256 seedsPerBdv, int96 stem)
         internal
         pure
         returns (bool)
@@ -278,13 +287,20 @@ library LibLegacyTokenSilo {
         if (seedsPerBdv == 0) {
             return false; //shortcut since we know it's a newer token?
         }
-
         
         return
             stem <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
             uint256(-stem) % seedsPerBdv == 0;
-    }
+    }*/
 
+    /** 
+     * @notice Calculates stem based on input season
+     * @param seedsPerBdv Seeds per bdv for the token you want to find the corresponding stem for
+     * @param season The season you want to find the corresponding stem for
+     *
+     * @dev Used by the mowAndMigrate function to convert seasons to stems, to know which
+     * stem to deposit in for the new Silo storage system.
+     */
     function seasonToStem(uint256 seedsPerBdv, uint32 season)
         internal
         view
@@ -303,6 +319,8 @@ library LibLegacyTokenSilo {
         stem = (int96(season)-int96(s.season.stemStartSeason)).mul(int96(seedsPerBdv));
     }
 
+    //this function was used for some testing at some point, but there are currently
+    //no unit tests that use it. Leaving it here for now in case we need it later.
     // function stemToSeason(uint256 seedsPerBdv, int128 stem)
     //     internal
     //     view
@@ -314,20 +332,20 @@ library LibLegacyTokenSilo {
 
     //     require(seedsPerBdv > 0, "Silo: Token not supported");
 
-
     //     int128 diff = stem.div(int128(seedsPerBdv));
     //     //using regular + here becauase we want to "overflow" (which for signed just means add negative)
     //     season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
     //     // season = seasonAs256.toUint32();
     // }
 
-
-    // function lastUpdate(address account) internal view returns (uint32) {
-    //     AppStorage storage s = LibAppStorage.diamondStorage();
-    //     return s.a[account].lastUpdate;
-    // }
-
-
+    /** 
+     * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
+     * @param account Address of the account to migrate
+     *
+     * @dev If a user's lastUpdate was set, which means they had deposits in the silo,
+     * but they currently have no deposits, then this function can be used to migrate
+     * their account to the new silo using less gas.
+     */
    function _migrateNoDeposits(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(s.a[account].s.seeds == 0, "only for zero seeds");
@@ -421,9 +439,7 @@ library LibLegacyTokenSilo {
             }
  
             //init mow status for this token
-            // s.a[account].mowStatuses[perTokenData.token].lastStem = perTokenData.stemTip;
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
- 
         }
  
         //user deserves stalk grown between stemStartSeason and now
@@ -438,7 +454,6 @@ library LibLegacyTokenSilo {
         require(balanceOfSeeds(account) == migrateData.totalSeeds, "seeds misaligned");
  
         //and wipe out old seed balances (all your seeds are belong to stem)
-        // s.a[account].s.seeds = 0;
         setBalanceOfSeeds(account, 0);
     }
 
@@ -476,8 +491,6 @@ library LibLegacyTokenSilo {
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
         return uint128(LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
     }
-
-
 
     //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?
     function getSeedsPerToken(address token) internal pure returns (uint256) {
