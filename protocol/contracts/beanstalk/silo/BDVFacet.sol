@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "~/C.sol";
 import "~/libraries/Curve/LibBeanMetaCurve.sol";
 import "~/libraries/LibUnripe.sol";
+import "~/libraries/Well/LibWellPrice.sol";
 
 /**
  * @title BDVFacet
@@ -35,15 +36,11 @@ contract BDVFacet {
         return LibUnripe.unripeToUnderlying(C.unripeBeanAddress(), amount);
     }
 
-    function bdv(address token, uint256 amount)
+    function wellBdv(address token, uint256 amount)
         external
         view
         returns (uint256)
     {
-        if (token == C.beanAddress()) return beanToBDV(amount);
-        else if (token == C.curveMetapoolAddress()) return curveToBDV(amount);
-        else if (token == C.unripeBeanAddress()) return unripeBeanToBDV(amount);
-        else if (token == C.unripeLPAddress()) return unripeLPToBDV(amount);
-        revert("BDV: Token not whitelisted");
+        return LibWellPrice.bdv(token, 0, 0, amount);
     }
 }

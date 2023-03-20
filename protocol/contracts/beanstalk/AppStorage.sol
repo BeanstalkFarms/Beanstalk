@@ -296,7 +296,14 @@ contract Storage {
          * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
          */
 		int96 milestoneStem;
-        /// @dev  7 bytes of additional storage space is available here.
+
+        /*
+         @dev 1 byte of space is used for different encoding types.
+         */
+        bytes1 encodeType;
+
+        /// @dev  3 bytes of additional storage space is available here.
+
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.

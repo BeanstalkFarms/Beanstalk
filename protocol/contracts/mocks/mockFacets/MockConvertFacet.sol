@@ -14,6 +14,7 @@ import "../../beanstalk/silo/ConvertFacet.sol";
 contract MockConvertFacet is ConvertFacet {
 
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     event MockConvert(uint256 stalkRemoved, uint256 bdvRemoved);
 
@@ -36,5 +37,22 @@ contract MockConvertFacet is ConvertFacet {
         uint256 grownStalk
     ) external {
         _depositTokens(token, amount, bdv, grownStalk);
+    }
+
+    function convertInternalE(
+        address tokenIn,
+        uint amountIn,
+        bytes calldata convertData
+    ) external returns (
+        address toToken,
+        address fromToken,
+        uint256 toAmount,
+        uint256 fromAmount
+    ) {
+        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
+            convertData
+        );
+        IERC20(toToken).safeTransfer(msg.sender, toAmount);
     }
 }

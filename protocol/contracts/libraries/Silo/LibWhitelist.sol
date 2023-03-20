@@ -61,13 +61,16 @@ library LibWhitelist {
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
+        uint32 stalkEarnedPerSeason,
+        bytes1 encodeType
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+
+        s.ss[token].encodeType = encodeType;
 
         s.ss[token].milestoneSeason = s.season.current;
 

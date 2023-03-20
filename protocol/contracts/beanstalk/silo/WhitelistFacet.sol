@@ -45,7 +45,25 @@ contract WhitelistFacet {
             token,
             selector,
             stalk,
-            stalkEarnedPerSeason
+            stalkEarnedPerSeason,
+            0x00
+        );
+    }
+
+    function whitelistTokenWithEncodeType(
+        address token,
+        bytes4 selector,
+        uint32 stalk,
+        uint32 stalkEarnedPerSeason,
+        bytes1 encodeType
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.whitelistToken(
+            token,
+            selector,
+            stalk,
+            stalkEarnedPerSeason,
+            encodeType
         );
     }
 

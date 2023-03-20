@@ -1,6 +1,9 @@
 @contracts/=contracts/
-@beanstalk/=contracts/beanstalk/
 ~/=contracts/
+
+src/=@beanstalk/wells/src/
+@wells/=@beanstalk/wells/src/
+oz/=@openzeppelin/contracts/
 
 ds-test/=lib/solmate/lib/ds-test/src/
 forge-std/=lib/forge-std/src/

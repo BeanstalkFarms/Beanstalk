@@ -245,17 +245,29 @@ library LibTokenSilo {
      */
     function beanDenominatedValue(address token, uint256 amount)
         internal
+        view
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        require(s.ss[token].selector != bytes4(0), "Silo: Token not whitelisted");
 
-        // BDV functions accept one argument: `uint256 amount`
-        bytes memory callData = abi.encodeWithSelector(
-            s.ss[token].selector,
-            amount
-        );
+        bytes memory callData;
+        if (s.ss[token].encodeType == 0x00) {
+            callData = abi.encodeWithSelector(
+                s.ss[token].selector,
+                amount
+            );
+        } else if (s.ss[token].encodeType == 0x01) {
+            callData = abi.encodeWithSelector(
+                s.ss[token].selector,
+                token,
+                amount
+            );
+        } else {
+            revert("Silo: Invalid encodeType");
+        }
 
-        (bool success, bytes memory data) = address(this).call(
+        (bool success, bytes memory data) = address(this).staticcall(
             callData
         );
 

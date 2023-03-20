@@ -307,4 +307,12 @@ contract SiloFacet is TokenSilo {
         _claimPlenty(msg.sender);
     }
 
+    function bdv(address token, uint256 amount)
+        external
+        view
+        returns (uint256 bdv)
+    {
+        bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+    }
+
 }

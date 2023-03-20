@@ -120,7 +120,7 @@ describe('Silo Token', function () {
       });
 
       it('reverts if deposits a non whitelisted token', async function () {
-        await expect(this.silo.connect(user).deposit(this.siloToken2.address, '0', 0x00, EXTERNAL)).to.revertedWith('Diamond: Function does not exist');
+        await expect(this.silo.connect(user).deposit(this.siloToken2.address, '0', 0x00, EXTERNAL)).to.revertedWith('Silo: Token not whitelisted');
       });
     });
 
