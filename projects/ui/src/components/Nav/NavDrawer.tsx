@@ -77,11 +77,13 @@ const NavDrawer: FC<{
               <Stack display={openMore ? 'block' : 'none'}>
                 <Box sx={{ pl: 0.5 }}>
                   {ROUTES.more.map((item) => (
-                    <MenuItemMobile
-                      key={item.path}
-                      item={item}
-                      onClick={hideDrawer}
-                    />
+                    item.title !== 'Swap' ?
+                      <MenuItemMobile
+                        key={item.path}
+                        item={item}
+                        onClick={hideDrawer}
+                      />
+                    : null
                   ))}
                 </Box>
                 <Box sx={{ px: 1, py: 0.6 }}>

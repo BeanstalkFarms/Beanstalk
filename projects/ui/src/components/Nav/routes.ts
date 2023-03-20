@@ -54,6 +54,10 @@ const ROUTES : { [key in RouteKeys] : RouteData[] } = {
       path: '/market/buy',
       title: 'Market',
     },
+    {
+      path: '/swap',
+      title: 'Swap',
+    }
   ],
   // More Menu
   more: [
