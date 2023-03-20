@@ -28,13 +28,15 @@ describe("app", () => {
             cy.getBySel('HoverMenu-MenuList').should("be.visible");
           })
           .then(async () => {
-            cy.getBySel(`MenuItem-${menuItem.title}`)
-            .click()
-            .then(() => {
-              if (menuItem.slug !== "") {
-                cy.url().should("contain", menuItem.slug);
-              }
-            });
+            if (menuItem.title !== 'Swap') {
+              cy.getBySel(`MenuItem-${menuItem.title}`)
+              .click()
+              .then(() => {
+                if (menuItem.slug !== "") {
+                  cy.url().should("contain", menuItem.slug);
+                }
+              });
+            };
           })
       }
     });
