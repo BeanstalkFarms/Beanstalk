@@ -76,11 +76,11 @@ beforeAll(async () => {
   });
 }, 90_000);
 
-describe('Form Txns', () => {
-  afterAll(async () => {
-    await chain.revert(initSnap);
-  });
+afterAll(async () => {
+  await chain.revert(initSnap);
+});
 
+describe('Form Txns', () => {
   describe('Claim + Do X', () => {
     let claimSnap: number | undefined;
 
@@ -220,8 +220,6 @@ describe('Form Txns', () => {
     beforeAll(async () => {
       blockSnap = await chain.snapshot();
       const { BEAN } = sdk.tokens;
-
-      console.log('setting bean balance...');
 
       /// update cache
       await chain.setBEANBalance(account, BEAN.amount(DEPOSIT_AND_FERT_AMOUNT));
