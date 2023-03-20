@@ -1,6 +1,6 @@
 import React, { createContext, useMemo } from "react";
 import { BeanstalkSDK } from "@beanstalk/sdk";
-import { useAccount, useProvider, useSigner } from "wagmi";
+import { useProvider, useSigner } from "wagmi";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 
@@ -14,32 +14,17 @@ const getSDK = (provider?: JsonRpcProvider, signer?: Signer) => {
   });
 };
 
-// const useBeanstalkSdkContext = () => {
-//   const { isConnected } = useAccount();
-//   const { data: signer, isSuccess } = useSigner();
-//   const provider = useProvider();
-//   console.log(isSuccess, signer);
+const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
+const RPC_URL = IS_DEVELOPMENT_ENV ? "http://localhost:8545" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
-//   const sdk = useMemo(() => getSDK(provider as JsonRpcProvider, signer ?? undefined), [provider, signer, isSuccess]);
-
-//   console.log("Returning SDK.");
-
-//   return sdk;
-// };
-
-export const BeanstalkSDKContext = createContext<BeanstalkSDK>(new BeanstalkSDK());
+export const BeanstalkSDKContext = createContext<BeanstalkSDK>(new BeanstalkSDK({ rpcUrl: RPC_URL }));
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const { data: signer, isSuccess } = useSigner();
   const provider = useProvider();
   const sdk = useMemo(() => getSDK(provider as JsonRpcProvider, signer ?? undefined), [provider, signer, isSuccess]);
-  if (isSuccess && signer){
-    // @ts-ignore
-    sdk.isReady = true;
-  }
 
   return <BeanstalkSDKContext.Provider value={sdk}>{children}</BeanstalkSDKContext.Provider>;
 }
-
 
 export const SdkProvider = React.memo(BeanstalkSDKProvider);
