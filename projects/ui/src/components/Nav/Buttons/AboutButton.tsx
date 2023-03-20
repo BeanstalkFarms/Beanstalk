@@ -51,7 +51,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
 
   /// Content
   const menuContent = (
-        <MenuList 
+      <MenuList 
       component={Card} 
       sx={{ 
         background: BeanstalkPalette.white, 

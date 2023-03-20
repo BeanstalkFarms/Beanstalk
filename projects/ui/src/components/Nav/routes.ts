@@ -8,7 +8,7 @@ import twitterIcon from '~/img/beanstalk/interface/nav/twitter.svg';
 import immunefiIcon from '~/img/beanstalk/interface/nav/immunefi.svg';
 import docsIcon from '~/img/beanstalk/interface/nav/docs.svg';
 import disclosuresIcon from '~/img/beanstalk/interface/nav/disclosures.svg';
-import analyticsIcon from '~/img/beanstalk/interface/nav/analytics.svg';
+import analyticsIcon from '~/img/beanstalk/interface/nav/stats.svg';
 
 export type RouteData = {
   /** Nav item title */
