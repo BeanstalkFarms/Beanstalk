@@ -51,7 +51,14 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
 
   /// Content
   const menuContent = (
-    <MenuList component={Card} sx={{ background: BeanstalkPalette.white }}>
+        <MenuList 
+      component={Card} 
+      sx={{ 
+        background: BeanstalkPalette.white, 
+        border: '0px solid transparent',
+        borderTopRightRadius: 0,
+      }} 
+      >
       {/* Menu Items */}
       {/* <MenuItem
         item={{ title: 'Settings', path: '/settings' }}

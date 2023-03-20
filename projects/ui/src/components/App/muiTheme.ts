@@ -200,6 +200,8 @@ export const FontWeight = {
   bold: 700,
 };
 
+export const borderRadius = 10;
+
 export const XXLWidth = 1400;
 
 // FIXME: changes to createTheme don't hot reload.
@@ -223,7 +225,7 @@ const muiThemeBase: ThemeOptions = {
    *
    */
   shape: {
-    borderRadius: 10,
+    borderRadius: borderRadius,
   },
 
   /**
@@ -590,7 +592,7 @@ const muiThemeBase: ThemeOptions = {
       styleOverrides: {
         root: {
           fontSize: '1.5rem',
-          borderRadius: '10px',
+          borderRadius: `${borderRadius}px`,
         },
         sizeSmall: {
           fontSize: '1.1rem',
@@ -714,7 +716,7 @@ const muiThemeBase: ThemeOptions = {
     },
     MuiPaper: {
       styleOverrides: {
-        rounded: { borderRadius: 20 },
+        rounded: { borderRadius: borderRadius * 2 },
       },
     },
     MuiDialogContent: {

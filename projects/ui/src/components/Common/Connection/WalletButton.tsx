@@ -84,7 +84,15 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
   }
 
   const menu = (
-    <MenuList sx={{ minWidth: 250, background: BeanstalkPalette.white }} component={Card}>
+    <MenuList 
+      component={Card} 
+      sx={{ 
+        minWidth: 250, 
+        background: BeanstalkPalette.white, 
+        border: '0px solid transparent',
+        borderTopRightRadius: 0,
+      }} 
+      >
       <MenuItem onClick={() => {
         toggleMenuAnchor();
         setSettingsOpen(true);
@@ -199,6 +207,13 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
         hotkey="opt+2, alt+2"
         popoverPlacement="bottom-end"
         zeroTopRightRadius
+        sx={import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT ? {
+          color: 'text.primary',
+          borderBottomColor: 'red',
+          borderBottomWidth: 2,
+          borderBottomStyle: 'solid',
+          ...props.sx,
+        } : props.sx}
       />
       {/* Pick Beans Dialog */}
       <PickBeansDialog
