@@ -163,7 +163,7 @@ const FolderMenu: FC<{
           ...buttonProps.sx,
           '&:hover': {
             borderColor: 'divider',
-            borderBottomColor: 'white'
+            borderBottomColor: popoverOpen ? 'white' : undefined
           }
         }}
       >
