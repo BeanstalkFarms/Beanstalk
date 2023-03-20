@@ -111,6 +111,12 @@
       "module": "./dist/TokenValue/TokenValue.esm.js",
       "default": "./dist/TokenValue/TokenValue.cjs.js",
       "browser": "./dist/TokenValue/TokenValue.umd.js"
+    },
+    "./Wells": {
+      "types": "./dist/types/Wells.d.ts",
+      "module": "./dist/Wells/Wells.esm.js",
+      "default": "./dist/Wells/Wells.cjs.js",
+      "browser": "./dist/Wells/Wells.umd.js"
     }
   }
 }

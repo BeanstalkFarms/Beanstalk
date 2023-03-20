@@ -22,7 +22,8 @@ const config = [
   // This lets you do this on the client side:
   // import { Thing } from "@beanstalk/sdk/Thing"
   makeEntry("dist/js/DecimalBigNumber.js", "DecimalBigNumber"),
-  makeEntry("dist/js/TokenValue.js", "TokenValue")
+  makeEntry("dist/js/TokenValue.js", "TokenValue"),
+  makeEntry("dist/js/Wells.js", "Wells")
 ];
 
 export default config;
