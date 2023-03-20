@@ -1,0 +1,17 @@
+query getPlotsAtFront($first: Int) {
+  plots(
+    where: { fullyHarvested: false }
+    first: $first
+    orderBy: index
+    orderDirection: asc
+  ) {
+    farmer {
+      id
+    }
+    id
+    index
+    pods
+    harvestablePods
+    fullyHarvested
+  }
+}

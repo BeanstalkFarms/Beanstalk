@@ -537,7 +537,7 @@ const Sow: FC<{}> = () => {
               [_amountInStep, fromMode]
             ),
           }),
-          decode: (data: string) =>
+          decode: (data: string) => 
             sdk.contracts.beanstalk.interface.decodeFunctionResult('sow', data),
           decodeResult: (result: string) =>
             sdk.contracts.beanstalk.interface.decodeFunctionResult(

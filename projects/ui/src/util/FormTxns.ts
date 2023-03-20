@@ -3,11 +3,15 @@ import {
   FarmToMode,
   FarmWorkflow,
   StepGenerator,
+  Token,
+  TokenSiloBalance,
   TokenValue,
 } from '@beanstalk/sdk';
 
 import { ethers } from 'ethers';
-import { DepositCrate } from '~/state/farmer/silo';
+import BigNumber from 'bignumber.js';
+import { DepositCrate } from '../state/farmer/silo';
+import { TokenMap } from '../constants';
 
 export enum FormTxn {
   MOW = 'MOW',
@@ -354,43 +358,22 @@ export class FormTxnBuilder {
     return FormTxnBuilder.implied[step];
   }
 
-  static async makePlantCrate(sdk: BeanstalkSDK, account: string) {
-    const { BEAN, STALK } = sdk.tokens;
-    const { beanstalk } = sdk.contracts;
-
-    const [_season, _earned] = await Promise.all([
-      sdk.sun.getSeason(),
-      beanstalk.balanceOfEarnedBeans(account),
-    ]);
-
-    const earnedBeans = BEAN.fromBlockchain(_earned);
-    const seeds = BEAN.getSeeds(earnedBeans);
-    const stalk = BEAN.getStalk(earnedBeans);
-    const grownStalk = STALK.amount(0);
-
-    const crate = {
-      season: ethers.BigNumber.from(_season),
-      amount: earnedBeans,
-      bdv: earnedBeans,
-      stalk,
-      baseStalk: stalk,
-      grownStalk,
-      seeds,
-    };
-
-    return {
-      canPlant: earnedBeans.gt(0),
-      amount: earnedBeans,
-      crate,
-    };
-  }
-
+  /**
+   * compiles all actions into a ready-to-execute Workflow
+   *
+   * @param sdk
+   * @param data
+   * @param getGenerators
+   * @param operation
+   * @param amountIn
+   * @param slippage
+   */
   static async compile(
     sdk: BeanstalkSDK,
     data: FormTxnBuilderInterface, // form data
     getGenerators: (action: FormTxn) => StepGenerator[],
     operation: FarmWorkflow | StepGenerator[],
-    amountIn: TokenValue | undefined,
+    _amountIn: TokenValue | undefined,
     slippage: number
   ) {
     const primary = new Set(data.primary || []);
@@ -404,7 +387,6 @@ export class FormTxnBuilder {
     });
 
     /// deduplicate implied actions
-
     [...allActions].forEach((action) => {
       FormTxnBuilder.implied[action]?.forEach((implied) => {
         allActions.has(implied) && allActions.delete(implied);
@@ -436,10 +418,10 @@ export class FormTxnBuilder {
       ...getSteps(secondary),
     ]);
 
-    const estimate = await farm.estimate(amountIn || TokenValue.ZERO);
+    const amountIn = _amountIn || TokenValue.ZERO;
+    const estimate = await farm.estimate(amountIn);
 
-    const execute = () =>
-      farm.execute(amountIn || TokenValue.ZERO, { slippage });
+    const execute = () => farm.execute(amountIn, { slippage });
 
     return {
       performed: [...allActions],
@@ -447,5 +429,87 @@ export class FormTxnBuilder {
       estimate,
       execute,
     };
+  }
+
+  /// -------------------------------------------------------
+  /// ----------------- Conveinence Methods -----------------
+  /// -------------------------------------------------------
+
+  static async makePlantCrate(
+    sdk: BeanstalkSDK,
+    account: string,
+    _earnedBeans?: TokenValue
+  ) {
+    const { BEAN, STALK } = sdk.tokens;
+    const { beanstalk } = sdk.contracts;
+
+    const [_season, earnedBeans] = await Promise.all([
+      sdk.sun.getSeason(),
+      _earnedBeans
+        ? Promise.resolve(_earnedBeans)
+        : beanstalk
+            .balanceOfEarnedBeans(account)
+            .then((result) => sdk.tokens.BEAN.fromBlockchain(result)),
+    ]);
+
+    const seeds = BEAN.getSeeds(earnedBeans);
+    const stalk = BEAN.getStalk(earnedBeans);
+    const grownStalk = STALK.amount(0);
+
+    const crate = {
+      season: ethers.BigNumber.from(_season),
+      amount: earnedBeans,
+      bdv: earnedBeans,
+      stalk,
+      baseStalk: stalk,
+      grownStalk,
+      seeds,
+    };
+
+    return {
+      canPlant: earnedBeans.gt(0),
+      amount: earnedBeans,
+      crate,
+    };
+  }
+
+  /**
+   * picks the crates that should be enrooted
+   * @param sdk
+   * @param siloBalances
+   * @returns
+   */
+  static async pickUnripeCratesForEnroot(
+    sdk: BeanstalkSDK,
+    siloBalances: Map<Token, TokenSiloBalance>
+  ) {
+    const { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } = sdk.tokens;
+
+    const [urBeanBDV, urBeanCRV3BDV] = await Promise.all([
+      sdk.bean.getBDV(UNRIPE_BEAN, UNRIPE_BEAN.amount(1)),
+      sdk.bean.getBDV(UNRIPE_BEAN_CRV3, UNRIPE_BEAN_CRV3.amount(1)),
+    ]);
+
+    const urCrates = [...sdk.tokens.unripeTokens].reduce<
+      TokenMap<DepositCrate[]>
+    >((prev, token) => {
+      const balance = siloBalances.get(token);
+      const depositCrates = balance?.deposited.crates || [];
+      const bdv = token.equals(UNRIPE_BEAN) ? urBeanBDV : urBeanCRV3BDV;
+
+      prev[token.address] = [...depositCrates]
+        .filter((crate) => bdv.mul(crate.amount).gt(crate.bdv))
+        .map((crate) => ({
+          bdv: new BigNumber(crate.bdv.toHuman()),
+          amount: new BigNumber(crate.amount.toHuman()),
+          season: new BigNumber(crate.season.toString()),
+          stalk: new BigNumber(crate.stalk.toHuman()),
+          seeds: new BigNumber(crate.seeds.toHuman()),
+        }));
+
+      return prev;
+    }, {});
+
+    return urCrates;
   }
 }

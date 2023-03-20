@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'projects/ui/**'
+      - "projects/ui/**"
 
 jobs:
   test:
@@ -14,18 +14,27 @@ jobs:
       - name: UI Tests
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: "16"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
       - name: Build
         run: yarn workspace ui build
+      - name: Install Anvil
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      # TODO: Cache Anvil RPC calls between runs to speed up tests
+      - name: Launch Anvil
+        run: anvil --fork-url $ANVIL_FORK_URL --chain-id 1337 &
+        env:
+          ANVIL_FORK_URL: ${{ secrets.ANVIL_FORK_URL }}
       - name: Unit Tests
         run: yarn ui:test
       - name: Browser Tests
@@ -33,4 +42,3 @@ jobs:
         with:
           start: yarn ui:start
           command: yarn test:browser
-      
