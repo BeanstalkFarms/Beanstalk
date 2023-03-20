@@ -4,6 +4,7 @@
   "private": true,
   "version": "1.0.0",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "start": "vite --port 2424",
     "build": "tsc && vite build",
