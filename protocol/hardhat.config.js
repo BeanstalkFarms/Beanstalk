@@ -7,6 +7,7 @@ require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades")
 require('dotenv').config();
 require("hardhat-preprocessor");
+require('hardhat-contract-sizer');
 
 const fs = require('fs')
 const { upgradeWithNewFacets } = require("./scripts/diamond")
@@ -14,8 +15,9 @@ const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBea
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./test/utils/balances.js')
 const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
 const { to6 } = require('./test/utils/helpers.js')
-const { replant } = require("./replant/replant.js")
+//const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config")
+const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -63,10 +65,10 @@ task('sunrise', async function () {
   await beanstalkAdmin.forceSunrise()
 })
 
-task('replant', async () => {
+/*task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
   await replant(account)
-})
+})*/
 
 task('diamondABI', 'Generates ABI file for diamond, includes all ABIs of facets', async () => {
   const basePath = '/contracts/beanstalk/';
@@ -139,6 +141,19 @@ task('marketplace', async function () {
     account: owner
   });
 })
+
+//////////////////////// SUBTASK CONFIGURATION ////////////////////////
+
+// Add a subtask that sets the action for the TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS task
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
+  // Get the list of source paths that would normally be passed to the Solidity compiler
+  var paths = await runSuper();
+
+  // Apply a filter function to exclude paths that contain the string "replant" to ignore replant code
+  paths = paths.filter((p) => !p.includes("replant"));
+  paths = paths.filter((p) => !p.includes("Root.sol"));
+  return paths;
+});
 
 //////////////////////// CONFIGURATION ////////////////////////
 

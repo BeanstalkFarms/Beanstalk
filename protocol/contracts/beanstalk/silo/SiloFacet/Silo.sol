@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
+import "~/libraries/LibBytes.sol";
 
 /**
  * @title Silo
@@ -16,7 +17,7 @@ import "~/libraries/Silo/LibTokenSilo.sol";
  * @notice Provides utility functions for claiming Silo rewards, including:
  *
  * - Grown Stalk (see "Mow")
- * - Earned Beans, Earned Stalk, Plantable Seeds (see "Plant")
+ * - Earned Beans, Earned Stalk (see "Plant")
  * - 3CRV earned during a Flood (see "Flood")
  *
  * For backwards compatibility, a Flood is sometimes referred to by its old name
@@ -32,12 +33,10 @@ contract Silo is SiloExit {
     //////////////////////// EVENTS ////////////////////////    
 
     /**
-     * @notice Emitted when the Seeds associated with the Earned Beans of
+     * @notice Emitted when the deposit associated with the Earned Beans of
      * `account` are Planted.
-     * @param account Owns the Earned Beans and receives the Planted Seeds.
-     * @param beans The amount of Earned Beans claimed by `account`. The number
-     * of Seeds that were Planted can be derived, since 1 Bean => 2 Seeds.
-     * See {C-getSeedsPerBean}.
+     * @param account Owns the Earned Beans
+     * @param beans The amount of Earned Beans claimed by `account`.
      */
     event Plant(
         address indexed account,
@@ -59,24 +58,6 @@ contract Silo is SiloExit {
         uint256 plenty
     );
 
-    /**
-     * @notice Emitted when `account` gains or loses Seeds.
-     * @param account The account that gained or lost Seeds.
-     * @param delta The change in Seeds.
-     *   
-     * @dev {SeedsBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred.
-     * 
-     * BIP-24 included a one-time re-emission of {SeedsBalanceChanged} for accounts that had
-     * executed a Deposit transfer between the Replant and BIP-24 execution.
-     * 
-     * For more, see:
-     * [BIP-24](https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals/blob/master/bip/bip-24-fungible-bdv-support.md)
-     * [Event-24-Event-Emission](https://github.com/BeanstalkFarms/Event-24-Event-Emission)
-     */
-    event SeedsBalanceChanged(
-        address indexed account,
-        int256 delta
-    );
 
     /**
      * @notice Emitted when `account` gains or loses Stalk.
@@ -101,78 +82,39 @@ contract Silo is SiloExit {
     //////////////////////// INTERNAL: MOW ////////////////////////
 
     /**
-     * @dev Claims the Grown Stalk for `msg.sender`.
+     * @dev Claims the Grown Stalk for `msg.sender`. Requires token address to mow.
      */
-    modifier mowSender() {
-        _mow(msg.sender);
+    modifier mowSender(address token) {
+        LibSilo._mow(msg.sender, token);
         _;
-    }
-
-    /**
-     * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
-     * balance.
-     *
-     * A Farmer cannot receive Seeds unless the Farmer's `lastUpdate` Season is
-     * equal to the current Season. Otherwise, they would receive extra Grown
-     * Stalk when they receive Seeds.
-     *
-     * This is why `_mow()` must be called before any actions that change Seeds,
-     * including:
-     *  - {SiloFacet-deposit}
-     *  - {SiloFacet-withdrawDeposit}
-     *  - {SiloFacet-withdrawDeposits}
-     *  - {_plant}
-     *  - {SiloFacet-transferDeposit(s)}
-     */
-    function _mow(address account) internal {
-        uint32 _lastUpdate = lastUpdate(account);
-
-        if (_lastUpdate >= _season()) return;
-
-
-        // Increments `plenty` for `account` if a Flood has occured.
-        // Saves Rain Roots for `account` if it is Raining.
-        handleRainAndSops(account, _lastUpdate);
-
-        // Calculate the amount of Grown Stalk claimable by `account`.
-        // Increase the account's balance of Stalk and Roots.
-        __mow(account);
-
-        // Reset timer so that Grown Stalk for a particular Season can only be 
-        // claimed one time. 
-        s.a[account].lastUpdate = _season();
-    }
-
-    function __mow(address account) private {
-        // If this `account` has no Seeds, skip to save gas.
-        if (s.a[account].s.seeds == 0) return;
-
-        // per the zero withdraw update, if a user plants within the morning, 
-        // addtional roots will need to be issued, to properly calculate the earned beans. 
-        // thus, a different mint stalk function is used to differ between deposits.
-        LibSilo.mintGrownStalkAndGrownRoots(account, balanceOfGrownStalk(account));
     }
 
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**
-     * @dev Plants the Plantable Seeds of `account` associated with its Earned
+     * @dev Plants the Plantable BDV of `account` associated with its Earned
      * Beans.
      * 
      * For more info on Planting, see: {SiloFacet-plant}
      */
-    function _plant(address account) internal returns (uint256 beans) {
+     
+    function _plant(address account, address token) internal returns (uint256 beans) {
+        // Need to Mow for `account` before we calculate the balance of 
+        // Earned Beans.
+        
         // per the zero withdraw update, planting is handled differently 
         // depending whether or not the user plants during the vesting period of beanstalk. 
         // during the vesting period, the earned beans are not issued to the user.
         // thus, the roots calculated for a given user is different. 
         // This is handled by the super mow function, which stores the difference in roots.
-        _mow(account);
-        uint256 accountStalk =  s.a[account].s.stalk;
+        LibSilo._mow(account, token);
+        uint256 accountStalk = s.a[account].s.stalk;
+
+        // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
         s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
         if (beans == 0) return 0;
-
+        
         // Reduce the Silo's supply of Earned Beans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
         
@@ -180,18 +122,11 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
-            _season(),
+            LibTokenSilo.stemTipForToken(IERC20(token)),
             beans, // amount
             beans // bdv
         );
-        
-        // Calculate the Plantable Seeds associated with the Earned Beans that were Deposited.
-        uint256 seeds = beans.mul(C.getSeedsPerBean());
-
-        // Plantable Seeds don't generate Grown Stalk until they are Planted (i.e., not auto-compounding). 
-        // Plantable Seeds are not included in the Seed supply, so new Seeds must be minted during `plant()`.
-        // (Notice that {Sun.sol:rewardToSilo} does not mint any Seeds, even though it updates Earned Beans.)
-        LibSilo.mintSeeds(account, seeds); // mints to `account` and updates totals
+        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
@@ -221,35 +156,5 @@ contract Silo is SiloExit {
         emit ClaimPlenty(account, plenty);
     }
 
-    /**
-     * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
-     */
-    function handleRainAndSops(address account, uint32 _lastUpdate) private {
-        // If no roots, reset Sop counters variables
-        if (s.a[account].roots == 0) {
-            s.a[account].lastSop = s.season.rainStart;
-            s.a[account].lastRain = 0;
-            return;
-        }
-        // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > _lastUpdate) {
-            s.a[account].sop.plenty = balanceOfPlenty(account);
-            s.a[account].lastSop = s.season.lastSop;
-        }
-        if (s.season.raining) {
-            // If rain started after update, set account variables to track rain.
-            if (s.season.rainStart > _lastUpdate) {
-                s.a[account].lastRain = s.season.rainStart;
-                s.a[account].sop.roots = s.a[account].roots;
-            }
-            // If there has been a Sop since rain started,
-            // save plentyPerRoot in case another SOP happens during rain.
-            if (s.season.lastSop == s.season.rainStart)
-                s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
-        } else if (s.a[account].lastRain > 0) {
-            // Reset Last Rain if not raining.
-            s.a[account].lastRain = 0;
-        }
-    }
 
 }

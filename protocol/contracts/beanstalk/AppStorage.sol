@@ -42,7 +42,7 @@ contract Account {
         mapping(uint32 => uint256) deposits; // Unripe Bean/LP Deposits (previously Bean/LP Deposits).
         mapping(uint32 => uint256) depositSeeds; // BDV of Unripe LP Deposits / 4 (previously # of Seeds in corresponding LP Deposit).
     }
-
+ 
     // Deposit represents a Deposit in the Silo of a given Token at a given Season.
     // Stored as two uint128 state variables to save gas.
     struct Deposit {
@@ -54,6 +54,12 @@ contract Account {
     struct Silo {
         uint256 stalk; // Balance of the Farmer's normal Stalk.
         uint256 seeds; // Balance of the Farmer's normal Seeds.
+    }
+
+    // This struct stores the mow status for each Silo-able token, for each farmer. This gets updated each time a farmer mows, or adds/removes deposits.
+    struct MowStatus {
+        int96 lastStem; // the last cumulative grown stalk per bdv index at which the farmer mowed
+        uint128 bdv; // bdv of all of a farmer's deposits of this token type
     }
 
     // Season Of Plenty stores Season of Plenty (SOP) related balances
@@ -111,13 +117,16 @@ contract Account {
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
-        mapping(address => mapping(uint32 => Deposit)) deposits; // A Farmer's Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
+        mapping(address => mapping(uint32 => Deposit)) legacyDeposits; // Legacy Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - Zero withdraw eliminates a need for withdraw mapping
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
+        mapping(bytes32 => Deposit) deposits; // SiloV3 Deposits stored as a map from bytes32 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
+        mapping(address => MowStatus) mowStatuses; //Store a MowStatus for each Silo-able token
+        mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping (TODO: this approves all ERC20, and in the future ERC721, ERC1155 deposits)
     }
 }
 
@@ -183,7 +192,7 @@ contract Storage {
     // Silo stores global level Silo balances.
     struct Silo {
         uint256 stalk; // The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-        uint256 seeds; // The total amount of active Seeds (excluding Earned Seeds).
+        uint256 deprecated_seeds; // The total amount of active Seeds (excluding Earned Seeds). No longer used. Balance is wiped to 0 on mowAndMigrate.
         uint256 roots; // Total amount of Roots.
     }
 
@@ -216,6 +225,7 @@ contract Storage {
         uint32 rainStart; // rainStart stores the most recent Season in which Rain started.
         bool raining; // True if it is Raining (P < 1, Pod Rate Excessively Low).
         bool fertilizing; // True if Beanstalk has Fertilizer left to be paid off.
+        uint16 stemStartSeason; //season in which the stem storage method was introduced
         uint32 sunriseBlock;
         bool abovePeg;
         uint256 start; // The timestamp of the Beanstalk deployment rounded down to the nearest hour.
@@ -268,13 +278,25 @@ contract Storage {
          */
         bytes4 selector;
         /*
-         * @dev The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
+         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlying deposited token
+         * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
+         *  as 1e10, so 1 legacy seed would be 1e6 * 1e10.
          */
-        uint32 seeds;
+        uint32 stalkEarnedPerSeason;
         /*
-         * @dev The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+         * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
+         * previously just called stalk.
          */
-        uint32 stalk;
+        uint32 stalkIssuedPerBdv;
+        /*
+         * @dev The last season in which the stalkEarnedPerSeason for this token was updated
+         */
+		uint32 milestoneSeason;
+        /*
+         * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
+         */
+		int96 milestoneStem;
+        /// @dev  7 bytes of additional storage space is available here.
     }
 
     // UnripeSettings stores the settings for an Unripe Token in Beanstalk.
@@ -290,6 +312,19 @@ contract Storage {
         address underlyingToken; // The address of the Token underlying the Unripe Token.
         uint256 balanceOfUnderlying; // The number of Tokens underlying the Unripe Tokens (redemption pool).
         bytes32 merkleRoot; // The Merkle Root used to validate a claim of Unripe Tokens.
+    }
+    
+   /**
+    * @notice Metadata stores the metadata for a given Deposit.
+    * Deposits are stored as a bytes32, which is the hash of the Deposit's metadata for gas efficency. 
+    * In the future, there may be a need for a deposit to have metadata of the deposit. 
+    * This struct is used to store that metadata.
+    * this metadata is not initalized on deposit, but rather when someone calls "setMetadata" for the first time.
+    */
+    struct Metadata {
+        address token; // the address of the token for a deposit
+        int96 stem; // the grown stalk per BDV assoiated with the deposit
+        uint256 id; // the id of the deposit
     }
 }
 
@@ -362,4 +397,5 @@ struct AppStorage {
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
+    mapping(bytes32 => Storage.Metadata) metadata; // mapping of ERC1155 deposit to metadata of the deposit
 }

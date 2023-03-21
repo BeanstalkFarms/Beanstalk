@@ -52,7 +52,6 @@ library C {
     uint256 private constant STALK_PER_BEAN = 10000;
     uint256 private constant ROOTS_BASE = 1e12;
 
-
     // Exploit
     uint256 private constant UNRIPE_LP_PER_DOLLAR = 1884592; // 145_113_507_403_282 / 77_000_000
     uint256 private constant ADD_LP_RATIO = 866616;

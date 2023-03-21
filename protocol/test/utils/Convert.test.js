@@ -113,7 +113,7 @@
   
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedBeans()).to.eq('47');
-//         expect(await this.silo.totalSeeds()).to.eq('3906');
+//         //expect(await this.silo.totalSeeds()).to.eq('3906');
 //         expect(await this.silo.totalStalk()).to.eq('10000000');
 //       });
 
@@ -141,7 +141,7 @@
   
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedBeans()).to.eq('18098');
-//         expect(await this.silo.totalSeeds()).to.eq('43804');
+//         //expect(await this.silo.totalSeeds()).to.eq('43804');
 //         expect(await this.silo.totalStalk()).to.eq('200000000');
 //       });
 
@@ -170,7 +170,7 @@
   
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedBeans()).to.eq('47');
-//         expect(await this.silo.totalSeeds()).to.eq('3906');
+//         //expect(await this.silo.totalSeeds()).to.eq('3906');
 //         expect(await this.silo.totalStalk()).to.eq('10000094');
 //       });
 
@@ -200,7 +200,7 @@
   
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedBeans()).to.eq('47');
-//         expect(await this.silo.totalSeeds()).to.eq('3906');
+//         //expect(await this.silo.totalSeeds()).to.eq('3906');
 //         expect(await this.silo.totalStalk()).to.eq('10004000');
 //       });
 
@@ -230,7 +230,7 @@
   
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedBeans()).to.eq('1047');
-//         expect(await this.silo.totalSeeds()).to.eq('5906');
+//         //expect(await this.silo.totalSeeds()).to.eq('5906');
 //         expect(await this.silo.totalStalk()).to.eq('20001000');
 //       });
 
@@ -284,7 +284,7 @@
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedLP()).to.eq('0');
 //         expect(await this.silo.totalDepositedBeans()).to.eq('796');
-//         expect(await this.silo.totalSeeds()).to.eq('1592');
+//         //expect(await this.silo.totalSeeds()).to.eq('1592');
 //         expect(await this.silo.totalStalk()).to.eq('7960000');
 //       });
 
@@ -314,7 +314,7 @@
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedLP()).to.eq('0');
 //         expect(await this.silo.totalDepositedBeans()).to.eq('799');
-//         expect(await this.silo.totalSeeds()).to.eq('1598');
+//         //expect(await this.silo.totalSeeds()).to.eq('1598');
 //         expect(await this.silo.totalStalk()).to.eq('7991598');
 //       });
 
@@ -345,7 +345,7 @@
 //       it('properly updates total values', async function () {
 //         expect(await this.silo.totalDepositedLP()).to.eq('1');
 //         expect(await this.silo.totalDepositedBeans()).to.eq('1596');
-//         expect(await this.silo.totalSeeds()).to.eq('4792');
+//         //expect(await this.silo.totalSeeds()).to.eq('4792');
 //         expect(await this.silo.totalStalk()).to.eq('19961600');
 //       });
 
@@ -398,17 +398,17 @@
 //       it('properly updates the total balances', async function () {
 //         expect(await this.silo.totalDepositedLP()).to.eq('1');
 //         expect(await this.silo.totalDepositedBeans()).to.eq('0');
-//         expect(await this.silo.totalSeeds()).to.eq('8000');
+//         //expect(await this.silo.totalSeeds()).to.eq('8000');
 //         expect(await this.silo.totalStalk()).to.eq('20000000');
 //       });
 
 //       it('properly updates the user balance', async function () {
-//         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
+//         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
 //         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('20000000')
 //       });
 
 //       it('properly updates the user total', async function () {
-//         expect(await this.silo.totalSeeds()).to.eq('8000');
+//         //expect(await this.silo.totalSeeds()).to.eq('8000');
 //         expect(await this.silo.totalStalk()).to.eq('20000000')
 //       });
 
@@ -430,12 +430,12 @@
 //       });
 
 //       it('properly updates the user balance', async function () {
-//         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
+//         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
 //         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('20016000')
 //       });
 
 //       it('properly updates the user total', async function () {
-//         expect(await this.silo.totalSeeds()).to.eq('8000');
+//         //expect(await this.silo.totalSeeds()).to.eq('8000');
 //         expect(await this.silo.totalStalk()).to.eq('20016000')
 //       });
 
@@ -461,12 +461,12 @@
 //       });
 
 //       it('properly updates the user balance', async function () {
-//         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');
+//         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');
 //         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('25018000')
 //       });
 
 //       it('properly updates the user total', async function () {
-//         expect(await this.silo.totalSeeds()).to.eq('9000');
+//         //expect(await this.silo.totalSeeds()).to.eq('9000');
 //         expect(await this.silo.totalStalk()).to.eq('25018000')
 //       });
 
@@ -497,17 +497,17 @@
 //       it('properly updates the total balances', async function () {
 //         expect(await this.silo.totalDepositedLP()).to.eq('1');
 //         expect(await this.silo.totalDepositedBeans()).to.eq('0');
-//         expect(await this.silo.totalSeeds()).to.eq('8000');
+//         //expect(await this.silo.totalSeeds()).to.eq('8000');
 //         expect(await this.silo.totalStalk()).to.eq('20000000');
 //       });
 
 //       it('properly updates the user balance', async function () {
-//         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
+//         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
 //         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('20000000')
 //       });
 
 //       it('properly updates the user total', async function () {
-//         expect(await this.silo.totalSeeds()).to.eq('8000');
+//         //expect(await this.silo.totalSeeds()).to.eq('8000');
 //         expect(await this.silo.totalStalk()).to.eq('20000000')
 //       });
 
@@ -541,12 +541,12 @@
 //       });
 
 //       it('properly updates the user balance', async function () {
-//         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
+//         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('8000');
 //         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('20016000')
 //       });
 
 //       it('properly updates the user total', async function () {
-//         expect(await this.silo.totalSeeds()).to.eq('8000');
+//         //expect(await this.silo.totalSeeds()).to.eq('8000');
 //         expect(await this.silo.totalStalk()).to.eq('20016000')
 //       });
 
@@ -581,12 +581,12 @@
 //       });
 
 //       it('properly updates the user balance', async function () {
-//         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');
+//         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('9000');
 //         expect(await this.silo.balanceOfStalk(userAddress)).to.eq('25018000')
 //       });
 
 //       it('properly updates the user total', async function () {
-//         expect(await this.silo.totalSeeds()).to.eq('9000');
+//         //expect(await this.silo.totalSeeds()).to.eq('9000');
 //         expect(await this.silo.totalStalk()).to.eq('25018000')
 //       });
 

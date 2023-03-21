@@ -30,8 +30,8 @@ contract InitWhitelist {
     uint32 private constant BEAN_3CRV_STALK = 10000;
     uint32 private constant BEAN_3CRV_SEEDS = 4;
 
-    uint32 private constant BEAN_STALK = 10000;
-    uint32 private constant BEAN_SEEDS = 2;
+    uint32 private constant BEAN_STALK = 10000; //stalk per bdv (bdv is 6, stalk is 10, so need 4 here)
+    uint32 private constant BEAN_SEEDS = 2; //seeds per bdv of bean (1e6 is one bean)
 
     function whitelistPools() internal {
         whitelistBean3Crv();
@@ -41,38 +41,38 @@ contract InitWhitelist {
     }
 
     function whitelistBean3Crv() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.curveMetapoolAddress(),
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS
+            BEAN_3CRV_SEEDS * 1e6 //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
         );
     }
 
     function whitelistBean() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.beanAddress(),
             IBS.beanToBDV.selector,
             BEAN_STALK,
-            BEAN_SEEDS
+            BEAN_SEEDS * 1e6
         );
     }
 
     function whitelistUnripeBean() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.unripeBeanAddress(),
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
-            BEAN_SEEDS
+            BEAN_SEEDS * 1e6
         );
     }
 
     function whitelistUnripeLP() internal {
-        LibWhitelist.whitelistToken(
+        LibWhitelist.whitelistTokenLegacy(
             C.unripeLPAddress(),
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS
+            BEAN_3CRV_SEEDS * 1e6
         );
     }
 }

@@ -31,4 +31,26 @@ async function bip29(mock = true, account = undefined) {
       });
 }
 
+//BIP for Silo migration to stem
+async function bipNewSilo(mock = true, account = undefined) {
+    if (account == undefined) {
+        account = await impersonateBeanstalkOwner()
+        await mintEth(account.address)
+    }
+
+    beanstalk = await getBeanstalk()
+    await upgradeWithNewFacets({
+        diamondAddress: BEANSTALK,
+        facetNames: [
+            'SiloFacet', 'ConvertFacet', 'WhitelistFacet'
+        ],
+        initFacetName: 'InitBipNewSilo',
+        bip: false,
+        object: !mock, //if this is true, something would get spit out in the diamond cuts folder with all the data (due to gnosis safe deployment flow)
+        verbose: true,
+        account: account
+      });
+}
+
 exports.bip29 = bip29
+exports.bipNewSilo = bipNewSilo

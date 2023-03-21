@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
+import "~/libraries/LibBytes.sol";
 
 /**
  * @author Publius
@@ -102,6 +103,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
+        s.season.sunriseBlock = uint32(block.number);
     }
 
     function farmSunrises(uint256 number) public {
@@ -163,7 +165,8 @@ contract MockSeasonFacet is SeasonFacet {
     function resetAccountToken(address account, address token) public {
         uint32 _s = season();
         for (uint32 j; j <= _s; ++j) {
-            if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
+            bytes32 depositID = LibBytes.packAddressAndStem(token,j);
+            if (s.a[account].deposits[depositID].amount > 0) delete s.a[account].deposits[depositID];
             if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
                 delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
         }
@@ -193,7 +196,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         s.s.stalk = 0;
-        s.s.seeds = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
@@ -261,4 +263,42 @@ contract MockSeasonFacet is SeasonFacet {
     function getSunriseBlock() external view returns (uint256) {
         return uint256(s.season.sunriseBlock);
     }
+
+    //fake the grown stalk per bdv deployment, does same as InitBipNewSilo
+    function deployStemsUpgrade() external {
+
+        uint32 currentSeason = s.season.current;
+
+        s.ss[C.beanAddress()].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.beanAddress()].stalkIssuedPerBdv = 10000;
+        s.ss[C.beanAddress()].milestoneSeason = currentSeason;
+        s.ss[C.beanAddress()].milestoneStem = 0;
+
+
+        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4*1e6;
+        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 10000;
+        s.ss[C.curveMetapoolAddress()].milestoneSeason = currentSeason;
+        s.ss[C.curveMetapoolAddress()].milestoneStem = 0;
+
+
+        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 10000;
+        s.ss[C.unripeBeanAddress()].milestoneSeason = currentSeason;
+        s.ss[C.unripeBeanAddress()].milestoneStem = 0;
+
+
+        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;
+        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
+        s.ss[address(C.unripeLP())].milestoneStem = 0;
+
+        //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
+        // emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);
+
+
+        s.season.stemStartSeason = uint16(s.season.current);
+    }
+
+    //constants for old seeds values
+    
 }

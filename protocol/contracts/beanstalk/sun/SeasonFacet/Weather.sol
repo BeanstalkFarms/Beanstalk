@@ -162,7 +162,6 @@ contract Weather is Sun {
         int256 newBeans = LibBeanMetaCurve.getDeltaB();
         if (newBeans <= 0) return;
         uint256 sopBeans = uint256(newBeans);
-
         uint256 newHarvestable;
         if (s.f.harvestable < s.r.pods) {
             newHarvestable = s.r.pods - s.f.harvestable;

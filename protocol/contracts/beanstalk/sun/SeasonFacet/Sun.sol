@@ -119,7 +119,6 @@ contract Sun is Oracle {
         // Beans that are allocated to the Silo will receive Stalk. 
         uint256 seasonStalk = amount.mul(C.getStalkPerBean());
         s.s.stalk = s.s.stalk.add(seasonStalk);
-
         // `s.newEarnedStalk` is an accounting mechanism that tracks the  number
         // of Earned stalk that is allocated during the season. 
         // This is used in _balanceOfEarnedBeans() to linearly distrubute 

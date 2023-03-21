@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Silo/LibSilo.sol";
+import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibPRBMath.sol";
@@ -63,13 +64,6 @@ contract SiloExit is ReentrancyGuard {
     //////////////////////// SILO: TOTALS ////////////////////////
 
     /**
-     * @notice Returns the total supply of Seeds. Does NOT include Earned Seeds.
-     */
-    function totalSeeds() public view returns (uint256) {
-        return s.s.seeds;
-    }
-
-    /**
      * @notice Returns the total supply of Stalk. Does NOT include Grown Stalk.
      */
     function totalStalk() public view returns (uint256) {
@@ -94,16 +88,6 @@ contract SiloExit is ReentrancyGuard {
     }
 
     //////////////////////// SILO: ACCOUNT BALANCES ////////////////////////
-
-    /**
-     * @notice Returns the balance of Seeds for `account`.
-     * Does NOT include Earned Seeds.
-     * @dev Earned Seeds do not earn Grown Stalk due to computational
-     * complexity, so they are not included.
-     */
-    function balanceOfSeeds(address account) public view returns (uint256) {
-        return s.a[account].s.seeds;
-    }
 
     /**
      * @notice Returns the balance of Stalk for `account`. 
@@ -135,26 +119,24 @@ contract SiloExit is ReentrancyGuard {
 
     /**
      * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
-     * earned each Season from Seeds and must be Mown via `SiloFacet-mow` to 
+     * earned each Season from BDV and must be Mown via `SiloFacet-mow` to 
      * apply it to a user's balance.
-     * @dev The balance of Grown Stalk for an account can be calculated as:
-     *
-     * ```
-     * elapsedSeasons = currentSeason - lastUpdatedSeason
-     * grownStalk = balanceOfSeeds * elapsedSeasons
-     * ```
+     * 
+     * @dev This passes in the last stem the user mowed at and the current stem
      */
-    function balanceOfGrownStalk(address account)
+    function balanceOfGrownStalk(address account, address token)
         public
         view
         returns (uint256)
     {
         return
-            LibSilo.stalkReward(
-                s.a[account].s.seeds,
-                _season() - lastUpdate(account)
+            LibSilo._balanceOfGrownStalk(
+                s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
+                LibTokenSilo.stemTipForToken(IERC20(token)), //get latest stem for this token
+                s.a[account].mowStatuses[token].bdv
             );
     }
+
     
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
@@ -227,20 +209,6 @@ contract SiloExit is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
     }
 
-    /**
-     * @notice Returns the `account` balance of Earned Seeds, the Seeds
-     * associated with Earned Beans.
-     * @dev Earned Seeds can be derived from Earned Beans, because
-     * 1 Bean => 2 Seeds. See {C-getSeedsPerBean}.
-     */
-    function balanceOfEarnedSeeds(address account)
-        public
-        view
-        returns (uint256)
-    {
-        return balanceOfEarnedBeans(account).mul(C.getSeedsPerBean());
-    }
-
     //////////////////////// SEASON OF PLENTY ////////////////////////
 
     /**
@@ -260,42 +228,7 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 plenty)
     {
-        Account.State storage a = s.a[account];
-        plenty = a.sop.plenty;
-        uint256 previousPPR;
-
-        // If lastRain > 0, then check if SOP occured during the rain period.
-        if (s.a[account].lastRain > 0) {
-            // if the last processed SOP = the lastRain processed season,
-            // then we use the stored roots to get the delta.
-            if (a.lastSop == a.lastRain) previousPPR = a.sop.plentyPerRoot;
-            else previousPPR = s.sops[a.lastSop];
-            uint256 lastRainPPR = s.sops[s.a[account].lastRain];
-
-            // If there has been a SOP duing the rain sesssion since last update, process SOP.
-            if (lastRainPPR > previousPPR) {
-                uint256 plentyPerRoot = lastRainPPR - previousPPR;
-                previousPPR = lastRainPPR;
-                plenty = plenty.add(
-                    plentyPerRoot.mul(s.a[account].sop.roots).div(
-                        C.getSopPrecision()
-                    )
-                );
-            }
-        } else {
-            // If it was not raining, just use the PPR at previous SOP.
-            previousPPR = s.sops[s.a[account].lastSop];
-        }
-
-        // Handle and SOPs that started + ended before after last Silo update.
-        if (s.season.lastSop > lastUpdate(account)) {
-            uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
-            plenty = plenty.add(
-                plentyPerRoot.mul(balanceOfRoots(account)).div(
-                    C.getSopPrecision()
-                )
-            );
-        }
+        return LibSilo.balanceOfPlenty(account);
     }
 
     /**
@@ -320,6 +253,37 @@ contract SiloExit is ReentrancyGuard {
         sop.roots = s.a[account].sop.roots;
         sop.plenty = balanceOfPlenty(account);
         sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
+    }
+
+
+    //////////////////////// STEM ////////////////////////
+
+    function stemTipForToken(IERC20 token)
+        public
+        view
+        returns (int128 _stemTip)
+    {
+        _stemTip = LibTokenSilo.stemTipForToken(
+            token
+        );
+    }
+
+    function seasonToStem(IERC20 token, uint32 season)
+        public
+        view
+        returns (int128 stem)
+    {
+        uint256 seedsPerBdv = getSeedsPerToken(address(token));
+        stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
+    }
+
+    function getSeedsPerToken(address token) public view virtual returns (uint256) {
+        return LibLegacyTokenSilo.getSeedsPerToken(token);
+    }
+
+    function stemStartSeason() public view virtual returns (uint16) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.season.stemStartSeason;
     }
 
     //////////////////////// INTERNAL ////////////////////////

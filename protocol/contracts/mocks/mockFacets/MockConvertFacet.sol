@@ -19,11 +19,13 @@ contract MockConvertFacet is ConvertFacet {
 
     function withdrawForConvertE(
         address token,
-        uint32[] memory seasons,
+        int96[] memory stems,
         uint256[] memory amounts,
         uint256 maxTokens
     ) external {
-        (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, seasons, amounts, maxTokens);
+        (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, stems, amounts, maxTokens);
+        
+        
         emit MockConvert(stalkRemoved, bdvRemoved);
     }
 

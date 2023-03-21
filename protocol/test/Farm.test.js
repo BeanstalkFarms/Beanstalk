@@ -26,7 +26,8 @@ describe('Farm', function () {
             },
           ],
         });
-      } catch {
+      } catch(error) {
+        console.log(error);
         return
       }
       const contracts = await deploy("Test", false, true, false);
@@ -52,7 +53,7 @@ describe('Farm', function () {
       await this.bean.connect(user2).approve(this.silo.address, '100000000000');
       await this.bean.mint(userAddress, to6('10000'));
       await this.bean.mint(user2Address, to6('10000'));
-      await this.silo.update(userAddress);
+      await this.silo.mow(userAddress, this.beanMetapool.address);
 
       this.usdt = await ethers.getContractAt('IERC20', USDT)
       this.usdc = await ethers.getContractAt('IERC20', USDC)
@@ -77,7 +78,7 @@ describe('Farm', function () {
     describe('Farm Deposit', function () {
       before(async function () {
         deposit = await this.silo.interface.encodeFunctionData(
-          "deposit", [this.bean.address, to6('1'), EXTERNAL]
+          "deposit", [this.bean.address, to6('1'), 0x0, EXTERNAL]
         );
       })
 

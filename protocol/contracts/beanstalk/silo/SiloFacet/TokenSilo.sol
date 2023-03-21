@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
+import {IERC1155} from "~/interfaces/IERC1155.sol";
 
 /**
  * @title TokenSilo
@@ -24,30 +25,31 @@ import "./Silo.sol";
  *   is created. See "Finish Removal".
  */
 contract TokenSilo is Silo {
-    uint32 private constant ASSET_PADDING = 100;
-
     using SafeMath for uint256;
+    using SafeCast for uint256;
     using LibSafeMath32 for uint32;
+
+    
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
      *
      * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
-     * creates multiple Deposits in different Seasons:
+     * creates multiple Deposits in different stems:
      *
      *  - `deposit()` always places the user's deposit in the current `_season()`.
      *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
      *
      * @param account The account that added a Deposit.
      * @param token Address of the whitelisted ERC20 token that was deposited.
-     * @param season The Season that this `amount` was added to.
-     * @param amount Amount of `token` added to `season`.
+     * @param stem The stem index that this `amount` was added to.
+     * @param amount Amount of `token` added to `stem`.
      * @param bdv The BDV associated with `amount` of `token` at the time of Deposit.
      */
     event AddDeposit(
         address indexed account,
         address indexed token,
-        uint32 season,
+        int96 stem,
         uint256 amount,
         uint256 bdv
     );
@@ -59,14 +61,16 @@ contract TokenSilo is Silo {
      * 
      * @param account The account that removed a Deposit.
      * @param token Address of the whitelisted ERC20 token that was removed.
-     * @param season The Season that this `amount` was removed from.
-     * @param amount Amount of `token` removed from `season`.
+     * @param stem The stem that this `amount` was removed from.
+     * @param amount Amount of `token` removed from `stem`.
+     * //add bdv here?
      */
     event RemoveDeposit(
         address indexed account,
         address indexed token,
-        uint32 season,
-        uint256 amount
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
     );
 
     /**
@@ -78,17 +82,18 @@ contract TokenSilo is Silo {
      *
      * @param account The account that removed Deposits.
      * @param token Address of the whitelisted ERC20 token that was removed.
-     * @param seasons Seasons of Deposit to remove from.
-     * @param amounts Amounts of `token` to remove from corresponding `seasons`.
+     * @param stems stems of Deposit to remove from.
+     * @param amounts Amounts of `token` to remove from corresponding `stems`.
      * @param amount Sum of `amounts`.
      */
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        uint32[] seasons,
+        int96[] stems,
         uint256[] amounts,
-        uint256 amount
-    );
+        uint256 amount,
+        uint256[] bdvs
+    ); //add bdv[] here? in favor of array
     
     // per the zero withdraw update, there is no claiming function for withdraws.abi
     // events are kept for backwards compatibility
@@ -98,6 +103,7 @@ contract TokenSilo is Silo {
         uint32[] seasons,
         uint256 amount
     );
+    
     event RemoveWithdrawal(
         address indexed account,
         address indexed token,
@@ -105,15 +111,21 @@ contract TokenSilo is Silo {
         uint256 amount
     );
 
+    // ERC1155 events
+    
+    /**
+     * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
+     */
+    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
 
     /**
+     * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
+     * transfers.
      */
-    event DepositApproval(
-        address indexed owner,
-        address indexed spender,
-        address token,
-        uint256 amount
-    );
+    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
+
+    // note add/remove withdrawal(s) are removed as claiming is removed
+    // FIXME: to discuss with subgraph team to update
 
     //////////////////////// UTILITIES ////////////////////////
 
@@ -122,17 +134,16 @@ contract TokenSilo is Silo {
      *
      * FIXME(naming): `tokensRemoved` -> `amountsRemoved`.
      */
-    struct AssetsRemoved {
-        uint256 tokensRemoved;
-        uint256 stalkRemoved;
-        uint256 seedsRemoved;
-        uint256 bdvRemoved;
-    }
+    // struct AssetsRemoved {
+    //     uint256 tokensRemoved;
+    //     uint256 stalkRemoved;
+    //     uint256 bdvRemoved;
+    // }
 
     //////////////////////// GETTERS ////////////////////////
 
     /**
-     * @notice Find the amount and BDV of `token` that `account` has Deposited in Season `season`.
+     * @notice Find the amount and BDV of `token` that `account` has Deposited in stem `stem`.
      * 
      * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
      *
@@ -142,9 +153,9 @@ contract TokenSilo is Silo {
     function getDeposit(
         address account,
         address token,
-        uint32 season
+        int96 stem
     ) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, season);
+        return LibTokenSilo.tokenDeposit(account, token, stem);
     }
 
     /**
@@ -167,7 +178,9 @@ contract TokenSilo is Silo {
      * Contains:
      *  - the BDV function selector
      *  - Stalk per BDV
-     *  - Seeds per BDV
+     *  - stalkEarnedPerSeason
+     *  - milestoneSeason
+     *  - lastStem
      * 
      * @dev FIXME(naming) getTokenSettings ?
      */
@@ -179,20 +192,6 @@ contract TokenSilo is Silo {
         return s.ss[token];
     }
 
-    /**
-     * @notice Returns how much of a `token` Deposit that `spender` can transfer on behalf of `owner`.
-     * @param owner The account that has given `spender` approval to transfer Deposits. 
-     * @param spender The address (contract or EOA) that is allowed to transfer Deposits on behalf of `owner`.
-     * @param token Whitelisted ERC20 token.
-     */
-    function depositAllowance(
-        address owner,
-        address spender,
-        address token
-    ) public view virtual returns (uint256) {
-        return s.a[owner].depositAllowances[spender][token];
-    }
-
     //////////////////////// DEPOSIT ////////////////////////
 
     /**
@@ -200,24 +199,25 @@ contract TokenSilo is Silo {
      *
      * - {LibTokenSilo.deposit} calculates BDV, adds a Deposit to `account`, and
      *   increments the total amount Deposited.
-     * - {LibSilo.mintSeedsAndStalk} mints the Stalk and Seeds associated with
+     * - {LibSilo.mintStalk} mints the Stalk associated with
      *   the Deposit.
      * 
      * This step should enforce that new Deposits are placed into the current 
-     * `_season()`.
+     * `LibTokenSilo.stemTipForToken(token)`.
      */
     function _deposit(
         address account,
         address token,
         uint256 amount
     ) internal {
-        (uint256 seeds, uint256 stalk) = LibTokenSilo.deposit(
+        (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,
-            _season(),
+            LibTokenSilo.stemTipForToken(IERC20(token)),
             amount
         );
-        LibSilo.mintSeedsAndStalk(account, seeds, stalk);
+
+        LibSilo.mintStalk(account, stalk);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -228,24 +228,23 @@ contract TokenSilo is Silo {
     function _withdrawDeposit(
         address account,
         address token,
-        uint32 season,
+        int96 stem,
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, uint256 seedsRemoved, ) = removeDepositFromAccount(
+        (uint256 stalkRemoved, ) = LibSilo._removeDepositFromAccount(
             account,
-            token,
-            season,
+            address(token),
+            stem,
             amount
         );
-
-        // Add a Withdrawal, update totals, burn Stalk and Seeds.
+        
+        // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
-            token,
+            address(token),
             amount,
-            stalkRemoved,
-            seedsRemoved
+            stalkRemoved
         );
     }
 
@@ -254,34 +253,33 @@ contract TokenSilo is Silo {
      * sum of their contents.
      *
      * Requirements:
-     * - Each item in `seasons` must have a corresponding item in `amounts`.
+     * - Each item in `stems` must have a corresponding item in `amounts`.
      */
     function _withdrawDeposits(
         address account,
         address token,
-        uint32[] calldata seasons,
+        int96[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (uint256) {
         require(
-            seasons.length == amounts.length,
+            stems.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
 
         // Remove the Deposits from `account`.
-        AssetsRemoved memory ar = removeDepositsFromAccount(
+        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
             account,
             token,
-            seasons,
+            stems,
             amounts
         );
 
-        // Add a Withdrawal, update totals, burn Stalk and Seeds.
+        // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
             token,
             ar.tokensRemoved,
-            ar.stalkRemoved,
-            ar.seedsRemoved
+            ar.stalkRemoved
         );
         /** @dev we return ar.tokensremoved here, but not in _withdrawDeposit()
          *  to use in siloFacet.withdrawDeposits()
@@ -294,202 +292,78 @@ contract TokenSilo is Silo {
      * @dev Create a Withdrawal.
      *
      * Gas optimization: Completion of the Remove step (decrementing total
-     * Deposited and burning Seeds & Stalk) is performed here because there 
+     * Deposited and burning Stalk) is performed here because there 
      */
     function _withdraw(
         address account,
         address token,
         uint256 amount,
-        uint256 stalk,
-        uint256 seeds
+        uint256 stalk
     ) private {
         LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
-        LibSilo.burnSeedsAndStalk(account, seeds, stalk); // Burn Seeds and Stalk
-    }
-
-    //////////////////////// CLAIM ///////////////////////// 
-
-    // as of the zero withdraw update, claims are not used anymore. 
-    // this functionality is kept for reverse functionality.
-    function _claimWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) internal returns (uint256) {
-        uint256 amount = _removeTokenWithdrawal(account, token, season);
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-        emit RemoveWithdrawal(msg.sender, token, season, amount);
-        return amount;
-    }
-
-    function _claimWithdrawals(
-        address account,
-        address token,
-        uint32[] calldata seasons
-    ) internal returns (uint256 amount) {
-        for (uint256 i; i < seasons.length; ++i) {
-            amount = amount.add(
-                _removeTokenWithdrawal(account, token, seasons[i])
-            );
-        }
-        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
-            amount
-        );
-        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
-        return amount;
-    }
-
-    function _removeTokenWithdrawal(
-        address account,
-        address token,
-        uint32 season
-    ) private returns (uint256) {
-        require(
-            season <= s.season.current,
-            "Claim: Withdrawal not receivable"
-        );
-        uint256 amount = s.a[account].withdrawals[token][season];
-        delete s.a[account].withdrawals[token][season];
-        return amount;
-    }
-
-
-
-    //////////////////////// REMOVE ////////////////////////
-
-    /**
-     * @dev Removes from a single Deposit, emits the RemoveDeposit event,
-     * and returns the Stalk/Seeds/BDV that were removed.
-     *
-     * Used in:
-     * - {TokenSilo:_withdrawDeposit}
-     * - {TokenSilo:_transferDeposit}
-     */
-    function removeDepositFromAccount(
-        address account,
-        address token,
-        uint32 season,
-        uint256 amount
-    )
-        private
-        returns (
-            uint256 stalkRemoved,
-            uint256 seedsRemoved,
-            uint256 bdvRemoved
-        )
-    {
-        bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, season, amount);
-
-        seedsRemoved = bdvRemoved.mul(s.ss[token].seeds);
-        stalkRemoved = bdvRemoved.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(
-                seedsRemoved,
-                _season() - season
-            )
-        );
-
-        emit RemoveDeposit(account, token, season, amount);
-    }
-
-    /**
-     * @dev Removes from multiple Deposits, emits the RemoveDeposits
-     * event, and returns the Stalk/Seeds/BDV that were removed.
-     * 
-     * Used in:
-     * - {TokenSilo:_withdrawDeposits}
-     * - {SiloFacet:enrootDeposits}
-     */
-    function removeDepositsFromAccount(
-        address account,
-        address token,
-        uint32[] calldata seasons,
-        uint256[] calldata amounts
-    ) internal returns (AssetsRemoved memory ar) {
-        for (uint256 i; i < seasons.length; ++i) {
-            uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
-                account,
-                token,
-                seasons[i],
-                amounts[i]
-            );
-            ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
-            ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
-            ar.stalkRemoved = ar.stalkRemoved.add(
-                LibSilo.stalkReward(
-                    crateBdv.mul(s.ss[token].seeds), // crateSeeds
-                    _season() - seasons[i]
-                )
-            );
-        }
-
-        ar.seedsRemoved = ar.bdvRemoved.mul(s.ss[token].seeds);
-        ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalk)
-        );
-
-        emit RemoveDeposits(account, token, seasons, amounts, ar.tokensRemoved);
+        LibSilo.burnStalk(account, stalk); // Burn Stalk
     }
 
     //////////////////////// TRANSFER ////////////////////////
 
     /**
      * @dev Removes `amount` of a single Deposit from `sender` and transfers
-     * it to `recipient`. No Stalk/Seeds are burned, and the total amount of
+     * it to `recipient`. No Stalk are burned, and the total amount of
      * Deposited `token` in the Silo doesn't change. 
      */
     function _transferDeposit(
         address sender,
         address recipient,
         address token,
-        uint32 season,
+        int96 stem,
         uint256 amount
     ) internal returns (uint256) {
-        (uint256 stalk, uint256 seeds, uint256 bdv) = removeDepositFromAccount(
+        (uint256 stalk, uint256 bdv) = LibSilo._removeDepositFromAccount(
             sender,
             token,
-            season,
+            stem,
             amount
         );
-        LibTokenSilo.addDepositToAccount(recipient, token, season, amount, bdv);
-        LibSilo.transferSeedsAndStalk(sender, recipient, seeds, stalk);
+        LibTokenSilo.addDepositToAccount(recipient, token, stem, amount, bdv);
+        LibSilo.transferStalk(sender, recipient, stalk);
         return bdv;
     }
 
     /**
      * @dev Removes `amounts` of multiple Deposits from `sender` and transfers
-     * them to `recipient`. No Stalk/Seeds are burned, and the total amount of
+     * them to `recipient`. No Stalk are burned, and the total amount of
      * Deposited `token` in the Silo doesn't change. 
      */
     function _transferDeposits(
         address sender,
         address recipient,
         address token,
-        uint32[] calldata seasons,
+        int96[] calldata stems,
         uint256[] calldata amounts
     ) internal returns (uint256[] memory) {
         require(
-            seasons.length == amounts.length,
+            stems.length == amounts.length,
             "Silo: Crates, amounts are diff lengths."
         );
 
-        AssetsRemoved memory ar;
-        uint256[] memory bdvs = new uint256[](seasons.length);
+        LibSilo.AssetsRemoved memory ar;
+        uint256[] memory bdvs = new uint256[](stems.length);
+        uint256[] memory removedDepositIDs = new uint256[](stems.length);
 
         // Similar to {removeDepositsFromAccount}, however the Deposit is also 
         // added to the recipient's account during each iteration.
-        for (uint256 i; i < seasons.length; ++i) {
+        for (uint256 i; i < stems.length; ++i) {
+            uint256 depositID = uint256(LibBytes.packAddressAndStem(token, stems[i]));
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,
                 token,
-                seasons[i],
+                stems[i],
                 amounts[i]
             );
             LibTokenSilo.addDepositToAccount(
                 recipient,
                 token,
-                seasons[i],
+                stems[i],
                 amounts[i],
                 crateBdv
             );
@@ -497,48 +371,64 @@ contract TokenSilo is Silo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
-                    crateBdv.mul(s.ss[token].seeds),
-                    _season() - seasons[i]
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(IERC20(token)),
+                    crateBdv.toUint128()
                 )
             );
             bdvs[i] = crateBdv;
+            removedDepositIDs[i] = depositID;
+
         }
 
-        ar.seedsRemoved = ar.bdvRemoved.mul(s.ss[token].seeds);
         ar.stalkRemoved = ar.stalkRemoved.add(
-            ar.bdvRemoved.mul(s.ss[token].stalk)
+            ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        emit RemoveDeposits(sender, token, seasons, amounts, ar.tokensRemoved);
+        //  "removing" a deposit is equivalent to "burning" a ERC1155 token
+        // i.e, send to 0 sender
+        emit TransferBatch(msg.sender, sender, address(0), removedDepositIDs, amounts);
+        emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
 
-        // Transfer all the Seeds/Stalk in one batch.
-        LibSilo.transferSeedsAndStalk(
+        // Transfer all the Stalk
+        LibSilo.transferStalk(
             sender,
             recipient,
-            ar.seedsRemoved,
             ar.stalkRemoved
         );
 
         return bdvs;
     }
 
-    //////////////////////// APPROVE ////////////////////////
+    
+    //////////////////////// ERC1155 ////////////////////////
 
-    function _spendDepositAllowance(
-        address owner,
-        address spender,
-        address token,
-        uint256 amount
-    ) internal virtual {
-        uint256 currentAllowance = depositAllowance(owner, spender, token);
-        if (currentAllowance != type(uint256).max) {
-            require(currentAllowance >= amount, "Silo: insufficient allowance");
-            _approveDeposit(owner, spender, token, currentAllowance - amount);
-        }
+    function balanceOf(
+        address account, 
+        uint256 depositId
+    ) external view returns (uint256 amount) {
+        return s.a[account].deposits[bytes32(depositId)].amount;
     }
-        
-    function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
-        s.a[account].depositAllowances[spender][token] = amount;
-        emit DepositApproval(account, spender, token, amount);
+
+    function balanceOfBatch(
+        address[] calldata accounts, 
+        uint256[] calldata depositIds
+    ) external view returns (uint256[] memory) {
+        require(
+            accounts.length == depositIds.length, 
+            "ERC1155: ids and amounts length mismatch"
+        );
+        uint256[] memory balances = new uint256[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; i++) {
+            balances[i] = s.a[accounts[i]].deposits[bytes32(depositIds[i])].amount;
+        }
+        return balances;
+    }
+
+    function getDepositId(
+        address token, 
+        int96 stem
+    ) external pure returns (bytes32) {
+        return LibBytes.packAddressAndStem(token, stem);
     }
 }
