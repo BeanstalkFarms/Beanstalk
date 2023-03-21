@@ -47,7 +47,7 @@ contract SiloFacet is TokenSilo {
      *  5. Emit an `AddDeposit` event.
      * note: changed added a generic bytes calldata to allow for ERC721 + ERC1155 deposits
      * 
-     * FIXME(logic): return `(amount, bdv(, season))`
+     * FIXME(logic): return `(amount, bdv, season)`
      */
     function deposit(
         address token,
@@ -85,10 +85,6 @@ contract SiloFacet is TokenSilo {
      * these require less Stalk to be burned. This functionality is the default
      * provided by the Beanstalk SDK, but is NOT provided at the contract level.
      * 
-     * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility
-     * alternative solution: make the input a bytes32 depositID
      */
     function withdrawDeposit(
         address token,
