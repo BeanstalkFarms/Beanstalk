@@ -317,7 +317,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         uint256 grownStalk //stalk grown previously by this deposit
-    ) internal returns (int96 _cumulativeGrownStalk) {
+    ) internal returns (int96 _stemTip) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
         //calculate stem index we need to deposit at from grownStalk and bdv
@@ -326,15 +326,15 @@ contract ConvertFacet is ReentrancyGuard {
         //so here we need to update grownStalk to be the amount you'd have with the above deposit
         
         /// @dev the two functions were combined into one function to save gas.
-        // _cumulativeGrownStalk = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
-        // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _cumulativeGrownStalk, bdv));
+        // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
+        // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
         // TODO: better name for this function?
-        (grownStalk, _cumulativeGrownStalk) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
+        (grownStalk, _stemTip) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
-        LibTokenSilo.addDepositToAccount(msg.sender, token, _cumulativeGrownStalk, amount, bdv);
+        LibTokenSilo.addDepositToAccount(msg.sender, token, _stemTip, amount, bdv);
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

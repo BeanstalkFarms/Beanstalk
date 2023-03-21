@@ -110,7 +110,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       });
     });
   
-    describe('cumulative grown stalk per bdv values for all tokens zero', function () {
+    describe('stem values for all tokens zero', function () {
       it('for bean', async function () {
         expect(await this.silo.stemTipForToken(this.bean.address)).to.eq(0);
       });
