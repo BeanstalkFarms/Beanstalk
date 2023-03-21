@@ -48,5 +48,28 @@ contract MigrationFacet is ReentrancyGuard {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 
+    //////////////////////// CLAIM ////////////////////////
+
+    // as of the zero withdraw update, these functions are no longer used. 
+    // However, these are kept for backwards compatability.
+    function claimWithdrawal(
+        address token,
+        uint32 season,
+        LibTransfer.To mode
+    ) external payable nonReentrant {
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available");
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(msg.sender, token, season);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    }
+
+    function claimWithdrawals(
+        address token,
+        uint32[] calldata seasons,
+        LibTransfer.To mode
+    ) external payable nonReentrant {
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available");
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(msg.sender, token, seasons);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    }
 
 }

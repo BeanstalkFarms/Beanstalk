@@ -55,6 +55,20 @@ library LibLegacyTokenSilo {
         address token;
         int96 stemTip;
     }
+
+    ///@dev these events are grandfathered in for legacy code (claiming)
+    event RemoveWithdrawals(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256 amount
+    );
+    event RemoveWithdrawal(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount
+    );
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     /**
@@ -504,5 +518,57 @@ library LibLegacyTokenSilo {
             return 4;
         }
         return 0;
+    }
+
+    ////////////////////////// CLAIM ///////////////////////////////
+    // as of the zero withdraw update, these functions are no longer used. 
+    // However, these are kept for backwards compatability.
+    function _claimWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) internal returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount = _removeTokenWithdrawal(account, token, season);
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawal(msg.sender, token, season, amount);
+        return amount;
+    }
+
+    function _claimWithdrawals(
+        address account,
+        address token,
+        uint32[] calldata seasons
+    ) internal returns (uint256 amount) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        for (uint256 i; i < seasons.length; ++i) {
+            amount = amount.add(
+                _removeTokenWithdrawal(account, token, seasons[i])
+            );
+        }
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
+        return amount;
+    }
+
+    function _removeTokenWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        require(
+            season <= s.season.current,
+            "Claim: Withdrawal not receivable"
+        );
+        uint256 amount = s.a[account].withdrawals[token][season];
+        delete s.a[account].withdrawals[token][season];
+        return amount;
     }
 }
