@@ -260,30 +260,49 @@ contract SiloExit is ReentrancyGuard {
 
 
     //////////////////////// STEM ////////////////////////
+    // per the silo V3.1 update, the internal accounting mechanism switched
+    // from "season" to "stem", where "stem" is the 
+    // Total Grown Stalk per BDV assoicated with an asset.
 
+    /**
+     * @notice Returns the `stem` for a given token.
+     * @dev See {AccountSeasonOfPlenty} struct.
+     */
     function stemTipForToken(IERC20 token)
-        public
+        external
         view
-        returns (int128 _stemTip)
+        returns (int96 _stemTip)
     {
         _stemTip = LibTokenSilo.stemTipForToken(
             token
         );
     }
 
+    /**
+     * @notice converts the `season` to a `stem` for a given token.
+     */
     function seasonToStem(IERC20 token, uint32 season)
-        public
+        external
         view
-        returns (int128 stem)
+        returns (int96 stem)
     {
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 
+    /**
+     * @notice gets the seeds for a given token
+     * @dev as seeds are deprecated on an accounting level, this is retained for 
+     * backwards compatability. 
+     */
     function getSeedsPerToken(address token) public view virtual returns (uint256) {
         return LibLegacyTokenSilo.getSeedsPerToken(token);
     }
 
+    /**
+     * @notice outputs the season in which the 
+     * accounting level changed from season to stem.
+     */
     function stemStartSeason() public view virtual returns (uint16) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.season.stemStartSeason;

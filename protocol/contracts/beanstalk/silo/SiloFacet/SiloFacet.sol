@@ -139,10 +139,8 @@ contract SiloFacet is TokenSilo {
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
      * change in deposited BDV. See {Silo-_mow}.
-     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility later 
-     * alternative solution: make the input a bytes32 depositID
+     * This function is public, 
+     * as the ERC1155 functions wrap around the transferDeposit(s) calls.
      */
     function transferDeposit(
         address sender,

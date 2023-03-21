@@ -108,22 +108,6 @@ contract TokenSilo is Silo {
      */
     event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
 
-    // note add/remove withdrawal(s) are removed as claiming is removed
-    // FIXME: to discuss with subgraph team to update
-
-    //////////////////////// UTILITIES ////////////////////////
-
-    /**
-     * @dev Convenience struct to simplify return value of {TokenSilo._withdrawDeposits()}.
-     *
-     * FIXME(naming): `tokensRemoved` -> `amountsRemoved`.
-     */
-    // struct AssetsRemoved {
-    //     uint256 tokensRemoved;
-    //     uint256 stalkRemoved;
-    //     uint256 bdvRemoved;
-    // }
-
     //////////////////////// GETTERS ////////////////////////
 
     /**
@@ -162,9 +146,9 @@ contract TokenSilo is Silo {
      * Contains:
      *  - the BDV function selector
      *  - Stalk per BDV
-     *  - stalkEarnedPerSeason
-     *  - milestoneSeason
-     *  - lastStem
+     *  - stalkEarnedPerSeason (previously seeds)
+     *  - milestoneSeason (the last season in which the stalkEarnedPerSeason was changed)
+     *  - lastStem (the stem value at the milestoneSeason)
      * 
      * @dev FIXME(naming) getTokenSettings ?
      */
@@ -387,6 +371,12 @@ contract TokenSilo is Silo {
     
     //////////////////////// ERC1155 ////////////////////////
 
+    /**
+        @notice Get the balance of an account's token for a given deposit.
+        @param account      The address of the deposit holder.
+        @param depositId    DepositID of a given deposit.
+        @return             The amount of tokens in a given deposit.
+     */
     function balanceOf(
         address account, 
         uint256 depositId
@@ -394,6 +384,12 @@ contract TokenSilo is Silo {
         return s.a[account].deposits[bytes32(depositId)].amount;
     }
 
+    /**
+        @notice Get the balance of multiple account/token pairs
+        @param accounts     The addresses of the deposit holders.
+        @param depositIds   The DepositIDs of a given deposit.
+        @return             The amount of tokens in a given deposit, for a given account.
+     */
     function balanceOfBatch(
         address[] calldata accounts, 
         uint256[] calldata depositIds
@@ -409,6 +405,7 @@ contract TokenSilo is Silo {
         return balances;
     }
 
+    /// @notice Outputs the depositID assoicated with a given token and stem.
     function getDepositId(
         address token, 
         int96 stem
