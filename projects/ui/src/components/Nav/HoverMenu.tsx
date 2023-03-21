@@ -1,8 +1,7 @@
 import React from 'react';
 import {
   Button,
-  Card,
-  MenuList,
+  Box,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -22,16 +21,16 @@ const HoverMenu: FC<{
   const [open, show, hide] = useToggle();
   return (
     <Tooltip
-      components={{ Tooltip: Card }}
+      components={{ Tooltip: Box }}
       title={(
-        <MenuList 
-          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }} 
+        <Box 
+          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, backgroundColor: 'white', py: 1 }}
           data-cy="HoverMenu-MenuList"
         >
           {items.map((item) => (
             <MenuItem key={item.path} item={item} onClick={hide} />
           ))}
-        </MenuList>
+        </Box>
       )}
       onOpen={show}
       onClose={hide}
