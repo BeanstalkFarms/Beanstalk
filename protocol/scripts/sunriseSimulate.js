@@ -1,9 +1,8 @@
 const beanstalkABI = require('../abi/Beanstalk.json');
 const { upgradeWithNewFacets } = require('../scripts/diamond.js');
 const hre = require('hardhat');
-const { impersonateBeanstalkOwner, mintEth } = require('../utils');
+const { impersonateBeanstalkOwner, mintEth, mintBeans } = require('../utils');
 const fs = require('node:fs');
-const { BigNumber } = require('ethers');
 
 async function main() {
   const seasonFacet = await hre.ethers.getContractAt(
@@ -25,16 +24,21 @@ async function main() {
   );
 
   let csvContent =
-    'TX_HASH,GAS_USED,GAS_PRICE,GAS_COST,GAS_COST_IN_DOLLARS,BEAN_AMOUNT,PROFIT\n';
+    'BLOCK_NUMBER,TX_HASH,GAS_USED,GAS_PRICE,GAS_COST,GAS_COST_IN_DOLLARS,BEAN_AMOUNT,PROFIT\n';
 
-  for (let i = 0; i < 5; i++) {
+  const preUpgradeBaseFees = [];
+  for (let i = 0; i < 150; i++) {
     // fetch eth price from uniswap pool
+    console.log('preupgrade', i);
 
     const event = events[i];
     const ethPrice = await getETHPrice(event.blockNumber);
 
     const txHash = event.transactionHash;
     const receipt = await ethers.provider.getTransactionReceipt(txHash);
+    const block = await ethers.provider.getBlock(receipt.blockNumber);
+
+    preUpgradeBaseFees.push(block.baseFeePerGas);
 
     const gasUsed = receipt.gasUsed;
     const gasPrice = receipt.effectiveGasPrice;
@@ -46,12 +50,18 @@ async function main() {
       );
     });
 
+    if (beanTransfer === undefined) {
+      continue;
+    }
     const beanAmount = parseInt(beanTransfer?.data, 16);
+
     const usdGasCost =
       ethPrice * gasUsed * ethers.utils.formatUnits(gasPrice, 'ether');
     const beanInUsd = ethers.utils.formatUnits(beanAmount, 6);
 
     csvContent +=
+      receipt.blockNumber +
+      ',' +
       receipt.transactionHash +
       ',' +
       gasUsed +
@@ -62,8 +72,6 @@ async function main() {
       ',' +
       usdGasCost +
       ',' +
-      // feeData.maxFeePerGas +
-      // ',' +
       beanAmount +
       ',' +
       (beanInUsd - usdGasCost) +
@@ -72,7 +80,7 @@ async function main() {
 
   csvContent += '\n"AFTER UPGRADE"\n\n';
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 150; i++) {
     const event = events[i];
     const ethPrice = await getETHPrice(event.blockNumber);
 
@@ -92,8 +100,14 @@ async function main() {
       account: account,
     });
 
-    const [signer] = await hre.ethers.getSigners();
-    const sunrise = await beanstalk.connect(signer).sunrise();
+    const signer = await hre.ethers.getImpersonatedSigner(
+      '0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49'
+    );
+    await mintEth(signer.address);
+
+    const sunrise = await beanstalk
+      .connect(signer)
+      .sunrise({ gasPrice: preUpgradeBaseFees[i] });
     const receipt = await sunrise.wait();
 
     const gasUsed = receipt.gasUsed;
@@ -106,12 +120,18 @@ async function main() {
       );
     });
 
+    if (beanTransfer === undefined) {
+      continue;
+    }
     const beanAmount = parseInt(beanTransfer?.data, 16);
+
     const usdGasCost =
       ethPrice * gasUsed * ethers.utils.formatUnits(gasPrice, 'ether');
     const beanInUsd = ethers.utils.formatUnits(beanAmount, 6);
 
     csvContent +=
+      receipt.blockNumber +
+      ',' +
       receipt.transactionHash +
       ',' +
       gasUsed +
@@ -122,8 +142,6 @@ async function main() {
       ',' +
       usdGasCost +
       ',' +
-      // feeData.maxFeePerGas +
-      // ',' +
       beanAmount +
       ',' +
       (beanInUsd - usdGasCost) +
