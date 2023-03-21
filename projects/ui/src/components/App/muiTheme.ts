@@ -400,8 +400,9 @@ const muiThemeBase: ThemeOptions = {
       },
       styleOverrides: {
         root: (t) => t.theme.unstable_sx({
-          border: 'none'
-
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'divider',
         }),
       },
     },
