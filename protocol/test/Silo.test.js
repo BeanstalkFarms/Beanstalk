@@ -244,13 +244,6 @@ describe('Silo', function () {
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
         userAddress, // operator 
         userAddress, // from
-        ethers.constants.AddressZero, // to
-        depositID, // depositID
-        to6('1000') // amt
-      );
-      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        ethers.constants.AddressZero, // from
         user3Address, // to
         depositID, // depositID
         to6('1000') // amt
@@ -302,38 +295,20 @@ describe('Silo', function () {
       expect(await this.silo.balanceOf(user3Address, depositID1)).to.eq(to6('1000'));
 
       // transfer deposit emits 
-      // - 1 event for burning all deposits, and 1 event per deposit for minting
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        userAddress, // from
-        ethers.constants.AddressZero, // to
+        userAddress,  // operator
+        userAddress,  // from
+        user3Address, // to
         depositID0, // depositID
-        to6('1000') // amt
-      );
-      
-      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        userAddress, // from
-        ethers.constants.AddressZero, // to
-        depositID1, // depositID
-        to6('1000') // amt
+        to6('1000')  // amt
       );
 
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        ethers.constants.AddressZero, // from
+        userAddress,  // operator
+        userAddress,  // from
         user3Address, // to
-        depositID0, // depositID
-        to6('1000') // amt
-    );
-
-      // transfer deposit has two events, 
-      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        ethers.constants.AddressZero, // from
-        user3Address, // to
-        depositID1, // depositID
-        to6('1000') // amt
+        depositID1,   // depositID
+        to6('1000')  // amt
       );
     });
 
