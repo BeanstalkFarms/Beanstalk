@@ -82,7 +82,7 @@ const SiloPage : FC<{}> = () => {
         <Card>
           <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
             <Stack
-              sx={{ pl: 2, pr: 2, py: 1.5 }}
+              sx={{ p: 1.5 }}
               direction={{ xs: 'column', lg: 'row' }}
               justifyContent={{ lg: 'space-between' }}
               alignItems={{ xs: 'auto', lg: 'center' }}
