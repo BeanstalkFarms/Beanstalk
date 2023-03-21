@@ -268,7 +268,7 @@ library LibIncentive {
     function _scaleReward(uint256 beans, uint256 scaler) 
         private 
         pure 
-        returns (uint256 scaledTemperature) 
+        returns (uint256) 
     {
         return beans.mul(scaler).div(FRAC_EXP_PRECISION);
     }
