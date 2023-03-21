@@ -318,13 +318,13 @@ library LibTokenSilo {
     function stemTipForToken(IERC20 token)
         internal
         view
-        returns (int96 _cumulativeGrownStalkPerBdv)
+        returns (int96 _stemTipForToken)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
         
         //replace the - here with sub to disable support for when the current season is less than the silov3 epoch season
-        _cumulativeGrownStalkPerBdv = s.ss[address(token)].milestoneStem +
+        _stemTipForToken = s.ss[address(token)].milestoneStem +
             int96(int96(s.ss[address(token)].stalkEarnedPerSeason).mul(int96(s.season.current)-int96(s.ss[address(token)].milestoneSeason)).div(1e6)) //round here
         ;
         
