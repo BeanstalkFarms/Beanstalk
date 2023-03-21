@@ -124,7 +124,8 @@ contract Silo is SiloExit {
             C.beanAddress(),
             LibTokenSilo.stemTipForToken(IERC20(token)),
             beans, // amount
-            beans // bdv
+            beans, // bdv
+            true // a new deposit is a ERC1155 "mint".
         );
         s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 

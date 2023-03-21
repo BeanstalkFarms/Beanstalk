@@ -446,7 +446,18 @@ library LibLegacyTokenSilo {
                 migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
  
                 //add to new silo
-                LibTokenSilo.addDepositToAccount(account, perTokenData.token, LibTokenSilo.grownStalkAndBdvToStem(IERC20(perTokenData.token), grownStalk, crateBDV), perDepositData.amount, crateBDV);
+                LibTokenSilo.addDepositToAccount(
+                    account, 
+                    perTokenData.token, 
+                    LibTokenSilo.grownStalkAndBdvToStem(
+                        IERC20(perTokenData.token), 
+                        grownStalk, 
+                        crateBDV
+                    ), 
+                    perDepositData.amount, 
+                    crateBDV,
+                    false // this is not a transfer, as we're "minting" a new deposit from migration.
+                );
  
                 //add to running total of seeds
                 migrateData.totalSeeds += uint128(uint256(crateBDV) * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)));

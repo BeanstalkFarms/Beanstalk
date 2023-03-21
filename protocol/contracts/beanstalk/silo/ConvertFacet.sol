@@ -127,7 +127,14 @@ contract ConvertFacet is ReentrancyGuard {
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
 
-        LibTokenSilo.addDepositToAccount(msg.sender, token, stem, amount, newBDV); // emits AddDeposit event
+        LibTokenSilo.addDepositToAccount(
+            msg.sender, 
+            token, 
+            stem, 
+            amount, 
+            newBDV,
+            true // converting "burns" the old ERC1155 deposit, and "mints" a new ERC1155 deposit.
+        ); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
@@ -186,7 +193,8 @@ contract ConvertFacet is ReentrancyGuard {
                 token,
                 stems[i],
                 amounts[i],
-                bdv
+                bdv,
+                true // converting "burns" the old ERC1155 deposit, and "mints" a new ERC1155 deposit.
             );
             newStalk = newStalk.add(
                 bdv.mul(_stalkPerBdv).add(
@@ -334,7 +342,14 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount);
-        LibTokenSilo.addDepositToAccount(msg.sender, token, _stemTip, amount, bdv);
+        LibTokenSilo.addDepositToAccount(
+            msg.sender, 
+            token, 
+            _stemTip, 
+            amount, 
+            bdv,
+            true // convert "mints" a new ERC1155 deposit. 
+            );
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

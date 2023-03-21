@@ -123,7 +123,14 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         incrementTotalDeposited(token, amount); // Update Totals        
-        addDepositToAccount(account, token, stem, amount, bdv); // Add to Account
+        addDepositToAccount(
+            account, 
+            token, 
+            stem, 
+            amount, 
+            bdv, 
+            true // {DepositWithBDV} is only used for deposits, and thus is a transferSingle. 
+        ); // Add to Account
         return (
             bdv.mul(s.ss[token].stalkIssuedPerBdv) //formerly stalk
         );
@@ -147,7 +154,8 @@ library LibTokenSilo {
         address token,
         int96 stem,
         uint256 amount,
-        uint256 bdv
+        uint256 bdv,
+        bool isTransferSingle
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Pack the Deposit data into a single bytes32
@@ -169,8 +177,18 @@ library LibTokenSilo {
         // update the mow status (note: mow status is per token, not per depositId)
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
 
-        // "adding" a deposit is equivalent to "minting" an ERC1155 token. 
-        emit TransferSingle(msg.sender, address(0), account, uint256(depositId), amount);
+        /**@dev  {addDepositToAccount} is used for both new deposits, and
+         * transferring Deposits. When a user is transferring Deposit(s), we omit the 
+         * {transferSingle} event as it is already handled by the {transferBatch} event. 
+         **/
+
+        // TODO: is it better to have the conditional here, or add it in a place where its implicitly a deposit/mint?
+        // PROs: decrease logic needed to determine whether to emit.
+        // CONs: impairs developer experience by having events in different multiple locations 
+        
+        if(isTransferSingle){
+            emit TransferSingle(msg.sender, address(0), account, uint256(depositId), amount);
+        }
         emit AddDeposit(account, token, stem, amount, bdv);
     }
 

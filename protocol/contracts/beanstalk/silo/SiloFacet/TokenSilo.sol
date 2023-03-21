@@ -108,6 +108,22 @@ contract TokenSilo is Silo {
      */
     event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
 
+    // note add/remove withdrawal(s) are removed as claiming is removed
+    // FIXME: to discuss with subgraph team to update
+
+    //////////////////////// UTILITIES ////////////////////////
+
+    /**
+     * @dev Convenience struct to simplify return value of {TokenSilo._withdrawDeposits()}.
+     *
+     * FIXME(naming): `tokensRemoved` -> `amountsRemoved`.
+     */
+    // struct AssetsRemoved {
+    //     uint256 tokensRemoved;
+    //     uint256 stalkRemoved;
+    //     uint256 bdvRemoved;
+    // }
+
     //////////////////////// GETTERS ////////////////////////
 
     /**
@@ -146,9 +162,9 @@ contract TokenSilo is Silo {
      * Contains:
      *  - the BDV function selector
      *  - Stalk per BDV
-     *  - stalkEarnedPerSeason (previously seeds)
-     *  - milestoneSeason (the last season in which the stalkEarnedPerSeason was changed)
-     *  - lastStem (the stem value at the milestoneSeason)
+     *  - stalkEarnedPerSeason
+     *  - milestoneSeason
+     *  - lastStem
      * 
      * @dev FIXME(naming) getTokenSettings ?
      */
@@ -204,7 +220,8 @@ contract TokenSilo is Silo {
             account,
             address(token),
             stem,
-            amount
+            amount,
+            true
         );
         
         // Add a Withdrawal, update totals, burn Stalk.
@@ -290,10 +307,34 @@ contract TokenSilo is Silo {
             sender,
             token,
             stem,
+            amount,
+            false
+        );
+        LibTokenSilo.addDepositToAccount(
+            recipient, 
+            token, 
+            stem, 
+            amount, 
+            bdv, 
+            false // a transfer is not a mint, and thus does not require the {TransferSingle} event.
+        );
+        LibSilo.transferStalk(sender, recipient, stalk);
+
+        /** the current beanstalk system uses {AddDeposit}
+         * and {RemoveDeposit} events to represent a transfer.
+         * However, the ERC1155 standard has a dedicated {TransferSingle} event,
+         * which creates an asymmetry between the two systems. 
+         * We accept this asymmetry for beanstalk to be better composable with the 
+         * greater DeFi system.
+         */
+        emit TransferSingle(
+            msg.sender, 
+            sender, 
+            recipient, 
+            uint256(LibBytes.packAddressAndStem(token, stem)), 
             amount
         );
-        LibTokenSilo.addDepositToAccount(recipient, token, stem, amount, bdv);
-        LibSilo.transferStalk(sender, recipient, stalk);
+
         return bdv;
     }
 
@@ -333,7 +374,8 @@ contract TokenSilo is Silo {
                 token,
                 stems[i],
                 amounts[i],
-                crateBdv
+                crateBdv,
+                false // a transfer is not a mint, and thus does not require the {TransferSingle} event.
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
@@ -353,9 +395,14 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        //  "removing" a deposit is equivalent to "burning" a ERC1155 token
-        // i.e, send to 0 sender
-        emit TransferBatch(msg.sender, sender, address(0), removedDepositIDs, amounts);
+        /** the current beanstalk system uses {AddDeposit}
+         * and {RemoveDeposits} events to represent a batch transfer.
+         * However, the ERC1155 standard has a dedicated {batchTransfer} event,
+         * which creates an asymmetry between the two systems. 
+         * We accept this asymmetry for beanstalk to be better composable with the 
+         * greater DeFi system.
+         */
+        emit TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
         emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
 
         // Transfer all the Stalk
@@ -371,12 +418,6 @@ contract TokenSilo is Silo {
     
     //////////////////////// ERC1155 ////////////////////////
 
-    /**
-        @notice Get the balance of an account's token for a given deposit.
-        @param account      The address of the deposit holder.
-        @param depositId    DepositID of a given deposit.
-        @return             The amount of tokens in a given deposit.
-     */
     function balanceOf(
         address account, 
         uint256 depositId
@@ -384,12 +425,6 @@ contract TokenSilo is Silo {
         return s.a[account].deposits[bytes32(depositId)].amount;
     }
 
-    /**
-        @notice Get the balance of multiple account/token pairs
-        @param accounts     The addresses of the deposit holders.
-        @param depositIds   The DepositIDs of a given deposit.
-        @return             The amount of tokens in a given deposit, for a given account.
-     */
     function balanceOfBatch(
         address[] calldata accounts, 
         uint256[] calldata depositIds
@@ -405,7 +440,6 @@ contract TokenSilo is Silo {
         return balances;
     }
 
-    /// @notice Outputs the depositID assoicated with a given token and stem.
     function getDepositId(
         address token, 
         int96 stem
