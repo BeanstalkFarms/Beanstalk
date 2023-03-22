@@ -1,5 +1,4 @@
-// import { Well } from "@beanstalk/sdk/Wells";
-import { Well } from "@beanstalk/sdk/dist/types/Wells";
+import { Well } from "@beanstalk/sdk/Wells";
 import { useEffect, useState } from "react";
 import useSdk from "src/utils/sdk/useSdk";
 
