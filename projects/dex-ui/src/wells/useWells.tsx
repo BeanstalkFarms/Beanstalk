@@ -16,7 +16,6 @@ export const useWells = () => {
       setError(undefined);
       const wells = await Promise.all(
         WELL_ADDRESSES.map((address) => {
-          console.log(address);
           return sdk.wells.getWell(address, {
             name: true
           });
