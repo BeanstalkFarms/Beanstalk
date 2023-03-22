@@ -50,8 +50,21 @@ contract MigrationFacet is ReentrancyGuard {
 
     //////////////////////// CLAIM ////////////////////////
 
-    // as of the zero withdraw update, these functions are no longer used. 
-    // However, these are kept for backwards compatability.
+    /** 
+     * @notice DEPRECATED. Claims tokens from a Withdrawal.
+     *
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is 
+     * omitted.
+     *
+     * @param token Address of the whitelisted ERC20 token to Claim.
+     * @param season Season of Withdrawal to claim from.
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
+     * INTERNAL_TOLERANT)
+     *
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     */
     function claimWithdrawal(
         address token,
         uint32 season,
@@ -62,6 +75,22 @@ contract MigrationFacet is ReentrancyGuard {
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
+    /** 
+     * @notice DEPRECATED: Claims tokens from multiple Withdrawals.
+     * 
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is
+     * omitted.
+     *
+     * @param token Address of the whitelisted ERC20 token to Claim.
+     * @param seasons Seasons of Withdrawal to claim from.
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
+     * INTERNAL_TOLERANT)
+     * 
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     * 
+     */
     function claimWithdrawals(
         address token,
         uint32[] calldata seasons,

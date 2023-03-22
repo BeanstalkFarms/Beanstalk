@@ -387,8 +387,6 @@ library LibLegacyTokenSilo {
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
      */
-    // TODO: talk with pizzaman about whether we need to downcast to uint128 or was that 
-    // because we had a int128
     function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
  
         require(tokens.length == seasons.length, "inputs not same length");
@@ -456,7 +454,7 @@ library LibLegacyTokenSilo {
                     ), 
                     perDepositData.amount, 
                     crateBDV,
-                    false // this is not a transfer, as we're "minting" a new deposit from migration.
+                    LibTokenSilo.Transfer.isDeposit
                 );
  
                 //add to running total of seeds
@@ -517,7 +515,6 @@ library LibLegacyTokenSilo {
         return uint128(LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
     }
 
-    //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?
     function getSeedsPerToken(address token) internal pure returns (uint256) {
         if (token == C.beanAddress()) {
             return 2;
@@ -532,8 +529,13 @@ library LibLegacyTokenSilo {
     }
 
     ////////////////////////// CLAIM ///////////////////////////////
-    // as of the zero withdraw update, these functions are no longer used. 
-    // However, these are kept for backwards compatability.
+
+    /** 
+     * @notice DEPRECATED. Internal logic for claiming withdraws.
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These internal functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     */
     function _claimWithdrawal(
         address account,
         address token,

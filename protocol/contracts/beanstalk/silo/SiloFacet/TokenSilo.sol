@@ -221,7 +221,7 @@ contract TokenSilo is Silo {
             address(token),
             stem,
             amount,
-            true
+            LibTokenSilo.Transfer.isWithdraw
         );
         
         // Add a Withdrawal, update totals, burn Stalk.
@@ -308,15 +308,15 @@ contract TokenSilo is Silo {
             token,
             stem,
             amount,
-            false
+            LibTokenSilo.Transfer.isTransfer
         );
         LibTokenSilo.addDepositToAccount(
             recipient, 
             token, 
             stem, 
             amount, 
-            bdv, 
-            false // a transfer is not a mint, and thus does not require the {TransferSingle} event.
+            bdv,
+            LibTokenSilo.Transfer.isTransfer
         );
         LibSilo.transferStalk(sender, recipient, stalk);
 
@@ -375,7 +375,7 @@ contract TokenSilo is Silo {
                 stems[i],
                 amounts[i],
                 crateBdv,
-                false // a transfer is not a mint, and thus does not require the {TransferSingle} event.
+                LibTokenSilo.Transfer.isTransfer
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
@@ -395,12 +395,13 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        /** the current beanstalk system uses {AddDeposit}
-         * and {RemoveDeposits} events to represent a batch transfer.
-         * However, the ERC1155 standard has a dedicated {batchTransfer} event,
-         * which creates an asymmetry between the two systems. 
-         * We accept this asymmetry for beanstalk to be better composable with the 
-         * greater DeFi system.
+        /** 
+         *  The current beanstalk system uses a mix of {AddDeposit}
+         *  and {RemoveDeposits} events to represent a batch transfer.
+         *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
+         *  which creates an asymmetry between the two systems. 
+         *  We accept this asymmetry for beanstalk to be better composable with the 
+         *  greater DeFi system.
          */
         emit TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
         emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);

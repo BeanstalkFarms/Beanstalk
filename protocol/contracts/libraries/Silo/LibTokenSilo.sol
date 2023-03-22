@@ -34,6 +34,20 @@ library LibTokenSilo {
     using SafeCast for uint256;
     using LibSafeMathSigned96 for int96;
 
+
+    //////////////////////// ENUM ////////////////////////
+    /**
+     * @dev when a user deposits or withdraws a deposit, the
+     * {TrasferSingle} event is emitted. However, in the case
+     * of a transfer, this emission is ommited. This enum is
+     * used to determine if the event should be emitted.
+     */
+    enum Transfer {
+        isDeposit,
+        isWithdraw,
+        isTransfer
+    }
+
     //////////////////////// EVENTS ////////////////////////
 
     /**
@@ -107,10 +121,6 @@ library LibTokenSilo {
      * add a Deposit for `account` and update the total amount Deposited.
      *
      * `s.ss[token].stalkIssuedPerBdv` stores the number of Stalk per BDV for `token`.
-     *
-     * FIXME(discuss): If we think of Deposits like 1155s, we might call the
-     * combination of "incrementTotalDeposited" and "addDepositToAccount" as 
-     * "minting a deposit".
      */
     function depositWithBDV(
         address account,
@@ -122,17 +132,17 @@ library LibTokenSilo {
         require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
         
-        incrementTotalDeposited(token, amount); // Update Totals        
+        incrementTotalDeposited(token, amount);     
         addDepositToAccount(
             account, 
             token, 
             stem, 
             amount, 
             bdv, 
-            true // {DepositWithBDV} is only used for deposits, and thus is a transferSingle. 
-        ); // Add to Account
+            Transfer.isDeposit  
+        ); 
         return (
-            bdv.mul(s.ss[token].stalkIssuedPerBdv) //formerly stalk
+            bdv.mul(s.ss[token].stalkIssuedPerBdv)
         );
     }
 
@@ -155,39 +165,41 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount,
         uint256 bdv,
-        bool isTransferSingle
+        Transfer transferType
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // Pack the Deposit data into a single bytes32
         bytes32 depositId = LibBytes.packAddressAndStem(
             token,
             stem
         );
-        // create memory var to save gas (TODO: check if this is actually saving gas)
+
+        // we instantiate the deposit to avoid the stack too deep error.
         Account.Deposit memory d = s.a[account].deposits[depositId];
 
-        // add amount to the deposits... 
+        // add amount to the deposits, and update the deposit.
         d.amount = uint128(d.amount.add(amount.toUint128()));
         d.bdv = uint128(d.bdv.add(bdv.toUint128()));
-        
-        // set it 
         s.a[account].deposits[depositId] = d;
         
         // get token and GSPBDV of the depositData, for updating mow status and emitting event 
         // update the mow status (note: mow status is per token, not per depositId)
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
 
-        /**@dev  {addDepositToAccount} is used for both new deposits, and
-         * transferring Deposits. When a user is transferring Deposit(s), we omit the 
-         * {transferSingle} event as it is already handled by the {transferBatch} event. 
-         **/
-
-        // TODO: is it better to have the conditional here, or add it in a place where its implicitly a deposit/mint?
-        // PROs: decrease logic needed to determine whether to emit.
-        // CONs: impairs developer experience by having events in different multiple locations 
-        
-        if(isTransferSingle){
-            emit TransferSingle(msg.sender, address(0), account, uint256(depositId), amount);
+        /** 
+         *  {addDepositToAccount} is used for both depositing and transferring deposits.
+         *  In the case of a deposit, only the {TransferSingle} Event needs to be emitted.
+         *  In the case of a transfer, a different {TransferSingle}/{TransferBatch} 
+         *  Event is emitted in {TokenSilo._transferDeposit(s)}, 
+         *  and thus, this event is ommited.
+         */
+        if(transferType == Transfer.isDeposit){
+            emit TransferSingle(
+                msg.sender, // operator
+                address(0), // from
+                account, // to
+                uint256(depositId), // depositID
+                amount // token amount
+            );
         }
         emit AddDeposit(account, token, stem, amount, bdv);
     }
@@ -212,7 +224,6 @@ library LibTokenSilo {
      * {TokenSilo-removeDepositsFromAccount} and {TokenSilo-_transferDeposits}.
      */
 
-    // TODO: Brean: ask pizza about why we remove `amount > crateAmount` check (probably because unripe)
     function removeDepositFromAccount(
         address account,
         address token,
@@ -341,11 +352,10 @@ library LibTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
         
-        //replace the - here with sub to disable support for when the current season is less than the silov3 epoch season
         _stemTipForToken = s.ss[address(token)].milestoneStem +
-            int96(int96(s.ss[address(token)].stalkEarnedPerSeason).mul(int96(s.season.current)-int96(s.ss[address(token)].milestoneSeason)).div(1e6)) //round here
-        ;
-        
+        int96(s.ss[address(token)].stalkEarnedPerSeason).mul(
+            int96(s.season.current).sub(int96(s.ss[address(token)].milestoneSeason))
+        ).div(1e6); //round here   
     }
 
     function grownStalkForDeposit(
@@ -379,7 +389,6 @@ library LibTokenSilo {
         return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(int96(bdv));
     }
 
-    /// @dev is there a way to use grownStalk as the output?
     function calculateTotalGrownStalkandGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
         internal
         view 
@@ -387,8 +396,6 @@ library LibTokenSilo {
     {
         int96 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
         stem = _stemTipForToken-int96(grownStalk.div(bdv));
-        // todo: talk to pizza about depositing at mid season
-        // is it possible to skip the math calc here? 
         _grownStalk = uint256(_stemTipForToken.sub(stem).mul(int96(bdv)));
     }
 

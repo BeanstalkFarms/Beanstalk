@@ -445,7 +445,7 @@ library LibSilo {
         address token,
         int96 stem,
         uint256 amount,
-        bool isSingleTransfer
+        LibTokenSilo.Transfer transferType
     )
         internal
         returns (
@@ -466,22 +466,30 @@ library LibSilo {
             )
         );
 
-        /** {_removeDepositFromAccount} is used for both transfers and withdraws.
+        /** 
+         * {_removeDepositFromAccount} is used for both transfers and withdraws.
          *  In the case of a withdraw, the TransferSingle Event needs to be emitted.
          *  In the case of a transfer, the TransferBatch is emitted, and thus, 
          *  TransferSingle does not need to be emitted.
          */
-        if(isSingleTransfer){
+
+        /** 
+         *  {_removeDepositFromAccount} is used for both withdrawing and transferring deposits.
+         *  In the case of a withdraw, only the {TransferSingle} Event needs to be emitted.
+         *  In the case of a transfer, a different {TransferSingle}/{TransferBatch} 
+         *  Event is emitted in {TokenSilo._transferDeposit(s)}, 
+         *  and thus, this event is ommited.
+         */
+        if(transferType == LibTokenSilo.Transfer.isWithdraw){
             // "removing" a deposit is equivalent to "burning" an ERC1155 token.
             emit TransferSingle(
                 msg.sender, // operator
                 account, // from
                 address(0), // to
-                uint256(LibBytes.packAddressAndStem(token, stem)), // id
-                amount // amount
+                uint256(LibBytes.packAddressAndStem(token, stem)), // depositid
+                amount // token amount
             );
         }
-        
         emit RemoveDeposit(account, token, stem, amount, bdvRemoved);
     }
 

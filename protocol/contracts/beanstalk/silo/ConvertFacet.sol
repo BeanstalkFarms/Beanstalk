@@ -133,7 +133,7 @@ contract ConvertFacet is ReentrancyGuard {
             stem, 
             amount, 
             newBDV,
-            true // converting "burns" the old ERC1155 deposit, and "mints" a new ERC1155 deposit.
+            LibTokenSilo.Transfer.isTransfer
         ); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
@@ -194,8 +194,9 @@ contract ConvertFacet is ReentrancyGuard {
                 stems[i],
                 amounts[i],
                 bdv,
-                true // converting "burns" the old ERC1155 deposit, and "mints" a new ERC1155 deposit.
+                LibTokenSilo.Transfer.isTransfer
             );
+            
             newStalk = newStalk.add(
                 bdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
@@ -227,85 +228,78 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
+        // a bracket is included here to avoid the "stack too deep" error.
         {
-        uint256[] memory bdvsRemoved = new uint256[](stems.length);
-        uint256[] memory depositIds = new uint256[](stems.length);
-        while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
-            if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
-                //keeping track of stalk removed must happen before we actually remove the deposit
-                //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
-                
-                depositBDV = LibTokenSilo.removeDepositFromAccount(
-                    msg.sender,
-                    token,
-                    stems[i],
-                    amounts[i]
-                );
-                bdvsRemoved[i] = depositBDV;
-                a.stalkRemoved = a.stalkRemoved.add(
-                    LibSilo.stalkReward(
+            uint256[] memory bdvsRemoved = new uint256[](stems.length);
+            uint256[] memory depositIds = new uint256[](stems.length);
+            while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
+                if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
+                    //keeping track of stalk removed must happen before we actually remove the deposit
+                    //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
+                    
+                    depositBDV = LibTokenSilo.removeDepositFromAccount(
+                        msg.sender,
+                        token,
                         stems[i],
-                        LibTokenSilo.stemTipForToken(IERC20(token)),
-                        depositBDV.toUint128()
-                    )
-                );
-                
-            } else {
-                amounts[i] = maxTokens.sub(a.tokensRemoved);
-                
-                depositBDV = LibTokenSilo.removeDepositFromAccount(
-                    msg.sender,
-                    token,
-                    stems[i],
-                    amounts[i]
-                );
+                        amounts[i]
+                    );
+                    bdvsRemoved[i] = depositBDV;
+                    a.stalkRemoved = a.stalkRemoved.add(
+                        LibSilo.stalkReward(
+                            stems[i],
+                            LibTokenSilo.stemTipForToken(IERC20(token)),
+                            depositBDV.toUint128()
+                        )
+                    );
+                    
+                } else {
+                    amounts[i] = maxTokens.sub(a.tokensRemoved);
+                    
+                    depositBDV = LibTokenSilo.removeDepositFromAccount(
+                        msg.sender,
+                        token,
+                        stems[i],
+                        amounts[i]
+                    );
 
-                bdvsRemoved[i] = depositBDV;
-                a.stalkRemoved = a.stalkRemoved.add(
-                    LibSilo.stalkReward(
-                        stems[i],
-                        LibTokenSilo.stemTipForToken(IERC20(token)),
-                        depositBDV.toUint128()
-                    )
-                );
+                    bdvsRemoved[i] = depositBDV;
+                    a.stalkRemoved = a.stalkRemoved.add(
+                        LibSilo.stalkReward(
+                            stems[i],
+                            LibTokenSilo.stemTipForToken(IERC20(token)),
+                            depositBDV.toUint128()
+                        )
+                    );
+                    
+                }
                 
+                a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
+                a.bdvRemoved = a.bdvRemoved.add(depositBDV);
+                
+                depositIds[i] = uint256(LibBytes.packAddressAndStem(
+                    token,
+                    stems[i]
+                ));
+                i++;
             }
+            for (i; i < stems.length; ++i) amounts[i] = 0;
             
-            
-            
-            
-            a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
-            a.bdvRemoved = a.bdvRemoved.add(depositBDV);
-            
-            
-            depositIds[i] = uint256(LibBytes.packAddressAndStem(
+            emit RemoveDeposits(
+                msg.sender,
                 token,
-                stems[i]
-            ));
-            i++;
-        }
-        for (i; i < stems.length; ++i) amounts[i] = 0;
-        
+                stems,
+                amounts,
+                a.tokensRemoved,
+                bdvsRemoved
+            );
 
-        emit RemoveDeposits(
-            msg.sender,
-            token,
-            stems,
-            amounts,
-            a.tokensRemoved,
-            bdvsRemoved
-        );
-        // we emit 2 events for ERC1155 compatibility:
-        // event 1: "Burn" ERC1155 deposit that was being converted from
-        // event 2: "Mint" ERC1155 deposit being converted into: 
-        // event 1 is emmitted here, the 2nd event is emitted in libtokensilo.addDepositToAccount
-        emit TransferBatch(
-            msg.sender, 
-            msg.sender,
-            address(0), 
-            depositIds, 
-            amounts
-        );
+            emit TransferBatch(
+                msg.sender, 
+                msg.sender,
+                address(0), 
+                depositIds, 
+                amounts
+            );
         }
 
         require(
@@ -324,8 +318,8 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk //stalk grown previously by this deposit
-    ) internal returns (int96 _stemTip) {
+        uint256 grownStalk // stalk grown previously by this deposit
+    ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
         //calculate stem index we need to deposit at from grownStalk and bdv
@@ -336,8 +330,8 @@ contract ConvertFacet is ReentrancyGuard {
         /// @dev the two functions were combined into one function to save gas.
         // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
-        // TODO: better name for this function?
-        (grownStalk, _stemTip) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
+
+        (grownStalk, stem) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
@@ -345,11 +339,11 @@ contract ConvertFacet is ReentrancyGuard {
         LibTokenSilo.addDepositToAccount(
             msg.sender, 
             token, 
-            _stemTip, 
+            stem, 
             amount, 
             bdv,
-            true // convert "mints" a new ERC1155 deposit. 
-            );
+            LibTokenSilo.Transfer.isDeposit
+        );
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)
