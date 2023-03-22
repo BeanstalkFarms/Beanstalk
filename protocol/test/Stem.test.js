@@ -456,10 +456,10 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         }
   
         //single withdraw
-        await expect(this.silo.connect(depositorSigner).withdrawDeposit(token, seasons[0], to6('1'), 0x00, EXTERNAL)).to.be.revertedWith('silo migration needed')
+        await expect(this.silo.connect(depositorSigner).withdrawDeposit(token, seasons[0], to6('1'), EXTERNAL)).to.be.revertedWith('silo migration needed')
         
         //multi withdraw
-        await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], [0x00,0x00], EXTERNAL)).to.be.revertedWith('silo migration needed')
+        await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], EXTERNAL)).to.be.revertedWith('silo migration needed')
       });
   
       //attempt to convert before migrating
