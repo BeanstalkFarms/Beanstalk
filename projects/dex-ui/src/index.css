@@ -1,3 +1,37 @@
+@font-face {
+  font-family: 'Futura PT';
+  src: url('src/assets/fonts/FuturaPTMedium.otf');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Futura PT';
+  src: url('src/assets/fonts/FuturaPTBold.otf');
+  font-weight: 600;
+}
+
+html,
 body {
-  margin: 10px;
+  height: 100%;
+  background-color: #fff;
+  
+}
+
+body {
+  position: relative;
+  margin: 0;
+  font-family: "Futura PT";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /** Prevent page overscrolling: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior */
+  overscroll-behavior: none;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }

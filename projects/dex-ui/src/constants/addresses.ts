@@ -1,0 +1,4 @@
+export const WELL_ADDRESSES = [
+  // BEAN <> WETH
+  "0x0a9CBb76cEE4B11c7d831FcD13493abd2E1f98b3"
+];

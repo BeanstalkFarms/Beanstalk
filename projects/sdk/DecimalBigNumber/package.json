@@ -1,0 +1,6 @@
+{
+  "main": "../dist/DecimalBigNumber/DecimalBigNumber.cjs.js",
+  "module": "../dist/DecimalBigNumber/DecimalBigNumber.esm.js",
+  "browser": "../dist/DecimalBigNumber/DecimalBigNumber.umd.js",
+  "typings": "../dist/types/DecimalBigNumber.d.ts"
+}
