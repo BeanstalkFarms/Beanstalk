@@ -14,7 +14,6 @@ export const useWell = (address: string) => {
       setLoading(true);
       setError(undefined);
       const well = await sdk.wells.getWell(address);
-      console.log("here", well);
       if (listen) setWell(well);
     };
 
