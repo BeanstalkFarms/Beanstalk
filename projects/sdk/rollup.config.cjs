@@ -6,7 +6,7 @@ import json from "@rollup/plugin-json";
 import multi from "@rollup/plugin-multi-entry";
 import excludeDeps from "rollup-plugin-exclude-dependencies-from-bundle";
 import alias from "rollup-plugin-alias";
-import sourcemaps from 'rollup-plugin-sourcemaps';
+import sourcemaps from "rollup-plugin-sourcemaps";
 const pkg = require("./package.json");
 delete pkg.exports;
 
@@ -71,5 +71,23 @@ function makeEntry(inputFile, name) {
   // Write back to package.json !!!!
   fs.writeFileSync("./package.json", JSON.stringify(pkg, null, 2) + "\n");
 
+  makeRootEntryFolder(name, cjsPath, esmPath, udmPath, typesPath);
+
   return config;
+}
+
+function makeRootEntryFolder(name, cjsPath, esmPath, udmPath, typesPath) {
+  if (name === "sdk") return;
+  // Make folder based entries
+  const entryPackageJson = {
+    main: `.${cjsPath}`,
+    module: `.${esmPath}`,
+    browser: `.${udmPath}`,
+    typings: `.${typesPath}`
+  };
+  const entryFolder = `./${name}`;
+  if (!fs.existsSync(entryFolder)) {
+    fs.mkdirSync(entryFolder);
+  }
+  fs.writeFileSync(`${entryFolder}/package.json`, JSON.stringify(entryPackageJson, null, 2) + "\n");
 }

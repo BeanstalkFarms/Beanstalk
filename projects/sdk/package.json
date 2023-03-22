@@ -23,6 +23,9 @@
   "licenses": [],
   "files": [
     "/dist",
+    "/DecimalBigNumber",
+    "/TokenValue",
+    "/Wells",
     "README.md"
   ],
   "engines": {
