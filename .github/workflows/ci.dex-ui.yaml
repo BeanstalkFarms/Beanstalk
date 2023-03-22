@@ -7,11 +7,11 @@ on:
       - 'projects/dex-ui/**'
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: DEX-UI CI Validation
+      - name: Node Install
         uses: actions/setup-node@v3
         with:
           node-version: '16'
