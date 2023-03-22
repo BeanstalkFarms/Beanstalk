@@ -1,11 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    // "noEmit": true,
-    // "module": "node",
-    // "moduleResolution": "bundler",
+    "baseUrl": "./",
+    "noEmit": true,   
     "paths": {
-      "src/*": ["./src/*"]
+      "src/*": [
+        "./src/*"
+      ]
     }
   }
 }
