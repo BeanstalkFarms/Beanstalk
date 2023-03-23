@@ -11,9 +11,9 @@ function getTestUtils() {
   const _connection = TestUtils.setupConnection();
   const _sdk = new BeanstalkSDK({
     signer: _connection.signer,
-    provider: _connection.provider,
+    // provider: _connection.provider,
     source: DataSource.LEDGER,
-    DEBUG: false,
+    DEBUG: true,
   });
   const _utils = new TestUtils.BlockchainUtils(_sdk);
 

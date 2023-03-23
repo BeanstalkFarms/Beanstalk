@@ -132,7 +132,7 @@
     "build:storybook": "build-storybook -s public",
     "build:netlify": "./utils/build-netlify.sh",
     "build:fleek": "./utils/build-fleek.sh",
-    "test": "yarn run vitest --silent",
+    "test": "yarn run vitest --no-threads --silent",
     "clean": "rm -rf ./src/generated && echo \"Cleaned src/generated.\"",
     "lint": "eslint \"src/**/**/*.ts{,x}\"",
     "generate": "echo '\nUI Generate' && yarn clean && yarn generate:typechain && yarn generate:graphql && echo \"Done generating files.\"",

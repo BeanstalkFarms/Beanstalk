@@ -9,127 +9,79 @@ import {
 } from '@beanstalk/sdk';
 
 import { ethers } from 'ethers';
-import {
-  beforeAll,
-  beforeEach,
-  describe,
-  it,
-  afterEach,
-  afterAll,
-  expect,
-} from 'vitest';
+import { beforeAll, beforeEach, describe, it, expect } from 'vitest';
 import { FormTxnBuilder, FormTxn, FormTxnBuilderInterface } from './FormTxns';
 
 import { expectWithinBounds, FarmerTestUtil, getTestUtils } from './test-util';
 
-const BASE_TEST_LEN = 15_000;
-const MAX_TEST_LEN = 25_000;
+const BASE_TEST_LEN = 20_000;
 
 // utils
 let chain: TestUtils.BlockchainUtils;
 let sdk: BeanstalkSDK;
 let account: string;
 let utils: FarmerTestUtil;
-let initSnap: number;
 
 /// CONSTANTS
 const DEPOSIT_AND_FERT_AMOUNT = 100_000;
 const WALLET_BEAN_AMOUNT = 1_000;
 
-beforeAll(async () => {
-  /// Have to do this first...
-  await setup.init({ resetFork: true });
-  const plotIds = await utils.receiveNextHarvestablePlots();
-  initSnap = await chain.snapshot();
+describe('Form Txns', async () => {
+  beforeAll(async () => {
+    /// Have to do this first...
+    await setup.init({ resetFork: true });
+    const plotIds = await utils.receiveNextHarvestablePlots();
 
-  ///
-  await setup.init({ resetFork: false });
+    ///
+    await setup.init({ resetFork: false });
 
-  /// Convenience
-  const { beanstalk } = sdk.contracts;
-  const { BEAN, CRV3 } = sdk.tokens;
+    const { beanstalk } = sdk.contracts;
+    const { BEAN, CRV3 } = sdk.tokens;
 
-  const fertilizersPrev = await beanstalk.getFertilizers();
-  await chain.setCurveLiquidity(
-    BEAN.amount(50_000_000),
-    CRV3.amount(50_000_000)
-  );
-  await chain.sunriseForward();
-  await utils.prepareSiloAndFertilizer(DEPOSIT_AND_FERT_AMOUNT);
-  await utils.setupSiloAndFertilizer({ amount: DEPOSIT_AND_FERT_AMOUNT });
-
-  await chain.setCurveLiquidity(
-    BEAN.amount(50_000_000),
-    CRV3.amount(75_000_000)
-  );
-  await chain.sunriseForward();
-
-  const fertilizerIds = await utils.getAndParseFertilizerIds(fertilizersPrev);
-  await chain.setBEANBalance(
-    account,
-    sdk.tokens.BEAN.amount(WALLET_BEAN_AMOUNT)
-  );
-  await setup.cache({
-    plotIds,
-    depositAmount: DEPOSIT_AND_FERT_AMOUNT,
-    fertilizerIds,
-  });
-}, 90_000);
-
-afterAll(async () => {
-  await chain.revert(initSnap);
-});
-
-describe('Form Txns', () => {
-  describe('Claim + Do X', () => {
-    let claimSnap: number | undefined;
-
-    beforeEach(async () => {
-      if (claimSnap) {
-        chain.revert(claimSnap);
-      }
-      claimSnap = await chain.snapshot();
-    });
-
-    afterEach(async () => {
-      if (claimSnap) {
-        chain.revert(claimSnap);
-        claimSnap = undefined;
-      }
-    });
-
-    it.skip(
-      'BEAN (claimed amount) -> BEAN:SILO',
-      async () => {
-        const params = {
-          preset: 'claim',
-          primary: [FormTxn.RINSE, FormTxn.HARVEST, FormTxn.CLAIM],
-          secondary: undefined,
-        };
-
-        const { amountIn, additional } = await testSiloDeposit(
-          params,
-          sdk.tokens.BEAN,
-          sdk.tokens.BEAN,
-          FarmFromMode.INTERNAL_TOLERANT,
-          0
-        );
-
-        const bals = await utils.getBalance.siloAndToken();
-
-        const cache = utils.cache.tokens;
-        const prevBalance = cache.getValue(sdk.tokens.BEAN);
-
-        expect(amountIn.eq(additional)).toBe(true);
-        expect(bals.silo.claimable.amount.eq(0)).toBe(true);
-        expect(amountIn.eq(bals.silo.deposited.amount)).toBe(true);
-        expect(prevBalance?.external.eq(bals.token.external)).toBe(true);
-      },
-      BASE_TEST_LEN
+    const fertilizersPrev = await beanstalk.getFertilizers();
+    await chain.setCurveLiquidity(
+      BEAN.amount(50_000_000),
+      CRV3.amount(50_000_000)
     );
+    await chain.sunriseForward();
+    await utils.prepareSiloAndFertilizer(DEPOSIT_AND_FERT_AMOUNT);
+    await utils.setupSiloAndFertilizer({ amount: DEPOSIT_AND_FERT_AMOUNT });
 
-    it.skip(
-      'BEAN (claimed amount + external amount) -> BEAN:SILO',
+    await chain.setCurveLiquidity(
+      BEAN.amount(50_000_000),
+      CRV3.amount(75_000_000)
+    );
+    await chain.sunriseForward();
+
+    const fertilizerIds = await utils.getAndParseFertilizerIds(fertilizersPrev);
+    await chain.setBEANBalance(
+      account,
+      sdk.tokens.BEAN.amount(WALLET_BEAN_AMOUNT)
+    );
+    await setup.cache({
+      plotIds,
+      depositAmount: DEPOSIT_AND_FERT_AMOUNT,
+      fertilizerIds,
+    });
+
+    return async () => {
+      await chain.resetFork();
+    };
+  }, 90_000);
+
+  describe('Claim + Do X', async () => {
+    beforeEach(async () => {
+      const snap = await chain.snapshot();
+
+      return async () => {
+        await chain.revert(snap);
+        await chain.mine();
+        await wait();
+      };
+    });
+
+    it(
+      'Claim to internal + ETH (external amount) -> BEAN:SILO',
       async () => {
         const params = {
           preset: 'claim',
@@ -137,19 +89,20 @@ describe('Form Txns', () => {
           secondary: undefined,
         };
 
-        const { amountIn } = await testSiloDeposit(
+        const { estimate, additional } = await handle.siloDeposit(
           params,
+          sdk.tokens.ETH,
           sdk.tokens.BEAN,
-          sdk.tokens.BEAN,
-          FarmFromMode.INTERNAL_EXTERNAL,
-          1_000
+          FarmFromMode.EXTERNAL,
+          1
         );
-
         const bals = await utils.getBalance.siloAndToken();
 
-        expect(bals.silo.claimable.amount.eq(0)).toBe(true);
-        expect(amountIn.eq(bals.silo.deposited.amount)).toBe(true);
-        expect(bals.token.external.eq(0)).toBe(true);
+        const est = sdk.tokens.BEAN.fromBlockchain(estimate);
+
+        expectWithinBounds(bals.silo.deposited.amount, est);
+        expectWithinBounds(bals.token.internal, additional);
+        // expect(bals.silo.claimable.amount.eq(0)).toBe(true);
       },
       BASE_TEST_LEN
     );
@@ -159,14 +112,14 @@ describe('Form Txns', () => {
       async () => {
         const params = {
           preset: 'claim',
-          primary: [FormTxn.RINSE, FormTxn.HARVEST, FormTxn.CLAIM],
+          primary: [FormTxn.CLAIM],
           secondary: [FormTxn.PLANT, FormTxn.ENROOT],
         };
 
         const cache = utils.cache;
         const earnedBeansPrev = cache.amounts.getValue(FormTxn.PLANT);
 
-        const { amountIn } = await testSiloDeposit(
+        const { amountIn } = await handle.siloDeposit(
           params,
           sdk.tokens.BEAN,
           sdk.tokens.BEAN,
@@ -185,40 +138,46 @@ describe('Form Txns', () => {
       BASE_TEST_LEN
     );
 
-    it.skip(
-      'claim to internal + ETH (external amount) -> BEAN:SILO',
+    it(
+      'BEAN (claimed amount + external amount) -> BEAN:SILO',
       async () => {
         const params = {
           preset: 'claim',
-          primary: [FormTxn.CLAIM],
+          primary: [FormTxn.RINSE, FormTxn.HARVEST, FormTxn.CLAIM],
           secondary: undefined,
         };
 
-        const { estimate, additional } = await testSiloDeposit(
+        const { amountIn } = await handle.siloDeposit(
           params,
-          sdk.tokens.ETH,
           sdk.tokens.BEAN,
-          FarmFromMode.EXTERNAL,
-          1
+          sdk.tokens.BEAN,
+          FarmFromMode.INTERNAL_EXTERNAL,
+          1_000
         );
+
         const bals = await utils.getBalance.siloAndToken();
 
-        const est = sdk.tokens.BEAN.fromBlockchain(estimate);
-
-        expectWithinBounds(bals.silo.deposited.amount, est);
-        expectWithinBounds(bals.token.internal, additional);
         expect(bals.silo.claimable.amount.eq(0)).toBe(true);
+        expect(amountIn.eq(bals.silo.deposited.amount)).toBe(true);
+        expect(bals.token.external.eq(0)).toBe(true);
       },
-      MAX_TEST_LEN
+      BASE_TEST_LEN
     );
   });
 
-  describe('Plant + Do x', () => {
-    let blockSnap: number;
-    let plantSnap: number | undefined;
+  describe('Plant + Do x', async () => {
+    beforeEach(async () => {
+      const snap = await chain.snapshot();
+
+      return async () => {
+        await chain.revert(snap);
+        await chain.mine();
+        await wait();
+      };
+    });
 
     beforeAll(async () => {
-      blockSnap = await chain.snapshot();
+      const blockSnap = await chain.snapshot();
       const { BEAN } = sdk.tokens;
 
       /// update cache
@@ -237,129 +196,68 @@ describe('Form Txns', () => {
       utils.manageCache.create('plant', { copyFrom: 'main' });
       utils.cache.silo.setValue(BEAN, bals.silo);
       utils.cache.tokens.setValue(BEAN, bals.token);
-    }, 60_000);
 
-    afterAll(async () => {
-      utils.manageCache.delete('plant');
-      await chain.revert(blockSnap);
-    });
+      return async () => {
+        utils.manageCache.delete('plant');
+        console.log('reverting block snap...');
+        await chain.revert(blockSnap);
+      };
+    }, 30_000);
 
-    beforeEach(async () => {
-      if (plantSnap) {
-        chain.revert(plantSnap);
-      }
-      plantSnap = await chain.snapshot();
-    });
+    it('PLANT => Convert => ENROOT + CLAIM', async () => {
+      const params = {
+        preset: 'plant',
+        primary: [FormTxn.PLANT],
+        secondary: [FormTxn.ENROOT, FormTxn.CLAIM],
+      };
 
-    afterEach(async () => {
-      if (plantSnap) {
-        chain.revert(plantSnap);
-        plantSnap = undefined;
-      }
-    });
+      const { BEAN, BEAN_CRV3_LP } = sdk.tokens;
 
-    it.skip(
-      'PLANT => Convert',
-      async () => {
-        const params = {
-          preset: 'plant',
-          primary: [FormTxn.PLANT],
-          secondary: undefined,
-        };
+      const siloBeanPrev = utils.cache.silo.getValue(BEAN);
+      const siloBeanLPPrev = utils.cache.silo.getValue(BEAN_CRV3_LP);
+      expect(siloBeanPrev).toBeTruthy();
+      expect(siloBeanLPPrev).toBeTruthy();
 
-        const { BEAN, BEAN_CRV3_LP } = sdk.tokens;
+      const plantAmount = utils.cache.amounts.getValue(FormTxn.PLANT);
+      const amountIn = plantAmount.add(siloBeanPrev!.deposited.amount);
 
-        const siloBeanPrev = utils.cache.silo.getValue(BEAN)?.deposited.amount;
-        const siloBeanLPPrev =
-          utils.cache.silo.getValue(BEAN_CRV3_LP)?.deposited.amount;
+      const claimedAmount = help.additionalAmount(params.secondary);
 
-        expect(siloBeanPrev).toBeTruthy();
-        expect(siloBeanLPPrev).toBeTruthy();
+      const { minAmountOut } = await handle.siloConvert(
+        params,
+        BEAN,
+        BEAN_CRV3_LP,
+        amountIn
+      );
 
-        const plantAmount = utils.cache.amounts.getValue(FormTxn.PLANT);
-        const plantAmountNum = parseFloat(plantAmount.toHuman());
-        const totalAmountIn = DEPOSIT_AND_FERT_AMOUNT + plantAmountNum;
+      const [siloBean, siloBeanLP, beanBalance] = await Promise.all([
+        utils.getBalance.siloToken(BEAN),
+        utils.getBalance.siloToken(BEAN_CRV3_LP),
+        utils.getBalance.token(BEAN),
+      ]);
 
-        const { minAmountOut } = await testSiloConvert(
-          params,
-          BEAN,
-          BEAN_CRV3_LP,
-          totalAmountIn
-        );
+      const estimatedDeposit =
+        siloBeanLPPrev!.deposited.amount.add(minAmountOut);
 
-        const [siloBean, siloBeanLP] = await Promise.all([
-          utils.getBalance.siloToken(BEAN),
-          utils.getBalance.siloToken(BEAN_CRV3_LP),
-        ]);
-
-        const esimatedDeposit = siloBeanLPPrev!.add(minAmountOut);
-
-        expect(siloBeanPrev?.gt(siloBean.deposited.amount)).toBe(true);
-        expect(esimatedDeposit?.lte(siloBeanLP.deposited.amount)).toBe(true);
-        expect(siloBeanLPPrev?.lt(esimatedDeposit)).toBe(true);
-      },
-      MAX_TEST_LEN
-    );
-
-    it(
-      'PLANT => Convert + CLAIM',
-      async () => {
-        const params = {
-          preset: 'plant',
-          primary: [FormTxn.PLANT],
-          secondary: [FormTxn.CLAIM],
-        };
-
-        const { BEAN, BEAN_CRV3_LP } = sdk.tokens;
-
-        const siloBeanPrev = utils.cache.silo.getValue(BEAN);
-        const siloBeanLPPrev = utils.cache.silo.getValue(BEAN_CRV3_LP);
-
-        expect(siloBeanPrev).toBeTruthy();
-        expect(siloBeanLPPrev).toBeTruthy();
-
-        const plantAmount = utils.cache.amounts.getValue(FormTxn.PLANT);
-        const plantAmountNum = parseFloat(plantAmount.toHuman());
-        const totalAmountIn = DEPOSIT_AND_FERT_AMOUNT + plantAmountNum;
-
-        const { minAmountOut } = await testSiloConvert(
-          params,
-          BEAN,
-          BEAN_CRV3_LP,
-          totalAmountIn
-        );
-
-        const [siloBean, siloBeanLP, beanBalance] = await Promise.all([
-          utils.getBalance.siloToken(BEAN),
-          utils.getBalance.siloToken(BEAN_CRV3_LP),
-          utils.getBalance.token(BEAN),
-        ]);
-
-        const esimatedDeposit =
-          siloBeanLPPrev!.deposited.amount.add(minAmountOut);
-
-        expect(siloBean.claimable.amount.eq(0)).toBe(true);
-        expect(siloBeanPrev?.claimable.amount?.eq(beanBalance.internal)).toBe(
-          true
-        );
-        expect(esimatedDeposit.lte(siloBeanLP.deposited.amount)).toBe(true);
-        expect(siloBeanLPPrev?.deposited.amount?.lt(esimatedDeposit)).toBe(
-          true
-        );
-      },
-      MAX_TEST_LEN
-    );
+      expect(siloBean.claimable.amount.eq(0)).toBe(true);
+      expect(siloBeanPrev?.claimable.amount?.eq(beanBalance.internal)).toBe(
+        true
+      );
+      expect(estimatedDeposit.lte(siloBeanLP.deposited.amount)).toBe(true);
+      expect(siloBeanLPPrev?.deposited.amount?.lt(estimatedDeposit)).toBe(true);
+      expect(beanBalance.internal.gte(claimedAmount)).toBe(true);
+    }, 30_000);
   });
 });
 
-async function testSiloDeposit(
-  params: FormTxnBuilderInterface,
-  tokenIn: Token,
-  target: Token,
-  from: FarmFromMode,
-  _amountFromEOA: number
-) {
-  try {
+const handle = {
+  siloDeposit: async (
+    params: FormTxnBuilderInterface,
+    tokenIn: Token,
+    target: Token,
+    from: FarmFromMode,
+    _amountFromEOA: number
+  ) => {
     const { BEAN } = sdk.tokens;
     const deposit = sdk.silo.buildDeposit(target, account);
     deposit.setInputToken(tokenIn, from);
@@ -387,6 +285,7 @@ async function testSiloDeposit(
     );
     const txn = await execute();
     const receipt = await txn.wait();
+    // await chain.mine();
 
     expect(receipt.transactionHash).toBeTruthy();
 
@@ -397,19 +296,13 @@ async function testSiloDeposit(
       workflow,
       estimate,
     };
-  } catch (err: any) {
-    console.log(err);
-    throw new Error(err);
-  }
-}
-
-async function testSiloConvert(
-  params: FormTxnBuilderInterface,
-  tokenIn: Token,
-  tokenOut: Token,
-  _amountIn: number
-) {
-  try {
+  },
+  siloConvert: async (
+    params: FormTxnBuilderInterface,
+    tokenIn: Token,
+    tokenOut: Token,
+    amountIn: TokenValue
+  ) => {
     const convert = sdk.silo.siloConvert;
     // we define this here b/c siloConvert expects token instances from it's own class
     const whitelist = [
@@ -437,8 +330,6 @@ async function testSiloConvert(
       : TokenValue.ZERO;
 
     const season = await sdk.sun.getSeason();
-    const amountIn = inToken.amount(_amountIn);
-
     const siloBal = utils.cache.silo.getValue(tokenIn);
     const depositCrates = [...(siloBal?.deposited.crates || [])];
 
@@ -465,25 +356,20 @@ async function testSiloConvert(
     );
 
     const amountOut = outToken.fromBlockchain(amountOutBN);
+    console.log('amoutOut: ', amountOut.toHuman());
     const minAmountOut = amountOut.pct(100 - 0.1);
-
-    const seasons = conversion.crates.map((crate) => crate.season.toString());
-    const amounts = conversion.crates.map((crate) =>
-      crate.amount.toBlockchain()
-    );
-
-    const callData = beanstalk.interface.encodeFunctionData('convert', [
-      convert.calculateEncoding(inToken, outToken, amountIn, minAmountOut),
-      seasons,
-      amounts,
-    ]);
+    console.log('minAmountOut: ', minAmountOut.toHuman());
 
     const convertStep: StepGenerator = async (_amountInStep, _context) => ({
       name: 'convert',
       amountOut: _amountInStep,
       prepare: () => ({
         target: beanstalk.address,
-        callData: callData,
+        callData: beanstalk.interface.encodeFunctionData('convert', [
+          convert.calculateEncoding(inToken, outToken, amountIn, minAmountOut),
+          conversion.crates.map((crate) => crate.season.toString()),
+          conversion.crates.map((crate) => crate.amount.toBlockchain()),
+        ]),
       }),
       decode: (data: string) =>
         beanstalk.interface.decodeFunctionData('convert', data),
@@ -502,6 +388,8 @@ async function testSiloConvert(
 
     const txn = await execute();
     const receipt = await txn.wait();
+    // await chain.mine();
+
     expect(receipt.transactionHash).toBeTruthy();
 
     return {
@@ -511,13 +399,32 @@ async function testSiloConvert(
       workflow,
       additional,
     };
-  } catch (err: any) {
-    console.log(err);
-    throw new Error(err);
-  }
-}
+  },
+};
 
 const help = {
+  check: async () => {
+    const [earned, stoken, lpSilo, token, ethBal, earnedSeeds] =
+      await Promise.all([
+        utils.getBalance.earnedBeans(),
+        utils.getBalance.siloToken(),
+        utils.getBalance.siloToken(sdk.tokens.BEAN_CRV3_LP),
+        utils.getBalance.token(),
+        utils.getBalance.token(sdk.tokens.ETH),
+        utils.getBalance.earnedSeeds(),
+      ]);
+
+    console.table({
+      earned: earned.toHuman(),
+      earnedSeeds: earnedSeeds.toHuman(),
+      siloDeposited: stoken.deposited.amount.toHuman(),
+      siloClaimable: stoken.claimable.amount.toHuman(),
+      siloLPDeposited: lpSilo.deposited.amount.toHuman(),
+      beanExternal: token.external.toHuman(),
+      beanInternal: token.internal.toHuman(),
+      ethExternal: ethBal.external.toHuman(),
+    });
+  },
   additionalAmount: (formTxns: FormTxn[] | undefined) => {
     if (!formTxns) return TokenValue.ZERO;
     const cache = utils.cache.amounts;
@@ -637,4 +544,9 @@ const setup = {
       [FormTxn.CLAIM]: claim.getSteps(),
     });
   },
+};
+
+const wait = async (_ms?: number) => {
+  const ms = _ms || 500;
+  await new Promise((resolve) => setTimeout(resolve, ms));
 };

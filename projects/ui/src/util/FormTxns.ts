@@ -432,8 +432,36 @@ export class FormTxnBuilder {
   }
 
   /// -------------------------------------------------------
-  /// ----------------- Conveinence Methods -----------------
+  /// ----------------- Convenience Methods -----------------
   /// -------------------------------------------------------
+
+  static makePlantCrateSync(
+    sdk: BeanstalkSDK,
+    earnedBeans: TokenValue,
+    season: number
+  ) {
+    const { BEAN, STALK } = sdk.tokens;
+
+    const seeds = BEAN.getSeeds(earnedBeans);
+    const stalk = BEAN.getStalk(earnedBeans);
+    const grownStalk = STALK.amount(0);
+
+    const crate = {
+      season: ethers.BigNumber.from(season),
+      amount: earnedBeans,
+      bdv: earnedBeans,
+      stalk,
+      baseStalk: stalk,
+      grownStalk,
+      seeds,
+    };
+
+    return {
+      canPlant: earnedBeans.gt(0),
+      amount: earnedBeans,
+      crate,
+    };
+  }
 
   static async makePlantCrate(
     sdk: BeanstalkSDK,
