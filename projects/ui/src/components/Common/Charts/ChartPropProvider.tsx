@@ -13,11 +13,11 @@ import {
   curveStepBefore,
 } from '@visx/curve';
 
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { Line } from '@visx/shape';
 import { SeriesPoint } from '@visx/shape/lib/types';
 import { TickFormatter } from '@visx/axis';
 import { localPoint } from '@visx/event';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // -------------------------------------------------------------------------
 // --------------------------------- TYPES ---------------------------------
@@ -172,10 +172,10 @@ const chartPadding = {
   right: 17,
 };
 
-const chartColors = BeanstalkPalette.theme.winter.chart;
+const chartColors = BeanstalkPalette.theme.spring.chart;
 const defaultChartStyles: ChartMultiStyles = {
   0: {
-    stroke: BeanstalkPalette.theme.winter.primary,
+    stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
     fillPrimary: chartColors.primaryLight,
     strokeWidth: 2,
   },

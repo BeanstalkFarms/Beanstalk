@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Box, BoxProps, ClickAwayListener } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 
@@ -15,6 +16,8 @@ const BorderEffect: FC<
 
   // ref state to keep track of active state
   const activeRef = useRef<boolean>(false);
+
+  const theme = useTheme();
 
   const actions = useMemo(() => {
     const handleMouseOver = () => {
@@ -35,7 +38,7 @@ const BorderEffect: FC<
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.padding = '0px';
       ref.current.style.border = '2px solid';
-      ref.current.style.borderColor = BeanstalkPalette.theme.winter.primary;
+      ref.current.style.borderColor = theme.palette.primary.main;
       activeRef.current = true;
     };
 
@@ -53,7 +56,7 @@ const BorderEffect: FC<
       handleOnClick,
       handleClickAway,
     };
-  }, [disabled]);
+  }, [disabled, theme]);
 
   useEffect(() => {
     if (!enabled || !ref.current) return;
