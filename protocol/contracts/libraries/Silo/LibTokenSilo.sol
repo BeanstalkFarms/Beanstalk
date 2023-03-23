@@ -43,9 +43,8 @@ library LibTokenSilo {
      * used to determine if the event should be emitted.
      */
     enum Transfer {
-        isDeposit,
-        isWithdraw,
-        isTransfer
+        emitTransferSingle,
+        noEmitTransferSingle
     }
 
     //////////////////////// EVENTS ////////////////////////
@@ -139,7 +138,7 @@ library LibTokenSilo {
             stem, 
             amount, 
             bdv, 
-            Transfer.isDeposit  
+            Transfer.emitTransferSingle  
         ); 
         return (
             bdv.mul(s.ss[token].stalkIssuedPerBdv)
@@ -192,7 +191,7 @@ library LibTokenSilo {
          *  Event is emitted in {TokenSilo._transferDeposit(s)}, 
          *  and thus, this event is ommited.
          */
-        if(transferType == Transfer.isDeposit){
+        if(transferType == Transfer.emitTransferSingle){
             emit TransferSingle(
                 msg.sender, // operator
                 address(0), // from

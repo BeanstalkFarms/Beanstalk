@@ -480,7 +480,7 @@ library LibSilo {
          *  Event is emitted in {TokenSilo._transferDeposit(s)}, 
          *  and thus, this event is ommited.
          */
-        if(transferType == LibTokenSilo.Transfer.isWithdraw){
+        if(transferType == LibTokenSilo.Transfer.emitTransferSingle){
             // "removing" a deposit is equivalent to "burning" an ERC1155 token.
             emit TransferSingle(
                 msg.sender, // operator

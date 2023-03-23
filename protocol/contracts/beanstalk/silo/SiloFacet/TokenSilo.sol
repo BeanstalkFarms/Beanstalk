@@ -221,7 +221,7 @@ contract TokenSilo is Silo {
             address(token),
             stem,
             amount,
-            LibTokenSilo.Transfer.isWithdraw
+            LibTokenSilo.Transfer.emitTransferSingle
         );
         
         // Add a Withdrawal, update totals, burn Stalk.
@@ -308,7 +308,7 @@ contract TokenSilo is Silo {
             token,
             stem,
             amount,
-            LibTokenSilo.Transfer.isTransfer
+            LibTokenSilo.Transfer.noEmitTransferSingle
         );
         LibTokenSilo.addDepositToAccount(
             recipient, 
@@ -316,7 +316,7 @@ contract TokenSilo is Silo {
             stem, 
             amount, 
             bdv,
-            LibTokenSilo.Transfer.isTransfer
+            LibTokenSilo.Transfer.noEmitTransferSingle
         );
         LibSilo.transferStalk(sender, recipient, stalk);
 
@@ -375,7 +375,7 @@ contract TokenSilo is Silo {
                 stems[i],
                 amounts[i],
                 crateBdv,
-                LibTokenSilo.Transfer.isTransfer
+                LibTokenSilo.Transfer.noEmitTransferSingle
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);

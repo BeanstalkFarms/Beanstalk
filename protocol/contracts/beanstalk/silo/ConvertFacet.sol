@@ -64,6 +64,20 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 bdvRemoved;
     }
 
+    /**
+     * @notice convert allows a user to convert a deposit to another deposit,
+     * given that the conversion is supported by the ConvertFacet.
+     * For example, a user can convert LP into Bean, only when beanstalk is below peg, 
+     * or convert beans into LP, only when beanstalk is above peg.
+     * @param convertData  input parameters to determine the conversion type.
+     * @param stems the stems of the deposits to convert 
+     * @param amounts the amounts within each deposit to convert
+     * @return toStem the new stems of the converted deposit
+     * @return fromAmount the amount of tokens converted from
+     * @return toAmount the amount of tokens converted to
+     * @return fromBdv the bdv of the deposits converted from
+     * @return toBdv the bdv of the deposit converted to
+     */
     function convert(
         bytes calldata convertData,
         int96[] memory stems,
@@ -109,6 +123,8 @@ contract ConvertFacet is ReentrancyGuard {
      * 
      * {LibTokenSilo-removeDepositFromAccount} should revert if there isn't
      * enough balance of `token` to remove.
+     * Because the amount and the stem of an Deposit does not change, 
+     * an ERC1155 event does not need to be emitted.
      */
     function enrootDeposit(
         address token,
@@ -133,7 +149,7 @@ contract ConvertFacet is ReentrancyGuard {
             stem, 
             amount, 
             newBDV,
-            LibTokenSilo.Transfer.isTransfer
+            LibTokenSilo.Transfer.noEmitTransferSingle
         ); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
@@ -194,7 +210,7 @@ contract ConvertFacet is ReentrancyGuard {
                 stems[i],
                 amounts[i],
                 bdv,
-                LibTokenSilo.Transfer.isTransfer
+                LibTokenSilo.Transfer.noEmitTransferSingle
             );
             
             newStalk = newStalk.add(
@@ -342,7 +358,7 @@ contract ConvertFacet is ReentrancyGuard {
             stem, 
             amount, 
             bdv,
-            LibTokenSilo.Transfer.isDeposit
+            LibTokenSilo.Transfer.emitTransferSingle
         );
     }
 

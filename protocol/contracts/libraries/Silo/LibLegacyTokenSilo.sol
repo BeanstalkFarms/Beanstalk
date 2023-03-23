@@ -454,7 +454,7 @@ library LibLegacyTokenSilo {
                     ), 
                     perDepositData.amount, 
                     crateBDV,
-                    LibTokenSilo.Transfer.isDeposit
+                    LibTokenSilo.Transfer.emitTransferSingle
                 );
  
                 //add to running total of seeds
