@@ -41,14 +41,13 @@ import { sgEnvKey } from '~/graph/client';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
 
-import pageBackground from '~/img/beanstalk/interface/bg/winter.png';
+import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
 
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
 
 import { FC } from '~/types';
-import Snowflakes from './theme/winter/Snowflakes';
 
 import PodMarketPage from '~/pages/market/pods';
 import PodMarketBuy from '~/components/Market/PodsV2/Actions/Buy';
@@ -130,7 +129,7 @@ export default function App() {
       <CustomToaster navHeight={navHeight} />
       {account && <NewProposalsDialog />}
       {/* <Leaves /> */}
-      <Snowflakes />
+      {/* <Snowflakes /> */}
       <Box
         sx={{
           bgcolor: 'background.default',

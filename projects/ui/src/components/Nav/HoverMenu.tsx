@@ -26,7 +26,7 @@ const HoverMenu: FC<{
       components={{ Tooltip: Box }}
       title={(
         <Box 
-          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, backgroundColor: 'white', py: 1 }} 
+          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, backgroundColor: 'white', py: 1 }}
           data-cy="HoverMenu-MenuList"
         >
           {items.map((item) => (

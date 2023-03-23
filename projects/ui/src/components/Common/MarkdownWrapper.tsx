@@ -127,7 +127,7 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
         props: {
           style: {
             wordBreak: 'break-word',
-            color: BeanstalkPalette.theme.winter.primary,
+            color: 'primary.main',
           }
         }
       },
