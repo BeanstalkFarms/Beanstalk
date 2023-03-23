@@ -51,6 +51,7 @@ import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
+import useAsyncMemo from '~/hooks/ui/useAsyncMemo';
 
 // -----------------------------------------------------------------------
 
@@ -120,13 +121,14 @@ const ConvertForm: FC<
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
   let deltaSeeds; // the change in seeds during the convert.
 
-  const plantCrate = useFarmerDepositCrateFromPlant();
+  const { crate: plantCrate } = useFarmerDepositCrateFromPlant();
   const { plantableBalance } = useFarmerFormTxnBalances();
   const txnActions = useFarmerFormTxnsActions();
 
-  const shouldAppendPlantDepositCrate =
+  const shouldAppendPlantDepositCrate = !(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
-    sdk.tokens.BEAN.equals(tokenIn);
+    sdk.tokens.BEAN.equals(tokenIn)
+  );
 
   ///
   const [conversion, setConversion] = useState(INIT_CONVERSION);
@@ -135,12 +137,13 @@ const ConvertForm: FC<
       if (!tokenOut) {
         setConversion(INIT_CONVERSION);
       } else if (tokenOut && !isQuoting) {
-        console.debug('[Convert] setting conversion, ', tokenOut, isQuoting);
-
+        console.debug(
+          `[Convert] setting conversion. tokenOut: ${tokenOut.symbol} isQuoting: ${isQuoting}`
+        );
         const crates = [...(siloBalance?.deposited.crates || [])]; // depositedCrates
         // only append the plant deposit crate if SILO:BEAN is being converted
         if (shouldAppendPlantDepositCrate) {
-          crates.push(plantCrate.crate.asBN);
+          crates.push(plantCrate.asBN);
         }
 
         setConversion(
@@ -161,7 +164,7 @@ const ConvertForm: FC<
       shouldAppendPlantDepositCrate,
       tokenIn,
       currentSeason,
-      plantCrate.crate.asBN,
+      plantCrate.asBN,
     ]
   );
 
@@ -231,21 +234,27 @@ const ConvertForm: FC<
   useEffect(() => {
     (async () => {
       if (tokenOut) {
+        console.log('FETCHING MAX AMOUNT IN');
         const _maxAmountIn = await sdk.contracts.beanstalk
           .getMaxAmountIn(tokenIn.address, tokenOut.address)
-          .then((amt) => tokenValueToBN(tokenIn.amount(amt.toString())))
+          .then((amt) => tokenValueToBN(tokenIn.fromBlockchain(amt)))
           .catch(() => ZERO_BN); // if calculation fails, consider this pathway unavailable
         setFieldValue('maxAmountIn', _maxAmountIn);
+
+        const _maxAmountInStr = tokenIn.amount(_maxAmountIn.toString());
+        console.debug('[Convert][maxAmountIn]: ', _maxAmountInStr);
       }
     })();
   }, [sdk.contracts.beanstalk, setFieldValue, tokenIn, tokenOut]);
 
+  const isPlanting =
+    values.farmActions.primary?.includes(FormTxn.PLANT) || false;
   const quoteHandlerParams = useMemo(
     () => ({
       slippage: values.settings.slippage,
-      isPlanting: values.farmActions.primary?.includes(FormTxn.PLANT) || false,
+      isPlanting: isPlanting,
     }),
-    [values.farmActions.primary, values.settings.slippage]
+    [isPlanting, values.settings.slippage]
   );
   const maxAmountUsed =
     amountIn && maxAmountIn ? amountIn.div(maxAmountIn) : null;
@@ -301,7 +310,7 @@ const ConvertForm: FC<
           </PillRow>
         ) : null}
         {/* Warning Alert */}
-        {!canConvert && tokenOut ? (
+        {!canConvert && tokenOut && maxAmountIn ? (
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
               {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when
@@ -418,8 +427,6 @@ const Convert: FC<{
 }> = ({ fromToken }) => {
   const sdk = useSdk();
 
-  const formTxnBuilder = useFarmerFormTxns();
-
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
     const { BEAN, BEAN_CRV3_LP, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } = sdk.tokens;
@@ -437,36 +444,25 @@ const Convert: FC<{
   const season = useSeason();
 
   /// Farmer
+  const formTxnBuilder = useFarmerFormTxns();
   const farmerSilo = useFarmerSilo();
   const farmerSiloBalances = farmerSilo.balances;
   const account = useAccount();
 
+  /// Temporary solution. Remove this when we move the site to use the new sdk types.
+  const [sdkBalances, refetchSdkBalances] = useAsyncMemo(async () => {
+    if (!account) return undefined;
+    console.log('refetchSdkBalances...');
+    return sdk.silo.getBalance(fromToken, account, {
+      source: DataSource.LEDGER,
+    });
+  }, [account, sdk]);
+
   const [refetchPools] = useFetchPools();
-
-  const defaultFarmActionsFormState = useMemo(() => {
-    const shouldChange = true;
-    const { isLP, isUnripe } = fromToken;
-    if (!shouldChange) {
-      return {
-        preset: 'plant',
-        primary: undefined,
-        secondary: undefined,
-        implied: [FormTxn.MOW],
-      };
-    }
-
-    // only show the 'plant' option in primary options if the token is BEAN
-    const presetKey = isUnripe || isLP ? 'noPrimary' : 'plant';
-
-    return {
-      preset: presetKey,
-      primary: undefined,
-      secondary: undefined,
-    };
-  }, [fromToken]);
 
   /// Form
   const middleware = useFormMiddleware();
+
   const initialValues: ConvertFormValues = useMemo(
     () => ({
       // Settings
@@ -486,9 +482,14 @@ const Convert: FC<{
       maxAmountIn: undefined,
       // Token Outputs
       tokenOut: initialTokenOut,
-      farmActions: defaultFarmActionsFormState,
+      farmActions: {
+        preset: fromToken.isLP || fromToken.isUnripe ? 'noPrimary' : 'plant',
+        primary: undefined,
+        secondary: undefined,
+        implied: [FormTxn.MOW],
+      },
     }),
-    [defaultFarmActionsFormState, fromToken, initialTokenOut]
+    [fromToken, initialTokenOut]
   );
 
   /**
@@ -503,35 +504,24 @@ const Convert: FC<{
       slippage: number,
       isPlanting: boolean
     ) => {
-      if (!account) {
-        throw new Error('Signer required');
-      }
+      if (!account) throw new Error('Signer required');
+      if (!sdkBalances) throw new Error('No balances found');
+      const sc = sdk.silo.siloConvert;
 
-      const siloConvert = sdk.silo.siloConvert;
-      // we define this here b/c siloConvert expects token instances from it's own class
-      const whitelist = [
-        siloConvert.Bean,
-        siloConvert.BeanCrv3,
-        siloConvert.urBean,
-        siloConvert.urBeanCrv3,
-      ];
-
+      const whitelist = [sc.Bean, sc.BeanCrv3, sc.urBean, sc.urBeanCrv3];
       const [inToken, outToken] = whitelist.reduce(
         (prev, curr) => {
-          prev[0] = curr.equals(tokenIn) ? curr : prev[0];
-          prev[1] = curr.equals(tokenOut) ? curr : prev[1];
+          if (curr.equals(tokenIn)) prev[0] = curr;
+          if (curr.equals(tokenOut)) prev[1] = curr;
           return prev;
         },
         [null, null] as [Token | null, Token | null]
       );
 
       if (!inToken || !outToken) throw new Error('conversion unavailable');
+      await sc.validateTokens(inToken, outToken);
 
-      const amountIn = inToken.amount(_amountIn.toString());
-      const { deposited } = await sdk.silo.getBalance(inToken, account, {
-        source: DataSource.LEDGER,
-      });
-      const depositCrates = [...deposited.crates];
+      const depositCrates = [...sdkBalances.deposited.crates];
 
       // if the user is planting
       if (isPlanting && sdk.tokens.BEAN.equals(inToken)) {
@@ -539,13 +529,16 @@ const Convert: FC<{
         depositCrates.push(plantCrate.crate);
       }
 
-      const conversion = siloConvert.calculateConvert(
+      const amountIn = inToken.amount(_amountIn.toString());
+
+      const conversion = sc.calculateConvert(
         inToken,
         outToken,
         amountIn,
         depositCrates,
         season.toNumber()
       );
+      console.debug('[Convert][conversion]', conversion);
 
       const amountOutBN = await sdk.contracts.beanstalk.getAmountOut(
         tokenIn.address,
@@ -555,13 +548,21 @@ const Convert: FC<{
       const amountOut = outToken.fromBlockchain(amountOutBN);
       const minAmountOut = amountOut.pct(100 - slippage);
 
+      console.debug('[Convert][minAmountOut]', minAmountOut);
+
+      const getEncoded = () =>
+        sdk.contracts.beanstalk.interface.encodeFunctionData('convert', [
+          sc.calculateEncoding(inToken, outToken, amountIn, minAmountOut),
+          conversion.crates.map((c) => c.season.toString()),
+          conversion.crates.map((c) => c.amount.abs().toBlockchain()),
+        ]);
+
       return {
         minAmountOut,
-        conversion,
-        crates: depositCrates,
+        getEncoded,
       };
     },
-    [account, sdk, season]
+    [account, sdk, sdkBalances, season]
   );
 
   /// Handlers
@@ -569,21 +570,12 @@ const Convert: FC<{
   const handleQuote = useCallback<
     QuoteHandlerWithParams<ConvertQuoteHandlerParams>
   >(
-    async (tokenIn, _amountIn, tokenOut, { slippage, isPlanting }) => {
-      const { minAmountOut } = await handleConversion(
-        tokenIn,
-        _amountIn,
-        tokenOut,
-        slippage,
-        isPlanting
-      );
-      return tokenValueToBN(minAmountOut);
-    },
+    async (tokenIn, _amountIn, tokenOut, { slippage, isPlanting }) =>
+      handleConversion(tokenIn, _amountIn, tokenOut, slippage, isPlanting).then(
+        ({ minAmountOut }) => tokenValueToBN(minAmountOut)
+      ),
     [handleConversion]
   );
-
-  // const tkIn = sdk.tokens.siloWhitelist.has(fromToken);
-  // console.log('tk in is in whitelist:', tkIn);
 
   const onSubmit = useCallback(
     async (
@@ -592,47 +584,30 @@ const Convert: FC<{
     ) => {
       let txToast;
       try {
-        const { beanstalk } = sdk.contracts;
         middleware.before();
 
-        const formData = values.tokens[0];
+        /// FormData
         const slippage = values?.settings?.slippage;
-        const tokenIn = formData.token;
+        const tokenIn = values.tokens[0].token;
         const tokenOut = values.tokenOut;
-        const _amountIn = formData.amount;
-        const _amountOut = formData.amountOut;
+        const _amountIn = values.tokens[0].amount;
 
-        if (!account) {
-          throw new Error('Wallet connection required');
-        }
-        if (!slippage) {
-          throw new Error('No slippage value set.');
-        }
-        if (!tokenOut) {
-          throw new Error('No output token selected');
-        }
-        if (!_amountIn) {
-          throw new Error('No amount input');
-        }
-        if (!_amountOut) {
-          throw new Error('No quote available.');
-        }
+        /// Validation
+        if (!account) throw new Error('Wallet connection required');
+        if (!slippage) throw new Error('No slippage value set.');
+        if (!_amountIn) throw new Error('No amount input');
+        if (!tokenOut) throw new Error('Conversion pathway not set');
 
-        const siloConvert = sdk.silo.siloConvert;
-
-        if (!tokenIn || !tokenOut) throw new Error('Token not whitelisted.');
+        const { beanstalk } = sdk.contracts;
         const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
-        const amountOut = tokenOut.amount(_amountOut.toString());
+        const isPlanting = values.farmActions.primary?.includes(FormTxn.PLANT);
 
-        const isPlanting =
-          values.farmActions.primary?.includes(FormTxn.PLANT) || false;
-
-        const { conversion } = await handleConversion(
+        const { getEncoded } = await handleConversion(
           tokenIn,
           _amountIn,
           tokenOut,
           slippage,
-          isPlanting
+          isPlanting || false
         );
 
         txToast = new TransactionToast({
@@ -640,25 +615,12 @@ const Convert: FC<{
           success: 'Convert successful.',
         });
 
-        const crates = conversion.crates.map((crate) =>
-          crate.season.toString()
-        );
-        const amounts = conversion.crates.map((crate) =>
-          crate.amount.toBlockchain()
-        );
-
-        const callData = beanstalk.interface.encodeFunctionData('convert', [
-          siloConvert.calculateEncoding(tokenIn, tokenOut, amountIn, amountOut),
-          crates,
-          amounts,
-        ]);
-
         const convertStep: StepGenerator = async (_amountInStep, _context) => ({
           name: 'convert',
           amountOut: _amountInStep,
           prepare: () => ({
             target: beanstalk.address,
-            callData: callData,
+            callData: getEncoded(),
           }),
           decode: (data: string) =>
             beanstalk.interface.decodeFunctionData('convert', data),
@@ -682,14 +644,22 @@ const Convert: FC<{
 
         await formTxnBuilder.refetch(
           performed,
-          {
-            farmerSilo: true, // update farmer silo since we just moved deposits around
-          },
-          [refetchPools]
-        ); // update prices to account for pool conversion
-
+          { farmerSilo: true },
+          [refetchPools, refetchSdkBalances] // update prices to account for pool conversion
+        );
         txToast.success(receipt);
-        formActions.resetForm();
+
+        const _maxAmountIn = await sdk.contracts.beanstalk
+          .getMaxAmountIn(tokenIn.address, tokenOut.address)
+          .then((amt) => tokenValueToBN(tokenIn.fromBlockchain(amt)))
+          .catch(() => ZERO_BN); // if calculation fails, consider this pathway unavailable
+
+        formActions.resetForm({
+          values: {
+            ...initialValues,
+            maxAmountIn: _maxAmountIn,
+          },
+        });
       } catch (err) {
         console.error(err);
         if (txToast) {
@@ -701,7 +671,16 @@ const Convert: FC<{
         formActions.setSubmitting(false);
       }
     },
-    [sdk, middleware, account, formTxnBuilder, handleConversion, refetchPools]
+    [
+      middleware,
+      account,
+      sdk,
+      handleConversion,
+      formTxnBuilder,
+      refetchPools,
+      refetchSdkBalances,
+      initialValues,
+    ]
   );
 
   return (

@@ -423,9 +423,11 @@ export class FormTxnBuilder {
     const farm = sdk.farm.create();
 
     const getSteps = (actions?: Set<FormTxn>) => {
-      let generators: StepGenerator[] = [];
+      const generators: StepGenerator[] = [];
       [...(actions || [])]?.forEach((action) => {
-        generators = [...generators, ...getGenerators(action)];
+        getGenerators(action).forEach((step) => {
+          generators.push(step);
+        });
       });
       return generators;
     };
@@ -436,7 +438,9 @@ export class FormTxnBuilder {
       ...getSteps(secondary),
     ]);
 
-    const estimate = await farm.estimate(amountIn || TokenValue.ZERO);
+    const amountIn = _amountIn || TokenValue.ZERO;
+    const estimate = await farm.estimate(amountIn);
+    console.debug('[FormTxnBuilder.compile]: estimate: ', estimate.toString());
 
     const execute = () =>
       farm.execute(amountIn || TokenValue.ZERO, { slippage });
