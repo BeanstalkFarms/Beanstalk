@@ -22,7 +22,9 @@ const getConfig = (key: keyof typeof FormTxnBuilderPresets) => {
   };
 };
 
-const FormTxnsPrimaryOptions: React.FC<{}> = () => {
+const FormTxnsPrimaryOptions: React.FC<{
+  hide?: boolean;
+}> = ({ hide: _hideOptions }) => {
   /// Formik
   const { values, setFieldValue } = useFormikContext<FormTxnsFormState>();
 
@@ -74,7 +76,7 @@ const FormTxnsPrimaryOptions: React.FC<{}> = () => {
     }
   }, [values.farmActions.primary, hide, setFieldValue]);
 
-  if (formItems.noneEnabled || !formItems.options.length) return null;
+  if (formItems.noneEnabled || !formItems.options.length || _hideOptions) return null;
 
   return (
     <SelectionAccordion<FormTxn>

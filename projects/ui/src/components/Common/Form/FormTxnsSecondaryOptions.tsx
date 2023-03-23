@@ -172,9 +172,6 @@ const FormTxnsSecondaryOptions: React.FC<Props> = ({ disabledActions }) => {
       // setFieldValue('farmActions.secondary', []);
     }
   }, [farmActions.secondary, impliedOptions]);
-
-  console.log('local: ', local);
-
   return (
     <SelectionAccordion<FormTxn>
       open={open}
@@ -188,13 +185,7 @@ const FormTxnsSecondaryOptions: React.FC<Props> = ({ disabledActions }) => {
         </Row>
       }
       subtitle={
-        <Row
-          width="100%"
-          justifyContent="space-between"
-          // We add a negative margin b/c the MUI switch component has padding of 12px, and
-          // removing the padding from the switch component causes unexpected behavior
-          // sx={{ my: '-12px', boxSizing: 'border-box' }}
-        >
+        <Row width="100%" justifyContent="space-between">
           <Typography color="text.secondary">Claim All</Typography>
           <Switch
             checked={allToggled}

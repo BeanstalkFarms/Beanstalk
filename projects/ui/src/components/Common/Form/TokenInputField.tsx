@@ -186,7 +186,7 @@ const TokenInput: FC<
   );
 
   const clamp = useCallback((amount: BigNumber | null) => {
-    const max = _max === 'use-balance' ? balance : _max; // fallback to balance
+    const max = _max === 'use-balance' ? balance?.plus(additionalBalance || ZERO_BN) : _max; // fallback to balance
     const actualMax = additionalBalance ? max?.plus(additionalBalance || ZERO_BN) : max;
     console.debug(`[TokenInputField@${field.name}] clamp: `, {
       amount: amount?.toString(),
@@ -196,7 +196,7 @@ const TokenInput: FC<
     if (!amount) return undefined; // if no amount, exit
     if (min?.gt(amount)) return min; // clamp @ min
     if (!allowNegative && amount?.lt(ZERO_BN)) return ZERO_BN; // clamp negative 
-    if (actualMax?.lt(amount)) return actualMax; // clamp @ max
+    if (max?.lt(amount)) return max; // clamp @ max
     return amount; // no max; always return amount
   }, [_max, additionalBalance, balance, field.name, min, allowNegative]);
 

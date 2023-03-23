@@ -16,6 +16,7 @@ import EmbeddedCard from '../EmbeddedCard';
 import {
   BeanstalkPalette,
   FontSize,
+  FontWeight,
   IconSize,
 } from '~/components/App/muiTheme';
 import { displayFullBN } from '~/util';
@@ -92,6 +93,18 @@ function TokenOutputRow({
     isMedium ? 'bodySmall' : 'caption'
   ) as TypographyVariant;
 
+  const labelSx = {
+    fontSize: isMedium ? FontSize.lg : FontSize.sm,
+    lineHeight: isMedium ? FontSize.lg : FontSize.sm,
+    fontWeight: isMedium ? FontWeight.normal : FontWeight.medium,
+  };
+
+  const descriptionSx = {
+    fontSize: isMedium ? FontSize.sm : FontSize.xs,
+    lineHeight: isMedium ? FontSize.sm : FontSize.xs,
+    fontWeight: isMedium ? FontWeight.medium : FontWeight.normal,
+  };
+
   return (
     <Stack width="100%" gap={0}>
       <Row width="100%" justifyContent="space-between">
@@ -104,16 +117,16 @@ function TokenOutputRow({
               }}
             />
           </IconWrapper>
-          <Typography variant={labelVariant} color="text.primary">
+          <Typography color="text.primary" sx={labelSx}>
             {label || token.symbol}
           </Typography>
         </Row>
         <Tooltip title={amountTooltip || ''}>
           <Typography
-            variant={labelVariant}
             sx={{
               color: amount.lt(0) ? BeanstalkPalette.trueRed : 'text.secondary',
               textAlign: 'right',
+              ...labelSx,
             }}
           >
             {formatBN(amount, token.displayDecimals, amountSuffix)}
@@ -131,9 +144,9 @@ function TokenOutputRow({
             />
             {description ? (
               <Typography
-                variant={descriptionVariant}
                 color="text.secondary"
                 textAlign="right"
+                sx={descriptionSx}
               >
                 {description}
                 {descriptionTooltip ? (
@@ -143,7 +156,7 @@ function TokenOutputRow({
                         ml: 0.1,
                         color: 'text.secondary',
                         display: 'inline',
-                        mb: 0.5,
+                        mb: 0.2,
                         fontSize: '11px',
                       }}
                     />
@@ -153,7 +166,7 @@ function TokenOutputRow({
             ) : null}
           </Row>
           {delta ? (
-            <Typography variant={descriptionVariant} color="text.tertiary">
+            <Typography color="text.tertiary" sx={descriptionSx}>
               {typeof delta === 'string'
                 ? delta
                 : formatBN(delta, 2, deltaSuffix)}

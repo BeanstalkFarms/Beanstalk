@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
+import { TokenValue } from '@beanstalk/sdk';
+import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import {
   FormTxn,
   FormTxnActions,
@@ -26,14 +28,15 @@ export type FormTxnRefetchFn =
   | 'farmerSilo'
   | 'farmerField'
   | 'farmerBalances'
-  | 'farmerBarn';
+  | 'farmerBarn'
+  | 'beanstalkSilo';
 
 export type FormTxnRefetchConfig<T> = Partial<{ [key in FormTxnRefetchFn]: T }>;
 
 const refetchMapping: Record<FormTxn, FormTxnRefetchFn[]> = {
   [FormTxn.MOW]: ['farmerSilo'],
   [FormTxn.PLANT]: ['farmerSilo'],
-  [FormTxn.ENROOT]: ['farmerSilo'],
+  [FormTxn.ENROOT]: ['farmerSilo', 'beanstalkSilo'],
   [FormTxn.CLAIM]: ['farmerSilo', 'farmerBalances'],
   [FormTxn.HARVEST]: ['farmerBalances', 'farmerField'],
   [FormTxn.RINSE]: ['farmerBalances', 'farmerBarn'],
@@ -71,6 +74,7 @@ export default function useFarmerFormTxns() {
   const [refetchFarmerBalances] = useFetchFarmerBalances();
   const [refetchFarmerField] = useFetchFarmerField();
   const [refetchFarmerBarn] = useFetchFarmerBarn();
+  const [refetchSilo] = useFetchBeanstalkSilo();
 
   /// Helpers
   const getBDV = useBDV();
@@ -84,11 +88,11 @@ export default function useFarmerFormTxns() {
 
     const beanBalance = farmerSilo.balances[BEAN.address];
     const plots = Object.keys(farmerField.harvestablePlots);
+    const plotIds = plots.map(
+      (plotId) => TokenValue.fromHuman(plotId, 6).blockchainString
+    );
     const seasons =
       beanBalance?.claimable?.crates.map((c) => c.season.toString()) || [];
-    const plotIds = plots.map((harvestIdx) =>
-      sdk.tokens.BEAN.fromBlockchain(harvestIdx).toBlockchain()
-    );
     const fertilizerIds = farmerBarn.balances.map((bal) =>
       bal.token.id.toString()
     );
@@ -166,12 +170,14 @@ export default function useFarmerFormTxns() {
       farmerField: refetchFarmerField,
       farmerBalances: refetchFarmerBalances,
       farmerBarn: refetchFarmerBarn,
+      beanstalkSilo: refetchSilo,
     }),
     [
       refetchFarmerBalances,
       refetchFarmerBarn,
       refetchFarmerField,
       refetchFarmerSilo,
+      refetchSilo,
     ]
   );
 

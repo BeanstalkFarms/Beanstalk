@@ -269,7 +269,12 @@ const SowForm: FC<
           additionalBalance={
             additionalBalance.balances[values.tokens[0].token.address]?.applied
           }
-          belowComponent={<FormTxnsPrimaryOptions />}
+          disableTokenSelect={!hasSoil || !values.maxAmountIn}
+          belowComponent={
+            <FormTxnsPrimaryOptions 
+              hide={!hasSoil}
+            />
+          }
         />
         {!hasSoil ? (
           <Box>
@@ -303,9 +308,7 @@ const SowForm: FC<
                 {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
               </WarningAlert>
             ) : null}
-            <FormTxnsSecondaryOptions
-              disabledActions={disabledActions}
-            />
+            <FormTxnsSecondaryOptions disabledActions={disabledActions} />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -427,7 +430,7 @@ const Sow: FC<{}> = () => {
       ],
       maxAmountIn: undefined,
       farmActions: {
-        ...defaultFarmActionsFormState
+        ...defaultFarmActionsFormState,
       },
       balanceFrom: BalanceFrom.TOTAL,
     }),

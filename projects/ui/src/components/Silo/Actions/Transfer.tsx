@@ -38,8 +38,8 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import FormTxnOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
-import FormTxnOtherOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
+import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
@@ -84,11 +84,9 @@ const TransferForm: FC<
     const crates = [
       ...(siloBalances[whitelistedToken.address]?.deposited.crates || []),
     ];
-
     if (shouldAppendPlantDepositCrate) {
       crates.push(plantUtil.crate.asBN);
     }
-
     return BeanstalkSDKOld.Silo.Withdraw.withdraw(
       getNewToOldToken(whitelistedToken),
       values.tokens,
@@ -176,7 +174,7 @@ const TransferForm: FC<
           additionalBalance={
             plantableBalance[whitelistedToken.address]?.applied
           }
-          belowComponent={<FormTxnOptions />}
+          belowComponent={<FormTxnsPrimaryOptions />}
         />
         {depositedBalance?.gt(0) && (
           <>
@@ -190,7 +188,7 @@ const TransferForm: FC<
                 <WarningAlert>
                   More recent Deposits are Transferred first.
                 </WarningAlert>
-                <FormTxnOtherOptions />
+                <FormTxnsSecondaryOptions />
                 <Box>
                   <TxnAccordion>
                     <TxnPreview

@@ -26,7 +26,6 @@ import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { AppState } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
-import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import {
@@ -40,7 +39,7 @@ import { depositSummary as getDepositSummary } from '~/lib/Beanstalk/Silo/Deposi
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
-import { tokenValueToBN } from '~/util';
+import { STALK_PER_SEED_PER_SEASON, tokenValueToBN } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
@@ -48,6 +47,7 @@ import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBa
 import useFarmerFormTxnActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
 import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
+import useSilo from '~/hooks/beanstalk/useSilo';
 
 // -----------------------------------------------------------------------
 
@@ -96,6 +96,7 @@ const DepositForm: FC<
 }) => {
   ///
   const sdk = useSdk();
+  const beanstalkSilo = useSilo();
   const { balances: additionalBalances } = useFarmerFormTxnBalances();
 
   const txnActions = useFarmerFormTxnActions({
@@ -108,9 +109,6 @@ const DepositForm: FC<
     values.tokens,
     amountToBdv
   );
-
-  /// Derived
-  const isReady = bdv.gt(0);
 
   // Memoized params for TokenQuoteProviderWithParams.
   // If not memoized, it'll cause an infinite loop
@@ -163,7 +161,7 @@ const DepositForm: FC<
 
   const disabledActions = useMemo(() => {
     const isEth = currTokenSymbol === 'ETH';
-    const _disabled = isEth
+    return isEth
       ? [
           {
             action: FormTxn.ENROOT,
@@ -172,8 +170,15 @@ const DepositForm: FC<
           },
         ]
       : undefined;
-    return _disabled;
   }, [currTokenSymbol]);
+
+  const increasedStalkPct = stalk.div(beanstalkSilo.stalk.total).times(100);
+  const increasedStalkPctStr = increasedStalkPct.lt(0.01)
+    ? '<0.01%'
+    : `+${increasedStalkPct.toFixed(2)}%`;
+
+  /// Derived
+  const isReady = bdv.gt(0);
 
   return (
     <Form noValidate autoComplete="off">
@@ -230,13 +235,16 @@ const DepositForm: FC<
             <TokenOutput>
               <TokenOutput.Row
                 token={whitelistedToken}
-                label={whitelistedToken.symbol}
+                label={`Deposited ${whitelistedToken.symbol}`}
                 amount={amount}
               />
               <TokenOutput.Row
                 token={sdk.tokens.STALK}
                 label={sdk.tokens.STALK.symbol}
                 amount={stalk}
+                description="Ownership percentage"
+                descriptionTooltip="Your ownership percentage of Beanstalk denominated by STALK"
+                delta={increasedStalkPctStr}
                 amountTooltip={
                   <>
                     1 {whitelistedToken.symbol} ={' '}
@@ -252,6 +260,9 @@ const DepositForm: FC<
                 token={sdk.tokens.SEEDS}
                 label={sdk.tokens.SEEDS.symbol}
                 amount={seeds}
+                description="Stalk Growth per Season"
+                descriptionTooltip="The amount of STALK you will receive per season"
+                delta={seeds.times(STALK_PER_SEED_PER_SEASON)}
                 amountTooltip={
                   <>
                     1 {whitelistedToken.symbol} ={' '}
@@ -356,7 +367,6 @@ const Deposit: FC<{
   /// Farmer
   const balances = useFarmerBalances();
   const [refetchPools] = useFetchPools();
-  const [refetchSilo] = useFetchBeanstalkSilo();
 
   /// Form setup
   const initialValues: DepositFormValues = useMemo(
@@ -467,10 +477,11 @@ const Deposit: FC<{
         await formTxns.refetch(
           performed,
           {
+            beanstalkSilo: true,
             farmerSilo: true,
             farmerBalances: true,
           },
-          [refetchSilo, refetchPools]
+          [refetchPools]
         );
 
         txToast.success(receipt);
@@ -485,15 +496,7 @@ const Deposit: FC<{
         formActions.setSubmitting(false);
       }
     },
-    [
-      middleware,
-      account,
-      sdk,
-      whitelistedToken,
-      formTxns,
-      refetchSilo,
-      refetchPools,
-    ]
+    [middleware, account, sdk, whitelistedToken, formTxns, refetchPools]
   );
 
   return (

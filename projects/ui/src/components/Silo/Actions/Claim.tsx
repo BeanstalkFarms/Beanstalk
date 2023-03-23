@@ -402,8 +402,6 @@ const Claim: FC<{
           claim.add([...values.token.steps]);
         }
 
-        console.log(claim);
-
         const { execute, performed } = await FormTxnBuilder.compile(
           sdk,
           values.farmActions,

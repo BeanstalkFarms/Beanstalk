@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Box, Stack, Tooltip } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { Button, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Link, Box, Stack } from '@mui/material';
 import { Token } from '@beanstalk/sdk';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
-import { displayBN, displayFullBN } from '~/util';
+import { displayBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
@@ -233,18 +232,18 @@ const TokenSelectDialogNew : TokenSelectDialogC = React.memo(({
                         {/* Token balance */}
                         {displayBN(tokenBalance)}
                         {/* additionally applied balance */}
-                        {applicableBalance?.applied.gt(0) ? (
+                        {/* {applicableBalance?.applied.gt(0) ? (
                           <Typography variant="inherit" color="primary" component="span">
                             &nbsp; + {displayFullBN(applicableBalance.applied, 2)}
                           </Typography>
-                        ) : null}
+                        ) : null} */}
                         {/* remaining applicable balance */}
-                        {applicableBalance?.remaining.gt(0) ? (
+                        {/* {applicableBalance?.remaining.gt(0) ? (
                           <Typography variant="inherit" color="text.tertiary" component="span">
                             &nbsp; + {displayFullBN(applicableBalance.remaining, 2)}
                           </Typography>
-                        ) : null}
-                        {applicableBalance?.applied.gt(0) || applicableBalance?.remaining.gt(0) ? (
+                        ) : null} */}
+                        {/* {applicableBalance?.applied.gt(0) || applicableBalance?.remaining.gt(0) ? (
                           <Tooltip
                             title={`The amount of ${_token.symbol} you can use in conjunction with your selected balance by claiming Silo withdrawals, harvesting Pods, and rinsing Sprouts.`}
                             placement="right"
@@ -258,7 +257,7 @@ const TokenSelectDialogNew : TokenSelectDialogC = React.memo(({
                               }}
                             />
                           </Tooltip>
-                        ) : null}
+                        ) : null} */}
                       </Typography>
                   ) : null}
                   </Row>
