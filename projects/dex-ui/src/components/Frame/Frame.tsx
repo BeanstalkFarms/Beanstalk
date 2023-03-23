@@ -3,8 +3,22 @@ import { Link } from "react-router-dom";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { ConnectKitButton } from "connectkit";
+import { useNetwork } from "wagmi";
 
 export const Frame: FC<{}> = ({ children }) => {
+  const { chain } = useNetwork();
+  let net;
+  switch (chain?.name) {
+    case "localhost:8545":
+      net = "DEV";
+      break;
+    case "Ethereum":
+      net = "ETH";
+      break;
+    default:
+      net = "X";
+  }
+
   return (
     <Container>
       <NavContainer>
@@ -16,7 +30,10 @@ export const Frame: FC<{}> = ({ children }) => {
           <Link to="/wells">Wells</Link>
           <Link to="/silo">Silo</Link>
         </NavLinks>
-        <ConnectKitButton showBalance/>
+        <ConnectArea>
+          {net}
+          <ConnectKitButton showBalance />
+        </ConnectArea>
       </NavContainer>
       <ContentContaine>{children}</ContentContaine>
     </Container>
@@ -44,6 +61,12 @@ const NavLinks = styled.div`
   display: flex;
   gap: 20px;
 `;
+const ConnectArea = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+`
 
 const ContentContaine = styled.div`
   // border: 1px solid green;
