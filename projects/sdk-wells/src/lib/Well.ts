@@ -5,7 +5,15 @@ import { Well as WellContract } from "src/constants/generated";
 
 import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
-import { loadToken, setReadOnly, validateAddress, validateAmount, validateToken } from "./utils";
+import {
+  deadlineSecondsToBlockchain,
+  loadToken,
+  setReadOnly,
+  validateAddress,
+  validateAmount,
+  validateDeadline,
+  validateToken
+} from "./utils";
 import { WellFunction } from "./WellFunction";
 import { WellsSDK } from "./WellsSDK";
 
@@ -227,8 +235,7 @@ export class Well {
    * @param amountIn The amount of `fromToken` to spend
    * @param minAmountOut The minimum amount of `toToken` to receive
    * @param recipient The address to receive `toToken`
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline)
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return amountOut The amount of `toToken` received
    */
   async swapFrom(
@@ -237,7 +244,7 @@ export class Well {
     amountIn: TokenValue,
     minAmountOut: TokenValue,
     recipient: string,
-    _deadline: string,
+    deadline?: number,
     overrides?: Overrides
   ): Promise<ContractTransaction> {
     validateToken(fromToken, "fromToken");
@@ -245,7 +252,9 @@ export class Well {
     validateAmount(amountIn, "amountIn");
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
+    validateDeadline(deadline);
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapFrom(
       fromToken.address,
@@ -253,7 +262,7 @@ export class Well {
       amountIn.toBigNumber(),
       minAmountOut.toBigNumber(),
       recipient,
-      deadline,
+      deadlineBlockchain,
       overrides ?? {}
     );
   }
@@ -283,8 +292,7 @@ export class Well {
    * @param amountIn The amount of `fromToken` to spend
    * @param minAmountOut The minimum amount of `toToken` to receive
    * @param recipient The address to receive `toToken`
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return amountOut The amount of `toToken` received
    */
   async swapFromFeeOnTransfer(
@@ -293,7 +301,7 @@ export class Well {
     amountIn: TokenValue,
     minAmountOut: TokenValue,
     recipient: string,
-    _deadline: number | string,
+    deadline?: number,
     overrides?: Overrides
   ): Promise<ContractTransaction> {
     validateToken(fromToken, "fromToken");
@@ -301,7 +309,9 @@ export class Well {
     validateAmount(amountIn, "amountIn");
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
+    validateDeadline(deadline);
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapFromFeeOnTransfer(
       fromToken.address,
@@ -309,7 +319,7 @@ export class Well {
       amountIn.toBigNumber(),
       minAmountOut.toBigNumber(),
       recipient,
-      deadline,
+      deadlineBlockchain,
       overrides ?? {}
     );
   }
@@ -323,8 +333,7 @@ export class Well {
    * @param maxAmountIn The maximum amount of `fromToken` to spend
    * @param amountOut The amount of `toToken` to receive
    * @param recipient The address to receive `toToken`
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return amountIn The amount of `toToken` received
    */
   async swapTo(
@@ -333,16 +342,18 @@ export class Well {
     maxAmountIn: TokenValue,
     amountOut: TokenValue,
     recipient: string,
-    _deadline: string,
+    deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const from = fromToken.address;
     const to = toToken.address;
     const maxIn = maxAmountIn.toBigNumber();
     const out = amountOut.toBigNumber();
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.swapTo(from, to, maxIn, out, recipient, deadline, overrides ?? {});
+    validateDeadline(deadline);
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    return this.contract.swapTo(from, to, maxIn, out, recipient, deadlineBlockchain, overrides ?? {});
   }
 
   /**
@@ -368,21 +379,22 @@ export class Well {
    * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
    * @param minLpAmountOut The minimum amount of LP tokens to receive
    * @param recipient The address to receive the LP tokens
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    */
   addLiquidity(
     tokenAmountsIn: TokenValue[],
     minLpAmountOut: TokenValue,
     recipient: string,
-    _deadline?: string,
+    deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.addLiquidity(amountsIn, minLp, recipient, deadline, overrides ?? {});
+    validateDeadline(deadline);
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    return this.contract.addLiquidity(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
   }
 
   /**
@@ -404,21 +416,22 @@ export class Well {
    * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
    * @param minLpAmountOut The minimum amount of LP tokens to receive
    * @param recipient The address to receive the LP tokens
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    */
   addLiquidityFeeOnTransfer(
     tokenAmountsIn: TokenValue[],
     minLpAmountOut: TokenValue,
     recipient: string,
-    _deadline: string,
+    deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadline, overrides ?? {});
+    validateDeadline(deadline);
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
   }
 
   ////// Remove Liquidity
@@ -428,22 +441,23 @@ export class Well {
    * @param lpAmountIn The amount of LP tokens to burn
    * @param minTokenAmountsOut The minimum amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
    * @param recipient The address to receive the underlying tokens
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return tokenAmountsOut The amount of each underlying token received
    */
   async removeLiquidity(
     lpAmountIn: TokenValue,
     minTokenAmountsOut: TokenValue[],
     recipient: string,
-    _deadline: string,
+    deadline?: number,
     overrides?: CallOverrides
   ): Promise<ContractTransaction> {
     const lpAmount = lpAmountIn.toBigNumber();
     const minOutAmounts = minTokenAmountsOut.map((a) => a.toBigNumber());
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.removeLiquidity(lpAmount, minOutAmounts, recipient, deadline, overrides ?? {});
+    validateDeadline(deadline);
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    return this.contract.removeLiquidity(lpAmount, minOutAmounts, recipient, deadlineBlockchain, overrides ?? {});
   }
 
   /**
@@ -465,8 +479,7 @@ export class Well {
    * @param tokenOut The underlying token to receive
    * @param minTokenAmountOut The minimum amount of `tokenOut` to receive
    * @param recipient The address to receive the underlying tokens
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return tokenAmountOut The amount of `tokenOut` received
    */
   async removeLiquidityOneToken(
@@ -474,15 +487,17 @@ export class Well {
     tokenOut: Token,
     minTokenAmountOut: TokenValue,
     recipient: string,
-    _deadline: string,
+    deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const amountIn = lpAmountIn.toBigNumber();
     const token = tokenOut.address;
     const minOut = minTokenAmountOut.toBigNumber();
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.removeLiquidityOneToken(amountIn, token, minOut, recipient, deadline, overrides ?? {});
+    validateDeadline(deadline);
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    return this.contract.removeLiquidityOneToken(amountIn, token, minOut, recipient, deadlineBlockchain, overrides ?? {});
   }
 
   /**
@@ -505,22 +520,23 @@ export class Well {
    * @param maxLpAmountIn The maximum amount of LP tokens to burn
    * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
    * @param recipient The address to receive the underlying tokens
-   * @param _deadline The txn deadline
-   * Defaults to `MAX_UINT256` (effectively no deadline).
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return lpAmountIn The amount of LP tokens burned
    */
   async removeLiquidityImbalanced(
     maxLpAmountIn: TokenValue,
     tokenAmountsOut: TokenValue[],
     recipient: string,
-    _deadline: string,
+    deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const maxIn = maxLpAmountIn.toBigNumber();
     const amounts = tokenAmountsOut.map((tv) => tv.toBigNumber());
-    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.removeLiquidityImbalanced(maxIn, amounts, recipient, deadline, overrides ?? {});
+    validateDeadline(deadline);
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    return this.contract.removeLiquidityImbalanced(maxIn, amounts, recipient, deadlineBlockchain, overrides ?? {});
   }
 
   /**
