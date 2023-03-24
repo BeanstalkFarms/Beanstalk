@@ -33,8 +33,6 @@ export type PreloadOptions = {
   reserves?: boolean;
 };
 
-const MAX_UINT256 = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-
 export class Well {
   public sdk: WellsSDK;
   public address: string;
@@ -239,7 +237,7 @@ export class Well {
     amountIn: TokenValue,
     minAmountOut: TokenValue,
     recipient: string,
-    _deadline: number | string,
+    _deadline: string,
     overrides?: Overrides
   ): Promise<ContractTransaction> {
     validateToken(fromToken, "fromToken");
@@ -247,7 +245,7 @@ export class Well {
     validateAmount(amountIn, "amountIn");
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapFrom(
       fromToken.address,
@@ -303,7 +301,7 @@ export class Well {
     validateAmount(amountIn, "amountIn");
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapFromFeeOnTransfer(
       fromToken.address,
@@ -335,14 +333,14 @@ export class Well {
     maxAmountIn: TokenValue,
     amountOut: TokenValue,
     recipient: string,
-    _deadline: number | string,
+    _deadline: string,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const from = fromToken.address;
     const to = toToken.address;
     const maxIn = maxAmountIn.toBigNumber();
     const out = amountOut.toBigNumber();
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapTo(from, to, maxIn, out, recipient, deadline, overrides ?? {});
   }
@@ -377,12 +375,12 @@ export class Well {
     tokenAmountsIn: TokenValue[],
     minLpAmountOut: TokenValue,
     recipient: string,
-    _deadline?: number | string,
+    _deadline?: string,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.addLiquidity(amountsIn, minLp, recipient, deadline, overrides ?? {});
   }
@@ -413,12 +411,12 @@ export class Well {
     tokenAmountsIn: TokenValue[],
     minLpAmountOut: TokenValue,
     recipient: string,
-    _deadline: number | string,
+    _deadline: string,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadline, overrides ?? {});
   }
@@ -438,12 +436,12 @@ export class Well {
     lpAmountIn: TokenValue,
     minTokenAmountsOut: TokenValue[],
     recipient: string,
-    _deadline: number | string,
+    _deadline: string,
     overrides?: CallOverrides
   ): Promise<ContractTransaction> {
     const lpAmount = lpAmountIn.toBigNumber();
     const minOutAmounts = minTokenAmountsOut.map((a) => a.toBigNumber());
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.removeLiquidity(lpAmount, minOutAmounts, recipient, deadline, overrides ?? {});
   }
@@ -476,13 +474,13 @@ export class Well {
     tokenOut: Token,
     minTokenAmountOut: TokenValue,
     recipient: string,
-    _deadline: number | string,
+    _deadline: string,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const amountIn = lpAmountIn.toBigNumber();
     const token = tokenOut.address;
     const minOut = minTokenAmountOut.toBigNumber();
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.removeLiquidityOneToken(amountIn, token, minOut, recipient, deadline, overrides ?? {});
   }
@@ -515,12 +513,12 @@ export class Well {
     maxLpAmountIn: TokenValue,
     tokenAmountsOut: TokenValue[],
     recipient: string,
-    _deadline: number | string,
+    _deadline: string,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     const maxIn = maxLpAmountIn.toBigNumber();
     const amounts = tokenAmountsOut.map((tv) => tv.toBigNumber());
-    const deadline = _deadline || MAX_UINT256;
+    const deadline = _deadline || TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.removeLiquidityImbalanced(maxIn, amounts, recipient, deadline, overrides ?? {});
   }
