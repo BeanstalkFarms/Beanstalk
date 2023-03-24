@@ -388,23 +388,22 @@ library LibLegacyTokenSilo {
      * lots of deposits may take a considerable amount of gas to migrate.
      */
     function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
- 
+        
         require(tokens.length == seasons.length, "inputs not same length");
- 
-        // AppStorage storage s = LibAppStorage.diamondStorage();
  
         //see if msg.sender has already migrated or not by checking seed balance
         require(balanceOfSeeds(account) > 0, "no migration needed");
+
+        //checking if migration is necessary/possible can also be done with lastUpdate, but it uses more stack depth, which we're out of in this function
+        // AppStorage storage s = LibAppStorage.diamondStorage();
         // uint32 _lastUpdate = s.a[account].lastUpdate;
         // require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
  
- 
-        //TODOSEEDS: require that a season of plenty is not currently happening?
+
         //do a legacy mow using the old silo seasons deposits
-        updateLastUpdateToNow(account); //do we want to store last update season as current season or as s.season.stemStartSeason?
+        updateLastUpdateToNow(account);
         LibSilo.mintGrownStalkAndGrownRoots(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
         //at this point we've completed the guts of the old mow function, now we need to do the migration
- 
  
         MigrateData memory migrateData;
  
@@ -430,7 +429,6 @@ library LibLegacyTokenSilo {
                                     perDepositData.season,
                                     perDepositData.amount
                                 );
- 
  
                 //calculate how much stalk has grown for this deposit
                 uint128 grownStalk = _calcGrownStalkForDeposit(
