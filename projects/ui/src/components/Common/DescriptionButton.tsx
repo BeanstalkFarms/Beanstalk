@@ -10,7 +10,7 @@ import {
   TypographyProps
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
+import { FontSize } from '~/components/App/muiTheme';
 import Row from '~/components/Common/Row';
 
 /**
@@ -67,9 +67,9 @@ const DescriptionButton: FC<ButtonProps & {
       display: 'block',
       color: 'inherit',
       borderColor: isSelected ? 'primary.main' : 'divider',
-      backgroundColor: isSelected ? BeanstalkPalette.theme.winter.primaryHover : null,
+      backgroundColor: isSelected ? 'primary.light' : null,
       '&:hover': {
-        backgroundColor: isSelected ? BeanstalkPalette.theme.winter.primaryHover : null,
+        backgroundColor: isSelected ? 'primary.light' : null,
         borderColor: 'primary.main'
       },
       height: 'auto'

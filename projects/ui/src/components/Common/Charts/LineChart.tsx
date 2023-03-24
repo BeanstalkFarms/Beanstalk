@@ -1,8 +1,4 @@
 import { Axis, Orientation, TickFormatter } from '@visx/axis';
-import ChartPropProvider, {
-  BaseDataPoint,
-  ProviderChartProps,
-} from './ChartPropProvider';
 import { Line, LinePath } from '@visx/shape';
 import { NumberLike, scaleLinear } from '@visx/scale';
 import React, { useCallback, useMemo } from 'react';
@@ -17,11 +13,15 @@ import {
 } from '@visx/curve';
 import { useTooltip, useTooltipInPortal } from '@visx/tooltip';
 
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { CurveFactory } from 'd3-shape';
 import { Group } from '@visx/group';
 import { NumberValue } from 'd3-scale';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
+import ChartPropProvider, {
+  BaseDataPoint,
+  ProviderChartProps,
+} from './ChartPropProvider';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // ------------------------
 //       Line Chart
@@ -78,7 +78,7 @@ type GraphProps = {
 
 const strokes = [
   {
-    stroke: BeanstalkPalette.theme.winter.primary,
+    stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
     strokeWidth: 2,
   },
   {
