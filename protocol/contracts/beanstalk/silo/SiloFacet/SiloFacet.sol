@@ -108,7 +108,7 @@ contract SiloFacet is TokenSilo {
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in stems is minimal.
      */
-    
+
     function withdrawDeposits(
         address token,
         int96[] calldata stems,
@@ -194,10 +194,20 @@ contract SiloFacet is TokenSilo {
         bdvs = _transferDeposits(sender, recipient, token, stem, amounts);
     }
 
-    // ERC1155 safeTransferFrom
+    
 
-    /// @dev ERC1155 safeTransferFrom does not need reentrancy protection,
-    // as the transferDeposit function already has this protection.
+    /**
+     * @notice Transfer a single Deposit, conforming to the ERC1155 standard.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param depositId ID of Deposit to Transfer.
+     * @param amount Amount of `token` to Transfer.
+     * @param null bytes calldata, required by ERC1155.
+     * 
+     * @dev the depositID is the token address and stem of a deposit, 
+     * concatinated into a single uint256.
+     * 
+     */
     function safeTransferFrom(
         address sender, 
         address recipient, 
@@ -220,8 +230,18 @@ contract SiloFacet is TokenSilo {
         );
     }
 
-    // unlike transferDeposits, safeBatchTransferFrom does not assume the deposits come from the same token,
-    // and must emit 2 transfer events per deposit. 
+    /**
+     * @notice Transfer a multiple Deposits, conforming to the ERC1155 standard.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param depositId list of ID of deposits to Transfer.
+     * @param amounts list of amounts of `token` to Transfer.
+     * @param null bytes calldata, required by ERC1155.
+     * 
+     * @dev {transferDeposits} can be used to transfer multiple deposits, but only 
+     * if they are all of the same token. Since the ERC1155 standard requires the abilty
+     * to transfer any set of depositIDs, the {transferDeposits} function is not used here.
+     */
     function safeBatchTransferFrom(
         address sender, 
         address recipient, 
@@ -272,6 +292,7 @@ contract SiloFacet is TokenSilo {
      * `msg.sender`.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
+     * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
      * 
      * The Seeds associated with Earned Beans are commonly called "Plantable
      * Seeds". The word "Plantable" is used to highlight that these Seeds aren't 
@@ -280,7 +301,7 @@ contract SiloFacet is TokenSilo {
      * 
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
      * the current Season.
-     *
+     * 
      * FIXME(doc): Publius has suggested we explain `plant()` as "Planting Seeds"
      * and that this happens to deposit Earned Beans, rather than the above approach.
      */

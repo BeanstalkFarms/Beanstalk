@@ -465,14 +465,6 @@ library LibSilo {
                 bdvRemoved.toUint128()
             )
         );
-
-        /** 
-         * {_removeDepositFromAccount} is used for both transfers and withdraws.
-         *  In the case of a withdraw, the TransferSingle Event needs to be emitted.
-         *  In the case of a transfer, the TransferBatch is emitted, and thus, 
-         *  TransferSingle does not need to be emitted.
-         */
-
         /** 
          *  {_removeDepositFromAccount} is used for both withdrawing and transferring deposits.
          *  In the case of a withdraw, only the {TransferSingle} Event needs to be emitted.
