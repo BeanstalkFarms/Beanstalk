@@ -47,12 +47,11 @@ contract SiloFacet is TokenSilo {
      *  5. Emit an `AddDeposit` event.
      * note: changed added a generic bytes calldata to allow for ERC721 + ERC1155 deposits
      * 
-     * FIXME(logic): return `(amount, bdv(, season))`
+     * FIXME(logic): return `(amount, bdv, season)`
      */
     function deposit(
         address token,
         uint256 amount,
-        bytes calldata,
         LibTransfer.From mode
     ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
@@ -85,16 +84,11 @@ contract SiloFacet is TokenSilo {
      * these require less Stalk to be burned. This functionality is the default
      * provided by the Beanstalk SDK, but is NOT provided at the contract level.
      * 
-     * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility
-     * alternative solution: make the input a bytes32 depositID
      */
     function withdrawDeposit(
         address token,
         int96 stem,
         uint256 amount,
-        bytes calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, stem, amount);
@@ -119,7 +113,6 @@ contract SiloFacet is TokenSilo {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts,
-        bytes[] calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
@@ -153,8 +146,7 @@ contract SiloFacet is TokenSilo {
         address recipient,
         address token,
         int96 stem,
-        uint256 amount,
-        bytes calldata
+        uint256 amount
     ) public payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
@@ -186,8 +178,7 @@ contract SiloFacet is TokenSilo {
         address recipient,
         address token,
         int96[] calldata stem,
-        uint256[] calldata amounts,
-        bytes[] calldata
+        uint256[] calldata amounts
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -212,7 +203,7 @@ contract SiloFacet is TokenSilo {
         address recipient, 
         uint256 depositId, 
         uint256 amount,
-        bytes calldata depositData
+        bytes calldata
     ) external {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
@@ -225,8 +216,7 @@ contract SiloFacet is TokenSilo {
             recipient,
             token, 
             cumulativeGrownStalkPerBDV, 
-            amount,
-            depositData
+            amount
         );
     }
 
@@ -237,7 +227,7 @@ contract SiloFacet is TokenSilo {
         address recipient, 
         uint256[] calldata depositIDs, 
         uint256[] calldata amounts, 
-        bytes calldata depositsData
+        bytes calldata
     ) external {
         require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
         require(recipient != address(0), "ERC1155: transfer to the zero address");
@@ -254,8 +244,7 @@ contract SiloFacet is TokenSilo {
                 recipient,
                 token, 
                 cumulativeGrownStalkPerBDV, 
-                amounts[i],
-                depositsData
+                amounts[i]
             );
         }
     }

@@ -55,6 +55,20 @@ library LibLegacyTokenSilo {
         address token;
         int96 stemTip;
     }
+
+    ///@dev these events are grandfathered in for legacy code (claiming)
+    event RemoveWithdrawals(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256 amount
+    );
+    event RemoveWithdrawal(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount
+    );
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     /**
@@ -373,8 +387,6 @@ library LibLegacyTokenSilo {
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
      */
-    // TODO: talk with pizzaman about whether we need to downcast to uint128 or was that 
-    // because we had a int128
     function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
  
         require(tokens.length == seasons.length, "inputs not same length");
@@ -432,7 +444,18 @@ library LibLegacyTokenSilo {
                 migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
  
                 //add to new silo
-                LibTokenSilo.addDepositToAccount(account, perTokenData.token, LibTokenSilo.grownStalkAndBdvToStem(IERC20(perTokenData.token), grownStalk, crateBDV), perDepositData.amount, crateBDV);
+                LibTokenSilo.addDepositToAccount(
+                    account, 
+                    perTokenData.token, 
+                    LibTokenSilo.grownStalkAndBdvToStem(
+                        IERC20(perTokenData.token), 
+                        grownStalk, 
+                        crateBDV
+                    ), 
+                    perDepositData.amount, 
+                    crateBDV,
+                    LibTokenSilo.Transfer.emitTransferSingle
+                );
  
                 //add to running total of seeds
                 migrateData.totalSeeds += uint128(uint256(crateBDV) * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)));
@@ -492,7 +515,6 @@ library LibLegacyTokenSilo {
         return uint128(LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
     }
 
-    //this feels gas inefficient to me, maybe there's a better way? hardcode in values here?
     function getSeedsPerToken(address token) internal pure returns (uint256) {
         if (token == C.beanAddress()) {
             return 2;
@@ -504,5 +526,62 @@ library LibLegacyTokenSilo {
             return 4;
         }
         return 0;
+    }
+
+    ////////////////////////// CLAIM ///////////////////////////////
+
+    /** 
+     * @notice DEPRECATED. Internal logic for claiming withdraws.
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These internal functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     */
+    function _claimWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) internal returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount = _removeTokenWithdrawal(account, token, season);
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawal(msg.sender, token, season, amount);
+        return amount;
+    }
+
+    function _claimWithdrawals(
+        address account,
+        address token,
+        uint32[] calldata seasons
+    ) internal returns (uint256 amount) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        for (uint256 i; i < seasons.length; ++i) {
+            amount = amount.add(
+                _removeTokenWithdrawal(account, token, seasons[i])
+            );
+        }
+        s.siloBalances[token].withdrawn = s.siloBalances[token].withdrawn.sub(
+            amount
+        );
+        emit RemoveWithdrawals(msg.sender, token, seasons, amount);
+        return amount;
+    }
+
+    function _removeTokenWithdrawal(
+        address account,
+        address token,
+        uint32 season
+    ) private returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        require(
+            season <= s.season.current,
+            "Claim: Withdrawal not receivable"
+        );
+        uint256 amount = s.a[account].withdrawals[token][season];
+        delete s.a[account].withdrawals[token][season];
+        return amount;
     }
 }

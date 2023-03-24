@@ -5,16 +5,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/C.sol";
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/Silo/LibLegacyTokenSilo.sol";
-import "../SiloFacet/Silo.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/Convert/LibConvert.sol";
-import "~/libraries/LibInternal.sol";
+import "~/libraries/Token/LibTransfer.sol";
 import "../../ReentrancyGuard.sol";
-import "../SiloFacet/TokenSilo.sol";
 
 /**
  * @author pizzaman1337
@@ -55,5 +48,57 @@ contract MigrationFacet is ReentrancyGuard {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 
+    //////////////////////// CLAIM ////////////////////////
+
+    /** 
+     * @notice DEPRECATED. Claims tokens from a Withdrawal.
+     *
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is 
+     * omitted.
+     *
+     * @param token Address of the whitelisted ERC20 token to Claim.
+     * @param season Season of Withdrawal to claim from.
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
+     * INTERNAL_TOLERANT)
+     *
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     */
+    function claimWithdrawal(
+        address token,
+        uint32 season,
+        LibTransfer.To mode
+    ) external payable nonReentrant {
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available");
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawal(msg.sender, token, season);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    }
+
+    /** 
+     * @notice DEPRECATED: Claims tokens from multiple Withdrawals.
+     * 
+     * Claiming a Withdrawal is all-or-nothing, hence an `amount` parameter is
+     * omitted.
+     *
+     * @param token Address of the whitelisted ERC20 token to Claim.
+     * @param seasons Seasons of Withdrawal to claim from.
+     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL,
+     * INTERNAL_TOLERANT)
+     * 
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     * 
+     */
+    function claimWithdrawals(
+        address token,
+        uint32[] calldata seasons,
+        LibTransfer.To mode
+    ) external payable nonReentrant {
+        require(s.siloBalances[token].withdrawn > 0, "Silo: no withdraw available");
+        uint256 amount = LibLegacyTokenSilo._claimWithdrawals(msg.sender, token, seasons);
+        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
+    }
 
 }

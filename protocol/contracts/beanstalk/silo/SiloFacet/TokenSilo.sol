@@ -220,7 +220,8 @@ contract TokenSilo is Silo {
             account,
             address(token),
             stem,
-            amount
+            amount,
+            LibTokenSilo.Transfer.emitTransferSingle
         );
         
         // Add a Withdrawal, update totals, burn Stalk.
@@ -306,10 +307,34 @@ contract TokenSilo is Silo {
             sender,
             token,
             stem,
+            amount,
+            LibTokenSilo.Transfer.noEmitTransferSingle
+        );
+        LibTokenSilo.addDepositToAccount(
+            recipient, 
+            token, 
+            stem, 
+            amount, 
+            bdv,
+            LibTokenSilo.Transfer.noEmitTransferSingle
+        );
+        LibSilo.transferStalk(sender, recipient, stalk);
+
+        /** the current beanstalk system uses {AddDeposit}
+         * and {RemoveDeposit} events to represent a transfer.
+         * However, the ERC1155 standard has a dedicated {TransferSingle} event,
+         * which creates an asymmetry between the two systems. 
+         * We accept this asymmetry for beanstalk to be better composable with the 
+         * greater DeFi system.
+         */
+        emit TransferSingle(
+            msg.sender, 
+            sender, 
+            recipient, 
+            uint256(LibBytes.packAddressAndStem(token, stem)), 
             amount
         );
-        LibTokenSilo.addDepositToAccount(recipient, token, stem, amount, bdv);
-        LibSilo.transferStalk(sender, recipient, stalk);
+
         return bdv;
     }
 
@@ -349,7 +374,8 @@ contract TokenSilo is Silo {
                 token,
                 stems[i],
                 amounts[i],
-                crateBdv
+                crateBdv,
+                LibTokenSilo.Transfer.noEmitTransferSingle
             );
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
@@ -369,9 +395,15 @@ contract TokenSilo is Silo {
             ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
         );
 
-        //  "removing" a deposit is equivalent to "burning" a ERC1155 token
-        // i.e, send to 0 sender
-        emit TransferBatch(msg.sender, sender, address(0), removedDepositIDs, amounts);
+        /** 
+         *  The current beanstalk system uses a mix of {AddDeposit}
+         *  and {RemoveDeposits} events to represent a batch transfer.
+         *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
+         *  which creates an asymmetry between the two systems. 
+         *  We accept this asymmetry for beanstalk to be better composable with the 
+         *  greater DeFi system.
+         */
+        emit TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
         emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
 
         // Transfer all the Stalk

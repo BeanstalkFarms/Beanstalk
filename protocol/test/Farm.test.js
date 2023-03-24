@@ -78,7 +78,7 @@ describe('Farm', function () {
     describe('Farm Deposit', function () {
       before(async function () {
         deposit = await this.silo.interface.encodeFunctionData(
-          "deposit", [this.bean.address, to6('1'), 0x0, EXTERNAL]
+          "deposit", [this.bean.address, to6('1'), EXTERNAL]
         );
       })
 
