@@ -41,6 +41,18 @@ export const validateAddress = (address: string, name: string) => {
   }
 };
 
+export const validateDeadline = (deadline?: number) => {
+  if (deadline !== null && deadline !== undefined && deadline <= 0) {
+    throw new Error("Deadline must be greater than 0");
+  }
+};
+
+export const deadlineSecondsToBlockchain = (deadlineSecondsFromNow: number) => {
+  const deadlineDate = new Date();
+  deadlineDate.setSeconds(deadlineDate.getSeconds() + deadlineSecondsFromNow);
+  return deadlineDate.getTime();
+};
+
 export const setReadOnly = (obj: any, prop: string, value: any, visible?: boolean) => {
   Object.defineProperty(obj, prop, {
     value,
