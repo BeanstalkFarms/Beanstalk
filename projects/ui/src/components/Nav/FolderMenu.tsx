@@ -219,7 +219,7 @@ const FolderMenu: FC<{
         <NavDrawer open={drawerOpen} hideDrawer={closeDrawer} />
       ) : null}
       {drawerContent ? (
-        <Drawer anchor="bottom" open={drawerOpen} onClose={closeDrawer} disableScrollLock>
+        <Drawer anchor="bottom" open={drawerOpen} onClose={closeDrawer}>
           {drawerContent}
         </Drawer>
       ) : null}

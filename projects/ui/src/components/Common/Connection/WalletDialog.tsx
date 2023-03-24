@@ -40,7 +40,7 @@ const WalletDialog: FC<{
     [connect]
   );
   return (
-    <Dialog onClose={handleClose} open={open} fullScreen={fullScreen} disableScrollLock>
+    <Dialog onClose={handleClose} open={open} fullScreen={fullScreen}>
       <StyledDialogTitle onClose={handleClose}>
         Connect a wallet
       </StyledDialogTitle>

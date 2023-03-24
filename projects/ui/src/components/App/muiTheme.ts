@@ -730,6 +730,7 @@ const muiThemeBase: ThemeOptions = {
     MuiDialog: {
       defaultProps: {
         transitionDuration: 0,
+        disableScrollLock: true,
         PaperProps: {
           sx: {
             borderRadius: 1.8,
