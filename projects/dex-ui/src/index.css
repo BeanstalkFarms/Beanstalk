@@ -1,37 +1,36 @@
 @font-face {
-  font-family: 'Futura PT';
-  src: url('src/assets/fonts/FuturaPTMedium.otf');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'Futura PT';
-  src: url('src/assets/fonts/FuturaPTBold.otf');
-  font-weight: 600;
+  font-family: "Inter";
+  src: url("src/assets/fonts/Inter.ttf");
 }
 
 html,
 body {
   height: 100%;
-  background-color: #fff;
-  
+  background-color: #101321;
+  color: #c7c8cb;
 }
 
 body {
   position: relative;
   margin: 0;
-  font-family: "Futura PT";
+  font-family: "Inter";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /** Prevent page overscrolling: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior */
   overscroll-behavior: none;
 }
-
+input,
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+  border: none;
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+:focus {
+  outline: 2px solid #9DCAE6;
+  box-sizing: border-box;
+
 }

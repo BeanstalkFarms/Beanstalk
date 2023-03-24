@@ -7,19 +7,23 @@ import { ConnectKitProvider } from "connectkit";
 import { WagmiConfig } from "wagmi";
 import { SdkProvider } from "../../utils/sdk/SdkProvider";
 import { Avatar } from "src/utils/wagmi/Avatar";
+import { TokenProvider } from "src/utils/TokenProvider";
 
 export const Wrapper: FC<{}> = ({ children }) => (
   <HashRouter>
     <WagmiConfig client={client}>
       <ConnectKitProvider
         theme="auto"
-        mode="light"
+        mode="dark"
         options={{
           customAvatar: Avatar,
-          initialChainId: 0
+          initialChainId: 0,
+          hideBalance: true
         }}
       >
-        <SdkProvider>{children}</SdkProvider>
+        <SdkProvider>
+          <TokenProvider>{children}</TokenProvider>
+        </SdkProvider>
       </ConnectKitProvider>
     </WagmiConfig>
   </HashRouter>
