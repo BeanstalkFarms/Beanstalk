@@ -46,18 +46,17 @@ const RemainingFertilizer: FC<{}> = () => {
           {/* right column */}
           <Stack justifyContent="space-between" gap={2}>
             <Stack gap={0.5}>
-              <Tooltip
-                title="The number of Fertilizer that can be bought from Beanstalk in exchange for 1 USDC each."
-                placement={isMobile ? "top" : "bottom"}
-              >
-                <Typography variant="body1">
-                  Available Fertilizer&nbsp;
+              <Typography variant="body1">
+                Available Fertilizer&nbsp;
+                <Tooltip
+                  title="The number of Fertilizer that can be bought from Beanstalk in exchange for 1 USDC each."
+                  placement={isMobile ? "top" : "bottom"}
+                >
                   <HelpOutlineIcon
                     sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                   />
-                </Typography>
-              </Tooltip>
-
+                </Tooltip>
+              </Typography>
               <Row gap={1} alignItems="center">
                 <Typography
                   display="inline-block"
@@ -78,17 +77,17 @@ const RemainingFertilizer: FC<{}> = () => {
               </Row>
             </Stack>
             <Stack gap={0.5}>
-              <Tooltip
-                title="The interest rate on Fertilizer. The Humidity determines how many Sprouts come with Fertilizer."
-                placement={isMobile ? "top" : "bottom"}
-              >
-                <Typography>
-                  Humidity&nbsp;
+              <Typography>
+                Humidity&nbsp;
+                <Tooltip
+                  title="The interest rate on Fertilizer. The Humidity determines how many Sprouts come with Fertilizer."
+                  placement={isMobile ? "top" : "bottom"}
+                >
                   <HelpOutlineIcon
                     sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                   />
-                </Typography>
-              </Tooltip>
+                </Tooltip>
+              </Typography>
               <Row alignItems="center" gap={1}>
                 <Typography variant="bodyLarge">
                   {displayFullBN(humidity.multipliedBy(100))}%
