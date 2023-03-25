@@ -49,6 +49,11 @@ export const parseError = (error: any) => {
 
   const rawError = JSON.stringify(error);
 
+  if (rawError === '{}') {
+    errorMessage.message = `${error}`;
+    return errorMessage;
+  }
+
   switch (error.code) {
     /// Common error codes
     case -32000:
@@ -144,11 +149,6 @@ export const parseError = (error: any) => {
           errorMessage.message = ERROR_STRINGS[key];
           return errorMessage;
         }
-      }
-
-      if (rawError === '{}') {
-        errorMessage.message = `${error}`;
-        return errorMessage;
       }
 
       errorMessage.rawError = rawError;
