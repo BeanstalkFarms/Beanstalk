@@ -4,7 +4,9 @@ import {
   TypographyProps,
   StackProps,
   Tooltip,
+  useMediaQuery
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import React from 'react';
 import Row from '~/components/Common/Row';
@@ -50,43 +52,49 @@ const Stat: FC<StatProps> = ({
   color,
   // Stack
   gap = 1,
-}) => (
-  <Stack gap={gap}>
-    {/* Title */}
-    <Row gap={0.5}>
-      {titleIcon && (<Typography><> {titleIcon}</></Typography>)}
-      <Typography variant="body1">
-        {title}
-        {titleTooltip && (
-          <Tooltip title={titleTooltip} placement="right">
-            <HelpOutlineIcon
-              sx={{
-                color: 'text.secondary',
-                display: 'inline',
-                mb: 0.5,
-                fontSize: '11px',
-              }}
-            />
-          </Tooltip>
-        )}
-      </Typography>
-    </Row>
-    {/* Amount */}
-    <Tooltip title={amountTooltip}>
-      <Typography variant={variant} color={color} sx={sx}>
-        <Row gap={0.5} width="100%">
-          {amountIcon && <>{amountIcon}</>}
-          {amount}
-        </Row>
-      </Typography>
-    </Tooltip>
-    {/* Subtitle */}
-    {subtitle !== undefined && (
-      <Typography variant="bodySmall" color="text.primary">
-        {subtitle}
-      </Typography>
-    )}
-  </Stack>
-);
+}) => {
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  return (
+    <Stack gap={gap}>
+      {/* Title */}
+      <Row gap={0.5}>
+        {titleIcon && (<Typography><> {titleIcon}</></Typography>)}
+        <Typography variant="body1">
+          {title}
+          {titleTooltip && (
+            <Tooltip title={titleTooltip} placement={isMobile ? "top" : "right" }>
+              <HelpOutlineIcon
+                sx={{
+                  color: 'text.secondary',
+                  display: 'inline',
+                  mb: 0.5,
+                  fontSize: '11px',
+                }}
+              />
+            </Tooltip>
+          )}
+        </Typography>
+      </Row>
+      {/* Amount */}
+      <Tooltip title={amountTooltip}>
+        <Typography variant={variant} color={color} sx={sx}>
+          <Row gap={0.5} width="100%">
+            {amountIcon && <>{amountIcon}</>}
+            {amount}
+          </Row>
+        </Typography>
+      </Tooltip>
+      {/* Subtitle */}
+      {subtitle !== undefined && (
+        <Typography variant="bodySmall" color="text.primary">
+          {subtitle}
+        </Typography>
+      )}
+    </Stack>
+  );
+};
 
 export default Stat;

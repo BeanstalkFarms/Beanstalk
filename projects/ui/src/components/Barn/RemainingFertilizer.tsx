@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Card, Stack, Typography, Tooltip } from '@mui/material';
+import { Box, Card, Stack, Typography, Tooltip, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import useHumidity from '~/hooks/beanstalk/useHumidity';
 import SunriseCountdown from '~/components/Sun/SunriseCountdown';
@@ -24,6 +25,9 @@ const RemainingFertilizer: FC<{}> = () => {
   const nextDecreaseTimeString = season.eq(6074) 
     ? 'per Season upon Unpause'
     : <SunriseCountdown />;
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <Card sx={{ p: 2 }}>
@@ -44,7 +48,7 @@ const RemainingFertilizer: FC<{}> = () => {
             <Stack gap={0.5}>
               <Tooltip
                 title="The number of Fertilizer that can be bought from Beanstalk in exchange for 1 USDC each."
-                placement="bottom"
+                placement={isMobile ? "top" : "bottom"}
               >
                 <Typography variant="body1">
                   Available Fertilizer&nbsp;
@@ -76,7 +80,7 @@ const RemainingFertilizer: FC<{}> = () => {
             <Stack gap={0.5}>
               <Tooltip
                 title="The interest rate on Fertilizer. The Humidity determines how many Sprouts come with Fertilizer."
-                placement="bottom"
+                placement={isMobile ? "top" : "bottom"}
               >
                 <Typography>
                   Humidity&nbsp;
