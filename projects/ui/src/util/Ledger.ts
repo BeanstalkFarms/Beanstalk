@@ -51,6 +51,7 @@ export const parseError = (error: any) => {
 
   if (rawError === '{}') {
     errorMessage.message = `${error}`;
+    errorMessage.message = errorMessage.message.replace('Error: ', '');
     return errorMessage;
   }
 
