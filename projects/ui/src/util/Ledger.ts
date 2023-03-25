@@ -146,6 +146,11 @@ export const parseError = (error: any) => {
         }
       }
 
+      if (rawError === '{}') {
+        errorMessage.message = `${error}`;
+        return errorMessage;
+      }
+
       errorMessage.rawError = rawError;
       errorMessage.message = 'Unhandled error.';
       return errorMessage;
