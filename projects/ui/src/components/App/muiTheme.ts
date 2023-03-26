@@ -537,6 +537,7 @@ const muiThemeBase: ThemeOptions = {
     },
     MuiTooltip: {
       defaultProps: {
+        enterTouchDelay: 0,
         onClick: (e: React.MouseEvent) => e.stopPropagation(),
       },
       variants: [
