@@ -3,7 +3,7 @@ import React from 'react';
 import Row from '../Common/Row';
 import { displayFullBN } from '~/util';
 import { TokenBalanceWithFiatValue } from '~/hooks/farmer/useFarmerBalancesWithFiatValue';
-import { BeanstalkPalette, borderRadius } from '../App/muiTheme';
+import { BeanstalkPalette } from '../App/muiTheme';
 
 const TokenBalanceTable: React.FC<{
   rows: TokenBalanceWithFiatValue[];
@@ -45,7 +45,7 @@ const TokenBalanceTable: React.FC<{
                   {...{ px: 2, py: 1 }}
                   sx={{
                     background: BeanstalkPalette.white,
-                    borderRadius: borderRadius,
+                    borderRadius: 0.6,
                     border: '1px solid',
                     borderColor: 'divider',
                   }}

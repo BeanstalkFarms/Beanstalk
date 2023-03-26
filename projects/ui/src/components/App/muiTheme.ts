@@ -405,7 +405,7 @@ const muiThemeBase: ThemeOptions = {
           borderWidth: '1px',
           borderStyle: 'solid',
           borderColor: 'divider',
-          borderRadius: 2,
+          borderRadius: 1,
         }),
       },
     },
@@ -733,7 +733,7 @@ const muiThemeBase: ThemeOptions = {
         disableScrollLock: true,
         PaperProps: {
           sx: {
-            borderRadius: 1.8,
+            borderRadius: 1,
             background: BeanstalkPalette.white,
             minWidth: { xs: '95%', sm: '400px' },
           },
@@ -741,13 +741,13 @@ const muiThemeBase: ThemeOptions = {
       },
       styleOverrides: {
         root: (t) => t.theme.unstable_sx({
-          borderRadius: 1.8,
+          borderRadius: 1,
         }),
       },
     },
     MuiPaper: {
       styleOverrides: {
-        rounded: { borderRadius: borderRadius * 2 },
+        rounded: { borderRadius: borderRadius * 1 },
       },
     },
     MuiDialogContent: {

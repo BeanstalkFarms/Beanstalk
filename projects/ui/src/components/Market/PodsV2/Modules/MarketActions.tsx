@@ -22,7 +22,7 @@ const MarketActions: React.FC<{ chartHeight: string }> = (chartHeight) => {
   return (
     <Card
       sx={{
-        borderRadius: 1.4,
+        borderRadius: 1,
         width: '100%',
         overflow: 'auto',
         position: 'relative',
