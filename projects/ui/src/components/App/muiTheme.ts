@@ -539,6 +539,11 @@ const muiThemeBase: ThemeOptions = {
       defaultProps: {
         enterTouchDelay: 0,
         onClick: (e: React.MouseEvent) => e.stopPropagation(),
+        PopperProps: {           
+          sx: {
+            zIndex: 5,
+          },
+        },
       },
       variants: [
         {
