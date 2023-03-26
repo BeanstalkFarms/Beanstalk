@@ -14,11 +14,9 @@ import { FC } from '~/types';
 
 const HoverMenu: FC<{
   items: RouteData[];
-  swapOnDropdown?: boolean;
 }> = ({
   children,
   items,
-  swapOnDropdown
 }) => {
   const [open, show, hide] = useToggle();
   return (
@@ -30,11 +28,7 @@ const HoverMenu: FC<{
           data-cy="HoverMenu-MenuList"
         >
           {items.map((item) => (
-            swapOnDropdown ? 
-              <MenuItem key={item.path} item={item} onClick={hide} />
-            : item.title !== 'Swap' ?
-                <MenuItem key={item.path} item={item} onClick={hide} />
-              : null
+            <MenuItem key={item.path} item={item} onClick={hide} />
           ))}
         </Box>
       )}

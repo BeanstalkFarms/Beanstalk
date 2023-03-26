@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { AppBar, Box } from '@mui/material';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import NetworkButton from '~/components/Common/Connection/NetworkButton';
@@ -17,26 +17,8 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
-import { useTheme } from '@mui/material/styles';
-
 
 const NavBar: FC<{}> = ({ children }) => {
-
-  const theme = useTheme();
-  const limit = theme.breakpoints.values.lg + 80;
-  const [swapOnDropdown, setSwapOnDropdown] = useState(window.innerWidth <= limit);
-
-  useEffect(() => {
-    function handleResize() {
-      if (window.innerWidth <= limit) {
-        setSwapOnDropdown(true);
-      } else {
-        setSwapOnDropdown(false);
-      }
-    }
-    window.addEventListener('resize', handleResize);     
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const content = (
     <AppBar
@@ -63,16 +45,6 @@ const NavBar: FC<{}> = ({ children }) => {
           <SunButton sx={{ height: NAV_ELEM_HEIGHT }} />
           <Row sx={{ display: { lg: 'flex', xs: 'none' } }} height="100%" data-cy="Navbar-links">
             {ROUTES.top.map((item) => (
-              swapOnDropdown ? 
-                item.title !== 'Swap' ? 
-                  <LinkButton
-                    key={item.path}
-                    to={item.path}
-                    title={item.title}
-                    tag={item.tag}
-                  />
-                : null
-              :
               <LinkButton
                 key={item.path}
                 to={item.path}
@@ -80,7 +52,7 @@ const NavBar: FC<{}> = ({ children }) => {
                 tag={item.tag}
               />
             ))}
-            <HoverMenu items={ROUTES.more} swapOnDropdown={swapOnDropdown}>More</HoverMenu>
+            <HoverMenu items={ROUTES.more}>More</HoverMenu>
           </Row>
         </Row>
         {/* Desktop: Right Side */}
