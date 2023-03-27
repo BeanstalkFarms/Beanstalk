@@ -29,7 +29,8 @@ async function ebip6(mock = true, account = undefined) {
     await bipDiamondCut("EBIP-6", dc, account, mock)
 }
 
-async function ebip7(mock = true, account = undefined) {
+// Used for EBIP-7 and EBIP-8
+async function ebipEnrootDeposits(mock = true, account = undefined) {
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()
         await mintEth(account.address)
@@ -47,7 +48,7 @@ async function ebip7(mock = true, account = undefined) {
         initFacetAddress: '0x0000000000000000000000000000000000000000',
         functionCall: '0x'
     }
-    await bipDiamondCut("EBIP-7", dc, account, mock)
+    await bipDiamondCut("EBIP-EnrootDeposit(s)", dc, account, mock)
 
 }
 
@@ -69,4 +70,5 @@ async function bipDiamondCut(name, dc, account, mock = true) {
 }
 
 exports.ebip6 = ebip6
-exports.ebip7 = ebip7
+exports.ebip7 = ebipEnrootDeposits
+exports.ebip8 = ebipEnrootDeposits

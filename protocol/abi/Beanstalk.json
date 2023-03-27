@@ -4108,7 +4108,7 @@
         ],
         "name": "enrootDeposit",
         "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -4131,7 +4131,7 @@
         ],
         "name": "enrootDeposits",
         "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
         "type": "function"
     },
     {
