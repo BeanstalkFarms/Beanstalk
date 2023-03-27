@@ -14,3 +14,9 @@ export function assert(value: any, message?: string) {
 }
 
 export const zeros = (numZeros: number) => "".padEnd(numZeros, "0");
+
+export const deadlineSecondsToBlockchain = (deadlineSecondsFromNow: number) => {
+  const deadlineDate = new Date();
+  deadlineDate.setSeconds(deadlineDate.getSeconds() + deadlineSecondsFromNow);
+  return deadlineDate.getTime();
+};
