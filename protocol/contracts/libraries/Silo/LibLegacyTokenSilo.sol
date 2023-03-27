@@ -402,7 +402,7 @@ library LibLegacyTokenSilo {
         //TODOSEEDS: require that a season of plenty is not currently happening?
         //do a legacy mow using the old silo seasons deposits
         updateLastUpdateToNow(account); //do we want to store last update season as current season or as s.season.stemStartSeason?
-        LibSilo.mintGrownStalkAndGrownRoots(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        LibSilo.mintGrownStalk(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
         //at this point we've completed the guts of the old mow function, now we need to do the migration
  
  
@@ -466,7 +466,7 @@ library LibLegacyTokenSilo {
         }
  
         //user deserves stalk grown between stemStartSeason and now
-        LibSilo.mintGrownStalkAndGrownRoots(account, migrateData.totalGrownStalk);
+        LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
  
         //verify user account seeds total equals seedsTotalBasedOnInputDeposits
         // if((s.a[account].s.seeds + 4 - seedsTotalBasedOnInputDeposits) > 100) {

@@ -13,9 +13,6 @@ import "./Silo.sol";
  * @notice This contract contains functions for depositing, withdrawing and 
  * claiming whitelisted Silo tokens.
  *
- * @dev WONTFIX: There is asymmetry in the structure of deposit / withdrawal functions.
- * Since the withdraw + claim step is being removed in Silo V3 in the coming
- * months, we'll leave these asymmetries present for now.
  *
  * - LibTokenSilo offers `incrementTotalDeposited` and `decrementTotalDeposited`
  *   but these operations are performed directly for withdrawals.
@@ -360,7 +357,7 @@ contract TokenSilo is Silo {
          *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
          *  which is used here.
          */
-        emit TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
+        emit LibSilo.TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
         emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
 
         LibSilo.transferStalk(

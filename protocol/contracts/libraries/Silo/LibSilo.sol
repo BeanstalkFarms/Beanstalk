@@ -36,15 +36,15 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
  */
 library LibSilo {
     using SafeMath for uint256;
-    // using SafeMath for uint128;
     using LibSafeMath128 for uint128;
     using LibSafeMathSigned96 for int96;
     using LibPRBMath for uint256;
     using SafeCast for uint256;
     
+    uint256 constant VESTING_PERIOD = 25;
     //////////////////////// EVENTS ////////////////////////    
      
-     /**
+    /**
      * @notice Emitted when `account` gains or loses Stalk.
      * @param account The account that gained or lost Stalk.
      * @param delta The change in Stalk.
@@ -66,6 +66,15 @@ library LibSilo {
         int256 deltaRoots
     );
 
+    /**
+     * @notice Emitted when a deposit is removed from the silo.
+     * 
+     * @param account The account assoicated with the removed deposit.
+     * @param token The token address of the removed deposit.
+     * @param stem The stem of the removed deposit.
+     * @param amount The amount of "token" removed from an deposit.
+     * @param bdv The instanteous bdv removed from the deposit.
+     */
     event RemoveDeposit(
         address indexed account,
         address indexed token,
@@ -74,6 +83,16 @@ library LibSilo {
         uint256 bdv
     );
 
+    /**
+     * @notice Emitted when multiple deposits are removed from the silo.
+     * 
+     * @param account The account assoicated with the removed deposit.
+     * @param token The token address of the removed deposit.
+     * @param stems A list of stems of the removed deposits.
+     * @param amounts A list of amounts removed from the deposits.
+     * @param amount the total summation of the amount removed.
+     * @param bdvs A list of bdvs removed from the deposits.
+     */
     event RemoveDeposits(
         address indexed account,
         address indexed token,
@@ -89,25 +108,45 @@ library LibSilo {
         uint256 bdvRemoved;
     }
 
-    // ERC1155 events
-
-    /**
-     * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
-     */
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+    // /**
+    //  * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
+    //  */
+    // event TransferSingle(
+    //     address indexed operator, 
+    //     address indexed from, 
+    //     address indexed to, 
+    //     uint256 id, 
+    //     uint256 value
+    // );
 
     /**
      * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
      * transfers.
      */
-    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
+    event TransferBatch(
+        address indexed operator, 
+        address indexed from, 
+        address indexed to, 
+        uint256[] ids, 
+        uint256[] values
+    );
 
     //////////////////////// MINT ////////////////////////
 
     /**
-     * @dev Mints Stalk and Roots to `account`.
+     * @notice Mints Stalk and Roots to `account`.
      *
-     * For an explanation of Roots accounting, see {FIXME(doc)}.
+     * @dev `roots` are an underlying accounting variable that is used to track
+     * how many earned beans a user has. 
+     * 
+     * When a farmer's state is updated, the ratio should hold:
+     * 
+     *  Total Roots     User Roots
+     * ------------- = ------------
+     *  Total Stalk     User Stalk
+     *  
+     * @param account the address to mint Stalk and Roots to
+     * @param stalk the amount of stalk to mint
      */
     function mintStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -136,14 +175,28 @@ library LibSilo {
 
     /**
      * @dev mints grownStalk to `account`.
-     * per the zero-withdraw update, if a user plants during the morning,
-     * the roots needed to properly calculate the earned beans would be higher 
-     * than outside the morning. Thus, if a user mows in the morning, 
-     * additional calculation is done and stored for the {plant} function.
-     * @param account farmer
+     * 
+     * per the zero-withdraw update, if a user plants during the vesting period (25 blocks),
+     * the earned beans of the current season is deferred until the non vesting period.
+     * However, this causes a slight mismatch in the amount of roots to properly allocate to the user.
+     * 
+     * The formula for calculating the roots is:
+     * GainedRoots = TotalRoots * GainedStalk / TotalStalk.
+     * 
+     * Roots are utilized in {SiloExit.balanceOfEarnedBeans} to calculate the earned beans as such: 
+     * EarnedBeans = (TotalStalk * userRoots / TotalRoots) - userStalk  
+     * 
+     * Because TotalStalk increments when there are new beans issued (at sunrise), 
+     * the amount of roots issued without the earned beans are:
+     * GainedRoots = TotalRoots * GainedStalk / (TotalStalk - NewEarnedStalk)
+     * 
+     * since newEarnedStalk is always equal or greater than 0, the gained roots calculated without the earned beans
+     * will always be equal or larger than the gained roots calculated with the earned beans.
+     * 
+     * @param account the address to mint Stalk and Roots to
      * @param stalk the amount of stalk to mint
      */
-    function mintGrownStalkAndGrownRoots(address account, uint256 stalk) internal {
+    function mintGrownStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 roots;
@@ -151,7 +204,7 @@ library LibSilo {
             roots = stalk.mul(C.getRootsBase());
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
-            if (block.number - s.season.sunriseBlock <= 25) {
+            if (block.number - s.season.sunriseBlock <= VESTING_PERIOD) {
                 uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
                 s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
@@ -318,7 +371,7 @@ library LibSilo {
             // per the zero withdraw update, if a user plants within the morning, 
             // addtional roots will need to be issued, to properly calculate the earned beans. 
             // thus, a different mint stalk function is used to differ between deposits.
-            LibSilo.mintGrownStalkAndGrownRoots(
+            LibSilo.mintGrownStalk(
                 account,
                 _balanceOfGrownStalk(
                     _lastStem,
@@ -430,7 +483,7 @@ library LibSilo {
         }
     }
 
-        //////////////////////// REMOVE ////////////////////////
+    //////////////////////// REMOVE ////////////////////////
 
     /**
      * @dev Removes from a single Deposit, emits the RemoveDeposit event,
@@ -474,7 +527,7 @@ library LibSilo {
          */
         if(transferType == LibTokenSilo.Transfer.emitTransferSingle){
             // "removing" a deposit is equivalent to "burning" an ERC1155 token.
-            emit TransferSingle(
+            emit LibTokenSilo.TransferSingle(
                 msg.sender, // operator
                 account, // from
                 address(0), // to
