@@ -120,7 +120,7 @@ library LibSilo {
     // );
 
     /**
-     * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
+     * @notice Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
      * transfers.
      */
     event TransferBatch(
@@ -134,9 +134,9 @@ library LibSilo {
     //////////////////////// MINT ////////////////////////
 
     /**
-     * @notice Mints Stalk and Roots to `account`.
+     * @dev Mints Stalk and Roots to `account`.
      *
-     * @dev `roots` are an underlying accounting variable that is used to track
+     * `roots` are an underlying accounting variable that is used to track
      * how many earned beans a user has. 
      * 
      * When a farmer's state is updated, the ratio should hold:
@@ -176,7 +176,7 @@ library LibSilo {
     /**
      * @dev mints grownStalk to `account`.
      * 
-     * per the zero-withdraw update, if a user plants during the vesting period (25 blocks),
+     * per the zero-withdraw update, if a user plants during the vesting period (see constant),
      * the earned beans of the current season is deferred until the non vesting period.
      * However, this causes a slight mismatch in the amount of roots to properly allocate to the user.
      * 
@@ -228,7 +228,9 @@ library LibSilo {
     /**
      * @dev Burns Stalk and Roots from `account`.
      *
-     * For an explanation of Roots accounting, see {FIXME(doc)}.
+     * if the user withdraws in the vesting period, 
+     * they forfeit their earned beans for that season, 
+     * distrubuted to the other users.
      */
     function burnStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -237,10 +239,6 @@ library LibSilo {
         uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
-        
-        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
-        // this is distrubuted to the other users.
-        // should this be the same as the vesting period?
         if(block.number - s.season.sunriseBlock <= 25){
             roots = s.s.roots.mulDiv(
             stalk,
@@ -278,7 +276,7 @@ library LibSilo {
     //////////////////////// TRANSFER ////////////////////////
 
     /**
-     * @dev Decrements the Stalk and Roots of `sender` and increments the Stalk
+     * @notice Decrements the Stalk and Roots of `sender` and increments the Stalk
      * and Roots of `recipient` by the same amount.
      */
     function transferStalk(
@@ -321,8 +319,8 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint32 _lastUpdate = lastUpdate(account);
 
-        //if last update > 0 and < stemStartSeason
-        //require that user account seeds be zero
+        // if last update > 0 and < stemStartSeason
+        // require that user account seeds be zero
         // require(_lastUpdate > 0 && _lastUpdate >= s.season.stemStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
 
         //maybe instead of checking lastUpdate here, which is no longer used going forwards since mowStatus will keep track of each individual "last mow time" by storing the stem tip at time of mow
@@ -332,8 +330,8 @@ library LibSilo {
         if((_lastUpdate != 0) && (_lastUpdate < s.season.stemStartSeason)) revert('silo migration needed');
 
 
-        //sop stuff only needs to be updated once per season
-        //if it started raininga nd it's still raining, or there was a sop
+        // sop stuff only needs to be updated once per season
+        // if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.stemStartSeason) {
             if (_lastUpdate <= s.season.rainStart && _lastUpdate <= s.season.current) {
                 // Increments `plenty` for `account` if a Flood has occured.
@@ -350,11 +348,15 @@ library LibSilo {
         // Increase the account's balance of Stalk and Roots.
         __mow(account, token);
 
-        //was hoping to not have to update lastUpdate, but if you don't, then it's 0 for new depositors, this messes up mow and migrate in unit tests, maybe better to just set this manually for tests?
-        //anyone that would have done any deposit has to go through mowSender which would have init'd it above zero in the pre-migration days
+        // was hoping to not have to update lastUpdate, but if you don't, then it's 0 for new depositors, this messes up mow and migrate in unit tests, maybe better to just set this manually for tests?
+        // anyone that would have done any deposit has to go through mowSender which would have init'd it above zero in the pre-migration days
         s.a[account].lastUpdate = s.season.current;
     }
 
+    /**
+     * @dev Updates the mowStatus for the given account and token, 
+     * and mints Grown Stalk for the given account and token.
+     */
     function __mow(address account, address token) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -362,15 +364,15 @@ library LibSilo {
         int96 _lastStem =  s.a[account].mowStatuses[token].lastStem;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
+        // if 
+        // 1: account has no bdv (new token deposit)
+        // 2: the lastStem is the same as the stemTip (implying that a user has mowed),
+        // then skip calculations to save gas.
         if (_bdv > 0) {
-             // if account mowed the same token in the same season, skip
             if (_lastStem == _stemTip) {
                 return;
             }
 
-            // per the zero withdraw update, if a user plants within the morning, 
-            // addtional roots will need to be issued, to properly calculate the earned beans. 
-            // thus, a different mint stalk function is used to differ between deposits.
             LibSilo.mintGrownStalk(
                 account,
                 _balanceOfGrownStalk(
@@ -387,12 +389,16 @@ library LibSilo {
         return;
     }
 
+    /**
+     * @notice returns the last season an account interacted with the silo.
+     */
     function lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
     }
 
     /**
+     * @dev internal logic to handle when beanstalk is raining.
      * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
      */
     function handleRainAndSops(address account, uint32 _lastUpdate) private {
@@ -425,20 +431,24 @@ library LibSilo {
         }
     }
 
+    /**
+     * @dev returns the balance of amount of grown stalk based on stems.
+     * @param lastStem the stem assoicated with the last mow
+     * @param latestStem the current stem for a given token
+     * @param bdv the bdv used to calculate grown stalk
+     */
     function _balanceOfGrownStalk(
         int96 lastStem,
-        int96 endStalkPerBDV,
+        int96 latestStem,
         uint128 bdv
     ) internal pure returns (uint256)
     {
-        return
-            stalkReward(
-                lastStem, //last GSPBDV farmer mowed
-                endStalkPerBDV, //get latest grown stalk per bdv for this token
-                bdv
-            );
+        return stalkReward(lastStem, latestStem, bdv);
     } 
 
+    /**
+     * @dev returns the amount of `plenty` an account has.
+     */
     function balanceOfPlenty(address account)
         internal
         view
@@ -601,24 +611,11 @@ library LibSilo {
         internal
         pure
         returns (uint256)
-    {
-        
-        // 
-        
-        // 
-        
-        int96 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int96(bdv));
-        
-        return uint128(reward);
+    {   
+        int96 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int96(bdv));     
+        return uint256(reward);
     }
 
-    //at the moment this is only used for MockSiloFacet - remove somehow? just do seeds.mul(seasons) there?
-    function stalkRewardLegacy(uint256 seeds, uint32 seasons)
-        internal
-        pure
-        returns (uint256)
-    {
-        return seeds.mul(seasons);
-    }
+    
 
 }

@@ -47,7 +47,7 @@ contract MockSiloFacet is SiloFacet {
         LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeLPAddress()));
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv.add(amount);
         s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv = uint128(newBdv);
@@ -64,7 +64,7 @@ contract MockSiloFacet is SiloFacet {
         
         
         
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv).add(LibSilo.stalkRewardLegacy(seeds, _season() - _s));
+        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         
         LibSilo.mintStalk(msg.sender, stalk);
         mintSeeds(msg.sender, seeds);
@@ -297,5 +297,13 @@ contract MockSiloFacet is SiloFacet {
         }
         
         return 1; //return 1 instead of zero so we can use 1 for testing purposes on stuff that hasn't been whitelisted (like in Convert.test)
+    }
+
+    function stalkRewardLegacy(uint256 seeds, uint32 seasons)
+        internal
+        pure
+        returns (uint256)
+    {
+        return seeds.mul(seasons);
     }
 }
