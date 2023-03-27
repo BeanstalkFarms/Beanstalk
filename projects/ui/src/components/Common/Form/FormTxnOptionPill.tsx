@@ -48,7 +48,9 @@ const FormTxnOptionPill: React.FC<Props> = ({
   if (!('claimable' in summary) || !summary.claimable) return null;
 
   return (
-    <Tooltip title={disabled ? `Nothing to ${summary.title.toLowerCase()}` : ''}>
+    <Tooltip
+      title={disabled ? `Nothing to ${summary.title.toLowerCase()}` : ''}
+    >
       <Box>
         <SelectionItem
           {...props}
@@ -56,7 +58,10 @@ const FormTxnOptionPill: React.FC<Props> = ({
           disabled={disabled}
           variant="pill"
         >
-          <Row gap={0.5} sx={{ width: 'fit-content' }}>
+          <Row
+            gap={0.5}
+            sx={{ width: 'fit-content', boxSizing: 'border-box', px: 1 }}
+          >
             <TokenIcon
               token={summary.claimable.token}
               logoOverride={

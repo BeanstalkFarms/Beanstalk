@@ -1,12 +1,14 @@
 import {
   BeanstalkSDK,
+  FarmFromMode,
   FarmToMode,
   FarmWorkflow,
   StepGenerator,
+  Token,
   TokenValue,
 } from '@beanstalk/sdk';
 
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { DepositCrate } from '~/state/farmer/silo';
 
 export enum FormTxn {
@@ -56,6 +58,14 @@ export type FormTxnBuilderInterface = {
    * actions to exclude from the options
    */
   exclude?: FormTxn[];
+  /**
+   *
+   */
+  additionalAmount?: BigNumber;
+  /**
+   *
+   */
+  surplusTo?: FarmToMode;
 };
 
 export const FormTxnBuilderPresets: {
@@ -315,6 +325,39 @@ export class FormTxnBuilder {
     };
   };
 
+  private static transferToken = (
+    sdk: BeanstalkSDK,
+    account: string,
+    token: Token,
+    amount: TokenValue,
+    from: FarmFromMode,
+    to: FarmToMode
+  ): {
+    getSteps: () => StepGenerator[];
+    estimateGas: () => Promise<ethers.BigNumber>;
+  } => {
+    const step = new sdk.farm.actions.TransferToken(
+      token.address,
+      account,
+      from,
+      to
+    );
+
+    const estimateGas = () =>
+      sdk.contracts.beanstalk.estimateGas.transferToken(
+        token.address,
+        account,
+        amount.toBigNumber(),
+        from,
+        to
+      );
+
+    return {
+      getSteps: () => [step],
+      estimateGas,
+    };
+  };
+
   private static implied: { [key in FormTxn]: FormTxn[] | undefined } = {
     [FormTxn.ENROOT]: [FormTxn.MOW],
     [FormTxn.PLANT]: [FormTxn.MOW],
@@ -354,6 +397,37 @@ export class FormTxnBuilder {
     return FormTxnBuilder.implied[step];
   }
 
+  /// ----------------- Convenience Methods -----------------
+  /// -------------------------------------------------------
+
+  static makePlantCrateSync(
+    sdk: BeanstalkSDK,
+    earnedBeans: TokenValue,
+    season: number
+  ) {
+    const { BEAN, STALK } = sdk.tokens;
+
+    const seeds = BEAN.getSeeds(earnedBeans);
+    const stalk = BEAN.getStalk(earnedBeans);
+    const grownStalk = STALK.amount(0);
+
+    const crate = {
+      season: ethers.BigNumber.from(season),
+      amount: earnedBeans,
+      bdv: earnedBeans,
+      stalk,
+      baseStalk: stalk,
+      grownStalk,
+      seeds,
+    };
+
+    return {
+      canPlant: earnedBeans.gt(0),
+      amount: earnedBeans,
+      crate,
+    };
+  }
+
   static async makePlantCrate(sdk: BeanstalkSDK, account: string) {
     const { BEAN, STALK } = sdk.tokens;
     const { beanstalk } = sdk.contracts;
@@ -390,7 +464,7 @@ export class FormTxnBuilder {
     data: FormTxnBuilderInterface, // form data
     getGenerators: (action: FormTxn) => StepGenerator[],
     operation: FarmWorkflow | StepGenerator[],
-    amountIn: TokenValue | undefined,
+    _amountIn: TokenValue | undefined,
     slippage: number
   ) {
     const primary = new Set(data.primary || []);

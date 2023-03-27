@@ -4,7 +4,7 @@ import { Box, Button, ButtonProps, lighten, Stack } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { FC } from '~/types';
 
-import { FontSize } from '~/components/App/muiTheme';
+import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 
 export type SelectionCardProps = {
   selected: boolean;
@@ -33,9 +33,9 @@ const SelectionCard: FC<SelectionCardProps> = ({
         borderColor: selected ? 'primary.main' : 'text.light',
         backgroundColor: selected ? 'primary.light' : 'transparent',
         '&:hover': {
-          backgroundColor: selected 
-            ? 'primary.light' 
-            : lighten('primary.light', 0.4),
+          backgroundColor: selected
+            ? 'primary.light'
+            : lighten(BeanstalkPalette.lightestGreen, 0.4),
         },
       },
       '&.Mui-disabled': {
@@ -51,16 +51,16 @@ const SelectionCard: FC<SelectionCardProps> = ({
     <Stack sx={{ width: '100%', boxSizing: 'border-box', height: '100%' }}>
       <Box sx={{ position: 'absolute', top: posOffset, right: posOffset }}>
         <Box sx={{ maxWidth: FontSize.base, height: FontSize.base }}>
-          <CheckCircleRoundedIcon 
+          <CheckCircleRoundedIcon
             sx={{
-            borderRadius: '100%',
-            border: `${selected ? 0 : 1}px solid`,
-            borderColor: selected ? 'primary.main' : 'text.light',
-            color: selected ? 'primary.main' : 'transparent',
-            transform: `scale(${selected ? 1.2 : 1})`,
-            width: '100%',
-            height: 'auto',
-          }}
+              borderRadius: '100%',
+              border: `${selected ? 0 : 1}px solid`,
+              borderColor: selected ? 'primary.main' : 'text.light',
+              color: selected ? 'primary.main' : 'transparent',
+              transform: `scale(${selected ? 1.2 : 1})`,
+              width: '100%',
+              height: 'auto',
+            }}
           />
         </Box>
       </Box>

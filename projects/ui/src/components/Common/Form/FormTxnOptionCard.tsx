@@ -70,7 +70,11 @@ const FormTxnOptionCard: React.FC<Props> = ({
         checkIcon="top-left"
         disabled={props.disabled || !summary.enabled}
         title={
-          <Row width="100%" justifyContent="space-between">
+          <Row
+            width="100%"
+            justifyContent="space-between"
+            sx={{ boxSizing: 'border-box', px: 1 }}
+          >
             <Row gap={0.5}>
               {required && summary.enabled && (
                 <img
