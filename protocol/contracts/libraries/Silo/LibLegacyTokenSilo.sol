@@ -56,7 +56,7 @@ library LibLegacyTokenSilo {
         int96 stemTip;
     }
 
-    ///@dev these events are grandfathered in for legacy code (claiming)
+    /// @dev these events are grandfathered in for legacy code (claiming)
     event RemoveWithdrawals(
         address indexed account,
         address indexed token,
@@ -356,9 +356,9 @@ library LibLegacyTokenSilo {
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
      * @param account Address of the account to migrate
      *
-     * @dev If a user's lastUpdate was set, which means they had deposits in the silo,
-     * but they currently have no deposits, then this function can be used to migrate
-     * their account to the new silo using less gas.
+     * @dev If a user's lastUpdate was set, which means they previously had deposits in the silo.
+     * if they currently do not have any deposits to migrate, then this function 
+     * can be used to migrate their account to the new silo cheaply.
      */
    function _migrateNoDeposits(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -377,7 +377,6 @@ library LibLegacyTokenSilo {
      * @param seasons The seasons in which the deposits were made
      * @param amounts The amounts of those deposits which are to be migrated
      *
-     *
      * @dev When migrating an account, you must submit all of the account's deposits,
      * or the migration will not pass because the seed check will fail. The seed check
      * adds up the BDV of all submitted deposits, and multiples by the corresponding
@@ -387,28 +386,31 @@ library LibLegacyTokenSilo {
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
      */
-    function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
+    function _mowAndMigrate(
+        address account, 
+        address[] calldata tokens, 
+        uint32[][] calldata seasons, 
+        uint256[][] calldata amounts
+    ) internal {
  
         require(tokens.length == seasons.length, "inputs not same length");
- 
-        // AppStorage storage s = LibAppStorage.diamondStorage();
- 
-        //see if msg.sender has already migrated or not by checking seed balance
+  
+        // see if the account has migrated by checking seed balance
         require(balanceOfSeeds(account) > 0, "no migration needed");
         // uint32 _lastUpdate = s.a[account].lastUpdate;
         // require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
  
  
         //TODOSEEDS: require that a season of plenty is not currently happening?
-        //do a legacy mow using the old silo seasons deposits
+        // do a legacy mow using the old silo seasons deposits
         updateLastUpdateToNow(account); //do we want to store last update season as current season or as s.season.stemStartSeason?
         LibSilo.mintGrownStalk(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
-        //at this point we've completed the guts of the old mow function, now we need to do the migration
+        // at this point we've completed the guts of the old mow function, now we need to do the migration
  
  
         MigrateData memory migrateData;
  
-        //use of PerTokenData and PerDepositData structs to save on stack depth
+        // use of PerTokenData and PerDepositData structs to save on stack depth
         for (uint256 i = 0; i < tokens.length; i++) {
             PerTokenData memory perTokenData;
             perTokenData.token = tokens[i];
@@ -420,10 +422,11 @@ library LibLegacyTokenSilo {
                 perDepositData.amount = uint128(amounts[i][j]);
  
                 if (perDepositData.amount == 0) {
-                    continue; //for some reason subgraph gives us deposits with 0 in it sometimes, save gas and skip it (also fixes div by zero bug if it continues on)
+                    // skip deposit calculations if amount deposited in deposit is 0
+                    continue;
                 }
  
-                //withdraw this deposit
+                // withdraw this deposit
                 uint256 crateBDV = LibLegacyTokenSilo.removeDepositFromAccount(
                                     account,
                                     perTokenData.token,
@@ -432,18 +435,18 @@ library LibLegacyTokenSilo {
                                 );
  
  
-                //calculate how much stalk has grown for this deposit
+                // calculate how much stalk has grown for this deposit
                 uint128 grownStalk = _calcGrownStalkForDeposit(
                     crateBDV * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)),
                     perDepositData.season
                 );
  
-                //also need to calculate how much stalk has grown since the migration
+                // also need to calculate how much stalk has grown since the migration
                 uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
                 grownStalk += stalkGrownSinceStemStartSeason;
                 migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
  
-                //add to new silo
+                // add to new silo
                 LibTokenSilo.addDepositToAccount(
                     account, 
                     perTokenData.token, 
@@ -457,26 +460,21 @@ library LibLegacyTokenSilo {
                     LibTokenSilo.Transfer.emitTransferSingle
                 );
  
-                //add to running total of seeds
+                // add to running total of seeds
                 migrateData.totalSeeds += uint128(uint256(crateBDV) * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)));
             }
  
-            //init mow status for this token
+            // init mow status for this token
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
         }
  
-        //user deserves stalk grown between stemStartSeason and now
+        // user deserves stalk grown between stemStartSeason and now
         LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
  
-        //verify user account seeds total equals seedsTotalBasedOnInputDeposits
-        // if((s.a[account].s.seeds + 4 - seedsTotalBasedOnInputDeposits) > 100) {
-        //     require(msg.sender == account, "deSynced seeds, only account can migrate");
-        // }
- 
-        //require exact seed match
+        // require exact seed match
         require(balanceOfSeeds(account) == migrateData.totalSeeds, "seeds misaligned");
  
-        //and wipe out old seed balances (all your seeds are belong to stem)
+        // and wipe out old seed balances as they've been migrated
         setBalanceOfSeeds(account, 0);
     }
 
