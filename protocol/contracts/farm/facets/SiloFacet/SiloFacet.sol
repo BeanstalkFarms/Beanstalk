@@ -9,6 +9,7 @@ import "./TokenSilo.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
+import "hardhat/console.sol";
 
 /*
  * @author Publius
@@ -210,18 +211,17 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32[] calldata seasons,
         uint256[] calldata amounts
-    ) external nonReentrant updateSilo {
+    ) external payable nonReentrant updateSilo {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
         AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
-
+        AssetsAdded memory aa;
         // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-        uint256 newStalk;
+        aa.bdvAdded = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
 
         // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
         for (uint256 i; i < seasons.length; ++i) {
-            uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            uint256 bdv = amounts[i].mul(aa.bdvAdded).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
             LibTokenSilo.addDeposit(
                 msg.sender,
                 token,
@@ -229,7 +229,7 @@ contract SiloFacet is TokenSilo {
                 amounts[i],
                 bdv
             );
-            newStalk = newStalk.add(
+            aa.stalkAdded = aa.stalkAdded.add(
                 bdv.mul(s.ss[token].stalk).add(
                     LibSilo.stalkReward(
                         bdv.mul(s.ss[token].seeds),
@@ -237,15 +237,17 @@ contract SiloFacet is TokenSilo {
                     )
                 )
             );
+            // Count BDV to prevent a rounding error. Do multiplication later to save gas.
+            aa.seedsAdded = aa.seedsAdded.add(bdv);
         }
 
-        uint256 newSeeds = newBDV.mul(s.ss[token].seeds);
+        aa.seedsAdded = aa.seedsAdded.mul(s.ss[token].seeds);
 
         // Add new Stalk
         LibSilo.depositSiloAssets(
             msg.sender,
-            newSeeds.sub(ar.seedsRemoved),
-            newStalk.sub(ar.stalkRemoved)
+            aa.seedsAdded.sub(ar.seedsRemoved),
+            aa.stalkAdded.sub(ar.stalkRemoved)
         );
     }
 
@@ -253,7 +255,7 @@ contract SiloFacet is TokenSilo {
         address token,
         uint32 _season,
         uint256 amount
-    ) external nonReentrant updateSilo {
+    ) external payable nonReentrant updateSilo {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDeposit(
