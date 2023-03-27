@@ -1,14 +1,20 @@
 import { TokenValue } from "@beanstalk/sdk-core";
-import { ethers } from "ethers";
+import { BigNumberish, ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import { RunContext, RunMode, Step, StepClass, Workflow } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
+import { deadlineSecondsToBlockchain } from "src/utils";
 
 export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "wellSwap";
+  private transactionDeadline: BigNumberish;
 
-  constructor(public wellAddress: string, public fromToken: Token, public toToken: Token, public recipient: string) {
+  constructor(public wellAddress: string, public fromToken: Token, public toToken: Token, public recipient: string, deadline?: number) {
     super();
+    if (deadline !== null && deadline !== undefined && deadline <= 0) {
+      throw new Error("Deadline must be greater than 0");
+    }
+    this.transactionDeadline = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext): Promise<Step<AdvancedPipePreparedResult>> {
@@ -69,7 +75,8 @@ export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
             this.toToken.address,
             _amountInStep,
             minAmountOut.toBigNumber(),
-            this.recipient
+            this.recipient,
+            this.transactionDeadline
           ]);
         } else {
           const maxAmountIn = estimate.addSlippage(context.data.slippage);
@@ -90,7 +97,8 @@ export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
             this.toToken.address,
             maxAmountIn.toBigNumber(),
             _amountInStep,
-            this.recipient
+            this.recipient,
+            this.transactionDeadline
           ]);
         }
 
