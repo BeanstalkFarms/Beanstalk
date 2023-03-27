@@ -478,32 +478,57 @@ library LibLegacyTokenSilo {
         setBalanceOfSeeds(account, 0);
     }
 
+    /**
+     * @dev Updates the lastStem of a given token for an account to the latest Tip.
+     */
     function setMowStatus(address account, address token, int96 stemTip) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].mowStatuses[token].lastStem = stemTip;
     }
 
+    /**
+     * @dev Season getter.
+     */
     function _season() internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.season.current;
     }
 
+    /**
+     * @notice DEPRECATED: Seeds do not exist in the new system, but will remain as a
+     * user facing concept for the time being.
+     * 
+     * @dev Legacy Seed balance getter.
+     * 
+     */
     function balanceOfSeeds(address account) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].s.seeds;
     }
 
+    /**
+     * @notice DEPRECATED: Seeds do not exist in the new system,
+     * but will remain as a user facing concept for the time being.
+     * 
+     * @dev sets the seed for an given account.
+     * 
+     */
     function setBalanceOfSeeds(address account, uint256 seeds) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].s.seeds = seeds;
     }
 
+    /**
+     * @dev Updates `lastUpdate` of an account to the current season.
+     */
     function updateLastUpdateToNow(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.a[account].lastUpdate = _season();
     }
 
-    //calculates grown stalk up until stemStartSeason
+    /**
+     * @dev Calculates the amount of stalk thats been grown for a given deposit.
+     */
     function _calcGrownStalkForDeposit(
         uint256 seedsForDeposit,
         uint32 season
@@ -513,6 +538,11 @@ library LibLegacyTokenSilo {
         return uint128(LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
     }
 
+    /**
+     * @dev Legacy Seed balance getter.
+     * 
+     * constants are used in favor of reading from storage for gas savings.
+     */
     function getSeedsPerToken(address token) internal pure returns (uint256) {
         if (token == C.beanAddress()) {
             return 2;
@@ -529,7 +559,8 @@ library LibLegacyTokenSilo {
     ////////////////////////// CLAIM ///////////////////////////////
 
     /** 
-     * @notice DEPRECATED. Internal logic for claiming withdraws.
+     * @notice DEPRECATED. Internal logic for claiming a singular deposit.
+     * 
      * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
      * These internal functions are left for backwards compatibility, to allow pending 
      * withdrawals from before the update to be claimed.
@@ -548,6 +579,13 @@ library LibLegacyTokenSilo {
         return amount;
     }
 
+    /** 
+     * @notice DEPRECATED. Internal logic for claiming multiple deposits.
+     * 
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These internal functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     */
     function _claimWithdrawals(
         address account,
         address token,
@@ -567,6 +605,13 @@ library LibLegacyTokenSilo {
         return amount;
     }
 
+    /** 
+     * @notice DEPRECATED. Internal logic for removing the claim multiple deposits.
+     * 
+     * @dev The Zero Withdraw update removed the two-step withdraw & claim process. 
+     * These internal functions are left for backwards compatibility, to allow pending 
+     * withdrawals from before the update to be claimed.
+     */
     function _removeTokenWithdrawal(
         address account,
         address token,
