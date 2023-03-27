@@ -61,7 +61,7 @@ type ClaimableOption = {
   token: Token;
 };
 
-type FormTxnOptionSummary = {
+export type FormTxnOptionSummary = {
   /**
    *
    */
@@ -175,7 +175,6 @@ export default function useFarmerFormTxnsSummary() {
           {
             description: 'Earned Stalk',
             tooltip: tooltips.earnedStalk,
-
             token: STALK,
             amount: earnedStalk,
           },

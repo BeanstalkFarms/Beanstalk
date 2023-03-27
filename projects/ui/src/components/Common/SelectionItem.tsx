@@ -5,26 +5,30 @@ import { FontSize } from '~/components/App/muiTheme';
 import Row from './Row';
 
 export type SelectionItemProps = {
-  /** 
-   * 
+  /**
+   *
    */
   selected: boolean;
-  /** 
+  /**
    * Placement of the check icon
    */
   checkIcon?: 'top-left' | 'top-right';
-  /** 
-   * 
+  /**
+   *
    */
   title?: string | JSX.Element;
-  /** 
+  /**
    * NOTE: pill variant ignores 'title' and 'checkIcon' props
    */
   variant?: 'pill' | 'card';
-  /** 
-   * 
+  /**
+   *
    */
   isHovered?: boolean;
+  /**
+   *
+   */
+  gap?: number;
 } & Omit<ButtonProps, 'variant' | 'title'>;
 
 /**
@@ -39,6 +43,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
   checkIcon,
   disabled = false,
   isHovered,
+  gap = 1,
   ...props
 }) => (
   <Button
@@ -50,9 +55,11 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
       border: '1px solid',
       borderRadius: variant === 'pill' ? 2.2 : 1,
       ':not(.Mui-disabled)': {
-        color: selected && variant === 'pill' ? 'primary.main' : 'text.secondary',
+        color:
+          selected && variant === 'pill' ? 'primary.main' : 'text.secondary',
         borderColor: selected ? 'primary.main' : 'text.light',
-        backgroundColor: selected || isHovered === true ? 'primary.light' : 'transparent',
+        backgroundColor:
+          selected || isHovered === true ? 'primary.light' : 'transparent',
         '&:hover': {
           backgroundColor: 'primary.light',
         },
@@ -74,11 +81,13 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
     {variant === 'pill' ? (
       <>{children}</>
     ) : (
-      <Stack width="100%" p={1} gap={1}>
+      <Stack width="100%" p={1} gap={gap}>
         {title || checkIcon ? (
           <Row
             direction={checkIcon === 'top-right' ? 'row-reverse' : 'row'}
-            justifyContent={checkIcon === 'top-left' ? 'flex-start' : 'space-between'}
+            justifyContent={
+              checkIcon === 'top-left' ? 'flex-start' : 'space-between'
+            }
             gap={0.5}
           >
             {checkIcon ? (
@@ -96,16 +105,16 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
                 />
               </Box>
             ) : null}
-            {title 
-              ? typeof title === 'string' ? (
+            {title ? (
+              typeof title === 'string' ? (
                 <Typography color="inherit">{title}</Typography>
               ) : (
                 <>{title}</>
-              ) 
-            : null}
+              )
+            ) : null}
           </Row>
         ) : null}
-        <Box sx={{ boxSizing: 'border-box', px: 1 }}>{children}</Box>
+        <Box>{children}</Box>
       </Stack>
     )}
   </Button>

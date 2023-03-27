@@ -31,7 +31,7 @@ const guides = [
   HOW_TO_CLAIM_WITHDRAWALS,
 ];
 
-const SILO_ACTIONS_MAX_WIDTH = '470px';
+const SILO_ACTIONS_MAX_WIDTH = '540px';
 
 const TokenPage: FC<{}> = () => {
   // Constants
@@ -64,9 +64,7 @@ const TokenPage: FC<{}> = () => {
   if (!whitelistedToken) return null;
 
   return (
-    <Container
-      sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}
-    >
+    <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
       <Stack gap={2} width="100%">
         <PagePath
           items={[
@@ -80,7 +78,9 @@ const TokenPage: FC<{}> = () => {
         <PageHeaderSecondary
           title={whitelistedToken.name}
           titleAlign="left"
-          icon={<TokenIcon css={{ marginBottom: -3 }} token={whitelistedToken} />}
+          icon={
+            <TokenIcon css={{ marginBottom: -3 }} token={whitelistedToken} />
+          }
           returnPath="/silo"
           hideBackButton
           control={
@@ -102,7 +102,11 @@ const TokenPage: FC<{}> = () => {
           >
             <SiloAssetOverviewCard token={whitelistedToken} />
           </Stack>
-          <Stack gap={2} width="100%" sx={{ flexShrink: 2, maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}>
+          <Stack
+            gap={2}
+            width="100%"
+            sx={{ flexShrink: 2, maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
+          >
             <SiloActions
               pool={pool}
               token={whitelistedToken as ERC20Token}

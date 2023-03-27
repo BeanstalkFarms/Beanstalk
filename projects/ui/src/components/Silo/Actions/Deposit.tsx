@@ -1,5 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Stack } from '@mui/material';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Box, Button, Card, Drawer, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
@@ -49,6 +55,11 @@ import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondary
 import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 import useSilo from '~/hooks/beanstalk/useSilo';
 
+import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
+import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
+import Claim from './Claim';
+import ClaimBeanBanner from '~/components/Common/Form/FormTxn/ClaimBeanBanner';
+
 // -----------------------------------------------------------------------
 
 type DepositFormValues = FormStateNew &
@@ -94,7 +105,9 @@ const DepositForm: FC<
   isSubmitting,
   setFieldValue,
 }) => {
-  ///
+  const ref = useRef<HTMLDivElement | null>(null);
+  const siblingRef = useRef<HTMLDivElement | null>(null);
+
   const sdk = useSdk();
   const beanstalkSilo = useSilo();
   const { balances: additionalBalances } = useFarmerFormTxnBalances();
@@ -148,6 +161,10 @@ const DepositForm: FC<
     [setFieldValue]
   );
 
+  const additional = values.farmActions.additionalAmount || ZERO_BN;
+
+  console.log('additionalamt: ', additional?.toString());
+
   /// Effects
   // Reset the form farmActions whenever the tokenIn changes
   const currTokenSymbol = values.tokens[0].token.symbol;
@@ -180,8 +197,10 @@ const DepositForm: FC<
   /// Derived
   const isReady = bdv.gt(0);
 
+  const noAmount = values.tokens[0].amount === undefined;
+
   return (
-    <Form noValidate autoComplete="off">
+    <FormWithDrawer noValidate autoComplete="off" siblingRef={siblingRef} >
       <TokenSelectDialogNew
         open={isTokenSelectVisible}
         handleClose={hideTokenSelect}
@@ -193,10 +212,9 @@ const DepositForm: FC<
         title="Assets"
         balanceFrom={values.balanceFrom}
         setBalanceFrom={handleSetBalanceFrom}
-        applicableBalances={additionalBalances}
       />
       {/* Input Field */}
-      <Stack gap={1}>
+      <Stack gap={1} ref={siblingRef}>
         {values.tokens.map((tokenState, index) => {
           const key =
             tokenState.token.symbol === 'ETH'
@@ -210,8 +228,6 @@ const DepositForm: FC<
             _balance && balanceType in _balance
               ? _balance[balanceType]
               : ZERO_BN;
-          const additionalBalance =
-            additionalBalances[tokenState.token.address]?.applied;
 
           return (
             <TokenQuoteProviderWithParams<DepositQuoteHandler>
@@ -222,13 +238,13 @@ const DepositForm: FC<
               state={tokenState}
               showTokenSelect={showTokenSelect}
               handleQuote={handleQuote}
-              additionalBalance={additionalBalance}
               balanceFrom={values.balanceFrom}
               params={quoteProviderParams}
-              belowComponent={<FormTxnsPrimaryOptions />}
             />
           );
         })}
+
+        <ClaimBeanBanner />
         {isReady ? (
           <>
             <TxnSeparator />
@@ -249,10 +265,8 @@ const DepositForm: FC<
                   <>
                     1 {whitelistedToken.symbol} ={' '}
                     {displayFullBN(amountToBdv(new BigNumber(1)))} BDV
-                    <br />1 BDV&rarr;{whitelistedToken
-                      .getStalk()
-                      ?.toHuman()}{' '}
-                    STALK
+                    <br />1 BDV&rarr;
+                    {whitelistedToken.getStalk()?.toHuman()} STALK
                   </>
                 }
               />
@@ -267,10 +281,8 @@ const DepositForm: FC<
                   <>
                     1 {whitelistedToken.symbol} ={' '}
                     {displayFullBN(amountToBdv(new BigNumber(1)))} BDV
-                    <br />1 BDV&rarr;{whitelistedToken
-                      .getSeeds()
-                      ?.toHuman()}{' '}
-                    SEEDS
+                    <br />1 BDV&rarr;
+                    {whitelistedToken.getSeeds()?.toHuman()} SEEDS
                   </>
                 }
               />
@@ -285,7 +297,7 @@ const DepositForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting}
+          disabled={isSubmitting || noAmount}
           type="submit"
           variant="contained"
           color="primary"
@@ -297,7 +309,10 @@ const DepositForm: FC<
           Deposit
         </SmartSubmitButton>
       </Stack>
-    </Form>
+      <FormWithDrawer.Drawer title="Use Claimable Assets">
+        <ClaimBeanDrawerContent />
+      </FormWithDrawer.Drawer>
+    </FormWithDrawer>
   );
 };
 
@@ -388,6 +403,7 @@ const Deposit: FC<{
         primary: undefined,
         secondary: undefined,
         implied: [FormTxn.MOW],
+        additionalAmount: undefined,
       },
     }),
     [baseToken]

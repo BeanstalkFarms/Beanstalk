@@ -51,7 +51,8 @@ import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import useAsyncMemo from '~/hooks/ui/useAsyncMemo';
+import useAsyncMemo from '~/hooks/display/useAsyncMemo';
+import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 
 // -----------------------------------------------------------------------
 
@@ -298,6 +299,7 @@ const ConvertForm: FC<
             plantableBalance[tokenIn.address]?.applied || undefined
           }
         />
+        <AddPlantTxnToggle />
         {/* Output token */}
         {depositedAmount.gt(0) ? (
           <PillRow

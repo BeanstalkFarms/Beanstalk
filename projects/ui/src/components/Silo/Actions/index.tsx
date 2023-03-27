@@ -29,7 +29,7 @@ import useSdk from '~/hooks/sdk';
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 
-const SiloActions : FC<{
+const SiloActions: FC<{
   pool: Pool;
   token: ERC20TokenOld;
   siloBalance: FarmerSiloBalance;
@@ -55,46 +55,22 @@ const SiloActions : FC<{
           <BadgeTab label="Claim" showBadge={hasClaimable} />
         </ModuleTabs>
         <ModuleContent>
-          {tab === 0 && token ? (
-            <Deposit 
-              token={token} 
-            />
-          ) : null}
-          {tab === 1 && token ? (
-            <Convert
-              fromToken={token}
-            />
-          ) : null}
-          {tab === 2 && token ? (
-            <Transfer
-              token={token}
-            />
-          ) : null}
-          {tab === 3 && token ? (
-            <Withdraw
-              token={token}
-            />
-          ) : null}
+          {tab === 0 && token ? <Deposit token={token} /> : null}
+          {/* {tab === 0 && token && <TempAction token={token} />} */}
+          {tab === 1 && token ? <Convert fromToken={token} /> : null}
+          {tab === 2 && token ? <Transfer token={token} /> : null}
+          {tab === 3 && token ? <Withdraw token={token} /> : null}
           {tab === 4 && token ? (
-            <Claim
-              token={token}
-              siloBalance={props.siloBalance}
-            />
+            <Claim token={token} siloBalance={props.siloBalance} />
           ) : null}
         </ModuleContent>
       </Module>
       {/* Tables */}
       <Box sx={{ display: tab <= 2 ? 'block' : 'none' }}>
-        <Deposits
-          token={props.token}
-          siloBalance={props.siloBalance}
-        />
+        <Deposits token={props.token} siloBalance={props.siloBalance} />
       </Box>
       <Box sx={{ display: tab >= 3 ? 'block' : 'none' }}>
-        <Withdrawals
-          token={props.token}
-          siloBalance={props.siloBalance}
-        />
+        <Withdrawals token={props.token} siloBalance={props.siloBalance} />
       </Box>
     </>
   );

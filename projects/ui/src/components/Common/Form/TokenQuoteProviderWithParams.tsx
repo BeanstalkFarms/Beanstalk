@@ -11,7 +11,7 @@ import Row from '~/components/Common/Row';
 
 import useQuoteWithParams, { QuoteHandlerWithParams, QuoteSettingsNew } from '~/hooks/ledger/useQuoteWithParams';
 import { TokenQuoteProviderCustomProps } from './TokenQuoteProvider';
-import useDeepCompareMemo from '~/hooks/ui/useDeepCompareMemo';
+import useDeepCompareMemo from '~/hooks/display/useDeepCompareMemo';
 
 type TokenQuoteProviderWithParamsCustomProps<T> = {
     /** The current form state of this token */

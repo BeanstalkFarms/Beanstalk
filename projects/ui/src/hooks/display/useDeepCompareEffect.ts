@@ -10,13 +10,20 @@ type DependencyList = UseEffectParams[1];
 
 const isFunction = (value: any) => typeof value === 'function';
 
-function useDeepCompareEffect(effect: EffectCallback, dependencies?: DependencyList): void;
+function useDeepCompareEffect(
+  effect: EffectCallback,
+  dependencies?: DependencyList
+): void;
 function useDeepCompareEffect(
   effect: EffectCallback,
   cleanFunction: () => void,
   dependencies: DependencyList
 ): void;
-function useDeepCompareEffect(effect: EffectCallback, param2?: any, param3?: any): void {
+function useDeepCompareEffect(
+  effect: EffectCallback,
+  param2?: any,
+  param3?: any
+): void {
   const cleanFunction = isFunction(param2) ? param2 : undefined;
 
   useEffect(() => {
