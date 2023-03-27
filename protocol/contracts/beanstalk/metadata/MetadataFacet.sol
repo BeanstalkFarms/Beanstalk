@@ -20,8 +20,12 @@ import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
  * @author brean
  * @notice MetadataFacet is a contract that provides metadata for beanstalk ERC1155 deposits, 
  * as well as other auxiliary functions related to ERC1155 deposits.
- *
  * 
+ * @dev Deposits are represented by a bytes32, which is the concatination of the token address and the stem.
+ * This means that all the nessecary metadata needed for an ERC1155 can be derived from the depositId.
+ * However, in the future, when beanstalk accepts ERC721 and ERC1155 deposits,
+ * they will be represented by the *hash* of the token address, id, and stem.
+ * The functions are designed to be extensible to support this.
  */
 contract MetadataFacet is IERC1155Receiver {
     using LibStrings for uint256;
@@ -37,11 +41,15 @@ contract MetadataFacet is IERC1155Receiver {
      */
     event URI(string value, uint256 indexed id);
 
-    // for gas effiency, the metadata of an given deposit is not initalized until it is needed. 
-    // this is because a new ERC1155 id is created each season, per whitelisted token. 
-    // currently, the metadata stoes the token address, the id of the token, and the Stem.
-
-    function uri(uint256 depositId) external view returns (string memory) {
+    /**
+     * @notice Returns the URI for a given depositId.
+     * @param depositId - the id of the deposit
+     * @dev the URI is a base64 encoded JSON object that contains the metadata and base64 encoded svg.
+     * Deposits are stored as a mapping of a bytes32 to a Deposit struct. 
+     * ERC20 deposits are represented by the concatination of the token address and the stem. (20 + 12 bytes).
+     * ERC721 and ERC1155 Deposits (not implmented) will be represented by the *hash* of the token address, id, and stem. (32 bytes).
+     */
+    function uri(bytes32 depositId) external view returns (string memory) {
         Storage.Metadata memory depositMetadata = getDepositMetadata(depositId);
         require(depositMetadata.token != address(0), "Silo: metadata does not exist");
         bytes memory attributes = abi.encodePacked(
@@ -64,35 +72,54 @@ contract MetadataFacet is IERC1155Receiver {
         ));
     }
 
-    function setMetadata(
-        uint256 depositId,
-        address token, 
-        int96 stem,
-        uint256 // this should be the id of the token, but currently, only ERC20 tokens are supported.
-    ) public returns (bool) {
-        require(bytes32(depositId) == LibBytes.packAddressAndStem(token,stem), "Silo: invalid depositId");
-        // currently, deposits only support ERC20, which does not have an ID assoicated with a token.
-        // in the future, deposits will support ERC721 and ERC1155 tokens, which will need an ID assoicated.
-        // thus, the signature will include the id for future support. 
+    /**
+     * @notice sets the metadata of a given depositId.
+     * @param depositId - the id of the deposit
+     * 
+     * @dev the depositId is the concatination of the token address and the stem.
+     * the metadata struct is somewhat redundant for ERC20 deposits, but is left here commented out 
+     * to use in the future. 
+     */
+    // function setMetadata(bytes32 depositId) external returns (bool) {
+    //     (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
+    //     Storage.Metadata memory depositMetadata;
+    //     depositMetadata.token = token;
+    //     depositMetadata.id = 0;
+    //     depositMetadata.stem = stem;
+    //     s.metadata[depositId] = depositMetadata;
+    //     emit URI("", uint256(depositId));
+    //     return true;
+    // }
+    /**
+     * @notice returns the metadata of a given depositId.
+     * 
+     * @dev since the silo only supports ERC20 deposits, the metadata can be derived from the depositId.
+     * However, the function is designed with future compatability with ERC721 and ERC1155 deposits in mind.
+     */
+    function getDepositMetadata(bytes32 depositId) public view returns (Storage.Metadata memory) {
         Storage.Metadata memory depositMetadata;
+        (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
         depositMetadata.token = token;
         depositMetadata.id = 0;
         depositMetadata.stem = stem;
-        s.metadata[bytes32(depositId)] = depositMetadata;
-        emit URI("", depositId);
-        return true;
-    }
-
-    function getDepositMetadata(uint256 depositId) public view returns (Storage.Metadata memory) {
-        return s.metadata[bytes32(depositId)];
+        return depositMetadata;
     }
     
+    /**
+     * @notice returns the imageURI for a given depositId.
+     */
     function imageURI() public pure returns (string memory){
         return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzgiIGhlaWdodD0iMzkiIHZpZXdCb3g9IjAgMCAzOCAzOSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeT0iMC41MTk1MzEiIHdpZHRoPSIzNy45NjI5IiBoZWlnaHQ9IjM3Ljk2MjkiIHJ4PSIxOC45ODE0IiBmaWxsPSIjM0VCOTRFIi8+CjxwYXRoIGQ9Ik0yNC4zMTM1IDQuNTE5NTNMMTMuMjI5IDM0LjEzMjhDMTMuMjI5IDM0LjEzMjggMC45Mzg4NDIgMTMuMTY2NyAyNC4zMTM1IDQuNTE5NTNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTUuODA0NyAzMi4yOTU1TDIzLjU5NDIgMTEuMTI3QzIzLjU5NDIgMTEuMTI3IDM3Ljk0OTcgMjIuNzQwNCAxNS44MDQ3IDMyLjI5NTVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=";
     }
 
     //////////////////////// ERC1155Reciever ////////////////////////
 
+    /**
+     * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
+     * 
+     * @dev as ERC1155 deposits are not accepted yet, 
+     * this function will send the tokens back to the sender.
+     */
     function onERC1155Received(
         address,
         address from,
@@ -104,6 +131,12 @@ contract MetadataFacet is IERC1155Receiver {
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
+    /**
+     * @notice onERC1155BatchReceived function that allows the silo to receive ERC1155 tokens.
+     * 
+     * @dev as ERC1155 deposits are not accepted yet, 
+     * this function will send the tokens back to the sender.
+     */
     function onERC1155BatchReceived(
         address,
         address from,

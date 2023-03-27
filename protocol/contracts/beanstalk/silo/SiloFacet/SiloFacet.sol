@@ -202,7 +202,6 @@ contract SiloFacet is TokenSilo {
      * @param recipient Destination of Deposit.
      * @param depositId ID of Deposit to Transfer.
      * @param amount Amount of `token` to Transfer.
-     * @param null bytes calldata, required by ERC1155.
      * 
      * @dev the depositID is the token address and stem of a deposit, 
      * concatinated into a single uint256.
@@ -234,9 +233,8 @@ contract SiloFacet is TokenSilo {
      * @notice Transfer a multiple Deposits, conforming to the ERC1155 standard.
      * @param sender Source of Deposit.
      * @param recipient Destination of Deposit.
-     * @param depositId list of ID of deposits to Transfer.
+     * @param depositIds list of ID of deposits to Transfer.
      * @param amounts list of amounts of `token` to Transfer.
-     * @param null bytes calldata, required by ERC1155.
      * 
      * @dev {transferDeposits} can be used to transfer multiple deposits, but only 
      * if they are all of the same token. Since the ERC1155 standard requires the abilty
@@ -245,19 +243,19 @@ contract SiloFacet is TokenSilo {
     function safeBatchTransferFrom(
         address sender, 
         address recipient, 
-        uint256[] calldata depositIDs, 
+        uint256[] calldata depositIds, 
         uint256[] calldata amounts, 
         bytes calldata
     ) external {
-        require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+        require(depositIds.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         address token;
         int96 cumulativeGrownStalkPerBDV;
-        for(uint i; i < depositIDs.length; i++) {
+        for(uint i; i < depositIds.length; i++) {
             (token, cumulativeGrownStalkPerBDV) = 
                 LibBytes.getAddressAndStemFromBytes(
-                    bytes32(depositIDs[i])
+                    bytes32(depositIds[i])
                 );
             transferDeposit(
                 sender, 
