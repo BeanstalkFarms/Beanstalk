@@ -9,7 +9,6 @@ import "./TokenSilo.sol";
 import "../../ReentrancyGuard.sol";
 import "../../../libraries/Token/LibTransfer.sol";
 import "../../../libraries/Silo/LibSiloPermit.sol";
-import "hardhat/console.sol";
 
 /*
  * @author Publius
