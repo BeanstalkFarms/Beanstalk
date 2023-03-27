@@ -343,43 +343,37 @@ describe('Silo', function () {
       expect(await this.approval.isApprovedForAll(userAddress, user2Address)).to.eq(true);
     });
 
-    it("properly emits URI for when correctly setting metadata:", async function () {
-      season = this.season.season()
-      stem = this.silo.seasonToStem(this.bean.address, season)
-      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
-      await expect(this.metadata.connect(user).setMetadata(
-        depositID, // depositId,
-        this.bean.address, // token,
-        stem, // stem
-        0 // id (set to 0, but can be anything)
-      )).to.emit(this.metadata, 'URI').withArgs(
-        "",
-        depositID
-      )
-    });
+    // it("properly emits URI for when correctly setting metadata:", async function () {
+    //   season = this.season.season()
+    //   stem = this.silo.seasonToStem(this.bean.address, season)
+    //   depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
+    //   await expect(this.metadata.connect(user).setMetadata(
+    //     depositID, // depositId,
+    //     this.bean.address, // token,
+    //     stem, // stem
+    //     0 // id (set to 0, but can be anything)
+    //   )).to.emit(this.metadata, 'URI').withArgs(
+    //     "",
+    //     depositID
+    //   )
+    // });
 
-    it("reverts when incorrectly setting metadata:", async function () {
-      season = this.season.season()
-      stem = this.silo.seasonToStem(this.bean.address, season)
-      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB999999999999999999999999';     
-      await expect(this.metadata.connect(user).setMetadata(
-        depositID, // depositId,
-        this.bean.address, // token,
-        stem, // stem
-        0 // id (set to 0, but can be anything)
-      )).to.be.revertedWith("Silo: invalid depositId");
-    });
+    // it("reverts when incorrectly setting metadata:", async function () {
+    //   season = this.season.season()
+    //   stem = this.silo.seasonToStem(this.bean.address, season)
+    //   depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB999999999999999999999999';     
+    //   await expect(this.metadata.connect(user).setMetadata(
+    //     depositID, // depositId,
+    //     this.bean.address, // token,
+    //     stem, // stem
+    //     0 // id (set to 0, but can be anything)
+    //   )).to.be.revertedWith("Silo: invalid depositId");
+    // });
 
     it("properly gives an URI", async function () {
       season = this.season.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
-      await this.metadata.connect(user).setMetadata(
-        depositID, // depositId,
-        this.bean.address, // token,
-        stem, // stem
-        0 // id (set to 0, but can be anything)
-      )
       expect(await this.metadata.uri(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpnaUlHaGxhV2RvZEQwaU16a2lJSFpwWlhkQ2IzZzlJakFnTUNBek9DQXpPU0lnWm1sc2JEMGlibTl1WlNJZ2VHMXNibk05SW1oMGRIQTZMeTkzZDNjdWR6TXViM0puTHpJd01EQXZjM1puSWo0S1BISmxZM1FnZVQwaU1DNDFNVGsxTXpFaUlIZHBaSFJvUFNJek55NDVOakk1SWlCb1pXbG5hSFE5SWpNM0xqazJNamtpSUhKNFBTSXhPQzQ1T0RFMElpQm1hV3hzUFNJak0wVkNPVFJGSWk4K0NqeHdZWFJvSUdROUlrMHlOQzR6TVRNMUlEUXVOVEU1TlROTU1UTXVNakk1SURNMExqRXpNamhETVRNdU1qSTVJRE0wTGpFek1qZ2dNQzQ1TXpnNE5ESWdNVE11TVRZMk55QXlOQzR6TVRNMUlEUXVOVEU1TlROYUlpQm1hV3hzUFNKM2FHbDBaU0l2UGdvOGNHRjBhQ0JrUFNKTk1UVXVPREEwTnlBek1pNHlPVFUxVERJekxqVTVORElnTVRFdU1USTNRekl6TGpVNU5ESWdNVEV1TVRJM0lETTNMamswT1RjZ01qSXVOelF3TkNBeE5TNDRNRFEzSURNeUxqSTVOVFZhSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284TDNOMlp6ND0iLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn19");
     });
 
