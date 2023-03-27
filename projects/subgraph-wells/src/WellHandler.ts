@@ -1,9 +1,8 @@
 import { AddLiquidity, Approval, RemoveLiquidity, RemoveLiquidityOneToken, Swap, Transfer } from "../generated/templates/Well/Well";
 import { loadOrCreateAccount } from "./utils/Account";
-import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import { emptyBigIntArray, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent } from "./utils/Liquidity";
 import { recordSwapEvent } from "./utils/Swap";
-import { getBeanPriceUDSC } from "./utils/Token";
 import {
   checkForSnapshot,
   incrementWellDeposit,

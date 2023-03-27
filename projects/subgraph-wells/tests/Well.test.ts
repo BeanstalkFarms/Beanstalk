@@ -1,6 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, logStore, test } from "matchstick-as/assembly/index";
-import { BEAN_ERC20, WETH } from "../src/utils/Constants";
-import { ZERO_BD, ZERO_BI } from "../src/utils/Decimals";
+import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
+import { ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadWell } from "../src/utils/Well";
 import {
   ACCOUNT_ENTITY_TYPE,
@@ -29,7 +29,7 @@ import {
   loadWithdraw
 } from "./helpers/Liquidity";
 import { loadDeposit } from "./helpers/Liquidity";
-import { dayFromTimestamp, hourFromTimestamp } from "../src/utils/Dates";
+import { dayFromTimestamp, hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 describe("Well Entity: Single Event Tests", () => {
