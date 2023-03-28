@@ -49,9 +49,9 @@ export const TokenInput: FC<TokenInput> = ({
     [token, onAmountChange]
   );
 
-  const handleAmountChange = (cleanValue: string) => {
+  const handleAmountChange = useCallback((cleanValue: string) => {
     updateAmount(cleanValue);
-  };
+  }, [updateAmount]);
 
   const handleTokenChange = useCallback(
     (token: Token) => {
@@ -64,15 +64,15 @@ export const TokenInput: FC<TokenInput> = ({
     [amount, onAmountChange, onTokenChange]
   );
 
-  const handleFocus = () => setFocused(true);
-  const handleBlur = () => setFocused(false);
-  const handleClick = () => {
+  const handleFocus = useCallback(() => setFocused(true), []);
+  const handleBlur = useCallback(() => setFocused(false), []);
+  const handleClick = useCallback(() => {
     inputRef.current && inputRef.current.focus();
-  };
+  }, []);
 
-  const handleClickMax = () => {
+  const handleClickMax = useCallback(() => {
     console.log("Max clicked");
-  };
+  }, []);
 
   /**
    * We have a fake focus outline around TokenInput that kind of
@@ -83,11 +83,11 @@ export const TokenInput: FC<TokenInput> = ({
    * We also need to add an exception for the input element itself, otherwise
    * events like double-clicking to select won't work
    */
-  const dontStealFocus = (e: MouseEvent) => {
+  const dontStealFocus = useCallback((e: MouseEvent) => {
     if ((e.target as HTMLElement).tagName !== "INPUT") {
       e.preventDefault();
     }
-  };
+  }, []);
 
   return (
     <Container width={width} focused={focused} id="token-input" onClick={handleClick} onMouseDown={dontStealFocus}>
