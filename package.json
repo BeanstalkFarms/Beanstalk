@@ -1,0 +1,42 @@
+{
+  "name": "root",
+  "private": true,
+  "packageManager": "yarn@3.3.1",
+  "workspaces": [
+    "projects/*",
+    "protocol",
+    "utils"
+  ],
+  "devDependencies": {
+    "@types/prettier": "^2",
+    "husky": "8.0.1",
+    "jest": "29.2.2",
+    "lint-staged": "13.1.0",
+    "prettier": "2.7.1",
+    "ts-jest": "29.0.3",
+    "ts-node": "10.9.1",
+    "typescript": "4.8.4"
+  },
+  "scripts": {
+    "bootstrap": "yarn husky install && yarn generate",
+    "generate": "yarn protocol:generate && yarn sdk:generate && yarn ui:generate",
+    "build": "yarn sdk:build",
+    "test": "yarn sdk:test",
+    "format": "yarn sdk:prettier",
+    "protocol:generate": "yarn workspace @beanstalk/protocol generate",
+    "sdk:generate": "yarn workspace @beanstalk/sdk generate",
+    "sdk:dev": "yarn workspace @beanstalk/sdk dev",
+    "sdk:build": "yarn workspace @beanstalk/sdk build",
+    "sdk:test": "jest --selectProjects sdk --silent --runInBand --",
+    "sdk:testdev": "jest --selectProjects sdk --watch --runInBand --",
+    "sdk:prettier": "yarn prettier projects/sdk -w",
+    "sdk:publish": "yarn workspace @beanstalk/sdk publish",
+    "sdk:version": "yarn workspace @beanstalk/sdk version",
+    "ui:generate": "yarn workspace ui generate",
+    "ui:start": "yarn workspace ui start",
+    "ui:build": "yarn workspace ui build",
+    "ui:test": "yarn workspace ui test",
+    "test:browser": "yarn workspace tests test:browser",
+    "ex": "yarn workspace @beanstalk/examples x"
+  }
+}

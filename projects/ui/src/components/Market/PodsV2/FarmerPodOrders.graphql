@@ -1,0 +1,19 @@
+#import "../../PodOrder.fragment.graphql"
+
+query FarmerPodOrders(
+  $first: Int = 100,
+  $createdAt_gt: BigInt,
+  $account: String!
+) {
+  podOrders(
+    first: $first,
+    orderBy: createdAt,
+    orderDirection: desc
+    where: {
+     	farmer: $account,
+      createdAt_gt: $createdAt_gt 
+    }
+  ) {
+    ...PodOrder
+  }
+}

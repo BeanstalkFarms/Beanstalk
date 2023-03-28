@@ -110,10 +110,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     marketplaceFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet,
     whitelistFacet
   ] = mock ? await deployFacets(
@@ -126,11 +128,13 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockFundraiserFacet',
       'MockMarketplaceFacet',
       'PauseFacet',
+      'DepotFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'MockUnripeFacet',
       'WhitelistFacet'],
   ) : await deployFacets(
@@ -144,10 +148,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MarketplaceFacet',
       'OwnershipFacet',
       'PauseFacet',
+      'DepotFacet',
       'SeasonFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'UnripeFacet',
       'WhitelistFacet'],
   )
@@ -182,10 +188,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['MarketplaceFacet', marketplaceFacet],
       ['OwnershipFacet', ownershipFacet],
       ['PauseFacet', pauseFacet],
+      ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
+      ['TokenSupportFacet', tokenSupportFacet],
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet]
     ],
@@ -224,10 +232,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     marketplaceFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet
   }
 }

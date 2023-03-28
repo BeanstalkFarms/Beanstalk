@@ -1,0 +1,18 @@
+#import "../../PodListing.fragment.graphql"
+
+query FarmerPodListings(
+  $first: Int = 100,
+  $createdAt_gt: BigInt,
+  $account: String!
+) {
+  podListings(
+    first: $first,
+    where: { 
+      createdAt_gt: $createdAt_gt,
+      farmer: $account,
+      status_not: FILLED_PARTIAL
+    },
+  ) {
+    ...PodListing
+  }
+}

@@ -1,0 +1,65 @@
+`bean`: Bean token
+- pools (keyed by pool address)
+  - price
+  - reserves
+  - deltaB
+  - totalCrosses
+  - supply
+- price: aggregate price
+
+`beanstalk`: Beanstalk protocol
+- field
+- governance
+- market
+- silo
+  - balances
+    - deposited
+      - amount
+    - withdrawn
+      - amount
+    - claimable
+      - amount
+    - circulating
+    - wrapped
+- sun
+  - season
+
+`farmer`: Active user
+- allowances: ERC-20 token allowances
+- balances: ERC-20 token balances
+- events: Beanstalk events related to this farmer, used to calculate deposits etc.
+- field
+  - pods
+  - plots
+  - harvestablePods
+  - harvestablePlots
+- governance
+- market
+- nfts
+- silo
+  - balances (tokenAddress => SiloBalance)
+    - deposited
+      - amount
+      - bdv
+      - crates
+    - withdrawn
+      - amount
+      - crates
+    - claimable
+      - amount
+      - crates
+    - circulating
+    - wrapped
+  - beans
+    - earned
+  - stalk
+    - total
+    - active
+    - earned
+    - grown
+  - seeds
+    - total
+    - active
+    - earned
+  - roots
+    - total

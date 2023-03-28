@@ -1,0 +1,393 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Silo-Replanted
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo-Replanted
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-BIP29.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: AddDeposit(indexed address,indexed address,uint32,uint256,uint256)
+          handler: handleAddDeposit
+        - event: RemoveDeposit(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveDeposit
+        - event: RemoveDeposits(indexed address,indexed address,uint32[],uint256[],uint256)
+          handler: handleRemoveDeposits
+        - event: AddWithdrawal(indexed address,indexed address,uint32,uint256)
+          handler: handleAddWithdrawal
+        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveWithdrawal
+        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
+          handler: handleRemoveWithdrawals
+        - event: SeedsBalanceChanged(indexed address,int256)
+          handler: handleSeedsBalanceChanged
+        - event: StalkBalanceChanged(indexed address,int256,int256)
+          handler: handleStalkBalanceChanged
+        - event: Plant(indexed address,uint256)
+          handler: handlePlant
+        - event: WhitelistToken(indexed address,bytes4,uint256,uint256)
+          handler: handleWhitelistToken
+        - event: DewhitelistToken(indexed address)
+          handler: handleDewhitelistToken
+      file: ./src/SiloHandler.ts
+  # Field - Original
+  - kind: ethereum/contract
+    name: Field
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Field
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: CurvePrice
+          file: ./abis/CurvePrice.json
+      eventHandlers:
+        - event: WeatherChange(indexed uint256,uint256,int8)
+          handler: handleWeatherChange
+        - event: Sow(indexed address,uint256,uint256,uint256)
+          handler: handleSow
+        - event: Harvest(indexed address,uint256[],uint256)
+          handler: handleHarvest
+        - event: PlotTransfer(indexed address,indexed address,indexed uint256,uint256)
+          handler: handlePlotTransfer
+        - event: SupplyIncrease(indexed uint256,uint256,uint256,uint256,int256)
+          handler: handleSupplyIncrease
+        - event: SupplyDecrease(indexed uint256,uint256,int256)
+          handler: handleSupplyDecrease
+        - event: SupplyNeutral(indexed uint256,int256)
+          handler: handleSupplyNeutral
+        - event: FundFundraiser(indexed address,indexed uint32,uint256)
+          handler: handleFundFundraiser
+      file: ./src/FieldHandler.ts
+  - kind: ethereum/contract
+    name: Season
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+        - event: SeasonSnapshot(indexed uint32,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleSeasonSnapshot
+        - event: Incentivization(indexed address,uint256)
+          handler: handleIncentive
+      file: ./src/SeasonHandler.ts
+  - kind: ethereum/contract
+    name: Marketplace
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,bool)
+          handler: handlePodListingCreated
+        - event: PodListingCancelled(indexed address,uint256)
+          handler: handlePodListingCancelled
+        - event: PodListingFilled(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handlePodListingFilled
+        - event: PodOrderCreated(indexed address,bytes32,uint256,uint24,uint256)
+          handler: handlePodOrderCreated
+        - event: PodOrderFilled(indexed address,indexed address,bytes32,uint256,uint256,uint256)
+          handler: handlePodOrderFilled
+        - event: PodOrderCancelled(indexed address,bytes32)
+          handler: handlePodOrderCancelled
+      file: ./src/MarketplaceHandler.ts
+  - kind: ethereum/contract
+    name: Marketplace-Replanted
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Marketplace-Replanted
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-Replanted.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint8)
+          handler: handlePodListingCreated_v1_1
+      file: ./src/MarketplaceHandler.ts
+  - kind: ethereum/contract
+    name: Diamond
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Diamond
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk.json
+      eventHandlers:
+        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
+          handler: handleDiamondCut
+      file: ./src/DiamondHandler.ts
+  - kind: ethereum/contract
+    name: Bean
+    network: mainnet
+    source:
+      address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
+      abi: ERC20
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: Beanstalk
+          file: ./abis/Beanstalk.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleLegacyTransfer
+      file: ./src/BeanHandler.ts
+  - kind: ethereum/contract
+    name: Bean-Replanted
+    network: mainnet
+    source:
+      address: "0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab"
+      abi: ERC20
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: Beanstalk
+          file: ./abis/Beanstalk.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/BeanHandler.ts
+  - kind: ethereum/contract
+    name: Replant
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Replant
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-BIP29.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Chop(indexed address,indexed address,uint256,uint256)
+          handler: handleChop
+      file: ./src/ReplantHandler.ts
+  - kind: ethereum/contract
+    name: Season-Replanted
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season-Replanted
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-BIP29.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: CurvePrice
+          file: ./abis/CurvePrice.json
+      eventHandlers:
+        - event: Reward(indexed uint32,uint256,uint256,uint256)
+          handler: handleReward
+        - event: MetapoolOracle(indexed uint32,int256,uint256[2])
+          handler: handleMetapoolOracle
+        - event: Soil(indexed uint32,uint256)
+          handler: handleSoil
+      file: ./src/SeasonHandler.ts
+  - kind: ethereum/contract
+    name: Fertilizer
+    network: mainnet
+    source:
+      address: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6"
+      abi: Fertilizer
+      startBlock: 14910573
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Fertilizer
+      abis:
+        - name: Fertilizer
+          file: ./abis/Fertilizer.json
+        - name: Beanstalk
+          file: ./abis/Beanstalk-BIP29.json
+      eventHandlers:
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+      file: ./src/FertilizerHandler.ts
+  - kind: ethereum/contract
+    name: Farm
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Farm
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-BIP29.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: InternalBalanceChanged(indexed address,indexed address,int256)
+          handler: handleInternalBalanceChanged
+      file: ./src/FarmHandler.ts
+  - kind: ethereum/contract
+    name: Silo-Calls
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-Replanted.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      callHandlers:
+        - function: transferDeposit(address,address,uint32,uint256)
+          handler: handleTransferDepositCall
+        - function: transferDeposits(address,address,uint32[],uint256[])
+          handler: handleTransferDepositsCall
+      file: ./src/SiloHandler.ts
+  - kind: ethereum/contract
+    name: BIP29-PodMarketplace
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - PodMarketplaceV2
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-BIP29.json
+        - name: UniswapV2Pair
+          file: ./abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint256,bytes,uint8,uint8)
+          handler: handlePodListingCreated_v2
+        - event: PodListingFilled(indexed address,indexed address,uint256,uint256,uint256,uint256)
+          handler: handlePodListingFilled_v2
+        - event: PodOrderCreated(indexed address,bytes32,uint256,uint24,uint256,uint256,bytes,uint8)
+          handler: handlePodOrderCreated_v2
+        - event: PodOrderFilled(indexed address,indexed address,bytes32,uint256,uint256,uint256,uint256)
+          handler: handlePodOrderFilled_v2
+      file: ./src/MarketplaceHandler.ts

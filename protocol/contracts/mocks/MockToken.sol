@@ -7,17 +7,19 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import {ERC20Permit} from "../tokens/ERC20/ERC20Permit.sol";
 
 /**
  * @author Publius
  * @title Mock Token
 **/
-contract MockToken is ERC20, ERC20Burnable {
+contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
 
     uint8 private _decimals = 18;
 
     constructor(string memory name, string memory symbol)
     ERC20(name, symbol)
+    ERC20Permit(name)
     { }
 
     function mint(address account, uint256 amount) external returns (bool) {

@@ -1,0 +1,15 @@
+<svg width="38" height="30" viewBox="0 0 38 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="23" cy="15" r="6" fill="#FBB4AE"/>
+<circle cx="35" cy="15" r="3" fill="#FBB4AE"/>
+<circle cx="11" cy="15" r="3" fill="#FBB4AE"/>
+<line x1="35" y1="15" x2="11" y2="15" stroke="#FBB4AE" stroke-width="2"/>
+<circle cx="31.4851" cy="23.4858" r="3" transform="rotate(45 31.4851 23.4858)" fill="#FBB4AE"/>
+<circle cx="14.5146" cy="6.5151" r="3" transform="rotate(45 14.5146 6.5151)" fill="#FBB4AE"/>
+<line x1="31.4853" y1="23.4854" x2="14.5147" y2="6.51486" stroke="#FBB4AE" stroke-width="2"/>
+<circle cx="31.4851" cy="6.51465" r="3" transform="rotate(-45 31.4851 6.51465)" fill="#FBB4AE"/>
+<circle cx="14.5146" cy="23.4854" r="3" transform="rotate(-45 14.5146 23.4854)" fill="#FBB4AE"/>
+<line x1="31.4852" y1="6.51472" x2="14.5146" y2="23.4853" stroke="#FBB4AE" stroke-width="2"/>
+<circle cx="23" cy="27" r="3" fill="#FBB4AE"/>
+<circle cx="23" cy="3" r="3" fill="#FBB4AE"/>
+<line x1="23" y1="3" x2="23" y2="27" stroke="#FBB4AE" stroke-width="2"/>
+</svg>

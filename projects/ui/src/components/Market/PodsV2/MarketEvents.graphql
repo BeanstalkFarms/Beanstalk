@@ -1,0 +1,75 @@
+query MarketEvents(
+  $events_first: Int = 1000,
+  $events_timestamp_lt: BigInt!
+) {
+  marketEvents: marketplaceEvents(
+    orderBy: createdAt,
+    orderDirection: desc,
+    first: $events_first,
+    where: { 
+      createdAt_lt: $events_timestamp_lt
+    }
+  ) {
+    hash
+    createdAt
+    # --------
+    # LISTINGS
+    # --------
+    ... on PodListingCancelled {
+      id
+      index # of the Listing that was cancelled
+      account
+      historyID
+      # => amount
+      # => pricePerPod
+    }
+    ... on PodListingCreated {
+      id
+      index
+      amount
+      maxHarvestableIndex
+      pricePerPod
+      historyID
+    }
+    ... on PodListingFilled {
+      id
+      from
+      to
+      amount
+      index # of Listing that sold
+      start
+      historyID
+      # => pricePerPod
+    }
+    # ------
+    # ORDERS
+    # ------
+    ... on PodOrderCancelled {
+      id
+      orderId
+      account
+      historyID
+      # => amount
+      # => maxPlaceInLine
+      # => pricePerPod
+    }
+    ... on PodOrderCreated {
+      id
+      amount
+      maxPlaceInLine
+      pricePerPod
+      historyID
+    }
+    ... on PodOrderFilled {
+      id
+      from
+      to
+      historyID
+      amount
+      index # index of plot was sold to the Order
+      start #
+      # => maxPlaceInLine
+      # => pricePerPod
+    }
+  }
+}

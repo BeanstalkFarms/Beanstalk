@@ -1,0 +1,16 @@
+{
+  "extends": "../../babel.config.js",
+  "rootMode": "upward",
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ],
+    "@babel/preset-react",
+    "@babel/preset-typescript"
+  ]
+}

@@ -340,6 +340,8 @@ contract SiloFacet is TokenSilo {
         uint32[] calldata seasons,
         uint256[] calldata amounts
     ) external nonReentrant updateSilo {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+
         // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
         AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
 
@@ -388,6 +390,8 @@ contract SiloFacet is TokenSilo {
         uint32 _season,
         uint256 amount
     ) external nonReentrant updateSilo {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+        
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDeposit(
             msg.sender,

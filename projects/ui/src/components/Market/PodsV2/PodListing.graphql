@@ -1,0 +1,13 @@
+#import "./PodListing.fragment.graphql"
+# NOTE: use this query approach because the UI tracks plot index
+#       as the unique ID, but the subgraph tracks `{account}-{index}`.
+query PodListing($index: BigInt) {
+  podListings(
+    where: { index: $index }
+    first: 1
+    orderBy: createdAt
+    orderDirection: desc
+  ) {
+    ...PodListing
+  }
+}

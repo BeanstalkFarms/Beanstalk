@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Exit if in CI
+[ -n "$CI" ] || [ -n "$NETLIFY" ] && exit 0
+
+echo 'Linting and prettifying...'
+yarn run lint-staged
