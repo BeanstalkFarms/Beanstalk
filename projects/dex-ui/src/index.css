@@ -30,7 +30,28 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 :focus {
-  outline: 2px solid #9DCAE6;
+  outline: 2px solid #9dcae6;
   box-sizing: border-box;
+}
 
+/* ===== Scrollbar CSS ===== */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #494c58 #272a37;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #272a37;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #494c58;
+  border-radius: 10px;
+  border: 0px none #000000;
 }
