@@ -16,9 +16,12 @@ export const SwapRoot = () => {
 
   const arrowHandler = () => {
     const prevInToken = inToken;
+    const prevInAmount = inAmount;
 
     setInToken(outToken);
+    setInAmount(outAmount);
     setOutToken(prevInToken);
+    setOutAmount(prevInAmount);
   };
 
   const handleInputChange = useCallback((a: TokenValue) => setInAmount(a), []);
@@ -31,7 +34,7 @@ export const SwapRoot = () => {
     setOutToken(token);
   }, []);
 
-  console.log(`IN: ${inAmount?.toHuman()} ${inToken?.symbol} | OUT: ${outAmount?.toHuman()} ${outToken?.symbol}`);
+  console.log(` ${inAmount?.toHuman()} ${inToken?.symbol} => ${outAmount?.toHuman()} ${outToken?.symbol}`);
 
   return (
     <Container>
@@ -58,7 +61,7 @@ export const SwapRoot = () => {
         </ArrowContainer>
 
         <SwapInputContainer>
-          {/* <TokenInput
+          <TokenInput
             id="output-amount"
             label={`Output amount in ${inToken.symbol}`}
             token={outToken}
@@ -68,7 +71,7 @@ export const SwapRoot = () => {
             canChangeToken={true}
             showBalance={false}
             allowNegative={true}
-          /> */}
+          />
         </SwapInputContainer>
       </Div>
       <SwapDetailsContainer>Details</SwapDetailsContainer>
