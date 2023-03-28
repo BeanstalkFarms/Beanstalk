@@ -64,7 +64,7 @@ const Container = styled.div`
   align-items: center;
 `;
 
-const NavContainer = styled.div`
+const NavContainer = styled.nav`
   // border-bottom: 1px solid gray;
   display: flex;
   flex-direction: row;
@@ -86,12 +86,13 @@ const ConnectArea = styled.div`
   align-items: center;
 `;
 
-const ContentContainer = styled.div`
-  border: 1px solid green;
+const ContentContainer = styled.main`
+  // border: 1px solid green;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   padding: 20px;
+  padding-top: 48px;
   align-items: center;
   width: 1200px
 `;
