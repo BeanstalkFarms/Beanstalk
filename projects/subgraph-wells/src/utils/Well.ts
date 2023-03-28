@@ -157,8 +157,9 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
   for (let i = 0; i < well.tokens.length; i++) {
     if (i == beanIndex) continue;
     let tokenAddress = Address.fromBytes(well.tokens[i]);
-
-    updateTokenUSD(tokenAddress, blockNumber, currentBeans.div(toDecimal(well.reserves[i], getTokenDecimals(tokenAddress))));
+    if (well.reserves[i].gt(ZERO_BI)) {
+      updateTokenUSD(tokenAddress, blockNumber, currentBeans.div(toDecimal(well.reserves[i], getTokenDecimals(tokenAddress))));
+    }
   }
 
   well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
