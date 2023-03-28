@@ -1,9 +1,10 @@
-import React, { MouseEvent, useRef, useState } from "react";
+import React, { MouseEvent, useCallback, useRef, useState } from "react";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
+import { reactWhatChanged as RWC } from "src/utils/what-changed";
 
 type ContainerProps = {
   width: string;
@@ -11,6 +12,8 @@ type ContainerProps = {
 };
 
 type TokenInput = {
+  id?: string;
+  label: string;
   token: Token;
   amount?: TokenValue;
   width?: string;
@@ -22,6 +25,8 @@ type TokenInput = {
 };
 
 export const TokenInput: FC<TokenInput> = ({
+  id,
+  label,
   token,
   amount,
   onAmountChange,
@@ -35,18 +40,29 @@ export const TokenInput: FC<TokenInput> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   width = width ?? "100%";
 
+  const updateAmount = useCallback(
+    (value: string) => {
+      if (!token) return;
+      const newAmount = token.amount(value);
+      onAmountChange && onAmountChange(newAmount);
+    },
+    [token, onAmountChange]
+  );
+
   const handleAmountChange = (cleanValue: string) => {
-    const newAmount = token.amount(cleanValue);
-    onAmountChange && onAmountChange(newAmount);
+    updateAmount(cleanValue);
   };
 
-  const handleTokenChange = (token: Token) => {
-    if (amount) {
-      const newAmount = token.amount(amount.toHuman());
-      onAmountChange && onAmountChange(newAmount);
-    }
-    onTokenChange && onTokenChange(token);
-  };
+  const handleTokenChange = useCallback(
+    (token: Token) => {
+      if (amount) {
+        const newAmount = token.amount(amount.toHuman());
+        onAmountChange && onAmountChange(newAmount);
+      }
+      onTokenChange && onTokenChange(token);
+    },
+    [amount, onAmountChange, onTokenChange]
+  );
 
   const handleFocus = () => setFocused(true);
   const handleBlur = () => setFocused(false);
@@ -77,6 +93,8 @@ export const TokenInput: FC<TokenInput> = ({
     <Container width={width} focused={focused} id="token-input" onClick={handleClick} onMouseDown={dontStealFocus}>
       <TopRow>
         <BasicInput
+          id={id}
+          label={label}
           value={amount?.toHuman() || ""}
           onChange={handleAmountChange}
           onFocus={handleFocus}
