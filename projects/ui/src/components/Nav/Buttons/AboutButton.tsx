@@ -55,7 +55,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
       component={Card} 
       sx={{ 
         background: BeanstalkPalette.white, 
-        border: '0px solid transparent',
+        border: 'none',
         borderTopRightRadius: 0,
       }} 
       >

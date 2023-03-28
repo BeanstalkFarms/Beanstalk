@@ -52,10 +52,10 @@ const validateAddress = (account?: string, allowTransferToSelf?: boolean) => (va
 const textFieldStyles = {
   borderRadius: 1,
   '& label.Mui-focused': {
-    color: '#fff',
+    color: 'transparent',
   },
   '& .MuiOutlinedInput-root': {
-    background: '#fff',
+    background: 'transparent',
     pr: 0,
     pl: 0,
     '& fieldset': {
