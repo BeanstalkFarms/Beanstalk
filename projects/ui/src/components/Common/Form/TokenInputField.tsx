@@ -276,7 +276,7 @@ const TokenInput: FC<
       setDisplayAmount(field.value.toString()); 
     }
   }, [field.name, field.value, displayAmount]);
-
+  console.log(inputProps);
   return (
     <FieldWrapper label={label}>
       <BorderEffect disabled={isInputDisabled}>
