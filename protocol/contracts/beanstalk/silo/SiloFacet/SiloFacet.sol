@@ -45,22 +45,26 @@ contract SiloFacet is TokenSilo {
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
-     * note: changed added a generic bytes calldata to allow for ERC721 + ERC1155 deposits
      * 
-     * FIXME(logic): return `(amount, bdv, season)`
      */
     function deposit(
         address token,
-        uint256 amount,
+        uint256 _amount,
         LibTransfer.From mode
-    ) external payable nonReentrant mowSender(token) {
+    ) 
+        external
+        payable 
+        nonReentrant 
+        mowSender(token) 
+        returns (uint256 amount, uint256 bdv, int96 stem)
+    {
         amount = LibTransfer.receiveToken(
             IERC20(token),
-            amount,
+            _amount,
             msg.sender,
             mode
         );
-        _deposit(msg.sender, token, amount);
+        (bdv, stem) = _deposit(msg.sender, token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -106,7 +110,7 @@ contract SiloFacet is TokenSilo {
      *
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
-     * if the difference in stems is minimal.
+     * if the difference in stems is minimal to save on gas.
      */
 
     function withdrawDeposits(
@@ -136,10 +140,6 @@ contract SiloFacet is TokenSilo {
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
      * change in deposited BDV. See {Silo-_mow}.
-     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility later 
-     * alternative solution: make the input a bytes32 depositID
      */
     function transferDeposit(
         address sender,
@@ -238,7 +238,7 @@ contract SiloFacet is TokenSilo {
      * 
      * @dev {transferDeposits} can be used to transfer multiple deposits, but only 
      * if they are all of the same token. Since the ERC1155 standard requires the abilty
-     * to transfer any set of depositIDs, the {transferDeposits} function is not used here.
+     * to transfer any set of depositIDs, the {transferDeposits} function cannot be used here.
      */
     function safeBatchTransferFrom(
         address sender, 

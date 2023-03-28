@@ -142,14 +142,13 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount
-    ) internal {
-        (uint256 stalk) = LibTokenSilo.deposit(
+    ) internal returns (uint256 stalk, int96 stem){
+        stalk = LibTokenSilo.deposit(
             account,
             token,
-            LibTokenSilo.stemTipForToken(IERC20(token)),
+            stem = LibTokenSilo.stemTipForToken(IERC20(token)),
             amount
         );
-
         LibSilo.mintStalk(account, stalk);
     }
 
