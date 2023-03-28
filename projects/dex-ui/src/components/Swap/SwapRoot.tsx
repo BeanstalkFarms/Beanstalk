@@ -1,5 +1,5 @@
-import { TokenValue } from "@beanstalk/sdk";
-import React, { useState } from "react";
+import { Token, TokenValue } from "@beanstalk/sdk";
+import React, { useCallback, useState } from "react";
 import { useTokens } from "src/utils/TokenProvider";
 import styled from "styled-components";
 import { ArrowButton } from "./ArrowButton";
@@ -8,15 +8,30 @@ import { TokenInput } from "./TokenInput";
 import { Image } from "../Image";
 
 export const SwapRoot = () => {
-  const [inAmount, setInAmount] = useState(TokenValue.fromHuman("3.14", 6));
-  // const [outAmount, setOutAmount] = useState(TokenValue.fromHuman("0", 18));
   const tokens = useTokens();
-  const arrowHandler = () => console.log("Arrow");
+  const [inAmount, setInAmount] = useState<TokenValue>();
+  const [inToken, setInToken] = useState<Token>(tokens["WETH"]);
+  const [outToken, setOutToken] = useState<Token>(tokens["BEAN"]);
+  const [outAmount, setOutAmount] = useState<TokenValue>();
 
-  const inToken = tokens["BEAN"];
-  const onInputChange = (a: TokenValue) => setInAmount(a);
+  const arrowHandler = () => {
+    const prevInToken = inToken;
 
-  const outToken = tokens["WETH"];
+    setInToken(outToken);
+    setOutToken(prevInToken);
+  };
+
+  const handleInputChange = useCallback((a: TokenValue) => setInAmount(a), []);
+  const handleOutputChange = useCallback((a: TokenValue) => setOutAmount(a), []);
+
+  const handleInputTokenChange = useCallback((token: Token) => {
+    setInToken(token);
+  }, []);
+  const handleOutputTokenChange = useCallback((token: Token) => {
+    setOutToken(token);
+  }, []);
+
+  console.log(`IN: ${inAmount?.toHuman()} ${inToken?.symbol} | OUT: ${outAmount?.toHuman()} ${outToken?.symbol}`);
 
   return (
     <Container>
@@ -28,14 +43,32 @@ export const SwapRoot = () => {
       </SwapHeaderContainer>
       <Div>
         <SwapInputContainer>
-          <TokenInput token={inToken} amount={inAmount} onAmountChange={onInputChange} canChangeToken={true} />
+          <TokenInput
+            id="input-amount"
+            label={`Input amount in ${inToken.symbol}`}
+            token={inToken}
+            amount={inAmount}
+            onAmountChange={handleInputChange}
+            onTokenChange={handleInputTokenChange}
+            canChangeToken={true}
+          />
         </SwapInputContainer>
         <ArrowContainer>
           <ArrowButton onClick={arrowHandler} />
         </ArrowContainer>
 
         <SwapInputContainer>
-          <TokenInput token={outToken}  canChangeToken={false} showBalance={false} allowNegative={true} />
+          {/* <TokenInput
+            id="output-amount"
+            label={`Output amount in ${inToken.symbol}`}
+            token={outToken}
+            amount={outAmount}
+            onAmountChange={handleOutputChange}
+            onTokenChange={handleOutputTokenChange}
+            canChangeToken={true}
+            showBalance={false}
+            allowNegative={true}
+          /> */}
         </SwapInputContainer>
       </Div>
       <SwapDetailsContainer>Details</SwapDetailsContainer>

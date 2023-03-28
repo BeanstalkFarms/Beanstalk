@@ -33,8 +33,9 @@ export const TokenPicker: FC<Props> = ({ token: selectedToken, tokenList, exclud
 
     setList(list);
   }, [tokenList, tokens, excludeToken]);
-
-  if (!token) return null;
+  useEffect(() => {
+    setToken(selectedToken ?? tokens[0]);
+  }, [selectedToken, tokens]);
 
   const openModal = () => editable && setModalOpen(true);
   const closeModal = () => setModalOpen(false);
@@ -43,20 +44,26 @@ export const TokenPicker: FC<Props> = ({ token: selectedToken, tokenList, exclud
     setToken(token);
     onChange?.(token);
   };
-
+  console.log("selectedToken: ", selectedToken?.symbol);
   return (
     <>
       <Button editable={editable} onClick={openModal}>
-        <TokenLogo token={token} size={20} />
-        <TokenSymbol>{token.symbol}</TokenSymbol>
+        {selectedToken ? (
+          <>
+            <TokenLogo token={token} size={20} />
+            <TokenSymbol>{token.symbol}</TokenSymbol>
+          </>
+        ) : (
+          <div>Select a Token</div>
+        )}
         {editable && <Image src={chevDown} alt={"Token Dropdown"} size={9} />}
       </Button>
       {modalOpen && (
         <>
-          <Modal id="modal-background" onClick={closeModal}>
+          <Modal id="modal-background" onClick={closeModal} role="dialog" aria-labelledby="dialog-title">
             <ModalContainer id="modal">
               <ModalHeader>
-                <div>Select a token</div>
+                <div id="dialog-title">Select a token</div>
                 <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
               </ModalHeader>
               <ModalContent>
@@ -117,7 +124,7 @@ const Balance = styled.div`
   overflow: hidden;
 `;
 
-const Modal = styled.div`
+const Modal = styled.dialog`
   position: fixed;
   top: 0px;
   left: 0px;
