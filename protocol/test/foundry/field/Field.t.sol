@@ -321,7 +321,7 @@ contract FieldTest is FieldFacet, TestHelper {
     // Morning Auction
     function testMorningAuctionValues(uint256 blockNo, uint32 _weather) public {
         // tests that morning auction values align with manually calculated values
-        _weather = uint32(bound(_weather, 1, 69420)); // arbitary large number
+        _weather = uint32(bound(uint256(_weather), 1, 69420)); // arbitary large number
         season.setMaxTempE(_weather);
         blockNo = bound(blockNo, 1, 26); // 12s block time = 300 blocks in an season
 
@@ -597,7 +597,7 @@ contract FieldTest is FieldFacet, TestHelper {
 
     function testSowAllMorningAuctionAbovePeg(uint256 soil, uint32 _weather, uint256 delta) public {
         soil = bound(soil, 1e6, 100e6);
-        _weather = uint32(bound(_weather, 1, 69420));
+        _weather = uint32(bound(uint256(_weather), 1, 69420));
         delta = bound(delta, 1, 301); //maximum blockdelta within a season is 300 blocks
         season.setMaxTempE(_weather);
         season.setSoilE(soil);
@@ -617,7 +617,7 @@ contract FieldTest is FieldFacet, TestHelper {
     // soil/bean used should always be equal to soil issued.
     function testSowAllMorningAuctionBelowPeg(uint256 soil, uint32 _weather, uint256 delta) public {
         soil = bound(soil, 1e6, 100e6);
-        _weather = uint32(bound(_weather, 1, 69420));
+        _weather = uint32(bound(uint256(_weather), 1, 69420));
         delta = bound(delta, 1, 301); //maximum blockdelta within a season is 300 blocks
         season.setMaxTempE(_weather);
         season.setSoilE(soil);
