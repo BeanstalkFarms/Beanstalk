@@ -5,10 +5,10 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../C.sol";
 import "../LibAppStorage.sol";
 import "../LibSafeMath128.sol";
-import "../../C.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @title LibUnripeSilo

@@ -97,7 +97,7 @@ contract MetadataFacet is IERC1155Receiver {
      * @dev since the silo only supports ERC20 deposits, the metadata can be derived from the depositId.
      * However, the function is designed with future compatability with ERC721 and ERC1155 deposits in mind.
      */
-    function getDepositMetadata(bytes32 depositId) public view returns (Storage.Metadata memory) {
+    function getDepositMetadata(bytes32 depositId) public pure returns (Storage.Metadata memory) {
         Storage.Metadata memory depositMetadata;
         (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
         depositMetadata.token = token;

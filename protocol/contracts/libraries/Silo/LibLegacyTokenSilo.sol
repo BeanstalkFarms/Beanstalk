@@ -5,16 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "~/libraries/LibBytes.sol";
-import "../LibAppStorage.sol";
 import "../../C.sol";
-import "./LibUnripeSilo.sol";
-import "./LibTokenSilo.sol";
 import "./LibSilo.sol";
+import "./LibUnripeSilo.sol";
+import "../LibAppStorage.sol";
+import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import "~/libraries/LibSafeMathSigned128.sol";
-import "~/libraries/LibSafeMathSigned96.sol";
+import {LibBytes} from "~/libraries/LibBytes.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -26,7 +24,6 @@ import "~/libraries/LibSafeMathSigned96.sol";
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
-    using SafeMath for uint32;
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
