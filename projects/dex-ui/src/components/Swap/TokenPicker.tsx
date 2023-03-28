@@ -1,5 +1,5 @@
 import { Token } from "@beanstalk/sdk";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FC } from "src/types";
 import { useTokens } from "src/utils/TokenProvider";
 import styled from "styled-components";
@@ -10,8 +10,7 @@ import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
 
 type Props = {
-  token?: Token;
-  tokenList?: Token[];
+  token: Token;
   excludeToken?: Token;
   editable?: boolean;
   onChange?: (t: Token) => void;
@@ -21,34 +20,31 @@ type ContainerProps = {
   editable?: Boolean;
 };
 
-export const TokenPicker: FC<Props> = ({ token: selectedToken, tokenList, excludeToken, editable = true, onChange }) => {
+export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, onChange }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const tokens = useTokens();
-  const [token, setToken] = useState<Token>(selectedToken ?? tokens[0]);
-  const [list, setList] = useState(tokenList || []);
+  const [list, setList] = useState<Token[]>([]);
 
   useEffect(() => {
-    let list = tokenList && tokenList.length && tokenList.length > 0 ? tokenList : Object.values(tokens);
-    list = list.filter((t: Token) => t.symbol !== excludeToken?.symbol);
+    let list = Object.values(tokens).filter((t: Token) => t.symbol !== excludeToken?.symbol);
 
     setList(list);
-  }, [tokenList, tokens, excludeToken]);
-  useEffect(() => {
-    setToken(selectedToken ?? tokens[0]);
-  }, [selectedToken, tokens]);
+  }, [tokens, excludeToken]);
 
-  const openModal = () => editable && setModalOpen(true);
-  const closeModal = () => setModalOpen(false);
-  const selectToken = (token: Token) => {
-    closeModal();
-    setToken(token);
-    onChange?.(token);
-  };
-  console.log("selectedToken: ", selectedToken?.symbol);
+  const openModal = useCallback(() => editable && setModalOpen(true), []);
+  const closeModal = useCallback(() => setModalOpen(false), []);
+  const selectToken = useCallback(
+    (token: Token) => {
+      closeModal();
+      onChange?.(token);
+    },
+    [closeModal, onChange]
+  );
+
   return (
     <>
       <Button editable={editable} onClick={openModal}>
-        {selectedToken ? (
+        {token ? (
           <>
             <TokenLogo token={token} size={20} />
             <TokenSymbol>{token.symbol}</TokenSymbol>
