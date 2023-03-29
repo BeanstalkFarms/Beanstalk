@@ -79,12 +79,11 @@ library LibDibbler {
             // 2: pods are rounded down.
             beans = scaleSoilDown(beans, _morningTemperature, maxTemperature);
             pods = beansToPods(beans, maxTemperature);
-        } 
-        
-        else {
+        } else {
             pods = beansToPods(beans, _morningTemperature);
         }
 
+        // we use trySub here because in the case of an overflow, its equivalent to having no soil left. 
         (, s.f.soil) = s.f.soil.trySub(uint128(beans));
 
         return sowNoSoil(account, beans, pods);
@@ -102,7 +101,6 @@ library LibDibbler {
         _sowPlot(account, beans, pods);
         s.f.pods = s.f.pods.add(pods);
         _saveSowTime();
-
         return pods;
     }
 
@@ -383,10 +381,8 @@ library LibDibbler {
                 s.f.soil, // 1 bean = 1 soil
                 uint256(s.w.t).mul(TEMPERATURE_PRECISION) // 1e2 -> 1e8
             );
-        } 
-        
-        // Below peg: amount of Soil is fixed, temperature adjusts
-        else {
+        } else {
+            // Below peg: amount of Soil is fixed, temperature adjusts
             return beansToPods(
                 s.f.soil, // 1 bean = 1 soil
                 morningTemperature()

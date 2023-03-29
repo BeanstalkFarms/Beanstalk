@@ -52,7 +52,7 @@ contract FieldFacet is ReentrancyGuard {
     /**
      * @param account The account that created the Pod Listing
      * @param index The index of the Plot listed
-     * @dev NOTE: must mirrow {Listing.PodListingCancelled}
+     * @dev NOTE: must mirror {Listing.PodListingCancelled}
      */
     event PodListingCancelled(address indexed account, uint256 index);
 
@@ -68,7 +68,7 @@ contract FieldFacet is ReentrancyGuard {
      * 
      * `minTemperature` has precision of 1e6. Wraps {sowWithMin} with `minSoil = beans`.
      * 
-     * NOTE: previously minTemperature was measured to 1e2
+     * NOTE: previously minTemperature was measured to 1e2 (1% = 1)
      * 
      * Rationale for {sow} accepting a `minTemperature` parameter:
      * If someone sends a Sow transaction at the end of a Season, it could be 
@@ -119,7 +119,6 @@ contract FieldFacet is ReentrancyGuard {
         );
 
         // If beans >= soil, Sow all of the remaining Soil
-        // Logic is inverted to overwrite memory var `soil` instead of calldata `beans`
         if (beans < soil) {
             soil = beans; 
         }
