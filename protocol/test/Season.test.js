@@ -35,24 +35,24 @@ describe('Season', function () {
     it('season incentive', async function () {
         await setToSecondsAfterHour(0)
         await beanstalk.connect(owner).sunrise();
-        expect(await bean.balanceOf(owner.address)).to.be.equal(to6('25'))
+        expect(await bean.balanceOf(owner.address)).to.be.equal(to6('3'))
     })
 
     it('30 seconds after season incentive', async function () {
         await setToSecondsAfterHour(30)
         await beanstalk.connect(owner).sunrise();
-        expect(await bean.balanceOf(owner.address)).to.be.equal('33696207')
+        expect(await bean.balanceOf(owner.address)).to.be.equal('3809203')
     })
 
     it('300 seconds after season incentive', async function () {
         await setToSecondsAfterHour(300)
         await beanstalk.connect(owner).sunrise();
-        expect(await bean.balanceOf(owner.address)).to.be.equal('494705494')
+        expect(await bean.balanceOf(owner.address)).to.be.equal('59365398')
     })
 
     it('1500 seconds after season incentive', async function () {
         await setToSecondsAfterHour(1500)
         await beanstalk.connect(owner).sunrise();
-        expect(await bean.balanceOf(owner.address)).to.be.equal('494705494')
+        expect(await bean.balanceOf(owner.address)).to.be.equal('59365398')
     })
 })

@@ -235,13 +235,15 @@ describe('Sun', function () {
       [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 24, INTERNAL],
       [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
-
+    let START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
+    await timeSkip(START_TIME + 60*60*3);
     // Load some beans into the wallet's internal balance, and note the starting time
     // This also accomplishes initializing curve oracle
     const initial = await this.season.sunriseTo(owner.address, INTERNAL);
     const block = await ethers.provider.getBlock(initial.blockNumber);
-    const START_TIME = block.timestamp;
-
+    START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
+    await this.season.setCurrentSeasonE(1);
+    
     const startingBeanBalance = (await this.tokenFacet.getAllBalance(owner.address, BEAN)).totalBalance.toNumber() / Math.pow(10, 6);
     for (const mockVal of mockedValues) {
 
@@ -258,7 +260,7 @@ describe('Sun', function () {
       const effectiveSecondsLate = Math.min(secondsLate, 300);
       await this.season.resetSeasonStart(secondsLate);
 
-      /// SUNRISE
+      // SUNRISE
       this.result = await this.season.sunriseTo(owner.address, mockVal[4]);
       
       // Verify that sunrise was profitable assuming a 50% average success rate
@@ -270,21 +272,17 @@ describe('Sun', function () {
       const txReceipt = await ethers.provider.getTransactionReceipt(this.result.hash);
       const gasUsed = txReceipt.gasUsed.toNumber();
 
-      // Calculate gas amount using the mocked baseFee + priority
-      // The idea of failure adjusted cost is it includes the assumption that the call will
-      // fail half the time (cost of one sunrise = 1 success + 1 fail)
-      const PRIORITY = 5;
       const blockBaseFee = await this.basefee.block_basefee() / Math.pow(10, 9);
-      const failAdjustedGasCostEth = (blockBaseFee + PRIORITY) * gasUsed / Math.pow(10, 9);
+      const GasCostInETH = blockBaseFee * gasUsed / Math.pow(10, 9);
 
       // Get mocked eth/bean prices
       const ethPrice = mockVal[1] / Math.pow(10, 6);
       const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
-      // How many beans are required to purcahse 1 eth
+      // How many beans are required to purchase 1 eth
       const beanEthPrice = ethPrice / beanPrice;
 
       // Bean equivalent of the cost to execute sunrise
-      const failAdjustedGasCostBean = failAdjustedGasCostEth * beanEthPrice;
+      const GasCostBean = GasCostInETH * beanEthPrice;
 
       if (VERBOSE) {
         // console.log('sunrise call tx', this.result);
@@ -296,16 +294,15 @@ describe('Sun', function () {
         console.log('gas used', gasUsed);
         console.log('to mode', mockVal[4]);
         console.log('base fee', blockBaseFee);
-        console.log('failure adjusted gas cost (eth)', failAdjustedGasCostEth);
-        console.log('failure adjusted cost (bean)', failAdjustedGasCostBean);
-        console.log('failure adjusted cost * late exponent (bean)', failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
+        console.log('failure adjusted gas cost (eth)', GasCostInETH);
+        console.log('failure adjusted cost (bean)', GasCostBean);
+        console.log('failure adjusted cost * late exponent (bean)', GasCostBean * Math.pow(1.01, effectiveSecondsLate));
       }
 
-      expect(rewardAmount).to.greaterThan(failAdjustedGasCostBean * Math.pow(1.01, effectiveSecondsLate));
+      expect(rewardAmount * beanPrice).to.greaterThan(GasCostBean * Math.pow(1.01, effectiveSecondsLate));
 
       await expect(this.result).to.emit(this.season, 'Incentivization')
           .withArgs(owner.address, Math.round(rewardAmount * Math.pow(10, 6)));
-
       await revertToSnapshot(snapshotId);
     }
   })

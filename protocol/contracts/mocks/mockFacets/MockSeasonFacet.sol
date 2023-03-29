@@ -228,6 +228,10 @@ contract MockSeasonFacet is SeasonFacet {
         stepWeather(deltaB);
     }
 
+    function setCurrentSeasonE(uint32 season) public {
+        s.season.current = season;
+    }
+
     function stepWeatherWithParams(
         uint256 pods,
         uint256 _lastDSoil,
@@ -248,7 +252,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function resetSeasonStart(uint256 amount) public {
-        s.season.start = block.timestamp.sub(amount);
+        s.season.start = block.timestamp.sub(amount + 3600 * 2);
     }
 
     function captureE() external returns (int256 deltaB) {

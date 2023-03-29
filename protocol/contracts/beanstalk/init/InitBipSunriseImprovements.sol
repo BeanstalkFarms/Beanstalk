@@ -10,7 +10,7 @@ import "~/beanstalk/AppStorage.sol";
  * @title InitBip33 re-initalizes the weather struct for BIP-33, for gas efficency  
  **/
 
-contract InitBip33 {    
+contract InitBipSunriseImprovements {    
     AppStorage internal s;
     
     struct OldWeather {
