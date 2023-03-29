@@ -1,4 +1,3 @@
-import { Token, TokenValue } from "@beanstalk/sdk";
 import React, { FocusEventHandler, RefObject, useCallback, useEffect, useState } from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
