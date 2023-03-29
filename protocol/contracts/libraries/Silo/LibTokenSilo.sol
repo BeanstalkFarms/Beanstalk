@@ -343,18 +343,17 @@ library LibTokenSilo {
     }
 
     //this returns grown stalk with no decimals
-    function stemTipForToken(IERC20 token)
+    function stemTipForToken(address token)
         internal
         view
         returns (int96 _stemTipForToken)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // SiloSettings storage ss = s.ss[token]; //tried to use this, but I get `DeclarationError: Identifier not found or not unique.`
         
-        _stemTipForToken = s.ss[address(token)].milestoneStem +
-        int96(s.ss[address(token)].stalkEarnedPerSeason).mul(
-            int96(s.season.current).sub(int96(s.ss[address(token)].milestoneSeason))
-        ).div(1e6); //round here   
+        _stemTipForToken = s.ss[token].milestoneStem +
+        int96(s.ss[token].stalkEarnedPerSeason).mul(
+            int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
+        ).div(1e6); //round here 
     }
 
     function grownStalkForDeposit(
@@ -367,9 +366,9 @@ library LibTokenSilo {
         returns (uint grownStalk)
     {
         // stemTipForToken(token) > depositGrownStalkPerBdv for all valid Deposits
-        int96 _stemTip = stemTipForToken(token);
+        int96 _stemTip = stemTipForToken(address(token));
         require(stem <= _stemTip, "Silo: Invalid Deposit");
-        uint deltaStemTip = uint(stemTipForToken(token).sub(stem));
+        uint deltaStemTip = uint(stemTipForToken(address(token)).sub(stem));
         (, uint bdv) = tokenDeposit(account, address(token), stem);
         
         grownStalk = deltaStemTip.mul(bdv);
@@ -384,7 +383,7 @@ library LibTokenSilo {
         view
         returns (int96 grownStalk)
     {
-        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
+        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
         return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(int96(bdv));
     }
 
@@ -393,7 +392,7 @@ library LibTokenSilo {
         view 
         returns (uint256 _grownStalk, int96 stem)
     {
-        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
+        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
         stem = _stemTipForToken-int96(grownStalk.div(bdv));
         _grownStalk = uint256(_stemTipForToken.sub(stem).mul(int96(bdv)));
     }
@@ -407,7 +406,7 @@ library LibTokenSilo {
         returns (int96 cumulativeGrownStalk)
     {
         //first get current latest grown stalk index
-        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
+        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
         //then calculate how much stalk each individual bdv has grown
         int96 stem = int96(grownStalk.div(bdv));
         //then subtract from the current latest index, so we get the index the deposit should have happened at

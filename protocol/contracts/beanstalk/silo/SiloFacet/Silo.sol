@@ -122,7 +122,7 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
-            LibTokenSilo.stemTipForToken(IERC20(token)),
+            LibTokenSilo.stemTipForToken(token),
             beans, // amount
             beans, // bdv
             LibTokenSilo.Transfer.emitTransferSingle

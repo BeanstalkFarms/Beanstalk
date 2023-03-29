@@ -197,7 +197,7 @@ contract TokenSilo is Silo {
         (uint256 stalk) = LibTokenSilo.deposit(
             account,
             token,
-            LibTokenSilo.stemTipForToken(IERC20(token)),
+            LibTokenSilo.stemTipForToken(token),
             amount
         );
 
@@ -382,7 +382,7 @@ contract TokenSilo is Silo {
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     stems[i],
-                    LibTokenSilo.stemTipForToken(IERC20(token)),
+                    LibTokenSilo.stemTipForToken(token),
                     crateBdv.toUint128()
                 )
             );

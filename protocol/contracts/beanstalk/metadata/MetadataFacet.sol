@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import {IERC1155} from "~/interfaces/IERC1155.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
@@ -49,7 +48,7 @@ contract MetadataFacet is IERC1155Receiver {
                 '"token address": "', LibStrings.toHexString(uint256(depositMetadata.token), 20),
                 '", "id": ', depositMetadata.id.toString(),
                 ', "stem": ', uint256(depositMetadata.stem).toString(),
-                ', "total stalk": ', uint256(LibTokenSilo.stemTipForToken(IERC20(depositMetadata.token))).toString(),
+                ', "total stalk": ', uint256(LibTokenSilo.stemTipForToken(depositMetadata.token)).toString(),
                 ', "seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
             '}'
         );

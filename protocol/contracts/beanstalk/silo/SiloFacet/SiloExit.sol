@@ -132,7 +132,7 @@ contract SiloExit is ReentrancyGuard {
         return
             LibSilo._balanceOfGrownStalk(
                 s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
-                LibTokenSilo.stemTipForToken(IERC20(token)), //get latest stem for this token
+                LibTokenSilo.stemTipForToken(token), //get latest stem for this token
                 s.a[account].mowStatuses[token].bdv
             );
     }
@@ -261,7 +261,7 @@ contract SiloExit is ReentrancyGuard {
 
     //////////////////////// STEM ////////////////////////
 
-    function stemTipForToken(IERC20 token)
+    function stemTipForToken(address token)
         public
         view
         returns (int128 _stemTip)
@@ -271,7 +271,7 @@ contract SiloExit is ReentrancyGuard {
         );
     }
 
-    function seasonToStem(IERC20 token, uint32 season)
+    function seasonToStem(address token, uint32 season)
         public
         view
         returns (int128 stem)
