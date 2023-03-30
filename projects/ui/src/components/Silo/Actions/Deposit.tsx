@@ -49,16 +49,13 @@ import { STALK_PER_SEED_PER_SEASON, tokenValueToBN } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
-import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
 import useFarmerFormTxnActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
-import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
 import useSilo from '~/hooks/beanstalk/useSilo';
 
 import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
-import Claim from './Claim';
-import ClaimBeanBanner from '~/components/Common/Form/FormTxn/ClaimBeanBanner';
+import ClaimBeanDrawerToggle from '~/components/Common/Form/FormTxn/ClaimBeanDrawerToggle';
 
 // -----------------------------------------------------------------------
 
@@ -105,12 +102,8 @@ const DepositForm: FC<
   isSubmitting,
   setFieldValue,
 }) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const siblingRef = useRef<HTMLDivElement | null>(null);
-
   const sdk = useSdk();
   const beanstalkSilo = useSilo();
-  const { balances: additionalBalances } = useFarmerFormTxnBalances();
 
   const txnActions = useFarmerFormTxnActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
@@ -123,8 +116,9 @@ const DepositForm: FC<
     amountToBdv
   );
 
-  // Memoized params for TokenQuoteProviderWithParams.
-  // If not memoized, it'll cause an infinite loop
+  const siblingRef = useRef<HTMLDivElement | null>(null);
+
+  // Memoized params to prevent infinite loop
   const quoteProviderParams = useMemo(
     () => ({
       balanceFrom: values.balanceFrom,
@@ -161,10 +155,6 @@ const DepositForm: FC<
     [setFieldValue]
   );
 
-  const additional = values.farmActions.additionalAmount || ZERO_BN;
-
-  console.log('additionalamt: ', additional?.toString());
-
   /// Effects
   // Reset the form farmActions whenever the tokenIn changes
   const currTokenSymbol = values.tokens[0].token.symbol;
@@ -200,7 +190,7 @@ const DepositForm: FC<
   const noAmount = values.tokens[0].amount === undefined;
 
   return (
-    <FormWithDrawer noValidate autoComplete="off" siblingRef={siblingRef} >
+    <FormWithDrawer noValidate autoComplete="off" siblingRef={siblingRef}>
       <TokenSelectDialogNew
         open={isTokenSelectVisible}
         handleClose={hideTokenSelect}
@@ -244,7 +234,7 @@ const DepositForm: FC<
           );
         })}
 
-        <ClaimBeanBanner />
+        <ClaimBeanDrawerToggle />
         {isReady ? (
           <>
             <TxnSeparator />
@@ -310,7 +300,7 @@ const DepositForm: FC<
         </SmartSubmitButton>
       </Stack>
       <FormWithDrawer.Drawer title="Use Claimable Assets">
-        <ClaimBeanDrawerContent />
+        <ClaimBeanDrawerContent txnName="Deposit" />
       </FormWithDrawer.Drawer>
     </FormWithDrawer>
   );

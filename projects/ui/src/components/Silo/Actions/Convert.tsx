@@ -294,10 +294,6 @@ const ConvertForm: FC<
             values.maxAmountIn.eq(0) // = 0 means we can't make this conversion
           }
           params={quoteHandlerParams}
-          belowComponent={<FormTxnsPrimaryOptions />}
-          additionalBalance={
-            plantableBalance[tokenIn.address]?.applied || undefined
-          }
         />
         <AddPlantTxnToggle />
         {/* Output token */}
