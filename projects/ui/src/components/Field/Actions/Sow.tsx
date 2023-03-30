@@ -1,19 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ERC20Token,
+  FarmFromMode,
+  FarmToMode,
+  NativeToken,
+  StepGenerator,
+  Token,
+} from '@beanstalk/sdk';
 import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Formik, FormikHelpers, FormikProps } from 'formik';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import {
-  Token,
-  ERC20Token,
-  NativeToken,
-  StepGenerator,
-  FarmFromMode,
-  FarmToMode,
-} from '@beanstalk/sdk';
-import TransactionToast from '~/components/Common/TxnToast';
-import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
+import { IconSize } from '~/components/App/muiTheme';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import {
   BalanceFromFragment,
   FormStateNew,
@@ -25,41 +25,44 @@ import {
   TxnSeparator,
   TxnSettings,
 } from '~/components/Common/Form';
-import useToggle from '~/hooks/display/useToggle';
-import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import usePreferredToken, {
-  PreferredToken,
-} from '~/hooks/farmer/usePreferredToken';
-import useTokenMap from '~/hooks/chain/useTokenMap';
-import { displayBN, displayFullBN, MinBN, tokenValueToBN } from '~/util';
-import usePrice from '~/hooks/beanstalk/usePrice';
-import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
-import { useFetchPools } from '~/state/bean/pools/updater';
-import { AppState } from '~/state';
-import { ZERO_BN } from '~/constants';
-import { ActionType } from '~/util/Actions';
-import { IconSize } from '~/components/App/muiTheme';
-import TokenIcon from '~/components/Common/TokenIcon';
-import { FC } from '~/types';
-import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
-import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import {
   BalanceFrom,
   balanceFromToMode,
 } from '~/components/Common/Form/BalanceFromRow';
-import WarningAlert from '~/components/Common/Alert/WarningAlert';
-import TokenOutput from '~/components/Common/Form/TokenOutput';
-import TxnAccordion from '~/components/Common/TxnAccordion';
-import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
-import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
+import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
+import ClaimBeanDrawerToggle from '~/components/Common/Form/FormTxn/ClaimBeanDrawerToggle';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
-import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
+import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
+import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
+import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
+import TokenIcon from '~/components/Common/TokenIcon';
+import TxnAccordion from '~/components/Common/TxnAccordion';
+import TransactionToast from '~/components/Common/TxnToast';
+import { ZERO_BN } from '~/constants';
+import usePrice from '~/hooks/beanstalk/usePrice';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
+import useTokenMap from '~/hooks/chain/useTokenMap';
+import useToggle from '~/hooks/display/useToggle';
+import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
+import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
+import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
+import usePreferredToken, {
+  PreferredToken,
+} from '~/hooks/farmer/usePreferredToken';
+import useResetFormFarmActions from '~/hooks/form/useResetFormFarmActions';
+import useAccount from '~/hooks/ledger/useAccount';
+import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import { AppState } from '~/state';
+import { useFetchPools } from '~/state/bean/pools/updater';
+import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
+import { FC } from '~/types';
+import { displayBN, displayFullBN, MinBN, tokenValueToBN } from '~/util';
+import { ActionType } from '~/util/Actions';
+import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -75,6 +78,7 @@ const defaultFarmActionsFormState = {
   preset: 'claim',
   primary: undefined,
   secondary: undefined,
+  additionalAmount: undefined,
 };
 
 const SowForm: FC<
@@ -96,6 +100,7 @@ const SowForm: FC<
 }) => {
   const sdk = useSdk();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
+  const formRef = useRef<HTMLDivElement | null>(null);
 
   /// Chain
   const Bean = sdk.tokens.BEAN;
@@ -132,14 +137,14 @@ const SowForm: FC<
   const podLineLength = beanstalkField.podIndex.minus(
     beanstalkField.harvestableIndex
   );
-
   const maxAmountUsed =
     amountIn && maxAmountIn ? amountIn.div(maxAmountIn) : null;
+
+  const beansUsed = (Bean.equals(tokenIn) ? amountIn : amountOut) || ZERO_BN;
 
   const txnActions = useFarmerFormTxnsActions({
     showGraphicOnClaim: Bean.equals(tokenIn),
   });
-  const additionalBalance = useFarmerFormTxnBalances();
 
   const handleSetBalanceFrom = useCallback(
     (_balanceFrom: BalanceFrom) => {
@@ -187,13 +192,15 @@ const SowForm: FC<
           const work = sdk.farm.create();
           work.add(sdk.farm.presets.weth2bean());
 
-          const estimate = await work.estimateReversed(
-            bean.amount(soil.toString())
+          const estimate = await work
+            .estimateReversed(bean.amount(soil.toString()))
+            .then((result) => tokenIn.fromBlockchain(result));
+          console.debug(
+            '[Sow][maxAmountIn]: ',
+            estimate.toHuman(),
+            tokenIn.symbol
           );
-          setFieldValue(
-            'maxAmountIn',
-            tokenValueToBN(bean.fromBlockchain(estimate))
-          );
+          setFieldValue('maxAmountIn', tokenValueToBN(estimate));
         } else {
           throw new Error(`Unsupported tokenIn: ${tokenIn.symbol}`);
         }
@@ -201,7 +208,7 @@ const SowForm: FC<
         setFieldValue('maxAmountIn', ZERO_BN);
       }
     })();
-  }, [hasSoil, setFieldValue, soil, tokenIn, tokenOut, sdk.tokens, sdk.farm]);
+  }, [hasSoil, soil, tokenIn, tokenOut, sdk.tokens, sdk.farm, setFieldValue]);
 
   const quotehHandlerParams = useMemo(
     () => ({
@@ -210,19 +217,11 @@ const SowForm: FC<
     [values.balanceFrom]
   );
 
-  /// Effects
   // Reset the form farmActions whenever the tokenIn changes
-  const currTokenSymbol = values.tokens[0].token.symbol;
-  const [cachedTokenSymbol, setCachedTokenSymbol] = useState(currTokenSymbol);
-  useEffect(() => {
-    if (cachedTokenSymbol !== currTokenSymbol) {
-      setCachedTokenSymbol(currTokenSymbol);
-      setFieldValue('farmActions', defaultFarmActionsFormState);
-    }
-  }, [cachedTokenSymbol, currTokenSymbol, setFieldValue]);
+  useResetFormFarmActions(tokenIn, defaultFarmActionsFormState);
 
   const disabledActions = useMemo(() => {
-    const isEth = currTokenSymbol === 'ETH';
+    const isEth = tokenIn.equals(sdk.tokens.ETH);
     const _disabled = isEth
       ? [
           {
@@ -233,10 +232,10 @@ const SowForm: FC<
         ]
       : undefined;
     return _disabled;
-  }, [currTokenSymbol]);
+  }, [tokenIn, sdk.tokens.ETH]);
 
   return (
-    <Form autoComplete="off">
+    <FormWithDrawer autoComplete="off" siblingRef={formRef}>
       <TokenSelectDialogNew
         open={isTokenSelectVisible}
         handleClose={hideTokenSelect}
@@ -247,9 +246,8 @@ const SowForm: FC<
         mode={TokenSelectMode.SINGLE}
         balanceFrom={values.balanceFrom}
         setBalanceFrom={handleSetBalanceFrom}
-        applicableBalances={additionalBalance.balances}
       />
-      <Stack gap={1}>
+      <Stack gap={1} ref={formRef}>
         {/* Input Field */}
         <TokenQuoteProviderWithParams<SowFormQuoteParams>
           key="tokens.0"
@@ -266,16 +264,9 @@ const SowForm: FC<
           handleQuote={handleQuote}
           params={quotehHandlerParams}
           balanceFrom={values.balanceFrom}
-          additionalBalance={
-            additionalBalance.balances[values.tokens[0].token.address]?.applied
-          }
           disableTokenSelect={!hasSoil || !values.maxAmountIn}
-          belowComponent={
-            <FormTxnsPrimaryOptions 
-              hide={!hasSoil}
-            />
-          }
         />
+        {hasSoil && <ClaimBeanDrawerToggle maxBeans={soil} />}
         {!hasSoil ? (
           <Box>
             <WarningAlert sx={{ color: 'black' }}>
@@ -373,7 +364,14 @@ const SowForm: FC<
           Sow
         </SmartSubmitButton>
       </Stack>
-    </Form>
+      <FormWithDrawer.Drawer title="Use Claimable Assets">
+        <ClaimBeanDrawerContent
+          txnName="Sow"
+          maxBeans={soil}
+          beanAmount={beansUsed}
+        />
+      </FormWithDrawer.Drawer>
+    </FormWithDrawer>
   );
 };
 
@@ -381,6 +379,7 @@ const SowForm: FC<
 
 const Sow: FC<{}> = () => {
   const sdk = useSdk();
+  const account = useAccount();
 
   /// Beanstalk
   const temperature = useTemperature();
@@ -398,8 +397,8 @@ const Sow: FC<{}> = () => {
   /// Form
   const middleware = useFormMiddleware();
 
-  const preferredTokens: PreferredToken[] = useMemo(
-    () => [
+  const preferredTokens: PreferredToken[] = useMemo(() => {
+    return [
       {
         token: sdk.tokens.BEAN,
         minimum: new BigNumber(1), // $1
@@ -412,9 +411,8 @@ const Sow: FC<{}> = () => {
         token: sdk.tokens.ETH,
         minimum: new BigNumber(0.001), // ~$2-4
       },
-    ],
-    [sdk.tokens]
-  );
+    ];
+  }, [sdk]);
 
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const initialValues: SowFormValues = useMemo(
@@ -442,12 +440,15 @@ const Sow: FC<{}> = () => {
   // _tokenOut === Bean
   const handleQuote = useCallback<QuoteHandlerWithParams<SowFormQuoteParams>>(
     async (_tokenIn, _amountIn, _tokenOut, { fromMode: _fromMode }) => {
+      if (!account) {
+        throw new Error('Signer required');
+      }
+
       const work = sdk.farm.create();
       const isEth = sdk.tokens.ETH.symbol === _tokenIn.symbol;
       const amountIn = _tokenIn.fromHuman(_amountIn.toString());
 
       let fromMode = _fromMode;
-
       if (isEth || sdk.tokens.WETH.equals(_tokenIn)) {
         if (isEth) {
           fromMode = FarmFromMode.INTERNAL_TOLERANT;
@@ -467,7 +468,7 @@ const Sow: FC<{}> = () => {
         steps: work.generators as StepGenerator[],
       };
     },
-    [sdk.farm, sdk.tokens]
+    [sdk.farm, sdk.tokens, account]
   );
 
   const onSubmit = useCallback(
@@ -481,12 +482,21 @@ const Sow: FC<{}> = () => {
         const { BEAN: bean, ETH, WETH, PODS } = sdk.tokens;
 
         const formData = values.tokens[0];
+        const farmActions = values.farmActions;
         const tokenIn = formData.token;
         const amountIn =
           formData.amount && tokenIn.amount(formData.amount.toString());
         const amountBeans = bean.equals(tokenIn)
           ? formData.amount
           : formData.amountOut;
+        const additionalAmount = bean.amount(
+          farmActions.additionalAmount?.toString() || '0'
+        );
+        const totalClaimAmount = bean.amount(
+          farmActions.surplus?.max?.toString() || '0'
+        );
+        const transferDestination =
+          farmActions.surplus?.destination || FarmToMode.INTERNAL;
 
         if (values.tokens.length > 1) {
           throw new Error('Only one token supported at this time');
@@ -494,15 +504,19 @@ const Sow: FC<{}> = () => {
         if (!amountIn || amountIn.lte(0) || !amountBeans || amountBeans.eq(0)) {
           throw new Error('No amount set');
         }
+        if (!account) {
+          throw new Error('Signer required');
+        }
 
-        const amountPods = amountBeans.times(temperature.div(100).plus(1));
+        const totalBeans = amountBeans.times(additionalAmount.toHuman());
+        const amountPods = totalBeans.times(temperature.div(100).plus(1));
         const fromMode = bean.equals(tokenIn)
           ? balanceFromToMode(values.balanceFrom)
           : FarmFromMode.INTERNAL_TOLERANT;
 
         txToast = new TransactionToast({
           loading: `Sowing ${displayFullBN(
-            amountBeans,
+            totalBeans,
             bean.decimals
           )} Beans for ${displayFullBN(amountPods, PODS.decimals)} Pods...`,
           success: 'Sow successful.',
@@ -529,7 +543,22 @@ const Sow: FC<{}> = () => {
           );
         }
 
-        console.debug('[SOW]: adding sow to workflow');
+        /// If the user is claiming beans and using claimable beans to sow,
+        // add amount of claimable beans to the amount from their farm/circulating balance
+        if (additionalAmount.gt(0)) {
+          console.debug(
+            '[SOW]: adding claimable beans',
+            additionalAmount.toHuman()
+          );
+          /// at this point, we know that the token for amountInStep is BEAN
+          sow.add(
+            FormTxnBuilder.getLocalOnlyStep('add-additional-amount', {
+              additionalAmount,
+            }),
+            { onlyLocal: true }
+          );
+        }
+
         sow.add(async (_amountInStep: ethers.BigNumber, _context: any) => ({
           name: 'sow',
           amountOut: _amountInStep,
@@ -549,20 +578,43 @@ const Sow: FC<{}> = () => {
             ),
         }));
 
+        /// If the user is claiming beans and isn't using the full amount,
+        /// transfer the remaining amount to their external wallet if requested.
+        const finalSteps = (() => {
+          const transferAmount = totalClaimAmount.sub(additionalAmount);
+          const isToExternal = transferDestination === FarmToMode.EXTERNAL;
+          const shouldTransfer = isToExternal && transferAmount.gt(0);
+
+          if (!shouldTransfer) return undefined;
+
+          const transferStep = new sdk.farm.actions.TransferToken(
+            bean.address,
+            account,
+            FarmFromMode.INTERNAL_TOLERANT,
+            FarmToMode.EXTERNAL
+          );
+
+          const finalStep = {
+            steps: [transferStep],
+            overrideAmount: transferAmount,
+          };
+          return [finalStep];
+        })();
+
         const { execute, performed } = await FormTxnBuilder.compile(
           sdk,
           values.farmActions,
           farmerFormTxns.getGenerators,
           sow,
           amountIn,
-          values.settings.slippage
+          values.settings.slippage,
+          finalSteps
         );
 
         const txn = await execute();
         txToast.confirming(txn);
 
         const reciept = await txn.wait();
-
         await farmerFormTxns.refetch(
           performed,
           {
@@ -587,8 +639,8 @@ const Sow: FC<{}> = () => {
       }
     },
     [
-      middleware,
       sdk,
+      middleware,
       temperature,
       farmerFormTxns,
       refetchBeanstalkField,
