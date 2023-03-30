@@ -19,6 +19,7 @@
   "dependencies": {
     "@beanstalk/sdk": "workspace:*",
     "@tanstack/react-query": "4.28.0",
+    "@tanstack/react-query-devtools": "4.28.0",
     "connectkit": "1.2.1",
     "ethers": "^5",
     "graphql-request": "5.2.0",
