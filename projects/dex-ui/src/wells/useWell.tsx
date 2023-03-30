@@ -1,33 +1,18 @@
 import { Well } from "@beanstalk/sdk/Wells";
 import { useEffect, useState } from "react";
 import useSdk from "src/utils/sdk/useSdk";
+import { useQuery } from "@tanstack/react-query";
 
 export const useWell = (address: string) => {
   const sdk = useSdk();
-  const [well, setWell] = useState<Well>();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error>();
 
-  useEffect(() => {
-    let listen = true;
-    const fetchData = async () => {
-      setLoading(true);
-      setError(undefined);
-      const well = await sdk.wells.getWell(address);
-      if (listen) setWell(well);
-    };
+  const { data, isLoading, error } = useQuery(["wells", address], async () => {
+    console.log("fetching well");
+    return sdk.wells.getWell(address);
+  });
 
-    fetchData()
-      .catch((err) => {
-        console.log(err);
-        setError(err);
-      })
-      .finally(() => setLoading(false));
-
-    return () => {
-      listen = false;
-    };
-  }, [address]);
-
-  return { well, loading, error };
+  return { well: data, loading: isLoading, error };
 };
+
+
+
