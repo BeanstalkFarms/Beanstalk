@@ -1,4 +1,11 @@
-import { Box, Button, ButtonProps, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  ButtonProps,
+  Stack,
+  StackProps,
+  Typography,
+} from '@mui/material';
 import React from 'react';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { FontSize } from '~/components/App/muiTheme';
@@ -29,6 +36,10 @@ export type SelectionItemProps = {
    *
    */
   gap?: number;
+  /**
+   *
+   */
+  stackProps?: StackProps;
 } & Omit<ButtonProps, 'variant' | 'title'>;
 
 /**
@@ -44,6 +55,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
   disabled = false,
   isHovered,
   gap = 1,
+  stackProps,
   ...props
 }) => (
   <Button
@@ -73,7 +85,6 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
       height: 'unset',
       minHeight: 0,
       boxSizing: 'border-box',
-      width: 'unset',
       minWidth: 0,
       ...props.sx,
     }}
@@ -81,7 +92,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
     {variant === 'pill' ? (
       <>{children}</>
     ) : (
-      <Stack width="100%" p={1} gap={gap}>
+      <Stack width="100%" p={1} gap={gap} {...stackProps}>
         {title || checkIcon ? (
           <Row
             direction={checkIcon === 'top-right' ? 'row-reverse' : 'row'}
