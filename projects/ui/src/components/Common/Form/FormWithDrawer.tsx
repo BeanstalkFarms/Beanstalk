@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Drawer, Stack, Box, Typography, DrawerProps } from '@mui/material';
 import Row from '../Row';
 import useToggle from '~/hooks/display/useToggle';
@@ -15,14 +22,14 @@ function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
 
   // Updates the height of the parent container and the drawer
   // based on the open state and the sibling's & drawer's height changes.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const parent = parentRef.current;
     const sibling = siblingRef.current;
     const drawer = drawerRef.current;
 
     if (!parent || !sibling || !drawer) return;
 
-    const updateHeight = () => {
+    const updateHeights = () => {
       if (!open) {
         parent.style.height = '100%';
       } else {
@@ -43,11 +50,11 @@ function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
 
     // Observe drawer height changes
     const childResizeObserver = new ResizeObserver(() => {
-      updateHeight();
+      updateHeights();
     });
     // Observe drawer sibling's height changes
     const siblingResizeObserver = new ResizeObserver(() => {
-      updateHeight();
+      updateHeights();
     });
 
     childResizeObserver.observe(drawer);
@@ -88,10 +95,6 @@ const useFormDrawerContext = () => {
  * Formik Form Wrapper for forms that need a drawer
  * The height of the drawer & parent container are updated
  * based on the sibling's height changes & the open state.
- *
- * Components
- * - Drawer
- * - Toggle
  */
 const FormWithDrawer = ({
   children,
@@ -196,8 +199,12 @@ const NestedFormDrawer: React.FC<{
       transitionDuration={transitionDuration}
     >
       <Box ref={drawerRef} width="100%">
-        <Stack p={1} gap={1} sx={{ boxSizing: 'border-box', height: '100%' }}>
-          <Row justifyContent="space-between">
+        <Stack
+          p={1}
+          gap={1}
+          sx={{ boxSizing: 'border-box', height: '100%', overflowY: 'hidden' }}
+        >
+          <Row justifyContent="space-between" width="100%">
             <Box>
               {title ? (
                 typeof title === 'string' ? (
@@ -211,7 +218,7 @@ const NestedFormDrawer: React.FC<{
             </Box>
             <ToggleIcon />
           </Row>
-          {children}
+          {open ? children : null}
         </Stack>
       </Box>
     </Drawer>
