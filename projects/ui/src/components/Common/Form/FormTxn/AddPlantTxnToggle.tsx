@@ -149,7 +149,7 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
             </Typography>
             <Grid container spacing={1} direction="row">
               {items.map((item) => (
-                <Grid item xs={6} sm={3}>
+                <Grid item xs={6} sm={3} key={item.description}>
                   <Card sx={{ border: 0, width: '100%', background: 'white' }}>
                     <Stack gap={0.2} p={1}>
                       <Row gap={0.2}>

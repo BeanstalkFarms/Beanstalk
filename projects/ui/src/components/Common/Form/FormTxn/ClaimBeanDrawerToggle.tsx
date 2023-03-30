@@ -1,4 +1,4 @@
-import { Box, Card, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, Stack, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import { IconSize } from '~/components/App/muiTheme';
@@ -17,9 +17,14 @@ import beanIconGreen from '~/img/tokens/bean-logo-circled-wintergreen.svg';
 import beanIconGrey from '~/img/tokens/bean-logo-circled-grey.svg';
 import IconWrapper from '~/components/Common/IconWrapper';
 import Centered from '~/components/Common/ZeroState/Centered';
-import useFarmerFormTxnsSummary from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
+import useFarmerFormTxnsSummary, {
+  FormTxnOptionSummary,
+} from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
 
 import MergeIcon from '~/img/misc/merge-icon.svg';
+import SelectionItem from '../../SelectionItem';
+import BigNumber from 'bignumber.js';
+import { ZERO_BN } from '~/constants';
 
 const actionsToIconMap = {
   [FormTxn.RINSE]: {
@@ -36,17 +41,34 @@ const actionsToIconMap = {
   },
 };
 
-const ClaimBeanBanner: React.FC<{}> = () => {
+const ClaimBeanDrawerToggle: React.FC<{ maxBeans?: BigNumber }> = ({
+  maxBeans,
+}) => {
   /// Formik
   const { values, setFieldValue } = useFormikContext<FormTxnsFormState>();
 
   /// Farmer
-  const { getClaimable } = useFarmerFormTxnsSummary();
+  const { summary, getClaimable } = useFarmerFormTxnsSummary();
+
+  /// Derived
+  const preset = values.farmActions.preset;
+  const formSelections = values.farmActions.primary;
+
+  const optionsMap = useMemo(() => {
+    const options = FormTxnBuilderPresets[preset].primary;
+    return options.reduce<Partial<{ [key in FormTxn]: FormTxnOptionSummary }>>(
+      (prev, curr) => {
+        prev[curr] = summary[curr].summary[0];
+        return prev;
+      },
+      {}
+    );
+  }, [preset, summary]);
 
   /// Form State
   const selectionSet = useMemo(() => {
-    return new Set(values.farmActions.primary || []);
-  }, [values.farmActions.primary]);
+    return new Set(formSelections || []);
+  }, [formSelections]);
 
   /// Derived
   const maxClaimable = useMemo(() => {
@@ -55,6 +77,16 @@ const ClaimBeanBanner: React.FC<{}> = () => {
     );
     return amount.bn;
   }, [values.farmActions.preset, getClaimable]);
+
+  const clamp = useCallback(
+    (_amount: BigNumber) => {
+      if (maxBeans) {
+        return BigNumber.min(maxClaimable, maxBeans);
+      }
+      return _amount;
+    },
+    [maxClaimable, maxBeans]
+  );
 
   const handleToggle = useCallback(
     (option: FormTxn) => {
@@ -65,10 +97,11 @@ const ClaimBeanBanner: React.FC<{}> = () => {
         _selected.add(option);
       }
       const amount = getClaimable([..._selected]).bn;
+
       setFieldValue('farmActions.primary', Array.from(_selected));
-      setFieldValue('farmActions.additionalAmount', amount);
+      setFieldValue('farmActions.additionalAmount', clamp(amount));
     },
-    [selectionSet, setFieldValue]
+    [selectionSet, clamp, setFieldValue]
   );
 
   /// if nothing to claim, return null
@@ -94,10 +127,7 @@ const ClaimBeanBanner: React.FC<{}> = () => {
           <img
             src={MergeIcon}
             alt="merge"
-            css={{
-              width: '24px',
-              height: '24px',
-            }}
+            css={{ width: '24px', height: '24px' }}
           />
           <Stack>
             <Typography variant="h4" color="primary.main">
@@ -110,31 +140,28 @@ const ClaimBeanBanner: React.FC<{}> = () => {
         </Row>
         <Row gap={1}>
           <Row gap={0.5}>
-            {Object.entries(actionsToIconMap).map(([k, v]) => {
+            {Object.entries(optionsMap).map(([k, info]) => {
               const selected = selectionSet.has(k as FormTxn);
+              const disabled = info.amount.lte(0);
+              const _key = k as keyof typeof actionsToIconMap;
+              const icons = actionsToIconMap[_key];
+
               return (
-                <Box
-                  sx={{
-                    borderRadius: '50%',
-                    cursor: 'pointer',
-                    border: '1px solid',
-                    borderColor: selected ? 'primary.main' : 'text.tertiary',
-                  }}
+                <SelectionItem
+                  selected={selected}
+                  disabled={disabled}
                   onClick={() => handleToggle(k as FormTxn)}
+                  sx={{ borderRadius: '50%' }}
+                  stackProps={{ sx: { p: 0 } }}
                 >
                   <IconWrapper
                     boxSize={IconSize.small}
                     maxWidth={IconSize.small}
                     maxHeight={IconSize.small}
                   >
-                    <Centered
-                      sx={{
-                        p: 0.3,
-                        boxSizing: 'border-box',
-                      }}
-                    >
+                    <Centered sx={{ p: 0.3, boxSizing: 'border-box' }}>
                       <img
-                        src={selected ? v.selected : v.grey}
+                        src={selected ? icons.selected : icons.grey}
                         css={{
                           width: '100%',
                           height: '100%',
@@ -142,7 +169,7 @@ const ClaimBeanBanner: React.FC<{}> = () => {
                       />
                     </Centered>
                   </IconWrapper>
-                </Box>
+                </SelectionItem>
               );
             })}
           </Row>
@@ -153,4 +180,4 @@ const ClaimBeanBanner: React.FC<{}> = () => {
   );
 };
 
-export default ClaimBeanBanner;
+export default ClaimBeanDrawerToggle;

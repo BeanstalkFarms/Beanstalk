@@ -8,7 +8,8 @@ import {
   TokenValue,
 } from '@beanstalk/sdk';
 
-import { BigNumber, ethers } from 'ethers';
+import BigNumber from 'bignumber.js';
+import { ethers } from 'ethers';
 import { DepositCrate } from '~/state/farmer/silo';
 
 export enum FormTxn {
@@ -19,6 +20,9 @@ export enum FormTxn {
   RINSE = 'RINSE',
   CLAIM = 'CLAIM',
 }
+
+export type FormTxnMap<T> = { [key in FormTxn]: T };
+export type PartialFormTxnMap<T> = Partial<FormTxnMap<T>>;
 
 export type FormTxnActions = {
   getSteps: () => StepGenerator[];
@@ -65,7 +69,17 @@ export type FormTxnBuilderInterface = {
   /**
    *
    */
-  surplusTo?: FarmToMode;
+  surplus?: {
+    /**
+     * the amount of beans that will be claimed
+     */
+    max: BigNumber;
+    /**
+     * the destination of the surplus claimable beans.
+     * Defaults to FarmToMode.INTERNAL
+     */
+    destination?: FarmToMode;
+  };
 };
 
 export const FormTxnBuilderPresets: {
@@ -325,7 +339,7 @@ export class FormTxnBuilder {
     };
   };
 
-  private static transferToken = (
+  static transferToken = (
     sdk: BeanstalkSDK,
     account: string,
     token: Token,
@@ -459,14 +473,7 @@ export class FormTxnBuilder {
     };
   }
 
-  static async compile(
-    sdk: BeanstalkSDK,
-    data: FormTxnBuilderInterface, // form data
-    getGenerators: (action: FormTxn) => StepGenerator[],
-    operation: FarmWorkflow | StepGenerator[],
-    _amountIn: TokenValue | undefined,
-    slippage: number
-  ) {
+  private static deduplicate(data: FormTxnBuilderInterface) {
     const primary = new Set(data.primary || []);
     const secondary = new Set(data.secondary || []);
     const allActions = new Set([...primary, ...secondary]);
@@ -494,8 +501,63 @@ export class FormTxnBuilder {
       secondary.has(toRemove) && secondary.delete(toRemove);
     });
 
-    const farm = sdk.farm.create();
+    return {
+      primary,
+      secondary,
+      allActions,
+    };
+  }
 
+  static getLocalOnlyStep(
+    name: string,
+    options?: {
+      additionalAmount?: TokenValue;
+      overrideAmount?: TokenValue;
+    }
+  ): StepGenerator {
+    const step: StepGenerator = async (amountInStep) => {
+      const getAmountIn = () => {
+        if (options?.overrideAmount) {
+          return ethers.BigNumber.from(options.overrideAmount.toBlockchain());
+        }
+        if (options?.additionalAmount) {
+          return amountInStep.add(options.additionalAmount.toBlockchain());
+        }
+        return amountInStep;
+      };
+
+      const _amountInStep = getAmountIn();
+
+      return {
+        name: name,
+        amountOut: _amountInStep,
+        prepare: () => ({
+          target: '',
+          callData: '',
+        }),
+        decode: () => undefined,
+        decodeResult: () => undefined,
+      };
+    };
+    return step;
+  }
+
+  static async compile(
+    sdk: BeanstalkSDK,
+    data: FormTxnBuilderInterface, // form data
+    getGenerators: (action: FormTxn) => StepGenerator[],
+    operation: FarmWorkflow | StepGenerator[],
+    _amountIn: TokenValue | undefined,
+    slippage: number,
+    finalSteps?: {
+      steps: StepGenerator[];
+      overrideAmount?: TokenValue;
+      additionalAmount?: TokenValue;
+    }[]
+  ) {
+    const { primary, secondary, allActions } = FormTxnBuilder.deduplicate(data);
+
+    const farm = sdk.farm.create();
     const getSteps = (actions?: Set<FormTxn>) => {
       const generators: StepGenerator[] = [];
       [...(actions || [])]?.forEach((action) => {
@@ -506,18 +568,29 @@ export class FormTxnBuilder {
       return generators;
     };
 
-    farm.add([
-      ...getSteps(primary),
-      ...(operation instanceof FarmWorkflow ? operation.generators : operation),
-      ...getSteps(secondary),
-    ]);
+    farm.add([...getSteps(primary), operation, ...getSteps(secondary)]);
+
+    if (finalSteps) {
+      finalSteps.forEach(({ steps, additionalAmount, overrideAmount }) => {
+        if (overrideAmount || additionalAmount) {
+          farm.add(
+            FormTxnBuilder.getLocalOnlyStep('final-steps', {
+              overrideAmount,
+              additionalAmount,
+            }),
+            { onlyLocal: true }
+          );
+          farm.add(steps);
+        }
+      });
+    }
 
     const amountIn = _amountIn || TokenValue.ZERO;
     const estimate = await farm.estimate(amountIn);
     console.debug('[FormTxnBuilder.compile]: estimate: ', estimate.toString());
+    console.log(farm.summarizeSteps());
 
-    const execute = () =>
-      farm.execute(amountIn || TokenValue.ZERO, { slippage });
+    const execute = () => farm.execute(amountIn, { slippage });
 
     return {
       performed: [...allActions],

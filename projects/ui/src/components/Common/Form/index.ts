@@ -119,10 +119,7 @@ export type FormTxnsFormState = {
   /**
    * actions added in conjunction to an arbitrary txn (e.g. deposit, convert, harvest, etc).
    */
-  farmActions: FormTxnBuilderInterface & {
-    additionalAmount?: BigNumber;
-    surplusTo?: FarmToMode;
-  };
+  farmActions: FormTxnBuilderInterface;
 };
 
 // ----------------------------------------------------------------------
