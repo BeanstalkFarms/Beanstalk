@@ -120,7 +120,7 @@ const Balance = styled.div`
   overflow: hidden;
 `;
 
-const Modal = styled.dialog`
+const Modal = styled.div`
   position: fixed;
   top: 0px;
   left: 0px;

@@ -19,6 +19,7 @@ type TokenInput = {
   width?: string;
   canChangeToken?: boolean;
   showBalance?: boolean;
+  showMax?: boolean;
   allowNegative?: boolean;
   onAmountChange?: (a: TokenValue) => void;
   onTokenChange?: (t: Token) => void;
@@ -34,6 +35,7 @@ export const TokenInput: FC<TokenInput> = ({
   width,
   canChangeToken = false,
   showBalance = true,
+  showMax = true,
   allowNegative = false
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
@@ -49,9 +51,12 @@ export const TokenInput: FC<TokenInput> = ({
     [token, onAmountChange]
   );
 
-  const handleAmountChange = useCallback((cleanValue: string) => {
-    updateAmount(cleanValue);
-  }, [updateAmount]);
+  const handleAmountChange = useCallback(
+    (cleanValue: string) => {
+      updateAmount(cleanValue);
+    },
+    [updateAmount]
+  );
 
   const handleTokenChange = useCallback(
     (token: Token) => {
@@ -107,7 +112,7 @@ export const TokenInput: FC<TokenInput> = ({
       {showBalance && (
         <BalanceRow>
           <Balance>Balance: 3503.2351</Balance>
-          <MaxButton onClick={handleClickMax}>Max</MaxButton>
+          {showMax && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
         </BalanceRow>
       )}
     </Container>
