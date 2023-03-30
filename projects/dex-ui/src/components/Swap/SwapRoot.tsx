@@ -69,8 +69,8 @@ export const SwapRoot = () => {
             onAmountChange={handleOutputChange}
             onTokenChange={handleOutputTokenChange}
             canChangeToken={true}
-            showBalance={false}
-            allowNegative={true}
+            showBalance={true}
+            showMax={false}
           />
         </SwapInputContainer>
       </Div>
