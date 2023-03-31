@@ -8,7 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiConfig } from "wagmi";
 import { SdkProvider } from "../../utils/sdk/SdkProvider";
 import { Avatar } from "src/utils/wagmi/Avatar";
-import { TokenProvider } from "src/utils/TokenProvider";
+import { TokenProvider } from "src/tokens/TokenProvider";
+import { OnLoad } from "./OnLoad";
 
 export const Wrapper: FC<{}> = ({ children }) => {
   const queryClient = new QueryClient();
@@ -24,11 +25,13 @@ export const Wrapper: FC<{}> = ({ children }) => {
             hideBalance: true
           }}
         >
-          <SdkProvider>
-            <QueryClientProvider client={queryClient}>
-              <TokenProvider>{children}</TokenProvider>
-            </QueryClientProvider>
-          </SdkProvider>
+          <QueryClientProvider client={queryClient}>
+            <SdkProvider>
+              <TokenProvider>
+                <OnLoad>{children}</OnLoad>
+              </TokenProvider>
+            </SdkProvider>
+          </QueryClientProvider>
         </ConnectKitProvider>
       </WagmiConfig>
     </HashRouter>

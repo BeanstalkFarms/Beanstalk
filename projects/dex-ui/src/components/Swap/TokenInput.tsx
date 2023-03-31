@@ -4,6 +4,7 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
+import { useTokenBalance } from "src/tokens/useTokenBalance";
 
 type ContainerProps = {
   width: string;
@@ -39,6 +40,8 @@ export const TokenInput: FC<TokenInput> = ({
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const {data: balance, isLoading: isBalanceLoading, error: balanceError} = useTokenBalance(token)
+  
   width = width ?? "100%";
 
   const updateAmount = useCallback(
@@ -110,7 +113,8 @@ export const TokenInput: FC<TokenInput> = ({
       </TopRow>
       {showBalance && (
         <BalanceRow>
-          <Balance>Balance: 3503.2351</Balance>
+          <Balance>Balance: {
+            isBalanceLoading ? <>loading</> : balance?.[token.symbol].toHuman()}</Balance>
           {showMax && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
         </BalanceRow>
       )}
