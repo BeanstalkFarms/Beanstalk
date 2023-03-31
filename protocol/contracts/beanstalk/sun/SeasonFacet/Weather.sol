@@ -11,7 +11,7 @@ library DecimalExtended {
     uint256 private constant PERCENT_BASE = 1e18;
 
     function toDecimal(uint256 a) internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(a, PERCENT_BASE);
+        return Decimal.D256({ value: a });
     }
 }
 
