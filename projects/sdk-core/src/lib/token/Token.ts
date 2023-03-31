@@ -25,10 +25,10 @@ export abstract class Token {
   public decimals: number;
 
   /** The name of the currency, i.e. a descriptive textual non-unique identifier */
-  public name: string = "Unknown";
+  public name: string;
 
   /** The display name of the currency, i.e. a descriptive textual non-unique identifier */
-  public displayName: string = "Unknown Token";
+  public displayName: string;
 
   /** The symbol of the currency, i.e. a short textual non-unique identifier */
   public symbol: string;
@@ -67,8 +67,8 @@ export abstract class Token {
       enumerable: false
     });
 
-    this.name = metadata?.name ?? "Unknown";
-    this.displayName = metadata?.displayName ?? metadata?.name ?? "Unknown Token";
+    this.name = metadata?.name ?? this.symbol;
+    this.displayName = metadata?.displayName ?? metadata?.name ?? this.name;
     this.displayDecimals = metadata?.displayDecimals ?? 2;
     this.logo = metadata?.logo;
     this.color = metadata?.color;
@@ -87,7 +87,7 @@ export abstract class Token {
 
   setSignerOrProvider(provider: providers.Provider | Signer) {
     this.providerOrSigner = provider;
-    
+
     // Remove the cached contract when changing provider/signer
     // @ts-ignore - NativeToken does not have 'this.contract', but instead of implementing two copies of this
     // method, for NativeToken and ERC20, we just do it here once and ignore the ts warning

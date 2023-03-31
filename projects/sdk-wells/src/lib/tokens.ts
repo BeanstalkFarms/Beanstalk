@@ -74,7 +74,7 @@ export class Tokens {
    */
   findByAddress(address: string): Token | undefined {
     for (const token of this.tokens) {
-      if (token.address === address) return token;
+      if (token.address === address.toLowerCase()) return token;
     }
     return;
   }
