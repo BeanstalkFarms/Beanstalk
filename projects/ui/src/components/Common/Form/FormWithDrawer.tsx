@@ -1,18 +1,11 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import { Drawer, Stack, Box, Typography, DrawerProps } from '@mui/material';
-import Row from '../Row';
-import useToggle from '~/hooks/display/useToggle';
 import { Form, FormikFormProps } from 'formik';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import useToggle from '~/hooks/display/useToggle';
+import Row from '../Row';
 import Centered from '~/components/Common/ZeroState/Centered';
 
 function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
@@ -20,8 +13,12 @@ function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [open, setOpen, setClose] = useToggle();
 
-  // Updates the height of the parent container and the drawer
-  // based on the open state and the sibling's & drawer's height changes.
+  /**
+   * Updates the height of the parent container and the drawer
+   * based on the open state and the sibling's & drawer's height changes.
+   * We use 'useLayoutEffect' here to update the heights of the drawer / parent
+   * before React renders the drawer
+   */
   useLayoutEffect(() => {
     const parent = parentRef.current;
     const sibling = siblingRef.current;
@@ -33,14 +30,14 @@ function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
       if (!open) {
         parent.style.height = '100%';
       } else {
+        // +2 to account for the border
         const drawerHeight = drawer.scrollHeight + 2;
         const siblingHeight = sibling.offsetHeight;
 
         if (siblingHeight === drawerHeight) return;
 
-        if (siblingHeight > drawerHeight) {
-          drawer.style.height = `${parent.offsetHeight}px`;
-        } else {
+        /// If the sibling is taller than the drawer, set the parent's height to the drawer's height
+        if (siblingHeight < drawerHeight) {
           parent.style.height = `${drawerHeight}px`;
           // reset the height of the drawer
           drawer.style.height = 'auto';
@@ -65,7 +62,7 @@ function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
       childResizeObserver.disconnect();
       siblingResizeObserver.disconnect();
     };
-  }, [open]);
+  }, [open, siblingRef]);
 
   return {
     open,
@@ -92,9 +89,9 @@ const useFormDrawerContext = () => {
 };
 
 /**
- * Formik Form Wrapper for forms that need a drawer
- * The height of the drawer & parent container are updated
- * based on the sibling's height changes & the open state.
+ * Wrapper around Formik's Form component.
+ * The height of the drawer & parent container are dynamically updated
+ * based on the open state and the sibling's & drawer's height changes.
  */
 const FormWithDrawer = ({
   children,
@@ -107,16 +104,20 @@ const FormWithDrawer = ({
   const value = useFormDrawer(siblingRef);
 
   return (
-    <Form {...formProps}>
-      <FormDrawerContext.Provider value={value}>
+    <FormDrawerContext.Provider value={value}>
+      <Form {...formProps}>
         <Box position="relative" ref={value.parentRef}>
           {children}
         </Box>
-      </FormDrawerContext.Provider>
-    </Form>
+      </Form>
+    </FormDrawerContext.Provider>
   );
 };
 
+/**
+ * Toggle icon for the drawer.
+ * NOTE: Must be rendered within FormDrawerContext Provider.
+ */
 const ToggleIcon: React.FC<{ ms?: number }> = ({ ms = 150 }) => {
   const { open, setOpen, setClose } = useFormDrawerContext();
 
@@ -148,10 +149,8 @@ const ToggleIcon: React.FC<{ ms?: number }> = ({ ms = 150 }) => {
 };
 
 /**
- * NestedFormDrawer is a React component that renders a Drawer/Modal
- * on top of a sibling element within a parent container. The component
- * ensures that the parent container's height adapts to the height of the
- * Drawer or the sibling element, depending on the state of the Drawer.
+ * Renders a MUI Drawer on top of a sibling element within shared parent container.
+ * NOTE: Must be rendered within FormDrawerContext Provider.
  */
 const NestedFormDrawer: React.FC<{
   /** */
@@ -168,8 +167,8 @@ const NestedFormDrawer: React.FC<{
     const isNum = typeof dur === 'number';
 
     return {
-      enter: isNum ? dur : dur?.enter || 100,
-      exit: isNum ? dur : dur?.exit || 200,
+      enter: isNum ? dur : dur?.enter || 200,
+      exit: isNum ? dur : dur?.exit || 300,
     };
   }, [_transitionDuration]);
 
@@ -183,9 +182,7 @@ const NestedFormDrawer: React.FC<{
         '&.MuiDrawer-root': {
           '& .MuiDrawer-paper': {
             top: '0px',
-            left: '0px',
             bottom: '0px',
-            right: '0px',
             position: 'absolute',
             borderRadius: 1,
             backgroundColor: 'primary.light',
@@ -193,6 +190,7 @@ const NestedFormDrawer: React.FC<{
             border: '1px solid',
             borderColor: 'primary.light',
             boxSizing: 'border-box',
+            overflow: 'hidden',
           },
         },
       }}
@@ -202,7 +200,7 @@ const NestedFormDrawer: React.FC<{
         <Stack
           p={1}
           gap={1}
-          sx={{ boxSizing: 'border-box', height: '100%', overflowY: 'hidden' }}
+          sx={{ boxSizing: 'border-box', overflow: 'hidden' }}
         >
           <Row justifyContent="space-between" width="100%">
             <Box>
@@ -218,7 +216,7 @@ const NestedFormDrawer: React.FC<{
             </Box>
             <ToggleIcon />
           </Row>
-          {open ? children : null}
+          <Box>{open ? children : null}</Box>
         </Stack>
       </Box>
     </Drawer>

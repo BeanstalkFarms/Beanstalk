@@ -1,3 +1,4 @@
+import React, { useCallback, useMemo } from 'react';
 import { FarmToMode } from '@beanstalk/sdk';
 import {
   Card,
@@ -8,30 +9,31 @@ import {
   useTheme,
 } from '@mui/material';
 import { useFormikContext } from 'formik';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import BigNumber from 'bignumber.js';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { ZERO_BN } from '~/constants';
 import {
   BeanstalkPalette,
   FontWeight,
   IconSize,
 } from '~/components/App/muiTheme';
 import TokenSelectionCard from '~/components/Common/Card/TokenSelectionCard';
-import Row from '~/components/Common/Row';
-import SelectionItem from '~/components/Common/SelectionItem';
-import { ZERO_BN } from '~/constants';
 import useFarmerFormTxnsSummary, {
   FormTxnOptionSummary,
 } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
 import useSdk from '~/hooks/sdk';
 import { FormTxn, FormTxnBuilderPresets, PartialFormTxnMap } from '~/util';
-import { FormTxnsFormState, TokenAdornment, TokenInputField } from '..';
-
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import AddressIcon from '../../AddressIcon';
-
-import BigNumber from 'bignumber.js';
+import {
+  FormTxnsFormState,
+  TokenAdornment,
+  TokenInputField,
+} from '~/components/Common/Form';
+import SelectionItem from '~/components/Common/SelectionItem';
+import AddressIcon from '~/components/Common/AddressIcon';
+import Row from '~/components/Common/Row';
 
 // if 'maxBeans' property is defined, require 'beanAmount' to be defined
-export type ClaimBeanDrawerContentProps =
+export type ClaimBeanInfoProps =
   | {
       txnName?: string;
       /**
@@ -39,7 +41,7 @@ export type ClaimBeanDrawerContentProps =
        */
       maxBeans?: BigNumber;
       /**
-       * the estimated amount of beans from the token input
+       * the estimated amount of beans used from the primary token input
        */
       beanAmount: BigNumber;
     }
@@ -54,10 +56,17 @@ export type ClaimBeanDrawerContentProps =
 
 const FAKE_TOOLTIP = 'fake tooltip';
 
+const sharedCardProps = {
+  sx: {
+    background: BeanstalkPalette.honeydewGreen,
+    borderColor: 'primary.light',
+  },
+} as const;
+
 const toModeOptions = [
   {
     key: FarmToMode.INTERNAL,
-    icon: <>{'🚜'}</>,
+    icon: <>🚜</>,
     name: 'Farm',
     content: 'Claim to Farm Balance by default. Does not cost extra gas',
     tooltip: FAKE_TOOLTIP,
@@ -77,7 +86,7 @@ const toModeOptions = [
   },
 ];
 
-const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
+const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
   txnName,
   maxBeans,
   beanAmount,
@@ -98,11 +107,10 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
 
   /// Form values
   const preset = values.farmActions.preset;
-  const formSelections = values.farmActions.primary;
   const destination = farmActions.surplus?.destination || FarmToMode.INTERNAL;
   const additionalAmount = farmActions.additionalAmount || ZERO_BN;
 
-  ///
+  /// Derived
   const optionsMap = useMemo(() => {
     const options = FormTxnBuilderPresets[preset].primary;
     return options.reduce((prev, curr) => {
@@ -111,39 +119,15 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
     }, {} as PartialFormTxnMap<FormTxnOptionSummary>);
   }, [preset, summary]);
 
-  const selectionsSet = useMemo(() => {
-    return new Set(formSelections);
-  }, [formSelections]);
-
-  /// Handlers
-  const handleToggle = useCallback(
-    (option: FormTxn) => {
-      const copy = new Set(selectionsSet);
-      if (copy.has(option)) copy.delete(option);
-      else copy.add(option);
-
-      const newSelections = [...copy];
-      const newClaimAmount = getClaimable(newSelections).bn;
-      setFieldValue('farmActions.primary', newSelections);
-      setFieldValue('farmActions.surplus.max', newClaimAmount);
-      if (newClaimAmount.lt(additionalAmount)) {
-        setFieldValue('farmActions.additionalAmount', newClaimAmount);
-      }
-    },
-    [selectionsSet, additionalAmount, getClaimable, setFieldValue]
+  const selectionsSet = useMemo(
+    () => new Set(values.farmActions.primary || []),
+    [values.farmActions.primary]
   );
 
-  const handleSetDestination = useCallback(
-    (_toMode: FarmToMode) => {
-      if (_toMode === destination) return;
-      setFieldValue('farmActions.surplus.destination', _toMode);
-    },
-    [destination, setFieldValue]
+  const claimAmount = useMemo(
+    () => getClaimable([...selectionsSet]).bn,
+    [selectionsSet, getClaimable]
   );
-
-  const claimAmount = useMemo(() => {
-    return getClaimable([...selectionsSet]).bn;
-  }, [selectionsSet, getClaimable]);
 
   const maxClaimableBeansUsable = useMemo(() => {
     if (maxBeans) {
@@ -156,29 +140,37 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
   const inputDisabled = claimAmount.lte(0) || maxClaimableBeansUsable.lte(0);
   const transferrable = claimAmount.minus(additionalAmount);
 
-  /// Effects
-  /// update the additional amount if it is greater than the max claimable beans
-  useEffect(() => {
-    if (maxClaimableBeansUsable.lt(additionalAmount)) {
-      setFieldValue('farmActions.additionalAmount', maxClaimableBeansUsable);
-    }
-  }, [maxClaimableBeansUsable, claimAmount, additionalAmount, setFieldValue]);
+  /// Handlers
+  const handleToggle = useCallback(
+    (option: FormTxn) => {
+      const copy = new Set(selectionsSet);
+      if (copy.has(option)) copy.delete(option);
+      else copy.add(option);
 
-  /// Render
-  const InputProps = useMemo(() => {
-    return {
-      endAdornment: <TokenAdornment token={sdk.tokens.BEAN} />,
-    };
-  }, [sdk.tokens.BEAN]);
+      const newSelections = [...copy];
+      const newClaimAmount = getClaimable(newSelections).bn;
+
+      setFieldValue('farmActions.primary', newSelections);
+      setFieldValue('farmActions.surplus.max', newClaimAmount);
+
+      if (newClaimAmount.lt(additionalAmount)) {
+        setFieldValue('farmActions.additionalAmount', newClaimAmount);
+      }
+    },
+    [selectionsSet, getClaimable, setFieldValue, additionalAmount]
+  );
+
+  const handleSetDestination = useCallback(
+    (_toMode: FarmToMode) => {
+      if (_toMode === destination) return;
+      setFieldValue('farmActions.surplus.destination', _toMode);
+    },
+    [destination, setFieldValue]
+  );
 
   return (
     <Stack gap={1}>
-      <Card
-        sx={{
-          background: BeanstalkPalette.honeydewGreen,
-          borderColor: 'primary.light',
-        }}
-      >
+      <Card {...sharedCardProps}>
         <Stack gap={1} p={1}>
           <Typography variant="body1" color="text.tertiary">
             Which assets do you want to Claim?
@@ -186,12 +178,13 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
           <Stack gap={1} direction={{ xs: 'column', sm: 'row' }}>
             {Object.entries(optionsMap).map(([k, item]) => (
               <TokenSelectionCard
-                key={item.token.symbol}
+                key={k}
                 token={item.token}
                 amount={item.amount}
                 selected={selectionsSet.has(k as FormTxn)}
                 onClick={() => handleToggle(k as FormTxn)}
                 disabled={item.amount.lte(0)}
+                backgroundOnHover={false}
               >
                 <Stack>
                   <Typography
@@ -209,58 +202,50 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
         </Stack>
       </Card>
       {/* Input Field */}
-      <Card
-        sx={{
-          background: BeanstalkPalette.honeydewGreen,
-          borderColor: 'primary.light',
-        }}
-      >
-        <Stack gap={1} p={1}>
-          <Typography variant="body1" color="text.tertiary">
-            Amount of Claimable Beans to use {txnName ? `in ${txnName}` : ''}
-          </Typography>
-          <TokenInputField
-            /// Formik
-            name={'farmActions.additionalAmount'}
-            /// MUI
-            disabled={inputDisabled}
-            fullWidth
-            InputProps={InputProps}
-            // Other
-            balance={claimAmount}
-            balanceLabel={isMobile ? 'Balance' : 'Claimable Bean Balance'}
-            token={sdk.tokens.BEAN}
-            max={maxClaimableBeansUsable}
-            hideBalance={false}
-          />
-        </Stack>
-      </Card>
-
-      {/* Transfer claimable beans not being used */}
-      {transferrable?.gt(0) && (
-        <Card
-          sx={{
-            background: BeanstalkPalette.honeydewGreen,
-            borderColor: 'primary.light',
-            width: '100%',
-          }}
-        >
+      {claimAmount.gt(0) ? (
+        <Card {...sharedCardProps}>
           <Stack gap={1} p={1}>
             <Typography variant="body1" color="text.tertiary">
-              You're using less than your total Claimable Beans in this
+              Amount of Claimable Beans to use {txnName ? `in ${txnName}` : ''}
+            </Typography>
+            <TokenInputField
+              /// Formik
+              name="farmActions.additionalAmount"
+              /// MUI
+              disabled={inputDisabled}
+              fullWidth
+              InputProps={{
+                endAdornment: <TokenAdornment token={sdk.tokens.BEAN} />,
+              }}
+              // Other
+              balance={claimAmount}
+              balanceLabel={isMobile ? 'Balance' : 'Claimable Bean Balance'}
+              token={sdk.tokens.BEAN}
+              max={maxClaimableBeansUsable}
+              hideBalance={false}
+            />
+          </Stack>
+        </Card>
+      ) : null}
+      {/* Transfer claimable beans not being used */}
+      {transferrable.gt(0) ? (
+        <Card {...sharedCardProps}>
+          <Stack gap={1} p={1}>
+            <Typography variant="body1" color="text.tertiary">
+              You&apos;re using less than your total Claimable Beans in this
               transaciton. Where do you want to send the remainer?
             </Typography>
             <Stack gap={1}>
               {toModeOptions.map((opt) => {
-                const selected = opt.key === destination;
+                const isSelected = opt.key === destination;
                 return (
                   <SelectionItem
-                    key={opt.key}
+                    key={opt.key.toString()}
                     title={
                       <Typography
                         variant="body1"
                         component="span"
-                        color={selected ? 'text.primary' : 'text.secondary'}
+                        color={isSelected ? 'text.primary' : 'text.secondary'}
                       >
                         <Row gap={0.5}>
                           {opt.icon}
@@ -280,15 +265,16 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
                         </Row>
                       </Typography>
                     }
-                    selected={selected}
+                    selected={isSelected}
                     onClick={() => handleSetDestination(opt.key)}
                     checkIcon="top-right"
+                    backgroundOnHover={false}
                     gap={0}
                   >
                     <Stack alignItems="flex-start">
                       <Typography
                         variant="bodySmall"
-                        color={selected ? 'text.primary' : 'text.secondary'}
+                        color={isSelected ? 'text.primary' : 'text.secondary'}
                       >
                         {opt.content}
                       </Typography>
@@ -299,7 +285,7 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanDrawerContentProps> = ({
             </Stack>
           </Stack>
         </Card>
-      )}
+      ) : null}
     </Stack>
   );
 };

@@ -1,11 +1,12 @@
-import { Box, Button, Card, Stack, Typography } from '@mui/material';
+import { Card, Stack, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import React, { useCallback, useMemo } from 'react';
+import BigNumber from 'bignumber.js';
+import { ZERO_BN } from '~/constants';
 import { IconSize } from '~/components/App/muiTheme';
-import { FormTxn, FormTxnBuilderPresets } from '~/util';
+import { FormTxn, FormTxnBuilderPresets, PartialFormTxnMap } from '~/util';
 import { FormTxnsFormState } from '..';
 import Row from '../../Row';
-import FormWithDrawer from '../FormWithDrawer';
 
 import podIconGrey from '~/img/beanstalk/pod-icon-grey.svg';
 import podIconGreen from '~/img/beanstalk/pod-icon-green.svg';
@@ -23,8 +24,8 @@ import useFarmerFormTxnsSummary, {
 
 import MergeIcon from '~/img/misc/merge-icon.svg';
 import SelectionItem from '../../SelectionItem';
-import BigNumber from 'bignumber.js';
-import { ZERO_BN } from '~/constants';
+import FormWithDrawer from '../FormWithDrawer';
+import { ClaimBeanInfoProps } from './ClaimBeanDrawerContent';
 
 const actionsToIconMap = {
   [FormTxn.RINSE]: {
@@ -41,8 +42,9 @@ const actionsToIconMap = {
   },
 };
 
-const ClaimBeanDrawerToggle: React.FC<{ maxBeans?: BigNumber }> = ({
+const ClaimBeanDrawerToggle: React.FC<ClaimBeanInfoProps> = ({
   maxBeans,
+  beanAmount,
 }) => {
   /// Formik
   const { values, setFieldValue } = useFormikContext<FormTxnsFormState>();
@@ -56,7 +58,7 @@ const ClaimBeanDrawerToggle: React.FC<{ maxBeans?: BigNumber }> = ({
 
   const optionsMap = useMemo(() => {
     const options = FormTxnBuilderPresets[preset].primary;
-    return options.reduce<Partial<{ [key in FormTxn]: FormTxnOptionSummary }>>(
+    return options.reduce<PartialFormTxnMap<FormTxnOptionSummary>>(
       (prev, curr) => {
         prev[curr] = summary[curr].summary[0];
         return prev;
@@ -65,49 +67,45 @@ const ClaimBeanDrawerToggle: React.FC<{ maxBeans?: BigNumber }> = ({
     );
   }, [preset, summary]);
 
-  /// Form State
-  const selectionSet = useMemo(() => {
-    return new Set(formSelections || []);
-  }, [formSelections]);
-
-  /// Derived
-  const maxClaimable = useMemo(() => {
-    const amount = getClaimable(
-      FormTxnBuilderPresets[values.farmActions.preset].primary
-    );
-    return amount.bn;
-  }, [values.farmActions.preset, getClaimable]);
-
-  const clamp = useCallback(
-    (_amount: BigNumber) => {
-      if (maxBeans) {
-        return BigNumber.min(maxClaimable, maxBeans);
-      }
-      return _amount;
-    },
-    [maxClaimable, maxBeans]
+  const selectionsSet = useMemo(
+    () => new Set(formSelections || []),
+    [formSelections]
   );
 
+  const claimAmount = useMemo(
+    () => getClaimable([...selectionsSet]).bn,
+    [selectionsSet, getClaimable]
+  );
+
+  const maxClaimableBeansUsable = useMemo(() => {
+    if (maxBeans) {
+      const remainingAmount = maxBeans.minus(beanAmount);
+      return BigNumber.max(remainingAmount, ZERO_BN);
+    }
+    return claimAmount;
+  }, [claimAmount, maxBeans, beanAmount]);
+
+  /// Handlers
   const handleToggle = useCallback(
     (option: FormTxn) => {
-      const _selected = new Set(selectionSet);
-      if (_selected.has(option)) {
-        _selected.delete(option);
-      } else {
-        _selected.add(option);
-      }
-      const amount = getClaimable([..._selected]).bn;
+      const copy = new Set(selectionsSet);
+      if (copy.has(option)) copy.delete(option);
+      else copy.add(option);
 
-      setFieldValue('farmActions.primary', Array.from(_selected));
-      setFieldValue('farmActions.additionalAmount', clamp(amount));
+      const newSelections = Array.from(copy);
+      const newClaimAmount = getClaimable(newSelections).bn;
+
+      setFieldValue('farmActions.primary', newSelections);
+      setFieldValue('farmActions.surplus.max', newClaimAmount);
+
+      const clampedAmount = newClaimAmount.gt(maxClaimableBeansUsable)
+        ? maxClaimableBeansUsable
+        : newClaimAmount;
+
+      setFieldValue('farmActions.additionalAmount', clampedAmount);
     },
-    [selectionSet, clamp, setFieldValue]
+    [selectionsSet, getClaimable, setFieldValue, maxClaimableBeansUsable]
   );
-
-  /// if nothing to claim, return null
-  if (!maxClaimable.gt(0)) {
-    return null;
-  }
 
   return (
     <Card
@@ -141,18 +139,18 @@ const ClaimBeanDrawerToggle: React.FC<{ maxBeans?: BigNumber }> = ({
         <Row gap={1}>
           <Row gap={0.5}>
             {Object.entries(optionsMap).map(([k, info]) => {
-              const selected = selectionSet.has(k as FormTxn);
+              const selected = selectionsSet.has(k as FormTxn);
               const disabled = info.amount.lte(0);
               const _key = k as keyof typeof actionsToIconMap;
               const icons = actionsToIconMap[_key];
 
               return (
                 <SelectionItem
+                  variant="circle"
                   selected={selected}
                   disabled={disabled}
                   onClick={() => handleToggle(k as FormTxn)}
-                  sx={{ borderRadius: '50%' }}
-                  stackProps={{ sx: { p: 0 } }}
+                  backgroundOnHover={false}
                 >
                   <IconWrapper
                     boxSize={IconSize.small}
@@ -162,6 +160,7 @@ const ClaimBeanDrawerToggle: React.FC<{ maxBeans?: BigNumber }> = ({
                     <Centered sx={{ p: 0.3, boxSizing: 'border-box' }}>
                       <img
                         src={selected ? icons.selected : icons.grey}
+                        alt={info.token.symbol}
                         css={{
                           width: '100%',
                           height: '100%',

@@ -1,3 +1,4 @@
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   ERC20Token,
   FarmFromMode,
@@ -10,7 +11,6 @@ import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { Formik, FormikHelpers, FormikProps } from 'formik';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { IconSize } from '~/components/App/muiTheme';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
@@ -32,7 +32,6 @@ import {
 import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 import ClaimBeanDrawerToggle from '~/components/Common/Form/FormTxn/ClaimBeanDrawerToggle';
 import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
-import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -60,9 +59,10 @@ import { AppState } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
 import { FC } from '~/types';
-import { displayBN, displayFullBN, MinBN, tokenValueToBN } from '~/util';
+import { MinBN, displayBN, displayFullBN, tokenValueToBN } from '~/util';
 import { ActionType } from '~/util/Actions';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
+import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
@@ -87,6 +87,7 @@ const SowForm: FC<
     balances: ReturnType<typeof useFarmerBalances>;
     weather: BigNumber;
     soil: BigNumber;
+    // formRef: React.MutableRefObject<HTMLDivElement | null>;
   }
 > = ({
   // Formik
@@ -182,6 +183,7 @@ const SowForm: FC<
     (async () => {
       const { BEAN: bean, ETH: eth, WETH: weth } = sdk.tokens;
       if (hasSoil) {
+        const work = sdk.farm.create();
         if (bean.equals(tokenIn)) {
           /// 1 SOIL is consumed by 1 BEAN
           setFieldValue('maxAmountIn', soil);
@@ -189,21 +191,20 @@ const SowForm: FC<
           /// Estimate how many ETH it will take to buy `soil` BEAN.
           /// TODO: across different forms of `tokenIn`.
           /// This (obviously) only works for Eth and Weth.
-          const work = sdk.farm.create();
           work.add(sdk.farm.presets.weth2bean());
-
-          const estimate = await work
-            .estimateReversed(bean.amount(soil.toString()))
-            .then((result) => tokenIn.fromBlockchain(result));
-          console.debug(
-            '[Sow][maxAmountIn]: ',
-            estimate.toHuman(),
-            tokenIn.symbol
-          );
-          setFieldValue('maxAmountIn', tokenValueToBN(estimate));
         } else {
           throw new Error(`Unsupported tokenIn: ${tokenIn.symbol}`);
         }
+
+        const estimate = await work
+          .estimateReversed(bean.amount(soil.toString()))
+          .then((result) => tokenIn.fromBlockchain(result));
+        console.debug(
+          '[Sow][maxAmountIn]: ',
+          estimate.toHuman(),
+          tokenIn.symbol
+        );
+        setFieldValue('maxAmountIn', tokenValueToBN(estimate));
       } else {
         setFieldValue('maxAmountIn', ZERO_BN);
       }
@@ -266,7 +267,9 @@ const SowForm: FC<
           balanceFrom={values.balanceFrom}
           disableTokenSelect={!hasSoil || !values.maxAmountIn}
         />
-        {hasSoil && <ClaimBeanDrawerToggle maxBeans={soil} />}
+        {hasSoil && (
+          <ClaimBeanDrawerToggle maxBeans={soil} beanAmount={beansUsed} />
+        )}
         {!hasSoil ? (
           <Box>
             <WarningAlert sx={{ color: 'black' }}>
@@ -380,6 +383,7 @@ const SowForm: FC<
 const Sow: FC<{}> = () => {
   const sdk = useSdk();
   const account = useAccount();
+  // const formRef = useRef<HTMLDivElement | null>(null);
 
   /// Beanstalk
   const temperature = useTemperature();
@@ -397,8 +401,8 @@ const Sow: FC<{}> = () => {
   /// Form
   const middleware = useFormMiddleware();
 
-  const preferredTokens: PreferredToken[] = useMemo(() => {
-    return [
+  const preferredTokens: PreferredToken[] = useMemo(
+    () => [
       {
         token: sdk.tokens.BEAN,
         minimum: new BigNumber(1), // $1
@@ -411,8 +415,9 @@ const Sow: FC<{}> = () => {
         token: sdk.tokens.ETH,
         minimum: new BigNumber(0.001), // ~$2-4
       },
-    ];
-  }, [sdk]);
+    ],
+    [sdk]
+  );
 
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const initialValues: SowFormValues = useMemo(
@@ -639,8 +644,9 @@ const Sow: FC<{}> = () => {
       }
     },
     [
-      sdk,
       middleware,
+      sdk,
+      account,
       temperature,
       farmerFormTxns,
       refetchBeanstalkField,

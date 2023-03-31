@@ -25,6 +25,24 @@ import MergeIcon from '~/img/misc/merge-icon.svg';
 
 import { FormTxnsFormState } from '..';
 
+const sx = {
+  accordion: {
+    backgroundColor: 'primary.light',
+    borderRadius: 1,
+    '&.MuiAccordion-root:before': {
+      backgroundColor: 'primary.light',
+    },
+  },
+  accordionSummary: {
+    '&.MuiAccordionSummary-root': {
+      '&:hover': {
+        /// only enable cursor on the switch component
+        cursor: 'default',
+      },
+    },
+  },
+} as const;
+
 /**
  * Used to add 'plant' to the formState (FormTxnsFormState)
  * If nothing to 'plant' or if the preset is not 'plant', returns null
@@ -58,13 +76,14 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
       setFieldValue('farmActions.primary', [FormTxn.PLANT]);
       show();
     }
-  }, [isPlant, setFieldValue]);
+  }, [isPlant, setFieldValue, show]);
+
   const handleToggleOff = useCallback(() => {
     if (isPlant) {
       setFieldValue('farmActions.primary', []);
       hide();
     }
-  }, [isPlant, setFieldValue]);
+  }, [hide, isPlant, setFieldValue]);
 
   /// Effects
   /// Update the local state if the Form State is updated externally
@@ -84,24 +103,9 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
       expanded={open}
       defaultExpanded={false}
       defaultChecked={false}
-      sx={{
-        backgroundColor: 'primary.light',
-        borderRadius: 1,
-        '&.MuiAccordion-root:before': {
-          backgroundColor: 'primary.light',
-        },
-      }}
+      sx={sx.accordion}
     >
-      <AccordionSummary
-        sx={{
-          '&.MuiAccordionSummary-root': {
-            '&:hover': {
-              /// only enable cursor on the switch component
-              cursor: 'default',
-            },
-          },
-        }}
-      >
+      <AccordionSummary sx={sx.accordionSummary}>
         <Row justifyContent="space-between" alignItems="center" width="100%">
           <Row
             gap={1}
@@ -112,10 +116,7 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
             <img
               src={MergeIcon}
               alt="merge"
-              css={{
-                width: '24px',
-                height: '24px',
-              }}
+              css={{ width: '24px', height: '24px' }}
             />
             <Stack>
               <Typography variant="h4" color="primary.main">
@@ -148,8 +149,8 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
               You will Plant to claim these silo rewards
             </Typography>
             <Grid container spacing={1} direction="row">
-              {items.map((item) => (
-                <Grid item xs={6} sm={3} key={item.description}>
+              {items.map((item, i) => (
+                <Grid item xs={6} sm={3} key={`${item.token.symbol}-${i}`}>
                   <Card sx={{ border: 0, width: '100%', background: 'white' }}>
                     <Stack gap={0.2} p={1}>
                       <Row gap={0.2}>
