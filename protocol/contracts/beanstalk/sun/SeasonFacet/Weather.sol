@@ -186,7 +186,7 @@ contract Weather is Sun {
             caseId += 1;
         }
 
-        s.w.lastDSoil = uint128(dsoil);
+        s.w.lastDSoil = uint128(dsoil); // SafeMath not necessary as `s.f.beanSown` is uint128.
         
         changeWeather(caseId);
         handleRain(caseId);
