@@ -1,6 +1,6 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
 import React, { useCallback, useState } from "react";
-import { useTokens } from "src/utils/TokenProvider";
+import { useTokens } from "src/tokens/TokenProvider";
 import styled from "styled-components";
 import { ArrowButton } from "./ArrowButton";
 import gear from "src/assets/images/gear.svg";
