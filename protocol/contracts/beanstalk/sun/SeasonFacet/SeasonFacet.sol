@@ -135,6 +135,7 @@ contract SeasonFacet is Weather {
         LibTransfer.To mode
     ) private returns (uint256) {
         // Number of blocks the sunrise is late by
+        // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
         uint256 blocksLate = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
         )
