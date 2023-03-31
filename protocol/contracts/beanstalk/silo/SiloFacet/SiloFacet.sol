@@ -23,7 +23,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice deposits an ERC20 into the Silo
+     * @notice Deposits an ERC20 into the Silo.
      * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
      * @param token address of ERC20
      * @param amount tokens to be transfered
@@ -48,7 +48,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice withdraws an ERC20 Deposit from the Silo
+     * @notice Withdraws an ERC20 Deposit from the Silo.
      * @dev 
      *  season determines how much Stalk and Seeds are removed from the Farmer.
      *  typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
@@ -66,7 +66,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice withdraws multiple ERC20 Deposits from the Silo
+     * @notice Withdraws multiple ERC20 Deposits from the Silo.
      * @dev
      *  factor in gas costs when withdrawing from multiple deposits to ensure greater UX
      *  for example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
@@ -88,7 +88,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice claims ERC20s from a Withdrawal.
+     * @notice Claims ERC20s from a Withdrawal.
      * @param token address of ERC20
      * @param season season to claim
      * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
@@ -103,7 +103,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice claims ERC20s from multiple Withdrawals.
+     * @notice Claims ERC20s from multiple Withdrawals.
      * @param token address of ERC20
      * @param seasons array of seasons to claim
      * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
@@ -122,7 +122,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice transfers a single Deposit.
+     * @notice Transfers a single Deposit.
      * @param sender source of deposit
      * @param recipient destination of deposit
      * @param token address of ERC20
@@ -147,7 +147,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice transfers multiple Deposits of a single ERC20 token.
+     * @notice Transfers multiple Deposits of a single ERC20 token.
      * @param sender source of deposit
      * @param recipient destination of deposit
      * @param token address of ERC20
@@ -181,7 +181,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice approves an address to transfer a farmer's Deposits of a specified ERC20 token.
+     * @notice Approves an address to transfer a farmer's Deposits of a specified ERC20 token.
      * @param spender address to be given approval
      * @param token address of ERC20
      * @param amount amount to be approved
@@ -197,7 +197,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice increases allowance of Deposits of a specified ERC20 token.
+     * @notice Increases allowance of Deposits of a specified ERC20 token.
      * @param spender address to increase approval
      * @param token address of ERC20
      * @param addedValue additional amount to approve
@@ -209,7 +209,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice decreases allowance of Deposits of a specified ERC20 token.
+     * @notice Decreases allowance of Deposits of a specified ERC20 token.
      * @param spender address to decrease approval
      * @param token address of ERC20
      * @param subtractedValue amount to revoke approval
@@ -231,7 +231,7 @@ contract SiloFacet is TokenSilo {
      */
     
     /** 
-     * @notice executes a signed EIP-712 deposit permit for multiple tokens.
+     * @notice Executes a signed EIP-712 deposit permit for multiple tokens.
      * @param owner address to give permit
      * @param spender address to permit
      * @param tokens array of ERC20s to permit
@@ -258,7 +258,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice executes a signed EIP-712 Deposit permit for a single token.
+     * @notice Executes a signed EIP-712 Deposit permit for a single token.
      * @param owner address to give permit
      * @param spender address to permit
      * @param token ERC20 to permit
@@ -283,7 +283,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice returns nonce of deposit permits.
+     * @notice Returns nonce of deposit permits.
      */ 
     function depositPermitNonces(address owner) public view virtual returns (uint256) {
         return LibSiloPermit.nonces(owner);
@@ -302,7 +302,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice activates a farmer's Grown Stalk and processes any new Seasons of Plentys
+     * @notice Activates a farmer's Grown Stalk and processes any new Seasons of Plentys.
      * @param account address to update
      */
     function update(address account) external payable {
@@ -310,7 +310,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice deposits Earned Beans in the current Season and activates Earned Seeds
+     * @notice Deposits Earned Beans in the current Season and activates Earned Seeds.
      * @dev 
      *   planting is not required to activate Earned Stalk (It is already active)
      *   a Farmer can only plant their own Earned Beans to prevent griefing
@@ -321,7 +321,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice claims outstanding 3CRV rewards from Season Of Plentys (SOP)
+     * @notice Claims outstanding 3CRV rewards from Season Of Plentys (SOP).
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
@@ -332,7 +332,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice claims oustanding Revitalized Stalk and Seeds and updates BDV of specified Unripe Deposits
+     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of specified Unripe Deposits.
      * @param token address of Whitelisted Unripe ERC20
      * @param seasons array of seasons to enroot
      * @param amounts array of amount (corresponding to seasons) to enroot
@@ -382,7 +382,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice claims oustanding Revitalized Stalk and Seeds and updates BDV of a single Unripe Deposit
+     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of a single Unripe Deposit.
      * @param token address of Whitelisted Unripe ERC20
      * @param _season season to enroot
      * @param amount amount to enroot
