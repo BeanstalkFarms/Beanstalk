@@ -23,8 +23,8 @@ library LibUnripeConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         tokenOut = C.UNRIPE_BEAN;
@@ -45,16 +45,16 @@ library LibUnripeConvert {
                 C.CURVE_BEAN_METAPOOL
             );
 
-        inAmount = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
+        amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
         LibUnripe.removeUnderlying(tokenIn, inUnderlyingAmount);
-        IBean(tokenIn).burn(inAmount);
+        IBean(tokenIn).burn(amountIn);
 
-        outAmount = LibUnripe
+        amountOut = LibUnripe
             .underlyingToUnripe(tokenOut, outUnderlyingAmount)
             .mul(LibUnripe.percentBeansRecapped())
             .div(LibUnripe.percentLPRecapped());
         LibUnripe.addUnderlying(tokenOut, outUnderlyingAmount);
-        IBean(tokenOut).mint(address(this), outAmount);
+        IBean(tokenOut).mint(address(this), amountOut);
     }
 
     function convertBeansToLP(bytes memory convertData)
@@ -62,8 +62,8 @@ library LibUnripeConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         tokenIn = C.UNRIPE_BEAN;
@@ -84,16 +84,16 @@ library LibUnripeConvert {
                 C.CURVE_BEAN_METAPOOL
             );
 
-        inAmount = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
+        amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
         LibUnripe.removeUnderlying(tokenIn, inUnderlyingAmount);
-        IBean(tokenIn).burn(inAmount);
+        IBean(tokenIn).burn(amountIn);
 
-        outAmount = LibUnripe
+        amountOut = LibUnripe
             .underlyingToUnripe(tokenOut, outUnderlyingAmount)
             .mul(LibUnripe.percentLPRecapped())
             .div(LibUnripe.percentBeansRecapped());
         LibUnripe.addUnderlying(tokenOut, outUnderlyingAmount);
-        IBean(tokenOut).mint(address(this), outAmount);
+        IBean(tokenOut).mint(address(this), amountOut);
     }
 
     function beansToPeg() internal view returns (uint256 beans) {

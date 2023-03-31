@@ -28,26 +28,26 @@ library LibConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         LibConvertData.ConvertKind kind = convertData.convertKind();
 
         if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
-            (tokenOut, tokenIn, outAmount, inAmount) = LibCurveConvert
+            (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
                 .convertBeansToLP(convertData);
         } else if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
-            (tokenOut, tokenIn, outAmount, inAmount) = LibCurveConvert
+            (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
                 .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
-            (tokenOut, tokenIn, outAmount, inAmount) = LibUnripeConvert
+            (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert
                 .convertBeansToLP(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
-            (tokenOut, tokenIn, outAmount, inAmount) = LibUnripeConvert
+            (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert
                 .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            (tokenOut, tokenIn, outAmount, inAmount) = LibLambdaConvert
+            (tokenOut, tokenIn, amountOut, amountIn) = LibLambdaConvert
                 .convert(convertData);
         } else {
             revert("Convert: Invalid payload");

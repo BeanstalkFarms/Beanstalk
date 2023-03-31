@@ -14,7 +14,6 @@ import {C} from "~/C.sol";
 /**
  * @title LibCurveConvert
  * @author Publius
- * @dev FIXME: `tokenOut` vs. `outAmount` throughout this file
  */
 library LibCurveConvert {
     using SafeMath for uint256;
@@ -23,8 +22,10 @@ library LibCurveConvert {
     //////////////////// GETTERS ////////////////////
 
     /**
-     * @notice Calculate the number of BEAN needed to return `pool` back to peg.
-     * @dev Assumes that BEAN is the first token in the pool.
+     * @notice Calculate the number of BEAN needed to be added as liquidity to return `pool` back to peg.
+     * @dev
+     *   Assumes that BEAN is the first token in the pool.
+     *   Returns 0 if returns peg.
      */
     function beansToPeg(address pool) internal view returns (uint256 beans) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
@@ -34,7 +35,8 @@ library LibCurveConvert {
     }
 
     /**
-     * @notice Calculate the amount of LP needed to return `pool` back to peg.
+     * @notice Calculate the amount of liquidity needed to be removed as Beans to return `pool` back to peg.
+     * @dev Returns 0 if above peg.
      */
     function lpToPeg(address pool) internal view returns (uint256 lp) {
         uint256[2] memory balances = ICurvePool(pool).get_balances();
@@ -66,7 +68,7 @@ library LibCurveConvert {
     //////////////////// CURVE CONVERT: KINDS ////////////////////
 
     /**
-     * @notice Takes in encoded bytes for adding Curve LP in beans, extracts the input data, and then calls the
+     * @notice Decodes convert data and increasing deltaB by removing liquidity as Beans.
      * @param convertData Contains convert input parameters for a Curve AddLPInBeans convert
      */
     function convertLPToBeans(bytes memory convertData)
@@ -74,19 +76,19 @@ library LibCurveConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
-        (outAmount, inAmount) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
+        (amountOut, amountIn) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
         tokenOut = C.BEAN;
         tokenIn = pool; // The Curve metapool also issues the LP token
     }
 
     /**
-     * @notice Takes in encoded bytes for adding beans in Curve LP, extracts the input data, 
+     * @notice Decodes convert data and decreases deltaB by adding Beans as 1-sided liquidity.
      * @param convertData Contains convert input parameters for a Curve AddBeansInLP convert
      */
     function convertBeansToLP(bytes memory convertData)
@@ -94,13 +96,13 @@ library LibCurveConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
-        (outAmount, inAmount) = curveSellToPegAndAddLiquidity(
+        (amountOut, amountIn) = curveSellToPegAndAddLiquidity(
             beans,
             minLP,
             pool
@@ -112,9 +114,10 @@ library LibCurveConvert {
     //////////////////// CURVE CONVERT: LOGIC ////////////////////
 
     /**
-     * @notice Converts Beans into LP via Curve.
-     * @param beans The mount of beans to convert to Curve LP
-     * @param minLP The min amount of Curve LP to receive
+     * @notice Increase deltaB by adding Beans as liquidity via Curve.
+     * @dev deltaB <≈ 0 after the convert
+     * @param beans The amount of beans to convert to Curve LP
+     * @param minLP The minimum amount of Curve LP to receive
      * @param pool The address of the Curve pool to add to
      */
     function curveSellToPegAndAddLiquidity(
@@ -129,7 +132,8 @@ library LibCurveConvert {
     }
 
     /**
-     * @notice Removes LP into Beans via Curve.
+     * @notice Decrease deltaB by removing LP as Beans via Curve.
+     * @dev deltaB >≈ 0 after the convert
      * @param lp The amount of Curve LP to be removed
      * @param minBeans The minimum amount of Beans to receive
      * @param pool The address of the Curve pool to remove from
