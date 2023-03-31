@@ -9,6 +9,7 @@ temp
 .env
 archived
 .vscode
+diamondCut-*.json
 
 #Editors
 .idea/
