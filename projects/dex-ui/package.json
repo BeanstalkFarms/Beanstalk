@@ -8,7 +8,8 @@
   "scripts": {
     "start": "vite --port 2424",
     "build": "yarn generate:graphql && tsc && vite build",
-    "generate:graphql": "echo \"Generating: graphql-codegen\" && graphql-codegen --config codegen.ts",
+    "generate:graphql": "graphql-codegen --config codegen.ts",
+    "generate": "echo \"DEX Generate\" && yarn generate:graphql",
     "lint": "eslint \"src/**/**/*.ts{,x}\"",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "prettier src --check",

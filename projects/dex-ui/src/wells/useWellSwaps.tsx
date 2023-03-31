@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import request from "graphql-request";
 import { useQuery } from "@tanstack/react-query";
 import { GetWellSwapsDocument } from "src/generated/graphql";
 
 import { TokenValue, ERC20Token } from "@beanstalk/sdk";
 import { useNetwork } from "wagmi";
 import { fetchFromSubgraphRequest } from "./subgraphFetch";
-import { useGetWellSwapsQuery } from "src/generated/graph";
 
 export type WellSwap = {
   hash: string;
@@ -27,10 +25,13 @@ const useWellSwaps = (wellId: string) => {
     error,
     data
   } = useQuery(
-    ["wellswaps"],
+    ["history", "swap", wellId],
     fetchFromSubgraphRequest(GetWellSwapsDocument, {
       id: wellId
-    })
+    }),
+    {
+      staleTime: 1000 * 60
+    }
   );
 
   const [swaps, setSwaps] = useState<WellSwap[]>([]);

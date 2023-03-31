@@ -1,13 +1,14 @@
 import { Token } from "@beanstalk/sdk";
 import React, { useCallback, useEffect, useState } from "react";
 import { FC } from "src/types";
-import { useTokens } from "src/utils/TokenProvider";
+import { useTokens } from "src/tokens/TokenProvider";
 import styled from "styled-components";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Image } from "../Image";
 import chevDown from "src/assets/images/chevron-down.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
+import { useTokenBalance } from "src/tokens/useTokenBalance";
 
 type Props = {
   token: Token;
@@ -24,6 +25,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
   const [modalOpen, setModalOpen] = useState(false);
   const tokens = useTokens();
   const [list, setList] = useState<Token[]>([]);
+  const { data: balances, isLoading: balancesLoading, error: balancesError, refetch } = useTokenBalance();
 
   useEffect(() => {
     let list = Object.values(tokens).filter((t: Token) => t.symbol !== excludeToken?.symbol);
@@ -31,7 +33,12 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
     setList(list);
   }, [tokens, excludeToken]);
 
-  const openModal = useCallback(() => editable && setModalOpen(true), []);
+  const openModal = useCallback(() => {
+    if (!editable) return;
+    setModalOpen(true);
+    refetch();
+  }, [editable, refetch]);
+
   const closeModal = useCallback(() => setModalOpen(false), []);
   const selectToken = useCallback(
     (token: Token) => {
@@ -71,7 +78,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
                         <Symbol>{token.symbol}</Symbol>
                         <Name>{token.displayName}</Name>
                       </Details>
-                      <Balance>1234567890</Balance>
+                      {balancesLoading ? <div>loading...</div> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
                     </TokenRow>
                   ))}
                 </Ol>
