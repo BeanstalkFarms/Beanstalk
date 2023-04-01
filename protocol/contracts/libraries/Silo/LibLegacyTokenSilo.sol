@@ -363,8 +363,8 @@ library LibLegacyTokenSilo {
    function _migrateNoDeposits(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(s.a[account].s.seeds == 0, "only for zero seeds");
-        uint32 _lastUpdate = s.a[account].lastUpdate;
-        require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
+        
+        require(LibSilo.migrationNeeded(account), "no migration needed");
 
         s.a[account].lastUpdate = s.season.stemStartSeason;
     }
@@ -388,17 +388,8 @@ library LibLegacyTokenSilo {
      * lots of deposits may take a considerable amount of gas to migrate.
      */
     function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
-        
-        require(tokens.length == seasons.length, "inputs not same length");
  
-        //see if msg.sender has already migrated or not by checking seed balance
-        require(balanceOfSeeds(account) > 0, "no migration needed");
-
-        //checking if migration is necessary/possible can also be done with lastUpdate, but it uses more stack depth, which we're out of in this function
-        // AppStorage storage s = LibAppStorage.diamondStorage();
-        // uint32 _lastUpdate = s.a[account].lastUpdate;
-        // require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
- 
+        require(LibSilo.migrationNeeded(account), "no migration needed");
 
         //do a legacy mow using the old silo seasons deposits
         updateLastUpdateToNow(account);
@@ -466,13 +457,9 @@ library LibLegacyTokenSilo {
         //user deserves stalk grown between stemStartSeason and now
         LibSilo.mintGrownStalkAndGrownRoots(account, migrateData.totalGrownStalk);
  
-        //verify user account seeds total equals seedsTotalBasedOnInputDeposits
-        // if((s.a[account].s.seeds + 4 - seedsTotalBasedOnInputDeposits) > 100) {
-        //     require(msg.sender == account, "deSynced seeds, only account can migrate");
-        // }
- 
-        //require exact seed match
-        require(balanceOfSeeds(account) == migrateData.totalSeeds, "seeds misaligned");
+        if (balanceOfSeeds(account).sub(migrateData.totalSeeds) > 2000) {
+            require(msg.sender == account, "seeds misalignment, double check submitted deposits");
+        }
  
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);

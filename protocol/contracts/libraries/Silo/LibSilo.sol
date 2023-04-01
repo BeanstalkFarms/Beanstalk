@@ -252,9 +252,7 @@ library LibSilo {
 
     /**
      * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
-     * balance.
-     *
-     * 
+     * balance. Also handles Season of Plenty related rain.
      *
      * This is why `_mow()` must be called before any actions that change Seeds,
      * including:
@@ -265,23 +263,14 @@ library LibSilo {
      *  - {SiloFacet-transferDeposit(s)}
      */
    function _mow(address account, address token) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint32 _lastUpdate = lastUpdate(account);
 
-        //if last update > 0 and < stemStartSeason
-        //require that user account seeds be zero
-        // require(_lastUpdate > 0 && _lastUpdate >= s.season.stemStartSeason, 'silo migration needed'); //will require storage cold read... is there a better way?
-
-        //maybe instead of checking lastUpdate here, which is no longer used going forwards since mowStatus will keep track of each individual "last mow time" by storing the stem tip at time of mow
-
-        
-
-        if((_lastUpdate != 0) && (_lastUpdate < s.season.stemStartSeason)) revert('silo migration needed');
-
+        require(!LibSilo.migrationNeeded(account), "silo migration needed");
 
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.stemStartSeason) {
+            AppStorage storage s = LibAppStorage.diamondStorage();
+            uint32 _lastUpdate = lastUpdate(account);
             if (_lastUpdate <= s.season.rainStart && _lastUpdate <= s.season.current) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
@@ -430,7 +419,7 @@ library LibSilo {
         }
     }
 
-        //////////////////////// REMOVE ////////////////////////
+    //////////////////////// REMOVE ////////////////////////
 
     /**
      * @dev Removes from a single Deposit, emits the RemoveDeposit event,
@@ -548,21 +537,18 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * This function will take in a start stalk per bdv, end stalk per bdv,
-     * and the deposited bdv amount, and return
-     *
+     * @dev Calculates the Stalk reward based on the start and end
+     * stems, and the amount of BDV deposited. Stems represent the
+     * amount of grown stalk per BDV, so the difference between the 
+     * start index and end index (stem) multiplied by the amount of
+     * bdv deposited will give the amount of stalk earned.
      */
-    function stalkReward(int96 startStalkPerBDV, int96 endStalkPerBDV, uint128 bdv) //are the types what we want here?
+    function stalkReward(int96 startStem, int96 endStem, uint128 bdv) //are the types what we want here?
         internal
         pure
         returns (uint256)
     {
-        
-        // 
-        
-        // 
-        
-        int96 reward = endStalkPerBDV.sub(startStalkPerBDV).mul(int96(bdv));
+        int96 reward = endStem.sub(startStem).mul(int96(bdv));
         
         return uint128(reward);
     }
@@ -576,4 +562,8 @@ library LibSilo {
         return seeds.mul(seasons);
     }
 
+    function migrationNeeded(address account) internal returns (bool) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[account].lastUpdate > 0 && s.a[account].lastUpdate < s.season.stemStartSeason;
+    }
 }

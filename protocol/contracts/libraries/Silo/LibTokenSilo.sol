@@ -409,11 +409,13 @@ library LibTokenSilo {
         //first get current latest grown stalk index
         int96 _stemTipForToken = LibTokenSilo.stemTipForToken(token);
         //then calculate how much stalk each individual bdv has grown
-        int96 stem = int96(grownStalk.div(bdv));
+        //there's a > 0 check here, because if you have a small amount of unripe bean deposit, the bdv could
+        //end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
+        int96 grownStalkPerBdv = bdv > 0 ? int96(grownStalk.div(bdv)) : 0;
         //then subtract from the current latest index, so we get the index the deposit should have happened at
         //note that we want this to be able to "subtraction overflow" aka go below zero, because
         //there will be many cases where you'd want to convert and need to go far back enough in the
         //grown stalk index to need a negative index
-        return _stemTipForToken - stem;
+        return _stemTipForToken - grownStalkPerBdv;
     }
 }

@@ -379,7 +379,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         }
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, seasons)).to.be.revertedWith('seeds misaligned');
+        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, seasons)).to.be.revertedWith('seeds misalignment, double check submitted deposits');
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
       })
     });
