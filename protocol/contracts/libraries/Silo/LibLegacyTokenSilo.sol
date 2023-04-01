@@ -402,7 +402,7 @@ library LibLegacyTokenSilo {
         for (uint256 i = 0; i < tokens.length; i++) {
             PerTokenData memory perTokenData;
             perTokenData.token = tokens[i];
-            perTokenData.stemTip = LibTokenSilo.stemTipForToken(IERC20(perTokenData.token));
+            perTokenData.stemTip = LibTokenSilo.stemTipForToken(perTokenData.token);
  
             for (uint256 j = 0; j < seasons[i].length; j++) {
                 PerDepositData memory perDepositData;

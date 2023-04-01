@@ -158,7 +158,7 @@ contract ConvertFacet is ReentrancyGuard {
         // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(stem,
-                                LibTokenSilo.stemTipForToken(IERC20(token)),
+                                LibTokenSilo.stemTipForToken(token),
                                 uint128(deltaBDV))
         );
 
@@ -197,7 +197,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newStalk;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
-        int96 _lastStem = LibTokenSilo.stemTipForToken(IERC20(token)); //need for present season
+        int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
         // Iterate through all stems, redeposit the tokens with new BDV and
@@ -263,7 +263,7 @@ contract ConvertFacet is ReentrancyGuard {
                     a.stalkRemoved = a.stalkRemoved.add(
                         LibSilo.stalkReward(
                             stems[i],
-                            LibTokenSilo.stemTipForToken(IERC20(token)),
+                            LibTokenSilo.stemTipForToken(token),
                             depositBDV.toUint128()
                         )
                     );
@@ -282,7 +282,7 @@ contract ConvertFacet is ReentrancyGuard {
                     a.stalkRemoved = a.stalkRemoved.add(
                         LibSilo.stalkReward(
                             stems[i],
-                            LibTokenSilo.stemTipForToken(IERC20(token)),
+                        LibTokenSilo.stemTipForToken(token),
                             depositBDV.toUint128()
                         )
                     );

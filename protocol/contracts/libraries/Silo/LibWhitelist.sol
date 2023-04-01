@@ -83,7 +83,7 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(IERC20(token)); //store grown stalk milestone
+        s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); //store grown stalk milestone
         s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 

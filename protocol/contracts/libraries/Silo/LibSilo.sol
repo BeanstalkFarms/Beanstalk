@@ -294,7 +294,7 @@ library LibSilo {
     function __mow(address account, address token) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        int96 _stemTip = LibTokenSilo.stemTipForToken(IERC20(token));
+        int96 _stemTip = LibTokenSilo.stemTipForToken(token);
         int96 _lastStem =  s.a[account].mowStatuses[token].lastStem;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
         
@@ -450,7 +450,7 @@ library LibSilo {
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(
                 stem, //this is the index of when it was deposited
-                LibTokenSilo.stemTipForToken(IERC20(token)), //this is latest for this token
+                LibTokenSilo.stemTipForToken(token), //this is latest for this token
                 bdvRemoved.toUint128()
             )
         );
@@ -517,7 +517,7 @@ library LibSilo {
             ar.stalkRemoved = ar.stalkRemoved.add(
                 LibSilo.stalkReward(
                     stems[i],
-                    LibTokenSilo.stemTipForToken(IERC20(token)),
+                    LibTokenSilo.stemTipForToken(token),
                     crateBdv.toUint128()
                 )
             );
