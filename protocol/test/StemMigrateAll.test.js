@@ -271,7 +271,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
   
     //get deposits for a sample big depositor, verify they can migrate their deposits correctly
     describe('properly migrates deposits', function () {
-      it.only('for all depositors', async function () {
+      it('for all depositors', async function () {
 
         //check to see if /data/deposits.json exists
         //this is done just to make repeat testing faster, delete the file to re-fetch all deposits

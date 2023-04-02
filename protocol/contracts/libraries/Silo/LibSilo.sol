@@ -266,10 +266,10 @@ library LibSilo {
 
         require(!LibSilo.migrationNeeded(account), "silo migration needed");
 
+        AppStorage storage s = LibAppStorage.diamondStorage();
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.stemStartSeason) {
-            AppStorage storage s = LibAppStorage.diamondStorage();
             uint32 _lastUpdate = lastUpdate(account);
             if (_lastUpdate <= s.season.rainStart && _lastUpdate <= s.season.current) {
                 // Increments `plenty` for `account` if a Flood has occured.
@@ -562,7 +562,7 @@ library LibSilo {
         return seeds.mul(seasons);
     }
 
-    function migrationNeeded(address account) internal returns (bool) {
+    function migrationNeeded(address account) internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate > 0 && s.a[account].lastUpdate < s.season.stemStartSeason;
     }

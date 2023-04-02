@@ -388,8 +388,16 @@ library LibLegacyTokenSilo {
      * lots of deposits may take a considerable amount of gas to migrate.
      */
     function _mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) internal {
- 
-        require(LibSilo.migrationNeeded(account), "no migration needed");
+        //typically a migrationNeeded should be enough to allow the user to migrate, however
+        //for Unripe unit testing convenience, (Update Unripe Deposit -> "1 deposit, some", 
+        //"1 deposit after 1 season, all", and "2 deposit, all" tests), they cannot migrate
+        //since the test expects to add a Legacy deposit (which updates lastUpdated) and
+        //migrate in the same season, which doesn't work since lastUpdated is updated
+        //on deposit. By allow migration if balanceOfSeeds > 0, everything works smoothly.
+        //You would never be able to migrate twice since the old deposits would be removed already,
+        //and balanceOfSeeds would be 0 on 2nd migration attempt.
+        require((LibSilo.migrationNeeded(account) || balanceOfSeeds(account) > 0), "no migration needed");
+
 
         //do a legacy mow using the old silo seasons deposits
         updateLastUpdateToNow(account);

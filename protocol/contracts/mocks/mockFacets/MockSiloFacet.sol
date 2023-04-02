@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
+import "../../libraries/Silo/LibLegacyTokenSilo.sol";
 
 /**
  * @author Publius
@@ -36,7 +37,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv) external {
-        LibSilo._mow(msg.sender, C.unripeLPAddress());
+        _mowLegacy(msg.sender);
         if (t == 0) {
             s.a[msg.sender].lp.deposits[_s] += amount;
             s.a[msg.sender].lp.depositSeeds[_s] += bdv.mul(4);
@@ -55,7 +56,7 @@ contract MockSiloFacet is SiloFacet {
     }
 
    function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
-        LibSilo._mow(msg.sender, C.unripeBeanAddress());
+        _mowLegacy(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
         LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
@@ -71,6 +72,93 @@ contract MockSiloFacet is SiloFacet {
         uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);
         s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv = uint128(newBdv);
         LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
+    }
+
+    modifier mowSenderLegacy() {
+        _mowLegacy(msg.sender);
+        _;
+    }
+
+    /**
+     * @dev Claims the Grown Stalk for `account` and applies it to their Stalk
+     * balance.
+     *
+     * A Farmer cannot receive Seeds unless the Farmer's `lastUpdate` Season is
+     * equal to the current Season. Otherwise, they would receive extra Grown
+     * Stalk when they receive Seeds.
+     *
+     * This is why `_mow()` must be called before any actions that change Seeds,
+     * including:
+     *  - {SiloFacet-deposit}
+     *  - {SiloFacet-withdrawDeposit}
+     *  - {SiloFacet-withdrawDeposits}
+     *  - {_plant}
+     *  - {SiloFacet-transferDeposit(s)}
+     */
+    function _mowLegacy(address account) internal {
+        uint32 _lastUpdate = lastUpdate(account);
+
+        // If `account` was already updated this Season, there's no Stalk to Mow.
+        // _lastUpdate > _season() should not be possible, but it is checked anyway.
+        if (_lastUpdate >= _season()) return;
+
+        // Increments `plenty` for `account` if a Flood has occured.
+        // Saves Rain Roots for `account` if it is Raining.
+        handleRainAndSopsLegacy(account, _lastUpdate);
+
+        // Calculate the amount of Grown Stalk claimable by `account`.
+        // Increase the account's balance of Stalk and Roots.
+        __mowLegacy(account);
+
+        // Reset timer so that Grown Stalk for a particular Season can only be 
+        // claimed one time. 
+        s.a[account].lastUpdate = _season();
+    }
+
+    function __mowLegacy(address account) private {
+        // If this `account` has no Seeds, skip to save gas.
+        if (s.a[account].s.seeds == 0) return;
+        LibSilo.mintStalk(account, balanceOfGrownStalkLegacy(account));
+    }
+
+    function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
+        // If no roots, reset Sop counters variables
+        if (s.a[account].roots == 0) {
+            s.a[account].lastSop = s.season.rainStart;
+            s.a[account].lastRain = 0;
+            return;
+        }
+        // If a Sop has occured since last update, calculate rewards and set last Sop.
+        if (s.season.lastSopSeason > _lastUpdate) {
+            s.a[account].sop.plenty = balanceOfPlenty(account);
+            s.a[account].lastSop = s.season.lastSop;
+        }
+        if (s.season.raining) {
+            // If rain started after update, set account variables to track rain.
+            if (s.season.rainStart > _lastUpdate) {
+                s.a[account].lastRain = s.season.rainStart;
+                s.a[account].sop.roots = s.a[account].roots;
+            }
+            // If there has been a Sop since rain started,
+            // save plentyPerRoot in case another SOP happens during rain.
+            if (s.season.lastSop == s.season.rainStart)
+                s.a[account].sop.plentyPerRoot = s.sops[s.season.lastSop];
+        } else if (s.a[account].lastRain > 0) {
+            // Reset Last Rain if not raining.
+            s.a[account].lastRain = 0;
+        }
+    }
+
+    function balanceOfGrownStalkLegacy(address account)
+        public
+        view
+        returns (uint256)
+    {
+        return
+            LibLegacyTokenSilo.stalkReward(
+                s.a[account].s.seeds,
+                _season() - lastUpdate(account)
+            );
     }
 
     //mock adding seeds to account for legacy tests
@@ -137,11 +225,13 @@ contract MockSiloFacet is SiloFacet {
         return depositWithBDVLegacy(account, token, season, amount, bdv);
     }
 
+    //no mowSender(token) here because modern mowSender requires migration
+    //old deposits would have happened before migration, we're just trying to mock here
     function depositLegacy(
         address token,
         uint256 amount,
         LibTransfer.From mode
-    ) external payable nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSenderLegacy {
         amount = LibTransfer.receiveToken(
             IERC20(token),
             amount,

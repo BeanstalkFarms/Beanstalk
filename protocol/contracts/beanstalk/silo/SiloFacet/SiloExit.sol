@@ -289,6 +289,11 @@ contract SiloExit is ReentrancyGuard {
         return s.season.stemStartSeason;
     }
 
+
+    function migrationNeeded(address account) public view returns (bool) {
+        return LibSilo.migrationNeeded(account);
+    }
+
     //////////////////////// INTERNAL ////////////////////////
 
     /**
