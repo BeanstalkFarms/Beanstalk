@@ -1,11 +1,12 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTokens } from "src/tokens/TokenProvider";
 import styled from "styled-components";
 import { ArrowButton } from "./ArrowButton";
 import gear from "src/assets/images/gear.svg";
 import { TokenInput } from "./TokenInput";
 import { Image } from "../Image";
+import { useAllTokensBalance } from "src/tokens/useTokenBalance";
 
 export const SwapRoot = () => {
   const tokens = useTokens();
@@ -13,6 +14,13 @@ export const SwapRoot = () => {
   const [inToken, setInToken] = useState<Token>(tokens["WETH"]);
   const [outToken, setOutToken] = useState<Token>(tokens["BEAN"]);
   const [outAmount, setOutAmount] = useState<TokenValue>();
+  const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
+  const { isLoading: isAllTokenLoading } = useAllTokensBalance();
+
+  useEffect(() => {
+    const fetching = isAllTokenLoading;
+    fetching ? setIsLoadingAllBalances(true) : setTimeout(() => setIsLoadingAllBalances(false), 500);
+  }, [isAllTokenLoading]);
 
   const arrowHandler = () => {
     const prevInToken = inToken;
@@ -54,6 +62,7 @@ export const SwapRoot = () => {
             onAmountChange={handleInputChange}
             onTokenChange={handleInputTokenChange}
             canChangeToken={true}
+            loading={isLoadingAllBalances}
           />
         </SwapInputContainer>
         <ArrowContainer>
@@ -71,6 +80,7 @@ export const SwapRoot = () => {
             canChangeToken={true}
             showBalance={true}
             showMax={false}
+            loading={isLoadingAllBalances}
           />
         </SwapInputContainer>
       </Div>
