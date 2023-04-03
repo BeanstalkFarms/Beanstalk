@@ -5,6 +5,7 @@ import { client } from "src/utils/wagmi/Client";
 import { ConnectKitProvider } from "connectkit";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { WagmiConfig } from "wagmi";
 import { SdkProvider } from "../../utils/sdk/SdkProvider";
 import { Avatar } from "src/utils/wagmi/Avatar";
@@ -26,6 +27,7 @@ export const Wrapper: FC<{}> = ({ children }) => {
           }}
         >
           <QueryClientProvider client={queryClient}>
+            <ReactQueryDevtools initialIsOpen={false} />
             <SdkProvider>
               <TokenProvider>
                 <OnLoad>{children}</OnLoad>
