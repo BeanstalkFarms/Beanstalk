@@ -9,6 +9,7 @@ import chevDown from "src/assets/images/chevron-down.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { Spinner } from "../Spinner";
 
 type Props = {
   token: Token;
@@ -25,7 +26,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
   const [modalOpen, setModalOpen] = useState(false);
   const tokens = useTokens();
   const [list, setList] = useState<Token[]>([]);
-  const { data: balances, isLoading: balancesLoading, error: balancesError, refetch } = useTokenBalance();
+  const { data: balances, isLoading: balancesLoading, error: balancesError, refetch, isFetching } = useTokenBalance();
 
   useEffect(() => {
     let list = Object.values(tokens).filter((t: Token) => t.symbol !== excludeToken?.symbol);
@@ -78,7 +79,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
                         <Symbol>{token.symbol}</Symbol>
                         <Name>{token.displayName}</Name>
                       </Details>
-                      {balancesLoading ? <div>loading...</div> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
+                      {(balancesLoading || isFetching) ? <Spinner size={14}/> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
                     </TokenRow>
                   ))}
                 </Ol>

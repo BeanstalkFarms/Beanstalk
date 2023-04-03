@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { Spinner } from "../Spinner";
 
 type ContainerProps = {
   width: string;
@@ -40,8 +41,7 @@ export const TokenInput: FC<TokenInput> = ({
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const {data: balance, isLoading: isBalanceLoading, error: balanceError} = useTokenBalance(token)
-  
+  const { data: balance, isLoading: isBalanceLoading, error: balanceError } = useTokenBalance(token);
   width = width ?? "100%";
 
   const updateAmount = useCallback(
@@ -78,8 +78,9 @@ export const TokenInput: FC<TokenInput> = ({
   }, []);
 
   const handleClickMax = useCallback(() => {
-    console.log("Max clicked");
-  }, []);
+    const val = balance?.[token.symbol].toHuman() ?? "";
+    handleAmountChange(val);
+  }, [balance, handleAmountChange, token.symbol]);
 
   /**
    * We have a fake focus outline around TokenInput that kind of
@@ -113,9 +114,8 @@ export const TokenInput: FC<TokenInput> = ({
       </TopRow>
       {showBalance && (
         <BalanceRow>
-          <Balance>Balance: {
-            isBalanceLoading ? <>loading</> : balance?.[token.symbol].toHuman()}</Balance>
-          {showMax && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
+          <Balance>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
+          {showMax && !isBalanceLoading && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
         </BalanceRow>
       )}
     </Container>
@@ -152,6 +152,7 @@ const BalanceRow = styled.div`
 
 const Balance = styled.div`
   display: flex;
+  align-items: center;
   font-family: "Inter";
   font-style: normal;
   font-weight: 500;

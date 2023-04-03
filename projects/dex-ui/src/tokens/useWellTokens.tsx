@@ -1,10 +1,10 @@
 import { Token } from "@beanstalk/sdk";
 import { useQuery } from "@tanstack/react-query";
-import useSdk from "src/utils/sdk/useSdk";
+// import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
 
 export const useWellTokens = () => {
-  const sdk = useSdk();
+  // const sdk = useSdk();
   const { data: wells } = useWells();
   return useQuery<Token[], Error>(
     ["tokens"],
