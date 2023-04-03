@@ -4,7 +4,6 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
-import { reactWhatChanged as RWC } from "src/utils/what-changed";
 
 type ContainerProps = {
   width: string;
