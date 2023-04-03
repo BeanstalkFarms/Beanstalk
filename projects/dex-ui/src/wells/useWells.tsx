@@ -8,16 +8,20 @@ export const useWells = () => {
 
   return useQuery<Well[], Error>(
     ["wells"],
-    () => {
-      console.log("Fetching wells");
-      return Promise.all(
-        WELL_ADDRESSES.map((address) => {
-          return sdk.wells.getWell(address, {
-            name: true,
-            tokens: true
-          });
-        })
+    async () => {
+      const res = await Promise.allSettled(
+        WELL_ADDRESSES.map((address) =>
+          sdk.wells
+            .getWell(address, {
+              name: true,
+              tokens: true
+            })
+            .catch((err) => console.log(`Failed to load Well [${address}]: ${err.message}`))
+        )
       );
+
+      // filter out errored calls
+      return res.map((promise) => (promise.status === "fulfilled" ? promise.value : null)).filter<Well>((p): p is Well => !!p);
     },
     {
       staleTime: Infinity
