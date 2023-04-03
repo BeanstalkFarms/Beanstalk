@@ -2,7 +2,7 @@ import { Token, TokenValue } from "@beanstalk/sdk";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useTokens } from "./TokenProvider";
 
@@ -18,12 +18,12 @@ const TokenBalanceABI = [
   }
 ] as const;
 
-export const useTokenBalance = (token?: Token) => {
+export const useAllTokensBalance = () => {
   const tokens = useTokens();
   const { address } = useAccount();
   const queryClient = useQueryClient();
 
-  const tokensToLoad = useMemo(() => (token ? [token] : Object.values(tokens)), [token, tokens]);
+  const tokensToLoad = Object.values(tokens);
   if (tokensToLoad.length > 20) throw new Error("Too many tokens to load balances. Fix me");
 
   const calls = useMemo(() => {
@@ -46,12 +46,12 @@ export const useTokenBalance = (token?: Token) => {
    * tokens. When doing so, we will also create a cache for the individual tokens
    * so if later queries for the token happen, they will be retrieved from the cache
    */
-  const key = token ? ["token", "balances", token.symbol] : ["token", "balances"];
+  const key = ["token", "balance"];
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
     key,
     async () => {
-      console.log(`Multicall: Getting balances for ${token ? token.symbol : "ALL"}`);
+      console.log(`Query: Get ALL tokens balance`);
       const res = (await multicall({
         contracts: calls,
         allowFailure: true
@@ -64,7 +64,7 @@ export const useTokenBalance = (token?: Token) => {
         balances[token.symbol] = token.fromBlockchain(value);
 
         // set the balance in the query cache too
-        queryClient.setQueryData(["token", "balances", token.symbol], { [token.symbol]: balances[token.symbol] });
+        queryClient.setQueryData(["token", "balance", token.symbol], { [token.symbol]: balances[token.symbol] });
       }
 
       return balances;
@@ -76,4 +76,44 @@ export const useTokenBalance = (token?: Token) => {
   );
 
   return { data, isLoading, isFetching, error, refetch };
+};
+
+export const useTokenBalance = (token: Token) => {
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
+
+  const key = ["token", "balance", token.symbol];
+
+  const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
+    key,
+    async () => {
+      console.log(`Query: Get ${token.symbol} balance`);
+
+      let balance: TokenValue;
+      if (!address) {
+        balance = TokenValue.ZERO;
+      } else {
+        balance = await token.getBalance(address);
+      }
+
+      const result = {
+        [token.symbol]: balance
+      };
+
+      // Also update the cache of "ALL" token query
+      queryClient.setQueryData(["token", "balance"], (oldData: undefined | void | Record<string, TokenValue>) => {
+        if (!oldData) return result;
+
+        return { ...oldData, ...result };
+      });
+
+      return result;
+    },
+    {
+      staleTime: 1000 * 30,
+      refetchInterval: 1000 * 30
+    }
+  );
+
+  return { data, isLoading, error, refetch, isFetching };
 };
