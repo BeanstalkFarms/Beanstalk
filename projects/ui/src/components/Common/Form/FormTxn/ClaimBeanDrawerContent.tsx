@@ -1,13 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { FarmToMode } from '@beanstalk/sdk';
-import {
-  Card,
-  Stack,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Card, Stack, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -21,40 +14,27 @@ import TokenSelectionCard from '~/components/Common/Card/TokenSelectionCard';
 import useFarmerFormTxnsSummary, {
   FormTxnOptionSummary,
 } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
-import useSdk from '~/hooks/sdk';
 import { FormTxn, FormTxnBuilderPresets, PartialFormTxnMap } from '~/util';
-import {
-  FormTxnsFormState,
-  TokenAdornment,
-  TokenInputField,
-} from '~/components/Common/Form';
+import { FormTxnsFormState } from '~/components/Common/Form';
 import SelectionItem from '~/components/Common/SelectionItem';
 import AddressIcon from '~/components/Common/AddressIcon';
 import Row from '~/components/Common/Row';
+import TokenQuoteProviderWithParams, {
+  TokenQuoteProviderWithParamsCustomProps,
+} from '../TokenQuoteProviderWithParams';
+import useSdk from '~/hooks/sdk';
 
-// if 'maxBeans' property is defined, require 'beanAmount' to be defined
-export type ClaimBeanInfoProps =
-  | {
-      txnName?: string;
-      /**
-       * the maximum amount of beans that can be used
-       */
-      maxBeans?: BigNumber;
-      /**
-       * the estimated amount of beans used from the primary token input
-       */
-      beanAmount: BigNumber;
-    }
-  | {
-      /** */
-      txnName?: string;
-      /** */
-      maxBeans?: undefined;
-      /** */
-      beanAmount?: undefined;
-    };
-
-const FAKE_TOOLTIP = 'fake tooltip';
+export type UseClaimableBeansDrawerProps<T> = {
+  /** */
+  maxBeans?: BigNumber;
+  /** */
+  beansUsed?: BigNumber;
+} & {
+  quoteProviderProps: Pick<
+    TokenQuoteProviderWithParamsCustomProps<T>,
+    'tokenOut' | 'handleQuote' | 'params' | 'state' | 'name'
+  >;
+};
 
 const sharedCardProps = {
   sx: {
@@ -69,7 +49,6 @@ const toModeOptions = [
     icon: <>🚜</>,
     name: 'Farm',
     content: 'Claim to Farm Balance by default. Does not cost extra gas',
-    tooltip: FAKE_TOOLTIP,
   },
   {
     key: FarmToMode.EXTERNAL,
@@ -82,21 +61,15 @@ const toModeOptions = [
     ),
     name: 'Circulating',
     content: 'Transfer remainder to your wallet. Costs extra in gas',
-    tooltip: FAKE_TOOLTIP,
   },
 ];
 
-const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
-  txnName,
+export default function ClaimBeanDrawerContent<T>({
   maxBeans,
-  beanAmount,
-}) => {
-  ///
+  beansUsed,
+  quoteProviderProps: { tokenOut, handleQuote, params: _params, state, name },
+}: UseClaimableBeansDrawerProps<T>) {
   const sdk = useSdk();
-
-  /// @MUI
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   /// Formik
   const { values, setFieldValue } = useFormikContext<FormTxnsFormState>();
@@ -107,10 +80,10 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
 
   /// Form values
   const preset = values.farmActions.preset;
-  const destination = farmActions.surplus?.destination || FarmToMode.INTERNAL;
-  const additionalAmount = farmActions.additionalAmount || ZERO_BN;
+  const destination = farmActions.transferToMode || FarmToMode.INTERNAL;
+  const additionalAmount = state.amount || ZERO_BN;
 
-  /// Derived
+  ///
   const optionsMap = useMemo(() => {
     const options = FormTxnBuilderPresets[preset].primary;
     return options.reduce((prev, curr) => {
@@ -124,21 +97,15 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
     [values.farmActions.primary]
   );
 
-  const claimAmount = useMemo(
-    () => getClaimable([...selectionsSet]).bn,
-    [selectionsSet, getClaimable]
-  );
+  /// Derived
+  const claimAmount = getClaimable([...selectionsSet]).bn;
+  const maxClaimableBeansUsable = maxBeans
+    ? BigNumber.max(maxBeans.minus(beansUsed || ZERO_BN), ZERO_BN)
+    : claimAmount;
 
-  const maxClaimableBeansUsable = useMemo(() => {
-    if (maxBeans) {
-      const remainingAmount = maxBeans.minus(beanAmount);
-      return BigNumber.max(remainingAmount, ZERO_BN);
-    }
-    return claimAmount;
-  }, [claimAmount, maxBeans, beanAmount]);
+  const transferrable = claimAmount.minus(additionalAmount);
 
   const inputDisabled = claimAmount.lte(0) || maxClaimableBeansUsable.lte(0);
-  const transferrable = claimAmount.minus(additionalAmount);
 
   /// Handlers
   const handleToggle = useCallback(
@@ -148,25 +115,49 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
       else copy.add(option);
 
       const newSelections = [...copy];
+
+      if (!newSelections.length) {
+        /// reset the form state.
+        setFieldValue('farmActions.primary', []);
+        setFieldValue(`${name}`, {
+          token: sdk.tokens.BEAN,
+          amount: undefined,
+        });
+        return;
+      }
+
       const newClaimAmount = getClaimable(newSelections).bn;
 
       setFieldValue('farmActions.primary', newSelections);
-      setFieldValue('farmActions.surplus.max', newClaimAmount);
+      setFieldValue(`${name}.maxAmountIn`, newClaimAmount);
 
       if (newClaimAmount.lt(additionalAmount)) {
-        setFieldValue('farmActions.additionalAmount', newClaimAmount);
+        setFieldValue(`${name}.amount`, newClaimAmount);
       }
     },
-    [selectionsSet, getClaimable, setFieldValue, additionalAmount]
+    [
+      selectionsSet,
+      getClaimable,
+      setFieldValue,
+      name,
+      additionalAmount,
+      sdk.tokens.BEAN,
+    ]
   );
 
   const handleSetDestination = useCallback(
     (_toMode: FarmToMode) => {
       if (_toMode === destination) return;
-      setFieldValue('farmActions.surplus.destination', _toMode);
+      setFieldValue('farmActions.transferToMode', _toMode);
     },
     [destination, setFieldValue]
   );
+
+  useEffect(() => {
+    if (additionalAmount.gt(maxClaimableBeansUsable)) {
+      setFieldValue(`${name}.amount`, maxClaimableBeansUsable);
+    }
+  }, [additionalAmount, maxClaimableBeansUsable, name, setFieldValue]);
 
   return (
     <Stack gap={1}>
@@ -206,23 +197,20 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
         <Card {...sharedCardProps}>
           <Stack gap={1} p={1}>
             <Typography variant="body1" color="text.tertiary">
-              Amount of Claimable Beans to use {txnName ? `in ${txnName}` : ''}
+              Amount of Claimable Beans to use
             </Typography>
-            <TokenInputField
-              /// Formik
-              name="farmActions.additionalAmount"
-              /// MUI
-              disabled={inputDisabled}
+            <TokenQuoteProviderWithParams<T>
+              name={name}
               fullWidth
-              InputProps={{
-                endAdornment: <TokenAdornment token={sdk.tokens.BEAN} />,
-              }}
-              // Other
-              balance={claimAmount}
-              balanceLabel={isMobile ? 'Balance' : 'Claimable Bean Balance'}
-              token={sdk.tokens.BEAN}
+              state={state}
               max={maxClaimableBeansUsable}
-              hideBalance={false}
+              params={_params}
+              balance={claimAmount}
+              tokenOut={tokenOut}
+              disabled={inputDisabled}
+              handleQuote={handleQuote}
+              balanceLabel="Balance"
+              disableTokenSelect={inputDisabled}
             />
           </Stack>
         </Card>
@@ -233,7 +221,7 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
           <Stack gap={1} p={1}>
             <Typography variant="body1" color="text.tertiary">
               You&apos;re using less than your total Claimable Beans in this
-              transaciton. Where do you want to send the remainer?
+              transaction. Where do you want to send the remainder?
             </Typography>
             <Stack gap={1}>
               {toModeOptions.map((opt) => {
@@ -251,16 +239,14 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
                           {opt.icon}
                           <Typography variant="inherit" color="inherit">
                             {opt.name} Balance
-                            <Tooltip title={opt.tooltip}>
-                              <HelpOutlineIcon
-                                sx={{
-                                  color: 'text.secondary',
-                                  display: 'inline',
-                                  mb: 0.5,
-                                  fontSize: '11px',
-                                }}
-                              />
-                            </Tooltip>
+                            <HelpOutlineIcon
+                              sx={{
+                                color: 'text.secondary',
+                                display: 'inline',
+                                mb: 0.5,
+                                fontSize: '11px',
+                              }}
+                            />
                           </Typography>
                         </Row>
                       </Typography>
@@ -288,6 +274,4 @@ const ClaimBeanDrawerContent: React.FC<ClaimBeanInfoProps> = ({
       ) : null}
     </Stack>
   );
-};
-
-export default ClaimBeanDrawerContent;
+}

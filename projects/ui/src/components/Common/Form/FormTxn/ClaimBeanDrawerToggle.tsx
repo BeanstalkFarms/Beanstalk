@@ -1,8 +1,6 @@
 import { Card, Stack, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
-import React, { useCallback, useMemo } from 'react';
-import BigNumber from 'bignumber.js';
-import { ZERO_BN } from '~/constants';
+import React, { useMemo } from 'react';
 import { IconSize } from '~/components/App/muiTheme';
 import { FormTxn, FormTxnBuilderPresets, PartialFormTxnMap } from '~/util';
 import { FormTxnsFormState } from '..';
@@ -24,8 +22,7 @@ import useFarmerFormTxnsSummary, {
 
 import MergeIcon from '~/img/misc/merge-icon.svg';
 import SelectionItem from '../../SelectionItem';
-import FormWithDrawer from '../FormWithDrawer';
-import { ClaimBeanInfoProps } from './ClaimBeanDrawerContent';
+import FormWithDrawer, { useFormDrawerContext } from '../FormWithDrawer';
 
 const actionsToIconMap = {
   [FormTxn.RINSE]: {
@@ -42,15 +39,15 @@ const actionsToIconMap = {
   },
 };
 
-const ClaimBeanDrawerToggle: React.FC<ClaimBeanInfoProps> = ({
-  maxBeans,
-  beanAmount,
-}) => {
+const ClaimBeanDrawerToggle: React.FC<{}> = () => {
   /// Formik
-  const { values, setFieldValue } = useFormikContext<FormTxnsFormState>();
+  const { values } = useFormikContext<FormTxnsFormState>();
+
+  /// Form Drawer Context state
+  const { setOpen: setDrawerOpen } = useFormDrawerContext();
 
   /// Farmer
-  const { summary, getClaimable } = useFarmerFormTxnsSummary();
+  const { summary } = useFarmerFormTxnsSummary();
 
   /// Derived
   const preset = values.farmActions.preset;
@@ -72,40 +69,7 @@ const ClaimBeanDrawerToggle: React.FC<ClaimBeanInfoProps> = ({
     [formSelections]
   );
 
-  const claimAmount = useMemo(
-    () => getClaimable([...selectionsSet]).bn,
-    [selectionsSet, getClaimable]
-  );
-
-  const maxClaimableBeansUsable = useMemo(() => {
-    if (maxBeans) {
-      const remainingAmount = maxBeans.minus(beanAmount);
-      return BigNumber.max(remainingAmount, ZERO_BN);
-    }
-    return claimAmount;
-  }, [claimAmount, maxBeans, beanAmount]);
-
-  /// Handlers
-  const handleToggle = useCallback(
-    (option: FormTxn) => {
-      const copy = new Set(selectionsSet);
-      if (copy.has(option)) copy.delete(option);
-      else copy.add(option);
-
-      const newSelections = Array.from(copy);
-      const newClaimAmount = getClaimable(newSelections).bn;
-
-      setFieldValue('farmActions.primary', newSelections);
-      setFieldValue('farmActions.surplus.max', newClaimAmount);
-
-      const clampedAmount = newClaimAmount.gt(maxClaimableBeansUsable)
-        ? maxClaimableBeansUsable
-        : newClaimAmount;
-
-      setFieldValue('farmActions.additionalAmount', clampedAmount);
-    },
-    [selectionsSet, getClaimable, setFieldValue, maxClaimableBeansUsable]
-  );
+  if (preset !== 'claim') return null;
 
   return (
     <Card
@@ -146,10 +110,11 @@ const ClaimBeanDrawerToggle: React.FC<ClaimBeanInfoProps> = ({
 
               return (
                 <SelectionItem
+                  key={k}
                   variant="circle"
                   selected={selected}
                   disabled={disabled}
-                  onClick={() => handleToggle(k as FormTxn)}
+                  onClick={setDrawerOpen}
                   backgroundOnHover={false}
                 >
                   <IconWrapper
