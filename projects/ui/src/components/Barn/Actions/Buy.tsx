@@ -17,6 +17,7 @@ import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
   BalanceFromFragment,
   FormStateNew,
+  FormTokenStateNew,
   FormTxnsFormState,
 } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
@@ -51,12 +52,10 @@ import {
 } from '~/components/Common/Form/BalanceFromRow';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import { AppState } from '~/state';
-import useResetFormFarmActions from '~/hooks/form/useResetFormFarmActions';
 import ClaimBeanDrawerToggle from '~/components/Common/Form/FormTxn/ClaimBeanDrawerToggle';
 import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
@@ -69,6 +68,8 @@ type BuyFormValues = FormStateNew &
     settings: {
       slippage: number;
     };
+  } & {
+    claimableBeans: FormTokenStateNew;
   };
 
 type BuyQuoteHandlerParams = {
@@ -79,13 +80,6 @@ const defaultFarmActionsFormState = {
   preset: 'claim',
   primary: undefined,
   secondary: undefined,
-  additionalAmount: undefined,
-};
-
-const disableEnrootWhenEth = {
-  action: FormTxn.ENROOT,
-  reason:
-    'Enrooting while using ETH to Buy Fertilizer is currently not supported',
 };
 
 // ---------------------------------------------------
@@ -95,6 +89,7 @@ const BuyForm: FC<
     handleQuote: QuoteHandlerWithParams<BuyQuoteHandlerParams>;
     balances: FarmerBalances;
     tokenOut: ERC20Token;
+    tokenList: (ERC20Token | NativeToken)[];
     remainingFertilizer: BigNumber;
   }
 > = ({
@@ -104,43 +99,48 @@ const BuyForm: FC<
   isSubmitting,
   // Custom
   handleQuote,
+  tokenList,
   balances,
   tokenOut: token,
 }) => {
   const sdk = useSdk();
-  const additionalBalances = useFarmerFormTxnBalances();
-
   const formRef = useRef<HTMLDivElement>(null);
 
-  const tokenMap = useTokenMap<ERC20Token | NativeToken>([
-    sdk.tokens.BEAN,
-    sdk.tokens.USDC,
-    sdk.tokens.ETH,
-  ]);
-  const { usdc, fert, humidity, actions } = useFertilizerSummary(values.tokens);
+  const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
+
+  const combinedTokenState = [...values.tokens, values.claimableBeans];
+
+  const { usdc, fert, humidity, actions } =
+    useFertilizerSummary(combinedTokenState);
 
   // Extract
   const isValid = fert?.gt(0);
 
-  const tokenIn = values.tokens[0].token;
+  const formTokenInputState = values.tokens[0];
+  const tokenIn = formTokenInputState.token;
 
-  // Reset the form farmActions whenever the tokenIn changes
-  useResetFormFarmActions(tokenIn, defaultFarmActionsFormState);
+  const isTokenInEth = tokenIn.equals(sdk.tokens.ETH);
+  const balanceKey = isTokenInEth ? 'eth' : tokenIn.address;
+  const tokenBalance = balances[balanceKey] || undefined;
 
   const formTxnsActions = useFarmerFormTxnsActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(tokenIn),
+    claimBeansState: values.claimableBeans,
   });
 
   // Handlers
   const [showTokenSelect, handleOpen, handleClose] = useToggle();
+
   const handleSelectTokens = useCallback(
     (_tokens: Set<Token>) => {
       setFieldValue(
         'tokens',
         Array.from(_tokens).map((t) => ({ token: t, amount: null }))
       );
+      setFieldValue('farmActions', defaultFarmActionsFormState);
+      setFieldValue('claimableBeans', { token: sdk.tokens.BEAN, amount: null });
     },
-    [setFieldValue]
+    [sdk.tokens.BEAN, setFieldValue]
   );
 
   const handleSetBalanceFrom = (balanceFrom: BalanceFrom) => {
@@ -157,7 +157,7 @@ const BuyForm: FC<
 
   const disabledActions = useMemo(() => {
     const isEth = tokenIn.equals(sdk.tokens.ETH);
-    return isEth ? [disableEnrootWhenEth] : undefined;
+    return isEth ? [FormTxn.ENROOT] : undefined;
   }, [tokenIn, sdk.tokens.ETH]);
 
   return (
@@ -167,36 +167,26 @@ const BuyForm: FC<
           <TokenSelectDialogNew
             open={showTokenSelect}
             handleClose={handleClose}
-            selected={values.tokens}
+            selected={[values.tokens[0]]}
             handleSubmit={handleSelectTokens}
             balances={balances}
             tokenList={Object.values(tokenMap)}
             mode={TokenSelectMode.SINGLE}
             balanceFrom={values.balanceFrom}
             setBalanceFrom={handleSetBalanceFrom}
-            applicableBalances={additionalBalances.balances}
           />
         )}
-
         {/* Form Contents */}
-        {values.tokens.map((state, index) => {
-          const isETH = state.token.symbol === 'ETH';
-          const balanceKey = isETH ? 'eth' : state.token.address;
-
-          return (
-            <TokenQuoteProviderWithParams<BuyQuoteHandlerParams>
-              key={state.token.address}
-              name={`tokens.${index}`}
-              state={state}
-              tokenOut={token}
-              balance={balances[balanceKey] || undefined}
-              showTokenSelect={handleOpen}
-              handleQuote={handleQuote}
-              balanceFrom={values.balanceFrom}
-              params={quoteProviderParams}
-            />
-          );
-        })}
+        <TokenQuoteProviderWithParams<BuyQuoteHandlerParams>
+          name="tokens.0"
+          state={formTokenInputState}
+          tokenOut={token}
+          balance={tokenBalance}
+          showTokenSelect={handleOpen}
+          handleQuote={handleQuote}
+          balanceFrom={values.balanceFrom}
+          params={quoteProviderParams}
+        />
         <ClaimBeanDrawerToggle />
         {/* Outputs */}
         {fert?.gt(0) ? (
@@ -223,7 +213,7 @@ const BuyForm: FC<
                 USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT.
               </WarningAlert>
               <Box width="100%">
-                <FormTxnsSecondaryOptions disabledActions={disabledActions} />
+                <AdditionalTxnsAccordion filter={disabledActions} />
               </Box>
               <Box sx={{ width: '100%', mt: 0 }}>
                 <TxnAccordion defaultExpanded={false}>
@@ -274,7 +264,15 @@ const BuyForm: FC<
         </SmartSubmitButton>
       </Stack>
       <FormWithDrawer.Drawer title="Use Claimable Assets">
-        <ClaimBeanDrawerContent txnName="Buy Fertilizer" />
+        <ClaimBeanDrawerContent<BuyQuoteHandlerParams>
+          quoteProviderProps={{
+            tokenOut: token,
+            name: 'claimableBeans',
+            state: values.claimableBeans,
+            params: quoteProviderParams,
+            handleQuote: handleQuote,
+          }}
+        />
       </FormWithDrawer.Drawer>
     </FormWithDrawer>
   );
@@ -296,14 +294,24 @@ const Buy: FC<{}> = () => {
 
   /// Form
   const middleware = useFormMiddleware();
-  const preferredTokens: PreferredToken[] = useMemo(() => {
+
+  const { preferredTokens, tokenList } = useMemo(() => {
     const tokens = sdk.tokens;
 
-    return [
+    const _preferredTokens: PreferredToken[] = [
       { token: tokens.BEAN, minimum: new BigNumber(1) },
       { token: tokens.USDC, minimum: new BigNumber(1) },
       { token: tokens.ETH, minimum: new BigNumber(0.01) },
     ];
+
+    const _tokenList = _preferredTokens.map(
+      (data) => data.token as ERC20Token | NativeToken
+    );
+
+    return {
+      preferredTokens: _preferredTokens,
+      tokenList: _tokenList,
+    };
   }, [sdk.tokens]);
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const tokenOut = sdk.tokens.USDC;
@@ -322,11 +330,16 @@ const Buy: FC<{}> = () => {
         primary: undefined,
         secondary: undefined,
       },
+      claimableBeans: {
+        /// claimable BEAN
+        token: sdk.tokens.BEAN,
+        amount: undefined,
+      },
       settings: {
         slippage: 0.1,
       },
     }),
-    [baseToken]
+    [baseToken, sdk.tokens.BEAN]
   );
 
   /// Handlers
@@ -336,16 +349,19 @@ const Buy: FC<{}> = () => {
     QuoteHandlerWithParams<BuyQuoteHandlerParams>
   >(
     async (tokenIn, _amountIn, _tokenOut, { fromMode: _fromMode }) => {
-      if (!account) throw new Error('No account connected');
-      const { ETH, WETH, BEAN, USDC } = sdk.tokens;
-      const isEth = tokenIn.symbol === ETH.symbol;
-      const isWeth = WETH.equals(tokenIn);
+      if (!account) {
+        throw new Error('No account connected');
+      }
 
-      if (!isEth && !isWeth && !BEAN.equals(tokenIn) && !USDC.equals(tokenIn)) {
+      const inTokenList = Boolean(
+        tokenList.find((tk) => tokenIn.address === tk.address)
+      );
+      if (!inTokenList) {
         throw new Error(
           `Buying fertilizer with ${tokenIn.symbol} is not supported.`
         );
       }
+
       const amountIn = tokenIn.fromHuman(_amountIn.toString());
 
       const swap = sdk.swap.buildSwap(
@@ -363,7 +379,7 @@ const Buy: FC<{}> = () => {
         steps: swap.getFarm().generators as StepGenerator[],
       };
     },
-    [account, sdk]
+    [account, sdk.swap, tokenList]
   );
 
   const onSubmit = useCallback(
@@ -388,22 +404,26 @@ const Buy: FC<{}> = () => {
 
         const formData = values.tokens[0];
         const farmActions = values.farmActions;
+        const claimData = values.claimableBeans;
         const tokenIn = formData.token; // input token
         const amountIn = formData.amount; // input amount in form
+        const slippage = values.settings.slippage;
         const amountUsdc = (
           USDC.equals(tokenIn) ? amountIn : formData.amountOut
         )?.dp(0, BigNumber.ROUND_DOWN);
         if (!amountIn || !amountUsdc) throw new Error('An error occured');
-        // const slippage = values.settings.slippage;
+        if (!slippage || slippage < 0) {
+          throw new Error('Invalid slippage amount');
+        }
 
         const additionalAmount = BEAN.amount(
-          farmActions.additionalAmount?.toString() || '0'
+          claimData.amount?.toString() || '0'
         );
         const totalClaimAmount = BEAN.amount(
-          farmActions.surplus?.max?.toString() || '0'
+          claimData.maxAmountIn?.toString() || '0'
         );
         const transferDestination =
-          farmActions.surplus?.destination || FarmToMode.INTERNAL;
+          farmActions.transferToMode || FarmToMode.INTERNAL;
 
         // console.log('additionalAmount: ', additionalAmount.toHuman());
 
@@ -444,7 +464,6 @@ const Buy: FC<{}> = () => {
            * 2. we add the additional BEAN amount to the output of ETH -> BEAN
            * 3. swap from BEAN -> USDC
            */
-          console.log('additional + using bean or eth');
           if (ethIn) {
             const swap = sdk.swap.buildSwap(
               ETH,
@@ -453,7 +472,7 @@ const Buy: FC<{}> = () => {
               fromMode,
               FarmToMode.INTERNAL
             );
-            buyFert.add([...swap.getFarm().generators]);
+            buyFert.add(swap.getFarm());
             fromMode = FarmFromMode.INTERNAL_TOLERANT;
           }
           buyFert.add(
@@ -469,7 +488,6 @@ const Buy: FC<{}> = () => {
            * 2. Swap from BEAN -> USDC
            * 3. Inject the updated USDC amount into workflow
            */
-          console.log('additional + using USDC');
           buyFert.add(
             FormTxnBuilder.getLocalOnlyStep('add-additional-bean', {
               overrideAmount: additionalAmount,
@@ -564,7 +582,7 @@ const Buy: FC<{}> = () => {
           farmerFormTxns.getGenerators,
           buyFert,
           tokenIn.amount(amountIn.toString()),
-          0.1,
+          slippage,
           finalSteps
         );
 
@@ -612,6 +630,7 @@ const Buy: FC<{}> = () => {
           handleQuote={handleQuote}
           balances={balances}
           tokenOut={tokenOut}
+          tokenList={tokenList}
           remainingFertilizer={remaining}
           {...formikProps}
         />
@@ -621,75 +640,3 @@ const Buy: FC<{}> = () => {
 };
 
 export default Buy;
-
-/*
-
-beanMinLP:  961417
-usdcMinLP:  1109393
-minLP:  500097636695493844
-strBN:  1
-withSlipMinLP:  499597539058798350
-
-
-beanMinLP:  866616
-BuyOld.tsx:379 usdcMinLP:  1000000
-BuyOld.tsx:380 minLP:  450785088202864313
-BuyOld.tsx:381 strBN:  1
-BuyOld.tsx:382 withSlipMinLP:  450334303114661448
-
-
-
-        const _usdcOut = await buyFert.estimate(
-          tokenIn.amount(amountIn.toString())
-        );
-
-        const usdcOut = tokenValueToBN(USDC.fromBlockchain(_usdcOut)).dp(
-          0,
-          BigNumber.ROUND_DOWN
-        );
-
-        // console.log('usdcOut: ', USDC.fromBlockchain(usdcOut).toHuman());
-        // console.log('to string units bn: ', toStringBaseUnitBN(amountUsdc, 0));
-
-        const beanOutBN = USDC.fromHuman(
-          usdcOut.times(0.866616).toString()
-        ).blockchainString;
-        const usdcOutBN = USDC.fromHuman(usdcOut.toString()).blockchainString;
-
-        const _minLP = await curve.zap.callStatic.calc_token_amount(
-          curve.pools.beanCrv3.address,
-          [
-            // 0.866616 is the ratio to add USDC/Bean at such that post-exploit
-            // delta B in the Bean:3Crv pool with A=1 equals the pre-export
-            // total delta B times the haircut. Independent of the haircut %.
-            beanOutBN, // BEAN
-            0, // DAI
-            // amountInUSDC.blockchainString, // USDC
-            usdcOutBN, // USDC
-            0, // USDT
-          ],
-          true, // _is_deposit
-          { gasLimit: 10000000 }
-        );
-
-        const amountInUSDC = USDC.fromHuman(amountUsdc.toString());
-        const floored = toStringBaseUnitBN(tokenValueToBN(amountInUSDC), 0);
-
-        // console.log("amountInUSDC: ", amountInUSDC.toHuman());
-        console.log('amountInUSDC: ', amountUsdc.toString());
-
-        console.log('beanMinLP: ', beanOutBN);
-        console.log('usdcMinLP: ', usdcOutBN);
-        console.log('minLP: ', minLP.toString());
-        console.log('strBN: ', floored);
-        console.log(
-          'withSlipMinLP: ',
-          FarmWorkflow.slip(minLP, 0.1).toString()
-        );
-
-
-
-
-
-
- */
