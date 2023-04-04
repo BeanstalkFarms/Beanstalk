@@ -38,11 +38,11 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
+import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 
 export type TransferFormValues = FormStateNew &
   FormTxnsFormState & {
@@ -68,39 +68,52 @@ const TransferForm: FC<
   season,
 }) => {
   const sdk = useSdk();
+  const Bean = sdk.tokens.BEAN;
 
   /// Claim and Plant
   const { plantableBalance } = useFarmerFormTxnBalances();
   const plantUtil = useFarmerDepositCrateFromPlant();
   const txnActions = useFarmerFormTxnsActions();
 
-  const shouldAppendPlantDepositCrate =
+  const isUsingPlanted = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
-    sdk.tokens.BEAN.equals(whitelistedToken);
+      Bean.equals(whitelistedToken)
+  );
 
   // Results
   /// use this for now until we migrate the forms to use the new sdk classes
   const withdrawResult = useMemo(() => {
+    const formTokenState = { ...values.tokens[0] };
     const crates = [
       ...(siloBalances[whitelistedToken.address]?.deposited.crates || []),
     ];
-    if (shouldAppendPlantDepositCrate) {
+
+    if (isUsingPlanted) {
       crates.push(plantUtil.crate.asBN);
+      const plantAmount = plantableBalance[Bean.address].applied;
+      formTokenState.amount = formTokenState.amount?.plus(plantAmount);
     }
     return BeanstalkSDKOld.Silo.Withdraw.withdraw(
       getNewToOldToken(whitelistedToken),
-      values.tokens,
+      [formTokenState],
       crates,
       season
     );
   }, [
+    Bean,
+    isUsingPlanted,
     plantUtil.crate.asBN,
+    plantableBalance,
     season,
-    shouldAppendPlantDepositCrate,
     siloBalances,
     values.tokens,
     whitelistedToken,
   ]);
+
+  const disabledActions = useMemo(
+    () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
+    [whitelistedToken.isUnripe]
+  );
 
   // derived
   const isReady = withdrawResult && withdrawResult.amount.lt(0);
@@ -171,11 +184,8 @@ const TransferForm: FC<
           balance={depositedBalance || ZERO_BN}
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
-          additionalBalance={
-            plantableBalance[whitelistedToken.address]?.applied
-          }
-          belowComponent={<FormTxnsPrimaryOptions />}
         />
+        <AddPlantTxnToggle />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
@@ -188,7 +198,7 @@ const TransferForm: FC<
                 <WarningAlert>
                   More recent Deposits are Transferred first.
                 </WarningAlert>
-                <FormTxnsSecondaryOptions />
+                <AdditionalTxnsAccordion filter={disabledActions} />
                 <Box>
                   <TxnAccordion>
                     <TxnPreview
@@ -290,12 +300,8 @@ const Transfer: FC<{ token: ERC20Token }> = ({ token }) => {
   /// Form
   const middleware = useFormMiddleware();
   const depositedBalance = siloBalances[token.address]?.deposited.amount;
-  const initialValues: TransferFormValues = useMemo(() => {
-    // only show 'plant' in primary form txn options if token is BEAN
-    const isBean = sdk.tokens.BEAN.equals(token);
-    const _preset = isBean ? 'plant' : 'noPrimary';
-
-    return {
+  const initialValues: TransferFormValues = useMemo(
+    () => ({
       tokens: [
         {
           token: token,
@@ -304,13 +310,14 @@ const Transfer: FC<{ token: ERC20Token }> = ({ token }) => {
       ],
       to: '',
       farmActions: {
-        preset: _preset,
+        preset: sdk.tokens.BEAN.equals(token) ? 'plant' : 'noPrimary',
         primary: undefined,
         secondary: undefined,
         implied: [FormTxn.MOW],
       },
-    };
-  }, [sdk.tokens.BEAN, token]);
+    }),
+    [sdk.tokens.BEAN, token]
+  );
 
   /// Handlers
   const onSubmit = useCallback(
@@ -327,8 +334,9 @@ const Transfer: FC<{ token: ERC20Token }> = ({ token }) => {
         }
 
         const formData = values.tokens[0];
-        const amount = token.amount((formData?.amount || 0).toString());
         const primaryActions = values.farmActions.primary;
+
+        let amount = token.amount((formData?.amount || 0).toString());
 
         if (amount.lte(0)) throw new Error('Please enter a valid amount.');
 
@@ -337,13 +345,14 @@ const Transfer: FC<{ token: ERC20Token }> = ({ token }) => {
         });
         const depositCrates = [...siloBalance.deposited.crates];
 
-        const isPlanting = primaryActions?.includes(FormTxn.PLANT);
-        if (isPlanting && sdk.tokens.BEAN.equals(token)) {
-          const { crate: plantCrate } = await FormTxnBuilder.makePlantCrate(
-            sdk,
-            account
-          );
-          depositCrates.push(plantCrate);
+        const isUsingPlanted =
+          primaryActions?.includes(FormTxn.PLANT) &&
+          sdk.tokens.BEAN.equals(token);
+
+        if (isUsingPlanted) {
+          const plantData = await FormTxnBuilder.makePlantCrate(sdk, account);
+          depositCrates.push(plantData.crate);
+          amount = amount.add(plantData.amount);
         }
 
         const withdrawResult = sdk.silo.siloWithdraw.calculateWithdraw(
@@ -423,13 +432,7 @@ const Transfer: FC<{ token: ERC20Token }> = ({ token }) => {
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await formTxns.refetch(
-          performed,
-          {
-            farmerSilo: true,
-          },
-          [refetchSilo]
-        );
+        await formTxns.refetch(performed, { farmerSilo: true }, [refetchSilo]);
 
         txToast.success(receipt);
 

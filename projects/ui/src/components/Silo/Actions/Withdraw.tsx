@@ -33,11 +33,11 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
+import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
 
 // -----------------------------------------------------------------------
 
@@ -63,6 +63,7 @@ const WithdrawForm: FC<
   season,
 }) => {
   const sdk = useSdk();
+  const Bean = sdk.tokens.BEAN;
 
   // Input props
   const InputProps = useMemo(
@@ -77,34 +78,48 @@ const WithdrawForm: FC<
   const { crate: plantDepositCrate } = useFarmerDepositCrateFromPlant();
   const txActions = useFarmerFormTxnsActions();
 
-  const shouldAppendPlantDepositCrate =
+  const isUsingPlanted = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
-    sdk.tokens.BEAN.equals(whitelistedToken);
+      sdk.tokens.BEAN.equals(whitelistedToken)
+  );
 
   // Results
-  /// use this for now until we migrate the forms to use the new sdk classes
   const withdrawResult = useMemo(() => {
+    const formTokenState = { ...values.tokens[0] };
     const crates = [
       ...(siloBalances[whitelistedToken.address]?.deposited.crates || []),
     ];
-    if (shouldAppendPlantDepositCrate) crates.push(plantDepositCrate.asBN);
 
+    if (isUsingPlanted) {
+      crates.push(plantDepositCrate.asBN);
+      const plantAmount = plantableBalance[Bean.address].applied;
+      formTokenState.amount = formTokenState.amount?.plus(plantAmount);
+    }
+
+    /// use this for now until we migrate the forms to use the new sdk classes
     return BeanstalkSDKOld.Silo.Withdraw.withdraw(
       getNewToOldToken(whitelistedToken),
-      values.tokens,
+      [formTokenState],
       crates,
       season
     );
   }, [
+    Bean,
+    plantableBalance,
     plantDepositCrate.asBN,
     season,
-    shouldAppendPlantDepositCrate,
+    isUsingPlanted,
     siloBalances,
     values.tokens,
     whitelistedToken,
   ]);
 
   const isReady = withdrawResult && withdrawResult.amount.lt(0);
+
+  const disabledActions = useMemo(
+    () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
+    [whitelistedToken.isUnripe]
+  );
 
   return (
     <Form autoComplete="off" noValidate>
@@ -118,11 +133,8 @@ const WithdrawForm: FC<
           balance={depositedBalance || ZERO_BN}
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
-          additionalBalance={
-            plantableBalance[whitelistedToken.address]?.applied
-          }
-          belowComponent={<FormTxnsPrimaryOptions />}
         />
+        <AddPlantTxnToggle />
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -164,7 +176,7 @@ const WithdrawForm: FC<
               You can Claim your Withdrawn assets at the start of the next
               Season.
             </WarningAlert>
-            <FormTxnsSecondaryOptions />
+            <AdditionalTxnsAccordion filter={disabledActions} />
             <Box>
               <TxnAccordion>
                 <TxnPreview
@@ -230,10 +242,8 @@ const Withdraw: FC<{ token: ERC20Token }> = ({ token }) => {
   /// Form
   const middleware = useFormMiddleware();
   const depositedBalance = siloBalances[token.address]?.deposited.amount;
-  const initialValues: WithdrawFormValues = useMemo(() => {
-    const _preset = sdk.tokens.BEAN.equals(token) ? 'plant' : 'noPrimary';
-
-    return {
+  const initialValues: WithdrawFormValues = useMemo(
+    () => ({
       tokens: [
         {
           token: token,
@@ -241,13 +251,14 @@ const Withdraw: FC<{ token: ERC20Token }> = ({ token }) => {
         },
       ],
       farmActions: {
-        preset: _preset,
+        preset: sdk.tokens.BEAN.equals(token) ? 'plant' : 'noPrimary',
         primary: undefined,
         secondary: undefined,
         implied: [FormTxn.MOW],
       },
-    };
-  }, [sdk.tokens.BEAN, token]);
+    }),
+    [sdk.tokens.BEAN, token]
+  );
 
   /// Handlers
   const onSubmit = useCallback(
@@ -261,7 +272,7 @@ const Withdraw: FC<{ token: ERC20Token }> = ({ token }) => {
         if (!account) throw new Error('Missing signer');
 
         const formData = values.tokens[0];
-        const amount = token.amount((formData?.amount || 0).toString());
+        let amount = token.amount((formData?.amount || 0).toString());
         const primaryActions = values.farmActions.primary;
 
         if (amount.lte(0)) throw new Error('Invalid amount.');
@@ -276,11 +287,9 @@ const Withdraw: FC<{ token: ERC20Token }> = ({ token }) => {
           sdk.tokens.BEAN.equals(token);
 
         if (shouldAppendCrate) {
-          const { crate: plantCrate } = await FormTxnBuilder.makePlantCrate(
-            sdk,
-            account
-          );
-          depositCrates.push(plantCrate);
+          const plantData = await FormTxnBuilder.makePlantCrate(sdk, account);
+          depositCrates.push(plantData.crate);
+          amount = amount.add(plantData.amount);
         }
 
         const withdrawResult = sdk.silo.siloWithdraw.calculateWithdraw(

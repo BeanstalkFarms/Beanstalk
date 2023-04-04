@@ -33,8 +33,7 @@ import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 
@@ -153,8 +152,11 @@ const ClaimForm: FC<
         ignoreSameToken: false,
         onReset: () => ({ amountOut: claimableBalance }),
       },
+      params: {
+        toMode: values.destination || FarmToMode.INTERNAL,
+      },
     }),
-    [claimableBalance]
+    [claimableBalance, values.destination]
   );
 
   return (
@@ -182,10 +184,6 @@ const ClaimForm: FC<
           handleQuote={handleQuote}
           displayQuote={false}
           {...quoteHandlerParams}
-          params={{
-            toMode: values.destination || FarmToMode.INTERNAL,
-          }}
-          belowComponent={<FormTxnsPrimaryOptions />}
         />
         <Stack gap={0}>
           {/* Setting: Destination */}
@@ -228,9 +226,9 @@ const ClaimForm: FC<
                 amount={values.token.amountOut || ZERO_BN}
               />
             </TokenOutput>
-            <FormTxnsSecondaryOptions />
+            <AdditionalTxnsAccordion />
             <Box>
-              <TxnAccordion>
+              <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
                   actions={[
                     {
