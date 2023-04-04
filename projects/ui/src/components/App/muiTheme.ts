@@ -541,8 +541,12 @@ const muiThemeBase: ThemeOptions = {
     MuiTooltip: {
       defaultProps: {
         enterTouchDelay: 0,
-        leaveTouchDelay: 1000000,
         onClick: (e: React.MouseEvent) => e.stopPropagation(),
+        PopperProps: {           
+          sx: {
+            zIndex: 5,
+          },
+        },
       },
       variants: [
         {

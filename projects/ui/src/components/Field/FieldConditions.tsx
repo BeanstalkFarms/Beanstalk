@@ -24,17 +24,17 @@ const FieldConditions: FC<FieldConditionsProps> = ({
       <Grid container spacing={1}>
         <Grid item xs={6} md={3}>
           <Stack gap={0.5}>
-            <Tooltip
-              title="The number of Beans that can currently be Sown (lent to Beanstalk)."
-              placement="top"
-            >
-              <Typography variant="body1">
-                Available Soil&nbsp;
+            <Typography variant="body1">
+              Available Soil&nbsp;
+              <Tooltip
+                title="The number of Beans that can currently be Sown (lent to Beanstalk)."
+                placement="top"
+              >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
-              </Typography>
-            </Tooltip>
+              </Tooltip>
+            </Typography>
             <Typography variant="bodyLarge" fontWeight="400">
               {displayBN(beanstalkField.soil)}
             </Typography>
@@ -42,14 +42,14 @@ const FieldConditions: FC<FieldConditionsProps> = ({
         </Grid>
         <Grid item xs={6} md={3}>
           <Stack gap={0.5}>
-            <Tooltip title="The interest rate for Sowing Beans." placement="top">
-              <Typography variant="body1">
-                Temperature&nbsp;
+            <Typography variant="body1">
+              Temperature&nbsp;
+              <Tooltip title="The interest rate for Sowing Beans." placement="top">
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
-              </Typography>
-            </Tooltip>
+              </Tooltip>
+            </Typography>
             <Typography variant="bodyLarge" fontWeight="400">
               {displayBN(beanstalkField.weather.yield)}%
             </Typography>
@@ -57,29 +57,29 @@ const FieldConditions: FC<FieldConditionsProps> = ({
         </Grid>
         <Grid item xs={6} md={3}>
           <Stack gap={0.5}>
-            <Tooltip title="The number of Pods that will become Harvestable before Pods earned for newly Sown Beans, based on the FIFO Harvest schedule." placement="top">
-              <Typography variant="body1">
-                Pod Line&nbsp;
+            <Typography variant="body1">
+              Pod Line&nbsp;
+              <Tooltip title="The number of Pods that will become Harvestable before Pods earned for newly Sown Beans, based on the FIFO Harvest schedule." placement="top">
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
-              </Typography>
-            </Tooltip>
+              </Tooltip>
+            </Typography>
             <Typography variant="bodyLarge" fontWeight="400">
               {displayBN(beanstalkField.podLine)}
             </Typography>
           </Stack>
         </Grid>
         <Grid item xs={6} md={3}>
-          <Stack gap={0.5}>
-            <Tooltip title="The number of Pods that have become redeemable for a Bean (i.e., the debt paid back by Beanstalk to date)." placement="top">
-              <Typography variant="body1">
-                Pods Harvested&nbsp;
+          <Stack gap={0.5}>            
+            <Typography variant="body1">
+              Pods Harvested&nbsp;
+              <Tooltip title="The number of Pods that have become redeemable for a Bean (i.e., the debt paid back by Beanstalk to date)." placement="top">
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
-              </Typography>
-            </Tooltip>
+              </Tooltip>
+            </Typography>
             <Typography variant="bodyLarge">
               {displayBN(beanstalkField.harvestableIndex)}
             </Typography>

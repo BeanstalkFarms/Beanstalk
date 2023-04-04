@@ -9,7 +9,9 @@ import {
   Tabs,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useSelector } from 'react-redux';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import FertilizerItem from '~/components/Barn/FertilizerItem';
@@ -54,6 +56,9 @@ const MyFertilizer: FC<{}> = () => {
     return true;
   }) || [], [farmerBarn.balances, pctRepaid, tab]);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   return (
     <Card>
       {/* Card Header */}
@@ -64,17 +69,17 @@ const MyFertilizer: FC<{}> = () => {
             alignItems="center"
             justifyContent="space-between"
           >
-            <Tooltip
-              title="The number of Beans left to be earned from your Fertilizer. Sprouts become Rinsable on a pari passu basis."
-              placement="bottom"
-            >
-              <Typography variant="body1">
-                Sprouts&nbsp;
+            <Typography variant="body1">
+              Sprouts&nbsp;
+              <Tooltip
+                title="The number of Beans left to be earned from your Fertilizer. Sprouts become Rinsable on a pari passu basis."
+                placement={isMobile ? "top" : "bottom"}
+              >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
-              </Typography>
-            </Tooltip>
+              </Tooltip>
+            </Typography>
             <Row alignItems="center" gap={0.2}>
               <TokenIcon token={SPROUTS} />
               <Typography>
@@ -88,17 +93,17 @@ const MyFertilizer: FC<{}> = () => {
             alignItems="center"
             justifyContent="space-between"
           >
-            <Tooltip
-              title="Sprouts that are redeemable for 1 Bean each. Rinsable Sprouts must be Rinsed in order to use them."
-              placement="bottom"
-            >
-              <Typography variant="body1">
-                Rinsable Sprouts&nbsp;
+            <Typography variant="body1">
+              Rinsable Sprouts&nbsp;
+              <Tooltip
+                title="Sprouts that are redeemable for 1 Bean each. Rinsable Sprouts must be Rinsed in order to use them."
+                placement={isMobile ? "top" : "bottom"}
+              >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
-              </Typography>
-            </Tooltip>
+              </Tooltip>
+            </Typography>
             <Row alignItems="center" gap={0.2}>
               <TokenIcon token={RINSABLE_SPROUTS} />
               <Typography>
