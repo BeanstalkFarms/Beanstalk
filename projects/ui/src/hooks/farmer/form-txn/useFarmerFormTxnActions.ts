@@ -1,9 +1,14 @@
 import { useFormikContext } from 'formik';
 import { useCallback, useMemo } from 'react';
 import { Action } from '@reduxjs/toolkit';
-import { FormTxnsFormState } from '~/components/Common/Form';
-import useFarmerFormTxnsSummary from './useFarmerFormTxnsSummary';
+import { FarmToMode, FarmFromMode } from '@beanstalk/sdk';
 import { FormTxn } from '~/util/FormTxns';
+import useFarmerFormTxnsSummary from './useFarmerFormTxnsSummary';
+import { FormTokenStateNew, FormTxnsFormState } from '~/components/Common/Form';
+import useSdk from '~/hooks/sdk';
+import { ActionType } from '~/util';
+import { ZERO_BN } from '~/constants';
+import useAccount from '~/hooks/ledger/useAccount';
 
 const isClaimingBeansAction = (action: FormTxn) => {
   const isClaiming =
@@ -16,9 +21,12 @@ const isClaimingBeansAction = (action: FormTxn) => {
 
 export default function useFarmerFormTxnsActions(options?: {
   showGraphicOnClaim?: boolean | undefined;
+  claimBeansState?: FormTokenStateNew | undefined;
 }) {
+  const sdk = useSdk();
   const { values } = useFormikContext<FormTxnsFormState>();
   const { summary } = useFarmerFormTxnsSummary();
+  const account = useAccount();
 
   const getTxnActions = useCallback(
     (
@@ -65,14 +73,56 @@ export default function useFarmerFormTxnsActions(options?: {
     [summary]
   );
 
+  const transferAction = useMemo(() => {
+    if (!options?.claimBeansState || !account) return undefined;
+    const claimableBeans = options.claimBeansState;
+    const usedFromClaim = claimableBeans.amount;
+    const claimAmount = claimableBeans.maxAmountIn;
+    const transferTo = values.farmActions.transferToMode;
+    const transferAmount = claimAmount?.minus(usedFromClaim || ZERO_BN);
+
+    if (transferTo === FarmToMode.EXTERNAL && transferAmount?.gt(0)) {
+      const transfer = {
+        type: ActionType.TRANSFER_BALANCE,
+        amount: transferAmount,
+        token: sdk.tokens.BEAN,
+        source: FarmFromMode.INTERNAL,
+        destination: FarmToMode.EXTERNAL,
+        to: account,
+      };
+
+      return transfer;
+    }
+    return undefined;
+  }, [
+    account,
+    options?.claimBeansState,
+    sdk.tokens.BEAN,
+    values.farmActions.transferToMode,
+  ]);
+
   const txnActions = useMemo(() => {
     const primary = values.farmActions.primary;
     const secondary = values.farmActions.secondary;
 
-    return getTxnActions(primary, secondary, options?.showGraphicOnClaim);
+    const actions = getTxnActions(
+      primary,
+      secondary,
+      options?.showGraphicOnClaim
+    );
+
+    if (transferAction) {
+      return {
+        ...actions,
+        postActions: [transferAction, ...actions.postActions],
+      };
+    }
+
+    return actions;
   }, [
     getTxnActions,
     options?.showGraphicOnClaim,
+    transferAction,
     values.farmActions.primary,
     values.farmActions.secondary,
   ]);

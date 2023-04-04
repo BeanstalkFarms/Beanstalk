@@ -92,10 +92,6 @@ export type FormTxnSummary = {
    */
   enabled: boolean;
   /**
-   * implied actions of a form Action that are performed automatically in the contract
-   */
-  implied: FormTxn[];
-  /**
    * A summary of the assets an action intends to claim / plant.
    */
   summary: FormTxnOptionSummary[];
@@ -144,7 +140,6 @@ export default function useFarmerFormTxnsSummary() {
         title: 'Mow',
         tooltip: tooltips.mow,
         enabled: grownStalk.gt(0),
-        implied: [],
         summary: [
           {
             description: 'Grown Stalk',
@@ -164,7 +159,6 @@ export default function useFarmerFormTxnsSummary() {
         title: 'Plant',
         tooltip: tooltips.plant,
         enabled: earnedSeeds.gt(0),
-        implied: [],
         summary: [
           {
             description: 'Earned Beans',
@@ -198,7 +192,6 @@ export default function useFarmerFormTxnsSummary() {
         title: 'Enroot',
         tooltip: tooltips.enroot,
         enabled: revitalizedSeeds.gt(0) && revitalizedStalk.gt(0),
-        implied: [],
         summary: [
           {
             description: 'Revitalized Seeds',
@@ -225,7 +218,6 @@ export default function useFarmerFormTxnsSummary() {
         title: 'Harvest',
         tooltip: tooltips.harvest,
         enabled: harvestablePods.gt(0),
-        implied: [],
         claimable: {
           token: PODS,
           amount: harvestablePods,
@@ -249,7 +241,6 @@ export default function useFarmerFormTxnsSummary() {
         title: 'Rinse',
         tooltip: tooltips.rinse,
         enabled: rinsableSprouts.gt(0),
-        implied: [],
         claimable: {
           token: SPROUTS,
           amount: rinsableSprouts,
@@ -273,7 +264,6 @@ export default function useFarmerFormTxnsSummary() {
         title: 'Claim',
         tooltip: tooltips.claim,
         enabled: claimableBeans.gt(0),
-        implied: [],
         claimable: {
           token: BEAN,
           amount: claimableBeans,
@@ -329,5 +319,19 @@ export default function useFarmerFormTxnsSummary() {
     [summary, sdk.tokens.BEAN]
   );
 
-  return { summary, getClaimable };
+  const canClaimBeans = useMemo(() => {
+    const { bn } = getClaimable([
+      FormTxn.CLAIM,
+      FormTxn.RINSE,
+      FormTxn.HARVEST,
+    ]);
+    return bn.gt(0);
+  }, [getClaimable]);
+
+  const canPlant = useMemo(() => {
+    const earnedSeeds = normalizeBN(farmerSilo.seeds.earned);
+    return earnedSeeds;
+  }, [farmerSilo.seeds.earned]);
+
+  return { summary, getClaimable, canClaimBeans, canPlant };
 }

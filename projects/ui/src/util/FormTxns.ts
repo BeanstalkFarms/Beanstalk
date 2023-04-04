@@ -8,7 +8,6 @@ import {
   TokenValue,
 } from '@beanstalk/sdk';
 
-import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { DepositCrate } from '~/state/farmer/silo';
 
@@ -65,21 +64,7 @@ export type FormTxnBuilderInterface = {
   /**
    *
    */
-  additionalAmount?: BigNumber;
-  /**
-   *
-   */
-  surplus?: {
-    /**
-     * the amount of beans that will be claimed
-     */
-    max: BigNumber;
-    /**
-     * the destination of the surplus claimable beans.
-     * Defaults to FarmToMode.INTERNAL
-     */
-    destination?: FarmToMode;
-  };
+  transferToMode?: FarmToMode;
 };
 
 export const FormTxnBuilderPresets: {
@@ -407,8 +392,8 @@ export class FormTxnBuilder {
    * @returns the implicit actions that are performed by including 'step' in a Farm call.
    * (e.g. claiming Silo withdrawals implies that mow will also be performed)
    */
-  static getImplied(step: FormTxn): FormTxn[] | undefined {
-    return FormTxnBuilder.implied[step];
+  static getImplied(step: FormTxn): FormTxn[] {
+    return FormTxnBuilder.implied[step] || [];
   }
 
   /// ----------------- Convenience Methods -----------------
@@ -587,8 +572,8 @@ export class FormTxnBuilder {
 
     const amountIn = _amountIn || TokenValue.ZERO;
     const estimate = await farm.estimate(amountIn);
-    console.debug('[FormTxnBuilder.compile]: estimate: ', estimate.toString());
-    console.log(farm.summarizeSteps());
+    console.debug('[FormTxnBuilder.compile]: estimate', estimate.toString());
+    console.debug('[FormTxnBuilder.compile]: summary', farm.summarizeSteps());
 
     const execute = () => farm.execute(amountIn, { slippage });
 

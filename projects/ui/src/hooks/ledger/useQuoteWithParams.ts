@@ -11,7 +11,7 @@ export type QuoteHandlerResultNew = {
   steps?: StepGenerator[];
 };
 
-export type QuoteHandlerWithParams<T> = (
+export type QuoteHandlerWithParams<T = {}> = (
   tokenIn: ERC20Token | NativeToken,
   amountIn: BigNumber,
   /** Calculate `amountOut` of this `tokenOut`. */
