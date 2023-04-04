@@ -41,6 +41,9 @@ Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.
 | [`ui`][proj-ui]                                 | The Beanstalk UI hosted at [app.bean.money](https://app.bean.money).                 |
 | [`cli`][proj-cli]                               | A tool for interacting with Beanstalk in a development environment.                  |
 
+## Development
+If you are a developer and would like to contribute, please see our [DEVELOPER.md](./DEVELOPER.md) document for how to get started.
+
 ## Documentation
 
 Conceptual documentation on Beanstalk can be found in the [Farmers' Almanac](https://docs.bean.money/almanac). <br>
