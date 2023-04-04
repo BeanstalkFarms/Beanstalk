@@ -67,6 +67,18 @@ library LibIncentive {
         view
         returns (uint256)
     {
+
+        // Cap the maximum number of blocks late. If the sunrise is later than
+        // this, Beanstalk will pay the same amount. Prevents unbounded return value.
+        if (blocksLate > MAX_BLOCKS_LATE) {
+            blocksLate = MAX_BLOCKS_LATE;
+        }
+
+        // If the Bean 3Crv pool is empty, it is impossible to determine the price of Bean. Therefore, return the max reward.
+        if (balances[0] == 0 || balances[1] == 0) {
+            return fracExp(MAX_REWARD, blocksLate);
+        }
+
         // Gets the current BEAN/USD price based on the Curve pool.
         // In the future, this can be swapped out to another oracle
         uint256 beanUsdPrice = getBeanUsdPrice(balances); // BEAN / USD
@@ -76,13 +88,7 @@ library LibIncentive {
         uint256 ethUsdcPrice = getEthUsdcPrice(); // WETH / USDC
 
         // Calculate ETH/BEAN price using the BEAN/USD price and the ETH/USDC price
-        uint256 beanEthPrice = (ethUsdcPrice.mul(1e6)).div(beanUsdPrice); // WETH / BEAN
-
-        // Cap the maximum number of blocks late. If the sunrise is later than
-        // this, Beanstalk will pay the same amount. Prevents unbounded return value.
-        if (blocksLate > MAX_BLOCKS_LATE) {
-            blocksLate = MAX_BLOCKS_LATE;
-        }
+        uint256 ethBeanPrice = (ethUsdcPrice.mul(1e6)).div(beanUsdPrice); // WETH / BEAN
 
         // Sunrise gas overhead includes:
         //  - 21K for base transaction cost
@@ -99,7 +105,7 @@ library LibIncentive {
 
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(
-            BASE_REWARD + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
+            BASE_REWARD + gasCostWei.mul(ethBeanPrice).div(1e18), // divide by 1e18 to convert wei to eth
             MAX_REWARD
         );
 

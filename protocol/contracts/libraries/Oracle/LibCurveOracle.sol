@@ -14,6 +14,7 @@ interface IMeta3CurveOracle {
     function block_timestamp_last() external view returns (uint256);
     function get_price_cumulative_last() external view returns (uint256[2] memory);
     function get_balances() external view returns (uint256[2] memory);
+    function get_previous_balances() external view returns (uint256[2] memory);
 }
 
 /**
@@ -71,13 +72,16 @@ library LibCurveOracle {
         if (s.co.initialized) {
             (deltaB, balances) = updateOracle();
         } else {
-            balances = initializeOracle();
+            initializeOracle();
+            // Since the oracle was just initialized, it is not possible to compute the TWA balances over the Season.
+            // Thus, use the previous balances instead.
+            balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_previous_balances();
         }
     }
 
     //////////////////// INITIALIZE ////////////////////
 
-    function initializeOracle() internal returns (uint256[2] memory current_balances) {
+    function initializeOracle() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.Oracle storage o = s.co;
 
@@ -86,7 +90,7 @@ library LibCurveOracle {
         uint256 timestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
         
         if (balances[0] != 0 && balances[1] != 0 && timestamp != 0) {
-            (current_balances, o.balances, o.timestamp) = get_cumulative();
+            (o.balances, o.timestamp) = getCumulative();
             o.initialized = true;
         }
     }
@@ -137,13 +141,13 @@ library LibCurveOracle {
         balances[1] = cum_balances[1].sub(o.balances[1]).div(deltaTimestamp);
     }
 
-    function get_cumulative()
+    function getCumulative()
         private
         view
-        returns (uint256[2] memory balances, uint256[2] memory cum_balances, uint256 lastTimestamp)
+        returns (uint256[2] memory cum_balances, uint256 lastTimestamp)
     {
         cum_balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
-        balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
+        uint256[2] memory balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
         lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
 
         cum_balances[0] = cum_balances[0].add(
