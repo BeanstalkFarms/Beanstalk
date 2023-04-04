@@ -63,7 +63,7 @@ If you are developing contracts, see `/protocol` for more details
 
 ### Subgraphs
 
-You don't need to run the subgraphs locally unless you're working on those components. 
+You don't need to run the subgraphs locally unless you're working on those components. If you are using Anvil with the local subgraph node, include the `--disable-block-gas-limit` option when starting Anvil to avoid issues when indexing.
 
 
 ### UI
