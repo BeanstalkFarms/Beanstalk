@@ -526,8 +526,6 @@ const Sow: FC<{}> = () => {
           throw new Error('Insufficient claimable Beans');
         }
 
-        console.log('claimableBeans: ', values.claimableBeans);
-
         const totalBeans = amountBeans.plus(additionalAmount.toHuman());
         const amountPods = totalBeans.times(temperature.div(100).plus(1));
         const fromMode = bean.equals(tokenIn)
@@ -619,7 +617,7 @@ const Sow: FC<{}> = () => {
           return [finalStep];
         })();
 
-        const { execute, performed, workflow } = await FormTxnBuilder.compile(
+        const { execute, performed } = await FormTxnBuilder.compile(
           sdk,
           values.farmActions,
           farmerFormTxns.getGenerators,
@@ -628,8 +626,6 @@ const Sow: FC<{}> = () => {
           values.settings.slippage,
           finalSteps
         );
-
-        console.log(workflow);
 
         const txn = await execute();
         txToast.confirming(txn);

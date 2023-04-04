@@ -400,8 +400,6 @@ const Buy: FC<{}> = () => {
           throw new Error('Signer Required.');
         }
 
-        // console.log(values);
-
         const formData = values.tokens[0];
         const farmActions = values.farmActions;
         const claimData = values.claimableBeans;
@@ -424,8 +422,6 @@ const Buy: FC<{}> = () => {
         );
         const transferDestination =
           farmActions.transferToMode || FarmToMode.INTERNAL;
-
-        // console.log('additionalAmount: ', additionalAmount.toHuman());
 
         const beanIn = BEAN.equals(tokenIn);
         const ethIn = tokenIn.equals(ETH);

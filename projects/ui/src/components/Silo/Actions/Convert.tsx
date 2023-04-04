@@ -115,8 +115,6 @@ const ConvertForm: FC<
   const isQuoting = values.tokens[0].quoting || false;
   const slippage = values.settings.slippage;
 
-  console.log('amountOut: ', amountOut?.toString());
-
   const isUsingPlanted = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(tokenIn)
