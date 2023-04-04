@@ -387,7 +387,8 @@ library LibTokenSilo {
         return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(int96(bdv));
     }
 
-    function calculateTotalGrownStalkandGrownStalk(IERC20 token, uint256 grownStalk, uint256 bdv)
+    //this is only used in ConvertFacet
+    function calculateGrownStalkAndStem(IERC20 token, uint256 grownStalk, uint256 bdv)
         internal
         view 
         returns (uint256 _grownStalk, int96 stem)

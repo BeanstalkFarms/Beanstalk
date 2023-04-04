@@ -103,7 +103,7 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toStem = _depositTokens(toToken, toAmount, toBdv, grownStalk);
+        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
@@ -330,7 +330,8 @@ contract ConvertFacet is ReentrancyGuard {
         return (a.stalkRemoved, a.bdvRemoved);
     }
 
-    function _depositTokens(
+    //this is only used internal to the convert facet
+    function _depositTokensForConvert(
         address token,
         uint256 amount,
         uint256 bdv,
@@ -347,7 +348,7 @@ contract ConvertFacet is ReentrancyGuard {
         // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
 
-        (grownStalk, stem) = LibTokenSilo.calculateTotalGrownStalkandGrownStalk(IERC20(token), grownStalk, bdv);
+        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(IERC20(token), grownStalk, bdv);
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
