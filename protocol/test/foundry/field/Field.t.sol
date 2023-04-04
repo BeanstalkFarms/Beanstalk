@@ -65,16 +65,14 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSow();
-        assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 100e6, "balanceOf");
-        assertEq(field.plot(brean, 0), 101e6, "plot");
-        assertEq(C.bean().balanceOf(address(field)), 0, "field balanceOf");
-        assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6, "total supply");
-        assertEq(field.totalPods(), 101e6, "total Pods");
+        sowAssertEq(
+            brean,
+            beanBalanceBefore,
+            totalBeanSupplyBefore,
+            100e6,
+            101e6
+        );
         assertEq(uint256(field.totalSoil()), 0, "total Soil");
-        assertEq(uint256(field.totalRealSoil()), 0, "true Soil");
-        assertEq(field.totalUnharvestable(), 101e6, "totalUnharvestable");
-        assertEq(field.podIndex(), 101e6, "podIndex");
-        assertEq(field.harvestableIndex(), 0, "harvestableIndex");
     }
 
     // test checks field status after sowing 100 soil, with 200 available soil.
@@ -83,16 +81,14 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSomeSow();
-        vm.prank(brean);
-        assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 100e6);
-        assertEq(field.plot(brean, 0), 101e6);
-        assertEq(C.bean().balanceOf(address(field)), 0);
-        assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6);
-        assertEq(field.totalPods(), 101e6);
-        assertEq(uint256(field.totalSoil()), 100e6);
-        assertEq(field.totalUnharvestable(), 101e6);
-        assertEq(field.podIndex(), 101e6);
-        assertEq(field.harvestableIndex(), 0);
+        sowAssertEq(
+            brean,
+            beanBalanceBefore,
+            totalBeanSupplyBefore,
+            100e6,
+            101e6
+        );
+        assertEq(uint256(field.totalSoil()), 100e6, "total Soil");
     }
 
     // verfies a user can sow from internal balances.
@@ -101,15 +97,14 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSomeSowFromInternal();
-        assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 100e6);
-        assertEq(field.plot(brean, 0), 101e6);
-        assertEq(C.bean().balanceOf(address(field)), 0);
-        assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6);
-        assertEq(field.totalPods(), 101e6);
+        sowAssertEq(
+            brean,
+            beanBalanceBefore,
+            totalBeanSupplyBefore,
+            100e6,
+            101e6
+        );
         assertEq(uint256(field.totalSoil()), 100e6);
-        assertEq(field.totalUnharvestable(), 101e6);
-        assertEq(field.podIndex(), 101e6);
-        assertEq(field.harvestableIndex(), 0);
     }
 
     /**
@@ -123,58 +118,64 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSomeSowFromInternalTolerant();
-        assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 50e6);
-        assertEq(field.plot(brean, 0), 50.5e6);
-
-        console.log("Updates total balance:");
-        assertEq(C.bean().balanceOf(address(field)), 0);
-        assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 50e6);
-        assertEq(field.totalPods(), 50.5e6);
-        assertEq(uint256(field.totalSoil()), 150e6);
-        assertEq(field.totalUnharvestable(), 50.5e6);
-        assertEq(field.podIndex(), 50.5e6);
-        assertEq(field.harvestableIndex(), 0);
+        sowAssertEq(
+            brean,
+            beanBalanceBefore,
+            totalBeanSupplyBefore,
+            100e6,
+            101e6
+        );
+        assertEq(uint256(field.totalSoil()), 100e6);
     }
 
-    // sowing with min.
+    /** 
+     * in cases where a user wants to sow more beans than soil available, 
+     * beanstalk introduces a `minSoil` parameter, which allows the user to
+     * specify the minimum amount of soil they are willing to sow.
+     * This test makes an attempt to sow 200 soil, with a minimum of 100 soil.
+     * The supply of soil is 100, so the transaction should succeed with sowing 100 soil.
+     */
     function testSowMin() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSowMin();
-        assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 100e6);
-        assertEq(field.plot(brean, 0), 101e6);
-
-        console.log("Updates total balance:");
-        assertEq(C.bean().balanceOf(address(field)), 0);
-        assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6);
-        assertEq(field.totalPods(), 101e6);
+        sowAssertEq(
+            brean,
+            beanBalanceBefore,
+            totalBeanSupplyBefore,
+            100e6,
+            101e6
+        );
         assertEq(uint256(field.totalSoil()), 0);
-        assertEq(field.totalUnharvestable(), 101e6);
-        assertEq(field.podIndex(), 101e6);
-        assertEq(field.harvestableIndex(), 0);
     }
 
-    // sow min w/enough soil.
+    /** 
+     * in cases where a user wants to sow more beans than soil available, 
+     * beanstalk introduces a `minSoil` parameter, which allows the user to
+     * specify the minimum amount of soil they are willing to sow.
+     * This test makes an attempt to sow 100 soil, with a minimum of 50 soil.
+     * The supply of soil is 100, so the transaction should succeed with sowing 200 soil.
+     */
     function testSowMinWithEnoughSoil() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSowMinWithEnoughSoil();
-        assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 100e6);
-        assertEq(field.plot(brean, 0), 101e6);
-
-        console.log("Updates total balance:");
-        assertEq(C.bean().balanceOf(address(field)), 0);
-        assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6);
-        assertEq(field.totalPods(), 101e6);
+        sowAssertEq(
+            brean,
+            beanBalanceBefore,
+            totalBeanSupplyBefore,
+            100e6,
+            101e6
+        );
         assertEq(uint256(field.totalSoil()), 100e6);
-        assertEq(field.totalUnharvestable(), 101e6);
-        assertEq(field.podIndex(), 101e6);
-        assertEq(field.harvestableIndex(), 0);
     }
 
-    // sowing from 2 users.
+    /**
+     * test ensures that multiple sows correctly
+     * updates plot index, total pods, and total soil.
+     */
     function testSowFrom2Users() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 beanBalanceBefore2 = C.bean().balanceOf(siloChad);
@@ -184,21 +185,20 @@ contract FieldTest is FieldFacet, TestHelper {
         _beforeEachSow2Users();
         assertEq(C.bean().balanceOf(brean), beanBalanceBefore - 100e6);
         assertEq(C.bean().balanceOf(siloChad), beanBalanceBefore2 - 100e6);
-
         assertEq(field.plot(brean, 0), 101e6);
         assertEq(field.plot(siloChad, 101e6), 101e6);
-
-        console.log("Updates total balance:");
         assertEq(C.bean().balanceOf(address(field)), 0);
         assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 200e6);
         assertEq(field.totalPods(), 202e6);
         assertEq(uint256(field.totalSoil()), 0);
         assertEq(field.totalUnharvestable(), 202e6);
         assertEq(field.podIndex(), 202e6);
-        assertEq(field.harvestableIndex(), 0);
     }
 
-    // checking next sow time, with more than 1 soil available.
+    /**
+     * checking next sow time, with more than 1 soil available
+     * *after* sowing.
+     */
     function testComplexDPDMoreThan1Soil() public {
         // Does not set thisSowTime if Soil > 1;
         season.setSoilE(3e6);
@@ -208,7 +208,10 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
     }
 
-    // checking next sow time with exactly 1 soil available.
+    /**
+     * checking next sow time, with exactly 1 soil available
+     * *after* sowing.
+     */
     function testComplexDPD1Soil() public {
         // Does set thisSowTime if Soil = 1;
         season.setSoilE(1e6);
@@ -218,7 +221,10 @@ contract FieldTest is FieldFacet, TestHelper {
         assertLt(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
     }
 
-    // checking next sow time with less than 1 soil available.
+    /**
+     * checking next sow time, with less than 1 soil available
+     * *after* sowing.
+     */
     function testComplexDPDLessThan1Soil() public {
         // Does set thisSowTime if Soil < 1;
         season.setSoilE(1.5e6);
@@ -228,7 +234,11 @@ contract FieldTest is FieldFacet, TestHelper {
         assertLt(uint256(weather.thisSowTime), uint256(LibConstant.MAX_UINT32));
     }
 
-    // checking next sow time with less than 1 soil available, but is not set.
+    /**
+     * checking next sow time with less than 1 soil available,
+     * after it has been set previously in the season.
+     * *after* sowing.
+     */
     function testComplexDPDLessThan1SoilNoSet() public {
         // Does not set thisSowTime if Soil already < 1;
         season.setSoilE(1.5e6);
@@ -241,7 +251,7 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(uint256(weather2.thisSowTime), uint256(weather.thisSowTime));
     }
 
-    // reverts if the user does not own the plot.
+    // a user cannot harvest another users plot, or an unintialized plot.
     function testCannotHarvestUnownedPlot() public {
         _beforeEachHarvest();
         field.incrementTotalHarvestableE(101e6);
@@ -252,7 +262,10 @@ contract FieldTest is FieldFacet, TestHelper {
         field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
     }
 
-    // reverts if the plot is unharvestable.
+    /** 
+     * a user cannot harvest an unharvestable plot. 
+     * a plot is unharvestable if the index of plot > s.f.harvestable.
+     */
     function testCannotHarvestUnharvestablePlot() public {
         _beforeEachHarvest();
         uint256[] memory harvestPlot = new uint[](1);
@@ -274,7 +287,6 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.plot(brean, 0), 0);
 
         //updates total balance
-        console.log("Updates total balance:");
         assertEq(C.bean().balanceOf(address(field)), 0);
         assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 100e6 + 1e6);
         assertEq(field.totalPods(), 101e6);
@@ -299,7 +311,6 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.plot(brean, 50e6), 51e6);
 
         //updates total balance
-        console.log("Updates total balance:");
         assertEq(C.bean().balanceOf(address(field)), 0);
         assertEq(C.bean().totalSupply(), totalBeanSupplyBefore - 200e6 + 50e6);
         assertEq(field.totalPods(), 152e6);
@@ -668,14 +679,11 @@ contract FieldTest is FieldFacet, TestHelper {
     function _beforeEachSow() public prank(brean) {
         vm.roll(30);
         season.setSoilE(100e6);
-        console.log("b4 field.totalSoil():", field.totalSoil());
 
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
         emit Sow(brean, 0, 100e6, 101e6);
         field.sow(100e6, 1e6, LibTransfer.From.EXTERNAL);
-        console.log("after field.totalSoil():", field.totalSoil());
-        console.log("after field.trueSoil():", field.totalRealSoil());
     }
 
     function _beforeEachSomeSow() public {
@@ -701,10 +709,10 @@ contract FieldTest is FieldFacet, TestHelper {
     function _beforeEachSomeSowFromInternalTolerant() public {
         season.setSoilE(200e6);
         vm.startPrank(brean);
-        token.transferToken(C.bean(), brean, 50e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
+        token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
-        emit Sow(brean, 0, 50e6, 50.5e6);
+        emit Sow(brean, 0, 100e6, 101e6);
         field.sow(100e6, 1e6, LibTransfer.From.INTERNAL_TOLERANT);
         vm.stopPrank();
     }
@@ -750,5 +758,23 @@ contract FieldTest is FieldFacet, TestHelper {
     // Test Helpers
     function max(uint256 a, uint256 b) internal pure returns (uint256) {
         return a >= b ? a : b;
+    }
+
+    // helper function to reduce clutter, asserts that the state of the field is as expected
+    function sowAssertEq(
+        address account,
+        uint256 preBeanBalance,
+        uint256 preTotalBalance,
+        uint256 sowedAmount,
+        uint256 expectedPods
+    ) public {
+        assertEq(C.bean().balanceOf(brean), preBeanBalance - sowedAmount, "balanceOf");
+        assertEq(field.plot(brean, 0), expectedPods, "plot");
+        assertEq(C.bean().balanceOf(address(field)), 0, "field balanceOf");
+        assertEq(C.bean().totalSupply(), preTotalBalance - sowedAmount, "total supply");
+        assertEq(field.totalPods(), expectedPods, "total Pods");
+        assertEq(field.totalUnharvestable(), 101e6, "totalUnharvestable");
+        assertEq(field.podIndex(), expectedPods, "podIndex");
+        assertEq(field.harvestableIndex(), 0, "harvestableIndex");
     }
 }
