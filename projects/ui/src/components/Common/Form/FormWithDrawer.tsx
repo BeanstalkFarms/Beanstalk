@@ -27,17 +27,19 @@ function useFormDrawer(siblingRef: React.RefObject<HTMLDivElement>) {
     if (!parent || !sibling || !drawer) return;
 
     const updateHeights = () => {
+      // if drawer is closed, set the parent's height to 100%
       if (!open) {
         parent.style.height = '100%';
       } else {
         // +2 to account for the border
         const drawerHeight = drawer.scrollHeight + 2;
         const siblingHeight = sibling.offsetHeight;
+        const parentHeight = parent.offsetHeight;
 
         if (siblingHeight === drawerHeight) return;
 
-        /// If the sibling is taller than the drawer, set the parent's height to the drawer's height
-        if (siblingHeight < drawerHeight) {
+        // if drawer is taller than sibling, set the parent's height to the drawer's height
+        if (parentHeight < drawerHeight) {
           parent.style.height = `${drawerHeight}px`;
           // reset the height of the drawer
           drawer.style.height = 'auto';
@@ -77,7 +79,7 @@ const FormDrawerContext = React.createContext<
   ReturnType<typeof useFormDrawer> | undefined
 >(undefined);
 
-const useFormDrawerContext = () => {
+export const useFormDrawerContext = () => {
   const context = React.useContext(FormDrawerContext);
 
   if (!context) {
@@ -106,7 +108,11 @@ const FormWithDrawer = ({
   return (
     <FormDrawerContext.Provider value={value}>
       <Form {...formProps}>
-        <Box position="relative" ref={value.parentRef}>
+        <Box
+          position="relative"
+          sx={{ overflow: 'hidden', borderRadius: 1 }}
+          ref={value.parentRef}
+        >
           {children}
         </Box>
       </Form>
@@ -184,10 +190,10 @@ const NestedFormDrawer: React.FC<{
             top: '0px',
             bottom: '0px',
             position: 'absolute',
-            borderRadius: 1,
             backgroundColor: 'primary.light',
             zIndex: 1300,
-            border: '1px solid',
+            borderRadius: 1,
+            border: '0px solid',
             borderColor: 'primary.light',
             boxSizing: 'border-box',
             overflow: 'hidden',

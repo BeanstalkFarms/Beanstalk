@@ -31,7 +31,7 @@ const guides = [
   HOW_TO_CLAIM_WITHDRAWALS,
 ];
 
-const SILO_ACTIONS_MAX_WIDTH = '540px';
+const SILO_ACTIONS_MAX_WIDTH = '480px';
 
 const TokenPage: FC<{}> = () => {
   // Constants
@@ -105,7 +105,7 @@ const TokenPage: FC<{}> = () => {
           <Stack
             gap={2}
             width="100%"
-            sx={{ flexShrink: 2, maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
+            sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
           >
             <SiloActions
               pool={pool}

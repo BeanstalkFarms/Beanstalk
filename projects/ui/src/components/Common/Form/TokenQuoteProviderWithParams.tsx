@@ -13,7 +13,7 @@ import useQuoteWithParams, { QuoteHandlerWithParams, QuoteSettingsNew } from '~/
 import { TokenQuoteProviderCustomProps } from './TokenQuoteProvider';
 import useDeepCompareMemo from '~/hooks/display/useDeepCompareMemo';
 
-type TokenQuoteProviderWithParamsCustomProps<T> = {
+export type TokenQuoteProviderWithParamsCustomProps<T> = {
     /** The current form state of this token */
     state: FormTokenStateNew;
     /** Token which we're quoting to. Required to display a proper `amountOut` below the input. */

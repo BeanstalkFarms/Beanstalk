@@ -52,7 +52,8 @@ export type FormTokenState =
  */
 export type FormTokenStateNew = {
   token: ERC20TokenNew | NativeTokenNew;
-  amount: BigNumber | undefined;
+  amount: BigNumber | undefined;    
+  maxAmountIn?: BigNumber | undefined;
 } & {
   quoting?: boolean;
 } & Partial<QuoteHandlerResultNew>;
@@ -121,6 +122,10 @@ export type FormTxnsFormState = {
    */
   farmActions: FormTxnBuilderInterface;
 };
+
+export type ClaimBeansFormState = {
+  claimableBeans: FormTokenStateNew;
+}
 
 // ----------------------------------------------------------------------
 
