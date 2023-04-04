@@ -102,13 +102,6 @@ contract SunTest is  Sun, TestHelper {
     season.sunSunrise(0, 8); // deltaB = 0
   }
 
-  // function test_deltaB_positive() public {
-  //   vm.revertTo(snapId);
-  //   vm.expectEmit(true, false, false, true);
-  //   emit Soil(season.season() + 1, 0); // sunSunrise should emit this
-  //   season.sunSunrise(100e6, 8); // deltaB = 100
-  // }
-
   ///////////////////////// Pod Rate sets Soil /////////////////////////
 
   function test_deltaB_positive_podRate_low() public {
@@ -188,29 +181,6 @@ contract SunTest is  Sun, TestHelper {
     assertEq(silo.totalEarnedBeans(), toSilo);
     assertEq(field.totalHarvestable(), newHarvestable);
   }
-
-  ///////////////////////// Alternatives /////////////////////////
-
-  // function test_deltaB_positive_podRate() public {
-  //   uint256 snapId = vm.snapshot();
-
-  //   // low pod rate
-  //   field.incrementTotalPodsE(100);
-  //   season.sunSunrise(300e6, 0); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(uint256(field.totalSoil()), 148); // FIXME: how calculated?
-  //   snapId = _reset(snapId);
-
-  //   // medium pod rate
-  //   field.incrementTotalPodsE(100);
-  //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
-  //   snapId = _reset(snapId);
-
-  //   // high pod rate
-  //   field.incrementTotalPodsE(100);
-  //   season.sunSunrise(300e6, 8); // deltaB = +300; case 0 = low pod rate
-  //   assertEq(uint256(field.totalSoil()), 99); // FIXME: how calculated?
-  // }
 
   function testMockOraclePrice() public {
     MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);

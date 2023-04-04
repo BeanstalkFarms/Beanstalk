@@ -15,6 +15,15 @@ contract FieldTest is FieldFacet, TestHelper {
 
     Storage.Weather weather;
     
+    /**
+     * @notice the diamond is setup in the constructor, 
+     * with all the mock facets deployed and added.
+     * @dev this creates a beanstalk instance with a blank state - 
+     * this does not consider upgrading the current beanstalk, 
+     * so care is needed when:
+     * - adding new functions with the same selectors 
+     * - changing of appStorage layout
+     */
     constructor() {
         setupDiamond();
         season.lightSunrise();
@@ -30,17 +39,24 @@ contract FieldTest is FieldFacet, TestHelper {
     }
 
     // user should not be able to sow if there is no soil.
-    function testCannotSowWithNoSoil() public {
+    function testCannotSowWithNoSoil(uint256 beans) public {
+        beans = bound(beans, 1, 2 ** 256 - 1);
         vm.prank(brean);
         vm.expectRevert("Field: Soil Slippage");
-        field.sow(1, 1e6, LibTransfer.From.EXTERNAL);
+        field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
     }
 
-    // user should not sow if the amount input is less than the minSoil.
-    function testCannotSowBelowMinSoil() public {
-        vm.prank(brean);
+
+    /**
+     * user should not sow if the amount input is less than the minSoil.
+     * @dev we set the soil, as in the code, we verify that the amount of 
+     * beans is greater than the soil in the field..
+     */
+    function testCannotSowBelowMinSoil(uint256 beanSown) public {
+        beanSown = bound(beanSown, 1, 2 ** 256 - 1);
+        season.setSoilE(beanSown);
         vm.expectRevert("Field: Soil Slippage");
-        field.sowWithMin(1, 1e6, 3, LibTransfer.From.EXTERNAL);
+        field.sowWithMin(beanSown - 1, 1e6, beanSown, LibTransfer.From.EXTERNAL);
     }
 
     // test checks field status after sowing 100 soil, with 100 available soil.
@@ -61,7 +77,7 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.harvestableIndex(), 0, "harvestableIndex");
     }
 
-    // test checks field status after sowing 50 soil, with 100 available soil.
+    // test checks field status after sowing 100 soil, with 200 available soil.
     function testSowSomeSoil() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -79,7 +95,7 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.harvestableIndex(), 0);
     }
 
-    // sow soil from internal balances.
+    // verfies a user can sow from internal balances.
     function testSowSomeSoilFromInternal() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
@@ -96,7 +112,12 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.harvestableIndex(), 0);
     }
 
-    // sow soil from internal tolerant mode.
+    /**
+     * sow soil from internal tolerant mode.
+     * @dev internal tolerant will receive tokens 
+     * from the user's Internal Balance and will not fail 
+     * if there is not enough in their Internal Balance.
+     */ 
     function testSowSomeSoilFromInternalTolerant() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
