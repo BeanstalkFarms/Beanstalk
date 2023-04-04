@@ -1,0 +1,25 @@
+query GetWellSwaps($id: ID!) {
+  well: well(id: $id) {
+    swaps {
+      hash
+      account {
+        id
+      }
+      amountIn
+      amountOut
+      toToken {
+        decimals
+        name
+        symbol
+        id
+      }
+      fromToken {
+        decimals
+        name
+        symbol
+        id
+      }
+      timestamp
+    }
+  }
+}
