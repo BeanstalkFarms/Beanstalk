@@ -28,7 +28,7 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 
 // ---------------------------------------------------
 
@@ -120,7 +120,7 @@ const RinseForm: FC<FormikProps<RinseFormValues>> = ({
             <TokenOutput>
               <TokenOutput.Row token={BEAN} amount={amountSprouts} />
             </TokenOutput>
-            <FormTxnsSecondaryOptions />
+            <AdditionalTxnsAccordion />
             <Box sx={{ width: '100%', mt: 0 }}>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
