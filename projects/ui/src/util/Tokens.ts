@@ -250,3 +250,12 @@ export function toTokenUnitsBN(
 ): string {
   return toBaseUnitBN(decimalAmt, decimals).toFixed();
 }
+
+
+export function getTokenIndex(token: Token | TokenOld) {
+  if (token instanceof Token && token.symbol === 'ETH') {
+    return 'eth';
+  }
+
+  return token.address;
+}

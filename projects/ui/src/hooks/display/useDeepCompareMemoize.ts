@@ -1,7 +1,5 @@
 import React, { useRef } from 'react';
-import _ from 'lodash';
-
-const isDeepEqual = (prev: any, curr: any) => _.isEqual(prev, curr);
+import { isEqual as isDeepEqual } from 'lodash';
 
 export default function useDeepCompareMemoize(value: React.DependencyList) {
   const ref = useRef<React.DependencyList>([]);

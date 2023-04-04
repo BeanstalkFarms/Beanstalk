@@ -10,9 +10,9 @@ import podIconGrey from '~/img/beanstalk/pod-icon-grey.svg';
 import podIconGreen from '~/img/beanstalk/pod-icon-green.svg';
 
 import sproutsIconGrey from '~/img/beanstalk/sprout-icon-grey.svg';
-import sproutsIconGreen from '~/img/beanstalk/sprout-icon-green.svg';
+import sproutsIconGreen from '~/img/beanstalk/rinsable-sprout-icon.svg';
 
-import beanIconGreen from '~/img/tokens/bean-logo-circled-wintergreen.svg';
+import beanIconGreen from '~/img/tokens/bean-logo-circled.svg';
 import beanIconGrey from '~/img/tokens/bean-logo-circled-grey.svg';
 import IconWrapper from '~/components/Common/IconWrapper';
 import Centered from '~/components/Common/ZeroState/Centered';
@@ -21,8 +21,10 @@ import useFarmerFormTxnsSummary, {
 } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
 
 import MergeIcon from '~/img/misc/merge-icon.svg';
-import SelectionItem from '../../SelectionItem';
-import FormWithDrawer, { useFormDrawerContext } from '../FormWithDrawer';
+import SelectionItem from '~/components/Common/SelectionItem';
+import FormWithDrawer, {
+  useFormDrawerContext,
+} from '~/components/Common/Form/FormWithDrawer';
 
 const actionsToIconMap = {
   [FormTxn.RINSE]: {

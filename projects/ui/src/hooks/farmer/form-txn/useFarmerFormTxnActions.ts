@@ -10,14 +10,10 @@ import { ActionType } from '~/util';
 import { ZERO_BN } from '~/constants';
 import useAccount from '~/hooks/ledger/useAccount';
 
-const isClaimingBeansAction = (action: FormTxn) => {
-  const isClaiming =
-    action === FormTxn.CLAIM ||
-    action === FormTxn.HARVEST ||
-    action === FormTxn.RINSE;
-
-  return isClaiming;
-};
+const isClaimingBeansAction = (action: FormTxn) =>
+  action === FormTxn.CLAIM ||
+  action === FormTxn.HARVEST ||
+  action === FormTxn.RINSE;
 
 export default function useFarmerFormTxnsActions(options?: {
   showGraphicOnClaim?: boolean | undefined;

@@ -183,7 +183,6 @@ const TokenSelectDialogNew : TokenSelectDialogC = React.memo(({
           {filteredTokenList ? filteredTokenList.map((_token) => {
             const key = (_token.equals(sdk.tokens.ETH)) ? 'eth' : _token.address;
             const tokenBalance = getBalance(key);
-            const applicableBalance = getApplicableBalances(key);
             return (
               <ListItem
                 key={_token.address}
@@ -231,33 +230,6 @@ const TokenSelectDialogNew : TokenSelectDialogC = React.memo(({
                       <Typography variant="bodyLarge">
                         {/* Token balance */}
                         {displayBN(tokenBalance)}
-                        {/* additionally applied balance */}
-                        {/* {applicableBalance?.applied.gt(0) ? (
-                          <Typography variant="inherit" color="primary" component="span">
-                            &nbsp; + {displayFullBN(applicableBalance.applied, 2)}
-                          </Typography>
-                        ) : null} */}
-                        {/* remaining applicable balance */}
-                        {/* {applicableBalance?.remaining.gt(0) ? (
-                          <Typography variant="inherit" color="text.tertiary" component="span">
-                            &nbsp; + {displayFullBN(applicableBalance.remaining, 2)}
-                          </Typography>
-                        ) : null} */}
-                        {/* {applicableBalance?.applied.gt(0) || applicableBalance?.remaining.gt(0) ? (
-                          <Tooltip
-                            title={`The amount of ${_token.symbol} you can use in conjunction with your selected balance by claiming Silo withdrawals, harvesting Pods, and rinsing Sprouts.`}
-                            placement="right"
-                          >
-                            <HelpOutlineIcon
-                              sx={{
-                                color: 'text.secondary',
-                                display: 'inline',
-                                mb: 0.5,
-                                fontSize: '12px',
-                              }}
-                            />
-                          </Tooltip>
-                        ) : null} */}
                       </Typography>
                   ) : null}
                   </Row>

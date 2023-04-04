@@ -384,7 +384,6 @@ const SowForm: FC<
 const Sow: FC<{}> = () => {
   const sdk = useSdk();
   const account = useAccount();
-  // const formRef = useRef<HTMLDivElement | null>(null);
 
   /// Beanstalk
   const temperature = useTemperature();

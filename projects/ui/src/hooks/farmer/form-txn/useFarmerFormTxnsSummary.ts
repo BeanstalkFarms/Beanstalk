@@ -2,12 +2,12 @@ import { useCallback, useMemo } from 'react';
 import { FarmToMode, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ZERO_BN } from '~/constants';
-import useSdk, { getNewToOldToken } from '../../sdk';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 
-import useFarmerFertilizer from '../useFarmerFertilizer';
-import useFarmerField from '../useFarmerField';
-import useFarmerSilo from '../useFarmerSilo';
-import useRevitalized from '../useRevitalized';
+import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
+import useFarmerField from '~/hooks/farmer/useFarmerField';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
+import useRevitalized from '~/hooks/farmer/useRevitalized';
 import { normalizeBN } from '~/util';
 import { FormTxn } from '~/util/FormTxns';
 import { Action, ActionType } from '~/util/Actions';

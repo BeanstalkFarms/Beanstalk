@@ -279,7 +279,6 @@ const BuyForm: FC<
 };
 
 const Buy: FC<{}> = () => {
-  ///
   const sdk = useSdk();
 
   const { remaining } = useSelector<AppState, AppState['_beanstalk']['barn']>(

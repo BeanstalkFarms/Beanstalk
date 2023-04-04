@@ -60,7 +60,6 @@ const TransferForm: FC<
   // Formik
   values,
   isSubmitting,
-  // submitForm,
   // Custom
   token: whitelistedToken,
   siloBalances,
