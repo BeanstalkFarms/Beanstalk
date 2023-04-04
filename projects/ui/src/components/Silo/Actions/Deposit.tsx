@@ -1,19 +1,20 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { Box, Button, Card, Drawer, Stack, Typography } from '@mui/material';
-import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { Box, Stack } from '@mui/material';
+import { Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import { useSelector } from 'react-redux';
-import { ERC20Token, NativeToken, Token } from '@beanstalk/sdk';
+import {
+  ERC20Token,
+  FarmFromMode,
+  FarmToMode,
+  NativeToken,
+  Token,
+} from '@beanstalk/sdk';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
   BalanceFromFragment,
+  ClaimBeansFormState,
   FormStateNew,
   FormTxnsFormState,
   SettingInput,
@@ -50,12 +51,12 @@ import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import useFarmerFormTxnActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useSilo from '~/hooks/beanstalk/useSilo';
 
 import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
-import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 import ClaimBeanDrawerToggle from '~/components/Common/Form/FormTxn/ClaimBeanDrawerToggle';
+import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 
 // -----------------------------------------------------------------------
 
@@ -65,10 +66,10 @@ type DepositFormValues = FormStateNew &
     settings: {
       slippage: number;
     };
-  };
+  } & ClaimBeansFormState;
 
 type DepositQuoteHandler = {
-  balanceFrom: BalanceFrom;
+  fromMode: FarmFromMode;
 };
 
 const defaultFarmActionsFormState = {
@@ -104,24 +105,29 @@ const DepositForm: FC<
 }) => {
   const sdk = useSdk();
   const beanstalkSilo = useSilo();
+  const siblingRef = useRef<HTMLDivElement | null>(null);
 
   const txnActions = useFarmerFormTxnActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
+    claimBeansState: values.claimableBeans,
   });
+
+  const formData = values.tokens[0];
+  const tokenIn = formData.token;
+
+  const combinedTokenState = [...values.tokens, values.claimableBeans];
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = getDepositSummary(
     whitelistedToken,
-    values.tokens,
+    combinedTokenState,
     amountToBdv
   );
-
-  const siblingRef = useRef<HTMLDivElement | null>(null);
 
   // Memoized params to prevent infinite loop
   const quoteProviderParams = useMemo(
     () => ({
-      balanceFrom: values.balanceFrom,
+      fromMode: balanceFromToMode(values.balanceFrom),
     }),
     [values.balanceFrom]
   );
@@ -144,8 +150,13 @@ const DepositForm: FC<
           amount: undefined,
         })),
       ]);
+      setFieldValue('farmActions', defaultFarmActionsFormState);
+      setFieldValue('claimableBeans', {
+        token: sdk.tokens.BEAN,
+        amount: undefined,
+      });
     },
-    [values.tokens, setFieldValue]
+    [values.tokens, sdk.tokens.BEAN, setFieldValue]
   );
 
   const handleSetBalanceFrom = useCallback(
@@ -155,29 +166,10 @@ const DepositForm: FC<
     [setFieldValue]
   );
 
-  /// Effects
-  // Reset the form farmActions whenever the tokenIn changes
-  const currTokenSymbol = values.tokens[0].token.symbol;
-  const [cachedTokenSymbol, setCachedTokenSymbol] = useState(currTokenSymbol);
-  useEffect(() => {
-    if (cachedTokenSymbol !== currTokenSymbol) {
-      setCachedTokenSymbol(currTokenSymbol);
-      setFieldValue('farmActions', defaultFarmActionsFormState);
-    }
-  }, [cachedTokenSymbol, currTokenSymbol, setFieldValue]);
-
-  const disabledActions = useMemo(() => {
-    const isEth = currTokenSymbol === 'ETH';
-    return isEth
-      ? [
-          {
-            action: FormTxn.ENROOT,
-            reason:
-              'Enrooting while using ETH to deposit is currently not supported',
-          },
-        ]
-      : undefined;
-  }, [currTokenSymbol]);
+  const filteredFormTxns = useMemo(
+    () => (tokenIn.equals(sdk.tokens.ETH) ? [FormTxn.ENROOT] : undefined),
+    [sdk.tokens.ETH, tokenIn]
+  );
 
   const increasedStalkPct = stalk.div(beanstalkSilo.stalk.total).times(100);
   const increasedStalkPctStr = increasedStalkPct.lt(0.01)
@@ -187,7 +179,9 @@ const DepositForm: FC<
   /// Derived
   const isReady = bdv.gt(0);
 
-  const noAmount = values.tokens[0].amount === undefined;
+  const noAmount =
+    values.tokens[0].amount === undefined &&
+    values.claimableBeans.amount?.eq(0);
 
   return (
     <FormWithDrawer noValidate autoComplete="off" siblingRef={siblingRef}>
@@ -206,10 +200,9 @@ const DepositForm: FC<
       {/* Input Field */}
       <Stack gap={1} ref={siblingRef}>
         {values.tokens.map((tokenState, index) => {
-          const key =
-            tokenState.token.symbol === 'ETH'
-              ? 'eth'
-              : tokenState.token.address;
+          const key = tokenState.token.equals(sdk.tokens.ETH)
+            ? 'eth'
+            : tokenState.token.address;
           const balanceType = values.balanceFrom
             ? values.balanceFrom
             : BalanceFrom.TOTAL;
@@ -277,7 +270,7 @@ const DepositForm: FC<
                 }
               />
             </TokenOutput>
-            <FormTxnsSecondaryOptions disabledActions={disabledActions} />
+            <AdditionalTxnsAccordion filter={filteredFormTxns} />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview actions={actions} {...txnActions} />
@@ -300,7 +293,17 @@ const DepositForm: FC<
         </SmartSubmitButton>
       </Stack>
       <FormWithDrawer.Drawer title="Use Claimable Assets">
-        <ClaimBeanDrawerContent txnName="Deposit" />
+        <ClaimBeanDrawerContent
+          quoteProviderProps={{
+            name: 'claimableBeans',
+            handleQuote: handleQuote,
+            params: {
+              fromMode: FarmFromMode.INTERNAL_TOLERANT,
+            },
+            tokenOut: whitelistedToken,
+            state: values.claimableBeans,
+          }}
+        />
       </FormWithDrawer.Drawer>
     </FormWithDrawer>
   );
@@ -389,26 +392,31 @@ const Deposit: FC<{
       ],
       balanceFrom: BalanceFrom.TOTAL,
       farmActions: {
-        preset: 'claim',
+        preset: whitelistedToken.isUnripe ? 'noPrimary' : 'claim',
         primary: undefined,
         secondary: undefined,
         implied: [FormTxn.MOW],
         additionalAmount: undefined,
       },
+      /// claimable beans
+      claimableBeans: {
+        token: sdk.tokens.BEAN,
+        amount: undefined,
+      },
     }),
-    [baseToken]
+    [baseToken, sdk.tokens.BEAN, whitelistedToken]
   );
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
   const handleQuote = useCallback<QuoteHandlerWithParams<DepositQuoteHandler>>(
-    async (tokenIn, _amountIn, tokenOut, { balanceFrom }) => {
+    async (tokenIn, _amountIn, tokenOut, { fromMode }) => {
       if (!account) {
         throw new Error('Wallet connection required.');
       }
 
       const deposit = sdk.silo.buildDeposit(tokenOut, account);
-      deposit.setInputToken(tokenIn, balanceFromToMode(balanceFrom));
+      deposit.setInputToken(tokenIn, fromMode);
 
       const amountIn = tokenIn.amount(_amountIn.toString());
       const estimate = await deposit.estimate(amountIn);
@@ -418,9 +426,11 @@ const Deposit: FC<{
           `Depositing ${tokenOut.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`
         );
       }
+
       console.debug('[chain] estimate = ', estimate);
       return {
         amountOut: tokenValueToBN(estimate),
+        // steps: deposit.workflow.generators as StepGenerator[],
       };
     },
     [account, sdk.silo]
@@ -443,38 +453,155 @@ const Deposit: FC<{
         if (values.tokens.length > 1) {
           throw new Error('Only one token supported at this time');
         }
-        const formData = values.tokens[0];
-        const tokenIn = formData.token;
-        const amountIn = tokenIn.fromHuman(formData?.amount?.toString() || '0');
 
-        if (amountIn.eq(0)) {
+        const { BEAN } = sdk.tokens;
+
+        const formData = values.tokens[0];
+        const claimData = values.claimableBeans;
+        const farmActions = values.farmActions;
+
+        const tokenIn = formData.token;
+        const _amountIn = formData.amount || '0';
+        const amountIn = tokenIn.fromHuman(_amountIn.toString());
+
+        const target = whitelistedToken as ERC20Token;
+        const isDepositingSameToken = target.equals(tokenIn);
+
+        const amountOut =
+          (isDepositingSameToken ? formData.amount : formData.amountOut) ||
+          ZERO_BN;
+
+        const amountOutFromClaimed =
+          (target.equals(sdk.tokens.BEAN)
+            ? claimData.amount
+            : claimData.amountOut) || ZERO_BN;
+
+        const totalAmountOut = amountOut.plus(amountOutFromClaimed);
+
+        const claimedBeansUsed = BEAN.amount(
+          claimData.amount?.toString() || '0'
+        );
+        const totalClaimAmount = BEAN.amount(
+          claimData.maxAmountIn?.toString() || '0'
+        );
+        const transferDestination =
+          farmActions.transferToMode || FarmToMode.INTERNAL;
+
+        if (amountIn.eq(0) && claimedBeansUsed.eq(0)) {
           throw new Error('Enter an amount to deposit');
         }
 
-        const deposit = sdk.silo.buildDeposit(whitelistedToken, account);
-        deposit.setInputToken(tokenIn, balanceFromToMode(values.balanceFrom));
-
-        const { execute, estimate, performed } = await FormTxnBuilder.compile(
-          sdk,
-          values.farmActions,
-          formTxns.getGenerators,
-          deposit.workflow,
-          amountIn,
-          values.settings.slippage
-        );
-
-        const estimateBN = tokenValueToBN(
-          whitelistedToken.fromBlockchain(estimate.toString())
-        );
+        if (
+          (claimedBeansUsed && !totalClaimAmount) ||
+          claimedBeansUsed.gt(totalClaimAmount)
+        ) {
+          throw new Error('Insufficient claimable Beans');
+        }
 
         txToast = new TransactionToast({
           loading: `Depositing ${displayFullBN(
-            estimateBN,
+            totalAmountOut,
             whitelistedToken.displayDecimals,
             whitelistedToken.displayDecimals
           )} ${whitelistedToken.name} into the Silo...`,
           success: 'Deposit successful.',
         });
+
+        // initialize workflow
+        const work = sdk.farm.create();
+
+        /**
+         * In the case where the 'tokenIn' is BEAN we can combine the amounts
+         * & create only 1 deposit workflow.
+         * In the case where 'tokenIn' != BEAN, we need to create 2 deposit workflows.
+         */
+
+        const canCombine =
+          BEAN.equals(tokenIn) && amountIn.gt(0) && claimedBeansUsed.gt(0);
+
+        /// primary input deposit
+        if (canCombine || amountIn.gt(0)) {
+          const deposit = sdk.silo.buildDeposit(whitelistedToken, account);
+          deposit.setInputToken(
+            tokenIn,
+            canCombine
+              ? FarmFromMode.INTERNAL_EXTERNAL
+              : balanceFromToMode(values.balanceFrom)
+          );
+          work.add([...deposit.workflow.generators]);
+          console.debug(
+            `[Deposit]: deposited added ${tokenIn.symbol} => ${target.symbol}`,
+            work
+          );
+        }
+
+        /// Claim beans input deposit
+        /// FIXME: currently if the user is depositing claimed BEANs, we add another deposit operation.
+        // Is there a more efficient way to do this?
+        if (!canCombine && claimedBeansUsed.gt(0)) {
+          const depositClaimed = sdk.silo.buildDeposit(
+            whitelistedToken,
+            account
+          );
+          depositClaimed.setInputToken(
+            sdk.tokens.BEAN,
+            FarmFromMode.INTERNAL_TOLERANT
+          );
+
+          work.add(
+            FormTxnBuilder.getLocalOnlyStep('deposit-claimed-beans', {
+              overrideAmount: claimedBeansUsed,
+            }),
+            { onlyLocal: true }
+          );
+          work.add([...depositClaimed.workflow.generators]);
+          console.debug(
+            `[Deposit]: deposit added claimed BEANs => ${target.symbol}`,
+            work
+          );
+        }
+
+        /// If the user is claiming beans and isn't using the full amount,
+        /// transfer the remaining amount to their external wallet if requested.
+        const finalSteps = (() => {
+          const transferAmount = totalClaimAmount.sub(claimedBeansUsed);
+          const isToExternal = transferDestination === FarmToMode.EXTERNAL;
+          const shouldTransfer = isToExternal && transferAmount.gt(0);
+
+          if (!shouldTransfer) return undefined;
+
+          const transferStep = new sdk.farm.actions.TransferToken(
+            BEAN.address,
+            account,
+            FarmFromMode.INTERNAL_TOLERANT,
+            FarmToMode.EXTERNAL
+          );
+
+          const finalStep = {
+            steps: [transferStep],
+            overrideAmount: transferAmount,
+          };
+          console.debug(`[Deposit]: Transfer amount ${transferAmount}`);
+          return [finalStep];
+        })();
+
+        const finalAmountIn = canCombine
+          ? amountIn.add(claimedBeansUsed)
+          : amountIn?.gt(0)
+          ? amountIn
+          : undefined;
+
+        const { execute, performed, workflow } = await FormTxnBuilder.compile(
+          sdk,
+          values.farmActions,
+          formTxns.getGenerators,
+          work,
+          finalAmountIn,
+          values.settings.slippage,
+          finalSteps
+        );
+
+        console.debug(`[Deposit]: final workflow`, workflow);
 
         const txn = await execute();
         txToast.confirming(txn);

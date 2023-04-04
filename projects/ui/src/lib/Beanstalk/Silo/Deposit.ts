@@ -97,7 +97,7 @@ export function depositSummary(
     /// then `amountOut` contains the amount of BEAN corresponding to the input amount of ETH.
     /// this is the asset that is actually deposited.
     const amount = (
-      curr.token === to
+      to.equals(curr.token)
         ? curr.amount
         : curr.amountOut
     );
