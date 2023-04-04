@@ -46,10 +46,8 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 
 import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import useFarmerFormTxnBalances from '~/hooks/farmer/form-txn/useFarmerFormTxnBalances';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
-import FormTxnsPrimaryOptions from '~/components/Common/Form/FormTxnsPrimaryOptions';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useAsyncMemo from '~/hooks/display/useAsyncMemo';
 import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
@@ -64,7 +62,10 @@ type ConvertFormValues = FormStateNew & {
   tokenOut: Token | undefined;
 } & FormTxnsFormState;
 
-type ConvertQuoteHandlerParams = { slippage: number; isPlanting: boolean };
+type ConvertQuoteHandlerParams = {
+  slippage: number;
+  isConvertingPlanted: boolean;
+};
 
 // -----------------------------------------------------------------------
 
@@ -100,6 +101,8 @@ const ConvertForm: FC<
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
 
+  const { crate: plantCrate } = useFarmerDepositCrateFromPlant();
+
   /// Extract values from form state
   const tokenIn = values.tokens[0].token; // converting from token
   const amountIn = values.tokens[0].amount; // amount of from token
@@ -110,6 +113,18 @@ const ConvertForm: FC<
   const siloBalance = siloBalances[tokenIn.address]; // FIXME: this is mistyped, may not exist
   const depositedAmount = siloBalance?.deposited.amount || ZERO_BN;
   const isQuoting = values.tokens[0].quoting || false;
+  const slippage = values.settings.slippage;
+
+  console.log('amountOut: ', amountOut?.toString());
+
+  const isUsingPlanted = Boolean(
+    values.farmActions.primary?.includes(FormTxn.PLANT) &&
+      sdk.tokens.BEAN.equals(tokenIn)
+  );
+
+  const totalAmountIn = isUsingPlanted
+    ? (amountIn || ZERO_BN).plus(plantCrate.asBN.amount)
+    : amountIn;
 
   /// Derived form state
   let isReady = false;
@@ -122,14 +137,7 @@ const ConvertForm: FC<
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
   let deltaSeeds; // the change in seeds during the convert.
 
-  const { crate: plantCrate } = useFarmerDepositCrateFromPlant();
-  const { plantableBalance } = useFarmerFormTxnBalances();
   const txnActions = useFarmerFormTxnsActions();
-
-  const shouldAppendPlantDepositCrate = !(
-    values.farmActions.primary?.includes(FormTxn.PLANT) &&
-    sdk.tokens.BEAN.equals(tokenIn)
-  );
 
   ///
   const [conversion, setConversion] = useState(INIT_CONVERSION);
@@ -143,7 +151,7 @@ const ConvertForm: FC<
         );
         const crates = [...(siloBalance?.deposited.crates || [])]; // depositedCrates
         // only append the plant deposit crate if SILO:BEAN is being converted
-        if (shouldAppendPlantDepositCrate) {
+        if (isUsingPlanted) {
           crates.push(plantCrate.asBN);
         }
 
@@ -162,7 +170,7 @@ const ConvertForm: FC<
       tokenOut,
       isQuoting,
       siloBalance?.deposited.crates,
-      shouldAppendPlantDepositCrate,
+      isUsingPlanted,
       tokenIn,
       currentSeason,
       plantCrate.asBN,
@@ -176,7 +184,7 @@ const ConvertForm: FC<
   /// depends on amountIn it will run every time the user
   /// types something into the input.
   useEffect(() => {
-    runConversion(amountIn || ZERO_BN);
+    runConversion(totalAmountIn || ZERO_BN);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountOut, runConversion]);
 
@@ -235,7 +243,6 @@ const ConvertForm: FC<
   useEffect(() => {
     (async () => {
       if (tokenOut) {
-        console.log('FETCHING MAX AMOUNT IN');
         const _maxAmountIn = await sdk.contracts.beanstalk
           .getMaxAmountIn(tokenIn.address, tokenOut.address)
           .then((amt) => tokenValueToBN(tokenIn.fromBlockchain(amt)))
@@ -248,17 +255,20 @@ const ConvertForm: FC<
     })();
   }, [sdk.contracts.beanstalk, setFieldValue, tokenIn, tokenOut]);
 
-  const isPlanting =
-    values.farmActions.primary?.includes(FormTxn.PLANT) || false;
   const quoteHandlerParams = useMemo(
     () => ({
-      slippage: values.settings.slippage,
-      isPlanting: isPlanting,
+      slippage: slippage,
+      isConvertingPlanted: isUsingPlanted,
     }),
-    [isPlanting, values.settings.slippage]
+    [slippage, isUsingPlanted]
   );
   const maxAmountUsed =
-    amountIn && maxAmountIn ? amountIn.div(maxAmountIn) : null;
+    totalAmountIn && maxAmountIn ? totalAmountIn.div(maxAmountIn) : null;
+
+  const disabledFormActions = useMemo(
+    () => (tokenIn.isUnripe ? [FormTxn.ENROOT] : undefined),
+    [tokenIn.isUnripe]
+  );
 
   return (
     <Form noValidate autoComplete="off">
@@ -319,7 +329,7 @@ const ConvertForm: FC<
             </WarningAlert>
           </Box>
         ) : null}
-        {amountIn && tokenOut && maxAmountIn && amountOut?.gt(0) ? (
+        {totalAmountIn && tokenOut && maxAmountIn && amountOut?.gt(0) ? (
           <>
             <TxnSeparator mt={-1} />
             <TokenOutput>
@@ -374,7 +384,7 @@ const ConvertForm: FC<
                 </WarningAlert>
               </Box>
             ) : null}
-            <FormTxnsSecondaryOptions />
+            <AdditionalTxnsAccordion filter={disabledFormActions} />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -382,7 +392,7 @@ const ConvertForm: FC<
                     {
                       type: ActionType.BASE,
                       message: `Convert ${displayFullBN(
-                        amountIn,
+                        totalAmountIn,
                         tokenIn.displayDecimals
                       )} ${tokenIn.name} to ${displayFullBN(
                         amountOut,
@@ -450,7 +460,9 @@ const Convert: FC<{
   /// Temporary solution. Remove this when we move the site to use the new sdk types.
   const [sdkBalances, refetchSdkBalances] = useAsyncMemo(async () => {
     if (!account) return undefined;
-    console.log('refetchSdkBalances...');
+    console.debug(
+      `[Convert] Fetching silo balances for SILO:${fromToken.symbol}`
+    );
     return sdk.silo.getBalance(fromToken, account, {
       source: DataSource.LEDGER,
     });
@@ -496,61 +508,75 @@ const Convert: FC<{
    */
   const handleConversion = useCallback(
     async (
-      tokenIn: Token,
+      _tokenIn: Token,
       _amountIn: BigNumber,
-      tokenOut: Token,
+      _tokenOut: Token,
       slippage: number,
-      isPlanting: boolean
+      isConvertingPlanted: boolean
     ) => {
       if (!account) throw new Error('Signer required');
       if (!sdkBalances) throw new Error('No balances found');
-      const sc = sdk.silo.siloConvert;
+      const siloConvert = sdk.silo.siloConvert;
 
-      const whitelist = [sc.Bean, sc.BeanCrv3, sc.urBean, sc.urBeanCrv3];
-      const [inToken, outToken] = whitelist.reduce(
+      /// sdk.silo.siloConvert requires it's own token instances
+      const whitelist = [
+        siloConvert.Bean,
+        siloConvert.BeanCrv3,
+        siloConvert.urBean,
+        siloConvert.urBeanCrv3,
+      ];
+      const [tokenIn, tokenOut] = whitelist.reduce<
+        [Token | null, Token | null]
+      >(
         (prev, curr) => {
-          if (curr.equals(tokenIn)) prev[0] = curr;
-          if (curr.equals(tokenOut)) prev[1] = curr;
+          prev[0] = curr.equals(_tokenIn) ? curr : prev[0];
+          prev[1] = curr.equals(_tokenOut) ? curr : prev[1];
           return prev;
         },
-        [null, null] as [Token | null, Token | null]
+        [null, null]
       );
 
-      if (!inToken || !outToken) throw new Error('conversion unavailable');
-      await sc.validateTokens(inToken, outToken);
+      if (!tokenIn || !tokenOut) throw new Error('conversion unavailable');
+      await siloConvert.validateTokens(tokenIn, tokenOut);
 
       const depositCrates = [...sdkBalances.deposited.crates];
 
-      // if the user is planting
-      if (isPlanting && sdk.tokens.BEAN.equals(inToken)) {
+      let amountIn = tokenIn.amount(_amountIn.toString());
+
+      // if the user is planting & the token being used is BEAN
+      if (isConvertingPlanted) {
         const plantCrate = await FormTxnBuilder.makePlantCrate(sdk, account);
         depositCrates.push(plantCrate.crate);
+        amountIn = amountIn.add(plantCrate.amount);
       }
 
-      const amountIn = inToken.amount(_amountIn.toString());
-
-      const conversion = sc.calculateConvert(
-        inToken,
-        outToken,
+      const conversion = siloConvert.calculateConvert(
+        tokenIn,
+        tokenOut,
         amountIn,
         depositCrates,
         season.toNumber()
       );
-      console.debug('[Convert][conversion]', conversion);
+      console.debug('[Convert]conversion: ', conversion);
 
       const amountOutBN = await sdk.contracts.beanstalk.getAmountOut(
         tokenIn.address,
         tokenOut.address,
         conversion.amount.toBigNumber()
       );
-      const amountOut = outToken.fromBlockchain(amountOutBN);
+      const amountOut = tokenOut.fromBlockchain(amountOutBN);
       const minAmountOut = amountOut.pct(100 - slippage);
 
-      console.debug('[Convert][minAmountOut]', minAmountOut);
+      console.debug('[Convert] minAmountOut: ', minAmountOut);
 
       const getEncoded = () =>
         sdk.contracts.beanstalk.interface.encodeFunctionData('convert', [
-          sc.calculateEncoding(inToken, outToken, amountIn, minAmountOut),
+          siloConvert.calculateEncoding(
+            tokenIn,
+            tokenOut,
+            amountIn,
+            minAmountOut
+          ),
           conversion.crates.map((c) => c.season.toString()),
           conversion.crates.map((c) => c.amount.abs().toBlockchain()),
         ]);
@@ -568,10 +594,14 @@ const Convert: FC<{
   const handleQuote = useCallback<
     QuoteHandlerWithParams<ConvertQuoteHandlerParams>
   >(
-    async (tokenIn, _amountIn, tokenOut, { slippage, isPlanting }) =>
-      handleConversion(tokenIn, _amountIn, tokenOut, slippage, isPlanting).then(
-        ({ minAmountOut }) => tokenValueToBN(minAmountOut)
-      ),
+    async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) =>
+      handleConversion(
+        tokenIn,
+        _amountIn,
+        tokenOut,
+        slippage,
+        isConvertingPlanted
+      ).then(({ minAmountOut }) => tokenValueToBN(minAmountOut)),
     [handleConversion]
   );
 
@@ -645,8 +675,10 @@ const Convert: FC<{
           { farmerSilo: true },
           [refetchPools, refetchSdkBalances] // update prices to account for pool conversion
         );
+
         txToast.success(receipt);
 
+        /// Reset the max Amount In
         const _maxAmountIn = await sdk.contracts.beanstalk
           .getMaxAmountIn(tokenIn.address, tokenOut.address)
           .then((amt) => tokenValueToBN(tokenIn.fromBlockchain(amt)))
