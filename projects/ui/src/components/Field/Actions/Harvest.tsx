@@ -30,7 +30,7 @@ import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 
 // -----------------------------------------------------------------------
 
@@ -140,7 +140,7 @@ const HarvestForm: FC<Props> = ({
                 page.
               </Alert>
             </Box> */}
-            <FormTxnsSecondaryOptions />
+            <AdditionalTxnsAccordion />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview

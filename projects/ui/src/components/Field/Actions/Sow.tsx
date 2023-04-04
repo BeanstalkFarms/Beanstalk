@@ -17,6 +17,7 @@ import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import {
   BalanceFromFragment,
   FormStateNew,
+  FormTokenStateNew,
   FormTxnsFormState,
   SettingInput,
   SlippageSettingsFragment,
@@ -29,9 +30,8 @@ import {
   BalanceFrom,
   balanceFromToMode,
 } from '~/components/Common/Form/BalanceFromRow';
-import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 import ClaimBeanDrawerToggle from '~/components/Common/Form/FormTxn/ClaimBeanDrawerToggle';
-import FormTxnsSecondaryOptions from '~/components/Common/Form/FormTxnsSecondaryOptions';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -50,7 +50,6 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
-import useResetFormFarmActions from '~/hooks/form/useResetFormFarmActions';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
@@ -63,12 +62,14 @@ import { MinBN, displayBN, displayFullBN, tokenValueToBN } from '~/util';
 import { ActionType } from '~/util/Actions';
 import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
 import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
+import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
-  maxAmountIn: BigNumber | undefined;
 } & FormTxnsFormState &
-  BalanceFromFragment;
+  BalanceFromFragment & {
+    claimableBeans: FormTokenStateNew;
+  };
 
 type SowFormQuoteParams = {
   fromMode: FarmFromMode;
@@ -78,7 +79,6 @@ const defaultFarmActionsFormState = {
   preset: 'claim',
   primary: undefined,
   secondary: undefined,
-  additionalAmount: undefined,
 };
 
 const SowForm: FC<
@@ -124,27 +124,27 @@ const SowForm: FC<
   const amountIn = values.tokens[0].amount; // amount of from token
   const tokenOut = Bean; // converting to token
   const amountOut = values.tokens[0].amountOut; // amount of to token
-  const maxAmountIn = values.maxAmountIn;
+  const maxAmountIn = values.tokens[0].maxAmountIn;
   const tokenInBalance =
     balances[tokenIn.symbol === 'ETH' ? 'eth' : tokenIn.address];
+  const claimedBeansUsed = values.claimableBeans.amount;
 
   /// Calculations
   const hasSoil = soil.gt(0);
   const beans = Bean.equals(tokenIn)
     ? amountIn || ZERO_BN
     : amountOut || ZERO_BN;
-  const isSubmittable = hasSoil && beans?.gt(0);
-  const numPods = beans.multipliedBy(weather.div(100).plus(1));
+  const totalBeansAmount = beans.plus(claimedBeansUsed || ZERO_BN);
+  const isSubmittable = hasSoil && totalBeansAmount?.gt(0);
+  const numPods = totalBeansAmount.multipliedBy(weather.div(100).plus(1));
   const podLineLength = beanstalkField.podIndex.minus(
     beanstalkField.harvestableIndex
   );
-  const maxAmountUsed =
-    amountIn && maxAmountIn ? amountIn.div(maxAmountIn) : null;
-
-  const beansUsed = (Bean.equals(tokenIn) ? amountIn : amountOut) || ZERO_BN;
+  const maxAmountUsed = maxAmountIn ? totalBeansAmount.div(maxAmountIn) : null;
 
   const txnActions = useFarmerFormTxnsActions({
     showGraphicOnClaim: Bean.equals(tokenIn),
+    claimBeansState: values.claimableBeans,
   });
 
   const handleSetBalanceFrom = useCallback(
@@ -166,14 +166,19 @@ const SowForm: FC<
         return _tokens.has(x.token);
       });
       setFieldValue('tokens', [
-        ...newValue,
         ...Array.from(copy).map((_token) => ({
           token: _token,
           amount: undefined,
         })),
+        ...newValue,
       ]);
+      setFieldValue('farmActions', defaultFarmActionsFormState);
+      setFieldValue('claimableBeans', {
+        token: Bean,
+        amount: null,
+      });
     },
-    [values.tokens, setFieldValue]
+    [values.tokens, setFieldValue, Bean]
   );
 
   /// FIXME: standardized `maxAmountIn` approach?
@@ -186,7 +191,7 @@ const SowForm: FC<
         const work = sdk.farm.create();
         if (bean.equals(tokenIn)) {
           /// 1 SOIL is consumed by 1 BEAN
-          setFieldValue('maxAmountIn', soil);
+          setFieldValue('tokens.0.maxAmountIn', soil);
         } else if (tokenIn.equals(eth) || weth.equals(tokenIn)) {
           /// Estimate how many ETH it will take to buy `soil` BEAN.
           /// TODO: across different forms of `tokenIn`.
@@ -204,35 +209,30 @@ const SowForm: FC<
           estimate.toHuman(),
           tokenIn.symbol
         );
-        setFieldValue('maxAmountIn', tokenValueToBN(estimate));
+        setFieldValue('tokens.0.maxAmountIn', tokenValueToBN(estimate));
       } else {
-        setFieldValue('maxAmountIn', ZERO_BN);
+        setFieldValue('tokens.0.maxAmountIn', ZERO_BN);
       }
     })();
   }, [hasSoil, soil, tokenIn, tokenOut, sdk.tokens, sdk.farm, setFieldValue]);
 
-  const quotehHandlerParams = useMemo(
+  const quoteHandlerParams = useMemo(
     () => ({
       fromMode: balanceFromToMode(values.balanceFrom),
     }),
     [values.balanceFrom]
   );
 
-  // Reset the form farmActions whenever the tokenIn changes
-  useResetFormFarmActions(tokenIn, defaultFarmActionsFormState);
+  const useClaimedQuoteParams = useMemo(
+    () => ({
+      fromMode: FarmFromMode.INTERNAL_TOLERANT,
+    }),
+    []
+  );
 
   const disabledActions = useMemo(() => {
     const isEth = tokenIn.equals(sdk.tokens.ETH);
-    const _disabled = isEth
-      ? [
-          {
-            action: FormTxn.ENROOT,
-            reason:
-              'Enrooting while using ETH to deposit is currently not supported',
-          },
-        ]
-      : undefined;
-    return _disabled;
+    return isEth ? [FormTxn.ENROOT] : undefined;
   }, [tokenIn, sdk.tokens.ETH]);
 
   return (
@@ -254,22 +254,17 @@ const SowForm: FC<
           key="tokens.0"
           name="tokens.0"
           tokenOut={Bean}
-          disabled={!hasSoil || !values.maxAmountIn}
-          max={MinBN(
-            values.maxAmountIn || ZERO_BN,
-            tokenInBalance?.total || ZERO_BN
-          )}
+          disabled={!hasSoil || !maxAmountIn}
+          max={MinBN(maxAmountIn || ZERO_BN, tokenInBalance?.total || ZERO_BN)}
           balance={tokenInBalance || undefined}
           state={values.tokens[0]}
           showTokenSelect={showTokenSelect}
           handleQuote={handleQuote}
-          params={quotehHandlerParams}
+          params={quoteHandlerParams}
           balanceFrom={values.balanceFrom}
-          disableTokenSelect={!hasSoil || !values.maxAmountIn}
+          disableTokenSelect={!hasSoil || !maxAmountIn}
         />
-        {hasSoil && (
-          <ClaimBeanDrawerToggle maxBeans={soil} beanAmount={beansUsed} />
-        )}
+        {hasSoil && <ClaimBeanDrawerToggle />}
         {!hasSoil ? (
           <Box>
             <WarningAlert sx={{ color: 'black' }}>
@@ -302,21 +297,21 @@ const SowForm: FC<
                 {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
               </WarningAlert>
             ) : null}
-            <FormTxnsSecondaryOptions disabledActions={disabledActions} />
+            <AdditionalTxnsAccordion filter={disabledActions} />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
                   actions={[
                     {
                       type: ActionType.BUY_BEANS,
-                      beanAmount: beans,
+                      beanAmount: totalBeansAmount,
                       beanPrice: beanPrice,
                       token: getNewToOldToken(tokenIn),
                       tokenAmount: amountIn || ZERO_BN,
                     },
                     {
                       type: ActionType.BURN_BEANS,
-                      amount: beans,
+                      amount: totalBeansAmount,
                     },
                     {
                       type: ActionType.RECEIVE_PODS,
@@ -369,9 +364,15 @@ const SowForm: FC<
       </Stack>
       <FormWithDrawer.Drawer title="Use Claimable Assets">
         <ClaimBeanDrawerContent
-          txnName="Sow"
           maxBeans={soil}
-          beanAmount={beansUsed}
+          beansUsed={beans}
+          quoteProviderProps={{
+            tokenOut: Bean,
+            name: 'claimableBeans',
+            state: values.claimableBeans,
+            params: useClaimedQuoteParams,
+            handleQuote,
+          }}
         />
       </FormWithDrawer.Drawer>
     </FormWithDrawer>
@@ -430,14 +431,22 @@ const Sow: FC<{}> = () => {
           token: baseToken as ERC20Token | NativeToken,
           amount: undefined,
         },
+        {
+          // claimable BEANs
+          token: sdk.tokens.BEAN,
+          amount: undefined,
+        },
       ],
-      maxAmountIn: undefined,
       farmActions: {
         ...defaultFarmActionsFormState,
       },
+      claimableBeans: {
+        token: sdk.tokens.BEAN,
+        amount: undefined,
+      },
       balanceFrom: BalanceFrom.TOTAL,
     }),
-    [baseToken]
+    [baseToken, sdk.tokens.BEAN]
   );
 
   /// Handlers
@@ -487,6 +496,7 @@ const Sow: FC<{}> = () => {
         const { BEAN: bean, ETH, WETH, PODS } = sdk.tokens;
 
         const formData = values.tokens[0];
+        const additional = values.claimableBeans;
         const farmActions = values.farmActions;
         const tokenIn = formData.token;
         const amountIn =
@@ -495,25 +505,30 @@ const Sow: FC<{}> = () => {
           ? formData.amount
           : formData.amountOut;
         const additionalAmount = bean.amount(
-          farmActions.additionalAmount?.toString() || '0'
+          additional.amount?.toString() || '0'
         );
         const totalClaimAmount = bean.amount(
-          farmActions.surplus?.max?.toString() || '0'
+          additional.maxAmountIn?.toString() || '0'
         );
         const transferDestination =
-          farmActions.surplus?.destination || FarmToMode.INTERNAL;
+          farmActions.transferToMode || FarmToMode.INTERNAL;
 
-        if (values.tokens.length > 1) {
-          throw new Error('Only one token supported at this time');
-        }
         if (!amountIn || amountIn.lte(0) || !amountBeans || amountBeans.eq(0)) {
           throw new Error('No amount set');
         }
         if (!account) {
           throw new Error('Signer required');
         }
+        if (
+          (additionalAmount && !totalClaimAmount) ||
+          additionalAmount.gt(totalClaimAmount)
+        ) {
+          throw new Error('Insufficient claimable Beans');
+        }
 
-        const totalBeans = amountBeans.times(additionalAmount.toHuman());
+        console.log('claimableBeans: ', values.claimableBeans);
+
+        const totalBeans = amountBeans.plus(additionalAmount.toHuman());
         const amountPods = totalBeans.times(temperature.div(100).plus(1));
         const fromMode = bean.equals(tokenIn)
           ? balanceFromToMode(values.balanceFrom)
@@ -536,9 +551,7 @@ const Sow: FC<{}> = () => {
             throw new Error(`No quote available for ${formData.token.symbol}`);
           }
           console.debug('[SOW]: adding steps to workflow', formData.steps);
-          formData.steps.forEach((step) => {
-            sow.add(step);
-          });
+          sow.add(formData.steps);
 
           // At the end of the Swap step, the assets will be in our INTERNAL balance.
           // The Swap decides where to route them from (see handleQuote).
@@ -606,7 +619,7 @@ const Sow: FC<{}> = () => {
           return [finalStep];
         })();
 
-        const { execute, performed } = await FormTxnBuilder.compile(
+        const { execute, performed, workflow } = await FormTxnBuilder.compile(
           sdk,
           values.farmActions,
           farmerFormTxns.getGenerators,
@@ -615,6 +628,8 @@ const Sow: FC<{}> = () => {
           values.settings.slippage,
           finalSteps
         );
+
+        console.log(workflow);
 
         const txn = await execute();
         txToast.confirming(txn);
