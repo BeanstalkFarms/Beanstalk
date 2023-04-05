@@ -1,21 +1,30 @@
-import { Well } from "@beanstalk/sdk/Wells";
-import { useEffect, useState } from "react";
 import { WELL_ADDRESSES } from "src/constants/addresses";
 import useSdk from "src/utils/sdk/useSdk";
 import { useQuery } from "@tanstack/react-query";
+import { Well } from "@beanstalk/sdk/Wells";
 
 export const useWells = () => {
   const sdk = useSdk();
 
-  const { data, isLoading, error } = useQuery(["wells"], () => {
-    return Promise.all(
-      WELL_ADDRESSES.map((address) => {
-        return sdk.wells.getWell(address, {
-          name: true
-        });
-      })
-    );
-  });
+  return useQuery<Well[], Error>(
+    ["wells"],
+    async () => {
+      const res = await Promise.allSettled(
+        WELL_ADDRESSES.map((address) =>
+          sdk.wells
+            .getWell(address, {
+              name: true,
+              tokens: true
+            })
+            .catch((err) => console.log(`Failed to load Well [${address}]: ${err.message}`))
+        )
+      );
 
-  return { wells: data, loading: isLoading, error };
+      // filter out errored calls
+      return res.map((promise) => (promise.status === "fulfilled" ? promise.value : null)).filter<Well>((p): p is Well => !!p);
+    },
+    {
+      staleTime: Infinity
+    }
+  );
 };

@@ -11,7 +11,7 @@ type Props = {
 export const TokenLogo: FC<Props> = ({ size = 32, token }) => {
   return (
     <Container>
-      <img src={token?.logo} alt={`${token?.symbol} Logo`} width={size} />
+      <img src={token?.logo} alt={`${token?.symbol} Logo`} width={size} height={size} />
     </Container>
   );
 };

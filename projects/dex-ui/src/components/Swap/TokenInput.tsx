@@ -1,9 +1,11 @@
-import React, { MouseEvent, useCallback, useRef, useState } from "react";
+import React, { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { FC } from "src/types";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
+import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { Spinner } from "../Spinner";
 
 type ContainerProps = {
   width: string;
@@ -20,6 +22,7 @@ type TokenInput = {
   showBalance?: boolean;
   showMax?: boolean;
   allowNegative?: boolean;
+  loading: boolean;
   onAmountChange?: (a: TokenValue) => void;
   onTokenChange?: (t: Token) => void;
 };
@@ -35,10 +38,13 @@ export const TokenInput: FC<TokenInput> = ({
   canChangeToken = false,
   showBalance = true,
   showMax = true,
+  loading = false,
   allowNegative = false
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: balance, isLoading: isBalanceLoading, error: balanceError } = useTokenBalance(token);
   width = width ?? "100%";
 
   const updateAmount = useCallback(
@@ -75,8 +81,9 @@ export const TokenInput: FC<TokenInput> = ({
   }, []);
 
   const handleClickMax = useCallback(() => {
-    console.log("Max clicked");
-  }, []);
+    const val = balance?.[token.symbol].toHuman() ?? "";
+    handleAmountChange(val);
+  }, [balance, handleAmountChange, token.symbol]);
 
   /**
    * We have a fake focus outline around TokenInput that kind of
@@ -93,6 +100,8 @@ export const TokenInput: FC<TokenInput> = ({
     }
   }, []);
 
+  if (loading) return <LoadingContainer width={width} focused={focused} />;
+
   return (
     <Container width={width} focused={focused} id="token-input" onClick={handleClick} onMouseDown={dontStealFocus}>
       <TopRow>
@@ -108,16 +117,53 @@ export const TokenInput: FC<TokenInput> = ({
         />
         <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} />
       </TopRow>
+
       {showBalance && (
         <BalanceRow>
-          <Balance>Balance: 3503.2351</Balance>
-          {showMax && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
+          <Balance>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
+          {showMax && !isBalanceLoading && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
         </BalanceRow>
       )}
     </Container>
   );
 };
 
+const shimmer = keyframes`
+  0% {
+      background-position: -1600px 0;
+  }
+  100% {
+      background-position: 1200px 0;
+  }
+`;
+
+const LoadingContainer = styled.div<ContainerProps>`
+  display: flex;
+  flex-direction: column;
+  width: ${(props) => props.width};
+  height: 96px;
+
+  padding: 0px 16px;
+  background: #272a37;
+
+  border: 2px solid rgb("0 0 0 / 0%");
+  box-sizing: border-box;
+  border-radius: 12px;
+
+  overflow: hidden;
+  justify-content: center;
+  gap: 8px;
+  cursor: text;
+
+  animation-duration: 2s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: ${shimmer};
+  animation-timing-function: linear;
+  background: #ddd;
+  background: linear-gradient(65deg, rgba(39, 42, 55, 1) 10%, rgba(48, 52, 68, 1) 20%, rgba(39, 42, 55, 1) 30%);
+  background-size: 1200px 100%;
+`;
 const Container = styled.div<ContainerProps>`
   display: flex;
   flex-direction: column;
@@ -148,6 +194,7 @@ const BalanceRow = styled.div`
 
 const Balance = styled.div`
   display: flex;
+  align-items: center;
   font-family: "Inter";
   font-style: normal;
   font-weight: 500;
