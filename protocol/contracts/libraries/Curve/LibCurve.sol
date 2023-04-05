@@ -43,7 +43,7 @@ library LibCurve {
         uint256 x = xp[i] + ((1 * rates[i]) / PRECISION);
         uint256 y = getY(x, xp, a, D);
         uint256 dy = xp[j] - y - 1;
-        return dy / 1e6; // !
+        return dy / 1e6;
     }
 
     function getY(
