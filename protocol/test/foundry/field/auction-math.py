@@ -20,8 +20,10 @@ def fracExp(beanReward, blocks):
     # this print statement must be here for ffi to work
     print("0x" + enc.hex())
 
+# the formula here is defined in the morning auction PR, proposed solution: 
+# https://hackmd.io/ZV3FPVEHQcaQHX7qgX2tKA?view#Contract-Changes
 def morningAuctionLog(t, blocks): 
-    # https://github.com/BeanstalkFarms/Beanstalk/pull/133 
+    
     blocks = blocks if blocks < 25 else 25
     scale = math.floor(math.log((2*blocks) + 1, 51) * 1e12)
     tempScale = t * scale
