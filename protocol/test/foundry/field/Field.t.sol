@@ -209,7 +209,7 @@ contract FieldTest is FieldFacet, TestHelper {
     }
 
     /**
-     * checking next sow time, with exactly 1 soil available
+     * checking next sow time, with exactly 0 soil available
      * *after* sowing.
      */
     function testComplexDPD1Soil() public {
@@ -397,6 +397,12 @@ contract FieldTest is FieldFacet, TestHelper {
         ];
 
         vm.roll(blockNo);
+        
+        // temperature is scaled as such:
+        // (1e2)    season.weather().t
+        // (1e12)    * pct
+        // (1e6)     / TEMPERATURE_PRECISION
+        // (1e8)     = temperature
         uint256 __temperature = uint256(season.weather().t).mulDiv(ScaleValues[blockNo - 1], 1e6, LibPRBMath.Rounding.Up);
         // temperature is always 1% if a user sows at the same block 
         // as the sunrise block, irregardless of temperature
@@ -411,7 +417,7 @@ contract FieldTest is FieldFacet, TestHelper {
     function test_remainingPods_abovePeg(uint256 rand) prank(brean) public {
         _beforeEachMorningAuction();
         uint256 _block = 1;
-        uint256 maxAmount = 10e6;
+        uint256 maxBeans = 10e6;
         uint256 totalSoilSown = 0;
         uint256 totalPodsMinted = 0;
 
@@ -419,14 +425,14 @@ contract FieldTest is FieldFacet, TestHelper {
             vm.roll(_block);
             // we want to randomize the amount of soil sown, 
             // but currently foundry does not support stateful fuzz testing. 
-            uint256 amount = uint256(keccak256(abi.encodePacked(rand))).mod(maxAmount);
+            uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
             
-            // if amount is less than maxAmount, then sow remaining instead
-            if(maxAmount > field.totalSoil()){
-                amount = field.totalSoil();
+            // if beans is less than maxBeans, then sow remaining instead
+            if(maxBeans > field.totalSoil()){
+                beans = field.totalSoil();
             }
-            totalPodsMinted = totalPodsMinted + field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
-            totalSoilSown = totalSoilSown + amount;
+            totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
+            totalSoilSown = totalSoilSown + beans;
             _block++;
             rand++;
         }
@@ -443,24 +449,24 @@ contract FieldTest is FieldFacet, TestHelper {
         _beforeEachMorningAuctionBelowPeg();
         uint256 _block = 1; // start block
         uint256 totalSoilSown = 0;
-        uint256 maxAmount = 5e6; // max amount that can be sown in a tx
+        uint256 maxBeans = 5e6; // max beans that can be sown in a tx
         uint256 totalPodsMinted = 0;
         uint256 maxPods = 200e6; // maximum pods that should be issued
         uint256 initalBal = C.bean().balanceOf(brean); // inital balance
 
         while (field.totalSoil() > 0) {
-            // we want to randomize the amount of soil sown, 
+            // we want to randomize the beans sown, 
             // but currently foundry does not support stateful fuzz testing. 
-            uint256 amount = uint256(keccak256(abi.encodePacked(rand))).mod(maxAmount);
+            uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
             vm.roll(_block);
-            uint256 LastTotalSoil = field.totalSoil();
-            // if amount is less than maxAmount, then sow remaining instead
-            if(maxAmount > field.totalSoil()){
-                amount = field.totalSoil();
+            uint256 lastTotalSoil = field.totalSoil();
+            // if beans is less than maxBeans, then sow remaining instead
+            if(maxBeans > field.totalSoil()){
+                beans = field.totalSoil();
             }
-            totalSoilSown = totalSoilSown + amount;
-            totalPodsMinted = totalPodsMinted + field.sow(amount, 1e6, LibTransfer.From.EXTERNAL);
-            assertEq(LastTotalSoil - field.totalSoil(), amount);
+            totalSoilSown = totalSoilSown + beans;
+            totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
+            assertEq(lastTotalSoil - field.totalSoil(), beans);
             _block++;
             rand++;
         }
@@ -479,27 +485,26 @@ contract FieldTest is FieldFacet, TestHelper {
     }
 
     // multiple fixed amount sows at different dutch auction times
-    function testRoundingErrorBelowPeg(uint256 amount) prank(brean) public {
+    function testRoundingErrorBelowPeg(uint256 beans) prank(brean) public {
         // we bound between 1 and 10 beans to sow, out of 100 total soil.
-        amount = bound(amount, 1e6, 10e6);
+        beans = bound(beans, 1e6, 10e6);
         _beforeEachMorningAuction();
         uint256 _block = 1;
         uint256 totalSoilSown = 0;
-        // uint256 amount = 5e6;
         uint256 totalPodsMinted = 0;
-        uint256 LastTotalSoil;
+        uint256 lastTotalSoil;
         while (field.totalSoil() > 0) {
             vm.roll(_block);
-            LastTotalSoil = field.totalSoil();
-            // if amount is less than maxAmount, then sow remaining instead
-            if(amount > field.totalSoil()) amount = field.totalSoil();
-            totalSoilSown = totalSoilSown + amount;
-            totalPodsMinted = totalPodsMinted + field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
+            lastTotalSoil = field.totalSoil();
+            // if beans is less than the amount of soil in the field, then sow remaining instead
+            if(beans > field.totalSoil()) beans = field.totalSoil();
+            totalSoilSown = totalSoilSown + beans;
+            totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
             
             // because totalsoil is scaled up,
             // it may cause the delta to be up to 2 off 
             // (if one was rounded up, and the other is rounded down)
-            assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 2);
+            assertApproxEqAbs(lastTotalSoil - field.totalSoil(), beans, 2);
             // cap the blocks between 1 - 25 blocks
             if(_block < 25) _block++;
         }
@@ -509,7 +514,7 @@ contract FieldTest is FieldFacet, TestHelper {
             totalPodsMinted, 
             "TotalUnharvestable doesn't equal totalPodsMinted"
         );
-        // check the amount of soil sown at the end of the season is greater than the start soil
+        // check the amount of beans sown at the end of the season is greater than the start soil
         assertGt(
             totalSoilSown, 
             100e6, 
@@ -550,7 +555,8 @@ contract FieldTest is FieldFacet, TestHelper {
     
 
     /**
-     * sowing all with variable soil, temperature, and deltaBlocks.
+     * sowing all soil, with variable soil, temperature, and place in the morning auction.
+     * this is done by rolling to a block between 1 and 25, and sowing all soil.
      * pods issued should always be equal to remainingPods.
      * soil/bean used should always be greater/equal to soil issued.
      */
@@ -562,16 +568,16 @@ contract FieldTest is FieldFacet, TestHelper {
             true
         );
         uint256 remainingPods = field.remainingPods();
-        uint256 TotalSoil = field.totalSoil();
+        uint256 totalSoil = field.totalSoil();
         vm.prank(brean);
-        field.sowWithMin(TotalSoil, 1e6, TotalSoil, LibTransfer.From.EXTERNAL);
+        field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
         assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
         assertEq(uint256(field.totalRealSoil()), 0, "s.f.soil greater than 0");
         assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
     }
 
     /**
-     * sowing all with variable soil, temperature, and block
+     * sowing all soil, with variable soil, temperature, and block below peg
      * pods issued should always be lower than remainingPods
      * soil/bean used should always be equal to soil issued.
      */ 
@@ -587,8 +593,8 @@ contract FieldTest is FieldFacet, TestHelper {
             false
         );
         uint256 remainingPods = field.remainingPods();
-        uint256 TotalSoil = field.totalSoil();
-        field.sow(TotalSoil, 1e6, LibTransfer.From.EXTERNAL);
+        uint256 totalSoil = field.totalSoil();
+        field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
         assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
         assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
     }
