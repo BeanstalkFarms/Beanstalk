@@ -10,6 +10,12 @@ temp
 archived
 .vscode
 
+# Diamond Cut Outputs
+diamondCut-*.json
+
+#Open Zeppelin Local Config
+.openzeppelin/unknown-1337.json
+
 #Editors
 .idea/
 

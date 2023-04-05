@@ -34,17 +34,17 @@ library LibBalance {
     );
 
     /**
-     * @dev Returns the combined Internal and External (ERC20) balance of `token` for `account`.
+     * @dev Returns the sum of `account`'s Internal and External (ERC20) balance of `token`
      */
     function getBalance(address account, IERC20 token)
         internal
         view
-        returns (uint256 combined_balance)
+        returns (uint256 balance)
     {
-        combined_balance = token.balanceOf(account).add(
+        balance = token.balanceOf(account).add(
             getInternalBalance(account, token)
         );
-        return combined_balance;
+        return balance;
     }
 
     /**
@@ -108,9 +108,9 @@ library LibBalance {
     function getInternalBalance(address account, IERC20 token)
         internal
         view
-        returns (uint256)
+        returns (uint256 balance)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.internalTokenBalance[account][token];
+        balance = s.internalTokenBalance[account][token];
     }
 }

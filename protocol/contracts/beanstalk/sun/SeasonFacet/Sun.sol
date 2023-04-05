@@ -146,7 +146,7 @@ contract Sun is Oracle {
         }
 
         // Distribute the rest of the Fertilized Beans
-        s.bpf = uint128(newTotalBpf);
+        s.bpf = uint128(newTotalBpf); // SafeCast unnecessary here.
         newFertilized = newFertilized.add(newBpf.mul(s.activeFertilizer));
         s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
     }

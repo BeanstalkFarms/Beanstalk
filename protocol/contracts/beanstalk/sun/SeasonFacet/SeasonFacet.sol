@@ -116,7 +116,7 @@ contract SeasonFacet is Weather {
     function stepSeason() private {
         s.season.timestamp = block.timestamp;
         s.season.current += 1;
-        s.season.sunriseBlock = uint32(block.number);
+        s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season());
     }
 
@@ -135,6 +135,7 @@ contract SeasonFacet is Weather {
         LibTransfer.To mode
     ) private returns (uint256) {
         // Number of blocks the sunrise is late by
+        // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
         uint256 blocksLate = block.timestamp.sub(
             s.season.start.add(s.season.period.mul(season()))
         )

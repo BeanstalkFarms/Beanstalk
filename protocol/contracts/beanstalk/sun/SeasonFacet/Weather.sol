@@ -11,7 +11,7 @@ library DecimalExtended {
     uint256 private constant PERCENT_BASE = 1e18;
 
     function toDecimal(uint256 a) internal pure returns (Decimal.D256 memory) {
-        return Decimal.ratio(a, PERCENT_BASE);
+        return Decimal.D256({ value: a });
     }
 }
 
@@ -186,7 +186,7 @@ contract Weather is Sun {
             caseId += 1;
         }
 
-        s.w.lastDSoil = uint128(dsoil);
+        s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
         
         changeWeather(caseId);
         handleRain(caseId);

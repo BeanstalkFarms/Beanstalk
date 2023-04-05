@@ -50,6 +50,7 @@
     "@uniswap/v3-core": "github:uniswap/v3-core",
     "@uniswap/v3-periphery": "github:uniswap/v3-periphery",
     "dotenv": "^10.0.0",
+    "eth-gas-reporter": "0.2.25",
     "eth-permit": "^0.2.1",
     "forge-std": "^1.1.2",
     "hardhat-tracer": "^1.1.0-rc.9",

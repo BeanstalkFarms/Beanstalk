@@ -169,7 +169,7 @@ contract StorageOld {
         uint256 lastDSoil;
         uint96 lastSoilPercent;
         uint32 lastSowTime;
-        uint32 thisSowTime;
+        uint32 nextSowTime;
         uint32 yield;
         bool didSowBelowMin;
         bool didSowFaster;

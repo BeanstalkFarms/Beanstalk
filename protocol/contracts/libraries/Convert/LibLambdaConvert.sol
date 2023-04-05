@@ -18,12 +18,12 @@ library LibLambdaConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
-        (inAmount, tokenIn) = convertData.lambdaConvert();
+        (amountIn, tokenIn) = convertData.lambdaConvert();
         tokenOut = tokenIn;
-        outAmount = inAmount;
+        amountOut = amountIn;
     }
 }

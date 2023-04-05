@@ -23,7 +23,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice deposits ERC20 token into internal farmer balances.
+     * @notice Deposits an ERC20 into the Silo.
      * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
      * @param token address of ERC20
      * @param amount tokens to be transfered
@@ -48,7 +48,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice withdraws from a single deposit.
+     * @notice Withdraws an ERC20 Deposit from the Silo.
      * @dev 
      *  season determines how much Stalk and Seeds are removed from the Farmer.
      *  typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
@@ -66,7 +66,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice withdraws from multiple deposits.
+     * @notice Withdraws multiple ERC20 Deposits from the Silo.
      * @dev
      *  factor in gas costs when withdrawing from multiple deposits to ensure greater UX
      *  for example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
@@ -88,7 +88,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice claims tokens from a withdrawal.
+     * @notice Claims ERC20s from a Withdrawal.
      * @param token address of ERC20
      * @param season season to claim
      * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
@@ -103,7 +103,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice claims tokens from multiple withdrawals.
+     * @notice Claims ERC20s from multiple Withdrawals.
      * @param token address of ERC20
      * @param seasons array of seasons to claim
      * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
@@ -122,7 +122,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice transfers single farmer deposit.
+     * @notice Transfers a single Deposit.
      * @param sender source of deposit
      * @param recipient destination of deposit
      * @param token address of ERC20
@@ -147,7 +147,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice transfers multiple farmer deposits.
+     * @notice Transfers multiple Deposits of a single ERC20 token.
      * @param sender source of deposit
      * @param recipient destination of deposit
      * @param token address of ERC20
@@ -181,7 +181,7 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice approves an address to access a farmers deposit.
+     * @notice Approves an address to transfer a farmer's Deposits of a specified ERC20 token.
      * @param spender address to be given approval
      * @param token address of ERC20
      * @param amount amount to be approved
@@ -197,10 +197,10 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice increases allowance of deposit.
+     * @notice Increases allowance of Deposits of a specified ERC20 token.
      * @param spender address to increase approval
      * @param token address of ERC20
-     * @param addedValue additional value to be given 
+     * @param addedValue additional amount to approve
      * @return bool success
      */
     function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
@@ -209,10 +209,10 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice decreases allowance of deposit.
+     * @notice Decreases allowance of Deposits of a specified ERC20 token.
      * @param spender address to decrease approval
      * @param token address of ERC20
-     * @param subtractedValue amount to be removed 
+     * @param subtractedValue amount to revoke approval
      * @return bool success
      */
     function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
@@ -231,7 +231,7 @@ contract SiloFacet is TokenSilo {
      */
     
     /** 
-     * @notice permits multiple deposits.
+     * @notice Executes a signed EIP-712 deposit permit for multiple tokens.
      * @param owner address to give permit
      * @param spender address to permit
      * @param tokens array of ERC20s to permit
@@ -258,7 +258,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice permits deposit.
+     * @notice Executes a signed EIP-712 Deposit permit for a single token.
      * @param owner address to give permit
      * @param spender address to permit
      * @param token ERC20 to permit
@@ -283,7 +283,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice returns nonce of deposit permits.
+     * @notice Returns nonce of deposit permits.
      */ 
     function depositPermitNonces(address owner) public view virtual returns (uint256) {
         return LibSiloPermit.nonces(owner);
@@ -296,13 +296,13 @@ contract SiloFacet is TokenSilo {
     function depositPermitDomainSeparator() external view returns (bytes32) {
         return LibSiloPermit._domainSeparatorV4();
     }
+
     /*
-     * Silo
+     * Yield Distributon
      */
 
     /** 
-     * @notice updates farmer state
-     * @dev accredits grown stalk
+     * @notice Activates a farmer's Grown Stalk and processes any new Seasons of Plentys.
      * @param account address to update
      */
     function update(address account) external payable {
@@ -310,7 +310,10 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice accredits earned beans and stalk to farmer
+     * @notice Deposits Earned Beans in the current Season and activates Earned Seeds.
+     * @dev 
+     *   planting is not required to activate Earned Stalk (It is already active)
+     *   a Farmer can only plant their own Earned Beans to prevent griefing
      * @return beans amount of earned beans given
      */
     function plant() external payable returns (uint256 beans) {
@@ -318,7 +321,7 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice claims rewards from a Season Of Plenty (SOP)
+     * @notice Claims outstanding 3CRV rewards from Season Of Plentys (SOP).
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
@@ -329,9 +332,8 @@ contract SiloFacet is TokenSilo {
      */
 
     /** 
-     * @notice adds Revitalized Stalk and Seeds to your Stalk and Seed balances
-     * @dev only applies to unripe assets
-     * @param token address of ERC20
+     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of specified Unripe Deposits.
+     * @param token address of Whitelisted Unripe ERC20
      * @param seasons array of seasons to enroot
      * @param amounts array of amount (corresponding to seasons) to enroot
      */
@@ -380,8 +382,8 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice updates unripe deposit
-     * @param token address of ERC20
+     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of a single Unripe Deposit.
+     * @param token address of Whitelisted Unripe ERC20
      * @param _season season to enroot
      * @param amount amount to enroot
      */
