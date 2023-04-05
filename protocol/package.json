@@ -2,6 +2,9 @@
   "name": "@beanstalk/protocol",
   "version": "2.7.1",
   "description": "Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.",
+  "installConfig": {
+    "hoistingLimits": "dependencies"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
