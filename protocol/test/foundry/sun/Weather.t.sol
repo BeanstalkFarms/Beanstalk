@@ -13,7 +13,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
   using Decimal for Decimal.D256;
 
 
-  struct weatherData {
+  struct WeatherData {
       uint256 unharvestablePods;
       uint256 totalOutstandingBeans;
       uint256 startingSoil;
@@ -27,7 +27,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
       uint256 rainingSeasons;
       uint256 rainStalk;
       uint32 newWeather;
-      uint256 Code;
+      uint256 code;
       bool postRain;
   }
   
@@ -39,23 +39,21 @@ contract ComplexWeatherTest is Weather, TestHelper {
 
   ///////////////////////// Utilities /////////////////////////
   //Complex Weather
-  // then we have 11 cases to test
-  // not working currently
-  function _testComplexWeatherCases() public {
-    weatherData[12] memory data;
+  function testComplexWeatherCases() public {
+    WeatherData[12] memory data;
     data = [
-        weatherData(0,1,0,0,0,1,1,0,4294967295,true,1,1,1,4,false),
-        weatherData(0,0,0,0,0,1,1,0,4294967295,true,1,1,1,24,false),
-        weatherData(49,1000,0,0,0,-1,1,0,4294967295,true,1,1,4,0,false), // no work
-        weatherData(51,1000,0,0,0,-1,1,0,4294967295,true,1,1,4,8,false), // no work
-        weatherData(151,1000,1,0,0,-1,1,0,4294967295,true,1,1,2,18,false),
-        weatherData(251,1000,1,0,1,-1,1,0,4294967295,false,1,1,4,25,false), // no work
-        weatherData(0,1,0,0,0,1,100,0,4294967295,true,1,1,99,4,true), // no work 
-        weatherData(0,1,0,0,0,100,1,0,4294967295,false,26,1,1,4,true),
-        weatherData(151,1,0,0,0,-1,1,0,4294967295,false,26,1,4,24,false), // no work
-        weatherData(251,1000,1,0,1,-1,1,4294967295,4294967295,true,1,1,4,25,false),
-        weatherData(251,1000,1,0,1,0,1,0,0,true,1,1,2,26,false),
-        weatherData(451,1000,1,0,1,0,1,0,0,true,1,1,2,26,false)
+        WeatherData(0,1,0,0,0,1,1,0,4294967295,true,1,1,1,4,true),
+        WeatherData(0,0,0,0,0,1,1,0,4294967295,true,1,1,1,24,false),
+        WeatherData(49,1000,0,0,0,-1,1,0,4294967295,true,1,1,4,0,false),
+        WeatherData(51,1000,0,0,0,-1,1,0,4294967295,true,1,1,4,8,false),
+        WeatherData(151,1000,1,0,0,-1,1,0,4294967295,true,1,1,2,18,false),
+        WeatherData(251,1000,1,0,1,-1,1,0,4294967295,false,1,1,4,25,false), 
+        WeatherData(0,1,0,0,0,1,100,0,4294967295,true,1,1,99,4,true), 
+        WeatherData(0,1,0,0,0,100,1,0,4294967295,false,26,1,1,4,true),
+        WeatherData(151,1,0,0,0,-1,1,0,4294967295,false,26,1,4,24,false),
+        WeatherData(251,1000,1,0,1,-1,1,4294967295,4294967295,true,1,1,4,25,false),
+        WeatherData(251,1000,1,0,1,0,1,0,0,true,1,1,2,26,false),
+        WeatherData(451,1000,1,0,1,0,1,0,0,true,1,1,2,26,false)
     ];
     vm.startPrank(brean);
     console.log("Testing for complex weather cases:");
@@ -94,7 +92,7 @@ contract ComplexWeatherTest is Weather, TestHelper {
 contract ExtremeWeatherTest is Weather, TestHelper {
   using SafeMath for uint256;
   using LibSafeMath32 for uint32;
-  struct weatherData {
+  struct WeatherData {
       uint256 unharvestablePods;
       uint256 totalOutstandingBeans;
       uint256 startingSoil;
@@ -108,7 +106,7 @@ contract ExtremeWeatherTest is Weather, TestHelper {
       uint256 rainingSeasons;
       uint256 rainStalk;
       uint32 newWeather;
-      uint256 Code;
+      uint256 code;
       bool postRain;
   }
   
