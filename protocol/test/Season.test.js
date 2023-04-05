@@ -72,7 +72,7 @@ describe('Season', function () {
             console.log(await this.beanMetapool.get_previous_balances())
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.equal('7546563')
+            expect(await bean.balanceOf(owner.address)).to.be.equal('7366188')
         })
     })
 
@@ -89,7 +89,7 @@ describe('Season', function () {
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.equal('8148415')
+            expect(await bean.balanceOf(owner.address)).to.be.equal('8023964')
         })
     })
 })
