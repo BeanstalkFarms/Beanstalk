@@ -368,7 +368,7 @@ contract FieldTest is FieldFacet, TestHelper {
 
         uint256[26] memory ScaleValues;
         ScaleValues = [
-            uint256(1000000), //Delta = 0
+            uint256(1000000), // Delta = 0
             279415312704, // Delta = 1
             409336034395, // 2
             494912626048, // 3
@@ -520,8 +520,8 @@ contract FieldTest is FieldFacet, TestHelper {
     /**
      * check that the Soil decreases over 25 blocks, then stays stagent
      * when beanstalk is above peg, the soil issued is now:
-     * soil = s.f.soil * (1+ s.w.t)/(1+ yield())
-     * soil should always be greater or equal to s.f.soil
+     * `availableSoil` = s.f.soil * (1+ s.w.t)/(1+ yield())
+     * `availableSoil` should always be greater or equal to s.f.soil
      */
     function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
         _beforeEachMorningAuction();
@@ -550,15 +550,15 @@ contract FieldTest is FieldFacet, TestHelper {
     
 
     /**
-     * sowing all with variable soil, weather, and deltaBlocks.
+     * sowing all with variable soil, temperature, and deltaBlocks.
      * pods issued should always be equal to remainingPods.
      * soil/bean used should always be greater/equal to soil issued.
      */
-    function testSowAllMorningAuctionAbovePeg(uint256 soil, uint32 _temperature, uint256 delta) public {
+    function testSowAllMorningAuctionAbovePeg(uint256 soil, uint32 temperature, uint256 _block) public {
         sowAllInit(
-            _temperature,
+            temperature,
             soil,
-            delta,
+            _block,
             true
         );
         uint256 remainingPods = field.remainingPods();
@@ -571,19 +571,19 @@ contract FieldTest is FieldFacet, TestHelper {
     }
 
     /**
-     * sowing all with variable soil, weather, and delta
+     * sowing all with variable soil, temperature, and block
      * pods issued should always be lower than remainingPods
      * soil/bean used should always be equal to soil issued.
      */ 
     function testSowAllMorningAuctionBelowPeg(
         uint256 soil, 
-        uint32 _temperature, 
-        uint256 delta
+        uint32 temperature, 
+        uint256 _block
     ) prank(brean) public {
         sowAllInit(
-            _temperature,
+            temperature,
             soil,
-            delta,
+            _block,
             false
         );
         uint256 remainingPods = field.remainingPods();
@@ -746,17 +746,18 @@ contract FieldTest is FieldFacet, TestHelper {
     }
 
     function sowAllInit(
-        uint32 _temperature,
+        uint32 temperature,
         uint256 soil,
-        uint256 delta,
+        uint256 _block,
         bool abovePeg
     ) public {
-        _temperature = uint32(bound(uint256(_temperature), 1, 10000));
+        temperature = uint32(bound(uint256(temperature), 1, 10000));
         soil = bound(soil, 1e6, 100e6);
-        delta = bound(delta, 1, 301); // maximum blockdelta within a season is 300 blocks
-        season.setMaxTempE(_temperature);
+        // maximum blockdelta within a season is 300 blocks, but the block starts at 1
+        _block = bound(_block, 1, 301); 
+        season.setMaxTempE(temperature);
         season.setSoilE(soil);
         season.setAbovePegE(abovePeg);
-        vm.roll(delta);
+        vm.roll(_block);
     }
 }
