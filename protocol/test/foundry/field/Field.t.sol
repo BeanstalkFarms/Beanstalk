@@ -340,14 +340,25 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.totalHarvestable(), 0, "totalHarvestable");
         assertEq(field.harvestableIndex(), 101e6, "harvestableIndex");
         assertEq(field.totalHarvested(), 101e6, "totalHarvested");
-        assertEq(field.podIndex(), 202 * 1e6, "podIndex");
+        assertEq(field.podIndex(), 202e6, "podIndex");
 
         //deletes
         assertEq(marketplace.podListing(0), 0);
     }
 
     //////////////////// MORNING AUCTION ////////////////////////////
-
+    /**
+     * The morning auction is a mechanism that introduces 
+     * reflexivity to the temperature that beanstalk is willing to lend at. 
+     * During the first 25 blocks (5 minutes) of the season (dubbed the morning), 
+     * the temperature starts at 1% and increases logarithmically until it reaches 
+     * the maximum temperature. 
+     * The formula for the morning auction is:
+     * max(temperature*log_a*b+1(a*c + 1),1) where: 
+     * a = 2,
+     * b = 25 (length of morning auction)
+     * c = number of blocks elapsed since the start of season.
+     */
     function testMorningAuctionValues(uint256 blockNo, uint32 _temperature) public {
         
         // tests that morning auction values align with manually calculated values
@@ -397,140 +408,102 @@ contract FieldTest is FieldFacet, TestHelper {
     // various sowing at different dutch auctions + different soil amount
     // soil sown should be larger than starting soil
     // pods issued should be the same maximum
-    function test_remainingPods_abovePeg() public {
+    function test_remainingPods_abovePeg(uint256 rand) prank(brean) public {
         _beforeEachMorningAuction();
         uint256 _block = 1;
+        uint256 maxAmount = 10e6;
         uint256 totalSoilSown = 0;
-        uint256 TotalSownTransactions = 0;
-        uint256 maxAmount = 10 * 1e6;
         uint256 totalPodsMinted = 0;
-        uint256 LastTotalSoil;
-        uint256 BreanBal;
-        uint256 LastTrueSoil;
-        uint256 AmtPodsGained;
 
-        vm.startPrank(brean);
-        while (field.totalSoil() > maxAmount) {
-            // pseudo-random numbers to sow
-            uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(maxAmount);
+        while (field.totalSoil() > 0) {
             vm.roll(_block);
-            LastTotalSoil = field.totalSoil();
-            BreanBal = C.bean().balanceOf(brean);
-            LastTrueSoil = field.totalRealSoil();
-            AmtPodsGained = field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
+            // we want to randomize the amount of soil sown, 
+            // but currently foundry does not support stateful fuzz testing. 
+            uint256 amount = uint256(keccak256(abi.encodePacked(rand))).mod(maxAmount);
+            
+            // if amount is less than maxAmount, then sow remaining instead
+            if(maxAmount > field.totalSoil()){
+                amount = field.totalSoil();
+            }
+            totalPodsMinted = totalPodsMinted + field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
             totalSoilSown = totalSoilSown + amount;
-            totalPodsMinted = totalPodsMinted + AmtPodsGained;
-
             _block++;
-            TotalSownTransactions++;
+            rand++;
         }
-        vm.roll(30);
-        uint256 soilLeft = field.totalSoil();
-        LastTotalSoil = field.totalSoil();
-        BreanBal = C.bean().balanceOf(brean);
-        LastTrueSoil = field.totalRealSoil();
-        AmtPodsGained = field.sow(soilLeft, 1e6, LibTransfer.From.EXTERNAL);
-        totalSoilSown = totalSoilSown + soilLeft;
-        totalPodsMinted = totalPodsMinted + AmtPodsGained;
-
         assertEq(field.totalPods(), field.totalUnharvestable(), "totalUnharvestable");
         assertEq(totalPodsMinted, field.totalPods(), "totalPodsMinted");
         assertEq(field.remainingPods(), 0, "remainingPods");
         assertGt(totalSoilSown, 100e6, "totalSoilSown");
-        vm.stopPrank();
     }
 
     // same test as above, but below peg
     // soil sown should be equal to starting soil
     // pods issued should be less than maximum
-    function test_remainingPods_belowPeg() public prank(brean) {
+    function test_remainingPods_belowPeg(uint256 rand) public prank(brean) {
         _beforeEachMorningAuctionBelowPeg();
-        uint256 _block = 1;
+        uint256 _block = 1; // start block
         uint256 totalSoilSown = 0;
-        uint256 TotalSownTransactions = 0;
-        uint256 maxAmount = 5 * 1e6;
+        uint256 maxAmount = 5e6; // max amount that can be sown in a tx
         uint256 totalPodsMinted = 0;
-        uint256 LastTotalSoil;
-        uint256 BreanBal;
-        uint256 AmtPodsGained;
-        uint256 maxPods = 200e6;
-        uint256 initalBreanBal = C.bean().balanceOf(brean);
+        uint256 maxPods = 200e6; // maximum pods that should be issued
+        uint256 initalBal = C.bean().balanceOf(brean); // inital balance
 
-        while (field.totalSoil() > maxAmount) {
-            // pseudo-random numbers to sow
-            uint256 amount = uint256(keccak256(abi.encodePacked(_block))).mod(maxAmount);
+        while (field.totalSoil() > 0) {
+            // we want to randomize the amount of soil sown, 
+            // but currently foundry does not support stateful fuzz testing. 
+            uint256 amount = uint256(keccak256(abi.encodePacked(rand))).mod(maxAmount);
             vm.roll(_block);
-            LastTotalSoil = field.totalSoil();
-            BreanBal = C.bean().balanceOf(brean);
-            AmtPodsGained = field.sow(amount, 1e6, LibTransfer.From.EXTERNAL);
+            uint256 LastTotalSoil = field.totalSoil();
+            // if amount is less than maxAmount, then sow remaining instead
+            if(maxAmount > field.totalSoil()){
+                amount = field.totalSoil();
+            }
             totalSoilSown = totalSoilSown + amount;
-            totalPodsMinted = totalPodsMinted + AmtPodsGained;
+            totalPodsMinted = totalPodsMinted + field.sow(amount, 1e6, LibTransfer.From.EXTERNAL);
             assertEq(LastTotalSoil - field.totalSoil(), amount);
-
             _block++;
-            TotalSownTransactions++;
+            rand++;
         }
-        vm.roll(30);
-        uint256 soilLeft = field.totalSoil();
-        LastTotalSoil = field.totalSoil();
-        BreanBal = C.bean().balanceOf(brean);
-        AmtPodsGained = field.sowWithMin(soilLeft, 1e6, 0, LibTransfer.From.EXTERNAL);
-        totalSoilSown = totalSoilSown + soilLeft;
-        totalPodsMinted = totalPodsMinted + AmtPodsGained;
-
         assertLt(field.totalUnharvestable(), maxPods);
         assertEq(field.totalPods(), field.totalUnharvestable(), "totalUnharvestable");
         assertEq(totalPodsMinted, field.totalPods(), "totalPodsMinted");
         assertEq(field.remainingPods(), 0, "remainingPods is not 0");
+
         // check the amt of soil sown at the end of the season is equal to start soil
         assertEq(totalSoilSown, 100e6, "totalSoilSown");
         assertEq(
             totalSoilSown, 
-            initalBreanBal - C.bean().balanceOf(brean), 
+            initalBal - C.bean().balanceOf(brean), 
             "total bean used does not equal total soil sown"
         );
     }
 
     // multiple fixed amount sows at different dutch auction times
-    function testRoundingError() public {
+    function testRoundingErrorBelowPeg(uint256 amount) prank(brean) public {
+        // we bound between 1 and 10 beans to sow, out of 100 total soil.
+        amount = bound(amount, 1e6, 10e6);
         _beforeEachMorningAuction();
         uint256 _block = 1;
         uint256 totalSoilSown = 0;
-        uint256 amount = 5e6;
+        // uint256 amount = 5e6;
         uint256 totalPodsMinted = 0;
         uint256 LastTotalSoil;
-        uint256 BreanBal;
-        uint256 LastTrueSoil;
-        uint256 AmtPodsGained;
-        while (field.totalSoil() > 5e6 && _block < 25) {
+        while (field.totalSoil() > 0) {
             vm.roll(_block);
             LastTotalSoil = field.totalSoil();
-            BreanBal = C.bean().balanceOf(brean);
-            LastTrueSoil = field.totalRealSoil();
-            AmtPodsGained = 0;
-            vm.prank(brean);
-            AmtPodsGained = field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
+            // if amount is less than maxAmount, then sow remaining instead
+            if(amount > field.totalSoil()) amount = field.totalSoil();
             totalSoilSown = totalSoilSown + amount;
-            totalPodsMinted = totalPodsMinted + AmtPodsGained;
-            /// @dev due to rounding precision as totalsoil is scaled up,
-            ///  and does not represent the amount of soil removed
-            assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 1);
-            _block++;
+            totalPodsMinted = totalPodsMinted + field.sowWithMin(amount, 1e6, amount, LibTransfer.From.EXTERNAL);
+            
+            // because totalsoil is scaled up,
+            // it may cause the delta to be up to 2 off 
+            // (if one was rounded up, and the other is rounded down)
+            assertApproxEqAbs(LastTotalSoil - field.totalSoil(), amount, 2);
+            // cap the blocks between 1 - 25 blocks
+            if(_block < 25) _block++;
         }
-        LastTotalSoil = field.totalSoil();
-        BreanBal = C.bean().balanceOf(brean);
-        LastTrueSoil = field.totalRealSoil();
-        uint256 soilLeft = field.totalSoil();
 
-        vm.prank(brean);
-        AmtPodsGained = field.sowWithMin(soilLeft, 1e6, soilLeft, LibTransfer.From.EXTERNAL);
-        totalSoilSown = totalSoilSown + soilLeft;
-        totalPodsMinted = totalPodsMinted + AmtPodsGained;
-        assertEq(
-            soilLeft, 
-            LastTotalSoil - field.totalSoil(), 
-            "soil sown doesn't equal soil used."
-        );
         assertEq(
             field.totalUnharvestable(), 
             totalPodsMinted, 
@@ -550,9 +523,11 @@ contract FieldTest is FieldFacet, TestHelper {
      * soil = s.f.soil * (1+ s.w.t)/(1+ yield())
      * soil should always be greater or equal to s.f.soil
      */
-    function testSoilDecrementsOverDutchAbovePeg() public {
+    function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
         _beforeEachMorningAuction();
-        uint256 startingSoil = 100e6;
+        // uint256 startingSoil = 100e6;
+        startingSoil = bound(startingSoil, 100e6, 10000e6);
+        season.setSoilE(startingSoil);
         startingSoil = startingSoil.mulDiv(200, 101);
         uint256 sfsoil = uint256(field.totalRealSoil());
         for (uint256 i = 1; i < 30; ++i) {
@@ -580,13 +555,12 @@ contract FieldTest is FieldFacet, TestHelper {
      * soil/bean used should always be greater/equal to soil issued.
      */
     function testSowAllMorningAuctionAbovePeg(uint256 soil, uint32 _temperature, uint256 delta) public {
-        soil = bound(soil, 1e6, 100e6);
-        _temperature = uint32(bound(uint256(_temperature), 1, 69420));
-        delta = bound(delta, 1, 301); //maximum blockdelta within a season is 300 blocks
-        season.setMaxTempE(_temperature);
-        season.setSoilE(soil);
-        season.setAbovePegE(true);
-        vm.roll(delta);
+        sowAllInit(
+            _temperature,
+            soil,
+            delta,
+            true
+        );
         uint256 remainingPods = field.remainingPods();
         uint256 TotalSoil = field.totalSoil();
         vm.prank(brean);
@@ -601,18 +575,19 @@ contract FieldTest is FieldFacet, TestHelper {
      * pods issued should always be lower than remainingPods
      * soil/bean used should always be equal to soil issued.
      */ 
-    function testSowAllMorningAuctionBelowPeg(uint256 soil, uint32 _temperature, uint256 delta) public {
-        soil = bound(soil, 1e6, 100e6);
-        _temperature = uint32(bound(uint256(_temperature), 1, 69420));
-        // maximum blockdelta within a season is 300 blocks
-        delta = bound(delta, 1, 301);
-        season.setMaxTempE(_temperature);
-        season.setSoilE(soil);
-        season.setAbovePegE(false);
-        vm.roll(delta);
+    function testSowAllMorningAuctionBelowPeg(
+        uint256 soil, 
+        uint32 _temperature, 
+        uint256 delta
+    ) prank(brean) public {
+        sowAllInit(
+            _temperature,
+            soil,
+            delta,
+            false
+        );
         uint256 remainingPods = field.remainingPods();
         uint256 TotalSoil = field.totalSoil();
-        vm.prank(brean);
         field.sow(TotalSoil, 1e6, LibTransfer.From.EXTERNAL);
         assertEq(uint256(field.totalSoil()), 0, "totalSoil greater than 0");
         assertEq(field.totalUnharvestable(), remainingPods, "Unharvestable pods does not Equal Expected.");
@@ -695,47 +670,39 @@ contract FieldTest is FieldFacet, TestHelper {
         field.sow(100e6, 1e6, LibTransfer.From.EXTERNAL);
     }
 
-    function _beforeEachSomeSowFromInternal() public {
+    function _beforeEachSomeSowFromInternal() prank(brean) public {
         season.setSoilE(200e6);
-        vm.startPrank(brean);
         token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
         emit Sow(brean, 0, 100e6, 101e6);
         field.sow(100e6, 1e6, LibTransfer.From.INTERNAL);
-        vm.stopPrank();
     }
 
-    function _beforeEachSomeSowFromInternalTolerant() public {
+    function _beforeEachSomeSowFromInternalTolerant() prank(brean) public {
         season.setSoilE(200e6);
-        vm.startPrank(brean);
         token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
         emit Sow(brean, 0, 100e6, 101e6);
         field.sow(100e6, 1e6, LibTransfer.From.INTERNAL_TOLERANT);
-        vm.stopPrank();
     }
 
-    function _beforeEachSowMin() public {
+    function _beforeEachSowMin() prank(brean) public {
         season.setSoilE(100e6);
         vm.roll(30);
-        vm.startPrank(brean);
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
         emit Sow(brean, 0, 100e6, 101e6);
         field.sowWithMin(200e6, 1e6, 100e6, LibTransfer.From.EXTERNAL);
-        vm.stopPrank();
     }
 
-    function _beforeEachSowMinWithEnoughSoil() public {
+    function _beforeEachSowMinWithEnoughSoil() prank(brean) public {
         season.setSoilE(200e6);
-        vm.startPrank(brean);
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
         emit Sow(brean, 0, 100e6, 101e6);
         field.sowWithMin(100e6, 1e6, 50e6, LibTransfer.From.EXTERNAL);
-        vm.stopPrank();
     }
 
     function _beforeEachSow2Users() public {
@@ -768,13 +735,28 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 sowedAmount,
         uint256 expectedPods
     ) public {
-        assertEq(C.bean().balanceOf(brean), preBeanBalance - sowedAmount, "balanceOf");
-        assertEq(field.plot(brean, 0), expectedPods, "plot");
+        assertEq(C.bean().balanceOf(account), preBeanBalance - sowedAmount, "balanceOf");
+        assertEq(field.plot(account, 0), expectedPods, "plot");
         assertEq(C.bean().balanceOf(address(field)), 0, "field balanceOf");
         assertEq(C.bean().totalSupply(), preTotalBalance - sowedAmount, "total supply");
         assertEq(field.totalPods(), expectedPods, "total Pods");
         assertEq(field.totalUnharvestable(), 101e6, "totalUnharvestable");
         assertEq(field.podIndex(), expectedPods, "podIndex");
         assertEq(field.harvestableIndex(), 0, "harvestableIndex");
+    }
+
+    function sowAllInit(
+        uint32 _temperature,
+        uint256 soil,
+        uint256 delta,
+        bool abovePeg
+    ) public {
+        _temperature = uint32(bound(uint256(_temperature), 1, 10000));
+        soil = bound(soil, 1e6, 100e6);
+        delta = bound(delta, 1, 301); // maximum blockdelta within a season is 300 blocks
+        season.setMaxTempE(_temperature);
+        season.setSoilE(soil);
+        season.setAbovePegE(abovePeg);
+        vm.roll(delta);
     }
 }
