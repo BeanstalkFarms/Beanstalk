@@ -35,7 +35,7 @@ contract SeasonFacet is Weather {
      * @return reward The number of beans minted to the caller.
      */
     function sunrise() external payable returns (uint256) {
-        return sunriseTo(msg.sender, LibTransfer.To.EXTERNAL);
+        return gm(msg.sender, LibTransfer.To.EXTERNAL);
     }
 
     /**
@@ -44,7 +44,7 @@ contract SeasonFacet is Weather {
      * @param mode Indicates whether the reward beans are sent to internal or circulating balance
      * @return reward The number of Beans minted to the caller.
      */
-    function sunriseTo(
+    function gm(
         address account,
         LibTransfer.To mode
     ) public payable returns (uint256) {
