@@ -286,7 +286,10 @@ abstract contract TestHelper is Test {
         selectors = abi.decode(res, (bytes4[]));
     }
 
-    //gets bytecode at specific address (cant use address.code as we're in 0.7.6)
+    /**
+     * gets bytecode at specific address (cant use address.code as we're in 0.7.6)
+     * code solution from: https://ethereum.stackexchange.com/a/109393
+     */
     function at(address _addr) public view returns (bytes memory o_code) {
         assembly {
             // retrieve the size of the code
