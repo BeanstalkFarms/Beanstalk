@@ -8,7 +8,7 @@ import { Image } from "../Image";
 import chevDown from "src/assets/images/chevron-down.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
-import { useAllTokensBalance } from "src/tokens/useTokenBalance";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { Spinner } from "../Spinner";
 
 type Props = {

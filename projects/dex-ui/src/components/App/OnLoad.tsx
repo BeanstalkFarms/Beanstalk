@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useAllTokensBalance } from "src/tokens/useTokenBalance";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { FC } from "src/types";
 import { useAccount, useNetwork } from "wagmi";
 

@@ -6,7 +6,7 @@ import { ArrowButton } from "./ArrowButton";
 import gear from "src/assets/images/gear.svg";
 import { TokenInput } from "./TokenInput";
 import { Image } from "../Image";
-import { useAllTokensBalance } from "src/tokens/useTokenBalance";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 
 export const SwapRoot = () => {
   const tokens = useTokens();

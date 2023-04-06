@@ -21,7 +21,8 @@ export const useWellTokens = () => {
     },
     {
       // initialData: [sdk.tokens.BEAN, sdk.tokens.WETH],
-      enabled: Array.isArray(wells)
+      enabled: Array.isArray(wells),
+      refetchOnWindowFocus: false
     }
   );
 };
