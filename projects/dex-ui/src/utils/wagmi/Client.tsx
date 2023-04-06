@@ -31,16 +31,15 @@ export const anvilFork: Chain = {
   }
 };
 
-const { chains, provider, webSocketProvider } = configureChains(
-  [mainnet, anvilFork],
-  [
-    alchemyProvider({
-      apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
-      priority: 0
-    }),
-    publicProvider({ priority: 2 })
-  ]
-);
+const networks = import.meta.env.DEV ? [anvilFork, mainnet] : [mainnet];
+
+const { chains, provider, webSocketProvider } = configureChains(networks, [
+  alchemyProvider({
+    apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
+    priority: 0
+  }),
+  publicProvider({ priority: 2 })
+]);
 
 export const client = createClient({
   autoConnect: true,
