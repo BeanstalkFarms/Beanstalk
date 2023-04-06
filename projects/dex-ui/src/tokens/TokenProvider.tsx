@@ -14,7 +14,7 @@ export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
   if (error) return <div>Error loading Tokens: {error.message}</div>;
 
   if (tokens.length === 0) {
-    return <div>Zero Tokens</div>;
+    return <div>No Tokens Found. Is wallet connected? To localhost?</div>;
   }
 
   const add = (token: Token) => (tokenMap[token.symbol] = token);
@@ -24,8 +24,6 @@ export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
     token.setMetadata({ logo });
     add(token);
   }
-
-  // add(new ERC20Token(1, "0x123", 6, "FOO", { logo: images.DEFAULT, name: "Foo" }));
 
   return <TokenContext.Provider value={tokenMap}>{children}</TokenContext.Provider>;
 };
