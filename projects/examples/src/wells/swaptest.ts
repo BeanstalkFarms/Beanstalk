@@ -25,7 +25,7 @@ async function main() {
 
   // give user tokens and set allowances
   await forkUtils.setBalance(A.address, account, amountA);
-  await A.approve(well.address, TokenValue.MAX_UINT256);
+  await A.approve(well.address, amountA);
 
   // await forkUtils.setBalance(B.address, account, amountB);
   // await B.approve(well.address, TokenValue.MAX_UINT256);
@@ -33,16 +33,30 @@ async function main() {
   // Swap From : A => B
   const quoteFrom = await well.swapFromQuote(A, B, amountA);
   console.log(`Quote: ${amountA.toHuman()} ${A.symbol} returns ${quoteFrom.toHuman()} ${B.symbol}`);
-  const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account);
-  const receipt = await tx.wait();
-  console.log(receipt);
-  console.log('Done');
+  // const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account, 300, {});
+  // await tx.wait();
   
-  // Swap To : A => B
-  const quoteTo = await well.swapToQuote(A, B, amountB);
-  console.log(`Quote: Need to spend ${quoteTo.toHuman()} ${A.symbol} to receive ${amountB.toHuman()} ${B.symbol}`);
-  await forkUtils.setBalance(A.address, account, quoteTo.addSlippage(0.1));
-  const tx2 = await well.swapTo(A, B, quoteTo.addSlippage(0.1), amountB, account);
+  
+  // const p = [
+  //   A.address,
+  //   B.address,
+  //   amountA.toBigNumber(),
+  //   quoteFrom.subSlippage(1).toBigNumber(),
+  //   account,
+  //   300,
+  //   {}
+  // ];
+  // console.log(p);
+
+  const tx2 = await well.contract.swapFrom(
+    A.address,
+    B.address,
+    amountA.toBigNumber(),
+    quoteFrom.subSlippage(1).toBigNumber(),
+    account,
+    1680830458489,
+    {}
+  );
   await tx2.wait();
-  console.log('Done');
+  console.log("dones");
 }

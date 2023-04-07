@@ -2174,11 +2174,13 @@ __metadata:
     "@typechain/ethers-v5": ^10.1.0
     "@types/chai": ^4
     "@types/jest": ^29.1.2
+    "@types/numeral": ^2
     "@types/rimraf": ^3
     chai: 4.3.6
     dotenv: ^16.0.3
     ethers: ^5.0.0
     jest: ^29.2.0
+    numeral: 2.0.6
     rimraf: 3.0.2
     rollup: 3.2.5
     rollup-plugin-alias: 2.2.0
@@ -10663,6 +10665,13 @@ __metadata:
   version: 4.1.4
   resolution: "@types/npmlog@npm:4.1.4"
   checksum: 740f7431ccfc0e127aa8d162fe05c6ce8aa71290be020d179b2824806d19bd2c706c7e0c9a3c9963cefcdf2ceacb1dec6988c394c3694451387759dafe0aa927
+  languageName: node
+  linkType: hard
+
+"@types/numeral@npm:^2":
+  version: 2.0.2
+  resolution: "@types/numeral@npm:2.0.2"
+  checksum: d8b778ef5d1b20cb5919fb2cf41108b324ccfaeccb0238caaf54bd9d4bffbbd57d7b860844f05831fb356a5dc0115b477891531325180a670076036ee1b4a8ca
   languageName: node
   linkType: hard
 
@@ -31378,6 +31387,13 @@ __metadata:
     bn.js: 4.11.6
     strip-hex-prefix: 1.0.0
   checksum: 5b8c9dbe7b49dc7a069e5f0ba4e197257c89db11463478cb002fee7a34dc8868636952bd9f6310e5fdf22b266e0e6dffb5f9537c741734718107e90ae59b3de4
+  languageName: node
+  linkType: hard
+
+"numeral@npm:2.0.6":
+  version: 2.0.6
+  resolution: "numeral@npm:2.0.6"
+  checksum: 89f011116539692bf53fde380adeb0579623d00f782703c71c0062d4a8686770c404a041ff4eef454de53925a9f75bba1fa52726057b13d40473f707730b07c2
   languageName: node
   linkType: hard
 
