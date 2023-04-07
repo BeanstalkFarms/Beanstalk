@@ -1,4 +1,5 @@
 import { BigNumber, utils, constants } from "ethers";
+import numeral from "numeral";
 import { DecimalBigNumber } from "src/lib/DecimalBigNumber";
 
 const blocker = {};
@@ -140,10 +141,18 @@ export class TokenValue {
 
   /**
    * Returns a human readable string, for example "3.14"
+   * @param format Formatting options. See http://numeraljs.com/#format for
+   * possible options
    * @returns string
    */
-  public toHuman(): string {
-    return this.value.toString();
+  public toHuman(format?: string): string {
+    if (!format) return this.value.toString();
+
+    if (format !== "auto") {
+      return numeral(this.value.toString()).format(format).toUpperCase();
+    }
+
+    return "";
   }
 
   // Used mostly by the math functions to normalize the input
