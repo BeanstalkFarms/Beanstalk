@@ -707,6 +707,7 @@ describe('Silo Token', function () {
       
       describe("Withdraw", async function () {
         beforeEach(async function () {
+          this.bdvBefore = (await this.silo.getDeposit(user.address, UNRIPE_LP, '2'))[1]
           this.result = await this.silo.connect(user).withdrawDeposit(UNRIPE_LP, '2', to6('9'))
         })
 
@@ -724,8 +725,9 @@ describe('Silo Token', function () {
 
         it('properly removes the crate', async function () {
           let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+          bdvAfter = this.bdvBefore.sub(this.bdvBefore.mul('9').div('10'))
           expect(dep[0]).to.equal(to6('1'))
-          expect(dep[1]).to.equal(prune(to6('1')))
+          expect(dep[1]).to.equal(this.bdvBefore.sub(this.bdvBefore.mul('9').div('10')))
         });
 
         it('emits Remove and Withdrawal event', async function () {
