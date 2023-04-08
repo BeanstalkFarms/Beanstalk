@@ -37,7 +37,7 @@ export const ADDRESS_COLLECTION: {[c: string]: string} = {
 };
 
 export async function loadNFTs(account: string) {
-  const nftData : Nft[] = await fetch(`http://localhost:54430/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
+  const nftData : Nft[] = await fetch(`http://localhost:55619/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
   
   if (nftData.length === 0) {
     return {

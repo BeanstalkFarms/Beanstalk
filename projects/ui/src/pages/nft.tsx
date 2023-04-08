@@ -62,7 +62,6 @@ const NFTPage: FC<{}> = () => {
     // getNFTs
     const nftsBaseURL = 'https://eth-mainnet.alchemyapi.io/nft/v2/demo/getNFTs/';
     const nftsFetchURL = `${nftsBaseURL}?owner=${account?.toLowerCase()}&contractAddresses[]=${contractAddress}`;
-    console.log("NFT ADDRESS: ", nftsFetchURL)
 
     // getNFTMetadata
     const nftMetadataBaseURL = 'https://eth-mainnet.alchemyapi.io/nft/v2/demo/getNFTMetadata';
@@ -97,10 +96,9 @@ const NFTPage: FC<{}> = () => {
     /// CLAIMED
     if (ownedNfts.length) {
       for (let i = 0; i < ownedNfts.length; i += 1) {
-        console.log("NFT TITLE: ", ownedNfts[i].title, ADDRESS_COLLECTION[ownedNfts[i].contract.address])
         let subcollection = ADDRESS_COLLECTION[ownedNfts[i].contract.address]
         nfts.push({
-          // assumes title is formatted: "BeaNFT 1234"
+          // Winter BeaNFT titles: '(ID number)' || Genesis BeaNFT titles: 'BeaNFT (ID number)'
           id: (subcollection === BEANFT_WINTER_ADDRESSES[1] ? ownedNfts[i].title : parseInt(ownedNfts[i].title.split(' ')[1], 10)),
           account: account,
           subcollection: subcollection,
