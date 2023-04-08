@@ -98,8 +98,8 @@ const NFTPage: FC<{}> = () => {
       for (let i = 0; i < ownedNfts.length; i += 1) {
         let subcollection = ADDRESS_COLLECTION[ownedNfts[i].contract.address]
         nfts.push({
-          // Winter BeaNFT titles: '(ID number)' || Genesis BeaNFT titles: 'BeaNFT (ID number)'
-          id: (subcollection === BEANFT_WINTER_ADDRESSES[1] ? ownedNfts[i].title : parseInt(ownedNfts[i].title.split(' ')[1], 10)),
+          // Genesis BeaNFT titles: 'BeaNFT (ID number)' || Winter and Barn Raise BeaNFT titles: '(ID number)'
+          id: (subcollection === BEANFT_GENESIS_ADDRESSES[1] ? parseInt(ownedNfts[i].title.split(' ')[1], 10) : ownedNfts[i].title),
           account: account,
           subcollection: subcollection,
           claimed: ClaimStatus.CLAIMED,
