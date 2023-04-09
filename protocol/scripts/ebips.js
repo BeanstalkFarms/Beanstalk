@@ -1,5 +1,7 @@
 const fs = require('fs')
+const { BEANSTALK } = require('../test/utils/constants')
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, strDisplay } = require("../utils")
+const { upgradeWithNewFacets } = require('./diamond')
 
 async function ebip6(mock = true, account = undefined) {
     if (account == undefined) {
@@ -36,20 +38,16 @@ async function ebipEnrootDeposits(mock = true, account = undefined) {
         await mintEth(account.address)
     }
 
-    const siloFacet = await (await ethers.getContractFactory('SiloFacet', account)).deploy({maxFeePerGas: 40757798654})
-    await siloFacet.deployed()
-    console.log(`SiloFacet deployed to ${siloFacet.address}`)
-    const dc = {
-        diamondCut: [[
-            siloFacet.address,
-            1,
-            ['0xd5d2ea8c', '0x83b9e85d']
-        ]],
-        initFacetAddress: '0x0000000000000000000000000000000000000000',
-        functionCall: '0x'
-    }
-    await bipDiamondCut("EBIP-EnrootDeposit(s)", dc, account, mock)
-
+    await upgradeWithNewFacets({
+        diamondAddress: BEANSTALK,
+        facetNames: [
+            'SiloFacet'
+        ],
+        bip: false,
+        object: !mock,
+        verbose: true,
+        account: account
+    })
 }
 
 async function bipDiamondCut(name, dc, account, mock = true) {
