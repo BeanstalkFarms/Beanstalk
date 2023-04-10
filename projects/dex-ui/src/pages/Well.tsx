@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
 import useWellSwaps from "src/wells/useWellSwaps";
+import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 
 export const Well = () => {
   const { address } = useParams<"address">();
@@ -31,6 +32,9 @@ export const Well = () => {
             <br />
           </>
         ))}
+      </div>
+      <div>
+        <AddLiquidity well={well} />
       </div>
     </div>
   );
