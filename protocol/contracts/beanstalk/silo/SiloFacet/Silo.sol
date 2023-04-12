@@ -26,7 +26,6 @@ contract Silo is SiloExit {
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
 
-
     //////////////////////// EVENTS ////////////////////////    
 
     /**

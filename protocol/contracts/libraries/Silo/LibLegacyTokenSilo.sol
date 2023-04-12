@@ -38,6 +38,29 @@ library LibLegacyTokenSilo {
         uint256 bdv
     );
 
+    event RemoveDeposits(
+        address indexed account,
+        address indexed token,
+        int96[] stems,
+        uint256[] amounts,
+        uint256 amount,
+        uint256[] bdvs
+    );
+
+    /// @dev these events are grandfathered for claiming deposits. 
+    event RemoveWithdrawals(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256 amount
+    );
+    event RemoveWithdrawal(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount
+    );
+
     struct MigrateData {
         uint128 totalSeeds;
         uint128 totalGrownStalk;
@@ -53,19 +76,6 @@ library LibLegacyTokenSilo {
         int96 stemTip;
     }
 
-    /// @dev these events are grandfathered in for legacy code (claiming)
-    event RemoveWithdrawals(
-        address indexed account,
-        address indexed token,
-        uint32[] seasons,
-        uint256 amount
-    );
-    event RemoveWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
     //////////////////////// REMOVE DEPOSIT ////////////////////////
 
     /**
@@ -398,10 +408,10 @@ library LibLegacyTokenSilo {
         // require(_lastUpdate > 0 && _lastUpdate < s.season.stemStartSeason, "no migration needed");
  
  
-        //TODOSEEDS: require that a season of plenty is not currently happening?
+        // TODOSEEDS: require that a season of plenty is not currently happening?
         // do a legacy mow using the old silo seasons deposits
-        updateLastUpdateToNow(account); //do we want to store last update season as current season or as s.season.stemStartSeason?
-        LibSilo.mintGrownStalk(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        updateLastUpdateToNow(account); // do we want to store last update season as current season or as s.season.stemStartSeason?
+        LibSilo.mintGrownStalk(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); // should only mint stalk up to stemStartSeason
         // at this point we've completed the guts of the old mow function, now we need to do the migration
  
  
@@ -463,6 +473,16 @@ library LibLegacyTokenSilo {
  
             // init mow status for this token
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
+
+            event RemoveDeposits(
+                address indexed account,
+                address indexed token,
+                int96[] stems,
+                uint256[] amounts,
+                uint256 amount,
+                uint256[] bdvs
+            );
+            emit RemoveDeposits(account, perTokenData.token, new int96[](0), new uint256[](0), 0, new uint256[](0)
         }
  
         // user deserves stalk grown between stemStartSeason and now
