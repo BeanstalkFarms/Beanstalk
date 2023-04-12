@@ -473,15 +473,6 @@ library LibLegacyTokenSilo {
  
             // init mow status for this token
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
-
-            event RemoveDeposits(
-                address indexed account,
-                address indexed token,
-                int96[] stems,
-                uint256[] amounts,
-                uint256 amount,
-                uint256[] bdvs
-            );
             emit RemoveDeposits(account, perTokenData.token, new int96[](0), new uint256[](0), 0, new uint256[](0)
         }
  

@@ -200,7 +200,7 @@ library LibSilo {
             roots = stalk.mul(C.getRootsBase());
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
-            if (block.number - s.season.sunriseBlock <= VESTING_PERIOD) {
+            if (inVestingPeriod()) {
                 uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
                 s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
@@ -599,9 +599,9 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * This function will take in a start stalk per bdv, end stalk per bdv,
-     * and the deposited bdv amount, and return
-     *
+     * @dev math helper to calculate the grown stalk given stems and bdv
+     * formula: stalk = bdv * (ΔstalkPerBdv)
+     * ΔstalkPerBdv = (endStalkPerBdv - startStalkPerBdv)
      */
     function stalkReward(int96 startStalkPerBDV, int96 endStalkPerBDV, uint128 bdv) //are the types what we want here?
         internal
@@ -612,6 +612,11 @@ library LibSilo {
         return uint256(reward);
     }
 
-    
+    /**
+     * @dev check whether beanstalk is in the vesting period:
+     */
+    function inVestingPeriod() internal pure returns (bool) {
+        return block.number - s.season.sunriseBlock <= VESTING_PERIOD;
+    }
 
 }
