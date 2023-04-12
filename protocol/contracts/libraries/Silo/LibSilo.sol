@@ -41,7 +41,14 @@ library LibSilo {
     using LibPRBMath for uint256;
     using SafeCast for uint256;
     
-    uint256 constant VESTING_PERIOD = 25;
+    /**
+     * The `VESTING_PERIOD` is the number of blocks that must pass before
+     * a farmer is credited with their earned beans issued that season. 
+     * This is to prevent flash-loan and multi block MEV exploits.
+     * planting/withdrawing a deposit in this period will result in 
+     * the earned beans being deferred/lost upon execution.
+     */
+    uint256 constant VESTING_PERIOD = 10;
     //////////////////////// EVENTS ////////////////////////    
      
     /**
@@ -107,17 +114,6 @@ library LibSilo {
         uint256 stalkRemoved;
         uint256 bdvRemoved;
     }
-
-    // /**
-    //  * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
-    //  */
-    // event TransferSingle(
-    //     address indexed operator, 
-    //     address indexed from, 
-    //     address indexed to, 
-    //     uint256 id, 
-    //     uint256 value
-    // );
 
     /**
      * @notice Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
