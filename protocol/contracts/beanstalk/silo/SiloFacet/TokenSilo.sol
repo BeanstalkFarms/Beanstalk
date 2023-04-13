@@ -146,7 +146,7 @@ contract TokenSilo is Silo {
         stalk = LibTokenSilo.deposit(
             account,
             token,
-            stem = LibTokenSilo.stemTipForToken(IERC20(token)),
+            stem = LibTokenSilo.stemTipForToken(token),
             amount
         );
         LibSilo.mintStalk(account, stalk);

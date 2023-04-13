@@ -327,8 +327,8 @@ library LibLegacyTokenSilo {
     function _mowAndMigrate(
         address account, 
         address[] calldata tokens, 
+        uint32[][] calldata seasons,
         uint256[][] calldata amounts
-        uint32[][] calldata seasons, 
     ) internal {
         //typically a migrationNeeded should be enough to allow the user to migrate, however
         //for Unripe unit testing convenience, (Update Unripe Deposit -> "1 deposit, some", 
@@ -343,7 +343,7 @@ library LibLegacyTokenSilo {
 
         //do a legacy mow using the old silo seasons deposits
         updateLastUpdateToNow(account);
-        LibSilo.mintGrownStalkAndGrownRoots(account, LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        LibSilo.mintGrownStalk(account, balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
         //at this point we've completed the guts of the old mow function, now we need to do the migration
  
         MigrateData memory migrateData;
@@ -365,7 +365,7 @@ library LibLegacyTokenSilo {
                 }
  
                 // withdraw this deposit
-                uint256 crateBDV = LibLegacyTokenSilo.removeDepositFromAccount(
+                uint256 crateBDV = removeDepositFromAccount(
                                     account,
                                     perTokenData.token,
                                     perDepositData.season,
@@ -374,7 +374,7 @@ library LibLegacyTokenSilo {
  
                 //calculate how much stalk has grown for this deposit
                 uint128 grownStalk = _calcGrownStalkForDeposit(
-                    crateBDV * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)),
+                    crateBDV * getSeedsPerToken(address(perTokenData.token)),
                     perDepositData.season
                 );
  
@@ -398,7 +398,7 @@ library LibLegacyTokenSilo {
                 );
  
                 // add to running total of seeds
-                migrateData.totalSeeds += uint128(uint256(crateBDV) * LibLegacyTokenSilo.getSeedsPerToken(address(perTokenData.token)));
+                migrateData.totalSeeds += uint128(uint256(crateBDV) * getSeedsPerToken(address(perTokenData.token)));
             }
  
             // init mow status for this token
@@ -474,7 +474,7 @@ library LibLegacyTokenSilo {
     ) internal view returns (uint128 grownStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
-        return uint128(LibLegacyTokenSilo.stalkReward(seedsForDeposit, stemStartSeason - season));
+        return uint128(stalkReward(seedsForDeposit, stemStartSeason - season));
     }
 
     /**
