@@ -1,30 +1,36 @@
-import { StepGenerator, Token } from '@beanstalk/sdk';
+import { BeanstalkSDK, StepGenerator, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { TokenMap } from '~/constants';
 import { DepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
 
-import { FormTxn } from '~/util/formTxn';
-import FormTxnAction from '~/util/formTxn/FormTxnAction';
+import { FarmStepStrategy, EstimatesGas } from '~/lib/Txn/Strategy';
 
 enum EnrootType {
   DEPOSIT = 'DEPOSIT',
   DEPOSITS = 'DEPOSITS',
 }
 
-export default class EnrootStep extends FormTxnAction<FormTxn.ENROOT> {
-  implied = [FormTxn.MOW];
+export class EnrootStrategy extends FarmStepStrategy implements EstimatesGas {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _params: {
+      crates: Record<string, DepositCrate[]>;
+    }
+  ) {
+    super(_sdk);
+    this._params = _params;
+  }
 
   private _getCallData() {
-    const { beanstalk } = this._sdk.contracts;
-    const params = this.getParams();
+    const { beanstalk } = EnrootStrategy.sdk.contracts;
 
     const callData: { [key in EnrootType]: string[] } = {
       [EnrootType.DEPOSIT]: [],
       [EnrootType.DEPOSITS]: [],
     };
 
-    [...this._sdk.tokens.unripeTokens].forEach((urToken) => {
-      const crates = params.crates[urToken.address];
+    [...EnrootStrategy.sdk.tokens.unripeTokens].forEach((urToken) => {
+      const crates = this._params.crates[urToken.address];
       if (crates?.length === 1) {
         const encoded = beanstalk.interface.encodeFunctionData(
           'enrootDeposit',
@@ -58,16 +64,20 @@ export default class EnrootStep extends FormTxnAction<FormTxn.ENROOT> {
   }
 
   async estimateGas() {
-    return this._sdk.contracts.beanstalk.estimateGas.farm(
+    const { beanstalk } = EnrootStrategy.sdk.contracts;
+    const gasEstimate = await beanstalk.estimateGas.farm(
       Object.values(this._getCallData()).reduce<string[]>(
         (prev, curr) => [...prev, ...curr],
         []
       )
     );
+    console.debug(`[EnrootStrategy][estimateGas]: `, gasEstimate.toString());
+
+    return gasEstimate;
   }
 
   getSteps() {
-    const { beanstalk } = this._sdk.contracts;
+    const { beanstalk } = EnrootStrategy.sdk.contracts;
     const steps: StepGenerator[] = [];
 
     Object.entries(this._getCallData()).forEach(([k, callDatas]) => {
@@ -108,14 +118,18 @@ export default class EnrootStep extends FormTxnAction<FormTxn.ENROOT> {
       }
     });
 
-    return steps;
+    const _steps = { steps: EnrootStrategy.normaliseSteps(steps) };
+    console.debug(`[EnrootStrategy][getSteps]: `, _steps);
+
+    return _steps;
   }
 
-  pickCrates(
+  /// EnrootStrategy specific utils
+  static pickCrates(
     balances: TokenMap<FarmerSiloBalance>,
     getBDV: (token: Token) => BigNumber
   ) {
-    const unripe = [...this._sdk.tokens.unripeTokens];
+    const unripe = [...EnrootStrategy.sdk.tokens.unripeTokens];
     return unripe.reduce<TokenMap<DepositCrate[]>>((prev, token) => {
       const balance = balances[token.address];
       const depositCrates = balance?.deposited.crates;

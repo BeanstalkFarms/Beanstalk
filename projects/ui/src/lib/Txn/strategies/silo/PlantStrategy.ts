@@ -1,17 +1,20 @@
+/* eslint-disable class-methods-use-this */
 import { StepGenerator, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import { FormTxn } from '~/util/formTxn';
-import FormTxnAction from '~/util/formTxn/FormTxnAction';
+import { FarmStepStrategy, EstimatesGas } from '~/lib/Txn/Strategy';
 
-export default class PlantStep extends FormTxnAction<FormTxn.PLANT> {
-  implied = [];
+export class PlantStrategy extends FarmStepStrategy implements EstimatesGas {
+  async estimateGas(): Promise<ethers.BigNumber> {
+    const { beanstalk } = PlantStrategy.sdk.contracts;
+    const gasEstimate = await beanstalk.estimateGas.plant();
+    console.debug(`[PlantStrategy][estimateGas]: `, gasEstimate.toString());
 
-  async estimateGas() {
-    return this._sdk.contracts.beanstalk.estimateGas.plant();
+    return gasEstimate;
   }
 
   getSteps() {
-    const { beanstalk } = this._sdk.contracts;
+    const { beanstalk } = PlantStrategy.sdk.contracts;
+
     const step: StepGenerator = async (_amountInStep) => ({
       name: 'plant',
       amountOut: _amountInStep,
@@ -25,13 +28,15 @@ export default class PlantStep extends FormTxnAction<FormTxn.PLANT> {
         beanstalk.interface.decodeFunctionResult('plant', result),
     });
 
-    return [step];
+    const _steps = { steps: PlantStrategy.normaliseSteps(step) };
+    console.debug('[PlantStrategy][getSteps]: ', _steps);
+
+    return _steps;
   }
 
-  /// PlantStep specific utils
-
+  /// PlantStrategy specific utils
   makePlantCrateSync(earnedBeans: TokenValue, season: number) {
-    const { BEAN, STALK } = this._sdk.tokens;
+    const { BEAN, STALK } = PlantStrategy.sdk.tokens;
 
     const seeds = BEAN.getSeeds(earnedBeans);
     const stalk = BEAN.getStalk(earnedBeans);
@@ -55,11 +60,11 @@ export default class PlantStep extends FormTxnAction<FormTxn.PLANT> {
   }
 
   async makePlantCrate(account: string) {
-    const { BEAN, STALK } = this._sdk.tokens;
-    const { beanstalk } = this._sdk.contracts;
+    const { beanstalk } = PlantStrategy.sdk.contracts;
+    const { BEAN, STALK } = PlantStrategy.sdk.tokens;
 
     const [_season, _earned] = await Promise.all([
-      this._sdk.sun.getSeason(),
+      PlantStrategy.sdk.sun.getSeason(),
       beanstalk.balanceOfEarnedBeans(account),
     ]);
 
