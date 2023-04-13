@@ -473,7 +473,7 @@ library LibLegacyTokenSilo {
  
             // init mow status for this token
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
-            emit RemoveDeposits(account, perTokenData.token, new int96[](0), new uint256[](0), 0, new uint256[](0)
+            emit RemoveDeposits(account, perTokenData.token, new int96[](0), new uint256[](0), 0, new uint256[](0));
         }
  
         // user deserves stalk grown between stemStartSeason and now

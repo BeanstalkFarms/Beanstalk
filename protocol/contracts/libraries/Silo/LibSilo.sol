@@ -41,14 +41,9 @@ library LibSilo {
     using LibPRBMath for uint256;
     using SafeCast for uint256;
     
-    /**
-     * The `VESTING_PERIOD` is the number of blocks that must pass before
-     * a farmer is credited with their earned beans issued that season. 
-     * This is to prevent flash-loan and multi block MEV exploits.
-     * planting/withdrawing a deposit in this period will result in 
-     * the earned beans being deferred/lost upon execution.
-     */
-    uint256 constant VESTING_PERIOD = 10;
+    // The `VESTING_PERIOD` is the number of blocks that must pass before
+    // a farmer is credited with their earned beans issued that season. 
+    uint256 internal constant VESTING_PERIOD = 10;
     //////////////////////// EVENTS ////////////////////////    
      
     /**
@@ -205,7 +200,7 @@ library LibSilo {
                 uint256 deltaRoots = rootsWithoutEarned - roots;
                 s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
                 s.a[account].deltaRoots = uint128(deltaRoots);
-            } 
+            }
         }
 
         // increment user and total stalk
@@ -615,7 +610,8 @@ library LibSilo {
     /**
      * @dev check whether beanstalk is in the vesting period:
      */
-    function inVestingPeriod() internal pure returns (bool) {
+    function inVestingPeriod() internal view returns (bool) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         return block.number - s.season.sunriseBlock <= VESTING_PERIOD;
     }
 
