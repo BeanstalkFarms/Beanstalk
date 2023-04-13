@@ -7,9 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
-import "~/libraries/LibBytes.sol";
 
 /**
  * @title Silo
@@ -28,7 +25,6 @@ contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
-
 
     //////////////////////// EVENTS ////////////////////////    
 

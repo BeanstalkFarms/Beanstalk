@@ -397,5 +397,4 @@ struct AppStorage {
     uint256 recapitalized; // The nubmer of USDC that has been recapitalized in the Barn Raise.
     uint256 isFarm; // Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
     address ownerCandidate; // Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
-    mapping(bytes32 => Storage.Metadata) metadata; // mapping of ERC1155 deposit to metadata of the deposit
 }

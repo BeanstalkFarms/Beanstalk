@@ -271,6 +271,10 @@ contract SiloExit is ReentrancyGuard {
         );
     }
 
+    /**
+     * @dev given the season/token, returns the stem assoicated with that deposit.
+     * kept for legacy reasons. 
+     */
     function seasonToStem(address token, uint32 season)
         public
         view
@@ -280,12 +284,20 @@ contract SiloExit is ReentrancyGuard {
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 
+    /**
+     * @dev returns the seeds per token, for legacy tokens.
+     * calling with an non-legacy token will return 0, 
+     * even after the token is whitelisted.
+     * kept for legacy reasons. 
+     */
     function getSeedsPerToken(address token) public view virtual returns (uint256) {
         return LibLegacyTokenSilo.getSeedsPerToken(token);
     }
 
+    /**
+     * @dev returns the season in which beanstalk initalized siloV3.
+     */
     function stemStartSeason() public view virtual returns (uint16) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         return s.season.stemStartSeason;
     }
 
@@ -294,6 +306,12 @@ contract SiloExit is ReentrancyGuard {
         return LibSilo.migrationNeeded(account);
     }
 
+    /**
+     * @dev returns whether beanstalk is in the vesting period or not.
+     */
+    function inVestingPeriod() public view returns (bool){
+        return LibSilo.inVestingPeriod();
+    }
     //////////////////////// INTERNAL ////////////////////////
 
     /**

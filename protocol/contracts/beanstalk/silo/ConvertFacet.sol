@@ -252,7 +252,6 @@ contract ConvertFacet is ReentrancyGuard {
                 if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
                     //keeping track of stalk removed must happen before we actually remove the deposit
                     //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
-                    
                     depositBDV = LibTokenSilo.removeDepositFromAccount(
                         msg.sender,
                         token,

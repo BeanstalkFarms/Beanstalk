@@ -6,13 +6,13 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "~/libraries/LibSafeMathSigned96.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/LibBytes.sol";
 
 
@@ -152,7 +152,7 @@ library LibTokenSilo {
      * If a Deposit doesn't yet exist, one is created. Otherwise, the existing
      * Deposit is updated.
      * 
-     * `amount` & `bdv` are cast uint256 -> uint128 to optimize storage cost,
+     * `amount` & `bdv` are downcasted uint256 -> uint128 to optimize storage cost,
      * since both values can be packed into one slot.
      * 
      * Unlike {removeDepositFromAccount}, this function DOES EMIT an 

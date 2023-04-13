@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./Silo.sol";
-import {IERC1155} from "~/interfaces/IERC1155.sol";
 
 /**
  * @title TokenSilo
@@ -14,9 +13,6 @@ import {IERC1155} from "~/interfaces/IERC1155.sol";
  * @notice This contract contains functions for depositing, withdrawing and 
  * claiming whitelisted Silo tokens.
  *
- * @dev WONTFIX: There is asymmetry in the structure of deposit / withdrawal functions.
- * Since the withdraw + claim step is being removed in Silo V3 in the coming
- * months, we'll leave these asymmetries present for now.
  *
  * - LibTokenSilo offers `incrementTotalDeposited` and `decrementTotalDeposited`
  *   but these operations are performed directly for withdrawals.
@@ -29,7 +25,6 @@ contract TokenSilo is Silo {
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
 
-    
 
     /**
      * @notice Emitted when `account` adds a single Deposit to the Silo.
@@ -63,7 +58,6 @@ contract TokenSilo is Silo {
      * @param token Address of the whitelisted ERC20 token that was removed.
      * @param stem The stem that this `amount` was removed from.
      * @param amount Amount of `token` removed from `stem`.
-     * //add bdv here?
      */
     event RemoveDeposit(
         address indexed account,
@@ -75,11 +69,9 @@ contract TokenSilo is Silo {
 
     /**
      * @notice Emitted when `account` removes multiple Deposits from the Silo.
-     *
      * Occurs during `withdraw()` and `convert()` operations. 
-     *
      * Gas optimization: emit 1 `RemoveDeposits` instead of N `RemoveDeposit` events.
-     *
+     * 
      * @param account The account that removed Deposits.
      * @param token Address of the whitelisted ERC20 token that was removed.
      * @param stems stems of Deposit to remove from.
@@ -98,83 +90,40 @@ contract TokenSilo is Silo {
     // ERC1155 events
     
     /**
-     * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
-     */
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
-
-    /**
-     * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
-     * transfers.
-     */
-    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
-
-    // note add/remove withdrawal(s) are removed as claiming is removed
-    // FIXME: to discuss with subgraph team to update
-
-    //////////////////////// UTILITIES ////////////////////////
-
-    /**
-     * @dev Convenience struct to simplify return value of {TokenSilo._withdrawDeposits()}.
-     *
-     * FIXME(naming): `tokensRemoved` -> `amountsRemoved`.
-     */
-    // struct AssetsRemoved {
-    //     uint256 tokensRemoved;
-    //     uint256 stalkRemoved;
-    //     uint256 bdvRemoved;
-    // }
-
-    //////////////////////// GETTERS ////////////////////////
-
-    /**
-     * @notice Find the amount and BDV of `token` that `account` has Deposited in stem `stem`.
+     * @notice Emitted when a Deposit is created, removed, or transferred.
      * 
-     * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
-     *
-     * @return amount The number of tokens contained in this Deposit.
-     * @return bdv The BDV associated with this Deposit. See {FIXME(doc)}.
+     * @param operator the address that performed the operation.
+     * @param from the address the Deposit is being transferred from.
+     * @param to the address the Deposit is being transferred to.
+     * @param id the depositID of the Deposit.
+     * @param value the amount of the Deposit.
      */
-    function getDeposit(
-        address account,
-        address token,
-        int96 stem
-    ) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, stem);
-    }
+    event TransferSingle(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 id,
+        uint256 value
+    );
 
     /**
-     * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
-     */
-    function getTotalDeposited(address token) external view returns (uint256) {
-        return s.siloBalances[token].deposited;
-    }
-
-    /**
-     * @notice Get the total amount of `token` currently Withdrawn from the Silo across all users.
-     */
-    function getTotalWithdrawn(address token) external view returns (uint256) {
-        return s.siloBalances[token].withdrawn;
-    }
-
-    /**
-     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
-     *
-     * Contains:
-     *  - the BDV function selector
-     *  - Stalk per BDV
-     *  - stalkEarnedPerSeason
-     *  - milestoneSeason
-     *  - lastStem
+     * @notice Emitted when multiple deposits are withdrawn or transferred.
      * 
-     * @dev FIXME(naming) getTokenSettings ?
+     * @dev This event is emitted in `convert()`
+     * 
+     * @param operator the address that performed the operation.
+     * @param from the address the Deposit is being transferred from.
+     * @param to the address the Deposit is being transferred to.
+     * @param ids the depositIDs of the Deposit.
+     * @param values the amounts of the Deposit.
      */
-    function tokenSettings(address token)
-        external
-        view
-        returns (Storage.SiloSettings memory)
-    {
-        return s.ss[token];
-    }
+    event TransferBatch(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256[] ids,
+        uint256[] values
+    );
 
     //////////////////////// DEPOSIT ////////////////////////
 
@@ -193,21 +142,28 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount
-    ) internal {
-        (uint256 stalk) = LibTokenSilo.deposit(
+    ) internal returns (uint256 stalk, int96 stem){
+        stalk = LibTokenSilo.deposit(
             account,
             token,
-            LibTokenSilo.stemTipForToken(token),
+            stem = LibTokenSilo.stemTipForToken(IERC20(token)),
             amount
         );
-
         LibSilo.mintStalk(account, stalk);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
 
     /**
-     * @dev Remove a single Deposit and create a single Withdrawal with its contents.
+     * @notice Handles withdraw accounting.
+     *
+     * - {LibSilo._removeDepositFromAccount} calculates the stalk
+     * assoicated with a given deposit, and removes the deposit from the account.
+     * emits `RemoveDeposit` and `TransferSingle` events. 
+     * 
+     * - {_withdraw} updates the total value deposited in the silo, and burns 
+     * the stalk assoicated with the deposits.
+     * 
      */
     function _withdrawDeposit(
         address account,
@@ -224,7 +180,6 @@ contract TokenSilo is Silo {
             LibTokenSilo.Transfer.emitTransferSingle
         );
         
-        // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
             address(token),
@@ -234,11 +189,14 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @dev Remove multiple Deposits and create a single Withdrawal with the
-     * sum of their contents.
+     * @notice Handles withdraw accounting for multiple deposits.
      *
-     * Requirements:
-     * - Each item in `stems` must have a corresponding item in `amounts`.
+     * - {LibSilo._removeDepositsFromAccount} removes the deposits from the account,
+     * and returns the total tokens, stalk, and bdv removed from the account.
+     * 
+     * - {_withdraw} updates the total value deposited in the silo, and burns 
+     * the stalk assoicated with the deposits.
+     * 
      */
     function _withdrawDeposits(
         address account,
@@ -251,7 +209,6 @@ contract TokenSilo is Silo {
             "Silo: Crates, amounts are diff lengths."
         );
 
-        // Remove the Deposits from `account`.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
             account,
             token,
@@ -259,25 +216,20 @@ contract TokenSilo is Silo {
             amounts
         );
 
-        // Add a Withdrawal, update totals, burn Stalk.
         _withdraw(
             account,
             token,
             ar.tokensRemoved,
             ar.stalkRemoved
         );
-        /** @dev we return ar.tokensremoved here, but not in _withdrawDeposit()
-         *  to use in siloFacet.withdrawDeposits()
-         */ 
 
+        // we return the total tokens removed from the deposits,
+        // to be used in {SiloFacet.withdrawDeposits}.
         return ar.tokensRemoved;
     }
 
     /**
-     * @dev Create a Withdrawal.
-     *
-     * Gas optimization: Completion of the Remove step (decrementing total
-     * Deposited and burning Stalk) is performed here because there 
+     * @dev internal helper function for withdraw accounting.
      */
     function _withdraw(
         address account,
@@ -285,13 +237,15 @@ contract TokenSilo is Silo {
         uint256 amount,
         uint256 stalk
     ) private {
-        LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited
-        LibSilo.burnStalk(account, stalk); // Burn Stalk
+        LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited in the silo.
+        LibSilo.burnStalk(account, stalk); // Burn stalk and roots associated with the stalk.
     }
 
     //////////////////////// TRANSFER ////////////////////////
 
     /**
+     * @notice Intenral transfer logic accounting. 
+     * 
      * @dev Removes `amount` of a single Deposit from `sender` and transfers
      * it to `recipient`. No Stalk are burned, and the total amount of
      * Deposited `token` in the Silo doesn't change. 
@@ -320,12 +274,11 @@ contract TokenSilo is Silo {
         );
         LibSilo.transferStalk(sender, recipient, stalk);
 
-        /** the current beanstalk system uses {AddDeposit}
+        /** 
+         * the current beanstalk system uses {AddDeposit}
          * and {RemoveDeposit} events to represent a transfer.
          * However, the ERC1155 standard has a dedicated {TransferSingle} event,
-         * which creates an asymmetry between the two systems. 
-         * We accept this asymmetry for beanstalk to be better composable with the 
-         * greater DeFi system.
+         * which is used here.
          */
         emit TransferSingle(
             msg.sender, 
@@ -339,6 +292,8 @@ contract TokenSilo is Silo {
     }
 
     /**
+     * @notice Intenral transfer logic accounting for multiple deposits.
+     * 
      * @dev Removes `amounts` of multiple Deposits from `sender` and transfers
      * them to `recipient`. No Stalk are burned, and the total amount of
      * Deposited `token` in the Silo doesn't change. 
@@ -399,14 +354,11 @@ contract TokenSilo is Silo {
          *  The current beanstalk system uses a mix of {AddDeposit}
          *  and {RemoveDeposits} events to represent a batch transfer.
          *  However, the ERC1155 standard has a dedicated {batchTransfer} event,
-         *  which creates an asymmetry between the two systems. 
-         *  We accept this asymmetry for beanstalk to be better composable with the 
-         *  greater DeFi system.
+         *  which is used here.
          */
-        emit TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
+        emit LibSilo.TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
         emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
 
-        // Transfer all the Stalk
         LibSilo.transferStalk(
             sender,
             recipient,
@@ -416,9 +368,63 @@ contract TokenSilo is Silo {
         return bdvs;
     }
 
-    
+    //////////////////////// GETTERS ////////////////////////
+
+    /**
+     * @notice Find the amount and BDV of `token` that `account` has Deposited in stem index `stem`.
+     * 
+     * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
+     *
+     * @return amount The number of tokens contained in this Deposit.
+     * @return bdv The BDV associated with this Deposit. See {FIXME(doc)}.
+     */
+    function getDeposit(
+        address account,
+        address token,
+        int96 stem
+    ) external view returns (uint256, uint256) {
+        return LibTokenSilo.tokenDeposit(account, token, stem);
+    }
+
+    /**
+     * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
+     */
+    function getTotalDeposited(address token) external view returns (uint256) {
+        return s.siloBalances[token].deposited;
+    }
+
+    /**
+     * @notice Get the total amount of `token` currently Withdrawn from the Silo across all users.
+     */
+    function getTotalWithdrawn(address token) external view returns (uint256) {
+        return s.siloBalances[token].withdrawn;
+    }
+
+    /**
+     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
+     *
+     * Contains:
+     *  - the BDV function selector
+     *  - Stalk per BDV
+     *  - stalkEarnedPerSeason
+     *  - milestoneSeason
+     *  - lastStem
+     */
+    function tokenSettings(address token)
+        external
+        view
+        returns (Storage.SiloSettings memory)
+    {
+        return s.ss[token];
+    }
+
     //////////////////////// ERC1155 ////////////////////////
 
+    /**
+     * @notice returns the amount of tokens in a Deposit.
+     * 
+     * @dev see {getDeposit} for both the bdv and amount.
+     */
     function balanceOf(
         address account, 
         uint256 depositId
@@ -426,6 +432,9 @@ contract TokenSilo is Silo {
         return s.a[account].deposits[bytes32(depositId)].amount;
     }
 
+    /**
+     * @notice returns an array of amounts corresponding to Deposits.
+     */
     function balanceOfBatch(
         address[] calldata accounts, 
         uint256[] calldata depositIds
@@ -441,6 +450,9 @@ contract TokenSilo is Silo {
         return balances;
     }
 
+    /**
+     * @notice outputs the depositID given an token address and stem.
+     */
     function getDepositId(
         address token, 
         int96 stem

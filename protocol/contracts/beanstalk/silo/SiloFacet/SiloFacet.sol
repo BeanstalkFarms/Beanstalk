@@ -45,22 +45,26 @@ contract SiloFacet is TokenSilo {
      *  3. Create or update a Deposit entry for `account` in the current Season.
      *  4. Mint Stalk to `account`.
      *  5. Emit an `AddDeposit` event.
-     * note: changed added a generic bytes calldata to allow for ERC721 + ERC1155 deposits
      * 
-     * FIXME(logic): return `(amount, bdv, season)`
      */
     function deposit(
         address token,
-        uint256 amount,
+        uint256 _amount,
         LibTransfer.From mode
-    ) external payable nonReentrant mowSender(token) {
+    ) 
+        external
+        payable 
+        nonReentrant 
+        mowSender(token) 
+        returns (uint256 amount, uint256 bdv, int96 stem)
+    {
         amount = LibTransfer.receiveToken(
             IERC20(token),
-            amount,
+            _amount,
             msg.sender,
             mode
         );
-        _deposit(msg.sender, token, amount);
+        (bdv, stem) = _deposit(msg.sender, token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -106,9 +110,9 @@ contract SiloFacet is TokenSilo {
      *
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
-     * if the difference in stems is minimal.
+     * if the difference in stems is minimal to save on gas.
      */
-    
+
     function withdrawDeposits(
         address token,
         int96[] calldata stems,
@@ -136,10 +140,6 @@ contract SiloFacet is TokenSilo {
      * The {mowSender} modifier is not used here because _both_ the `sender` and
      * `recipient` need their Silo updated, since both accounts experience a
      * change in deposited BDV. See {Silo-_mow}.
-     * * note: changed name to `withdrawERC20Deposits` as in the future, when we deposit ERC721 or ERC1155, 
-     * 1) it would need a different way to make a deposit (hashing)
-     * 2) it conserves backwards compatibility later 
-     * alternative solution: make the input a bytes32 depositID
      */
     function transferDeposit(
         address sender,
@@ -194,10 +194,19 @@ contract SiloFacet is TokenSilo {
         bdvs = _transferDeposits(sender, recipient, token, stem, amounts);
     }
 
-    // ERC1155 safeTransferFrom
+    
 
-    /// @dev ERC1155 safeTransferFrom does not need reentrancy protection,
-    // as the transferDeposit function already has this protection.
+    /**
+     * @notice Transfer a single Deposit, conforming to the ERC1155 standard.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param depositId ID of Deposit to Transfer.
+     * @param amount Amount of `token` to Transfer.
+     * 
+     * @dev the depositID is the token address and stem of a deposit, 
+     * concatinated into a single uint256.
+     * 
+     */
     function safeTransferFrom(
         address sender, 
         address recipient, 
@@ -220,24 +229,33 @@ contract SiloFacet is TokenSilo {
         );
     }
 
-    // unlike transferDeposits, safeBatchTransferFrom does not assume the deposits come from the same token,
-    // and must emit 2 transfer events per deposit. 
+    /**
+     * @notice Transfer a multiple Deposits, conforming to the ERC1155 standard.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param depositIds list of ID of deposits to Transfer.
+     * @param amounts list of amounts of `token` to Transfer.
+     * 
+     * @dev {transferDeposits} can be used to transfer multiple deposits, but only 
+     * if they are all of the same token. Since the ERC1155 standard requires the abilty
+     * to transfer any set of depositIDs, the {transferDeposits} function cannot be used here.
+     */
     function safeBatchTransferFrom(
         address sender, 
         address recipient, 
-        uint256[] calldata depositIDs, 
+        uint256[] calldata depositIds, 
         uint256[] calldata amounts, 
         bytes calldata
     ) external {
-        require(depositIDs.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+        require(depositIds.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         address token;
         int96 cumulativeGrownStalkPerBDV;
-        for(uint i; i < depositIDs.length; i++) {
+        for(uint i; i < depositIds.length; i++) {
             (token, cumulativeGrownStalkPerBDV) = 
                 LibBytes.getAddressAndStemFromBytes(
-                    bytes32(depositIDs[i])
+                    bytes32(depositIds[i])
                 );
             transferDeposit(
                 sender, 
@@ -272,6 +290,7 @@ contract SiloFacet is TokenSilo {
      * `msg.sender`.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
+     * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
      * 
      * The Seeds associated with Earned Beans are commonly called "Plantable
      * Seeds". The word "Plantable" is used to highlight that these Seeds aren't 
@@ -280,7 +299,7 @@ contract SiloFacet is TokenSilo {
      * 
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
      * the current Season.
-     *
+     * 
      * FIXME(doc): Publius has suggested we explain `plant()` as "Planting Seeds"
      * and that this happens to deposit Earned Beans, rather than the above approach.
      */

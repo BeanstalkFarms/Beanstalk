@@ -24,13 +24,31 @@ import "../SiloFacet/TokenSilo.sol";
 contract ApprovalFacet is ReentrancyGuard {
     using SafeMath for uint256;
 
+    /**
+     * @notice Emitted when `owner` approves `spender` 
+     * to use up to `amount` of `token` deposited in the silo.
+     *
+     * @param owner the address that approves the spender to use the tokens
+     * @param spender the address that is approved to use the tokens
+     * @param token the address of the token
+     * @param amount the amount of tokens approved
+     */
     event DepositApproval(
         address indexed owner,
         address indexed spender,
         address token,
         uint256 amount
     );
-    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+
+    /**
+     * @notice Emitted when an owner approves 
+     * a spender to use all ERC1155 Deposits.
+     */
+    event ApprovalForAll(
+        address indexed owner, 
+        address indexed spender, 
+        bool approved
+    );
 
 
     //////////////////////// APPROVE ////////////////////////
@@ -60,8 +78,6 @@ contract ApprovalFacet is ReentrancyGuard {
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     *
-     * FIXME(doc): why does this return `true`?
      */
     function increaseDepositAllowance(
         address spender,
@@ -84,7 +100,6 @@ contract ApprovalFacet is ReentrancyGuard {
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
      * 
-     * FIXME(doc): why does this return `true`?
      */
     function decreaseDepositAllowance(
         address spender,
@@ -106,6 +121,32 @@ contract ApprovalFacet is ReentrancyGuard {
      * https://eips.ethereum.org/EIPS/eip-2612 
      */
     
+    /** 
+     * @notice Increases the Deposit Transfer allowance of `spender`.
+     * 
+     * @param owner address to give permit
+     * @param spender address to permit
+     * @param token ERC20 to permit
+     * @param value amount to permit
+     * @param deadline expiration of signature (unix time) 
+     * @param v recovery id
+     * @param r ECDSA signature output
+     * @param s ECDSA signature output
+     */
+    function permitDeposit(
+        address owner,
+        address spender,
+        address token,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable nonReentrant {
+        LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
+        LibSiloPermit._approveDeposit(owner, spender, token, value);
+    }
+
     /** 
      * @notice permits multiple deposits.
      * @param owner address to give permit
@@ -131,32 +172,6 @@ contract ApprovalFacet is ReentrancyGuard {
         for (uint256 i; i < tokens.length; ++i) {
             LibSiloPermit._approveDeposit(owner, spender, tokens[i], values[i]);
         }
-    }
-
-    /** 
-     * @notice Increases the Deposit Transfer allowance of `spender`.
-     * 
-     * @param owner address to give permit
-     * @param spender address to permit
-     * @param token ERC20 to permit
-     * @param value amount to permit
-     * @param deadline expiration of signature (unix time) 
-     * @param v recovery id
-     * @param r ECDSA signature output
-     * @param s ECDSA signature output
-     */
-    function permitDeposit(
-        address owner,
-        address spender,
-        address token,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable nonReentrant {
-        LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
-        LibSiloPermit._approveDeposit(owner, spender, token, value);
     }
 
     /** 
@@ -188,7 +203,10 @@ contract ApprovalFacet is ReentrancyGuard {
         return s.a[owner].depositAllowances[spender][token];
     }
 
-    // ERC1155 Approvals
+    /**
+     * @notice approves `spender` to transfer any ERC1155 
+     * deposit on behalf of `msg.sender`.
+     */
     function setApprovalForAll(
         address spender, 
         bool approved
@@ -197,10 +215,14 @@ contract ApprovalFacet is ReentrancyGuard {
         emit ApprovalForAll(msg.sender, spender, approved);
     }
 
+    /**
+     * @notice Returns whether `spender` is approved 
+     * to transfer any ERC1155 deposit on behalf of `owner`.
+     */
     function isApprovedForAll(
-        address _owner, 
-        address _operator
+        address owner, 
+        address spender
     ) external view returns (bool) {
-        return s.a[_owner].isApprovedForAll[_operator];
+        return s.a[owner].isApprovedForAll[spender];
     }
 }
