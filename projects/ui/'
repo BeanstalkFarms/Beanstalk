@@ -1,0 +1,6 @@
+#VITE_OVERRIDE_FARMER_ACCOUNT="0x0e9dc8ffc3a5a04a2abdd5c5cbc52187e6653e4"
+GENERATE_SOURCEMAP=false         # Set to false in build env
+TSC_COMPILE_ON_ERROR=true       # TEMP: after we overhaul site, remove this
+ESLINT_NO_DEV_ERRORS=true       # TEMP: after we overhaul site, remove this
+SKIP_PREFLIGHT_CHECK=true
+VITE_OVERRIDE_FARMER_ACCOUNT="0xE7003d4f740D6bBc2Bb0f057D41Df36085d8CbA8"
