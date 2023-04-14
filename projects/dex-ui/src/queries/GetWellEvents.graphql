@@ -1,0 +1,65 @@
+query GetWellEvents($id: ID!, $searchTimestamp: BigInt) {
+  well: well(id: $id) {
+    swaps(where: { timestamp_gte: $searchTimestamp }, orderBy: timestamp, orderDirection: desc) {
+      hash
+      account {
+        id
+      }
+      amountIn
+      amountOut
+      toToken {
+        decimals
+        name
+        symbol
+        id
+        lastPriceUSD
+        lastPriceBlockNumber
+      }
+      fromToken {
+        decimals
+        name
+        symbol
+        id
+        lastPriceUSD
+        lastPriceBlockNumber
+      }
+      timestamp
+    }
+    deposits(where: { timestamp_gte: $searchTimestamp }, orderBy: timestamp, orderDirection: desc) {
+      hash
+      account {
+        id
+      }
+      amountUSD
+      timestamp
+      tokens {
+        id
+        name
+        symbol
+        decimals
+        lastPriceUSD
+        lastPriceBlockNumber
+      }
+      liquidity
+      reserves
+    }
+    withdraws(where: { timestamp_gte: $searchTimestamp }, orderBy: timestamp, orderDirection: desc) {
+      hash
+      account {
+        id
+      }
+      amountUSD
+      timestamp
+      tokens {
+        id
+        name
+        symbol
+        decimals
+        lastPriceUSD
+        lastPriceBlockNumber
+      }
+      liquidity
+      reserves
+    }
+  }
+}

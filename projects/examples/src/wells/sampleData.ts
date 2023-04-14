@@ -3,7 +3,7 @@ import { TestUtils } from "@beanstalk/sdk";
 import { signer, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";
 
-const WELL_ADDRESS = "0xa6AB86f760ae5D6fbF06056a7887b816610A4668";
+const WELL_ADDRESS = process.env.WELL_ADDRESS!;
 
 main().catch((e) => {
   console.log("FAILED:");
