@@ -66,3 +66,4 @@ You can read more about BOPs [here](https://docs.bean.money/almanac/governance/p
 
 * [BOP-1](https://bean.money/bop-1): Ratify Disclosures Statement
 * [BOP-2](https://bean.money/bop-2): Increase and Revisit Bounty for April Governance Exploit
+* [BOP-2](https://bean.money/bop-3): Form the BeaNFT DAO
