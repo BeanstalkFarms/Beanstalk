@@ -42,6 +42,8 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-31](https://bean.money/bip-31): Beanstalk Farms Q1 2023 Budget
 * [BIP-32](https://bean.money/bip-32): Seraph
 * [BIP-33](https://bean.money/bip-33): Beanstalk Farms H1 2023 Budget
+* [BIP-33](https://bean.money/bip-33): Sunrise Improvements
+* [BIP-33](https://bean.money/bip-33): Stalk Delegation and Process Amendments
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
