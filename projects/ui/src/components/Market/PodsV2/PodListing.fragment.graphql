@@ -1,0 +1,36 @@
+fragment PodListing on PodListing {
+  #// Identifiers
+  id
+  farmer { id }
+  historyID
+  
+  #// Configuration
+  index
+  start
+  mode
+
+  #// Pricing
+  pricingType
+  pricePerPod           
+  pricingFunction
+
+  #// Constraints
+  maxHarvestableIndex
+  minFillAmount
+
+  #// Amounts [Relative to Original]
+  originalIndex
+  originalAmount
+  filled
+
+  #// Amounts [Relative to Child]
+  amount
+  remainingAmount
+  filledAmount
+
+  #// Metadata
+  status
+  createdAt
+  updatedAt
+  creationHash
+}

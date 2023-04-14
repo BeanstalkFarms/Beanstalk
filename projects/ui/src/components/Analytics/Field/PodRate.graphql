@@ -1,0 +1,16 @@
+query SeasonalPodRate($season_lte: Int, $first: Int) {
+  seasons: fieldHourlySnapshots(
+    where: {
+      season_lte: $season_lte,
+      field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
+    }
+    first: $first,
+    orderBy: season
+    orderDirection: desc
+  ) {
+    id
+    season
+    createdAt
+    podRate
+  }
+}

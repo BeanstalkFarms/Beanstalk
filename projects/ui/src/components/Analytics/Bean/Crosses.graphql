@@ -1,0 +1,13 @@
+query SeasonalCrosses($season_lte: Int, $first: Int) {
+  seasons: beanHourlySnapshots(
+    first: $first
+    where: { season_lte: $season_lte }
+    orderBy: season
+    orderDirection: desc
+  ) {
+    id
+    season
+    timestamp
+    totalCrosses
+  }
+}

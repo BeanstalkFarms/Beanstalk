@@ -1,10 +1,12 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.6; // FIXME: changed from 0.8.0
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "forge-std/Test.sol";
 
-//common utilities for forge tests
+/**
+ * @dev common utilities for forge tests
+ */
 contract Utils is Test {
     bytes32 internal nextUser = keccak256(abi.encodePacked("user address"));
 

@@ -1,0 +1,64 @@
+/** ------------------------- **/
+/** Fonts                     **/
+/** ------------------------- **/
+
+@font-face {
+  font-family: 'Futura PT';
+  src: url('./components/App/fonts/FuturaPT/FuturaPTMedium.otf');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Futura PT';
+  src: url('./components/App/fonts/FuturaPT/FuturaPTBold.otf');
+  font-weight: 600;
+}
+
+
+/** ------------------------- **/
+/** Globals                   **/
+/** ------------------------- **/
+
+html, body {
+  height: 100%;
+  background-color: #daf2ff;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  font-family: 'Futura PT';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /** Prevent page overscrolling: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior */
+  overscroll-behavior: none;
+}
+
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* .alm {
+  overflow: visible;
+  pointer-events: none;
+}
+.alm:after {
+  pointer-events: all !important;
+  border-radius: 10px;
+  padding: 5px;
+  border: 2px solid #46B955;
+  position: absolute;
+  content: '';
+  top: -5px;
+  left: -5px;
+  bottom: -5px;
+  right: -5px;
+  cursor: pointer;
+  background: rgba(0,0,0,0.1)
+} */

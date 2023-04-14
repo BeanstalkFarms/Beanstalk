@@ -53,7 +53,7 @@ contract Replant5 {
             for (uint256 j; j < d.seasons.length; ++j) {
                 emit AddDeposit(
                     d.account,
-                    C.unripeBeanAddress(),
+                    C.UNRIPE_BEAN,
                     d.seasons[j],
                     d.amounts[j],
                     d.amounts[j].mul(C.initialRecap()).div(C.precision())

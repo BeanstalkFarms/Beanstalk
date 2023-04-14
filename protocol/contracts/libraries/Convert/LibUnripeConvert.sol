@@ -1,6 +1,4 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -12,9 +10,9 @@ import "../LibUnripe.sol";
 import "~/libraries/LibInternal.sol";
 
 /**
- * @author Publius
  * @title LibUnripeConvert
- **/
+ * @author Publius
+ */
 library LibUnripeConvert {
     using LibConvertData for bytes;
     using SafeMath for uint256;
@@ -24,8 +22,8 @@ library LibUnripeConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         tokenOut = C.unripeBeanAddress();
@@ -41,22 +39,22 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert._curveRemoveLPAndBuyToPeg(
+        ) = LibCurveConvert.curveRemoveLPAndBuyToPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp),
                 minAmountOut,
-                C.curveMetapoolAddress()
+                C.CURVE_BEAN_METAPOOL
             );
 
-        inAmount = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
+        amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
         LibUnripe.removeUnderlying(tokenIn, inUnderlyingAmount);
-        IBean(tokenIn).burn(inAmount);
+        IBean(tokenIn).burn(amountIn);
 
-        outAmount = LibUnripe
+        amountOut = LibUnripe
             .underlyingToUnripe(tokenOut, outUnderlyingAmount)
             .mul(LibUnripe.percentBeansRecapped())
             .div(LibUnripe.percentLPRecapped());
         LibUnripe.addUnderlying(tokenOut, outUnderlyingAmount);
-        IBean(tokenOut).mint(address(this), outAmount);
+        IBean(tokenOut).mint(address(this), amountOut);
     }
 
     function convertBeansToLP(bytes memory convertData)
@@ -64,8 +62,8 @@ library LibUnripeConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
         tokenIn = C.unripeBeanAddress();
@@ -81,39 +79,39 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert._curveSellToPegAndAddLiquidity(
+        ) = LibCurveConvert.curveSellToPegAndAddLiquidity(
                 LibUnripe.unripeToUnderlying(tokenIn, beans),
                 minAmountOut,
-                C.curveMetapoolAddress()
+                C.CURVE_BEAN_METAPOOL
             );
 
-        inAmount = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
+        amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
         LibUnripe.removeUnderlying(tokenIn, inUnderlyingAmount);
-        IBean(tokenIn).burn(inAmount);
+        IBean(tokenIn).burn(amountIn);
 
-        outAmount = LibUnripe
+        amountOut = LibUnripe
             .underlyingToUnripe(tokenOut, outUnderlyingAmount)
             .mul(LibUnripe.percentLPRecapped())
             .div(LibUnripe.percentBeansRecapped());
         LibUnripe.addUnderlying(tokenOut, outUnderlyingAmount);
-        IBean(tokenOut).mint(address(this), outAmount);
+        IBean(tokenOut).mint(address(this), amountOut);
     }
 
     function beansToPeg() internal view returns (uint256 beans) {
         uint256 underlyingBeans = LibCurveConvert.beansToPeg(
-            C.curveMetapoolAddress()
+            C.CURVE_BEAN_METAPOOL
         );
         beans = LibUnripe.underlyingToUnripe(
-            C.unripeBeanAddress(),
+            C.UNRIPE_BEAN,
             underlyingBeans
         );
     }
 
     function lpToPeg() internal view returns (uint256 lp) {
         uint256 underlyingLP = LibCurveConvert.lpToPeg(
-            C.curveMetapoolAddress()
+            C.CURVE_BEAN_METAPOOL
         );
-        lp = LibUnripe.underlyingToUnripe(C.unripeLPAddress(), underlyingLP);
+        lp = LibUnripe.underlyingToUnripe(C.UNRIPE_LP, underlyingLP);
     }
 
     function getLPAmountOut(uint256 amountIn)
@@ -122,12 +120,12 @@ library LibUnripeConvert {
         returns (uint256 lp)
     {
         uint256 beans = LibUnripe.unripeToUnderlying(
-            C.unripeBeanAddress(),
+            C.UNRIPE_BEAN,
             amountIn
         );
-        lp = LibCurveConvert.getLPAmountOut(C.curveMetapoolAddress(), beans);
+        lp = LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, beans);
         lp = LibUnripe
-            .underlyingToUnripe(C.unripeLPAddress(), lp)
+            .underlyingToUnripe(C.UNRIPE_LP, lp)
             .mul(LibUnripe.percentLPRecapped())
             .div(LibUnripe.percentBeansRecapped());
     }
@@ -138,12 +136,12 @@ library LibUnripeConvert {
         returns (uint256 bean)
     {
         uint256 lp = LibUnripe.unripeToUnderlying(
-            C.unripeLPAddress(),
+            C.UNRIPE_LP,
             amountIn
         );
-        bean = LibCurveConvert.getBeanAmountOut(C.curveMetapoolAddress(), lp);
+        bean = LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, lp);
         bean = LibUnripe
-            .underlyingToUnripe(C.unripeBeanAddress(), bean)
+            .underlyingToUnripe(C.UNRIPE_BEAN, bean)
             .mul(LibUnripe.percentBeansRecapped())
             .div(LibUnripe.percentLPRecapped());
     }

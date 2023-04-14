@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "rootDir": "./src",
+    "outDir": "./build",
+    "declaration": false,
+    "baseUrl": ".",
+    "sourceMap": false,
+    "noImplicitAny": false,
+    "paths": {
+      "src/*": ["src/*"]
+    }
+  }
+}

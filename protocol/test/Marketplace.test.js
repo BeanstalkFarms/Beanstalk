@@ -44,8 +44,8 @@ describe('Marketplace', function () {
 
     await this.field.incrementTotalSoilE('100000');
     await this.season.setYieldE('0');
-    await this.field.connect(user).sow('1000', EXTERNAL);
-    await this.field.connect(user2).sow('1000', EXTERNAL);
+    await this.field.connect(user).sow('1000', '0', EXTERNAL);
+    await this.field.connect(user2).sow('1000', '0', EXTERNAL);
   })
 
   const getHash = async function (tx) {
@@ -82,9 +82,7 @@ describe('Marketplace', function () {
     if (l[4] > 0) {
       return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'uint256', 'bool'], l);
     } else {
-      console.log(l)
       l.splice(4,1);
-      console.log(l)
       return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint24', 'uint256', 'bool'], l);
     }
   }
@@ -1053,7 +1051,13 @@ describe('Marketplace', function () {
           it('Fill Listing wrong price Fails', async function () {
             let brokenListing = this.listing;
             brokenListing[4] = '100001'
-            await expect(this.marketplace.connect(user).fillPodListingV2(brokenListing,1000, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Listing does not exist.');
+            await expect(this.marketplace.connect(user).
+            fillPodListingV2(
+              brokenListing,
+              1000, 
+              this.f.packedFunction, 
+              EXTERNAL)
+            ).to.be.revertedWith('Marketplace: Listing does not exist.');
           })
 
           it('Fill Listing after expired', async function () {
@@ -1398,16 +1402,16 @@ describe('Marketplace', function () {
               this.marketplace
                 .connect(user2)
                 .fillPodOrder(this.order, 1000, 700, 500, INTERNAL)
-            ).to.revertedWith("Marketplace: Invalid Plot.");
+            ).to.be.revertedWith("Marketplace: Invalid Plot.");
           });
   
           it("plot amount too large", async function () {
-            await this.field.connect(user2).sow("1200", EXTERNAL);
+            await this.field.connect(user2).sow("1200", "0", EXTERNAL);
             await expect(
               this.marketplace
                 .connect(user2)
                 .fillPodOrder(this.order, 2000, 700, 500, INTERNAL)
-            ).to.revertedWith("Marketplace: Plot too far in line.");
+            ).to.be.revertedWith("Marketplace: Plot too far in line.");
           });
   
           it("sell too much", async function () {
@@ -1772,14 +1776,14 @@ describe('Marketplace', function () {
           it("plot amount too large", async function () {
             await expect(
               this.marketplace.connect(user2).fillPodOrderV2(this.order, 1000, 700, 500, this.f.packedFunction, INTERNAL)
-            ).to.revertedWith("Marketplace: Invalid Plot.");
+            ).to.be.revertedWith("Marketplace: Invalid Plot.");
           });
 
           it("plot amount too large", async function () {
-            await this.field.connect(user2).sow("1200", EXTERNAL);
+            await this.field.connect(user2).sow("1200", "0", EXTERNAL);
             await expect(
               this.marketplace.connect(user2).fillPodOrderV2(this.order, 2000, 700, 500, this.f.packedFunction, INTERNAL)
-            ).to.revertedWith("Marketplace: Plot too far in line.");
+            ).to.be.revertedWith("Marketplace: Plot too far in line.");
           });
 
           it("sell too much", async function () {

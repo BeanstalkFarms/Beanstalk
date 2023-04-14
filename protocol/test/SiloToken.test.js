@@ -1132,6 +1132,15 @@ describe('Silo Token', function () {
   })
 
   describe("Update Unripe Deposit", async function () {
+
+    it("enrootDeposit fails if not unripe token", async function () {
+      await expect(this.silo.connect(user).enrootDeposit(BEAN, '1', '1')).to.be.revertedWith("Silo: token not unripe")
+    })
+
+    it("enrootDeposits fails if not unripe token", async function () {
+      await expect(this.silo.connect(user).enrootDeposits(BEAN, ['1'], ['1'])).to.be.revertedWith("Silo: token not unripe")
+    })
+
     describe("1 deposit, some", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);

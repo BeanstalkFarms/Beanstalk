@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+[ -n "$CI" ] || [ -n "$NETLIFY" ] && exit 0
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+yarn run lint-staged

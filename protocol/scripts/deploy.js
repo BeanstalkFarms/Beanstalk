@@ -8,7 +8,9 @@ const {
   impersonateWeth, 
   impersonateUnripe, 
   impersonateFertilizer,
-  impersonatePrice
+  impersonatePrice,
+  impersonateBlockBasefee,
+  impersonateEthUsdcUniswap
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -110,10 +112,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     marketplaceFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet,
     whitelistFacet,
     metadataFacet
@@ -130,11 +134,13 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockFundraiserFacet',
       'MockMarketplaceFacet',
       'PauseFacet',
+      'DepotFacet',
       'MockSeasonFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'MockUnripeFacet',
       'WhitelistFacet',
       'MetadataFacet'
@@ -153,10 +159,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MarketplaceFacet',
       'OwnershipFacet',
       'PauseFacet',
+      'DepotFacet',
       'SeasonFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
+      'TokenSupportFacet',
       'UnripeFacet',
       'WhitelistFacet',
       'MetadataFacet'
@@ -176,6 +184,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
+    await impersonateBlockBasefee();
+    await impersonateEthUsdcUniswap()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -193,10 +203,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['MarketplaceFacet', marketplaceFacet],
       ['OwnershipFacet', ownershipFacet],
       ['PauseFacet', pauseFacet],
+      ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
+      ['TokenSupportFacet', tokenSupportFacet],
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet],
       ['MetadataFacet', metadataFacet]
@@ -238,10 +250,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     marketplaceFacet,
     ownershipFacet,
     pauseFacet,
+    depotFacet,
     seasonFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
+    tokenSupportFacet,
     unripeFacet
   }
 }
