@@ -26,7 +26,7 @@ export const AddLiquidity = ({ well }: AddLiquidityProps) => {
 
   const { isLoading: isAllTokenLoading, refetch: refetchBalances } = useAllTokensBalance();
 
-  const atLeastOneAmountNonzero = () => Object.values(amounts).filter((amount) => amount.value.gt("0")).length > 0;
+  const atLeastOneAmountNonzero = useCallback(() => Object.values(amounts).filter((amount) => amount.value.gt("0")).length > 0, [amounts]);
 
   useEffect(() => {
     const fetching = isAllTokenLoading;
@@ -75,7 +75,7 @@ export const AddLiquidity = ({ well }: AddLiquidityProps) => {
     [amounts]
   );
 
-  const addLiquidityButtonEnabled = address && atLeastOneAmountNonzero();
+  const addLiquidityButtonEnabled = useMemo(() => address && atLeastOneAmountNonzero(), [address, atLeastOneAmountNonzero]);
 
   return (
     <div>
