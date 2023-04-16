@@ -16,10 +16,28 @@ fs.createReadStream(csvPath)
     .pipe(csv())
     .on('data', (row) => {
         const item = [row['address'], row['stalk'], row['seeds']];
-        const leaf = ethers.utils.solidityKeccak256(
-            ["address", "uint256", "uint256"],
-            item
-        )
+
+        //I initially tried these 2 methods, but they worked differently than solidity's `keccak256(abi.encodePacked(account, stalkDiff, seedsDiff));`
+        //manually doing the padding like below made things line up with the solidity version
+        // const leaf = ethers.utils.solidityKeccak256(
+        //     ["address", "uint256", "uint256"],
+        //     item
+        // )
+
+        // const packedData = ethers.utils.defaultAbiCoder.encode(
+        //     ["address", "uint256", "uint256"],
+        //     item
+        // );
+        // const leaf = ethers.utils.keccak256(packedData);
+
+
+        const addressPadded = ethers.utils.hexZeroPad(row['address'], 20); // Pad address to 20 bytes
+        const stalkPadded = ethers.utils.hexZeroPad(ethers.BigNumber.from(row['stalk']).toHexString(), 32); // Pad stalk to 32 bytes
+        const seedsPadded = ethers.utils.hexZeroPad(ethers.BigNumber.from(row['seeds']).toHexString(), 32); // Pad seeds to 32 bytes
+
+        const packedData = ethers.utils.hexConcat([addressPadded, stalkPadded, seedsPadded]); // Concatenate the padded values
+        const leaf = ethers.utils.keccak256(packedData);
+
         beansItems.push(item);
         stalkSeedsLeaves.push(leaf);
     })

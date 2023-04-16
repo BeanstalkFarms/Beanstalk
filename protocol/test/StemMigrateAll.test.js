@@ -291,8 +291,19 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
         //load deposits from disk
         let deposits = JSON.parse(await fs.readFileSync(__dirname + '/data/deposits.json'));
-
         deposits = reformatData(deposits);
+
+        //load seed/stalk diff from disk
+        let seedStalkDiff = JSON.parse(await fs.readFileSync(__dirname + '/../scripts/silov3-merkle/data/seed-stalk-merkle.json'));
+
+        //eth addresses here have the checksum casing, need just lowercase
+        //to match up with the stored data
+        for (const key in seedStalkDiff) {
+          seedStalkDiff[key.toLowerCase()] = seedStalkDiff[key];
+        }
+
+        // console.log('seedStalkDiff: ', seedStalkDiff);
+
 
         var progress = 0;
         for (const depositorAddress in deposits) {
@@ -302,6 +313,21 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             const seasons = deposits[depositorAddress]['seasonsArray'];
             const amounts = deposits[depositorAddress]['amountsArray'];
 
+            let stalkDiff = 0;
+            let seedsDiff = 0;
+            // const leaf = seedStalkDiff[depositorAddress]['leaf'];
+            let proof = [];
+
+            console.log('seedStalkDiff[depositorAddress]: ', seedStalkDiff[depositorAddress]);
+
+            if (seedStalkDiff[depositorAddress]) {
+              stalkDiff = seedStalkDiff[depositorAddress]['stalk'];
+              seedsDiff = seedStalkDiff[depositorAddress]['seeds'];
+              proof = seedStalkDiff[depositorAddress]['proof'];
+            } else {
+              // debugger;
+            }
+
 
             const depositorSigner = await impersonateSigner(depositorAddress);
             await this.silo.connect(depositorSigner);
@@ -310,7 +336,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             // console.log('seasons: ', seasons);
             // console.log('amounts: ', amounts);
         
-            await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+            await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
 
             console.log('progress: ', progress);
             progress++;

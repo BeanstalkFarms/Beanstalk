@@ -32,8 +32,19 @@ contract MigrationFacet is ReentrancyGuard {
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
      */
-    function mowAndMigrate(address account, address[] calldata tokens, uint32[][] calldata seasons, uint256[][] calldata amounts) external payable {
-        LibLegacyTokenSilo._mowAndMigrate(account, tokens, seasons, amounts);
+    function mowAndMigrate(
+        address account, 
+        address[] calldata tokens, 
+        uint32[][] calldata seasons,
+        uint256[][] calldata amounts,
+        uint256 stalkDiff,
+        uint256 seedsDiff,
+        bytes32[] calldata proof
+    ) external payable {
+        uint256 seedsVariance = LibLegacyTokenSilo._mowAndMigrate(account, tokens, seasons, amounts);
+        // LibLegacyTokenSilo._mowAndMigrate(account, tokens, seasons, amounts);
+        LibLegacyTokenSilo._mowAndMigrateMerkleCheck(account, stalkDiff, seedsDiff, proof, seedsVariance);
+
     }
 
     /** 

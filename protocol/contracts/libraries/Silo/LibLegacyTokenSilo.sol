@@ -13,6 +13,8 @@ import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
+import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -69,6 +71,7 @@ library LibLegacyTokenSilo {
     struct PerDepositData {
         uint32 season;
         uint128 amount;
+        uint128 grownStalk;
     }
 
     struct PerTokenData {
@@ -323,13 +326,15 @@ library LibLegacyTokenSilo {
      *
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
+     * 
+     * Returns seeds diff compared to stored amount, for verification in merkle check.
      */
     function _mowAndMigrate(
         address account, 
         address[] calldata tokens, 
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
-    ) internal {
+    ) internal returns (uint256) {
         //typically a migrationNeeded should be enough to allow the user to migrate, however
         //for Unripe unit testing convenience, (Update Unripe Deposit -> "1 deposit, some", 
         //"1 deposit after 1 season, all", and "2 deposit, all" tests), they cannot migrate
@@ -373,14 +378,14 @@ library LibLegacyTokenSilo {
                                 );
  
                 //calculate how much stalk has grown for this deposit
-                uint128 grownStalk = _calcGrownStalkForDeposit(
+                perDepositData.grownStalk = _calcGrownStalkForDeposit(
                     crateBDV * getSeedsPerToken(address(perTokenData.token)),
                     perDepositData.season
                 );
  
                 // also need to calculate how much stalk has grown since the migration
                 uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
-                grownStalk += stalkGrownSinceStemStartSeason;
+                perDepositData.grownStalk += stalkGrownSinceStemStartSeason;
                 migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
  
                 // add to new silo
@@ -389,7 +394,7 @@ library LibLegacyTokenSilo {
                     perTokenData.token, 
                     LibTokenSilo.grownStalkAndBdvToStem(
                         IERC20(perTokenData.token), 
-                        grownStalk, 
+                        perDepositData.grownStalk,
                         crateBDV
                     ), 
                     perDepositData.amount, 
@@ -408,13 +413,69 @@ library LibLegacyTokenSilo {
  
         // user deserves stalk grown between stemStartSeason and now
         LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
+
+
+        // if (balanceOfSeeds(account).sub(migrateData.totalSeeds) > 2000) {
+        //     require(msg.sender == account, "seeds misalignment, double check submitted deposits");
+        // }
  
-        if (balanceOfSeeds(account).sub(migrateData.totalSeeds) > 2000) {
-            require(msg.sender == account, "seeds misalignment, double check submitted deposits");
+
+        //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
+        return balanceOfSeeds(account).sub(migrateData.totalSeeds);
+    }
+
+    function _mowAndMigrateMerkleCheck(
+        address account,
+        uint256 stalkDiff,
+        uint256 seedsDiff,
+        bytes32[] calldata proof,
+        uint256 seedsVariance
+    ) internal {
+        if (seedsDiff > 0) {
+            //read merkle root to determine stalk/seeds diff drift from convert bug
+            //TODO: verify and update this root on launch if there's more drift
+            //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
+            bytes32 root = 0xa50966d0e2dd8dd5055b3da72da69922741daadc133fccace98e994b7b41342a;
+
+            console.log('account: ', account);
+            console.log('stalkDiff: ', stalkDiff);
+            console.log('seedsDiff: ', seedsDiff);
+            
+            
+            bytes32 leaf = keccak256(abi.encodePacked(account, stalkDiff, seedsDiff));
+            console.log('leaf: ');
+            console.logBytes32(leaf);
+            
+            
+            // Loop through the entire proof array and log each element
+            console.log('proof: ');
+            for (uint256 i = 0; i < proof.length; i++) {
+                console.logBytes32(proof[i]);
+            }
+
+            require(
+                MerkleProof.verify(proof, root, leaf),
+                "UnripeClaim: invalid proof"
+            );
         }
- 
+        
+        //TODO: emit legacy events for stalk/seeds diff
+
+        console.log('seedsVariance: ', seedsVariance);
+        console.log('seedsDiff: ', seedsDiff);
+
+        //make sure seedsVariance equals seedsDiff input
+        require(seedsVariance == seedsDiff, "seeds variance mismatch");
+
+        //TODO check stalk variance as well?
+
+        //now that we've varified the stalk/seeds variance is correct, emit the legacy events
+        //to correctly zero out the old silo at the events level
+
+
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
+ 
     }
 
     /**
