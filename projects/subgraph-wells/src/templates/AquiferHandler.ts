@@ -7,7 +7,7 @@ import { loadOrCreateToken } from "../utils/Token";
 import { createWell, loadOrCreateWellFunction } from "../utils/Well";
 
 export function handleBoreWell(event: BoreWell): void {
-  loadOrCreateAquifer(event.address);
+  let aquifer = loadOrCreateAquifer(event.address);
 
   Well.create(event.params.well);
 
@@ -39,4 +39,9 @@ export function handleBoreWell(event: BoreWell): void {
   well.createdTimestamp = event.block.timestamp;
   well.createdBlockNumber = event.block.number;
   well.save();
+
+  let wells = aquifer.wells;
+  wells.push(event.params.well);
+  aquifer.wells = wells;
+  aquifer.save();
 }
