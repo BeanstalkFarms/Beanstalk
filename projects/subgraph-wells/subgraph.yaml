@@ -24,6 +24,26 @@ dataSources:
         - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
           handler: handleBoreWell
       file: ./src/templates/AquiferHandler.ts
+  - kind: ethereum/contract
+    name: Beanstalk
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 16650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Beanstalk
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+      file: ./src/BeanstalkHandler.ts
 templates:
   - kind: ethereum/contract
     name: Well
