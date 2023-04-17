@@ -47,6 +47,19 @@ library LibLegacyTokenSilo {
         uint256 amount
     );
 
+    //legacy seeds balanced changed event, used upon migration
+    event SeedsBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    //legacy stalk balanced changed event, used upon migration
+    event StalkBalanceChanged(
+        address indexed account,
+        int256 delta,
+        int256 deltaRoots
+    );
+
     /// @dev these events are grandfathered for claiming deposits. 
     event RemoveWithdrawals(
         address indexed account,
@@ -441,19 +454,17 @@ library LibLegacyTokenSilo {
         //make sure seedsVariance equals seedsDiff input
         require(seedsVariance == seedsDiff, "seeds misalignment, double check submitted deposits");
 
-        //TODO: emit legacy events for stalk/seeds diff
-
-
-
-        //TODO check stalk variance as well?
-
-        //now that we've varified the stalk/seeds variance is correct, emit the legacy events
-        //to correctly zero out the old silo at the events level
+        AppStorage storage s = LibAppStorage.diamondStorage();
 
 
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
- 
+
+        //emit that all their seeds are gone
+        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
+
+        //emit the stalk variance
+        emit StalkBalanceChanged(account, -int256(stalkDiff), 0);
     }
 
     /**
