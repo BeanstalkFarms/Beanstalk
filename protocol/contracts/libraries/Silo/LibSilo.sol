@@ -197,7 +197,7 @@ library LibSilo {
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (inVestingPeriod()) {
-                uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
+                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
                 s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots));
                 s.a[account].deltaRoots = uint128(deltaRoots);

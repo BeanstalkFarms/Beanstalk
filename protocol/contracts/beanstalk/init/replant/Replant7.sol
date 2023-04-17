@@ -56,7 +56,8 @@ contract Replant7 {
                 C.UNRIPE_BEAN,
                 REPLANT_SEASON,
                 earned[i].earnedBeans,
-                earnedBeans.mul(C.initialRecap()).div(1e18)
+                earnedBeans.mul(C.initialRecap()).div(1e18),
+                LibTokenSilo.Transfer.noEmitTransferSingle 
             );
 
             prune(earned[i]);
