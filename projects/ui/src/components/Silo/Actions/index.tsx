@@ -6,19 +6,18 @@ import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
-// import Deposit from './Deposit';
-import Deposit2 from './Deposit2';
+import Deposit from './Deposit';
 import Withdraw from './Withdraw';
+import Transfer from './Transfer';
 import Claim from './Claim';
 import Deposits from './Deposits';
 import Withdrawals from './Withdrawals';
-import Transfer from './Transfer';
-import Convert from './Convert';
 import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
-import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
+import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
+import Convert from './Convert';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.
@@ -41,35 +40,37 @@ const SiloActions: FC<{
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
 
-  // temp solution
+  /// Temporary solutions. Remove these when we move the site to use the new sdk types.
   const token = useMemo(() => {
     const match = sdk.tokens.findBySymbol(props.token.symbol) as ERC20Token;
     return match;
   }, [props.token.symbol, sdk.tokens]);
 
+  const siloBalanceAsync = useFarmerSiloBalancesAsync(token);
+
+  if (!token) {
+    return null;
+  }
+
   return (
-    <>
-      <FormTxnProvider>
-        <Module>
-          <ModuleTabs value={tab} onChange={handleChange}>
-            <Tab label="Deposit" />
-            <Tab label="Convert" />
-            <Tab label="Transfer" />
-            <Tab label="Withdraw" />
-            <BadgeTab label="Claim" showBadge={hasClaimable} />
-          </ModuleTabs>
-          <ModuleContent>
-            {tab === 0 && token ? <Deposit2 token={token} /> : null}
-            {/* {tab === 0 && token && <TempAction token={token} />} */}
-            {tab === 1 && token ? <Convert fromToken={token} /> : null}
-            {tab === 2 && token ? <Transfer token={token} /> : null}
-            {tab === 3 && token ? <Withdraw token={token} /> : null}
-            {tab === 4 && token ? (
-              <Claim token={token} siloBalance={props.siloBalance} />
-            ) : null}
-          </ModuleContent>
-        </Module>
-      </FormTxnProvider>
+    <>  
+      <Module>
+        <ModuleTabs value={tab} onChange={handleChange}>
+          <Tab label="Deposit" />
+          <Tab label="Convert" />
+          <Tab label="Transfer" />
+          <Tab label="Withdraw" />
+          <BadgeTab label="Claim" showBadge={hasClaimable} />
+        </ModuleTabs>
+        <ModuleContent>
+          {tab === 0 && <Deposit token={token} />}
+          {/* {tab === 0 && token && <TempAction token={token} />} */}
+          {tab === 1 && <Convert fromToken={token} /> }
+          {tab === 2 && <Transfer token={token} siloBalance={siloBalanceAsync} /> }
+          {tab === 3 && <Withdraw token={token} siloBalance={siloBalanceAsync} /> }
+          {tab === 4 && <Claim token={token} siloBalance={props.siloBalance} /> }
+        </ModuleContent>
+      </Module>
       {/* Tables */}
       <Box sx={{ display: tab <= 2 ? 'block' : 'none' }}>
         <Deposits token={props.token} siloBalance={props.siloBalance} />
