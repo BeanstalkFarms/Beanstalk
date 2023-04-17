@@ -32,12 +32,12 @@ contract SiloFacet is TokenSilo {
 
     //////////////////////// DEPOSIT ////////////////////////
 
-    /**
-     * @notice Deposit `amount` of `token` into the Silo.
-     * @param token Address of the whitelisted ERC20 token to Deposit.
-     * @param amount The amount of `token` to Deposit.
-     * @param mode The balance to pull tokens from. See {LibTransfer-From}.
-     *
+    /** 
+     * @notice Deposits an ERC20 into the Silo.
+     * @dev farmer is issued stalk and seeds based on token (i.e non-whitelisted tokens do not get any)
+     * @param token address of ERC20
+     * @param amount tokens to be transfered
+     * @param mode source of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
      * @dev Depositing should:
      * 
      *  1. Transfer `amount` of `token` from `account` to Beanstalk.
@@ -70,7 +70,7 @@ contract SiloFacet is TokenSilo {
     //////////////////////// WITHDRAW ////////////////////////
 
     /** 
-     * @notice Withdraws from a single Deposit.
+     * @notice Withdraws an ERC20 Deposit from the Silo.
      * @param token Address of the whitelisted ERC20 token to Withdraw.
      * @param stem The stem to Withdraw from.
      * @param amount Amount of `token` to Withdraw.
@@ -100,14 +100,14 @@ contract SiloFacet is TokenSilo {
     }
 
     /** 
-     * @notice Withdraw from multiple Deposits.
+     * @notice Claims ERC20s from multiple Withdrawals.
      * @param token Address of the whitelisted ERC20 token to Withdraw.
      * @param stems stems to Withdraw from.
      * @param amounts Amounts of `token` to Withdraw from corresponding `stems`.
-     *
-     * @dev Clients should factor in gas costs when withdrawing from multiple
+     * 
      * deposits.
-     *
+     * @dev Clients should factor in gas costs when withdrawing from multiple
+     * 
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in stems is minimal to save on gas.
@@ -267,7 +267,7 @@ contract SiloFacet is TokenSilo {
         }
     }
 
-    //////////////////////// UPDATE SILO ////////////////////////
+    //////////////////////// YIELD DISTRUBUTION ////////////////////////
 
     /**
      * @notice Claim Grown Stalk for `account`.

@@ -1,10 +1,11 @@
 const { to18, toBean } = require('./utils/helpers.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { WETH } = require('./utils/constants');
+const { WETH, BEANSTALK } = require('./utils/constants');
+const { signERC2612Permit } = require("eth-permit");
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { signTokenPermit } = require('../utils');
+const { signTokenPermit, getBeanstalk } = require('../utils');
 
 describe('Token', function () {
 

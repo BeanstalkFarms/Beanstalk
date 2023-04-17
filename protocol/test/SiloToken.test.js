@@ -35,6 +35,7 @@ describe('Silo Token', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.approval = await ethers.getContractAt('ApprovalFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
@@ -128,7 +129,6 @@ describe('Silo Token', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
-        console.log('await this.silo.stemTipForToken(this.siloToken.address): ', await this.silo.stemTipForToken(this.siloToken.address));
         this.result = await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL)
       });
   
@@ -229,7 +229,7 @@ describe('Silo Token', function () {
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
-        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low');
+        await expect(this.silo.connect(user).withdrawDeposit(this.siloToken.address, stem, '1001', EXTERNAL)).to.revertedWith('Silo: Crate balance too low.');
       });
 
       it('reverts if deposits + withdrawals is a different length', async function () {
@@ -1132,6 +1132,15 @@ describe('Silo Token', function () {
   })
 
   describe("Update Unripe Deposit", async function () {
+
+    it("enrootDeposit fails if not unripe token", async function () {
+      await expect(this.convert.connect(user).enrootDeposit(BEAN, '1', '1')).to.be.revertedWith("Silo: token not unripe")
+    })
+
+    it("enrootDeposits fails if not unripe token", async function () {
+      await expect(this.convert.connect(user).enrootDeposits(BEAN, ['1'], ['1'])).to.be.revertedWith("Silo: token not unripe")
+    })
+
     describe("1 deposit, some", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);

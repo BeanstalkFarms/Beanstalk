@@ -438,7 +438,7 @@ describe('Curve', function () {
       ])
       const deposit = await this.silo.interface.encodeFunctionData('deposit', [
         this.beanMetapool.address, 
-        to18('1000'), 
+        to18('1000'),
         INTERNAL
       ])
 

@@ -141,9 +141,6 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
      * are the Beans distributed to Stalkholders during {Sun-rewardToSilo}.
-     * @dev in the case where a user calls balanceOfEarned beans during the vesting period,
-     * we have to manually calculate the deltaRoots and newEarnedRoots, as they are not stored in the state.
-     * this is done in {_calcRoots} and {_balanceOfEarnedBeansVested}.
      */
     function balanceOfEarnedBeans(address account)
         public
@@ -174,7 +171,7 @@ contract SiloExit is ReentrancyGuard {
         if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
                 s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
-                s.s.roots.add(s.newEarnedRoots), // add delta of global roots 
+                s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
                 LibPRBMath.Rounding.Up
             );
         } else {

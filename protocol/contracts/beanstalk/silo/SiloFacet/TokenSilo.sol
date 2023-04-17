@@ -86,6 +86,22 @@ contract TokenSilo is Silo {
         uint256 amount,
         uint256[] bdvs
     ); //add bdv[] here? in favor of array
+    
+    // per the zero withdraw update, there is no claiming function for withdraws.abi
+    // events are kept for backwards compatibility
+    event RemoveWithdrawals(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256 amount
+    );
+    
+    event RemoveWithdrawal(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount
+    );
 
     // ERC1155 events
     

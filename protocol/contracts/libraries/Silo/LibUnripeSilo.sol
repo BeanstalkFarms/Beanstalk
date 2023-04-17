@@ -1,14 +1,12 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../C.sol";
-import "../LibAppStorage.sol";
-import "../LibSafeMath128.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {AppStorage, LibAppStorage, Account} from "../LibAppStorage.sol";
+import {LibSafeMath128} from "../LibSafeMath128.sol";
+import {C} from "~/C.sol";
 
 /**
  * @title LibUnripeSilo
@@ -123,7 +121,7 @@ library LibUnripeSilo {
      * @dev Returns true if the provided address is the Unripe Bean address.
      */
     function isUnripeBean(address token) internal pure returns (bool b) {
-        b = token == C.unripeBeanAddress();
+        b = token == C.UNRIPE_BEAN;
     }
 
     /**
@@ -294,7 +292,7 @@ library LibUnripeSilo {
      * @dev Returns true if the provided address is the Unripe LP token address.
      */
     function isUnripeLP(address token) internal pure returns (bool b) {
-        b = token == C.unripeLPAddress();
+        b = token == C.UNRIPE_LP;
     }
 
     /**

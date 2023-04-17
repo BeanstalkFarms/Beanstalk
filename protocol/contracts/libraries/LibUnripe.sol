@@ -1,19 +1,17 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibAppStorage.sol";
-import "../C.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {IBean} from "../interfaces/IBean.sol";
+import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
+import {C} from "../C.sol";
 
 /**
+ * @title LibUnripe
  * @author Publius
- * @title Unripe
- **/
-
+ */
 library LibUnripe {
     using SafeMath for uint256;
 
@@ -24,7 +22,7 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.u[C.unripeBeanAddress()].balanceOfUnderlying.mul(DECIMALS).div(
+            s.u[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
                 C.unripeBean().totalSupply()
             );
     }
@@ -77,9 +75,9 @@ library LibUnripe {
 
     function addUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (token == C.unripeLPAddress()) {
+        if (token == C.UNRIPE_LP) {
             uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.unripeLPAddress()].balanceOfUnderlying
+                s.u[C.UNRIPE_LP].balanceOfUnderlying
             );
             s.recapitalized = s.recapitalized.add(recapped);
         }
@@ -88,9 +86,9 @@ library LibUnripe {
 
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (token == C.unripeLPAddress()) {
+        if (token == C.UNRIPE_LP) {
             uint256 recapped = underlying.mul(s.recapitalized).div(
-                s.u[C.unripeLPAddress()].balanceOfUnderlying
+                s.u[C.UNRIPE_LP].balanceOfUnderlying
             );
             s.recapitalized = s.recapitalized.sub(recapped);
         }

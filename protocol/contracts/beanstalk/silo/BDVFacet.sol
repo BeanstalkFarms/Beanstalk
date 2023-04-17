@@ -26,13 +26,13 @@ contract BDVFacet {
     }
 
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
-        amount = LibUnripe.unripeToUnderlying(C.unripeLPAddress(), amount);
+        amount = LibUnripe.unripeToUnderlying(C.UNRIPE_LP, amount);
         amount = LibBeanMetaCurve.bdv(amount);
         return amount;
     }
 
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
-        return LibUnripe.unripeToUnderlying(C.unripeBeanAddress(), amount);
+        return LibUnripe.unripeToUnderlying(C.UNRIPE_BEAN, amount);
     }
 
     function bdv(address token, uint256 amount)
@@ -40,10 +40,10 @@ contract BDVFacet {
         view
         returns (uint256)
     {
-        if (token == C.beanAddress()) return beanToBDV(amount);
-        else if (token == C.curveMetapoolAddress()) return curveToBDV(amount);
-        else if (token == C.unripeBeanAddress()) return unripeBeanToBDV(amount);
-        else if (token == C.unripeLPAddress()) return unripeLPToBDV(amount);
+        if (token == C.BEAN) return beanToBDV(amount);
+        else if (token == C.CURVE_BEAN_METAPOOL) return curveToBDV(amount);
+        else if (token == C.UNRIPE_BEAN) return unripeBeanToBDV(amount);
+        else if (token == C.UNRIPE_LP) return unripeLPToBDV(amount);
         revert("BDV: Token not whitelisted");
     }
 }

@@ -39,7 +39,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
-        // libraryNames: ['LibLegacyTokenSilo'],
         initFacetName: 'InitBipNewSilo',
         bip: false,
         object: false,
@@ -123,7 +122,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       it('for unripe LP', async function () {
         expect(await this.silo.stemTipForToken(this.unripeLP.address)).to.eq(0);
       });
-      
     });
   
     //get deposits for a sample big depositor, verify they can migrate their deposits correctly

@@ -1,0 +1,27 @@
+fragment PodOrder on PodOrder {
+  #// Identifiers
+  id
+  farmer { id }
+  historyID
+
+  #// Pricing
+  pricingType         # Pricing type
+  pricePerPod         # Market V1: FIXED price
+  pricingFunction     # Market V2: DYNAMIC pricing function
+
+  #// Constraints
+  maxPlaceInLine      # max place in line for pods to fulfill the order
+  minFillAmount       
+
+  #// Amounts
+  podAmount           # Market V1: Original amount of the ordered pods
+  beanAmount          # Market V2: Original amount of beans used to ordered beans
+  podAmountFilled     # current filled amount
+  beanAmountFilled    # bean amount filled
+
+  #// Metadata
+  status
+  createdAt
+  updatedAt
+  creationHash
+}

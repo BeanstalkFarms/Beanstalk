@@ -131,6 +131,7 @@ contract ConvertFacet is ReentrancyGuard {
         int96 stem,
         uint256 amount
     ) external nonReentrant mowSender(token) {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
@@ -188,6 +189,7 @@ contract ConvertFacet is ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts
     ) external nonReentrant mowSender(token) {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);

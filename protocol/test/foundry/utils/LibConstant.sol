@@ -5,7 +5,11 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-
+/**
+ * @title LibConstant 
+ * @author Publius
+ * @notice Library for constants, for testing purposes.
+ */
 library LibConstant  {
       uint32 constant MAX_UINT32 = 4294967295;
       address constant ZERO_ADDRESS =  0x0000000000000000000000000000000000000000 ;

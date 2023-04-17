@@ -1,0 +1,9 @@
+**/.git
+**/.svn
+**/.hg
+**/node_modules
+**/dist
+
+packages/sdk/src/constants/generated
+packages/sdk/src/constants/generated-gql
+

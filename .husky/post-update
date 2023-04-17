@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Exit if in CI
+[ -n "$CI" ] || [ -n "$NETLIFY" ] && exit 0
+
+echo "git diff --name-only $1 $2"
+
+ABIS_CHANGED=`git diff --name-only $1 $2 -- '*/abi/*.json' | wc -l`
+if [ $ABIS_CHANGED -gt 0 ];
+then
+  echo "⚠️ ABIs have changed, maybe run \"yarn generate\" ⚠️"
+else
+  :
+fi
+
+GQLS_CHANGED=`git diff --name-only $1 $2 -- '*/*.graphql' | wc -l`
+if [ $GQLS_CHANGED -gt 0 ];
+then
+  echo "⚠️ GraphQL queries have changed, maybe run \"yarn generate\" ⚠️"
+else
+  :
+fi

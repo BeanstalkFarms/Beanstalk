@@ -45,6 +45,7 @@ library LibSilo {
     // a farmer is credited with their earned beans issued that season. 
     uint256 internal constant VESTING_PERIOD = 10;
     //////////////////////// EVENTS ////////////////////////    
+    uint256 constant EARNED_BEAN_VESTING_BLOCKS = 25;
      
     /**
      * @notice Emitted when `account` gains or loses Stalk.
@@ -198,7 +199,7 @@ library LibSilo {
             if (inVestingPeriod()) {
                 uint256 rootsWithoutEarned = s.s.roots.add(s.newEarnedRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
                 uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.newEarnedRoots = s.newEarnedRoots.add(uint128(deltaRoots));
+                s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots));
                 s.a[account].deltaRoots = uint128(deltaRoots);
             }
         }
@@ -230,7 +231,10 @@ library LibSilo {
         uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
-        if(block.number - s.season.sunriseBlock <= 25){
+        
+        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
+        // this is distrubuted to the other users.
+        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk-s.newEarnedStalk,

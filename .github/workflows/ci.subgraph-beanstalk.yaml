@@ -1,0 +1,50 @@
+name: Continuous Integration - Subgraph Beanstalk
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'projects/subgraph-beanstalk/**'
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    name: Compile
+    steps:
+    - name: Check out source repository
+      uses: actions/checkout@v3
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - name: Cache Node Modules
+      id: node-modules-cache
+      uses: actions/cache@v3
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+    - name: Install The Graph CLI
+      run: npm install -g @graphprotocol/graph-cli
+    - name: Install Dependencies
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      run: yarn install --immutable
+
+    # Generate code and check for uncommitted changes
+    # https://github.com/marketplace/actions/check-uncommitted-changes
+    - name: Generate Subgraph Code
+      run: yarn codegen
+      working-directory: projects/subgraph-beanstalk
+    - name: Check for uncommitted changes
+      id: check-changes
+      uses: mskri/check-uncommitted-changes-action@v1.0.1
+    - name: Evaluate if there are changes
+      if: steps.check-changes.outputs.outcome == failure()
+      run: echo "There are uncommitted changes - execute 'yarn codegen' locally and commit the generated files!"
+
+    - name: Build Subgraph
+      run: yarn build
+      working-directory: projects/subgraph-beanstalk
+    # TODO: add matchstick test suite
+    #- name: Run Tests
+    #  run: yarn test
+    #  working-directory: "${{ matrix.value }}"

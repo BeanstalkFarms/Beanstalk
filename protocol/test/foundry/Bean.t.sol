@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 
 import { Bean } from "~/tokens/Bean.sol";
-import { Utils } from "./utils/Utils.sol";
+import { Utils } from "test/foundry/utils/Utils.sol";
 
 contract BeanTest is Bean, Test {
   Utils internal utils;
