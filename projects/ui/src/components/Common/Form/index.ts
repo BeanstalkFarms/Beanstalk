@@ -8,7 +8,8 @@ import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
-import { FormTxnBuilderInterface } from '~/util/FormTxns';
+import { FormTxnBundlerInterface } from '~/lib/Txn';
+
 
 /**
  *
@@ -120,7 +121,7 @@ export type FormTxnsFormState = {
   /**
    * actions added in conjunction to an arbitrary txn (e.g. deposit, convert, harvest, etc).
    */
-  farmActions: FormTxnBuilderInterface;
+  farmActions: FormTxnBundlerInterface;
 };
 
 export type ClaimBeansFormState = {

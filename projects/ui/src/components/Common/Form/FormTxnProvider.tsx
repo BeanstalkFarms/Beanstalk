@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
-import { FarmFromMode, FarmToMode, TokenValue } from '@beanstalk/sdk';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { TokenValue } from '@beanstalk/sdk';
+import { ethers } from 'ethers';
 import { FC, MayPromise } from '~/types';
-import { FormTxnBuilder } from '~/lib/Txn';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
@@ -13,10 +13,18 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import { FormTxnStrategy } from '~/lib/Txn/FormTxnBuilder';
-import { FormTxn } from '~/util';
-import { makeLocalOnlyStep } from '~/lib/Txn/util';
-import { StepsWithOptions } from '~/lib/Txn/Strategy';
+import useSeason from '~/hooks/beanstalk/useSeason';
+import {
+  FormTxnBundler,
+  ClaimFarmStep,
+  EnrootFarmStep,
+  HarvestFarmStep,
+  MowFarmStep,
+  PlantFarmStep,
+  RinseFarmStep,
+  PlantAndDoX,
+  FormTxn,
+} from '~/lib/Txn';
 
 // -------------------------------------------------------------------------
 
@@ -55,13 +63,13 @@ type FormTxnRefetch = (
 
 const useInitFormTxnContext = () => {
   const sdk = useSdk();
-  const txnBuilder = useMemo(() => new FormTxnBuilder(sdk), [sdk]);
 
   /// Farmer
   const account = useAccount();
   const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const farmerBarn = useFarmerFertilizer();
+  const season = useSeason();
 
   /// Refetch functions
   const [refetchFarmerSilo] = useFetchFarmerSilo();
@@ -73,75 +81,83 @@ const useInitFormTxnContext = () => {
   /// Helpers
   const getBDV = useBDV();
 
-  const formTxnMap: {
-    [key in FormTxn]: () => FormTxnStrategy;
-  } = useMemo(() => {
-    const { BEAN } = sdk.tokens;
+  const [txnBundler, setTxnBundler] = useState(new FormTxnBundler(sdk, {}));
 
-    const beanBalance = farmerSilo.balances[BEAN.address];
+  const plantAndDoX = useMemo(() => {
+    const earnedBeans = sdk.tokens.BEAN.amount(
+      farmerSilo.beans.earned.toString()
+    );
+
+    return new PlantAndDoX(sdk, earnedBeans, season.toNumber());
+  }, [farmerSilo.beans.earned, sdk, season]);
+
+  /// On any change, update the txn bundler
+  useEffect(() => {
+    const { BEAN } = sdk.tokens;
+    const earnedBeans = BEAN.amount(farmerSilo.beans.earned.toString());
+    const enrootCrates = EnrootFarmStep.pickUnripeCrates(
+      sdk.tokens.unripeTokens,
+      farmerSilo.balances,
+      getBDV
+    );
+    const _crates = Object.values(enrootCrates);
+    const canEnroot = _crates && _crates?.some((crates) => crates?.length > 0);
+    const fertilizerIds = farmerBarn.balances.map((bal) =>
+      bal.token.id.toString()
+    );
+    const rinsable = farmerBarn.fertilizedSprouts;
     const plots = Object.keys(farmerField.harvestablePlots);
     const plotIds = plots.map(
       (plotId) => TokenValue.fromHuman(plotId, 6).blockchainString
     );
-    const seasons =
-      beanBalance?.claimable?.crates.map((c) => c.season.toString()) || [];
-    const fertilizerIds = farmerBarn.balances.map((bal) =>
-      bal.token.id.toString()
-    );
+    const claimable = farmerSilo.balances[sdk.tokens.BEAN.address]?.claimable;
+    const seasons = claimable?.crates.map((c) => c.season.toString());
 
-    const actions = txnBuilder.strategies;
-
-    return {
-      [FormTxn.MOW]: () => {
-        if (!account) {
-          throw new Error('Signer not found');
-        }
-        return new actions.Silo.Mow(sdk, { account: account || '' });
-      },
-      [FormTxn.PLANT]: () => new actions.Silo.Plant(sdk),
-      [FormTxn.ENROOT]: () => {
-        const _crates = actions.Silo.Enroot.pickCrates(
-          farmerSilo.balances,
-          getBDV
-        );
-        return new actions.Silo.Enroot(sdk, { crates: _crates });
-      },
-      [FormTxn.CLAIM]: () =>
-        new actions.Silo.Claim(sdk, { tokenIn: BEAN, seasons }),
-      [FormTxn.HARVEST]: () => new actions.Field.Harvest(sdk, { plotIds }),
-      [FormTxn.RINSE]: () =>
-        new actions.Barn.Rinse(sdk, { tokenIds: fertilizerIds }),
+    const farmSteps = {
+      [FormTxn.MOW]: account
+        ? new MowFarmStep(sdk, account).build()
+        : undefined,
+      [FormTxn.PLANT]: earnedBeans.gt(0)
+        ? new PlantFarmStep(sdk).build()
+        : undefined,
+      [FormTxn.ENROOT]: canEnroot
+        ? new EnrootFarmStep(sdk, enrootCrates).build()
+        : undefined,
+      [FormTxn.HARVEST]: plotIds.length
+        ? new HarvestFarmStep(sdk, plotIds).build()
+        : undefined,
+      [FormTxn.RINSE]: rinsable.gt(0)
+        ? new RinseFarmStep(sdk, fertilizerIds).build()
+        : undefined,
+      [FormTxn.CLAIM]: seasons?.length
+        ? new ClaimFarmStep(sdk, BEAN, seasons).build(BEAN)
+        : undefined,
     };
+    console.debug('[FormTxnProvider] updating txn bundler...', farmSteps);
+    setTxnBundler(new FormTxnBundler(sdk, farmSteps));
   }, [
     account,
     farmerBarn.balances,
+    farmerBarn.fertilizedSprouts,
     farmerField.harvestablePlots,
     farmerSilo.balances,
-    txnBuilder.strategies,
+    farmerSilo.beans.earned,
     getBDV,
     sdk,
   ]);
 
   const getEstimateGas = useCallback(
     (action: FormTxn) => {
-      if (!(action in formTxnMap)) {
-        throw new Error('Invalid action');
-      }
-      const actionFunctions = formTxnMap[action]();
-      return actionFunctions.estimateGas;
+      const farmStep = txnBundler.getFarmStep(action);
+      if (!farmStep) return () => Promise.resolve(ethers.BigNumber.from(0));
+      return farmStep.estimateGas;
     },
-    [formTxnMap]
+    [txnBundler]
   );
 
-  const getStrategy = useCallback(
-    (action: FormTxn) => {
-      if (!(action in formTxnMap)) {
-        throw new Error('Invalid action');
-      }
-      return formTxnMap[action]();
-    },
-    [formTxnMap]
-  );
+  useEffect(() => {
+    console.debug('[FormTxnProvider][map]: ', txnBundler.getMap());
+  }, [txnBundler]);
 
   const refetchMap = useMemo(
     () => ({
@@ -184,81 +200,20 @@ const useInitFormTxnContext = () => {
         });
       }
 
+      /// set a new instance of the txn bundler
+      setTxnBundler(new FormTxnBundler(sdk, {}));
+
       await Promise.all(
         [...Object.values(map), ...(additional || [])].map((fn) => fn())
       );
     },
-    [refetchMap]
-  );
-
-  const getActionsPerformed = useCallback(
-    (items: (FormTxn[] | undefined)[]) => {
-      const set = new Set<FormTxn>();
-
-      items.forEach((item) => {
-        if (item) {
-          item.forEach((action) => {
-            set.add(action);
-          });
-        }
-      });
-      return Array.from(set);
-    },
-    []
-  );
-
-  /**
-   * if the user requested to transfer beans to an external address,
-   * return the steps
-   */
-  const getTransferBeanSteps = useCallback(
-    (
-      totalClaimAmount: TokenValue,
-      claimedBeansUsed: TokenValue,
-      transferDestination: FarmToMode
-    ) => {
-      if (!account) {
-        throw new Error('Signer not found');
-      }
-
-      const transferAmount = totalClaimAmount.sub(claimedBeansUsed);
-      const isToExternal = transferDestination === FarmToMode.EXTERNAL;
-      const shouldTransfer = isToExternal && transferAmount.gt(0);
-
-      const steps: StepsWithOptions[] = [];
-
-      if (!shouldTransfer) return undefined;
-
-      steps.push(
-        makeLocalOnlyStep({
-          name: 'pre-transfer',
-          amount: {
-            overrideAmount: transferAmount,
-          },
-        })
-      );
-      steps.push({
-        steps: [
-          new sdk.farm.actions.TransferToken(
-            sdk.tokens.BEAN.address,
-            account,
-            FarmFromMode.INTERNAL_TOLERANT,
-            FarmToMode.EXTERNAL
-          ),
-        ],
-      });
-
-      return steps;
-    },
-    [account, sdk.farm.actions.TransferToken, sdk.tokens.BEAN.address]
+    [refetchMap, sdk]
   );
 
   return {
-    txnBuilder,
-    getActionsPerformed,
-    getTransferBeanSteps,
+    txnBundler,
+    plantAndDoX,
     getEstimateGas,
-    getStrategy,
     refetch,
   };
 };
