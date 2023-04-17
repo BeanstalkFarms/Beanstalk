@@ -1,31 +1,32 @@
 import { BeanstalkSDK, FarmToMode, StepGenerator } from '@beanstalk/sdk';
-import { FarmStepStrategy, EstimatesGas } from '~/lib/Txn/Strategy';
+import { EstimatesGas, FarmStep } from '~/lib/Txn/Interface';
 
-export class RinseStrategy extends FarmStepStrategy implements EstimatesGas {
+export class RinseFarmStep extends FarmStep implements EstimatesGas {
   constructor(
     sdk: BeanstalkSDK,
-    private _params: {
-      tokenIds: string[];
-      toMode?: FarmToMode;
-    }
+    private _fertilizerIds: string[],
+    private _toMode: FarmToMode = FarmToMode.INTERNAL
   ) {
     super(sdk);
-    this._params = _params;
+    this._fertilizerIds = _fertilizerIds;
+    this._toMode = _toMode;
   }
 
   async estimateGas() {
-    const { beanstalk } = RinseStrategy.sdk.contracts;
+    const { beanstalk } = this._sdk.contracts;
     const gasEstimate = await beanstalk.estimateGas.claimFertilized(
-      this._params.tokenIds,
-      this._params.toMode || FarmToMode.INTERNAL
+      this._fertilizerIds,
+      this._toMode
     );
-    console.debug(`[RinseStrategy][estimateGas]: `, gasEstimate.toString());
+    console.debug(`[RinseFarmStep][estimateGas]: `, gasEstimate.toString());
 
     return gasEstimate;
   }
 
-  getSteps() {
-    const { beanstalk } = RinseStrategy.sdk.contracts;
+  build() {
+    this.clear();
+
+    const { beanstalk } = this._sdk.contracts;
 
     const step: StepGenerator = async (_amountInStep) => ({
       name: 'claimFertilized',
@@ -33,8 +34,8 @@ export class RinseStrategy extends FarmStepStrategy implements EstimatesGas {
       prepare: () => ({
         contract: beanstalk.address,
         callData: beanstalk.interface.encodeFunctionData('claimFertilized', [
-          this._params.tokenIds,
-          this._params.toMode || FarmToMode.INTERNAL,
+          this._fertilizerIds,
+          this._toMode,
         ]),
       }),
       decode: (data: string) =>
@@ -43,9 +44,9 @@ export class RinseStrategy extends FarmStepStrategy implements EstimatesGas {
         beanstalk.interface.decodeFunctionResult('claimFertilized', result),
     });
 
-    const _steps = { steps: RinseStrategy.normaliseSteps(step) };
-    console.debug('[RinseStrategy][getSteps]: ', _steps);
+    this.pushInput({ input: step });
+    console.debug('[RinseFarmStep][build]: ', this.getFarmInput());
 
-    return _steps;
+    return this;
   }
 }
