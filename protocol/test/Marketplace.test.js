@@ -720,14 +720,14 @@ describe('Marketplace', function () {
         })
 
         it('Fill Listing not enough pods in plot', async function () {
-          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 501, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+          await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 501, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
         })
 
         it('Fill Listing not enough pods in listing', async function () {
           
           const l = [userAddress, '0', '0', '500', '500000', '0', '0', INTERNAL]
           await this.marketplace.connect(user).createPodListing('0', '0', '500', '500000', '0', '0', INTERNAL);
-          await expect(this.marketplace.connect(user2).fillPodListing(l, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+          await expect(this.marketplace.connect(user2).fillPodListing(l, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
         })
 
         it("Fails if filling under minimum amount of Pods", async function () {
@@ -1066,13 +1066,13 @@ describe('Marketplace', function () {
           })
 
           it('Fill Listing not enough pods in plot', async function () {
-            await expect(this.marketplace.connect(user2).fillPodListingV2(this.listing, 1500, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await expect(this.marketplace.connect(user2).fillPodListingV2(this.listing, 1500, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
           })
 
           it('Fill Listing not enough pods in listing', async function () {
             const l = [userAddress, '0', '0', '500', '0', '0', '0', INTERNAL]
             await this.marketplace.connect(user).createPodListingV2('0', '0', '500', '0', '0', this.f.packedFunction, INTERNAL);
-            await expect(this.marketplace.connect(user2).fillPodListingV2(l, 1000, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing');
+            await expect(this.marketplace.connect(user2).fillPodListingV2(l, 1000, this.f.packedFunction, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
           })
         })
 

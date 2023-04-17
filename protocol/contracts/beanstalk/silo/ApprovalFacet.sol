@@ -10,12 +10,12 @@ import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/Silo/LibSiloPermit.sol";
 import "~/libraries/Silo/LibLegacyTokenSilo.sol";
-import "../SiloFacet/Silo.sol";
+import "./SiloFacet/Silo.sol";
+import "./SiloFacet/TokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/Convert/LibConvert.sol";
 import "~/libraries/LibInternal.sol";
-import "../../ReentrancyGuard.sol";
-import "../SiloFacet/TokenSilo.sol";
+import "../ReentrancyGuard.sol";
 
 /**
  * @author publius, pizzaman1337

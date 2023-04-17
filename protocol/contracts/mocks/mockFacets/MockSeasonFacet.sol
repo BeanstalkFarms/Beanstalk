@@ -189,8 +189,9 @@ contract MockSeasonFacet is SeasonFacet {
             bytes32 depositID = LibBytes.packAddressAndStem(token,j);
             if (s.a[account].deposits[depositID].amount > 0) delete s.a[account].deposits[depositID];
             if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
-                delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
-            }
+                {
+                    delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
+                }
         }
         delete s.siloBalances[token];
     }

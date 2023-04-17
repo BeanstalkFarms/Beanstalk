@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../AppStorage.sol";
+import "../../AppStorageOld.sol";
 import "../../../C.sol";
 import "../../../tokens/ERC20/BeanstalkERC20.sol";
 import "../../../libraries/Silo/LibSilo.sol";
@@ -21,7 +21,7 @@ import "../../../libraries/Silo/LibTokenSilo.sol";
 
 contract Replant7 {
 
-    AppStorage internal s;
+    AppStorageOld internal s;
 
     using SafeMath for uint256;
 

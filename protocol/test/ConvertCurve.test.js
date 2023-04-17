@@ -91,14 +91,14 @@ describe('Curve Convert', function () {
 
     describe('revert', async function () {
       it('not enough LP', async function () {
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('201'), this.beanMetapool.address), ['2'], [toBean('200')]))
           .to.be.revertedWith('Curve: Not enough LP');
       });
 
       it('p >= 1', async function () {
-        await this.silo.connect(user).deposit(this.bean.address, '1000', 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, '1000', EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('190'), this.beanMetapool.address), ['1'], ['1000']))
           .to.be.revertedWith('Convert: P must be >= 1.');
       });
@@ -108,7 +108,7 @@ describe('Curve Convert', function () {
     describe('below max', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(12);
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
       });
 
@@ -175,7 +175,7 @@ describe('Curve Convert', function () {
     describe('above max', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(12);
-        await this.silo.connect(user).deposit(this.bean.address, toBean('300'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('300'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
       });
 
@@ -228,7 +228,7 @@ describe('Curve Convert', function () {
     describe('after one season', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(12);
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
       });
@@ -276,7 +276,7 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(12);
         
-        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
@@ -325,12 +325,12 @@ describe('Curve Convert', function () {
     describe('multiple crates', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
-        await this.silo.connect(user).deposit(this.bean.address, toBean('100'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('100'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).deposit(this.bean.address, toBean('100'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('100'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
       });
 
@@ -384,7 +384,7 @@ describe('Curve Convert', function () {
       });
       it('not enough Beans', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
 
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('250'), this.beanMetapool.address), [stemMetapool], [to18('200')]))
@@ -394,7 +394,7 @@ describe('Curve Convert', function () {
       it('p < 1', async function () {
         const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('1')], to18('0.5'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('190'), this.beanMetapool.address), [stemMetapool], ['1000']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
@@ -404,7 +404,7 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
       });
 
 
@@ -460,7 +460,7 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
       });
 
 
@@ -516,7 +516,7 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         await this.season.siloSunrise(0);
       });
 
@@ -535,9 +535,9 @@ describe('Curve Convert', function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('100618167');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
 
-          //the seasons value for total stalk here was 10009982906334, because you would have
-          //lost stalk when the deposit would have required a negative season
-          //after this change, you get to keep more stalk!
+          // the seasons value for total stalk here was 10009982906334, because you would have
+          // lost stalk when the deposit would have required a negative season
+          // after this change, you get to keep more stalk!
           expect(await this.silo.totalStalk()).to.eq('10010083524501');
         });
 
@@ -568,9 +568,9 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), EXTERNAL);
         await this.season.siloSunrise(0);
-        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), 0x00, EXTERNAL);
+        await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), EXTERNAL);
       });
 
 

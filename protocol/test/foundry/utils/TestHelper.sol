@@ -52,6 +52,8 @@ import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
 import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
+import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
+import {MockUniswapV3Factory} from "~/mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockWETH} from "~/mocks/MockWETH.sol";
 
 import "~/beanstalk/AppStorage.sol";
@@ -151,16 +153,17 @@ abstract contract TestHelper is Test {
     }
 
     function deployMockTokens() public {
-        //impersonate tokens and utilities
+        // impersonate tokens and utilities
         _mockToken("Bean", address(C.bean()));
         MockToken(address(C.bean())).setDecimals(6);
         _mockToken("USDC", address(C.usdc()));
         _mockPrice();
         _mockCurve(); // only if "reset"
+        _mockUniswap();
         _mockUnripe();
         _mockWeth(); // only if "reset"
-        //_mockCurveMetapool();
-        //_mockFertilizer();
+        // _mockCurveMetapool();
+        // _mockFertilizer();
     }
 
     ///////////////////////// Utilities /////////////////////////
@@ -226,20 +229,20 @@ abstract contract TestHelper is Test {
         curveZap.approve();
     }
 
-    // function _mockUniswap() internal {
-    //     //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
-    //     MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
-    //     address ethUsdc = 
-    //         uniFactory.createPool(
-    //         0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
-    //         address(C.usdc()),//usdc
-    //         3000
-    //         );
-    //     bytes memory code = at(ethUsdc);
-    //     address targetAddr = C.UNIV3_ETH_USDC_POOL;
-    //     vm.etch(targetAddr, code);
-    //     MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
-    // }
+    function _mockUniswap() internal {
+        //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+        MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
+        address ethUsdc = 
+            uniFactory.createPool(
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
+            address(C.usdc()),//usdc
+            3000
+            );
+        bytes memory code = at(ethUsdc);
+        address targetAddr = C.UNIV3_ETH_USDC_POOL;
+        vm.etch(targetAddr, code);
+        MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
+    }
 
     function _mockCurveMetapool() internal {
         address THREE_CRV = address(C.threeCrv());

@@ -83,7 +83,7 @@ library LibConvert {
     }
 
     function getAmountOut(address tokenIn, address tokenOut, uint256 amountIn)
-        internal 
+        internal
         view
         returns (uint256)
     {

@@ -53,7 +53,6 @@ contract SiloFacet is TokenSilo {
     function deposit(
         address token,
         uint256 amount,
-        bytes calldata,
         LibTransfer.From mode
     ) external payable nonReentrant mowSender(token) {
         amount = LibTransfer.receiveToken(
@@ -90,7 +89,6 @@ contract SiloFacet is TokenSilo {
         address token,
         int96 stem,
         uint256 amount,
-        bytes calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, stem, amount);
@@ -102,10 +100,10 @@ contract SiloFacet is TokenSilo {
      * @param token Address of the whitelisted ERC20 token to Withdraw.
      * @param stems stems to Withdraw from.
      * @param amounts Amounts of `token` to Withdraw from corresponding `stems`.
-     *
+     * 
      * deposits.
      * @dev Clients should factor in gas costs when withdrawing from multiple
-     *
+     * 
      * For example, if a user wants to withdraw X Beans, it may be preferable to
      * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
      * if the difference in stems is minimal.
@@ -115,7 +113,6 @@ contract SiloFacet is TokenSilo {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts,
-        bytes[] calldata,
         LibTransfer.To mode
     ) external payable mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
@@ -149,8 +146,7 @@ contract SiloFacet is TokenSilo {
         address recipient,
         address token,
         int96 stem,
-        uint256 amount,
-        bytes calldata
+        uint256 amount
     ) public payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
             LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
@@ -182,8 +178,7 @@ contract SiloFacet is TokenSilo {
         address recipient,
         address token,
         int96[] calldata stem,
-        uint256[] calldata amounts,
-        bytes[] calldata
+        uint256[] calldata amounts
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -221,8 +216,7 @@ contract SiloFacet is TokenSilo {
             recipient,
             token, 
             cumulativeGrownStalkPerBDV, 
-            amount,
-            depositData
+            amount
         );
     }
 
@@ -250,13 +244,12 @@ contract SiloFacet is TokenSilo {
                 recipient,
                 token, 
                 cumulativeGrownStalkPerBDV, 
-                amounts[i],
-                depositsData
+                amounts[i]
             );
         }
     }
 
-    //////////////////////// UPDATE SILO ////////////////////////
+    //////////////////////// YIELD DISTRUBUTION ////////////////////////
 
     /**
      * @notice Claim Grown Stalk for `account`.
@@ -293,18 +286,6 @@ contract SiloFacet is TokenSilo {
      */
     function plant(address token) external payable returns (uint256 beans) {
         return _plant(msg.sender, token);
-    }
-
-    /*
-     * Yield Distributon
-     */
-
-    /** 
-     * @notice Activates a farmer's Grown Stalk and processes any new Seasons of Plentys.
-     * @param account address to update
-     */
-    function update(address account) external payable {
-        _update(account);
     }
 
     /** 
