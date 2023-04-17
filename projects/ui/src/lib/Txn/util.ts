@@ -1,6 +1,6 @@
 import { StepGenerator, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import { StepsWithOptions } from '~/lib/Txn/Strategy';
+import { FarmInput } from './types';
 
 export type GetLocalOnlyStepProps = {
   name: string;
@@ -13,7 +13,7 @@ export type GetLocalOnlyStepProps = {
 export const makeLocalOnlyStep = ({
   name,
   amount,
-}: GetLocalOnlyStepProps): StepsWithOptions => {
+}: GetLocalOnlyStepProps): FarmInput => {
   const step: StepGenerator = async (amountInStep) => {
     const getAmountIn = () => {
       const { overrideAmount, additionalAmount } = amount || {};
@@ -37,5 +37,5 @@ export const makeLocalOnlyStep = ({
       decodeResult: () => undefined,
     };
   };
-  return { steps: [step], options: { onlyLocal: true } };
+  return { input: [step], options: { onlyLocal: true } };
 };
