@@ -17,7 +17,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             {
               forking: {
                 jsonRpcUrl: process.env.FORKING_RPC,
-                blockNumber: 16947385 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+                blockNumber: 16993151 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
               },
             },
           ],
@@ -66,7 +66,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
     async function getDepositsForAccount(account, onChainBdv = false) {
 
         const START_BLOCK = 0;
-        const END_BLOCK = 16947385;
+        const END_BLOCK = 16993151;
         // const END_BLOCK = 'latest'
         
         //couldn't quickly figure out how to just use the hardhat network provider?
@@ -127,13 +127,13 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             // Create the filter object
             const oldFilter = {
                 fromBlock: 0,
-                toBlock: 'latest',
+                toBlock: END_BLOCK,
                 address: contract.address,
                 topics: [oldEventTopic, ethers.utils.hexZeroPad(account, 32)],
             };
 
             // Query the old events
-            const oldEvents = await contract.provider.getLogs(oldFilter, 0, "latest");
+            const oldEvents = await contract.provider.getLogs(oldFilter, 0, END_BLOCK);
             
             const updatedEvents = oldEvents.map((eventLog) => {
                 let parsedLog;
