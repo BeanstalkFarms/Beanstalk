@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import {
   FormTxnsFormState,
   SmartSubmitButton,
@@ -26,9 +27,10 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import useSdk from '~/hooks/sdk';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
+import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
+import { FormTxn, RinseFarmStep } from '~/lib/Txn';
+import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 
 // ---------------------------------------------------
 
@@ -37,13 +39,14 @@ type RinseFormValues = {
   amount: BigNumber;
 } & FormTxnsFormState;
 
+type Props = FormikProps<RinseFormValues> & {
+  SPROUTS: Token;
+  BEAN: Token;
+};
+
 // ---------------------------------------------------
 
-const QuickRinseForm: FC<FormikProps<RinseFormValues>> = ({
-  values,
-  isSubmitting,
-}) => {
-  const SPROUTS = useSdk().tokens.SPROUTS;
+const QuickRinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS }) => {
   /// Extract
   const amountSprouts = values.amount;
   const isSubmittable =
@@ -82,13 +85,7 @@ const QuickRinseForm: FC<FormikProps<RinseFormValues>> = ({
   );
 };
 
-const RinseForm: FC<FormikProps<RinseFormValues>> = ({
-  values,
-  isSubmitting,
-}) => {
-  const sdk = useSdk();
-  const { SPROUTS, BEAN } = sdk.tokens;
-
+const RinseForm: FC<Props> = ({ values, isSubmitting, SPROUTS, BEAN }) => {
   /// Extract
   const amountSprouts = values.amount;
   const isSubmittable =
@@ -159,16 +156,17 @@ const RinseForm: FC<FormikProps<RinseFormValues>> = ({
   );
 };
 
-const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
+const RinsePropProvider: FC<{ quick?: boolean }> = ({ quick }) => {
   /// Wallet connection
   const sdk = useSdk();
-  const farmerFormTxns = useFarmerFormTxns();
+  const { SPROUTS, BEAN } = sdk.tokens;
 
   /// Farmer
   const farmerBarn = useFarmerFertilizer();
 
   /// Form
   const middleware = useFormMiddleware();
+  const { txnBundler, refetch } = useFormTxnContext();
   const initialValues: RinseFormValues = useMemo(
     () => ({
       destination: undefined,
@@ -191,7 +189,6 @@ const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
     ) => {
       let txToast;
       try {
-        const { SPROUTS } = sdk.tokens;
         middleware.before();
         const account = await sdk.getAccount();
         if (!account) throw new Error('Connect a wallet first.');
@@ -211,19 +208,20 @@ const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
           )} Beans to your ${copy.MODES[values.destination]}.`,
         });
 
-        const rinseFormTxnFunction = FormTxnBuilder.getFunction(FormTxn.RINSE);
-
-        const rinseStep = rinseFormTxnFunction(sdk, {
-          tokenIds: farmerBarn.balances.map((bal) => bal.token.id.toString()),
-          toMode: values.destination,
-        }).getSteps();
-
-        const { execute, performed } = await FormTxnBuilder.compile(
+        const fertilizerIds = farmerBarn.balances.map((bal) =>
+          bal.token.id.toString()
+        );
+        const rinseTxn = new RinseFarmStep(
           sdk,
-          values.farmActions,
-          farmerFormTxns.getGenerators,
-          rinseStep,
-          sdk.tokens.BEAN.amount(0), // Rinse doesn't need any input so we can just use 0,
+          fertilizerIds,
+          values.destination
+        );
+        rinseTxn.build();
+
+        const performed = txnBundler.setFarmSteps(values.farmActions);
+        const { execute } = await txnBundler.bundle(
+          rinseTxn,
+          TokenValue.ZERO,
           0.1
         );
 
@@ -232,7 +230,7 @@ const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
 
         const receipt = await txn.wait();
 
-        await farmerFormTxns.refetch(performed);
+        await refetch(performed, { farmerBarn: true, farmerBalances: true });
 
         txToast.success(receipt);
         formActions.resetForm({
@@ -257,11 +255,13 @@ const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
       }
     },
     [
-      sdk,
       middleware,
+      sdk,
       farmerBarn.fertilizedSprouts,
       farmerBarn.balances,
-      farmerFormTxns,
+      SPROUTS.displayDecimals,
+      txnBundler,
+      refetch,
     ]
   );
 
@@ -273,12 +273,20 @@ const Rinse: FC<{ quick?: boolean }> = ({ quick }) => {
     >
       {(formikProps) => {
         if (quick) {
-          return <QuickRinseForm {...formikProps} />;
+          return (
+            <QuickRinseForm {...formikProps} SPROUTS={SPROUTS} BEAN={BEAN} />
+          );
         }
-        return <RinseForm {...formikProps} />;
+        return <RinseForm {...formikProps} SPROUTS={SPROUTS} BEAN={BEAN} />;
       }}
     </Formik>
   );
 };
+
+const Rinse: React.FC<{ quick?: boolean }> = (props) => (
+  <FormTxnProvider>
+    <RinsePropProvider {...props} />
+  </FormTxnProvider>
+);
 
 export default Rinse;

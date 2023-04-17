@@ -1,8 +1,9 @@
 import BigNumber from 'bignumber.js';
-import { Token } from '@beanstalk/sdk';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import TokenOld from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
+import { tokenValueToBN } from './BigNumber';
 
 // -------------------------
 // BigNumber Comparators
@@ -66,10 +67,12 @@ export function TrimBN(
  * Display a BigNumber with the specified range of decimals.
  */
 export function displayFullBN(
-  bn: BigNumber,
+  _bn: BigNumber | TokenValue,
   maxDecimals: number = 18,
   minDecimals : number = 0
 ) {
+  const bn = BigNumber.isBigNumber(_bn) ? _bn : tokenValueToBN(_bn);
+
   return bn
     .toNumber()
     .toLocaleString('en-US', {
@@ -83,7 +86,7 @@ export function displayFullBN(
  * displayDecimals for display. Includes the Token name.
  */
 export function displayTokenAmount(
-  amount: BigNumber,
+  _amount: BigNumber | TokenValue,
   token: TokenOld | Token,
   config: {
     allowNegative?: boolean,
@@ -94,6 +97,8 @@ export function displayTokenAmount(
     showName: true,
   }
 ) {
+  const amount = BigNumber.isBigNumber(_amount) ? _amount : tokenValueToBN(_amount);
+
   return `${(config.allowNegative ? amount : amount.abs())
     .toNumber()
     .toLocaleString('en-US', { 

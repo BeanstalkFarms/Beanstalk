@@ -4,10 +4,9 @@ import {
   Stack,
   Tooltip,
   Typography,
-  TypographyVariant,
 } from '@mui/material';
 
-import { Token } from '@beanstalk/sdk';
+import { Token, TokenValue } from '@beanstalk/sdk';
 
 import BigNumber from 'bignumber.js';
 
@@ -19,7 +18,7 @@ import {
   FontWeight,
   IconSize,
 } from '~/components/App/muiTheme';
-import { displayFullBN } from '~/util';
+import { displayFullBN, tokenValueToBN } from '~/util';
 import IconWrapper from '../IconWrapper';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -51,12 +50,12 @@ export default function TokenOutput({ children, size = 'medium' }: Props) {
 type TokenOutputRowProps = {
   label?: string;
   token: Token;
-  amount: BigNumber;
+  amount: BigNumber | TokenValue;
   amountTooltip?: string | JSX.Element;
   amountSuffix?: string;
   description?: string;
   descriptionTooltip?: string;
-  delta?: BigNumber | string;
+  delta?: BigNumber | TokenValue | string;
   deltaSuffix?: string;
   size?: 'small' | 'medium';
 };
@@ -86,12 +85,6 @@ function TokenOutputRow({
 }: TokenOutputRowProps) {
   const isMedium = size === 'medium';
   const boxSize = isMedium ? IconSize.medium : IconSize.small;
-  const labelVariant = (
-    isMedium ? 'subtitle1' : 'bodySmall'
-  ) as TypographyVariant;
-  const descriptionVariant = (
-    isMedium ? 'bodySmall' : 'caption'
-  ) as TypographyVariant;
 
   const labelSx = {
     fontSize: isMedium ? FontSize.lg : FontSize.sm,
@@ -129,7 +122,7 @@ function TokenOutputRow({
               ...labelSx,
             }}
           >
-            {formatBN(amount, token.displayDecimals, amountSuffix)}
+            {formatBN(tokenValueToBN(amount), token.displayDecimals, amountSuffix)}
           </Typography>
         </Tooltip>
       </Row>
@@ -169,7 +162,7 @@ function TokenOutputRow({
             <Typography color="text.tertiary" sx={descriptionSx}>
               {typeof delta === 'string'
                 ? delta
-                : formatBN(delta, 2, deltaSuffix)}
+                : formatBN(tokenValueToBN(delta), 2, deltaSuffix)}
             </Typography>
           ) : null}
         </Row>
