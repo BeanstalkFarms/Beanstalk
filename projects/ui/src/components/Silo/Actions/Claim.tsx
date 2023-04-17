@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { ERC20Token, StepGenerator, Token } from '@beanstalk/sdk';
+import { BeanstalkSDK, ERC20Token, StepGenerator, Token } from '@beanstalk/sdk';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import { ActionType } from '~/util/Actions';
 import {
@@ -34,8 +34,9 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
-import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
+import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
+import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
+import { ClaimFarmStep, FormTxn } from '~/lib/Txn';
 
 // -----------------------------------------------------------------------
 
@@ -65,9 +66,11 @@ const ClaimForm: FC<
   FormikProps<ClaimFormValues> & {
     token: ERC20Token;
     claimableBalance: BigNumber;
+    sdk: BeanstalkSDK;
   }
 > = ({
   // Custom
+  sdk,
   token,
   claimableBalance,
   // Formik
@@ -75,8 +78,6 @@ const ClaimForm: FC<
   isSubmitting,
   setFieldValue,
 }) => {
-  const sdk = useSdk();
-
   //
   const pool = useMemo(
     () => sdk.pools.getPoolByLPToken(token),
@@ -109,17 +110,16 @@ const ClaimForm: FC<
       // Require pooldata to be loaded first.
       if (!pool || !_tokenIn.isLP) return null;
 
-      const work = sdk.farm
-        .create()
-        .add(
-          new sdk.farm.actions.RemoveLiquidityOneToken(
-            pool.address,
-            curve.registries.metaFactory.address,
-            _tokenOut.address,
-            FarmFromMode.INTERNAL,
-            toMode
-          )
-        );
+      const work = sdk.farm.create();
+      work.add(
+        new sdk.farm.actions.RemoveLiquidityOneToken(
+          pool.address,
+          curve.registries.metaFactory.address,
+          _tokenOut.address,
+          FarmFromMode.INTERNAL,
+          toMode
+        )
+      );
       const estimate = await work.estimate(amountIn);
 
       return {
@@ -282,17 +282,15 @@ const ClaimForm: FC<
 
 // -----------------------------------------------------------------------
 
-const Claim: FC<{
+const ClaimPropProvider: FC<{
   token: ERC20Token;
   siloBalance: FarmerSiloBalance;
 }> = ({ token, siloBalance }) => {
   const sdk = useSdk();
 
-  /// Form Txns Actions
-  const formTxns = useFarmerFormTxns();
-
   /// Middleware
   const middleware = useFormMiddleware();
+  const { txnBundler, refetch } = useFormTxnContext();
 
   /// Data
   const claimableBalance = siloBalance?.claimable.amount;
@@ -347,18 +345,10 @@ const Claim: FC<{
 
         if (!tokenOut) throw new Error('Select an output token');
 
-        // If the user wants to swap their LP token for something else,
-        // we send their Claimable `token` to their internal balance for
-        // ease of interaction and gas efficiency.
-        const removeLiquidity = token.isLP && !tokenIn.equals(tokenOut);
-        const claimDestination = removeLiquidity
-          ? FarmToMode.INTERNAL
-          : values.destination;
+        const seasons = crates.map((crate) => crate.season.toString());
 
-        console.debug(
-          `[Claim] claimDestination = ${claimDestination}, crates = `,
-          crates
-        );
+        const claimTxn = new ClaimFarmStep(sdk, tokenIn, seasons);
+        claimTxn.build(tokenOut, values.destination);
 
         txToast = new TransactionToast({
           loading: `Claiming ${displayTokenAmount(
@@ -371,49 +361,14 @@ const Claim: FC<{
           )} to your ${copy.MODES[values.destination]}.`,
         });
 
-        const claim = sdk.farm.create();
-
-        // Claim multiple withdrawals of `token` in one call
-        if (crates.length > 1) {
-          console.debug(`[Claim] claiming ${crates.length} withdrawals`);
-          claim.add(
-            new sdk.farm.actions.ClaimWithdrawals(
-              token.address,
-              crates.map((crate) => crate.season.toString()),
-              claimDestination
-            )
-          );
-        } else {
-          // Claim a single withdrawal of `token` in one call. Gas efficient.
-          console.debug('[Claim] claiming a single withdrawal');
-          claim.add(
-            new sdk.farm.actions.ClaimWithdrawal(
-              token.address,
-              crates[0].season.toString(),
-              claimDestination
-            )
-          );
-        }
-
-        if (removeLiquidity) {
-          if (!values.token.steps) throw new Error('No quote found.');
-          claim.add([...values.token.steps]);
-        }
-
-        const { execute, performed } = await FormTxnBuilder.compile(
-          sdk,
-          values.farmActions,
-          formTxns.getGenerators,
-          claim,
-          amountIn,
-          values.settings.slippage
-        );
+        const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
+        const { execute } = await txnBundler.bundle(claimTxn, amountIn, 0.1);
 
         const txn = await execute();
         txToast.confirming(txn);
         const receipt = await txn.wait();
 
-        await formTxns.refetch(performed, {
+        await refetch(actionsPerformed, {
           farmerSilo: true,
           farmerBalances: true,
         });
@@ -434,10 +389,11 @@ const Claim: FC<{
     [
       middleware,
       siloBalance?.claimable?.crates,
-      token,
-      claimableBalance,
       sdk,
-      formTxns,
+      claimableBalance,
+      token,
+      txnBundler,
+      refetch,
     ]
   );
 
@@ -458,6 +414,7 @@ const Claim: FC<{
           </TxnSettings>
           <Stack spacing={1}>
             <ClaimForm
+              sdk={sdk}
               token={token}
               claimableBalance={claimableBalance}
               {...formikProps}
@@ -468,5 +425,14 @@ const Claim: FC<{
     </Formik>
   );
 };
+
+const Claim: FC<{
+  token: ERC20Token;
+  siloBalance: FarmerSiloBalance;
+}> = (props) => (
+  <FormTxnProvider>
+    <ClaimPropProvider {...props} />
+  </FormTxnProvider>
+);
 
 export default Claim;
