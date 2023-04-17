@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { GetWellEventsDocument, GetWellEventsQuery, Token } from "src/generated/graphql";
+import { GetWellEventsDocument, GetWellEventsQuery, Token as GQLToken } from "src/generated/graphql";
 
 import { TokenValue } from "@beanstalk/sdk";
 import { fetchFromSubgraphRequest } from "./subgraphFetch";
@@ -13,7 +13,7 @@ export enum EVENT_TYPE {
 export type WellEvent = {
   type: EVENT_TYPE;
   hash: string;
-  totalDollarValue: number;
+  totalDollarValue: string;
   label: string;
   timestamp: number;
 };
@@ -55,7 +55,7 @@ const useWellHistory = (wellId: string) => {
   const getTokenHumanAmount = (decimals: number, amount: string) =>
     parseFloat(TokenValue.fromBlockchain(amount, decimals).toHuman()).toFixed(0);
 
-  const generateLiquidityLabel = (tokens: Token[], reserves: string[]) => {
+  const generateLiquidityLabel = (tokens: GQLToken[], reserves: string[]) => {
     const labels: string[] = [];
     tokens.forEach((token, index) => {
       labels.push(`${getTokenHumanAmount(token.decimals, reserves[index])} ${token.symbol}`);
@@ -63,15 +63,17 @@ const useWellHistory = (wellId: string) => {
     return labels.join(" AND ");
   };
 
-  const calculateSwapUSDValue = (amountOut: string, toToken: Token) => {
-    const _amountOut = parseFloat(TokenValue.fromBlockchain(amountOut, toToken.decimals).toHuman());
-    const _price = parseFloat(toToken.lastPriceUSD);
-    const toTokenValue = _price * _amountOut;
+  const calculateSwapUSDValue = (amountOut: string, toToken: GQLToken) => {
+    const _amountOut = TokenValue.fromBlockchain(amountOut, toToken.decimals);
+    const _price = TokenValue.fromHuman(toToken.lastPriceUSD, 2);
+    const toTokenValue = _amountOut.mul(_price);
     return toTokenValue;
   };
 
-  const getAmountForLabel = (amount: string, token: Token) =>
-    parseFloat(TokenValue.fromBlockchain(amount, token.decimals).toHuman()).toFixed(0);
+  const getAmountForLabel = (amount: string, token: GQLToken) => TokenValue.fromBlockchain(amount, token.decimals).toHuman();
+
+  // TODO: Replace with toHuman(format) function
+  const tmpFormatDollars = (input: string) => `$${parseFloat(input).toFixed(0)}`;
 
   const handleSwapEvents = (queryResults: GetWellEventsQuery) => {
     if (!queryResults.well?.swaps || queryResults.well.swaps.length < 1) {
@@ -82,7 +84,7 @@ const useWellHistory = (wellId: string) => {
     return _swaps.map((swap) => ({
       type: EVENT_TYPE.SWAP,
       hash: swap.hash,
-      totalDollarValue: calculateSwapUSDValue(swap.amountOut, swap.toToken),
+      totalDollarValue: tmpFormatDollars(calculateSwapUSDValue(swap.amountOut, swap.toToken).toHuman()),
       label: `${getAmountForLabel(swap.amountIn, swap.fromToken)} ${swap.fromToken.symbol} for ${getAmountForLabel(
         swap.amountOut,
         swap.toToken
@@ -101,7 +103,7 @@ const useWellHistory = (wellId: string) => {
     return events.map((event) => ({
       type,
       hash: event.hash,
-      totalDollarValue: parseFloat(event.amountUSD),
+      totalDollarValue: tmpFormatDollars(event.amountUSD),
       label: generateLiquidityLabel(event.tokens, event.reserves),
       timestamp: event.timestamp
     }));
