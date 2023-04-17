@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { FarmToMode } from '@beanstalk/sdk';
+import { FarmToMode, Token, TokenValue } from '@beanstalk/sdk';
 import {
   FormTxnsFormState,
   SmartSubmitButton,
@@ -13,7 +13,6 @@ import {
 import { ActionType } from '~/util/Actions';
 import { displayFullBN } from '~/util';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
-import { PODS } from '~/constants/tokens';
 import copy from '~/constants/copy';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TransactionToast from '~/components/Common/TxnToast';
@@ -28,9 +27,10 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
-import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
+import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
+import { FormTxn, HarvestFarmStep } from '~/lib/Txn';
+import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 
 // -----------------------------------------------------------------------
 
@@ -40,12 +40,14 @@ type HarvestFormValues = {
 } & FormTxnsFormState;
 
 type Props = FormikProps<HarvestFormValues> & {
+  PODS: Token;
   harvestablePods: BigNumber;
 };
 
 const QuickHarvestForm: FC<Props> = ({
   // Custom
   harvestablePods,
+  PODS,
   // Formike
   values,
   isSubmitting,
@@ -90,6 +92,7 @@ const QuickHarvestForm: FC<Props> = ({
 const HarvestForm: FC<Props> = ({
   // Custom
   harvestablePods,
+  PODS,
   // Formik
   values,
   isSubmitting,
@@ -178,17 +181,19 @@ const HarvestForm: FC<Props> = ({
   );
 };
 
-const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
-  ///
+const HarvestPropProvider: FC<{ quick?: boolean }> = ({ quick = false }) => {
   const sdk = useSdk();
   const account = useAccount();
 
+  const pods = sdk.tokens.PODS;
+
   /// Farmer
-  const farmerFormTxns = useFarmerFormTxns();
   const farmerField = useFarmerField();
 
   /// Form
   const middleware = useFormMiddleware();
+  const { txnBundler, refetch } = useFormTxnContext();
+
   const initialValues: HarvestFormValues = useMemo(
     () => ({
       amount: farmerField.harvestablePods || null,
@@ -229,31 +234,26 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
         txToast = new TransactionToast({
           loading: `Harvesting ${displayFullBN(
             farmerField.harvestablePods,
-            PODS.displayDecimals
+            pods.displayDecimals
           )} Pods.`,
           success: `Harvest successful. Added ${displayFullBN(
             farmerField.harvestablePods,
-            PODS.displayDecimals
+            pods.displayDecimals
           )} Beans to your ${copy.MODES[values.destination]}.`,
         });
 
-        const plotIds = Object.keys(farmerField.harvestablePlots).map(
-          (harvestIdx) =>
-            sdk.tokens.PODS.amount(harvestIdx.toString()).blockchainString
+        const _plotIds = Object.keys(farmerField.harvestablePlots);
+        const plotIds = _plotIds.map((plotIndex) =>
+          pods.amount(plotIndex).toBlockchain()
         );
 
-        const txnFunction = FormTxnBuilder.getFunction(FormTxn.HARVEST);
-        const harvest = txnFunction(sdk, {
-          plotIds,
-          toMode: values.destination,
-        }).getSteps();
+        const harvestTxn = new HarvestFarmStep(sdk, plotIds);
+        harvestTxn.build(values.destination);
 
-        const { execute, performed } = await FormTxnBuilder.compile(
-          sdk,
-          values.farmActions,
-          farmerFormTxns.getGenerators,
-          harvest,
-          undefined,
+        const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
+        const { execute } = await txnBundler.bundle(
+          harvestTxn,
+          TokenValue.ZERO,
           0.1
         );
 
@@ -262,7 +262,7 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
 
         const receipt = await txn.wait();
 
-        await farmerFormTxns.refetch(performed, {
+        await refetch(actionsPerformed, {
           farmerField: true,
           farmerBalances: true,
         });
@@ -285,8 +285,10 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
       account,
       farmerField.harvestablePods,
       farmerField.harvestablePlots,
+      pods,
       sdk,
-      farmerFormTxns,
+      txnBundler,
+      refetch,
     ]
   );
 
@@ -297,11 +299,13 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
           {quick ? (
             <QuickHarvestForm
               harvestablePods={farmerField.harvestablePods}
+              PODS={pods}
               {...formikProps}
             />
           ) : (
             <HarvestForm
               harvestablePods={farmerField.harvestablePods}
+              PODS={pods}
               {...formikProps}
             />
           )}
@@ -310,5 +314,11 @@ const Harvest: FC<{ quick?: boolean }> = ({ quick }) => {
     </Formik>
   );
 };
+
+const Harvest: React.FC<{ quick?: boolean }> = (props) => (
+  <FormTxnProvider>
+    <HarvestPropProvider {...props} />
+  </FormTxnProvider>
+);
 
 export default Harvest;
