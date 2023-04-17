@@ -14,7 +14,6 @@ import TokenSelectionCard from '~/components/Common/Card/TokenSelectionCard';
 import useFarmerFormTxnsSummary, {
   FormTxnOptionSummary,
 } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
-import { FormTxn, FormTxnBuilderPresets, PartialFormTxnMap } from '~/util';
 import { FormTxnsFormState } from '~/components/Common/Form';
 import SelectionItem from '~/components/Common/SelectionItem';
 import AddressIcon from '~/components/Common/AddressIcon';
@@ -23,6 +22,7 @@ import TokenQuoteProviderWithParams, {
   TokenQuoteProviderWithParamsCustomProps,
 } from '../TokenQuoteProviderWithParams';
 import useSdk from '~/hooks/sdk';
+import { FormTxn, FormTxnBundler, FormTxnMap } from '~/lib/Txn';
 
 export type UseClaimableBeansDrawerProps<T> = {
   /** */
@@ -85,11 +85,11 @@ export default function ClaimBeanDrawerContent<T>({
 
   ///
   const optionsMap = useMemo(() => {
-    const options = FormTxnBuilderPresets[preset].primary;
+    const options = FormTxnBundler.presets[preset].primary;
     return options.reduce((prev, curr) => {
       prev[curr] = summary[curr].summary[0];
       return prev;
-    }, {} as PartialFormTxnMap<FormTxnOptionSummary>);
+    }, {} as Partial<FormTxnMap<FormTxnOptionSummary>>);
   }, [preset, summary]);
 
   const selectionsSet = useMemo(

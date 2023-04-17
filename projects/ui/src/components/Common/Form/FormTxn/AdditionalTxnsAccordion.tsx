@@ -8,14 +8,11 @@ import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion
 import { FormTxnsFormState } from '..';
 import useToggle from '~/hooks/display/useToggle';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
-import {
-  FormTxn,
-  FormTxnBuilder,
-  FormTxnBuilderPresets,
-} from '~/util/FormTxns';
+
 import FormTxnOptionCard from '../FormTxnOptionCard';
-import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import useFarmerFormTxnSummary from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
+import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
+import { FormTxn, FormTxnBundler } from '~/lib/Txn';
 
 type Props = {
   filter?: FormTxn[];
@@ -34,7 +31,7 @@ const sortOrder: { [key in FormTxn]: number } = {
 
 const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   /// FormTxns
-  const { getEstimateGas } = useFarmerFormTxns();
+  const { getEstimateGas } = useFormTxnContext();
   const { summary } = useFarmerFormTxnSummary();
 
   /// Formik
@@ -47,7 +44,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
 
   ///
   const allOptions = useMemo(() => {
-    const preset = FormTxnBuilderPresets[formPreset];
+    const preset = FormTxnBundler.presets[formPreset];
     const removeSet = new Set([...(excluded || []), ...(filter || [])]);
 
     return [...preset.secondary]
@@ -78,7 +75,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   // handle toggling of individual options
   const handleOnToggle = (item: FormTxn) => {
     const copy = new Set([...local]);
-    const affected = [item, ...FormTxnBuilder.getImplied(item)];
+    const affected = [item, ...(FormTxnBundler.implied[item] || [])] as FormTxn[];
 
     if (copy.has(item)) {
       /// remove the item and all it's implied unless it is required
@@ -104,7 +101,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   const handleMouseOver = useCallback(
     (item: FormTxn) => {
       const copy = new Set<FormTxn>();
-      const affected = FormTxnBuilder.getImplied(item);
+      const affected = [...(FormTxnBundler.implied[item] || [])] as FormTxn[];
       copy.add(item);
       affected.forEach((option) => {
         !local.has(option) && copy.add(option);

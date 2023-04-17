@@ -2,7 +2,6 @@ import { Card, Stack, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import React, { useMemo } from 'react';
 import { IconSize } from '~/components/App/muiTheme';
-import { FormTxn, FormTxnBuilderPresets, PartialFormTxnMap } from '~/util';
 import { FormTxnsFormState } from '..';
 import Row from '../../Row';
 
@@ -25,6 +24,7 @@ import SelectionItem from '~/components/Common/SelectionItem';
 import FormWithDrawer, {
   useFormDrawerContext,
 } from '~/components/Common/Form/FormWithDrawer';
+import { FormTxn, FormTxnBundler, FormTxnMap } from '~/lib/Txn';
 
 const actionsToIconMap = {
   [FormTxn.RINSE]: {
@@ -49,15 +49,15 @@ const ClaimBeanDrawerToggle: React.FC<{}> = () => {
   const { setOpen: setDrawerOpen } = useFormDrawerContext();
 
   /// Farmer
-  const { summary } = useFarmerFormTxnsSummary();
+  const { summary, getClaimable } = useFarmerFormTxnsSummary();
 
   /// Derived
   const preset = values.farmActions.preset;
   const formSelections = values.farmActions.primary;
 
   const optionsMap = useMemo(() => {
-    const options = FormTxnBuilderPresets[preset].primary;
-    return options.reduce<PartialFormTxnMap<FormTxnOptionSummary>>(
+    const options = FormTxnBundler.presets[preset].primary;
+    return options.reduce<Partial<FormTxnMap<FormTxnOptionSummary>>>(
       (prev, curr) => {
         prev[curr] = summary[curr].summary[0];
         return prev;
@@ -66,12 +66,17 @@ const ClaimBeanDrawerToggle: React.FC<{}> = () => {
     );
   }, [preset, summary]);
 
+  const maxClaimable = useMemo(
+    () => getClaimable(FormTxnBundler.presets[preset].primary).bn,
+    [getClaimable, preset]
+  );
+
   const selectionsSet = useMemo(
     () => new Set(formSelections || []),
     [formSelections]
   );
 
-  if (preset !== 'claim') return null;
+  if (preset !== 'claim' || maxClaimable.lte(0)) return null;
 
   return (
     <Card

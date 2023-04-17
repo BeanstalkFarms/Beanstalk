@@ -17,8 +17,8 @@ import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
 import stalkIconGrey from '~/img/beanstalk/stalk-icon-grey.svg';
 import LockIcon from '~/img/misc/lock-icon.svg';
 import GasTag from '../GasTag';
-import { FormTxn } from '~/util/FormTxns';
 import { FormTxnSummary } from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
+import { FormTxn } from '~/lib/Txn';
 
 const icons = {
   SEED: seedIconGrey,

@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useFormikContext } from 'formik';
-import { displayFullBN, FormTxn } from '~/util';
+import { displayFullBN } from '~/util';
 import {
   BeanstalkPalette,
   FontSize,
@@ -24,6 +24,7 @@ import useFarmerFormTxnsSummary from '~/hooks/farmer/form-txn/useFarmerFormTxnsS
 import MergeIcon from '~/img/misc/merge-icon.svg';
 
 import { FormTxnsFormState } from '..';
+import { FormTxn } from '~/lib/Txn';
 
 const sx = {
   accordion: {
@@ -59,6 +60,7 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
 
   /// Plant Summary and State
   const { summary } = useFarmerFormTxnsSummary();
+
   const items = useMemo(() => {
     const plant = summary[FormTxn.PLANT].summary;
     const mow = summary[FormTxn.MOW].summary;
