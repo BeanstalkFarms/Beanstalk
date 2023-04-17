@@ -9,8 +9,8 @@ import useFarmerField from '~/hooks/farmer/useFarmerField';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import { normalizeBN } from '~/util';
-import { FormTxn } from '~/util/FormTxns';
 import { Action, ActionType } from '~/util/Actions';
+import { FormTxn } from '~/lib/Txn';
 
 const tooltips = {
   mow: 'Add Grown Stalk to your Stalk balance. Mow is called upon any interaction with the Silo.',

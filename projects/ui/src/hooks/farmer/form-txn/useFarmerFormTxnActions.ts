@@ -2,13 +2,13 @@ import { useFormikContext } from 'formik';
 import { useCallback, useMemo } from 'react';
 import { Action } from '@reduxjs/toolkit';
 import { FarmToMode, FarmFromMode } from '@beanstalk/sdk';
-import { FormTxn } from '~/util/FormTxns';
 import useFarmerFormTxnsSummary from './useFarmerFormTxnsSummary';
 import { FormTokenStateNew, FormTxnsFormState } from '~/components/Common/Form';
 import useSdk from '~/hooks/sdk';
 import { ActionType } from '~/util';
 import { ZERO_BN } from '~/constants';
 import useAccount from '~/hooks/ledger/useAccount';
+import { FormTxn } from '~/lib/Txn';
 
 const isClaimingBeansAction = (action: FormTxn) =>
   action === FormTxn.CLAIM ||
