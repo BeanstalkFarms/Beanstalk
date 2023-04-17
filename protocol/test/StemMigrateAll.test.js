@@ -302,8 +302,6 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
           seedStalkDiff[key.toLowerCase()] = seedStalkDiff[key];
         }
 
-        // console.log('seedStalkDiff: ', seedStalkDiff);
-
 
         var progress = 0;
         for (const depositorAddress in deposits) {
@@ -315,26 +313,16 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
             let stalkDiff = 0;
             let seedsDiff = 0;
-            // const leaf = seedStalkDiff[depositorAddress]['leaf'];
             let proof = [];
-
-            console.log('seedStalkDiff[depositorAddress]: ', seedStalkDiff[depositorAddress]);
 
             if (seedStalkDiff[depositorAddress]) {
               stalkDiff = seedStalkDiff[depositorAddress]['stalk'];
               seedsDiff = seedStalkDiff[depositorAddress]['seeds'];
               proof = seedStalkDiff[depositorAddress]['proof'];
-            } else {
-              // debugger;
             }
-
 
             const depositorSigner = await impersonateSigner(depositorAddress);
             await this.silo.connect(depositorSigner);
-
-            // console.log('tokens: ', tokens);
-            // console.log('seasons: ', seasons);
-            // console.log('amounts: ', amounts);
         
             await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
 

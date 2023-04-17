@@ -14,7 +14,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -40,13 +39,12 @@ library LibLegacyTokenSilo {
         uint256 bdv
     );
 
-    event RemoveDeposits(
+    //this is the legacy seasons-based remove deposits event, emitted on migration
+    event RemoveDeposit(
         address indexed account,
         address indexed token,
-        int96[] stems,
-        uint256[] amounts,
-        uint256 amount,
-        uint256[] bdvs
+        uint32 season,
+        uint256 amount
     );
 
     /// @dev these events are grandfathered for claiming deposits. 
@@ -404,21 +402,17 @@ library LibLegacyTokenSilo {
  
                 // add to running total of seeds
                 migrateData.totalSeeds += uint128(uint256(crateBDV) * getSeedsPerToken(address(perTokenData.token)));
+
+                // emit legacy RemoveDeposit event
+                emit RemoveDeposit(account, perTokenData.token, perDepositData.season, perDepositData.amount);
             }
  
             // init mow status for this token
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
-            emit RemoveDeposits(account, perTokenData.token, new int96[](0), new uint256[](0), 0, new uint256[](0));
         }
  
         // user deserves stalk grown between stemStartSeason and now
         LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
-
-
-        // if (balanceOfSeeds(account).sub(migrateData.totalSeeds) > 2000) {
-        //     require(msg.sender == account, "seeds misalignment, double check submitted deposits");
-        // }
- 
 
         //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
         return balanceOfSeeds(account).sub(migrateData.totalSeeds);
@@ -432,40 +426,24 @@ library LibLegacyTokenSilo {
         uint256 seedsVariance
     ) internal {
         if (seedsDiff > 0) {
-            //read merkle root to determine stalk/seeds diff drift from convert bug
+            //read merkle root to determine stalk/seeds diff drift from convert issue
             //TODO: verify and update this root on launch if there's more drift
             //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
             bytes32 root = 0xa50966d0e2dd8dd5055b3da72da69922741daadc133fccace98e994b7b41342a;
-
-            console.log('account: ', account);
-            console.log('stalkDiff: ', stalkDiff);
-            console.log('seedsDiff: ', seedsDiff);
+            bytes32 leaf = keccak256(abi.encodePacked(account, stalkDiff, seedsDiff));            
             
-            
-            bytes32 leaf = keccak256(abi.encodePacked(account, stalkDiff, seedsDiff));
-            console.log('leaf: ');
-            console.logBytes32(leaf);
-            
-            
-            // Loop through the entire proof array and log each element
-            console.log('proof: ');
-            for (uint256 i = 0; i < proof.length; i++) {
-                console.logBytes32(proof[i]);
-            }
-
             require(
                 MerkleProof.verify(proof, root, leaf),
                 "UnripeClaim: invalid proof"
             );
         }
         
+        //make sure seedsVariance equals seedsDiff input
+        require(seedsVariance == seedsDiff, "seeds misalignment, double check submitted deposits");
+
         //TODO: emit legacy events for stalk/seeds diff
 
-        console.log('seedsVariance: ', seedsVariance);
-        console.log('seedsDiff: ', seedsDiff);
 
-        //make sure seedsVariance equals seedsDiff input
-        require(seedsVariance == seedsDiff, "seeds variance mismatch");
 
         //TODO check stalk variance as well?
 
