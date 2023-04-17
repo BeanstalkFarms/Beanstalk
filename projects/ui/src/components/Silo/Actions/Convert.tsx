@@ -7,7 +7,7 @@ import {
   ERC20Token,
   NativeToken,
   DataSource,
-  StepGenerator,
+  BeanstalkSDK,
 } from '@beanstalk/sdk';
 import {
   FormStateNew,
@@ -45,12 +45,13 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 
 import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
-import { FormTxn, FormTxnBuilder } from '~/util/FormTxns';
-import useFarmerFormTxns from '~/hooks/farmer/form-txn/useFarmerFormTxns';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useAsyncMemo from '~/hooks/display/useAsyncMemo';
 import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
+import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
+import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 
 // -----------------------------------------------------------------------
 
@@ -85,18 +86,20 @@ const ConvertForm: FC<
     siloBalances: FarmerSilo['balances'];
     handleQuote: QuoteHandlerWithParams<ConvertQuoteHandlerParams>;
     currentSeason: BigNumber;
+    /** other */
+    sdk: BeanstalkSDK;
   }
 > = ({
   tokenList,
   siloBalances,
   handleQuote,
   currentSeason,
+  sdk,
   // Formik
   values,
   isSubmitting,
   setFieldValue,
 }) => {
-  const sdk = useSdk();
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
@@ -241,17 +244,20 @@ const ConvertForm: FC<
   useEffect(() => {
     (async () => {
       if (tokenOut) {
-        const _maxAmountIn = await sdk.contracts.beanstalk
-          .getMaxAmountIn(tokenIn.address, tokenOut.address)
-          .then((amt) => tokenValueToBN(tokenIn.fromBlockchain(amt)))
-          .catch(() => ZERO_BN); // if calculation fails, consider this pathway unavailable
+        if (!tokenOut) return;
+        const maxAmount = await ConvertFarmStep.getMaxConvert(
+          sdk,
+          tokenIn,
+          tokenOut
+        );
+        const _maxAmountIn = tokenValueToBN(maxAmount);
         setFieldValue('maxAmountIn', _maxAmountIn);
 
         const _maxAmountInStr = tokenIn.amount(_maxAmountIn.toString());
         console.debug('[Convert][maxAmountIn]: ', _maxAmountInStr);
       }
     })();
-  }, [sdk.contracts.beanstalk, setFieldValue, tokenIn, tokenOut]);
+  }, [sdk, setFieldValue, tokenIn, tokenOut]);
 
   const quoteHandlerParams = useMemo(
     () => ({
@@ -428,35 +434,32 @@ const ConvertForm: FC<
 
 // -----------------------------------------------------------------------
 
-const Convert: FC<{
+const ConvertPropProvider: FC<{
   fromToken: ERC20Token | NativeToken;
 }> = ({ fromToken }) => {
   const sdk = useSdk();
 
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
-    const { BEAN, BEAN_CRV3_LP, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } = sdk.tokens;
-    const allTokens = fromToken.isUnripe
-      ? [UNRIPE_BEAN, UNRIPE_BEAN_CRV3]
-      : [BEAN, BEAN_CRV3_LP];
-    const _tokenList = allTokens.filter((_token) => !_token.equals(fromToken));
+    const { path } = ConvertFarmStep.getConversionPath(sdk, fromToken);
+    const _tokenList = [...path].filter((_token) => !_token.equals(fromToken));
     return [
       _tokenList, // all available tokens to convert to
       _tokenList[0], // tokenOut is the first available token that isn't the fromToken
     ];
-  }, [sdk.tokens, fromToken]);
+  }, [sdk, fromToken]);
 
   /// Beanstalk
   const season = useSeason();
+  const [refetchPools] = useFetchPools();
 
   /// Farmer
-  const formTxnBuilder = useFarmerFormTxns();
   const farmerSilo = useFarmerSilo();
   const farmerSiloBalances = farmerSilo.balances;
   const account = useAccount();
 
   /// Temporary solution. Remove this when we move the site to use the new sdk types.
-  const [sdkBalances, refetchSdkBalances] = useAsyncMemo(async () => {
+  const [farmerBalances, refetchFarmerBalances] = useAsyncMemo(async () => {
     if (!account) return undefined;
     console.debug(
       `[Convert] Fetching silo balances for SILO:${fromToken.symbol}`
@@ -466,10 +469,9 @@ const Convert: FC<{
     });
   }, [account, sdk]);
 
-  const [refetchPools] = useFetchPools();
-
   /// Form
   const middleware = useFormMiddleware();
+  const { txnBundler, plantAndDoX, refetch } = useFormTxnContext();
 
   const initialValues: ConvertFormValues = useMemo(
     () => ({
@@ -500,107 +502,30 @@ const Convert: FC<{
     [fromToken, initialTokenOut]
   );
 
-  /**
-   * SDK.SILO.CONVERT.convertEstimate has all the logic for this,
-   * but we need to add additional crates if the user is planting
-   */
-  const handleConversion = useCallback(
-    async (
-      _tokenIn: Token,
-      _amountIn: BigNumber,
-      _tokenOut: Token,
-      slippage: number,
-      isConvertingPlanted: boolean
-    ) => {
-      if (!account) throw new Error('Signer required');
-      if (!sdkBalances) throw new Error('No balances found');
-      const siloConvert = sdk.silo.siloConvert;
-
-      /// sdk.silo.siloConvert requires it's own token instances
-      const whitelist = [
-        siloConvert.Bean,
-        siloConvert.BeanCrv3,
-        siloConvert.urBean,
-        siloConvert.urBeanCrv3,
-      ];
-      const [tokenIn, tokenOut] = whitelist.reduce<
-        [Token | null, Token | null]
-      >(
-        (prev, curr) => {
-          prev[0] = curr.equals(_tokenIn) ? curr : prev[0];
-          prev[1] = curr.equals(_tokenOut) ? curr : prev[1];
-          return prev;
-        },
-        [null, null]
-      );
-
-      if (!tokenIn || !tokenOut) throw new Error('conversion unavailable');
-      await siloConvert.validateTokens(tokenIn, tokenOut);
-
-      const depositCrates = [...sdkBalances.deposited.crates];
-
-      let amountIn = tokenIn.amount(_amountIn.toString());
-
-      // if the user is planting & the token being used is BEAN
-      if (isConvertingPlanted) {
-        const plantCrate = await FormTxnBuilder.makePlantCrate(sdk, account);
-        depositCrates.push(plantCrate.crate);
-        amountIn = amountIn.add(plantCrate.amount);
-      }
-
-      const conversion = siloConvert.calculateConvert(
-        tokenIn,
-        tokenOut,
-        amountIn,
-        depositCrates,
-        season.toNumber()
-      );
-      console.debug('[Convert]conversion: ', conversion);
-
-      const amountOutBN = await sdk.contracts.beanstalk.getAmountOut(
-        tokenIn.address,
-        tokenOut.address,
-        conversion.amount.toBigNumber()
-      );
-      const amountOut = tokenOut.fromBlockchain(amountOutBN);
-      const minAmountOut = amountOut.pct(100 - slippage);
-
-      console.debug('[Convert] minAmountOut: ', minAmountOut);
-
-      const getEncoded = () =>
-        sdk.contracts.beanstalk.interface.encodeFunctionData('convert', [
-          siloConvert.calculateEncoding(
-            tokenIn,
-            tokenOut,
-            amountIn,
-            minAmountOut
-          ),
-          conversion.crates.map((c) => c.season.toString()),
-          conversion.crates.map((c) => c.amount.abs().toBlockchain()),
-        ]);
-
-      return {
-        minAmountOut,
-        getEncoded,
-      };
-    },
-    [account, sdk, sdkBalances, season]
-  );
-
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
   const handleQuote = useCallback<
     QuoteHandlerWithParams<ConvertQuoteHandlerParams>
   >(
-    async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) =>
-      handleConversion(
+    async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) => {
+      if (!farmerBalances?.deposited) {
+        throw new Error('No balances found');
+      }
+
+      const result = await ConvertFarmStep._handleConversion(
+        sdk,
+        farmerBalances.deposited.crates,
         tokenIn,
-        _amountIn,
         tokenOut,
+        tokenIn.amount(_amountIn.toString()),
+        season.toNumber(),
         slippage,
-        isConvertingPlanted
-      ).then(({ minAmountOut }) => tokenValueToBN(minAmountOut)),
-    [handleConversion]
+        isConvertingPlanted ? plantAndDoX : undefined
+      );
+
+      return tokenValueToBN(result.minAmountOut);
+    },
+    [farmerBalances?.deposited, sdk, season, plantAndDoX]
   );
 
   const onSubmit = useCallback(
@@ -623,42 +548,34 @@ const Convert: FC<{
         if (!slippage) throw new Error('No slippage value set.');
         if (!_amountIn) throw new Error('No amount input');
         if (!tokenOut) throw new Error('Conversion pathway not set');
-
-        const { beanstalk } = sdk.contracts;
-        const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
-        const isPlanting = values.farmActions.primary?.includes(FormTxn.PLANT);
-
-        const { getEncoded } = await handleConversion(
-          tokenIn,
-          _amountIn,
-          tokenOut,
-          slippage,
-          isPlanting || false
-        );
+        if (!farmerBalances) throw new Error('No balances found');
 
         txToast = new TransactionToast({
           loading: 'Converting...',
           success: 'Convert successful.',
         });
 
-        const convertStep: StepGenerator = async (_amountInStep, _context) => ({
-          name: 'convert',
-          amountOut: _amountInStep,
-          prepare: () => ({
-            target: beanstalk.address,
-            callData: getEncoded(),
-          }),
-          decode: (data: string) =>
-            beanstalk.interface.decodeFunctionData('convert', data),
-          decodeResult: (result: string) =>
-            beanstalk.interface.decodeFunctionResult('convert', result),
-        });
+        const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
+        const isPlanting = values.farmActions.primary?.includes(FormTxn.PLANT);
 
-        const { execute, performed } = await FormTxnBuilder.compile(
+        const convertTxn = new ConvertFarmStep(
           sdk,
-          values.farmActions,
-          formTxnBuilder.getGenerators,
-          [convertStep],
+          tokenIn,
+          season.toNumber(),
+          farmerBalances.deposited.crates
+        );
+
+        const { getEncoded, minAmountOut } = await convertTxn.handleConversion(
+          amountIn,
+          slippage,
+          isPlanting ? plantAndDoX : undefined
+        );
+
+        convertTxn.build(getEncoded, minAmountOut);
+        const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
+
+        const { execute } = await txnBundler.bundle(
+          convertTxn,
           amountIn,
           slippage
         );
@@ -668,24 +585,24 @@ const Convert: FC<{
 
         const receipt = await txn.wait();
 
-        await formTxnBuilder.refetch(
-          performed,
-          { farmerSilo: true },
-          [refetchPools, refetchSdkBalances] // update prices to account for pool conversion
-        );
+        await refetch(actionsPerformed, { farmerSilo: true }, [
+          refetchPools, // update prices to account for pool conversion
+          refetchFarmerBalances,
+        ]);
 
         txToast.success(receipt);
 
         /// Reset the max Amount In
-        const _maxAmountIn = await sdk.contracts.beanstalk
-          .getMaxAmountIn(tokenIn.address, tokenOut.address)
-          .then((amt) => tokenValueToBN(tokenIn.fromBlockchain(amt)))
-          .catch(() => ZERO_BN); // if calculation fails, consider this pathway unavailable
+        const _maxAmountIn = await ConvertFarmStep.getMaxConvert(
+          sdk,
+          tokenIn,
+          tokenOut
+        );
 
         formActions.resetForm({
           values: {
             ...initialValues,
-            maxAmountIn: _maxAmountIn,
+            maxAmountIn: tokenValueToBN(_maxAmountIn),
           },
         });
       } catch (err) {
@@ -702,11 +619,14 @@ const Convert: FC<{
     [
       middleware,
       account,
+      farmerBalances,
       sdk,
-      handleConversion,
-      formTxnBuilder,
+      season,
+      plantAndDoX,
+      txnBundler,
+      refetch,
       refetchPools,
-      refetchSdkBalances,
+      refetchFarmerBalances,
       initialValues,
     ]
   );
@@ -727,6 +647,7 @@ const Convert: FC<{
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             siloBalances={farmerSiloBalances}
             currentSeason={season}
+            sdk={sdk}
             {...formikProps}
           />
         </>
@@ -734,5 +655,13 @@ const Convert: FC<{
     </Formik>
   );
 };
+
+const Convert: FC<{
+  fromToken: ERC20Token | NativeToken;
+}> = (props) => (
+  <FormTxnProvider>
+    <ConvertPropProvider {...props} />
+  </FormTxnProvider>
+);
 
 export default Convert;
