@@ -28,7 +28,7 @@ type Aquifer @entity(immutable: true) {
   id: Bytes!
 
   " Wells deployed by this aquifer "
-  wells: [Well!]! @derivedFrom(field: "aquifer")
+  wells: [Well!]!
 }
 
 type WellFunction @entity {
