@@ -442,8 +442,8 @@ library LibLegacyTokenSilo {
             //read merkle root to determine stalk/seeds diff drift from convert issue
             //TODO: verify and update this root on launch if there's more drift
             //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
-            bytes32 root = 0xa50966d0e2dd8dd5055b3da72da69922741daadc133fccace98e994b7b41342a;
-            bytes32 leaf = keccak256(abi.encodePacked(account, stalkDiff, seedsDiff));            
+            bytes32 root = 0xb81b71efcfb245c4d596e20e403b2a6f70c05c68f59a5e57083881eacacc9671;
+            bytes32 leaf = keccak256(abi.encode(account, stalkDiff, seedsDiff));
             
             require(
                 MerkleProof.verify(proof, root, leaf),

@@ -31,7 +31,7 @@ fs.createReadStream(csvPath)
         // const leaf = ethers.utils.keccak256(packedData);
 
 
-        const addressPadded = ethers.utils.hexZeroPad(row['address'], 20); // Pad address to 20 bytes
+        const addressPadded = ethers.utils.hexZeroPad(row['address'], 32); // Pad address to 20 bytes
         const stalkPadded = ethers.utils.hexZeroPad(ethers.BigNumber.from(row['stalk']).toHexString(), 32); // Pad stalk to 32 bytes
         const seedsPadded = ethers.utils.hexZeroPad(ethers.BigNumber.from(row['seeds']).toHexString(), 32); // Pad seeds to 32 bytes
 
