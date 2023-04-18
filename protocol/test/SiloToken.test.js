@@ -1156,7 +1156,7 @@ describe('Silo Token', function () {
 
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
         //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
-        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]], 0, 0, []);
         
         this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
@@ -1202,7 +1202,7 @@ describe('Silo Token', function () {
 
         // const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 
-        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]]);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]], 0, 0, []);
 
         this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
       })
@@ -1247,7 +1247,7 @@ describe('Silo Token', function () {
         )
 
 
-        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10', '11']], [[to6('5'), to6('5')]]);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10', '11']], [[to6('5'), to6('5')]], 0, 0, []);
 
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 

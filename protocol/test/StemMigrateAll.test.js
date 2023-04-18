@@ -17,7 +17,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             {
               forking: {
                 jsonRpcUrl: process.env.FORKING_RPC,
-                blockNumber: 16947385 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+                blockNumber: 16993151 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
               },
             },
           ],
@@ -66,7 +66,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
     async function getDepositsForAccount(account, onChainBdv = false) {
 
         const START_BLOCK = 0;
-        const END_BLOCK = 16947385;
+        const END_BLOCK = 16993151;
         // const END_BLOCK = 'latest'
         
         //couldn't quickly figure out how to just use the hardhat network provider?
@@ -127,13 +127,13 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             // Create the filter object
             const oldFilter = {
                 fromBlock: 0,
-                toBlock: 'latest',
+                toBlock: END_BLOCK,
                 address: contract.address,
                 topics: [oldEventTopic, ethers.utils.hexZeroPad(account, 32)],
             };
 
             // Query the old events
-            const oldEvents = await contract.provider.getLogs(oldFilter, 0, "latest");
+            const oldEvents = await contract.provider.getLogs(oldFilter, 0, END_BLOCK);
             
             const updatedEvents = oldEvents.map((eventLog) => {
                 let parsedLog;
@@ -291,8 +291,17 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
         //load deposits from disk
         let deposits = JSON.parse(await fs.readFileSync(__dirname + '/data/deposits.json'));
-
         deposits = reformatData(deposits);
+
+        //load seed/stalk diff from disk
+        let seedStalkDiff = JSON.parse(await fs.readFileSync(__dirname + '/../scripts/silov3-merkle/data/seed-stalk-merkle.json'));
+
+        //eth addresses here have the checksum casing, need just lowercase
+        //to match up with the stored data
+        for (const key in seedStalkDiff) {
+          seedStalkDiff[key.toLowerCase()] = seedStalkDiff[key];
+        }
+
 
         var progress = 0;
         for (const depositorAddress in deposits) {
@@ -302,15 +311,20 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             const seasons = deposits[depositorAddress]['seasonsArray'];
             const amounts = deposits[depositorAddress]['amountsArray'];
 
+            let stalkDiff = 0;
+            let seedsDiff = 0;
+            let proof = [];
+
+            if (seedStalkDiff[depositorAddress]) {
+              stalkDiff = seedStalkDiff[depositorAddress]['stalk'];
+              seedsDiff = seedStalkDiff[depositorAddress]['seeds'];
+              proof = seedStalkDiff[depositorAddress]['proof'];
+            }
 
             const depositorSigner = await impersonateSigner(depositorAddress);
             await this.silo.connect(depositorSigner);
-
-            // console.log('tokens: ', tokens);
-            // console.log('seasons: ', seasons);
-            // console.log('amounts: ', amounts);
         
-            await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+            await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
 
             console.log('progress: ', progress);
             progress++;

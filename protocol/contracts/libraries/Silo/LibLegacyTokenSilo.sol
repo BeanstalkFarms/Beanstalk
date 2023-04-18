@@ -13,6 +13,7 @@ import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
+import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 /**
  * @title LibLegacyTokenSilo
@@ -38,13 +39,25 @@ library LibLegacyTokenSilo {
         uint256 bdv
     );
 
-    event RemoveDeposits(
+    //this is the legacy seasons-based remove deposits event, emitted on migration
+    event RemoveDeposit(
         address indexed account,
         address indexed token,
-        int96[] stems,
-        uint256[] amounts,
-        uint256 amount,
-        uint256[] bdvs
+        uint32 season,
+        uint256 amount
+    );
+
+    //legacy seeds balanced changed event, used upon migration
+    event SeedsBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    //legacy stalk balanced changed event, used upon migration
+    event StalkBalanceChanged(
+        address indexed account,
+        int256 delta,
+        int256 deltaRoots
     );
 
     /// @dev these events are grandfathered for claiming deposits. 
@@ -69,6 +82,7 @@ library LibLegacyTokenSilo {
     struct PerDepositData {
         uint32 season;
         uint128 amount;
+        uint128 grownStalk;
     }
 
     struct PerTokenData {
@@ -323,13 +337,15 @@ library LibLegacyTokenSilo {
      *
      * Deposits are migrated to the stem storage system on a 1:1 basis. Accounts with
      * lots of deposits may take a considerable amount of gas to migrate.
+     * 
+     * Returns seeds diff compared to stored amount, for verification in merkle check.
      */
     function _mowAndMigrate(
         address account, 
         address[] calldata tokens, 
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
-    ) internal {
+    ) internal returns (uint256) {
         //typically a migrationNeeded should be enough to allow the user to migrate, however
         //for Unripe unit testing convenience, (Update Unripe Deposit -> "1 deposit, some", 
         //"1 deposit after 1 season, all", and "2 deposit, all" tests), they cannot migrate
@@ -373,14 +389,14 @@ library LibLegacyTokenSilo {
                                 );
  
                 //calculate how much stalk has grown for this deposit
-                uint128 grownStalk = _calcGrownStalkForDeposit(
+                perDepositData.grownStalk = _calcGrownStalkForDeposit(
                     crateBDV * getSeedsPerToken(address(perTokenData.token)),
                     perDepositData.season
                 );
  
                 // also need to calculate how much stalk has grown since the migration
                 uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
-                grownStalk += stalkGrownSinceStemStartSeason;
+                perDepositData.grownStalk += stalkGrownSinceStemStartSeason;
                 migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
  
                 // add to new silo
@@ -389,7 +405,7 @@ library LibLegacyTokenSilo {
                     perTokenData.token, 
                     LibTokenSilo.grownStalkAndBdvToStem(
                         IERC20(perTokenData.token), 
-                        grownStalk, 
+                        perDepositData.grownStalk,
                         crateBDV
                     ), 
                     perDepositData.amount, 
@@ -399,22 +415,56 @@ library LibLegacyTokenSilo {
  
                 // add to running total of seeds
                 migrateData.totalSeeds += uint128(uint256(crateBDV) * getSeedsPerToken(address(perTokenData.token)));
+
+                // emit legacy RemoveDeposit event
+                emit RemoveDeposit(account, perTokenData.token, perDepositData.season, perDepositData.amount);
             }
  
             // init mow status for this token
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
-            emit RemoveDeposits(account, perTokenData.token, new int96[](0), new uint256[](0), 0, new uint256[](0));
         }
  
         // user deserves stalk grown between stemStartSeason and now
         LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
- 
-        if (balanceOfSeeds(account).sub(migrateData.totalSeeds) > 2000) {
-            require(msg.sender == account, "seeds misalignment, double check submitted deposits");
+
+        //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
+        return balanceOfSeeds(account).sub(migrateData.totalSeeds);
+    }
+
+    function _mowAndMigrateMerkleCheck(
+        address account,
+        uint256 stalkDiff,
+        uint256 seedsDiff,
+        bytes32[] calldata proof,
+        uint256 seedsVariance
+    ) internal {
+        if (seedsDiff > 0) {
+            //read merkle root to determine stalk/seeds diff drift from convert issue
+            //TODO: verify and update this root on launch if there's more drift
+            //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
+            bytes32 root = 0xb81b71efcfb245c4d596e20e403b2a6f70c05c68f59a5e57083881eacacc9671;
+            bytes32 leaf = keccak256(abi.encode(account, stalkDiff, seedsDiff));
+            
+            require(
+                MerkleProof.verify(proof, root, leaf),
+                "UnripeClaim: invalid proof"
+            );
         }
- 
+        
+        //make sure seedsVariance equals seedsDiff input
+        require(seedsVariance == seedsDiff, "seeds misalignment, double check submitted deposits");
+
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
+
+        //emit that all their seeds are gone
+        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
+
+        //emit the stalk variance
+        emit StalkBalanceChanged(account, -int256(stalkDiff), 0);
     }
 
     /**
