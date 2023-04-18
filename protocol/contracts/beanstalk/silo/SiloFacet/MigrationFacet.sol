@@ -42,9 +42,8 @@ contract MigrationFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) external payable {
         uint256 seedsVariance = LibLegacyTokenSilo._mowAndMigrate(account, tokens, seasons, amounts);
-        // LibLegacyTokenSilo._mowAndMigrate(account, tokens, seasons, amounts);
+        //had to break up the migration function into two parts to avoid stack too deep errors
         LibLegacyTokenSilo._mowAndMigrateMerkleCheck(account, stalkDiff, seedsDiff, proof, seedsVariance);
-
     }
 
     /** 
