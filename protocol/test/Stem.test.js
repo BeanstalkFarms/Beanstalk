@@ -9,6 +9,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const { ConvertEncoder } = require('./utils/encoder.js')
+require('dotenv').config();
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
@@ -93,7 +94,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       it('for unripe bean', async function () {
         const settings = await this.silo.tokenSettings(this.unripeBean.address);
   
-        expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
+        expect(settings['stalkEarnedPerSeason']).to.eq(1000000);
         expect(settings['stalkIssuedPerBdv']).to.eq(10000);
         expect(settings['milestoneSeason']).to.eq(await this.season.season());
         expect(settings['milestoneStem']).to.eq(0);
@@ -102,7 +103,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       it('for unripe LP', async function () {
         const settings = await this.silo.tokenSettings(this.unripeLP.address);
   
-        expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
+        expect(settings['stalkEarnedPerSeason']).to.eq(1000000);
         expect(settings['stalkIssuedPerBdv']).to.eq(10000);
         expect(settings['milestoneSeason']).to.eq(await this.season.season());
         expect(settings['milestoneStem']).to.eq(0);

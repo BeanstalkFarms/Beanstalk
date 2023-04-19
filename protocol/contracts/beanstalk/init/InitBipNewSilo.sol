@@ -22,6 +22,13 @@ contract InitBipNewSilo {
     AppStorage internal s;
     LibDiamond.DiamondStorage internal ds;
 
+    uint32 constant private BEAN_SEEDS_PER_BDV = 2e6;
+    uint32 constant private BEAN_3CRV_SEEDS_PER_BDV = 4e6;
+    uint32 constant private UNRIPE_BEAN_SEEDS_PER_BDV = 1e6;
+    uint32 constant private UNRIPE_BEAN_3CRV_SEEDS_PER_BDV = 1e6;
+    
+    uint32 constant private STALK_ISSUED_PER_BDV = 10000;
+
 
     event UpdatedStalkPerBdvPerSeason(
         address indexed token,
@@ -39,31 +46,32 @@ contract InitBipNewSilo {
 
         uint32 currentSeason = s.season.current;
 
-        s.ss[C.beanAddress()].stalkEarnedPerSeason = 2*1e6;
-        s.ss[C.beanAddress()].stalkIssuedPerBdv = 10000;
+        s.ss[C.beanAddress()].stalkEarnedPerSeason = BEAN_SEEDS_PER_BDV;
+        s.ss[C.beanAddress()].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
         s.ss[C.beanAddress()].milestoneSeason = currentSeason;
         s.ss[C.beanAddress()].milestoneStem = 0;
 
 
-        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4*1e6;
-        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 10000;
+        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = BEAN_3CRV_SEEDS_PER_BDV;
+        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
         s.ss[C.curveMetapoolAddress()].milestoneSeason = currentSeason;
         s.ss[C.curveMetapoolAddress()].milestoneStem = 0;
 
 
-        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2*1e6;
-        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 10000;
+        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = UNRIPE_BEAN_SEEDS_PER_BDV;
+        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
         s.ss[C.unripeBeanAddress()].milestoneSeason = currentSeason;
         s.ss[C.unripeBeanAddress()].milestoneStem = 0;
 
 
-        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;
-        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = UNRIPE_BEAN_3CRV_SEEDS_PER_BDV;
+        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
         s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.ss[address(C.unripeLP())].milestoneStem = 0;
 
         //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
-        emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);
+        emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), UNRIPE_BEAN_3CRV_SEEDS_PER_BDV, s.season.current);
+        emit UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
 
 
 
