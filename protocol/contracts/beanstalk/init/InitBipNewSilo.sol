@@ -69,7 +69,7 @@ contract InitBipNewSilo {
         s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.ss[address(C.unripeLP())].milestoneStem = 0;
 
-        //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
+        //emit event for unripe LP/Beans from 4 to 1 grown stalk per bdv per season
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), UNRIPE_BEAN_3CRV_SEEDS_PER_BDV, s.season.current);
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
 
