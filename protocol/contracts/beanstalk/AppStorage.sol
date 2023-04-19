@@ -52,7 +52,7 @@ contract Account {
     /**
      * @notice Stores a Farmer's Stalk and Seeds balances.
      * @param stalk Balance of the Farmer's Stalk.
-     * @param seeds Balance of the Farmer's Seeds.
+     * @param seeds DEPRECATED – Balance of the Farmer's Seeds. Seeds are no longer referenced as of Silo V3.
      */
     struct Silo {
         uint256 stalk;
@@ -125,15 +125,16 @@ contract Account {
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
          * 
          * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
-         * format in the next storage slot, `s.a[account].silo`.
+         * format in the `s.a[account].legacyDeposits` mapping.
          *
-         * NOTE: While the Silo V1 format is now deprecated, this storage slot is used for gas
-         * efficiency to store Unripe BEAN:3CRV deposits. See {FIXME(doc)} for more.
+         * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
+         * stored in this storage slot. See {FIXME(doc)} for more.
+         * 
          */
         AssetSilo lp; 
 
         /*
-         * @dev Silo V2
+         * @dev Holds Silo specific state for each account.
          */
         Silo s;
         
@@ -146,11 +147,11 @@ contract Account {
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint128 deltaRoots; // the number of roots to add, in the case where a farmer has mowed in the morning 
+        uint128 deltaRoots; // the number of roots to add, in the case where a farmer has mowed in the morning
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
-        mapping(address => mapping(uint32 => Deposit)) legacyDeposits; // Legacy Silo Deposits stored as a map from Token address to Season of Deposit to Deposit.
+        mapping(address => mapping(uint32 => Deposit)) legacyDeposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - Zero withdraw eliminates a need for withdraw mapping
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
@@ -158,8 +159,8 @@ contract Account {
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
         mapping(bytes32 => Deposit) deposits; // SiloV3 Deposits stored as a map from bytes32 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
-        mapping(address => MowStatus) mowStatuses; //Store a MowStatus for each Silo-able token
-        mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping (TODO: this approves all ERC20, and in the future ERC721, ERC1155 deposits)
+        mapping(address => MowStatus) mowStatuses; // Store a MowStatus for each Whitelisted Silo token
+        mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping (TODO: this approves all ERC20 deposits, and in the future ERC721, ERC1155 deposits)
     }
 }
 
@@ -523,7 +524,8 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     uint256[3] deprecated2;
-    uint128 newEarnedStalk; //(16/32)
+    uint128 newEarnedStalk; // ──────┐ 16
+    uint128 vestingPeriodRoots; // ──┘ 16 (32/32)
     mapping (uint32 => uint256) sops;
 
     // Internal Balances
@@ -542,8 +544,11 @@ struct AppStorage {
     uint128 fFirst;
     uint128 fLast;
     uint128 bpf;
-    uint128 vestingPeriodRoots;
     uint256 recapitalized;
+
+    // Farm
     uint256 isFarm;
+
+    // Ownership
     address ownerCandidate;
 }
