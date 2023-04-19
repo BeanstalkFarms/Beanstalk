@@ -1,6 +1,0 @@
-type User @entity {
-  id: ID!
-  barnRaise: [Int!]
-  genesis: [Int!]
-  winter: [Int!]
-}
