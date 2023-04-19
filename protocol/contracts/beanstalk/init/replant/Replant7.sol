@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../AppStorageOld.sol";
+import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../tokens/ERC20/BeanstalkERC20.sol";
 import "../../../libraries/Silo/LibSilo.sol";
@@ -21,7 +21,7 @@ import "../../../libraries/Silo/LibTokenSilo.sol";
 
 contract Replant7 {
 
-    AppStorageOld internal s;
+    AppStorage internal s;
 
     using SafeMath for uint256;
 
@@ -83,7 +83,7 @@ contract Replant7 {
 
     function init2(uint256 stalk, uint256 seeds) external {
         s.earnedBeans = 0;
-        s.s.seeds = seeds;
+        s.s.deprecated_seeds = seeds; // Was s.s.seeds
         s.s.stalk = stalk;
         s.s.roots = stalk.mul(ROOTS_PADDING);
     }
