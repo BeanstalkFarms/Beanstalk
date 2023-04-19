@@ -546,5 +546,4 @@ struct AppStorage {
     uint256 recapitalized;
     uint256 isFarm;
     address ownerCandidate;
-    mapping(bytes32 => Storage.Metadata) metadata;
 }
