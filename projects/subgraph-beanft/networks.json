@@ -1,0 +1,16 @@
+{
+  "mainnet": {
+    "genesis": {
+      "address": "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79",
+      "startBlock": 13323594
+    },
+    "winter": {
+      "address": "0x459895483556dad32526efa461f75e33e458d9e9",
+      "startBlock": 14026134
+    },
+    "barnraise": {
+      "address": "0xa969bb19b1d35582ded7ea869cecd60a3bd5d1e8",
+      "startBlock": 15533885
+    }
+  }
+}

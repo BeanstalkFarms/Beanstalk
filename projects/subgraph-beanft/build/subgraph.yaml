@@ -1,0 +1,66 @@
+specVersion: 0.0.5
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: genesis
+    network: mainnet
+    source:
+      address: "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79"
+      abi: genesis
+      startBlock: 13323594
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - User
+      abis:
+        - name: genesis
+          file: genesis\abis\genesis.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransferGenesis
+      file: genesis\genesis.wasm
+  - kind: ethereum
+    name: winter
+    network: mainnet
+    source:
+      address: "0x459895483556dad32526efa461f75e33e458d9e9"
+      abi: winter
+      startBlock: 14026134
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - User
+      abis:
+        - name: winter
+          file: winter\abis\winter.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransferWinter
+      file: genesis\genesis.wasm
+  - kind: ethereum
+    name: barnraise
+    network: mainnet
+    source:
+      address: "0xa969bb19b1d35582ded7ea869cecd60a3bd5d1e8"
+      abi: barnraise
+      startBlock: 15533885
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - User
+      abis:
+        - name: barnraise
+          file: barnraise\abis\barnraise.json
+      eventHandlers:
+        - event: ConsecutiveTransfer(indexed uint256,uint256,indexed address,indexed address)
+          handler: handleConsecutiveTransferBarnRaise
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransferBarnRaise
+      file: genesis\genesis.wasm
