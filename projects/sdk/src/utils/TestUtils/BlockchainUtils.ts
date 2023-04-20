@@ -80,7 +80,7 @@ export class BlockchainUtils {
     await this.sdk.provider.send("anvil_reset", [
       {
         forking: {
-          jsonRpcUrl: "PROVIDER_RPC_URL"
+          jsonRpcUrl: process.env.MAINNET_RPC
         }
       }
     ]);
