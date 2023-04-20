@@ -28,7 +28,6 @@ library LibUnripeConvert {
     {
         tokenOut = C.unripeBeanAddress();
         tokenIn = C.unripeLPAddress();
-        LibInternal.mow(msg.sender, tokenIn);
         (uint256 lp, uint256 minBeans) = convertData.basicConvert();
 
         uint256 minAmountOut = LibUnripe
@@ -68,7 +67,6 @@ library LibUnripeConvert {
     {
         tokenIn = C.unripeBeanAddress();
         tokenOut = C.unripeLPAddress();
-        LibInternal.mow(msg.sender, tokenIn);
         (uint256 beans, uint256 minLP) = convertData.basicConvert();
 
         uint256 minAmountOut = LibUnripe

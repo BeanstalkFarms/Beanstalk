@@ -23,10 +23,6 @@ library LibLambdaConvert {
         )
     {
         (amountIn, tokenIn) = convertData.lambdaConvert();
-        LibInternal.mow(msg.sender, tokenIn);
-        if (tokenIn != tokenOut) {
-            LibInternal.mow(msg.sender, tokenOut);
-        }
         tokenOut = tokenIn;
         amountOut = amountIn;
     }

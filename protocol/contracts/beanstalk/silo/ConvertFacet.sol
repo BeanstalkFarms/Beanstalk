@@ -93,6 +93,9 @@ contract ConvertFacet is ReentrancyGuard {
             convertData
         );
 
+        LibSilo._mow(msg.sender, fromToken);
+        LibSilo._mow(msg.sender, toToken);
+
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,

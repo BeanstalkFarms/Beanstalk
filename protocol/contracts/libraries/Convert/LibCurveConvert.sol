@@ -82,7 +82,6 @@ library LibCurveConvert {
     {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
-        LibInternal.mow(msg.sender, C.curveMetapoolAddress());
         (amountOut, amountIn) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
         tokenOut = C.beanAddress();
         tokenIn = pool;
@@ -101,7 +100,6 @@ library LibCurveConvert {
             uint256 amountIn
         )
     {
-        LibInternal.mow(msg.sender, C.beanAddress());
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
         (amountOut, amountIn) = curveSellToPegAndAddLiquidity(
