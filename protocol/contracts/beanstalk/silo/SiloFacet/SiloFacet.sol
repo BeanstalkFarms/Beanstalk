@@ -217,9 +217,7 @@ contract SiloFacet is TokenSilo {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = 
-            LibBytes.getAddressAndStemFromBytes(
-                bytes32(depositId)
-            );
+            LibBytes.getAddressAndStemFromBytes(depositId);
         transferDeposit(
             sender, 
             recipient,
@@ -254,9 +252,7 @@ contract SiloFacet is TokenSilo {
         int96 cumulativeGrownStalkPerBDV;
         for(uint i; i < depositIds.length; i++) {
             (token, cumulativeGrownStalkPerBDV) = 
-                LibBytes.getAddressAndStemFromBytes(
-                    bytes32(depositIds[i])
-                );
+                LibBytes.getAddressAndStemFromBytes(depositIds[i]);
             transferDeposit(
                 sender, 
                 recipient,
