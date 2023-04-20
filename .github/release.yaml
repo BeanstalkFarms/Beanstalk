@@ -1,0 +1,9 @@
+changelog:
+  categories:
+    - title: SDK
+      labels:
+        - '📦 SDK'
+
+    - title: CLI
+      labels:
+        - '🖥️ CLI'

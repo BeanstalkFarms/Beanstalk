@@ -1,0 +1,17 @@
+fragment PodListing on PodListing {
+  # Metadata
+  id
+  index
+  createdAt
+  updatedAt
+  status
+  # Listing data
+  originalIndex #
+  amount # amount currently `active`
+  originalAmount # amount from the original listing
+  remainingAmount # `totalAmount - amount`
+  start
+  pricePerPod
+  maxHarvestableIndex
+  mode
+}

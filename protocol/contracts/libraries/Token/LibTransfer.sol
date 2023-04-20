@@ -1,11 +1,5 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
-/**
- * @author publius
- * @title LibTransfer handles the recieving and sending of Tokens to/from internal Balances.
- **/
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
@@ -13,6 +7,11 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../interfaces/IBean.sol";
 import "./LibBalance.sol";
 
+/**
+ * @title LibTransfer
+ * @author Publius
+ * @notice Handles the recieving and sending of Tokens to/from internal Balances.
+ */
 library LibTransfer {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -65,7 +64,10 @@ library LibTransfer {
         }
         uint256 beforeBalance = token.balanceOf(address(this));
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
-        return receivedAmount.add(token.balanceOf(address(this)).sub(beforeBalance));
+        return
+            receivedAmount.add(
+                token.balanceOf(address(this)).sub(beforeBalance)
+            );
     }
 
     function sendToken(
@@ -95,6 +97,20 @@ library LibTransfer {
         } else {
             burnt = LibTransfer.receiveToken(token, amount, sender, mode);
             token.burn(burnt);
+        }
+    }
+
+    function mintToken(
+        IBean token,
+        uint256 amount,
+        address recipient,
+        To mode
+    ) internal {
+        if (mode == To.EXTERNAL) {
+            token.mint(recipient, amount);
+        } else {
+            token.mint(address(this), amount);
+            LibTransfer.sendToken(token, amount, recipient, mode);
         }
     }
 }

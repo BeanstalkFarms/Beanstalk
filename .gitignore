@@ -9,7 +9,15 @@ temp
 .env
 archived
 .vscode
+
+# Diamond Cut Outputs
 diamondCut-*.json
+
+#Open Zeppelin Local Config
+.openzeppelin/unknown-1337.json
+
+#Editors
+.idea/
 
 # Foundry
 cache/
@@ -17,3 +25,17 @@ out/
 coverage_data/
 .openzeppelin
 protocol/lib/prb-math
+protocol/remappings.txt
+.gas-snapshot
+
+# From SDK Monorepo Join:
+node_modules
+.pnp.*
+.yarn/*
+.yarn/install-state.gz
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.DS_Store

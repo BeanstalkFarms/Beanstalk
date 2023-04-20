@@ -1,0 +1,26 @@
+query Votes($proposal_id: String!, $voter_address: String!) {
+  votes (
+    first: 1000
+    skip: 0
+    where: {
+      proposal: $proposal_id,
+      voter: $voter_address
+    }
+    orderBy: "created",
+    orderDirection: desc
+  ) {
+    id
+    voter
+    vp
+    vp_by_strategy
+    vp_state
+    created
+    proposal {
+      id
+    }
+    choice
+    space {
+      id
+    }
+  }
+}

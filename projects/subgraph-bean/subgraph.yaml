@@ -1,0 +1,78 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Bean
+    network: mainnet
+    source:
+      address: "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab"
+      abi: Bean
+      startBlock: 15278082
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: Bean
+          file: ./abis/ERC20.json
+        - name: CurvePrice
+          file: ./abis/CurvePrice.json
+      eventHandlers:
+      - event: Transfer(indexed address,indexed address,uint256)
+        handler: handleTransfer
+      file: ./src/BeanHandler.ts
+  - kind: ethereum/contract
+    name: Bean3CRV
+    network: mainnet
+    source:
+      address: "0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49"
+      abi: Bean3CRV
+      startBlock: 15278082
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Bean3CRV
+      abis:
+        - name: Bean3CRV
+          file: ./abis/Bean3CRV.json
+        - name: CurvePrice
+          file: ./abis/CurvePrice.json
+      eventHandlers:
+      - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
+        handler: handleTokenExchange
+      - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
+        handler: handleTokenExchangeUnderlying
+      - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
+        handler: handleAddLiquidity
+      - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
+        handler: handleRemoveLiquidity
+      - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
+        handler: handleRemoveLiquidityImbalance
+      - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
+        handler: handleRemoveLiquidityOne
+      file: ./src/Bean3CRVHandler.ts
+  - kind: ethereum/contract
+    name: Beanstalk
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Beanstalk
+      abis:
+        - name: Beanstalk
+          file: ./abis/Beanstalk-Replanted.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+      file: ./src/BeanstalkHandler.ts

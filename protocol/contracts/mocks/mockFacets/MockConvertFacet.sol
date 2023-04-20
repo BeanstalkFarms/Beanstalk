@@ -36,7 +36,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256 bdv, 
         uint256 grownStalk
     ) external {
-        _depositTokens(token, amount, bdv, grownStalk);
+        _depositTokensForConvert(token, amount, bdv, grownStalk);
     }
 
     function convertInternalE(

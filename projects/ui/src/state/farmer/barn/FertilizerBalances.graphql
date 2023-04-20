@@ -1,0 +1,12 @@
+query FertilizerBalances($account: String) {
+  fertilizerBalances(where: { farmer: $account }) {
+    amount
+    fertilizerToken {
+      id
+      endBpf
+      season
+      humidity
+      startBpf
+    }
+  }
+}

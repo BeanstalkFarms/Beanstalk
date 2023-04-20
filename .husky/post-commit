@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# why? 
+# https://prettier.io/docs/en/precommit.html#option-6-shell-script
+git update-index -g

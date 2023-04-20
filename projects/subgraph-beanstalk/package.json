@@ -1,0 +1,33 @@
+{
+  "name": "subgraph-beanstalk",
+  "license": "MIT",
+  "description": "A subgraph for indexing events emitted by Beanstalk.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/subgraph-beanstalk"
+  },
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "test": "graph test",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ beanstalk",
+    "create-local": "graph create --node http://127.0.0.1:8020/ beanstalk",
+    "deploy-local": "graph deploy --node http://127.0.0.1:8020/ --ipfs http://127.0.0.1:5001 beanstalk",
+    "create-hosted": "graph create --node http://graph.node.bean.money:8020/ beanstalk",
+    "remove-hosted": "graph remove --node http://graph.node.bean.money:8020/ beanstalk",
+    "deploy-hosted": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanstalk",
+    "create-hosted-dev": "graph create --node http://graph.node.bean.money:8020/ beanstalk-dev",
+    "remove-hosted-dev": "graph remove --node http://graph.node.bean.money:8020/ beanstalk-dev",
+    "deploy-hosted-dev": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanstalk-dev",
+    "create-hosted-test": "graph create --node http://graph.node.bean.money:8020/ beanstalk-testing",
+    "remove-hosted-test": "graph remove --node http://graph.node.bean.money:8020/ beanstalk-testing",
+    "deploy-hosted-test": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanstalk-testing"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.30.4",
+    "@graphprotocol/graph-ts": "^0.27.0",
+    "matchstick-as": "^0.5.0"
+  },
+  "private": true
+}

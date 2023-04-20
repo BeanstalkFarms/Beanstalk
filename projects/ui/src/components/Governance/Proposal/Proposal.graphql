@@ -1,0 +1,9 @@
+#import "./Proposal.fragment.graphql"
+query Proposal($proposal_id: String!) {
+  proposal(id: $proposal_id) {
+    ...Proposal
+    # Only on the individual Proposal page
+    body
+    choices
+  }
+}

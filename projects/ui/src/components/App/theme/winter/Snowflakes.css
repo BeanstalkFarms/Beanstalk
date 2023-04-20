@@ -1,0 +1,62 @@
+@keyframes sway { 
+	0% { 
+		transform: translateX(-10px) rotateZ(0deg);
+		animation-timing-function: linear;
+	}
+  25% {
+    transform: translateX(10px) rotateZ(45deg);
+		animation-timing-function: linear;
+  }
+	50% { 
+		transform: translateX(-10px) rotateZ(90deg);
+		animation-timing-function: ease-in-out;
+	}
+  75% { 
+		transform: translateX(10px) rotateZ(135deg);
+		animation-timing-function: linear;
+	}
+	100% { 
+		transform: translateX(-10px) rotateZ(180deg);
+		animation-timing-function: linear;
+	}
+}
+
+@keyframes fall {
+	100% {
+		margin-top: 120vh;
+	}
+}
+
+#snowflakes {
+	width: 100%;
+	height: 100%;
+	left: 0;
+	top: 0;
+	position: absolute;
+	z-index: 0;
+}
+
+#snowflakes > .l1 {
+	background-image: url('./snowflake1.svg');
+}
+#snowflakes > .l2 {
+	background-image: url('./snowflake2.svg');
+}
+#snowflakes > .l3 {
+	background-image: url('./snowflake3.svg');
+}
+
+
+
+
+#snowflakes > i {
+	width: 40px;
+	height: 40px;
+	position: fixed;
+	top: 0px;
+	animation-name: fall, sway;
+	animation-iteration-count: infinite;
+	animation-fill-mode: both;
+	animation-timing-function: linear, ease-in-out;
+	background-repeat: no-repeat
+}

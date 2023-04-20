@@ -132,7 +132,7 @@ contract SiloExit is ReentrancyGuard {
         return
             LibSilo._balanceOfGrownStalk(
                 s.a[account].mowStatuses[token].lastStem, //last stem farmer mowed
-                LibTokenSilo.stemTipForToken(IERC20(token)), //get latest stem for this token
+                LibTokenSilo.stemTipForToken(token), //get latest stem for this token
                 s.a[account].mowStatuses[token].bdv
             );
     }
@@ -141,9 +141,6 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
      * are the Beans distributed to Stalkholders during {Sun-rewardToSilo}.
-     * @dev in the case where a user calls balanceOfEarned beans during the vesting period,
-     * we have to manually calculate the deltaRoots and newEarnedRoots, as they are not stored in the state.
-     * this is done in {_calcRoots} and {_balanceOfEarnedBeansVested}.
      */
     function balanceOfEarnedBeans(address account)
         public
@@ -174,7 +171,7 @@ contract SiloExit is ReentrancyGuard {
         if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
                 s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
-                s.s.roots.add(s.newEarnedRoots), // add delta of global roots 
+                s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
                 LibPRBMath.Rounding.Up
             );
         } else {
@@ -261,7 +258,7 @@ contract SiloExit is ReentrancyGuard {
 
     //////////////////////// STEM ////////////////////////
 
-    function stemTipForToken(IERC20 token)
+    function stemTipForToken(address token)
         public
         view
         returns (int128 _stemTip)
@@ -271,7 +268,11 @@ contract SiloExit is ReentrancyGuard {
         );
     }
 
-    function seasonToStem(IERC20 token, uint32 season)
+    /**
+     * @dev given the season/token, returns the stem assoicated with that deposit.
+     * kept for legacy reasons. 
+     */
+    function seasonToStem(address token, uint32 season)
         public
         view
         returns (int128 stem)
@@ -280,15 +281,34 @@ contract SiloExit is ReentrancyGuard {
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 
+    /**
+     * @dev returns the seeds per token, for legacy tokens.
+     * calling with an non-legacy token will return 0, 
+     * even after the token is whitelisted.
+     * kept for legacy reasons. 
+     */
     function getSeedsPerToken(address token) public view virtual returns (uint256) {
         return LibLegacyTokenSilo.getSeedsPerToken(token);
     }
 
+    /**
+     * @dev returns the season in which beanstalk initalized siloV3.
+     */
     function stemStartSeason() public view virtual returns (uint16) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         return s.season.stemStartSeason;
     }
 
+
+    function migrationNeeded(address account) public view returns (bool) {
+        return LibSilo.migrationNeeded(account);
+    }
+
+    /**
+     * @dev returns whether beanstalk is in the vesting period or not.
+     */
+    function inVestingPeriod() public view returns (bool){
+        return LibSilo.inVestingPeriod();
+    }
     //////////////////////// INTERNAL ////////////////////////
 
     /**

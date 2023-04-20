@@ -1,6 +1,4 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
@@ -9,9 +7,9 @@ import "./LibConvertData.sol";
 import "~/libraries/LibInternal.sol";
 
 /**
- * @title Lib Lambda Convert
- **/
-
+ * @title LibLambdaConvert
+ * @author Publius
+ */
 library LibLambdaConvert {
     using LibConvertData for bytes;
 
@@ -20,14 +18,16 @@ library LibLambdaConvert {
         returns (
             address tokenOut,
             address tokenIn,
-            uint256 outAmount,
-            uint256 inAmount
+            uint256 amountOut,
+            uint256 amountIn
         )
     {
-        (inAmount, tokenIn) = convertData.lambdaConvert();
-        LibInternal.mow(msg.sender, tokenIn); //this convert function used to be pure, had to remove pure in order to mow
-        LibInternal.mow(msg.sender, tokenOut);
+        (amountIn, tokenIn) = convertData.lambdaConvert();
+        LibInternal.mow(msg.sender, tokenIn);
+        if (tokenIn != tokenOut) {
+            LibInternal.mow(msg.sender, tokenOut);
+        }
         tokenOut = tokenIn;
-        outAmount = inAmount;
+        amountOut = amountIn;
     }
 }

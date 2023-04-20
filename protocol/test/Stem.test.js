@@ -39,7 +39,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
-        // libraryNames: ['LibLegacyTokenSilo'],
         initFacetName: 'InitBipNewSilo',
         bip: false,
         object: false,
@@ -110,7 +109,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       });
     });
   
-    describe('cumulative grown stalk per bdv values for all tokens zero', function () {
+    describe('stem values for all tokens zero', function () {
       it('for bean', async function () {
         expect(await this.silo.stemTipForToken(this.bean.address)).to.eq(0);
       });
@@ -123,7 +122,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       it('for unripe LP', async function () {
         expect(await this.silo.stemTipForToken(this.unripeLP.address)).to.eq(0);
       });
-      
     });
   
     //get deposits for a sample big depositor, verify they can migrate their deposits correctly
@@ -150,7 +148,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.silo.connect(depositorSigner);
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
   
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
@@ -182,8 +180,8 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       });*/
       
       it('for a third sample depositor', async function () {
-        const depositorAddress = '0xc46c1b39e6c86115620f5297e98859529b92ad14';
-        const tokens = ['0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449', '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d'];
+        const depositorAddress = ethers.utils.getAddress('0xc46c1b39e6c86115620f5297e98859529b92ad14');
+        const tokens = [ethers.utils.getAddress('0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449'), ethers.utils.getAddress('0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d')];
   
         const seasons = [
           [
@@ -202,11 +200,33 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
           amounts.push(newSeason);
         }
 
-  
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
     
-        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+        this.migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
+
+        const oldRemoveDepositAbi = [
+            {
+                anonymous: false,
+                inputs: [
+                { indexed: true, internalType: "address", name: "account", type: "address" },
+                { indexed: true, internalType: "address", name: "token", type: "address" },
+                { indexed: false, internalType: "uint32", name: "season", type: "uint32" },
+                { indexed: false, internalType: "uint256", name: "amount", type: "uint256" },
+                ],
+                name: "RemoveDeposit",
+                type: "event",
+            },
+        ];
+
+        const oldRemoveDepositInterface = new ethers.utils.Interface(oldRemoveDepositAbi);
+        const customMigrate = new ethers.Contract(this.migrate.address, oldRemoveDepositInterface, this.migrate.signer);
+        
+        //check for emitting Legacy RemoveDeposit events
+        await expect(this.migrateResult).to.emit(customMigrate, 'RemoveDeposit').withArgs(depositorAddress, tokens[0], seasons[0][0], amounts[0][0]);
+        await expect(this.migrateResult).to.emit(customMigrate, 'RemoveDeposit').withArgs(depositorAddress, tokens[0], seasons[0][1], amounts[0][1]);
+        await expect(this.migrateResult).to.emit(customMigrate, 'RemoveDeposit').withArgs(depositorAddress, tokens[1], seasons[1][0], amounts[1][0]);
+        await expect(this.migrateResult).to.emit(customMigrate, 'RemoveDeposit').withArgs(depositorAddress, tokens[1], seasons[1][1], amounts[1][1]);
   
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
@@ -251,7 +271,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
         const depositorSigner = await impersonateSigner(depositorAddress);
         await mintEth(depositorAddress);
-        await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts);
+        await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
 
@@ -280,7 +300,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             this.stalkBeforeTotal = await this.silo.totalStalk();
         
             //need an array of all the tokens that have been deposited and their corresponding seasons
-            await this.migrate.mowAndMigrate(this.depositorAddress, tokens, seasons, amounts);
+            await this.migrate.mowAndMigrate(this.depositorAddress, tokens, seasons, amounts, 0, 0, []);
         });
 
         it('properly migrates the user balances', async function () {
@@ -379,7 +399,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         }
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
-        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, seasons)).to.be.revertedWith('seeds misaligned');
+        await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, seasons, 0, 0, [])).to.be.revertedWith('seeds misalignment, double check submitted deposits');
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('silo migration needed');
       })
     });
@@ -456,10 +476,10 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         }
   
         //single withdraw
-        await expect(this.silo.connect(depositorSigner).withdrawDeposit(token, seasons[0], to6('1'), 0x00, EXTERNAL)).to.be.revertedWith('silo migration needed')
+        await expect(this.silo.connect(depositorSigner).withdrawDeposit(token, seasons[0], to6('1'), EXTERNAL)).to.be.revertedWith('silo migration needed')
         
         //multi withdraw
-        await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], [0x00,0x00], EXTERNAL)).to.be.revertedWith('silo migration needed')
+        await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], EXTERNAL)).to.be.revertedWith('silo migration needed')
       });
   
       //attempt to convert before migrating

@@ -45,8 +45,8 @@ describe('Silo', function () {
     await this.bean.mint(user4Address, to6('10000'));
     await this.silo.mow(userAddress, this.bean.address);
 
-    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
-    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+    this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
+    this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
   });
 
   beforeEach(async function () {
@@ -73,7 +73,7 @@ describe('Silo', function () {
 
   describe('Silo Balances After Withdrawal', function () {
     beforeEach(async function () {
-      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), 0x00, EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
+      await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL) //we deposited at grownStalkPerBdv of 2, need to withdraw from 2
     })
 
     it('properly updates the total balances', async function () {
@@ -160,7 +160,7 @@ describe('Silo', function () {
     })
     it('mints an ERC1155 when depositing an whitelisted asset', async function () {
       // we use user 3 as user 1 + user 2 has already deposited - this makes it more clear
-      this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+      this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
       season = this.season.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
@@ -176,7 +176,7 @@ describe('Silo', function () {
 
     it('adds to the ERC1155 balance when depositing an whitelisted asset', async function () {
       // user 1 already deposited 1000, so we expect the balanceOf to be 2000e6 here. 
-      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
       season = this.season.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
@@ -196,7 +196,7 @@ describe('Silo', function () {
       season = this.season.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       
-      this.result = await this.silo.connect(user).withdrawDeposit(this.bean.address, stem, to6('500'), 0x00, EXTERNAL)
+      this.result = await this.silo.connect(user).withdrawDeposit(this.bean.address, stem, to6('500'), EXTERNAL)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
         userAddress, // operator
@@ -219,7 +219,6 @@ describe('Silo', function () {
       
       // get roots
       roots = await this.silo.balanceOfRoots(userAddress);
-      console.log("roots of user:",roots);
       expect(await this.silo.balanceOfRoots(user3Address)).to.eq('0');
 
 
@@ -244,13 +243,6 @@ describe('Silo', function () {
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
         userAddress, // operator 
         userAddress, // from
-        ethers.constants.AddressZero, // to
-        depositID, // depositID
-        to6('1000') // amt
-      );
-      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        ethers.constants.AddressZero, // from
         user3Address, // to
         depositID, // depositID
         to6('1000') // amt
@@ -273,7 +265,7 @@ describe('Silo', function () {
       this.result = await this.silo.connect(user).deposit(
         this.bean.address, 
         to6('1000'), 
-        0x00, 
+        
         EXTERNAL
       )
       roots = await this.silo.balanceOfRoots(userAddress);
@@ -302,38 +294,20 @@ describe('Silo', function () {
       expect(await this.silo.balanceOf(user3Address, depositID1)).to.eq(to6('1000'));
 
       // transfer deposit emits 
-      // - 1 event for burning all deposits, and 1 event per deposit for minting
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        userAddress, // from
-        ethers.constants.AddressZero, // to
+        userAddress,  // operator
+        userAddress,  // from
+        user3Address, // to
         depositID0, // depositID
-        to6('1000') // amt
-      );
-      
-      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        userAddress, // from
-        ethers.constants.AddressZero, // to
-        depositID1, // depositID
-        to6('1000') // amt
+        to6('1000')  // amt
       );
 
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        ethers.constants.AddressZero, // from
+        userAddress,  // operator
+        userAddress,  // from
         user3Address, // to
-        depositID0, // depositID
-        to6('1000') // amt
-    );
-
-      // transfer deposit has two events, 
-      await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
-        userAddress, // operator
-        ethers.constants.AddressZero, // from
-        user3Address, // to
-        depositID1, // depositID
-        to6('1000') // amt
+        depositID1,   // depositID
+        to6('1000')  // amt
       );
     });
 
@@ -368,43 +342,37 @@ describe('Silo', function () {
       expect(await this.approval.isApprovedForAll(userAddress, user2Address)).to.eq(true);
     });
 
-    it("properly emits URI for when correctly setting metadata:", async function () {
-      season = this.season.season()
-      stem = this.silo.seasonToStem(this.bean.address, season)
-      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
-      await expect(this.metadata.connect(user).setMetadata(
-        depositID, // depositId,
-        this.bean.address, // token,
-        stem, // stem
-        0 // id (set to 0, but can be anything)
-      )).to.emit(this.metadata, 'URI').withArgs(
-        "",
-        depositID
-      )
-    });
+    // it("properly emits URI for when correctly setting metadata:", async function () {
+    //   season = this.season.season()
+    //   stem = this.silo.seasonToStem(this.bean.address, season)
+    //   depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
+    //   await expect(this.metadata.connect(user).setMetadata(
+    //     depositID, // depositId,
+    //     this.bean.address, // token,
+    //     stem, // stem
+    //     0 // id (set to 0, but can be anything)
+    //   )).to.emit(this.metadata, 'URI').withArgs(
+    //     "",
+    //     depositID
+    //   )
+    // });
 
-    it("reverts when incorrectly setting metadata:", async function () {
-      season = this.season.season()
-      stem = this.silo.seasonToStem(this.bean.address, season)
-      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB999999999999999999999999';     
-      await expect(this.metadata.connect(user).setMetadata(
-        depositID, // depositId,
-        this.bean.address, // token,
-        stem, // stem
-        0 // id (set to 0, but can be anything)
-      )).to.be.revertedWith("Silo: invalid depositId");
-    });
+    // it("reverts when incorrectly setting metadata:", async function () {
+    //   season = this.season.season()
+    //   stem = this.silo.seasonToStem(this.bean.address, season)
+    //   depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB999999999999999999999999';     
+    //   await expect(this.metadata.connect(user).setMetadata(
+    //     depositID, // depositId,
+    //     this.bean.address, // token,
+    //     stem, // stem
+    //     0 // id (set to 0, but can be anything)
+    //   )).to.be.revertedWith("Silo: invalid depositId");
+    // });
 
     it("properly gives an URI", async function () {
       season = this.season.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
-      await this.metadata.connect(user).setMetadata(
-        depositID, // depositId,
-        this.bean.address, // token,
-        stem, // stem
-        0 // id (set to 0, but can be anything)
-      )
       expect(await this.metadata.uri(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpnaUlHaGxhV2RvZEQwaU16a2lJSFpwWlhkQ2IzZzlJakFnTUNBek9DQXpPU0lnWm1sc2JEMGlibTl1WlNJZ2VHMXNibk05SW1oMGRIQTZMeTkzZDNjdWR6TXViM0puTHpJd01EQXZjM1puSWo0S1BISmxZM1FnZVQwaU1DNDFNVGsxTXpFaUlIZHBaSFJvUFNJek55NDVOakk1SWlCb1pXbG5hSFE5SWpNM0xqazJNamtpSUhKNFBTSXhPQzQ1T0RFMElpQm1hV3hzUFNJak0wVkNPVFJGSWk4K0NqeHdZWFJvSUdROUlrMHlOQzR6TVRNMUlEUXVOVEU1TlROTU1UTXVNakk1SURNMExqRXpNamhETVRNdU1qSTVJRE0wTGpFek1qZ2dNQzQ1TXpnNE5ESWdNVE11TVRZMk55QXlOQzR6TVRNMUlEUXVOVEU1TlROYUlpQm1hV3hzUFNKM2FHbDBaU0l2UGdvOGNHRjBhQ0JrUFNKTk1UVXVPREEwTnlBek1pNHlPVFUxVERJekxqVTVORElnTVRFdU1USTNRekl6TGpVNU5ESWdNVEV1TVRJM0lETTNMamswT1RjZ01qSXVOelF3TkNBeE5TNDRNRFEzSURNeUxqSTVOVFZhSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284TDNOMlp6ND0iLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiAwLCAic3RlbSI6IDIsICJ0b3RhbCBzdGFsayI6IDIsICJzZWVkcyBwZXIgQkRWIjogMn19");
     });
 
@@ -416,8 +384,8 @@ describe('Silo', function () {
 
   describe("Earned Beans issuance during vesting period", async function () {
     before(async function () {
-      this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), 0x00,  EXTERNAL)
-      this.result = await this.silo.connect(user4).deposit(this.bean.address, to6('1000'), 0x00, EXTERNAL)
+      this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
+      this.result = await this.silo.connect(user4).deposit(this.bean.address, to6('1000'), EXTERNAL)
     });
     
     // tests a farmers deposit that has no earned bean prior

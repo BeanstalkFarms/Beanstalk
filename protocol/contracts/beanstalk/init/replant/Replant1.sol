@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
 // import "../../../libraries/Silo/LibBeanSilo.sol";
+import "../../AppStorageOld.sol";
 import "../../../C.sol";
 
 /**
@@ -54,7 +55,7 @@ import "../../../C.sol";
  **/
 contract Replant1 {
     using SafeMath for uint256;
-    AppStorage internal s;
+    AppStorageOld internal s;
 
     event BeanRemove(
         address indexed account,

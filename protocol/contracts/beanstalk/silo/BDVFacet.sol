@@ -27,13 +27,13 @@ contract BDVFacet {
     }
 
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
-        amount = LibUnripe.unripeToUnderlying(C.unripeLPAddress(), amount);
+        amount = LibUnripe.unripeToUnderlying(C.UNRIPE_LP, amount);
         amount = LibBeanMetaCurve.bdv(amount);
         return amount;
     }
 
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
-        return LibUnripe.unripeToUnderlying(C.unripeBeanAddress(), amount);
+        return LibUnripe.unripeToUnderlying(C.UNRIPE_BEAN, amount);
     }
 
     function wellBdv(address token, uint256 amount)

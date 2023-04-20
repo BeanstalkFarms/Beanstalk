@@ -25,8 +25,8 @@ contract InitBip8 {
     uint256 private constant beanstalkFarmsBudget = 1200000 * 1e6; // 1,200,000 Beans
 
     function init() external {
-        s.isBudget[beanSprout] = true;
-        s.isBudget[beanstalkFarms] = true;
+        s.deprecated_isBudget[beanSprout] = true;
+        s.deprecated_isBudget[beanstalkFarms] = true;
         C.bean().mint(beanSprout, beanSproutBudget);
         C.bean().mint(beanstalkFarms, beanstalkFarmsBudget);
     }

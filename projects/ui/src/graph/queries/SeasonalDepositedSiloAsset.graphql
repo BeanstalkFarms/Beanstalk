@@ -1,0 +1,22 @@
+query SeasonalDepositedSiloAsset(
+  $season_lte: Int,
+  $season_gt: Int,
+  $first: Int,
+  $siloAsset: String!
+) {
+  seasons: siloAssetHourlySnapshots(
+    where: {
+      season_lte: $season_lte,
+      season_gt:  $season_gt,
+      siloAsset: $siloAsset
+    }
+    first: $first
+    orderBy: season
+    orderDirection: desc
+  ) { 
+    id
+    season
+    createdAt
+    depositedAmount
+  }
+}

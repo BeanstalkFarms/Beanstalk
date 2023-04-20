@@ -1,0 +1,13 @@
+#import "../Proposal/Proposal.fragment.graphql"
+query Proposals($space_in: [String!]!, $state: String) {
+  proposals (
+    where: {
+      space_in: $space_in,
+      state: $state
+    },
+    orderBy: "created",
+    orderDirection: desc
+  ) {
+    ...Proposal
+  }
+}

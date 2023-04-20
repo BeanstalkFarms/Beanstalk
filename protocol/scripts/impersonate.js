@@ -19,7 +19,9 @@ const {
   CURVE_ZAP,
   STABLE_FACTORY,
   PRICE_DEPLOYER,
-  BEANSTALK
+  BEANSTALK,
+  BASE_FEE_CONTRACT,
+  ETH_USDC_UNISWAP_V3
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -43,7 +45,7 @@ async function curve() {
     JSON.parse(threeCurveJson).deployedBytecode,
   ]);
 
-  let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveFactory.sol/MockCurveFactory.json`);
+  let curveFactoryJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockCurveFactory.sol/MockCurveFactory.json`);
   await network.provider.send("hardhat_setCode", [
     STABLE_FACTORY,
     JSON.parse(curveFactoryJson).deployedBytecode,
@@ -56,7 +58,7 @@ async function curve() {
   const curveStableFactory = await ethers.getContractAt("MockCurveFactory", STABLE_FACTORY);
   await curveStableFactory.set_coins(BEAN_3_CURVE, [BEAN, THREE_CURVE, ZERO_ADDRESS, ZERO_ADDRESS]);
 
-  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/Curve/MockCurveZap.sol/MockCurveZap.json`);
+  let curveZapJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockCurveZap.sol/MockCurveZap.json`);
   await network.provider.send("hardhat_setCode", [
     CURVE_ZAP,
     JSON.parse(curveZapJson).deployedBytecode,
@@ -217,6 +219,31 @@ async function impersonateBeanstalk(owner) {
   await beanstalk.mockInit(owner);
 }
 
+async function blockBasefee() {
+  let basefeeJson = fs.readFileSync(`./artifacts/contracts/mocks/MockBlockBasefee.sol/MockBlockBasefee.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    BASE_FEE_CONTRACT,
+    JSON.parse(basefeeJson).deployedBytecode,
+  ]);
+
+  const basefee = await ethers.getContractAt("MockBlockBasefee", BASE_FEE_CONTRACT);
+  await basefee.setAnswer(20 * Math.pow(10, 9));
+}
+
+async function ethUsdcUniswap() {
+  const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
+  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
+  await mockUniswapV3Factory.deployed()
+  const ethUdscPool = await mockUniswapV3Factory.callStatic.createPool(WETH, USDC, 3000)
+  await mockUniswapV3Factory.createPool(WETH, USDC, 3000)
+  const bytecode = await ethers.provider.getCode(ethUdscPool)
+  await network.provider.send("hardhat_setCode", [
+    ETH_USDC_UNISWAP_V3,
+    bytecode,
+  ]);
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -228,4 +255,6 @@ exports.impersonateUnripe = unripe
 exports.impersonateFertilizer = fertilizer
 exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
+exports.impersonateBlockBasefee = blockBasefee;
+exports.impersonateEthUsdcUniswap = ethUsdcUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk

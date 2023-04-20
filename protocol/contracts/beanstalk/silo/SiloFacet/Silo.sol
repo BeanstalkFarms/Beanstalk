@@ -7,9 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
-import "~/libraries/LibBytes.sol";
 
 /**
  * @title Silo
@@ -28,7 +25,6 @@ contract Silo is SiloExit {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
-
 
     //////////////////////// EVENTS ////////////////////////    
 
@@ -112,7 +108,7 @@ contract Silo is SiloExit {
 
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
-        s.a[account].deltaRoots = 0;
+        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
         if (beans == 0) return 0;
         
         // Reduce the Silo's supply of Earned Beans.
@@ -122,9 +118,10 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.beanAddress(),
-            LibTokenSilo.stemTipForToken(IERC20(token)),
+            LibTokenSilo.stemTipForToken(token),
             beans, // amount
-            beans // bdv
+            beans, // bdv
+            LibTokenSilo.Transfer.emitTransferSingle
         );
         s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 
@@ -134,6 +131,7 @@ contract Silo is SiloExit {
         // The following lines allocate Earned Stalk that has already been minted to `account`.
         uint256 stalk = beans.mul(C.getStalkPerBean());
         s.a[account].s.stalk = accountStalk.add(stalk);
+
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
