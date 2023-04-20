@@ -3,11 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibCurveConvert.sol";
-import "../../C.sol";
-import "../../interfaces/IBean.sol";
-import "../LibUnripe.sol";
-import "~/libraries/LibInternal.sol";
+import {C} from "~/C.sol";
+import {IBean} from "~/interfaces/IBean.sol";
+import {LibCurveConvert} from "./LibCurveConvert.sol";
+import {LibUnripe} from "../LibUnripe.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @title LibUnripeConvert
@@ -26,8 +27,8 @@ library LibUnripeConvert {
             uint256 amountIn
         )
     {
-        tokenOut = C.unripeBeanAddress();
-        tokenIn = C.unripeLPAddress();
+        tokenOut = C.UNRIPE_BEAN;
+        tokenIn = C.UNRIPE_LP;
         (uint256 lp, uint256 minBeans) = convertData.basicConvert();
 
         uint256 minAmountOut = LibUnripe
@@ -65,8 +66,8 @@ library LibUnripeConvert {
             uint256 amountIn
         )
     {
-        tokenIn = C.unripeBeanAddress();
-        tokenOut = C.unripeLPAddress();
+        tokenIn = C.UNRIPE_BEAN;
+        tokenOut = C.UNRIPE_LP;
         (uint256 beans, uint256 minLP) = convertData.basicConvert();
 
         uint256 minAmountOut = LibUnripe
