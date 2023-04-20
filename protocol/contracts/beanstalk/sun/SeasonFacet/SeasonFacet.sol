@@ -114,7 +114,6 @@ contract SeasonFacet is Weather {
      * @dev Moves the Season forward by 1.
      */
     function stepSeason() private {
-        s.season.timestamp = block.timestamp;
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season());

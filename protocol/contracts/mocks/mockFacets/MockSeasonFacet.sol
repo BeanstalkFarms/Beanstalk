@@ -9,6 +9,8 @@ import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
 import "~/libraries/LibBytes.sol";
 
+import {LibAppStorage} from "~/libraries/LibAppStorage.sol";
+
 /**
  * @author Publius
  * @title Mock Season Facet
@@ -217,7 +219,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.season;
         delete s.fundraiserIndex;
         s.season.start = block.timestamp;
-        s.season.timestamp = uint32(block.timestamp % 2 ** 32);
+        s.season.timestamp = block.timestamp;
         s.s.stalk = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
@@ -264,18 +266,20 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function captureCurveE() external returns (int256 deltaB) {
-        (deltaB,) = LibCurveOracle.capture();
+        (deltaB, ) = LibCurveMinting.capture();
+        s.season.timestamp = block.timestamp;
         emit DeltaB(deltaB);
     }
 
     function updateTWAPCurveE() external returns (uint256[2] memory balances) {
-        (balances, s.co.balances) = LibCurveOracle.twap();
-        s.co.timestamp = block.timestamp;
+        (balances, s.co.balances) = LibCurveMinting.twap();
+        s.season.timestamp = block.timestamp;
         emit UpdateTWAPs(balances);
     }
 
-    function curveOracle() external view returns (Storage.CurveMetapoolOracle memory) {
-        return s.co;
+    function curveOracle() external view returns (Storage.CurveMetapoolOracle memory co) {
+        co = s.co;
+        co.timestamp = s.season.timestamp; // use season timestamp for oracle
     }
 
     function resetPools(address[] calldata pools) external {

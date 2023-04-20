@@ -41,6 +41,6 @@ contract BDVFacet {
         view
         returns (uint256)
     {
-        return LibWellPrice.bdv(token, 0, 0, amount);
+        return LibWellPrice.bdv(token, amount);
     }
 }

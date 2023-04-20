@@ -134,7 +134,7 @@ describe('Well Convert', function () {
       it('depost and convert below max', async function () {
         const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.well.address)
         await this.bean.connect(owner).approve(this.beanstalk.address, to6('100000'))
-        await this.beanstalk.connect(owner).deposit(BEAN, to6('100000'), '0x', 0)
+        await this.beanstalk.connect(owner).deposit(BEAN, to6('100000'), 0)
         await this.convert.connect(owner).convert(
           convertData,
           ['0'],
@@ -208,7 +208,7 @@ describe('Well Convert', function () {
 
       it('depost and convert below max', async function () {
         const convertData = ConvertEncoder.convertWellLPToBeans(to18('2000'), to6('100000'), this.well.address)
-        await this.beanstalk.connect(owner).deposit(this.well.address, to18('2000'), '0x', 0)
+        await this.beanstalk.connect(owner).deposit(this.well.address, to18('2000'), 0)
         await this.convert.connect(owner).convert(
           convertData,
           ['0'],

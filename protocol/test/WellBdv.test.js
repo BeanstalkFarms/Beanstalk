@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS } = require('./utils/constants');
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk } = require('../utils/contracts.js');
 const { getWellContractFactory, whitelistWell } = require('../utils/well.js');
@@ -32,6 +32,7 @@ describe('Well BDV', function () {
 
     await this.well.setPumps([[this.pump.address, '0x']])
     await this.well.setWellFunction([this.wellFunction.address, '0x'])
+    await this.well.setTokens([BEAN, WETH])
     this.pump.setInstantaneousReserves([to18('1'), to18('1')])
     await whitelistWell(this.well.address, '10000', to6('4'))
   

@@ -69,7 +69,6 @@ describe('Season', function () {
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
 
-            console.log(await this.beanMetapool.get_previous_balances())
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
             expect(await bean.balanceOf(owner.address)).to.be.equal('7366188')
@@ -84,7 +83,6 @@ describe('Season', function () {
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
 
-            console.log(await this.beanMetapool.get_previous_balances())
             await setToSecondsAfterHour(0)
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)

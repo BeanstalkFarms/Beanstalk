@@ -501,6 +501,7 @@ contract Storage {
  * @param recapitalized The nubmer of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
+ * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -553,4 +554,5 @@ struct AppStorage {
     uint256 recapitalized;
     uint256 isFarm;
     address ownerCandidate;
+    mapping(address => bytes) wellOracleSnapshots;
 }

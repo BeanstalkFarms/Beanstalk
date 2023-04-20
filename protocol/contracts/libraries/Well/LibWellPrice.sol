@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "@wells/interfaces/IWell.sol";
 import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
+import {LibWell} from "~/libraries/Well/LibWell.sol";
 
 /**=
  * @title LibWellPrice handles fetching the price of ERC-20 tokens in a Well.
@@ -21,11 +22,12 @@ library LibWellPrice {
 
     function bdv(
         address well,
-        uint beanIndex,
-        uint pumpIndex,
         uint amount
     ) internal view returns (uint _bdv) {
-        Call memory pump = IWell(well).pumps()[pumpIndex];
+        uint beanIndex = LibWell.getBeanIndexFromWell(well);
+
+        // TODO – set Pump index in storage or use default Pumps?
+        Call memory pump = IWell(well).pumps()[0];
         uint[] memory reserves = IInstantaneousPump(pump.target).readInstantaneousReserves(well, pump.data);
         Call memory wellFunction = IWell(well).wellFunction();
         uint lpTokenSupplyBefore = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);

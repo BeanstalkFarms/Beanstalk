@@ -72,7 +72,6 @@ library LibWellConvert {
     /// @param amountIn The amount of the LP token of `well` to remove as BEAN.
     /// @return beans The amount of BEAN received for removing `amountIn` LP tokens.
     function getBeanAmountOut(address well, uint256 amountIn) internal view returns(uint256 beans) {
-        IERC20[] memory tokens = IWell(well).tokens();
         beans = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(C.beanAddress()));
     }
 

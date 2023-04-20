@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IBean.sol";
 import "../MockToken.sol";
 import "../../libraries/Curve/LibCurve.sol";
-import "../../libraries/Oracle/LibCurveOracle.sol";
+import "../../libraries/Minting/LibCurveMinting.sol";
 
 /**
  * @author Publius + LeoFib
@@ -138,9 +138,8 @@ contract MockMeta3Curve {
     }
 
     function get_bean_price() external view returns (uint256 price) {
-        (uint256[2] memory twa_balances, ) = LibCurveOracle.twap();
         uint256[2] memory rates = get_rates();
-        uint256[2] memory xp = LibCurve.getXP(twa_balances, rates);
+        uint256[2] memory xp = LibCurve.getXP(balances, rates);
         uint256 D = LibCurve.getD(xp, a);
         price = LibCurve.getPrice(xp, rates, a, D);
     }

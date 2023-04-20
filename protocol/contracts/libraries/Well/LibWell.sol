@@ -20,6 +20,10 @@ import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
 
 library LibWell {
 
+    // TODO: set
+    address constant internal BEANSTALK_PUMP = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
+    uint256 constant private MIN_BEANS = 1e11; // 10,000 Beans
+
     function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
         uint[] memory ratios,
         uint beanIndex
