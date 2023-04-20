@@ -117,7 +117,7 @@ contract Silo is SiloExit {
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
-            C.beanAddress(),
+            C.BEAN,
             LibTokenSilo.stemTipForToken(token),
             beans, // amount
             beans, // bdv

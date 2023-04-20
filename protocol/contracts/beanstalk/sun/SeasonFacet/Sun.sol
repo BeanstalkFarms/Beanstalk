@@ -194,8 +194,8 @@ contract Sun is Oracle {
         s.newEarnedStalk = uint128(seasonStalk);
         s.vestingPeriodRoots = 0;
 
-        s.siloBalances[C.beanAddress()].deposited = s
-            .siloBalances[C.beanAddress()]
+        s.siloBalances[C.BEAN].deposited = s
+            .siloBalances[C.BEAN]
             .deposited
             .add(amount);
     }

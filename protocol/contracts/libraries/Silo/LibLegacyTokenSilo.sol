@@ -533,13 +533,13 @@ library LibLegacyTokenSilo {
      * constants are used in favor of reading from storage for gas savings.
      */
     function getSeedsPerToken(address token) internal pure returns (uint256) {
-        if (token == C.beanAddress()) {
+        if (token == C.BEAN) {
             return 2;
-        } else if (token == C.unripeBeanAddress()) {
+        } else if (token == C.UNRIPE_BEAN) {
             return 2;
-        } else if (token == C.unripeLPAddress()) {
+        } else if (token == C.UNRIPE_LP) {
             return 4;
-        } else if (token == C.curveMetapoolAddress()) {
+        } else if (token == C.CURVE_BEAN_METAPOOL) {
             return 4;
         }
         return 0;

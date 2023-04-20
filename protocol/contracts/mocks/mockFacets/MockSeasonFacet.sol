@@ -302,22 +302,22 @@ contract MockSeasonFacet is SeasonFacet {
 
         uint32 currentSeason = s.season.current;
 
-        s.ss[C.beanAddress()].stalkEarnedPerSeason = 2*1e6;
-        s.ss[C.beanAddress()].stalkIssuedPerBdv = 10000;
-        s.ss[C.beanAddress()].milestoneSeason = currentSeason;
-        s.ss[C.beanAddress()].milestoneStem = 0;
+        s.ss[C.BEAN].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.ss[C.BEAN].milestoneSeason = currentSeason;
+        s.ss[C.BEAN].milestoneStem = 0;
 
 
-        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4*1e6;
-        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 10000;
-        s.ss[C.curveMetapoolAddress()].milestoneSeason = currentSeason;
-        s.ss[C.curveMetapoolAddress()].milestoneStem = 0;
+        s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = 4*1e6;
+        s.ss[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = 10000;
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
 
 
-        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2*1e6;
-        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 10000;
-        s.ss[C.unripeBeanAddress()].milestoneSeason = currentSeason;
-        s.ss[C.unripeBeanAddress()].milestoneStem = 0;
+        s.ss[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.ss[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
+        s.ss[C.UNRIPE_BEAN].milestoneStem = 0;
 
 
         s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;

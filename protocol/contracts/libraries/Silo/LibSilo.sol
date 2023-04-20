@@ -457,7 +457,7 @@ library LibSilo {
                 previousPPR = lastRainPPR;
                 plenty = plenty.add(
                     plentyPerRoot.mul(s.a[account].sop.roots).div(
-                        C.getSopPrecision()
+                        C.SOP_PRECISION
                     )
                 );
             }
@@ -471,7 +471,7 @@ library LibSilo {
             uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
             plenty = plenty.add(
                 plentyPerRoot.mul(s.a[account].roots).div(
-                    C.getSopPrecision()
+                    C.SOP_PRECISION
                 )
             );
         }
