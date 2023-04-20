@@ -72,25 +72,6 @@ contract MetadataFacet is IERC1155Receiver {
     }
 
     /**
-     * @notice sets the metadata of a given depositId.
-     * @param depositId - the id of the deposit
-     * 
-     * @dev the depositId is the concatination of the token address and the stem.
-     * the metadata struct is somewhat redundant for ERC20 deposits, but is left here commented out 
-     * to use in the future. 
-     */
-    // function setMetadata(bytes32 depositId) external returns (bool) {
-    //     (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
-    //     Storage.Metadata memory depositMetadata;
-    //     depositMetadata.token = token;
-    //     depositMetadata.id = 0;
-    //     depositMetadata.stem = stem;
-    //     s.metadata[depositId] = depositMetadata;
-    //     emit URI("", uint256(depositId));
-    //     return true;
-    // }
-
-    /**
      * @notice returns the metadata of a given depositId.
      * 
      * @dev since the silo only supports ERC20 deposits, the metadata can be derived from the depositId.
