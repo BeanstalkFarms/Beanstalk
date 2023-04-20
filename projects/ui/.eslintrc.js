@@ -4,21 +4,21 @@ module.exports = {
     browser: true,
     es2021: true,
     webextensions: true,
-    'jest/globals': true
+    'jest/globals': true,
   },
   globals: {
     page: 'readonly',
-    JSX: true
+    JSX: true,
   },
   // https://typescript-eslint.io/docs/linting/
   root: true,
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
-      jsx: true
+      jsx: true,
     },
     ecmaVersion: 12,
-    sourceType: 'module'
+    sourceType: 'module',
   },
   ignorePatterns: [
     'src/constants/abi/**/*.json',
@@ -35,63 +35,53 @@ module.exports = {
   extends: [
     'plugin:react/recommended',
     'airbnb',
-    'plugin:storybook/recommended'
+    'plugin:storybook/recommended',
+
+    // This is the eslint-config-prettier plugin, which DISABLES any styling rule
+    // that conflicts with prettier, that is added by a plugin above this
+    // This should be the last entry in extends.
+    // https://github.com/prettier/eslint-config-prettier
+    'prettier',
   ],
   rules: {
     // -- Tree-shaking
     // https://mui.com/material-ui/guides/minimizing-bundle-size/#option-1
-    'no-restricted-imports': ['error', {
-      patterns: ['@mui/*/*/*', '!@mui/material/test-utils/*']
-    }],
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: ['@mui/*/*/*', '!@mui/material/test-utils/*'],
+      },
+    ],
 
     /// Automatically remove unused imports
     /// https://github.com/sweepline/eslint-plugin-unused-imports#usage
     '@typescript-eslint/no-unused-vars': 'off',
     'no-unused-vars': 'off',
-    'unused-imports/no-unused-imports': 'error',  // fixable
-    'unused-imports/no-unused-vars': [ // NOT auto-fixable
+    'unused-imports/no-unused-imports': 'error', // fixable
+    'unused-imports/no-unused-vars': [
+      // NOT auto-fixable
       'warn',
-      { 
+      {
         vars: 'all',
         varsIgnorePattern: '^_',
         args: 'after-used',
-        argsIgnorePattern: '^_'
-      }
+        argsIgnorePattern: '^_',
+      },
     ],
 
     // -- Stylistic
     'react/no-unused-prop-types': 'warn',
-    'arrow-parens': 'warn',
-    semi: 'warn',
-    'quote-props': 'warn',
     'import/order': 'warn',
-    'space-infix-ops': 'warn',
-    'react/jsx-indent': 'warn',
-    quotes: ['warn', 'single'],
     'comma-dangle': 0,
-    'no-multiple-empty-lines': 'warn',
-    'jsx-quotes': ['error', 'prefer-double'],
     'react/jsx-curly-brace-presence': 'warn',
-    'eol-last': 'warn',
     'key-spacing': 0,
-    // I like to line up my values sometimes
     'no-multi-spaces': 0,
     'react/jsx-boolean-value': 'warn',
-    'react/jsx-props-no-multi-spaces': 'warn',
     'spaced-comment': 'warn',
     'brace-style': 0,
-    'keyword-spacing': 'warn',
     'jsx-a11y/anchor-is-valid': 0,
     'react/self-closing-comp': 'warn',
     'react/jsx-no-duplicate-props': ['warn', { ignoreCase: false }],
-    // 'comma-dangle': ['warn', {
-    //   arrays: 'always-multiline',
-    //   imports: 'always-multiline',
-    //   exports: 'always-multiline',
-    //   functions: 'never',
-    //   objects: 'always-multiline',
-    // }],
-    // -- Space efficiency
     'arrow-body-style': 'warn',
     'no-trailing-spaces': 0,
 
@@ -99,9 +89,12 @@ module.exports = {
     'react/button-has-type': 0,
     'react/require-default-props': 0,
     'max-classes-per-file': 0,
-    'react/jsx-filename-extension': ['error', {
-      extensions: ['.ts', '.tsx']
-    }],
+    'react/jsx-filename-extension': [
+      'error',
+      {
+        extensions: ['.ts', '.tsx'],
+      },
+    ],
     'no-continue': 0,
     'import/extensions': 0,
     'newline-per-chained-call': 0,
@@ -113,10 +106,13 @@ module.exports = {
     'consistent-return': 0,
     'linebreak-style': 0,
     'no-param-reassign': 0,
-    'no-unused-expressions': ['error', {
-      allowShortCircuit: true,
-      allowTernary: true
-    }],
+    'no-unused-expressions': [
+      'error',
+      {
+        allowShortCircuit: true,
+        allowTernary: true,
+      },
+    ],
     'max-len': 0,
     'react/no-array-index-key': 0,
     'no-mixed-operators': 0,
@@ -139,35 +135,35 @@ module.exports = {
     'no-nested-ternary': 0,
     'react/jsx-wrap-multilines': 0,
     'no-await-in-loop': 0,
-    'no-restricted-syntax': ['error', 'ForInStatement', 'LabeledStatement', 'WithStatement'],
+    'no-restricted-syntax': [
+      'error',
+      'ForInStatement',
+      'LabeledStatement',
+      'WithStatement',
+    ],
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': 'error',
     '@typescript-eslint/no-extra-non-null-assertion': ['error'],
     'no-console': 'off',
     'object-shorthand': 0,
     'comma-spacing': 0,
-    'react/jsx-tag-spacing': 'warn',
     camelcase: 0,
-    // disable because generated files aren't camel-cased
-    'padded-blocks': 'warn',
     'import/no-useless-path-segments': 'warn',
-    'import/no-unresolved': 'error'
+    'import/no-unresolved': 'error',
   },
   settings: {
     'import/resolver': {
       typescript: {
         project: ['projects/ui/tsconfig.json'],
       },
-    }
+    },
   },
   overrides: [
     {
-      files: [
-        '**/*.stories.*'
-      ],
+      files: ['**/*.stories.*'],
       rules: {
-        'import/no-anonymous-default-export': 'off'
-      }
-    }
+        'import/no-anonymous-default-export': 'off',
+      },
+    },
   ],
 };
