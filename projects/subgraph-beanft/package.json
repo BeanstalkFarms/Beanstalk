@@ -8,7 +8,9 @@
     "create-local": "graph create --node http://localhost:8020/ beanft",
     "remove-local": "graph remove --node http://localhost:8020/ beanft",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 beanft",
-    "deploy-hosted": "graph deploy --product hosted-service cujowolf/bean",
+    "create-hosted": "graph create --node http://graph.node.bean.money:8020/ beanft",
+    "remove-hosted": "graph remove --node http://graph.node.bean.money:8020/ beanft",
+    "deploy-hosted": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanft",
     "test": "graph test"
   },
   "dependencies": {
