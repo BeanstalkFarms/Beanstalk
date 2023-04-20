@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import {IBean} from "../../interfaces/IBean.sol";
 import {AppStorage} from "../AppStorage.sol";
 import "~/C.sol";
-import {IERC1155} from "~/interfaces/IERC1155.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {LibDiamond} from "~/libraries/LibDiamond.sol";
 
 

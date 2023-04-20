@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
 import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
-import {IERC1155} from "~/interfaces/IERC1155.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
 import {LibBytes64} from "~/libraries/LibBytes64.sol";
 import {LibStrings} from "~/libraries/LibStrings.sol";
