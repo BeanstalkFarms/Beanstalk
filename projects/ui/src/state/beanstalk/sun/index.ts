@@ -35,8 +35,8 @@ export const getNextExpectedSunrise = () => {
   return now.set({ minute: 0, second: 0, millisecond: 0 }).plus({ hour: 1 });
 };
 
-// eslint-disable-next-line no-undef
 export const parseSeasonResult = (
+  // eslint-disable-next-line no-undef
   result: Awaited<ReturnType<Beanstalk['time']>>
 ): Sun['season'] => ({
   current: bigNumberResult(result.current), /// The current Season in Beanstalk.
