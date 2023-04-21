@@ -3,6 +3,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/SafeCast.sol";
 import "~/libraries/Decimal.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibFertilizer.sol";
@@ -17,6 +18,7 @@ import "./Oracle.sol";
  * @notice Sun controls the minting of new Beans to Fertilizer, the Field, and the Silo.
  */
 contract Sun is Oracle {
+    using SafeCast for uint256;
     using SafeMath for uint256;
     using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
@@ -134,7 +136,7 @@ contract Sun is Oracle {
 
             // If there is no more fertilizer, end
             if (!LibFertilizer.pop()) {
-                s.bpf = uint128(firstEndBpf);
+                s.bpf = uint128(firstEndBpf); // SafeCast unnecessary here.
                 s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
                 require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
                 return newFertilized;
@@ -179,6 +181,7 @@ contract Sun is Oracle {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
+        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
         s.earnedBeans = s.earnedBeans.add(uint128(amount));
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
@@ -191,7 +194,7 @@ contract Sun is Oracle {
         // of Earned stalk that is allocated during the season. 
         // This is used in _balanceOfEarnedBeans() to linearly distrubute 
         // beans over the course of the season.
-        s.newEarnedStalk = uint128(seasonStalk);
+        s.newEarnedStalk = seasonStalk.toUint128();
         s.vestingPeriodRoots = 0;
 
         s.siloBalances[C.BEAN].deposited = s
@@ -224,7 +227,7 @@ contract Sun is Oracle {
 
     
     function setSoil(uint256 amount) internal {
-        s.f.soil = uint128(amount);
+        s.f.soil = amount.toUint128();
         emit Soil(s.season.current, amount);
     }
 }
