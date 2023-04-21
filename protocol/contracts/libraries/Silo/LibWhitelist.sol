@@ -27,20 +27,20 @@ library LibWhitelist {
      * ```
      * 
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
-     * @param stalk The Stalk per BDV received from depositing `token`.
+     * @param stalkEarnedPerBdv The Stalk per BDV received from depositing `token`.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
-        uint256 stalk
+        uint256 stalkEarnedPerBdv
     );
 
     /**
      * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
      * @param token ERC-20 token being updated in the Silo Whitelist.
      * @param stalkEarnedPerSeason new stalk per bdv per season value for this token.
-     * @param season the current season.
+     * @param season the season that the new stalk per bdv per season value becomes active (The current season).
      */
     event UpdatedStalkPerBdvPerSeason(
         address indexed token,
