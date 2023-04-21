@@ -90,26 +90,6 @@ library LibWhitelist {
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
     }
 
-
-    //function not needed because we'll manually setup these initial values from the bip script?
-    //however it's referenced in the InitWhitelist.sol code
-    function whitelistTokenLegacy(
-        address token,
-        bytes4 selector,
-        uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
-
-        s.ss[token].milestoneSeason = s.season.current;
-
-        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
-    }
-
     /**
      * @dev Remove an ERC-20 token from the Silo Whitelist.
      */

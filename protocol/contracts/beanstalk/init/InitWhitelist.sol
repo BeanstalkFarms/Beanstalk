@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Silo/LibWhitelist.sol";
+import "~/libraries/Silo/LibLegacyWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 /**
@@ -41,7 +41,7 @@ contract InitWhitelist {
     }
 
     function whitelistBean3Crv() internal {
-        LibWhitelist.whitelistTokenLegacy(
+        LibLegacyWhitelist.whitelistToken(
             C.CURVE_BEAN_METAPOOL,
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
@@ -50,7 +50,7 @@ contract InitWhitelist {
     }
 
     function whitelistBean() internal {
-        LibWhitelist.whitelistTokenLegacy(
+        LibLegacyWhitelist.whitelistToken(
             C.BEAN,
             IBS.beanToBDV.selector,
             BEAN_STALK,
@@ -59,7 +59,7 @@ contract InitWhitelist {
     }
 
     function whitelistUnripeBean() internal {
-        LibWhitelist.whitelistTokenLegacy(
+        LibLegacyWhitelist.whitelistToken(
             C.UNRIPE_BEAN,
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
@@ -68,7 +68,7 @@ contract InitWhitelist {
     }
 
     function whitelistUnripeLP() internal {
-        LibWhitelist.whitelistTokenLegacy(
+        LibLegacyWhitelist.whitelistToken(
             C.UNRIPE_LP,
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
