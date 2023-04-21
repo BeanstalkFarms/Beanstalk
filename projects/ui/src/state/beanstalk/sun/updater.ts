@@ -6,14 +6,14 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
-import { getNextExpectedSunrise } from '.';
+import { getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
   setAwaitingSunrise,
   setNextSunrise,
   setRemainingUntilSunrise,
-  updateSeason,
-  updateSeasonTime
+  updateSeasonResult,
+  updateSeasonTime,
 } from './actions';
 
 export const useSun = () => {
@@ -23,15 +23,19 @@ export const useSun = () => {
   const fetch = useCallback(async () => {
     try {
       if (beanstalk) {
-        console.debug(`[beanstalk/sun/useSun] FETCH (contract = ${beanstalk.address})`);
-        const [
-          season, seasonTime
-        ] = await Promise.all([
-          beanstalk.season().then(bigNumberResult),       /// the current season  
-          beanstalk.seasonTime().then(bigNumberResult),   /// the season that it could be if sunrise was called
+        console.debug(
+          `[beanstalk/sun/useSun] FETCH (contract = ${beanstalk.address})`
+        );
+        const [seasonTime, season] = await Promise.all([
+          beanstalk.seasonTime().then(bigNumberResult), /// the season that it could be if sunrise was called
+          beanstalk.time().then(parseSeasonResult), /// SeasonStruct
         ] as const);
-        console.debug(`[beanstalk/sun/useSun] RESULT: season = ${season}, seasonTime = ${seasonTime}`);
-        dispatch(updateSeason(season));
+
+        console.debug(`[beanstalk/sun/useSun] time RESULT: = ${season}`);
+        console.debug(
+          `[beanstalk/sun/useSun] season = ${season.current}, seasonTime = ${seasonTime}`
+        );
+        dispatch(updateSeasonResult(season));
         dispatch(updateSeasonTime(seasonTime));
         return [season, seasonTime] as const;
       }
@@ -41,11 +45,8 @@ export const useSun = () => {
       console.error(e);
       return [undefined, undefined] as const;
     }
-  }, [
-    dispatch,
-    beanstalk,
-  ]);
-  
+  }, [dispatch, beanstalk]);
+
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useSun] clear');
     dispatch(resetSun());
@@ -56,11 +57,15 @@ export const useSun = () => {
 
 const SunUpdater = () => {
   const [fetch, clear] = useSun();
-  const dispatch  = useDispatch();
-  const season    = useSeason();
-  const next      = useSelector<AppState, DateTime>((state) => state._beanstalk.sun.sunrise.next);
-  const awaiting  = useSelector<AppState, boolean>((state) => state._beanstalk.sun.sunrise.awaiting);
-  
+  const dispatch = useDispatch();
+  const season = useSeason();
+  const next = useSelector<AppState, DateTime>(
+    (state) => state._beanstalk.sun.sunrise.next
+  );
+  const awaiting = useSelector<AppState, boolean>(
+    (state) => state._beanstalk.sun.sunrise.awaiting
+  );
+
   useEffect(() => {
     if (awaiting === false) {
       /// Setup timer. Count down from now until the start
@@ -75,18 +80,20 @@ const SunUpdater = () => {
         }
       }, 1000);
       return () => clearInterval(i);
-    } 
+    }
     /// When awaiting sunrise, check every 3 seconds to see
     /// if the season has incremented bumped.
     const i = setInterval(() => {
       (async () => {
         const [newSeason] = await fetch();
-        if (newSeason?.gt(season)) {
+        if (newSeason?.current?.gt(season)) {
           const _next = getNextExpectedSunrise();
           dispatch(setAwaitingSunrise(false));
           dispatch(setNextSunrise(_next));
           dispatch(setRemainingUntilSunrise(_next.diffNow()));
-          toast.success(`The Sun has risen. It is now Season ${newSeason.toString()}.`);
+          toast.success(
+            `The Sun has risen. It is now Season ${newSeason.toString()}.`
+          );
         }
       })();
     }, 3000);
@@ -97,10 +104,7 @@ const SunUpdater = () => {
   useEffect(() => {
     clear();
     fetch();
-  }, [
-    fetch,
-    clear
-  ]);
+  }, [fetch, clear]);
 
   return null;
 };
