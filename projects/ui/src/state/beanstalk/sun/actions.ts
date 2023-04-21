@@ -23,3 +23,7 @@ export const setRemainingUntilSunrise = createAction<
 >('beanstalk/sun/setRemainingUntilSunrise');
 
 export const resetSun = createAction('beanstalk/sun/reset');
+
+export const updateMorningBlock = createAction<BigNumber>(
+  'beanstalk/sun/updateMorningBlock'
+);

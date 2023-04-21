@@ -23,11 +23,12 @@ export type Sun = {
     raining: boolean;
     fertilizing: boolean;
     sunriseBlock: BigNumber;
-    abovePeg: boolean;
+    abovePeg: boolean | undefined;
     start: BigNumber;
     period: BigNumber;
     timestamp: BigNumber;
   };
+  morningBlock: BigNumber;
 };
 
 export const getNextExpectedSunrise = () => {

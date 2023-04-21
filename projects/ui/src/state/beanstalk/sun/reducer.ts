@@ -8,6 +8,7 @@ import {
   updateSeasonTime,
   resetSun,
   updateSeasonResult,
+  updateMorningBlock,
 } from './actions';
 
 const getInitialState = () => {
@@ -33,6 +34,7 @@ const getInitialState = () => {
       period: NEW_BN,
       timestamp: NEW_BN,
     },
+    morningBlock: NEW_BN,
   };
 };
 
@@ -55,6 +57,9 @@ export default createReducer(initialState, (builder) =>
     })
     .addCase(setRemainingUntilSunrise, (state, { payload }) => {
       state.sunrise.remaining = payload;
+    })
+    .addCase(updateMorningBlock, (state, { payload }) => {
+      state.morningBlock = payload;
     })
 );
 
@@ -86,3 +91,8 @@ export const selectSop = createSelector(selectSelf, (state) => ({
   lastSop: state.season.lastSop,
   lastSopSeason: state.season.lastSopSeason,
 }));
+
+export const selectMorningBlock = createSelector(
+  selectSelf,
+  (state) => state.morningBlock
+);
