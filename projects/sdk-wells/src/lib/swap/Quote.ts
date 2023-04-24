@@ -15,6 +15,12 @@ export type QuotePrepareResult = {
   doApproval?: () => Promise<ContractTransaction>;
 };
 
+export type QuoteResult = {
+  amount: TokenValue;
+  doSwap: () => Promise<ContractTransaction>;
+  doApproval?: () => Promise<ContractTransaction>;
+};
+
 export class Quote {
   private readonly sdk: WellsSDK;
   private readonly depot: Depot;
@@ -53,11 +59,11 @@ export class Quote {
    * @param amountIn The amount of `fromToken` to use for a quote.
    * @returns The amount of `toToken` you will receive in exchange for `amountIn` of `fromToken`
    */
-  async quoteForward(amountIn: number | TokenValue, slippage: number) {
+  async quoteForward(amountIn: number | TokenValue, recipient: string, slippage: number): Promise<QuoteResult> {
     if (typeof amountIn == "number") {
       amountIn = this.fromToken.amount(amountIn);
     }
-    return this.doQuote(amountIn, Direction.FORWARD, slippage);
+    return this.doQuote(amountIn, Direction.FORWARD, recipient, slippage);
   }
 
   /**
@@ -66,51 +72,47 @@ export class Quote {
    * @param amountOut The amount of `toToken` to use for a quote.
    * @returns The amount of `fromToken` you will need to spend to receive `amountOut` of `toToken`
    */
-  async quoteReverse(amountOut: number | TokenValue, slippage: number) {
+  async quoteReverse(amountOut: number | TokenValue, recipient: string, slippage: number): Promise<QuoteResult> {
     if (typeof amountOut == "number") {
       amountOut = this.toToken.amount(amountOut);
     }
-    return this.doQuote(amountOut, Direction.REVERSE, slippage);
+    return this.doQuote(amountOut, Direction.REVERSE, recipient, slippage);
   }
 
-  private async doQuote(amount: TokenValue, direction: Direction, slippage: number): Promise<TokenValue> {
+  private async doQuote(amount: TokenValue, direction: Direction, recipient: string, slippage: number): Promise<QuoteResult> {
     if (!slippage) throw new Error("Must supply slippage when doing a quote");
+
     this.amountUsedForQuote = amount;
     this.direction = direction;
     this.slippage = slippage;
 
     const fwd = direction === Direction.FORWARD;
+    if (fwd) {
+      console.log(`QUOTING: ${amount.toHuman()} ${this.fromToken.symbol} => ? ${this.toToken.symbol}`);
+    } else {
+      console.log(`QUOTING: ? ${this.fromToken.symbol} => ${amount.toHuman()} ${this.toToken.symbol}`);
+    }
+
     const steps = fwd ? this.steps : [...this.steps].reverse();
     const isMultiReverse = !fwd && steps.length > 1;
-    console.log("Is Multi Reverse Quote: ", isMultiReverse);
 
     let prevQuote: TokenValue = amount;
     let prevQuoteWSlippage: TokenValue = amount;
     for (const step of steps) {
-      console.log("Quote Step:", step.fromToken.symbol, " -> ", step.toToken.symbol);
+      // console.log("Quote Step:", step.fromToken.symbol, " -> ", step.toToken.symbol);
       const { quote, quoteWithSlippage } = await step.quote(isMultiReverse ? prevQuoteWSlippage : prevQuote, direction, slippage);
-
-      if (fwd) {
-        console.log(
-          `${prevQuote.toHuman()} ${step.fromToken.symbol} will result in ${quote.toHuman()} (${quoteWithSlippage.toHuman()}) ${
-            step.toToken.symbol
-          }`
-        );
-      } else {
-        console.log(
-          `${quote.toHuman()}(${quoteWithSlippage.toHuman()}) ${step.fromToken.symbol} needed to buy ${(isMultiReverse
-            ? prevQuoteWSlippage
-            : prevQuote
-          ).toHuman()} ${step.toToken.symbol}`
-        );
-      }
       prevQuote = quote;
       prevQuoteWSlippage = quoteWithSlippage;
     }
 
     this.fullQuote = prevQuote;
+    const { doApproval, doSwap } = await this.prepare(recipient); // TODO: Add deadline
 
-    return prevQuote;
+    return {
+      amount: prevQuote,
+      doApproval,
+      doSwap
+    };
   }
 
   async prepare(recipient: string, deadline: number = DEFAULT_DEADLINE, overrides?: TxOverrides): Promise<QuotePrepareResult> {
@@ -133,7 +135,6 @@ export class Quote {
     const step = this.steps[0];
     const { contract, method, parameters } = step.swapSingle(this.amountUsedForQuote, step.quoteResultWithSlippage!, recipient, deadline);
     parameters.push(overrides ?? {});
-
     // @ts-ignore
     const doSwap = (): Promise<ContractTransaction> => contract[method](...parameters);
 
@@ -253,6 +254,7 @@ export class Quote {
   }
 
   async getApproval(token: Token, amount: TokenValue, spender: string, account: string) {
+    if (!account) return;
     const allowance = await token.getAllowance(account, spender);
 
     if (allowance && allowance.gte(amount)) return;
