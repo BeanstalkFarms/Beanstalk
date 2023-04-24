@@ -3,15 +3,16 @@ import { useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
 import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 import { WellHistory } from "src/components/History/WellHistory";
+import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
 
 export const Well = () => {
-  const { address } = useParams<"address">();
-  const { well, loading, error } = useWell(address!);
+  const { address: wellAddress } = useParams<"address">();
+  const { well, loading, error } = useWell(wellAddress!);
 
   if (loading) return <div>loading...</div>;
   if (error) return <div>{error.message}</div>;
 
-  console.log("Well: ", address);
+  console.log("Well: ", wellAddress);
   if (!well) return null;
 
   return (
@@ -24,6 +25,9 @@ export const Well = () => {
       <br />
       <div>
         <AddLiquidity well={well} />
+      </div>
+      <div>
+        <RemoveLiquidity well={well} />
       </div>
       <div>
         <WellHistory well={well} />

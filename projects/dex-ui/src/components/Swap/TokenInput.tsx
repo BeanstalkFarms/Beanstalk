@@ -25,6 +25,7 @@ type TokenInput = {
   loading: boolean;
   onAmountChange?: (a: TokenValue) => void;
   onTokenChange?: (t: Token) => void;
+  canChangeValue?: boolean;
 };
 
 export const TokenInput: FC<TokenInput> = ({
@@ -39,7 +40,8 @@ export const TokenInput: FC<TokenInput> = ({
   showBalance = true,
   showMax = true,
   loading = false,
-  allowNegative = false
+  allowNegative = false,
+  canChangeValue = true
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -114,6 +116,7 @@ export const TokenInput: FC<TokenInput> = ({
           onBlur={handleBlur}
           inputRef={inputRef}
           allowNegative={allowNegative}
+          canChangeValue={!!canChangeValue}
         />
         <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} />
       </TopRow>
