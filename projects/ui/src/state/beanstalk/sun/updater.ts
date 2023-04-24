@@ -18,9 +18,7 @@ import {
   updateSeasonResult,
   updateSeasonTime,
 } from './actions';
-import { selectSunriseBlock } from './reducer';
-import useForceBlockDevOnly from '~/hooks/chain/dev/useForceBlockDevOnly';
-import { NEW_BN, ZERO_BN } from '~/constants';
+import useMorningUpdater from './morning';
 
 export const useSun = () => {
   const dispatch = useDispatch();
@@ -36,9 +34,10 @@ export const useSun = () => {
         const [seasonTime, season, currentBlock] = await Promise.all([
           beanstalk.seasonTime().then(bigNumberResult), /// the season that it could be if sunrise was called
           beanstalk.time().then(parseSeasonResult), /// SeasonStruct
-          provider
-            .getBlock('latest')
-            .then((result) => new BigNumber(result.number)),
+          provider.getBlock('latest').then((result) => ({
+            blockNumber: new BigNumber(result.number),
+            timestamp: DateTime.fromSeconds(result.timestamp),
+          })),
         ] as const);
 
         console.debug(`[beanstalk/sun/useSun] time RESULT: = ${season}`);
@@ -47,21 +46,15 @@ export const useSun = () => {
         );
         dispatch(updateSeasonResult(season));
         dispatch(updateSeasonTime(seasonTime));
+        dispatch(updateMorningBlock(currentBlock));
 
-        const morningBlock = currentBlock.minus(season.sunriseBlock);
-        if (morningBlock.gte(0) && morningBlock.lt(25)) {
-          dispatch(updateMorningBlock(morningBlock));
-        } else {
-          dispatch(updateMorningBlock(NEW_BN));
-        }
-
-        return [season, seasonTime] as const;
+        return [season, seasonTime, currentBlock] as const;
       }
-      return [undefined, undefined] as const;
+      return [undefined, undefined, undefined] as const;
     } catch (e) {
       console.debug('[beanstalk/sun/useSun] FAILED', e);
       console.error(e);
-      return [undefined, undefined] as const;
+      return [undefined, undefined, undefined] as const;
     }
   }, [dispatch, beanstalk, provider]);
 
@@ -73,53 +66,9 @@ export const useSun = () => {
   return [fetch, clear] as const;
 };
 
-export const useUpdateMorning = () => {
-  const dispatch = useDispatch();
-
-  const { block: sunriseBlock } = useSelector(selectSunriseBlock);
-  useForceBlockDevOnly();
-
-  const provider = useProvider();
-
-  const handleUpdateBlock = useCallback(
-    async (_block: number) => {
-      if (!sunriseBlock.gt(0)) return;
-      const currentBlock = new BigNumber(_block);
-      const diff = currentBlock.minus(sunriseBlock);
-      if (diff.gte(0) && diff.lt(25)) {
-        dispatch(updateMorningBlock(diff));
-      } else if (diff.gte(24) && sunriseBlock.eq(24)) {
-        dispatch(updateMorningBlock(ZERO_BN));
-      }
-    },
-    [dispatch, sunriseBlock]
-  );
-
-  useEffect(() => {
-    const subscribe = () => {
-      provider.on('block', (_blockNumber) => {
-        console.debug('[beanstalk/sun][updatedBlockNumber]: ', _blockNumber);
-        handleUpdateBlock(_blockNumber);
-      });
-
-      return () => {
-        provider.removeAllListeners('block');
-      };
-    };
-
-    const unsubscribe = subscribe();
-
-    return () => {
-      unsubscribe();
-    };
-  }, [handleUpdateBlock, provider]);
-};
-
 const SunUpdater = () => {
   const [fetch, clear] = useSun();
   const dispatch = useDispatch();
-  useUpdateMorning();
-
   const season = useSeason();
   const next = useSelector<AppState, DateTime>(
     (state) => state._beanstalk.sun.sunrise.next
@@ -127,6 +76,9 @@ const SunUpdater = () => {
   const awaiting = useSelector<AppState, boolean>(
     (state) => state._beanstalk.sun.sunrise.awaiting
   );
+
+  useMorningUpdater();
+  // useUpdateMorningBlockRemaining();
 
   useEffect(() => {
     if (awaiting === false) {

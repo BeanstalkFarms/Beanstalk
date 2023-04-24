@@ -1,6 +1,12 @@
 import { createReducer, createSelector } from '@reduxjs/toolkit';
-import { NEW_BN } from '~/constants';
-import { getNextExpectedSunrise, Sun } from '.';
+import { DateTime } from 'luxon';
+import { NEW_BN, ZERO_BN } from '~/constants';
+import {
+  getNextExpectedBlockUpdate,
+  getNextExpectedSunrise,
+  MorningData,
+  Sun,
+} from '.';
 import {
   setNextSunrise,
   setRemainingUntilSunrise,
@@ -8,11 +14,14 @@ import {
   updateSeasonTime,
   resetSun,
   updateSeasonResult,
+  updateMorningTimestamp,
   updateMorningBlock,
 } from './actions';
+import { getIsMorningInterval } from './morning';
 
 const getInitialState = () => {
   const nextSunrise = getNextExpectedSunrise();
+  const nextBlockUpdate = getNextExpectedBlockUpdate();
   return {
     seasonTime: NEW_BN,
     sunrise: {
@@ -32,9 +41,18 @@ const getInitialState = () => {
       abovePeg: false,
       start: NEW_BN,
       period: NEW_BN,
-      timestamp: NEW_BN,
+      timestamp: DateTime.now(),
     },
-    morningBlock: NEW_BN,
+    morning: {
+      block: {
+        blockNumber: NEW_BN,
+        timestamp: DateTime.now(),
+      },
+      time: {
+        next: nextBlockUpdate,
+        remaining: nextBlockUpdate.diffNow(),
+      },
+    },
   };
 };
 
@@ -59,40 +77,69 @@ export default createReducer(initialState, (builder) =>
       state.sunrise.remaining = payload;
     })
     .addCase(updateMorningBlock, (state, { payload }) => {
-      state.morningBlock = payload;
+      state.morning.block = payload;
+    })
+    .addCase(updateMorningTimestamp, (state, { payload }) => {
+      state.morning.block.timestamp = payload;
     })
 );
 
-// Selectors
+// ----- Selectors -----
+
 const selectSelf = (state: { _beanstalk: { sun: Sun } }) =>
   state._beanstalk.sun;
 
+const selectSeasonState = (state: {
+  _beanstalk: { sun: { season: Sun['season'] } };
+}) => state._beanstalk.sun.season;
+
+// ----- exported -----
+
 export const selectCurrentSeason = createSelector(
-  selectSelf,
-  (state) => state.season.current
+  selectSeasonState,
+  (state) => state.current
 );
 
-export const selectSunriseBlock = createSelector(selectSelf, (state) => ({
-  block: state.season.sunriseBlock,
-  timestamp: state.season.timestamp,
-}));
+export const selectSunriseBlock = createSelector(
+  selectSeasonState,
+  ({ sunriseBlock, timestamp }) => ({
+    block: sunriseBlock,
+    timestamp,
+  })
+);
 
 export const selectAbovePeg = createSelector(
-  selectSelf,
-  (state) => state.season.abovePeg
+  selectSeasonState,
+  (state) => state.abovePeg
 );
 
-export const selectRain = createSelector(selectSelf, (state) => ({
-  rainStart: state.season.rainStart,
-  raining: state.season.raining,
-}));
+const selectMorningBlock = (state: {
+  _beanstalk: { sun: { morning: { block: Sun['morning']['block'] } } };
+}) => state._beanstalk.sun.morning.block;
 
-export const selectSop = createSelector(selectSelf, (state) => ({
-  lastSop: state.season.lastSop,
-  lastSopSeason: state.season.lastSopSeason,
-}));
+export const selectMorning = createSelector(
+  selectSeasonState,
+  selectMorningBlock,
+  (season, morning) => {
+    const sunriseBlock = season.sunriseBlock;
+    const currentBlock = morning.blockNumber;
 
-export const selectMorningBlock = createSelector(
+    // interval range [1 to 25]
+    const blockDiff = currentBlock.minus(sunriseBlock);
+    const interval = blockDiff.plus(1);
+    const isMorning = blockDiff.lt(25);
+    const isMorningInterval = getIsMorningInterval(interval);
+
+    return {
+      blockNumber: currentBlock,
+      timestamp: morning.timestamp,
+      isMorning: isMorning,
+      interval: isMorningInterval ? interval : ZERO_BN,
+    } as MorningData;
+  }
+);
+
+export const selectMorningBlockUpdate = createSelector(
   selectSelf,
-  (state) => state.morningBlock
+  (state) => state.morning.time
 );

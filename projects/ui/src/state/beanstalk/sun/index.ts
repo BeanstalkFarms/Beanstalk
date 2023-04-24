@@ -26,14 +26,39 @@ export type Sun = {
     abovePeg: boolean | undefined;
     start: BigNumber;
     period: BigNumber;
-    timestamp: BigNumber;
+    timestamp: DateTime | undefined;
   };
-  morningBlock: BigNumber;
+  morning: {
+    block: {
+      /** the current morning block 1 - 25 */
+      blockNumber: BigNumber;
+      /** the Date Time of the next expected block update */
+      timestamp: DateTime;
+    };
+    time: {
+      remaining: Duration;
+      next: DateTime;
+    };
+  };
+};
+
+export type MorningData = {
+  blockNumber: BigNumber;
+  timestamp: DateTime;
+  isMorning: boolean;
+  interval: BigNumber;
 };
 
 export const getNextExpectedSunrise = () => {
   const now = DateTime.now();
   return now.set({ minute: 0, second: 0, millisecond: 0 }).plus({ hour: 1 });
+};
+
+export const getNextExpectedBlockUpdate = () => {
+  const now = DateTime.now();
+  return now
+    .set({ minute: 0, second: 0, millisecond: 0 })
+    .plus({ seconds: 12 });
 };
 
 export const parseSeasonResult = (
@@ -51,5 +76,9 @@ export const parseSeasonResult = (
   abovePeg: result.abovePeg, /// Boolean indicating whether the previous Season was above or below peg.
   start: bigNumberResult(result.start), /// The timestamp of the Beanstalk deployment rounded down to the nearest hour.
   period: bigNumberResult(result.period), /// The length of each season in Beanstalk in seconds.
-  timestamp: bigNumberResult(result.timestamp), /// The timestamp of the start of the current Season.
+  timestamp: DateTime.fromMillis(
+    bigNumberResult(result.timestamp).times(1000).toNumber()
+  ), /// The timestamp of the start of the current Season.
 });
+
+export * from './reducer';

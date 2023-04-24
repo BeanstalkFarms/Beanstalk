@@ -24,6 +24,18 @@ export const setRemainingUntilSunrise = createAction<
 
 export const resetSun = createAction('beanstalk/sun/reset');
 
-export const updateMorningBlock = createAction<BigNumber>(
+export const updateMorningBlock = createAction<Sun['morning']['block']>(
   'beanstalk/sun/updateMorningBlock'
+);
+
+export const updateMorningTimestamp = createAction<
+  Sun['morning']['block']['timestamp']
+>('beanstalk/sun/updateMorningTimestamp');
+
+export const setRemainingUntilBlockUpdate = createAction<
+  Sun['morning']['time']['remaining']
+>('beanstalk/sun/setRemainingUntilBlockUpdate');
+
+export const setNextBlockUpdate = createAction<Sun['morning']['time']['next']>(
+  'beanstalk/sun/setNextBlockUpdate'
 );
