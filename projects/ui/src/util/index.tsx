@@ -18,28 +18,29 @@ export * from './Season';
 export * from './State';
 export * from './Time';
 export * from './Tokens';
+export * from './Environment';
 
 // -----------------
 // Shared Types
 // -----------------
 
-export type SeasonMap<T> = { [season: string]: T; }
-export type PlotMap<T>   = { [index: string]: T; }
+export type SeasonMap<T> = { [season: string]: T };
+export type PlotMap<T> = { [index: string]: T };
 
 // -----------------
 // Other Helpers
 // -----------------
 
 const ordinalRulesEN = new Intl.PluralRules('en', { type: 'ordinal' });
-const suffixes : { [k: string] : string } = {
+const suffixes: { [k: string]: string } = {
   one: 'st',
   two: 'nd',
   few: 'rd',
-  other: 'th'
+  other: 'th',
 };
 
-export function ordinal(number: number) : string {
+export function ordinal(number: number): string {
   const category = ordinalRulesEN.select(number);
   const suffix = suffixes[category];
-  return (number + suffix);
+  return number + suffix;
 }
