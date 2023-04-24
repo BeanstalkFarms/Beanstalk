@@ -14,9 +14,9 @@ export interface FieldConditionsProps {
 }
 
 const FieldConditions: FC<FieldConditionsProps> = ({
- beanstalkField,
- // farmerField,
- // podLine,
+  beanstalkField,
+  // farmerField,
+  // podLine,
 }) => (
   <Card sx={{ p: 2 }}>
     <Stack gap={1}>
@@ -44,14 +44,17 @@ const FieldConditions: FC<FieldConditionsProps> = ({
           <Stack gap={0.5}>
             <Typography variant="body1">
               Temperature&nbsp;
-              <Tooltip title="The interest rate for Sowing Beans." placement="top">
+              <Tooltip
+                title="The interest rate for Sowing Beans."
+                placement="top"
+              >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
               </Tooltip>
             </Typography>
             <Typography variant="bodyLarge" fontWeight="400">
-              {displayBN(beanstalkField.weather.yield)}%
+              {displayBN(beanstalkField.temperature.max)}%
             </Typography>
           </Stack>
         </Grid>
@@ -59,7 +62,10 @@ const FieldConditions: FC<FieldConditionsProps> = ({
           <Stack gap={0.5}>
             <Typography variant="body1">
               Pod Line&nbsp;
-              <Tooltip title="The number of Pods that will become Harvestable before Pods earned for newly Sown Beans, based on the FIFO Harvest schedule." placement="top">
+              <Tooltip
+                title="The number of Pods that will become Harvestable before Pods earned for newly Sown Beans, based on the FIFO Harvest schedule."
+                placement="top"
+              >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
@@ -71,10 +77,13 @@ const FieldConditions: FC<FieldConditionsProps> = ({
           </Stack>
         </Grid>
         <Grid item xs={6} md={3}>
-          <Stack gap={0.5}>            
+          <Stack gap={0.5}>
             <Typography variant="body1">
               Pods Harvested&nbsp;
-              <Tooltip title="The number of Pods that have become redeemable for a Bean (i.e., the debt paid back by Beanstalk to date)." placement="top">
+              <Tooltip
+                title="The number of Pods that have become redeemable for a Bean (i.e., the debt paid back by Beanstalk to date)."
+                placement="top"
+              >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                 />
