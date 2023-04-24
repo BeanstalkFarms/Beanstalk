@@ -11,9 +11,20 @@ type Props = {
   onChange?: (v: string) => void;
   onFocus?: FocusEventHandler<HTMLInputElement>;
   onBlur?: FocusEventHandler<HTMLInputElement>;
+  canChangeValue?: boolean;
 };
 
-export const BasicInput: FC<Props> = ({ id: _id, label, value, allowNegative = false, onChange, onFocus, onBlur, inputRef }) => {
+export const BasicInput: FC<Props> = ({
+  id: _id,
+  label,
+  value,
+  allowNegative = false,
+  onChange,
+  onFocus,
+  onBlur,
+  inputRef,
+  canChangeValue = true
+}) => {
   const [id, _] = useState(_id ?? Math.random().toString(36).substring(2, 7));
   const [displayValue, setDisplayValue] = useState(value);
 
@@ -89,6 +100,7 @@ export const BasicInput: FC<Props> = ({ id: _id, label, value, allowNegative = f
         spellCheck="false"
         autoCorrect="off"
         autoComplete="off"
+        readOnly={!canChangeValue}
       />
     </>
   );
