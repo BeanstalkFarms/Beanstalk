@@ -79,7 +79,7 @@ contract MetadataFacet is IERC1155Receiver {
      */
     function getDepositMetadata(uint256 depositId) public pure returns (Storage.Metadata memory) {
         Storage.Metadata memory depositMetadata;
-        (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
+        (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         depositMetadata.token = token;
         depositMetadata.id = depositId;
         depositMetadata.stem = stem;

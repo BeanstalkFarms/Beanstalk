@@ -525,7 +525,7 @@ library LibSilo {
                 msg.sender, // operator
                 account, // from
                 address(0), // to
-                uint256(LibBytes.packAddressAndStem(token, stem)), // depositid
+                LibBytes.packAddressAndStem(token, stem), // depositid
                 amount // token amount
             );
         }
@@ -560,7 +560,7 @@ library LibSilo {
                 amounts[i]
             );
             bdvsRemoved[i] = crateBdv;
-            removedDepositIDs[i] = uint256(LibBytes.packAddressAndStem(token, stems[i]));
+            removedDepositIDs[i] = LibBytes.packAddressAndStem(token, stems[i]);
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
 

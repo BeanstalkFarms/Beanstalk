@@ -167,7 +167,7 @@ library LibTokenSilo {
         Transfer transferType
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bytes32 depositId = LibBytes.packAddressAndStem(
+        uint256 depositId = LibBytes.packAddressAndStem(
             token,
             stem
         );
@@ -230,7 +230,7 @@ library LibTokenSilo {
         uint256 amount
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bytes32 depositId = LibBytes.packAddressAndStem(token,stem);
+        uint256 depositId = LibBytes.packAddressAndStem(token,stem);
         Account.Deposit memory d = s.a[account].deposits[depositId];
         
         uint256 crateAmount;
@@ -317,7 +317,7 @@ library LibTokenSilo {
         int96 stem
     ) internal view returns (uint256 amount, uint256 bdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        bytes32 depositId = LibBytes.packAddressAndStem(
+        uint256 depositId = LibBytes.packAddressAndStem(
             token,
             stem
         );
