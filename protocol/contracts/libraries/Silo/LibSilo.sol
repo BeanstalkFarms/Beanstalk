@@ -197,10 +197,12 @@ library LibSilo {
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (inVestingPeriod()) {
-                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
-                uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots));
-                s.a[account].deltaRoots = uint128(deltaRoots);
+                // Safe Math is unnecessary for because total Stalk > new Earned Stalk
+                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - s.newEarnedStalk);
+                // Safe Math is unnecessary for because rootsWithoutEarned >= roots
+                uint128 deltaRoots = (rootsWithoutEarned - roots).toUint128();
+                s.vestingPeriodRoots = s.vestingPeriodRoots.add(deltaRoots);
+                s.a[account].deltaRoots = deltaRoots;
             }
         }
 
