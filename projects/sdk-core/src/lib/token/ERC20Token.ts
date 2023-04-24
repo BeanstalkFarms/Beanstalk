@@ -9,11 +9,11 @@ export class ERC20Token extends Token {
 
   public getContract() {
     if (!this.contract) {
-      // Make this.contract "invisible" to console.log, and immutable
+      // Make this.contract "invisible" to console.log
       Object.defineProperty(this, "contract", {
         enumerable: false,
         configurable: false,
-        writable: false,
+        writable: true,
         value: ERC20Permit__factory.connect(this.address, this.getSignerOrProvider())
       });
     }
