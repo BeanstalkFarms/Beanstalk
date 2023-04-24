@@ -18,7 +18,7 @@ import { HOW_TO_MINT_BEANFTS } from '~/util/Guides';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 
-const SLUGS = ['genesis', 'winter', 'barnRaise'];
+const SLUGS = ['genesis', 'winter', 'barnraise'];
 
 const NFTPage: FC<{}> = () => {
   const account = useAccount();
@@ -26,7 +26,6 @@ const NFTPage: FC<{}> = () => {
   const { data: signer } = useSigner();
   const genesisContract = useGenesisNFTContract(signer);
   const winterContract = useWinterNFTContract(signer);
-  const barnRaiseContract = useBarnRaiseNFTContract(signer);
 
   // component state
   const [tab, handleChangeTab] = useTabs(SLUGS, 'collection');
@@ -40,7 +39,6 @@ const NFTPage: FC<{}> = () => {
   const [barnRaiseNFTs, setBarnRaiseNFTs] = useState<Nft[] | null>(null);
   const unmintedGenesis = genesisNFTs?.filter((nft) => nft.claimed === ClaimStatus.UNCLAIMED);
   const unmintedWinter = winterNFTs?.filter((nft) => nft.claimed === ClaimStatus.UNCLAIMED);
-  const unmintedBarnRaise = barnRaiseNFTs?.filter((nft) => nft.claimed === ClaimStatus.UNCLAIMED);
 
   /// Handlers
   const handleDialogOpen = (nft: Nft) => {
@@ -270,7 +268,6 @@ const NFTPage: FC<{}> = () => {
 
   const hideGenesis = !unmintedGenesis || unmintedGenesis.length === 0;
   const hideWinter = !unmintedWinter || unmintedWinter.length === 0;
-  const hideBarnRaise = !unmintedBarnRaise || unmintedBarnRaise.length === 0;
 
   return (
     <Container maxWidth="lg">
@@ -329,7 +326,7 @@ const NFTPage: FC<{}> = () => {
                     handleDialogOpen={handleDialogOpen}
                   />
                 )}
-                {/* winter */}
+                {/* barn raise */}
                 {tab === 2 && (
                   <NFTGrid
                     nfts={barnRaiseNFTs}
