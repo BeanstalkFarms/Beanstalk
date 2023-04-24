@@ -171,17 +171,16 @@ library LibTokenSilo {
             stem
         );
 
-        // we instantiate the deposit to avoid the stack too deep error.
-        Account.Deposit memory d = s.a[account].deposits[depositId];
-
         // add amount to the deposits, and update the deposit.
-        d.amount = d.amount.add(amount.toUint128());
-        d.bdv = d.bdv.add(bdv.toUint128());
-        s.a[account].deposits[depositId] = d;
+        s.a[account].deposits[depositId].amount = 
+            s.a[account].deposits[depositId].amount.add(amount.toUint128());
+        s.a[account].deposits[depositId].bdv = 
+            s.a[account].deposits[depositId].bdv.add(bdv.toUint128());
         
         // get token and GSPBDV of the depositData, for updating mow status and emitting event 
         // update the mow status (note: mow status is per token, not per depositId)
-        s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(bdv.toUint128()));
+        // SafeMath not necessary as the bdv is already checked to be <= type(uint128).max
+        s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(uint128(bdv)));
 
         /** 
          *  {addDepositToAccount} is used for both depositing and transferring deposits.
