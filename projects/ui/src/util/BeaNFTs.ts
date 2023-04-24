@@ -39,19 +39,72 @@ export const ADDRESS_COLLECTION: {[c: string]: string} = {
 };
 
 export async function loadNFTs(account: string) {
-  const nftData : Nft[] = await fetch(`http://localhost:49784/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
-  
-  if (nftData.length === 0) {
-    return {
-      genesis: [],
-      winter: [],
-      barnRaise: [],
-    };
-  }
 
-  const genesisNFTs = nftData.filter((n) => n.subcollection === 'Genesis');
-  const winterNFTs  = nftData.filter((n) => n.subcollection === 'Winter');
-  const barnRaiseNFTs = nftData.filter((n) => n.subcollection == 'Barn Raise');
+  const genesisNFTs: Nft[] = []
+  const winterNFTs: Nft[] = []
+  const barnRaiseNFTs: Nft[] = []
+
+  try {
+
+    const ownedNFTs = await fetch('https://graph.node.bean.money/subgraphs/name/beanft', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+            query NFTData($account: ID!) {
+              user(id: $account) {
+                id
+                genesis
+                barnRaise
+                winter
+              }
+            }
+          `,
+        variables: {
+          account: account.toLowerCase(),
+        },
+      })
+    })
+
+    const ownedNFTsJSON = await ownedNFTs.json()
+
+    ownedNFTsJSON.data.user.genesis.sort()
+    ownedNFTsJSON.data.user.winter.sort()
+    ownedNFTsJSON.data.user.barnRaise.sort()
+
+    ownedNFTsJSON.data.user.genesis.forEach((element: number) => {
+      genesisNFTs.push(
+        {
+          id: element,
+          account: account.toLowerCase(),
+          subcollection: "Genesis"
+        }
+      )
+    });
+
+    ownedNFTsJSON.data.user.winter.forEach((element: number) => {
+      winterNFTs.push(
+        {
+          id: element,
+          account: account.toLowerCase(),
+          subcollection: "Winter"
+        }
+      )
+    });
+
+    ownedNFTsJSON.data.user.barnRaise.forEach((element: number) => {
+      barnRaiseNFTs.push(
+        {
+          id: element,
+          account: account.toLowerCase(),
+          subcollection: "Barn Raise"
+        }
+      )
+    }); } catch (e) {
+    console.log("BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ", e)
+  }
 
   return {
     genesis: genesisNFTs,
