@@ -10,3 +10,5 @@ export { Direction } from "src/lib/swap/SwapStep";
 export { SwapStep } from "src/lib/swap/SwapStep";
 export { SwapBuilder } from "./lib/swap/SwapBuilder";
 export { Quote } from "./lib/swap/Quote";
+
+export type { QuoteResult } from "./lib/swap/Quote";
