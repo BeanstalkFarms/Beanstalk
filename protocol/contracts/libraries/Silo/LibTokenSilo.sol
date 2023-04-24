@@ -128,7 +128,7 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount,
         uint256 bdv
-    ) internal returns (uint256) {
+    ) internal returns (uint256 stalk) {
         require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
         
@@ -141,9 +141,7 @@ library LibTokenSilo {
             bdv, 
             Transfer.emitTransferSingle  
         ); 
-        return (
-            bdv.mul(s.ss[token].stalkIssuedPerBdv)
-        );
+        stalk = bdv.mul(s.ss[token].stalkIssuedPerBdv);
     }
 
     /**
