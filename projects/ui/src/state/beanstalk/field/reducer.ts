@@ -5,8 +5,8 @@ import {
   resetBeanstalkField,
   updateBeanstalkField,
   updateHarvestableIndex,
+  updateScaledTemperature,
 } from './actions';
-import { AppState } from '~/state';
 
 const initialState: BeanstalkField = {
   harvestableIndex: NEW_BN,
@@ -20,7 +20,7 @@ const initialState: BeanstalkField = {
   },
   temperature: {
     max: NEW_BN,
-    morning: NEW_BN,
+    scaled: NEW_BN,
   },
 };
 
@@ -38,11 +38,19 @@ export default createReducer(initialState, (builder) =>
     .addCase(updateHarvestableIndex, (state, { payload }) => {
       state.harvestableIndex = payload;
     })
+    .addCase(updateScaledTemperature, (state, { payload }) => {
+      state.temperature.scaled = payload;
+    })
 );
 
-const selectAppState = (state: AppState) => state;
+export const selectBeanstalkField = (state: {
+  _beanstalk: { field: BeanstalkField };
+}) => state._beanstalk.field;
 
-export const selectBeanstalkField = createSelector(
-  selectAppState,
-  (state) => state._beanstalk.field
+export const selectFieldTemperature = createSelector(
+  selectBeanstalkField,
+  (state) => ({
+    scaled: state.temperature.scaled,
+    max: state.temperature.max,
+  })
 );

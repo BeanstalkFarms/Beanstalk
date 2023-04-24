@@ -1,9 +1,40 @@
 import { useCallback, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { bigNumberResult, tokenResult } from '~/util';
+import { useDispatch, useSelector } from 'react-redux';
+import { bigNumberResult, bnResultWithPrecision, tokenResult } from '~/util';
 import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { resetBeanstalkField, updateBeanstalkField } from './actions';
+import {
+  resetBeanstalkField,
+  updateBeanstalkField,
+  updateScaledTemperature,
+} from './actions';
+import { selectFieldTemperature } from './reducer';
+import { TEMPERATURE_PRECISION } from '.';
+
+export const useFetchTemperature = () => {
+  const beanstalk = useBeanstalkContract();
+  const temperatures = useSelector(selectFieldTemperature);
+
+  const dispatch = useDispatch();
+
+  const fetch = useCallback(async () => {
+    const adjustedTemp = await beanstalk
+      .temperature()
+      .then(bnResultWithPrecision(TEMPERATURE_PRECISION));
+
+    // const maxTemp = await beanstalk.maxTemperature()
+    //   .then(bnResultWithPrecision(TEMPERATURE_PRECISION));
+
+    console.debug('[beanstalk/field/useFetchTemperature] RESULT', {
+      scaled: adjustedTemp.toString(),
+      // max: maxTemp.toString(),
+    });
+    dispatch(updateScaledTemperature(adjustedTemp));
+    return [adjustedTemp] as const;
+  }, [beanstalk, dispatch]);
+
+  return [temperatures.scaled, fetch] as const;
+};
 
 export const useFetchBeanstalkField = () => {
   const dispatch = useDispatch();
@@ -30,8 +61,8 @@ export const useFetchBeanstalkField = () => {
           lastSowTime: bigNumberResult(_weather.lastSowTime),
           thisSowTime: bigNumberResult(_weather.thisSowTime),
         })),
-        beanstalk.temperature().then(bigNumberResult),
-        beanstalk.maxTemperature().then(bigNumberResult),
+        beanstalk.temperature().then(tokenResult(BEAN)), // FIX ME
+        beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIX ME
       ] as const);
 
       console.debug('[beanstalk/field/useBeanstalkField] RESULT');
@@ -45,7 +76,7 @@ export const useFetchBeanstalkField = () => {
           weather,
           temperature: {
             max: maxTemperature,
-            morning: adjustedTemperature,
+            scaled: adjustedTemperature,
           },
         })
       );

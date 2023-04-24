@@ -11,3 +11,7 @@ export const updateBeanstalkField = createAction<
 export const updateHarvestableIndex = createAction<BigNumber>(
   'beanstalk/field/updateHarvestableIndex'
 );
+
+export const updateScaledTemperature = createAction<BigNumber>(
+  'beanstalk/field/updateScaledTemperature'
+);

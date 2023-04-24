@@ -39,6 +39,8 @@ export type BeanstalkField = {
     /** The max temperature for this season. */
     max: BigNumber;
     /** adjusted temperature for this season */
-    morning: BigNumber;
+    scaled: BigNumber;
   };
 };
+
+export const TEMPERATURE_PRECISION = 1e6;

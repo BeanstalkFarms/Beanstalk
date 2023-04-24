@@ -3,7 +3,7 @@ import { ZERO_BN } from '~/constants';
 import { FarmerField } from '.';
 import { resetFarmerField, updateFarmerField } from './actions';
 
-const initialState : FarmerField = {
+const initialState: FarmerField = {
   plots: {},
   harvestablePlots: {},
   pods: ZERO_BN,
@@ -20,3 +20,6 @@ export default createReducer(initialState, (builder) =>
       state.harvestablePods = payload.harvestablePods;
     })
 );
+
+export const selectFarmerField = (state: { _farmer: { field: FarmerField } }) =>
+  state._farmer.field;
