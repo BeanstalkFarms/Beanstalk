@@ -10,7 +10,7 @@ export class SwapBuilder {
 
   constructor(sdk: WellsSDK) {
     this.sdk = sdk;
-    this.router = new Router();
+    this.router = new Router(sdk);
   }
 
   async addWell(well: Well) {

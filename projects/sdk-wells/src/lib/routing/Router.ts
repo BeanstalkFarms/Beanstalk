@@ -2,23 +2,29 @@ import { Token } from "@beanstalk/sdk-core";
 import { Well } from "../Well";
 import { Graph } from "./Graph";
 import { Route } from "./Route";
+import { WellsSDK } from "../WellsSDK";
 
 export class Router {
-  public wells: Well[] = [];
+  private sdk: WellsSDK;
+  public wells = new Set<Well>();
   public graph: Graph;
 
-  constructor() {
+  constructor(sdk: WellsSDK) {
+    this.sdk = sdk;
     this.graph = new Graph();
   }
 
   async addWell(well: Well) {
+    if (this.wells.has(well)) return;
+
     const tokens = await well.getTokens();
-    this.wells.push(well);
+    this.wells.add(well);
 
     /**
      * Add the "nodes"
      * */
     for (const token of tokens) {
+      token.setSignerOrProvider(this.sdk.providerOrSigner);
       this.graph.addNode(token);
     }
 
