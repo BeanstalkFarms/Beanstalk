@@ -19924,6 +19924,7 @@ __metadata:
     "@graphql-codegen/typescript-react-query": 4.1.0
     "@tanstack/react-query": 4.28.0
     "@tanstack/react-query-devtools": 4.28.0
+    "@types/numeral": ^2
     "@types/react": ^18.0.21
     "@types/react-dom": ^18.0.6
     "@types/styled-components": ^5
@@ -19938,6 +19939,7 @@ __metadata:
     eslint-plugin-react-hooks: 4.2.0
     ethers: ^5
     graphql-request: 5.2.0
+    numeral: 2.0.6
     prettier: 2.7.1
     react: ^18.2.0
     react-dom: ^18.2.0

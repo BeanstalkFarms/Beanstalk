@@ -7,20 +7,47 @@ import gear from "src/assets/images/gear.svg";
 import { TokenInput } from "./TokenInput";
 import { Image } from "../Image";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
+import { useSwapBuilder } from "./useSwapBuilder";
+import { useAccount } from "wagmi";
+import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
+import { Button } from "./Button";
 
 export const SwapRoot = () => {
+  const { address: account } = useAccount();
+
   const tokens = useTokens();
   const [inAmount, setInAmount] = useState<TokenValue>();
   const [inToken, setInToken] = useState<Token>(tokens["WETH"]);
   const [outToken, setOutToken] = useState<Token>(tokens["BEAN"]);
   const [outAmount, setOutAmount] = useState<TokenValue>();
+  const [slippage, setSlippage] = useState<number>(0.1);
   const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
   const { isLoading: isAllTokenLoading } = useAllTokensBalance();
+  const [quoter, setQuoter] = useState<Quote | null>(null);
+  const [needsApproval, setNeedsApproval] = useState(false);
+  const [readyToSwap, setReadyToSwap] = useState(false);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
+  const [txLoading, setTxLoading] = useState(false);
 
+  const [quote, setQuote] = useState<QuoteResult | undefined>();
+  const builder = useSwapBuilder();
+
+  // Fetch all tokens. Needed for populating the token selector dropdowns
   useEffect(() => {
     const fetching = isAllTokenLoading;
     fetching ? setIsLoadingAllBalances(true) : setTimeout(() => setIsLoadingAllBalances(false), 500);
   }, [isAllTokenLoading]);
+
+  // Builds a Quoter object. Dependency array updates it when those change
+  useEffect(() => {
+    const quoter = builder?.buildQuote(inToken, outToken, account || "");
+    setQuoter(quoter ?? null);
+  }, [inToken, outToken, builder, account]);
+
+  useEffect(() => {
+    readyToSwap && !!account ? setButtonEnabled(true) : setButtonEnabled(false);
+    console.log("Button Enable: ", readyToSwap, !!account);
+  }, [readyToSwap, account]);
 
   const arrowHandler = () => {
     const prevInToken = inToken;
@@ -32,8 +59,57 @@ export const SwapRoot = () => {
     setOutAmount(prevInAmount);
   };
 
-  const handleInputChange = useCallback((a: TokenValue) => setInAmount(a), []);
-  const handleOutputChange = useCallback((a: TokenValue) => setOutAmount(a), []);
+  const handleInputChange = useCallback(
+    async (a: TokenValue) => {
+      setInAmount(a);
+      if (a.eq(0)) {
+        setOutAmount(outToken.amount(0));
+        return;
+      }
+
+      try {
+        const quote = await quoter?.quoteForward(a, account!, slippage);
+        if (!quote) {
+          setOutAmount(undefined);
+          setNeedsApproval(true);
+          setQuote(undefined);
+          setReadyToSwap(false);
+        }
+        setReadyToSwap(true);
+        setOutAmount(quote?.amount);
+        if (quote?.doApproval) {
+          setNeedsApproval(true);
+        } else {
+          setNeedsApproval(false);
+        }
+        setQuote(quote);
+      } catch (err: unknown) {
+        console.error("Error during quote: ", (err as Error).message);
+        setOutAmount(undefined); // TODO: clear this better
+        setReadyToSwap(false);
+      }
+    },
+    [account, outToken, quoter, slippage]
+  );
+
+  const handleOutputChange = useCallback(
+    async (a: TokenValue) => {
+      setOutAmount(a);
+      if (a.eq(0)) {
+        setInAmount(inToken.amount(0));
+        return;
+      }
+      try {
+        const quote = await quoter?.quoteReverse(a, account!, slippage);
+        setInAmount(quote!.amount);
+      } catch (err: unknown) {
+        console.error("Error during quote: ", (err as Error).message);
+        setInAmount(undefined); // TODO: clear this better
+        setReadyToSwap(false);
+      }
+    },
+    [account, inToken, quoter, slippage]
+  );
 
   const handleInputTokenChange = useCallback((token: Token) => {
     setInToken(token);
@@ -42,7 +118,40 @@ export const SwapRoot = () => {
     setOutToken(token);
   }, []);
 
-  console.log(` ${inAmount?.toHuman()} ${inToken?.symbol} => ${outAmount?.toHuman()} ${outToken?.symbol}`);
+  const handleSwapClick = async () => {
+    if (!quote) throw new Error("Bad state, quote there is no quote. Button should've been disabled");
+    setTxLoading(true);
+    try {
+      if (needsApproval) {
+        console.log("Doing approval");
+        if (!quote.doApproval) throw new Error("quote.doApproval() is missing. Bad logic");
+        const tx = await quote.doApproval();
+        await tx.wait();
+
+        setNeedsApproval(false);
+      } else {
+        console.log("Doing swap");
+        const tx = await quote.doSwap();
+        await tx.wait();
+        setNeedsApproval(true);
+        setReadyToSwap(false);
+        setQuote(undefined);
+      }
+    } catch (err) {
+      
+    }
+    setTxLoading(false);
+  };
+
+  const getLabel = useCallback(() => {
+    if (!account) return "Connect Wallet";
+    if (!inAmount && !outAmount) return "Enter Amount";
+    if (needsApproval) return "Approve";
+
+    return "Swap";
+  }, [account, inAmount, needsApproval, outAmount]);
+
+  // console.log(` ${inAmount?.toHuman()} ${inToken?.symbol} => ${outAmount?.toHuman()} ${outToken?.symbol}`);
 
   return (
     <Container>
@@ -85,7 +194,9 @@ export const SwapRoot = () => {
         </SwapInputContainer>
       </Div>
       <SwapDetailsContainer>Details</SwapDetailsContainer>
-      <SwapButtonContainer>Buttons</SwapButtonContainer>
+      <SwapButtonContainer>
+        <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleSwapClick} loading={txLoading} />
+      </SwapButtonContainer>
     </Container>
   );
 };
