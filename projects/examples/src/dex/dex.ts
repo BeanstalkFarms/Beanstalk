@@ -19,7 +19,6 @@ async function main() {
 }
 
 async function go() {
-  const router = new sdk.wells.Router();
   const bean_weth_well = await sdk.wells.getWell("0x453FDB6f2e8E0098e5FdBcE1F179905a02a4b78e");
   const bean_usdc_well = await sdk.wells.getWell("0x07ef4e4d451209f9b927663f1937Bc367Ba6eee2");
   const usdc_dai_well = await sdk.wells.getWell("0x6502cF9a688db4C717ef864CF64fE0DdAB309C37");
@@ -152,15 +151,14 @@ async function swapMultiReverse(token1: Token, token2: Token, builder: SwapBuild
   const targetAmount = token2.amount(1000);
   console.log(`Swap: x ETH for ${targetAmount.toHuman()} ${token2.symbol}`);
 
-  const quote = await quoter.quoteReverse(1000, slippage);
-  const quoteWithSlippage = quote.addSlippage(slippage);
+  const { amount, doSwap, doApproval } = await quoter.quoteReverse(1000, account, slippage);
+  const quoteWithSlippage = amount.addSlippage(slippage);
   console.log(
-    `\nOverall Quote: ${quote.toHuman()} ${quoter.fromToken.symbol} Needed to get ==> ${targetAmount.toHuman()} ${quoter.toToken.symbol}`
+    `\nOverall Quote: ${amount.toHuman()} ${quoter.fromToken.symbol} Needed to get ==> ${targetAmount.toHuman()} ${quoter.toToken.symbol}`
   );
 
   await chain.setBalance(token1, account, quoteWithSlippage);
 
-  const { doApproval, doSwap } = await quoter.prepare(account);
   if (doApproval) {
     console.log("Approving...");
     const atx = await doApproval();
