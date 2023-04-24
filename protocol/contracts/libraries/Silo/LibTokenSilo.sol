@@ -11,6 +11,8 @@ import "../LibAppStorage.sol";
 import "../../C.sol";
 import "./LibUnripeSilo.sol";
 import "./LibLegacyTokenSilo.sol";
+import "~/libraries/LibSafeMath32.sol";
+import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "~/libraries/LibSafeMathSigned96.sol";
 import "~/libraries/LibBytes.sol";
@@ -26,9 +28,8 @@ import "~/libraries/LibBytes.sol";
  */
 library LibTokenSilo {
     using SafeMath for uint256;
-    using SafeMath for uint128;
-    using SafeMath for int128;
-    using SafeMath for uint32;
+    using LibSafeMath128 for uint128;
+    using LibSafeMath32 for uint32;
     using LibSafeMathSigned128 for int128;
     using SafeCast for int128;
     using SafeCast for uint256;
@@ -176,8 +177,8 @@ library LibTokenSilo {
         Account.Deposit memory d = s.a[account].deposits[depositId];
 
         // add amount to the deposits, and update the deposit.
-        d.amount = uint128(d.amount.add(amount.toUint128()));
-        d.bdv = uint128(d.bdv.add(bdv.toUint128()));
+        d.amount = d.amount.add(amount.toUint128());
+        d.bdv = d.bdv.add(bdv.toUint128());
         s.a[account].deposits[depositId] = d;
         
         // get token and GSPBDV of the depositData, for updating mow status and emitting event 
@@ -252,7 +253,7 @@ library LibTokenSilo {
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.sub(removedBDV));
+            s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.sub(removedBDV.toUint128()));
             return removedBDV;
         }
         // Full remove
