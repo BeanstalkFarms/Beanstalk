@@ -91,7 +91,7 @@ export abstract class Token {
     // Remove the cached contract when changing provider/signer
     // @ts-ignore - NativeToken does not have 'this.contract', but instead of implementing two copies of this
     // method, for NativeToken and ERC20, we just do it here once and ignore the ts warning
-    delete this.contract;
+    this.contract = undefined;
   }
 
   getSignerOrProvider(): providers.Provider | Signer {
