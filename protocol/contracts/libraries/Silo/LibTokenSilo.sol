@@ -245,15 +245,19 @@ library LibTokenSilo {
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.sub(removedBDV.toUint128()));
+            s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
+                removedBDV.toUint128()
+            );
             return removedBDV;
         }
         // Full remove
         if (crateAmount > 0) delete s.a[account].deposits[depositId];
 
 
-        uint256 updatedTotalBdv = uint256(s.a[account].mowStatuses[token].bdv).sub(crateBDV); //this will `SafeMath: subtraction overflow` if amount > crateAmount, but I want it to be able to call through to the Legacy stuff below for excess remove
-        s.a[account].mowStatuses[token].bdv = uint128(updatedTotalBdv);
+        // SafeMath unnecessary b/c crateBDV <= type(uint128).max
+        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
+            uint128(crateBDV)
+        );
     }
 
     //////////////////////// GETTERS ////////////////////////
