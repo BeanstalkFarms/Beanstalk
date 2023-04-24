@@ -229,10 +229,9 @@ library LibTokenSilo {
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token,stem);
-        Account.Deposit memory d = s.a[account].deposits[depositId];
-        
-        uint256 crateAmount;
-        (crateAmount, crateBDV) = (d.amount,d.bdv);
+
+        uint256 crateAmount = s.a[account].deposits[depositId].amount;
+        crateBDV = s.a[account].deposits[depositId].bdv;
 
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
@@ -241,12 +240,8 @@ library LibTokenSilo {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
-                
-            require(
-                updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1), //this code was here before, but maybe there's a better way to do this?
-                "Silo: uint128 overflow."
-            );
 
+            // SafeMath unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV, which are both <= type(uint128).max
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
             //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
