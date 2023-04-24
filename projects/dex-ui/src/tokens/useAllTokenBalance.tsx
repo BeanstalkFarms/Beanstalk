@@ -51,7 +51,6 @@ export const useAllTokensBalance = () => {
   const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
     key,
     async () => {
-      console.log(`Query: Get ALL tokens balances`);
       if (!address) return {};
       const res = (await multicall({
         contracts: calls,

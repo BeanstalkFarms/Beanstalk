@@ -11,8 +11,6 @@ export const useTokenBalance = (token: Token) => {
   const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
     key,
     async () => {
-      console.log(`Query: Get ${token.symbol} balance`);
-
       let balance: TokenValue;
       if (!address) {
         balance = TokenValue.ZERO;

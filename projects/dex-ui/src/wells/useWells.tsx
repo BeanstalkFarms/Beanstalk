@@ -7,8 +7,9 @@ export const useWells = () => {
   const sdk = useSdk();
 
   return useQuery<Well[], Error>(
-    ["wells"],
+    ["wells", !!sdk.signer],
     async () => {
+      console.log("useWells", sdk.signer);
       const res = await Promise.allSettled(
         WELL_ADDRESSES.map((address) =>
           sdk.wells

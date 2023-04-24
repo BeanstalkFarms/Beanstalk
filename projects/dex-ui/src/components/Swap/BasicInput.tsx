@@ -1,6 +1,7 @@
 import React, { FocusEventHandler, RefObject, useCallback, useEffect, useState } from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
+import numeral from "numeral";
 
 type Props = {
   id?: string;
@@ -29,8 +30,9 @@ export const BasicInput: FC<Props> = ({
   const [displayValue, setDisplayValue] = useState(value);
 
   useEffect(() => {
-    setDisplayValue(value);
-  }, [value]);
+    if (value === displayValue) return;
+    setDisplayValue(value === "0" ? "" : numeral(value).format('0.00000'));
+  }, [value, displayValue]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +45,7 @@ export const BasicInput: FC<Props> = ({
       if (rawValue.startsWith(".") && rawValue.length > 1) {
         rawValue = `0${rawValue}`;
       }
+
       setDisplayValue(rawValue);
       onChange?.(cleanValue);
     },
