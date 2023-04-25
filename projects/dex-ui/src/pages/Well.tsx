@@ -17,11 +17,12 @@ export const Well = () => {
 
   return (
     <div>
-      <strong>Name: {well.name}</strong>
+      <strong>{well.name}</strong>
       <br />
-      <strong>Tokens: {well.tokens?.map((t) => t.symbol).join(":")}</strong>
+      <strong>Tokens:</strong> {well.tokens?.map((t) => t.symbol).join(":")}
       <br />
-      <strong>Reserves: {well.reserves?.map((r) => r.toHuman()).join(":")}</strong>
+      <strong>Reserves: </strong>
+      {well.reserves?.map((r, i) => `${r.toHuman("0,0.00a")} ${well.tokens?.[i].symbol}`).join(" - ")}
       <br />
       <div>
         <AddLiquidity well={well} />

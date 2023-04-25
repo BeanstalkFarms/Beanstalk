@@ -87,8 +87,15 @@ export const TokenInput: FC<TokenInput> = ({
     handleAmountChange(val);
   }, [balance, handleAmountChange, token.symbol]);
 
+  const handleDoubleClick = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [inputRef]);
+
   /**
-   * We have a fake focus outline around TokenInput that kind of
+   * We have a fake focus outline around TokenInput which 
    * imitates the focus of a normal input. This focus is lost when
    * use clicks on other things inside TokenInput, but not on the input
    * so we use this method to stop other elements from stealing focus.
@@ -105,7 +112,14 @@ export const TokenInput: FC<TokenInput> = ({
   if (loading) return <LoadingContainer width={width} focused={focused} />;
 
   return (
-    <Container width={width} focused={focused} id="token-input" onClick={handleClick} onMouseDown={dontStealFocus}>
+    <Container
+      width={width}
+      focused={focused}
+      id="token-input"
+      onClick={handleClick}
+      onMouseDown={dontStealFocus}
+      onDoubleClick={handleDoubleClick}
+    >
       <TopRow>
         <BasicInput
           id={id}

@@ -8,7 +8,6 @@ export const useWellTokens = () => {
   return useQuery<Token[], Error>(
     ["tokens"],
     () => {
-      console.log("Query: Loading tokens");
       const tokens: Token[] = [];
       for (const well of wells!) {
         if (well.tokens && Array.isArray(well.tokens)) {
@@ -20,7 +19,8 @@ export const useWellTokens = () => {
     },
     {
       // initialData: [sdk.tokens.BEAN, sdk.tokens.WETH],
-      enabled: Array.isArray(wells)
+      enabled: Array.isArray(wells),
+      refetchOnWindowFocus: false
     }
   );
 };

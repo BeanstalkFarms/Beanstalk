@@ -8,7 +8,7 @@ export const loadToken = async (sdk: WellsSDK, address: string): Promise<ERC20To
 
   // Otherwise build a Token instance from the address
   if (!token) {
-    token = new ERC20Token(sdk.chainId, address, undefined, undefined, undefined, sdk.provider);
+    token = new ERC20Token(sdk.chainId, address, undefined, undefined, undefined, sdk.providerOrSigner);
     await token.loadFromChain();
   }
 

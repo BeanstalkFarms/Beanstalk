@@ -2,6 +2,8 @@ import { ChainId } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
+import { Router } from "./routing";
+import { SwapBuilder } from "./swap/SwapBuilder";
 import { Tokens } from "./tokens";
 import { PreloadOptions, Well } from "./Well";
 
@@ -19,11 +21,13 @@ export class WellsSDK {
   public signer?: Signer;
   public provider: Provider;
   public providerOrSigner: Signer | Provider;
+  public Router = Router;
 
   public readonly chainId: ChainId;
 
   public readonly addresses: typeof addresses;
   public readonly tokens: Tokens;
+  public readonly swapBuilder: SwapBuilder;
 
   constructor(config?: SDKConfig) {
     this.handleConfig(config);
@@ -33,6 +37,8 @@ export class WellsSDK {
     // Globals
     this.addresses = addresses;
     this.tokens = new Tokens(this);
+
+    this.swapBuilder = new SwapBuilder(this);
   }
 
   /**
@@ -56,7 +62,7 @@ export class WellsSDK {
     return well;
   }
 
-  debug(...args: any[]) {
+   debug(...args: any[]) {
     if (!this.DEBUG) return;
     console.debug(...args);
   }
