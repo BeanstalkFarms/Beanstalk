@@ -40,9 +40,9 @@ export const ADDRESS_COLLECTION: {[c: string]: string} = {
 
 export async function loadNFTs(account: string) {
 
-  const genesisNFTs: Nft[] = []
-  const winterNFTs: Nft[] = []
-  const barnRaiseNFTs: Nft[] = []
+  const genesisNFTs: Nft[] = [];
+  const winterNFTs: Nft[] = [];
+  const barnRaiseNFTs: Nft[] = [];
 
   try {
 
@@ -70,40 +70,49 @@ export async function loadNFTs(account: string) {
 
     const ownedNFTsJSON = await ownedNFTs.json()
 
-    ownedNFTsJSON.data.user.genesis.sort()
-    ownedNFTsJSON.data.user.winter.sort()
-    ownedNFTsJSON.data.user.barnRaise.sort()
+    if (ownedNFTsJSON.data.user) {
+      if (ownedNFTsJSON.data.user.genesis) {
+        ownedNFTsJSON.data.user.genesis.sort()
+        ownedNFTsJSON.data.user.genesis.forEach((element: number) => {
+          genesisNFTs.push(
+            {
+              id: element,
+              account: account.toLowerCase(),
+              subcollection: "Genesis"
+            }
+          )
+        });
+      }
+      
+      if (ownedNFTsJSON.data.user.winter) {
+        ownedNFTsJSON.data.user.winter.sort()
+        ownedNFTsJSON.data.user.winter.forEach((element: number) => {
+          winterNFTs.push(
+            {
+              id: element,
+              account: account.toLowerCase(),
+              subcollection: "Winter"
+            }
+          )
+        });
+      }
 
-    ownedNFTsJSON.data.user.genesis.forEach((element: number) => {
-      genesisNFTs.push(
-        {
-          id: element,
-          account: account.toLowerCase(),
-          subcollection: "Genesis"
-        }
-      )
-    });
+      if (ownedNFTsJSON.data.user.barnRaise) {
+        ownedNFTsJSON.data.user.barnRaise.sort()
+        ownedNFTsJSON.data.user.barnRaise.forEach((element: number) => {
+          barnRaiseNFTs.push(
+            {
+              id: element,
+              account: account.toLowerCase(),
+              subcollection: "Barn Raise"
+            }
+          )
+        });
+      }
+    }
 
-    ownedNFTsJSON.data.user.winter.forEach((element: number) => {
-      winterNFTs.push(
-        {
-          id: element,
-          account: account.toLowerCase(),
-          subcollection: "Winter"
-        }
-      )
-    });
-
-    ownedNFTsJSON.data.user.barnRaise.forEach((element: number) => {
-      barnRaiseNFTs.push(
-        {
-          id: element,
-          account: account.toLowerCase(),
-          subcollection: "Barn Raise"
-        }
-      )
-    }); } catch (e) {
-    console.log("BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ", e)
+  } catch (e) {
+    console.log("BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ", e);
   }
 
   return {

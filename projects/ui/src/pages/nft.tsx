@@ -30,7 +30,6 @@ const NFTPage: FC<{}> = () => {
   // component state
   const [tab, handleChangeTab] = useTabs(SLUGS, 'collection');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [parseMintTries, setParseMintTries] = useState(0)
 
   // NFT state
   const [selectedNFT, setSelectedNFT] = useState<Nft | null>(null);
@@ -52,24 +51,19 @@ const NFTPage: FC<{}> = () => {
 
   const delay = (ms:number) => new Promise(res => setTimeout(res, ms));
 
-  const parseMints = useCallback(async (accountNFTs: Nft[], contractAddress: string, setNFTs: any) => {
-    if (!account) {
-      return;
-    }
-    const nfts: Nft[] = [];
+  async function getNFTMetadataBatch(nftArray:any[], contractAddress:string) {
 
-    // batchNFTMetadata
     const nftMetadataBatchBaseURL =  'https://eth-mainnet.alchemyapi.io/nft/v2/demo/getNFTMetadataBatch'
 
-    const ownedNfts: any[] = []
+    const nfts: any[] = []
     let batchRequest: any[] = []
 
     try {
-      if (accountNFTs.length > 0) {
-        for (let i = 0; i < accountNFTs.length; i++) {
-          batchRequest.push({ contractAddress: contractAddress, tokenId: accountNFTs[i].id })
-          if (batchRequest.length === 100 || i === accountNFTs.length - 1) {
-            let requestData = JSON.stringify(batchRequest)
+      if (nftArray.length > 0) {
+        for (let i = 0; i < nftArray.length; i++) {
+          batchRequest.push({ contractAddress: contractAddress, tokenId: nftArray[i].id });
+          if (batchRequest.length === 100 || i === nftArray.length - 1) {
+            let requestData = JSON.stringify(batchRequest);
             let request = await fetch(nftMetadataBatchBaseURL, {
               method: 'POST',
               headers: {
@@ -85,57 +79,101 @@ const NFTPage: FC<{}> = () => {
             if (request.ok === false) {
               throw "ALCHEMY FETCH ERROR"
             }
-            let response = await request.json()
+            let response = await request.json();
             response.forEach((element: any) => {
-              ownedNfts.push(element)
+              nfts.push(element);
             });
-            batchRequest = []
+            batchRequest = [];
           } 
         }
       }
+    } catch (e) {
+      console.log("BEANFT - ERROR FETCHING METADATA", e);
+      return ["ERROR"];
+    }
 
-      const nftHashes = ownedNfts.map((nft: any) => nft.metadata.image.replace('ipfs://', ''));
+    return nfts;
+  }
 
-      /// UNCLAIMED
-      if (accountNFTs.length) {
-        for (let i = 0; i < accountNFTs.length; i += 1) {
-          let isNotMinted
-          if (ownedNfts[i].error) {
-            isNotMinted = true
-          } else {
-            isNotMinted = false
-          }
-          // if nft hash is NOT included in accountNFTs but IS minted
-          // that means a new address owns this NFT now
-          if (!nftHashes.includes(accountNFTs[i].imageIpfsHash) && isNotMinted) {
-            nfts.push({ ...accountNFTs[i], claimed: ClaimStatus.UNCLAIMED });
-          }
+  const parseMints = useCallback(async (accountNFTs: Nft[], contractAddress: string, setNFTs: any) => {
+    if (!account) {
+      return;
+    }
+    const nfts: Nft[] = [];
+    let mintables = [];
+
+    try {
+      mintables = await fetch(`/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
+    } catch (e) {
+      console.log("BEANFT - ERROR FECTHING MINTABLE NFTS");
+    }
+
+    // batchNFTMetadata
+    let ownedNfts = [];
+    let mintableNfts = [];
+
+    let ownedAttempts = 1;
+    do {
+      await delay(500 * ownedAttempts);
+      ownedNfts = await getNFTMetadataBatch(accountNFTs, contractAddress);
+      ownedAttempts++
+    } while (ownedNfts[0] === "ERROR");
+
+    let mintableAttempts = 1;
+    do {
+      await delay(500 * mintableAttempts);
+      mintableNfts = await getNFTMetadataBatch(mintables, contractAddress);
+      mintableAttempts++
+    } while (mintableNfts[0] === "ERROR");
+
+    const nftHashes = ownedNfts.map((nft: any) => nft.metadata.image.replace('ipfs://', ''));
+
+    // Unminted NFTs
+    if (mintableNfts.length > 0) {
+      for (let i = 0; i < mintableNfts.length; i++) {
+        const isNotMinted = mintableNfts[i].error;
+        let mintableSubcollection = mintables[i].subcollection;
+        let currentCollection;
+        switch (mintableSubcollection) {
+          case "Genesis":
+            contractAddress === BEANFT_GENESIS_ADDRESSES[1] ? currentCollection = true : currentCollection = false;
+            break
+          case "Winter":
+            contractAddress === BEANFT_WINTER_ADDRESSES[1] ? currentCollection = true : currentCollection = false;
+            break
+          case "Barn Raise":
+            contractAddress === BEANFT_BARNRAISE_ADDRESSES[1] ? currentCollection = true : currentCollection = false;
+            break
+          default:
+            currentCollection = false;
         }
-      }
-
-      /// CLAIMED
-      if (ownedNfts.length) {
-        for (let i = 0; i < ownedNfts.length; i += 1) {
-          let subcollection = ADDRESS_COLLECTION[ownedNfts[i].contract.address]
+        // if nft hash is NOT included in mintableNfts but IS minted
+        // that means a new address owns this NFT now]
+        if (!nftHashes.includes(mintables[i].imageIpfsHash) && isNotMinted && currentCollection) {
           nfts.push({
-            // Genesis BeaNFT titles: 'BeaNFT (ID number)' || Winter and Barn Raise BeaNFT titles: '(ID number)'
-            id: (subcollection === BEANFT_GENESIS_ADDRESSES[1] ? parseInt(ownedNfts[i].title.split(' ')[1], 10) : ownedNfts[i].title),
-            account: account,
-            subcollection: subcollection,
-            claimed: ClaimStatus.CLAIMED,
-            imageIpfsHash: nftHashes[i]
+            account: mintables[i].account,
+            id: mintables[i].id,
+            imageIpfsHash: mintables[i].imageIpfsHash,
+            signature2: mintables[i].signature2,
+            subcollection: ADDRESS_COLLECTION[mintableNfts[i].contract.address],
+            claimed: ClaimStatus.UNCLAIMED,
           });
         }
       }
+    }
 
-    } catch (e) {
-      console.log("BEANFT - ERROR FETCHING METADATA", e)
-      if (parseMintTries < 4) {
-        console.log("BEANFT - RETRYING IN 3 SECONDS...")
-        await delay(3000)
-        setParseMintTries(parseMintTries + 1)
-        console.log("BEANFT - FETCHING DATA...")
-        parseMints(accountNFTs, contractAddress, setNFTs)
+    /// Minted NFTs
+    if (ownedNfts.length > 0) {
+      for (let i = 0; i < ownedNfts.length; i += 1) {
+        let subcollection = ADDRESS_COLLECTION[ownedNfts[i].contract.address];
+        nfts.push({
+          // Genesis BeaNFT titles: 'BeaNFT (ID number)' || Winter and Barn Raise BeaNFT titles: '(ID number)'
+          id: (subcollection === BEANFT_GENESIS_ADDRESSES[1] ? parseInt(ownedNfts[i].title.split(' ')[1], 10) : ownedNfts[i].title),
+          account: account,
+          subcollection: subcollection,
+          claimed: ClaimStatus.CLAIMED,
+          imageIpfsHash: nftHashes[i]
+        });
       }
     }
 
