@@ -29,7 +29,7 @@ const StyledButton = styled.button<ButtonProps>`
   outline: none;
   border: none;
   color: ${({ disabled, loading }) => (disabled ? "#575757" : loading ? "#d6dbff" : "#d6dbff")};
-  ine-height: 1.5rem;
+  line-height: 1.5rem;
   font-size: 1.5rem;
   cursor: pointer;
 
