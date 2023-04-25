@@ -101,8 +101,6 @@ export class SwapStep {
     // This should never happen, but sanity check
     if (!amount) throw new Error(`Step is missing forward lastQuote`);
 
-    // this.well.contract.shift(tokenout, minAmountOut, recipient)
-
     return {
       contract: this.well.contract,
       method: "shift",
@@ -114,13 +112,6 @@ export class SwapStep {
     if (!this.hasQuoted) throw new Error("Must do a quote before swapping");
     if (this.direction !== Direction.REVERSE) throw new Error("swapMany() can only be called for quotes where direction was Reverse");
 
-    // const amount = this.quoteResult;
-    // This should never happen, but sanity check
-    // if (!amount) throw new Error(`Step is missing reverse lastQuote`);
-
-    // const amountWithSlippage = amount.addSlippage(this.slippage);
-
-    // this.well.swapTo(a,b,maxAmountIn, amountOut, recipient, deadlin)
     return {
       contract: this.well.contract,
       method: "swapTo",
