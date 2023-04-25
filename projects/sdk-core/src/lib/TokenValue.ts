@@ -148,11 +148,7 @@ export class TokenValue {
   public toHuman(format?: string): string {
     if (!format) return this.value.toString();
 
-    if (format !== "auto") {
-      return numeral(this.value.toString()).format(format).toUpperCase();
-    }
-
-    return "";
+    return numeral(this.value.toString()).format(format).toUpperCase();
   }
 
   // Used mostly by the math functions to normalize the input
