@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { TokenInput } from "src/components/Swap/TokenInput";
 import { Token, TokenValue } from "@beanstalk/sdk";
-import { useAllTokensBalance } from "src/tokens/useTokenBalance";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import styled from "styled-components";
 import { images } from "src/assets/images/tokens";
 import { useAccount } from "wagmi";
