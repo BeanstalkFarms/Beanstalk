@@ -13,6 +13,14 @@ async function getWellContractFactory(name) {
     );
 }
 
+async function getWellContractAt(name, address) {
+    const contractJson = JSON.parse(await fs.readFileSync(`${BASE_STRING}/${name}.sol/${name}.json`))
+    return await ethers.getContractAt(
+        contractJson.abi,
+        address
+    );
+}
+
 async function deployWellContract(name, arguments = []) {
     const Contract = await getWellContractFactory(name);
     const contract = await Contract.deploy(...arguments);
@@ -186,3 +194,4 @@ exports.getWellContractFactory = getWellContractFactory;
 exports.deployWell = deployWell;
 exports.setReserves = setReserves;
 exports.whitelistWell = whitelistWell;
+exports.getWellContractAt = getWellContractAt

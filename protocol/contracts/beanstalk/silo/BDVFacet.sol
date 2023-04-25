@@ -8,7 +8,7 @@ pragma experimental ABIEncoderV2;
 import "~/C.sol";
 import "~/libraries/Curve/LibBeanMetaCurve.sol";
 import "~/libraries/LibUnripe.sol";
-import "~/libraries/Well/LibWellPrice.sol";
+import "~/libraries/Well/LibWellBdv.sol";
 
 /**
  * @title BDVFacet
@@ -41,6 +41,6 @@ contract BDVFacet {
         view
         returns (uint256)
     {
-        return LibWellPrice.bdv(token, amount);
+        return LibWellBdv.bdv(token, amount);
     }
 }

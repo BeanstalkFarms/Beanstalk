@@ -11,14 +11,15 @@ import {Call, IWell} from "@wells/interfaces/IWell.sol";
 import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
 import {LibWell} from "~/libraries/Well/LibWell.sol";
 
-/**=
- * @title LibWellPrice handles fetching the price of ERC-20 tokens in a Well.
+/**
+ * @title LibWellBdv handles fetching the bdv of a Well's Well Tokens.
  **/
 
-library LibWellPrice {
+library LibWellBdv {
     using SafeMath for uint256;
 
     uint constant private BEAN_UNIT = 1e6;
+    bytes constant BYTES_ZERO = new bytes(0);
 
     function bdv(
         address well,
@@ -26,9 +27,8 @@ library LibWellPrice {
     ) internal view returns (uint _bdv) {
         uint beanIndex = LibWell.getBeanIndexFromWell(well);
 
-        // TODO – set Pump index in storage or use default Pumps?
-        Call memory pump = IWell(well).pumps()[0];
-        uint[] memory reserves = IInstantaneousPump(pump.target).readInstantaneousReserves(well, pump.data);
+        // For now, assume all Wells use the default Beanstalk Pump. This should be changed if/when a new Beanstalk Pump is deployed.
+        uint[] memory reserves = IInstantaneousPump(LibWell.BEANSTALK_PUMP).readInstantaneousReserves(well, BYTES_ZERO);
         Call memory wellFunction = IWell(well).wellFunction();
         uint lpTokenSupplyBefore = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
         reserves[beanIndex] = reserves[beanIndex].sub(BEAN_UNIT); // remove one bean

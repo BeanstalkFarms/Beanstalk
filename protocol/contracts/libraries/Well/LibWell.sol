@@ -15,7 +15,7 @@ import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
 
 /**=
- * @title LibWellPrice handles fetching the price of ERC-20 tokens in a Well.
+ * @title LibWell stores Well utility functions.
  **/
 
 library LibWell {

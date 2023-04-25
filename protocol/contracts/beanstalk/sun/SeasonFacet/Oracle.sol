@@ -46,4 +46,8 @@ contract Oracle is ReentrancyGuard {
         // deltaB = deltaB + LibWellMinting.capture(BEAN_ETH_WELL);
         s.season.timestamp = block.timestamp;
     }
+
+    function wellOracleSnapshot(address well) external view returns (bytes memory snapshot) {
+        snapshot = s.wellOracleSnapshots[well];
+    }
 }

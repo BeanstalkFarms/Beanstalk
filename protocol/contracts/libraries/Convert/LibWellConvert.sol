@@ -165,7 +165,6 @@ library LibWellConvert {
         uint256 maxLp = lpToPeg(well);
         require(maxLp > 0, "Convert: P must be < 1.");
         lpConverted = lp > maxLp ? maxLp : lp;
-        // TODO: maybe move to init function
         beans = IWell(well).removeLiquidityOneToken(
             lpConverted,
             C.bean(),

@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call} from "@wells/interfaces/IWell.sol";
+import {IPump} from "@wells/interfaces/pumps/IPump.sol";
 import {MockToken} from "../MockToken.sol";
 
 /**
@@ -16,12 +17,16 @@ import {MockToken} from "../MockToken.sol";
 
 contract MockSetComponentsWell is MockToken {
 
-    constructor() MockToken("Mock Well", "MWELL") {}
+    constructor() MockToken("Mock Well", "MWELL") {
+        _reserves = new uint256[](2);
+    }
 
     Call[] public _pumps;
     Call public _wellFunction;
 
     IERC20[] internal _tokens;
+
+    uint256[] _reserves;
 
     function pumps() external view returns (Call[] memory) {
         return _pumps;
@@ -48,5 +53,16 @@ contract MockSetComponentsWell is MockToken {
 
     function setTokens(IERC20[] memory __tokens) external {
         _tokens = __tokens;
+    }
+
+    function getReserves() external view returns (uint256[] memory reserves) {
+        reserves = _reserves;
+    }
+
+    function setReserves(uint256[] memory reserves) external {
+        for (uint i; i < _pumps.length; ++i) {
+            IPump(_pumps[i].target).update(_reserves, new bytes(0));
+        }
+        _reserves = reserves;
     }
 }
