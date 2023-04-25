@@ -249,21 +249,22 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
                 amounts.push(ethers.BigNumber.from(tokenData[tokenAddress][season].amount.hex));
               }
       
-              if (seasons.length > 0 && amounts.length > 0) {
+              //removing this check to include ALL silos, even those with no deposits
+              // if (seasons.length > 0 && amounts.length > 0) {
                 tokenAddresses.push(tokenAddress);
                 seasonsArray.push(seasons);
                 amountsArray.push(amounts);
-              }
+              // }
             }
           }
       
-          if (tokenAddresses.length > 0 && seasonsArray.length > 0 && amountsArray.length > 0) {
+          // if (tokenAddresses.length > 0 && seasonsArray.length > 0 && amountsArray.length > 0) {
             result[siloAddress] = {
               tokenAddresses,
               seasonsArray,
               amountsArray,
             };
-          }
+          // }
         }
       
         return result;
@@ -304,12 +305,25 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
 
         var progress = 0;
+        let gasTotal = 0;
         for (const depositorAddress in deposits) {
-            console.log('depositorAddress: ', depositorAddress);
-
             const tokens = deposits[depositorAddress]['tokenAddresses'];
             const seasons = deposits[depositorAddress]['seasonsArray'];
             const amounts = deposits[depositorAddress]['amountsArray'];
+
+
+            function countItemsInNestedArray(nestedArray) {
+              let count = 0;
+              for (let i = 0; i < nestedArray.length; i++) {
+                if (Array.isArray(nestedArray[i])) {
+                  count += nestedArray[i].length;
+                }
+              }
+              return count;
+            }
+            
+
+            console.log('depositorAddress: ', depositorAddress, 'deposits:', countItemsInNestedArray(seasons));
 
             let stalkDiff = 0;
             let seedsDiff = 0;
@@ -323,11 +337,38 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
             const depositorSigner = await impersonateSigner(depositorAddress);
             await this.silo.connect(depositorSigner);
-        
-            await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
+
+            let tx;
+
+            const balanceOfSeeds = await this.migrate.balanceOfSeeds(depositorAddress);
+            console.log('balanceOfSeeds: ', balanceOfSeeds);
+
+            if (seasons.length > 0 || balanceOfSeeds > 0) {
+
+              if (balanceOfSeeds > 0 && seasons.length == 0) {
+                console.log('not migrating this silo because we don\'t have the seeds diff for it: ', depositorAddress);
+              } else {
+                tx = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
+              }
+            } else {
+              console.log('migrate no deposits for depositorAddress: ', depositorAddress);
+
+              const needMigrate = await this.silo.migrationNeeded(depositorAddress);
+              console.log('needMigrate: ', needMigrate);
+              if (needMigrate) {
+                tx = await this.migrate.mowAndMigrateNoDeposits(depositorAddress);
+              }
+            }
+            
 
             console.log('progress: ', progress);
             progress++;
+
+            if (tx) {
+              const receipt = await tx.wait();
+              gasTotal += parseInt(receipt.gasUsed);
+              console.log('gasTotal: ', gasTotal);
+            }
         }
       });
     });

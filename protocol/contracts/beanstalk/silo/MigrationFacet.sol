@@ -65,5 +65,8 @@ contract MigrationFacet is ReentrancyGuard {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 
-
+    //view legacy seeds amount for migration logic (can determine if should use migrate no deposits or regular migrate)
+    function balanceOfSeeds(address account) public view returns (uint256) {
+        return s.a[account].s.seeds;
+    }
 }
