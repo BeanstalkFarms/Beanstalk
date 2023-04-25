@@ -193,7 +193,7 @@ export class Quote {
     // Should never happen but sanity check
     if (this.direction !== direction) throw new Error("Direction of last quote does not match expected direction of swap");
 
-    const pipelineAddress = "0xb1be0000bfdcddc92a8290202830c4ef689dceaa";
+    const pipelineAddress = addresses.PIPELINE.get(this.sdk.chainId);
     const steps = this.steps;
 
     const desiredAmount = this.amountUsedForQuote; // Amount desired

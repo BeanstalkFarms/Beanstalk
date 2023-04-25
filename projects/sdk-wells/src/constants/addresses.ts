@@ -7,5 +7,6 @@ export const addresses = {
   USDC: Address.make("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
 
   // Contracts
-  DEPOT: Address.make("0xdeb0f000082fd56c10f449d4f8497682494da84d")
+  DEPOT: Address.make("0xdeb0f000082fd56c10f449d4f8497682494da84d"),
+  PIPELINE: Address.make('0xb1be0000bfdcddc92a8290202830c4ef689dceaa')
 };
