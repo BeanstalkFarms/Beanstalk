@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "~/libraries/Minting/LibCurveMinting.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Minting/LibWellMinting.sol";
+import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**
  * @title Oracle
@@ -14,6 +15,8 @@ import "~/libraries/Minting/LibWellMinting.sol";
  */
 contract Oracle is ReentrancyGuard {
     
+    using SignedSafeMath for int256;
+
     //////////////////// ORACLE GETTERS ////////////////////
 
     // TODO: Set
@@ -25,9 +28,9 @@ contract Oracle is ReentrancyGuard {
      */
     function totalDeltaB() external view returns (int256 deltaB) {
         // TODO: Use SafeMath
-        deltaB =
-            LibCurveMinting.check() + 
-            LibWellMinting.check(BEAN_ETH_WELL);
+        deltaB = LibCurveMinting.check().add(
+            LibWellMinting.check(BEAN_ETH_WELL)
+        );
     }
 
     /**
@@ -44,7 +47,7 @@ contract Oracle is ReentrancyGuard {
     function stepOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         (deltaB, balances) = LibCurveMinting.capture();
         // TODO: Use SafeMath
-        deltaB = deltaB + LibWellMinting.capture(BEAN_ETH_WELL);
+        deltaB = deltaB.add(LibWellMinting.capture(BEAN_ETH_WELL));
         s.season.timestamp = block.timestamp;
     }
 
