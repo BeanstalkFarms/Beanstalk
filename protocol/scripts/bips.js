@@ -75,7 +75,7 @@ async function bip34(mock = true, account = undefined) {
         object: !mock,
         verbose: true,
         account: account,
-        verify: true
+        verify: false
       });
 }
 

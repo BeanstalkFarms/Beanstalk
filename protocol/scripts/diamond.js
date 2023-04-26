@@ -376,7 +376,7 @@ async function upgradeWithNewFacets ({
       libraryFactory = await libraryFactory.deploy()
       await libraryFactory.deployed()
       if (verify) {
-        await run(`verify:verify`, {
+        await run(`verify`, {
           address: libraryFactory.address
         });
       }
@@ -424,7 +424,7 @@ async function upgradeWithNewFacets ({
     if (verbose) console.log(`${name} hash: ${deployedFactory.deployTransaction.hash}`);
     await deployedFactory.deployed()
     if (verify) {
-      await run(`verify:verify`, {
+      await run(`verify`, {
         address: deployedFactory.address
       });
     }
@@ -478,7 +478,7 @@ async function upgradeWithNewFacets ({
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
       if (verify) {
-        await run(`verify:verify`, {
+        await run(`verify`, {
           address: initFacet.address
         });
       }
