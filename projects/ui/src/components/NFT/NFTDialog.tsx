@@ -34,7 +34,7 @@ const NFTDialog: FC<NFTDialogProps> = ({
         {nft.claimed === 0 ? (
           <Link
             href={
-            `https://opensea.io/assets/ethereum/${COLLECTION_ADDRESS[nft.subcollection]}/${nft.id}`
+            `https://opensea.io/assets/ethereum/${nft.subcollection}/${nft.id}`
           }
             target="_blank"
             rel="noreferrer">
