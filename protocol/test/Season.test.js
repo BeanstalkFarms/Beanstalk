@@ -5,6 +5,7 @@ const { signERC2612Permit } = require("eth-permit");
 const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, PIPELINE, BEANSTALK, ETH_USDC_UNISWAP_V3 } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { deployMockWell } = require('../utils/well.js');
 
 let user, user2, owner;
 
@@ -22,6 +23,8 @@ describe('Season', function () {
         bean = await getBean()
         await setToSecondsAfterHour(0)
         await owner.sendTransaction({to: user.address, value: 0})
+
+        await deployMockWell()
 
         this.ethUsdcUniswapPool = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
         await this.ethUsdcUniswapPool.setOraclePrice(1000e6,18);

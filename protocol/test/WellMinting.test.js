@@ -4,7 +4,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { BEAN, BEANSTALK_PUMP, WETH } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
-const { getWellContractFactory, whitelistWell, getWellContractAt } = require('../utils/well.js');
+const { getWellContractFactory, whitelistWell, getWellContractAt, deployMockWell } = require('../utils/well.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -31,57 +31,11 @@ describe('Well Minting', function () {
     this.beanstalk = await getBeanstalk(this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.bean = await getBean()
-    await this.bean.mint(userAddress, to18('1'))
+    await this.bean.mint(userAddress, to18('1'));
 
-    /////////////////////////////////////////////////////////////////////////////////
+    [this.well, this.wellFunction, this.pump] = await deployMockWell()
 
-    // this.pump = await (await getWellContractFactory('GeoEmaAndCumSmaPump')).deploy(
-    //   '0x3ffe0000000000000000000000000000', // 0.5
-    //   '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
-    //   12,
-    //   '0x3ffecccccccccccccccccccccccccccc' // 0.9
-    // )
-    // await this.pump.deployed()
-
-    // await network.provider.send("hardhat_setCode", [
-    //   BEANSTALK_PUMP,
-    //   await ethers.provider.getCode(this.pump.address),
-    // ]);
-    // this.pump = await getWellContractAt('GeoEmaAndCumSmaPump', BEANSTALK_PUMP)
-
-    /////////////////////////////////////////////////////////////////////////////////
-
-    this.pump = await (await ethers.getContractFactory('MockGeoEmaAndCumSmaPump')).deploy(
-      '0x3ffe0000000000000000000000000000', // 0.5
-      '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
-      12,
-      '0x3ffecccccccccccccccccccccccccccc' // 0.9
-    )
-    await this.pump.deployed()
-
-    await network.provider.send("hardhat_setCode", [
-      BEANSTALK_PUMP,
-      await ethers.provider.getCode(this.pump.address),
-    ]);
-    this.pump = await ethers.getContractAt('MockGeoEmaAndCumSmaPump', BEANSTALK_PUMP)
-
-
-    /////////////////////////////////////////////////////////////////////////////////
-
-    this.wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
-    await this.wellFunction.deployed()
-
-    this.well = await (await ethers.getContractFactory('MockSetComponentsWell')).deploy()
-    await this.well.deployed()
-
-    await this.well.setPumps([[this.pump.address, '0x']])
-    await this.well.setWellFunction([this.wellFunction.address, '0x'])
-    await this.well.setTokens([BEAN, WETH])
     await whitelistWell(this.well.address, '10000', to6('4'))
-
-    await this.well.setReserves([to6('1000000'), to18('1000')])
-
-    await this.well.setReserves([to6('1000000'), to18('1000')])
 
     await this.season.captureWellE(this.well.address)
   
@@ -99,26 +53,63 @@ describe('Well Minting', function () {
     const snapshot = await this.beanstalk.wellOracleSnapshot(this.well.address)
   })
 
-  it("Tracks a delta B = 0", async function () {
-    await advanceTime(3600)
-    const result = await this.season.captureWellE(this.well.address)
-    await expect(result).to.emit(this.season, 'DeltaB').withArgs('0');
+  describe("Delta B = 0", async function () {
+    beforeEach(async function () {
+      await advanceTime(3600)
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+    })
+
+    it("Captures", async function () {
+      expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
+    })
+  
+    it("Checks", async function () {
+      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('0')
+    })
+
   })
 
-  it ("Tracks a delta B > 0", async function () {
-    await advanceTime(1800)
-    await this.well.setReserves([to6('500000'), to18('1000')])
-    await advanceTime(1800)
-    const result = await this.season.captureWellE(this.well.address)
-    await expect(result).to.emit(this.season, 'DeltaB').withArgs('133789634067');
+  describe("Delta B > 0", async function () {
+    beforeEach(async function () {
+      await advanceTime(1800)
+      await this.well.setReserves([to6('500000'), to18('1000')])
+      await advanceTime(1800)
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+    })
+
+    it ("Captures a delta B > 0", async function () {
+      expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('133789634067')
+    })
+  
+    it("Checks a delta B > 0", async function () {
+      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('133789634067')
+    })
   })
 
-  it ("Tracks a delta B < 0", async function () {    
-    await advanceTime(1800)
-    await this.well.setReserves([to6('2000000'), to18('1000')])
-    await advanceTime(1800)
-    const result = await this.season.captureWellE(this.well.address)
-    await expect(result).to.emit(this.season, 'DeltaB').withArgs('-225006447371');
+  describe("Delta B < 0", async function () {
+    beforeEach(async function () {
+      await advanceTime(1800)
+      await this.well.setReserves([to6('2000000'), to18('1000')])
+      await advanceTime(1800)
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+    })
+
+    it("Captures a delta B < 0", async function () {
+      expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('-225006447371')
+    })
+
+    it("Checks a delta B < 0", async function () {
+      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('-225006447371')
+    })
   })
   
 })

@@ -5,6 +5,7 @@ const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
 const { USDC, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
+const { deployMockWell } = require('../utils/well.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -43,6 +44,8 @@ describe('Sun', function () {
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeLP.mint(owner.address, to6('10000'))
+
+    await deployMockWell()
 
     await this.season.siloSunrise(0)
   })

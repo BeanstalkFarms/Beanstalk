@@ -24,9 +24,10 @@ contract Oracle is ReentrancyGuard {
      * @notice Returns the current Delta B in the Curve liquidity pool.
      */
     function totalDeltaB() external view returns (int256 deltaB) {
+        // TODO: Use SafeMath
         deltaB =
-            LibCurveMinting.check(); // +
-            // LibWellMinting.check(BEAN_ETH_WELL);
+            LibCurveMinting.check() + 
+            LibWellMinting.check(BEAN_ETH_WELL);
     }
 
     /**
@@ -42,8 +43,8 @@ contract Oracle is ReentrancyGuard {
 
     function stepOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         (deltaB, balances) = LibCurveMinting.capture();
-        // TODO: implement SafeMath
-        // deltaB = deltaB + LibWellMinting.capture(BEAN_ETH_WELL);
+        // TODO: Use SafeMath
+        deltaB = deltaB + LibWellMinting.capture(BEAN_ETH_WELL);
         s.season.timestamp = block.timestamp;
     }
 

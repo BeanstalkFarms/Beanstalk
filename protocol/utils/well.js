@@ -1,4 +1,6 @@
 const fs = require('fs');
+const { BEAN, WETH, BEANSTALK_PUMP } = require('../test/utils/constants');
+const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
 const { mintEth } = require('./mint');
 const { impersonateBeanstalkOwner } = require('./signer');
@@ -90,12 +92,7 @@ async function deployWell(tokens, verbose = false, salt = ethers.constants.HashZ
     if (verbose) console.log("Deployed Aquifer", aquifer.address);
     const wellFunction = await deployWellContract('ConstantProduct2');
     if (verbose) console.log("Deployed Well Function", wellFunction.address);
-    const pump = await deployWellContract('GeoEmaAndCumSmaPump', [
-        '0x3ffe0000000000000000000000000000', // 0.5e18
-        '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333e18
-        12,
-        '0x3ffecccccccccccccccccccccccccccc' // 0.9e18
-    ]);
+    const pump = await deployGeoEmaAndCumSmaPump()
     if (verbose) console.log("Deployed Pump", pump.address);
 
     const immutableData = await encodeWellImmutableData(
@@ -190,8 +187,74 @@ async function whitelistWell(wellAddress, stalk, stalkEarnedPerSeason) {
 
 }
 
+async function deployMockPump() {
+    pump = await (await ethers.getContractFactory('MockPump')).deploy()
+    await pump.deployed()
+    await network.provider.send("hardhat_setCode", [
+      BEANSTALK_PUMP,
+      await ethers.provider.getCode(pump.address),
+    ]);
+    return await ethers.getContractAt('MockPump', BEANSTALK_PUMP)
+}
+
+async function deployGeoEmaAndCumSmaPump() {
+
+    pump = await (await getWellContractFactory('GeoEmaAndCumSmaPump')).deploy(
+      '0x3ffe0000000000000000000000000000', // 0.5
+      '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
+      12,
+      '0x3ffecccccccccccccccccccccccccccc' // 0.9
+    )
+    await pump.deployed()
+
+    await network.provider.send("hardhat_setCode", [
+      BEANSTALK_PUMP,
+      await ethers.provider.getCode(pump.address),
+    ]);
+    return await getWellContractAt('GeoEmaAndCumSmaPump', BEANSTALK_PUMP)
+
+    /////////////////////////////////////////////////////////////////////////////////
+
+    // let pump = await (await ethers.getContractFactory('MockGeoEmaAndCumSmaPump')).deploy(
+    //     '0x3ffe0000000000000000000000000000', // 0.5
+    //     '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
+    //     12,
+    //     '0x3ffecccccccccccccccccccccccccccc' // 0.9
+    //     )
+    //     await pump.deployed()
+    
+    //     await network.provider.send("hardhat_setCode", [
+    //         BEANSTALK_PUMP,
+    //         await ethers.provider.getCode(pump.address),
+    //     ]);
+    return await ethers.getContractAt('MockGeoEmaAndCumSmaPump', BEANSTALK_PUMP)
+
+}
+
+async function deployMockWell() {
+
+    let wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
+    await wellFunction.deployed()
+
+    let well = await (await ethers.getContractFactory('MockSetComponentsWell')).deploy()
+    await well.deployed()
+
+    pump = await deployGeoEmaAndCumSmaPump()
+
+    await well.setPumps([[pump.address, '0x']])
+    await well.setWellFunction([wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+
+    await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setReserves([to6('1000000'), to18('1000')])
+
+    return [well, wellFunction, pump]
+}
+
 exports.getWellContractFactory = getWellContractFactory;
 exports.deployWell = deployWell;
 exports.setReserves = setReserves;
 exports.whitelistWell = whitelistWell;
 exports.getWellContractAt = getWellContractAt
+exports.deployMockWell = deployMockWell
+exports.deployMockPump = deployMockPump

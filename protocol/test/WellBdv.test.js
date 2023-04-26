@@ -1,10 +1,10 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH } = require('./utils/constants');
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH, BEANSTALK_PUMP } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk } = require('../utils/contracts.js');
-const { getWellContractFactory, whitelistWell } = require('../utils/well.js');
+const { getWellContractFactory, whitelistWell, deployMockPump } = require('../utils/well.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -21,8 +21,7 @@ describe('Well BDV', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address)
 
-    this.pump = await (await ethers.getContractFactory('MockPump')).deploy()
-    await this.pump.deployed()
+    this.pump = await deployMockPump()
 
     this.wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
     await this.wellFunction.deployed()

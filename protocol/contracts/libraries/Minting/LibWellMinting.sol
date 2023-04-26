@@ -49,7 +49,7 @@ library LibWellMinting {
         bytes memory lastSnapshot = LibAppStorage
             .diamondStorage()
             .wellOracleSnapshots[well];
-        if (lastSnapshot.length == 0) {
+        if (lastSnapshot.length > 0) {
             (deltaB, ) = twaDeltaB(well, lastSnapshot);
         } else {
             deltaB = 0;
