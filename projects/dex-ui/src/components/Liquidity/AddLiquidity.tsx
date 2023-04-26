@@ -1,52 +1,35 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { TokenInput } from "src/components/Swap/TokenInput";
-import { Token, TokenValue } from "@beanstalk/sdk";
-import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
+import { TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
-import { images } from "src/assets/images/tokens";
 import { useAccount } from "wagmi";
 import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useQuery } from "@tanstack/react-query";
-
-type LiquidityAmounts = {
-  [key: number]: TokenValue;
-};
+import { LiquidityAmounts } from "./types";
 
 type AddLiquidityProps = {
   well: Well;
+  txnCompleteCallback: () => void;
 };
 
-export const AddLiquidity = ({ well }: AddLiquidityProps) => {
+export const AddLiquidity = ({ well, txnCompleteCallback }: AddLiquidityProps) => {
   const { address } = useAccount();
-  const [wellTokens, setWellTokens] = useState<Token[]>([]);
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
   const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
-  const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
-
-  const { isLoading: isAllTokenLoading, refetch: refetchBalances } = useAllTokensBalance();
 
   const atLeastOneAmountNonzero = useCallback(() => Object.values(amounts).filter((amount) => amount.value.gt("0")).length > 0, [amounts]);
 
   useEffect(() => {
-    const fetching = isAllTokenLoading;
-    fetching ? setIsLoadingAllBalances(true) : setTimeout(() => setIsLoadingAllBalances(false), 500);
-  }, [isAllTokenLoading]);
-
-  useEffect(() => {
     if (well.tokens) {
-      const tokens: Token[] = [];
       const initialAmounts: LiquidityAmounts = {};
-      well.tokens.forEach((token, index) => {
-        token.setMetadata({ logo: images[token.symbol] ?? images.DEFAULT });
-        tokens.push(token);
-        initialAmounts[index] = TokenValue.ZERO;
-      });
+      for (let i = 0; i < well.tokens.length; i++) {
+        initialAmounts[i] = TokenValue.ZERO;
+      }
 
-      setWellTokens(tokens);
       setAmounts(initialAmounts);
     }
-  }, [well]);
+  }, [well.tokens]);
 
   const {
     data: quote,
@@ -64,7 +47,7 @@ export const AddLiquidity = ({ well }: AddLiquidityProps) => {
       const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quote, address);
       const receipt = await addLiquidityTxn.wait();
       setReceipt(receipt);
-      refetchBalances();
+      txnCompleteCallback();
     }
   }, [well.addLiquidity, amounts, quote, address]);
 
@@ -79,7 +62,7 @@ export const AddLiquidity = ({ well }: AddLiquidityProps) => {
 
   return (
     <div>
-      {wellTokens.length > 0 && (
+      {well.tokens!.length > 0 && (
         <div>
           <h1>Add Liquidity</h1>
           <div>
@@ -88,11 +71,11 @@ export const AddLiquidity = ({ well }: AddLiquidityProps) => {
                 <TokenInput
                   id={`input${index}`}
                   label={`Input amount in ${token.symbol}`}
-                  token={wellTokens[index]}
+                  token={well.tokens![index]}
                   amount={amounts[index]}
                   onAmountChange={handleInputChange(index)}
                   canChangeToken={false}
-                  loading={isLoadingAllBalances}
+                  loading={false}
                 />
               ))}
             </TokenListContainer>
