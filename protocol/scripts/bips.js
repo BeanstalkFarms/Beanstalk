@@ -53,5 +53,32 @@ async function bip29(mock = true, account = undefined) {
       });
 }
 
+async function bip34(mock = true, account = undefined) {
+    if (account == undefined) {
+        account = await impersonateBeanstalkOwner()
+        await mintEth(account.address)
+    }
+
+    await upgradeWithNewFacets({
+        diamondAddress: BEANSTALK,
+        facetNames: [
+            'FieldFacet', // Add Morning Auction
+            'SeasonFacet', // Add ERC-20 permit function
+            'FundraiserFacet', // update fundraiser with new soil spec
+        ],
+        initFacetName: 'InitBipSunriseImprovements',
+        selectorsToRemove: [
+            "0x78309c85",
+            "0x6c8d548e",
+        ],
+        bip: false,
+        object: !mock,
+        verbose: true,
+        account: account,
+        verify: true
+      });
+}
+
 exports.bip29 = bip29
 exports.bip30 = bip30
+exports.bip34 = bip34
