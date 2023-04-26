@@ -14,7 +14,6 @@ export const useSwapBuilder = () => {
     const b = sdk.wells.swapBuilder;
 
     for (const well of wells) {
-      console.log('Adding well', well.contract.signer);
       b.addWell(well);
       setBuilder(b);
     }
