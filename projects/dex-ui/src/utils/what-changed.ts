@@ -1,3 +1,9 @@
+// @ts-nocheck
+
+/**
+ * This is a dev only component useful in showing what changed in a React
+ * dependency array that triggered a render
+ */
 type AnyObject = Array<any> | Record<string, any>;
 type Diffs = Array<{
   path: string;

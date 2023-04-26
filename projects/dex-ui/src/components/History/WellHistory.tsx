@@ -84,7 +84,7 @@ export const WellHistory = ({ well }: WellHistoryProps) => {
                   <strong>
                     <a href={`https://etherscan.io/tx${event.hash}`}>{getEventType(event.type)}</a>
                   </strong>
-                  &nbsp; | {formatDollarAmount(event.totalDollarValue)} | {event.label} | {formatTime(event.timestamp)}
+                  &nbsp; | {formatDollarAmount(parseFloat(event.totalDollarValue))} | {event.label} | {formatTime(event.timestamp)}
                   <br />
                 </>
               ))}
