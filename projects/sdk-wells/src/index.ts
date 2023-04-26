@@ -3,6 +3,7 @@ export { WellsSDK } from "src/lib/WellsSDK";
 export * from "src/lib/Well";
 export { WellFunction } from "src/lib/WellFunction";
 export { Pump } from "src/lib/Pump";
+export { Aquifer } from "src/lib/Aquifer";
 
 // Swap
 export { Router } from "src/lib/routing";
