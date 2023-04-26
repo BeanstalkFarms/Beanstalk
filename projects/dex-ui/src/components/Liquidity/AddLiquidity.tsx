@@ -49,7 +49,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback }: AddLiquidityProps) =
       setReceipt(receipt);
       txnCompleteCallback();
     }
-  }, [well.addLiquidity, amounts, quote, address]);
+  }, [quote, address, well, amounts, refetchBalances]);
 
   const handleInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
@@ -69,6 +69,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback }: AddLiquidityProps) =
             <TokenListContainer>
               {well.tokens?.map((token, index) => (
                 <TokenInput
+                  key={index}
                   id={`input${index}`}
                   label={`Input amount in ${token.symbol}`}
                   token={well.tokens![index]}
