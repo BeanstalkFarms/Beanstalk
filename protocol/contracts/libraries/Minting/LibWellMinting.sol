@@ -14,6 +14,7 @@ import {Call, IWell} from "@wells/interfaces/IWell.sol";
 import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
 import {LibWell} from "~/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.sol";
+import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**
  * @author Publius
@@ -21,6 +22,8 @@ import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.s
  **/
 
 library LibWellMinting {
+
+    using SignedSafeMath for int256;
     
     bytes constant BYTES_ZERO = new bytes(0);
 
@@ -131,6 +134,6 @@ library LibWellMinting {
             beanIndex,
             ratios,
             wellFunction.data
-        )) - int256(twaBalances[beanIndex]);
+        )).sub(int256(twaBalances[beanIndex]));
     }
 }

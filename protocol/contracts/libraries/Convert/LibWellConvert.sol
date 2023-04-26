@@ -39,6 +39,7 @@ library LibWellConvert {
             wellFunction.data
         );
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
+        // SafeMath is unnecessary as above line performs the check
         beans = beansAtPeg - reserves[beanIndex];
     }
 
@@ -54,6 +55,7 @@ library LibWellConvert {
             reserves,
             wellFunction.data
         );
+
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
             reserves,
             beanIndex,
@@ -63,10 +65,10 @@ library LibWellConvert {
 
         if (reserves[beanIndex] <= beansAtPeg) return 0;
         reserves[beanIndex] = beansAtPeg;
-        return lpSupplyNow - IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+        return lpSupplyNow.sub(IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
             reserves,
             wellFunction.data
-        );
+        ));
     }
 
     /// @param amountIn The amount of the LP token of `well` to remove as BEAN.
