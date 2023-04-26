@@ -1,18 +1,16 @@
 import { BeanstalkSDK } from "@beanstalk/sdk";
 import { Aquifer } from "@beanstalk/sdk/Wells";
 import memoize from "lodash/memoize";
-
-// import { Aquifer__factory } from "@beanstalk/wells";
-import { AQUIFER } from "src/constants/addresses";
+import { Settings } from "src/settings";
 
 type WellAddresses = string[];
 
 const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
-  const aquifer = new Aquifer(sdk.wells, AQUIFER);
+  const aquifer = new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
   const contract = aquifer.contract;
   const eventFilter = contract.filters.BoreWell();
 
-  const fromBlock = Number(import.meta.env.VITE_WELLS_START_BLOCK) || 16400000;
+  const fromBlock = Number(Settings.WELLS_ORIGIN_BLOCK);
   const toBlock = "latest";
   const events = await contract.queryFilter(eventFilter, fromBlock, toBlock);
 
