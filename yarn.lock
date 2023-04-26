@@ -19939,6 +19939,7 @@ __metadata:
     eslint-plugin-react-hooks: 4.2.0
     ethers: ^5
     graphql-request: 5.2.0
+    loadash: 1.0.0
     numeral: 2.0.6
     prettier: 2.7.1
     react: ^18.2.0
@@ -29882,6 +29883,13 @@ __metadata:
     pify: ^2.0.0
     strip-bom: ^3.0.0
   checksum: 7f212bbf08a8c9aab087ead07aa220d1f43d83ec1c4e475a00a8d9bf3014eb29ebe901db8554627dcfb70184c274d05b7379f1e9678fe8297ae74dc495212049
+  languageName: node
+  linkType: hard
+
+"loadash@npm:1.0.0":
+  version: 1.0.0
+  resolution: "loadash@npm:1.0.0"
+  checksum: 05a105fa9773a7c15963ea783507daa4d488a7a5b782ba77d84dbfaa40b01eb6a3a6cb1a160e67c4af339c7aa9209f9bfb8ef35eefffe98838930f05752ea550
   languageName: node
   linkType: hard
 
