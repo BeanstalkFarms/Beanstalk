@@ -198,7 +198,6 @@ async function deployMockPump() {
 }
 
 async function deployGeoEmaAndCumSmaPump() {
-
     pump = await (await getWellContractFactory('GeoEmaAndCumSmaPump')).deploy(
       '0x3ffe0000000000000000000000000000', // 0.5
       '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
@@ -212,23 +211,6 @@ async function deployGeoEmaAndCumSmaPump() {
       await ethers.provider.getCode(pump.address),
     ]);
     return await getWellContractAt('GeoEmaAndCumSmaPump', BEANSTALK_PUMP)
-
-    /////////////////////////////////////////////////////////////////////////////////
-
-    // let pump = await (await ethers.getContractFactory('MockGeoEmaAndCumSmaPump')).deploy(
-    //     '0x3ffe0000000000000000000000000000', // 0.5
-    //     '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
-    //     12,
-    //     '0x3ffecccccccccccccccccccccccccccc' // 0.9
-    //     )
-    //     await pump.deployed()
-    
-    //     await network.provider.send("hardhat_setCode", [
-    //         BEANSTALK_PUMP,
-    //         await ethers.provider.getCode(pump.address),
-    //     ]);
-    return await ethers.getContractAt('MockGeoEmaAndCumSmaPump', BEANSTALK_PUMP)
-
 }
 
 async function deployMockWell() {
