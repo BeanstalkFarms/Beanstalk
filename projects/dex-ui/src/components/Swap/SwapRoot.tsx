@@ -46,7 +46,6 @@ export const SwapRoot = () => {
 
   useEffect(() => {
     readyToSwap && !!account ? setButtonEnabled(true) : setButtonEnabled(false);
-    console.log("Button Enable: ", readyToSwap, !!account);
   }, [readyToSwap, account]);
 
   const arrowHandler = () => {
@@ -150,8 +149,6 @@ export const SwapRoot = () => {
 
     return "Swap";
   }, [account, inAmount, needsApproval, outAmount]);
-
-  // console.log(` ${inAmount?.toHuman()} ${inToken?.symbol} => ${outAmount?.toHuman()} ${outToken?.symbol}`);
 
   return (
     <Container>
