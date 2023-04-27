@@ -306,6 +306,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
         var progress = 0;
         let gasTotal = 0;
+        let gasPerDepositor = [];
         for (const depositorAddress in deposits) {
             const tokens = deposits[depositorAddress]['tokenAddresses'];
             const seasons = deposits[depositorAddress]['seasonsArray'];
@@ -345,11 +346,11 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
             if (seasons.length > 0 || balanceOfSeeds > 0) {
 
-              if (balanceOfSeeds > 0 && seasons.length == 0) {
-                console.log('not migrating this silo because we don\'t have the seeds diff for it: ', depositorAddress);
-              } else {
+              // if (balanceOfSeeds > 0 && seasons.length == 0) {
+                // console.log('not migrating this silo because we don\'t have the seeds diff for it: ', depositorAddress);
+              // } else {
                 tx = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
-              }
+              // }
             } else {
               console.log('migrate no deposits for depositorAddress: ', depositorAddress);
 
@@ -368,8 +369,32 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
               const receipt = await tx.wait();
               gasTotal += parseInt(receipt.gasUsed);
               console.log('gasTotal: ', gasTotal);
+
+              gasPerDepositor.push(depositorAddress.toString()+','+parseInt(receipt.gasUsed).toString());
             }
         }
+
+        //delete the file if it exists
+        var gasPerDepositorPath = __dirname + '/data/gas-per-depositor.json';
+        if (fs.existsSync(gasPerDepositorPath)) {
+          fs.unlinkSync(gasPerDepositorPath);
+        }
+
+
+        console.log('going to write file');
+        const writeStream = fs.createWriteStream(gasPerDepositorPath, { flags: 'a' });
+
+        writeStream.on('finish', () => {
+          console.log(`done`);
+        });
+
+        gasPerDepositor.forEach((row, index) => {
+          writeStream.write(row + (index < gasPerDepositor.length - 1 ? '\n' : ''));
+        });
+        writeStream.end();
+
+        console.log('second done');
+
       });
     });
 });
