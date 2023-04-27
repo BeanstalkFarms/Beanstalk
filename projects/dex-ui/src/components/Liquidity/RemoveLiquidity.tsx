@@ -1,108 +1,53 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { TokenInput } from "src/components/Swap/TokenInput";
 import { Token, TokenValue } from "@beanstalk/sdk";
-import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import styled from "styled-components";
 import { images } from "src/assets/images/tokens";
 import { useAccount } from "wagmi";
 import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
-import { useQuery } from "@tanstack/react-query";
+import { useLiquidityQuote } from "src/wells/useLiquidityQuote";
+import { LiquidityAmounts, REMOVE_LIQUIDITY_MODE } from "./types";
 
 type RemoveLiquidityProps = {
   well: Well;
+  txnCompleteCallback: () => void;
 };
 
-enum REMOVE_LIQUIDITY_MODE {
-  Balanced,
-  OneToken,
-  Custom
-}
-
-type LiquidityAmounts = {
-  [key: number]: TokenValue;
-};
-
-export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
+export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
-  const [wellTokens, setWellTokens] = useState<Token[]>();
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
-  const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue | undefined>();
+  const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue>(TokenValue.ZERO);
   const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
-  const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
   const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
 
-  const { isLoading: isAllTokenLoading, refetch: refetchBalances } = useAllTokensBalance();
+  const { balanced, oneToken, custom } = useLiquidityQuote(well, removeLiquidityMode, lpTokenAmount, singleTokenIndex, well.tokens!, amounts);
 
-  const atLeastOneAmountNonzero = useCallback(() => Object.values(amounts).filter((amount) => amount.value.gt("0")).length > 0, [amounts]);
-
-  useEffect(() => {
-    const fetching = isAllTokenLoading;
-    fetching ? setIsLoadingAllBalances(true) : setTimeout(() => setIsLoadingAllBalances(false), 500);
-  }, [isAllTokenLoading]);
+  const { balancedQuote, loadingBalancedQuote, balanedQuoteError } = balanced;
+  const { oneTokenQuote, loadingOneTokenQuote, oneTokenQuoteError } = oneToken;
+  const { customRatioQuote, loadingCustomRatioQuote, customRatioQuoteError } = custom;
 
   useEffect(() => {
     if (well.tokens) {
-      const tokens: Token[] = [];
       const initialAmounts: LiquidityAmounts = {};
-      well.tokens.forEach((token, index) => {
-        token.setMetadata({ logo: images[token.symbol] ?? images.DEFAULT });
-        tokens.push(token);
-        initialAmounts[index] = TokenValue.ZERO;
-      });
-
-      setWellTokens(tokens);
+      for (let i=0; i<well.tokens.length; i++) {
+        initialAmounts[i] = TokenValue.ZERO;
+      };
       setAmounts(initialAmounts);
     }
-  }, [well]);
+  }, [well.tokens]);
 
   useEffect(() => {
     if (well.lpToken) {
       let lpTokenWithMetadata = well.lpToken;
       lpTokenWithMetadata.setMetadata({ logo: images[well.lpToken.symbol] ?? images.DEFAULT });
-      setLpTokenAmount(undefined);
+      setLpTokenAmount(TokenValue.ZERO);
       setWellLpToken(lpTokenWithMetadata);
     }
-  }, [well]);
-
-  const {
-    data: balancedQuote,
-    isLoading: loadingBalancedQuote,
-    isError: balanedQuoteError
-  } = useQuery(["wells", address, removeLiquidityMode, lpTokenAmount], async () => {
-    if (!lpTokenAmount || removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Balanced) {
-      return null;
-    }
-
-    return well.removeLiquidityQuote(lpTokenAmount);
-  });
-
-  const {
-    data: oneTokenQuote,
-    isLoading: loadingOneTokenQuote,
-    isError: oneTokenQuoteError
-  } = useQuery(["wells", address, removeLiquidityMode, lpTokenAmount, singleTokenIndex], async () => {
-    if (!lpTokenAmount || removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken) {
-      return null;
-    }
-
-    return well.removeLiquidityOneTokenQuote(lpTokenAmount, wellTokens![singleTokenIndex]);
-  });
-
-  const {
-    data: customRatioQuote,
-    isLoading: loadingCustomRatioQuote,
-    isError: customRatioQuoteError
-  } = useQuery(["wells", address, removeLiquidityMode, amounts], async () => {
-    if (!atLeastOneAmountNonzero() || removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom) {
-      return null;
-    }
-
-    return well.removeLiquidityImbalancedQuote(Object.values(amounts));
-  });
+  }, [well.lpToken]);
 
   useEffect(() => {
     if (customRatioQuote) {
@@ -118,7 +63,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
         if (!oneTokenQuote) {
           return;
         }
-        removeLiquidityTxn = await well.removeLiquidityOneToken(lpTokenAmount, wellTokens![singleTokenIndex], oneTokenQuote, address);
+        removeLiquidityTxn = await well.removeLiquidityOneToken(lpTokenAmount, well.tokens![singleTokenIndex], oneTokenQuote, address);
       } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
         if (!balancedQuote) {
           return;
@@ -133,7 +78,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
 
       const receipt = await removeLiquidityTxn.wait();
       setReceipt(receipt);
-      refetchBalances();
+      txnCompleteCallback();
     }
   }, [well.removeLiquidity, lpTokenAmount, oneTokenQuote, balancedQuote, address]);
 
@@ -194,7 +139,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
                 canChangeValue={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
                 showBalance={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
                 showMax={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
-                loading={isLoadingAllBalances}
+                loading={false}
               />
             </TokenContainer>
             {loadingQuote && <h2>Loading Quote...</h2>}
@@ -205,7 +150,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
             </div>
             {removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && (
               <div>
-                {wellTokens!.map((token, index) => (
+                {well.tokens!.map((token, index) => (
                   <TokenContainer key={`token${index}`}>
                     <ReadOnlyTokenValueRow>
                       <SmallTokenLogo src={token.logo} />
@@ -218,7 +163,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
             )}
             {removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && (
               <div>
-                {wellTokens!.map((token, index) => (
+                {well.tokens!.map((token, index) => (
                   <TokenContainer key={`token${index}`}>
                     <ReadOnlyTokenValueRow>
                       <div>
@@ -249,7 +194,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
                    We could initially we set the amounts from the quote
                    But if they change, reverse quote
                    */}
-                {wellTokens!.map((token, index) => (
+                {well.tokens!.map((token, index) => (
                   <TokenContainer>
                     <TokenInput
                       id={`token${index}`}
@@ -260,7 +205,7 @@ export const RemoveLiquidity = ({ well }: RemoveLiquidityProps) => {
                       canChangeToken={false}
                       showMax={false}
                       showBalance={false}
-                      loading={isLoadingAllBalances}
+                      loading={false}
                     />
                   </TokenContainer>
                 ))}
