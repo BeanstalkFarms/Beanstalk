@@ -1,10 +1,9 @@
 import { createReducer, createSelector } from '@reduxjs/toolkit';
-import { DateTime } from 'luxon';
 import { NEW_BN, ZERO_BN } from '~/constants';
 import {
+  getDiffNow,
   getNextExpectedBlockUpdate,
   getNextExpectedSunrise,
-  MorningData,
   Sun,
 } from '.';
 import {
@@ -14,8 +13,11 @@ import {
   updateSeasonTime,
   resetSun,
   updateSeasonResult,
-  updateMorningTimestamp,
+  setRemainingUntilBlockUpdate,
+  setMorningBlockMap,
   updateMorningBlock,
+  setAwaitingMorningBlock,
+  setMorning,
 } from './actions';
 import { getIsMorningInterval } from './morning';
 
@@ -41,16 +43,15 @@ const getInitialState = () => {
       abovePeg: false,
       start: NEW_BN,
       period: NEW_BN,
-      timestamp: DateTime.now(),
+      timestamp: nextSunrise.minus({ hour: 1 }),
     },
     morning: {
-      block: {
-        blockNumber: NEW_BN,
-        timestamp: DateTime.now(),
-      },
+      blockNumber: NEW_BN,
+      blockMap: {},
       time: {
+        awaiting: false,
         next: nextBlockUpdate,
-        remaining: nextBlockUpdate.diffNow(),
+        remaining: getDiffNow(nextBlockUpdate),
       },
     },
   };
@@ -76,11 +77,35 @@ export default createReducer(initialState, (builder) =>
     .addCase(setRemainingUntilSunrise, (state, { payload }) => {
       state.sunrise.remaining = payload;
     })
-    .addCase(updateMorningBlock, (state, { payload }) => {
-      state.morning.block = payload;
+    .addCase(setMorning, (state, { payload }) => {
+      const { blockNumber, blockMap } = payload;
+      state.morning.blockMap = payload.blockMap;
+      state.morning.blockNumber = payload.blockNumber;
+
+      const key = blockNumber.toString();
+      if (!(key in blockMap)) return;
+
+      state.morning.time.next = blockMap[key].next;
+      state.morning.time.remaining = getDiffNow(blockMap[key].next);
     })
-    .addCase(updateMorningTimestamp, (state, { payload }) => {
-      state.morning.block.timestamp = payload;
+    .addCase(updateMorningBlock, (state, { payload }) => {
+      const map = { ...state.morning.blockMap };
+      state.morning.blockNumber = payload;
+
+      const key = payload.toString();
+      if (!(key in map)) return;
+
+      state.morning.time.next = map[key].next;
+      state.morning.time.remaining = getDiffNow(map[key].next);
+    })
+    .addCase(setMorningBlockMap, (state, { payload }) => {
+      state.morning.blockMap = payload;
+    })
+    .addCase(setAwaitingMorningBlock, (state, { payload }) => {
+      state.morning.time.awaiting = payload;
+    })
+    .addCase(setRemainingUntilBlockUpdate, (state, { payload }) => {
+      state.morning.time.remaining = payload;
     })
 );
 
@@ -89,15 +114,14 @@ export default createReducer(initialState, (builder) =>
 const selectSelf = (state: { _beanstalk: { sun: Sun } }) =>
   state._beanstalk.sun;
 
+/// we define selectSeasonState to allow proper memoization of derived selectors
 const selectSeasonState = (state: {
   _beanstalk: { sun: { season: Sun['season'] } };
 }) => state._beanstalk.sun.season;
 
-// ----- exported -----
-
 export const selectCurrentSeason = createSelector(
   selectSeasonState,
-  (state) => state.current
+  (seasonState) => seasonState.current
 );
 
 export const selectSunriseBlock = createSelector(
@@ -108,38 +132,38 @@ export const selectSunriseBlock = createSelector(
   })
 );
 
-export const selectAbovePeg = createSelector(
-  selectSeasonState,
-  (state) => state.abovePeg
+export const selectMorningBlock = createSelector(
+  selectSelf,
+  (state) => state.morning.blockNumber
 );
-
-const selectMorningBlock = (state: {
-  _beanstalk: { sun: { morning: { block: Sun['morning']['block'] } } };
-}) => state._beanstalk.sun.morning.block;
 
 export const selectMorning = createSelector(
   selectSeasonState,
   selectMorningBlock,
-  (season, morning) => {
+  (season, blockNumber) => {
     const sunriseBlock = season.sunriseBlock;
-    const currentBlock = morning.blockNumber;
+    const currentBlock = blockNumber;
 
     // interval range [1 to 25]
     const blockDiff = currentBlock.minus(sunriseBlock);
     const interval = blockDiff.plus(1);
-    const isMorning = blockDiff.lt(25);
+    const isMorning = blockDiff.lt(25) && sunriseBlock.gt(0);
     const isMorningInterval = getIsMorningInterval(interval);
 
     return {
-      blockNumber: currentBlock,
-      timestamp: morning.timestamp,
+      blockNumber,
       isMorning: isMorning,
       interval: isMorningInterval ? interval : ZERO_BN,
-    } as MorningData;
+    };
   }
 );
 
-export const selectMorningBlockUpdate = createSelector(
+export const selectMorningBlockTime = createSelector(
   selectSelf,
   (state) => state.morning.time
+);
+
+export const selectMorningBlockMap = createSelector(
+  selectSelf,
+  (state) => state.morning.blockMap
 );

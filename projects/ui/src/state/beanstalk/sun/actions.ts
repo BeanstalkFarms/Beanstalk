@@ -1,5 +1,6 @@
 import { createAction } from '@reduxjs/toolkit';
 import BigNumber from 'bignumber.js';
+import { Duration } from 'luxon';
 import { Sun } from '.';
 
 export const updateSeasonTime = createAction<BigNumber>(
@@ -24,18 +25,23 @@ export const setRemainingUntilSunrise = createAction<
 
 export const resetSun = createAction('beanstalk/sun/reset');
 
-export const updateMorningBlock = createAction<Sun['morning']['block']>(
+/// morning
+export const updateMorningBlock = createAction<BigNumber>(
   'beanstalk/sun/updateMorningBlock'
 );
 
-export const updateMorningTimestamp = createAction<
-  Sun['morning']['block']['timestamp']
->('beanstalk/sun/updateMorningTimestamp');
+export const setMorningBlockMap = createAction<Sun['morning']['blockMap']>(
+  'beanstalk/sun/setMorningBlockMap'
+);
 
-export const setRemainingUntilBlockUpdate = createAction<
-  Sun['morning']['time']['remaining']
->('beanstalk/sun/setRemainingUntilBlockUpdate');
+export const setRemainingUntilBlockUpdate = createAction<Duration>(
+  'beanstalk/sun/setRemainingUntilBlockUpdate'
+);
 
-export const setNextBlockUpdate = createAction<Sun['morning']['time']['next']>(
-  'beanstalk/sun/setNextBlockUpdate'
+export const setAwaitingMorningBlock = createAction<boolean>(
+  'beanstalk/sun/setAwaitingMorningBlock'
+);
+
+export const setMorning = createAction<Omit<Sun['morning'], 'time'>>(
+  'beanstalk/sun/setMorning'
 );

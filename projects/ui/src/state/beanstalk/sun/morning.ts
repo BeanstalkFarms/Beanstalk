@@ -1,116 +1,175 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useProvider } from 'wagmi';
+import { TestUtils } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import { DateTime } from 'luxon';
-import { setNextBlockUpdate, updateMorningBlock } from './actions';
-import { selectMorning } from './reducer';
-import { useFetchTemperature } from '../field/updater';
+import {
+  setAwaitingMorningBlock,
+  setRemainingUntilBlockUpdate,
+  updateMorningBlock,
+} from './actions';
+import {
+  selectMorning,
+  selectMorningBlockMap,
+  selectMorningBlockTime,
+} from './reducer';
+import { BEAN } from '~/constants/tokens';
+import { IS_DEV, tokenResult } from '~/util';
+import {
+  updateTotalSoil,
+  updateScaledTemperature,
+  updateMaxTemperature,
+} from '~/state/beanstalk/field/actions';
+import { SupportedChainId } from '~/constants';
+import useSdk from '~/hooks/sdk';
+import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import useChainId from '~/hooks/chain/useChainId';
+import useFetchLatestBlock from '~/hooks/chain/useFetchLatestBlock';
+import { getDiffNow } from '.';
 
 export const BLOCKS_PER_MORNING = 25;
 
 export const FIRST_MORNING_BLOCK = 1;
 
-const APPROX_SECS_PER_BLOCK = 12;
+export const APPROX_SECS_PER_BLOCK = 12;
 
-export const getIsMorningInterval = (block: BigNumber) =>
-  block.gte(FIRST_MORNING_BLOCK) && block.lte(BLOCKS_PER_MORNING);
+export const getIsMorningInterval = (interval: BigNumber) =>
+  interval.gte(FIRST_MORNING_BLOCK) && interval.lte(BLOCKS_PER_MORNING);
 
-export default function useMorningUpdater() {
-  /// Chain
-  const provider = useProvider();
+/**
+ * DEV ENV ONLY:
+ * While in the morning state, Force the block
+ * when the remaining timer reaches its lower limit
+ */
+// eslint-disable-next-line unused-imports/no-unused-vars
+function useForceBlockMorningDev(run: boolean = false) {
+  const sdk = useSdk();
+  const chainUtil = useMemo(() => new TestUtils.BlockchainUtils(sdk), [sdk]);
 
-  /// Data
-  const { isMorning, blockNumber } = useSelector(selectMorning);
-  const [_, fetchTemp] = useFetchTemperature();
-
-  /// Helpers
-  const dispatch = useDispatch();
-
-  // useForceBlockDevOnly();
-
-  const handleUpdateMorning = useCallback(
-    async (_block: number) => {
-      const before = DateTime.now();
-      const _newBlock = await provider.getBlock('latest');
-      fetchTemp();
-      const blockTimestamp = DateTime.fromSeconds(_newBlock.timestamp);
-      const nextUpdateTime = blockTimestamp.plus({
-        seconds: APPROX_SECS_PER_BLOCK,
-      });
-      dispatch(
-        updateMorningBlock({
-          blockNumber: new BigNumber(_block),
-          timestamp: blockTimestamp,
-        })
-      );
-      setNextBlockUpdate(nextUpdateTime);
-      const after = DateTime.now();
-      console.debug(
-        `[beanstalk/sun/useMorning]: time to fetch block = ${after
-          .diff(before)
-          .as('milliseconds')}ms`
-      );
-    },
-    [dispatch, fetchTemp, provider]
-  );
+  const chainId = useChainId();
+  const { remaining } = useSelector(selectMorningBlockTime);
+  const { isMorning } = useSelector(selectMorning);
 
   useEffect(() => {
-    // If it's not morning, remove all listeners
-    if (isMorning === false) {
-      if (provider.listeners('block').length) {
-        provider.removeAllListeners('block');
-      }
-      return;
+    if (chainId !== SupportedChainId.LOCALHOST || !IS_DEV) return;
+    if (!isMorning || !run) return;
+
+    const secondsRemaining = Math.floor(remaining.as('seconds'));
+
+    if (secondsRemaining === 1) {
+      console.debug('[useForceBlockMorning]: Forcing block');
+      chainUtil.forceBlock();
     }
-
-    const subscribe = () => {
-      provider.on('block', (_blockNumber) => {
-        console.debug('[beanstalk/sun][updatedBlockNumber]: ', _blockNumber);
-        handleUpdateMorning(_blockNumber);
-      });
-
-      return () => {
-        provider.removeAllListeners('block');
-      };
-    };
-
-    const unsubscribe = subscribe();
-
-    return () => {
-      unsubscribe();
-    };
-  }, [handleUpdateMorning, isMorning, provider]);
+  }, [chainId, chainUtil, isMorning, remaining, run]);
 }
 
-const MAX_MS_DIFF = APPROX_SECS_PER_BLOCK * 1000 * BLOCKS_PER_MORNING * 1.1;
+export function useFetchMorningField() {
+  const beanstalk = useBeanstalkContract();
+  const dispatch = useDispatch();
 
-// export function useUpdateMorningBlockRemaining() {
-//   const { isMorning, blockNumber, timestamp } = useSelector(selectMorning);
-//   const { next, remaining } = useSelector(selectMorningBlockUpdate);
-//   const dispatch = useDispatch();
+  const fetch = useCallback(async () => {
+    try {
+      if (beanstalk) {
+        console.debug(
+          `[beanstalk/sun/useFetchMorningField] FETCH (contract = ${beanstalk.address})`
+        );
+        const [adjustedTemperature, maxTemperature, soil] = await Promise.all([
+          beanstalk.temperature().then(tokenResult(BEAN)), // FIX ME
+          beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIX ME
+          beanstalk.totalSoil().then(tokenResult(BEAN)),
+        ]);
 
-//   console.log('remaining: ', remaining.as('seconds'));
+        console.debug('[beanstalksun/useFetchMorningField] RESULT = ', {
+          scaledTemperature: adjustedTemperature.toString(),
+          maxTemperature: maxTemperature.toString(),
+          soil: soil.toString(),
+        });
 
-// useEffect(() => {
-//   if (!isMorning) return;
+        dispatch(updateTotalSoil(soil));
+        dispatch(updateScaledTemperature(adjustedTemperature));
+        dispatch(updateMaxTemperature(maxTemperature));
 
-//   const intervalId = setInterval(() => {
-//     const r = remaining.as('seconds');
-//     const updated = remaining.minus({ seconds: 1 });
+        return [adjustedTemperature, maxTemperature, soil] as const;
+      }
+      return [undefined, undefined, undefined] as const;
+    } catch (e) {
+      console.debug('[beanstalk/sun/useFetchMorningField] FAILED', e);
+      console.error(e);
+      return [undefined, undefined, undefined] as const;
+    }
+  }, [beanstalk, dispatch]);
 
-//     console.log('remaining: ', r);
-//     console.log('updated: ', updated.as('seconds'));
+  return [fetch] as const;
+}
 
-//     // dispatch(setNextBlockUpdate(update));
-//     dispatch(setRemainingUntilBlockUpdate(remaining.minus({ seconds: 1 })));
+export default function MorningUpdater() {
+  const morningTime = useSelector(selectMorningBlockTime);
+  const blockMap = useSelector(selectMorningBlockMap);
+  const morning = useSelector(selectMorning);
 
-//     // const r = remaining.diffNow()
-//   }, 1000);
+  const [fetchMorningField] = useFetchMorningField();
+  const [fetchLatestBlock] = useFetchLatestBlock();
+  const dispatch = useDispatch();
 
-//   return () => {
-//     clearInterval(intervalId);
-//   };
-// }, [isMorning, blockNumber, next, dispatch, timestamp, remaining]);
-// return null;
-// }
+  // useForceBlockMorningDev(true);
+
+  /// called when the state is notified that it needs to fetch for updates
+  /// If the block from on chain matches the expected block number,
+  /// we know we have the most updated state.
+  const fetch = useCallback(async () => {
+    const [blockData] = await Promise.all([
+      fetchLatestBlock(),
+      fetchMorningField(),
+    ]);
+    console.debug(`[MorningUpdater][fetch], blockData = ${blockData}`);
+
+    if (blockData.blockNumber.eq(morning.blockNumber)) {
+      dispatch(setAwaitingMorningBlock(false));
+    }
+  }, [morning.blockNumber, dispatch, fetchLatestBlock, fetchMorningField]);
+
+  useEffect(() => {
+    if (!morning.isMorning || !Object.keys(blockMap).length) return;
+
+    /// set up the timer while in the morning state.
+    const intervalId = setInterval(async () => {
+      const _remaining = getDiffNow(morningTime.next);
+      /// If the lower limit hasn't been reached
+      /// decrement the remaining time
+      if (_remaining.as('seconds') >= 1) {
+        dispatch(setRemainingUntilBlockUpdate(_remaining));
+      } else {
+        /// if the lower limit is reached, notify the state to
+        /// fetch for updated block, temperature, & soil values
+        /// refer to useEffect below.
+        dispatch(setAwaitingMorningBlock(true));
+        dispatch(updateMorningBlock(morning.blockNumber.plus(1)));
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [
+    morning.isMorning,
+    morningTime.next,
+    blockMap,
+    dispatch,
+    fetch,
+    morning.blockNumber,
+  ]);
+
+  /// Fetch if we are expecting a new block number on-chain
+  useEffect(() => {
+    if (!morningTime.awaiting || !morning.isMorning) return;
+
+    const intervalId = setInterval(() => {
+      fetch();
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [morningTime.awaiting, morning.isMorning, fetch]);
+
+  return null;
+}
