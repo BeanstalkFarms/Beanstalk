@@ -5,6 +5,7 @@ import {
   resetBeanstalkField,
   updateBeanstalkField,
   updateHarvestableIndex,
+  updateMaxTemperature,
   updateScaledTemperature,
 } from './actions';
 
@@ -40,6 +41,9 @@ export default createReducer(initialState, (builder) =>
     })
     .addCase(updateScaledTemperature, (state, { payload }) => {
       state.temperature.scaled = payload;
+    })
+    .addCase(updateMaxTemperature, (state, { payload }) => {
+      state.temperature.max = payload;
     })
 );
 

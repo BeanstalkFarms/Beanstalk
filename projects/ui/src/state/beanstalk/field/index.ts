@@ -42,5 +42,3 @@ export type BeanstalkField = {
     scaled: BigNumber;
   };
 };
-
-export const TEMPERATURE_PRECISION = 1e6;
