@@ -3,7 +3,7 @@ import { BeanstalkSDK, TestUtils } from "@beanstalk/sdk";
 import { signer, provider, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";
 
-const WELL_ADDRESS = process.env.WELL_ADDRESS!;
+const WELL_ADDRESSES = process.env.WELL_ADDRESSES!;
 let sdk;
 let forkUtils;
 
@@ -18,12 +18,8 @@ main()
 async function main() {
   sdk = new WellsSDK({ signer });
   forkUtils = new TestUtils.BlockchainUtils(bsdk);
-
-  const addresses = [
-    "0x453FDB6f2e8E0098e5FdBcE1F179905a02a4b78e",
-    "0x07ef4e4d451209f9b927663f1937Bc367Ba6eee2",
-    "0x6502cF9a688db4C717ef864CF64fE0DdAB309C37"
-  ];
+  
+  const addresses = WELL_ADDRESSES.split(",");
   for (const a of addresses) {
     await unloadWell(sdk, a);
     await loadWell(sdk, a);

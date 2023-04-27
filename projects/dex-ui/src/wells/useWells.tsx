@@ -10,7 +10,7 @@ export const useWells = () => {
     ["wells", !!sdk.signer],
     async () => {
       const wellAddresses = await getWellAddresses(sdk);
-      // console.log('Addresses: ', wellAddresses);
+
       const res = await Promise.allSettled(
         wellAddresses.map((address) =>
           sdk.wells
@@ -26,6 +26,7 @@ export const useWells = () => {
       return res.map((promise) => (promise.status === "fulfilled" ? promise.value : null)).filter<Well>((p): p is Well => !!p);
     },
     {
+      retry: false,
       staleTime: Infinity
     }
   );
