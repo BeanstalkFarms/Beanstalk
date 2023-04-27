@@ -27,6 +27,10 @@ const FieldInfo: React.FC<{
 }> = ({ harvestableIndex, PODS }) => {
   const [open, setOpen] = useState(false);
 
+  const handleOnClick = () => {
+    setOpen((prev) => !prev);
+  };
+
   return (
     <Stack gap={2}>
       <EmbeddedCard>
@@ -61,7 +65,7 @@ const FieldInfo: React.FC<{
             asset. Loans to Beanstalk are issued with a fixed interest rate,
             known as Temperature, and an unknown maturity date.
           </Typography>
-          {open && (
+          {open ? (
             <>
               <Typography>
                 The number of Pods received from 1 Sown Bean is determined by
@@ -82,23 +86,20 @@ const FieldInfo: React.FC<{
                 Transferred to another address directly.
               </Typography>
             </>
-          )}
-
+          ) : null}
           <ThinDivider />
-          <Box
-            alignSelf="center"
+          <Typography
+            onClick={handleOnClick}
             sx={{
+              alignSelf: 'center',
               cursor: 'pointer',
               ':hover': {
                 color: 'primary.main',
               },
             }}
-            onClick={() => setOpen((prev) => !prev)}
           >
-            <Typography color="inherit">
-              {open ? 'View less' : 'View more'}
-            </Typography>
-          </Box>
+            {open ? 'View less' : 'View more'}
+          </Typography>
         </Stack>
       </EmbeddedCard>
     </Stack>

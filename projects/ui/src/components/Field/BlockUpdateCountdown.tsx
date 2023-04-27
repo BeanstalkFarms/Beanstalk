@@ -1,14 +1,11 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { selectMorningBlockTime } from '~/state/beanstalk/sun';
 
-import { FC } from '~/types';
+const BlockUpdateCountdown: React.FC<{}> = () => {
+  const { remaining } = useSelector(selectMorningBlockTime);
 
-const BlockUpdateCountdown: FC<{}> = () => (
-  // const remaining = useSelector<
-  //   AppState,
-  //   AppState['_beanstalk']['sun']['morning']['time']['remaining']
-  // >((state) => state._beanstalk.sun.morning.time.remaining);
+  return <>{remaining.toFormat('ss')} seconds</>;
+};
 
-  // return <>{remaining.toFormat('mm:ss')}</>;
-  <>0:12</>
-);
 export default BlockUpdateCountdown;

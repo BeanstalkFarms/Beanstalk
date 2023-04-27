@@ -27,9 +27,10 @@ const lineChartProps: Partial<LineChartProps> = {
   yTickFormat: tickFormatPercentage,
 };
 
-const Temperature: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
-  height,
-}) => {
+const Temperature: FC<{
+  height?: SeasonPlotBaseProps['height'];
+  statsRowFullWidth?: boolean;
+}> = ({ height, statsRowFullWidth }) => {
   const temperature = useSelector<
     AppState,
     AppState['_beanstalk']['field']['temperature']['max']
@@ -45,6 +46,7 @@ const Temperature: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
       formatValue={formatValue}
       StatProps={statProps}
       LineChartProps={lineChartProps}
+      statsRowFullWidth={statsRowFullWidth}
     />
   );
 };

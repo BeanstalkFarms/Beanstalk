@@ -249,7 +249,7 @@ const ChartWrapper: React.FC<{
 };
 
 const MorningTemperature: React.FC<{
-  height?: number;
+  height?: string;
 }> = ({ height = '200px' }) => {
   const [hovered, setHovered] = useState<BlockTemperature | undefined>(
     undefined
@@ -308,7 +308,7 @@ const MorningTemperature: React.FC<{
                   <Typography color="primary" component="span">
                     +{displayFullBN(temperatureIncrease, 0)}%
                   </Typography>{' '}
-                  in 0:12)
+                  in <BlockUpdateCountdown />)
                 </Typography>
               )}
             </Row>

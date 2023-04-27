@@ -19,8 +19,7 @@ import {
 
 import { FC } from '~/types';
 import { XXLWidth } from '~/components/App/muiTheme';
-import { selectBeanstalkField } from '~/state/beanstalk/field/reducer';
-import { selectFarmerField } from '~/state/farmer/field/reducer';
+import { AppState } from '~/state';
 
 export const podlineColumns: DataGridProps['columns'] = [
   {
@@ -52,8 +51,13 @@ const FieldPage: FC<{}> = () => {
   const authState = !account ? 'disconnected' : 'ready';
 
   /// Data
-  const farmerField = useSelector(selectFarmerField);
-  const beanstalkField = useSelector(selectBeanstalkField);
+  const farmerField = useSelector<AppState, AppState['_farmer']['field']>(
+    (state) => state._farmer.field
+  );
+  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
+    (state) => state._beanstalk.field
+  );
+
   const harvestablePods = farmerField.harvestablePods;
 
   const rows: any[] = useMemo(() => {

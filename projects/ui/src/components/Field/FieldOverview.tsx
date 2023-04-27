@@ -7,17 +7,19 @@ import EmbeddedCard from '~/components/Common/EmbeddedCard';
 
 import useSdk from '~/hooks/sdk';
 
-import { AppState } from '~/state';
 import { selectMorning } from '~/state/beanstalk/sun';
 
 import Temperature from '~/components/Analytics/Field/Temperature';
 import FieldConditionsHeader from '~/components/Field/FieldConditionsHeader';
 import FieldStats from '~/components/Field/FieldStats';
 import MorningTemperature from '~/components/Field/Chart';
-import FieldInfo from './FieldInfo';
+import FieldInfo from '~/components/Field/FieldInfo';
+import { BeanstalkField } from '~/state/beanstalk/field';
+
+const CHART_HEIGHT = '200px';
 
 const FieldOverview: React.FC<{
-  beanstalkField: AppState['_beanstalk']['field'];
+  beanstalkField: BeanstalkField;
 }> = ({ beanstalkField }) => {
   const sdk = useSdk();
 
@@ -34,7 +36,11 @@ const FieldOverview: React.FC<{
         <FieldConditionsHeader />
         <EmbeddedCard>
           <Stack gap={2} p={2}>
-            {isMorning ? <MorningTemperature /> : <Temperature />}
+            {isMorning ? (
+              <MorningTemperature height={CHART_HEIGHT} />
+            ) : (
+              <Temperature height={CHART_HEIGHT} statsRowFullWidth />
+            )}
             <FieldStats beanstalkField={beanstalkField} />
           </Stack>
         </EmbeddedCard>
