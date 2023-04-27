@@ -134,7 +134,7 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
       img: {
         props: {
           style: {
-            width: '100%'
+            maxWidth: '100%'
           }
         }
       }
