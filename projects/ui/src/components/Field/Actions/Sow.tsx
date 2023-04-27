@@ -49,6 +49,7 @@ import {
   displayBN,
   displayFullBN,
   MinBN,
+  tokenResult,
   toStringBaseUnitBN,
   toTokenUnitsBN,
 } from '~/util';
@@ -73,7 +74,9 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { BeanstalkField } from '~/state/beanstalk/field';
 
 type SowFormValues = FormState & {
-  settings: SlippageSettingsFragment;
+  settings: SlippageSettingsFragment & {
+    minTemperature: BigNumber | undefined;
+  };
   maxAmountIn: BigNumber | undefined;
 };
 
@@ -415,6 +418,7 @@ const Sow: FC<{}> = () => {
     () => ({
       settings: {
         slippage: 0.1, // 0.1%
+        minTemperature: ZERO_BN,
       },
       tokens: [
         {
@@ -485,8 +489,18 @@ const Sow: FC<{}> = () => {
           throw new Error('Only one token supported at this time');
         if (!amountBeans || amountBeans.eq(0)) throw new Error('No amount set');
 
+        /// ensure we have the most updated temperature
+        const _temperature = await beanstalk
+          .temperature()
+          .then(tokenResult(BEAN));
+
+        const _minTemperature = values.settings.minTemperature || ZERO_BN;
+        const minTemperature = BigNumber.max(_temperature, _minTemperature);
+
         const data: string[] = [];
-        const amountPods = amountBeans.times(temperature.div(100).plus(1));
+        const amountPods = amountBeans.times(minTemperature.div(100).plus(1));
+        const minSoil = amountBeans.times(1 - values.settings.slippage / 100);
+
         let finalFromMode: FarmFromMode;
 
         txToast = new TransactionToast({
@@ -496,6 +510,13 @@ const Sow: FC<{}> = () => {
           )} Beans for ${displayFullBN(amountPods, PODS.decimals)} Pods...`,
           success: 'Sow successful.',
         });
+
+        console.log(
+          `Sowing ${displayFullBN(
+            amountBeans,
+            Bean.decimals
+          )} Beans for ${displayFullBN(amountPods, PODS.decimals)} Pods...`
+        );
 
         /// Sow directly from BEAN
         if (tokenIn === Bean) {
@@ -525,10 +546,13 @@ const Sow: FC<{}> = () => {
           );
         }
 
+        console.log('minsoil: ', minSoil.toString());
+
         data.push(
-          beanstalk.interface.encodeFunctionData('sow', [
+          beanstalk.interface.encodeFunctionData('sowWithMin', [
             toStringBaseUnitBN(amountBeans, Bean.decimals),
-            toStringBaseUnitBN(temperature, 6),
+            toStringBaseUnitBN(minTemperature, 6),
+            toStringBaseUnitBN(minSoil, Bean.decimals),
             finalFromMode,
           ])
         );
@@ -545,6 +569,7 @@ const Sow: FC<{}> = () => {
           refetchPools(), // get price data [TODO: optimize if we bought beans]
         ]);
         txToast.success(receipt);
+        txToast.success();
         formActions.resetForm();
       } catch (err) {
         console.error(err);
@@ -561,7 +586,6 @@ const Sow: FC<{}> = () => {
     [
       middleware,
       Bean,
-      temperature,
       Eth,
       Weth,
       beanstalk,
@@ -578,11 +602,17 @@ const Sow: FC<{}> = () => {
       {(formikProps: FormikProps<SowFormValues>) => (
         <>
           <TxnSettings placement="form-top-right">
-            <SettingInput
-              name="settings.slippage"
-              label="Slippage Tolerance"
-              endAdornment="%"
-            />
+            <>
+              <SettingInput
+                name="settings.slippage"
+                label="Slippage Tolerance"
+                endAdornment="%"
+              />
+              <SettingInput
+                name="settings.minTemperature"
+                label="Min Temperature"
+              />
+            </>
           </TxnSettings>
           <SowForm
             beanstalkField={beanstalkField}

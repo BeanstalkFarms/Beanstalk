@@ -1,4 +1,4 @@
-import { BigNumber as BNJS, ethers } from 'ethers';
+import { BigNumber as BNJS } from 'ethers';
 import BigNumber from 'bignumber.js';
 import type Token from '~/classes/Token';
 import { ChainConstant, SupportedChainId } from '~/constants';
@@ -33,12 +33,6 @@ export const tokenResult = (_token: Token | ChainConstant<Token>) => {
   return (result: any) =>
     toTokenUnitsBN(bigNumberResult(result), token.decimals);
 };
-
-export const bnResultWithPrecision =
-  (precision: number) => (result: ethers.BigNumber) => {
-    const bn = bigNumberResult(result);
-    return bn.dividedBy(precision);
-  };
 
 /**
  * Return a formatted error string from a transaction error thrown by ethers.
