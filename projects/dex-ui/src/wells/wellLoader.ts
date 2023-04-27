@@ -28,9 +28,21 @@ const loadFromGraph = async (): Promise<WellAddresses> => {
 
 export const getWellAddresses = memoize(
   async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
-    const addresses = await Promise.any([loadFromChain(sdk), loadFromGraph()]);
+    const addresses = await Promise.any([
+      loadFromChain(sdk).then((res) => {
+        console.log("Loaded Wells from blockchain");
+        return res;
+      }),
+      loadFromGraph().then((res) => {
+        console.log("Loaded Wells from subgraph");
+        return res;
+      })
+    ]);
+    if (addresses.length === 0) throw new Error("No deployed wells found");
 
     return addresses;
   },
-  () => 1
+  // Override the default memoize caching with just a '1' 
+  // so it always caches, regardless of parameter passed
+  () => 1 
 );

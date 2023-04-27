@@ -195,7 +195,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
                    But if they change, reverse quote
                    */}
                 {well.tokens!.map((token, index) => (
-                  <TokenContainer>
+                  <TokenContainer key={index}>
                     <TokenInput
                       id={`token${index}`}
                       label={`Input amount in ${token.symbol}`}

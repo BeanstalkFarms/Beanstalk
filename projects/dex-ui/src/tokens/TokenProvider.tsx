@@ -11,11 +11,7 @@ export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: tokens, isLoading, error } = useWellTokens();
 
   if (isLoading) return <div></div>;
-  if (error) return <div>Error loading Tokens: {error.message}</div>;
-
-  if (tokens.length === 0) {
-    return <div>No Tokens Found. Is wallet connected? To localhost?</div>;
-  }
+  if (error) return <div>Error loading Tokens: {error.message}. Check your network</div>;
 
   const add = (token: Token) => (tokenMap[token.symbol] = token);
 
