@@ -17,7 +17,7 @@ import { useSun } from '~/state/beanstalk/sun/updater';
 import { BeanstalkPalette } from '../App/muiTheme';
 import { useFetchMorningField } from '~/state/beanstalk/sun/morning';
 
-const minimize = false;
+const minimize = true;
 
 /**
  * TEMORARY

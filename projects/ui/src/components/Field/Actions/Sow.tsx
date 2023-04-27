@@ -511,13 +511,6 @@ const Sow: FC<{}> = () => {
           success: 'Sow successful.',
         });
 
-        console.log(
-          `Sowing ${displayFullBN(
-            amountBeans,
-            Bean.decimals
-          )} Beans for ${displayFullBN(amountPods, PODS.decimals)} Pods...`
-        );
-
         /// Sow directly from BEAN
         if (tokenIn === Bean) {
           // No swap occurs, so we know exactly how many beans are going in.
@@ -545,8 +538,6 @@ const Sow: FC<{}> = () => {
             `Sowing via ${tokenIn.symbol} is not currently supported`
           );
         }
-
-        console.log('minsoil: ', minSoil.toString());
 
         data.push(
           beanstalk.interface.encodeFunctionData('sowWithMin', [
