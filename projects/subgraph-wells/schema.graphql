@@ -23,7 +23,7 @@ type Token @entity {
   lastPriceBlockNumber: BigInt!
 }
 
-type Aquifer @entity(immutable: true) {
+type Aquifer @entity() {
   " Smart contract address of the aquifer "
   id: Bytes!
 
