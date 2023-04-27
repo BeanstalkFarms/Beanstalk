@@ -212,7 +212,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
                    We could initially we set the amounts from the quote
                    But if they change, reverse quote
                    */}
-                {well.tokens!.map((token, index) => (
+                {wellTokens!.map((token, index) => (
                   <TokenContainer key={index}>
                     <TokenInput
                       id={`token${index}`}
