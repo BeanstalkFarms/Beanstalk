@@ -49,7 +49,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback }: AddLiquidityProps) =
       setReceipt(receipt);
       txnCompleteCallback();
     }
-  }, [quote, address, well, amounts, refetchBalances]);
+  }, [quote, address, well, amounts, txnCompleteCallback]);
 
   const handleInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
