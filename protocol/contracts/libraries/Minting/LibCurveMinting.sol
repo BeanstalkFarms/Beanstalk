@@ -21,7 +21,13 @@ interface IMeta3CurveOracle {
 /**
  * @title Oracle
  * @author Publius, Chaikitty
- * @notice Tracks the TWAP of the BEAN:3CRV Curve Metapool.
+ * @notice Curve Minting provides an Oracle for the Bean:3Crv Metapool that can be Checked or Captured to compute
+ * the time weighted average Delta B since the last time the Oracle was Captured.
+ *
+ * @dev
+ * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
+ * it has been since the last Season instead of storing its own for efficiency purposes.
+ * Each Capture stores the encoded cumulative balances returned by the Pump in `s.co`.
  */
 library LibCurveMinting {
     using SafeMath for uint256;
@@ -31,6 +37,7 @@ library LibCurveMinting {
     uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
 
     /**
+     * @notice Emitted when the Curve Minting Oracle is captured.
      * @param season The Season in which the oracle was updated.
      * @param deltaB The deltaB
      * @param balances The TWA 
@@ -44,32 +51,24 @@ library LibCurveMinting {
     //////////////////// CHECK ////////////////////
 
     function check() internal view returns (int256 deltaB) {
-        deltaB = _check();
-        deltaB = LibMinting.checkForMaxDeltaB(deltaB);
-    }
-
-    function _check() internal view returns (int256 db) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
-            (db, , ) = twaDeltaB();
+            (deltaB, , ) = twaDeltaB();
         } else {
-            db = 0;
+            deltaB = 0;
         }
+
+        deltaB = LibMinting.checkForMaxDeltaB(deltaB);
     }
 
     //////////////////// CAPTURE ////////////////////
 
-    function capture() internal returns (int256 deltaB, uint256[2] memory balances) {
-        (deltaB, balances) = _capture();
-        deltaB = LibMinting.checkForMaxDeltaB(deltaB);
-    }
 
     /** 
      * @dev `balances` stores the TWA balances throughout the Season.
      * In the case of {initializeOracle}, it will be the current balances.
      */
-    function _capture() internal returns (int256 deltaB, uint256[2] memory balances) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    function capture() internal returns (int256 deltaB, uint256[2] memory balances) {        AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
             (deltaB, balances) = updateOracle();
         } else {
@@ -78,6 +77,7 @@ library LibCurveMinting {
             // Thus, use the previous balances instead.
             balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_previous_balances();
         }
+        deltaB = LibMinting.checkForMaxDeltaB(deltaB);
     }
 
     //////////////////// INITIALIZE ////////////////////

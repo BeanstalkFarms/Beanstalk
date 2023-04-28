@@ -39,6 +39,7 @@ describe('Silo Token', function () {
     this.approval = await ethers.getContractAt('ApprovalFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('MockConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
+    this.enroot = await ethers.getContractAt('EnrootFacet', this.diamond.address)
 
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
@@ -1134,11 +1135,11 @@ describe('Silo Token', function () {
   describe("Update Unripe Deposit", async function () {
 
     it("enrootDeposit fails if not unripe token", async function () {
-      await expect(this.convert.connect(user).enrootDeposit(BEAN, '1', '1')).to.be.revertedWith("Silo: token not unripe")
+      await expect(this.enroot.connect(user).enrootDeposit(BEAN, '1', '1')).to.be.revertedWith("Silo: token not unripe")
     })
 
     it("enrootDeposits fails if not unripe token", async function () {
-      await expect(this.convert.connect(user).enrootDeposits(BEAN, ['1'], ['1'])).to.be.revertedWith("Silo: token not unripe")
+      await expect(this.enroot.connect(user).enrootDeposits(BEAN, ['1'], ['1'])).to.be.revertedWith("Silo: token not unripe")
     })
 
     describe("1 deposit, some", async function () {
@@ -1158,7 +1159,7 @@ describe('Silo Token', function () {
         //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]], 0, 0, []);
         
-        this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
+        this.result = await this.enroot.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
 
       it('properly updates the total balances', async function () {
@@ -1180,7 +1181,7 @@ describe('Silo Token', function () {
 
       it('emits Remove and Add Deposit event', async function () {
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
-        await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
+        await expect(this.result).to.emit(this.enroot, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
     });
@@ -1204,7 +1205,7 @@ describe('Silo Token', function () {
 
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]], 0, 0, []);
 
-        this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
+        this.result = await this.enroot.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
       })
 
       it('properly updates the total balances', async function () {
@@ -1226,7 +1227,7 @@ describe('Silo Token', function () {
 
       it('emits Remove and Add Deposit event', async function () {
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
-        await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
+        await expect(this.result).to.emit(this.enroot, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
       });
     });
@@ -1252,7 +1253,7 @@ describe('Silo Token', function () {
         const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 
         const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, '11');
-        this.result = await this.convert.connect(user).enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6('5'), to6('5')]);
+        this.result = await this.enroot.connect(user).enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6('5'), to6('5')]);
       })
 
       it('properly updates the total balances', async function () {

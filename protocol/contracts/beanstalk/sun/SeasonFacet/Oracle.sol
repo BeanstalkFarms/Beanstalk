@@ -49,7 +49,20 @@ contract Oracle is ReentrancyGuard {
         s.season.timestamp = block.timestamp;
     }
 
+    /**
+     * @notice Returns thelast Well Oracle Snapshot for a given `well`.
+     * @return snapshot The encoded cumulative balances the last time the Oracle was captured.
+     */
     function wellOracleSnapshot(address well) external view returns (bytes memory snapshot) {
         snapshot = s.wellOracleSnapshots[well];
+    }
+
+    /**
+     * @notice Returns the last Curve Oracle data snapahost for the Bean:3Crv Pool.
+     * @return co The last Curve Oracle data snapshot.
+     */
+    function curveOracle() external view returns (Storage.CurveMetapoolOracle memory co) {
+        co = s.co;
+        co.timestamp = s.season.timestamp; // use season timestamp for oracle
     }
 }

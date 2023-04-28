@@ -254,7 +254,7 @@ contract Storage {
     /**
      * @notice System-level Silo state variables.
      * @param stalk The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-     * @param deprecated_seeds // The total amount of active Seeds (excluding Earned Seeds). 
+     * @param deprecated_seeds DEPRECATED: The total amount of active Seeds (excluding Earned Seeds).
      * @dev seeds are no longer used internally. Balance is wiped to 0 from the mayflower update. see {mowAndMigrate}.
      * @param roots The total amount of Roots.
      */
@@ -269,7 +269,7 @@ contract Storage {
      * @param initialized True if the Oracle has been initialzed. It needs to be initialized on Deployment and re-initialized each Unpause.
      * @param startSeason The Season the Oracle started minting. Used to ramp up delta b when oracle is first added.
      * @param balances The cumulative reserve balances of the pool at the start of the Season (used for computing time weighted average delta b).
-     * @param timestamp The timestamp of the start of the current Season.
+     * @param timestamp DEPRECATED: The timestamp of the start of the current Season. `LibCurveMinting` now uses `s.season.timestamp` instead of storing its own for gas efficiency purposes.
      * @dev Currently refers to the time weighted average deltaB calculated from the BEAN:3CRV pool.
      */
     struct CurveMetapoolOracle {

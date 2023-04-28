@@ -17,6 +17,13 @@ import {LibAppStorage} from "~/libraries/LibAppStorage.sol";
  *
  */
 
+struct MockCurveMetapoolOracle {
+    bool initialized; // ────┐ 1
+    uint32 startSeason; // ──┘ 4 (5/32)
+    uint256[2] balances;
+    uint256 deprecated_timestamp;
+}
+
 interface ResetPool {
     function reset_cumulative() external;
 }
@@ -281,11 +288,6 @@ contract MockSeasonFacet is SeasonFacet {
         (balances, s.co.balances) = LibCurveMinting.twap();
         s.season.timestamp = block.timestamp;
         emit UpdateTWAPs(balances);
-    }
-
-    function curveOracle() external view returns (Storage.CurveMetapoolOracle memory co) {
-        co = s.co;
-        co.timestamp = s.season.timestamp; // use season timestamp for oracle
     }
 
     function resetPools(address[] calldata pools) external {
