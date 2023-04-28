@@ -24,7 +24,14 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
 
-  const { balanced, oneToken, custom } = useLiquidityQuote(well, removeLiquidityMode, lpTokenAmount, singleTokenIndex, well.tokens!, amounts);
+  const { balanced, oneToken, custom } = useLiquidityQuote(
+    well,
+    removeLiquidityMode,
+    lpTokenAmount,
+    singleTokenIndex,
+    well.tokens!,
+    amounts
+  );
 
   const { balancedQuote, loadingBalancedQuote, balanedQuoteError } = balanced;
   const { oneTokenQuote, loadingOneTokenQuote, oneTokenQuoteError } = oneToken;
@@ -33,9 +40,9 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
   useEffect(() => {
     if (well.tokens) {
       const initialAmounts: LiquidityAmounts = {};
-      for (let i=0; i<well.tokens.length; i++) {
+      for (let i = 0; i < well.tokens.length; i++) {
         initialAmounts[i] = TokenValue.ZERO;
-      };
+      }
       setAmounts(initialAmounts);
     }
   }, [well.tokens]);
@@ -80,7 +87,18 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
       setReceipt(receipt);
       txnCompleteCallback();
     }
-  }, [well.removeLiquidity, lpTokenAmount, oneTokenQuote, balancedQuote, address]);
+  }, [
+    oneTokenQuote,
+    balancedQuote,
+    customRatioQuote,
+    address,
+    lpTokenAmount,
+    removeLiquidityMode,
+    well,
+    singleTokenIndex,
+    amounts,
+    txnCompleteCallback
+  ]);
 
   const handleInputChange = useCallback(
     (amountFromInput: TokenValue) => {
