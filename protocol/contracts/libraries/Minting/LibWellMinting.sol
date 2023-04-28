@@ -17,9 +17,10 @@ import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.s
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**
- * @author Publius
- * @title Well Minting provides an Oracle for a given `well` that can be Checked or Captured to compute
- * the time weighted average Delta B since the last time the Oracle was Captured.
+ * @title Well Minting Oracle Library
+ * @notice Well Minting Oracle can be Checked or Captured to compute
+ * the time weighted average Delta B since the last time the Oracle was Captured
+ * for a given Well.
  *
  * @dev
  * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
@@ -55,6 +56,7 @@ library LibWellMinting {
     /**
      * @dev Returns the time weighted average delta B in a given Well
      * since the last Sunrise.
+     * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
     function check(
         address well
@@ -62,6 +64,8 @@ library LibWellMinting {
         bytes memory lastSnapshot = LibAppStorage
             .diamondStorage()
             .wellOracleSnapshots[well];
+        // If the length of the stored Snapshot for a given Well is 0,
+        // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
             (deltaB, ) = twaDeltaB(well, lastSnapshot);
         } else {
@@ -76,6 +80,7 @@ library LibWellMinting {
     /**
      * @dev Returns the time weighted average delta B in a given Well
      * since the last Sunrise and snapshots the current cumulative reserves.
+     * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
     function capture(
         address well
@@ -94,9 +99,11 @@ library LibWellMinting {
         deltaB = LibMinting.checkForMaxDeltaB(deltaB);
     }
 
+    //////////////////// Oracle ////////////////////
+
     /**
-     * Initializes the minting oracle for a given Well by snapshotting the current
-     * cumulative reserves.
+     * Initializes the Well Minting Oracle for a given Well by snapshotting the current
+     * encoded cumulative reserves from a Beanstalk supported pump.
      */
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -114,7 +121,7 @@ library LibWellMinting {
     }
 
     /**
-     * @dev updates the Oracle snapshot for a given Well and returns the deltaB
+     * @dev Updates the Oracle snapshot for a given Well and returns the deltaB
      * given the previous snapshot in the Well
      */
     function updateOracle(

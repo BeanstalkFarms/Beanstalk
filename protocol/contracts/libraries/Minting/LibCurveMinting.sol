@@ -19,10 +19,11 @@ interface IMeta3CurveOracle {
 }
 
 /**
- * @title Oracle
+ * @title Bean:3Crv Curve Metapool Minting Oracle Library
  * @author Publius, Chaikitty
- * @notice Curve Minting provides an Oracle for the Bean:3Crv Metapool that can be Checked or Captured to compute
- * the time weighted average Delta B since the last time the Oracle was Captured.
+ * @notice Bean:3Crv Curve Metapool Minting Oracle can be Checked or Captured to compute
+ * the time weighted average Delta B since the last time the Oracle was Captured
+ * for a given Well.
  *
  * @dev
  * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
@@ -50,6 +51,11 @@ library LibCurveMinting {
 
     //////////////////// CHECK ////////////////////
 
+    /**
+     * @dev Returns the time weighted average delta B in the Bean:3Crv Metapool
+     * since the last Sunrise.
+     * @return deltaB The time weighted average delta B balance since the last `capture` call.
+     */
     function check() internal view returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
@@ -63,12 +69,14 @@ library LibCurveMinting {
 
     //////////////////// CAPTURE ////////////////////
 
-
     /** 
-     * @dev `balances` stores the TWA balances throughout the Season.
-     * In the case of {initializeOracle}, it will be the current balances.
+     * @dev Returns the time weighted average delta B in a given Well
+     * since the last Sunrise and snapshots the current cumulative reserves.
+     * @return deltaB The time weighted average delta B balance since the last `capture` call.
+     * @return balances the TWA balances throughout the Season. In the case of {initializeOracle}, it will be the balances at the end of the last block.
      */
-    function capture() internal returns (int256 deltaB, uint256[2] memory balances) {        AppStorage storage s = LibAppStorage.diamondStorage();
+    function capture() internal returns (int256 deltaB, uint256[2] memory balances) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
             (deltaB, balances) = updateOracle();
         } else {
@@ -80,8 +88,12 @@ library LibCurveMinting {
         deltaB = LibMinting.checkForMaxDeltaB(deltaB);
     }
 
-    //////////////////// INITIALIZE ////////////////////
+    //////////////////// Oracle ////////////////////
 
+    /**
+     * Initializes the Bean:3Crv Minting Oracle by snapshotting the current cumulative balances
+     * in the Bean:3Crv pool.
+     */
     function initializeOracle() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Storage.CurveMetapoolOracle storage o = s.co;
@@ -96,7 +108,11 @@ library LibCurveMinting {
         }
     }
 
-    function updateOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
+    /**
+     * @dev updates the Bean:3Crv Minting Oracle snapshot for a given Well and returns the deltaB
+     * given the previous snapshot in the Well
+     */
+    function UpdateOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         (deltaB, balances, s.co.balances) = twaDeltaB();
@@ -106,30 +122,38 @@ library LibCurveMinting {
 
     //////////////////// CALCULATIONS ////////////////////
 
+    /**
+     * @dev Calculates the time weighted average delta B since the
+     * last `capture` call to the Bean:3Crv Curve Metapool.
+     */
     function twaDeltaB()
         internal
         view
-        returns (int256 deltaB, uint256[2] memory balances, uint256[2] memory cum_balances)
+        returns (int256 deltaB, uint256[2] memory balances, uint256[2] memory cumulativeBalances)
     {
-        (balances, cum_balances) = twap();
+        (balances, cumulativeBalances) = twaBalances();
         uint256 d = LibBeanMetaCurve.getDFroms(balances);
         deltaB = LibBeanMetaCurve.getDeltaBWithD(balances[0], d);
     }
 
-    function twap()
+    /**
+     * @dev Calculates the time weighted average balances since the
+     * last `capture` call to the Bean:3Crv Curve Metapool.
+     */
+    function twaBalances()
         internal
         view
-        returns (uint256[2] memory balances, uint256[2] memory cum_balances)
+        returns (uint256[2] memory twaBalances, uint256[2] memory cumulativeBalances)
     {
-        cum_balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
-        balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
+        cumulativeBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
+        twaBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
         uint256 lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
 
-        cum_balances[0] = cum_balances[0].add(
-            balances[0].mul(block.timestamp.sub(lastTimestamp))
+        cumulativeBalances[0] = cumulativeBalances[0].add(
+            twaBalances[0].mul(block.timestamp.sub(lastTimestamp))
         );
-        cum_balances[1] = cum_balances[1].add(
-            balances[1].mul(block.timestamp.sub(lastTimestamp))
+        cumulativeBalances[1] = cumulativeBalances[1].add(
+            twaBalances[1].mul(block.timestamp.sub(lastTimestamp))
         );
 
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -137,23 +161,26 @@ library LibCurveMinting {
 
         uint256 deltaTimestamp = block.timestamp.sub(s.season.timestamp);
 
-        balances[0] = cum_balances[0].sub(o.balances[0]).div(deltaTimestamp);
-        balances[1] = cum_balances[1].sub(o.balances[1]).div(deltaTimestamp);
+        twaBalances[0] = cumulativeBalances[0].sub(o.balances[0]).div(deltaTimestamp);
+        twaBalances[1] = cumulativeBalances[1].sub(o.balances[1]).div(deltaTimestamp);
     }
 
+    /**
+     * @dev calcualte the current cumulative balances in the Bean:3Crv Curve Metapool.
+     */
     function getCumulative()
         private
         view
-        returns (uint256[2] memory cum_balances)
+        returns (uint256[2] memory cumulativeBalances)
     {
-        cum_balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
+        cumulativeBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
         uint256[2] memory balances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
         uint256 lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
 
-        cum_balances[0] = cum_balances[0].add(
+        cumulativeBalances[0] = cumulativeBalances[0].add(
             balances[0].mul(block.timestamp.sub(lastTimestamp))
         );
-        cum_balances[1] = cum_balances[1].add(
+        cumulativeBalances[1] = cumulativeBalances[1].add(
             balances[1].mul(block.timestamp.sub(lastTimestamp))
         );
     }

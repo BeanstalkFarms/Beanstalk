@@ -12,15 +12,22 @@ import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
 import {LibWell} from "~/libraries/Well/LibWell.sol";
 
 /**
- * @title LibWellBdv handles fetching the bdv of a Well's Well Tokens.
+ * @title Well Bdv Library contains a function to calulate
+ * the BDV of a given Well LP Token
  **/
 
 library LibWellBdv {
     using SafeMath for uint256;
 
     uint constant private BEAN_UNIT = 1e6;
+
+    // A constant representing a bytes variable with a length of 0.
     bytes constant BYTES_ZERO = new bytes(0);
 
+    /**
+     * @dev Calculates the `_bdv` of a given Well LP Token given a relevant
+     * `well` and `amount` value by computing the delta LP token supply given a small change in the Bean reserve balance.
+     */
     function bdv(
         address well,
         uint amount
@@ -31,7 +38,7 @@ library LibWellBdv {
         uint[] memory reserves = IInstantaneousPump(LibWell.BEANSTALK_PUMP).readInstantaneousReserves(well, BYTES_ZERO);
         Call memory wellFunction = IWell(well).wellFunction();
         uint lpTokenSupplyBefore = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
-        reserves[beanIndex] = reserves[beanIndex].sub(BEAN_UNIT); // remove one bean
+        reserves[beanIndex] = reserves[beanIndex].sub(BEAN_UNIT); // remove one Bean
         uint deltaLPTokenSupply = lpTokenSupplyBefore.sub(
             IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data)
         );
