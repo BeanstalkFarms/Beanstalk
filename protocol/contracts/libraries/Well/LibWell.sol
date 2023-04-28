@@ -13,17 +13,22 @@ import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
 import {C} from "~/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
-
 /**=
- * @title LibWell stores Well utility functions.
+ * @title Well Library contains Well helper functions.
  **/
 
 library LibWell {
 
     // TODO: set
     address constant internal BEANSTALK_PUMP = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
+
+    // TODO: Optionally fail if below minimum amount.
     uint256 constant private MIN_BEANS = 1e11; // 10,000 Beans
 
+    /**
+     * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
+     * These actions are combined into a single function for gas efficiency.
+     */
     function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
         uint[] memory ratios,
         uint beanIndex
@@ -39,6 +44,9 @@ library LibWell {
         }
     }
     
+    /**
+     * @dev Returns the index of Bean in a list of tokens.
+     */
     function getBeanIndex(IERC20[] memory tokens) internal pure returns (uint beanIndex) {
         for (beanIndex; beanIndex < tokens.length; ++beanIndex) {
             if (C.beanAddress() == address(tokens[beanIndex])) {
@@ -47,11 +55,18 @@ library LibWell {
         }
     }
 
+    /**
+     * @dev Returns the index of Bean given a Well.
+     */
     function getBeanIndexFromWell(address well) internal view returns (uint beanIndex) {
         IERC20[] memory tokens = IWell(well).tokens();
         beanIndex = getBeanIndex(tokens);
     }
 
+    /**
+     * @dev Returns whether an address is a whitelisted Well by checking
+     * if the BDV function selector is the `wellBdv` function.
+     */
     function isWell(
         address well
     ) internal view returns (bool _isWell) {
