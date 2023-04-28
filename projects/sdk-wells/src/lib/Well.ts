@@ -236,7 +236,7 @@ export class Well {
    * @param minAmountOut The minimum amount of `toToken` to receive
    * @param recipient The address to receive `toToken`
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
-   * @return amountOut The amount of `toToken` received
+   * @return Promise with the executing transaction
    */
   async swapFrom(
     fromToken: Token,
@@ -285,6 +285,40 @@ export class Well {
   }
 
   /**
+   * Estimate gas for `swapFrom()`
+   * @param fromToken The token to swap from
+   * @param toToken The token to swap to
+   * @param amountIn The amount of `fromToken` to spend
+   * @param minAmountOut The minimum amount of `toToken` to receive
+   * @param recipient The address to receive `toToken`
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async swapFromGasEstimate(
+    fromToken: Token,
+    toToken: Token,
+    amountIn: TokenValue,
+    minAmountOut: TokenValue,
+    recipient: string = "0x0000000000000000000000000000000000000000",
+    deadline?: number,
+    overrides?: Overrides
+  ): Promise<TokenValue> {
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.swapFrom(
+      fromToken.address,
+      toToken.address,
+      amountIn.toBigNumber(),
+      minAmountOut.toBigNumber(),
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
+
+    return TokenValue.fromBlockchain(gas, 0);
+  }
+
+  /**
    * Swaps from an exact amount of `fromToken` to a minimum amount of `toToken` and supports
    * fee on transfer tokens.
    * @param fromToken The token to swap from
@@ -293,7 +327,7 @@ export class Well {
    * @param minAmountOut The minimum amount of `toToken` to receive
    * @param recipient The address to receive `toToken`
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
-   * @return amountOut The amount of `toToken` received
+   * @return Promise with the executing transaction
    */
   async swapFromFeeOnTransfer(
     fromToken: Token,
@@ -324,6 +358,40 @@ export class Well {
     );
   }
 
+  /**
+   * Estimage gas for `swapFromFeeOnTransfer()`
+   * @param fromToken The token to swap from
+   * @param toToken The token to swap to
+   * @param amountIn The amount of `fromToken` to spend
+   * @param minAmountOut The minimum amount of `toToken` to receive
+   * @param recipient The address to receive `toToken`
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async swapFromFeeOnTransferGasEstimate(
+    fromToken: Token,
+    toToken: Token,
+    amountIn: TokenValue,
+    minAmountOut: TokenValue,
+    recipient: string = "0x0000000000000000000000000000000000000000",
+    deadline?: number,
+    overrides?: Overrides
+  ): Promise<TokenValue> {
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.swapFromFeeOnTransfer(
+      fromToken.address,
+      toToken.address,
+      amountIn.toBigNumber(),
+      minAmountOut.toBigNumber(),
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
+
+    return TokenValue.fromBlockchain(gas, 0);
+  }
+
   ////// Swap TO
 
   /**
@@ -334,7 +402,7 @@ export class Well {
    * @param amountOut The amount of `toToken` to receive
    * @param recipient The address to receive `toToken`
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
-   * @return amountIn The amount of `toToken` received
+   * @return Promise with the executing transaction
    */
   async swapTo(
     fromToken: Token,
@@ -345,6 +413,11 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
+    validateToken(fromToken, "fromToken");
+    validateToken(toToken, "toToken");
+    validateAmount(maxAmountIn, "maxAmountIn");
+    validateAmount(amountOut, "amountOut");
+    validateAddress(recipient, "recipient");
     validateDeadline(deadline);
     const from = fromToken.address;
     const to = toToken.address;
@@ -372,6 +445,36 @@ export class Well {
     return fromToken.fromBlockchain(quote);
   }
 
+  /**
+   * Estimage gas for `swapTo()`
+   * @param fromToken The token to swap from
+   * @param toToken The token to swap to
+   * @param maxAmountIn The maximum amount of `fromToken` to spend
+   * @param amountOut The amount of `toToken` to receive
+   * @param recipient The address to receive `toToken`
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async swapToEstimageGas(
+    fromToken: Token,
+    toToken: Token,
+    maxAmountIn: TokenValue,
+    amountOut: TokenValue,
+    recipient: string = "0x0000000000000000000000000000000000000000",
+    deadline?: number,
+    overrides?: TxOverrides
+  ): Promise<TokenValue> {
+    const from = fromToken.address;
+    const to = toToken.address;
+    const maxIn = maxAmountIn.toBigNumber();
+    const out = amountOut.toBigNumber();
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.swapTo(from, to, maxIn, out, recipient, deadlineBlockchain, overrides ?? {});
+    return TokenValue.fromBlockchain(gas, 0);
+  }
+
   ////// Add Liquidity
 
   /**
@@ -380,6 +483,7 @@ export class Well {
    * @param minLpAmountOut The minimum amount of LP tokens to receive
    * @param recipient The address to receive the LP tokens
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Promise with the executing transaction
    */
   addLiquidity(
     tokenAmountsIn: TokenValue[],
@@ -388,6 +492,10 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
+    // TODO: validate at least one isn't zero
+    tokenAmountsIn.forEach((v, i) => validateAmount(v, `tokenAmountsIn[${i}]`));
+    validateAmount(minLpAmountOut, "minLpAmountOut");
+    validateAddress(recipient, "recipient");
     validateDeadline(deadline);
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
@@ -411,12 +519,37 @@ export class Well {
   }
 
   /**
+   * Estimate gas for addLiquidity()
+   * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
+   * @param minLpAmountOut The minimum amount of LP tokens to receive
+   * @param recipient The address to receive the LP tokens
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async addLiquidityGasEstimate(
+    tokenAmountsIn: TokenValue[],
+    minLpAmountOut: TokenValue,
+    recipient: string = "0x0000000000000000000000000000000000000000",
+    deadline?: number,
+    overrides?: TxOverrides
+  ): Promise<TokenValue> {
+    const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
+    const minLp = minLpAmountOut.toBigNumber();
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.addLiquidity(amountsIn, minLp, recipient, deadlineBlockchain, overrides || {});
+    return TokenValue.fromBlockchain(gas, 0);
+  }
+
+  /**
    * Adds liquidity to the Well as multiple tokens in any ratio and supports
    * fee on transfer tokens.
    * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
    * @param minLpAmountOut The minimum amount of LP tokens to receive
    * @param recipient The address to receive the LP tokens
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Promise with the executing transaction
    */
   addLiquidityFeeOnTransfer(
     tokenAmountsIn: TokenValue[],
@@ -425,6 +558,11 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
+    // TODO: validate at least one isn't zero
+    // TODO: validate at least one (or all?) is fee-on-transfer
+    tokenAmountsIn.forEach((v, i) => validateAmount(v, `tokenAmountsIn[${i}]`));
+    validateAmount(minLpAmountOut, "minLpAmountOut");
+    validateAddress(recipient, "recipient");
     validateDeadline(deadline);
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
@@ -432,6 +570,30 @@ export class Well {
     const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
+  }
+
+  /**
+   * Gas estimate for `addLiquidityFeeOnTransfer()`
+   * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
+   * @param minLpAmountOut The minimum amount of LP tokens to receive
+   * @param recipient The address to receive the LP tokens
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async addLiquidityFeeOnTransferGasEstimate(
+    tokenAmountsIn: TokenValue[],
+    minLpAmountOut: TokenValue,
+    recipient: string,
+    deadline?: number,
+    overrides?: TxOverrides
+  ): Promise<TokenValue> {
+    const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
+    const minLp = minLpAmountOut.toBigNumber();
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
+    return TokenValue.fromBlockchain(gas, 0);
   }
 
   ////// Remove Liquidity
@@ -442,7 +604,7 @@ export class Well {
    * @param minTokenAmountsOut The minimum amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
    * @param recipient The address to receive the underlying tokens
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
-   * @return tokenAmountsOut The amount of each underlying token received
+   * @return Promise with the executing transaction
    */
   async removeLiquidity(
     lpAmountIn: TokenValue,
@@ -451,6 +613,9 @@ export class Well {
     deadline?: number,
     overrides?: CallOverrides
   ): Promise<ContractTransaction> {
+    validateAmount(lpAmountIn, "lpAmountIn");
+    minTokenAmountsOut.forEach((v, i) => validateAmount(v, `minTokenAmountsOut[${i}]`));
+    validateAddress(recipient, "recipient");
     validateDeadline(deadline);
     const lpAmount = lpAmountIn.toBigNumber();
     const minOutAmounts = minTokenAmountsOut.map((a) => a.toBigNumber());
@@ -474,6 +639,30 @@ export class Well {
   }
 
   /**
+   * Removes liquidity from the Well as all underlying tokens in a balanced ratio.
+   * @param lpAmountIn The amount of LP tokens to burn
+   * @param minTokenAmountsOut The minimum amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
+   * @param recipient The address to receive the underlying tokens
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async removeLiquidityEstimateGas(
+    lpAmountIn: TokenValue,
+    minTokenAmountsOut: TokenValue[],
+    recipient: string,
+    deadline?: number,
+    overrides?: CallOverrides
+  ): Promise<TokenValue> {
+    const lpAmount = lpAmountIn.toBigNumber();
+    const minOutAmounts = minTokenAmountsOut.map((a) => a.toBigNumber());
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.removeLiquidity(lpAmount, minOutAmounts, recipient, deadlineBlockchain, overrides ?? {});
+    return TokenValue.fromBlockchain(gas, 0);
+  }
+
+  /**
    * Removes liquidity from the Well as a single underlying token.
    * @param lpAmountIn The amount of LP tokens to burn
    * @param tokenOut The underlying token to receive
@@ -490,6 +679,10 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
+    validateAmount(lpAmountIn, "lpAmountIn");
+    validateToken(tokenOut, "tokenOut");
+    validateAmount(minTokenAmountOut, "minTokenAmountOut");
+    validateAddress(recipient, "recipient");
     validateDeadline(deadline);
     const amountIn = lpAmountIn.toBigNumber();
     const token = tokenOut.address;
@@ -516,12 +709,47 @@ export class Well {
   }
 
   /**
+   * Estimate gas for `removeLiquidityOneToken()`
+   * @param lpAmountIn The amount of LP tokens to burn
+   * @param tokenOut The underlying token to receive
+   * @param minTokenAmountOut The minimum amount of `tokenOut` to receive
+   * @param recipient The address to receive the underlying tokens
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async removeLiquidityOneTokenGasEstimate(
+    lpAmountIn: TokenValue,
+    tokenOut: Token,
+    minTokenAmountOut: TokenValue,
+    recipient: string,
+    deadline?: number,
+    overrides?: TxOverrides
+  ): Promise<TokenValue> {
+    validateDeadline(deadline);
+    const amountIn = lpAmountIn.toBigNumber();
+    const token = tokenOut.address;
+    const minOut = minTokenAmountOut.toBigNumber();
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.removeLiquidityOneToken(
+      amountIn,
+      token,
+      minOut,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
+    return TokenValue.fromBlockchain(gas, 0);
+  }
+
+  /**
    * Removes liquidity from the Well as multiple underlying tokens in any ratio.
    * @param maxLpAmountIn The maximum amount of LP tokens to burn
    * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
    * @param recipient The address to receive the underlying tokens
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
-   * @return lpAmountIn The amount of LP tokens burned
+   * @return Promise with executing transaction
    */
   async removeLiquidityImbalanced(
     maxLpAmountIn: TokenValue,
@@ -530,6 +758,9 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
+    validateAmount(maxLpAmountIn, "maxLpAmountIn");
+    tokenAmountsOut.forEach((t, i) => validateAmount(t, `tokenAmountsOut[${i}]`));
+    validateAddress(recipient, "recipient");
     validateDeadline(deadline);
     const maxIn = maxLpAmountIn.toBigNumber();
     const amounts = tokenAmountsOut.map((tv) => tv.toBigNumber());
@@ -550,6 +781,31 @@ export class Well {
     const lpToken = await this.getLPToken();
 
     return lpToken.fromBlockchain(quote);
+  }
+
+  /**
+   * Estimate gas for `removeLiquidityImbalanced()`
+   * @param maxLpAmountIn The maximum amount of LP tokens to burn
+   * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
+   * @param recipient The address to receive the underlying tokens
+   * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
+   * @return Estimated gas needed
+   */
+  async removeLiquidityImbalancedEstimateGas(
+    maxLpAmountIn: TokenValue,
+    tokenAmountsOut: TokenValue[],
+    recipient: string,
+    deadline?: number,
+    overrides?: TxOverrides
+  ): Promise<TokenValue> {
+    validateDeadline(deadline);
+    const maxIn = maxLpAmountIn.toBigNumber();
+    const amounts = tokenAmountsOut.map((tv) => tv.toBigNumber());
+
+    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    const gas = await this.contract.estimateGas.removeLiquidityImbalanced(maxIn, amounts, recipient, deadlineBlockchain, overrides ?? {});
+    return TokenValue.fromBlockchain(gas, 0);
   }
 
   ////// Other
