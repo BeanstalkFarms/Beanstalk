@@ -3,4 +3,10 @@ type User @entity {
   barnRaise: [Int!]
   genesis: [Int!]
   winter: [Int!]
+},
+type CollectionData @entity {
+  id: ID!
+  barnRaiseMinted: [Int!]
+  genesisMinted: [Int!]
+  winterMinted: [Int!]
 }
