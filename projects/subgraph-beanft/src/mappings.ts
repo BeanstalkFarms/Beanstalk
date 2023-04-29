@@ -10,7 +10,7 @@ import {
   Transfer as TransferEventWinter
 } from "../generated/winter/winter"
 import {
-  User, CollectionData
+  User, Collection
 } from "../generated/schema"
 
 const zeroAddress = '0x0000000000000000000000000000000000000000'
@@ -36,7 +36,7 @@ export function handleTransferBarnRaise(event: TransferEventBarnRaise): void {
   let from = event.params.from.toHexString()
   let to = event.params.to.toHexString()
   let tokenId = event.params.tokenId.toI32()
-  transferHandler(from, to, tokenId, 'barnRaise')
+  transferHandler(from, to, tokenId, 'barnraise')
 }
 
 export function handleConsecutiveTransferBarnRaise(event: ConsecutiveTransferEventBarnRaise): void {
@@ -62,7 +62,7 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
       let winterNew = source.winter
       winterNew!.splice(nftIndex, 1)
       source.winter = winterNew
-    } else if (mode === 'barnRaise') {
+    } else if (mode === 'barnraise') {
       let nftIndex = source.barnRaise!.indexOf(tokenId)
       let barnRaiseNew = source.barnRaise
       barnRaiseNew!.splice(nftIndex, 1)
@@ -73,31 +73,15 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
     source.save()
   } else if (from == zeroAddress) {
     log.info("NEW {} COLLECTION MINT! ID: {}", [mode.toUpperCase(), tokenId.toString()])
-    let collectionData = CollectionData.load("")
+    let collectionData = Collection.load(mode)
     if (!collectionData) {
-      collectionData = new CollectionData("")
-      collectionData.genesisMinted = new Array<i32>()
-      collectionData.winterMinted = new Array<i32>()
-      collectionData.barnRaiseMinted = new Array<i32>()
+      collectionData = new Collection(mode)
+      collectionData.minted = new Array<i32>()
     }
-    if (mode === 'genesis') {
-      let mintedData = collectionData.genesisMinted
-      mintedData!.push(tokenId)
-      collectionData.genesisMinted = mintedData
-      collectionData.save() 
-    } else if (mode === 'winter') {
-      let mintedData = collectionData.winterMinted
-      mintedData!.push(tokenId)
-      collectionData.winterMinted = mintedData
-      collectionData.save() 
-    } else if (mode === 'barnRaise') {
-      let mintedData = collectionData.barnRaiseMinted
-      mintedData!.push(tokenId)
-      collectionData.barnRaiseMinted = mintedData
-      collectionData.save() 
-    } else {
-      log.critical("MINT HANDLER - MODE MISSING", [])
-    }
+    let mintedData = collectionData.minted
+    mintedData!.push(tokenId)
+    collectionData.minted = mintedData
+    collectionData.save()
   }
   if (destination) { // If true we have indexed the receiver as an user already, just update the arrays
     if (mode === 'genesis') {
@@ -108,7 +92,7 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
       let winterNew = destination.winter
       winterNew!.push(tokenId)
       destination.winter = winterNew
-    } else if (mode === 'barnRaise') {
+    } else if (mode === 'barnraise') {
       let barnRaiseNew = destination.barnRaise
       barnRaiseNew!.push(tokenId)
       destination.barnRaise = barnRaiseNew
@@ -130,7 +114,7 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
       let winterNew = destination.winter
       winterNew!.push(tokenId)
       destination.winter = winterNew
-    } else if (mode === 'barnRaise') {
+    } else if (mode === 'barnraise') {
       let barnRaiseNew = destination.barnRaise
       barnRaiseNew!.push(tokenId)
       destination.barnRaise = barnRaiseNew
@@ -155,17 +139,15 @@ function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string,
       sender.save() 
     } else if (from == zeroAddress) {
       log.info("NEW BARNRAISE COLLECTION MINT! ID: {}", [tokenId.toString()])
-      let collectionData = CollectionData.load("")
+      let collectionData = Collection.load('barnraise')
       if (!collectionData) {
-        collectionData = new CollectionData("")
-        collectionData.genesisMinted = new Array<i32>()
-        collectionData.winterMinted = new Array<i32>()
-        collectionData.barnRaiseMinted = new Array<i32>()
+        collectionData = new Collection('barnraise')
+        collectionData.minted = new Array<i32>()
       }
-      let mintedData = collectionData.barnRaiseMinted
+      let mintedData = collectionData.minted
       mintedData!.push(tokenId)
-      collectionData.barnRaiseMinted = mintedData
-      collectionData.save() 
+      collectionData.minted = mintedData
+      collectionData.save()
     }
     if (receiver) {
       let barnRaiseNew = receiver.barnRaise

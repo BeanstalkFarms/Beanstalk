@@ -15,7 +15,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - User
-        - CollectionData
+        - Collection
       abis:
         - name: genesis
           file: ./abis/genesis.json
@@ -36,7 +36,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - User
-        - CollectionData
+        - Collection
       abis:
         - name: winter
           file: ./abis/winter.json
@@ -57,7 +57,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - User
-        - CollectionData
+        - Collection
       abis:
         - name: barnraise
           file: ./abis/barnraise.json
