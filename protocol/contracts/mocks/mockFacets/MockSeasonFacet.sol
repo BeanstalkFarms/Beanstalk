@@ -285,7 +285,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function updateTWAPCurveE() external returns (uint256[2] memory balances) {
-        (balances, s.co.balances) = LibCurveMinting.twap();
+        (balances, s.co.balances) = LibCurveMinting.twaBalances();
         s.season.timestamp = block.timestamp;
         emit UpdateTWAPs(balances);
     }

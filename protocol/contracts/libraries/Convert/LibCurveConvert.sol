@@ -83,7 +83,7 @@ library LibCurveConvert {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
         LibInternal.mow(msg.sender, C.curveMetapoolAddress());
-        (amountOut, amountIn) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
+        (amountOut, amountIn) = curveRemoveLPTowardsPeg(lp, minBeans, pool);
         tokenOut = C.beanAddress();
         tokenIn = pool;
     }
@@ -104,7 +104,7 @@ library LibCurveConvert {
         LibInternal.mow(msg.sender, C.beanAddress());
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
-        (amountOut, amountIn) = curveSellToPegAndAddLiquidity(
+        (amountOut, amountIn) = curveAddLiquidityTowardsPeg(
             beans,
             minLP,
             pool
@@ -122,7 +122,7 @@ library LibCurveConvert {
      * @param minLP The minimum amount of Curve LP to receive
      * @param pool The address of the Curve pool to add to
      */
-    function curveSellToPegAndAddLiquidity(
+    function curveAddLiquidityTowardsPeg(
         uint256 beans,
         uint256 minLP,
         address pool
@@ -140,7 +140,7 @@ library LibCurveConvert {
      * @param minBeans The minimum amount of Beans to receive
      * @param pool The address of the Curve pool to remove from
      */
-    function curveRemoveLPAndBuyToPeg(
+    function curveRemoveLPTowardsPeg(
         uint256 lp,
         uint256 minBeans,
         address pool

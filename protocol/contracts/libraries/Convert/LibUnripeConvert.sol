@@ -39,7 +39,7 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert.curveRemoveLPAndBuyToPeg(
+        ) = LibCurveConvert.curveRemoveLPTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp),
                 minAmountOut,
                 C.CURVE_BEAN_METAPOOL
@@ -79,7 +79,7 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert.curveSellToPegAndAddLiquidity(
+        ) = LibCurveConvert.curveAddLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, beans),
                 minAmountOut,
                 C.CURVE_BEAN_METAPOOL

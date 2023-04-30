@@ -173,7 +173,7 @@ library LibWellConvert {
         tokenOut = well;
         tokenIn = C.beanAddress();
 
-        (amountOut, amountIn) = _wellRemoveLiquidityTowardsPeg(
+        (amountOut, amountIn) = _wellAddLiquidityTowardsPeg(
             beans,
             minLP,
             well
@@ -183,7 +183,7 @@ library LibWellConvert {
     /**
      * @dev Adds as Beans Liquidity with the constraint that delta B >= 0.
      */
-    function _wellRemoveLiquidityTowardsPeg(
+    function _wellAddLiquidityTowardsPeg(
         uint256 beans,
         uint256 minLP,
         address well

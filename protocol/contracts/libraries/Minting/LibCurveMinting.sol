@@ -112,7 +112,7 @@ library LibCurveMinting {
      * @dev updates the Bean:3Crv Minting Oracle snapshot for a given Well and returns the deltaB
      * given the previous snapshot in the Well
      */
-    function UpdateOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
+    function updateOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         (deltaB, balances, s.co.balances) = twaDeltaB();
