@@ -17,6 +17,8 @@ It's important to keep this in mind, because there are SDK components that can w
 - Tokens: can create and use a Token object with just a Provider, but attempted to do a write operation, such as setting approvals, will result in an "operation requires signer" error
 - Wells: similarly, wells can be readonly with just a Provider, or we can act on them (do swaps, add/remove liquidity, etc..) if we configure a signer.
 
+** Furthermore ** - it's important to keep in mind that if a user changes their connected account, for ex in Metamask, this _should_ instantiate a new SDK, and all previously "connected" data, such as Wells and Tokens, need to be "re-connected".
+
 Next sections will touch more on how this is handled
 
 ## Loading Data
