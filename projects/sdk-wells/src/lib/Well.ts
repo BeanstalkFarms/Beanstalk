@@ -226,6 +226,10 @@ export class Well {
     setReadOnly(this, "aquifer", new Aquifer(this.sdk, address), true);
   }
 
+  getTokenByAddress(address: string): Token | undefined {
+    return this.tokens?.find((t) => t.address === address.toLowerCase());
+  }
+
   ////// Swap FROM
 
   /**
