@@ -7,7 +7,7 @@ export const useWell = (address: string) => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery<Well, Error>(
-    ["well", address],
+    ["well", sdk.instanceId, address],
     async () => {
       return sdk.wells.getWell(address);
     },

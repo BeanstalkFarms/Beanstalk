@@ -7,7 +7,7 @@ export const useWells = () => {
   const sdk = useSdk();
 
   return useQuery<Well[], Error>(
-    ["wells", !!sdk.signer],
+    ["wells", sdk.instanceId],
     async () => {
       const wellAddresses = await getWellAddresses(sdk);
 
