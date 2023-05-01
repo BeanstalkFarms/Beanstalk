@@ -13,7 +13,7 @@ export const useWell = (address: string) => {
       return sdk.wells.getWell(address);
     },
     {
-      initialData: () => {
+      placeholderData: () => {
         const cachedWell = queryClient.getQueryData<Well[]>(["wells", !!sdk.signer])?.find((well) => well.address === address);
         if (cachedWell) {
           console.log("Got well from cache", address);
