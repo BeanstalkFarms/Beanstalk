@@ -152,6 +152,8 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
   // Update the BEAN price first as it is the reference for other USD calculations
   updateTokenUSD(BEAN_ERC20, blockNumber, BigDecimal.fromString("1"));
   let beanIndex = well.tokens.indexOf(BEAN_ERC20);
+  // Curretly only supporting USD values for Wells with BEAN as a token.
+  if (beanIndex == -1) return;
   let currentBeans = toDecimal(well.reserves[beanIndex]);
 
   for (let i = 0; i < well.tokens.length; i++) {
