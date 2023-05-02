@@ -7,17 +7,13 @@ export const useWell = (address: string) => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery<Well, Error>(
-    ["well", address],
+    ["well", sdk.instanceId, address],
     async () => {
-      console.log("Fetching Well", address);
       return sdk.wells.getWell(address);
     },
     {
-      initialData: () => {
+      placeholderData: () => {
         const cachedWell = queryClient.getQueryData<Well[]>(["wells", !!sdk.signer])?.find((well) => well.address === address);
-        if (cachedWell) {
-          console.log("Got well from cache", address);
-        }
         return cachedWell;
       },
       staleTime: Infinity,

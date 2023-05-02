@@ -8,6 +8,7 @@ import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useLiquidityQuote } from "src/wells/useLiquidityQuote";
 import { LiquidityAmounts, REMOVE_LIQUIDITY_MODE } from "./types";
+import { Button } from "../Swap/Button";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -18,7 +19,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
-  const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue>(TokenValue.ZERO);
+  const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue | undefined>();
   const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
   const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
@@ -27,7 +28,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
   const { balanced, oneToken, custom } = useLiquidityQuote(
     well,
     removeLiquidityMode,
-    lpTokenAmount,
+    lpTokenAmount || TokenValue.ZERO,
     singleTokenIndex,
     well.tokens!,
     amounts
@@ -51,7 +52,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
     if (well.lpToken) {
       let lpTokenWithMetadata = well.lpToken;
       lpTokenWithMetadata.setMetadata({ logo: images[well.lpToken.symbol] ?? images.DEFAULT });
-      setLpTokenAmount(TokenValue.ZERO);
+      setLpTokenAmount(undefined);
       setWellLpToken(lpTokenWithMetadata);
     }
   }, [well.lpToken]);
@@ -122,7 +123,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
     [amounts]
   );
 
-  const removeLiquidityButtonEnabled = useMemo(() => address && lpTokenAmount, [address, lpTokenAmount]);
+  const removeLiquidityButtonEnabled = useMemo(() => address && lpTokenAmount && lpTokenAmount.gt(0), [address, lpTokenAmount]);
   const loadingQuote = useMemo(
     () => loadingBalancedQuote || loadingOneTokenQuote || loadingCustomRatioQuote,
     [loadingBalancedQuote, loadingOneTokenQuote, loadingCustomRatioQuote]
@@ -137,9 +138,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
     // If we are leaving custom mode, reset to 0
     // If we are entering custom mode, reset to 0
     // If we are switching between balanced and one token, don't reset
-    setLpTokenAmount(TokenValue.ZERO);
+    setLpTokenAmount(undefined);
   }, [removeLiquidityMode]);
-
   return (
     <div>
       {wellLpToken && (
@@ -231,7 +231,13 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
             )}
             {quoteError && <h2>Error loading quote</h2>}
             {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
-            {removeLiquidityButtonEnabled && <button onClick={removeLiquidityButtonClickHandler}>Remove Liquidity</button>}
+            {/* {removeLiquidityButtonEnabled && <button onClick={removeLiquidityButtonClickHandler}>Remove Liquidity</button>} */}
+            <Button
+              disabled={!removeLiquidityButtonEnabled}
+              label="Remove Liquidity"
+              onClick={removeLiquidityButtonClickHandler}
+              loading={false}
+            />
           </div>
         </div>
       )}
