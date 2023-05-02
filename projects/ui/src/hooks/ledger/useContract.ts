@@ -10,13 +10,17 @@ import BEANFT_GENESIS_ABI from '~/constants/abi/BeaNFT/BeaNFTGenesis.json';
 import BEANFT_WINTER_ABI from '~/constants/abi/BeaNFT/BeaNFTWinter.json';
 import BEANFT_BARNRAISE_ABI from '~/constants/abi/BeaNFT/BeaNFTBarnRaise.json';
 import AGGREGATOR_V3_ABI from '~/constants/abi/Chainlink/AggregatorV3.json';
+import GNOSIS_DELEGATE_REGISTRY_ABI from '~/constants/abi/Gnosis/DelegateRegistry.json';
 import useChainConstant from '../chain/useChainConstant';
 import { SupportedChainId } from '~/constants/chains';
 import {
-  BEANFT_GENESIS_ADDRESSES, BEANFT_WINTER_ADDRESSES, BEANFT_BARNRAISE_ADDRESSES,
+  BEANFT_GENESIS_ADDRESSES,
+  BEANFT_WINTER_ADDRESSES,
+  BEANFT_BARNRAISE_ADDRESSES,
   BEANSTALK_ADDRESSES,
   BEANSTALK_FERTILIZER_ADDRESSES,
   BEANSTALK_PRICE_ADDRESSES,
+  DELEGATES_REGISTRY_ADDRESSES,
 } from '~/constants/addresses';
 import { ChainConstant } from '~/constants';
 import { getChainConstant } from '~/util/Chain';
@@ -29,7 +33,8 @@ import {
   Beanstalk,
   BeanstalkPrice,
   ERC20,
-  AggregatorV3
+  AggregatorV3,
+  DelegateRegistry,
 } from '~/generated/index';
 
 export type AddressOrAddressMap = string | ChainConstant<string>;
@@ -39,24 +44,26 @@ export type AbiOrAbiMap = ContractInterface | ChainConstant<ContractInterface>;
 
 export function useContractReadOnly<T extends Contract = Contract>(
   addressOrAddressMap: AddressOrAddressMap,
-  abiOrAbiMap: AbiOrAbiMap,
+  abiOrAbiMap: AbiOrAbiMap
 ): [T | null, SupportedChainId] {
-  const provider  = useProvider();
-  const address   = typeof addressOrAddressMap === 'string' ? addressOrAddressMap : getChainConstant(addressOrAddressMap, provider.network.chainId);
-  const abi       = Array.isArray(abiOrAbiMap) ? abiOrAbiMap : getChainConstant(abiOrAbiMap as ChainConstant<ContractInterface>, provider.network.chainId);
+  const provider = useProvider();
+  const address =
+    typeof addressOrAddressMap === 'string'
+      ? addressOrAddressMap
+      : getChainConstant(addressOrAddressMap, provider.network.chainId);
+  const abi = Array.isArray(abiOrAbiMap)
+    ? abiOrAbiMap
+    : getChainConstant(
+        abiOrAbiMap as ChainConstant<ContractInterface>,
+        provider.network.chainId
+      );
   return useMemo(
-    () => 
+    () =>
       // console.debug(`[useContractReadOnly] creating new instance of ${address}`);
-       [
-        address
-          ? new ethers.Contract(
-            address,
-            abi,
-            provider
-          ) as T
-          : null,
+      [
+        address ? (new ethers.Contract(address, abi, provider) as T) : null,
         provider.network.chainId,
-      ],    
+      ],
     [address, abi, provider]
   );
   // if (!address) throw new Error('Attempted to instantiate contract without address.')
@@ -78,25 +85,29 @@ export function useGetContract<T extends Contract = Contract>(
   abiOrAbiMap: AbiOrAbiMap,
   useSignerIfPossible: boolean = true
 ): (addressOrAddressMap: AddressOrAddressMap) => [T | null, SupportedChainId] {
-  const provider         = useProvider();
+  const provider = useProvider();
   const { data: signer } = useSigner();
-  const chainId          = provider.network.chainId;
-  const abi              = Array.isArray(abiOrAbiMap) ? abiOrAbiMap : getChainConstant(abiOrAbiMap as ChainConstant<ContractInterface>, chainId);
+  const chainId = provider.network.chainId;
+  const abi = Array.isArray(abiOrAbiMap)
+    ? abiOrAbiMap
+    : getChainConstant(
+        abiOrAbiMap as ChainConstant<ContractInterface>,
+        chainId
+      );
   const signerOrProvider = useSignerIfPossible && signer ? signer : provider;
   // useWhatChanged([abi,signerOrProvider,chainId], 'abi,signerOrProvider,chainId');
-  
-  // 
+
+  //
   return useCallback(
     (addressOrAddressMap: AddressOrAddressMap) => {
-      const address   = typeof addressOrAddressMap === 'string' ? addressOrAddressMap : getChainConstant(addressOrAddressMap, chainId);
+      const address =
+        typeof addressOrAddressMap === 'string'
+          ? addressOrAddressMap
+          : getChainConstant(addressOrAddressMap, chainId);
       // console.debug(`[useGetContract] creating new instance of ${address}, ${abi.length}, ${signerOrProvider}, ${chainId}`);
       return [
-        address 
-          ? new ethers.Contract(
-            address,
-            abi,
-            signerOrProvider
-          ) as T
+        address
+          ? (new ethers.Contract(address, abi, signerOrProvider) as T)
           : null,
         chainId,
       ];
@@ -123,7 +134,7 @@ const BEANSTALK_PRICE_ABIS = {
 export function useBeanstalkPriceContract() {
   return useContractReadOnly<BeanstalkPrice>(
     BEANSTALK_PRICE_ADDRESSES,
-    BEANSTALK_PRICE_ABIS,
+    BEANSTALK_PRICE_ABIS
   );
 }
 
@@ -136,10 +147,7 @@ export function useBeanstalkFertilizerContract() {
 }
 
 export function useGetERC20Contract() {
-  return useGetContract<ERC20>(
-    ERC20_ABI,
-    true
-  );
+  return useGetContract<ERC20>(ERC20_ABI, true);
 }
 
 export function useERC20Contract(addressOrAddressMap: AddressOrAddressMap) {
@@ -160,8 +168,8 @@ export function useFertilizerContract(signer?: ethers.Signer | null) {
 }
 
 export function useBeanstalkContract(signer?: ethers.Signer | null) {
-  const address   = useChainConstant(BEANSTALK_ADDRESSES);
-  const provider  = useProvider();
+  const address = useChainConstant(BEANSTALK_ADDRESSES);
+  const provider = useProvider();
   return useWagmiContract({
     address,
     abi: BEANSTALK_ABI,
@@ -200,12 +208,25 @@ export function useBarnRaiseNFTContract(signer?: ethers.Signer | null) {
 }
 
 /** used to access chainlink price data feeds */
-export function useAggregatorV3Contract(chainConstant: ChainConstant<string>, signer?: ethers.Signer | null) {
+export function useAggregatorV3Contract(
+  chainConstant: ChainConstant<string>,
+  signer?: ethers.Signer | null
+) {
   const address = useChainConstant(chainConstant);
   const provider = useProvider();
   return useWagmiContract({
     address,
     abi: AGGREGATOR_V3_ABI,
-    signerOrProvider: signer || provider
+    signerOrProvider: signer || provider,
   }) as AggregatorV3;
+}
+
+export function useDelegatesRegistryContract(signer?: ethers.Signer | null) {
+  const address = useChainConstant(DELEGATES_REGISTRY_ADDRESSES);
+  const provider = useProvider();
+  return useWagmiContract({
+    address,
+    abi: GNOSIS_DELEGATE_REGISTRY_ABI,
+    signerOrProvider: signer || provider,
+  }) as DelegateRegistry;
 }
