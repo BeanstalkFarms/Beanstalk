@@ -9,7 +9,7 @@ import {
   TextFieldProps,
   Tooltip,
   Typography,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 import { Field, FieldProps } from 'formik';
 import CheckIcon from '@mui/icons-material/Check';
@@ -24,31 +24,33 @@ import { trimAddress } from '../../../util';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 
-export type AddressInputFieldProps = (
-  Partial<TextFieldProps>
-  & { 
-  name: string,
-  allowTransferToSelf?: boolean,
-  newLabel?: string
-  }
-);
+export type AddressInputFieldProps = Partial<TextFieldProps> & {
+  name: string;
+  allowTransferToSelf?: boolean;
+  newLabel?: string;
+};
 
 export const ETHEREUM_ADDRESS_CHARS = /([0][x]?[a-fA-F0-9]{0,42})$/;
 
-const validateAddress = (account?: string, allowTransferToSelf?: boolean) => (value: string) => {
-  let error;
-  if (!value) {
-    error = 'Enter an address';
-  } else if (account && value?.toLowerCase() === account.toLowerCase() && !allowTransferToSelf) {
-    error = 'Cannot Transfer to yourself';
-  // } else if (!ETHEREUM_ADDRESS_CHARS.test(value)) {
-  } else if (!ethers.utils.isAddress(value)) {
-    error = 'Enter a valid address';
-  }
-  return error;
-};
+export const validateAddress =
+  (account?: string, allowTransferToSelf?: boolean) => (value: string) => {
+    let error;
+    if (!value) {
+      error = 'Enter an address';
+    } else if (
+      account &&
+      value?.toLowerCase() === account.toLowerCase() &&
+      !allowTransferToSelf
+    ) {
+      error = 'Cannot Transfer to yourself';
+      // } else if (!ETHEREUM_ADDRESS_CHARS.test(value)) {
+    } else if (!ethers.utils.isAddress(value)) {
+      error = 'Enter a valid address';
+    }
+    return error;
+  };
 
-const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
+const AddressInputFieldInner: FC<FieldProps & AddressInputFieldProps> = ({
   name,
   disabled,
   allowTransferToSelf,
@@ -62,22 +64,28 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
   const chainId = useChainId();
   const account = useAccount();
   const isValid = field.value?.length === 42 && !meta.error;
-  const onChange = useCallback((e: any) => {
-    // Allow field to change if the value has been removed, or if
-    // a valid address character has been input.
-    if (!e.target.value || ETHEREUM_ADDRESS_CHARS.test(e.target.value)) {
-      field.onChange(e);
-    }
-  }, [field]);
+  const onChange = useCallback(
+    (e: any) => {
+      // Allow field to change if the value has been removed, or if
+      // a valid address character has been input.
+      if (!e.target.value || ETHEREUM_ADDRESS_CHARS.test(e.target.value)) {
+        field.onChange(e);
+      }
+    },
+    [field]
+  );
 
   //
-  const InputProps = useMemo(() => ({
-    startAdornment: meta.value ? (
-      <InputAdornment position="start">
-        <CloseIcon color="warning" /> 
-      </InputAdornment>
-    ) : null
-  }), [meta.value]);
+  const InputProps = useMemo(
+    () => ({
+      startAdornment: meta.value ? (
+        <InputAdornment position="start">
+          <CloseIcon color="warning" />
+        </InputAdornment>
+      ) : null,
+    }),
+    [meta.value]
+  );
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -96,22 +104,27 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
             display="inline-block"
           >
             {newLabel}
-            {allowTransferToSelf && account ? 
+            {allowTransferToSelf && account ? (
               <Typography
                 sx={{
                   px: 0.5,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
                 display="inline-block"
                 color="primary"
                 onClick={() => form.setFieldValue(name, account)}
               >
                 (Me)
-              </Typography> : null}
-          </Typography>) : null}
+              </Typography>
+            ) : null}
+          </Typography>
+        ) : null}
         <OutputField sx={{ height: 67.5 /* lock to same height as input */ }}>
           <Row spacing={1}>
-            <CheckIcon sx={{ height: 20, width: 20, fontSize: '100%' }} color="primary" />
+            <CheckIcon
+              sx={{ height: 20, width: 20, fontSize: '100%' }}
+              color="primary"
+            />
             <Typography>
               <Tooltip title="View on Etherscan">
                 <Link
@@ -151,16 +164,18 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
           {allowTransferToSelf && account ? (
             <Typography
               sx={{
-                  px: 0.5,
-                  cursor: 'pointer'
-                }}
+                px: 0.5,
+                cursor: 'pointer',
+              }}
               display="inline-block"
               color="primary"
               onClick={() => form.setFieldValue(name, account)}
             >
               (Me)
-            </Typography>) : null}
-        </Typography>) : null}
+            </Typography>
+          ) : null}
+        </Typography>
+      ) : null}
       <TextField
         fullWidth
         type="text"
@@ -175,7 +190,11 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
       />
       {meta.touched && (
         <Box sx={{ px: 0.5 }}>
-          <Typography fontSize="bodySmall" textAlign="right" color="text.secondary">
+          <Typography
+            fontSize="bodySmall"
+            textAlign="right"
+            color="text.secondary"
+          >
             {meta.error}
           </Typography>
         </Box>
@@ -184,20 +203,19 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
   );
 };
 
-const AddressInputField : FC<AddressInputFieldProps> = ({
+const AddressInputField: FC<AddressInputFieldProps> = ({
   name,
   allowTransferToSelf,
   ...props
 }) => {
   const account = useAccount();
-  const validate = useMemo(() => validateAddress(account, allowTransferToSelf), [account, allowTransferToSelf]);
+  const validate = useMemo(
+    () => validateAddress(account, allowTransferToSelf),
+    [account, allowTransferToSelf]
+  );
   return (
     <Box>
-      <Field
-        name={name}
-        validate={validate}
-        validateOnBlur
-      >
+      <Field name={name} validate={validate} validateOnBlur>
         {(fieldProps: FieldProps) => (
           <AddressInputFieldInner
             name={name}

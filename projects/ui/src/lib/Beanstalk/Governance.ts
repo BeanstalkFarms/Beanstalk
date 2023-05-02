@@ -1,9 +1,10 @@
 import BigNumber from 'bignumber.js';
 
 export enum GovSpace {
-  BeanstalkDAO    = 'beanstalkdao.eth',
-  BeanstalkFarms  = 'beanstalkfarms.eth',
-  BeanSprout      = 'wearebeansprout.eth',
+  BeanstalkDAO = 'beanstalkdao.eth',
+  BeanstalkFarms = 'beanstalkfarms.eth',
+  BeanSprout = 'wearebeansprout.eth',
+  BeanNFT = 'beanft.eth',
 }
 
 export enum GovProposalType {
@@ -19,13 +20,13 @@ export enum GovProposalType {
 export const SNAPSHOT_SPACES = Object.values(GovSpace);
 
 const QUORUM = {
-  [GovProposalType.BIP]:     0.5,
-  [GovProposalType.BOP]:     0.35,
-  [GovProposalType.BFCP_A]:  0.25,
-  [GovProposalType.BFCP_B]:  0.25,
-  [GovProposalType.BFCP_C]:  0.25,
-  [GovProposalType.BFCP_D]:  0.25,
-  [GovProposalType.BSP]:     0.1,
+  [GovProposalType.BIP]: 0.5,
+  [GovProposalType.BOP]: 0.35,
+  [GovProposalType.BFCP_A]: 0.25,
+  [GovProposalType.BFCP_B]: 0.25,
+  [GovProposalType.BFCP_C]: 0.25,
+  [GovProposalType.BFCP_D]: 0.25,
+  [GovProposalType.BSP]: 0.1,
 };
 
 export const getQuorumPct = (type: string) => {
