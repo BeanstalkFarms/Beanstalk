@@ -46,7 +46,7 @@ const ProposalPageInner : FC<{ proposal: Proposal }> = ({ proposal }) => {
         ]} 
         />
         {/* <PageHeader returnPath="/governance" /> */}
-        <Grid container direction={{ xs: 'column-reverse', md: 'row' }} spacing={{ xs: 0, md: 2 }} gap={{ xs: 2, md: 0 }} maxWidth="100%">
+        <Grid container wrap="nowrap" direction={{ xs: 'column-reverse', md: 'row' }} spacing={{ xs: 0, md: 2 }} gap={{ xs: 2, md: 0 }} maxWidth="100%">
           <Grid item xs={12} md={8} maxWidth="100% !important">
             <ProposalContent
               proposal={proposal}

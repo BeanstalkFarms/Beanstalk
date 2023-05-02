@@ -1,4 +1,4 @@
-import { BEANFT_GENESIS_ADDRESSES, BEANFT_WINTER_ADDRESSES } from '~/constants';
+import { BEANFT_BARNRAISE_ADDRESSES, BEANFT_GENESIS_ADDRESSES, BEANFT_WINTER_ADDRESSES } from '~/constants';
 
 export enum ClaimStatus {
   CLAIMED = 0,
@@ -28,29 +28,96 @@ export type Nft = {
 /** Maps an NFT collection to its ETH address. */
 export const COLLECTION_ADDRESS: {[c: string]: string} = {
   Genesis: BEANFT_GENESIS_ADDRESSES[1],
-  Winter:  BEANFT_WINTER_ADDRESSES[1]
+  Winter:  BEANFT_WINTER_ADDRESSES[1],
+  BarnRaise: BEANFT_BARNRAISE_ADDRESSES[1],
 };
 
 export const ADDRESS_COLLECTION: {[c: string]: string} = {
   [BEANFT_GENESIS_ADDRESSES[1]]: COLLECTION_ADDRESS.Genesis,
-  [BEANFT_WINTER_ADDRESSES[1]]: COLLECTION_ADDRESS.Winter
+  [BEANFT_WINTER_ADDRESSES[1]]: COLLECTION_ADDRESS.Winter,
+  [BEANFT_BARNRAISE_ADDRESSES[1]]: COLLECTION_ADDRESS.BarnRaise,
 };
 
 export async function loadNFTs(account: string) {
-  const nftData : Nft[] = await fetch(`/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
-  
-  if (nftData.length === 0) {
-    return {
-      genesis: [],
-      winter: [],
-    };
-  }
 
-  const genesisNFTs = nftData.filter((n) => n.subcollection === 'Genesis');
-  const winterNFTs  = nftData.filter((n) => n.subcollection === 'Winter');
+  const genesisNFTs: Nft[] = [];
+  const winterNFTs: Nft[] = [];
+  const barnRaiseNFTs: Nft[] = [];
+
+  try {
+
+    const ownedNFTs = await fetch('https://graph.node.bean.money/subgraphs/name/beanft', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+            query NFTData($account: ID!) {
+              user(id: $account) {
+                id
+                genesis
+                barnRaise
+                winter
+              }
+            }
+          `,
+        variables: {
+          account: account.toLowerCase(),
+        },
+      })
+    })
+
+    const ownedNFTsJSON = await ownedNFTs.json()
+
+    if (ownedNFTsJSON.data.user) {
+      if (ownedNFTsJSON.data.user.genesis) {
+        ownedNFTsJSON.data.user.genesis.sort()
+        ownedNFTsJSON.data.user.genesis.forEach((element: number) => {
+          genesisNFTs.push(
+            {
+              id: element,
+              account: account.toLowerCase(),
+              subcollection: "Genesis"
+            }
+          )
+        });
+      }
+      
+      if (ownedNFTsJSON.data.user.winter) {
+        ownedNFTsJSON.data.user.winter.sort()
+        ownedNFTsJSON.data.user.winter.forEach((element: number) => {
+          winterNFTs.push(
+            {
+              id: element,
+              account: account.toLowerCase(),
+              subcollection: "Winter"
+            }
+          )
+        });
+      }
+
+      if (ownedNFTsJSON.data.user.barnRaise) {
+        ownedNFTsJSON.data.user.barnRaise.sort()
+        ownedNFTsJSON.data.user.barnRaise.forEach((element: number) => {
+          barnRaiseNFTs.push(
+            {
+              id: element,
+              account: account.toLowerCase(),
+              subcollection: "Barn Raise"
+            }
+          )
+        });
+      }
+    }
+
+  } catch (e) {
+    console.log("BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ", e);
+  }
 
   return {
     genesis: genesisNFTs,
     winter: winterNFTs,
+    barnRaise: barnRaiseNFTs,
   };
 }

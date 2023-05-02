@@ -32,6 +32,10 @@ export const BEANFT_WINTER_ADDRESSES = {
   [SupportedChainId.MAINNET]: '0x459895483556daD32526eFa461F75E33E458d9E9'.toLowerCase(),
 };
 
+export const BEANFT_BARNRAISE_ADDRESSES = {
+  [SupportedChainId.MAINNET]: '0xa969BB19b1d35582Ded7EA869cEcD60A3Bd5D1E8'.toLowerCase(),
+}
+
 // ----------------------------------------
 // Bean & Unripe Bean Tokens
 // ----------------------------------------
