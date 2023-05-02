@@ -1,4 +1,4 @@
-type User @entity {
+type BeaNFTUser @entity {
   id: ID!
   barnRaise: [Int!]
   genesis: [Int!]

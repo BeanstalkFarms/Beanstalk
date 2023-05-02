@@ -14,7 +14,7 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - User
+        - BeaNFTUser
         - Collection
       abis:
         - name: genesis
@@ -35,7 +35,7 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - User
+        - BeaNFTUser
         - Collection
       abis:
         - name: winter
@@ -56,7 +56,7 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - User
+        - BeaNFTUser
         - Collection
       abis:
         - name: barnraise

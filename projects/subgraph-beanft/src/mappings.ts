@@ -10,7 +10,7 @@ import {
   Transfer as TransferEventWinter
 } from "../generated/winter/winter"
 import {
-  User, Collection
+  BeaNFTUser, Collection
 } from "../generated/schema"
 
 const zeroAddress = '0x0000000000000000000000000000000000000000'
@@ -49,8 +49,8 @@ export function handleConsecutiveTransferBarnRaise(event: ConsecutiveTransferEve
 }
 
 function transferHandler(from:string, to:string, tokenId:i32, mode:string): void {
-  let source = User.load(from)
-  let destination = User.load(to)
+  let source = BeaNFTUser.load(from)
+  let destination = BeaNFTUser.load(to)
   if (source) { // If source is true this means it is a user wallet, as we make sure to not add the zero address as an user
     if (mode === 'genesis') {
       let nftIndex = source.genesis!.indexOf(tokenId)
@@ -101,7 +101,7 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
     }
     destination.save()
   } else if (to !== zeroAddress) { // This is a new user, so initialize the arrays. This check also makes sure we don't index the zero address
-    destination = new User(to)
+    destination = new BeaNFTUser(to)
     destination.id = to
     destination.genesis = new Array<i32>()
     destination.winter = new Array<i32>()
@@ -128,8 +128,8 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
 function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string, to:string): void {
   let totalNFTsSent = (toTokenId - fromTokenId) + 1
   for (let i = 0; i < totalNFTsSent; i++) {
-    let sender = User.load(from)
-    let receiver = User.load(to)
+    let sender = BeaNFTUser.load(from)
+    let receiver = BeaNFTUser.load(to)
     let tokenId = fromTokenId + i
     if (sender) {
       let nftIndex = sender.barnRaise!.indexOf(tokenId)
@@ -156,7 +156,7 @@ function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string,
       receiver.save()
     } 
     else if (to !== zeroAddress) {
-      receiver = new User(to)
+      receiver = new BeaNFTUser(to)
       receiver.id = to
       receiver.genesis = new Array<i32>()
       receiver.winter = new Array<i32>()
