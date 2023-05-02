@@ -58,6 +58,7 @@ export const TokenInput: FC<TokenInput> = ({
     [token, onAmountChange]
   );
 
+  // TODO: Per designs, what if amount exceeds balance, render error message
   const handleAmountChange = useCallback(
     (cleanValue: string) => {
       updateAmount(cleanValue);

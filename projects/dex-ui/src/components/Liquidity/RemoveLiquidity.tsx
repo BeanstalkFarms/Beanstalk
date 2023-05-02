@@ -89,15 +89,15 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
       txnCompleteCallback();
     }
   }, [
-    oneTokenQuote,
-    balancedQuote,
-    customRatioQuote,
-    address,
-    lpTokenAmount,
-    removeLiquidityMode,
     well,
-    singleTokenIndex,
+    lpTokenAmount,
+    oneTokenQuote,
     amounts,
+    removeLiquidityMode,
+    singleTokenIndex,
+    customRatioQuote,
+    balancedQuote,
+    address,
     txnCompleteCallback
   ]);
 
@@ -140,11 +140,11 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
     // If we are switching between balanced and one token, don't reset
     setLpTokenAmount(undefined);
   }, [removeLiquidityMode]);
+
   return (
     <div>
       {wellLpToken && (
         <div>
-          <h1>Remove Liquidity</h1>
           <div>
             <TokenContainer>
               <TokenInput
@@ -213,8 +213,9 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
                    But if they change, reverse quote
                    */}
                 {well.tokens!.map((token, index) => (
-                  <TokenContainer key={index}>
+                  <TokenContainer key={`tokencontainer${index}`}>
                     <TokenInput
+                      key={`token${index}`}
                       id={`token${index}`}
                       label={`Input amount in ${token.symbol}`}
                       token={token}
@@ -232,18 +233,30 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback }: RemoveLiquidityPr
             {quoteError && <h2>Error loading quote</h2>}
             {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
             {/* {removeLiquidityButtonEnabled && <button onClick={removeLiquidityButtonClickHandler}>Remove Liquidity</button>} */}
-            <Button
-              disabled={!removeLiquidityButtonEnabled}
-              label="Remove Liquidity"
-              onClick={removeLiquidityButtonClickHandler}
-              loading={false}
-            />
+            <ButtonWrapper>
+              <Button
+                disabled={!removeLiquidityButtonEnabled}
+                label="Remove Liquidity"
+                onClick={removeLiquidityButtonClickHandler}
+                loading={false}
+              />
+            </ButtonWrapper>
           </div>
         </div>
       )}
     </div>
   );
 };
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 10px;
+  :last-of-type {
+    margin-bottom: 0;
+  }
+`;
 
 const Radio = styled.input`
   // TODO: Somehow the default input styled
