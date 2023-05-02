@@ -4,7 +4,7 @@ import memoize from "lodash/memoize";
 import { Settings } from "src/settings";
 import { Log } from "src/utils/logger";
 import { fetchFromSubgraphRequest } from "./subgraphFetch";
-import { GetWellAddressesDocument } from "src/generated/graphql";
+import { GetWellAddressesDocument } from "src/generated/graph/graphql";
 
 type WellAddresses = string[];
 

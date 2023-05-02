@@ -5,7 +5,7 @@ import { Settings } from "src/settings";
 import { Well } from "@beanstalk/sdk/Wells";
 import isEqual from "lodash/isEqual";
 import { BigNumber } from "ethers";
-import { GetWellEventsDocument } from "src/generated/graphql";
+import { GetWellEventsDocument } from "src/generated/graph/graphql";
 import { Log } from "src/utils/logger";
 
 const HISTORY_DAYS = 7;

@@ -10690,7 +10690,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typechain/ethers-v5@npm:^10.0.0":
+"@typechain/ethers-v5@npm:10.2.0, @typechain/ethers-v5@npm:^10.0.0":
   version: 10.2.0
   resolution: "@typechain/ethers-v5@npm:10.2.0"
   dependencies:
@@ -19924,6 +19924,7 @@ __metadata:
     "@graphql-codegen/typescript-react-query": 4.1.0
     "@tanstack/react-query": 4.28.0
     "@tanstack/react-query-devtools": 4.28.0
+    "@typechain/ethers-v5": 10.2.0
     "@types/numeral": ^2
     "@types/react": ^18.0.21
     "@types/react-dom": ^18.0.6
@@ -19947,6 +19948,7 @@ __metadata:
     react-jazzicon: 1.0.4
     react-router-dom: ^6.4.4
     styled-components: 5.3.9
+    typechain: 8.1.1
     typescript: 4.8.4
     vite: ^3.2.5
     wagmi: 0.12.2
@@ -40026,24 +40028,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typechain@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "typechain@npm:3.0.0"
-  dependencies:
-    command-line-args: ^4.0.7
-    debug: ^4.1.1
-    fs-extra: ^7.0.0
-    js-sha3: ^0.8.0
-    lodash: ^4.17.15
-    ts-essentials: ^6.0.3
-    ts-generator: ^0.1.1
-  bin:
-    typechain: ./dist/cli/cli.js
-  checksum: a38aff5e89c41e20e2c3a1f7b5f04666dbc94b5592eba70ba7d1e0aeb49089d22ed3d35e55a0b0d1f0bfdcea9818157fa4ee3854ef818f46f6aa899520fe7c25
-  languageName: node
-  linkType: hard
-
-"typechain@npm:^8.0.0":
+"typechain@npm:8.1.1, typechain@npm:^8.0.0":
   version: 8.1.1
   resolution: "typechain@npm:8.1.1"
   dependencies:
@@ -40062,6 +40047,23 @@ __metadata:
   bin:
     typechain: dist/cli/cli.js
   checksum: 77984239d9728befe5a484c4e1b55c8f194696fc8a78c44754f8e25ca8fd6d0208ddfcd9e71c90c1c35ac0689f5c3053107b54fdc2aab691c980614f6daf209b
+  languageName: node
+  linkType: hard
+
+"typechain@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "typechain@npm:3.0.0"
+  dependencies:
+    command-line-args: ^4.0.7
+    debug: ^4.1.1
+    fs-extra: ^7.0.0
+    js-sha3: ^0.8.0
+    lodash: ^4.17.15
+    ts-essentials: ^6.0.3
+    ts-generator: ^0.1.1
+  bin:
+    typechain: ./dist/cli/cli.js
+  checksum: a38aff5e89c41e20e2c3a1f7b5f04666dbc94b5592eba70ba7d1e0aeb49089d22ed3d35e55a0b0d1f0bfdcea9818157fa4ee3854ef818f46f6aa899520fe7c25
   languageName: node
   linkType: hard
 
