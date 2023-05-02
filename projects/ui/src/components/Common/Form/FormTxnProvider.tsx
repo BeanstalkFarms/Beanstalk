@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { TokenValue } from '@beanstalk/sdk';
-import { ethers } from 'ethers';
 import { FC, MayPromise } from '~/types';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -146,15 +145,6 @@ const useInitFormTxnContext = () => {
     sdk,
   ]);
 
-  const getEstimateGas = useCallback(
-    (action: FormTxn) => {
-      const farmStep = txnBundler.getFarmStep(action);
-      if (!farmStep) return () => Promise.resolve(ethers.BigNumber.from(0));
-      return farmStep.estimateGas;
-    },
-    [txnBundler]
-  );
-
   useEffect(() => {
     console.debug('[FormTxnProvider][map]: ', txnBundler.getMap());
   }, [txnBundler]);
@@ -213,7 +203,6 @@ const useInitFormTxnContext = () => {
   return {
     txnBundler,
     plantAndDoX,
-    getEstimateGas,
     refetch,
   };
 };
