@@ -1,0 +1,8 @@
+query BeaNFTUsers($ids: [ID!]) {
+  beaNFTUsers( where: { id_in: $ids } ) {
+    id
+    barnRaise
+    winter
+    genesis
+  }
+}
