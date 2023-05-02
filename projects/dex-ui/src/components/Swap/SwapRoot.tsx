@@ -11,6 +11,7 @@ import { useSwapBuilder } from "./useSwapBuilder";
 import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
+import { Log } from "src/utils/logger";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -68,6 +69,7 @@ export const SwapRoot = () => {
 
       try {
         const quote = await quoter?.quoteForward(a, account!, slippage);
+        Log.module("swap").debug("Forward quote", quote);
         if (!quote) {
           setOutAmount(undefined);
           setNeedsApproval(true);
@@ -83,7 +85,7 @@ export const SwapRoot = () => {
         }
         setQuote(quote);
       } catch (err: unknown) {
-        console.error("Error during quote: ", (err as Error).message);
+        Log.module("swap").error("Error during quote: ", (err as Error).message);
         setOutAmount(undefined); // TODO: clear this better
         setReadyToSwap(false);
       }
@@ -100,9 +102,10 @@ export const SwapRoot = () => {
       }
       try {
         const quote = await quoter?.quoteReverse(a, account!, slippage);
+        Log.module("swap").debug("Reverse quote", quote);
         setInAmount(quote!.amount);
       } catch (err: unknown) {
-        console.error("Error during quote: ", (err as Error).message);
+        Log.module("swap").error("Error during quote: ", (err as Error).message);
         setInAmount(undefined); // TODO: clear this better
         setReadyToSwap(false);
       }
@@ -117,28 +120,26 @@ export const SwapRoot = () => {
     setOutToken(token);
   }, []);
 
-  const handleSwapClick = async () => {
-    if (!quote) throw new Error("Bad state, quote there is no quote. Button should've been disabled");
+  const handleButtonClick = async () => {
+    if (!quote) throw new Error("Bad state, there is no quote. Button should've been disabled");
     setTxLoading(true);
     try {
       if (needsApproval) {
-        console.log("Doing approval");
+        Log.module("swap").debug("Doing approval");
         if (!quote.doApproval) throw new Error("quote.doApproval() is missing. Bad logic");
         const tx = await quote.doApproval();
         await tx.wait();
 
         setNeedsApproval(false);
       } else {
-        console.log("Doing swap");
+        Log.module("swap").debug("Doing swap");
         const tx = await quote.doSwap();
         await tx.wait();
         setNeedsApproval(true);
         setReadyToSwap(false);
         setQuote(undefined);
       }
-    } catch (err) {
-      
-    }
+    } catch (err) {}
     setTxLoading(false);
   };
 
@@ -192,7 +193,7 @@ export const SwapRoot = () => {
       </Div>
       <SwapDetailsContainer>Details</SwapDetailsContainer>
       <SwapButtonContainer>
-        <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleSwapClick} loading={txLoading} />
+        <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
       </SwapButtonContainer>
     </Container>
   );
