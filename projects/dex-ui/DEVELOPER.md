@@ -39,5 +39,13 @@ Loading a list of wells involves to main steps (this all starts in useWells.tsx)
 To get the list of addresses, we race two sources with Promise.any(); the subgraph and direct events from the chain. Why? For local development; it's nice to not have to spin up the subgraphs, plus it give us a backup if subgraph is ever not available. We should do this for all subgraph queries.
 
 
+### Debug()
 
+There is a _global_ `debug()` method that will let you turn on or off debug messages, either globally or per module. Just run it from the dev console:
+```js
+debug() // show current settings
+debug(true|false) // enable or disable debugging for all modules
+debug(moduleName) // enable or disable for a specific module
+debug('DEFAULT')  // DEFAULT module is for log statements that were not made in the context of a module. Ex: Log.log('test') vs Log.module('foo').log('test')
 
+```

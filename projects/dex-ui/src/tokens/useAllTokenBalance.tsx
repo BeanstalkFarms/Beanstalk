@@ -5,6 +5,7 @@ import { BigNumber } from "ethers";
 import { useCallback, useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useTokens } from "./TokenProvider";
+import { Log } from "src/utils/logger";
 
 const TokenBalanceABI = [
   {
@@ -28,6 +29,7 @@ export const useAllTokensBalance = () => {
 
   const calls = useMemo(() => {
     const contractCalls: any[] = [];
+    Log.module("app").debug(`Fetching token balances for ${tokensToLoad.length} tokens, for address ${address}`);
     for (const t of tokensToLoad) {
       contractCalls.push({
         address: t.address as `0x{string}`,
@@ -37,7 +39,9 @@ export const useAllTokensBalance = () => {
       });
     }
     return contractCalls;
-  }, [address, tokensToLoad]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- doing just tokensToLoad doesn't work and causes multiple calls
+  }, [address, tokensToLoad.map((t) => t.symbol).join()]);
 
   /**
    * The query here is either [token, balance, all] or [token, balance, {SYMBOL}]

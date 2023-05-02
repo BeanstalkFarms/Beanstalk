@@ -34,8 +34,6 @@ export type RemoveEvent = AddEvent;
 
 export type WellEvent = SwapEvent | AddEvent | RemoveEvent;
 
-// TODO: Store in env var?
-
 const useWellHistory = (well: Well) => {
   const sdk = useSdk();
 
