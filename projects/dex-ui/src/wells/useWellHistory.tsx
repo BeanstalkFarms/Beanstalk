@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { GetWellEventsDocument, GetWellEventsQuery, Token as GQLToken } from "src/generated/graphql";
-
 import { Token, TokenValue } from "@beanstalk/sdk";
 
 import useSdk from "src/utils/sdk/useSdk";
