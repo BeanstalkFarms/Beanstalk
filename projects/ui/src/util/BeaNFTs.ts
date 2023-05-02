@@ -54,7 +54,7 @@ export async function loadNFTs(account: string) {
       body: JSON.stringify({
         query: `
             query NFTData($account: ID!) {
-              user(id: $account) {
+              beaNFTUser(id: $account) {
                 id
                 genesis
                 barnRaise
@@ -69,11 +69,12 @@ export async function loadNFTs(account: string) {
     })
 
     const ownedNFTsJSON = await ownedNFTs.json()
+    console.log("OWNED NFTS", ownedNFTsJSON)
 
-    if (ownedNFTsJSON.data.user) {
-      if (ownedNFTsJSON.data.user.genesis) {
-        ownedNFTsJSON.data.user.genesis.sort()
-        ownedNFTsJSON.data.user.genesis.forEach((element: number) => {
+    if (ownedNFTsJSON.data.beaNFTUser) {
+      if (ownedNFTsJSON.data.beaNFTUser.genesis) {
+        ownedNFTsJSON.data.beaNFTUser.genesis.sort()
+        ownedNFTsJSON.data.beaNFTUser.genesis.forEach((element: number) => {
           genesisNFTs.push(
             {
               id: element,
@@ -84,9 +85,9 @@ export async function loadNFTs(account: string) {
         });
       }
       
-      if (ownedNFTsJSON.data.user.winter) {
-        ownedNFTsJSON.data.user.winter.sort()
-        ownedNFTsJSON.data.user.winter.forEach((element: number) => {
+      if (ownedNFTsJSON.data.beaNFTUser.winter) {
+        ownedNFTsJSON.data.beaNFTUser.winter.sort()
+        ownedNFTsJSON.data.beaNFTUser.winter.forEach((element: number) => {
           winterNFTs.push(
             {
               id: element,
@@ -97,9 +98,9 @@ export async function loadNFTs(account: string) {
         });
       }
 
-      if (ownedNFTsJSON.data.user.barnRaise) {
-        ownedNFTsJSON.data.user.barnRaise.sort()
-        ownedNFTsJSON.data.user.barnRaise.forEach((element: number) => {
+      if (ownedNFTsJSON.data.beaNFTUser.barnRaise) {
+        ownedNFTsJSON.data.beaNFTUser.barnRaise.sort()
+        ownedNFTsJSON.data.beaNFTUser.barnRaise.forEach((element: number) => {
           barnRaiseNFTs.push(
             {
               id: element,

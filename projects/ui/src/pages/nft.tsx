@@ -105,7 +105,7 @@ const NFTPage: FC<{}> = () => {
     try {
       mintables = await fetch(`/.netlify/functions/nfts?account=${account}`).then((response) => response.json());
     } catch (e) {
-      console.log("BEANFT - ERROR FECTHING MINTABLE NFTS");
+      console.log("BEANFT - ERROR FETCHING MINTABLE NFTS");
     }
 
     // batchNFTMetadata
