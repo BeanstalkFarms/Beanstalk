@@ -6,12 +6,13 @@ import { Well } from "@beanstalk/sdk/Wells";
 import isEqual from "lodash/isEqual";
 import { BigNumber } from "ethers";
 import { GetWellEventsDocument } from "src/generated/graphql";
+import { Log } from "src/utils/logger";
 
 const HISTORY_DAYS = 7;
 const HISTORY_DAYS_AGO_BLOCK_TIMESTAMP = Math.floor(new Date(Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000).getTime() / 1000);
 
 const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
-  console.log("Loading history from blockchain");
+  Log.module("history").debug("Loading history from blockchain");
   const contract = well.contract;
   const addFilter = contract.filters.AddLiquidity();
   const removeFilter = contract.filters.RemoveLiquidity();
@@ -35,6 +36,8 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
   const fromBlock = Number(Settings.WELLS_ORIGIN_BLOCK);
   const toBlock = "latest";
   const events = await contract.queryFilter(combinedFilter, fromBlock, toBlock);
+
+  Log.module("history").debug("Raw event data from blockchain: ", events);
 
   return events.sort(sortEventsDescByBlock).map((e) => {
     const type = getEventType(e.topics);
@@ -79,7 +82,7 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
 };
 
 const loadFromGraph = async (sdk: BeanstalkSDK, well: Well) => {
-  console.log("Loading history from Graph");
+  Log.module("history").debug("Loading history from Graph");
 
   if (!well.lpToken) await well.getLPToken();
 
@@ -89,6 +92,7 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well) => {
   });
 
   const results = await data();
+  Log.module("history").debug("Raw event data from subgraph: ", results);
 
   const swapEvents = ((results.well ?? {}).swaps ?? []).map((e) => {
     const fromToken = well.getTokenByAddress(e.fromToken.id)!;
@@ -106,7 +110,6 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well) => {
   });
 
   const addEvents = ((results.well ?? {}).deposits ?? []).map((e) => {
-    // console.log(e);
     const event: AddEvent = {
       timestamp: e.timestamp,
       type: EVENT_TYPE.ADD_LIQUIDITY,
@@ -150,19 +153,18 @@ const sortEventsDescByTimestamp = (a: any, b: any) => {
  * In production, use the Graph but failover to blockchain if there's an error
  */
 export const loadHistory = async (sdk: BeanstalkSDK, well: Well): Promise<WellEvent[]> => {
-  if (import.meta.env.DEV) {
-    return Settings.LOAD_HISTORY_FROM_GRAPH ? loadFromGraph(sdk, well) : loadFromChain(sdk, well);
-  } else {
-    return loadFromGraph(sdk, well)
-      .catch((err) => {
-        console.error(err.message);
-        console.log("Failed to load history from Graph. Trying blockchain...");
-        return loadFromChain(sdk, well);
-      })
-      .catch((err) => {
-        console.error(err.message);
-        console.log("Failed to load history from Chain too :(");
-        return [];
-      });
+  if (import.meta.env.DEV && !Settings.LOAD_HISTORY_FROM_GRAPH) {
+    return loadFromChain(sdk, well);
   }
+
+  return loadFromGraph(sdk, well)
+    .catch((err) => {
+      Log.module("history").error("Error loading history from subgraph", err);
+      Log.module("history").log("Trying blockchain...");
+      return loadFromChain(sdk, well);
+    })
+    .catch((err) => {
+      Log.module("history").error("Failed to load history from blockchain too :(", err);
+      return [];
+    });
 };
