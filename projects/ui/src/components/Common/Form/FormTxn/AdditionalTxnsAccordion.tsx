@@ -3,6 +3,7 @@ import { Switch, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import AddIcon from '@mui/icons-material/Add';
 import BigNumber from 'bignumber.js';
+import { ethers } from 'ethers';
 import Row from '../../Row';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
 import { FormTxnsFormState } from '..';
@@ -31,7 +32,7 @@ const sortOrder: { [key in FormTxn]: number } = {
 
 const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   /// FormTxns
-  const { getEstimateGas } = useFormTxnContext();
+  const { txnBundler } = useFormTxnContext();
   const { summary } = useFarmerFormTxnSummary();
 
   /// Formik
@@ -75,7 +76,10 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   // handle toggling of individual options
   const handleOnToggle = (item: FormTxn) => {
     const copy = new Set([...local]);
-    const affected = [item, ...(FormTxnBundler.implied[item] || [])] as FormTxn[];
+    const affected = [
+      item,
+      ...(FormTxnBundler.implied[item] || []),
+    ] as FormTxn[];
 
     if (copy.has(item)) {
       /// remove the item and all it's implied unless it is required
@@ -121,7 +125,13 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
     console.debug(`[FormTxnsOptions] estimating Gas for ${allOptions} txns`);
     const optionKeys = [...allOptions];
     const estimates = await Promise.all(
-      optionKeys.map((opt) => getEstimateGas(opt)())
+      optionKeys.map((opt) => {
+        const fStep = txnBundler.getFarmStep(opt);
+        if (fStep) {
+          return fStep.estimateGas();
+        }
+        return Promise.resolve(ethers.BigNumber.from('0'));
+      })
     ).then((results) =>
       results.reduce<FormTxnGasResult>(
         (prev, curr, i) => ({
@@ -134,7 +144,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
     console.debug(`[FormTxnsOptions] gas result: `, estimates);
 
     setGasEstimates(estimates);
-  }, [allOptions, getEstimateGas, open]);
+  }, [allOptions, open, txnBundler]);
 
   useTimedRefresh(estimateGas, 2 * 1000, open, false);
 

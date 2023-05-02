@@ -153,11 +153,23 @@ export default function ClaimBeanDrawerContent<T>({
     [destination, setFieldValue]
   );
 
+  const _maxBeansUsable = maxClaimableBeansUsable.toString();
+  const _additionalAmount = additionalAmount.toString();
+
   useEffect(() => {
-    if (additionalAmount.gt(maxClaimableBeansUsable)) {
-      setFieldValue(`${name}.amount`, maxClaimableBeansUsable);
+    const _additional = new BigNumber(_additionalAmount);
+    const _max = new BigNumber(_maxBeansUsable);
+    if (_additional.gt(_max)) {
+      console.debug(
+        '[ClaimBeansDrawerContent]: claimed beans used + beans used > max amount. Setting amount: ',
+        {
+          additional: _additional.toString(),
+          max: _max.toString(),
+        }
+      );
+      setFieldValue(`${name}.amount`, _max);
     }
-  }, [additionalAmount, maxClaimableBeansUsable, name, setFieldValue]);
+  }, [_additionalAmount, _maxBeansUsable, name, setFieldValue]);
 
   return (
     <Stack gap={1}>
