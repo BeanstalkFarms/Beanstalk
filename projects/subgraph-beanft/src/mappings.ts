@@ -10,7 +10,7 @@ import {
   Transfer as TransferEventWinter
 } from "../generated/winter/winter"
 import {
-  BeaNFTUser, Collection
+  BeaNFTUser, CollectionData
 } from "../generated/schema"
 
 const zeroAddress = '0x0000000000000000000000000000000000000000'
@@ -73,9 +73,9 @@ function transferHandler(from:string, to:string, tokenId:i32, mode:string): void
     source.save()
   } else if (from == zeroAddress) {
     log.info("NEW {} COLLECTION MINT! ID: {}", [mode.toUpperCase(), tokenId.toString()])
-    let collectionData = Collection.load(mode)
+    let collectionData = CollectionData.load(mode)
     if (!collectionData) {
-      collectionData = new Collection(mode)
+      collectionData = new CollectionData(mode)
       collectionData.minted = new Array<i32>()
     }
     let mintedData = collectionData.minted
@@ -139,9 +139,9 @@ function consecutiveTransferHandler(fromTokenId:i32, toTokenId:i32, from:string,
       sender.save() 
     } else if (from == zeroAddress) {
       log.info("NEW BARNRAISE COLLECTION MINT! ID: {}", [tokenId.toString()])
-      let collectionData = Collection.load('barnraise')
+      let collectionData = CollectionData.load('barnraise')
       if (!collectionData) {
-        collectionData = new Collection('barnraise')
+        collectionData = new CollectionData('barnraise')
         collectionData.minted = new Array<i32>()
       }
       let mintedData = collectionData.minted
