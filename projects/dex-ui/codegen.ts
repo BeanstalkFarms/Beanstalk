@@ -6,7 +6,7 @@ const config: CodegenConfig = {
   documents: "src/**/*.graphql",
   ignoreNoDocuments: true,
   generates: {
-    "./src/generated/": {
+    "./src/generated/graph/": {
       preset: "client",
       plugins: [],
       presetConfig: {

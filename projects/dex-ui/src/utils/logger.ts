@@ -9,18 +9,8 @@ class Logger {
 
   constructor(name?: string) {
     this.name = name ?? "";
-
-    if (DEBUG) {
-      if (DEBUG === "1" || DEBUG === "0") {
-        Logger.debugConfig.DEFAULT = !!parseInt(DEBUG);
-      } else {
-        try {
-          DEBUG.split(",").map((module: string) => (Logger.debugConfig[module] = true));
-        } catch (err: unknown) {
-          this.error("VITE_DEBUG env variable parsing failed", (err as Error).message);
-        }
-      }
-    }
+    const savedConfig = localStorage.getItem("debugConfig");
+    if (savedConfig) Logger.debugConfig = JSON.parse(savedConfig);
 
     // @ts-ignore
     if (!globalThis.debug)
@@ -29,14 +19,13 @@ class Logger {
         if (param !== undefined) {
           if (typeof param === "boolean") {
             for (const [key, val] of Object.entries(Logger.debugConfig)) {
-              console.log(key, val);
               Logger.debugConfig[key] = param;
             }
           } else {
             Logger.debugConfig[param] = !Logger.debugConfig[param];
           }
+          localStorage.setItem("debugConfig", JSON.stringify(Logger.debugConfig));
         }
-
         this.log("%cDebug Config: ", "color: green");
         for (const [key, val] of Object.entries(Logger.debugConfig)) {
           this.log(`%c\t${key}: `, "color: green", val);
@@ -66,7 +55,7 @@ class Logger {
   module(name: string): Logger {
     const m = Logger.modules.has(name) ? Logger.modules.get(name) : new Logger(name);
     Logger.modules.set(name, m!);
-    Logger.debugConfig[name] = Logger.debugConfig.DEFAULT;
+    Logger.debugConfig[name] = Logger.debugConfig[name] ?? Logger.debugConfig.DEFAULT;
 
     return m!;
   }

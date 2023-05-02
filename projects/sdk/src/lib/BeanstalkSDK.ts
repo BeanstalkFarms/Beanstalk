@@ -1,6 +1,6 @@
 import { GraphQLClient } from "graphql-request";
 import { ethers } from "ethers";
-import { enumFromValue, makeId } from "src/utils";
+import { enumFromValue } from "src/utils";
 import { addresses, ChainId } from "src/constants";
 import { Tokens } from "./tokens";
 import { Contracts } from "./contracts";
@@ -44,7 +44,6 @@ export class BeanstalkSDK {
   public source: DataSource;
   public subgraphUrl: string;
 
-  public readonly instanceId: string;
   public readonly chainId: ChainId;
   public readonly addresses: typeof addresses;
   public readonly contracts: Contracts;
@@ -64,7 +63,6 @@ export class BeanstalkSDK {
   public readonly wells: WellsSDK;
 
   constructor(config?: BeanstalkConfig) {
-    this.instanceId = makeId(5);
     this.handleConfig(config);
 
     this.chainId = enumFromValue(this.provider?.network?.chainId ?? 1, ChainId);
@@ -164,7 +162,6 @@ export class BeanstalkSDK {
    */
   toJSON() {
     return {
-      instanceId: this.instanceId,
       chainId: this.chainId,
       provider: {
         url: this.provider?.connection?.url,
