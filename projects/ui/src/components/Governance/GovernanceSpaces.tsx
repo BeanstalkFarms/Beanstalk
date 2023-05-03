@@ -1,30 +1,24 @@
 import React, { useCallback } from 'react';
-import { Grid, Stack } from '@mui/material';
+import { Box, Link } from '@mui/material';
 import { useProposalsQuery } from '~/generated/graphql';
 import useTabs from '~/hooks/display/useTabs';
 import { GovSpace, SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
-import { Proposal } from '~/util/Governance';
+import {
+  GOV_SLUGS,
+  GOV_SLUGS_TAB_MAP,
+  Proposal,
+  getGovSpaceLabel,
+} from '~/util/Governance';
 import { Module, ModuleTabs, ModuleContent } from '../Common/Module';
 import { StyledTab, ChipLabel } from '../Common/Tabs';
 import ProposalList from './Proposals/ProposalList';
-import useToggle from '~/hooks/display/useToggle';
-import DelegatesCard from './Delegate/DelegatesCard';
-import DelegatorsCard from './Delegate/DelegatorsCard';
-import VotingPowerCard from './VotingPowerCard';
-
-/// Variables
-export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout', 'beanft'];
-
-export const GOV_SLUGS_TAB_MAP = {
-  0: GovSpace.BeanstalkDAO,
-  1: GovSpace.BeanstalkFarms,
-  2: GovSpace.BeanSprout,
-  3: GovSpace.BeanNFT,
-};
+import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
 
 const GovernanceSpaces: React.FC<{}> = () => {
   const [tab, handleChange] = useTabs(GOV_SLUGS, 'type');
-  const [open, show, hide] = useToggle();
+  const farmerDelegations = useFarmerDelegations();
+
+  const getSlug = useCallback((_tab: number) => GOV_SLUGS[_tab], []);
 
   // Query Proposals
   const { loading, data } = useProposalsQuery({
@@ -77,77 +71,108 @@ const GovernanceSpaces: React.FC<{}> = () => {
     [filterBySpace]
   );
 
+  const getSnapshotLink = () => {
+    const space =
+      GOV_SLUGS_TAB_MAP[tab as keyof typeof GOV_SLUGS_TAB_MAP].toString();
+    return `https://snapshot.org/#/${space}`;
+  };
+
   const daoProposals = filterProposals(0);
   const beanstalkFarmsProposals = filterProposals(1);
   const beanSproutProposals = filterProposals(2);
   const beaNFTDaoProposals = filterProposals(3);
 
   return (
-    <>
-      <Grid container direction={{ xs: 'column', md: 'row' }} spacing={2}>
-        <Grid item xs={12} lg={3.5}>
-          <Stack gap={1}>
-            <VotingPowerCard tab={tab} />
-            <DelegatesCard tab={tab} />
-            <DelegatorsCard tab={tab} />
-          </Stack>
-        </Grid>
-        <Grid item xs={12} lg={8.5}>
-          <Module>
-            <ModuleTabs
-              value={tab}
-              onChange={handleChange}
-              sx={{ minHeight: 0 }}
-            >
-              <StyledTab
-                label={
-                  <ChipLabel name="DAO">
-                    {daoProposals.activeProposals || null}
-                  </ChipLabel>
-                }
-              />
-              <StyledTab
-                label={
-                  <ChipLabel name="Beanstalk Farms">
-                    {beanstalkFarmsProposals.activeProposals || null}
-                  </ChipLabel>
-                }
-              />
-              <StyledTab
-                label={
-                  <ChipLabel name="Bean Sprout">
-                    {beanSproutProposals.activeProposals || null}
-                  </ChipLabel>
-                }
-              />
-              <StyledTab
-                label={
-                  <ChipLabel name="BeanNFT DAO">
-                    {beaNFTDaoProposals.activeProposals || null}
-                  </ChipLabel>
-                }
-              />
-            </ModuleTabs>
-            <ModuleContent>
-              {tab === 0 && (
-                <ProposalList proposals={daoProposals.allProposals} />
-              )}
-              {tab === 1 && (
-                <ProposalList
-                  proposals={beanstalkFarmsProposals.allProposals}
-                />
-              )}
-              {tab === 2 && (
-                <ProposalList proposals={beanSproutProposals.allProposals} />
-              )}
-              {tab === 3 && (
-                <ProposalList proposals={beaNFTDaoProposals.allProposals} />
-              )}
-            </ModuleContent>
-          </Module>
-        </Grid>
-      </Grid>
-    </>
+    <Module>
+      <ModuleTabs value={tab} onChange={handleChange} sx={{ minHeight: 0 }}>
+        <StyledTab
+          label={
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanstalkDAO)}>
+              {daoProposals.activeProposals || null}
+            </ChipLabel>
+          }
+        />
+        <StyledTab
+          label={
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanstalkFarms)}>
+              {beanstalkFarmsProposals.activeProposals || null}
+            </ChipLabel>
+          }
+        />
+        <StyledTab
+          label={
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanSprout)}>
+              {beanSproutProposals.activeProposals || null}
+            </ChipLabel>
+          }
+        />
+        <StyledTab
+          label={
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanNFT)}>
+              {beaNFTDaoProposals.activeProposals || null}
+            </ChipLabel>
+          }
+        />
+      </ModuleTabs>
+      <Box
+        sx={({ breakpoints: bp }) => ({
+          position: 'absolute',
+          top: '15px',
+          right: '20px',
+          [bp.down('md')]: {
+            display: 'none',
+          },
+        })}
+      >
+        <Link
+          component="a"
+          variant="subtitle1"
+          href={getSnapshotLink()}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View on Snapshot
+        </Link>
+      </Box>
+      <ModuleContent>
+        {tab === 0 && (
+          <ProposalList
+            tab={0}
+            getSlug={getSlug}
+            space={GovSpace.BeanstalkDAO}
+            farmerDelegations={farmerDelegations}
+            proposals={daoProposals.allProposals}
+          />
+        )}
+        {tab === 1 && (
+          <ProposalList
+            tab={1}
+            getSlug={getSlug}
+            space={GovSpace.BeanstalkFarms}
+            farmerDelegations={farmerDelegations}
+            proposals={beanstalkFarmsProposals.allProposals}
+          />
+        )}
+        {tab === 2 && (
+          <ProposalList
+            tab={2}
+            getSlug={getSlug}
+            space={GovSpace.BeanSprout}
+            farmerDelegations={farmerDelegations}
+            proposals={beanSproutProposals.allProposals}
+          />
+        )}
+        {tab === 3 && (
+          <ProposalList
+            tab={3}
+            getSlug={getSlug}
+            space={GovSpace.BeanNFT}
+            farmerDelegations={farmerDelegations}
+            proposals={beaNFTDaoProposals.allProposals}
+          />
+        )}
+      </ModuleContent>
+    </Module>
   );
 };
 

@@ -1,3 +1,4 @@
+import { GovSpace } from '~/lib/Beanstalk/Governance';
 import { getDateCountdown } from '~/util/Time';
 
 export type Proposal = {
@@ -33,8 +34,8 @@ export type Proposal = {
     id: string;
     /**  */
     name?: string;
-  }
-}
+  };
+};
 
 /**
  * Formats date messages for governance proposal.
@@ -55,11 +56,56 @@ const SEP_MIN_INDEX = SHORTEST_TAG + 2; // "BIP" + "-N"
  */
 export const getProposalTag = (title: string) => {
   const sep = title.indexOf(':', SEP_MIN_INDEX);
-  return (
-    sep > -1
-      ? title.substring(0, sep)
-      : title
-  );
+  return sep > -1 ? title.substring(0, sep) : title;
 };
 
-export const getProposalType = (tag: string) => tag.substring(0, tag.lastIndexOf('-', tag.length - 1));
+export const getProposalType = (tag: string) =>
+  tag.substring(0, tag.lastIndexOf('-', tag.length - 1));
+
+export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout', 'beanft'];
+
+export const GOV_SLUGS_TAB_MAP = {
+  0: GovSpace.BeanstalkDAO,
+  1: GovSpace.BeanstalkFarms,
+  2: GovSpace.BeanSprout,
+  3: GovSpace.BeanNFT,
+};
+
+export const GOV_SPACE_LABEL_MAP = {
+  [GovSpace.BeanstalkDAO]: 'DAO',
+  [GovSpace.BeanstalkFarms]: 'Beanstalk Farms',
+  [GovSpace.BeanSprout]: 'Bean Sprout',
+  [GovSpace.BeanNFT]: '"BeanNFT DAO"',
+};
+
+export const getGovSlugIndex = (slug: string) => GOV_SLUGS.indexOf(slug);
+
+export const getGovSpaceWithSlug = (space: string) => {
+  const slugIndex = getGovSlugIndex(space);
+  return GOV_SLUGS_TAB_MAP[slugIndex as keyof typeof GOV_SLUGS_TAB_MAP];
+};
+
+export const getGovSpaceLabel = (space: GovSpace) => {
+  switch (space) {
+    case GovSpace.BeanstalkDAO:
+      return 'DAO';
+    case GovSpace.BeanstalkFarms:
+      return 'Beanstalk Farms';
+    case GovSpace.BeanSprout:
+      return 'Bean Sprout';
+    default: {
+      return 'BeanNFT DAO';
+    }
+  }
+};
+
+export const GOV_SPACE_BY_ID: { [key in GovSpace]: string } = {
+  [GovSpace.BeanstalkDAO]:
+    '0x6265616e7374616c6b64616f2e65746800000000000000000000000000000000',
+  [GovSpace.BeanstalkFarms]:
+    '0x6265616e7374616c6b6661726d732e6574680000000000000000000000000000',
+  [GovSpace.BeanSprout]:
+    '0x77656172656265616e7370726f75742e65746800000000000000000000000000',
+  [GovSpace.BeanNFT]:
+    '0x6265616e66742e65746800000000000000000000000000000000000000000000',
+};

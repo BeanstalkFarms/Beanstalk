@@ -21,7 +21,6 @@ import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
 import useAccount from '~/hooks/ledger/useAccount';
 import { ZERO_BN } from '~/constants';
 import PagePath from '~/components/Common/PagePath';
-import FarmerDelegationsUpdater from '~/state/farmer/delegations/updater';
 
 const getCrumbTitle = (title: string) => {
   const split = title.split(':');
@@ -40,38 +39,35 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
       : new BigNumber(proposal.scores[0] || ZERO_BN);
 
   return (
-    <>
-      <FarmerDelegationsUpdater />
-      <Container maxWidth="lg">
-        <Stack gap={2}>
-          <PagePath
-            items={[
-              { path: '/governance', title: 'Governance' },
-              {
-                path: `/governance/${proposal.id}`,
-                title: getCrumbTitle(proposal.title),
-              },
-            ]}
-          />
-          {/* <PageHeader returnPath="/governance" /> */}
-          <Grid
-            container
-            wrap="nowrap"
-            direction={{ xs: 'column-reverse', md: 'row' }}
-            spacing={{ xs: 0, md: 2 }}
-            gap={{ xs: 2, md: 0 }}
-            maxWidth="100%"
-          >
-            <Grid item xs={12} md={8} maxWidth="100% !important">
-              <ProposalContent proposal={proposal} quorum={quorum} />
-            </Grid>
-            <Grid item xs={12} md={4} maxWidth="100%">
-              <GovernanceActions proposal={proposal} quorum={quorum} />
-            </Grid>
+    <Container maxWidth="lg">
+      <Stack gap={2}>
+        <PagePath
+          items={[
+            { path: '/governance', title: 'Governance' },
+            {
+              path: `/governance/${proposal.id}`,
+              title: getCrumbTitle(proposal.title),
+            },
+          ]}
+        />
+        {/* <PageHeader returnPath="/governance" /> */}
+        <Grid
+          container
+          wrap="nowrap"
+          direction={{ xs: 'column-reverse', md: 'row' }}
+          spacing={{ xs: 0, md: 2 }}
+          gap={{ xs: 2, md: 0 }}
+          maxWidth="100%"
+        >
+          <Grid item xs={12} md={8} maxWidth="100% !important">
+            <ProposalContent proposal={proposal} quorum={quorum} />
           </Grid>
-        </Stack>
-      </Container>
-    </>
+          <Grid item xs={12} md={4} maxWidth="100%">
+            <GovernanceActions proposal={proposal} quorum={quorum} />
+          </Grid>
+        </Grid>
+      </Stack>
+    </Container>
   );
 };
 
