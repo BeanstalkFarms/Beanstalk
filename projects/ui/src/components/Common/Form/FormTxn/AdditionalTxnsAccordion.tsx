@@ -68,7 +68,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   const [open, show, hide] = useToggle();
 
   const allToggled = useMemo(() => {
-    if (allOptions.length <= 1) return false;
+    if (allOptions.length === 0) return false;
     return allOptions.every((opt) => local.has(opt));
   }, [allOptions, local]);
 
@@ -76,12 +76,26 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   // handle toggling of individual options
   const handleOnToggle = (item: FormTxn) => {
     const copy = new Set([...local]);
-    const affected = [
+    const affected = new Set([
       item,
-      ...(FormTxnBundler.implied[item] || []),
-    ] as FormTxn[];
+      ...([FormTxnBundler.implied[item]] || []),
+    ] as FormTxn[]);
 
     if (copy.has(item)) {
+      /// check if other items need the affected items
+      const filtered = new Set([...copy]);
+      affected.forEach((_affected) => {
+        filtered.delete(_affected);
+      });
+
+      [...filtered].forEach((remaining) => {
+        ([FormTxnBundler.implied[remaining]] || []).forEach((k) => {
+          if (k && affected.has(k)) {
+            affected.delete(k);
+          }
+        });
+      });
+
       /// remove the item and all it's implied unless it is required
       affected.forEach((v) => {
         !impliedOptions.has(v) && copy.delete(v);
@@ -96,8 +110,11 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
     setFieldValue('farmActions.secondary', Array.from(copy));
   };
 
+  // console.log('rerender...', 'open: ', open);
+
   const handleOnToggleAll = useCallback(() => {
     const newState = new Set(allToggled ? impliedOptions : allOptions);
+    console.log('new state: ', newState);
     setLocal(newState);
     setFieldValue('farmActions.secondary', newState);
   }, [allOptions, allToggled, impliedOptions, setFieldValue]);
@@ -105,7 +122,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   const handleMouseOver = useCallback(
     (item: FormTxn) => {
       const copy = new Set<FormTxn>();
-      const affected = [...(FormTxnBundler.implied[item] || [])] as FormTxn[];
+      const affected = [...([FormTxnBundler.implied[item]] || [])] as FormTxn[];
       copy.add(item);
       affected.forEach((option) => {
         !local.has(option) && copy.add(option);
@@ -176,7 +193,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
           <Switch
             checked={allToggled}
             onClick={handleOnToggleAll}
-            disabled={allOptions.length <= 1}
+            disabled={allOptions.length === 0}
           />
         </Row>
       }
