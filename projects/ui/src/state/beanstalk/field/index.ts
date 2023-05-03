@@ -1,5 +1,20 @@
 import BigNumber from 'bignumber.js';
 
+export type MorningBlockTemperature = {
+  /** */
+  temperature: BigNumber;
+  /** */
+  maxTemperature: BigNumber;
+  /** */
+  interval: BigNumber;
+  /** */
+  blockNumber: BigNumber;
+};
+
+export type MorningTemperatureMap = {
+  [blockNumber: string]: MorningBlockTemperature;
+};
+
 export type BeanstalkField = {
   /**
    * The number of Pods that have become Harvestable.
@@ -41,4 +56,8 @@ export type BeanstalkField = {
     /** adjusted temperature for this season */
     scaled: BigNumber;
   };
+  /**
+   * Mapping of the temperature for each block of the morning
+   */
+  temperatures: MorningTemperatureMap;
 };

@@ -4,6 +4,7 @@ import { bigNumberResult, tokenResult } from '~/util';
 import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { resetBeanstalkField, updateBeanstalkField } from './actions';
+import { useUpdateMorningTemperatures } from './morning';
 
 export const useFetchBeanstalkField = () => {
   const dispatch = useDispatch();
@@ -64,6 +65,7 @@ export const useFetchBeanstalkField = () => {
 
 const FieldUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkField();
+  useUpdateMorningTemperatures();
 
   useEffect(() => {
     clear();
