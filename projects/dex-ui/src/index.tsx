@@ -5,11 +5,14 @@ import { Wrapper } from "src/components/App/Wrapper";
 
 import "src/normalize.css";
 import "src/index.css";
+import { basin } from "./utils/useBasin";
+
+basin();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
-    <Wrapper>
-      <App />
-    </Wrapper>
+  <Wrapper>
+    <App />
+  </Wrapper>
   // </React.StrictMode>
 );

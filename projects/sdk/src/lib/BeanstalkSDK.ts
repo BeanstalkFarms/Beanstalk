@@ -155,12 +155,31 @@ export class BeanstalkSDK {
     return account.toLowerCase();
   }
 
+  /**
+   * This methods helps serialize the SDK object. When used in a react
+   * dependency array, the signer and provider objects have circular references
+   * which cause errors. This overrides the result and allows using the sdk
+   * in dependency arrays (which use .toJSON under the hood)
+   * @returns
+   */
   toJSON() {
     return {
       instanceId: this.instanceId,
       chainId: this.chainId,
-      provider: this.provider,
+      provider: {
+        url: this.provider?.connection?.url,
+        network: this.provider?._network
+      },
       signer: this.signer
+        ? {
+            provider: {
+              // @ts-ignore
+              network: this.signer?.provider?._network
+            },
+            // @ts-ignore
+            address: this.signer?._address
+          }
+        : undefined
     };
   }
 }
