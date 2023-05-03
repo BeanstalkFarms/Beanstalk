@@ -381,7 +381,7 @@ library LibTokenSilo {
         returns (int96 grownStalk)
     {
         int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
-        return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(int96(bdv));
+        return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(toInt96(bdv));
     }
 
     //this is only used in ConvertFacet
@@ -391,8 +391,8 @@ library LibTokenSilo {
         returns (uint256 _grownStalk, int96 stem)
     {
         int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
-        stem = _stemTipForToken-int96(grownStalk.div(bdv));
-        _grownStalk = uint256(_stemTipForToken.sub(stem).mul(int96(bdv)));
+        stem = _stemTipForToken-toInt96(grownStalk.div(bdv));
+        _grownStalk = uint256(_stemTipForToken.sub(stem).mul(toInt96(bdv)));
     }
 
 
@@ -408,11 +408,16 @@ library LibTokenSilo {
         //then calculate how much stalk each individual bdv has grown
         //there's a > 0 check here, because if you have a small amount of unripe bean deposit, the bdv could
         //end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
-        int96 grownStalkPerBdv = bdv > 0 ? int96(grownStalk.div(bdv)) : 0;
+        int96 grownStalkPerBdv = bdv > 0 ? toInt96(grownStalk.div(bdv)) : 0;
         //then subtract from the current latest index, so we get the index the deposit should have happened at
         //note that we want this to be able to "subtraction overflow" aka go below zero, because
         //there will be many cases where you'd want to convert and need to go far back enough in the
         //grown stalk index to need a negative index
         return _stemTipForToken - grownStalkPerBdv;
+    }
+
+    function toInt96(uint256 value) internal pure returns (int96 downcasted) {
+        require(value <= uint256(type(int96).max), "SafeCast: value doesn't fit in an int96");
+        return int96(value);
     }
 }
