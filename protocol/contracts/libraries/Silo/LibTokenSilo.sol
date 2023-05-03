@@ -363,7 +363,9 @@ library LibTokenSilo {
         // stemTipForToken(token) > depositGrownStalkPerBdv for all valid Deposits
         int96 _stemTip = stemTipForToken(address(token));
         require(stem <= _stemTip, "Silo: Invalid Deposit");
-        uint deltaStemTip = uint(stemTipForToken(address(token)).sub(stem));
+         // The check in the above line guarantees that subtraction result is positive
+         // and thus the cast to `uint256` is safe.
+        uint deltaStemTip = uint256(_stemTip.sub(stem));
         (, uint bdv) = tokenDeposit(account, address(token), stem);
         
         grownStalk = deltaStemTip.mul(bdv);
