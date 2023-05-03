@@ -56,6 +56,7 @@ import PodMarketFillListing from '~/components/Market/PodsV2/Actions/Buy/FillLis
 import PodMarketSell from '~/components/Market/PodsV2/Actions/Sell';
 import PodMarketCreateListing from '~/components/Market/PodsV2/Actions/Sell/CreateListing';
 import PodMarketFillOrder from '~/components/Market/PodsV2/Actions/Sell/FillOrder';
+import MorningUpdater from '~/state/beanstalk/sun/morning';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -112,6 +113,7 @@ export default function App() {
       <FieldUpdater />
       <BarnUpdater />
       <SunUpdater />
+      <MorningUpdater />
       <GovernanceUpdater />
       {/* -----------------------
        * Farmer Updaters

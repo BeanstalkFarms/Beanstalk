@@ -27,7 +27,7 @@ import ChartInfoOverlay from '~/components/Common/Charts/ChartInfoOverlay';
 import { ZERO_BN } from '~/constants';
 import { getIsMorningInterval } from '~/state/beanstalk/sun/morning';
 import { selectFieldTemperature } from '~/state/beanstalk/field/reducer';
-import BlockUpdateCountdown from '../BlockUpdateCountdown';
+import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
 
 const {
   common: {
@@ -308,7 +308,7 @@ const MorningTemperature: React.FC<{
                   <Typography color="primary" component="span">
                     +{displayFullBN(temperatureIncrease, 0)}%
                   </Typography>{' '}
-                  in <BlockUpdateCountdown />)
+                  in <FieldBlockCountdown />)
                 </Typography>
               )}
             </Row>
@@ -318,7 +318,7 @@ const MorningTemperature: React.FC<{
         />
         <Box alignSelf="flex-start" display={{ xs: 'none', sm: 'block' }}>
           <Typography textAlign="right" color="text.secondary">
-            Next increase in <BlockUpdateCountdown />
+            Next increase in <FieldBlockCountdown />
           </Typography>
         </Box>
       </Row>
