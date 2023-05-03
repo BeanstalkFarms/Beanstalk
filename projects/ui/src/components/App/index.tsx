@@ -56,8 +56,6 @@ import PodMarketFillListing from '~/components/Market/PodsV2/Actions/Buy/FillLis
 import PodMarketSell from '~/components/Market/PodsV2/Actions/Sell';
 import PodMarketCreateListing from '~/components/Market/PodsV2/Actions/Sell/CreateListing';
 import PodMarketFillOrder from '~/components/Market/PodsV2/Actions/Sell/FillOrder';
-import FieldOverlay from '../Field/FieldOverlay';
-import MorningUpdater from '~/state/beanstalk/sun/morning';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -111,10 +109,9 @@ export default function App() {
        * Beanstalk Updaters
        * ----------------------- */}
       <SiloUpdater />
-      <SunUpdater />
-      <MorningUpdater />
       <FieldUpdater />
       <BarnUpdater />
+      <SunUpdater />
       <GovernanceUpdater />
       {/* -----------------------
        * Farmer Updaters
@@ -133,7 +130,6 @@ export default function App() {
       {account && <NewProposalsDialog />}
       {/* <Leaves /> */}
       {/* <Snowflakes /> */}
-      <FieldOverlay />
       <Box
         sx={{
           bgcolor: 'background.default',

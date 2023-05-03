@@ -159,7 +159,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           rewardBeans={peg.rewardBeans}
           issuedSoil={peg.soilStart}
           podRate={NEW_BN}
-          temperature={beanstalkField.temperature.max} // FIXME expected
+          temperature={beanstalkField.weather.yield.plus(peg.deltaTemperature)} // FIXME expected
           deltaDemand={peg.deltaPodDemand}
           deltaTemperature={peg.deltaTemperature}
           isNew

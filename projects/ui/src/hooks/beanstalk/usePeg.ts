@@ -147,7 +147,7 @@ const usePeg = () => {
 
   const soilStart = soilSupply(
     newHarvestablePods, // estimated for next season
-    field.temperature.max, // current temperature
+    field.weather.yield, // current temperature
     // POD RATE AS DECIMAL
     // 100% = 1
     podRate.div(100), // current pod rate (unharvestable pods / bean supply)
@@ -171,9 +171,9 @@ const usePeg = () => {
   //        dont know how much demand if it all sells
   //
   const deltaPodDemand = getDeltaPodDemand(
-    field.weather.thisSowTime,
+    field.weather.nextSowTime,
     field.weather.lastSowTime,
-    field.soil,
+    field.weather.startSoil,
     field.soil,
     field.weather.lastDSoil
   );
