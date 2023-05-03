@@ -13,10 +13,6 @@ import { Typography, Box, CircularProgress } from '@mui/material';
 import { chartHelpers } from '~/components/Common/Charts/ChartPropProvider';
 import { tickFormatPercentage } from '~/components/Analytics/formatters';
 
-import useMorningTemperature, {
-  BlockTemperature,
-} from '~/hooks/beanstalk/useMorningTemperature';
-
 import './chart.css';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { selectMorning } from '~/state/beanstalk/sun';
@@ -26,8 +22,12 @@ import Centered from '~/components/Common/ZeroState/Centered';
 import ChartInfoOverlay from '~/components/Common/Charts/ChartInfoOverlay';
 import { ZERO_BN } from '~/constants';
 import { getIsMorningInterval } from '~/state/beanstalk/sun/morning';
-import { selectFieldTemperature } from '~/state/beanstalk/field/reducer';
+import {
+  selectFieldTemperature,
+  selectMorningTemperatureMap,
+} from '~/state/beanstalk/field/reducer';
 import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
+import { MorningBlockTemperature } from '~/state/beanstalk/field';
 
 const {
   common: {
@@ -42,9 +42,9 @@ const {
   },
 } = chartHelpers;
 
-const getInterval = (d: BlockTemperature) => d.interval.toNumber();
+const getInterval = (d: MorningBlockTemperature) => d.interval.toNumber();
 
-const getTemperature = (d: BlockTemperature) => d.temperature.toNumber();
+const getTemperature = (d: MorningBlockTemperature) => d.temperature.toNumber();
 
 const getClassName = (barState: { isPast: boolean; isCurrent: boolean }) => {
   if (barState.isCurrent) return 'bar-current';
@@ -53,7 +53,7 @@ const getClassName = (barState: { isPast: boolean; isCurrent: boolean }) => {
 };
 
 const getIntervalStatus = (
-  data: BlockTemperature,
+  data: MorningBlockTemperature,
   currentInterval: BigNumber
 ) => ({
   isCurrent: currentInterval.eq(getInterval(data)),
@@ -63,9 +63,9 @@ const getIntervalStatus = (
 type Props = {
   height: number;
   width: number;
-  seriesData: BlockTemperature[];
+  seriesData: MorningBlockTemperature[];
   interval: BigNumber;
-  onHover: (block: BlockTemperature | undefined) => void;
+  onHover: (block: MorningBlockTemperature | undefined) => void;
 };
 
 const useTemperatureChart = ({
@@ -209,7 +209,7 @@ const Chart: React.FC<Props> = ({
                 height={barHeight}
                 className={className}
                 cursor="pointer"
-                radius={4}
+                radius={0}
                 top
                 onMouseEnter={() => onHover(d)}
                 onTouchStart={() => onHover(d)}
@@ -227,9 +227,9 @@ const Chart: React.FC<Props> = ({
 };
 
 const ChartWrapper: React.FC<{
-  seriesData: BlockTemperature[] | undefined;
+  seriesData: MorningBlockTemperature[] | undefined;
   interval: BigNumber;
-  onHover: (block: BlockTemperature | undefined) => void;
+  onHover: (block: MorningBlockTemperature | undefined) => void;
 }> = ({ seriesData, interval, onHover }) => {
   if (!seriesData) return null;
 
@@ -251,13 +251,13 @@ const ChartWrapper: React.FC<{
 const MorningTemperature: React.FC<{
   height?: string;
 }> = ({ height = '200px' }) => {
-  const [hovered, setHovered] = useState<BlockTemperature | undefined>(
+  const [hovered, setHovered] = useState<MorningBlockTemperature | undefined>(
     undefined
   );
 
-  const { temperatureMap } = useMorningTemperature();
+  const temperatureMap = useSelector(selectMorningTemperatureMap);
   const { max } = useSelector(selectFieldTemperature);
-  const { interval } = useSelector(selectMorning);
+  const { interval, blockNumber } = useSelector(selectMorning);
   const season = useSeason();
 
   const [temperatures, loading] = useMemo(() => {
@@ -275,12 +275,12 @@ const MorningTemperature: React.FC<{
   );
 
   const temperatureDisplay =
-    hovered?.temperature || temperatureMap[interval.toNumber()]?.temperature;
+    hovered?.temperature || temperatureMap[blockNumber.toString()]?.temperature;
 
   const temperatureIncrease = useMemo(() => {
     const nextInterval = interval.plus(1);
     if (getIsMorningInterval(nextInterval)) {
-      const nextTemp = temperatureMap[nextInterval.toNumber()]?.temperature;
+      const nextTemp = temperatureMap[blockNumber.toString()]?.temperature;
       return nextTemp?.minus(temperatureDisplay || ZERO_BN) || ZERO_BN;
     }
     if (nextInterval.eq(26)) {
@@ -288,7 +288,7 @@ const MorningTemperature: React.FC<{
     }
 
     return ZERO_BN;
-  }, [interval, max, temperatureDisplay, temperatureMap]);
+  }, [blockNumber, interval, max, temperatureDisplay, temperatureMap]);
 
   return (
     <>
