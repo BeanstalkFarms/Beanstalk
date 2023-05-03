@@ -4,7 +4,7 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
-import { PlotFragment, PlotSettingsFragment, SmartSubmitButton, TokenOutputField, TxnPreview, TxnSeparator } from '~/components/Common/Form';
+import { PlotFragment, PlotSettingsFragment, SmartSubmitButton, TxnPreview, TxnSeparator } from '~/components/Common/Form';
 import TransactionToast from '~/components/Common/TxnToast';
 import PlotInputField from '~/components/Common/Form/PlotInputField';
 import { useSigner } from '~/hooks/ledger/useSigner';
@@ -21,6 +21,8 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 
 import { FC } from '~/types';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type TransferFormValues = {
   plot: PlotFragment;
@@ -40,6 +42,7 @@ const TransferForm: FC<
   isValid,
   isSubmitting,
 }) => {
+  const sdk = useSdk();
   /// Data
   const plots = useFarmerPlots();
   const harvestableIndex = useHarvestableIndex();
@@ -65,13 +68,16 @@ const TransferForm: FC<
             <AddressInputField name="to" />
           </FieldWrapper>
         )}
+        {/* Txn info */}
         {(values.to && plot.amount && plot.start && plot.index) && (
           <>
             <TxnSeparator />
-            <TokenOutputField
-              amount={plot.amount.negated()}
-              token={PODS}
-            />
+            <TokenOutput>
+              <TokenOutput.Row 
+                amount={plot.amount.negated()}
+                token={sdk.tokens.PODS}
+              />
+            </TokenOutput>
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />

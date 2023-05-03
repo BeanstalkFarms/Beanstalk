@@ -14,7 +14,7 @@ import { BEANSTALK_ADDRESSES, BEANSTALK_FERTILIZER_ADDRESSES } from '~/constants
 import { CHAIN_INFO, SupportedChainId, MAX_UINT256 } from '~/constants';
 import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '../Dialog';
 import TransactionToast from '../TxnToast';
-import { FormState, FormTokenState } from '.';
+import { FormState, FormStateNew, FormTokenState, FormTokenStateNew } from '.';
 import WalletButton from '../Connection/WalletButton';
 import Row from '~/components/Common/Row';
 import useChainId from '~/hooks/chain/useChainId';
@@ -26,6 +26,7 @@ import NetworkButton from '~/components/Common/Connection/NetworkButton';
  *   form state, it changes every time an input value changes.
  */
 import { FC } from '~/types';
+import { getNewToOldToken } from '~/hooks/sdk';
 
 const CONTRACT_NAMES : { [address: string] : string } = {
   [BEANSTALK_ADDRESSES[SupportedChainId.MAINNET]]: 'Beanstalk',
@@ -42,7 +43,7 @@ const SmartSubmitButton : FC<{
    * The tokens (and respective values) currently tracked in the form.
    * Pass an empty list if no tokens need to be approved for this txn.
    */
-  tokens: FormTokenState[];
+  tokens: (FormTokenState | FormTokenStateNew)[];
   /**
    * auto = the module assumes the user wants to max out their allowance.
    * manual = show a modal to let the user decide their allowance.
@@ -66,14 +67,17 @@ const SmartSubmitButton : FC<{
   ...props
 }) => {
   const { explorer } = useChainConstant(CHAIN_INFO); // fallback to mainnet
-  const { values, setFieldValue } = useFormikContext<FormState>();
+  const { values, setFieldValue } = useFormikContext<FormState | FormStateNew>();
   const { status } = useWagmiAccount();
   const chainId = useChainId();
   const getErc20Contract = useGetERC20Contract();
 
   // Convert the current `FormTokenState[]` into more convenient forms,
   // and find the next token that we need to seek approval for.
-  const selectedTokens : Token[] = useMemo(() => tokens?.map((elem) => elem.token), [tokens]);
+  const selectedTokens : Token[] = useMemo(() => tokens?.map((elem) => {
+    if (elem.token instanceof Token) return elem.token;
+    return getNewToOldToken(elem.token);
+  }), [tokens]);
   const [allowances, refetchAllowances] = useAllowances(
     contract?.address,
     selectedTokens,

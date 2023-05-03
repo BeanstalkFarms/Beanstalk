@@ -7,7 +7,8 @@ import {
   Typography,
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { BeanstalkPalette, IconSize } from '../../App/muiTheme';
 import { hexToRgba } from '~/util/UI';
 import Row from '~/components/Common/Row';
@@ -18,7 +19,7 @@ import AddressIcon from '../AddressIcon';
 
 export type TokenAdornmentProps = (
   {
-    token: Token;
+    token: Token | TokenOld;
     balanceFrom?: BalanceFrom;
     buttonLabel?: string | JSX.Element;
     iconSize?: keyof typeof IconSize;

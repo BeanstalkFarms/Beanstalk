@@ -1,42 +1,63 @@
 import BigNumber from 'bignumber.js';
-import { BeanstalkToken, ERC20Token, NativeToken } from '~/classes/Token';
+import {
+  ERC20Token as ERC20TokenNew,
+  NativeToken as NativeTokenNew,
+} from '@beanstalk/sdk';
+import { ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
 import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
+import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
+import { FormTxnBundlerInterface } from '~/lib/Txn';
+
 
 /**
- * 
+ *
  */
 export type FormState = {
   /** */
   tokens: FormTokenState[];
   /** */
-  approving?: FormApprovingState; 
-}
+  approving?: FormApprovingState;
+};
+
+export type FormStateNew = {
+  tokens: FormTokenStateNew[];
+  approving?: FormApprovingStateNew;
+};
 
 /// FIXME: use type composition instead of this
 export type FormStateWithPlotSelect = FormState & {
   plot?: BigNumber;
-}
+};
 
 /**
  * Fragment: A single Token stored within a form.
  */
-export type FormTokenState = (
+export type FormTokenState =
   /// Form inputs
   {
     /** The selected token. */
-    token:      ERC20Token | NativeToken;
+    token: ERC20Token | NativeToken;
     /** The amount of the selected token, usually input by the user.
      * @value undefined if the input is empty */
-    amount:     BigNumber | undefined;
-  } 
-  /// Quoting
-  & {
+    amount: BigNumber | undefined;
+  } & { /// Quoting
     /** Whether we're currently looking up a quoted `amountOut` for this token. */
-    quoting?:   boolean;
-  } & Partial<QuoteHandlerResult>
-);
+    quoting?: boolean;
+  } & Partial<QuoteHandlerResult>;
+
+/**
+ * Fragment: A single Token stored within a form.
+ * NOTE: Duplicated from FromTokenState but to use types from @beanstalk/sdk
+ */
+export type FormTokenStateNew = {
+  token: ERC20TokenNew | NativeTokenNew;
+  amount: BigNumber | undefined;    
+  maxAmountIn?: BigNumber | undefined;
+} & {
+  quoting?: boolean;
+} & Partial<QuoteHandlerResultNew>;
 
 // /** Some `amountOut` received for inputting `amount` of this token into a function. */
 // amountOut?: BigNumber;
@@ -49,52 +70,37 @@ export type FormApprovingState = {
   /** */
   contract: string;
   /** */
-  token:    ERC20Token | NativeToken;
+  token: ERC20Token | NativeToken;
   /** */
-  amount:   BigNumber;
-}
+  amount: BigNumber;
+};
+
+export type FormApprovingStateNew = {
+  contract: string;
+  token: ERC20TokenNew | NativeTokenNew;
+  amount: BigNumber;
+};
 
 export type PlotFragment = {
   /** The absolute index of the plot. @decimals 6 */
-  index:  string    | null;
+  index: string | null;
   /** The user's selected start position. @decimals 6 */
-  start:  BigNumber | null;
+  start: BigNumber | null;
   /** The user's selected end position. @decimals 6 */
-  end:    BigNumber | null;
+  end: BigNumber | null;
   /** end - start. @decimals 6 */
   amount: BigNumber | null;
-}
+};
 
 export type SlippageSettingsFragment = {
   /** When performing a swap of some kind, set the slippage
    * value applied to all exchanges. */
   slippage: number;
-}
+};
 export type PlotSettingsFragment = {
   /** Let the Farmer select the exact range from which their
    * Pods are being transferred, sold, etc. */
   showRangeSelect: boolean;
-}
-
-export type ClaimableBeanAssetFragment = {
-  /**
-   * claimable bean token (BEAN, PODS, or SPROUTS)
-   */
-  token: BeanstalkToken | ERC20Token;
-  /**
-   * amount to claim from (claimable beans | harvestable pods | rinsable sprouts)
-   */
-  amount: BigNumber;
-};
-
-/**
- *
- */
-export type ClaimableBeanAssetFormState = {
-  /** */
-  maxBeansClaimable: BigNumber;
-  /** */
-  beansClaiming: { [k: string]: ClaimableBeanAssetFragment };
 };
 
 /**
@@ -104,13 +110,6 @@ export type BalanceFromFragment = {
   balanceFrom: BalanceFrom;
 };
 
-export type AdditionalBalanceFragment = {
-  /** */
-  additionMax: BigNumber;
-  /** */
-  additionApplied: BigNumber;
-}
-
 /**
  *
  */
@@ -118,9 +117,16 @@ export type FarmToModeFragment = {
   destination?: FarmToMode;
 };
 
-export type FarmWithClaimFormState = BalanceFromFragment &
-  FarmToModeFragment &
-  ClaimableBeanAssetFormState;
+export type FormTxnsFormState = {
+  /**
+   * actions added in conjunction to an arbitrary txn (e.g. deposit, convert, harvest, etc).
+   */
+  farmActions: FormTxnBundlerInterface;
+};
+
+export type ClaimBeansFormState = {
+  claimableBeans: FormTokenStateNew;
+}
 
 // ----------------------------------------------------------------------
 

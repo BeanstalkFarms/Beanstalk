@@ -1,4 +1,4 @@
-import { Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
@@ -9,7 +9,7 @@ import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TransactionToast from '~/components/Common/TxnToast';
 import {
   FormState,
-  SettingInput, SlippageSettingsFragment, SmartSubmitButton, TokenOutputField,
+  SettingInput, SlippageSettingsFragment, SmartSubmitButton,
   TokenQuoteProvider,
   TokenSelectDialog, TxnSeparator,
   TxnSettings
@@ -33,11 +33,10 @@ import { BEAN, ETH, PODS, WETH } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { PodListing } from '~/state/farmer/market';
 import { optimizeFromMode } from '~/util/Farm';
-import TokenIcon from '~/components/Common/TokenIcon';
-import { IconSize } from '~/components/App/muiTheme';
-import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type FillListingFormValues = FormState & {
   settings: SlippageSettingsFragment;
@@ -62,6 +61,7 @@ const FillListingV2Form : FC<
   handleQuote,
   farm,
 }) => {
+  const sdk = useSdk();
   /// State
   const [isTokenSelectVisible, handleOpen, hideTokenSelect] = useToggle();
 
@@ -184,29 +184,19 @@ const FillListingV2Form : FC<
           <>
             <TxnSeparator mt={0} />
             {/* Pods Output */}
-            <TokenOutputField
-              size="small"
-              token={PODS}
-              amount={podsPurchased}
-              amountTooltip={(
-                <>
-                  {displayTokenAmount(amountOut!, Bean)} / {displayBN(podListing.pricePerPod)} Beans per Pod<br />= {displayTokenAmount(podsPurchased, PODS)}
-                </>
-              )}
-              override={(
-                <Row gap={0.5}>
-                  <TokenIcon
-                    token={PODS}
-                    css={{
-                      height: IconSize.xs,
-                    }}
-                  />
-                  <Typography variant="bodySmall">
-                    {PODS.symbol} @ {displayBN(placeInLine)}
-                  </Typography>
-                </Row>
-              )}
-            />
+            <TokenOutput size="small">
+              <TokenOutput.Row 
+                token={sdk.tokens.PODS}
+                amount={podsPurchased}
+                amountTooltip={
+                  <>
+                    {displayTokenAmount(amountOut!, Bean)} / {displayBN(podListing.pricePerPod)} Beans per Pod<br />= {displayTokenAmount(podsPurchased, PODS)}
+                  </>
+                }
+                amountSuffix={` @ ${displayBN(placeInLine)}`}
+                size="small"
+              />
+            </TokenOutput>
             {/* <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
