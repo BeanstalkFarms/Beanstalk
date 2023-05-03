@@ -24,9 +24,15 @@ export type FarmerDelegation = {
       };
     };
   }>;
-  delegatorVotingPower: { [k: string]: BigNumber };
+  votingPower: {
+    [key in GovSpace]?: {
+      [address: string]: BigNumber;
+    };
+  };
   updated: {
     delegators: DateTime | undefined;
     delegates: DateTime | undefined;
+    stalk: DateTime | undefined;
+    nft: DateTime | undefined;
   };
 };

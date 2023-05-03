@@ -7,14 +7,17 @@ import {
   setFarmerDelegates,
   setFarmerDelegators,
 } from './actions';
+import { GovSpace } from '~/lib/Beanstalk/Governance';
 
 const initialState: FarmerDelegation = {
   delegators: {},
   delegates: {},
-  delegatorVotingPower: {},
+  votingPower: {},
   updated: {
     delegators: undefined,
     delegates: undefined,
+    stalk: undefined,
+    nft: undefined,
   },
 };
 
@@ -29,6 +32,12 @@ export default createReducer(initialState, (builder) =>
       state.updated.delegates = DateTime.now();
     })
     .addCase(setDelegatorsVotingPower, (state, { payload }) => {
-      state.delegatorVotingPower[payload.space] = payload.votingPower;
+      console.log('setDelegatorsVotingPower', payload.space, payload.data);
+      state.votingPower[payload.space] = payload.data;
+      if (payload.space === GovSpace.BeanNFT) {
+        state.updated.nft = DateTime.now();
+      } else {
+        state.updated.stalk = DateTime.now();
+      }
     })
 );

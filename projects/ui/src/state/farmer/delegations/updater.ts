@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { DateTime } from 'luxon';
+import BigNumber from 'bignumber.js';
 import { GovSpace, SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
 import {
+  useBeaNftUsersLazyQuery,
   useDelegatorsStalkLazyQuery,
   useVoterDelegatesLazyQuery,
   useVoterDelegatorsLazyQuery,
@@ -14,24 +16,11 @@ import {
   setFarmerDelegates,
   setFarmerDelegators,
 } from './actions';
-import { AppState } from '~/state';
 import { useDelegatesRegistryContract } from '~/hooks/ledger/useContract';
 import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
+import { GOV_SPACE_BY_ID, tokenResult } from '~/util';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
-import { ZERO_BN } from '~/constants';
-import { tokenResult } from '~/util';
 import { STALK } from '~/constants/tokens';
-
-export const GOV_SPACE_BY_ID: { [key in GovSpace]: string } = {
-  [GovSpace.BeanstalkDAO]:
-    '0x6265616e7374616c6b64616f2e65746800000000000000000000000000000000',
-  [GovSpace.BeanstalkFarms]:
-    '0x6265616e7374616c6b6661726d732e6574680000000000000000000000000000',
-  [GovSpace.BeanSprout]:
-    '0x77656172656265616e7370726f75742e65746800000000000000000000000000',
-  [GovSpace.BeanNFT]:
-    '0x6265616e66742e65746800000000000000000000000000000000000000000000',
-};
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -73,25 +62,19 @@ export function useReadDelegatesDev() {
 }
 
 export function useFetchFarmerDelegations() {
+  const [fetchDelegatesDevOnly] = useReadDelegatesDev();
+  const account = useAccount();
+
   const dispatch = useDispatch();
 
-  const account = useAccount();
-  const [fetchDelegatesDevOnly] = useReadDelegatesDev();
-
   const [fetchDelegates] = useVoterDelegatesLazyQuery({
-    variables: {
-      space_in: SNAPSHOT_SPACES,
-      voter_address: account || '',
-    },
+    variables: { space_in: SNAPSHOT_SPACES, voter_address: account || '' },
     fetchPolicy: 'cache-and-network',
     context: { subgraph: 'snapshot-labs' },
   });
 
   const [fetchDelegators] = useVoterDelegatorsLazyQuery({
-    variables: {
-      space_in: SNAPSHOT_SPACES,
-      voter_address: account || '',
-    },
+    variables: { space_in: SNAPSHOT_SPACES, voter_address: account || '' },
     fetchPolicy: 'cache-and-network',
     context: { subgraph: 'snapshot-labs' },
   });
@@ -104,9 +87,7 @@ export function useFetchFarmerDelegations() {
           await fetchDelegatesDevOnly();
           return;
         }
-
         const { data } = await fetchDelegates();
-
         const delegate = data?.delegations?.reduce<
           FarmerDelegation['delegates']
         >((prev, curr) => {
@@ -124,7 +105,6 @@ export function useFetchFarmerDelegations() {
         );
 
         dispatch(setFarmerDelegates(delegate || {}));
-
         return delegate;
       } catch (e) {
         console.debug('[useFarmerDelegations/fetchDelegates] FAILED:', e);
@@ -139,17 +119,14 @@ export function useFetchFarmerDelegations() {
     async (_account: string) => {
       try {
         const { data } = await fetchDelegators();
-
         const delegators = data?.delegations?.reduce<
           FarmerDelegation['delegators']
         >((prev, curr) => {
           const spaceDelegators = prev[curr.space as GovSpace] || {};
-
           const currDelegator = {
             address: curr.delegator,
             timestamp: DateTime.fromSeconds(curr.timestamp),
           };
-
           return {
             ...prev,
             [curr.space]: {
@@ -165,7 +142,6 @@ export function useFetchFarmerDelegations() {
         );
 
         dispatch(setFarmerDelegators(delegators || {}));
-
         return delegators;
       } catch (e) {
         console.debug('[useFarmerDelegations/fetchDelegators] FAILED:', e);
@@ -175,134 +151,244 @@ export function useFetchFarmerDelegations() {
     [dispatch, fetchDelegators]
   );
 
+  const clear = useCallback(() => {
+    dispatch(setFarmerDelegates({}));
+    dispatch(setFarmerDelegators({}));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!account) {
+      clear();
+    }
+  }, [account, clear]);
+
   return [fetchVoterDelegates, fetchVoterDelegators] as const;
 }
 
-export function useFetchVotingPower() {
+export function useFetchNFTVotingPower() {
   const delegations = useFarmerDelegations();
-  const farmerSilo = useFarmerSilo();
+  const account = useAccount();
+
+  const [fetchBeaNFTs] = useBeaNftUsersLazyQuery();
+
   const dispatch = useDispatch();
 
-  const allStalkDelegators = useMemo(() => {
+  const delegators = useMemo(() => {
+    if (!account) return [];
+    const nftDelegators = delegations.delegators[GovSpace.BeanNFT] || {};
+    const _delegators = new Set(
+      Object.values(nftDelegators).map(({ address }) => address.toLowerCase())
+    );
+    _delegators.add(account.toLowerCase());
+
+    return Array.from(_delegators);
+  }, [account, delegations.delegators]);
+
+  const fetch = useCallback(async () => {
+    try {
+      if (!account || !delegators.length) return;
+      const data = await fetchBeaNFTs({
+        variables: { id_in: delegators },
+        fetchPolicy: 'cache-and-network',
+        context: { subgraph: 'beanft' },
+      });
+      const byUser = data.data?.beaNFTUsers || [];
+      const votingPower = byUser.reduce<{
+        [address: string]: BigNumber;
+      }>((acc, curr) => {
+        const genesis = curr.genesis?.length || 0;
+        const winter = curr.winter?.length || 0;
+        const barnRaise = curr.barnRaise?.length || 0;
+        acc[curr.id] = new BigNumber(genesis + winter + barnRaise);
+        return acc;
+      }, {});
+
+      console.debug('[useFetchNFTVotingPower] RESULT = ', votingPower);
+      dispatch(
+        setDelegatorsVotingPower({
+          space: GovSpace.BeanNFT,
+          data: votingPower,
+        })
+      );
+
+      return votingPower;
+    } catch (err) {
+      console.debug('[useFetchNFTVotingPower] FAILED:', err);
+      return undefined;
+    }
+  }, [account, delegators, dispatch, fetchBeaNFTs]);
+
+  const clear = useCallback(() => {
+    dispatch(
+      setDelegatorsVotingPower({
+        space: GovSpace.BeanNFT,
+        data: {},
+      })
+    );
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!account) {
+      clear();
+    }
+  }, [account, clear]);
+
+  return [fetch, clear] as const;
+}
+
+export function useFetchStalkVotingPower() {
+  const delegations = useFarmerDelegations();
+  const farmerSilo = useFarmerSilo();
+  const account = useAccount();
+
+  const dispatch = useDispatch();
+
+  const [fetchDelegatorsStalk] = useDelegatorsStalkLazyQuery();
+
+  const activeStalk = farmerSilo.stalk.active;
+
+  const delegators = useMemo(() => {
+    if (!account) return [];
     const accounts = new Set<string>();
-    Object.entries(delegations.delegators).forEach(([_space, _delegators]) => {
+    const _stalkDelegators = Object.entries(delegations.delegators);
+
+    _stalkDelegators.forEach(([_space, _delegators]) => {
       const space = _space as GovSpace;
-      if (space !== GovSpace.BeanNFT) {
-        Object.entries(_delegators).forEach(([address]) => {
-          accounts.add(address);
-        });
-      }
+      if (space === GovSpace.BeanNFT) return;
+      Object.values(_delegators).forEach(({ address }) => {
+        accounts.add(address.toLowerCase());
+      });
     });
 
     return Array.from(accounts);
-  }, [delegations.delegators]);
+  }, [account, delegations.delegators]);
 
-  // const allNFTDelegators = useMemo(() => {
-  //   const accounts = new Set<string>();
-  //   const delegators = delegations.delegators[GovSpace.BeanNFT] || {};
-  //   Object.values(delegators).forEach((delegator) => {
-  //     accounts.add(delegator.address);
-  //   });
-  //   return Array.from(accounts);
-  // }, [delegations.delegators]);
-
-  const [fetchDelegatorsStalk] = useDelegatorsStalkLazyQuery({
-    variables: {
-      ids: allStalkDelegators.map((id) => id.toLowerCase()),
-    },
-    fetchPolicy: 'cache-and-network',
-    context: { subgraph: 'beanstalk' },
-  });
-
-  const handleFetch = useCallback(async () => {
+  const fetch = useCallback(async () => {
     try {
-      if (!allStalkDelegators.length) return;
-      const { data } = await fetchDelegatorsStalk();
-      // console.log("result: ", data);
-      const farmers = data?.farmers;
+      if (!account || !delegators.length || activeStalk.lte(0)) return;
+      const data = await fetchDelegatorsStalk({
+        variables: { ids: delegators },
+        fetchPolicy: 'cache-and-network',
+        context: { subgraph: 'beanstalk' },
+      });
 
-      const delegators = { ...delegations.delegators };
+      const stalkByFarmer = (data.data?.farmers || []).reduce<{
+        [address: string]: BigNumber;
+      }>((acc, curr) => {
+        const result = tokenResult(STALK)(curr.silo?.stalk || 0);
+        acc[curr.id.toLowerCase()] = result;
+        return acc;
+      }, {});
 
-      const _votingPower = {
-        [GovSpace.BeanSprout]: farmerSilo.stalk.active,
-        [GovSpace.BeanstalkFarms]: farmerSilo.stalk.active,
-        [GovSpace.BeanstalkDAO]: farmerSilo.stalk.active,
-        [GovSpace.BeanNFT]: ZERO_BN, // FIX ME
+      const votingPower: {
+        [key in GovSpace]: {
+          [address: string]: BigNumber;
+        };
+      } = {
+        [GovSpace.BeanSprout]: {},
+        [GovSpace.BeanstalkFarms]: {},
+        [GovSpace.BeanstalkDAO]: {},
+        [GovSpace.BeanNFT]: {},
       };
 
-      farmers?.forEach((farmer) => {
-        const _stalk = farmer.silo?.stalk;
-        const stalk = _stalk ? tokenResult(STALK)(_stalk) : ZERO_BN;
+      votingPower[GovSpace.BeanSprout][account.toLowerCase()] = activeStalk;
+      votingPower[GovSpace.BeanstalkFarms][account.toLowerCase()] = activeStalk;
+      votingPower[GovSpace.BeanstalkDAO][account.toLowerCase()] = activeStalk;
 
-        SNAPSHOT_SPACES.forEach((space) => {
-          if (space === GovSpace.BeanNFT) return;
-          const _delegators = delegators[space] || {};
-          if (farmer.id in _delegators) {
-            const amount = _votingPower[space] || ZERO_BN;
-            _votingPower[space] = amount.plus(stalk);
-          }
-        });
+      Object.entries(delegations.delegators).forEach(([s, d]) => {
+        const space = s as GovSpace;
+        if (space !== GovSpace.BeanNFT) {
+          Object.keys(d).forEach((address) => {
+            const vp = stalkByFarmer[address.toLowerCase()];
+            if (vp) {
+              votingPower[space][address] = vp;
+            }
+          });
+        }
       });
 
-      Object.entries(_votingPower).forEach(([space, amount]) => {
-        dispatch(
-          setDelegatorsVotingPower({
-            space: space as GovSpace,
-            votingPower: amount,
-          })
-        );
+      const spaces = [
+        GovSpace.BeanSprout,
+        GovSpace.BeanstalkDAO,
+        GovSpace.BeanstalkFarms,
+      ];
+      spaces.forEach((space) => {
+        if (space === GovSpace.BeanNFT) return;
+        const vp = votingPower[space as GovSpace];
+        console.log('vp: ', space, vp);
+        if (vp) {
+          dispatch(
+            setDelegatorsVotingPower({
+              space: space as GovSpace,
+              data: vp,
+            })
+          );
+          console.debug(
+            '[useFetchStalkVotingPower] SET DELEGATORS VOTING POWER: ',
+            space,
+            vp
+          );
+        }
       });
+      votingPower[GovSpace.BeanNFT] = {};
 
-      console.debug('[useFetchVotingPower] RESULT = ', _votingPower);
-
-      return _votingPower;
+      return votingPower;
     } catch (err) {
-      console.debug('[useFetchVotingPower] FAILED:', err);
+      console.debug('[useFetchStalkVotingPower] FAILED:', err);
       return undefined;
     }
   }, [
-    allStalkDelegators.length,
+    account,
+    activeStalk,
     delegations.delegators,
-    farmerSilo.stalk.active,
+    delegators,
     dispatch,
     fetchDelegatorsStalk,
   ]);
 
-  useEffect(() => {
-    if (!allStalkDelegators.length) return;
-    handleFetch();
-  }, [allStalkDelegators.length, farmerSilo.stalk, handleFetch]);
+  const clear = useCallback(() => {
+    const spaces = [
+      GovSpace.BeanSprout,
+      GovSpace.BeanstalkDAO,
+      GovSpace.BeanstalkFarms,
+    ];
+    spaces.forEach((space) => {
+      dispatch(
+        setDelegatorsVotingPower({
+          space,
+          data: {},
+        })
+      );
+    });
+  }, [dispatch]);
 
-  return [handleFetch] as const;
+  useEffect(() => {
+    if (!account) {
+      clear();
+    }
+  }, [account, clear]);
+
+  return [fetch, clear] as const;
 }
 
 export default function FarmerDelegationsUpdater() {
-  const farmerDelegations = useSelector<
-    AppState,
-    AppState['_farmer']['delegations']
-  >((state) => state._farmer.delegations);
-  const account = useAccount();
   const [fetchDelegates, fetchDelegators] = useFetchFarmerDelegations();
+  const [fetchNFTVP] = useFetchNFTVotingPower();
+  const [fetchStalkVP] = useFetchStalkVotingPower();
 
-  const fetchedDelegates = Boolean(farmerDelegations.updated.delegates);
-  const fetchedDelegators = Boolean(farmerDelegations.updated.delegators);
+  const account = useAccount();
 
   useEffect(() => {
     if (!account) return;
-    (async () => {})();
-    if (!fetchedDelegators) {
-      fetchDelegators(account);
-    }
-    if (!fetchedDelegates) {
-      fetchDelegates(account);
-    }
-  }, [
-    account,
-    fetchedDelegates,
-    fetchedDelegators,
-    fetchDelegates,
-    fetchDelegators,
-  ]);
+    fetchDelegators(account);
+    fetchDelegates(account);
+  }, [account, fetchDelegates, fetchDelegators]);
+
+  useEffect(() => {
+    if (!account) return;
+    fetchNFTVP();
+    fetchStalkVP();
+  }, [account, fetchNFTVP, fetchStalkVP]);
 
   return null;
 }

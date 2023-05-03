@@ -13,5 +13,5 @@ export const setFarmerDelegates = createAction<FarmerDelegation['delegates']>(
 
 export const setDelegatorsVotingPower = createAction<{
   space: GovSpace;
-  votingPower: BigNumber;
-}>('farmer/delegations/setDelegatorsStalkVotingPower');
+  data: { [address: string]: BigNumber };
+}>('farmer/delegations/setDelegatorsVotingPower');
