@@ -16,14 +16,7 @@ const FieldStats: React.FC<{ beanstalkField: BeanstalkField }> = ({
         title="Available Soil"
         amount={displayFullBN(beanstalkField.soil, 0)}
         subtitle={
-          <Typography
-            color="text.secondary"
-            sx={({ breakpoints: bp }) => ({
-              [bp.up('sm')]: {
-                whiteSpace: 'nowrap',
-              },
-            })}
-          >
+          <Typography color="text.secondary">
             The number of Beans Beanstalk is willing to borrow
           </Typography>
         }
@@ -35,14 +28,7 @@ const FieldStats: React.FC<{ beanstalkField: BeanstalkField }> = ({
         title="Pod Line"
         amount={displayFullBN(beanstalkField.podLine, 0)}
         subtitle={
-          <Typography
-            color="text.secondary"
-            sx={({ breakpoints: bp }) => ({
-              [bp.up('sm')]: {
-                whiteSpace: 'nowrap',
-              },
-            })}
-          >
+          <Typography color="text.secondary">
             The number of Pods currently Outstanding
           </Typography>
         }
