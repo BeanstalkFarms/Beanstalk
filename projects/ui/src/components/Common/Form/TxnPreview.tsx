@@ -15,7 +15,7 @@ import {
   SiloRewardsAction,
   SiloTransitAction,
   SwapAction,
-  TransferBalanceAction
+  TransferBalanceAction,
 } from '~/util/Actions';
 import { SupportedChainId } from '~/constants/chains';
 import { BEAN, PODS, SEEDS, SPROUTS, STALK, USDC } from '~/constants/tokens';
@@ -27,19 +27,26 @@ import { BeanstalkPalette } from '../../App/muiTheme';
 
 // -----------------------------------------------------------------------
 
-const IconRow : FC<{ spacing?: number }> = ({ children, spacing = 0.75 }) => (
+const IconRow: FC<{ spacing?: number }> = ({ children, spacing = 0.75 }) => (
   <Row sx={{ height: '100%' }} spacing={spacing}>
     {children}
   </Row>
 );
 
-const AltIconRow : FC<{ gap?: number }> = ({ children, gap = 5 }) => (
-  <Row sx={{ height: '100%', display: 'inline-flex', alignItems: 'center', gap: `${gap}px` }}>
+const AltIconRow: FC<{ gap?: number }> = ({ children, gap = 5 }) => (
+  <Row
+    sx={{
+      height: '100%',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: `${gap}px`,
+    }}
+  >
     {children}
   </Row>
 );
 
-const ActionTokenImage : FC<{ token: Token }> = ({ token }) => (
+const ActionTokenImage: FC<{ token: Token }> = ({ token }) => (
   <img
     key={token.address}
     src={token.logo}
@@ -48,31 +55,34 @@ const ActionTokenImage : FC<{ token: Token }> = ({ token }) => (
   />
 );
 
-const SwapStep : FC<{ actions: SwapAction[] }> = ({ actions }) => {
-  const data = actions.reduce((agg, a) => {
-    if (!agg.in.addrs.has(a.tokenIn.address)) {
-      agg.in.addrs.add(a.tokenIn.address);
-      agg.in.elems.push(
-        <ActionTokenImage key={a.tokenIn.address} token={a.tokenIn} />
-      );
-    }
-    if (!agg.out.addrs.has(a.tokenOut.address)) {
-      agg.out.addrs.add(a.tokenOut.address);
-      agg.out.elems.push(
-        <ActionTokenImage key={a.tokenOut.address} token={a.tokenOut} />
-      );
-    }
-    return agg;
-  }, {
-    in: {
-      addrs: new Set<string>(),
-      elems: [] as JSX.Element[],
+const SwapStep: FC<{ actions: SwapAction[] }> = ({ actions }) => {
+  const data = actions.reduce(
+    (agg, a) => {
+      if (!agg.in.addrs.has(a.tokenIn.address)) {
+        agg.in.addrs.add(a.tokenIn.address);
+        agg.in.elems.push(
+          <ActionTokenImage key={a.tokenIn.address} token={a.tokenIn} />
+        );
+      }
+      if (!agg.out.addrs.has(a.tokenOut.address)) {
+        agg.out.addrs.add(a.tokenOut.address);
+        agg.out.elems.push(
+          <ActionTokenImage key={a.tokenOut.address} token={a.tokenOut} />
+        );
+      }
+      return agg;
     },
-    out: {
-      addrs: new Set<string>(),
-      elems: [] as JSX.Element[],
+    {
+      in: {
+        addrs: new Set<string>(),
+        elems: [] as JSX.Element[],
+      },
+      out: {
+        addrs: new Set<string>(),
+        elems: [] as JSX.Element[],
+      },
     }
-  });
+  );
   return (
     <Row sx={{ height: '100%' }} spacing={0.33}>
       {data.in.elems}
@@ -82,22 +92,16 @@ const SwapStep : FC<{ actions: SwapAction[] }> = ({ actions }) => {
   );
 };
 
-const TxnStep : FC<{
+const TxnStep: FC<{
   type: ActionType;
   actions: Action[];
   highlighted: ActionType | undefined;
-}> = ({
-  type,
-  actions,
-  highlighted,
-}) => {
+}> = ({ type, actions, highlighted }) => {
   let step;
   switch (type) {
     /// SWAP
     case ActionType.SWAP:
-      step = (
-        <SwapStep actions={actions as SwapAction[]} />
-      );
+      step = <SwapStep actions={actions as SwapAction[]} />;
       break;
     case ActionType.RECEIVE_TOKEN: {
       // eslint-disable-next-line
@@ -105,9 +109,17 @@ const TxnStep : FC<{
       step = (
         <IconRow spacing={0.5}>
           {a.destination !== undefined ? (
-            a.destination === FarmToMode.INTERNAL
-              ? <AltIconRow><ActionTokenImage key={a.token.address} token={a.token} />🚜</AltIconRow>
-              : <AltIconRow><ActionTokenImage key={a.token.address} token={a.token} /><AddressIcon address={a.to} size={23} /></AltIconRow>
+            a.destination === FarmToMode.INTERNAL ? (
+              <AltIconRow>
+                <ActionTokenImage key={a.token.address} token={a.token} />
+                🚜
+              </AltIconRow>
+            ) : (
+              <AltIconRow>
+                <ActionTokenImage key={a.token.address} token={a.token} />
+                <AddressIcon address={a.to} size={23} />
+              </AltIconRow>
+            )
           ) : null}
         </IconRow>
       );
@@ -117,11 +129,28 @@ const TxnStep : FC<{
     case ActionType.TRANSFER_BALANCE: {
       const a = actions[0] as TransferBalanceAction;
       step = (
-        <Row spacing={0.5} sx={{ height: '100%', display: 'inline-flex', alignItems: 'center' }}>
+        <Row
+          spacing={0.5}
+          sx={{ height: '100%', display: 'inline-flex', alignItems: 'center' }}
+        >
           {a.source !== undefined ? (
-            a.source === FarmFromMode.INTERNAL ? <AltIconRow><ActionTokenImage key={a.token.address} token={a.token} />🚜</AltIconRow>
-            : a.source === FarmFromMode.EXTERNAL ? <AltIconRow><ActionTokenImage key={a.token.address} token={a.token} /><AddressIcon size={23} /></AltIconRow>
-            : <AltIconRow><ActionTokenImage key={a.token.address} token={a.token} /><AddressIcon size={23} />🚜</AltIconRow>
+            a.source === FarmFromMode.INTERNAL ? (
+              <AltIconRow>
+                <ActionTokenImage key={a.token.address} token={a.token} />
+                🚜
+              </AltIconRow>
+            ) : a.source === FarmFromMode.EXTERNAL ? (
+              <AltIconRow>
+                <ActionTokenImage key={a.token.address} token={a.token} />
+                <AddressIcon size={23} />
+              </AltIconRow>
+            ) : (
+              <AltIconRow>
+                <ActionTokenImage key={a.token.address} token={a.token} />
+                <AddressIcon size={23} />
+                🚜
+              </AltIconRow>
+            )
           ) : null}
         </Row>
       );
@@ -134,11 +163,7 @@ const TxnStep : FC<{
     case ActionType.CLAIM_WITHDRAWAL:
       step = (
         <IconRow>
-          <img
-            src={siloIcon}
-            css={{ height: '100%' }}
-            alt=""
-          />
+          <img src={siloIcon} css={{ height: '100%' }} alt="" />
           {(actions as SiloDepositAction[]).map((a) => (
             <ActionTokenImage key={a.token.address} token={a.token} />
           ))}
@@ -148,14 +173,19 @@ const TxnStep : FC<{
     case ActionType.TRANSFER:
       step = (
         <IconRow>
-          <TokenIcon token={(actions[0] as SiloTransitAction).token} css={{ height: '100%' }} />
+          <TokenIcon
+            token={(actions[0] as SiloTransitAction).token}
+            css={{ height: '100%' }}
+          />
         </IconRow>
       );
       break;
     case ActionType.UPDATE_SILO_REWARDS:
       step = (
         <IconRow spacing={0}>
-          <Typography fontWeight="bold" sx={{ fontSize: 20 }}>{(actions[0] as SiloRewardsAction).stalk.lt(0) ? '🔥' : '+'}</Typography>
+          <Typography fontWeight="bold" sx={{ fontSize: 20 }}>
+            {(actions[0] as SiloRewardsAction).stalk.lt(0) ? '🔥' : '+'}
+          </Typography>
           <TokenIcon token={STALK} css={{ height: '100%' }} />
           <TokenIcon token={SEEDS} css={{ height: '100%' }} />
         </IconRow>
@@ -164,7 +194,10 @@ const TxnStep : FC<{
     case ActionType.IN_TRANSIT:
       step = (
         <IconRow>
-          <TokenIcon token={(actions[0] as SiloTransitAction).token} css={{ height: '100%' }} />
+          <TokenIcon
+            token={(actions[0] as SiloTransitAction).token}
+            css={{ height: '100%' }}
+          />
         </IconRow>
       );
       break;
@@ -173,25 +206,30 @@ const TxnStep : FC<{
     case ActionType.BUY_BEANS:
       step = (
         <IconRow>
-          <TokenIcon token={(actions[0] as SiloTransitAction).token} css={{ height: '100%' }} />
+          <TokenIcon
+            token={(actions[0] as SiloTransitAction).token}
+            css={{ height: '100%' }}
+          />
         </IconRow>
       );
       break;
     case ActionType.BURN_BEANS:
       step = (
         <IconRow spacing={0.3}>
-          <Typography fontWeight="bold" sx={{ fontSize: 20 }}>🔥</Typography>
+          <Typography fontWeight="bold" sx={{ fontSize: 20 }}>
+            🔥
+          </Typography>
           <TokenIcon token={BEAN[1]} css={{ height: '100%' }} />
         </IconRow>
       );
       break;
-      case ActionType.HARVEST:
-        step = (
-          <IconRow>
-            <TokenIcon token={PODS} css={{ height: '100%' }} />
-          </IconRow>
-        );
-        break;
+    case ActionType.HARVEST:
+      step = (
+        <IconRow>
+          <TokenIcon token={PODS} css={{ height: '100%' }} />
+        </IconRow>
+      );
+      break;
     case ActionType.RECEIVE_PODS:
       step = (
         <IconRow>
@@ -218,22 +256,18 @@ const TxnStep : FC<{
     case ActionType.CREATE_ORDER:
       step = (
         <IconRow>
-          <TokenIcon token={BEAN[1]} css={{ height: '100%', marginTop: 0, }} />
+          <TokenIcon token={BEAN[1]} css={{ height: '100%', marginTop: 0 }} />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
-          <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0, }} />
+          <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0 }} />
         </IconRow>
       );
       break;
     // FIXME: better way to reduce duplicate code here?
     case ActionType.BUY_PODS:
-      step = (
-        <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0, }} />
-      );
+      step = <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0 }} />;
       break;
     case ActionType.SELL_PODS:
-      step = (
-        <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0, }} />
-      );
+      step = <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0 }} />;
       break;
 
     /// FERTILIZER
@@ -247,7 +281,10 @@ const TxnStep : FC<{
     case ActionType.BUY_FERTILIZER:
       step = (
         <IconRow>
-          <TokenIcon token={USDC[SupportedChainId.MAINNET]} css={{ height: '100%', marginTop: 0, }} />
+          <TokenIcon
+            token={USDC[SupportedChainId.MAINNET]}
+            css={{ height: '100%', marginTop: 0 }}
+          />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
           <img
             src={FERTILIZER_ICONS.unused}
@@ -266,7 +303,7 @@ const TxnStep : FC<{
             css={{ height: '100%' }}
           />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
-          <TokenIcon token={SPROUTS} css={{ height: '100%', marginTop: 0, }} />
+          <TokenIcon token={SPROUTS} css={{ height: '100%', marginTop: 0 }} />
         </IconRow>
       );
       break;
@@ -275,7 +312,10 @@ const TxnStep : FC<{
     case ActionType.END_TOKEN:
       step = (
         <IconRow>
-          <TokenIcon token={(actions[0] as SiloTransitAction).token} css={{ height: '100%' }} />
+          <TokenIcon
+            token={(actions[0] as SiloTransitAction).token}
+            css={{ height: '100%' }}
+          />
         </IconRow>
       );
       break;
@@ -284,30 +324,35 @@ const TxnStep : FC<{
   }
 
   return (
-    <Box sx={{
-      width: '80px',
-      height: '100%', // of TXN_PREVIEW_HEIGHT
-      textAlign: 'center',
-      '&:first-child': {
-        textAlign: 'left',
-      },
-      '&:last-child': {
-        textAlign: 'right',
-      }
-    }}>
-      <Box sx={{
-        height: '100%',
-        display: 'inline-block',
-        py: 0.5,
-        px: 0.5,
-        mx: 'auto',
-        background: BeanstalkPalette.offWhite,
-      }}>
+    <Box
+      sx={{
+        width: '80px',
+        height: '100%', // of TXN_PREVIEW_HEIGHT
+        textAlign: 'center',
+        '&:first-child': {
+          textAlign: 'left',
+        },
+        '&:last-child': {
+          textAlign: 'right',
+        },
+      }}
+    >
+      <Box
+        sx={{
+          height: '100%',
+          display: 'inline-block',
+          py: 0.5,
+          px: 0.5,
+          mx: 'auto',
+          background: BeanstalkPalette.offWhite,
+        }}
+      >
         <Box
           display="inline-block"
           sx={{
             height: '100%',
-            opacity: (highlighted === undefined || highlighted === type) ? 1 : 0.2,
+            opacity:
+              highlighted === undefined || highlighted === type ? 1 : 0.2,
           }}
         >
           {step}
@@ -352,43 +397,54 @@ const EXECUTION_STEPS = [
 
   /// Group 4:
   /// ???
-  ActionType.END_TOKEN
+  ActionType.END_TOKEN,
 ];
 
 const TXN_PREVIEW_HEIGHT = 35;
 const TXN_PREVIEW_LINE_WIDTH = 5;
 
-const TxnPreview : FC<{
-  actions: (Action | undefined)[]
-  preActionsWithGraphic?: Action[] // Find a better way to do this?
-  preActions?: Action[] // Find a better way to do this?
-  postActions?: Action[] // Find a better way to do this?
+const TxnPreview: FC<{
+  actions: (Action | undefined)[];
+  preActionsWithGraphic?: Action[]; // Find a better way to do this?
+  preActions?: Action[]; // Find a better way to do this?
+  postActions?: Action[]; // Find a better way to do this?
 }> = ({
   actions,
   preActionsWithGraphic = [],
   preActions = [],
-  postActions = []
+  postActions = [],
 }) => {
   const preInstructionsByType = useMemo(() => {
-    const grouped = groupBy(preActionsWithGraphic.filter((a) => a && a.type !== ActionType.BASE) as Action[], 'type');
+    const grouped = groupBy(
+      preActionsWithGraphic.filter(
+        (a) => a && a.type !== ActionType.BASE
+      ) as Action[],
+      'type'
+    );
     return grouped;
   }, [preActionsWithGraphic]);
 
-  const instructionsByType = useMemo(() => 
-    // actions.reduce((prev, curr) => {
-    //   if (curr.type !== ActionType.BASE) {
-    //     prev.grouped[curr.type] = curr;
+  const instructionsByType = useMemo(
+    () =>
+      // actions.reduce((prev, curr) => {
+      //   if (curr.type !== ActionType.BASE) {
+      //     prev.grouped[curr.type] = curr;
 
-    //   }
-    //   return prev;
-    // }, { grouped: {}, total: 0 }),
-    // [actions]
-    
-    groupBy(actions.filter((a) => a && a.type !== ActionType.BASE) as Action[], 'type'),
+      //   }
+      //   return prev;
+      // }, { grouped: {}, total: 0 }),
+      // [actions]
+
+      groupBy(
+        actions.filter((a) => a && a.type !== ActionType.BASE) as Action[],
+        'type'
+      ),
     [actions]
   );
   const instructionGroupCount = Object.keys(instructionsByType).length;
-  const [highlighted, setHighlighted] = useState<ActionType | undefined>(undefined);
+  const [highlighted, setHighlighted] = useState<ActionType | undefined>(
+    undefined
+  );
 
   if (actions.length === 0) {
     return (
@@ -401,10 +457,12 @@ const TxnPreview : FC<{
   return (
     <Stack gap={1.5}>
       {instructionGroupCount > 1 ? (
-        <Box sx={{
-          position: 'relative',
-          height: `${TXN_PREVIEW_HEIGHT}px`,
-        }}>
+        <Box
+          sx={{
+            position: 'relative',
+            height: `${TXN_PREVIEW_HEIGHT}px`,
+          }}
+        >
           {/* Dotted line */}
           <Box
             sx={{
@@ -419,24 +477,26 @@ const TxnPreview : FC<{
             }}
           />
           {/* Content */}
-          <Box sx={{
-            position: 'relative',
-            zIndex: 2,      // above the Divider
-            height: '100%'  // of TXN_PREVIEW_HEIGHT
-          }}>
+          <Box
+            sx={{
+              position: 'relative',
+              zIndex: 2, // above the Divider
+              height: '100%', // of TXN_PREVIEW_HEIGHT
+            }}
+          >
             {/* Distribute content equally spaced
-              * across the entire container */}
+             * across the entire container */}
             <Row
               justifyContent="space-between"
               sx={{
-                height: '100%' // of TXN_PREVIEW_HEIGHT
+                height: '100%', // of TXN_PREVIEW_HEIGHT
               }}
             >
               <>
                 {preActionsWithGraphic.map(({ type }, index) => {
                   if (preInstructionsByType[type]) {
                     return (
-                      <TxnStep 
+                      <TxnStep
                         key={`pre-${type}-${index}`}
                         type={type}
                         actions={preInstructionsByType[type]}
@@ -444,10 +504,10 @@ const TxnPreview : FC<{
                       />
                     );
                   }
-                  console.log('returning null');
+                  console.debug('returning null');
                   return null;
                 })}
-                {EXECUTION_STEPS.map((step, index) => (
+                {EXECUTION_STEPS.map((step, index) =>
                   instructionsByType[step] ? (
                     <TxnStep
                       key={index}
@@ -456,7 +516,7 @@ const TxnPreview : FC<{
                       highlighted={highlighted}
                     />
                   ) : null
-                ))}
+                )}
               </>
             </Row>
           </Box>
@@ -464,27 +524,31 @@ const TxnPreview : FC<{
       ) : null}
       {/* Show highlightable explanations of each action */}
       <Stack>
-        {[...preActions, ...actions, ...postActions].map((a, index) => (
-          a !== undefined && (
-            <Box
-              key={index}
-              sx={{
-                opacity: (highlighted === undefined || a.type === highlighted) ? 1 : 0.3,
-                cursor: 'pointer',
-                py: 0.5,
-              }}
-              onMouseOver={() => setHighlighted(a.type)}
-              onMouseOut={() => setHighlighted(undefined)}
-              onFocus={() => setHighlighted(a.type)}
-              onBlur={() => setHighlighted(undefined)}
-            >
-              {/* <Typography variant="body1" color="grey[300]"> */}
-              <Typography variant="body1" color="text.primary">
-                {parseActionMessage(a)}
-              </Typography>
-            </Box>
-          )
-        ))}
+        {[...preActions, ...actions, ...postActions].map(
+          (a, index) =>
+            a !== undefined && (
+              <Box
+                key={index}
+                sx={{
+                  opacity:
+                    highlighted === undefined || a.type === highlighted
+                      ? 1
+                      : 0.3,
+                  cursor: 'pointer',
+                  py: 0.5,
+                }}
+                onMouseOver={() => setHighlighted(a.type)}
+                onMouseOut={() => setHighlighted(undefined)}
+                onFocus={() => setHighlighted(a.type)}
+                onBlur={() => setHighlighted(undefined)}
+              >
+                {/* <Typography variant="body1" color="grey[300]"> */}
+                <Typography variant="body1" color="text.primary">
+                  {parseActionMessage(a)}
+                </Typography>
+              </Box>
+            )
+        )}
       </Stack>
     </Stack>
   );

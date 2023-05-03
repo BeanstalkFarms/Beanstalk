@@ -222,7 +222,7 @@ const ClaimForm: FC<
             <TxnSeparator />
             <TokenOutput>
               <TokenOutput.Row
-                token={token}
+                token={tokenOut}
                 amount={values.token.amountOut || ZERO_BN}
               />
             </TokenOutput>

@@ -188,7 +188,10 @@ const SowForm: FC<
     (async () => {
       console.debug('[Sow][finding max for token]...');
       if (!account) {
-        throw new Error('Signer required');
+        console.debug(
+          '[Sow][get maxAmountIn]: Execution reverted. Signer required'
+        );
+        return;
       }
       if (!soil.gt(0)) return;
       const isSupportedToken = Boolean(
@@ -250,7 +253,10 @@ const SowForm: FC<
           name="tokens.0"
           tokenOut={Bean}
           disabled={!hasSoil || !maxAmountIn}
-          max={MinBN(maxAmountIn || ZERO_BN, tokenInBalance?.total || ZERO_BN)}
+          max={MinBN(
+            maxAmountIn || ZERO_BN,
+            tokenInBalance?.[values.balanceFrom] || ZERO_BN
+          )}
           balance={tokenInBalance || undefined}
           state={values.tokens[0]}
           showTokenSelect={showTokenSelect}
@@ -479,7 +485,6 @@ const SowFormContainer: FC<{}> = () => {
         const totalBeans = amountBeans.add(claimedBeansUsed);
 
         if (totalBeans.lte(0)) {
-          console.log('totalBean: ', totalBeans.toHuman());
           throw new Error('No amount set');
         }
         if (!account) {

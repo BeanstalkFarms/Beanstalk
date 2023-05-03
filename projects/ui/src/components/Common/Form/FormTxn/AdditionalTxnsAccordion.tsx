@@ -110,11 +110,8 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
     setFieldValue('farmActions.secondary', Array.from(copy));
   };
 
-  // console.log('rerender...', 'open: ', open);
-
   const handleOnToggleAll = useCallback(() => {
     const newState = new Set(allToggled ? impliedOptions : allOptions);
-    console.log('new state: ', newState);
     setLocal(newState);
     setFieldValue('farmActions.secondary', newState);
   }, [allOptions, allToggled, impliedOptions, setFieldValue]);

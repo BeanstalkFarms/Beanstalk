@@ -479,13 +479,14 @@ const DepositPropProvider: FC<{
           success: 'Deposit successful.',
         });
 
-        const depositTxn = new DepositFarmStep(sdk, target);
         const claimAndDoX = new ClaimAndDoX(
           sdk,
           normaliseTV(BEAN, claimData.maxAmountIn),
           claimedUsed,
           values.farmActions.transferToMode || FarmToMode.INTERNAL
         );
+
+        const depositTxn = new DepositFarmStep(sdk, target);
         depositTxn.build(
           tokenIn,
           amountIn,

@@ -309,7 +309,7 @@ const ConvertForm: FC<
           }
           params={quoteHandlerParams}
         />
-        <AddPlantTxnToggle />
+        {!canConvert && tokenOut && maxAmountIn ? null : <AddPlantTxnToggle />}
         {/* Output token */}
         {depositedAmount.gt(0) ? (
           <PillRow
@@ -508,22 +508,27 @@ const ConvertPropProvider: FC<{
     QuoteHandlerWithParams<ConvertQuoteHandlerParams>
   >(
     async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) => {
-      if (!farmerBalances?.deposited) {
-        throw new Error('No balances found');
+      try {
+        if (!farmerBalances?.deposited) {
+          throw new Error('No balances found');
+        }
+
+        const result = await ConvertFarmStep._handleConversion(
+          sdk,
+          farmerBalances.deposited.crates,
+          tokenIn,
+          tokenOut,
+          tokenIn.amount(_amountIn.toString()),
+          season.toNumber(),
+          slippage,
+          isConvertingPlanted ? plantAndDoX : undefined
+        );
+
+        return tokenValueToBN(result.minAmountOut);
+      } catch (e) {
+        console.debug('[Convert/handleQuote]: FAILED: ', e);
+        return new BigNumber('0');
       }
-
-      const result = await ConvertFarmStep._handleConversion(
-        sdk,
-        farmerBalances.deposited.crates,
-        tokenIn,
-        tokenOut,
-        tokenIn.amount(_amountIn.toString()),
-        season.toNumber(),
-        slippage,
-        isConvertingPlanted ? plantAndDoX : undefined
-      );
-
-      return tokenValueToBN(result.minAmountOut);
     },
     [farmerBalances?.deposited, sdk, season, plantAndDoX]
   );
