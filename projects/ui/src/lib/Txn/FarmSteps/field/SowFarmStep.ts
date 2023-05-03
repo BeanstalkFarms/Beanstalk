@@ -56,7 +56,9 @@ export class SowFarmStep extends FarmStep {
           },
         })
       );
-      fromMode = FarmFromMode.INTERNAL_TOLERANT;
+      if (fromMode === FarmFromMode.EXTERNAL) {
+        fromMode = FarmFromMode.INTERNAL_EXTERNAL;
+      }
     }
 
     const sow: StepGenerator = (_amountInStep) => ({

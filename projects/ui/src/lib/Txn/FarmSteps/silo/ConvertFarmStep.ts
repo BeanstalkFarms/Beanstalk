@@ -25,9 +25,6 @@ export class ConvertFarmStep extends FarmStep {
 
     this._tokenIn = path.tokenIn;
     this._tokenOut = path.tokenOut;
-
-    console.log('tokenIN: ', this._tokenIn);
-    console.log('tokenOUT: ', this._tokenOut);
   }
 
   /// this logic exists in the SDK but won't work b/c we need to add plant

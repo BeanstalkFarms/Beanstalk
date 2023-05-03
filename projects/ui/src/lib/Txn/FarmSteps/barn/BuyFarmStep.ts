@@ -33,7 +33,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
 
     const { beanstalk } = this._sdk.contracts;
 
-    const { ethIn, usdcIn } = BuyFertilizerFarmStep.validateTokenIn(
+    const { ethIn, usdcIn, beanIn } = BuyFertilizerFarmStep.validateTokenIn(
       this._sdk.tokens,
       this._tokenList,
       tokenIn
@@ -80,6 +80,13 @@ export class BuyFertilizerFarmStep extends FarmStep {
           },
         })
       );
+      if (beanIn) {
+        /// FIXME: Edge case here. If the user has enough in their Internal to cover the full amount,
+        /// & circulating balance is selected, it'll only use BEAN from their internal balance.
+        if (fromMode === FarmFromMode.EXTERNAL) {
+          fromMode = FarmFromMode.INTERNAL_EXTERNAL;
+        }
+      }
       this.pushInput({
         input: this.getBean2Usdc(fromMode),
       });
@@ -95,7 +102,10 @@ export class BuyFertilizerFarmStep extends FarmStep {
           },
         })
       );
-      this.pushInput({ input: this.getBean2Usdc(fromMode) });
+      /// Internal Tolerant b/c we are claiming our claimable beans to our Internal balance.
+      this.pushInput({
+        input: this.getBean2Usdc(FarmFromMode.INTERNAL_TOLERANT),
+      });
       // add the original amount of USDC in 'amountIn' w/ the amount out from claimable beans
       this.pushInput(
         makeLocalOnlyStep({
@@ -105,10 +115,9 @@ export class BuyFertilizerFarmStep extends FarmStep {
           },
         })
       );
-      fromMode =
-        fromMode === FarmFromMode.EXTERNAL
-          ? FarmFromMode.INTERNAL_EXTERNAL
-          : fromMode;
+      if (fromMode === FarmFromMode.EXTERNAL) {
+        fromMode = FarmFromMode.INTERNAL_EXTERNAL;
+      }
     }
 
     this.pushInput({
