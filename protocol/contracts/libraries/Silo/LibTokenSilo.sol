@@ -345,6 +345,7 @@ library LibTokenSilo {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
+        // SafeCast unnecessary because all casted variables are types smaller that int96.
         _stemTipForToken = s.ss[token].milestoneStem +
         int96(s.ss[token].stalkEarnedPerSeason).mul(
             int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
