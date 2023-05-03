@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
+import "~/libraries/Silo/LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibPRBMath.sol";
