@@ -113,7 +113,7 @@ const SunUpdater = () => {
           dispatch(setNextSunrise(_next));
           dispatch(setRemainingUntilSunrise(_next.diffNow()));
           toast.success(
-            `The Sun has risen. It is now Season ${newSeason.toString()}.`
+            `The Sun has risen. It is now Season ${newSeason.current.toString()}.`
           );
         }
       })();
