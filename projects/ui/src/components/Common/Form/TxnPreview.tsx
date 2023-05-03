@@ -504,7 +504,6 @@ const TxnPreview: FC<{
                       />
                     );
                   }
-                  console.debug('returning null');
                   return null;
                 })}
                 {EXECUTION_STEPS.map((step, index) =>

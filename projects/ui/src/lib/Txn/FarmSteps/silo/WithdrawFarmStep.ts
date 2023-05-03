@@ -92,8 +92,6 @@ export class WithdrawFarmStep extends FarmStep {
 
     let amountIn = _amountIn;
 
-    console.log('canpreprentplant: ', plant?.canPrependPlant(whitelistedToken));
-
     if (plant?.canPrependPlant(whitelistedToken)) {
       crates.push(plant.makePlantCrate());
       amountIn = amountIn.add(plant.getAmount());
