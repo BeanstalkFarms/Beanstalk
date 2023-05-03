@@ -6,7 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../../farm/facets/FieldFacet.sol";
+import "~/beanstalk/field/FieldFacet.sol";
 
 /**
  * @author Publius
@@ -15,8 +15,9 @@ import "../../farm/facets/FieldFacet.sol";
 contract MockFieldFacet is FieldFacet {
 
     using SafeMath for uint256;
+    using LibSafeMath128 for uint128;
 
-    function incrementTotalSoilE(uint256 amount) external {
+    function incrementTotalSoilE(uint128 amount) external {
         s.f.soil = s.f.soil.add(amount);
     }
 
@@ -27,5 +28,13 @@ contract MockFieldFacet is FieldFacet {
 
     function incrementTotalPodsE(uint256 amount) external {
         s.f.pods = s.f.pods + amount;
+    }
+
+    function totalRealSoil() external view returns (uint256) {
+        return s.f.soil;
+    }
+
+    function beanSown() external view returns (uint256) {
+        return s.f.beanSown;
     }
 }
