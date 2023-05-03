@@ -9,8 +9,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
-import "./LibUnripeSilo.sol";
-import "./LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
