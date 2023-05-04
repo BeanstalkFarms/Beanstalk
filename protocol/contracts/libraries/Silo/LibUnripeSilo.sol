@@ -1,19 +1,17 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../LibAppStorage.sol";
-import "../LibSafeMath128.sol";
-import "../../C.sol";
+import {AppStorage, LibAppStorage, Account} from "../LibAppStorage.sol";
+import {LibSafeMath128} from "../LibSafeMath128.sol";
+import {C} from "~/C.sol";
 
 /**
+ * @title LibUnripeSilo
  * @author Publius
- * @title Lib Unripe Silo
- **/
+ */
 library LibUnripeSilo {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
@@ -31,7 +29,7 @@ library LibUnripeSilo {
     }
 
     function isUnripeBean(address token) internal pure returns (bool b) {
-        b = token == C.unripeBeanAddress();
+        b = token == C.UNRIPE_BEAN;
     }
 
     function unripeBeanDeposit(address account, uint32 season)
@@ -42,9 +40,9 @@ library LibUnripeSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 legacyAmount = s.a[account].bean.deposits[season];
         amount = uint256(
-            s.a[account].deposits[C.unripeBeanAddress()][season].amount
+            s.a[account].deposits[C.UNRIPE_BEAN][season].amount
         ).add(legacyAmount);
-        bdv = uint256(s.a[account].deposits[C.unripeBeanAddress()][season].bdv)
+        bdv = uint256(s.a[account].deposits[C.UNRIPE_BEAN][season].bdv)
             .add(legacyAmount.mul(C.initialRecap()).div(1e18));
     }
 
@@ -60,7 +58,7 @@ library LibUnripeSilo {
     }
 
     function isUnripeLP(address token) internal pure returns (bool b) {
-        b = token == C.unripeLPAddress();
+        b = token == C.UNRIPE_LP;
     }
 
     function unripeLPDeposit(address account, uint32 season)
@@ -74,13 +72,13 @@ library LibUnripeSilo {
         (uint256 amount2, uint256 bdv2) = getBeanLusdUnripeLP(account, season);
 
         amount = uint256(
-            s.a[account].deposits[C.unripeLPAddress()][season].amount
+            s.a[account].deposits[C.UNRIPE_LP][season].amount
         ).add(amount.add(amount1).add(amount2));
 
         uint256 legBdv = bdv.add(bdv1).add(bdv2).mul(C.initialRecap()).div(
             C.precision()
         );
-        bdv = uint256(s.a[account].deposits[C.unripeLPAddress()][season].bdv)
+        bdv = uint256(s.a[account].deposits[C.UNRIPE_LP][season].bdv)
             .add(legBdv);
     }
 

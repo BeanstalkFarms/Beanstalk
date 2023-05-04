@@ -51,7 +51,7 @@ library LibWhitelist {
 
     function whitelistBean3Crv() internal {
         whitelistToken(
-            C.curveMetapoolAddress(),
+            C.CURVE_BEAN_METAPOOL,
             IBS.curveToBDV.selector,
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS
@@ -60,7 +60,7 @@ library LibWhitelist {
 
     function whitelistBean() internal {
         whitelistToken(
-            C.beanAddress(),
+            C.BEAN,
             IBS.beanToBDV.selector,
             BEAN_STALK,
             BEAN_SEEDS
@@ -69,7 +69,7 @@ library LibWhitelist {
 
     function whitelistUnripeBean() internal {
         whitelistToken(
-            C.unripeBeanAddress(),
+            C.UNRIPE_BEAN,
             IBS.unripeBeanToBDV.selector,
             BEAN_STALK,
             BEAN_SEEDS
@@ -78,7 +78,7 @@ library LibWhitelist {
 
     function whitelistUnripeLP() internal {
         whitelistToken(
-            C.unripeLPAddress(),
+            C.UNRIPE_LP,
             IBS.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS

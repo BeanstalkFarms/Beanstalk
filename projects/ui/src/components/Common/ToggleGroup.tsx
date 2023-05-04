@@ -5,7 +5,7 @@ import {
   ToggleButtonGroup,
   ToggleButtonGroupProps,
 } from '@mui/material';
-import { BeanstalkPalette, FontSize, FontWeight } from '../App/muiTheme';
+import { FontSize, FontWeight } from '../App/muiTheme';
 import { hexToRgba } from '~/util/UI';
 
 export type IToggleGroup<T extends string | number> = ToggleButtonGroupProps & {
@@ -15,8 +15,6 @@ export type IToggleGroup<T extends string | number> = ToggleButtonGroupProps & {
   }[];
   fontSize?: keyof typeof FontSize;
 };
-
-const selectedBG = BeanstalkPalette.theme.winter.primary;
 
 export default function ToggleGroup<T extends string | number>({
   options,
@@ -81,11 +79,11 @@ export default function ToggleGroup<T extends string | number>({
                   px="4px"
                   sx={{
                     borderRadius: '4px',
-                    background: isActive ? selectedBG : 'transparent',
+                    background: isActive ? 'primary.main' : 'transparent',
                     ':hover': {
                       background: isActive
-                        ? BeanstalkPalette.theme.winter.primaryDark
-                        : hexToRgba(selectedBG, 0.2),
+                        ? 'primary.dark'
+                        : hexToRgba('primary.main', 0.2),
                     },
                   }}
                 >

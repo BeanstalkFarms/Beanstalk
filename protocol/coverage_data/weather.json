@@ -1,6 +1,6 @@
 {
     "columns":
-        ["unharvestablePods","totalOutstandingBeans","startingSoil","endingSoil","lastSoil","priceAvg","startingWeather","lastSowTime","nextSowTime","wasRaining","rainingSeasons","rainStalk","newWeather","Code","postRain"],
+        ["unharvestablePods","totalOutstandingBeans","startingSoil","endingSoil","lastSoil","priceAvg","startingWeather","lastSowTime","thisSowTime","wasRaining","rainingSeasons","rainStalk","newWeather","Code","postRain"],
     "data":[
         [0,1,0,0,0,1,1,0,4294967295,true,1,1,1,4,true],
         [0,0,0,0,0,1,1,0,4294967295,true,1,1,1,24,false],

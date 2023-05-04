@@ -1,16 +1,15 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
-/**
- * @author publius
- * @title LibTransfer handles the recieving and sending of Tokens to/from internal Balances.
- **/
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../LibAppStorage.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 
+/**
+ * @title LibTokenApprove
+ * @author Publius
+ */
 library LibTokenApprove {
     event TokenApproval(
         address indexed owner,

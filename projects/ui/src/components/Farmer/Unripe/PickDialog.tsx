@@ -106,7 +106,6 @@ const PickBeansDialog: FC<{
   onClose,
   fullWidth,
   fullScreen,
-  disableScrollLock,
   handleClose
 }) => {
   /// Theme
@@ -441,7 +440,6 @@ const PickBeansDialog: FC<{
       open={open}
       fullWidth={fullWidth}
       fullScreen={fullScreen}
-      disableScrollLock={disableScrollLock}
       sx={{ ...sx }}
     >
       {tab === 0 && tab0}

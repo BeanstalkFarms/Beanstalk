@@ -9,7 +9,12 @@ temp
 .env
 archived
 .vscode
+
+# Diamond Cut Outputs
 diamondCut-*.json
+
+#Open Zeppelin Local Config
+.openzeppelin/unknown-1337.json
 
 #Editors
 .idea/
@@ -17,6 +22,9 @@ diamondCut-*.json
 # Foundry
 cache/
 out/
+coverage_data/
+protocol/remappings.txt
+.gas-snapshot
 
 # From SDK Monorepo Join:
 node_modules

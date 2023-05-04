@@ -233,7 +233,7 @@ const Whitelist : FC<{
                   background: BeanstalkPalette.white,
                   '&:hover': {
                     borderColor: 'primary.main',
-                    backgroundColor: BeanstalkPalette.theme.winter.primaryHover,
+                    backgroundColor: 'primary.light',
                   },
                 }}
               >

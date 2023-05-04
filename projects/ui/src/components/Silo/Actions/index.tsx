@@ -1,18 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Tab } from '@mui/material';
+import { ERC20Token } from '@beanstalk/sdk';
 import { Pool } from '~/classes';
-import { ERC20Token } from '~/classes/Token';
+import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
 import Deposit from './Deposit';
 import Withdraw from './Withdraw';
+import Transfer from './Transfer';
 import Claim from './Claim';
 import Deposits from './Deposits';
 import Withdrawals from './Withdrawals';
-import Transfer from './Transfer';
-import Convert from './Convert';
 import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
+
+import { FC } from '~/types';
+import useSdk from '~/hooks/sdk';
+import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
+import Convert from './Convert';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.
@@ -23,22 +28,33 @@ import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
  *     selected tab. The Withdrawals table also displays an aggregated
  *     "claimable" row and is shown for both Withdraw & Claim tabs.
  */
-import { FC } from '~/types';
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 
-const SILO_ACTIONS_MAX_WIDTH = '470px';
-
-const SiloActions : FC<{
+const SiloActions: FC<{
   pool: Pool;
-  token: ERC20Token;
+  token: ERC20TokenOld;
   siloBalance: FarmerSiloBalance;
 }> = (props) => {
+  const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
+
+  /// Temporary solutions. Remove these when we move the site to use the new sdk types.
+  const token = useMemo(() => {
+    const match = sdk.tokens.findBySymbol(props.token.symbol) as ERC20Token;
+    return match;
+  }, [props.token.symbol, sdk.tokens]);
+
+  const siloBalanceAsync = useFarmerSiloBalancesAsync(token);
+
+  if (!token) {
+    return null;
+  }
+
   return (
     <>
-      <Module sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}>
+      <Module>
         <ModuleTabs value={tab} onChange={handleChange}>
           <Tab label="Deposit" />
           <Tab label="Convert" />
@@ -47,48 +63,24 @@ const SiloActions : FC<{
           <BadgeTab label="Claim" showBadge={hasClaimable} />
         </ModuleTabs>
         <ModuleContent>
-          {tab === 0 ? (
-            <Deposit
-              pool={props.pool}
-              token={props.token}
-            />
-          ) : null}
-          {tab === 1 ? (
-            <Convert
-              pool={props.pool}
-              fromToken={props.token}
-            />
-          ) : null}
-          {tab === 2 ? (
-            <Transfer
-              token={props.token}
-            />
-          ) : null}
-          {tab === 3 ? (
-            <Withdraw
-              token={props.token}
-            />
-          ) : null}
-          {tab === 4 ? (
-            <Claim
-              token={props.token}
-              siloBalance={props.siloBalance}
-            />
-          ) : null}
+          {tab === 0 && <Deposit token={token} />}
+          {/* {tab === 0 && token && <TempAction token={token} />} */}
+          {tab === 1 && <Convert fromToken={token} />}
+          {tab === 2 && (
+            <Transfer token={token} siloBalance={siloBalanceAsync} />
+          )}
+          {tab === 3 && (
+            <Withdraw token={token} siloBalance={siloBalanceAsync} />
+          )}
+          {tab === 4 && <Claim token={token} siloBalance={props.siloBalance} />}
         </ModuleContent>
       </Module>
       {/* Tables */}
       <Box sx={{ display: tab <= 2 ? 'block' : 'none' }}>
-        <Deposits
-          token={props.token}
-          siloBalance={props.siloBalance}
-        />
+        <Deposits token={props.token} siloBalance={props.siloBalance} />
       </Box>
       <Box sx={{ display: tab >= 3 ? 'block' : 'none' }}>
-        <Withdrawals
-          token={props.token}
-          siloBalance={props.siloBalance}
-        />
+        <Withdrawals token={props.token} siloBalance={props.siloBalance} />
       </Box>
     </>
   );

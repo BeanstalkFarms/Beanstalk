@@ -1,4 +1,10 @@
-import { ApolloClient, ApolloLink, FieldPolicy, HttpLink, InMemoryCache } from '@apollo/client';
+import {
+  ApolloClient,
+  ApolloLink,
+  FieldPolicy,
+  HttpLink,
+  InMemoryCache,
+} from '@apollo/client';
 import { LocalStorageWrapper, persistCacheSync } from 'apollo3-cache-persist';
 import { SGEnvironments, SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import store from '~/state';
@@ -16,7 +22,12 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     const first = args?.first;
     const startSeason = args?.where?.season_lte; // could be larger than the biggest season
 
-    console.debug(`[apollo/client/read@seasons] read first = ${first} startSeason = ${startSeason} for ${existing?.length || 0} existing items`, existing);
+    console.debug(
+      `[apollo/client/read@seasons] read first = ${first} startSeason = ${startSeason} for ${
+        existing?.length || 0
+      } existing items`,
+      existing
+    );
 
     if (!existing) return;
 
@@ -24,7 +35,10 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     if (!first) {
       dataset = existing;
     } else {
-      const maxSeason = Math.min(startSeason || existing.length, existing.length);
+      const maxSeason = Math.min(
+        startSeason || existing.length,
+        existing.length
+      );
 
       // 0 = latest season; always defined
       // maxSeason = 6073
@@ -41,22 +55,40 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
       // 6072 1
       // 6073 0 (this doesnt exist)
       const left = Math.max(
-        0,                           // clamp to first index
-        existing.length - maxSeason, //
+        0, // clamp to first index
+        existing.length - maxSeason //
       );
 
       // n = oldest season
       const right = Math.min(
-        left + first - 1,            //
-        existing.length - 1,         // clamp to last index
+        left + first - 1, //
+        existing.length - 1 // clamp to last index
       );
 
       console.debug('[apollo/client/read@seasons] READ:');
-      console.debug(`| left:  index = ${left}, season = ${readField('season', existing[left])}`);
-      console.debug(`| right: index = ${right}, season = ${readField('season', existing[right])}`);
+      console.debug(
+        `| left:  index = ${left}, season = ${readField(
+          'season',
+          existing[left]
+        )}`
+      );
+      console.debug(
+        `| right: index = ${right}, season = ${readField(
+          'season',
+          existing[right]
+        )}`
+      );
       console.debug(`| existing.length = ${existing.length}`);
-      console.debug(`| existing[0] = ${readField('season', existing[0])}`, existing);
-      console.debug(`| existing[${existing.length - 1}] = ${readField('season', existing[existing.length - 1])}`);
+      console.debug(
+        `| existing[0] = ${readField('season', existing[0])}`,
+        existing
+      );
+      console.debug(
+        `| existing[${existing.length - 1}] = ${readField(
+          'season',
+          existing[existing.length - 1]
+        )}`
+      );
 
       // If one of the endpoints is missing, force refresh
       if (!existing[left] || !existing[right]) return;
@@ -71,7 +103,14 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     return dataset;
   },
   merge(existing = [], incoming, { fieldName, args, readField }) {
-    console.debug(`[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(args)}): Merging ${incoming?.length || 0} incoming data points into ${existing?.length || 0} existing data points.`, { existing, incoming, args });
+    console.debug(
+      `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(
+        args
+      )}): Merging ${incoming?.length || 0} incoming data points into ${
+        existing?.length || 0
+      } existing data points.`,
+      { existing, incoming, args }
+    );
 
     // Slicing is necessary because the existing data is
     // immutable, and frozen in development.
@@ -91,7 +130,12 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
 
     merged = merged.reverse();
 
-    console.debug(`[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(args)}:) Merged into ${merged.length} points.`, { merged });
+    console.debug(
+      `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(
+        args
+      )}:) Merged into ${merged.length} points.`,
+      { merged }
+    );
 
     // We complete operations on the array in ascending order,
     // but reverse it before saving back to the cache.
@@ -114,9 +158,9 @@ const cache = new InMemoryCache({
         siloAssetHourlySnapshots: mergeUsingSeasons(['$siloAsset']),
         siloHourlySnapshots: mergeUsingSeasons([]),
         siloYields: mergeUsingSeasons([]),
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 try {
@@ -156,6 +200,13 @@ const snapshotLink = new HttpLink({
   uri: 'https://hub.snapshot.org/graphql',
 });
 
+const snapshotLabsLink = new HttpLink({
+  uri: 'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot',
+});
+
+const beanftLink = new HttpLink({
+  uri: 'https://graph.node.bean.money/subgraphs/name/beanft',
+});
 /// ///////////////////////// Client ////////////////////////////
 
 export const apolloClient = new ApolloClient({
@@ -165,8 +216,16 @@ export const apolloClient = new ApolloClient({
     ApolloLink.split(
       (operation) => operation.getContext().subgraph === 'snapshot',
       snapshotLink, // true
-      beanstalkLink, // false
-    ),
+      ApolloLink.split(
+        (operation) => operation.getContext().subgraph === 'snapshot-labs',
+        snapshotLabsLink, // true
+        ApolloLink.split(
+          (operation) => operation.getContext().subgraph === 'beanft',
+          beanftLink, // true
+          beanstalkLink // false
+        )
+      )
+    )
   ),
   cache,
 });

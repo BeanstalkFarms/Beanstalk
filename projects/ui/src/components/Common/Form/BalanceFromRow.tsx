@@ -1,3 +1,4 @@
+import { FarmFromMode } from '@beanstalk/sdk';
 import { Button, Typography } from '@mui/material';
 import React from 'react';
 import AddressIcon from '../AddressIcon';
@@ -8,6 +9,17 @@ export enum BalanceFrom {
   EXTERNAL = 'external',
   TOTAL = 'total',
 }
+
+export const balanceFromToMode = (from: BalanceFrom) => {
+  switch (from) {
+    case BalanceFrom.EXTERNAL:
+      return FarmFromMode.EXTERNAL;
+    case BalanceFrom.INTERNAL:
+      return FarmFromMode.INTERNAL;
+    default:
+      return FarmFromMode.INTERNAL_EXTERNAL;
+  }
+};
 
 const selectedSx = {
   color: 'primary.main',

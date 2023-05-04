@@ -3,10 +3,10 @@ import React, { useMemo, useState } from 'react';
 import { scaleBand, scaleLinear } from '@visx/scale';
 
 import { BarRounded } from '@visx/shape';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { Group } from '@visx/group';
-import { chartHelpers } from './ChartPropProvider';
 import { withTooltip } from '@visx/tooltip';
+import { useTheme } from '@mui/material/styles';
+import { chartHelpers } from './ChartPropProvider';
 
 const {
   common: {
@@ -86,6 +86,8 @@ const useBarChart = ({
 
         const fillColor = isActive ? 'rgba(0, 0, 0, 0.08)' : 'transparent';
         const additionalHoverBarWidth = Math.round(barWidth * 0.3);
+
+        const theme = useTheme();
         return (
           <>
             <BarRounded
@@ -97,7 +99,7 @@ const useBarChart = ({
               y={yPosition}
               width={barWidth}
               height={barHeight}
-              fill={BeanstalkPalette.theme.winter.primary}
+              fill={theme.palette.primary.main}
             />
             <BarRounded
               key={`hover-bar-${x}`}

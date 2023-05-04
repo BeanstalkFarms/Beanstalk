@@ -40,16 +40,16 @@ const RewardItem: FC<RewardItemProps> = ({
   );
 
   const Title = () => (
-    <Tooltip title={tooltip ?? ''} placement="top">
-      <Typography sx={{ color: titleColor }}>
-        {title}
-        {tooltip && (
+    <Typography sx={{ color: titleColor }}>
+      {title}
+      {tooltip && (
+        <Tooltip title={tooltip ?? ''} placement="top">
           <HelpOutlineIcon
             sx={{ display: 'inline', mb: 0.5, fontSize: '11px', color: 'text.secondary' }}
           />
-        )}
-      </Typography>
-    </Tooltip>
+        </Tooltip>
+      )}
+    </Typography>
   );
 
   return (
