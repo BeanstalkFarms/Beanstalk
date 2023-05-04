@@ -22,12 +22,11 @@ import Centered from '~/components/Common/ZeroState/Centered';
 import ChartInfoOverlay from '~/components/Common/Charts/ChartInfoOverlay';
 import { ZERO_BN } from '~/constants';
 import { getIsMorningInterval } from '~/state/beanstalk/sun/morning';
-import {
-  selectFieldTemperature,
-  selectMorningTemperatureMap,
-} from '~/state/beanstalk/field/reducer';
+import { selectFieldTemperature } from '~/state/beanstalk/field/reducer';
 import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
-import { MorningBlockTemperature } from '~/state/beanstalk/field';
+import useMorningTemperature, {
+  MorningBlockTemperature,
+} from '~/hooks/beanstalk/useMorningTemperature';
 
 const {
   common: {
@@ -255,7 +254,7 @@ const MorningTemperature: React.FC<{
     undefined
   );
 
-  const temperatureMap = useSelector(selectMorningTemperatureMap);
+  const temperatureMap = useMorningTemperature();
   const { max } = useSelector(selectFieldTemperature);
   const { interval, blockNumber } = useSelector(selectMorning);
   const season = useSeason();
@@ -280,7 +279,8 @@ const MorningTemperature: React.FC<{
   const temperatureIncrease = useMemo(() => {
     const nextInterval = interval.plus(1);
     if (getIsMorningInterval(nextInterval)) {
-      const nextTemp = temperatureMap[blockNumber.toString()]?.temperature;
+      const nextTemp =
+        temperatureMap[blockNumber.plus(1).toString()]?.temperature;
       return nextTemp?.minus(temperatureDisplay || ZERO_BN) || ZERO_BN;
     }
     if (nextInterval.eq(26)) {
