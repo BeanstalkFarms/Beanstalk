@@ -59,7 +59,9 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
       setSubmitting(true);
 
       txToast = new TransactionToast({
-        loading: `Removing ${delegate.address} as delegate for ${space}...`,
+        loading: `Removing ${trimAddress(
+          delegate.address
+        )} as delegate for ${space}...`,
         success: 'Successfully removed delegate',
       });
 
@@ -245,7 +247,9 @@ const Delegation: React.FC<Props> = ({ space }) => {
         }
 
         txToast = new TransactionToast({
-          loading: `Delegating voting power to ${values.delegate}...`,
+          loading: `Delegating voting power to ${trimAddress(
+            values.delegate
+          )}...`,
           success: 'Successfully delegated voting power',
         });
 

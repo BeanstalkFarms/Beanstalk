@@ -109,3 +109,14 @@ export const GOV_SPACE_BY_ID: { [key in GovSpace]: string } = {
   [GovSpace.BeanNFT]:
     '0x6265616e66742e65746800000000000000000000000000000000000000000000',
 };
+/** Returns true if two number[] arrays are equal. */
+export function arraysEqual(a: number[], b: number[]) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+
+  return true;
+}

@@ -4,15 +4,22 @@ import ProposalList from '~/components/Governance/Proposals/ProposalList';
 import { useProposalsQuery } from '~/generated/graphql';
 import { Proposal } from '~/util/Governance';
 import { Module, ModuleContent, ModuleTabs } from '~/components/Common/Module';
-import { SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
+import { GovSpace, SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
 
 import { FC } from '~/types';
 import { ChipLabel, StyledTab } from '~/components/Common/Tabs';
+import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
 
 /// Variables
-const SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout'];
+const SLUGS = [
+  'dao',
+  'beanstalk-farms',
+  'bean-sprout',
+  'beanstalk-farms-committee',
+];
 
 const Proposals: FC<{}> = () => {
+  const farmerDelegations = useFarmerDelegations();
   const [tab, handleChange] = useTabs(SLUGS, 'type');
 
   // Query Proposals
@@ -106,15 +113,41 @@ const Proposals: FC<{}> = () => {
         />
       </ModuleTabs>
       <ModuleContent>
-        {tab === 0 && <ProposalList proposals={daoProposals.allProposals} />}
+        {tab === 0 && (
+          <ProposalList
+            tab={0}
+            space={GovSpace.BeanstalkDAO}
+            getSlug={(t: number) => SLUGS[t]}
+            farmerDelegations={farmerDelegations}
+            proposals={daoProposals.allProposals}
+          />
+        )}
         {tab === 1 && (
-          <ProposalList proposals={beanstalkFarmsProposals.allProposals} />
+          <ProposalList
+            tab={1}
+            space={GovSpace.BeanstalkFarms}
+            getSlug={(t: number) => SLUGS[t]}
+            farmerDelegations={farmerDelegations}
+            proposals={beanstalkFarmsProposals.allProposals}
+          />
         )}
         {tab === 2 && (
-          <ProposalList proposals={beanSproutProposals.allProposals} />
+          <ProposalList
+            tab={2}
+            space={GovSpace.BeanSprout}
+            getSlug={(t: number) => SLUGS[t]}
+            farmerDelegations={farmerDelegations}
+            proposals={beanSproutProposals.allProposals}
+          />
         )}
         {tab === 3 && (
-          <ProposalList proposals={beaNFTDaoProposals.allProposals} />
+          <ProposalList
+            tab={3}
+            space={GovSpace.BeanNFT}
+            getSlug={(t: number) => SLUGS[t]}
+            farmerDelegations={farmerDelegations}
+            proposals={beaNFTDaoProposals.allProposals}
+          />
         )}
       </ModuleContent>
     </Module>
