@@ -2,6 +2,9 @@
   "name": "@beanstalk/protocol",
   "version": "2.7.1",
   "description": "Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.",
+  "installConfig": {
+    "hoistingLimits": "dependencies"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
@@ -22,6 +25,7 @@
     "./abi/*": "./abi/*"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
@@ -35,6 +39,7 @@
     "hardhat": "^2.12.2",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-preprocessor": "^0.1.5",
     "json-bigint": "^1.0.0",
     "solidity-coverage": "^0.8.2"
   },
@@ -42,10 +47,16 @@
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/contracts-upgradeable": "^3.4.0",
     "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3",
+    "@uniswap/v3-core": "github:uniswap/v3-core",
+    "@uniswap/v3-periphery": "github:uniswap/v3-periphery",
     "dotenv": "^10.0.0",
+    "eth-gas-reporter": "0.2.25",
     "eth-permit": "^0.2.1",
+    "forge-std": "^1.1.2",
+    "hardhat-tracer": "^1.1.0-rc.9",
     "keccak256": "^1.0.6",
     "mathjs": "^11.0.1",
-    "merkletreejs": "^0.2.31"
+    "merkletreejs": "^0.2.31",
+    "uniswap": "^0.0.1"
   }
 }

@@ -35,8 +35,8 @@ contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
         ERC20Burnable.burn(amount);
     }
 
-    function setDecimals(uint8 dec) public {
-        _decimals = dec;
+    function setDecimals(uint256 dec) public {
+        _decimals = uint8(dec);
     }
 
     function decimals() public view virtual override returns (uint8) {

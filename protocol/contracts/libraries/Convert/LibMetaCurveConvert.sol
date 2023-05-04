@@ -1,19 +1,19 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "../LibAppStorage.sol";
-import "./LibConvertData.sol";
-import "../Curve/LibBeanMetaCurve.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {LibBeanMetaCurve} from "../Curve/LibBeanMetaCurve.sol";
+import {LibCurve} from "../Curve/LibCurve.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {C} from "~/C.sol";
 
 /**
+ * @title LibMetaCurveConvert
  * @author Publius
- * @title Lib Curve Convert
- **/
+ */
 library LibMetaCurveConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
@@ -23,6 +23,11 @@ library LibMetaCurveConvert {
     uint256 constant private ADMIN_FEE = 5e9;
     uint256 constant private FEE_DENOMINATOR = 1e10;
 
+    /**
+     * @notice Calculate the amount of BEAN that would exist in a Curve metapool
+     * if it were "at peg", i.e. if there was 1 BEAN per 1 USD of 3CRV.
+     * @dev Assumes that `balances[1]` is 3CRV.
+     */
     function beansAtPeg(uint256[2] memory balances)
         internal
         view
@@ -36,11 +41,18 @@ library LibMetaCurveConvert {
         uint256[2] memory xp = LibBeanMetaCurve.getXP(balances);
         uint256 d0 = LibCurve.getD(xp, a);
         uint256 toPeg = balances[0].sub(atPeg);
-        toPeg = toPegWithFee(toPeg, balances, d0, a);
-        lp = calcLPTokenAmount(toPeg, balances, d0, a);
+        toPeg = _toPegWithFee(toPeg, balances, d0, a);
+        lp = _calcLPTokenAmount(toPeg, balances, d0, a);
     }
 
-    function calcLPTokenAmount(uint256 amount, uint256[2] memory balances, uint256 D0, uint256 a) internal view returns (uint256) {
+    //////////////////// INTERNAL ////////////////////
+
+    function _calcLPTokenAmount(
+        uint256 amount,
+        uint256[2] memory balances,
+        uint256 D0,
+        uint256 a
+    ) internal view returns (uint256) {
         balances[0] = balances[0].sub(amount);
         uint256[2] memory xp = LibBeanMetaCurve.getXP(balances);
         uint256 D1 = LibCurve.getD(xp, a);
@@ -48,7 +60,12 @@ library LibMetaCurveConvert {
         return diff.mul(C.curveMetapool().totalSupply()).div(D0);
     }
 
-    function toPegWithFee(uint256 amount, uint256[2] memory balances, uint256 D0, uint256 a) internal view returns (uint256) {
+    function _toPegWithFee(
+        uint256 amount,
+        uint256[2] memory balances,
+        uint256 D0,
+        uint256 a
+    ) internal view returns (uint256) {
         uint256[2] memory xp = LibBeanMetaCurve.getXP(balances);
         uint256 new_y = LibBeanMetaCurve.getXP0(balances[0].sub(amount));
         uint256 D1 = LibCurve.getD([new_y, xp[1]], a);
@@ -65,6 +82,8 @@ library LibMetaCurveConvert {
         dy = LibBeanMetaCurve.getX0(dy.sub(1));
         uint256 dy_0 = LibBeanMetaCurve.getX0(xp[0].sub(new_y));
 
-        return dy_0.add((dy_0.sub(dy)).mul(ADMIN_FEE).div(FEE_DENOMINATOR));
+        return dy_0.add(
+            dy_0.sub(dy).mul(ADMIN_FEE).div(FEE_DENOMINATOR)
+        );
     }
 }
