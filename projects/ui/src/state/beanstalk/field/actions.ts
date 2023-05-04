@@ -23,11 +23,3 @@ export const updateMaxTemperature = createAction<BigNumber>(
 export const updateTotalSoil = createAction<BigNumber>(
   'beanstalk/field/updateTotalSoil'
 );
-
-export const setMorningTemperatureMap = createAction<
-  BeanstalkField['temperatures']
->('beanstalk/field/setMorningTemperatureMap');
-
-export const updateTemperatureByBlock = createAction<
-  BeanstalkField['temperatures'][string]
->('beanstalk/field/updateTemperatureMapByBlock');

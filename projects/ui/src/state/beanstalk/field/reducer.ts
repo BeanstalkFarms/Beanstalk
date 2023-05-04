@@ -3,12 +3,10 @@ import { NEW_BN, ZERO_BN } from '~/constants';
 import { BeanstalkField } from '.';
 import {
   resetBeanstalkField,
-  setMorningTemperatureMap,
   updateBeanstalkField,
   updateHarvestableIndex,
   updateMaxTemperature,
   updateScaledTemperature,
-  updateTemperatureByBlock,
 } from './actions';
 
 const initialState: BeanstalkField = {
@@ -25,7 +23,6 @@ const initialState: BeanstalkField = {
     max: NEW_BN,
     scaled: NEW_BN,
   },
-  temperatures: {},
 };
 
 export default createReducer(initialState, (builder) =>
@@ -48,18 +45,6 @@ export default createReducer(initialState, (builder) =>
     .addCase(updateMaxTemperature, (state, { payload }) => {
       state.temperature.max = payload;
     })
-    .addCase(setMorningTemperatureMap, (state, { payload }) => {
-      state.temperatures = payload;
-    })
-    .addCase(updateTemperatureByBlock, (state, { payload }) => {
-      const { blockNumber, interval, temperature, maxTemperature } = payload;
-      state.temperatures[blockNumber.toString()] = {
-        interval,
-        blockNumber,
-        temperature,
-        maxTemperature,
-      };
-    })
 );
 
 export const selectBeanstalkField = (state: {
@@ -72,9 +57,4 @@ export const selectFieldTemperature = createSelector(
     scaled: state.temperature.scaled,
     max: state.temperature.max,
   })
-);
-
-export const selectMorningTemperatureMap = createSelector(
-  selectBeanstalkField,
-  (state) => state.temperatures
 );
