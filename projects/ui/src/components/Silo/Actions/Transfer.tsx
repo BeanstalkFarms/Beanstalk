@@ -1,126 +1,191 @@
-import { Accordion, AccordionDetails, Alert, Box, Divider, Stack } from '@mui/material';
-import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
+import { Box, Divider, Stack } from '@mui/material';
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import {
+  ERC20Token,
+  Token,
+  TokenSiloBalance,
+  TokenValue,
+} from '@beanstalk/sdk';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import {
-  FormState,
+  FormStateNew,
+  FormTxnsFormState,
   SmartSubmitButton,
   TokenAdornment,
   TokenInputField,
-  TokenOutputField,
-  TxnPreview
+  TxnPreview,
 } from '~/components/Common/Form';
 import { ZERO_BN } from '~/constants';
-import { Token } from '~/classes';
-import { FarmerSilo } from '~/state/farmer/silo';
-import { ERC20Token } from '~/classes/Token';
-import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
-import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
-import { useSigner } from '~/hooks/ledger/useSigner';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import BeanstalkSDK from '~/lib/Beanstalk';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
-import { SEEDS, STALK } from '~/constants/tokens';
-import { displayFullBN, displayTokenAmount, toStringBaseUnitBN, trimAddress } from '~/util';
-import IconWrapper from '~/components/Common/IconWrapper';
-import { FontSize, IconSize } from '~/components/App/muiTheme';
-import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
+import {
+  displayFullBN,
+  displayTokenAmount,
+  tokenValueToBN,
+  trimAddress,
+} from '~/util';
+import { FontSize } from '~/components/App/muiTheme';
 import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
+import TxnAccordion from '~/components/Common/TxnAccordion';
+import useAccount from '~/hooks/ledger/useAccount';
+import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
+import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
+import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
+import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
+import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
+import {
+  FormTxn,
+  PlantAndDoX,
+  TransferFarmStep,
+  WithdrawFarmStep,
+} from '~/lib/Txn';
+import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 
-export type TransferFormValues = FormState & {
-  to: string;
-}
+/// tokenValueToBN is too long
+/// remove me when we migrate everything to TokenValue & DecimalBigNumber
+const toBN = tokenValueToBN;
 
-const TransferForm: FC<FormikProps<TransferFormValues> & {
-  token: Token;
-  siloBalances: FarmerSilo['balances'];
-  depositedBalance: BigNumber;
-  season: BigNumber;
-}> = ({
+export type TransferFormValues = FormStateNew &
+  FormTxnsFormState & {
+    to: string;
+  };
+
+const TransferForm: FC<
+  FormikProps<TransferFormValues> & {
+    token: Token;
+    siloBalance: TokenSiloBalance | undefined;
+    season: BigNumber;
+    plantAndDoX: PlantAndDoX;
+  }
+> = ({
   // Formik
   values,
   isSubmitting,
-  submitForm,
   // Custom
   token: whitelistedToken,
-  siloBalances,
-  depositedBalance,
+  siloBalance,
   season,
+  plantAndDoX,
 }) => {
-  // Input props
-  const InputProps = useMemo(() => ({
-    endAdornment: (
-      <TokenAdornment token={whitelistedToken} />
-    )
-  }), [whitelistedToken]);
+  const sdk = useSdk();
+  const { BEAN, STALK, SEEDS } = sdk.tokens;
 
-  // Results
-  const withdrawResult = BeanstalkSDK.Silo.Withdraw.withdraw(
-    whitelistedToken,
-    values.tokens,
-    siloBalances[whitelistedToken.address]?.deposited.crates || [], // fallback
-    season,
+  /// Claim and Plant
+  const txnActions = useFarmerFormTxnsActions();
+  const isUsingPlant = Boolean(
+    values.farmActions.primary?.includes(FormTxn.PLANT) &&
+      BEAN.equals(whitelistedToken)
   );
 
-  const isReady = (withdrawResult && withdrawResult.amount.lt(0));
+  // Results
+  const withdrawResult = useMemo(() => {
+    const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
+    const crates = siloBalance?.deposited.crates || [];
 
-  const tokenOutputs = isReady ? (
-    <>
-      <TokenOutputField
-        token={whitelistedToken}
-        amount={withdrawResult.amount}
-      />
-      <Stack direction={{ xs: 'column', md: 'row' }} gap={1} justifyContent="center">
-        <Box sx={{ flex: 1 }}>
-          <TokenOutputField
-            token={STALK}
-            amount={withdrawResult.stalk}
-            amountTooltip={(
-              <>
-                <div>Withdrawing
-                  from {withdrawResult.deltaCrates.length} Deposit{withdrawResult.deltaCrates.length === 1 ? '' : 's'}:
+    if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
+    if (isUsingPlant && plantAndDoX.getAmount().lte(0)) return null;
+
+    return WithdrawFarmStep.calculateWithdraw(
+      sdk.silo.siloWithdraw,
+      whitelistedToken,
+      crates,
+      amount,
+      season.toNumber()
+    );
+  }, [
+    BEAN,
+    isUsingPlant,
+    plantAndDoX,
+    sdk.silo.siloWithdraw,
+    season,
+    siloBalance?.deposited.crates,
+    values.tokens,
+    whitelistedToken,
+  ]);
+
+  const disabledActions = useMemo(
+    () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
+    [whitelistedToken.isUnripe]
+  );
+
+  // derived
+  const depositedBalance = siloBalance?.deposited.amount;
+  const isReady = withdrawResult && !withdrawResult.amount.lt(0);
+
+  // Input props
+  const InputProps = useMemo(
+    () => ({
+      endAdornment: <TokenAdornment token={whitelistedToken} />,
+    }),
+    [whitelistedToken]
+  );
+
+  const TokenOutputs = () => {
+    if (!isReady) return null;
+    if (
+      !withdrawResult.amount ||
+      !withdrawResult.seeds ||
+      !withdrawResult.stalk
+    ) {
+      return null;
+    }
+
+    return (
+      <TokenOutput>
+        <TokenOutput.Row
+          token={whitelistedToken}
+          amount={withdrawResult.amount.mul(-1)}
+        />
+        <TokenOutput.Row
+          token={STALK}
+          amount={withdrawResult.stalk.mul(-1)}
+          amountTooltip={
+            <>
+              <div>
+                Withdrawing from {withdrawResult.crates.length} Deposit
+                {withdrawResult.crates.length === 1 ? '' : 's'}:
+              </div>
+              <Divider sx={{ opacity: 0.2, my: 1 }} />
+              {withdrawResult.crates.map((_crate, i) => (
+                <div key={i}>
+                  Season {_crate.season.toString()}:{' '}
+                  {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)}{' '}
+                  BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)}{' '}
+                  STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)}{' '}
+                  SEEDS
                 </div>
-                <Divider sx={{ opacity: 0.2, my: 1 }} />
-                {withdrawResult.deltaCrates.map((_crate, i) => (
-                  <div key={i}>
-                    Season {_crate.season.toString()}: {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)} BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)} STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)} SEEDS
-                  </div>
-                  ))}
-              </>
-              )}
-            />
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <TokenOutputField
-            token={SEEDS}
-            amount={withdrawResult.seeds}
-            />
-        </Box>
-      </Stack>
-    </>
-    ) :
-    null;
+              ))}
+            </>
+          }
+        />
+        <TokenOutput.Row token={SEEDS} amount={withdrawResult.seeds.mul(-1)} />
+      </TokenOutput>
+    );
+  };
 
   return (
     <Form autoComplete="off">
-      {/* <pre>{JSON.stringify(values, null, 2)}</pre> */}
       <Stack gap={1}>
+        {/* Input Field */}
         <TokenInputField
           name="tokens.0.amount"
           token={whitelistedToken}
           disabled={!depositedBalance || depositedBalance.eq(0)}
-          balance={depositedBalance || ZERO_BN}
+          balance={toBN(depositedBalance || TokenValue.ZERO)}
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
+        <AddPlantTxnToggle />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
@@ -129,48 +194,65 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
             {values.to !== '' && withdrawResult?.amount.abs().gt(0) && (
               <>
                 <TxnSeparator />
-                {tokenOutputs}
-                <Alert
-                  color="warning"
-                  icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
-                >
+                <TokenOutputs />
+                <WarningAlert>
                   More recent Deposits are Transferred first.
-                </Alert>
+                </WarningAlert>
+                <AdditionalTxnsAccordion filter={disabledActions} />
                 <Box>
-                  <Accordion defaultExpanded variant="outlined">
-                    <StyledAccordionSummary title="Transaction Details" />
-                    <AccordionDetails>
-                      <TxnPreview
-                        actions={[
-                          {
-                            type: ActionType.TRANSFER,
-                            amount: withdrawResult ? withdrawResult.amount.abs() : ZERO_BN,
-                            token: whitelistedToken,
-                            stalk: withdrawResult ? withdrawResult.stalk.abs() : ZERO_BN,
-                            seeds: withdrawResult ? withdrawResult?.seeds.abs() : ZERO_BN,
-                            to: values.to
-                          },
-                          {
-                            type: ActionType.BASE,
-                            message: (
-                              <>
-                                The following Deposits will be used:<br />
-                                <ul css={{ paddingLeft: '25px', marginTop: '10px', marginBottom: 0, fontSize: FontSize.sm }}>
-                                  {withdrawResult.deltaCrates.map((crate, index) => (
-                                    <li key={index}>{displayTokenAmount(crate.amount, whitelistedToken)} from Deposits in Season {crate.season.toString()}</li>
-                                  ))}
-                                </ul>
-                              </>
-                            )
-                          },
-                          {
-                            type: ActionType.END_TOKEN,
-                            token: whitelistedToken
-                          }
-                        ]}
-                      />
-                    </AccordionDetails>
-                  </Accordion>
+                  <TxnAccordion>
+                    <TxnPreview
+                      actions={[
+                        {
+                          type: ActionType.TRANSFER,
+                          amount: withdrawResult
+                            ? toBN(withdrawResult.amount.abs())
+                            : ZERO_BN,
+                          token: getNewToOldToken(whitelistedToken),
+                          stalk: withdrawResult
+                            ? toBN(withdrawResult.stalk.abs())
+                            : ZERO_BN,
+                          seeds: withdrawResult
+                            ? toBN(withdrawResult?.seeds.abs())
+                            : ZERO_BN,
+                          to: values.to,
+                        },
+                        {
+                          type: ActionType.BASE,
+                          message: (
+                            <>
+                              The following Deposits will be used:
+                              <br />
+                              <ul
+                                css={{
+                                  paddingLeft: '25px',
+                                  marginTop: '10px',
+                                  marginBottom: 0,
+                                  fontSize: FontSize.sm,
+                                }}
+                              >
+                                {withdrawResult.crates.map((crate, index) => (
+                                  <li key={index}>
+                                    {displayTokenAmount(
+                                      crate.amount,
+                                      whitelistedToken
+                                    )}{' '}
+                                    from Deposits in Season{' '}
+                                    {crate.season.toString()}
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
+                          ),
+                        },
+                        {
+                          type: ActionType.END_TOKEN,
+                          token: getNewToOldToken(whitelistedToken),
+                        },
+                      ]}
+                      {...txnActions}
+                    />
+                  </TxnAccordion>
                 </Box>
               </>
             )}
@@ -178,7 +260,13 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
         )}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isReady || !depositedBalance || depositedBalance.eq(0) || isSubmitting || values.to === ''}
+          disabled={
+            !isReady ||
+            !depositedBalance ||
+            depositedBalance.eq(0) ||
+            isSubmitting ||
+            values.to === ''
+          }
           type="submit"
           variant="contained"
           color="primary"
@@ -186,141 +274,181 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
           tokens={[]}
           mode="auto"
         >
-          {!depositedBalance || depositedBalance.eq(0) ? 'Nothing to Transfer' : 'Transfer'}
+          {!depositedBalance || depositedBalance.eq(0)
+            ? 'Nothing to Transfer'
+            : 'Transfer'}
         </SmartSubmitButton>
       </Stack>
     </Form>
   );
 };
 
-const Transfer: FC<{ token: ERC20Token; }> = ({ token }) => {
-  /// Ledger
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
+const TransferPropProvider: FC<{
+  token: ERC20Token;
+  /// temporary. will be remove when sdk types are moved to redux
+  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
+}> = ({ token, siloBalance }) => {
+  const sdk = useSdk();
+  const account = useAccount();
 
   /// Beanstalk
   const season = useSeason();
 
   /// Farmer
-  const siloBalances = useFarmerSiloBalances();
-  const [refetchFarmerSilo] = useFetchFarmerSilo();
   const [refetchSilo] = useFetchBeanstalkSilo();
+  const [farmerBalances, refetchFarmerBalances] = siloBalance;
 
   /// Form
   const middleware = useFormMiddleware();
-  const depositedBalance = siloBalances[token.address]?.deposited.amount;
-  const initialValues: TransferFormValues = useMemo(() => ({
-    tokens: [
-      {
-        token: token,
-        amount: undefined,
-      },
-    ],
-    to: ''
-  }), [token]);
+  const { txnBundler, plantAndDoX, refetch } = useFormTxnContext();
 
-  /// Handlers
-  const onSubmit = useCallback(async (values: TransferFormValues, formActions: FormikHelpers<TransferFormValues>) => {
-    let txToast;
-    try {
-      middleware.before();
-
-      const withdrawResult = BeanstalkSDK.Silo.Withdraw.withdraw(
-        token,
-        values.tokens,
-        siloBalances[token.address]?.deposited.crates,
-        season,
-      );
-        
-      if (!signer) throw new Error('Missing signer');
-      if (!withdrawResult) throw new Error('Nothing to Transfer.');
-      if (!values.to) throw new Error('Please enter a valid recipient address.');
-
-      let call;
-      const seasons = withdrawResult.deltaCrates.map((crate) => crate.season.toString());
-      const amounts = withdrawResult.deltaCrates.map((crate) => toStringBaseUnitBN(crate.amount.abs(), token.decimals));
-
-      console.debug('[silo/transfer] transferring: ', {
-        withdrawResult,
-        calldata: {
-          seasons,
-          amounts,
+  const initialValues: TransferFormValues = useMemo(
+    () => ({
+      tokens: [
+        {
+          token: token,
+          amount: undefined,
         },
-      });
+      ],
+      to: '',
+      farmActions: {
+        preset: sdk.tokens.BEAN.equals(token) ? 'plant' : 'noPrimary',
+        primary: undefined,
+        secondary: undefined,
+        implied: [FormTxn.MOW],
+      },
+    }),
+    [sdk.tokens.BEAN, token]
+  );
 
-      /// Optimize the call used depending on the
-      /// number of crates.
-      const sender = await signer.getAddress();
-      if (seasons.length === 0) {
-        throw new Error('Malformatted crates.');
-      } else if (seasons.length === 1) {
-        call = beanstalk.transferDeposit(
-          sender,
+  const onSubmit = useCallback(
+    async (
+      values: TransferFormValues,
+      formActions: FormikHelpers<TransferFormValues>
+    ) => {
+      let txToast;
+      try {
+        middleware.before();
+        if (!account) throw new Error('Missing signer');
+        if (!values.to) {
+          throw new Error('Please enter a valid recipient address.');
+        }
+
+        if (!farmerBalances?.deposited.crates) {
+          throw new Error('No balances found');
+        }
+
+        const formData = values.tokens[0];
+        const primaryActions = values.farmActions.primary;
+
+        const isPlanting =
+          primaryActions?.includes(FormTxn.PLANT) &&
+          sdk.tokens.BEAN.equals(token);
+
+        const baseAmount = token.amount((formData?.amount || 0).toString());
+
+        const totalAmount = isPlanting
+          ? baseAmount.add(plantAndDoX.getAmount())
+          : baseAmount;
+
+        if (totalAmount.lte(0)) throw new Error('Invalid amount.');
+
+        const transferTxn = new TransferFarmStep(sdk, token, account, [
+          ...farmerBalances.deposited.crates,
+        ]);
+
+        transferTxn.build(
           values.to,
-          token.address,
-          seasons[0],
-          amounts[0],
+          baseAmount,
+          season.toNumber(),
+          isPlanting ? plantAndDoX : undefined
         );
-      } else {
-        call = beanstalk.transferDeposits(
-          sender,
-          values.to,
-          token.address,
-          seasons,
-          amounts,
+
+        if (!transferTxn.withdrawResult) {
+          throw new Error('Nothing to withdraw');
+        }
+
+        const withdrawAmtStr = displayFullBN(
+          transferTxn.withdrawResult.amount.abs(),
+          token.displayDecimals,
+          token.displayDecimals
         );
+
+        txToast = new TransactionToast({
+          loading: `Transferring ${withdrawAmtStr} ${
+            token.name
+          } to ${trimAddress(values.to, true)}.`,
+          success: 'Transfer successful.',
+        });
+
+        const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
+
+        const { execute } = await txnBundler.bundle(
+          transferTxn,
+          // we can pass in 0 here b/c TransferFarmStep already receives it's input amount in build();
+          token.amount(0),
+          0.1
+        );
+        const txn = await execute();
+        txToast.confirming(txn);
+
+        const receipt = await txn.wait();
+        await refetch(actionsPerformed, { farmerSilo: true }, [
+          refetchSilo,
+          refetchFarmerBalances,
+        ]);
+
+        txToast.success(receipt);
+
+        formActions.resetForm();
+      } catch (err) {
+        if (txToast) {
+          txToast.error(err);
+        } else {
+          const toast = new TransactionToast({});
+          toast.error(err);
+        }
+        formActions.setSubmitting(false);
       }
-
-      txToast = new TransactionToast({
-        loading: `Transferring ${displayFullBN(withdrawResult.amount.abs(), token.displayDecimals, token.displayDecimals)} ${token.name} to ${trimAddress(values.to, true)}.`,
-        success: 'Transfer successful.',
-      });
-
-      const txn = await call;
-      txToast.confirming(txn);
-
-      const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerSilo(),
-        refetchSilo(),
-      ]);
-      txToast.success(receipt);
-      formActions.resetForm();
-    } catch (err) {
-      if (txToast) {
-        txToast.error(err);
-      } else {
-        const errorToast = new TransactionToast({});
-        errorToast.error(err);
-      }
-      formActions.setSubmitting(false);
-    }
-  }, [
-    siloBalances,
-    beanstalk,
-    token,
-    season,
-    refetchFarmerSilo,
-    refetchSilo,
-    signer,
-    middleware,
-  ]);
+    },
+    [
+      middleware,
+      account,
+      farmerBalances?.deposited.crates,
+      token,
+      sdk,
+      season,
+      plantAndDoX,
+      txnBundler,
+      refetch,
+      refetchSilo,
+      refetchFarmerBalances,
+    ]
+  );
 
   return (
-    <Formik
-      initialValues={initialValues}
-      onSubmit={onSubmit}>
+    <Formik initialValues={initialValues} onSubmit={onSubmit}>
       {(formikProps: FormikProps<TransferFormValues>) => (
         <TransferForm
           token={token}
-          siloBalances={siloBalances}
-          depositedBalance={depositedBalance}
+          siloBalance={farmerBalances}
           season={season}
+          plantAndDoX={plantAndDoX}
           {...formikProps}
         />
       )}
     </Formik>
   );
 };
+
+const Transfer: React.FC<{
+  token: ERC20Token;
+  /// temporary. will be remove when sdk types are moved to redux
+  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
+}> = (props) => (
+  <FormTxnProvider>
+    <TransferPropProvider {...props} />
+  </FormTxnProvider>
+);
 
 export default Transfer;

@@ -48,6 +48,13 @@ export const parseError = (error: any) => {
 
   const rawError = JSON.stringify(error);
 
+  /// JSON.stringify returns an empty object when given an Error object
+  if (rawError === '{}') {
+    errorMessage.message = `${error}`;
+    errorMessage.message = errorMessage.message.replace('Error: ', '');
+    return errorMessage;
+  }
+
   switch (error.code) {
     /// Common error codes
     case -32000:

@@ -19,6 +19,7 @@ export * from './State';
 export * from './Time';
 export * from './Tokens';
 export * from './Environment';
+export * from './TokenValue';
 
 // -----------------
 // Shared Types

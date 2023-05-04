@@ -7,9 +7,9 @@ import PlotInputField from '~/components/Common/Form/PlotInputField';
 import TransactionToast from '~/components/Common/TxnToast';
 import {
   PlotFragment,
-  PlotSettingsFragment, SmartSubmitButton,
-  TokenOutputField,
-  TxnSeparator
+  PlotSettingsFragment,
+  SmartSubmitButton,
+  TxnSeparator,
 } from '~/components/Common/Form';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import useFarmerPlots from '~/hooks/farmer/useFarmerPlots';
@@ -26,16 +26,17 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { PodOrder } from '~/state/farmer/market';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type FillOrderFormValues = {
   plot: PlotFragment;
   destination: FarmToMode | undefined;
   settings: PlotSettingsFragment & {};
-}
+};
 
 const FillOrderV2Form: FC<
-  FormikProps<FillOrderFormValues>
-  & {
+  FormikProps<FillOrderFormValues> & {
     podOrder: PodOrder;
     plots: PlotMap<BigNumber>;
     harvestableIndex: BigNumber;
@@ -44,33 +45,31 @@ const FillOrderV2Form: FC<
   values,
   isSubmitting,
   podOrder,
-  plots: allPlots,  // rename to prevent collision
+  plots: allPlots, // rename to prevent collision
   harvestableIndex,
 }) => {
+  const sdk = useSdk();
   /// Derived
   const plot = values.plot;
-  const [eligiblePlots, numEligiblePlots] = useMemo(() =>
-    Object.keys(allPlots).reduce<[PlotMap<BigNumber>, number]>(
-      (prev, curr) => {
-        const indexBN = new BigNumber(curr);
-        if (indexBN.minus(harvestableIndex).lt(podOrder.maxPlaceInLine)) {
-          prev[0][curr] = allPlots[curr];
-          prev[1] += 1;
-        }
-        return prev;
-      },
-      [{}, 0]
-    ),
+  const [eligiblePlots, numEligiblePlots] = useMemo(
+    () =>
+      Object.keys(allPlots).reduce<[PlotMap<BigNumber>, number]>(
+        (prev, curr) => {
+          const indexBN = new BigNumber(curr);
+          if (indexBN.minus(harvestableIndex).lt(podOrder.maxPlaceInLine)) {
+            prev[0][curr] = allPlots[curr];
+            prev[1] += 1;
+          }
+          return prev;
+        },
+        [{}, 0]
+      ),
     [allPlots, harvestableIndex, podOrder.maxPlaceInLine]
   );
 
   // const placeInLine   = plot.index ? new BigNumber(plot.index).minus(harvestableIndex) : undefined;
   const beansReceived = plot.amount?.times(podOrder.pricePerPod) || ZERO_BN;
-  const isReady = (
-    numEligiblePlots > 0
-    && plot.index
-    && plot.amount?.gt(0)
-  );
+  const isReady = numEligiblePlots > 0 && plot.index && plot.amount?.gt(0);
 
   return (
     <Form autoComplete="off" noValidate>
@@ -85,12 +84,13 @@ const FillOrderV2Form: FC<
         {isReady && (
           <>
             <TxnSeparator mt={0} />
-            <TokenOutputField
-              token={BEAN[1]}
-              amount={beansReceived}
-              isLoading={false}
-              size="small"
-            />
+            <TokenOutput size="small">
+              <TokenOutput.Row
+                token={sdk.tokens.BEAN}
+                amount={beansReceived}
+                size="small"
+              />
+            </TokenOutput>
             {/* <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
@@ -143,102 +143,124 @@ const FillOrderForm: FC<{ podOrder: PodOrder }> = ({ podOrder }) => {
 
   /// Farmer
   const allPlots = useFarmerPlots();
-  const [refetchFarmerField]    = useFetchFarmerField();
+  const [refetchFarmerField] = useFetchFarmerField();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
 
   /// Form
   const middleware = useFormMiddleware();
-  const initialValues: FillOrderFormValues = useMemo(() => ({
-    plot: {
-      index:  null,
-      start:  ZERO_BN,
-      end:    null,
-      amount: null,
-    },
-    destination: undefined,
-    settings: {
-      showRangeSelect: false,
-    }
-  }), []);
+  const initialValues: FillOrderFormValues = useMemo(
+    () => ({
+      plot: {
+        index: null,
+        start: ZERO_BN,
+        end: null,
+        amount: null,
+      },
+      destination: undefined,
+      settings: {
+        showRangeSelect: false,
+      },
+    }),
+    []
+  );
 
   /// Navigation
   const navigate = useNavigate();
 
   /// Handlers
-  const onSubmit = useCallback(async (values: FillOrderFormValues, formActions: FormikHelpers<FillOrderFormValues>) => {
-    let txToast;
-    try {
-      middleware.before();
-      const { index, start, amount } = values.plot;
-      if (!index) throw new Error('No plot selected');
-      const numPods = allPlots[index];
-      if (!numPods) throw new Error('Plot not recognized.');
-      if (!start || !amount) throw new Error('Malformatted plot data.');
-      if (!values.destination) throw new Error('No destination selected.');
-      if (amount.lt(new BigNumber(1))) throw new Error('Amount not greater than minFillAmount.');
+  const onSubmit = useCallback(
+    async (
+      values: FillOrderFormValues,
+      formActions: FormikHelpers<FillOrderFormValues>
+    ) => {
+      let txToast;
+      try {
+        middleware.before();
+        const { index, start, amount } = values.plot;
+        if (!index) throw new Error('No plot selected');
+        const numPods = allPlots[index];
+        if (!numPods) throw new Error('Plot not recognized.');
+        if (!start || !amount) throw new Error('Malformatted plot data.');
+        if (!values.destination) throw new Error('No destination selected.');
+        if (amount.lt(new BigNumber(1)))
+          throw new Error('Amount not greater than minFillAmount.');
 
-      console.debug('[FillOrder]', {
-        numPods: numPods.toString(),
-        index: index.toString(),
-        start: start.toString(),
-        amount: amount.toString(),
-        sum: start.plus(amount).toString(),
-        params: [
+        console.debug('[FillOrder]', {
+          numPods: numPods.toString(),
+          index: index.toString(),
+          start: start.toString(),
+          amount: amount.toString(),
+          sum: start.plus(amount).toString(),
+          params: [
+            {
+              account: podOrder.account,
+              maxPlaceInLine: Bean.stringify(podOrder.maxPlaceInLine),
+              pricePerPod: Bean.stringify(podOrder.pricePerPod),
+              minFillAmount: PODS.stringify(podOrder.minFillAmount || 0), // minFillAmount for Orders is measured in Pods
+            },
+            Bean.stringify(index),
+            Bean.stringify(start),
+            Bean.stringify(amount),
+            values.destination,
+          ],
+        });
+
+        txToast = new TransactionToast({
+          loading: 'Filling Order...',
+          // loading: `Selling ${displayTokenAmount(amount, PODS)} for ${displayTokenAmount(amount.multipliedBy(podOrder.pricePerPod), Bean)}.`,
+          success: 'Fill successful.',
+        });
+
+        const txn = await beanstalk.fillPodOrder(
           {
-            account:        podOrder.account,
+            account: podOrder.account,
             maxPlaceInLine: Bean.stringify(podOrder.maxPlaceInLine),
-            pricePerPod:    Bean.stringify(podOrder.pricePerPod),
-            minFillAmount:  PODS.stringify(podOrder.minFillAmount || 0), // minFillAmount for Orders is measured in Pods
+            pricePerPod: Bean.stringify(podOrder.pricePerPod),
+            minFillAmount: PODS.stringify(podOrder.minFillAmount || 0), // minFillAmount for Orders is measured in Pods
           },
-          Bean.stringify(index),
-          Bean.stringify(start),
-          Bean.stringify(amount),
-          values.destination,
-        ]
-      });
+          Bean.stringify(index), // index of plot to sell
+          Bean.stringify(start), // start index within plot
+          Bean.stringify(amount), // amount of pods to sell
+          values.destination
+        );
+        txToast.confirming(txn);
 
-      txToast = new TransactionToast({
-        loading: 'Filling Order...',
-        // loading: `Selling ${displayTokenAmount(amount, PODS)} for ${displayTokenAmount(amount.multipliedBy(podOrder.pricePerPod), Bean)}.`,
-        success: 'Fill successful.'
-      });
+        const receipt = await txn.wait();
+        await Promise.all([
+          refetchFarmerField(), // refresh plots; decrement pods
+          refetchFarmerBalances(), // increment balance of BEAN received
+          // FIXME: refresh orders
+        ]);
+        txToast.success(receipt);
+        formActions.resetForm();
 
-      const txn = await beanstalk.fillPodOrder(
-        {
-          account:        podOrder.account,
-          maxPlaceInLine: Bean.stringify(podOrder.maxPlaceInLine),
-          pricePerPod:    Bean.stringify(podOrder.pricePerPod),
-          minFillAmount:  PODS.stringify(podOrder.minFillAmount || 0), // minFillAmount for Orders is measured in Pods
-        },
-        Bean.stringify(index),    // index of plot to sell
-        Bean.stringify(start),    // start index within plot
-        Bean.stringify(amount),   // amount of pods to sell
-        values.destination,
-      );
-      txToast.confirming(txn);
-
-      const receipt = await txn.wait();
-      await Promise.all([
-        refetchFarmerField(),     // refresh plots; decrement pods
-        refetchFarmerBalances(),  // increment balance of BEAN received
-        // FIXME: refresh orders
-      ]);
-      txToast.success(receipt);
-      formActions.resetForm();
-
-      // Return to market index, open Your Orders
-      navigate('/market/sell');
-    } catch (err) {
-      if (txToast) {
-        txToast.error(err);
-      } else {
-        const errorToast = new TransactionToast({});
-        errorToast.error(err);
+        // Return to market index, open Your Orders
+        navigate('/market/sell');
+      } catch (err) {
+        if (txToast) {
+          txToast.error(err);
+        } else {
+          const errorToast = new TransactionToast({});
+          errorToast.error(err);
+        }
+      } finally {
+        formActions.setSubmitting(false);
       }
-    } finally {
-      formActions.setSubmitting(false);
-    }
-  }, [middleware, allPlots, podOrder.account, podOrder.maxPlaceInLine, podOrder.pricePerPod, podOrder.minFillAmount, Bean, beanstalk, refetchFarmerField, refetchFarmerBalances, navigate]);
+    },
+    [
+      middleware,
+      allPlots,
+      podOrder.account,
+      podOrder.maxPlaceInLine,
+      podOrder.pricePerPod,
+      podOrder.minFillAmount,
+      Bean,
+      beanstalk,
+      refetchFarmerField,
+      refetchFarmerBalances,
+      navigate,
+    ]
+  );
 
   return (
     <Formik<FillOrderFormValues>
