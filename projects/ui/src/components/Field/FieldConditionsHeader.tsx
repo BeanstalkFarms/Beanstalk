@@ -1,7 +1,6 @@
 import React from 'react';
 
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Stack, Typography, Tooltip, Box } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 
 import { useSelector } from 'react-redux';
 import { FontWeight } from '~/components/App/muiTheme';
@@ -24,19 +23,8 @@ const FieldConditionsHeader: React.FC<{}> = () => {
             component="span"
             sx={{ whiteSpace: 'nowrap' }}
           >
-            {' '}
+            &nbsp;
             {season.gt(0) && season.toString()}
-            <Tooltip title={<Box>tooltip</Box>}>
-              <HelpOutlineIcon
-                sx={{
-                  color: 'text.tertiary',
-                  display: 'inline',
-                  mb: 0.5,
-                  fontSize: '11px',
-                  ml: 0.25,
-                }}
-              />
-            </Tooltip>
           </Typography>
         </Typography>
         <Typography color="text.secondary">
@@ -50,16 +38,6 @@ const FieldConditionsHeader: React.FC<{}> = () => {
   return (
     <Typography variant="h4" fontWeight={FontWeight.bold}>
       🌤️ Field Conditions, Season {season.gt(0) && season.toString()}
-      <Tooltip title={<Box>tooltip</Box>}>
-        <HelpOutlineIcon
-          sx={{
-            color: 'text.tertiary',
-            display: 'inline',
-            mb: 0.5,
-            fontSize: '11px',
-          }}
-        />
-      </Tooltip>
     </Typography>
   );
 };
