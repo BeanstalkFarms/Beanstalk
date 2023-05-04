@@ -30,7 +30,10 @@ const getBNResult = (result: any, decimals: number) => {
  * - ETH/USD
  */
 export default function useDataFeedTokenPrices() {
-  const tokenPriceMap = useSelector<AppState, AppState['_beanstalk']['tokenPrices']>((state) => state._beanstalk.tokenPrices);
+  const tokenPriceMap = useSelector<
+    AppState,
+    AppState['_beanstalk']['tokenPrices']
+  >((state) => state._beanstalk.tokenPrices);
 
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
@@ -41,27 +44,28 @@ export default function useDataFeedTokenPrices() {
 
   const fetch = useCallback(async () => {
     if (Object.values(tokenPriceMap).length) return;
-    if (!daiPriceFeed || !usdtPriceFeed || !usdcPriceFeed || !ethPriceFeed) return;
+    if (!daiPriceFeed || !usdtPriceFeed || !usdcPriceFeed || !ethPriceFeed)
+      return;
 
     console.debug('[beanstalk/tokenPrices/useCrvUnderlylingPrices] FETCH');
 
     const [
-      daiPriceData, 
+      daiPriceData,
       daiPriceDecimals,
-      usdtPriceData, 
+      usdtPriceData,
       usdtPriceDecimals,
-      usdcPriceData, 
+      usdcPriceData,
       usdcPriceDecimals,
-      ethPriceData, 
+      ethPriceData,
       ethPriceDecimals,
     ] = await Promise.all([
-      daiPriceFeed.latestRoundData(), 
+      daiPriceFeed.latestRoundData(),
       daiPriceFeed.decimals(),
-      usdtPriceFeed.latestRoundData(), 
+      usdtPriceFeed.latestRoundData(),
       usdtPriceFeed.decimals(),
-      usdcPriceFeed.latestRoundData(), 
+      usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
-      ethPriceFeed.latestRoundData(), 
+      ethPriceFeed.latestRoundData(),
       ethPriceFeed.decimals(),
     ]);
 
@@ -73,19 +77,33 @@ export default function useDataFeedTokenPrices() {
     const priceDataCache: TokenMap<BigNumber> = {};
 
     if (daiPriceData && daiPriceDecimals) {
-      priceDataCache[dai.address] = getBNResult(daiPriceData.answer, daiPriceDecimals);
+      priceDataCache[dai.address] = getBNResult(
+        daiPriceData.answer,
+        daiPriceDecimals
+      );
     }
     if (usdtPriceData && usdtPriceDecimals) {
-      priceDataCache[usdt.address] = getBNResult(usdtPriceData.answer, usdtPriceDecimals);
+      priceDataCache[usdt.address] = getBNResult(
+        usdtPriceData.answer,
+        usdtPriceDecimals
+      );
     }
     if (usdcPriceData && usdcPriceDecimals) {
-      priceDataCache[usdc.address] = getBNResult(usdcPriceData.answer, usdcPriceDecimals);
+      priceDataCache[usdc.address] = getBNResult(
+        usdcPriceData.answer,
+        usdcPriceDecimals
+      );
     }
     if (ethPriceData && ethPriceDecimals) {
-      priceDataCache[eth.address] = getBNResult(ethPriceData.answer, ethPriceDecimals);
+      priceDataCache[eth.address] = getBNResult(
+        ethPriceData.answer,
+        ethPriceDecimals
+      );
     }
 
-    console.debug(`[beanstalk/tokenPrices/useCrvUnderlyingPrices] RESULT: ${priceDataCache}`);
+    console.debug(
+      `[beanstalk/tokenPrices/useCrvUnderlyingPrices] RESULT: ${priceDataCache}`
+    );
 
     return priceDataCache;
   }, [

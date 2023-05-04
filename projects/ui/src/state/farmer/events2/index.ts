@@ -8,9 +8,9 @@ export enum EventCacheName {
 }
 
 export type FarmerEvents = {
-  [id: string] : {
+  [id: string]: {
     /**
-     * The block number at which we last stopped searching. 
+     * The block number at which we last stopped searching.
      * This is NOT the last block where an event occurred.
      */
     endBlockNumber: number;

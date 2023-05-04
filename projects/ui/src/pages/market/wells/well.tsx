@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  Container, Grid,
-  Stack, Typography
-} from '@mui/material';
+import { Container, Grid, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import Row from '~/components/Common/Row';
 import { IconSize } from '~/components/App/muiTheme';
@@ -26,16 +23,16 @@ const WellPage: React.FC = () => (
         items={[
           {
             title: 'Market',
-            path: '/'
+            path: '/',
           },
           {
             title: 'Well Explorer',
-            path: '/'
+            path: '/',
           },
           {
             title: 'BEAN:ETH Liquidity Well',
-            path: '/'
-          }
+            path: '/',
+          },
         ]}
       />
       <PageHeader
@@ -45,8 +42,12 @@ const WellPage: React.FC = () => (
               <img alt="" src={beanIcon} height={IconSize.medium} />
               <img alt="" src={ethIcon} height={IconSize.medium} />
             </Row>
-            <Typography variant="h2" textAlign="center" sx={{ verticalAlign: 'middle' }}>BEAN:ETH Liquidity
-              Well
+            <Typography
+              variant="h2"
+              textAlign="center"
+              sx={{ verticalAlign: 'middle' }}
+            >
+              BEAN:ETH Liquidity Well
             </Typography>
           </Row>
         }
@@ -65,21 +66,13 @@ const WellPage: React.FC = () => (
           <Grid item xs={6} md={1.75}>
             <WellStat
               title="Type"
-              subTitle={
-                <Typography variant="h4">
-                  Constant Product
-                </Typography>
-              }
+              subTitle={<Typography variant="h4">Constant Product</Typography>}
             />
           </Grid>
           <Grid item xs={6} md={1.5}>
             <WellStat
               title="Exchange Fees"
-              subTitle={
-                <Typography variant="h4">
-                  0.00%
-                </Typography>
-              }
+              subTitle={<Typography variant="h4">0.00%</Typography>}
             />
           </Grid>
           <Grid item xs={6} md={1.5}>
@@ -98,31 +91,19 @@ const WellPage: React.FC = () => (
           <Grid item xs={6} md={2.75}>
             <WellStat
               title="Beans Earned by Depositors (7D)"
-              subTitle={
-                <Typography variant="h4">
-                  Constant Product
-                </Typography>
-              }
+              subTitle={<Typography variant="h4">Constant Product</Typography>}
             />
           </Grid>
           <Grid item xs={6} md={2.75}>
             <WellStat
               title="Stalk Grown by Depositors (7D)"
-              subTitle={
-                <Typography variant="h4">
-                  Constant Product
-                </Typography>
-              }
+              subTitle={<Typography variant="h4">Constant Product</Typography>}
             />
           </Grid>
           <Grid item xs={6} md={1.75}>
             <WellStat
               title="Well Address"
-              subTitle={
-                <Typography variant="h4">
-                  Constant Product
-                </Typography>
-              }
+              subTitle={<Typography variant="h4">Constant Product</Typography>}
             />
           </Grid>
         </Grid>

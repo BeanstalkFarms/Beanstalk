@@ -5,20 +5,20 @@ import { useLatestApyQuery } from '~/generated/graphql';
 type APY = {
   bean: BigNumber;
   stalk: BigNumber;
-}
+};
 
 type APYs = {
   beansPerSeasonEMA: BigNumber;
   bySeeds: {
     '2': APY;
     '4': APY;
-  }
-}
+  };
+};
 
 export default function useAPY() {
-  const query = useLatestApyQuery({ 
+  const query = useLatestApyQuery({
     fetchPolicy: 'cache-and-network',
-    nextFetchPolicy: 'cache-first'
+    nextFetchPolicy: 'cache-first',
   });
   return useMemo(() => {
     if (query.data?.siloYields?.[0]) {
@@ -30,15 +30,15 @@ export default function useAPY() {
           beansPerSeasonEMA: new BigNumber(siloYield.beansPerSeasonEMA),
           bySeeds: {
             2: {
-              bean:  new BigNumber(siloYield.twoSeedBeanAPY),
+              bean: new BigNumber(siloYield.twoSeedBeanAPY),
               stalk: new BigNumber(siloYield.twoSeedStalkAPY),
             },
             4: {
-              bean:  new BigNumber(siloYield.fourSeedBeanAPY),
+              bean: new BigNumber(siloYield.fourSeedBeanAPY),
               stalk: new BigNumber(siloYield.fourSeedStalkAPY),
-            }
-          }
-        } as APYs
+            },
+          },
+        } as APYs,
       };
     }
     return {

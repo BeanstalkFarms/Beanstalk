@@ -9,11 +9,9 @@ import useMarketData from '~/hooks/beanstalk/useMarketData';
 import { marketBottomTabsAtom } from '../info/atom-context';
 import EntityGraph from './MarketGraph';
 
-const MarketGraphContainer: React.FC<{ 
-  chartHeight: string; 
-}> = ({
-  chartHeight,
-}) => {
+const MarketGraphContainer: React.FC<{
+  chartHeight: string;
+}> = ({ chartHeight }) => {
   const data = useMarketData();
   const openState = useAtomValue(marketBottomTabsAtom);
   const marketBottomTabsOpen = openState === 1 || openState === 2;
@@ -21,9 +19,12 @@ const MarketGraphContainer: React.FC<{
   return (
     <CondensedCard title="OVERVIEW" sx={{ borderRadius: 1, height: '100%' }}>
       {!data.loading && data.listings && data.orders ? (
-        <Box 
-          width="100%" 
-          sx={{ height: chartHeight, minHeight: marketBottomTabsOpen ? '140px' : 0 }}
+        <Box
+          width="100%"
+          sx={{
+            height: chartHeight,
+            minHeight: marketBottomTabsOpen ? '140px' : 0,
+          }}
         >
           <EntityGraph
             listings={data.listings}

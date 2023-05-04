@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  Button,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import downloadIcon from '~/img/beanstalk/interface/download.svg';
 import Row from '~/components/Common/Row';

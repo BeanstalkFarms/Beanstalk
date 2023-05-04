@@ -6,7 +6,15 @@ import {
   GridValueFormatterParams,
 } from '@mui/x-data-grid';
 import BigNumber from 'bignumber.js';
-import { Box, IconButton, Link, Stack, Tooltip, TooltipProps, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  Link,
+  Stack,
+  Tooltip,
+  TooltipProps,
+  Typography,
+} from '@mui/material';
 import { DateTime } from 'luxon';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -30,33 +38,47 @@ import { FC } from '~/types';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
 // componentsProps={{ tooltip: { sx: { fontSize: 10 } } }}
-const TooltipPill : FC<{ title: string | React.ReactElement } & { placement?: TooltipProps['placement'] }> = ({ children, title, placement }) => (
-  <Tooltip title={title ? <Typography fontSize={FontSize.sm}>{title}</Typography> : ''} placement={placement || 'right'}>
-    <Box sx={{
-      display: 'inline-block',
-      px: 0.25,
-      '&:hover': {
-        outlineOffset: 1,
-        backgroundColor: BeanstalkPalette.white,
-        outlineColor: BeanstalkPalette.lightGrey,
-        outlineStyle: 'solid',
-        outlineWidth: 1,
-        borderRadius: 0.5,
-      }
-    }}>
+const TooltipPill: FC<
+  { title: string | React.ReactElement } & {
+    placement?: TooltipProps['placement'];
+  }
+> = ({ children, title, placement }) => (
+  <Tooltip
+    title={title ? <Typography fontSize={FontSize.sm}>{title}</Typography> : ''}
+    placement={placement || 'right'}
+  >
+    <Box
+      sx={{
+        display: 'inline-block',
+        px: 0.25,
+        '&:hover': {
+          outlineOffset: 1,
+          backgroundColor: BeanstalkPalette.white,
+          outlineColor: BeanstalkPalette.lightGrey,
+          outlineStyle: 'solid',
+          outlineWidth: 1,
+          borderRadius: 0.5,
+        },
+      }}
+    >
       {children}
     </Box>
   </Tooltip>
 );
 
-const Copy : FC<{ value: string }> = ({ value }) => {
+const Copy: FC<{ value: string }> = ({ value }) => {
   const onClick = useCallback(() => {
     navigator.clipboard.writeText(value);
     toast('Copied to clipboard');
   }, [value]);
   return (
     <IconButton onClick={onClick} sx={{ ml: 0.5 }}>
-      <FileCopyIcon width={12} height={12} fontSize="small" sx={{ width: 12, height: 12 }} />
+      <FileCopyIcon
+        width={12}
+        height={12}
+        fontSize="small"
+        sx={{ width: 12, height: 12 }}
+      />
     </IconButton>
   );
 };
@@ -77,7 +99,7 @@ const iconSx = {
 const MARKET_EVENT_TO_ICON = {
   fill: <SwapHorizIcon sx={iconSx} />,
   create: <AddCircleOutlineIcon sx={iconSx} />,
-  cancel: <DoNotDisturbIcon sx={iconSx} />
+  cancel: <DoNotDisturbIcon sx={iconSx} />,
 };
 
 /// ////////////////////////// Utilities /////////////////////////////
@@ -120,13 +142,26 @@ export const MarketColumns = {
         renderCell: (params: GridRenderCellParams) => (
           <Typography color="text.secondary" sx={{ fontSize: 'inherit' }}>
             {params.row[hashKey] ? (
-              <Link href={`https://etherscan.io/tx/${params.row[hashKey]}`} rel="noreferrer" target="_blank" underline="hover" color="text.tertiary" sx={{ '&:hover img': { display: 'inline-block' } }}>
+              <Link
+                href={`https://etherscan.io/tx/${params.row[hashKey]}`}
+                rel="noreferrer"
+                target="_blank"
+                underline="hover"
+                color="text.tertiary"
+                sx={{ '&:hover img': { display: 'inline-block' } }}
+              >
                 <Row>
                   <span>{params.formattedValue}</span>
-                  <img src={etherscanIcon} alt="" css={{ height: 12, marginLeft: 5, display: 'none' }} />
+                  <img
+                    src={etherscanIcon}
+                    alt=""
+                    css={{ height: 12, marginLeft: 5, display: 'none' }}
+                  />
                 </Row>
               </Link>
-            ) : params.formattedValue}
+            ) : (
+              params.formattedValue
+            )}
           </Typography>
         ),
       } as GridColumns[number]),
@@ -139,18 +174,23 @@ export const MarketColumns = {
         align: align || 'left',
         headerAlign: align || 'left',
         type: 'number',
-        renderCell: (params: GridRenderCellParams) => (
+        renderCell: (params: GridRenderCellParams) =>
           params.value?.gt(0) ? (
             <Row gap={0.25}>
               <TokenIcon token={BEAN[1]} />
               <span>{displayFullBN(params.value || ZERO_BN, 6, 0)}</span>
             </Row>
-          ) : '-'
-        ),
+          ) : (
+            '-'
+          ),
       } as GridColumns[number]),
-    
+
     /** */
-    placeInLine: (type: undefined | 'listing' | 'order', flex: number, align?: 'left' | 'right') =>
+    placeInLine: (
+      type: undefined | 'listing' | 'order',
+      flex: number,
+      align?: 'left' | 'right'
+    ) =>
       ({
         field: type === 'order' ? 'maxPlaceInLine' : 'placeInLine',
         headerName: 'PLACE IN LINE',
@@ -162,26 +202,40 @@ export const MarketColumns = {
           if (!params.value || params.value.eq(0)) return <>-</>;
           if ((type || params.row.type) === 'listing') {
             return (
-              <TooltipPill title={<StatHorizontal label="Place in Line">{displayFullBN(params.value)}</StatHorizontal>}>
+              <TooltipPill
+                title={
+                  <StatHorizontal label="Place in Line">
+                    {displayFullBN(params.value)}
+                  </StatHorizontal>
+                }
+              >
                 <>{displayBN(params.value)}</>
               </TooltipPill>
             );
           }
           return (
-            <TooltipPill title={(
-              <Stack gap={0.5}>
-                <StatHorizontal label="Max Place in Line">{displayFullBN(params.value)}</StatHorizontal>
-                <Typography fontSize="inherit">
-                  <InfoOutlinedIcon fontSize="inherit" sx={{ mb: -0.3 }} /> Any Pod before {displayBN(params.value)} can Fill this Order.
-                </Typography>
-              </Stack>
-            )}>
-              <>{`${params.row.pricingType === PricingType.DYNAMIC ? '*' : '0'} - ${displayBN(params.value)}`}</>
+            <TooltipPill
+              title={
+                <Stack gap={0.5}>
+                  <StatHorizontal label="Max Place in Line">
+                    {displayFullBN(params.value)}
+                  </StatHorizontal>
+                  <Typography fontSize="inherit">
+                    <InfoOutlinedIcon fontSize="inherit" sx={{ mb: -0.3 }} />{' '}
+                    Any Pod before {displayBN(params.value)} can Fill this
+                    Order.
+                  </Typography>
+                </Stack>
+              }
+            >
+              <>{`${
+                params.row.pricingType === PricingType.DYNAMIC ? '*' : '0'
+              } - ${displayBN(params.value)}`}</>
             </TooltipPill>
           );
         },
       } as GridColumns[number]),
-      
+
     /** */
     expiry: (flex: number, align?: 'left' | 'right') =>
       ({
@@ -195,19 +249,29 @@ export const MarketColumns = {
           const expiry = params.value as BigNumber;
           const hasExpiry = expiry.gt(0);
           return (
-            <TooltipPill title={hasExpiry ? (
-              <Stack gap={0.5}>
-                <StatHorizontal label="Expires in">
-                  {displayFullBN(expiry)} Pods
-                </StatHorizontal>
-                <Typography fontSize="inherit">
-                  <InfoOutlinedIcon fontSize="inherit" sx={{ mb: -0.3 }} /> This Listing will automatically expire when {displayBN(expiry)} more Pods become Harvestable.
-                  {/* <InfoOutlinedIcon fontSize="inherit" sx={{ mb: -0.3 }} /> This Listing will automatically expire when the Pod Line moves forward by {displayBN(expiry)} Pods. */}
-                </Typography>
-              </Stack>) : ''}>
+            <TooltipPill
+              title={
+                hasExpiry ? (
+                  <Stack gap={0.5}>
+                    <StatHorizontal label="Expires in">
+                      {displayFullBN(expiry)} Pods
+                    </StatHorizontal>
+                    <Typography fontSize="inherit">
+                      <InfoOutlinedIcon fontSize="inherit" sx={{ mb: -0.3 }} />{' '}
+                      This Listing will automatically expire when{' '}
+                      {displayBN(expiry)} more Pods become Harvestable.
+                      {/* <InfoOutlinedIcon fontSize="inherit" sx={{ mb: -0.3 }} /> This Listing will automatically expire when the Pod Line moves forward by {displayBN(expiry)} Pods. */}
+                    </Typography>
+                  </Stack>
+                ) : (
+                  ''
+                )
+              }
+            >
               <Typography
                 sx={{ fontSize: 'inherit' }}
-                color={hasExpiry ? undefined : 'text.tertiary'}>
+                color={hasExpiry ? undefined : 'text.tertiary'}
+              >
                 {hasExpiry ? `${displayBN(expiry)} PODS` : 'N/A'}
               </Typography>
             </TooltipPill>
@@ -226,16 +290,19 @@ export const MarketColumns = {
         flex: flex,
         align: align || 'left',
         headerAlign: align || 'left',
-        renderCell: (params: GridRenderCellParams<string, MarketEvent>) => (
-          params.value
-            ? (
-              <Row gap={0.25}>
-                {MARKET_EVENT_TO_ICON[params.value as keyof typeof MARKET_EVENT_TO_ICON]}
-                <span>{params.value.toUpperCase()}</span>
-              </Row>
-            )
-            : '-'
-        ),
+        renderCell: (params: GridRenderCellParams<string, MarketEvent>) =>
+          params.value ? (
+            <Row gap={0.25}>
+              {
+                MARKET_EVENT_TO_ICON[
+                  params.value as keyof typeof MARKET_EVENT_TO_ICON
+                ]
+              }
+              <span>{params.value.toUpperCase()}</span>
+            </Row>
+          ) : (
+            '-'
+          ),
       } as GridColumns[number]),
   },
 
@@ -249,18 +316,21 @@ export const MarketColumns = {
         flex: flex,
         align: align || 'left',
         headerAlign: align || 'left',
-        renderCell: (params: GridRenderCellParams<any, FarmerMarketOrder | MarketEvent>) => (
+        renderCell: (
+          params: GridRenderCellParams<any, FarmerMarketOrder | MarketEvent>
+        ) => (
           <TooltipPill
             title={
               <>
                 <StatHorizontal label="ID">
                   {params.row.type === 'listing'
-                    ? params.row.id 
+                    ? params.row.id
                     : params.row.id.substring(0, 8)}
                   <Copy value={params.row.id} />
                 </StatHorizontal>
               </>
-          }>
+            }
+          >
             <Row gap={0.5}>
               <EntityIcon type={params.value} size={12} />
               <span>{params.value.toString().toUpperCase()}</span>
@@ -268,8 +338,8 @@ export const MarketColumns = {
           </TooltipPill>
         ),
       } as GridColumns[number]),
-    
-    /** */  
+
+    /** */
     amountPods: (flex: number, align?: 'left' | 'right') =>
       ({
         field: 'amountPods',
@@ -278,14 +348,15 @@ export const MarketColumns = {
         align: align || 'left',
         headerAlign: align || 'left',
         type: 'number',
-        renderCell: (params: GridRenderCellParams) => (
+        renderCell: (params: GridRenderCellParams) =>
           params.value ? (
             <Row gap={0.25}>
               <TokenIcon token={PODS} />
               <span>{displayFullBN(params.value, 2, 0)}</span>
             </Row>
-          ) : '-'
-        ),
+          ) : (
+            '-'
+          ),
       } as GridColumns[number]),
 
     /** */
@@ -304,31 +375,38 @@ export const MarketColumns = {
             // cap at 100% to prevent bad data from confusing users
             new BigNumber(100)
           );
-          const title = params.row.type === 'listing' ? (
-            <>
-              <StatHorizontal label="Listed">
-                {displayFullBN(params.row.amountPods, 6)} PODS
-              </StatHorizontal>
-              <StatHorizontal label="Sold" color={BeanstalkPalette.washedRed}>
-                - {displayFullBN(params.row.amountPodsFilled, 6)} PODS
-              </StatHorizontal>
-              <StatHorizontal label="Received" color={BeanstalkPalette.logoGreen}>
-                + {displayFullBN(params.row.amountBeansFilled, 6)} BEAN
-              </StatHorizontal>
-            </>
-          ) : (
-            <>
-              <StatHorizontal label="Ordered">
-                {displayFullBN(params.row.amountPods, 6)} PODS
-              </StatHorizontal>
-              <StatHorizontal label="Sold" color={BeanstalkPalette.washedRed}>
-                - {displayFullBN(params.row.amountBeansFilled, 6)} BEAN
-              </StatHorizontal>
-              <StatHorizontal label="Received" color={BeanstalkPalette.logoGreen}>
-                + {displayFullBN(params.row.amountPodsFilled, 6)} PODS
-              </StatHorizontal>
-            </>
-          );
+          const title =
+            params.row.type === 'listing' ? (
+              <>
+                <StatHorizontal label="Listed">
+                  {displayFullBN(params.row.amountPods, 6)} PODS
+                </StatHorizontal>
+                <StatHorizontal label="Sold" color={BeanstalkPalette.washedRed}>
+                  - {displayFullBN(params.row.amountPodsFilled, 6)} PODS
+                </StatHorizontal>
+                <StatHorizontal
+                  label="Received"
+                  color={BeanstalkPalette.logoGreen}
+                >
+                  + {displayFullBN(params.row.amountBeansFilled, 6)} BEAN
+                </StatHorizontal>
+              </>
+            ) : (
+              <>
+                <StatHorizontal label="Ordered">
+                  {displayFullBN(params.row.amountPods, 6)} PODS
+                </StatHorizontal>
+                <StatHorizontal label="Sold" color={BeanstalkPalette.washedRed}>
+                  - {displayFullBN(params.row.amountBeansFilled, 6)} BEAN
+                </StatHorizontal>
+                <StatHorizontal
+                  label="Received"
+                  color={BeanstalkPalette.logoGreen}
+                >
+                  + {displayFullBN(params.row.amountPodsFilled, 6)} PODS
+                </StatHorizontal>
+              </>
+            );
           return (
             <TooltipPill title={title}>
               <Typography
@@ -343,7 +421,7 @@ export const MarketColumns = {
           );
         },
       } as GridColumns[number]),
-    
+
     /** */
     amountBeans: (flex: number, align?: 'left' | 'right') =>
       ({
@@ -353,14 +431,15 @@ export const MarketColumns = {
         align: align || 'left',
         headerAlign: align || 'left',
         type: 'number',
-        renderCell: (params: GridRenderCellParams) => (
+        renderCell: (params: GridRenderCellParams) =>
           params.value ? (
             <Row gap={0.25}>
               <TokenIcon token={BEAN[1]} />
               <span>{displayBN(params.value || ZERO_BN)}</span>
             </Row>
-          ) : '-'
-        ),
+          ) : (
+            '-'
+          ),
       } as GridColumns[number]),
 
     /** */
@@ -375,7 +454,9 @@ export const MarketColumns = {
           const key = params.value.toLowerCase();
           const color =
             key in MARKET_STATUS_TO_COLOR
-              ? MARKET_STATUS_TO_COLOR[key as keyof typeof MARKET_STATUS_TO_COLOR]
+              ? MARKET_STATUS_TO_COLOR[
+                  key as keyof typeof MARKET_STATUS_TO_COLOR
+                ]
               : 'text.primary';
 
           return (
@@ -399,12 +480,12 @@ export const MarketColumns = {
         headerAlign: align || 'left',
         renderCell: (params: GridRenderEditCellParams<any, PodListing>) => (
           <Row gap={0.5}>
-            <EntityIcon type="listing" size={12}  />
+            <EntityIcon type="listing" size={12} />
             <span>{params.value}</span>
           </Row>
         ),
       } as GridColumns[number]),
-    
+
     /** */
     placeInLine: (
       harvestableIndex: BigNumber,
@@ -437,7 +518,7 @@ export const MarketColumns = {
           </>
         ),
       } as GridColumns[number]),
-    
+
     /** */
     remainingAmount: (flex: number, align?: 'left' | 'right') =>
       ({
@@ -471,12 +552,12 @@ export const MarketColumns = {
         headerAlign: align || 'left',
         renderCell: (params: GridRenderCellParams<any, PodOrder>) => (
           <Row gap={0.5}>
-            <EntityIcon type="order" size={12}  />
+            <EntityIcon type="order" size={12} />
             <span>{params.value.substring(0, 8)}</span>
           </Row>
         ),
       } as GridColumns[number]),
-    
+
     /** */
     podAmountRemaining: (flex: number, align?: 'left' | 'right') =>
       ({
@@ -535,5 +616,5 @@ export const MarketColumns = {
           </>
         ),
       } as GridColumns<FarmerMarketOrder>[number]),
-  }
+  },
 };

@@ -44,21 +44,26 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
 
   /// Settings
   const [settingsOpen, setSettingsOpen] = useGlobal('showSettings');
-  useHotkeys('ctrl+, cmd+,', (e) => {
-    e.preventDefault();
-    setSettingsOpen(!settingsOpen);
-  }, { }, [settingsOpen]);
+  useHotkeys(
+    'ctrl+, cmd+,',
+    (e) => {
+      e.preventDefault();
+      setSettingsOpen(!settingsOpen);
+    },
+    {},
+    [settingsOpen]
+  );
 
   /// Content
   const menuContent = (
-      <MenuList 
-      component={Card} 
-      sx={{ 
-        background: BeanstalkPalette.white, 
+    <MenuList
+      component={Card}
+      sx={{
+        background: BeanstalkPalette.white,
         border: 'none',
         borderTopRightRadius: 0,
-      }} 
-      >
+      }}
+    >
       {/* Menu Items */}
       {/* <MenuItem
         item={{ title: 'Settings', path: '/settings' }}
@@ -97,7 +102,10 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
 
   return (
     <>
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
       {/**
        * Nav Drawer
        * ----------
@@ -106,7 +114,11 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
        * Activated by enabling the navDrawer property on FolderMenu
        */}
       <FolderMenu
-        buttonContent={<Typography sx={{ mt: 0.5 }}><MoreHorizIcon /></Typography>}
+        buttonContent={
+          <Typography sx={{ mt: 0.5 }}>
+            <MoreHorizIcon />
+          </Typography>
+        }
         popoverContent={menuContent}
         navDrawer
         noEndIcon

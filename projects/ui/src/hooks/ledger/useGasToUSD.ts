@@ -14,16 +14,19 @@ const ETH_PER_GWEI = new BigNumber(10).pow(-9);
  *   (X USD / 1 ETH)         prices.ethusd
  */
 const useGasToUSD = () => {
-  const prices = useSelector<AppState, AppState['app']['ethPrices']>((state) => state.app.ethPrices);
-  return useCallback((gasLimit?: BigNumber) => {
-    if (!prices || !gasLimit) return null; 
-    return (
-      gasLimit
+  const prices = useSelector<AppState, AppState['app']['ethPrices']>(
+    (state) => state.app.ethPrices
+  );
+  return useCallback(
+    (gasLimit?: BigNumber) => {
+      if (!prices || !gasLimit) return null;
+      return gasLimit
         .times(prices.gas.safe)
         .times(ETH_PER_GWEI)
-        .times(prices.ethusd)
-    );
-  }, [prices]);
+        .times(prices.ethusd);
+    },
+    [prices]
+  );
 };
 
 export default useGasToUSD;

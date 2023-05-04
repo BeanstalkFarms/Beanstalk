@@ -7,7 +7,7 @@ import Whitelist from './Whitelist';
 
 export default {
   component: Whitelist,
-  args: {}
+  args: {},
 } as ComponentMeta<typeof Whitelist>;
 
 const Template: ComponentStory<typeof Whitelist> = (args: any) => (
@@ -16,20 +16,20 @@ const Template: ComponentStory<typeof Whitelist> = (args: any) => (
     config={{
       whitelist: [
         BEAN[SupportedChainId.MAINNET],
-        BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET]
-      ]
+        BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET],
+      ],
     }}
     farmerSilo={{
       balances: {
         [BEAN[SupportedChainId.MAINNET].address]: {
           // input fake data here
-          deposited: new BigNumber(123_456_789)
+          deposited: new BigNumber(123_456_789),
         },
         [BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET].address]: {
           // input fake data here
-          deposited: new BigNumber(0.0001)
+          deposited: new BigNumber(0.0001),
         },
-      }
+      },
     }}
   />
 );

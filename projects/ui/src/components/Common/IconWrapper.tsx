@@ -21,7 +21,11 @@ import { Box, BoxProps } from '@mui/material';
  */
 import { FC } from '~/types';
 
-const IconWrapper : FC<{ boxSize: number } & BoxProps> = ({ boxSize, children, sx }) => (
+const IconWrapper: FC<{ boxSize: number } & BoxProps> = ({
+  boxSize,
+  children,
+  sx,
+}) => (
   <Box
     width={boxSize}
     height={boxSize}
@@ -29,7 +33,7 @@ const IconWrapper : FC<{ boxSize: number } & BoxProps> = ({ boxSize, children, s
     alignItems="center"
     justifyContent="center"
     sx={{
-      ...sx
+      ...sx,
     }}
   >
     {children}

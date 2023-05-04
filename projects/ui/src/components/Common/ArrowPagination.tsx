@@ -2,7 +2,12 @@ import React, { useCallback, useMemo } from 'react';
 import { Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { gridPageCountSelector, gridPageSelector, useGridApiContext, useGridSelector } from '@mui/x-data-grid';
+import {
+  gridPageCountSelector,
+  gridPageSelector,
+  useGridApiContext,
+  useGridSelector,
+} from '@mui/x-data-grid';
 import { FontSize } from '../App/muiTheme';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
@@ -25,7 +30,10 @@ const ArrowPagination: FC<{}> = () => {
   }, [apiRef, page, pageCount]);
 
   /** Determines color of next arrow. */
-  const hasNextPage = useMemo(() => !((page === pageCount - 1) || pageCount === 0), [page, pageCount]);
+  const hasNextPage = useMemo(
+    () => !(page === pageCount - 1 || pageCount === 0),
+    [page, pageCount]
+  );
 
   return (
     <Row gap={0.5}>
@@ -37,7 +45,7 @@ const ArrowPagination: FC<{}> = () => {
           color: page === 0 ? 'text.secondary' : 'text.primary',
           '&:hover': {
             color: page === 0 ? 'text.secondary' : 'primary.main',
-          }
+          },
         }}
       />
       <Typography variant="body1">
@@ -50,8 +58,11 @@ const ArrowPagination: FC<{}> = () => {
           cursor: 'pointer',
           color: hasNextPage ? 'text.primary' : 'text.secondary',
           '&:hover': {
-            color: page === pageCount - 1 || pageCount === 0 ? 'text.secondary' : 'primary.main',
-          }
+            color:
+              page === pageCount - 1 || pageCount === 0
+                ? 'text.secondary'
+                : 'primary.main',
+          },
         }}
       />
     </Row>

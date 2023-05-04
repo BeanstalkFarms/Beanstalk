@@ -15,10 +15,9 @@ import { AppState } from '~/state';
 import { FC } from '~/types';
 
 const BarnraiseAnalytics: FC<{}> = () => {
-  const fertilizer = useSelector<
-    AppState,
-    AppState['_beanstalk']['barn']
-  >((state) => state._beanstalk.barn);
+  const fertilizer = useSelector<AppState, AppState['_beanstalk']['barn']>(
+    (state) => state._beanstalk.barn
+  );
 
   const chainId = useChainId();
   const [tab, handleChangeTab] = useTabs();
@@ -30,7 +29,7 @@ const BarnraiseAnalytics: FC<{}> = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="lg">
       <Stack gap={2}>

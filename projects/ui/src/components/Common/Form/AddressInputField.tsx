@@ -67,16 +67,16 @@ const textFieldStyles = {
       border: 'none',
     },
     '&:hover fieldset': {
-      border: 'none'
+      border: 'none',
     },
     '& .MuiOutlinedInput-input': {
       pl: 0,
       py: 1.25,
-    }
-  }
+    },
+  },
 } as const;
 
-const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
+const AddressInputFieldInner: FC<FieldProps & AddressInputFieldProps> = ({
   name,
   disabled,
   allowTransferToSelf,
@@ -199,8 +199,10 @@ const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
               onClick={() => form.setFieldValue(name, account)}
             >
               (Me)
-            </Typography>) : null}
-        </Typography>) : null}
+            </Typography>
+          ) : null}
+        </Typography>
+      ) : null}
       <BorderEffect disabled={isValid || disabled}>
         <Box width="100%" sx={{ px: 2 }}>
           <TextField

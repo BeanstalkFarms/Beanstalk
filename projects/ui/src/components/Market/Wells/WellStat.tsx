@@ -11,7 +11,7 @@ export type RewardItemProps = {
   /** */
   // eslint-disable-next-line
   compact?: boolean;
-}
+};
 
 const WellStat: React.FC<RewardItemProps> = ({
   subTitle,
@@ -25,14 +25,19 @@ const WellStat: React.FC<RewardItemProps> = ({
         {title}
         {tooltip && (
           <HelpOutlineIcon
-            sx={{ display: 'inline', mb: 0.5, fontSize: '11px', color: 'text.tertiary' }}
+            sx={{
+              display: 'inline',
+              mb: 0.5,
+              fontSize: '11px',
+              color: 'text.tertiary',
+            }}
           />
         )}
       </Typography>
     </Tooltip>
     <Row gap={0.4}>
       {icon && <img src={icon} alt="" height="16px" />}
-      {subTitle && (subTitle)}
+      {subTitle && subTitle}
     </Row>
   </Box>
 );

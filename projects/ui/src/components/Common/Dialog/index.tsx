@@ -1,5 +1,13 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, IconButton, DialogTitleProps, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  DialogTitleProps,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { FontSize, IconSize } from '../../App/muiTheme';
@@ -8,18 +16,14 @@ import { FC } from '~/types';
 
 export const StyledDialog = Dialog;
 
-export const StyledDialogTitle : FC<{
-  id?: string;
-  children?: React.ReactNode;
-  onBack?: () => void;
-  onClose?: () => void;
-} & DialogTitleProps> = ({
-  children,
-  onBack,
-  onClose,
-  sx,
-  ...props
-}) => (
+export const StyledDialogTitle: FC<
+  {
+    id?: string;
+    children?: React.ReactNode;
+    onBack?: () => void;
+    onClose?: () => void;
+  } & DialogTitleProps
+> = ({ children, onBack, onClose, sx, ...props }) => (
   <DialogTitle
     sx={{
       m: 0,
@@ -27,7 +31,7 @@ export const StyledDialogTitle : FC<{
       pr: 2,
       pt: 2,
       pb: 2,
-      ...sx
+      ...sx,
     }}
     {...props}
   >
@@ -53,7 +57,7 @@ export const StyledDialogTitle : FC<{
           disableRipple
           sx={{
             color: (theme) => theme.palette.grey[900],
-            p: 0
+            p: 0,
           }}
         >
           <CloseIcon sx={{ fontSize: FontSize.base, color: 'text.primary' }} />

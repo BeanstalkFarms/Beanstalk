@@ -1,6 +1,10 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useDisconnect, useNetwork , useAccount as useWagmiAccount } from 'wagmi';
+import {
+  useDisconnect,
+  useNetwork,
+  useAccount as useWagmiAccount,
+} from 'wagmi';
 import {
   Box,
   Button,
@@ -35,7 +39,9 @@ import FolderMenu from '~/components/Nav/FolderMenu';
 import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
-const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props }) => {
+const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
+  ...props
+}) => {
   const account = useAccount();
   const { address } = useWagmiAccount();
   const { chain: _chain } = useNetwork();
@@ -70,7 +76,13 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
           onClick={showWallets}
         >
           Connect
-          <Box component="span" display={{ xs: props.showFullText ? 'inline' : 'none', md: 'inline' }}>
+          <Box
+            component="span"
+            display={{
+              xs: props.showFullText ? 'inline' : 'none',
+              md: 'inline',
+            }}
+          >
             &nbsp;Wallet
           </Box>
         </Button>
@@ -84,19 +96,21 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
   }
 
   const menu = (
-    <MenuList 
-      component={Card} 
-      sx={{ 
-        minWidth: 250, 
-        background: BeanstalkPalette.white, 
+    <MenuList
+      component={Card}
+      sx={{
+        minWidth: 250,
+        background: BeanstalkPalette.white,
         border: '0px solid transparent',
         borderTopRightRadius: 0,
-      }} 
+      }}
+    >
+      <MenuItem
+        onClick={() => {
+          toggleMenuAnchor();
+          setSettingsOpen(true);
+        }}
       >
-      <MenuItem onClick={() => {
-        toggleMenuAnchor();
-        setSettingsOpen(true);
-      }}>
         <ListItemText>
           <Row gap={1}>
             <img src={gearIcon} alt="Settings" width={20} />
@@ -155,7 +169,7 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
             backgroundColor: BeanstalkPalette.lightBrown,
             '&:hover': {
               backgroundColor: BeanstalkPalette.lightBrown,
-              opacity: 0.96
+              opacity: 0.96,
             },
           }}
         >
@@ -169,13 +183,13 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
           fullWidth
           color="primary"
           href="/#/chop"
-          sx={{ 
+          sx={{
             background: BeanstalkPalette.brown,
             py: 1.25,
             '&:hover': {
               background: BeanstalkPalette.darkBrown,
-              opacity: 0.96
-            }
+              opacity: 0.96,
+            },
           }}
         >
           <Row alignItems="center">
@@ -192,9 +206,12 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
       {/* Wallet Button */}
       <FolderMenu
         buttonContent={
-          <Typography variant="bodyMedium" display={{ xs: 'none', sm: 'block' }}>
+          <Typography
+            variant="bodyMedium"
+            display={{ xs: 'none', sm: 'block' }}
+          >
             {/* Use `accountRaw` to match capitalization of wallet provider
-              * assert existence of accountRaw.address since we check `account` prior. */}
+             * assert existence of accountRaw.address since we check `account` prior. */}
             {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
           </Typography>
         }
@@ -207,19 +224,20 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
         hotkey="opt+2, alt+2"
         popoverPlacement="bottom-end"
         zeroTopRightRadius
-        sx={import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT ? {
-          color: 'text.primary',
-          borderBottomColor: 'red',
-          borderBottomWidth: 2,
-          borderBottomStyle: 'solid',
-          ...props.sx,
-        } : props.sx}
+        sx={
+          import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT
+            ? {
+                color: 'text.primary',
+                borderBottomColor: 'red',
+                borderBottomWidth: 2,
+                borderBottomStyle: 'solid',
+                ...props.sx,
+              }
+            : props.sx
+        }
       />
       {/* Pick Beans Dialog */}
-      <PickBeansDialog
-        open={picking}
-        handleClose={hidePick}
-      />
+      <PickBeansDialog open={picking} handleClose={hidePick} />
     </>
   );
 };

@@ -6,12 +6,11 @@ import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 
 // FIXME: make a MUI button variant for this
-const AdvancedButton : FC<{ 
-  open: boolean;
-} & ButtonProps> = ({
-  open,
-  ...props
-}) => (
+const AdvancedButton: FC<
+  {
+    open: boolean;
+  } & ButtonProps
+> = ({ open, ...props }) => (
   <Button
     variant="outlined" // usually "contained"
     color="light"
@@ -21,11 +20,7 @@ const AdvancedButton : FC<{
   >
     <Row gap={0.5}>
       <Typography fontSize="bodySmall">Advanced</Typography>
-      <DropdownIcon
-        open={open}
-        sx={{ fontSize: 18 }}
-        mode="right-rotate"
-      />
+      <DropdownIcon open={open} sx={{ fontSize: 18 }} mode="right-rotate" />
     </Row>
   </Button>
 );

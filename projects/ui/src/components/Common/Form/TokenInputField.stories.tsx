@@ -12,8 +12,8 @@ export default {
     // token: BEAN[1],
     InputLabelProps: {
       disableAnimation: true,
-    }
-  }
+    },
+  },
 } as ComponentMeta<typeof TokenInputField>;
 
 const Template: ComponentStory<typeof TokenInputField> = (args: any) => {
@@ -22,16 +22,13 @@ const Template: ComponentStory<typeof TokenInputField> = (args: any) => {
       <Formik initialValues={{ test: undefined }} onSubmit={() => {}}>
         <Field name="test">
           {(fieldProps: FieldProps) => (
-            <TokenInputField
-              {...fieldProps}
-              {...args}
-            />
+            <TokenInputField {...fieldProps} {...args} />
           )}
         </Field>
       </Formik>
     </Card>
   );
-  
+
   return a;
 };
 

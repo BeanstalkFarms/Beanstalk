@@ -57,18 +57,18 @@ export type FarmerMarketOrder = {
    * Listing': `index - harvestable index`
    */
   placeInLine: BigNumber;
-  
+
   /**
    * Percentage filled.
    */
   fillPct: BigNumber;
-  
+
   /**
    * Order: 0 (orders don't have an expiry)
    * Listing: max harvestable index minus harvestable index
    */
   expiry: BigNumber;
-  
+
   /// ///////////// Metadata ////////////////
 
   status: MarketStatus;
@@ -96,7 +96,7 @@ const castOrderToHistoryItem = (order: PodOrder): FarmerMarketOrder => ({
   placeInLine: order.maxPlaceInLine,
   fillPct: order.podAmountFilled.div(order.podAmount).times(100),
   expiry: ZERO_BN, // pod orders don't expire
-  
+
   // Metadata
   status: order.status,
   createdAt: order.createdAt,
@@ -123,7 +123,7 @@ const castListingToHistoryItem = (listing: PodListing): FarmerMarketOrder => ({
   placeInLine: listing.placeInLine,
   fillPct: listing.filled.div(listing.originalAmount).times(100),
   expiry: listing.expiry,
-  
+
   // Metadata
   status: listing.status,
   createdAt: listing.createdAt,
@@ -132,7 +132,7 @@ const castListingToHistoryItem = (listing: PodListing): FarmerMarketOrder => ({
 
 export function useFetchFarmerMarketItems() {
   const account = useAccount();
-  
+
   const [fetchListings, listingsQuery] = useFarmerPodListingsLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'cache-only',
@@ -153,7 +153,7 @@ export function useFetchFarmerMarketItems() {
         variables: {
           account: account.toLowerCase(),
           createdAt_gt: 0,
-        }
+        },
       };
       fetchListings(opts);
       fetchOrders(opts);
@@ -182,27 +182,29 @@ export default function useFarmerMarket() {
   const listingItems = useCastApolloQuery<FarmerMarketOrder>(
     listingsQuery,
     'podListings',
-    useCallback((l) => castListingToHistoryItem(castPodListing(l, harvestableIndex)), [harvestableIndex]),
+    useCallback(
+      (l) => castListingToHistoryItem(castPodListing(l, harvestableIndex)),
+      [harvestableIndex]
+    )
   );
   const orderItems = useCastApolloQuery<FarmerMarketOrder>(
     ordersQuery,
     'podOrders',
-    useCallback((o) => castOrderToHistoryItem(castPodOrder(o)), []),
+    useCallback((o) => castOrderToHistoryItem(castPodOrder(o)), [])
   );
 
   // Cast query data to history item form
-  const data = useMemo(() => 
-    // shortcut to check if listings / orders are still loading
-    [
-      ...listingItems || [],
-      ...orderItems || [],
-    ].sort((a, b) => {
-      // Sort by MARKET_STATUS_TO_ORDER, then by creation date
-      const x = MARKET_STATUS_TO_ORDER[a.status] - MARKET_STATUS_TO_ORDER[b.status];
-      if (x !== 0) return x;
-      return parseInt(b.createdAt, 10) - parseInt(a.createdAt, 10);
-    }),
-   [listingItems, orderItems]
+  const data = useMemo(
+    () =>
+      // shortcut to check if listings / orders are still loading
+      [...(listingItems || []), ...(orderItems || [])].sort((a, b) => {
+        // Sort by MARKET_STATUS_TO_ORDER, then by creation date
+        const x =
+          MARKET_STATUS_TO_ORDER[a.status] - MARKET_STATUS_TO_ORDER[b.status];
+        if (x !== 0) return x;
+        return parseInt(b.createdAt, 10) - parseInt(a.createdAt, 10);
+      }),
+    [listingItems, orderItems]
   );
 
   return {

@@ -14,8 +14,8 @@ import { clearBalances, updateBalances } from './actions';
 export const useFetchFarmerBalances = () => {
   /// State
   const dispatch = useDispatch();
-  const account  = useAccount();
-  
+  const account = useAccount();
+
   /// Constants
   const Eth = useChainConstant(ETH);
   const erc20TokenMap = useTokenMap(ERC20_TOKENS);
@@ -42,26 +42,32 @@ export const useFetchFarmerBalances = () => {
               balance: {
                 internal: ZERO_BN,
                 external: result,
-                total:    result,
+                total: result,
               },
             })),
-          beanstalk.getAllBalances(account, erc20Addresses)
+          beanstalk
+            .getAllBalances(account, erc20Addresses)
             .then((result) => {
-              console.debug('[farmer/balances/updater]: getAllBalances = ', result);
+              console.debug(
+                '[farmer/balances/updater]: getAllBalances = ',
+                result
+              );
               return result;
             })
-            .then((result) => result.map((struct, index) => {
-              const _token = erc20TokenMap[erc20Addresses[index]];
-              const _tokenResult = tokenResult(_token);
-              return {
-                token: _token,
-                balance: {
-                  internal: _tokenResult(struct.internalBalance),
-                  external: _tokenResult(struct.externalBalance),
-                  total:    _tokenResult(struct.totalBalance),
-                }
-              };
-            })),
+            .then((result) =>
+              result.map((struct, index) => {
+                const _token = erc20TokenMap[erc20Addresses[index]];
+                const _tokenResult = tokenResult(_token);
+                return {
+                  token: _token,
+                  balance: {
+                    internal: _tokenResult(struct.internalBalance),
+                    external: _tokenResult(struct.externalBalance),
+                    total: _tokenResult(struct.totalBalance),
+                  },
+                };
+              })
+            ),
         ]).then((results) => flatMap(results));
 
         // const calls = [
@@ -71,7 +77,9 @@ export const useFetchFarmerBalances = () => {
         //   wrap(beanstalkReplanted).getAllBalances(account, erc20Addresses)
         // ];
 
-        console.debug(`[farmer/updater/useFetchBalances] FETCH: balances (account = ${account})`);
+        console.debug(
+          `[farmer/updater/useFetchBalances] FETCH: balances (account = ${account})`
+        );
         const balances = await promises;
         console.debug('[farmer/updater/useFetchBalances] RESULT: ', balances);
 
@@ -82,13 +90,7 @@ export const useFetchFarmerBalances = () => {
       console.debug('[farmer/updater/useFetchBalances] FAILED', e);
       console.error(e);
     }
-  }, [
-    dispatch,
-    beanstalk,
-    Eth,
-    erc20TokenMap,
-    account,
-  ]);
+  }, [dispatch, beanstalk, Eth, erc20TokenMap, account]);
 
   const clear = useCallback(() => {
     dispatch(clearBalances());
@@ -106,10 +108,7 @@ const FarmerBalancesUpdater = () => {
     clear();
     if (account) fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    account,
-    chainId,
-  ]);
+  }, [account, chainId]);
 
   return null;
 };

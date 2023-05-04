@@ -771,9 +771,10 @@ const muiThemeBase: ThemeOptions = {
         },
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({
-          borderRadius: 1,
-        }),
+        root: (t) =>
+          t.theme.unstable_sx({
+            borderRadius: 1,
+          }),
       },
     },
     MuiPaper: {

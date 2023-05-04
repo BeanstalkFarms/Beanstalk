@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
-  ButtonProps, ClickAwayListener,
+  ButtonProps,
+  ClickAwayListener,
   Drawer,
   Popper,
   PopperPlacementType,
@@ -27,23 +28,25 @@ import { BeanstalkPalette, borderRadius } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 import NavDrawer from './NavDrawer';
 
-const FolderMenu: FC<{
-  startIcon?: any;
-  noEndIcon?: boolean;
-  buttonContent: JSX.Element;
-  popoverContent?: JSX.Element;
-  drawerContent?: JSX.Element;
-  hideTextOnMobile?: boolean;
-  popperWidth?: string;
-  onOpen?: () => void;
-  onClose?: () => void;
-  hotkey: string;
-  zIndex?: number;
-  zeroTopRightRadius?: boolean;
-  zeroTopLeftRadius?: boolean;
-  popoverPlacement?: PopperPlacementType;
-  navDrawer?: boolean;
-} & ButtonProps> = ({
+const FolderMenu: FC<
+  {
+    startIcon?: any;
+    noEndIcon?: boolean;
+    buttonContent: JSX.Element;
+    popoverContent?: JSX.Element;
+    drawerContent?: JSX.Element;
+    hideTextOnMobile?: boolean;
+    popperWidth?: string;
+    onOpen?: () => void;
+    onClose?: () => void;
+    hotkey: string;
+    zIndex?: number;
+    zeroTopRightRadius?: boolean;
+    zeroTopLeftRadius?: boolean;
+    popoverPlacement?: PopperPlacementType;
+    navDrawer?: boolean;
+  } & ButtonProps
+> = ({
   startIcon,
   noEndIcon,
   buttonContent,
@@ -76,7 +79,9 @@ const FolderMenu: FC<{
   const isOpen = Boolean(anchorEl || drawerOpen);
 
   // Window
-  const [mobileWindow, setMobileWindow] = useState((window.innerWidth <= theme.breakpoints.values.md));
+  const [mobileWindow, setMobileWindow] = useState(
+    window.innerWidth <= theme.breakpoints.values.md
+  );
 
   const open = useCallback(() => {
     if (isMobile || mobileWindow) {
@@ -109,7 +114,7 @@ const FolderMenu: FC<{
         setMobileWindow(false);
       }
     }
-    window.addEventListener('resize', handleResize);     
+    window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -117,7 +122,7 @@ const FolderMenu: FC<{
     if (isOpen) {
       open();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mobileWindow]);
 
   // Hotkeys
@@ -163,14 +168,16 @@ const FolderMenu: FC<{
           ...buttonProps.sx,
           '&:hover': {
             borderColor: 'divider',
-            borderBottomColor: popoverOpen ? 'white' : undefined
-          }
+            borderBottomColor: popoverOpen ? 'white' : undefined,
+          },
         }}
       >
-        <Box sx={{ display: { xs: hideTextOnMobile ? 'none' : 'block', sm: 'block' } }}>
-          <Typography variant="h3">
-            {buttonContent}
-          </Typography>
+        <Box
+          sx={{
+            display: { xs: hideTextOnMobile ? 'none' : 'block', sm: 'block' },
+          }}
+        >
+          <Typography variant="h3">{buttonContent}</Typography>
         </Box>
       </Button>
       <Popper
@@ -211,7 +218,7 @@ const FolderMenu: FC<{
             borderStyle: 'solid',
             boxSizing: 'border-box',
             // px: 1,
-            // py: 1, 
+            // py: 1,
             boxShadow: _theme.shadows[0],
             // Should be below the zIndex of the Button.
             zIndex: zIndex,
@@ -223,7 +230,7 @@ const FolderMenu: FC<{
       </Popper>
     </Box>
   );
-  
+
   return (
     <>
       {/* Mobile: Drawer */}
@@ -236,11 +243,13 @@ const FolderMenu: FC<{
         </Drawer>
       ) : null}
       {isMobile ? (
-        <Box>
-          {content}
-        </Box>
+        <Box>{content}</Box>
       ) : (
-        <ClickAwayListener mouseEvent="onMouseUp" touchEvent="onTouchStart" onClickAway={handleClickAway}>
+        <ClickAwayListener
+          mouseEvent="onMouseUp"
+          touchEvent="onTouchStart"
+          onClickAway={handleClickAway}
+        >
           {content}
         </ClickAwayListener>
       )}

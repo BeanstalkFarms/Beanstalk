@@ -6,13 +6,10 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const SettingSwitch : FC<{
+const SettingSwitch: FC<{
   name: string;
   label: string;
-}> = ({
-  name,
-  label,
-}) => (
+}> = ({ name, label }) => (
   <Field name={name}>
     {(fieldProps: FieldProps) => (
       <Row gap={5} justifyContent="space-between">

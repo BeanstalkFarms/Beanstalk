@@ -29,7 +29,17 @@ import unripeBeanCrv3LogoUrl from '~/img/tokens/unripe-lp-logo-circled.svg';
 import { ERC20Token, NativeToken, BeanstalkToken } from '~/classes/Token';
 import { SupportedChainId } from './chains';
 import { ChainConstant } from '.';
-import { BEAN_CRV3_ADDRESSES, CRV3_ADDRESSES, DAI_ADDRESSES, LUSD_ADDRESSES, USDC_ADDRESSES, USDT_ADDRESSES, UNRIPE_BEAN_ADDRESSES, UNRIPE_BEAN_CRV3_ADDRESSES, BEAN_ADDRESSES } from './addresses';
+import {
+  BEAN_CRV3_ADDRESSES,
+  CRV3_ADDRESSES,
+  DAI_ADDRESSES,
+  LUSD_ADDRESSES,
+  USDC_ADDRESSES,
+  USDT_ADDRESSES,
+  UNRIPE_BEAN_ADDRESSES,
+  UNRIPE_BEAN_CRV3_ADDRESSES,
+  BEAN_ADDRESSES,
+} from './addresses';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // ----------------------------------------
@@ -64,56 +74,36 @@ export const ETH = {
       logo: ethIconCircledUrl,
       displayDecimals: 4,
     }
-  )
+  ),
 };
 
 // ----------------------------------------
 // Beanstalk Internal Tokens (not ERC20)
 // ----------------------------------------
 
-export const STALK = new BeanstalkToken(
-  SupportedChainId.MAINNET,
-  '',
-  10,
-  {
-    name: 'Stalk',
-    symbol: 'STALK',
-    logo: stalkLogo,
-  }
-);
+export const STALK = new BeanstalkToken(SupportedChainId.MAINNET, '', 10, {
+  name: 'Stalk',
+  symbol: 'STALK',
+  logo: stalkLogo,
+});
 
-export const SEEDS = new BeanstalkToken(
-  SupportedChainId.MAINNET,
-  '',
-  6,
-  {
-    name: 'Seeds',
-    symbol: 'SEED',
-    logo: seedLogo,
-  }
-);
+export const SEEDS = new BeanstalkToken(SupportedChainId.MAINNET, '', 6, {
+  name: 'Seeds',
+  symbol: 'SEED',
+  logo: seedLogo,
+});
 
-export const PODS = new BeanstalkToken(
-  SupportedChainId.MAINNET,
-  '',
-  6,
-  {
-    name: 'Pods',
-    symbol: 'PODS',
-    logo: podsLogo,
-  }
-);
+export const PODS = new BeanstalkToken(SupportedChainId.MAINNET, '', 6, {
+  name: 'Pods',
+  symbol: 'PODS',
+  logo: podsLogo,
+});
 
-export const SPROUTS = new BeanstalkToken(
-  SupportedChainId.MAINNET,
-  '',
-  6,
-  {
-    name: 'Sprouts',
-    symbol: 'SPROUT',
-    logo: sproutLogo,
-  }
-);
+export const SPROUTS = new BeanstalkToken(SupportedChainId.MAINNET, '', 6, {
+  name: 'Sprouts',
+  symbol: 'SPROUT',
+  logo: sproutLogo,
+});
 
 export const RINSABLE_SPROUTS = new BeanstalkToken(
   SupportedChainId.MAINNET,
@@ -138,9 +128,9 @@ export const WETH = {
     {
       name: 'Wrapped Ether',
       symbol: 'WETH',
-      logo: wEthIconCircledUrl
+      logo: wEthIconCircledUrl,
     }
-  )
+  ),
 };
 
 export const BEAN = {
@@ -152,7 +142,7 @@ export const BEAN = {
       name: 'Bean',
       symbol: 'BEAN',
       logo: beanCircleLogoUrl,
-      color: BeanstalkPalette.logoGreen
+      color: BeanstalkPalette.logoGreen,
     },
     {
       stalk: 1,
@@ -173,7 +163,7 @@ export const CRV3 = {
     SupportedChainId.MAINNET,
     CRV3_ADDRESSES,
     18,
-    crv3Meta,
+    crv3Meta
   ),
 };
 
@@ -200,7 +190,7 @@ export const USDC = {
     SupportedChainId.MAINNET,
     USDC_ADDRESSES,
     6,
-    usdcMeta,
+    usdcMeta
   ),
 };
 
@@ -228,7 +218,7 @@ export const LUSD = {
     SupportedChainId.MAINNET,
     LUSD_ADDRESSES,
     18,
-    lusdMeta,
+    lusdMeta
   ),
 };
 
@@ -285,7 +275,7 @@ export const BEAN_CRV3_LP = {
       symbol: 'BEAN3CRV',
       logo: beanCrv3LpLogoUrl,
       isLP: true,
-      color: '#DFB385'
+      color: '#DFB385',
     },
     {
       stalk: 1,
@@ -346,7 +336,7 @@ export const UNRIPE_TOKENS: ChainConstant<ERC20Token>[] = [
   UNRIPE_BEAN,
   UNRIPE_BEAN_CRV3,
 ];
-export const UNRIPE_UNDERLYING_TOKENS : ChainConstant<ERC20Token>[] = [
+export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
   BEAN,
   BEAN_CRV3_LP,
 ];
@@ -356,7 +346,7 @@ export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
   BEAN_CRV3_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3
+  UNRIPE_BEAN_CRV3,
 ];
 
 // All supported ERC20 tokens.
@@ -372,8 +362,4 @@ export const ERC20_TOKENS: ChainConstant<ERC20Token>[] = [
 ];
 
 // Assets underlying 3CRV (accessible when depositing/removing liquidity)
-export const CRV3_UNDERLYING: ChainConstant<ERC20Token>[] = [
-  DAI,
-  USDC,
-  USDT,
-];
+export const CRV3_UNDERLYING: ChainConstant<ERC20Token>[] = [DAI, USDC, USDT];

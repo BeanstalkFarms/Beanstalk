@@ -1,4 +1,4 @@
- import React from 'react';
+import React from 'react';
 import { Tab, Tabs, useMediaQuery } from '@mui/material';
 import { DataGridProps } from '@mui/x-data-grid';
 import { useTheme } from '@mui/material/styles';
@@ -21,7 +21,7 @@ export type WellActivityData = {
   tokenAmount1: BigNumber;
   account: string;
   time: string;
-}
+};
 
 const SLUGS = ['all', 'swaps', 'adds', 'removes'];
 
@@ -34,28 +34,28 @@ const WellActivity: FC<{}> = () => {
   /// Data Grid setup
   const columns: DataGridProps['columns'] = !isMobile
     ? [
-      // COLUMNS.listingId(1.3),
-      // // index
-      // COLUMNS.plotIndex(data.harvestableIndex, 1),
-      // // pricePerPod
-      // COLUMNS.pricePerPod(1),
-      // // amount
-      // maxHarvestableIndex
-      COLUMNS.label(
-        2.5,
-        <Tabs value={tab} onChange={handleChangeTab}>
-          <Tab label="All" />
-          <Tab label="Swaps" />
-          <Tab label="Adds" />
-          <Tab label="Removes" />
-        </Tabs>
-      ),
-      COLUMNS.totalValue(1),
-      COLUMNS.tokenAmount('tokenAmount0', BEAN[1], 1),
-      COLUMNS.tokenAmount('tokenAmount1', PODS, 1),
-      COLUMNS.account(1),
-      COLUMNS.time(1),
-    ]
+        // COLUMNS.listingId(1.3),
+        // // index
+        // COLUMNS.plotIndex(data.harvestableIndex, 1),
+        // // pricePerPod
+        // COLUMNS.pricePerPod(1),
+        // // amount
+        // maxHarvestableIndex
+        COLUMNS.label(
+          2.5,
+          <Tabs value={tab} onChange={handleChangeTab}>
+            <Tab label="All" />
+            <Tab label="Swaps" />
+            <Tab label="Adds" />
+            <Tab label="Removes" />
+          </Tabs>
+        ),
+        COLUMNS.totalValue(1),
+        COLUMNS.tokenAmount('tokenAmount0', BEAN[1], 1),
+        COLUMNS.tokenAmount('tokenAmount1', PODS, 1),
+        COLUMNS.account(1),
+        COLUMNS.time(1),
+      ]
     : [];
 
   const N = 30;
@@ -82,7 +82,7 @@ const WellActivity: FC<{}> = () => {
           rows={mockWellActivityData}
           loading={data.loading}
           maxRows={8}
-          getRowId={(row : PodListing) => `${row.account}-${row.id}`}
+          getRowId={(row: PodListing) => `${row.account}-${row.id}`}
         />
       </ModuleContent>
     </Module>

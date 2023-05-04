@@ -5,17 +5,19 @@ import {
   NetworkType,
   SupportedChainId,
   SupportedL1ChainId,
-  SupportedL2ChainId
+  SupportedL2ChainId,
 } from '~/constants/chains';
 
-export type ChainInfoMap = { readonly [chainId: number]: L1ChainInfo | L2ChainInfo } 
-& { readonly [chainId in SupportedL1ChainId]: L1ChainInfo }
-& { readonly [chainId in SupportedL2ChainId]: L2ChainInfo }
+export type ChainInfoMap = {
+  readonly [chainId: number]: L1ChainInfo | L2ChainInfo;
+} & { readonly [chainId in SupportedL1ChainId]: L1ChainInfo } & {
+  readonly [chainId in SupportedL2ChainId]: L2ChainInfo;
+};
 
 /**
  * FIXME: this was forked from Uniswap's UI but we only use `explorer` here.
  */
- export const CHAIN_INFO : ChainInfoMap = {
+export const CHAIN_INFO: ChainInfoMap = {
   [SupportedChainId.MAINNET]: {
     networkType: NetworkType.L1,
     explorer: 'https://etherscan.io',
@@ -36,5 +38,5 @@ export type ChainInfoMap = { readonly [chainId: number]: L1ChainInfo | L2ChainIn
     label: 'Harhat',
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Hardhat Ether', symbol: 'hETH', decimals: 18 },
-  }
+  },
 };

@@ -17,9 +17,7 @@ const NFTDetails: FC<NFTContentProps> = ({ nft, collection }) => (
     <NFTImage nft={nft} />
     <Row alignItems="start" justifyContent="space-between">
       {/* Name */}
-      <Typography variant="h4">
-        BeaNFT {nft.id}
-      </Typography>
+      <Typography variant="h4">BeaNFT {nft.id}</Typography>
       <Typography
         variant="bodySmall"
         textAlign="right"
@@ -29,12 +27,10 @@ const NFTDetails: FC<NFTContentProps> = ({ nft, collection }) => (
             : 'text.tertiary'
         }
       >
-        {nft.claimed === ClaimStatus.UNCLAIMED
-          ? 'Ready to mint'
-          : 'Minted'}
+        {nft.claimed === ClaimStatus.UNCLAIMED ? 'Ready to mint' : 'Minted'}
       </Typography>
     </Row>
   </Stack>
-  );
+);
 
 export default NFTDetails;

@@ -8,7 +8,8 @@ import Stat from '../Common/Stat';
 import TokenIcon from '../Common/TokenIcon';
 
 const copy = {
-  fertilizedAmounts: '30-day exponential moving average of Fertilized Sprouts per Season. Fertilized Sprouts can be Rinsed to be redeemed for Beans.',
+  fertilizedAmounts:
+    '30-day exponential moving average of Fertilized Sprouts per Season. Fertilized Sprouts can be Rinsed to be redeemed for Beans.',
   vAPY: 'The Variable FERT APY uses a moving average of Fertilized Sprouts during recent Seasons to estimate a future rate of return.',
 };
 
@@ -17,12 +18,13 @@ const SECTION_MAX_WIDTH = 260;
 const FertilizerAPYChip: React.FC<{}> = () => {
   const sdk = useSdk();
   const yieldData = useFertilizerYieldData();
-  
+
   if (!yieldData) return null;
 
-  const vApyString = yieldData.vApy.gt(0) && yieldData.vApy.lt(0.01)
-    ? '< 0.01'
-    : yieldData.vApy.toFixed(2);
+  const vApyString =
+    yieldData.vApy.gt(0) && yieldData.vApy.lt(0.01)
+      ? '< 0.01'
+      : yieldData.vApy.toFixed(2);
 
   return (
     <Tooltip
@@ -35,9 +37,7 @@ const FertilizerAPYChip: React.FC<{}> = () => {
               title={
                 <Row gap={0.5}>
                   <TokenIcon token={sdk.tokens.SPROUTS} />
-                  <Typography>
-                    Total Sprouts Fertilized Per Season
-                  </Typography>
+                  <Typography>Total Sprouts Fertilized Per Season</Typography>
                 </Row>
               }
               subtitle={copy.fertilizedAmounts}
@@ -46,7 +46,11 @@ const FertilizerAPYChip: React.FC<{}> = () => {
               amount={displayFullBN(yieldData.beansPerSeasonEMA, 2)}
             />
           </Box>
-          <Box px={1} py={0.5} sx={{ maxWidth: SECTION_MAX_WIDTH, alignSelf: 'center' }}>
+          <Box
+            px={1}
+            py={0.5}
+            sx={{ maxWidth: SECTION_MAX_WIDTH, alignSelf: 'center' }}
+          >
             <Typography component="span">
               {copy.vAPY} &nbsp;
               <Link

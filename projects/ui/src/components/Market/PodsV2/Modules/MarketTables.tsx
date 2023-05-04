@@ -50,7 +50,11 @@ const MarketTables: React.FC<{}> = () => {
   // pull queries out of their respecitive hooks to avoid re-fetching
   const marketData = useMarketData(); // "BUY NOW" and "SELL NOW"
   const { data: farmerMarket } = useFarmerMarket(); // "YOUR ORDERS"
-  const { data: eventsData, harvestableIndex, fetchMoreData } = useMarketActivityData(); // "MARKET ACTIVITY"
+  const {
+    data: eventsData,
+    harvestableIndex,
+    fetchMoreData,
+  } = useMarketActivityData(); // "MARKET ACTIVITY"
 
   // FUNCTIONS
   const openIfClosed = () => {
@@ -61,9 +65,9 @@ const MarketTables: React.FC<{}> = () => {
 
   return (
     <Stack
-      sx={{ 
-        bottom: 0, 
-        height: openState !== 0 ? `${size}px` : undefined 
+      sx={{
+        bottom: 0,
+        height: openState !== 0 ? `${size}px` : undefined,
       }}
     >
       <CondensedCard
@@ -73,7 +77,6 @@ const MarketTables: React.FC<{}> = () => {
           flexDirection: 'column',
           width: '100%',
           height: '100%',
-          
         }}
         title={
           <Tabs value={tab} onChange={setTab}>
@@ -92,21 +95,16 @@ const MarketTables: React.FC<{}> = () => {
               }}
               sx={sx.icons}
             >
-              <DropdownIcon 
-                open={openState !== 0} 
-              />
+              <DropdownIcon open={openState !== 0} />
             </Stack>
             <Stack display={{ xs: 'none', md: 'flex' }}>
               {openState === 1 && (
-                <FullscreenIcon 
-                  onClick={() => setOpenState(2)} 
-                  sx={sx.icons} 
-                />
+                <FullscreenIcon onClick={() => setOpenState(2)} sx={sx.icons} />
               )}
               {openState === 2 && (
-                <FullscreenExitIcon 
-                  onClick={() => setOpenState(1)} 
-                  sx={sx.icons} 
+                <FullscreenExitIcon
+                  onClick={() => setOpenState(1)}
+                  sx={sx.icons}
                 />
               )}
             </Stack>

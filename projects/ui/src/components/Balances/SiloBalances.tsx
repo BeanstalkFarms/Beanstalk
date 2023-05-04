@@ -64,7 +64,9 @@ const SiloBalances: React.FC<{}> = () => {
     (state) => state._bean.unripe
   );
 
-  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo);
+  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
+    (state) => state._farmer.silo
+  );
 
   const stalkByToken = useFarmerStalkByToken();
 
@@ -115,7 +117,7 @@ const SiloBalances: React.FC<{}> = () => {
           </Grid>
           <Grid
             item
-            {...{ xs:0, md: 2 }}
+            {...{ xs: 0, md: 2 }}
             display={{ xs: 'none', md: 'block' }}
             textAlign="right"
             pr={4}
@@ -144,10 +146,10 @@ const SiloBalances: React.FC<{}> = () => {
                   py: 1,
                   borderWidth: 0.5,
                   borderColor: 'divider',
-                  background: BeanstalkPalette.white, 
+                  background: BeanstalkPalette.white,
                   '&:hover': {
                     borderColor: 'unset',
-                  }
+                  },
                 }}
               >
                 <Grid container alignItems="center">
@@ -383,9 +385,7 @@ const SiloBalances: React.FC<{}> = () => {
                           sx={{ width: ARROW_CONTAINER_WIDTH }}
                           alignItems="center"
                         >
-                          <ArrowRightIcon
-                            sx={{ color: 'primary.main' }}
-                          />
+                          <ArrowRightIcon sx={{ color: 'primary.main' }} />
                         </Stack>
                       </Row>
                     </Box>
@@ -402,20 +402,28 @@ const SiloBalances: React.FC<{}> = () => {
                     <Row justifyContent="flex-end" gap={0.2}>
                       <TokenIcon token={STALK} css={{ marginBottom: '2px' }} />
                       <Typography color="text.primary" component="span">
-                        {token === Bean ? (
-                          displayFullBN(
-                            ((stalkByToken[address]?.base ?? ZERO_BN)
-                            .plus(stalkByToken[address]?.grown ?? ZERO_BN)
-                            .plus((farmerSilo.stalk.earned.gt(ZERO_BN) ? farmerSilo.stalk.earned : ZERO_BN))
-                            .minus(stalkByToken[address]?.unclaimed ?? ZERO_BN)) ?? ZERO_BN,
-                            STALK.displayDecimals)
-                        ) : (
-                          displayFullBN(
-                            ((stalkByToken[address]?.base ?? ZERO_BN)
-                            .plus(stalkByToken[address]?.grown ?? ZERO_BN)
-                            .minus(stalkByToken[address]?.unclaimed ?? ZERO_BN)) ?? ZERO_BN,
-                            STALK.displayDecimals)
-                        )}                        
+                        {token === Bean
+                          ? displayFullBN(
+                              (stalkByToken[address]?.base ?? ZERO_BN)
+                                .plus(stalkByToken[address]?.grown ?? ZERO_BN)
+                                .plus(
+                                  farmerSilo.stalk.earned.gt(ZERO_BN)
+                                    ? farmerSilo.stalk.earned
+                                    : ZERO_BN
+                                )
+                                .minus(
+                                  stalkByToken[address]?.unclaimed ?? ZERO_BN
+                                ) ?? ZERO_BN,
+                              STALK.displayDecimals
+                            )
+                          : displayFullBN(
+                              (stalkByToken[address]?.base ?? ZERO_BN)
+                                .plus(stalkByToken[address]?.grown ?? ZERO_BN)
+                                .minus(
+                                  stalkByToken[address]?.unclaimed ?? ZERO_BN
+                                ) ?? ZERO_BN,
+                              STALK.displayDecimals
+                            )}
                       </Typography>
                     </Row>
                   </Grid>

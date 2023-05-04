@@ -15,7 +15,7 @@ const columns = [
 
 /**
  * Displays a table of all activity on the Market, including:
- * 
+ *
  * Order, Listings
  * Create, Fill, Cancel
  */

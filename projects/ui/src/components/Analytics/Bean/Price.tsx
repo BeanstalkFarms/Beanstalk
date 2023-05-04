@@ -18,21 +18,21 @@ const statProps = {
   titleTooltip: 'The price at the end of every Season.',
   gap: 0.25,
 };
-const lineChartProps : Partial<LineChartProps> = {
+const lineChartProps: Partial<LineChartProps> = {
   isTWAP: true,
-  yTickFormat: tickFormatBeanPrice
+  yTickFormat: tickFormatBeanPrice,
 };
 
-const Price: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
-  height,
-}) => {
+const Price: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
   const price = usePrice();
   const season = useSeason();
   return (
     <SeasonPlot
       document={SeasonalPriceDocument}
       height={height}
-      defaultValue={price?.gt(0) ? price.dp(4, BigNumber.ROUND_FLOOR).toNumber() : 0} // FIXME: partial dup of `displayBeanPrice`
+      defaultValue={
+        price?.gt(0) ? price.dp(4, BigNumber.ROUND_FLOOR).toNumber() : 0
+      } // FIXME: partial dup of `displayBeanPrice`
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
       formatValue={formatValue}

@@ -3,10 +3,7 @@ import React from 'react';
 import CallMadeIcon from '@mui/icons-material/CallMade';
 import { Link, Stack, Typography } from '@mui/material';
 
-import {
-  SEEDS,
-  STALK,
-} from '~/constants/tokens';
+import { SEEDS, STALK } from '~/constants/tokens';
 import { FontSize } from '../App/muiTheme';
 import Stat from '../Common/Stat';
 import TokenIcon from '../Common/TokenIcon';
@@ -29,31 +26,19 @@ import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 
 import { FC } from '~/types';
 
-const DepositRewards : FC<{ token: ERC20Token }> = ({ token }) => (
+const DepositRewards: FC<{ token: ERC20Token }> = ({ token }) => (
   <Row gap={1} justifyContent="center">
     <Row gap={0.5} justifyContent="center">
       <Typography variant="bodyLarge">
-        <TokenIcon
-          token={STALK}
-          css={{ marginTop: '7px', height: '0.7em' }}
-        />
+        <TokenIcon token={STALK} css={{ marginTop: '7px', height: '0.7em' }} />
         {token.rewards?.stalk}
       </Typography>
       <Row>
-        <TokenIcon
-          token={SEEDS}
-          css={{ fontSize: 'inherit' }}
-        />
-        <Typography variant="bodyLarge">
-          {token.rewards?.seeds}
-        </Typography>
+        <TokenIcon token={SEEDS} css={{ fontSize: 'inherit' }} />
+        <Typography variant="bodyLarge">{token.rewards?.seeds}</Typography>
       </Row>
     </Row>
-    <SiloAssetApyChip 
-      token={token as Token}
-      metric="bean"
-      variant="labeled"
-    />
+    <SiloAssetApyChip token={token as Token} metric="bean" variant="labeled" />
   </Row>
 );
 
@@ -77,9 +62,9 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
               rel="noreferrer"
               underline="none"
               color="text.primary"
-              sx={{ 
-                flexWrap: 'nowrap', 
-                ':hover': { color: 'primary.main' }, 
+              sx={{
+                flexWrap: 'nowrap',
+                ':hover': { color: 'primary.main' },
               }}
             >
               View Liquidity
@@ -113,7 +98,11 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
               amount={`${displayFullBN(tokenPctTVD, 2, 2)}%`}
               variant="bodyLarge"
             />
-            <Stat gap={0} title="Deposit Rewards" amount={<DepositRewards token={token} />} />
+            <Stat
+              gap={0}
+              title="Deposit Rewards"
+              amount={<DepositRewards token={token} />}
+            />
           </Row>
 
           {/* Card Carousel */}
