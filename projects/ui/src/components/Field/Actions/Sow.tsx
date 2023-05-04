@@ -500,12 +500,14 @@ const SowFormContainer: FC<{}> = () => {
 
         const _scaledTemp = await sdk.contracts.beanstalk.temperature();
         const scaledTemp = TokenValue.fromBlockchain(_scaledTemp, 6);
-        console.log('scaledSoil: ', scaledTemp);
 
-        const _minTemp = values.settings.minTemperature || ZERO_BN;
-        const minTemp = _minTemp.gt(scaledTemp.toHuman())
-          ? _minTemp
-          : new BigNumber(scaledTemp.toHuman());
+        console.log('scaledTemperature: ', scaledTemp);
+
+        const _minTemp = TokenValue.fromHuman(
+          (values.settings.minTemperature || ZERO_BN).toString(),
+          6
+        );
+        const minTemperature = _minTemp.gt(scaledTemp) ? _minTemp : scaledTemp;
         const minSoil = amountBeans.mul(1 - values.settings.slippage / 100);
 
         const amountPods = totalBeans.mul(
@@ -528,17 +530,9 @@ const SowFormContainer: FC<{}> = () => {
           values.farmActions.transferToMode || FarmToMode.INTERNAL
         );
 
-        console.log('num beans: ', amountBeans.toHuman());
-        console.log('minTemp: ', minTemp.toString());
-        console.log('minSoil: ', minSoil.toHuman());
-        console.log(
-          'finaltemp: ',
-          TokenValue.fromBlockchain(minTemp.times(1e6).toString(), 0)
-        );
-
         sowTxn.build(
           tokenIn,
-          TokenValue.fromBlockchain(minTemp.times(1e6).toString(), 0),
+          minTemperature,
           minSoil,
           balanceFromToMode(values.balanceFrom),
           claimAndDoX
