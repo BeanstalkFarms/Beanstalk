@@ -9,18 +9,15 @@ export type WarningAlertProps = {
   iconSx?: SxProps<Theme>;
 } & AlertProps;
 
-const WarningAlert: FC<WarningAlertProps> = ({
-  iconSx,
-  ...alertProps
-}) => (
+const WarningAlert: FC<WarningAlertProps> = ({ iconSx, ...alertProps }) => (
   <Alert
     color="warning"
     icon={
       <IconWrapper boxSize={IconSize.medium}>
         <WarningAmberIcon sx={{ fontSize: IconSize.small, ...iconSx }} />
       </IconWrapper>
-      }
+    }
     {...alertProps}
-    />
-  );
+  />
+);
 export default WarningAlert;

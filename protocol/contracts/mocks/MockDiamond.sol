@@ -9,9 +9,9 @@ pragma experimental ABIEncoderV2;
 /******************************************************************************/
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {DiamondCutFacet} from "../farm/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "../farm/facets/DiamondLoupeFacet.sol";
-import {AppStorage} from "../farm/AppStorage.sol";
+import {DiamondCutFacet} from "../beanstalk/diamond/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "../beanstalk/diamond/DiamondLoupeFacet.sol";
+import {AppStorage} from "../beanstalk/AppStorage.sol";
 import {IERC165} from "../interfaces/IERC165.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";

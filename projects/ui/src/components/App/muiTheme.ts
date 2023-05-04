@@ -131,6 +131,7 @@ export const BeanstalkPalette = {
   lightestRed: '#FBEAEB',
   // Yellow
   yellow: '#f0df6a',
+  mediumYellow: '#FFDE7B',
   lightYellow: '#FDF4E7',
   warningYellow: '#F2A64A',
   // Brown

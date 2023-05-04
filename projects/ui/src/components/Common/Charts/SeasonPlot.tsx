@@ -6,9 +6,14 @@ import useSeasonsQuery, {
   MinimumViableSnapshotQuery,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useGenerateChartSeries from '~/hooks/beanstalk/useGenerateChartSeries';
-import { BaseChartProps, BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
+import {
+  BaseChartProps,
+  BaseDataPoint,
+} from '~/components/Common/Charts/ChartPropProvider';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
-import BaseSeasonPlot, { QueryData } from '~/components/Common/Charts/BaseSeasonPlot';
+import BaseSeasonPlot, {
+  QueryData,
+} from '~/components/Common/Charts/BaseSeasonPlot';
 
 export const defaultValueFormatter = (value: number) => `$${value.toFixed(4)}`;
 
@@ -52,6 +57,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
     queryConfig?: Partial<QueryOptions>;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP'>;
+    statsRowFullWidth?: boolean;
   };
 
 /**
@@ -69,6 +75,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   dateKey = 'createdAt',
   queryConfig,
   stackedArea,
+  statsRowFullWidth,
 }: SeasonPlotFinalProps<T>) {
   const timeTabParams = useTimeTabState();
   const getDisplayValue = useCallback((v?: BaseDataPoint[]) => {
@@ -88,7 +95,12 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
     [seasonsQuery, getValue]
   );
 
-  const queryData: QueryData = useGenerateChartSeries(queryParams, timeTabParams[0], dateKey, stackedArea);
+  const queryData: QueryData = useGenerateChartSeries(
+    queryParams,
+    timeTabParams[0],
+    dateKey,
+    stackedArea
+  );
 
   return (
     <BaseSeasonPlot
@@ -103,6 +115,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
         tooltip: false,
         ...LineChartProps,
       }}
+      statsRowFullWidth={statsRowFullWidth}
     />
   );
 }

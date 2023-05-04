@@ -80,7 +80,7 @@ const NFTPage: FC<{}> = () => {
 
     try {
       if (nftArray.length > 0) {
-        for (let i = 0; i < nftArray.length; i + 1) {
+        for (let i = 0; i < nftArray.length; i += 1) {
           batchRequest.push({
             contractAddress: contractAddress,
             tokenId: nftArray[i].id,
@@ -133,6 +133,7 @@ const NFTPage: FC<{}> = () => {
         ).then((response) => response.json());
       } catch (e) {
         console.log('BEANFT - ERROR FECTHING MINTABLE NFTS');
+        console.log('BEANFT - ERROR FETCHING MINTABLE NFTS');
       }
 
       // batchNFTMetadata

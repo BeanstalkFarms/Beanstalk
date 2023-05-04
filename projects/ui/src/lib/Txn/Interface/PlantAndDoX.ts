@@ -42,7 +42,7 @@ export default class PlantAndDoX {
     return PlantAndDoX.makeCrate.bigNumber(
       this._sdk,
       tokenValueToBN(this._earnedBeans),
-      new BigNumber(this._season),
+      new BigNumber(this._season)
     );
   }
 

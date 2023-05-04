@@ -10,11 +10,13 @@ import { AppState } from '~/state';
  * given token when it is deposited in the Silo.
  */
 export default function useBDV() {
-  const beanstalkSiloBalances = useSelector<AppState, AppState['_beanstalk']['silo']['balances']>(
-    (state) => state._beanstalk.silo.balances
-  );
+  const beanstalkSiloBalances = useSelector<
+    AppState,
+    AppState['_beanstalk']['silo']['balances']
+  >((state) => state._beanstalk.silo.balances);
   return useCallback(
-    (_token: Token | TokenOld) => beanstalkSiloBalances[_token.address]?.bdvPerToken || ZERO_BN,
+    (_token: Token | TokenOld) =>
+      beanstalkSiloBalances[_token.address]?.bdvPerToken || ZERO_BN,
     [beanstalkSiloBalances]
   );
 }

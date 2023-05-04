@@ -8,7 +8,9 @@ const {
   impersonateWeth, 
   impersonateUnripe, 
   impersonateFertilizer,
-  impersonatePrice
+  impersonatePrice,
+  impersonateBlockBasefee,
+  impersonateEthUsdcUniswap
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -169,6 +171,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
+    await impersonateBlockBasefee();
+    await impersonateEthUsdcUniswap()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({

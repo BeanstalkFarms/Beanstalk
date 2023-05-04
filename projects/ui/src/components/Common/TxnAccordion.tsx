@@ -5,12 +5,10 @@ import StyledAccordionSummary from './Accordion/AccordionSummary';
 
 import { FC } from '~/types';
 
-const TxnAccordion : FC<AccordionProps> = ({ children, ...props }) => (
+const TxnAccordion: FC<AccordionProps> = ({ children, ...props }) => (
   <Accordion defaultExpanded={false} variant="outlined" {...props}>
     <StyledAccordionSummary title="Transaction Details" />
-    <AccordionDetails>
-      {children}
-    </AccordionDetails>
+    <AccordionDetails>{children}</AccordionDetails>
   </Accordion>
 );
 

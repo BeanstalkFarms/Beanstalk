@@ -1,15 +1,12 @@
-/*
- SPDX-License-Identifier: MIT
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 /**
- * @author LeoFib
  * @title LibConvertData
- **/
-
+ * @author LeoFib
+ */
 library LibConvertData {
     // In order to preserve backwards compatibility, make sure new kinds are added at the end of the enum.
     enum ConvertKind {
@@ -28,10 +25,6 @@ library LibConvertData {
     {
         return abi.decode(self, (ConvertKind));
     }
-
-    /**
-     * Sell To Peg Convert Functions Uniswap
-     **/
 
     /// @notice Decoder for the addLPInBeans Convert
     function basicConvert(bytes memory self)
