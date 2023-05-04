@@ -29,6 +29,9 @@ library LibLegacyTokenSilo {
     using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
 
+    //TODO: verify and update this root on launch if there's more drift
+    //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
+    bytes32 constant DISCREPANCY_MERKLE_ROOT = 0xb81b71efcfb245c4d596e20e403b2a6f70c05c68f59a5e57083881eacacc9671;
 
     //important to note that this event is only here for unit tests purposes of legacy code and to ensure unripe all works with new bdv system
     event AddDeposit(
@@ -439,14 +442,11 @@ library LibLegacyTokenSilo {
         uint256 seedsVariance
     ) internal {
         if (seedsDiff > 0) {
-            //read merkle root to determine stalk/seeds diff drift from convert issue
-            //TODO: verify and update this root on launch if there's more drift
-            //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
-            bytes32 root = 0xb81b71efcfb245c4d596e20e403b2a6f70c05c68f59a5e57083881eacacc9671;
+            //verify merkle tree to determine stalk/seeds diff drift from convert issue
             bytes32 leaf = keccak256(abi.encode(account, stalkDiff, seedsDiff));
             
             require(
-                MerkleProof.verify(proof, root, leaf),
+                MerkleProof.verify(proof, DISCREPANCY_MERKLE_ROOT, leaf),
                 "UnripeClaim: invalid proof"
             );
         }
