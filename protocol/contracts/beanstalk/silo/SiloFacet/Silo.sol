@@ -112,6 +112,7 @@ contract Silo is SiloExit {
         if (beans == 0) return 0;
         
         // Reduce the Silo's supply of Earned Beans.
+        // SafeCast unnecessary because beans is <= s.earnedBeans.
         s.earnedBeans = s.earnedBeans.sub(uint128(beans));
         
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
