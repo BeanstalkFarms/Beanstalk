@@ -99,7 +99,7 @@ library LibTokenSilo {
 
         // If amount to remove is greater than the amount in the Deposit, migrate legacy Deposit to new Deposit
         if (amount > crateAmount) {
-            // Fetch and remove legacy deposit
+            // If Unripe Deposit, fetch whole Deposit balance and delete legacy deposit references.
             if (LibUnripeSilo.isUnripeBean(token)) {
                 (crateAmount, crateBDV) = LibUnripeSilo.unripeBeanDeposit(account, id);
                 LibUnripeSilo.removeUnripeBeanDeposit(account, id);

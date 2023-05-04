@@ -20,6 +20,9 @@ library LibUnripeSilo {
     uint256 private constant AMOUNT_TO_BDV_BEAN_3CRV = 992035;
     uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
+    /**
+     * @dev Deletes the legacy Bean storage reference for a given `account` and `id`.
+     */
     function removeUnripeBeanDeposit(
         address account,
         uint32 id
@@ -32,6 +35,10 @@ library LibUnripeSilo {
         b = token == C.UNRIPE_BEAN;
     }
 
+    /**
+     * @dev Returns the whole Unripe Bean Deposit for a given `account` and `season`.
+     * Includes non-legacy balance.
+     */
     function unripeBeanDeposit(address account, uint32 season)
         internal
         view
@@ -46,6 +53,9 @@ library LibUnripeSilo {
             .add(legacyAmount.mul(C.initialRecap()).div(1e18));
     }
 
+    /**
+     * @dev Deletes all legacy LP storage references for a given `account` and `id`.
+     */
     function removeUnripeLPDeposit(
         address account,
         uint32 id
@@ -61,6 +71,10 @@ library LibUnripeSilo {
         b = token == C.UNRIPE_LP;
     }
 
+    /**
+     * @dev Returns the whole Unripe LP Deposit for a given `account` and `season`.
+     * Includes non-legacy balance.
+     */
     function unripeLPDeposit(address account, uint32 season)
         internal
         view
