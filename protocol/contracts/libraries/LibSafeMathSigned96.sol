@@ -6,7 +6,7 @@ pragma solidity >=0.6.0 <0.8.0;
  * @title SignedSafeMath
  * @dev Signed math operations with safety checks that revert on error.
  */
-library SignedSafeMath {
+library LibSafeMathSigned96 {
     int96 constant private _INT96_MIN = -2**95;
 
     /**
