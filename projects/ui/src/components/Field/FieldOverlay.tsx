@@ -4,10 +4,7 @@ import { Box, Stack, Typography, Button } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useSelector, useDispatch } from 'react-redux';
 import useSdk from '~/hooks/sdk';
-import {
-  selectBeanstalkField,
-  selectMorningTemperatureMap,
-} from '~/state/beanstalk/field/reducer';
+import { selectBeanstalkField } from '~/state/beanstalk/field/reducer';
 import {
   selectMorning,
   selectSunriseBlock,
@@ -26,11 +23,12 @@ import { IS_DEV } from '~/util';
 import InfoRow from '~/components/Common/Form/InfoRow';
 import Row from '~/components/Common/Row';
 import useFetchLatestBlock from '~/hooks/chain/useFetchLatestBlock';
+import useMorningTemperature from '~/hooks/beanstalk/useMorningTemperature';
 
 const minimize = false;
 
 /**
- * TEMORARY
+ * TEMPORARY --> DEV ONLY
  * Used to help faciliate the starting of a new season
  */
 const FieldOverlay: React.FC<{}> = () => {
@@ -46,7 +44,7 @@ const FieldOverlay: React.FC<{}> = () => {
   const [fetchMorningField] = useFetchMorningField();
   const [fetchBlock] = useFetchLatestBlock();
 
-  const temperatureMap = useSelector(selectMorningTemperatureMap);
+  const temperatureMap = useMorningTemperature();
   const calculatedTempData = temperatureMap[morning.blockNumber.toString()];
 
   const dispatch = useDispatch();
@@ -103,18 +101,14 @@ const FieldOverlay: React.FC<{}> = () => {
 
   const handleClick = useCallback(async () => {
     await chainUtil.sunriseForward();
-    const nowSeconds = Math.ceil(DateTime.now().toSeconds());
     const [s] = await fetchSun();
-    await fetchMorningField();
     if (!s) return;
-    const sunriseTimestampSeconds = s.timestamp.toSeconds();
-    const secondsDiff = sunriseTimestampSeconds - nowSeconds;
-
+    const secondsDiff = getDiffNow(s.timestamp);
     const morningMap = initMorningBlockMap({
       sunriseBlock: s.sunriseBlock,
       timestamp: s.timestamp,
       offset: {
-        seconds: secondsDiff,
+        seconds: secondsDiff.as('seconds'),
         block: s.sunriseBlock,
       },
     });
@@ -124,7 +118,7 @@ const FieldOverlay: React.FC<{}> = () => {
         blockNumber: s.sunriseBlock,
       })
     );
-  }, [chainUtil, dispatch, fetchMorningField, fetchSun]);
+  }, [chainUtil, dispatch, fetchSun]);
 
   if (minimize) return null;
   if (!IS_DEV) return null;
