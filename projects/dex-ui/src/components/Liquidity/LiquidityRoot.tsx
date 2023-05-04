@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import styled from "styled-components";
 import { Well } from "@beanstalk/sdk/Wells";
 import { AddLiquidity } from "./AddLiquidity";
 import { RemoveLiquidity } from "./RemoveLiquidity";
 import SlippagePanel from "./SlippagePanel";
+import { Log } from "src/utils/logger";
 
 type LiquidityRootProps = {
   well: Well;
@@ -17,26 +18,22 @@ export const LiquidityRoot = ({ well, txnCompleteCallback }: LiquidityRootProps)
   const [showSlippageSettings, setShowSlippageSettings] = useState<boolean>(false);
   const [slippage, setSlippage] = useState<number>(0.1);
 
-  const slippageSettingsClickHandler = () => {
-    setShowSlippageSettings(true);
-  };
-
-  const slippageSettingsCloseHandler = () => {
-    setShowSlippageSettings(false);
-  };
+  const slippageSettingsClickHandler = useCallback(() => {
+    setShowSlippageSettings(!showSlippageSettings);
+  }, [showSlippageSettings]);
 
   const handleSlippageValueChange = (value: string) => {
-    console.debug(`Slippage changed: ${parseFloat(value)}`);
+    Log.module("liquidityroot").debug(`Slippage changed: ${parseFloat(value)}`);
     setSlippage(parseFloat(value));
   };
   // /Slippage-related
-  
+
   return (
     <Container>
       {showSlippageSettings && (
         <SlippagePanel
           slippageValue={slippage}
-          closeButtonClicked={slippageSettingsCloseHandler}
+          closeModal={slippageSettingsClickHandler}
           slippageValueChanged={handleSlippageValueChange}
         />
       )}
