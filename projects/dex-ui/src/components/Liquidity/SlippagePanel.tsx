@@ -8,19 +8,15 @@ import arrowLeft from "/src/assets/images/arrow.svg";
 type SlippagePanelProps = {
   slippageValue: number;
   slippageValueChanged: (value: string) => void;
-  closeButtonClicked: () => void;
+  closeModal: () => void;
 };
 
-const SlippagePanel = ({ slippageValueChanged, closeButtonClicked, slippageValue }: SlippagePanelProps) => {
-  const buttonClickHandler = () => {
-    closeButtonClicked();
-  };
-
+const SlippagePanel = ({ slippageValueChanged, closeModal, slippageValue }: SlippagePanelProps) => {
   return (
     <SlippageContainer>
       <SlippageHeader>
         <SlippageImageSpacer>
-          <img src={arrowLeft} alt="Back" onClick={buttonClickHandler} />
+          <img src={arrowLeft} alt="Back" onClick={closeModal} />
         </SlippageImageSpacer>
         <SlippageHeaderText>Adjust Slippage</SlippageHeaderText>
       </SlippageHeader>
@@ -28,7 +24,7 @@ const SlippagePanel = ({ slippageValueChanged, closeButtonClicked, slippageValue
         <SlippageTopSection>
           {/* // TODO: Can we show Slippage Tolerance as a "placeholder" (per design) */}
           {/* // TODO: Also, we need to show a trailing % */}
-          <input type="text" defaultValue={slippageValue} onChange={(e) => slippageValueChanged(e.target.value)} />
+          <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => slippageValueChanged(e.target.value)} />
           Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that you
           are willing to tolerate.
         </SlippageTopSection>
@@ -39,6 +35,10 @@ const SlippagePanel = ({ slippageValueChanged, closeButtonClicked, slippageValue
     </SlippageContainer>
   );
 };
+
+const StyledInput = styled.input`
+  // TODO: Make it look nice
+`;
 
 const SlippageTextBottom = styled.div`
   // TODO: Why doesn't this go to the bottom?
