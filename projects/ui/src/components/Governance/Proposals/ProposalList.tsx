@@ -9,8 +9,9 @@ import { GovSpace } from '~/lib/Beanstalk/Governance';
 import DelegationBanner, {
   DelegationBannerProps,
 } from '~/components/Governance/Delegate/DelegationBanner';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 import VotingPowerBanner from '../Delegate/VotingPowerBanner';
+import useAccount from '~/hooks/ledger/useAccount';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 type Props = {
   space: GovSpace;
@@ -18,6 +19,8 @@ type Props = {
 } & DelegationBannerProps;
 
 const ProposalList: FC<Props> = (props) => {
+  const account = useAccount();
+
   // Null state
   if (!props.proposals) {
     return (
@@ -34,13 +37,14 @@ const ProposalList: FC<Props> = (props) => {
 
   return (
     <Stack px={1} pb={1} gap={1}>
-      <Stack gap={2} py={1}>
+      <Stack gap={2} py={account ? 1 : 0}>
         <VotingPowerBanner {...props} />
         <DelegationBanner {...props} />
         <Box
           sx={{
             borderBottom: '0.5px solid',
             borderColor: BeanstalkPalette.blue,
+            display: account ? 'block' : 'none',
           }}
         />
       </Stack>

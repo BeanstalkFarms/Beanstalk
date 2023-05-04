@@ -1,37 +1,26 @@
 import { Button, Stack, Typography } from '@mui/material';
-import React, { useMemo } from 'react';
+import React from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Link as RouterLink } from 'react-router-dom';
-import BigNumber from 'bignumber.js';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
 
 import { BeanstalkPalette, IconSize } from '../../App/muiTheme';
-import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 import { displayFullBN } from '~/util';
 import Row from '../../Common/Row';
 import TokenIcon from '../../Common/TokenIcon';
-import { FarmerDelegation } from '~/state/farmer/delegations';
 import useAccount from '~/hooks/ledger/useAccount';
 import beanNFTIconDark from '~/img/tokens/beanft-dark-logo.svg';
+import useFarmerVotingPower from '~/hooks/beanstalk/useFarmerVotingPower';
 
 const VotingPowerBanner: React.FC<{
   tab: number;
   getSlug: (_tab: number) => string;
   space: GovSpace;
-  farmerDelegations: FarmerDelegation;
-}> = ({ tab, space, getSlug, farmerDelegations }) => {
+}> = ({ tab, space, getSlug }) => {
   const account = useAccount();
 
-  const totalVP = useMemo(() => {
-    const _delegation = Object.values(
-      farmerDelegations.votingPower[space] || []
-    );
-    return _delegation.reduce<BigNumber>(
-      (acc, curr) => acc.plus(curr),
-      ZERO_BN
-    );
-  }, [farmerDelegations.votingPower, space]);
+  const { votingPower } = useFarmerVotingPower(space);
 
   const isNFT = space === GovSpace.BeanNFT;
 
@@ -60,9 +49,9 @@ const VotingPowerBanner: React.FC<{
             {space.toString()}
           </Typography>
           <Typography color="text.secondary">
-            Your total number of votes includes your own{' '}
-            {isNFT ? 'BeaNFTs' : 'Stalk'} and {isNFT ? 'BeaNFTs' : 'Stalk'}{' '}
-            delegated to you by others.
+            Your total number of votes includes your own&nbsp;
+            {isNFT ? 'BeaNFTs' : 'Stalk'} and {isNFT ? 'BeaNFTs' : 'Stalk'}
+            &nbsp;delegated to you by others.
           </Typography>
           {space === GovSpace.BeanNFT ? (
             <Row gap={0.3}>
@@ -76,14 +65,20 @@ const VotingPowerBanner: React.FC<{
                 }}
               />
               <Typography variant="bodyLarge">
-                {displayFullBN(totalVP, 0)} BEANFT
+                {votingPower.total.gt(0)
+                  ? displayFullBN(votingPower.total, 0)
+                  : '0'}
+                &nbsp;BEANFT
               </Typography>
             </Row>
           ) : (
             <Row gap={0.3}>
               <TokenIcon token={STALK} css={{ height: IconSize.small }} />
               <Typography variant="bodyLarge">
-                {displayFullBN(totalVP, 0)} STALK
+                {votingPower.total.gt(0)
+                  ? displayFullBN(votingPower.total, 0)
+                  : '0'}
+                &nbsp;STALK
               </Typography>
             </Row>
           )}

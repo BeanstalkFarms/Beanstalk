@@ -19,7 +19,6 @@ import {
 import { useDelegatesRegistryContract } from '~/hooks/ledger/useContract';
 import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
 import { GOV_SPACE_BY_ID, tokenResult } from '~/util';
-import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import { STALK } from '~/constants/tokens';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -238,14 +237,11 @@ export function useFetchNFTVotingPower() {
 
 export function useFetchStalkVotingPower() {
   const delegations = useFarmerDelegations();
-  const farmerSilo = useFarmerSilo();
   const account = useAccount();
 
   const dispatch = useDispatch();
 
   const [fetchDelegatorsStalk] = useDelegatorsStalkLazyQuery();
-
-  const activeStalk = farmerSilo.stalk.active;
 
   const delegators = useMemo(() => {
     if (!account) return [];
@@ -265,7 +261,7 @@ export function useFetchStalkVotingPower() {
 
   const fetch = useCallback(async () => {
     try {
-      if (!account || !delegators.length || activeStalk.lte(0)) return;
+      if (!account || !delegators.length) return;
       const data = await fetchDelegatorsStalk({
         variables: { ids: delegators },
         fetchPolicy: 'cache-and-network',
@@ -290,10 +286,6 @@ export function useFetchStalkVotingPower() {
         [GovSpace.BeanstalkDAO]: {},
         [GovSpace.BeanNFT]: {},
       };
-
-      votingPower[GovSpace.BeanSprout][account.toLowerCase()] = activeStalk;
-      votingPower[GovSpace.BeanstalkFarms][account.toLowerCase()] = activeStalk;
-      votingPower[GovSpace.BeanstalkDAO][account.toLowerCase()] = activeStalk;
 
       Object.entries(delegations.delegators).forEach(([s, d]) => {
         const space = s as GovSpace;
@@ -339,7 +331,6 @@ export function useFetchStalkVotingPower() {
     }
   }, [
     account,
-    activeStalk,
     delegations.delegators,
     delegators,
     dispatch,

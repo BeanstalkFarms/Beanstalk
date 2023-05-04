@@ -1,9 +1,7 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Box, Stack, Typography, Link } from '@mui/material';
 import BigNumber from 'bignumber.js';
-import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
-import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 import { displayBN, displayFullBN, trimAddress } from '~/util';
 import { BeanstalkPalette, IconSize } from '~/components/App/muiTheme';
@@ -12,6 +10,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import useAccount from '~/hooks/ledger/useAccount';
 import AddressIcon from '~/components/Common/AddressIcon';
 import beanNFTIconDark from '~/img/tokens/beanft-dark-logo.svg';
+import useFarmerVotingPower from '~/hooks/beanstalk/useFarmerVotingPower';
 
 const FarmerRow: React.FC<{
   address: string;
@@ -55,37 +54,10 @@ const FarmerRow: React.FC<{
 );
 
 const VotingPowerTable: React.FC<{ space: GovSpace }> = ({ space }) => {
-  const farmerDelegations = useFarmerDelegations();
+  const { votingPower, delegators } = useFarmerVotingPower(space);
   const account = useAccount();
 
-  const { totalVP, delegation, delegators } = useMemo(() => {
-    const _delegation = farmerDelegations.votingPower[space];
-    if (!_delegation)
-      return {
-        totalVP: ZERO_BN,
-        delegation: {},
-        delegators: [],
-      };
-    const total = Object.values(_delegation).reduce<BigNumber>(
-      (acc, curr) => acc.plus(curr),
-      ZERO_BN
-    );
-    const _filteredDelegations = Object.entries(_delegation)
-      .filter(([_address]) => _address.toLowerCase() !== account?.toLowerCase())
-      .map(([address, amount]) => ({
-        address,
-        amount,
-      }));
-
-    return {
-      totalVP: total,
-      delegation: _delegation,
-      delegators: _filteredDelegations,
-    };
-  }, [account, farmerDelegations.votingPower, space]);
-
   const isNFT = space === GovSpace.BeanNFT;
-  const myVotingPower = account ? delegation[account.toLowerCase()] : ZERO_BN;
 
   return (
     <Stack gap={2}>
@@ -102,7 +74,7 @@ const VotingPowerTable: React.FC<{ space: GovSpace }> = ({ space }) => {
           <Row gap={0.5}>
             <TokenIcon token={STALK} css={{ height: IconSize.small }} />
             <Typography variant="bodyLarge">
-              {displayFullBN(totalVP, 0)} STALK
+              {displayFullBN(votingPower.farmer, 0)} STALK
             </Typography>
           </Row>
         ) : (
@@ -117,7 +89,7 @@ const VotingPowerTable: React.FC<{ space: GovSpace }> = ({ space }) => {
               }}
             />
             <Typography variant="bodyLarge">
-              {displayFullBN(totalVP, 0)} BEANFT
+              {displayFullBN(votingPower.farmer, 0)} BEANFT
             </Typography>
           </Row>
         )}
@@ -137,7 +109,7 @@ const VotingPowerTable: React.FC<{ space: GovSpace }> = ({ space }) => {
             </Typography>
             {account ? (
               <FarmerRow
-                amount={myVotingPower}
+                amount={votingPower.farmer}
                 address={account}
                 isNFT={space === GovSpace.BeanNFT}
               />
