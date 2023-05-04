@@ -12,7 +12,7 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-type TokenQuoteProviderCustomProps = {
+export type TokenQuoteProviderCustomProps = {
   /** Field name */
   name: string;
   /** The current form state of this token */

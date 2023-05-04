@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { ChainConstant } from '~/constants';
 import useGetChainToken from '../chain/useGetChainToken';
 import useFarmerBalances from './useFarmerBalances';
 
-type TokenOrTokenMap = Token | ChainConstant<Token>;
+type TokenOrTokenMap = TokenOld | ChainConstant<TokenOld> | Token;
 
 export type PreferredToken = {
   token: TokenOrTokenMap;
@@ -39,7 +40,9 @@ export default function usePreferredToken(
     const index = list.findIndex((pt) => {
       const tok = getChainToken(pt.token);
       const min = pt.minimum || new BigNumber(tok.displayDecimals / 100); // default: 2 decimals => min 0.02
-      const bal = balances[tok.address];
+       // in the sdk, address of ETH is "". We need to use "eth" as key
+      const key = tok instanceof Token && tok.symbol === 'ETH' ? 'eth' : tok.address;
+      const bal = balances[key];
       return bal?.total?.gte(min) || false;
     });
     // console.debug(`[hooks/usePreferredToken] found a preferred token: ${index}`);

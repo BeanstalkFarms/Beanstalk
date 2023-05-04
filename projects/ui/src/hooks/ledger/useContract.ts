@@ -8,11 +8,12 @@ import BEANSTALK_FERTILIZER_ABI from '~/constants/abi/Beanstalk/BeanstalkFertili
 import ERC20_ABI from '~/constants/abi/ERC20.json';
 import BEANFT_GENESIS_ABI from '~/constants/abi/BeaNFT/BeaNFTGenesis.json';
 import BEANFT_WINTER_ABI from '~/constants/abi/BeaNFT/BeaNFTWinter.json';
+import BEANFT_BARNRAISE_ABI from '~/constants/abi/BeaNFT/BeaNFTBarnRaise.json';
 import AGGREGATOR_V3_ABI from '~/constants/abi/Chainlink/AggregatorV3.json';
 import useChainConstant from '../chain/useChainConstant';
 import { SupportedChainId } from '~/constants/chains';
 import {
-  BEANFT_GENESIS_ADDRESSES, BEANFT_WINTER_ADDRESSES,
+  BEANFT_GENESIS_ADDRESSES, BEANFT_WINTER_ADDRESSES, BEANFT_BARNRAISE_ADDRESSES,
   BEANSTALK_ADDRESSES,
   BEANSTALK_FERTILIZER_ADDRESSES,
   BEANSTALK_PRICE_ADDRESSES,
@@ -23,6 +24,7 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import {
   BeaNFTGenesis,
   BeaNFTWinter,
+  BeaNFTBarnRaise,
   BeanstalkFertilizer,
   Beanstalk,
   BeanstalkPrice,
@@ -185,6 +187,16 @@ export function useWinterNFTContract(signer?: ethers.Signer | null) {
     abi: BEANFT_WINTER_ABI,
     signerOrProvider: signer || provider,
   }) as BeaNFTWinter;
+}
+
+export function useBarnRaiseNFTContract(signer?: ethers.Signer | null) {
+  const address = useChainConstant(BEANFT_BARNRAISE_ADDRESSES);
+  const provider = useProvider();
+  return useWagmiContract({
+    address,
+    abi: BEANFT_BARNRAISE_ABI,
+    signerOrProvider: signer || provider,
+  }) as BeaNFTBarnRaise;
 }
 
 /** used to access chainlink price data feeds */

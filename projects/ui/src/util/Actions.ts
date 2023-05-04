@@ -40,6 +40,11 @@ export enum ActionType {
   RINSE,
   BUY_FERTILIZER,
   RECEIVE_FERT_REWARDS,
+
+  /// SILO REWARDS
+  ENROOT,
+  PLANT,
+  MOW,
 }
 
 /// ////////////////////////////// GENERIC /////////////////////////////////
@@ -107,6 +112,7 @@ export type SiloTransitAction = SiloAction & {
 
 export type SiloClaimAction = SiloAction & {
   type: ActionType.CLAIM_WITHDRAWAL;
+  hideGraphic?: boolean;
 }
 
 export type SiloTransferAction = SiloAction & {
@@ -114,6 +120,26 @@ export type SiloTransferAction = SiloAction & {
   stalk: BigNumber;
   seeds: BigNumber;
   to: string;
+}
+
+/// /////////////////////////// SILO REWARDS /////////////////////////////
+
+export type MowAction = {
+  type: ActionType.MOW;
+  stalk: BigNumber;
+}
+
+export type EnrootAction = {
+  type: ActionType.ENROOT;
+  seeds: BigNumber;
+  stalk: BigNumber;
+}
+
+export type PlantAction = {
+  type: ActionType.PLANT;
+  seeds: BigNumber;
+  stalk: BigNumber;
+  bean: BigNumber;
 }
 
 /// ////////////////////////////// FIELD /////////////////////////////////
@@ -141,6 +167,7 @@ export type ReceivePodsAction = FieldAction & {
 export type FieldHarvestAction = {
   type: ActionType.HARVEST;
   amount: BigNumber;
+  hideGraphic?: boolean;
 }
 
 export type ReceiveBeansAction = {
@@ -181,6 +208,7 @@ export type SellPodsAction = {
 export type RinseAction = {
   type: ActionType.RINSE;
   amount: BigNumber;
+  hideGraphic?: boolean;
 }
 
 export type FertilizerBuyAction = {
@@ -210,6 +238,10 @@ export type Action = (
   | SiloRewardsAction
   | SiloClaimAction
   | SiloTransferAction
+  /// SILO REWARDS
+  | EnrootAction
+  | PlantAction
+  | MowAction
   /// FIELD
   | BurnBeansAction
   | ReceivePodsAction
@@ -270,6 +302,14 @@ export const parseActionMessage = (a: Action) => {
       return `Claim ${displayFullBN(a.amount, 2)} ${a.token.name}.`;
     case ActionType.TRANSFER:
       return `Transfer ${displayFullBN(a.amount)} ${a.token.name}, ${displayFullBN(a.stalk)} Stalk, and ${displayFullBN(a.seeds)} Seeds to ${trimAddress(a.to, true)}.`;
+
+    /// SILO REWARDS
+    case ActionType.MOW:
+      return `Mow ${displayFullBN(a.stalk, 2)} Stalk.`;
+    case ActionType.PLANT:
+      return `Plant ${displayFullBN(a.bean, 2)} Bean${a.bean.gt(1) ? 's' : ''}, ${displayFullBN(a.seeds, 2)} Seeds, and ${displayFullBN(a.stalk, 2)} Stalk.`;
+    case ActionType.ENROOT:
+      return `Enroot revitalized ${displayFullBN(a.stalk, 2)} Stalk and ${displayFullBN(a.seeds, 2)} Seeds.`;
 
     /// FIELD
     case ActionType.BUY_BEANS:

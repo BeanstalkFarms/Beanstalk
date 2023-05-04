@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
 
@@ -13,7 +14,7 @@ export default function useBDV() {
     (state) => state._beanstalk.silo.balances
   );
   return useCallback(
-    (_token: Token) => beanstalkSiloBalances[_token.address]?.bdvPerToken || ZERO_BN,
+    (_token: Token | TokenOld) => beanstalkSiloBalances[_token.address]?.bdvPerToken || ZERO_BN,
     [beanstalkSiloBalances]
   );
 }

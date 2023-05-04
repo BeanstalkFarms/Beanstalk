@@ -57,6 +57,7 @@ const CSP = buildCSP({
     'https://arweave.net', // Arweave images included in gov proposals
     '*.walletconnect.com', // WalletConnect wallet viewer
     'data:', // Wallet connectors use data-uri QR codes
+    'https://ipfs.io/', // BeaNFT images
   ],
 });
 

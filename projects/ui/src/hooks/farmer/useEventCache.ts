@@ -5,6 +5,9 @@ import { getEventCacheId } from '~/util/State';
 import { AppState } from '~/state';
 import { EventCacheName } from '~/state/farmer/events2';
 
+// use this instead of returning {} to avoid unnecessary rerenders
+const defaultEmpty = {};
+
 /**
  * 
  * @param cacheId CacheID
@@ -17,6 +20,6 @@ export default function useEventCache(cacheId: EventCacheName) {
   const account = useAccount();
   const id = account ? getEventCacheId(chainId, account, cacheId) : undefined;
   return useSelector<AppState, AppState['_farmer']['events2'][string] | undefined>(
-    (state) => (id ? (state._farmer.events2[id] || {}) : undefined)
+    (state) => (id ? (state._farmer.events2[id] || defaultEmpty) : undefined)
   );
 }
