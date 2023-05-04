@@ -139,7 +139,7 @@ const DelegationForm: React.FC<FormikProps<DelegateValues> & DelegateProps> = ({
               Your votes are currently delegated to&nbsp;
               <Link
                 component="a"
-                href={`https://etherscan.io/address/${delegate.address}`}
+                href={`https://snapshot.org/#/profile/${delegate.address}`}
                 target="_blank"
                 rel="noreferrer"
                 variant="h4"

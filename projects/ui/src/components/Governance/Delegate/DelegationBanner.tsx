@@ -73,7 +73,7 @@ const DelegationBanner: React.FC<DelegationBannerProps> = ({
               to&nbsp;
               <Link
                 component="a"
-                href={`https://etherscan.io/address/${delegate.address}`}
+                href={`https://snapshot.org/#/profile/${delegate.address}`}
                 target="_blank"
                 rel="noreferrer"
                 color="inherit"
