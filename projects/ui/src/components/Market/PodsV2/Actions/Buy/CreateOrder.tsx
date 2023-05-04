@@ -14,7 +14,6 @@ import {
   SmartSubmitButton,
   TokenAdornment,
   TokenInputField,
-  TokenOutputField,
   TokenQuoteProvider,
   TokenSelectDialog,
   TxnPreview,
@@ -52,6 +51,8 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 
 import { FC } from '~/types';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
@@ -109,6 +110,7 @@ const CreateOrderV2Form: FC<
   tokenList,
   contract,
 }) => {
+  const sdk = useSdk();
   const getChainToken = useGetChainToken();
   const balances = useFarmerBalances();
 
@@ -212,11 +214,13 @@ const CreateOrderV2Form: FC<
         {isReady ? (
           <>
             <TxnSeparator mt={-1} />
-            <TokenOutputField
-              token={PODS}
-              amount={amountPods}
-              size="small"
-            />
+            <TokenOutput size="small">
+              <TokenOutput.Row 
+                token={sdk.tokens.PODS}
+                amount={amountPods}
+                size="small"
+              />
+            </TokenOutput>
             {/* <Alert
               color="warning"
               icon={
@@ -277,7 +281,7 @@ const CreateOrderV2Form: FC<
             tokens={values.tokens}
             mode="auto"
             sx={{ width: '100%', outline: '6.5px solid white' }}
-          >
+        >
             Order
           </SmartSubmitButton>
         </Box>

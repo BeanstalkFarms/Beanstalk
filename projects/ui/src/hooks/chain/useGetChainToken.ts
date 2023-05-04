@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { ChainConstant } from '~/constants';
 import { useGetChainConstant } from './useChainConstant';
 
@@ -16,9 +17,10 @@ export default function useGetChainToken() {
   const getChainConstant = useGetChainConstant();
   return useCallback(
     // T = Token | ERC20Token | NativeToken ...
-    <T extends Token>(t: T | ChainConstant<T>) : T => (
-      (t instanceof Token) ? t : getChainConstant(t as ChainConstant<T>)
-    ),
+    <T extends TokenOld | Token>(t: T | ChainConstant<T>) : T => {
+      if (t instanceof Token) return t;
+      return (t instanceof TokenOld) ? t : getChainConstant(t as ChainConstant<T>);
+    },
     [getChainConstant]
   );
 }

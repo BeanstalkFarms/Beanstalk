@@ -1,9 +1,12 @@
 import { useMemo } from 'react';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { ChainConstant, TokenMap } from '~/constants';
 import useGetChainToken from './useGetChainToken';
+import { getTokenIndex } from '~/util';
 
-export default function useTokenMap<T extends Token>(
+
+export default function useTokenMap<T extends Token | TokenOld>(
   list: (T | ChainConstant<T>)[]
 ) {
   const getChainToken = useGetChainToken();
@@ -14,7 +17,7 @@ export default function useTokenMap<T extends Token>(
         // simply return the token. Otherwise we get the appropriate chain-
         // specific Token. This also dedupes tokens by address.
         const token = getChainToken(curr);
-        if (token) acc[token.address] = token;
+        if (token) acc[getTokenIndex(token)] = token;
         return acc;
       },
       {}

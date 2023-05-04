@@ -1,7 +1,7 @@
+import React, { useCallback, useMemo } from 'react';
 import { Alert, Box, InputAdornment, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useMemo } from 'react';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
   PlotFragment,

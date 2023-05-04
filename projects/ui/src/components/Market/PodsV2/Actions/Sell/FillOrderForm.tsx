@@ -8,7 +8,6 @@ import TransactionToast from '~/components/Common/TxnToast';
 import {
   PlotFragment,
   PlotSettingsFragment, SmartSubmitButton,
-  TokenOutputField,
   TxnSeparator
 } from '~/components/Common/Form';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
@@ -26,6 +25,8 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { PodOrder } from '~/state/farmer/market';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type FillOrderFormValues = {
   plot: PlotFragment;
@@ -47,6 +48,7 @@ const FillOrderV2Form: FC<
   plots: allPlots,  // rename to prevent collision
   harvestableIndex,
 }) => {
+  const sdk = useSdk();
   /// Derived
   const plot = values.plot;
   const [eligiblePlots, numEligiblePlots] = useMemo(() =>
@@ -85,12 +87,13 @@ const FillOrderV2Form: FC<
         {isReady && (
           <>
             <TxnSeparator mt={0} />
-            <TokenOutputField
-              token={BEAN[1]}
-              amount={beansReceived}
-              isLoading={false}
-              size="small"
-            />
+            <TokenOutput size="small">
+              <TokenOutput.Row
+                token={sdk.tokens.BEAN}
+                amount={beansReceived}
+                size="small"
+              />
+            </TokenOutput>
             {/* <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />

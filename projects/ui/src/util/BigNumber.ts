@@ -1,4 +1,6 @@
+import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
+import { ZERO_BN } from '~/constants';
 
 export const BN = (v: BigNumber.Value) => new BigNumber(v);
 
@@ -11,3 +13,22 @@ export const BN = (v: BigNumber.Value) => new BigNumber(v);
 //     hex: `0x${this.toString(16)}`,
 //   };
 // };
+
+export function normalizeBN(
+  value: BigNumber | undefined | null,
+  _gt?: BigNumber.Value,
+) {
+  return (value && value.gt(_gt || 0) ? value : ZERO_BN);
+}
+
+export function tokenValueToBN(
+  value: TokenValue | BigNumber
+) {
+  if (value instanceof BigNumber) return value;
+  return new BigNumber(value.toHuman());
+}
+
+export function bnToTokenValue(token: Token, value: TokenValue | BigNumber) {
+  if (value instanceof TokenValue) return value;
+  return token.amount(value.toString());
+}
