@@ -94,10 +94,10 @@ export const preventNegativeInput = (
 const textFieldStyles = {
   borderRadius: 1,
   '& label.Mui-focused': {
-    color: '#fff',
+    color: 'transparent',
   },
   '& .MuiOutlinedInput-root': {
-    background: '#fff',
+    background: 'transparent',
     pr: 0,
     pl: 0,
     '& fieldset': {
@@ -372,7 +372,7 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
             />
             {/* Bottom Adornment */}
             {balance && !hideBalance && (
-              <Row gap={0.5} px={0.5} pt={0.75}>
+              <Row gap={0.5} pt={0.75}>
                 {/* Leaving the Stack rendered regardless of whether `quote` is defined
                  * ensures that the Balance section gets flexed to the right side of
                  * the input. */}

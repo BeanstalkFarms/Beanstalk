@@ -54,7 +54,6 @@ const PillRow : FC<{
         px: 0.75,
         py: 0.5,
         my: 0.5,
-        transition: 'none',
         height: 'auto',
       }}
     >

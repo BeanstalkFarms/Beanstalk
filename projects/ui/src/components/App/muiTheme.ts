@@ -230,6 +230,8 @@ export const FontWeight = {
   bold: 700,
 };
 
+export const borderRadius = 10;
+
 export const XXLWidth = 1400;
 
 // FIXME: changes to createTheme don't hot reload.
@@ -253,7 +255,7 @@ const muiThemeBase: ThemeOptions = {
    *
    */
   shape: {
-    borderRadius: 10,
+    borderRadius: borderRadius,
   },
 
   /**
@@ -406,6 +408,7 @@ const muiThemeBase: ThemeOptions = {
             borderWidth: '1px',
             borderStyle: 'solid',
             borderColor: 'divider',
+            borderRadius: 1,
           }),
       },
     },
@@ -642,7 +645,7 @@ const muiThemeBase: ThemeOptions = {
       styleOverrides: {
         root: {
           fontSize: '1.5rem',
-          borderRadius: '10px',
+          borderRadius: `${borderRadius}px`,
         },
         sizeSmall: {
           fontSize: '1.1rem',
@@ -754,15 +757,24 @@ const muiThemeBase: ThemeOptions = {
     MuiDialog: {
       defaultProps: {
         transitionDuration: 0,
+        disableScrollLock: true,
         PaperProps: {
           sx: {
+            borderRadius: 1,
             background: BeanstalkPalette.white,
             minWidth: { xs: '95%', sm: '400px' },
           },
         },
       },
       styleOverrides: {
-        root: (t) => t.theme.unstable_sx({}),
+        root: (t) => t.theme.unstable_sx({
+          borderRadius: 1,
+        }),
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        rounded: { borderRadius: borderRadius * 1 },
       },
     },
     MuiDialogContent: {
@@ -770,6 +782,7 @@ const muiThemeBase: ThemeOptions = {
         root: (t) =>
           t.theme.unstable_sx({
             px: 1,
+            pb: 1,
           }),
       },
     },
