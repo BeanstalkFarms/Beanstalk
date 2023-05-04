@@ -48,7 +48,7 @@ type ChartStyleConfig = {
   strokeWidth: number;
 };
 
-type ChartSharedValuesProps = {
+export type ChartSharedValuesProps = {
   strokeBuffer: number;
   margin: { top: number; bottom: number; left: number; right: number };
   chartPadding: { right: number };

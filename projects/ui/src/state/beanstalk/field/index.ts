@@ -30,22 +30,15 @@ export type BeanstalkField = {
    * change in the Weather yield and available Soil over time.
    */
   weather: {
-    didSowBelowMin: boolean;
-    didSowFaster: boolean;
     lastDSoil: BigNumber;
-    lastSoilPercent: BigNumber;
     lastSowTime: BigNumber;
-    nextSowTime: BigNumber;
-    startSoil: BigNumber;
-    yield: BigNumber;
+    thisSowTime: BigNumber;
   };
 
-  // ------------------------------------------
-
-  rain: {
-    /** Whether it is raining or not. */
-    raining: Boolean;
-    /** The season that it started raining. */
-    rainStart: BigNumber;
-  }
-}
+  temperature: {
+    /** The max temperature for this season. */
+    max: BigNumber;
+    /** adjusted temperature for this season */
+    scaled: BigNumber;
+  };
+};

@@ -8,7 +8,7 @@ import {
   TokenValue,
 } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import { PreferredToken } from '../../../../hooks/farmer/usePreferredToken';
+import { PreferredToken } from '~/hooks/farmer/usePreferredToken';
 import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
 import { makeLocalOnlyStep } from '../../util';
 
@@ -20,6 +20,8 @@ export class SowFarmStep extends FarmStep {
 
   build(
     tokenIn: ERC20Token | NativeToken,
+    _minTemperature: TokenValue,
+    _minSoil: TokenValue,
     _fromMode: FarmFromMode,
     claimAndDoX: ClaimAndDoX
   ) {
@@ -62,19 +64,21 @@ export class SowFarmStep extends FarmStep {
     }
 
     const sow: StepGenerator = (_amountInStep) => ({
-      name: 'sow',
+      name: 'sowWithMin',
       amountOut: _amountInStep,
       prepare: () => ({
         target: beanstalk.address,
-        callData: beanstalk.interface.encodeFunctionData('sow', [
+        callData: beanstalk.interface.encodeFunctionData('sowWithMin', [
           _amountInStep,
+          _minTemperature.blockchainString,
+          _minSoil.blockchainString,
           fromMode,
         ]),
       }),
       decode: (data: string) =>
-        beanstalk.interface.decodeFunctionResult('sow', data),
+        beanstalk.interface.decodeFunctionResult('sowWithMin', data),
       decodeResult: (result: string) =>
-        beanstalk.interface.decodeFunctionResult('sow', result),
+        beanstalk.interface.decodeFunctionResult('sowWithMin', result),
     });
 
     this.pushInput({ input: sow });

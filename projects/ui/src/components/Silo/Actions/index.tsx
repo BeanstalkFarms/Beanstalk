@@ -53,7 +53,7 @@ const SiloActions: FC<{
   }
 
   return (
-    <>  
+    <>
       <Module>
         <ModuleTabs value={tab} onChange={handleChange}>
           <Tab label="Deposit" />
@@ -65,10 +65,14 @@ const SiloActions: FC<{
         <ModuleContent>
           {tab === 0 && <Deposit token={token} />}
           {/* {tab === 0 && token && <TempAction token={token} />} */}
-          {tab === 1 && <Convert fromToken={token} /> }
-          {tab === 2 && <Transfer token={token} siloBalance={siloBalanceAsync} /> }
-          {tab === 3 && <Withdraw token={token} siloBalance={siloBalanceAsync} /> }
-          {tab === 4 && <Claim token={token} siloBalance={props.siloBalance} /> }
+          {tab === 1 && <Convert fromToken={token} />}
+          {tab === 2 && (
+            <Transfer token={token} siloBalance={siloBalanceAsync} />
+          )}
+          {tab === 3 && (
+            <Withdraw token={token} siloBalance={siloBalanceAsync} />
+          )}
+          {tab === 4 && <Claim token={token} siloBalance={props.siloBalance} />}
         </ModuleContent>
       </Module>
       {/* Tables */}

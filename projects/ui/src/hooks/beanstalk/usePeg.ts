@@ -30,11 +30,11 @@ const beanSupply = (
   // The total Unfertilized Sprouts;
   𝒟: BigNumber,
   // The total number of Unharvestable Pods;
-  D: BigNumber,
+  D: BigNumber
 ) => {
-  const m_t   = MaxBN(a_t, ΔB_t1); 
-  const Δ𝒟_t  = MinBN(MaxBN(ZERO_BN, ΔB_t1.div(3)), 𝒟); // The number of Unfertilized Sprouts that are Fertilized by Active Fertilizer and become Rinsable at the beginning of each Season;
-  const ΔD_t  = MinBN(MaxBN(ZERO_BN, (ΔB_t1.minus(Δ𝒟_t)).div(2)), D); // The number of Pods that Ripen and become Harvestable at the beginning of each Season
+  const m_t = MaxBN(a_t, ΔB_t1);
+  const Δ𝒟_t = MinBN(MaxBN(ZERO_BN, ΔB_t1.div(3)), 𝒟); // The number of Unfertilized Sprouts that are Fertilized by Active Fertilizer and become Rinsable at the beginning of each Season;
+  const ΔD_t = MinBN(MaxBN(ZERO_BN, ΔB_t1.minus(Δ𝒟_t).div(2)), D); // The number of Pods that Ripen and become Harvestable at the beginning of each Season
   return [m_t, Δ𝒟_t, ΔD_t];
 };
 
@@ -46,9 +46,9 @@ const soilSupply = (
   // The Pod Rate at the end of the previous Season;
   RD_t1: BigNumber,
   // bean.deltaB: The sum of liquidity and time weighted average shortages or excesss of Beans across liquidity pools on the Oracle Whitelist over the previous Season;
-  ΔB_t1: BigNumber,
+  ΔB_t1: BigNumber
 ) => {
-  let x : number;
+  let x: number;
   if (RDUpper.lte(RD_t1)) {
     x = 0.5;
   } else if (RDLower.lt(RD_t1)) {
@@ -56,13 +56,13 @@ const soilSupply = (
   } else {
     x = 1.5;
   }
-  const Smin_t    = (new BigNumber(x).times(ΔD_t)).div(ONE_BN.plus(h_t.div(100)));
-  const SStart_t  = MaxBN(ΔB_t1.negated(), Smin_t);
+  const Smin_t = new BigNumber(x).times(ΔD_t).div(ONE_BN.plus(h_t.div(100)));
+  const SStart_t = MaxBN(ΔB_t1.negated(), Smin_t);
   return SStart_t;
 };
 
 // pod rate at end of last season is 2914392367
-// ((startSoil - currentSoil) / lastDSoil) * 100 = delta demand 
+// ((startSoil - currentSoil) / lastDSoil) * 100 = delta demand
 
 // See Weather.sol
 const MAX_UINT32_BN = new BigNumber(MAX_UINT32);
@@ -71,9 +71,9 @@ const getDeltaPodDemand = (
   lastSowTime: BigNumber,
   startSoil: BigNumber,
   endSoil: BigNumber,
-  lastDSoil: BigNumber,
+  lastDSoil: BigNumber
 ) => {
-  let deltaPodDemand : BigNumber;
+  let deltaPodDemand: BigNumber;
   if (nextSowTime.lt(MAX_UINT32_BN)) {
     if (
       lastSowTime.eq(MAX_UINT32_BN) || // No sows last season
@@ -82,9 +82,7 @@ const getDeltaPodDemand = (
         nextSowTime.lt(lastSowTime.minus(STEADY_SOW_TIME)))
     ) {
       deltaPodDemand = MAX_UINT32_BN;
-    } else if (
-      nextSowTime.lte(lastSowTime.plus(STEADY_SOW_TIME))
-    ) {
+    } else if (nextSowTime.lte(lastSowTime.plus(STEADY_SOW_TIME))) {
       deltaPodDemand = ONE_BN;
     } else {
       deltaPodDemand = ZERO_BN;
@@ -103,7 +101,7 @@ const temperature = (
   deltaB: BigNumber,
   deltaPodDemand: BigNumber
 ) => {
-  let caseId: number = 0; 
+  let caseId: number = 0;
 
   // Evlauate Pod rate
   if (podRate.gte(RDUpper)) caseId = 24;
@@ -111,8 +109,7 @@ const temperature = (
   else if (podRate.gte(RDLower)) caseId = 8;
 
   // Evaluate price
-  if (deltaB.gt(0) ||
-      (deltaB.eq(0) && podRate.lte(RDOptimal))) {
+  if (deltaB.gt(0) || (deltaB.eq(0) && podRate.lte(RDOptimal))) {
     caseId += 4;
   }
 
@@ -124,35 +121,37 @@ const temperature = (
 };
 
 /**
- * 
+ *
  */
 const usePeg = () => {
-  const season    = useSeason();
-  const bean      = useSelector<AppState, AppState['_bean']['token']>((state) => state._bean.token);
-  const field     = useSelector<AppState, AppState['_beanstalk']['field']>((state) => state._beanstalk.field);
-  const barn      = useSelector<AppState, AppState['_beanstalk']['barn']>((state) => state._beanstalk.barn);
-  const podRate   = usePodRate();
-  
+  const season = useSeason();
+  const bean = useSelector<AppState, AppState['_bean']['token']>(
+    (state) => state._bean.token
+  );
+  const field = useSelector<AppState, AppState['_beanstalk']['field']>(
+    (state) => state._beanstalk.field
+  );
+  const barn = useSelector<AppState, AppState['_beanstalk']['barn']>(
+    (state) => state._beanstalk.barn
+  );
+  const podRate = usePodRate();
+
   // END HOTFIX
 
-  const [
-    newBeans,
-    newRinsableSprouts,
-    newHarvestablePods,
-  ] = beanSupply(
-    ZERO_BN,              // assume a_t = 0
-    bean.deltaB,           // current deltaB via beanastalk.totalDeltaB()
-    barn.unfertilized,    // current unfertilized sprouts
-    field.podLine         // current pod line
+  const [newBeans, newRinsableSprouts, newHarvestablePods] = beanSupply(
+    ZERO_BN, // assume a_t = 0
+    bean.deltaB, // current deltaB via beanastalk.totalDeltaB()
+    barn.unfertilized, // current unfertilized sprouts
+    field.podLine // current pod line
   );
 
   const soilStart = soilSupply(
-    newHarvestablePods,   // estimated for next season
-    field.weather.yield,  // current temperature
+    newHarvestablePods, // estimated for next season
+    field.temperature.max, // current temperature
     // POD RATE AS DECIMAL
     // 100% = 1
-    podRate.div(100),     // current pod rate (unharvestable pods / bean supply)
-    bean.deltaB, // current deltaB via beanstalk.totalDeltaB()
+    podRate.div(100), // current pod rate (unharvestable pods / bean supply)
+    bean.deltaB // current deltaB via beanstalk.totalDeltaB()
   );
 
   /// TODO:
@@ -170,20 +169,20 @@ const usePeg = () => {
   //      minute-long buffer
   //        deltaPodDemand was increasing, set to infinity
   //        dont know how much demand if it all sells
-  //          
+  //
   const deltaPodDemand = getDeltaPodDemand(
-    field.weather.nextSowTime,
+    field.weather.thisSowTime,
     field.weather.lastSowTime,
-    field.weather.startSoil,
+    field.soil, // FIX ME (previously startSoil)
     field.soil,
-    field.weather.lastDSoil,
+    field.weather.lastDSoil
   );
 
   const [caseId, deltaTemperature] = temperature(
     // POD RATE AS DECIMAL
     podRate.div(100),
     bean.deltaB,
-    deltaPodDemand,
+    deltaPodDemand
   );
 
   // console.log('usePeg', {

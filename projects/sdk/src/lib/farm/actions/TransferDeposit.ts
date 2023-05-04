@@ -5,8 +5,8 @@ export class TransferDeposit extends StepClass<BasicPreparedResult> {
   public name: string = "transferDeposit";
 
   constructor(
-    private _signer:  string,
-    private _to:      string, 
+    private _signer: string,
+    private _to: string,
     private _tokenIn: string,
     private _season: ethers.BigNumberish,
     private _amount: ethers.BigNumberish
@@ -40,7 +40,7 @@ export class TransferDeposit extends StepClass<BasicPreparedResult> {
             this._to, //
             this._tokenIn, //
             this._season, //
-            this._amount, //
+            this._amount //
           ])
         };
       },

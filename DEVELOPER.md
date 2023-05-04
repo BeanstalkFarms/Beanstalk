@@ -28,10 +28,10 @@ anvil --fork-url <FORK_RPC>  --chain-id 1337 --block-time 12
 
 When anvil starts, you will see a list of Available Accounts and their Private Keys. We recommend using Account #0 (`0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266`) and adding its private key to metamtask. (The `bean` cli defaults to this address).
 
-
 ### Bean CLI
 
 In this repo there is also our Beanstalk development CLI tool. To run:
+
 ```
 # no install, from anywhere inside the monorepo:
 yarn g:bean --help
@@ -49,10 +49,9 @@ Some examples of what you can do with the bean cli:
 - Make BEAN price above $1: `yarn g:bean setprice 20 30`
 - Fast forward season into future: `yarn g:bean sunrise --force`
 
- `yarn g:bean --help` for all options
+`yarn g:bean --help` for all options
 
- By combining these commands, you should be able to put a beanstalk account in pretty much any state desired. 
-
+By combining these commands, you should be able to put a beanstalk account in pretty much any state desired.
 
 ### Protocol
 
@@ -60,24 +59,23 @@ If you're not working on the contracts, you don't need to do anything with the p
 
 If you are developing contracts, see `/protocol` for more details
 
-
 ### Subgraphs
 
 You don't need to run the subgraphs locally unless you're working on those components. If you are using Anvil with the local subgraph node, include the `--disable-block-gas-limit` option when starting Anvil to avoid issues when indexing.
 
-
 ### UI
+
 Start the UI with `yarn ui:start`
 
 ### Building and Generating
 
-There are cross-project dependencies you may need to be aware of. For ex, the UI uses the SDK, which uses the SDK-Core. The dependencies need to be built before they can be used by the parent project. When you ran `yarn bootstrap`, this built everything for you, but there may be times when you need to do this manually. 
+There are cross-project dependencies you may need to be aware of. For ex, the UI uses the SDK, which uses the SDK-Core. The dependencies need to be built before they can be used by the parent project. When you ran `yarn bootstrap`, this built everything for you, but there may be times when you need to do this manually.
 
 Easiest way to ensure everything is built:
+
 ```
 cd {REPO_ROOT}
 yarn build
 ```
+
 This will start building all the dependencies in reverse order.
-
-

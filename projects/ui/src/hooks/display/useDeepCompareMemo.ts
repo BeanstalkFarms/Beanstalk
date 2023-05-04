@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import useDeepCompareMemoize from './useDeepCompareMemoize';
-import { IS_DEV_ENV } from '~/util';
+import { IS_DEV } from '~/util';
 
 const checkDeps = (deps: React.DependencyList) => {
   if (!deps || deps.length === 0) {
@@ -14,7 +14,7 @@ export default function useDeepCompareMemo<T>(
   callback: () => T,
   dependencies: React.DependencyList
 ) {
-  if (IS_DEV_ENV) checkDeps(dependencies);
+  if (IS_DEV) checkDeps(dependencies);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(callback, useDeepCompareMemoize(dependencies));

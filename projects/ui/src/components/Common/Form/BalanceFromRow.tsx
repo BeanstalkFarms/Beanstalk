@@ -12,7 +12,7 @@ export enum BalanceFrom {
 
 export const balanceFromToMode = (from: BalanceFrom) => {
   switch (from) {
-    case BalanceFrom.EXTERNAL: 
+    case BalanceFrom.EXTERNAL:
       return FarmFromMode.EXTERNAL;
     case BalanceFrom.INTERNAL:
       return FarmFromMode.INTERNAL;

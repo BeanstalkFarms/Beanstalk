@@ -1,4 +1,8 @@
-import { BEANFT_BARNRAISE_ADDRESSES, BEANFT_GENESIS_ADDRESSES, BEANFT_WINTER_ADDRESSES } from '~/constants';
+import {
+  BEANFT_BARNRAISE_ADDRESSES,
+  BEANFT_GENESIS_ADDRESSES,
+  BEANFT_WINTER_ADDRESSES,
+} from '~/constants';
 
 export enum ClaimStatus {
   CLAIMED = 0,
@@ -22,37 +26,37 @@ export type Nft = {
   signature?: string;
 
   // winter and genesis
-  signature2?: string
-}
+  signature2?: string;
+};
 
 /** Maps an NFT collection to its ETH address. */
-export const COLLECTION_ADDRESS: {[c: string]: string} = {
+export const COLLECTION_ADDRESS: { [c: string]: string } = {
   Genesis: BEANFT_GENESIS_ADDRESSES[1],
-  Winter:  BEANFT_WINTER_ADDRESSES[1],
+  Winter: BEANFT_WINTER_ADDRESSES[1],
   BarnRaise: BEANFT_BARNRAISE_ADDRESSES[1],
 };
 
-export const ADDRESS_COLLECTION: {[c: string]: string} = {
+export const ADDRESS_COLLECTION: { [c: string]: string } = {
   [BEANFT_GENESIS_ADDRESSES[1]]: COLLECTION_ADDRESS.Genesis,
   [BEANFT_WINTER_ADDRESSES[1]]: COLLECTION_ADDRESS.Winter,
   [BEANFT_BARNRAISE_ADDRESSES[1]]: COLLECTION_ADDRESS.BarnRaise,
 };
 
 export async function loadNFTs(account: string) {
-
   const genesisNFTs: Nft[] = [];
   const winterNFTs: Nft[] = [];
   const barnRaiseNFTs: Nft[] = [];
 
   try {
-
-    const ownedNFTs = await fetch('https://graph.node.bean.money/subgraphs/name/beanft', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `
+    const ownedNFTs = await fetch(
+      'https://graph.node.bean.money/subgraphs/name/beanft',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
             query NFTData($account: ID!) {
               beaNFTUser(id: $account) {
                 id
@@ -62,58 +66,52 @@ export async function loadNFTs(account: string) {
               }
             }
           `,
-        variables: {
-          account: account.toLowerCase(),
-        },
-      })
-    })
+          variables: {
+            account: account.toLowerCase(),
+          },
+        }),
+      }
+    );
 
-    const ownedNFTsJSON = await ownedNFTs.json()
-    console.log("OWNED NFTS", ownedNFTsJSON)
+    const ownedNFTsJSON = await ownedNFTs.json();
+    console.log('OWNED NFTS', ownedNFTsJSON);
 
     if (ownedNFTsJSON.data.beaNFTUser) {
       if (ownedNFTsJSON.data.beaNFTUser.genesis) {
-        ownedNFTsJSON.data.beaNFTUser.genesis.sort()
+        ownedNFTsJSON.data.beaNFTUser.genesis.sort();
         ownedNFTsJSON.data.beaNFTUser.genesis.forEach((element: number) => {
-          genesisNFTs.push(
-            {
-              id: element,
-              account: account.toLowerCase(),
-              subcollection: "Genesis"
-            }
-          )
+          genesisNFTs.push({
+            id: element,
+            account: account.toLowerCase(),
+            subcollection: 'Genesis',
+          });
         });
       }
-      
+
       if (ownedNFTsJSON.data.beaNFTUser.winter) {
-        ownedNFTsJSON.data.beaNFTUser.winter.sort()
+        ownedNFTsJSON.data.beaNFTUser.winter.sort();
         ownedNFTsJSON.data.beaNFTUser.winter.forEach((element: number) => {
-          winterNFTs.push(
-            {
-              id: element,
-              account: account.toLowerCase(),
-              subcollection: "Winter"
-            }
-          )
+          winterNFTs.push({
+            id: element,
+            account: account.toLowerCase(),
+            subcollection: 'Winter',
+          });
         });
       }
 
       if (ownedNFTsJSON.data.beaNFTUser.barnRaise) {
-        ownedNFTsJSON.data.beaNFTUser.barnRaise.sort()
+        ownedNFTsJSON.data.beaNFTUser.barnRaise.sort();
         ownedNFTsJSON.data.beaNFTUser.barnRaise.forEach((element: number) => {
-          barnRaiseNFTs.push(
-            {
-              id: element,
-              account: account.toLowerCase(),
-              subcollection: "Barn Raise"
-            }
-          )
+          barnRaiseNFTs.push({
+            id: element,
+            account: account.toLowerCase(),
+            subcollection: 'Barn Raise',
+          });
         });
       }
     }
-
   } catch (e) {
-    console.log("BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ", e);
+    console.log('BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ', e);
   }
 
   return {
