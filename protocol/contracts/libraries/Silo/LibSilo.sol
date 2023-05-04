@@ -312,7 +312,7 @@ library LibSilo {
      */
    function _mow(address account, address token) internal {
 
-        require(!LibSilo.migrationNeeded(account), "silo migration needed");
+        require(!LibSilo.migrationNeeded(account), "Silo: Migration needed");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         //sop stuff only needs to be updated once per season
