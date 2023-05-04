@@ -14,6 +14,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { formatEther } from "ethers/lib/utils.js";
 import useEthPrice from "./useEthPrice";
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
+import { Log } from "src/utils/logger";
 
 type AddLiquidityProps = {
   well: Well;
@@ -42,9 +43,9 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     const _tokenAllowance = [];
     for (let [index, token] of well.tokens!.entries()) {
       // only check approval if this token has an amount gt zero
-      if (amounts[index] && amounts[index].value.gt("0")) {
+      if (amounts[index] && amounts[index].gt(0)) {
         const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index].value.toBigNumber());
-        console.debug(`Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`);
+        Log.module("addliquidity").debug(`Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`);
         _tokenAllowance.push(tokenHasMinAllowance);
       } else {
         _tokenAllowance.push(false);
@@ -52,12 +53,6 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     }
     setTokenAllowance(_tokenAllowance);
   }, [address, amounts, well.address, well.tokens]);
-
-  const allowanceCallback = useCallback(() => {
-    // TODO: Open notification??
-    console.log("allowance updated");
-    checkMinAllowanceForAllTokens();
-  }, [checkMinAllowanceForAllTokens]);
 
   // Once we have our first quote, we show the details.
   // Subsequent quote invocations shows a spinner in the Expected Output row
@@ -87,16 +82,13 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     }
   }, [well.tokens]);
 
-  const {
-    data: quote
-    // isLoading: loadingQuote,
-    // isError: quoteError
-  } = useQuery(["wells", address, amounts], async () => {
+  const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
+
+  const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
     if (!atLeastOneAmountNonzero()) {
       return null;
     }
 
-    // TODO: Scope
     if (!allTokensHaveMinAllowance) {
       return null;
     }
@@ -106,21 +98,22 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     // so we show the quote details page on first quote
     setShowQuoteDetails(true);
 
-    return well
-      .addLiquidityQuote(Object.values(amounts))
-      .then((_quote) => {
-        quote = _quote;
-        return well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
-      })
-      .then((estimate) => ({
+    try {
+      const quote = await well.addLiquidityQuote(Object.values(amounts));
+      const estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      return {
         quote,
         estimate
-      }));
+      };
+    } catch (error: any) {
+      Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
+      return null;
+    }
   });
 
   const addLiquidityButtonClickHandler = useCallback(async () => {
     if (quote && address) {
-      const quoteAmountLessSlippage = quote.quote.subSlippage(slippage)
+      const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
       const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
       const receipt = await addLiquidityTxn.wait();
       setReceipt(receipt);
@@ -152,8 +145,6 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     checkMinAllowanceForAllTokens();
   }, [well.tokens, address, atLeastOneAmountNonzero, amounts, checkMinAllowanceForAllTokens]);
 
-  const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
-
   const addLiquidityButtonEnabled = useMemo(
     () => address && atLeastOneAmountNonzero() && allTokensHaveMinAllowance,
     [address, atLeastOneAmountNonzero, allTokensHaveMinAllowance]
@@ -182,7 +173,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   }, [quote?.estimate, sdk.provider, ethPrice]);
 
   const approveTokenButtonClickHandler = useCallback(
-    (tokenIndex: number) => () => {
+    (tokenIndex: number) => async () => {
       if (!address) {
         return;
       }
@@ -194,9 +185,10 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       if (!amounts) {
         return;
       }
-      ensureAllowance(address, well.address, well.tokens[tokenIndex], amounts[tokenIndex].value.toBigNumber(), allowanceCallback);
+      await ensureAllowance(address, well.address, well.tokens[tokenIndex], amounts[tokenIndex].value.toBigNumber());
+      checkMinAllowanceForAllTokens();
     },
-    [well.address, well.tokens, address, amounts, allowanceCallback]
+    [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
   );
 
   const buttonLabel = useMemo(() => (!atLeastOneAmountNonzero() ? "Input Token Amount" : "Add Liquidity"), [atLeastOneAmountNonzero]);

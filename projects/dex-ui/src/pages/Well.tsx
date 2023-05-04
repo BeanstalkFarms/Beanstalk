@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
-import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 import { WellHistory } from "src/components/History/WellHistory";
-import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { LiquidityRoot } from "src/components/Liquidity/LiquidityRoot";
+import { Spinner } from "src/components/Spinner";
 
 export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
@@ -37,7 +36,7 @@ export const Well = () => {
       {well.reserves?.map((r, i) => `${r.toHuman("0,0.00a")} ${well.tokens?.[i].symbol}`).join(" - ")}
       <br />
       <br />
-      <div>{isLoadingAllBalances ? <div>SPINNER IMAGE</div> : <LiquidityRoot well={well} txnCompleteCallback={liquidityTxnCallback} />}</div>
+      <div>{isLoadingAllBalances ? <Spinner size={50} /> : <LiquidityRoot well={well} txnCompleteCallback={liquidityTxnCallback} />}</div>
       <div>
         <WellHistory well={well} />
       </div>
