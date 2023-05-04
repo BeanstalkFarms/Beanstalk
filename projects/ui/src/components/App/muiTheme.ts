@@ -385,6 +385,10 @@ const muiThemeBase: ThemeOptions = {
       fontSize: FontSize.lg, // 18px
       fontWeight: FontWeight.normal,
     },
+    subtitle2: {
+      fontSize: FontSize.base, // 16px
+      fontWeight: FontWeight.medium,
+    },
     button: {
       fontSize: remBase(0.75 * 20),
     },

@@ -30,6 +30,7 @@ import FieldPage from '~/pages/field';
 import ForecastPage from '~/pages/forecast';
 import GovernancePage from '~/pages/governance';
 import ProposalPage from '~/pages/governance/proposal';
+import FarmerDelegatePage from '~/pages/governance/delegate';
 import TransactionHistoryPage from '~/pages/history';
 import NFTPage from '~/pages/nft';
 import SiloPage from '~/pages/silo';
@@ -56,6 +57,8 @@ import PodMarketFillListing from '~/components/Market/PodsV2/Actions/Buy/FillLis
 import PodMarketSell from '~/components/Market/PodsV2/Actions/Sell';
 import PodMarketCreateListing from '~/components/Market/PodsV2/Actions/Sell/CreateListing';
 import PodMarketFillOrder from '~/components/Market/PodsV2/Actions/Sell/FillOrder';
+import FarmerDelegationsUpdater from '~/state/farmer/delegations/updater';
+import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -123,6 +126,7 @@ export default function App() {
       <FarmerBarnUpdater />
       <FarmerBalancesUpdater />
       <FarmerMarketUpdater />
+      <FarmerDelegationsUpdater />
       {/* -----------------------
        * Routes & Content
        * ----------------------- */}
@@ -190,6 +194,11 @@ export default function App() {
             {/* <Route path="/market/wells/:id" element={<WellPage />} /> */}
             <Route path="/nft" element={<NFTPage />} />
             <Route path="/governance/:id" element={<ProposalPage />} />
+            <Route
+              path="/governance/delegate/:type"
+              element={<FarmerDelegatePage />}
+            />
+            <Route path="governance/vp/:id" element={<VotingPowerPage />} />
             <Route path="/silo" element={<SiloPage />} />
             <Route path="/silo/:address" element={<SiloTokenPage />} />
             <Route path="/swap" element={<SwapPage />} />

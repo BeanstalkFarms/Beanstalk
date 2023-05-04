@@ -86,7 +86,7 @@ const FormTxnOptionCard: React.FC<Props> = ({
                 </Tooltip>
               </Typography>
             </Row>
-            <GasTag gasLimit={gas || null} />
+            {!required ? <GasTag gasLimit={gas || null} px={0} /> : null}
           </Row>
         }
         sx={{

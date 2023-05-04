@@ -195,3 +195,9 @@ export const ETH_CHAINLINK_ADDRESS = {
   [SupportedChainId.MAINNET]:
     '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'.toLowerCase(),
 };
+
+/// Gnosis Snapshot Delegates Registry
+export const DELEGATES_REGISTRY_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446'.toLowerCase(),
+};

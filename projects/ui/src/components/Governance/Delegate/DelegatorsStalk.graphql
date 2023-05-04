@@ -1,0 +1,10 @@
+query DelegatorsStalk($ids: [ID!]) {
+  farmers(
+    where: { id_in: $ids }
+  ) {
+    id
+    silo {
+      stalk
+    }
+	}
+}

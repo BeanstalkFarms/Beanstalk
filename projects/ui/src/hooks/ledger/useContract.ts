@@ -10,6 +10,7 @@ import BEANFT_GENESIS_ABI from '~/constants/abi/BeaNFT/BeaNFTGenesis.json';
 import BEANFT_WINTER_ABI from '~/constants/abi/BeaNFT/BeaNFTWinter.json';
 import BEANFT_BARNRAISE_ABI from '~/constants/abi/BeaNFT/BeaNFTBarnRaise.json';
 import AGGREGATOR_V3_ABI from '~/constants/abi/Chainlink/AggregatorV3.json';
+import GNOSIS_DELEGATE_REGISTRY_ABI from '~/constants/abi/Gnosis/DelegateRegistry.json';
 import useChainConstant from '../chain/useChainConstant';
 import { SupportedChainId } from '~/constants/chains';
 import {
@@ -19,6 +20,7 @@ import {
   BEANSTALK_ADDRESSES,
   BEANSTALK_FERTILIZER_ADDRESSES,
   BEANSTALK_PRICE_ADDRESSES,
+  DELEGATES_REGISTRY_ADDRESSES,
 } from '~/constants/addresses';
 import { ChainConstant } from '~/constants';
 import { getChainConstant } from '~/util/Chain';
@@ -32,6 +34,7 @@ import {
   BeanstalkPrice,
   ERC20,
   AggregatorV3,
+  DelegateRegistry,
 } from '~/generated/index';
 
 export type AddressOrAddressMap = string | ChainConstant<string>;
@@ -216,4 +219,14 @@ export function useAggregatorV3Contract(
     abi: AGGREGATOR_V3_ABI,
     signerOrProvider: signer || provider,
   }) as AggregatorV3;
+}
+
+export function useDelegatesRegistryContract(signer?: ethers.Signer | null) {
+  const address = useChainConstant(DELEGATES_REGISTRY_ADDRESSES);
+  const provider = useProvider();
+  return useWagmiContract({
+    address,
+    abi: GNOSIS_DELEGATE_REGISTRY_ABI,
+    signerOrProvider: signer || provider,
+  }) as DelegateRegistry;
 }

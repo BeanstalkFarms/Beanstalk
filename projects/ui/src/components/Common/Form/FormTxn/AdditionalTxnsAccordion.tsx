@@ -137,7 +137,8 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   const estimateGas = useCallback(async () => {
     if (!allOptions.length || !open) return;
     console.debug(`[FormTxnsOptions] estimating Gas for ${allOptions} txns`);
-    const optionKeys = [...allOptions];
+    const _optionKeys = [...allOptions];
+    const optionKeys = _optionKeys.filter((o) => !impliedOptions.has(o));
     const estimates = await Promise.all(
       optionKeys.map((opt) => {
         const fStep = txnBundler.getFarmStep(opt);
@@ -158,7 +159,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
     console.debug(`[FormTxnsOptions] gas result: `, estimates);
 
     setGasEstimates(estimates);
-  }, [allOptions, open, txnBundler]);
+  }, [allOptions, impliedOptions, open, txnBundler]);
 
   useTimedRefresh(estimateGas, 2 * 1000, open, false);
 

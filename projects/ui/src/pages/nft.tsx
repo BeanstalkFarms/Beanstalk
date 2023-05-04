@@ -132,6 +132,7 @@ const NFTPage: FC<{}> = () => {
           `/.netlify/functions/nfts?account=${account}`
         ).then((response) => response.json());
       } catch (e) {
+        console.log('BEANFT - ERROR FECTHING MINTABLE NFTS');
         console.log('BEANFT - ERROR FETCHING MINTABLE NFTS');
       }
 
@@ -371,7 +372,7 @@ const NFTPage: FC<{}> = () => {
         <PageHeader
           title="BeaNFTs"
           description="View and mint your BeaNFTs"
-          href="https://docs.bean.money/almanac/ecosystem/beanfts"
+          href="https://docs.bean.money/almanac/governance/beanfts"
           control={
             <GuideButton
               title="The Farmers' Almanac: BeaNFT Guides"
