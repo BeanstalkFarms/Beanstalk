@@ -5,6 +5,7 @@ import {
   FarmToMode,
   NativeToken,
   Token,
+  TokenValue,
 } from '@beanstalk/sdk';
 import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
@@ -39,7 +40,6 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import TransactionToast from '~/components/Common/TxnToast';
 import { ZERO_BN } from '~/constants';
 import usePrice from '~/hooks/beanstalk/usePrice';
-import useTemperature from '~/hooks/beanstalk/useTemperature';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import useToggle from '~/hooks/display/useToggle';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
@@ -68,7 +68,9 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, FormTxn, SowFarmStep } from '~/lib/Txn';
 
 type SowFormValues = FormStateNew & {
-  settings: SlippageSettingsFragment;
+  settings: SlippageSettingsFragment & {
+    minTemperature: BigNumber | undefined;
+  };
 } & FormTxnsFormState &
   BalanceFromFragment & {
     claimableBeans: FormTokenStateNew;
@@ -88,9 +90,10 @@ const SowForm: FC<
   FormikProps<SowFormValues> & {
     handleQuote: QuoteHandlerWithParams<SowFormQuoteParams>;
     balances: ReturnType<typeof useFarmerBalances>;
-    weather: BigNumber;
+    temperature: BigNumber;
     soil: BigNumber;
     tokenList: (ERC20Token | NativeToken)[];
+    beanstalkField: AppState['_beanstalk']['field'];
     // formRef: React.MutableRefObject<HTMLDivElement | null>;
   }
 > = ({
@@ -99,8 +102,9 @@ const SowForm: FC<
   isSubmitting,
   setFieldValue,
   //
+  beanstalkField,
   balances,
-  weather,
+  temperature,
   soil,
   tokenList,
   handleQuote,
@@ -116,9 +120,6 @@ const SowForm: FC<
 
   ///
   const beanPrice = usePrice();
-  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
-    (state) => state._beanstalk.field
-  );
 
   /// Derived
   const tokenIn = values.tokens[0].token; // converting from token
@@ -136,7 +137,7 @@ const SowForm: FC<
     : amountOut || ZERO_BN;
   const totalBeansAmount = beans.plus(claimedBeansUsed || ZERO_BN);
   const isSubmittable = hasSoil && totalBeansAmount?.gt(0);
-  const numPods = totalBeansAmount.multipliedBy(weather.div(100).plus(1));
+  const numPods = totalBeansAmount.multipliedBy(temperature.div(100).plus(1));
   const podLineLength = beanstalkField.podIndex.minus(
     beanstalkField.harvestableIndex
   );
@@ -387,10 +388,11 @@ const SowFormContainer: FC<{}> = () => {
   const account = useAccount();
 
   /// Beanstalk
-  const temperature = useTemperature();
-  const soil = useSelector<AppState, AppState['_beanstalk']['field']['soil']>(
-    (state) => state._beanstalk.field.soil
+  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
+    (state) => state._beanstalk.field
   );
+  const temperature = beanstalkField.temperature.scaled;
+  const soil = beanstalkField.soil;
 
   /// Farmer
   const balances = useFarmerBalances();
@@ -414,7 +416,8 @@ const SowFormContainer: FC<{}> = () => {
   const initialValues: SowFormValues = useMemo(
     () => ({
       settings: {
-        slippage: 0.1, // 0.1%
+        slippage: 0.1, // 0.1%,
+        minTemperature: undefined,
       },
       tokens: [
         {
@@ -495,6 +498,18 @@ const SowFormContainer: FC<{}> = () => {
           throw new Error('Slippage required');
         }
 
+        const _scaledTemp = await sdk.contracts.beanstalk.temperature();
+        const scaledTemp = TokenValue.fromBlockchain(_scaledTemp, 6);
+
+        console.log('scaledTemperature: ', scaledTemp);
+
+        const _minTemp = TokenValue.fromHuman(
+          (values.settings.minTemperature || ZERO_BN).toString(),
+          6
+        );
+        const minTemperature = _minTemp.gt(scaledTemp) ? _minTemp : scaledTemp;
+        const minSoil = amountBeans.mul(1 - values.settings.slippage / 100);
+
         const amountPods = totalBeans.mul(
           temperature.div(100).plus(1).toNumber()
         );
@@ -514,8 +529,11 @@ const SowFormContainer: FC<{}> = () => {
           normaliseTV(bean, claimData.amount),
           values.farmActions.transferToMode || FarmToMode.INTERNAL
         );
+
         sowTxn.build(
           tokenIn,
+          minTemperature,
+          minSoil,
           balanceFromToMode(values.balanceFrom),
           claimAndDoX
         );
@@ -572,16 +590,23 @@ const SowFormContainer: FC<{}> = () => {
       {(formikProps: FormikProps<SowFormValues>) => (
         <>
           <TxnSettings placement="form-top-right">
-            <SettingInput
-              name="settings.slippage"
-              label="Slippage Tolerance"
-              endAdornment="%"
-            />
+            <>
+              <SettingInput
+                name="settings.slippage"
+                label="Slippage Tolerance"
+                endAdornment="%"
+              />
+              <SettingInput
+                name="settings.minTemperature"
+                label="Min Temperature"
+              />
+            </>
           </TxnSettings>
           <SowForm
+            beanstalkField={beanstalkField}
             handleQuote={handleQuote}
             balances={balances}
-            weather={temperature}
+            temperature={temperature}
             soil={soil}
             tokenList={tokenList}
             {...formikProps}

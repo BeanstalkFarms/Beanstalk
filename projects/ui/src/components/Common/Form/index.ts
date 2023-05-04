@@ -10,7 +10,6 @@ import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
 import { FormTxnBundlerInterface } from '~/lib/Txn';
 
-
 /**
  *
  */
@@ -42,7 +41,8 @@ export type FormTokenState =
     /** The amount of the selected token, usually input by the user.
      * @value undefined if the input is empty */
     amount: BigNumber | undefined;
-  } & { /// Quoting
+  } & {
+    /// Quoting
     /** Whether we're currently looking up a quoted `amountOut` for this token. */
     quoting?: boolean;
   } & Partial<QuoteHandlerResult>;
@@ -53,7 +53,7 @@ export type FormTokenState =
  */
 export type FormTokenStateNew = {
   token: ERC20TokenNew | NativeTokenNew;
-  amount: BigNumber | undefined;    
+  amount: BigNumber | undefined;
   maxAmountIn?: BigNumber | undefined;
 } & {
   quoting?: boolean;
@@ -126,7 +126,7 @@ export type FormTxnsFormState = {
 
 export type ClaimBeansFormState = {
   claimableBeans: FormTokenStateNew;
-}
+};
 
 // ----------------------------------------------------------------------
 

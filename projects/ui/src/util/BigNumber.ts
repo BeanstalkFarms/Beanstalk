@@ -14,16 +14,33 @@ export const BN = (v: BigNumber.Value) => new BigNumber(v);
 //   };
 // };
 
+/**
+ * Calculates the logarithm of a BigNumber value with a specified base.
+ * @param base - The base of the logarithm.
+ * @param value - The value for which to calculate the logarithm.
+ * @returns result of the logarithm calculation.
+ */
+export const logBN = (_base: number, value: BigNumber): BigNumber => {
+  const base = BigNumber.isBigNumber(_base) ? _base.toNumber() : _base;
+
+  // Calculate the natural logarithm of the base using JavaScript's Math.log
+  const naturalLogBase = new BigNumber(Math.log(base));
+
+  // Calculate the natural logarithm of the value
+  const naturalLogValue = new BigNumber(Math.log(value.toNumber()));
+
+  // Divide the natural logarithm of the value by the natural logarithm of the base
+  // to calculate the logarithm with the specified base
+  return naturalLogValue.dividedBy(naturalLogBase);
+};
 export function normalizeBN(
   value: BigNumber | undefined | null,
-  _gt?: BigNumber.Value,
+  _gt?: BigNumber.Value
 ) {
-  return (value && value.gt(_gt || 0) ? value : ZERO_BN);
+  return value && value.gt(_gt || 0) ? value : ZERO_BN;
 }
 
-export function tokenValueToBN(
-  value: TokenValue | BigNumber
-) {
+export function tokenValueToBN(value: TokenValue | BigNumber) {
   if (value instanceof BigNumber) return value;
   return new BigNumber(value.toHuman());
 }

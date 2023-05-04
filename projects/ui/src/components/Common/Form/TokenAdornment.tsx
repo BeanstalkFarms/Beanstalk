@@ -17,15 +17,13 @@ import { FC } from '~/types';
 import { BalanceFrom } from './BalanceFromRow';
 import AddressIcon from '../AddressIcon';
 
-export type TokenAdornmentProps = (
-  {
-    token: Token | TokenOld;
-    balanceFrom?: BalanceFrom;
-    buttonLabel?: string | JSX.Element;
-    iconSize?: keyof typeof IconSize;
-    downArrowIconSize?: keyof typeof IconSize;
-  } & ButtonProps
-);
+export type TokenAdornmentProps = {
+  token: Token | TokenOld;
+  balanceFrom?: BalanceFrom;
+  buttonLabel?: string | JSX.Element;
+  iconSize?: keyof typeof IconSize;
+  downArrowIconSize?: keyof typeof IconSize;
+} & ButtonProps;
 
 const wrappedVariantSx = {
   px: 1,
@@ -40,7 +38,7 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
   balanceFrom,
   // Button
   size,
-  sx, 
+  sx,
   buttonLabel,
   disabled,
   onClick,
@@ -48,7 +46,7 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
   downArrowIconSize = 'small',
   ...props
 }) => {
-  const iconSize = (size && size === 'small' ? 'xs' : _iconSize);
+  const iconSize = size && size === 'small' ? 'xs' : _iconSize;
   const textVariant = size && size === 'small' ? 'body2' : 'bodyMedium';
   return (
     <InputAdornment position="end">
@@ -104,9 +102,9 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
             />
           ) : null}
           <Box sx={{ color: 'text.primary' }}>
-            <Typography 
-              variant={textVariant} 
-              fontWeight="fontWeightRegular" 
+            <Typography
+              variant={textVariant}
+              fontWeight="fontWeightRegular"
               color="text.primary"
             >
               {buttonLabel || token.symbol}

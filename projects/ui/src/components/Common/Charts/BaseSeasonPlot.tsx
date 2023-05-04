@@ -1,12 +1,12 @@
+import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { ApolloError } from '@apollo/client';
 import {
   BaseChartProps,
   BaseDataPoint,
   ExploitLine,
 } from './ChartPropProvider';
-import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-import React, { useCallback, useMemo, useState } from 'react';
-
-import { ApolloError } from '@apollo/client';
 import ChartInfoOverlay from './ChartInfoOverlay';
 import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import MultiLineChart from './MultiLineChart';
@@ -58,6 +58,7 @@ type Props<T extends MinimumViableSnapshotQuery> = BaseSeasonPlotProps & {
   formatValue?: (value: number) => string | JSX.Element;
   StatProps?: Omit<StatProps, 'amount' | 'subtitle'>;
   ChartProps: Omit<BaseChartProps, 'series' | 'keys'>;
+  statsRowFullWidth?: boolean;
 };
 
 function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
@@ -74,6 +75,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     StatProps: statProps, // renamed to prevent type collision
     ChartProps: chartProps,
     timeTabParams,
+    statsRowFullWidth,
   } = props;
 
   /// Display values
@@ -145,7 +147,10 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
 
   return (
     <>
-      <Row justifyContent="space-between" sx={{ px: 2 }}>
+      <Row
+        justifyContent="space-between"
+        sx={{ px: statsRowFullWidth ? 0 : 2 }}
+      >
         {statProps && (
           <ChartInfoOverlay
             title={statProps.title}

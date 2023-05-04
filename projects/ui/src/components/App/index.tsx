@@ -56,6 +56,7 @@ import PodMarketFillListing from '~/components/Market/PodsV2/Actions/Buy/FillLis
 import PodMarketSell from '~/components/Market/PodsV2/Actions/Sell';
 import PodMarketCreateListing from '~/components/Market/PodsV2/Actions/Sell/CreateListing';
 import PodMarketFillOrder from '~/components/Market/PodsV2/Actions/Sell/FillOrder';
+import MorningUpdater from '~/state/beanstalk/sun/morning';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -112,6 +113,7 @@ export default function App() {
       <FieldUpdater />
       <BarnUpdater />
       <SunUpdater />
+      <MorningUpdater />
       <GovernanceUpdater />
       {/* -----------------------
        * Farmer Updaters
@@ -153,19 +155,35 @@ export default function App() {
             <Route path="/field" element={<FieldPage />} />
             <Route path="/governance" element={<GovernancePage />} />
             <Route path="/history" element={<TransactionHistoryPage />} />
-            <Route path="/market" index element={<Navigate to="/market/buy" />} />
+            <Route
+              path="/market"
+              index
+              element={<Navigate to="/market/buy" />}
+            />
             <Route path="/market" element={<PodMarketPage />}>
               {/* https://ui.dev/react-router-nested-routes */}
               <Route path="/market/buy" element={<PodMarketBuy />}>
                 <Route index element={<PodMarketCreateOrder />} />
-                <Route path="/market/buy/:listingID" element={<PodMarketFillListing />} />
+                <Route
+                  path="/market/buy/:listingID"
+                  element={<PodMarketFillListing />}
+                />
               </Route>
               <Route path="/market/sell" element={<PodMarketSell />}>
                 <Route index element={<PodMarketCreateListing />} />
-                <Route path="/market/sell/:orderID" element={<PodMarketFillOrder />} />
+                <Route
+                  path="/market/sell/:orderID"
+                  element={<PodMarketFillOrder />}
+                />
               </Route>
-              <Route path="listing/:listingID" element={<Navigate to="/market/buy/:listingID" />} />
-              <Route path="order/:orderID" element={<Navigate to="/market/sell/:orderID" />} />
+              <Route
+                path="listing/:listingID"
+                element={<Navigate to="/market/buy/:listingID" />}
+              />
+              <Route
+                path="order/:orderID"
+                element={<Navigate to="/market/sell/:orderID" />}
+              />
             </Route>
             {/* DEX CODE (hidden) */}
             {/* <Route path="/market/wells" element={<WellHomePage />} /> */}
@@ -190,7 +208,8 @@ export default function App() {
             }}
           >
             <Typography fontSize="small">
-              {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0,6)} &middot; {sgEnvKey}
+              {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0, 6)}{' '}
+              &middot; {sgEnvKey}
             </Typography>
           </Box>
         </Box>

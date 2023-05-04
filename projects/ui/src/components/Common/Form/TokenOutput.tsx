@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 
 import { Token, TokenValue } from '@beanstalk/sdk';
 
@@ -122,7 +117,11 @@ function TokenOutputRow({
               ...labelSx,
             }}
           >
-            {formatBN(tokenValueToBN(amount), token.displayDecimals, amountSuffix)}
+            {formatBN(
+              tokenValueToBN(amount),
+              token.displayDecimals,
+              amountSuffix
+            )}
           </Typography>
         </Tooltip>
       </Row>
