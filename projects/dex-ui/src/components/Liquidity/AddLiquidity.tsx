@@ -44,7 +44,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     for (let [index, token] of well.tokens!.entries()) {
       // only check approval if this token has an amount gt zero
       if (amounts[index] && amounts[index].gt(0)) {
-        const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index].value.toBigNumber());
+        const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index]);
         Log.module("addliquidity").debug(`Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`);
         _tokenAllowance.push(tokenHasMinAllowance);
       } else {
@@ -185,7 +185,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       if (!amounts) {
         return;
       }
-      await ensureAllowance(address, well.address, well.tokens[tokenIndex], amounts[tokenIndex].value.toBigNumber());
+      await ensureAllowance(address, well.address, well.tokens[tokenIndex], amounts[tokenIndex]);
       checkMinAllowanceForAllTokens();
     },
     [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
