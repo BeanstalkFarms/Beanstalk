@@ -20,6 +20,7 @@ import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import { CHAIN_INFO } from '~/constants';
 import OutputField from './OutputField';
+import BorderEffect from './BorderEffect';
 import { trimAddress } from '../../../util';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
@@ -50,7 +51,32 @@ export const validateAddress =
     return error;
   };
 
-const AddressInputFieldInner: FC<FieldProps & AddressInputFieldProps> = ({
+const textFieldStyles = {
+  borderRadius: 1,
+  '& label.Mui-focused': {
+    color: 'transparent',
+  },
+  '& .MuiOutlinedInput-root': {
+    background: 'transparent',
+    pr: 0,
+    pl: 0,
+    '& fieldset': {
+      border: 'none',
+    },
+    '&.Mui-focused fieldset': {
+      border: 'none',
+    },
+    '&:hover fieldset': {
+      border: 'none'
+    },
+    '& .MuiOutlinedInput-input': {
+      pl: 0,
+      py: 1.25,
+    }
+  }
+} as const;
+
+const AddressInputFieldInner : FC<FieldProps & AddressInputFieldProps> = ({
   name,
   disabled,
   allowTransferToSelf,
@@ -59,6 +85,7 @@ const AddressInputFieldInner: FC<FieldProps & AddressInputFieldProps> = ({
   field,
   meta,
   form,
+  sx,
   ...props
 }) => {
   const chainId = useChainId();
@@ -172,22 +199,26 @@ const AddressInputFieldInner: FC<FieldProps & AddressInputFieldProps> = ({
               onClick={() => form.setFieldValue(name, account)}
             >
               (Me)
-            </Typography>
-          ) : null}
-        </Typography>
-      ) : null}
-      <TextField
-        fullWidth
-        type="text"
-        placeholder="0x0000"
-        disabled={isValid || disabled}
-        InputProps={InputProps}
-        {...props}
-        name={field.name}
-        value={field.value}
-        onBlur={field.onBlur}
-        onChange={onChange}
-      />
+            </Typography>) : null}
+        </Typography>) : null}
+      <BorderEffect disabled={isValid || disabled}>
+        <Box width="100%" sx={{ px: 2 }}>
+          <TextField
+            fullWidth
+            type="text"
+            color="primary"
+            placeholder="0x0000"
+            disabled={isValid || disabled}
+            InputProps={InputProps}
+            {...props}
+            name={field.name}
+            value={field.value}
+            onBlur={field.onBlur}
+            onChange={onChange}
+            sx={{ ...textFieldStyles, ...sx }}
+          />
+        </Box>
+      </BorderEffect>
       {meta.touched && (
         <Box sx={{ px: 0.5 }}>
           <Typography

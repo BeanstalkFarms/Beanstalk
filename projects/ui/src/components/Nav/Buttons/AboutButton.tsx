@@ -5,7 +5,6 @@ import {
   ButtonProps,
   Card,
   ListItemText,
-  Menu,
   MenuList,
   Typography,
   useMediaQuery,
@@ -18,12 +17,12 @@ import useChainConstant from '~/hooks/chain/useChainConstant';
 import useAnchor from '~/hooks/display/useAnchor';
 import useToggle from '~/hooks/display/useToggle';
 import { BEANSTALK_ADDRESSES, CHAIN_INFO } from '~/constants';
-import NavDrawer from '../NavDrawer';
 import ROUTES from '../routes';
 import MenuItem from '../MenuItem';
 import SettingsDialog from '~/components/Nav/SettingsDialog';
 import useGlobal from '~/hooks/app/useGlobal';
 import Row from '~/components/Common/Row';
+import FolderMenu from '../FolderMenu';
 
 import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
@@ -52,7 +51,14 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
 
   /// Content
   const menuContent = (
-    <MenuList component={Card} sx={{ background: BeanstalkPalette.white, border: '1px solid', borderColor: 'divider' }}>
+      <MenuList 
+      component={Card} 
+      sx={{ 
+        background: BeanstalkPalette.white, 
+        border: 'none',
+        borderTopRightRadius: 0,
+      }} 
+      >
       {/* Menu Items */}
       {/* <MenuItem
         item={{ title: 'Settings', path: '/settings' }}
@@ -62,7 +68,7 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
         <MenuItem key={item.path} item={item} onClick={toggleAnchor} />
       ))}
       {/* Contract Button Container */}
-      <Box sx={{ px: 1, pt: 0.75 }}>
+      <Box sx={{ px: 1, pt: 0.75, pb: 0.2 }}>
         <Button
           fullWidth
           href={`${chainInfo.explorer}/address/${beanstalkAddress}`}
@@ -97,50 +103,19 @@ const AboutButton: FC<ButtonProps> = ({ sx }) => {
        * ----------
        * Contains all nav items in one fullscreen drawer.
        * Triggered by AboutButton on mobile.
+       * Activated by enabling the navDrawer property on FolderMenu
        */}
-      <NavDrawer open={open && isMedium} hideDrawer={hide} />
-      <Button
-        color="light"
-        variant="contained"
-        aria-label="open drawer"
-        onClick={show}
-        sx={{
-          height: 44,
-          display: { xs: 'block' },
-          lineHeight: 0,
-          minWidth: 0,
-          px: 1,
-          ...sx,
-        }}
-      >
-        <MoreHorizIcon />
-      </Button>
-      <Menu
-        elevation={0}
-        anchorEl={anchorEl}
-        open={open && !isMedium}
+      <FolderMenu
+        buttonContent={<Typography sx={{ mt: 0.5 }}><MoreHorizIcon /></Typography>}
+        popoverContent={menuContent}
+        navDrawer
+        noEndIcon
+        onOpen={show}
         onClose={hide}
-        MenuListProps={{
-          sx: {
-            py: 0,
-            mt: 0,
-          },
-        }}
-        transitionDuration={{ appear: 200, enter: 200, exit: 0 }}
-        disablePortal
-        disableScrollLock
-        // Align the menu to the bottom-right side of the anchor button.
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        {menuContent}
-      </Menu>
+        popperWidth="250px"
+        hotkey="opt+2, alt+2"
+        zeroTopRightRadius
+      />
     </>
   );
 };

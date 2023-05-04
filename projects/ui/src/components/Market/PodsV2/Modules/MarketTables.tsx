@@ -68,6 +68,7 @@ const MarketTables: React.FC<{}> = () => {
     >
       <CondensedCard
         sx={{
+          borderRadius: 1,
           display: 'flex',
           flexDirection: 'column',
           width: '100%',

@@ -61,6 +61,13 @@ const NetworkButton: React.FC<ButtonProps & {
               xs: 0
             }
           },
+          borderStyle: 'solid',
+          borderColor: 'white',
+          borderWidth: 1,
+          transition: 'none !important',
+          '&:hover': {
+            borderColor: 'divider',
+          },
           ...props.sx
         }}
       >

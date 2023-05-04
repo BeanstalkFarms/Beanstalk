@@ -204,6 +204,8 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       popperWidth="700px"
       hotkey="opt+2, alt+2"
       zIndex={997}
+      zeroTopLeftRadius
+      zeroTopRightRadius
       {...props}
     />
   );

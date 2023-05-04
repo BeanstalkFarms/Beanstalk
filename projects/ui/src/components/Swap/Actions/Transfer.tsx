@@ -276,7 +276,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
                 />
               )
             }}
-            balanceLabel={undefined}
+            balanceLabel={copy.MODES[values.fromMode]}
             balance={balanceInMax}
           />
         </>

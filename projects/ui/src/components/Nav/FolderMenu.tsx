@@ -1,10 +1,11 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
   ButtonProps, ClickAwayListener,
   Drawer,
   Popper,
+  PopperPlacementType,
   Typography,
   useMediaQuery,
 } from '@mui/material';
@@ -12,7 +13,7 @@ import { useTheme } from '@mui/material/styles';
 import DropdownIcon from '~/components/Common/DropdownIcon';
 import useToggle from '~/hooks/display/useToggle';
 import useAnchor from '~/hooks/display/useAnchor';
-import { BeanstalkPalette, PAGE_BORDER_COLOR } from '~/components/App/muiTheme';
+import { BeanstalkPalette, borderRadius } from '~/components/App/muiTheme';
 
 /**
  * Show a "Folder". A folder is a button that shows a popup;
@@ -24,19 +25,27 @@ import { BeanstalkPalette, PAGE_BORDER_COLOR } from '~/components/App/muiTheme';
  * On mobile:  Clicking the Button shows a Drawer.
  */
 import { FC } from '~/types';
+import NavDrawer from './NavDrawer';
 
 const FolderMenu: FC<{
   startIcon?: any;
+  noEndIcon?: boolean;
   buttonContent: JSX.Element;
-  popoverContent: JSX.Element;
-  drawerContent: JSX.Element;
+  popoverContent?: JSX.Element;
+  drawerContent?: JSX.Element;
   hideTextOnMobile?: boolean;
   popperWidth?: string;
   onOpen?: () => void;
+  onClose?: () => void;
   hotkey: string;
   zIndex?: number;
+  zeroTopRightRadius?: boolean;
+  zeroTopLeftRadius?: boolean;
+  popoverPlacement?: PopperPlacementType;
+  navDrawer?: boolean;
 } & ButtonProps> = ({
   startIcon,
+  noEndIcon,
   buttonContent,
   popoverContent,
   drawerContent,
@@ -44,8 +53,13 @@ const FolderMenu: FC<{
   popperWidth,
   hotkey,
   onOpen,
+  onClose,
   /** fix: overlapping price and sun folders */
   zIndex = 998,
+  zeroTopRightRadius,
+  zeroTopLeftRadius,
+  popoverPlacement,
+  navDrawer,
   ...buttonProps
 }) => {
   // Theme
@@ -61,8 +75,11 @@ const FolderMenu: FC<{
   const [drawerOpen, openDrawer, closeDrawer] = useToggle();
   const isOpen = Boolean(anchorEl || drawerOpen);
 
+  // Window
+  const [mobileWindow, setMobileWindow] = useState((window.innerWidth <= theme.breakpoints.values.md));
+
   const open = useCallback(() => {
-    if (isMobile) {
+    if (isMobile || mobileWindow) {
       toggleAnchor(undefined); // force close menu if screen size has chnaged
       openDrawer();
     } else {
@@ -70,7 +87,7 @@ const FolderMenu: FC<{
       toggleAnchor({ currentTarget: button.current });
     }
     onOpen?.();
-  }, [closeDrawer, isMobile, onOpen, openDrawer, toggleAnchor]);
+  }, [closeDrawer, isMobile, mobileWindow, onOpen, openDrawer, toggleAnchor]);
 
   const close = useCallback(() => {
     if (isMobile) {
@@ -84,6 +101,25 @@ const FolderMenu: FC<{
     close();
   };
 
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < theme.breakpoints.values.lg && !mobileWindow) {
+        setMobileWindow(true);
+      } else {
+        setMobileWindow(false);
+      }
+    }
+    window.addEventListener('resize', handleResize);     
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      open();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobileWindow]);
+
   // Hotkeys
   // useHotkeys(hotkey || '', () => {
   //   console.debug('toggle');
@@ -95,7 +131,7 @@ const FolderMenu: FC<{
       <Button
         color="light"
         startIcon={startIcon}
-        endIcon={<DropdownIcon open={isOpen} />}
+        endIcon={noEndIcon ? null : <DropdownIcon open={isOpen} />}
         onClick={isOpen ? close : open}
         disableRipple
         ref={(r) => {
@@ -105,8 +141,8 @@ const FolderMenu: FC<{
         sx={{
           // Fully rounded by default; when open, remove
           // the bottom rounding to look like a "tab".
-          borderBottomLeftRadius: popoverOpen ? 0 : undefined,
-          borderBottomRightRadius: popoverOpen ? 0 : undefined,
+          borderBottomLeftRadius: popoverOpen && !mobileWindow ? 0 : undefined,
+          borderBottomRightRadius: popoverOpen && !mobileWindow ? 0 : undefined,
           // Enforce a default white border; switch the color
           // to secondary when the Popper is open.
           borderWidth: 1,
@@ -122,11 +158,12 @@ const FolderMenu: FC<{
           // Move the button above the Box so we can slice off
           // the 1px border at the top of the Box.
           zIndex: popoverOpen ? 999 : undefined,
+          minWidth: '0px',
           // Positioning and other styles.
           ...buttonProps.sx,
           '&:hover': {
             borderColor: 'divider',
-            borderBottomColor: 'white'
+            borderBottomColor: popoverOpen ? 'white' : undefined
           }
         }}
       >
@@ -139,11 +176,24 @@ const FolderMenu: FC<{
       <Popper
         open={popoverOpen}
         anchorEl={anchorEl}
-        placement="bottom-start"
+        placement={popoverPlacement || 'bottom-start'}
         disablePortal
         sx={{
-          zIndex,
+          zIndex: zIndex,
+          visibility: mobileWindow ? 'hidden' : 'visible',
         }}
+        modifiers={[
+          {
+            name: 'computeStyles',
+            options: {
+              gpuAcceleration: false,
+              roundOffsets: ({ x, y }: any) => ({
+                x: Math.round(x),
+                y: y,
+              }),
+            },
+          },
+        ]}
         nonce={undefined}
         onResize={undefined}
         onResizeCapture={undefined}
@@ -152,10 +202,11 @@ const FolderMenu: FC<{
           sx={(_theme) => ({
             background: BeanstalkPalette.white,
             width: popperWidth !== undefined ? popperWidth : '325px',
-            borderBottomLeftRadius: _theme.shape.borderRadius,
-            borderBottomRightRadius: _theme.shape.borderRadius,
-            borderTopRightRadius: _theme.shape.borderRadius,
-            borderColor: PAGE_BORDER_COLOR,
+            borderBottomLeftRadius: borderRadius * 1,
+            borderBottomRightRadius: borderRadius * 1,
+            borderTopRightRadius: zeroTopRightRadius ? 0 : borderRadius * 1,
+            borderTopLeftRadius: zeroTopLeftRadius ? 0 : borderRadius * 1,
+            borderColor: theme.palette.divider,
             borderWidth: 1,
             borderStyle: 'solid',
             boxSizing: 'border-box',
@@ -163,7 +214,7 @@ const FolderMenu: FC<{
             // py: 1, 
             boxShadow: _theme.shadows[0],
             // Should be below the zIndex of the Button.
-            zIndex,
+            zIndex: zIndex,
             mt: '-1px',
           })}
         >
@@ -176,9 +227,14 @@ const FolderMenu: FC<{
   return (
     <>
       {/* Mobile: Drawer */}
-      <Drawer anchor="bottom" open={drawerOpen} onClose={closeDrawer}>
-        {drawerContent}
-      </Drawer>
+      {navDrawer ? (
+        <NavDrawer open={drawerOpen} hideDrawer={closeDrawer} />
+      ) : null}
+      {drawerContent ? (
+        <Drawer anchor="bottom" open={drawerOpen} onClose={closeDrawer}>
+          {drawerContent}
+        </Drawer>
+      ) : null}
       {isMobile ? (
         <Box>
           {content}

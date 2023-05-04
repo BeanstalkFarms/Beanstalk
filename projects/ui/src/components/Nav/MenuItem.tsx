@@ -28,7 +28,7 @@ const MenuItem : FC<{
     target={item.href ? '_blank' : undefined}
     rel={item.href ? 'noreferrer' : undefined}
     to={item.href ? undefined : item.path}
-    sx={{ minWidth: 250, ...sx }}
+    sx={{ minWidth: 250, py: 0.75 , ...sx }}
     onClick={onClick}
     >
     {item.disabled ? (
@@ -59,7 +59,7 @@ const MenuItem : FC<{
         </ListItemText>
       )}
     {item.href ? (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" sx={{ display: 'flex' }}>
         <ArrowForwardIcon sx={{ transform: 'rotate(-45deg)', fontSize: FontSize.base }} />
       </Typography>
       ) : null}
