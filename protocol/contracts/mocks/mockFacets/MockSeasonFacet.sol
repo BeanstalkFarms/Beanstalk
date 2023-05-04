@@ -153,47 +153,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSowTime = number;
     }
 
-    // function setLastSoilPercentE(uint96 number) public {
-    //     s.w.lastSoilPercent = number;
-    // }
-
     function setSoilE(uint256 amount) public {
         setSoil(amount);
-    }
-
-    function resetAccount(address account) public {
-        uint32 _s = season();
-        for (uint32 j; j <= _s; ++j) {
-            if (s.a[account].field.plots[j] > 0) s.a[account].field.plots[j];
-            if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
-            if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
-            if (s.a[account].lp.depositSeeds[j] > 0) delete s.a[account].lp.depositSeeds[j];
-            if (s.a[account].bean.withdrawals[j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].bean.withdrawals[j+s.season.withdrawSeasons];
-            }
-            if (s.a[account].lp.withdrawals[j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].lp.withdrawals[j+s.season.withdrawSeasons];
-            }
-        }
-        for (uint32 i; i < s.g.bipIndex; ++i) {
-            s.g.voted[i][account] = false;
-        }
-        delete s.a[account];
-
-        resetAccountToken(account, C.CURVE_BEAN_METAPOOL);
-    }
-
-    function resetAccountToken(address account, address token) public {
-        uint32 _s = season();
-        for (uint32 j; j <= _s; ++j) {
-            uint256 depositID = LibBytes.packAddressAndStem(token,j);
-            if (s.a[account].deposits[depositID].amount > 0) delete s.a[account].deposits[depositID];
-            if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
-                {
-                    delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
-                }
-        }
-        delete s.siloBalances[token];
     }
 
     function resetState() public {
