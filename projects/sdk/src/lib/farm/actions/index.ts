@@ -13,11 +13,7 @@ import { WellSwap } from "./WellSwap";
 import { WellShift } from "./WellShift";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
-import { ClaimWithdrawals } from "./ClaimWithdrawals";
 import { ClaimWithdrawal } from "./ClaimWithdrawal";
-import { PermitERC20 } from "./PermitERC20";
-import { Deposit } from "./Deposit";
-import { DevDebug } from "./_DevDebug";
 import { TransferDeposits } from "./TransferDeposits";
 import { TransferDeposit } from "./TransferDeposit";
 import { WrapEth } from "./WrapEth";
@@ -38,11 +34,8 @@ export {
   WellShift,
   WithdrawDeposits,
   WithdrawDeposit,
-  ClaimWithdrawals,
   ClaimWithdrawal,
-  Deposit,
-  DevDebug,
   TransferDeposits,
-  TransferDeposit
+  TransferDeposit,
   WrapEth
 };
