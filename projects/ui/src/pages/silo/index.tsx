@@ -18,41 +18,46 @@ import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import GuideButton from '~/components/Common/Guide/GuideButton';
-import {
-  CLAIM_SILO_REWARDS,
-  HOW_TO_DEPOSIT_IN_THE_SILO
-} from '~/util/Guides';
+import { CLAIM_SILO_REWARDS, HOW_TO_DEPOSIT_IN_THE_SILO } from '~/util/Guides';
 
 import { FC } from '~/types';
 
-const SiloPage : FC<{}> = () => {
+const SiloPage: FC<{}> = () => {
   /// Helpers
   const getChainToken = useGetChainToken();
-  
+
   /// Chain Constants
   const whitelist = useWhitelist();
-  const pools     = usePools();
+  const pools = usePools();
 
   /// State
-  const farmerSilo    = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo);
-  const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>((state) => state._beanstalk.silo);
-  const breakdown     = useFarmerBalancesBreakdown();
-  const balances      = useFarmerSiloBalances();
-  const season        = useSeason();
+  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
+    (state) => state._farmer.silo
+  );
+  const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
+    (state) => state._beanstalk.silo
+  );
+  const breakdown = useFarmerBalancesBreakdown();
+  const balances = useFarmerSiloBalances();
+  const season = useSeason();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
 
   /// Calculate Unripe Silo Balance
-  const urBean      = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3  = getChainToken(UNRIPE_BEAN_CRV3);
-  const unripeDepositedBalance = balances[urBean.address]?.deposited.amount
-    .plus(balances[urBeanCrv3.address]?.deposited.amount);
+  const urBean = getChainToken(UNRIPE_BEAN);
+  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const unripeDepositedBalance = balances[
+    urBean.address
+  ]?.deposited.amount.plus(balances[urBeanCrv3.address]?.deposited.amount);
 
   /// Local state
   const [open, show, hide] = useToggle();
-  const config = useMemo(() => ({
-    whitelist: Object.values(whitelist),
-    poolsByAddress: pools,
-  }), [whitelist, pools]);
+  const config = useMemo(
+    () => ({
+      whitelist: Object.values(whitelist),
+      poolsByAddress: pools,
+    }),
+    [whitelist, pools]
+  );
 
   return (
     <Container maxWidth="lg">
@@ -66,10 +71,7 @@ const SiloPage : FC<{}> = () => {
           control={
             <GuideButton
               title="The Farmers' Almanac: Silo Guides"
-              guides={[
-                HOW_TO_DEPOSIT_IN_THE_SILO,
-                CLAIM_SILO_REWARDS,
-              ]}
+              guides={[HOW_TO_DEPOSIT_IN_THE_SILO, CLAIM_SILO_REWARDS]}
             />
           }
         />
@@ -104,7 +106,13 @@ const SiloPage : FC<{}> = () => {
                   size="medium"
                   variant="contained"
                   sx={{ width: '100%', whiteSpace: 'nowrap' }}
-                  endIcon={<DropdownIcon open={false} disabled={breakdown.totalValue?.eq(0)} light />}
+                  endIcon={
+                    <DropdownIcon
+                      open={false}
+                      disabled={breakdown.totalValue?.eq(0)}
+                      light
+                    />
+                  }
                   onClick={show}
                   disabled={breakdown.totalValue?.eq(0)}
                 >
@@ -114,10 +122,7 @@ const SiloPage : FC<{}> = () => {
             </Stack>
           </Box>
         </Card>
-        <Whitelist
-          config={config}
-          farmerSilo={farmerSilo}
-        />
+        <Whitelist config={config} farmerSilo={farmerSilo} />
         <RewardsDialog
           open={open}
           handleClose={hide}

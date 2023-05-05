@@ -3,13 +3,12 @@ import { useAllPodListingsQuery } from '~/generated/graphql';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 
-type BaseOptions = Parameters<typeof useAllPodListingsQuery>[0]
+type BaseOptions = Parameters<typeof useAllPodListingsQuery>[0];
 
 export default function usePodListings(
-  baseOptions: (
-    Omit<BaseOptions, 'variables'>
-    & { variables: Partial<BaseOptions['variables']> }
-  )
+  baseOptions: Omit<BaseOptions, 'variables'> & {
+    variables: Partial<BaseOptions['variables']>;
+  }
 ) {
   const harvestableIndex = useHarvestableIndex();
   const Bean = useChainConstant(BEAN);
@@ -20,6 +19,6 @@ export default function usePodListings(
       ...baseOptions?.variables,
     },
     /// Skip when harvestableIndex isn't loaded
-    skip: baseOptions?.skip ? baseOptions.skip : !(harvestableIndex?.gt(0))
+    skip: baseOptions?.skip ? baseOptions.skip : !harvestableIndex?.gt(0),
   });
 }

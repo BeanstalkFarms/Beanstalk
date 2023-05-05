@@ -1,11 +1,6 @@
 import React, { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import {
-  Box,
-  Card,
-  CircularProgress,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CircularProgress, Typography } from '@mui/material';
 import { DataGrid, GridColumns, GridSortItem } from '@mui/x-data-grid';
 import { tableStyle } from '~/components/Common/Table/styles';
 import { displayBN } from '~/util';
@@ -66,7 +61,11 @@ const TableCard: FC<{
   return (
     <Card sx={{ border: onlyTable ? '0px solid' : undefined }}>
       {!onlyTable && (
-        <Row p={2} justifyContent="space-between" sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}>
+        <Row
+          p={2}
+          justifyContent="space-between"
+          sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}
+        >
           <Typography variant="h4">{title}</Typography>
           {state === 'ready' ? (
             <Row gap={0.3}>

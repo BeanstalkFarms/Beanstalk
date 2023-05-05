@@ -10,32 +10,32 @@ const wellTableBaseStyle = {
     outline: 'none',
     border: 'none',
     '& .MuiDataGrid-row.odd': {
-      backgroundColor: '#F6FAFE'
+      backgroundColor: '#F6FAFE',
     },
     '& .MuiDataGrid-iconSeparator': {
-      display: 'none'
+      display: 'none',
     },
     '& .MuiDataGrid-columnHeaderTitle': {
       fontWeight: 500,
       fontSize: FontSize.base,
-      color: 'gray'
+      color: 'gray',
     },
     '& .MuiDataGrid-columnHeader:focus': {
-      outline: 'none'
+      outline: 'none',
     },
     '& .MuiDataGrid-columnHeaderDraggableContainer:focus': {
-      outline: 'none'
+      outline: 'none',
     },
     '& .MuiDataGrid-cellContent': {
       color: '#677166',
-      fontSize: '18px'
+      fontSize: '18px',
     },
     '& .MuiDataGrid-cell': {
       outline: 'none',
       border: 'none',
       '&:focused': {
-        border: 'none'
-      }
+        border: 'none',
+      },
     },
     '& .MuiDataGrid-cell:focus': {
       outline: 'none',
@@ -52,14 +52,14 @@ const wellTableBaseStyle = {
       // cursor: 'pointer',
       width: 'calc(100% - 2.5px)',
       '&:hover': {
-        background: 'transparent'
-      }
+        background: 'transparent',
+      },
     },
     '& .MuiDataGrid-footerContainer': {
       outline: 'none',
       borderBottom: 'none',
       borderTop: 'none',
-      justifyContent: 'center'
+      justifyContent: 'center',
     },
     '& .MuiDataGrid-columnHeaders': {
       outline: 'none',
@@ -67,30 +67,27 @@ const wellTableBaseStyle = {
       borderColor: BeanstalkPalette.blue,
       fontSize: '18px',
       color: '#000000',
-      '&:hover' : {
-        outline: 'none !important'
-      }
+      '&:hover': {
+        outline: 'none !important',
+      },
     },
     '& .MuiDataGrid-columnHeader': {
       outline: 'none',
-      border: 'none'
+      border: 'none',
     },
     '& .MuiDataGrid-columnHeaderTitleContainer': {
       outline: 'none',
     },
-  }
+  },
 };
 
 const MAX_ROWS = 5;
 
 export type MarketBaseTableProps = {
   maxRows?: number;
-}
+};
 
-const TabTable: FC<
-  MarketBaseTableProps &
-  DataGridProps
-> = ({
+const TabTable: FC<MarketBaseTableProps & DataGridProps> = ({
   rows,
   columns,
   maxRows,
@@ -104,11 +101,13 @@ const TabTable: FC<
   }, [rows, maxRows]);
 
   return (
-    <Box sx={{
-      height: tableHeight,
-      width: '100%',
-      ...wellTableBaseStyle,
-    }}>
+    <Box
+      sx={{
+        height: tableHeight,
+        width: '100%',
+        ...wellTableBaseStyle,
+      }}
+    >
       <DataGrid
         columns={columns}
         rows={rows}
@@ -120,7 +119,7 @@ const TabTable: FC<
         initialState={{
           sorting: {
             sortModel: [{ field: 'placeInLine', sort: 'asc' }],
-          }
+          },
         }}
         {...props}
       />

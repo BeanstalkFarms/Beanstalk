@@ -9,20 +9,20 @@ import './FertilizerImage.css';
 
 import { FC } from '~/types';
 
-export type FertilizerState = 'unused' | 'active' | 'used'
-export const FERTILIZER_ICONS : { [key in FertilizerState]: string } = {
+export type FertilizerState = 'unused' | 'active' | 'used';
+export const FERTILIZER_ICONS: { [key in FertilizerState]: string } = {
   unused: fertUnusedImage,
   active: fertActiveImage,
-  used:   fertUsedImage,
+  used: fertUsedImage,
 };
 export type FertilizerImageProps = {
   state?: FertilizerState;
-  isNew? : boolean;
+  isNew?: boolean;
   progress?: number;
   id?: BigNumber;
 };
 
-const FertilizerImage : FC<FertilizerImageProps> = ({
+const FertilizerImage: FC<FertilizerImageProps> = ({
   state = 'unused',
   isNew = false,
   progress,
@@ -41,8 +41,8 @@ const FertilizerImage : FC<FertilizerImageProps> = ({
         borderRadius: 1,
         position: 'relative',
         '&:hover > .id': {
-          display: 'block'
-        }
+          display: 'block',
+        },
       }}
       className="fert-item"
     >
@@ -51,11 +51,13 @@ const FertilizerImage : FC<FertilizerImageProps> = ({
         src={FERTILIZER_ICONS[state]}
         width="45%"
         css={{ position: 'relative', zIndex: 2 }}
-        className={isNew ? 'fert-anim bounce' : id ? 'fert-anim bounce-hover' : undefined}
+        className={
+          isNew ? 'fert-anim bounce' : id ? 'fert-anim bounce-hover' : undefined
+        }
       />
       {id ? (
         <Box
-          className="id" 
+          className="id"
           sx={{
             display: 'none',
             position: 'absolute',
@@ -80,7 +82,7 @@ const FertilizerImage : FC<FertilizerImageProps> = ({
             left: 0,
             zIndex: 0,
             borderBottomLeftRadius: 9,
-            borderBottomRightRadius: 9
+            borderBottomRightRadius: 9,
           }}
         />
       ) : null}
@@ -92,7 +94,7 @@ const FertilizerImage : FC<FertilizerImageProps> = ({
       <Button
         variant="outlined"
         sx={{ borderColor: 'none', p: 0, height: 'auto' }}
-        href={`https://opensea.io/assets/ethereum/0x402c84de2ce49af88f5e2ef3710ff89bfed36cb6/${id.toString()}`} 
+        href={`https://opensea.io/assets/ethereum/0x402c84de2ce49af88f5e2ef3710ff89bfed36cb6/${id.toString()}`}
         target="_blank"
         fullWidth
       >

@@ -14,7 +14,7 @@
 //   const { data: account } = useAccount();
 //   const erc20Tokens = useTokenMap(ERC20_TOKENS);
 //   const tokenAddresses = Object.keys(erc20Tokens);
-  
+
 //   const onClick = useCallback(async () => {
 //     if (account?.address) {
 //       const address = getAccount(account?.address);

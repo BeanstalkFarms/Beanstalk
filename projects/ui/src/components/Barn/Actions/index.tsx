@@ -11,14 +11,17 @@ import { FC } from '~/types';
 
 const SLUGS = ['buy', 'rinse'];
 
-const BarnActions : FC<{}> = () => {
+const BarnActions: FC<{}> = () => {
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const farmerFertilizer = useFarmerFertilizer();
   return (
     <Module>
       <ModuleTabs value={tab} onChange={handleChange}>
         <Tab label="Buy" />
-        <BadgeTab showBadge={farmerFertilizer.fertilizedSprouts.gt(0)} label="Rinse" />
+        <BadgeTab
+          showBadge={farmerFertilizer.fertilizedSprouts.gt(0)}
+          label="Rinse"
+        />
       </ModuleTabs>
       <ModuleContent>
         {tab === 0 ? <Buy /> : null}

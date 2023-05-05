@@ -5,7 +5,7 @@ import { FC } from '~/types';
 
 const InfoRow: FC<
   {
-    label: string  | JSX.Element;
+    label: string | JSX.Element;
     labelVariant?: TypographyVariant;
     infoVariant?: TypographyVariant;
     labelColor?: string;

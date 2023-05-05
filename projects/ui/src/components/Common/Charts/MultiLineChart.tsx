@@ -163,8 +163,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
       />
       <svg width={width} height={height}>
         {/**
-          * Lines
-          */}
+         * Lines
+         */}
         <Group
           width={width - common.yAxisWidth}
           height={dataRegion.yBottom - dataRegion.yTop}
@@ -194,8 +194,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
           ))}
         </Group>
         {/**
-          * Axis
-          */}
+         * Axis
+         */}
         <g transform={`translate(0, ${dataRegion.yBottom})`}>
           <Axis
             key="axis"
@@ -223,8 +223,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
           />
         </g>
         {/**
-          * Cursor
-          */}
+         * Cursor
+         */}
         {tooltipData && (
           <>
             <Line
@@ -274,10 +274,17 @@ const MultiLineChart: React.FC<BaseChartProps> = (props) => (
                 <ExploitLine {...childProps} />
                 {props.horizontalLineNumber !== undefined && (
                   <Line
-                    from={{ x: 0, y: childProps.scales[0].yScale(props.horizontalLineNumber) as number }}
+                    from={{
+                      x: 0,
+                      y: childProps.scales[0].yScale(
+                        props.horizontalLineNumber
+                      ) as number,
+                    }}
                     to={{
                       x: childProps.width - providerProps.common.yAxisWidth,
-                      y: childProps.scales[0].yScale(props.horizontalLineNumber) as number,
+                      y: childProps.scales[0].yScale(
+                        props.horizontalLineNumber
+                      ) as number,
                     }}
                     stroke={BeanstalkPalette.logoGreen}
                     strokeDasharray={4}

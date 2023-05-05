@@ -5,7 +5,7 @@ import { ComponentMeta, ComponentStory } from '@storybook/react';
 
 export default {
   argTypes: {},
-  args: {}
+  args: {},
 } as ComponentMeta<typeof Button>;
 
 const variants = [
@@ -22,13 +22,15 @@ const variants = [
 ];
 const Template: ComponentStory<typeof Button> = (args) => (
   <Box sx={{ width: 800 }}>
-    {variants.map(([v, t]) => <Typography key={v} variant={v as TypographyProps['variant']}>{t || v}</Typography>)}
+    {variants.map(([v, t]) => (
+      <Typography key={v} variant={v as TypographyProps['variant']}>
+        {t || v}
+      </Typography>
+    ))}
   </Box>
 );
 
 const Primary = Template.bind({});
 Primary.args = {};
 
-export {
-  Primary
-};
+export { Primary };

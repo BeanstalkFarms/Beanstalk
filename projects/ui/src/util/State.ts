@@ -4,8 +4,8 @@ import { EventCacheName, FarmerEvents } from '~/state/farmer/events2';
 /**
  * Return the key at which Farmer events should be held in localStorage.
  * @param chainId
- * @param account 
- * @param cacheId 
+ * @param account
+ * @param cacheId
  * @returns string
  */
 export const getEventCacheId = (
@@ -39,12 +39,14 @@ export const loadState = () => {
 /**
  * Save Redux state to localStorage.
  * @unused
- * @param state 
+ * @param state
  */
 export const saveState = (state: any) => {
   if (state.app.settings) {
     try {
-      const serializedState = JSON.stringify({ app: { settings: state.app.settings } });
+      const serializedState = JSON.stringify({
+        app: { settings: state.app.settings },
+      });
       localStorage.setItem('beanstalk.s', serializedState);
     } catch (err) {
       // pass
@@ -64,14 +66,15 @@ export const rehydrateEvents2 = (events2: FarmerEvents | undefined) => {
     Object.keys(cache).forEach((key) => {
       if (cache[key].events?.length > 0) {
         cache[key].events = cache[key].events.map((event) => ({
-            ...event,
-            args: event.args?.map((arg: any) => {
+          ...event,
+          args:
+            event.args?.map((arg: any) => {
               if (typeof arg === 'object' && arg.type === 'BigNumber') {
                 return ethers.BigNumber.from(arg.hex);
               }
               return arg;
             }) || [],
-          }));
+        }));
       }
     });
     return cache;

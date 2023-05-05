@@ -3,7 +3,7 @@ import { NEW_BN } from '~/constants';
 import { FarmerBarn } from '.';
 import { resetFarmerBarn, updateFarmerBarn } from './actions';
 
-const initialState : FarmerBarn = {
+const initialState: FarmerBarn = {
   balances: [],
   unfertilizedSprouts: NEW_BN,
   fertilizedSprouts: NEW_BN,

@@ -46,20 +46,44 @@ export const DELTA_POD_DEMAND_UPPER_BOUND = 1.05; /* 105% */
 // export const RAIN_TIME = 24; /* 24 Seasons */
 export const PEG_WEATHER_CASES = [
   // Dec, Sdy, Inc
-   3,  1,  0, 0,  // Exs Low: P < 1
-  -1, -3, -3, 0,  //          P > 1
-   3,  1,  0, 0,  // Rea Low: P < 1
-  -1, -3, -3, 0,  //          P > 1
-   3,  3,  1, 0,  // Rea Hgh: P < 1
-   0, -1, -3, 0,  //          P > 1
-   3,  3,  1, 0,  // Exs Hgh: P < 1
-   0, -1, -3, 0,  //          P > 1
+  3,
+  1,
+  0,
+  0, // Exs Low: P < 1
+  -1,
+  -3,
+  -3,
+  0, //          P > 1
+  3,
+  1,
+  0,
+  0, // Rea Low: P < 1
+  -1,
+  -3,
+  -3,
+  0, //          P > 1
+  3,
+  3,
+  1,
+  0, // Rea Hgh: P < 1
+  0,
+  -1,
+  -3,
+  0, //          P > 1
+  3,
+  3,
+  1,
+  0, // Exs Hgh: P < 1
+  0,
+  -1,
+  -3,
+  0, //          P > 1
 ]; /* Peg Maintenance Weather Cases */
 
 /* Website Settings */
 export const BASE_SLIPPAGE = 0.995; /* 0.5% slippage */
-export const CONVERT_BEAN_SLIPPAGE = 0.980; /* 2.0% slippage */
-export const CONVERT_LP_SLIPPAGE = 0.990; /* 1.0% slippage */
+export const CONVERT_BEAN_SLIPPAGE = 0.98; /* 2.0% slippage */
+export const CONVERT_LP_SLIPPAGE = 0.99; /* 1.0% slippage */
 export const SLIPPAGE_THRESHOLD = 0.97; /* 3% slippage threshold for frontrunning */
 export const LP_FEE = 0.003; /* 0.3% LP fee */
 export const MIN_BALANCE = 0.05; /* 0.05 minimum eth withtheld to transact */

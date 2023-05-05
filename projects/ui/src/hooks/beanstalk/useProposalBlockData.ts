@@ -23,14 +23,14 @@ export type ProposalBlockData = {
   pctOfQuorum: number | undefined;
   /** The voting power (in Stalk) of `account` at the proposal block. */
   votingPower: BigNumber | undefined;
-}
+};
 
 export default function useProposalBlockData(
   proposal: Proposal,
-  account?: string,
-) : {
-  loading: boolean,
-  data: ProposalBlockData
+  account?: string
+): {
+  loading: boolean;
+  data: ProposalBlockData;
 } {
   /// Proposal info
   const tag = getProposalTag(proposal.title);
@@ -39,16 +39,19 @@ export default function useProposalBlockData(
 
   /// Beanstalk
   const beanstalk = useBeanstalkContract();
-  const [totalStalk, setTotalStalk] = useState<undefined | BigNumber>(undefined);
-  const [votingPower, setVotingPower] = useState<undefined | BigNumber>(undefined);
+  const [totalStalk, setTotalStalk] = useState<undefined | BigNumber>(
+    undefined
+  );
+  const [votingPower, setVotingPower] = useState<undefined | BigNumber>(
+    undefined
+  );
   const [loading, setLoading] = useState(true);
-  
-  const score = (
+
+  const score =
     proposal.space.id === 'wearebeansprout.eth'
       ? new BigNumber(proposal.scores_total || ZERO_BN)
-      : new BigNumber(proposal.scores[0] || ZERO_BN)
-  );
-  
+      : new BigNumber(proposal.scores[0] || ZERO_BN);
+
   useEffect(() => {
     (async () => {
       try {
@@ -57,7 +60,9 @@ export default function useProposalBlockData(
         const stalkResult = tokenResult(STALK);
         const [_totalStalk, _votingPower] = await Promise.all([
           beanstalk.totalStalk({ blockTag }).then(stalkResult),
-          account ? beanstalk.balanceOfStalk(account, { blockTag }).then(stalkResult) : Promise.resolve(undefined),
+          account
+            ? beanstalk.balanceOfStalk(account, { blockTag }).then(stalkResult)
+            : Promise.resolve(undefined),
         ]);
         setTotalStalk(_totalStalk);
         setVotingPower(_votingPower);
@@ -68,14 +73,14 @@ export default function useProposalBlockData(
       }
     })();
   }, [beanstalk, tag, proposal.snapshot, account]);
-  
+
   //
-  const stalkForQuorum = (pctStalkForQuorum && totalStalk)
-    ? totalStalk.times(pctStalkForQuorum)
-    : undefined;
-  const pctOfQuorum = (score && stalkForQuorum)
-    ? score.div(stalkForQuorum).toNumber()
-    : undefined;
+  const stalkForQuorum =
+    pctStalkForQuorum && totalStalk
+      ? totalStalk.times(pctStalkForQuorum)
+      : undefined;
+  const pctOfQuorum =
+    score && stalkForQuorum ? score.div(stalkForQuorum).toNumber() : undefined;
 
   return {
     loading,
@@ -91,6 +96,6 @@ export default function useProposalBlockData(
       pctOfQuorum,
       // Account
       votingPower,
-    }
+    },
   };
 }

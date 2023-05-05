@@ -15,19 +15,16 @@ import { FC } from '~/types';
 
 type RowData = WithdrawalCrate & { id: BigNumber };
 
-const Withdrawals : FC<{
+const Withdrawals: FC<{
   token: Token;
   siloBalance: FarmerSiloBalance | undefined;
-}> = ({
-  token,
-  siloBalance,
-}) => {
+}> = ({ token, siloBalance }) => {
   const getUSD = useSiloTokenToFiat();
   const currentSeason = useSeason();
   const account = useWagmiAccount();
 
-  const rows : RowData[] = useMemo(() => {
-    const data : RowData[] = [];
+  const rows: RowData[] = useMemo(() => {
+    const data: RowData[] = [];
     if (siloBalance) {
       if (siloBalance.claimable.amount.gt(0)) {
         data.push({
@@ -38,61 +35,70 @@ const Withdrawals : FC<{
       }
       if (siloBalance.withdrawn?.crates?.length > 0) {
         data.push(
-          ...(siloBalance.withdrawn.crates.map((crate) => ({
+          ...siloBalance.withdrawn.crates.map((crate) => ({
             id: crate.season,
-            ...crate
-          })))
+            ...crate,
+          }))
         );
       }
     }
     return data;
-  }, [
-    siloBalance,
-    currentSeason,
-  ]);
+  }, [siloBalance, currentSeason]);
 
-  const columns = useMemo(() => ([
-    {
-      field: 'season',
-      flex: 2,
-      headerName: 'Seasons to Arrival',
-      align: 'left',
-      headerAlign: 'left',
-      valueParser: (value: BigNumber) => value.toNumber(),
-      renderCell: (params) => {
-        const seasonsToArrival = params.value.minus(currentSeason);
-        return seasonsToArrival.lte(0) ? (
-          <Typography color="primary">Claimable</Typography>
-        ) : (
-          <Typography>{seasonsToArrival.toFixed()}</Typography>
-        );
-      },
-      sortable: false,
-    },
-    {
-      field: 'amount',
-      flex: 2,
-      headerName: 'Withdrawn Amount',
-      align: 'right',
-      headerAlign: 'right',
-      renderCell: (params) => (
-        <Typography>
-          {displayFullBN(params.value, token.displayDecimals, token.displayDecimals)} 
-          <Typography display={{ xs: 'none', md: 'inline' }} color="text.secondary">
-            {' '}(~{displayUSD(getUSD(token, params.row.amount))})
-          </Typography>
-        </Typography>
-      ),
-      sortable: false,
-    },
-  ] as GridColumns), [
-    token,
-    getUSD,
-    currentSeason
-  ]);
+  const columns = useMemo(
+    () =>
+      [
+        {
+          field: 'season',
+          flex: 2,
+          headerName: 'Seasons to Arrival',
+          align: 'left',
+          headerAlign: 'left',
+          valueParser: (value: BigNumber) => value.toNumber(),
+          renderCell: (params) => {
+            const seasonsToArrival = params.value.minus(currentSeason);
+            return seasonsToArrival.lte(0) ? (
+              <Typography color="primary">Claimable</Typography>
+            ) : (
+              <Typography>{seasonsToArrival.toFixed()}</Typography>
+            );
+          },
+          sortable: false,
+        },
+        {
+          field: 'amount',
+          flex: 2,
+          headerName: 'Withdrawn Amount',
+          align: 'right',
+          headerAlign: 'right',
+          renderCell: (params) => (
+            <Typography>
+              {displayFullBN(
+                params.value,
+                token.displayDecimals,
+                token.displayDecimals
+              )}
+              <Typography
+                display={{ xs: 'none', md: 'inline' }}
+                color="text.secondary"
+              >
+                {' '}
+                (~{displayUSD(getUSD(token, params.row.amount))})
+              </Typography>
+            </Typography>
+          ),
+          sortable: false,
+        },
+      ] as GridColumns,
+    [token, getUSD, currentSeason]
+  );
 
   const amount = siloBalance?.withdrawn.amount;
-  const state = !account ? 'disconnected' : !currentSeason ? 'loading' : 'ready';
+  const state = !account
+    ? 'disconnected'
+    : !currentSeason
+    ? 'loading'
+    : 'ready';
 
   return (
     <TableCard

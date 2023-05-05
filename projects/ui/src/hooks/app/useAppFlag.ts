@@ -7,7 +7,7 @@ export default function useAppFlag<T extends string | number | object>(
   fallback?: T
 ) {
   const account = useAccount();
-  const key = `beanstalk.a.${account || '_'}.${id}`;  
+  const key = `beanstalk.a.${account || '_'}.${id}`;
   const get = useCallback<() => T>(() => {
     try {
       const v = localStorage.getItem(key);
@@ -23,8 +23,11 @@ export default function useAppFlag<T extends string | number | object>(
       throw e;
     }
   }, [fallback, key, parse]);
-  const set = useCallback((v: T) => {
-    localStorage.setItem(key, v.toString());
-  }, [key]);
+  const set = useCallback(
+    (v: T) => {
+      localStorage.setItem(key, v.toString());
+    },
+    [key]
+  );
   return [get, set, key] as const;
 }

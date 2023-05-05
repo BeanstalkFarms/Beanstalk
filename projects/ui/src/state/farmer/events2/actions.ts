@@ -4,7 +4,7 @@ import { EventCacheName } from '.';
 
 export type IngestPayload = {
   // Cache selectors
-  cache:   EventCacheName;
+  cache: EventCacheName;
   account: string;
   chainId: number;
   // Results
@@ -12,12 +12,10 @@ export type IngestPayload = {
   endBlockNumber: number;
   timestamp: number;
   events: Event[];
-}
+};
 
 export const ingestEvents = createAction<IngestPayload>(
   'farmer/events2/ingest'
 );
 
-export const resetEvents = createAction(
-  'farmer/events2/reset'
-);
+export const resetEvents = createAction('farmer/events2/reset');

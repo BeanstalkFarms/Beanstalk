@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js';
 // https://api.thegraph.com/subgraphs/name/publiuss/fertilizer/graphql
 
 export type FertilizerResponse = {
-  fertilizerBalances: ({
+  fertilizerBalances: {
     amount: string;
     fertilizerToken: {
       id: string;
@@ -13,27 +13,29 @@ export type FertilizerResponse = {
       humidity: string;
       startBpf: string;
     };
-  })[];
+  }[];
 };
 
-export const castFertilizerBalance = (balance: FertilizerResponse['fertilizerBalances'][number]) => ({
+export const castFertilizerBalance = (
+  balance: FertilizerResponse['fertilizerBalances'][number]
+) => ({
   amount: new BigNumber(balance.amount),
   token: {
-    id:     new BigNumber(balance.fertilizerToken.id),
+    id: new BigNumber(balance.fertilizerToken.id),
     endBpf: new BigNumber(balance.fertilizerToken.endBpf),
     season: new BigNumber(balance.fertilizerToken.season),
     humidity: new BigNumber(balance.fertilizerToken.humidity),
     startBpf: new BigNumber(balance.fertilizerToken.startBpf),
-  }
+  },
 });
 
 export type FertilizerBalance = ReturnType<typeof castFertilizerBalance>;
 
 export type FarmerBarn = {
   /**
-   * 
+   *
    */
-  balances: FertilizerBalance[]
+  balances: FertilizerBalance[];
 
   /**
    * The total number of [Unfertilized] Sprouts held by the Farmer.
@@ -46,4 +48,4 @@ export type FarmerBarn = {
    * When the Farmer calls `rinse()` this is reset to 0.
    */
   fertilizedSprouts: BigNumber;
-}
+};

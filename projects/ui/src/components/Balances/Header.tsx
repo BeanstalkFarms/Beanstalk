@@ -1,8 +1,4 @@
-import {
-  Box,
-  Divider,
-  Grid,
-} from '@mui/material';
+import { Box, Divider, Grid } from '@mui/material';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { AppState } from '~/state';

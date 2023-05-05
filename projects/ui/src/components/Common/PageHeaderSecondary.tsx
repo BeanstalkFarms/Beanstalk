@@ -17,7 +17,7 @@ const PageHeaderSecondary: FC<{
   /** Set a custom path for the back button to return to. Defaults to navigate(-1). */
   returnPath?: string;
   /** Show a back button */
-  hideBackButton?: boolean; 
+  hideBackButton?: boolean;
   /** Show a control on the right side of the header. */
   control?: React.ReactElement;
 }> = (props) => {
@@ -60,8 +60,8 @@ const PageHeaderSecondary: FC<{
             </Button>
           </Stack>
         )}
-        {props.title && (
-          typeof props.title === 'string' ? (
+        {props.title &&
+          (typeof props.title === 'string' ? (
             <Typography
               variant="h2"
               textAlign={props.titleAlign ?? 'center'}
@@ -76,8 +76,7 @@ const PageHeaderSecondary: FC<{
             </Typography>
           ) : (
             props.title
-          )
-        )}
+          ))}
         <Box sx={{ width: 70 }} display="flex" justifyContent="end">
           {props.control}
         </Box>

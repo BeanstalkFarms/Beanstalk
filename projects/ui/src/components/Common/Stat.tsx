@@ -4,7 +4,7 @@ import {
   TypographyProps,
   StackProps,
   Tooltip,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -53,7 +53,6 @@ const Stat: FC<StatProps> = ({
   // Stack
   gap = 1,
 }) => {
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -61,11 +60,18 @@ const Stat: FC<StatProps> = ({
     <Stack gap={gap}>
       {/* Title */}
       <Row gap={0.5}>
-        {titleIcon && (<Typography><> {titleIcon}</></Typography>)}
+        {titleIcon && (
+          <Typography>
+            <> {titleIcon}</>
+          </Typography>
+        )}
         <Typography variant="body1">
           {title}
           {titleTooltip && (
-            <Tooltip title={titleTooltip} placement={isMobile ? "top" : "right" }>
+            <Tooltip
+              title={titleTooltip}
+              placement={isMobile ? 'top' : 'right'}
+            >
               <HelpOutlineIcon
                 sx={{
                   color: 'text.secondary',

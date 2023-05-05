@@ -1,9 +1,6 @@
 import { createReducer } from '@reduxjs/toolkit';
 import BigNumber from 'bignumber.js';
-import {
-  clearAllowances,
-  updateAllowance, updateAllowances,
-} from './actions';
+import { clearAllowances, updateAllowance, updateAllowances } from './actions';
 
 export interface AllowanceState {
   [contractAddress: string]: {

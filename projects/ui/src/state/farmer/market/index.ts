@@ -28,37 +28,43 @@ export const castPodListing = (
 ): PodListing => {
   const [account, id] = listing.id.split('-'); // Subgraph returns a conjoined ID
   const index = toTokenUnitsBN(id, BEAN[1].decimals);
-  const maxHarvestableIndex = toTokenUnitsBN(listing.maxHarvestableIndex, BEAN[1].decimals);
+  const maxHarvestableIndex = toTokenUnitsBN(
+    listing.maxHarvestableIndex,
+    BEAN[1].decimals
+  );
 
   return {
     // Identifiers
     id: id,
     account: listing.farmer.id || account,
-    
+
     // Configuration
     index: index,
     start: toTokenUnitsBN(listing.start, BEAN[1].decimals),
     mode: listing.mode.toString() as FarmToMode, // FIXME: use numbers instead?
-    
+
     // Constraints
     maxHarvestableIndex: maxHarvestableIndex,
-    minFillAmount: toTokenUnitsBN(listing.minFillAmount || ZERO_BN, BEAN[1].decimals), // default to zero for backwards compat
-    
+    minFillAmount: toTokenUnitsBN(
+      listing.minFillAmount || ZERO_BN,
+      BEAN[1].decimals
+    ), // default to zero for backwards compat
+
     // Pricing
     pricingType: (listing?.pricingType as PricingType) || null,
     pricePerPod: toTokenUnitsBN(listing.pricePerPod, BEAN[1].decimals), // if pricingTyped == null | 0
     pricingFunction: listing?.pricingFunction ?? null, // if pricingType == 1
-    
+
     // Amounts [Relative to Original]
     originalIndex: toTokenUnitsBN(listing.originalIndex, BEAN[1].decimals),
     originalAmount: toTokenUnitsBN(listing.originalAmount, BEAN[1].decimals),
     filled: toTokenUnitsBN(listing.filled, BEAN[1].decimals),
-    
+
     // Amounts [Relative to Child]
     amount: toTokenUnitsBN(listing.amount, BEAN[1].decimals),
     remainingAmount: toTokenUnitsBN(listing.remainingAmount, BEAN[1].decimals),
     filledAmount: toTokenUnitsBN(listing.filledAmount, BEAN[1].decimals),
-    
+
     // Computed
     placeInLine: index.minus(harvestableIndex),
     expiry: maxHarvestableIndex.minus(harvestableIndex),
@@ -78,8 +84,14 @@ export const castPodListing = (
 export const castPodOrder = (order: PodOrderFragment): PodOrder => {
   const podAmount = toTokenUnitsBN(order.podAmount, BEAN[1].decimals);
   const beanAmount = toTokenUnitsBN(order.beanAmount, BEAN[1].decimals);
-  const podAmountFilled = toTokenUnitsBN(order.podAmountFilled, BEAN[1].decimals);
-  const beanAmountFilled = toTokenUnitsBN(order.beanAmountFilled, BEAN[1].decimals);
+  const podAmountFilled = toTokenUnitsBN(
+    order.podAmountFilled,
+    BEAN[1].decimals
+  );
+  const beanAmountFilled = toTokenUnitsBN(
+    order.beanAmountFilled,
+    BEAN[1].decimals
+  );
 
   return {
     // Identifiers
@@ -88,12 +100,15 @@ export const castPodOrder = (order: PodOrderFragment): PodOrder => {
 
     // Pricing
     pricingType: (order.pricingType as PricingType) || null,
-    pricePerPod: toTokenUnitsBN(order.pricePerPod, BEAN[1].decimals),  // if pricingTyped == null | 0
+    pricePerPod: toTokenUnitsBN(order.pricePerPod, BEAN[1].decimals), // if pricingTyped == null | 0
     pricingFunction: order?.pricingFunction ?? null, // if pricingType == 1
 
     // Constraints
     maxPlaceInLine: toTokenUnitsBN(order.maxPlaceInLine, BEAN[1].decimals),
-    minFillAmount: toTokenUnitsBN(order.minFillAmount || ZERO_BN, PODS.decimals), // default to zero for backwards compat
+    minFillAmount: toTokenUnitsBN(
+      order.minFillAmount || ZERO_BN,
+      PODS.decimals
+    ), // default to zero for backwards compat
 
     // Amounts
     podAmount: podAmount,
@@ -115,7 +130,7 @@ export const castPodOrder = (order: PodOrderFragment): PodOrder => {
 /**
  * Unless otherwise specified, values here match the value returned by the subgraph
  * in BigNumber form with the appropriate number of decimals.
- * 
+ *
  * See Beanstalk-Subgraph/schema.graphql for details.
  */
 export type PodListing = {
@@ -168,7 +183,7 @@ export type PodListing = {
 /**
  * Unless otherwise specified, values here match the value returned by the subgraph
  * in BigNumber form with the appropriate number of decimals.
- * 
+ *
  * See Beanstalk-Subgraph/schema.graphql for details.
  */
 export type PodOrder = {
@@ -194,7 +209,7 @@ export type PodOrder = {
   podAmountFilled: BigNumber;
   beanAmount: BigNumber;
   beanAmountFilled: BigNumber;
-  
+
   /// ///////////// Computed ////////////////
 
   podAmountRemaining: BigNumber;

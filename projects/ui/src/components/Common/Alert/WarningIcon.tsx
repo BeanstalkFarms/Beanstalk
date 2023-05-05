@@ -5,7 +5,7 @@ import IconWrapper from '~/components/Common/IconWrapper';
 
 import { FC } from '~/types';
 
-const WarningIcon : FC<{}> = () => (
+const WarningIcon: FC<{}> = () => (
   <IconWrapper boxSize={IconSize.medium}>
     <WarningAmberIcon sx={{ fontSize: IconSize.small }} />
   </IconWrapper>

@@ -23,7 +23,7 @@ export interface EventItemProps {
  */
 const TokenDisplay: FC<{
   color?: 'green' | 'red';
-  input?: [BigNumber, Token],
+  input?: [BigNumber, Token];
 }> = (props) => (
   <div>
     {props.input ? (
@@ -45,29 +45,30 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
   let eventTitle = `${event.event}`;
   let amountIn;
   let amountOut;
-  
+
   const siloTokens = useTokenMap(SILO_WHITELIST);
-  
-  const processTokenEvent = (e: Event, title: string, showInput?: boolean, showOutput?: boolean) => {
+
+  const processTokenEvent = (
+    e: Event,
+    title: string,
+    showInput?: boolean,
+    showOutput?: boolean
+  ) => {
     const tokenAddr = e.args?.token.toString().toLowerCase();
-      if (siloTokens[tokenAddr]) {
-        const token = siloTokens[tokenAddr];
-        const amount = toTokenUnitsBN(
-          new BigNumber(event.args?.amount.toString()),
-            token.decimals
-        );
-        eventTitle = `${title} ${token.symbol}`;
-        if (showInput) {
-          amountIn = (
-            <TokenDisplay color="green" input={[amount, token]} />
-          );
-        }
-        if (showOutput) {
-          amountOut = (
-            <TokenDisplay color="red" input={[amount, token]} />
-          );
-        }
+    if (siloTokens[tokenAddr]) {
+      const token = siloTokens[tokenAddr];
+      const amount = toTokenUnitsBN(
+        new BigNumber(event.args?.amount.toString()),
+        token.decimals
+      );
+      eventTitle = `${title} ${token.symbol}`;
+      if (showInput) {
+        amountIn = <TokenDisplay color="green" input={[amount, token]} />;
       }
+      if (showOutput) {
+        amountOut = <TokenDisplay color="red" input={[amount, token]} />;
+      }
+    }
   };
 
   switch (event.event) {
@@ -105,9 +106,15 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
       break;
     }
     case 'Sow': {
-      const pods = toTokenUnitsBN(event.args?.pods.toString(), BEAN[SupportedChainId.MAINNET].decimals);
+      const pods = toTokenUnitsBN(
+        event.args?.pods.toString(),
+        BEAN[SupportedChainId.MAINNET].decimals
+      );
       if (event.args?.beans.toString() !== undefined) {
-        const beans = toTokenUnitsBN(event.args?.beans.toString(), BEAN[SupportedChainId.MAINNET].decimals);
+        const beans = toTokenUnitsBN(
+          event.args?.beans.toString(),
+          BEAN[SupportedChainId.MAINNET].decimals
+        );
 
         const weather = pods
           .dividedBy(beans)
@@ -117,16 +124,15 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
 
         eventTitle = `Bean Sow (${weather}% Temperature)`;
         amountOut = (
-          <TokenDisplay color="red" input={[beans, BEAN[SupportedChainId.MAINNET]]} />
+          <TokenDisplay
+            color="red"
+            input={[beans, BEAN[SupportedChainId.MAINNET]]}
+          />
         );
-        amountIn = (
-          <TokenDisplay color="green" input={[pods, PODS]} />
-        );
+        amountIn = <TokenDisplay color="green" input={[pods, PODS]} />;
       } else {
         eventTitle = 'Bean Sow';
-        amountIn = (
-          <TokenDisplay color="green" input={[pods, PODS]} />
-        );
+        amountIn = <TokenDisplay color="green" input={[pods, PODS]} />;
       }
       break;
     }
@@ -137,11 +143,12 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
       );
 
       eventTitle = 'Pod Harvest';
-      amountOut = (
-        <TokenDisplay color="red" input={[beans, PODS]} />
-      );
+      amountOut = <TokenDisplay color="red" input={[beans, PODS]} />;
       amountIn = (
-        <TokenDisplay color="green" input={[beans, BEAN[SupportedChainId.MAINNET]]} />
+        <TokenDisplay
+          color="green"
+          input={[beans, BEAN[SupportedChainId.MAINNET]]}
+        />
       );
       break;
     }
@@ -171,14 +178,10 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
       );
       if (event.args?.from.toString().toLowerCase() === account) {
         eventTitle = 'Transfer Plot';
-        amountOut = (
-          <TokenDisplay color="red" input={[pods, PODS]} />
-        );
+        amountOut = <TokenDisplay color="red" input={[pods, PODS]} />;
       } else {
         eventTitle = 'Receive Plot';
-        amountIn = (
-          <TokenDisplay color="green" input={[pods, PODS]} />
-        );
+        amountIn = <TokenDisplay color="green" input={[pods, PODS]} />;
       }
       break;
     }
@@ -200,7 +203,16 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
             <Typography variant="h4">{eventTitle}</Typography>
             {/* Timestamps */}
             <Row>
-              <Link color="text.secondary" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }} href={`https://etherscan.io/tx/${event.transactionHash}`} target="_blank" rel="noreferrer">
+              <Link
+                color="text.secondary"
+                sx={{
+                  textDecoration: 'none',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+                href={`https://etherscan.io/tx/${event.transactionHash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {/* {event?.args?.season ? ( */}
                 {/*  <Typography color="text.secondary">Season {event.args?.season.toString()}</Typography> */}
                 {/* ) : ( */}
@@ -216,7 +228,14 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
           </Stack>
         </Row>
       </Box>
-      <Box sx={{ position: 'absolute', width: 'calc(100% + 40px)', height: '1px', left: '-20px' }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          width: 'calc(100% + 40px)',
+          height: '1px',
+          left: '-20px',
+        }}
+      >
         <Divider />
       </Box>
     </Box>

@@ -2,13 +2,17 @@ import React from 'react';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import BigNumber from 'bignumber.js';
 import Deposits from './Deposits';
-import { DepositCrate, FarmerSiloBalance, WithdrawalCrate } from '../../../state/farmer/silo';
+import {
+  DepositCrate,
+  FarmerSiloBalance,
+  WithdrawalCrate,
+} from '../../../state/farmer/silo';
 import { BEAN_ETH_UNIV2_LP } from '../../../constants/tokens';
 import { SupportedChainId } from '../../../constants/chains';
 
 export default {
   component: Deposits,
-  args: {}
+  args: {},
 } as ComponentMeta<typeof Deposits>;
 
 const deposit: DepositCrate = {
@@ -29,12 +33,12 @@ const deposit2: DepositCrate = {
 
 const withdrawal: WithdrawalCrate = {
   season: new BigNumber(698),
-  amount: new BigNumber(760)
+  amount: new BigNumber(760),
 };
 
 const withdrawal2: WithdrawalCrate = {
   season: new BigNumber(345),
-  amount: new BigNumber(753460)
+  amount: new BigNumber(753460),
 };
 
 const siloBalance: FarmerSiloBalance = {
@@ -50,8 +54,8 @@ const siloBalance: FarmerSiloBalance = {
         season: new BigNumber(6074),
         stalk: new BigNumber(100),
         seeds: new BigNumber(200),
-      }
-    ]
+      },
+    ],
   },
   withdrawn: {
     amount: new BigNumber(100),
@@ -60,8 +64,8 @@ const siloBalance: FarmerSiloBalance = {
       {
         amount: new BigNumber(100),
         season: new BigNumber(6074),
-      }
-    ]
+      },
+    ],
   },
   claimable: {
     amount: new BigNumber(100),
@@ -69,14 +73,17 @@ const siloBalance: FarmerSiloBalance = {
       {
         amount: new BigNumber(100),
         season: new BigNumber(6074),
-      }
-    ]
+      },
+    ],
   },
-  lastUpdate: new BigNumber(new Date().getTime())
+  lastUpdate: new BigNumber(new Date().getTime()),
 };
 
 const Template: ComponentStory<typeof Deposits> = (args: any) => (
-  <Deposits token={BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET]} siloBalance={siloBalance} />
+  <Deposits
+    token={BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET]}
+    siloBalance={siloBalance}
+  />
 );
 
 export const Main = Template.bind({});

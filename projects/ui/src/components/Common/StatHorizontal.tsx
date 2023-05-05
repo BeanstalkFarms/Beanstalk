@@ -6,15 +6,12 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const StatHorizontal : FC<{
-  label: string | React.ReactElement,
-  labelTooltip?: string | React.ReactElement;
-} & StackProps> = ({
-  label,
-  labelTooltip = '',
-  children,
-  ...props
-}) => (
+const StatHorizontal: FC<
+  {
+    label: string | React.ReactElement;
+    labelTooltip?: string | React.ReactElement;
+  } & StackProps
+> = ({ label, labelTooltip = '', children, ...props }) => (
   <Row justifyContent="space-between" gap={2} {...props}>
     <Tooltip title={labelTooltip} placement="right">
       <Typography sx={{ font: 'inherit' }}>
@@ -26,9 +23,7 @@ const StatHorizontal : FC<{
         )}
       </Typography>
     </Tooltip>
-    <Row gap={0.3}>
-      {children}
-    </Row>
+    <Row gap={0.3}>{children}</Row>
   </Row>
 );
 

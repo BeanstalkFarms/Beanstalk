@@ -1,9 +1,6 @@
 import { createReducer } from '@reduxjs/toolkit';
 import { FarmerBalances } from '.';
-import {
-  clearBalances,
-  updateBalance, updateBalances,
-} from './actions';
+import { clearBalances, updateBalance, updateBalances } from './actions';
 
 export const initialState: FarmerBalances = {};
 

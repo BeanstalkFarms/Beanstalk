@@ -14,56 +14,48 @@ import { updateFarmerField, resetFarmerField } from './actions';
 
 export const useFetchFarmerField = () => {
   /// Helpers
-  const dispatch  = useDispatch();
+  const dispatch = useDispatch();
 
   /// Contracts
   const beanstalk = useBeanstalkContract();
 
   /// Data
-  const account   = useAccount();
-  const blocks    = useBlocks();
+  const account = useAccount();
+  const blocks = useBlocks();
   const whitelist = useWhitelist();
-  const season    = useSeason();
+  const season = useSeason();
   const harvestableIndex = useHarvestableIndex();
 
   /// Events
-  const getQueryFilters = useCallback<GetQueryFilters>((
-    _account,
-    fromBlock,
-    toBlock,
-  ) => [
-    beanstalk.queryFilter(
-      beanstalk.filters['Sow(address,uint256,uint256,uint256)'](_account),
-      fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters.Harvest(_account),
-      fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters.PlotTransfer(_account, null), // from
-      fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters.PlotTransfer(null, _account), // to
-      fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-      toBlock   || 'latest',
-    ),
-  ], [
-    blocks,
-    beanstalk,
-  ]);
-  
+  const getQueryFilters = useCallback<GetQueryFilters>(
+    (_account, fromBlock, toBlock) => [
+      beanstalk.queryFilter(
+        beanstalk.filters['Sow(address,uint256,uint256,uint256)'](_account),
+        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters.Harvest(_account),
+        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters.PlotTransfer(_account, null), // from
+        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters.PlotTransfer(null, _account), // to
+        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
+        toBlock || 'latest'
+      ),
+    ],
+    [blocks, beanstalk]
+  );
+
   const [fetchFieldEvents] = useEvents(EventCacheName.FIELD, getQueryFilters);
 
-  const initialized = (
-    account
-    && fetchFieldEvents
-    && harvestableIndex.gt(0) // harvestedableIndex is initialized to 0
-  );
+  const initialized = account && fetchFieldEvents && harvestableIndex.gt(0); // harvestedableIndex is initialized to 0
 
   /// Handlers
   const fetch = useCallback(async () => {
@@ -74,9 +66,7 @@ export const useFetchFarmerField = () => {
       const p = new EventProcessor(account, { season, whitelist });
       p.ingestAll(allEvents);
 
-      dispatch(updateFarmerField(
-        p.parsePlots(harvestableIndex)
-      ));
+      dispatch(updateFarmerField(p.parsePlots(harvestableIndex)));
     }
   }, [
     dispatch,
@@ -86,9 +76,9 @@ export const useFetchFarmerField = () => {
     season,
     whitelist,
     account,
-    harvestableIndex
+    harvestableIndex,
   ]);
-  
+
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerSilo] CLEAR');
     dispatch(resetFarmerField());

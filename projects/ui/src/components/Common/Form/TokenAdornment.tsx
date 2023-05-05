@@ -29,7 +29,7 @@ const wrappedVariantSx = {
   px: 1,
   py: 0.1,
   height: 'unset',
-  border: ''
+  border: '',
 };
 
 const TokenAdornment: FC<TokenAdornmentProps> = ({

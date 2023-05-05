@@ -46,9 +46,7 @@ const EmptyOverlay: React.FC<{ message?: string; isUserTable?: boolean }> = ({
 
 // const TAB_CONTROL_HEIGHT = 52;
 
-const BaseTable: FC<
-  IActivityTable & MarketBaseTableProps & DataGridProps
-> = ({
+const BaseTable: FC<IActivityTable & MarketBaseTableProps & DataGridProps> = ({
   rows,
   columns,
   maxRows,
@@ -77,21 +75,22 @@ const BaseTable: FC<
           borderBottom: `1px solid ${BeanstalkPalette.lightestGrey} !important`,
         },
         '& .MuiDataGrid-columnHeaders .MuiDataGrid-columnHeaderTitle': {
-          textTransform: 'uppercase'
+          textTransform: 'uppercase',
         },
         '& .MuiDataGrid-footerContainer': {
           minHeight: 'auto',
           borderTop: `1px solid ${BeanstalkPalette.lightestGrey} !important`,
-          justifyContent: 'flex-end !important'
+          justifyContent: 'flex-end !important',
         },
-        '& .MuiDataGrid-footerContainer .MuiTablePagination-root .MuiToolbar-root': {
-          minHeight: '0 !important',
-          fontSize: 14
-        },
+        '& .MuiDataGrid-footerContainer .MuiTablePagination-root .MuiToolbar-root':
+          {
+            minHeight: '0 !important',
+            fontSize: 14,
+          },
         '& .MuiDataGrid-footerContainer .MuiTablePagination-root p': {
           my: 0,
-          fontSize: 14
-        }
+          fontSize: 14,
+        },
       }}
     >
       <DataGrid
