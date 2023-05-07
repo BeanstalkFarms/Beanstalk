@@ -196,13 +196,13 @@ describe("Legacy Claim", async function () {
         const thisToken = await ethers.getContractAt("IERC20", withdraw.token);
 
         this.userTokensBefore[i] = await thisToken.balanceOf(withdraw.farmer.id);
-        this.totalWithdrawnBefore[i] = await this.silo.getTotalWithdrawn(thisToken.address);
+        this.totalWithdrawnBefore[i] = await claim.getTotalWithdrawn(thisToken.address);
 
         this.results[i] = await this.legacyClaims[i]
           .connect(depositorSigner)
           .claimWithdrawal(withdraw.token, withdraw.withdrawSeason, EXTERNAL);
 
-        this.totalWithdrawnAfter[i] = await this.silo.getTotalWithdrawn(thisToken.address);
+        this.totalWithdrawnAfter[i] = await claim.getTotalWithdrawn(thisToken.address);
 
         this.deltaTokens[i] = (await thisToken.balanceOf(withdraw.farmer.id)).sub(this.userTokensBefore[i]);
       }
