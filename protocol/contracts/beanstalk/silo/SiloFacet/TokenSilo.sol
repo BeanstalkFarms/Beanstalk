@@ -410,13 +410,6 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @notice Get the total amount of `token` currently Withdrawn from the Silo across all users.
-     */
-    function getTotalWithdrawn(address token) external view returns (uint256) {
-        return s.siloBalances[token].withdrawn;
-    }
-
-    /**
      * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
      *
      * Contains:
