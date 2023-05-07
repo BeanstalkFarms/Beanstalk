@@ -21,6 +21,6 @@ contract InitBip14 {
     uint256 private constant beanstalkFarmsBudget = 2_000_000 * 1e6; // 2,000,000 Beans
 
     function init() external {
-        C.bean().mint(beanstalkFarms, beanstalkFarmsBudget);
+        IBean(s.c.bean).mint(beanstalkFarms, beanstalkFarmsBudget);
     }
 }
