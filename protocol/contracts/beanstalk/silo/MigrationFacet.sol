@@ -64,5 +64,9 @@ contract MigrationFacet is ReentrancyGuard {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 
+    function balanceOfLegacySeeds(address account) external view returns (uint256) {
+        return LibLegacyTokenSilo.balanceOfSeeds(account);
+    }
+
 
 }
