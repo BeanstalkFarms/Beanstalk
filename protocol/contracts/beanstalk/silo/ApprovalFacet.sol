@@ -14,7 +14,6 @@ import "./SiloFacet/Silo.sol";
 import "./SiloFacet/TokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/Convert/LibConvert.sol";
-import "~/libraries/LibInternal.sol";
 import "../ReentrancyGuard.sol";
 
 /**

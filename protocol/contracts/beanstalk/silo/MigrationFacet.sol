@@ -14,7 +14,6 @@ import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/Silo/LibLegacyTokenSilo.sol";
 import "~/libraries/Convert/LibConvert.sol";
 import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibInternal.sol";
 
 /**
  * @author pizzaman1337
