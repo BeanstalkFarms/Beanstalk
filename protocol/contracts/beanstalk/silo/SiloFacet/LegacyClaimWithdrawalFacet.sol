@@ -30,7 +30,7 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
      * @notice Claims ERC20s from a Withdrawal.
      * @param token address of ERC20
      * @param season season to claim
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * @param mode destination of funds (INTERNAL, EXTERNAL)
      */
     function claimWithdrawal(
         address token,
@@ -45,7 +45,7 @@ contract LegacyClaimWithdrawalFacet is ReentrancyGuard {
      * @notice Claims ERC20s from multiple Withdrawals.
      * @param token address of ERC20
      * @param seasons array of seasons to claim
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * @param mode destination of funds (INTERNAL, EXTERNAL)
      */
     function claimWithdrawals(
         address token,
