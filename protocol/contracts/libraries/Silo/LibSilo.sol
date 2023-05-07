@@ -234,7 +234,7 @@ library LibSilo {
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
         
-        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
+        // if the user withdraws in the vesting period, they forfeit their earned beans for that season
         // this is distrubuted to the other users.
         if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             roots = s.s.roots.mulDiv(

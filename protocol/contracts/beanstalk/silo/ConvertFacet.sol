@@ -313,14 +313,6 @@ contract ConvertFacet is ReentrancyGuard {
                 a.tokensRemoved,
                 bdvsRemoved
             );
-
-            emit TransferBatch(
-                msg.sender, 
-                msg.sender,
-                address(0), 
-                depositIds, 
-                amounts
-            );
         }
 
         require(
