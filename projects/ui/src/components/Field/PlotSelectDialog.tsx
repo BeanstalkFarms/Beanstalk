@@ -7,6 +7,7 @@ import PlotSelect from '../Common/Form/PlotSelect';
 import EmptyState from '../Common/ZeroState/EmptyState';
 
 import { FC } from '~/types';
+import { PlotFragment } from '../Common/Form';
 
 export interface PlotSelectDialogProps {
   /** Closes dialog */
@@ -18,7 +19,7 @@ export interface PlotSelectDialogProps {
   /** */
   harvestableIndex: BigNumber;
   /** index of the selected plot */
-  selected?: string | null;
+  selected?: PlotFragment[] | null;
 }
 
 const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
@@ -35,7 +36,6 @@ const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
   // sets plot index then closes dialog
   const handleSelectAndClose = (index: string) => {
     handlePlotSelect(index);
-    handleClose();
   };
 
   return (

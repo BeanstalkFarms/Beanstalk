@@ -19,6 +19,7 @@ import podIcon from '~/img/beanstalk/pod-icon.svg';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { PlotFragment } from '.';
 
 export interface PlotSelectProps {
   /** A farmer's plots */
@@ -28,7 +29,7 @@ export interface PlotSelectProps {
   /** Custom function to set the selected plot index */
   handlePlotSelect: any;
   /** index of the selected plot */
-  selected?: string | null;
+  selected?: PlotFragment[] | null;
 }
 
 const PlotSelect: FC<PlotSelectProps> = ({
@@ -58,7 +59,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
       <ListItem
         key={index}
         color="primary"
-        selected={selected ? selected === index : undefined}
+        selected={ selected && selected.findIndex(item => item.index == index) > -1 ? true : undefined}
         disablePadding
         onClick={() => handlePlotSelect(index)}
         sx={{

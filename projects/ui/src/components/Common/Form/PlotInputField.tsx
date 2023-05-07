@@ -40,6 +40,8 @@ const PlotInputField: FC<
   const { values, setFieldValue, isSubmitting } = useFormikContext<{
     /// These fields are required in the parent's Formik state
     plot: PlotFragment;
+    selectedPlots: PlotFragment[];
+    totalAmount: string;
     settings: PlotSettingsFragment;
   }>();
 
@@ -66,22 +68,28 @@ const PlotInputField: FC<
           token={PODS}
           onClick={showDialog}
           buttonLabel={
-            plot.index ? (
-              <Row gap={0.75}>
-                <Typography display="inline" fontSize={16}>
-                  @
-                </Typography>
-                {displayBN(new BigNumber(plot.index).minus(harvestableIndex))}
-              </Row>
-            ) : (
-              'Select Plot'
-            )
+            values.selectedPlots !== undefined && values.selectedPlots.length < 2 ?
+              plot.index ? (
+                <Row gap={0.75}>
+                  <Typography display="inline" fontSize={16}>
+                    @
+                  </Typography>
+                  {displayBN(new BigNumber(plot.index).minus(harvestableIndex))}
+                </Row>
+              ) : (
+                'Select Plot'
+              )
+              : (
+                <Row gap={0.75}>
+                  {`${values.selectedPlots.length > 1 ? values.selectedPlots.length : 0} PLOTS`}
+                </Row>
+              )
           }
           size={props.size}
         />
       ),
     }),
-    [harvestableIndex, plot.index, showDialog, props.size]
+    [harvestableIndex, plot.index, showDialog, props.size, values.selectedPlots.length]
   );
 
   /// "Advanced" control in the Quote slot
@@ -145,9 +153,24 @@ const PlotInputField: FC<
   /// Select a new plot
   const handlePlotSelect = useCallback(
     (index: string) => {
-      const numPodsClamped = clamp(new BigNumber(plots[index]));
+      const indexOf = values.selectedPlots.findIndex(item => item.index == index)
+      if (values.selectedPlots == undefined || values.selectedPlots.length == 0 || indexOf < 0) {
+        values.selectedPlots.push(
+          { 
+            amount: plots[index],
+            index: index,
+            start: ZERO_BN,
+            end: plots[index] 
+          }
+        )
+      } else {
+        if (values.selectedPlots.length > 1) {
+          values.selectedPlots.splice(indexOf, 1)
+        }
+      }
+      const numPodsClamped = clamp(new BigNumber(values.selectedPlots[0].amount!));
       setFieldValue('plot.amount', numPodsClamped);
-      setFieldValue('plot.index', index);
+      setFieldValue('plot.index', values.selectedPlots[0].index);
       // set start/end directly since `onChangeAmount` depends on the current `plot`
       setFieldValue('plot.start', ZERO_BN);
       setFieldValue('plot.end', numPodsClamped);
@@ -170,9 +193,10 @@ const PlotInputField: FC<
         harvestableIndex={harvestableIndex}
         handlePlotSelect={handlePlotSelect}
         handleClose={hideDialog}
-        selected={plot.index}
+        selected={values.selectedPlots}
         open={dialogOpen}
       />
+      {values.selectedPlots == undefined || values.selectedPlots.length < 2 && (
       <TokenInputField
         name="plot.amount"
         fullWidth
@@ -184,7 +208,20 @@ const PlotInputField: FC<
         onChange={onChangeAmount}
         quote={plot.index ? Quote : undefined}
         {...props}
-      />
+      />)}
+      {values.selectedPlots !== undefined && values.selectedPlots.length >= 2 && (
+      <TokenInputField
+        name="totalAmount"
+        fullWidth
+        max={undefined}
+        InputProps={InputProps}
+        balance={numPods}
+        hideBalance={true}
+        balanceLabel={`Selected Plots: ${values.selectedPlots.length}`}
+        onChange={undefined}
+        quote={undefined}
+        {...props}
+      />)}
       {values.settings.showRangeSelect && (
         <>
           <Box px={1}>
