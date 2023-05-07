@@ -13,11 +13,11 @@ const FieldStats: React.FC<{ beanstalkField: BeanstalkField }> = ({
     <Grid item xs={12} md={6}>
       <Stat
         gap={0}
-        title="Available Soil"
+        title="Soil"
         amount={displayFullBN(beanstalkField.soil, 0)}
         subtitle={
           <Typography color="text.secondary">
-            The number of Beans Beanstalk is willing to borrow
+            The number of Beans that Beanstalk is willing to borrow.
           </Typography>
         }
       />
@@ -29,7 +29,7 @@ const FieldStats: React.FC<{ beanstalkField: BeanstalkField }> = ({
         amount={displayFullBN(beanstalkField.podLine, 0)}
         subtitle={
           <Typography color="text.secondary">
-            The number of Pods currently Outstanding
+            The total number of outstanding Pods.
           </Typography>
         }
       />
