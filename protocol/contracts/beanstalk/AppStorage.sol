@@ -523,7 +523,7 @@ struct AppStorage {
     mapping(bytes32 => uint256) podOrders;
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
-    uint256[3] deprecated2;
+    uint256[2] deprecated2;
     uint128 newEarnedStalk; // ──────┐ 16
     uint128 vestingPeriodRoots; // ──┘ 16 (32/32)
     mapping (uint32 => uint256) sops;
