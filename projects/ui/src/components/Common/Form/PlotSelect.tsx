@@ -29,7 +29,7 @@ export interface PlotSelectProps {
   /** Custom function to set the selected plot index */
   handlePlotSelect: any;
   /** index of the selected plot */
-  selected?: PlotFragment[] | null;
+  selected?: PlotFragment[] | string | PlotFragment | null;
 }
 
 const PlotSelect: FC<PlotSelectProps> = ({
@@ -54,12 +54,18 @@ const PlotSelect: FC<PlotSelectProps> = ({
   const items = orderedPlotKeys.map((index) => {
     const id = toStringBaseUnitBN(index, BEAN[1].decimals);
     const listing = farmerListings[id];
+    let isSelected: boolean
+    if (Array.isArray(selected)) {
+      (selected!.findIndex(item => item.index == index) > -1) ? isSelected = true : isSelected = false
+    } else {
+      selected ? isSelected = true : isSelected = false
+    }
     if (listing) numAlreadyListed += 1;
     return (
       <ListItem
         key={index}
         color="primary"
-        selected={ selected && selected.findIndex(item => item.index == index) > -1 ? true : undefined}
+        selected={isSelected}
         disablePadding
         onClick={() => handlePlotSelect(index)}
         sx={{

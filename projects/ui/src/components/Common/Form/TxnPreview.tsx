@@ -251,6 +251,13 @@ const TxnStep: FC<{
         </IconRow>
       );
       break;
+    case ActionType.TRANSFER_MULTIPLE_PLOTS:
+      step = (
+        <IconRow>
+          <TokenIcon token={PODS} css={{ height: '100%' }} />
+        </IconRow>
+      );
+      break;
 
     /// MARKET
     case ActionType.CREATE_ORDER:
@@ -381,6 +388,7 @@ const EXECUTION_STEPS = [
   ActionType.BUY_BEANS,
   ActionType.BURN_BEANS,
   ActionType.TRANSFER_PODS,
+  ActionType.TRANSFER_MULTIPLE_PLOTS,
   ActionType.SELL_PODS,
   ActionType.RINSE,
 

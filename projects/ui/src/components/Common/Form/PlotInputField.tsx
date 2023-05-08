@@ -21,6 +21,7 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 import { TokenInputProps } from '~/components/Common/Form/TokenInputField';
+import useAccount from '~/hooks/ledger/useAccount';
 
 const SLIDER_FIELD_KEYS = ['plot.start', 'plot.end'];
 const InputPropsLeft = { endAdornment: 'Start' };
@@ -34,14 +35,16 @@ const PlotInputField: FC<
     max?: BigNumber;
     /** */
     disabledAdvanced?: boolean;
+    /** Enable multi plot selection */
+    multiSelect?: boolean;
   } & TokenInputProps
-> = ({ plots, max, disabledAdvanced = false, ...props }) => {
+> = ({ plots, max, disabledAdvanced = false, multiSelect, ...props }) => {
   /// Form state
   const { values, setFieldValue, isSubmitting } = useFormikContext<{
     /// These fields are required in the parent's Formik state
     plot: PlotFragment;
     selectedPlots: PlotFragment[];
-    totalAmount: string;
+    totalAmount: BigNumber;
     settings: PlotSettingsFragment;
   }>();
 
@@ -50,6 +53,18 @@ const PlotInputField: FC<
 
   /// Data
   const harvestableIndex = useHarvestableIndex();
+
+  /// Account
+  const account = useAccount();
+
+  useMemo(() => {
+    setFieldValue('selectedPlots', []);
+    setFieldValue('totalAmount', undefined)
+    setFieldValue('plot.amount', undefined);
+    setFieldValue('plot.index', undefined);
+    setFieldValue('plot.start', undefined);
+    setFieldValue('plot.end', undefined);
+  }, [account])
 
   /// Find the currently selected plot from form state.
   /// If selected, grab the number of pods from the farmer's field state.
@@ -60,6 +75,7 @@ const PlotInputField: FC<
     return [_pods, _pods.toNumber()];
   }, [plots, plot.index]);
 
+  const selectedPlotsAmount = (values.selectedPlots == undefined ? 0 : values.selectedPlots.length)
   /// Button to select a new plot
   const InputProps = useMemo(
     () => ({
@@ -68,7 +84,7 @@ const PlotInputField: FC<
           token={PODS}
           onClick={showDialog}
           buttonLabel={
-            values.selectedPlots !== undefined && values.selectedPlots.length < 2 ?
+            values.selectedPlots == undefined || values.selectedPlots.length < 2 ?
               plot.index ? (
                 <Row gap={0.75}>
                   <Typography display="inline" fontSize={16}>
@@ -77,11 +93,11 @@ const PlotInputField: FC<
                   {displayBN(new BigNumber(plot.index).minus(harvestableIndex))}
                 </Row>
               ) : (
-                'Select Plot'
+                'Select Plots'
               )
               : (
                 <Row gap={0.75}>
-                  {`${values.selectedPlots.length > 1 ? values.selectedPlots.length : 0} PLOTS`}
+                  {`${selectedPlotsAmount > 1 ? selectedPlotsAmount : 0} PLOTS`}
                 </Row>
               )
           }
@@ -89,7 +105,7 @@ const PlotInputField: FC<
         />
       ),
     }),
-    [harvestableIndex, plot.index, showDialog, props.size, values.selectedPlots.length]
+    [harvestableIndex, plot.index, showDialog, props.size, selectedPlotsAmount]
   );
 
   /// "Advanced" control in the Quote slot
@@ -153,29 +169,44 @@ const PlotInputField: FC<
   /// Select a new plot
   const handlePlotSelect = useCallback(
     (index: string) => {
+      if (!values.selectedPlots) { values.selectedPlots = [] }
       const indexOf = values.selectedPlots.findIndex(item => item.index == index)
       if (values.selectedPlots == undefined || values.selectedPlots.length == 0 || indexOf < 0) {
-        values.selectedPlots.push(
-          { 
+        if (multiSelect) {
+          values.selectedPlots.push(
+              { 
+                amount: plots[index],
+                index: index,
+                start: ZERO_BN,
+                end: plots[index] 
+              })
+        } else {
+          values.selectedPlots[0] = { 
             amount: plots[index],
             index: index,
             start: ZERO_BN,
             end: plots[index] 
           }
-        )
+        }
       } else {
         if (values.selectedPlots.length > 1) {
           values.selectedPlots.splice(indexOf, 1)
         }
       }
       const numPodsClamped = clamp(new BigNumber(values.selectedPlots[0].amount!));
+      let total:any[] = []
+      values.selectedPlots.forEach(element => {
+        total.push(element.amount)
+      });
+      let totalSum = BigNumber.sum.apply(null, total)
+      setFieldValue('totalAmount', totalSum)
       setFieldValue('plot.amount', numPodsClamped);
       setFieldValue('plot.index', values.selectedPlots[0].index);
       // set start/end directly since `onChangeAmount` depends on the current `plot`
       setFieldValue('plot.start', ZERO_BN);
       setFieldValue('plot.end', numPodsClamped);
     },
-    [clamp, plots, setFieldValue]
+    [clamp, plots, setFieldValue, multiSelect, values.selectedPlots]
   );
 
   /// Update amount when an endpoint changes via the advanced controls
@@ -195,6 +226,7 @@ const PlotInputField: FC<
         handleClose={hideDialog}
         selected={values.selectedPlots}
         open={dialogOpen}
+        multiSelect={multiSelect}
       />
       {values.selectedPlots == undefined || values.selectedPlots.length < 2 && (
       <TokenInputField
@@ -211,17 +243,15 @@ const PlotInputField: FC<
       />)}
       {values.selectedPlots !== undefined && values.selectedPlots.length >= 2 && (
       <TokenInputField
-        name="totalAmount"
+        name={"totalAmount"}
         fullWidth
-        max={undefined}
         InputProps={InputProps}
-        balance={numPods}
+        placeholder={values.totalAmount.toString()}
+        disabled={true}
         hideBalance={true}
-        balanceLabel={`Selected Plots: ${values.selectedPlots.length}`}
-        onChange={undefined}
-        quote={undefined}
         {...props}
-      />)}
+      />
+      )}
       {values.settings.showRangeSelect && (
         <>
           <Box px={1}>

@@ -19,7 +19,9 @@ export interface PlotSelectDialogProps {
   /** */
   harvestableIndex: BigNumber;
   /** index of the selected plot */
-  selected?: PlotFragment[] | null;
+  selected?: PlotFragment[] | string | PlotFragment | null;
+  /** Enable selection of multiple plots*/
+  multiSelect?: boolean | undefined;
 }
 
 const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
@@ -29,6 +31,7 @@ const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
   plots,
   harvestableIndex,
   selected,
+  multiSelect,
   // Dialog
   onClose,
   open,
@@ -36,6 +39,9 @@ const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
   // sets plot index then closes dialog
   const handleSelectAndClose = (index: string) => {
     handlePlotSelect(index);
+    if (Object.keys(plots).length == 1 || !multiSelect) {
+      handleClose();
+    }
   };
 
   return (
