@@ -59,12 +59,12 @@ const PlotInputField: FC<
 
   useMemo(() => {
     setFieldValue('selectedPlots', []);
-    setFieldValue('totalAmount', undefined)
+    setFieldValue('totalAmount', undefined);
     setFieldValue('plot.amount', undefined);
     setFieldValue('plot.index', undefined);
     setFieldValue('plot.start', undefined);
     setFieldValue('plot.end', undefined);
-  }, [account])
+  }, [account]);
 
   /// Find the currently selected plot from form state.
   /// If selected, grab the number of pods from the farmer's field state.
@@ -75,7 +75,8 @@ const PlotInputField: FC<
     return [_pods, _pods.toNumber()];
   }, [plots, plot.index]);
 
-  const selectedPlotsAmount = (values.selectedPlots == undefined ? 0 : values.selectedPlots.length)
+  const selectedPlotsAmount =
+    values.selectedPlots == undefined ? 0 : values.selectedPlots.length;
   /// Button to select a new plot
   const InputProps = useMemo(
     () => ({
@@ -84,7 +85,8 @@ const PlotInputField: FC<
           token={PODS}
           onClick={showDialog}
           buttonLabel={
-            values.selectedPlots == undefined || values.selectedPlots.length < 2 ?
+            values.selectedPlots == undefined ||
+            values.selectedPlots.length < 2 ? (
               plot.index ? (
                 <Row gap={0.75}>
                   <Typography display="inline" fontSize={16}>
@@ -95,11 +97,11 @@ const PlotInputField: FC<
               ) : (
                 'Select Plots'
               )
-              : (
-                <Row gap={0.75}>
-                  {`${selectedPlotsAmount > 1 ? selectedPlotsAmount : 0} PLOTS`}
-                </Row>
-              )
+            ) : (
+              <Row gap={0.75}>
+                {`${selectedPlotsAmount > 1 ? selectedPlotsAmount : 0} PLOTS`}
+              </Row>
+            )
           }
           size={props.size}
         />
@@ -169,37 +171,46 @@ const PlotInputField: FC<
   /// Select a new plot
   const handlePlotSelect = useCallback(
     (index: string) => {
-      if (!values.selectedPlots) { values.selectedPlots = [] }
-      const indexOf = values.selectedPlots.findIndex(item => item.index == index)
-      if (values.selectedPlots == undefined || values.selectedPlots.length == 0 || indexOf < 0) {
+      if (!values.selectedPlots) {
+        values.selectedPlots = [];
+      }
+      const indexOf = values.selectedPlots.findIndex(
+        (item) => item.index == index
+      );
+      if (
+        values.selectedPlots == undefined ||
+        values.selectedPlots.length == 0 ||
+        indexOf < 0
+      ) {
         if (multiSelect) {
-          values.selectedPlots.push(
-              { 
-                amount: plots[index],
-                index: index,
-                start: ZERO_BN,
-                end: plots[index] 
-              })
-        } else {
-          values.selectedPlots[0] = { 
+          values.selectedPlots.push({
             amount: plots[index],
             index: index,
             start: ZERO_BN,
-            end: plots[index] 
-          }
+            end: plots[index],
+          });
+        } else {
+          values.selectedPlots[0] = {
+            amount: plots[index],
+            index: index,
+            start: ZERO_BN,
+            end: plots[index],
+          };
         }
       } else {
         if (values.selectedPlots.length > 1) {
-          values.selectedPlots.splice(indexOf, 1)
+          values.selectedPlots.splice(indexOf, 1);
         }
       }
-      const numPodsClamped = clamp(new BigNumber(values.selectedPlots[0].amount!));
-      let total:any[] = []
-      values.selectedPlots.forEach(element => {
-        total.push(element.amount)
+      const numPodsClamped = clamp(
+        new BigNumber(values.selectedPlots[0].amount!)
+      );
+      let total: any[] = [];
+      values.selectedPlots.forEach((element) => {
+        total.push(element.amount);
       });
-      let totalSum = BigNumber.sum.apply(null, total)
-      setFieldValue('totalAmount', totalSum)
+      let totalSum = BigNumber.sum.apply(null, total);
+      setFieldValue('totalAmount', totalSum);
       setFieldValue('plot.amount', numPodsClamped);
       setFieldValue('plot.index', values.selectedPlots[0].index);
       // set start/end directly since `onChangeAmount` depends on the current `plot`
@@ -228,30 +239,33 @@ const PlotInputField: FC<
         open={dialogOpen}
         multiSelect={multiSelect}
       />
-      {values.selectedPlots == undefined || values.selectedPlots.length < 2 && (
-      <TokenInputField
-        name="plot.amount"
-        fullWidth
-        max={max}
-        InputProps={InputProps}
-        balance={numPods}
-        hideBalance={!plot.index}
-        balanceLabel={plot.index ? 'Plot Size' : undefined}
-        onChange={onChangeAmount}
-        quote={plot.index ? Quote : undefined}
-        {...props}
-      />)}
-      {values.selectedPlots !== undefined && values.selectedPlots.length >= 2 && (
-      <TokenInputField
-        name={"totalAmount"}
-        fullWidth
-        InputProps={InputProps}
-        placeholder={values.totalAmount.toString()}
-        disabled={true}
-        hideBalance={true}
-        {...props}
-      />
-      )}
+      {values.selectedPlots == undefined ||
+        (values.selectedPlots.length < 2 && (
+          <TokenInputField
+            name="plot.amount"
+            fullWidth
+            max={max}
+            InputProps={InputProps}
+            balance={numPods}
+            hideBalance={!plot.index}
+            balanceLabel={plot.index ? 'Plot Size' : undefined}
+            onChange={onChangeAmount}
+            quote={plot.index ? Quote : undefined}
+            {...props}
+          />
+        ))}
+      {values.selectedPlots !== undefined &&
+        values.selectedPlots.length >= 2 && (
+          <TokenInputField
+            name={'totalAmount'}
+            fullWidth
+            InputProps={InputProps}
+            placeholder={values.totalAmount.toString()}
+            disabled={true}
+            hideBalance={true}
+            {...props}
+          />
+        )}
       {values.settings.showRangeSelect && (
         <>
           <Box px={1}>

@@ -192,7 +192,7 @@ export type TransferMultiplePlotsAction = {
   amount: BigNumber;
   address: string;
   plots: number;
-}
+};
 
 /// ////////////////////////////// MARKET /////////////////////////////////
 
@@ -384,7 +384,9 @@ export const parseActionMessage = (a: Action) => {
         a.placeInLine
       )} in Line to ${a.address}.`;
     case ActionType.TRANSFER_MULTIPLE_PLOTS:
-      return `Transfer ${displayTokenAmount(a.amount, PODS)} in ${a.plots} Plots to ${a.address}.`;
+      return `Transfer ${displayTokenAmount(a.amount, PODS)} in ${
+        a.plots
+      } Plots to ${a.address}.`;
 
     /// BARN
     case ActionType.RINSE:

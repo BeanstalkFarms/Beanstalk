@@ -44,8 +44,6 @@ export type TransferFormValues = {
 
 export interface SendFormProps {}
 
-
-
 const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
   values,
   isValid,
@@ -75,15 +73,17 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
           <>
             <TxnSeparator />
             <TokenOutput>
-              {values.selectedPlots !== undefined && values.selectedPlots.length > 1 ? (
-              <TokenOutput.Row
-                amount={values.totalAmount.negated()}
-                token={sdk.tokens.PODS}
-              /> ) : (
-              <TokenOutput.Row
-                amount={plot.amount.negated()}
-                token={sdk.tokens.PODS}
-              />
+              {values.selectedPlots !== undefined &&
+              values.selectedPlots.length > 1 ? (
+                <TokenOutput.Row
+                  amount={values.totalAmount.negated()}
+                  token={sdk.tokens.PODS}
+                />
+              ) : (
+                <TokenOutput.Row
+                  amount={plot.amount.negated()}
+                  token={sdk.tokens.PODS}
+                />
               )}
             </TokenOutput>
             <Box>
@@ -92,34 +92,35 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
                 <AccordionDetails>
                   <TxnPreview
                     actions={
-                      (values.selectedPlots !== undefined && values.selectedPlots.length > 1) ? (
-                      [
-                        {
-                          type: ActionType.TRANSFER_MULTIPLE_PLOTS,
-                          amount: values.totalAmount   || ZERO_BN,
-                          address: values.to !== null ? values.to : '',
-                          plots: values.selectedPlots.length,
-                        },
-                        {
-                          type: ActionType.END_TOKEN,
-                          token: PODS,
-                        },
-                      ]) : (
-                      [
-                        {
-                          type: ActionType.TRANSFER_PODS,
-                          amount: plot.amount || ZERO_BN,
-                          address: values.to !== null ? values.to : '',
-                          placeInLine: new BigNumber(plot.index)
-                            .minus(harvestableIndex)
-                            .plus(plot.start),
-                        },
-                        {
-                          type: ActionType.END_TOKEN,
-                          token: PODS,
-                        },
-                      ])
-                  }
+                      values.selectedPlots !== undefined &&
+                      values.selectedPlots.length > 1
+                        ? [
+                            {
+                              type: ActionType.TRANSFER_MULTIPLE_PLOTS,
+                              amount: values.totalAmount || ZERO_BN,
+                              address: values.to !== null ? values.to : '',
+                              plots: values.selectedPlots.length,
+                            },
+                            {
+                              type: ActionType.END_TOKEN,
+                              token: PODS,
+                            },
+                          ]
+                        : [
+                            {
+                              type: ActionType.TRANSFER_PODS,
+                              amount: plot.amount || ZERO_BN,
+                              address: values.to !== null ? values.to : '',
+                              placeInLine: new BigNumber(plot.index)
+                                .minus(harvestableIndex)
+                                .plus(plot.start),
+                            },
+                            {
+                              type: ActionType.END_TOKEN,
+                              token: PODS,
+                            },
+                          ]
+                    }
                   />
                 </AccordionDetails>
               </Accordion>
@@ -149,7 +150,7 @@ const Transfer: FC<{}> = () => {
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
   const sdk = useSdk();
-  const workflow = sdk.farm.create("Multi Plot Transfer!", "beanstalk");
+  const workflow = sdk.farm.create('Multi Plot Transfer!', 'beanstalk');
   const _beanstalk = sdk.contracts.beanstalk;
 
   /// Farmer
@@ -175,7 +176,7 @@ const Transfer: FC<{}> = () => {
     }),
     []
   );
- 
+
   /// Handlers
   const onSubmit = useCallback(
     async (
@@ -194,10 +195,9 @@ const Transfer: FC<{}> = () => {
         if (!to || !index || !start || !end || !amount)
           throw new Error('Missing data.');
 
-        let txn
+        let txn;
 
         if (values.selectedPlots.length === 1) {
-
           txToast = new TransactionToast({
             loading: `Transferring ${displayFullBN(
               amount.abs(),
@@ -215,39 +215,51 @@ const Transfer: FC<{}> = () => {
           );
           txn = await call;
         } else {
-          for (let i = 0; i < values.selectedPlots.length ; i++) {
-            let index = values.selectedPlots[i].index!
-            let start = values.selectedPlots[i].start!
-            let end = values.selectedPlots[i].end!
+          for (let i = 0; i < values.selectedPlots.length; i++) {
+            let index = values.selectedPlots[i].index!;
+            let start = values.selectedPlots[i].start!;
+            let end = values.selectedPlots[i].end!;
             let data: StepGenerator = (_amountInStep) => ({
               name: 'transferPlot',
               amountOut: _amountInStep,
               prepare: () => ({
                 target: _beanstalk.address,
-                callData: _beanstalk.interface.encodeFunctionData('transferPlot', [
-                  account,
-                  to.toString(),
-                  toStringBaseUnitBN(index, PODS.decimals),
-                  toStringBaseUnitBN(start, PODS.decimals),
-                  toStringBaseUnitBN(end, PODS.decimals)])
+                callData: _beanstalk.interface.encodeFunctionData(
+                  'transferPlot',
+                  [
+                    account,
+                    to.toString(),
+                    toStringBaseUnitBN(index, PODS.decimals),
+                    toStringBaseUnitBN(start, PODS.decimals),
+                    toStringBaseUnitBN(end, PODS.decimals),
+                  ]
+                ),
               }),
               decode: (data: string) =>
                 _beanstalk.interface.decodeFunctionResult('transferPlot', data),
               decodeResult: (result: string) =>
-                _beanstalk.interface.decodeFunctionResult('transferPlot', result),
-            })
-            workflow.add(data)
+                _beanstalk.interface.decodeFunctionResult(
+                  'transferPlot',
+                  result
+                ),
+            });
+            workflow.add(data);
           }
 
           txToast = new TransactionToast({
             loading: `Transferring ${displayFullBN(
               values.totalAmount.abs(),
               PODS.decimals
-            )} Pods in ${values.selectedPlots.length} Plots to ${trimAddress(to, true)}...`,
+            )} Pods in ${values.selectedPlots.length} Plots to ${trimAddress(
+              to,
+              true
+            )}...`,
             success: 'Multi Plot Transfer successful.',
           });
 
-          txn = await workflow.execute(ethers.BigNumber.from(0), {slippage: values.settings.slippage})
+          txn = await workflow.execute(ethers.BigNumber.from(0), {
+            slippage: values.settings.slippage,
+          });
         }
 
         txToast.confirming(txn);
@@ -257,8 +269,7 @@ const Transfer: FC<{}> = () => {
 
         txToast.success(receipt);
         formActions.resetForm();
-        values.selectedPlots = []
-
+        values.selectedPlots = [];
       } catch (err) {
         if (txToast) {
           txToast.error(err);

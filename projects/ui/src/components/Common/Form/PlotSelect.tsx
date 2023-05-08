@@ -54,11 +54,13 @@ const PlotSelect: FC<PlotSelectProps> = ({
   const items = orderedPlotKeys.map((index) => {
     const id = toStringBaseUnitBN(index, BEAN[1].decimals);
     const listing = farmerListings[id];
-    let isSelected: boolean
+    let isSelected: boolean;
     if (Array.isArray(selected)) {
-      (selected!.findIndex(item => item.index == index) > -1) ? isSelected = true : isSelected = false
+      selected!.findIndex((item) => item.index == index) > -1
+        ? (isSelected = true)
+        : (isSelected = false);
     } else {
-      selected ? isSelected = true : isSelected = false
+      selected ? (isSelected = true) : (isSelected = false);
     }
     if (listing) numAlreadyListed += 1;
     return (
