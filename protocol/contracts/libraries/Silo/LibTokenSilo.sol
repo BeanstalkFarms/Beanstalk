@@ -74,7 +74,6 @@ library LibTokenSilo {
     /**
      * @dev Increment the total amount of `token` deposited in the Silo.
      */
-    // TODO: should we have an ERC721 + ERC1155 equlivant, or should we update silo balance mapping?
     function incrementTotalDeposited(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
@@ -100,10 +99,6 @@ library LibTokenSilo {
      * @dev Calculate the current BDV for `amount` of `token`, then perform 
      * Deposit accounting.
      */
-    /**
-     * TODO: should this be generalized for any token standard (ERC20 + ERC721 + ERC1155), or
-     * should we have separate functions for each?
-     */ 
     function deposit(
         address account,
         address token,
