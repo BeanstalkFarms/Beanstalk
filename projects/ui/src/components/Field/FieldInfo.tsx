@@ -37,15 +37,15 @@ const FieldInfo: React.FC<{
         <Row p={2} width="100%" justifyContent="space-between">
           <Stack gap={0.25}>
             <Row gap={0.5}>
-              <Typography>Pods Previously Harvested:</Typography>
+              <Typography>Harvested Pods:</Typography>
               <TokenIcon token={PODS} />
               <Typography component="span" variant="h4">
                 {displayFullBN(harvestableIndex, 0)}
               </Typography>
             </Row>
             <Typography color="text.secondary">
-              Paid back by Beanstalk since Season 1, does not count towards the
-              current Pod Line
+              Debt repaid by Beanstalk since deployment (does not count towards the
+              current Pod Line).
             </Typography>
           </Stack>
           <Link to="/analytics?field=harvested">
@@ -71,19 +71,14 @@ const FieldInfo: React.FC<{
                 The number of Pods received from 1 Sown Bean is determined by
                 the Temperature at the time of Sowing. Newly issued Pods
                 accumulate in the back of the Pod Line. The front of the Pod
-                Line receives 1/3 of new Bean mints when there are more than
-                zero Unfertilized Sprouts (Sprouts are issued by the Barn). If
-                there are no Unfertilized Sprouts, the front of the Pod Line
+                Line receives 1/3 of new Bean mints when there are  outstanding 
+                Sprouts (Sprouts are issued by the Barn). If
+                there are no outstanding Sprouts, the front of the Pod Line
                 receives 1/2 of new Bean mints.
               </Typography>
               <Typography>
-                Pods Ripen into Harvestable Pods that can be Harvested
-                (redeemed) for 1 Bean each on a First In, First Out (FIFO)
-                basis. There is no penalty for waiting to Harvest Pods.
-              </Typography>
-              <Typography>
-                Pods are tradeable on the Pod Market. Pods can also be
-                Transferred to another address directly.
+                Pods become Harvestable (redeemable) into Beans on a FIFO basis. Pods
+                are tradeable on the Market.
               </Typography>
             </>
           ) : null}
