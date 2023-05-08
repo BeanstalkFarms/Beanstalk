@@ -44,7 +44,7 @@ const FieldInfo: React.FC<{
               </Typography>
             </Row>
             <Typography color="text.secondary">
-              Debt repaid by Beanstalk since deployment (does not count towards the
+              Debt repaid by Beanstalk to Pod holders since deployment (does not count towards the
               current Pod Line).
             </Typography>
           </Stack>

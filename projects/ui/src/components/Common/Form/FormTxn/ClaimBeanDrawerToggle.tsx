@@ -100,7 +100,7 @@ const ClaimBeanDrawerToggle: React.FC<{}> = () => {
           />
           <Stack>
             <Typography variant="h4" color="primary.main">
-              Use Claimable Assets
+              Use Claimable Beans
             </Typography>
             <Typography variant="bodySmall" color="text.tertiary">
               Select assets to use in this transaction

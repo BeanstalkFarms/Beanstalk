@@ -17,7 +17,7 @@ const FieldStats: React.FC<{ beanstalkField: BeanstalkField }> = ({
         amount={displayFullBN(beanstalkField.soil, 0)}
         subtitle={
           <Typography color="text.secondary">
-            The number of Beans that Beanstalk is willing to borrow.
+            The number of Beans that Beanstalk currently is willing to borrow.
           </Typography>
         }
       />

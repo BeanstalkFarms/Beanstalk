@@ -267,7 +267,7 @@ const BuyForm: FC<
           Buy
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Assets">
+      <FormWithDrawer.Drawer title="Use Claimable Beans">
         <ClaimBeanDrawerContent<BuyQuoteHandlerParams>
           quoteProviderProps={{
             tokenOut: token,

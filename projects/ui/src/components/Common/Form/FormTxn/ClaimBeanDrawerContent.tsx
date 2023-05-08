@@ -48,7 +48,7 @@ const toModeOptions = [
     key: FarmToMode.INTERNAL,
     icon: <>🚜</>,
     name: 'Farm',
-    content: 'Claim to Farm Balance by default. Does not cost extra gas',
+    content: 'Transfer the remainder to your Farm Balance. Costs no extra gas.',
   },
   {
     key: FarmToMode.EXTERNAL,
@@ -60,7 +60,7 @@ const toModeOptions = [
       />
     ),
     name: 'Circulating',
-    content: 'Transfer remainder to your wallet. Costs extra in gas',
+    content: 'Transfer the remainder to your wallet. Costs extra gas.',
   },
 ];
 
@@ -176,7 +176,7 @@ export default function ClaimBeanDrawerContent<T>({
       <Card {...sharedCardProps}>
         <Stack gap={1} p={1}>
           <Typography variant="body1" color="text.tertiary">
-            Which assets do you want to Claim?
+            Which Beans would you like to Claim?
           </Typography>
           <Stack gap={1} direction={{ xs: 'column', sm: 'row' }}>
             {Object.entries(optionsMap).map(([k, item]) => (
@@ -209,7 +209,7 @@ export default function ClaimBeanDrawerContent<T>({
         <Card {...sharedCardProps}>
           <Stack gap={1} p={1}>
             <Typography variant="body1" color="text.tertiary">
-              Amount of Claimable Beans to use
+              Amount of Claimable Beans to use in this transaction
             </Typography>
             <TokenQuoteProviderWithParams<T>
               name={name}
@@ -232,8 +232,8 @@ export default function ClaimBeanDrawerContent<T>({
         <Card {...sharedCardProps}>
           <Stack gap={1} p={1}>
             <Typography variant="body1" color="text.tertiary">
-              You&apos;re using less than your total Claimable Beans in this
-              transaction. Where do you want to send the remainder?
+              You&apos;re using fewer than your total Claimable Beans in this
+              transaction. Where would you like to send the remainder?
             </Typography>
             <Stack gap={1}>
               {toModeOptions.map((opt) => {

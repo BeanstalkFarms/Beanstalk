@@ -240,8 +240,8 @@ const DepositForm: FC<
                 token={sdk.tokens.STALK}
                 label={sdk.tokens.STALK.symbol}
                 amount={stalk}
-                description="Ownership percentage"
-                descriptionTooltip="Your ownership percentage of Beanstalk denominated by STALK"
+                description="Stalk Ownership"
+                descriptionTooltip="Your increase in ownership of Beanstalk."
                 delta={increasedStalkPctStr}
                 amountTooltip={
                   <>
@@ -256,8 +256,8 @@ const DepositForm: FC<
                 token={sdk.tokens.SEEDS}
                 label={sdk.tokens.SEEDS.symbol}
                 amount={seeds}
-                description="Stalk Growth per Season"
-                descriptionTooltip="The amount of STALK you will receive per season"
+                description="Grown Stalk per Season"
+                descriptionTooltip="Your increase in Grown Stalk per Season."
                 delta={seeds.times(STALK_PER_SEED_PER_SEASON)}
                 amountTooltip={
                   <>
@@ -291,7 +291,7 @@ const DepositForm: FC<
           Deposit
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Assets">
+      <FormWithDrawer.Drawer title="Use Claimable Beans">
         <ClaimBeanDrawerContent
           quoteProviderProps={{
             name: 'claimableBeans',
