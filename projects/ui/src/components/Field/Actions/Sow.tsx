@@ -364,7 +364,7 @@ const SowForm: FC<
           Sow
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Assets">
+      <FormWithDrawer.Drawer title="Use Claimable Beans">
         <ClaimBeanDrawerContent
           maxBeans={soil}
           beansUsed={beans}
