@@ -193,16 +193,12 @@ describe('Silo Enroot', function () {
   describe("2 deposit, all", async function () {
     beforeEach(async function () {
       await this.silo.connect(user).mockUnripeBeanDeposit('2', to6('5'))
-
       await this.season.lightSunrise()
       await this.silo.connect(user).deposit(UNRIPE_BEAN, to6('5'), EXTERNAL)
-      
-      
       await this.unripe.connect(owner).addUnderlying(
         UNRIPE_BEAN,
         to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
       )
-
       this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_BEAN, ['2', '3'], [to6('5'), to6('5')]);
     })
 
@@ -233,23 +229,9 @@ describe('Silo Enroot', function () {
   describe("2 deposit, round", async function () {
 
     beforeEach(async function () {
-      // mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv)
       await this.silo.connect(user).mockUnripeLPDeposit('0', '1', to18('0.000000083406453'), to6('10'))
       await this.silo.connect(user).mockUnripeLPDeposit('0', '2', to18('0.000000083406453'), to6('10'))
-
-      const beanstalk = await getAltBeanstalk(this.silo.address)
-      // await this.unripe.connect(owner).addUnderlying(
-      //   UNRIPE_LP,
-      //   toBN(pru).sub('60000000000').mul(toBN('10000'))
-      //   // 1855646852202987000000
-      //   // 1855646852202987000000
-      // )
-
-      await this.unripe.connect(owner).addUnderlying(
-        UNRIPE_LP,
-        '147796000000000'
-      )
-
+      await this.unripe.connect(owner).addUnderlying(UNRIPE_LP, '147796000000000')
       this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_LP, ['1', '2'], [to6('10'), to6('10')]);
     })
 
@@ -272,36 +254,5 @@ describe('Silo Enroot', function () {
       expect(dep[0]).to.equal(to6('10'))
       expect(dep[1]).to.equal('1855646')
     });
-  })
-
-//   describe("2 deposit, round", async function () {
-
-//     beforeEach(async function () {
-//       // mockUnripeLPDeposit(uint256 t, uint32 _s, uint256 amount, uint256 bdv)
-//       await this.silo.connect(user).mockUnripeLPDeposit('0', '1', to18('0.000000083406453'), to6('10'))
-//       await this.silo.connect(user).mockUnripeLPDeposit('0', '2', to18('0.000000083406453'), to6('10'))
-
-//       const beanstalk = await getAltBeanstalk(this.silo.address)
-//       // await this.unripe.connect(owner).addUnderlying(
-//       //   UNRIPE_LP,
-//       //   toBN(pru).sub('60000000000').mul(toBN('10000'))
-//       //   // 1855646852202987000000
-//       //   // 1855646852202987000000
-//       // )
-
-//       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
-//       await this.unripe.connect(owner).addUnderlying(
-//         UNRIPE_LP,
-//         '1477960000000000'
-//       )
-
-//       this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_LP, ['1', '2'], [to6('10'), to6('10')]);
-//     })
-
-//     it('properly updates the total balances', async function () {
-//       expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
-//       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
-//       expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('14.845168'));
-//     });
-//   })
+  });
 });
