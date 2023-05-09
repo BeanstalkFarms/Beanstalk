@@ -228,6 +228,6 @@ contract Sun is Oracle {
     
     function setSoil(uint256 amount) internal {
         s.f.soil = amount.toUint128();
-        emit Soil(s.season.current, amount);
+        emit Soil(s.season.current, amount.toUint128());
     }
 }
