@@ -31,6 +31,8 @@ describe('Silo Enroot', function () {
     [owner,user,user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
+
+    // Setup mock facets for manipulating Beanstalk's state during tests
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
@@ -50,9 +52,6 @@ describe('Silo Enroot', function () {
     this.siloToken = await SiloToken.deploy("Silo", "SILO")
     await this.siloToken.deployed()
 
-    this.siloToken2 = await SiloToken.deploy("Silo", "SILO")
-    await this.siloToken2.deployed()
-
     await this.silo.mockWhitelistToken(
       this.siloToken.address, 
       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
@@ -64,8 +63,6 @@ describe('Silo Enroot', function () {
     await this.siloToken.connect(user2).approve(this.silo.address, '100000000000'); 
     await this.siloToken.mint(userAddress, '10000');
     await this.siloToken.mint(user2Address, '10000');
-    await this.siloToken2.connect(user).approve(this.silo.address, '100000000000');
-    await this.siloToken2.mint(userAddress, '10000');
 
     await this.siloToken.connect(owner).approve(this.silo.address, to18('10000')); 
     await this.siloToken.mint(ownerAddress, to18('10000'));
