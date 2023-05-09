@@ -26,7 +26,12 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
       toMode: this._toMode,
       context
     });
-    const registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.metaFactory;
+    let registry
+    if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry.address) {
+      registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry;
+    } else {
+      registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.metaFactory;
+    }
     const coins = await registry.callStatic.get_coins(this._pool, { gasLimit: 10000000 });
     const i = coins.findIndex((addr) => addr.toLowerCase() === this._tokenOut.toLowerCase());
 

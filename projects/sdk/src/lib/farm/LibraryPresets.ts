@@ -20,6 +20,9 @@ export class LibraryPresets {
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
 
+  public readonly usdc2bean: ActionBuilder;
+  public readonly dai2bean: ActionBuilder;
+
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
    * @param _permit provide a permit directly, or provide a function to extract it from `context`.
@@ -129,6 +132,16 @@ export class LibraryPresets {
 
     this.bean2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDT, fromMode, toMode);
+
+
+    ///////// USDC > BEAN ///////////
+    this.usdc2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.USDC, sdk.tokens.BEAN, fromMode, toMode);
+
+    ///////// DAI > BEAN ///////////
+    this.dai2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.DAI, sdk.tokens.BEAN, fromMode, toMode);
+
 
     //////// WETH <> BEAN
     this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [

@@ -324,7 +324,7 @@ const DepositPropProvider: FC<{
   const initTokenList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [tokens.ETH, tokens.BEAN];
+      return [tokens.ETH, tokens.WETH, tokens.BEAN, tokens.CRV3, tokens.DAI, tokens.USDC, tokens.USDT];
     }
     return [
       tokens.BEAN,
@@ -413,6 +413,8 @@ const DepositPropProvider: FC<{
         throw new Error('Wallet connection required.');
       }
 
+
+      console.log("AMOUNTOUT: ", tokenIn, tokenIn.amount(_amountIn.toString()), tokenOut)
       const amountOut = await DepositFarmStep.getAmountOut(
         sdk,
         account,
