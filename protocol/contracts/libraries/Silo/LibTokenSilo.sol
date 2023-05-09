@@ -125,7 +125,7 @@ library LibTokenSilo {
         }
 
         // Full Withdraw
-        if (crateAmount > 0) delete s.a[account].deposits[token][id];
+        delete s.a[account].deposits[token][id];
     }
 
     /*
