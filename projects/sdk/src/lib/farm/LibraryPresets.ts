@@ -14,14 +14,19 @@ export type ActionBuilder = (
 export class LibraryPresets {
   static sdk: BeanstalkSDK;
   public readonly weth2usdt: ActionBuilder;
-  public readonly usdt2bean: ActionBuilder;
   public readonly usdt2weth: ActionBuilder;
+
+  public readonly usdt2bean: ActionBuilder;
   public readonly bean2usdt: ActionBuilder;
+
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
 
   public readonly usdc2bean: ActionBuilder;
+  public readonly bean2usdc: ActionBuilder;
+
   public readonly dai2bean: ActionBuilder;
+  public readonly bean2dai: ActionBuilder;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -126,7 +131,7 @@ export class LibraryPresets {
         toMode
       );
 
-    ///////// BEAN <> USDT ///////////
+    ///////// USDT <> BEAN ///////////
     this.usdt2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.USDT, sdk.tokens.BEAN, fromMode, toMode);
 
@@ -134,13 +139,21 @@ export class LibraryPresets {
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDT, fromMode, toMode);
 
 
-    ///////// USDC > BEAN ///////////
+    ///////// USDC <> BEAN ///////////
     this.usdc2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.USDC, sdk.tokens.BEAN, fromMode, toMode);
+    
+    this.bean2usdc = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDC, fromMode, toMode);
 
-    ///////// DAI > BEAN ///////////
+
+    ///////// DAI <> BEAN ///////////
     this.dai2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.DAI, sdk.tokens.BEAN, fromMode, toMode);
+
+    this.bean2dai = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.DAI, fromMode, toMode);
+
 
 
     //////// WETH <> BEAN
@@ -148,6 +161,7 @@ export class LibraryPresets {
       this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
+    
     this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
