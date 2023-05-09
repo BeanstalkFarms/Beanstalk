@@ -6,8 +6,10 @@
 html,
 body {
   height: 100%;
-  background-color: #101321;
-  color: #c7c8cb;
+  background-color: var(--background);
+  color: var(--primary);
+  overflow: hidden;
+  line-height: 24px;
 }
 
 body {
@@ -30,7 +32,7 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 :focus {
-  outline: 2px solid #9dcae6;
+  outline: 1px solid #46b955;
   box-sizing: border-box;
 }
 
