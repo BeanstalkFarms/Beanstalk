@@ -31,7 +31,7 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry;
     } else {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.metaFactory;
-    }
+    };
     const coins = await registry.callStatic.get_coins(this._pool, { gasLimit: 10000000 });
     const i = coins.findIndex((addr) => addr.toLowerCase() === this._tokenOut.toLowerCase());
 

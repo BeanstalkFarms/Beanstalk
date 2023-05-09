@@ -413,8 +413,6 @@ const DepositPropProvider: FC<{
         throw new Error('Wallet connection required.');
       }
 
-
-      console.log("AMOUNTOUT: ", tokenIn, tokenIn.amount(_amountIn.toString()), tokenOut)
       const amountOut = await DepositFarmStep.getAmountOut(
         sdk,
         account,
