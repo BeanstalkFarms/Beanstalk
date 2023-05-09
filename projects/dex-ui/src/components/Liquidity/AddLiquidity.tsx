@@ -98,12 +98,6 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
 
   const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
-    Log.module("AddLiquidity").debug("Getting quote");
-    Log.module("AddLiquidity").debug("amounts", amounts);
-    Log.module("AddLiquidity").debug("bothAmountsNonZero", bothAmountsNonZero);
-    Log.module("AddLiquidity").debug("address", address);
-    Log.module("AddLiquidity").debug("allTokensHaveMinAllowance", allTokensHaveMinAllowance);
-    
     if (!bothAmountsNonZero) {
       return null;
     }
@@ -123,7 +117,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         estimate
       };
     } catch (error: any) {
-      Log.module("AddLiquidity").error("Error during quote: ", (error as Error).message);
+      Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
       return null;
     }
   });

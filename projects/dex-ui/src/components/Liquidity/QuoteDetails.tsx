@@ -8,6 +8,7 @@ import infoIcon from "/src/assets/images/info.svg";
 import useSdk from "src/utils/sdk/useSdk";
 import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
 import { getPrice } from "src/utils/price/usePrice";
+import { getGasInUsd } from "src/utils/gasprice";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE;
@@ -38,25 +39,22 @@ const QuoteDetails = ({
   const [gasFeeUsd, setGasFeeUsd] = useState<string>("");
 
   useEffect(() => {
-    const getGasInUsd = async () => {
-      const feeData = await sdk.provider.getFeeData();
-      const ethPrice = await getPrice(sdk.tokens.ETH, sdk)
-      const gBn = quote?.estimate.toBigNumber();
-      if (quote?.estimate && feeData.maxFeePerGas && gBn && ethPrice) {
-        const txEthAmount = gBn.mul(feeData.maxFeePerGas);
-        const txEthAmountNumber = formatEther(txEthAmount);
-        const usd = parseFloat(ethPrice.toHuman()) * parseFloat(txEthAmountNumber);
-        setGasFeeUsd(
-          `~${usd.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD"
-          })}`
-        );
+    const _setGasFeeUsd = async () => {
+      if (!quote || !quote.estimate) {
+        setGasFeeUsd("0.00");
       }
+
+      const usd = await getGasInUsd(sdk, quote!.estimate.toBigNumber());
+
+      setGasFeeUsd(`~${usd.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD"
+        })}`
+      );
     };
 
-    getGasInUsd();
-  }, [quote?.estimate, sdk.tokens.ETH, sdk.provider, sdk]);
+    _setGasFeeUsd();
+  }, [sdk.provider, sdk, quote]);
 
   const quoteValue = useMemo(() => {
     if (!quote) {
@@ -73,11 +71,15 @@ const QuoteDetails = ({
       }
     }
 
-    if (type === LIQUIDITY_OPERATION_TYPE.ADD || removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken || removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
+    if (
+      type === LIQUIDITY_OPERATION_TYPE.ADD ||
+      removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken ||
+      removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom
+    ) {
       const _quoteValue = quote?.quote as TokenValue;
       return `${_quoteValue.toHuman("0,0.0000")} ${wellLpToken!.symbol}`;
     }
-  
+
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
       const _quoteValue = quote?.quote as TokenValue[];
       const allTokensValue: string[] = [];

@@ -52,16 +52,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const { oneTokenQuote } = oneToken;
   const { customRatioQuote } = custom;
 
-  // useEffect(() => {
-  //   if (well.tokens) {
-  //     const initialAmounts: LiquidityAmounts = {};
-  //     for (let i = 0; i < well.tokens.length; i++) {
-  //       initialAmounts[i] = undefined;
-  //     }
-  //     setAmounts(initialAmounts);
-  //   }
-  // }, [well.tokens]);
-
   useEffect(() => {
     if (well.lpToken) {
       let lpTokenWithMetadata = well.lpToken;
