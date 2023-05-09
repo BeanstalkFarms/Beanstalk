@@ -65,8 +65,12 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        //if the selector is null, the token is not whitelisted
-        require(s.ss[token].selector == bytes4(0), "Token already whitelisted");
+        //verify you passed in a callable selector
+        bytes memory data = abi.encodeWithSelector(selector,0);
+        (bool success,) = address(this).staticcall(data);
+        require(success, "Invalid selector");
+
+        require(s.ss[token].milestoneSeason == 0, "Token already whitelisted");
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
@@ -86,8 +90,7 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        //verify the token has been whitelisted by checking the selector
-        require(s.ss[token].selector != bytes4(0), "Token not whitelisted");
+        require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
 
         s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); //store grown stalk milestone
         s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
