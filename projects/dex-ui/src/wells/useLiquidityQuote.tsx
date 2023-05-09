@@ -34,9 +34,7 @@ export const useLiquidityQuote = (
     [amounts, well.tokens]
   );
 
-  Log.module("useLiquidityQuote").debug("amounts:", amounts);
-  Log.module("useLiquidityQuote").debug("bothAmountsNonZero:", bothAmountsNonZero);
-  Log.module("useLiquidityQuote").debug("removeLiquidityMode:", removeLiquidityMode);
+  Log.module("useliquidityquote").debug("Quote details:", { amounts, bothAmountsNonZero, removeLiquidityMode });
 
   const {
     data: balancedQuote,
@@ -89,7 +87,7 @@ export const useLiquidityQuote = (
         estimate
       };
     } catch (error: any) {
-      Log.module("useLiquidityQuote").error("Error during quote: ", (error as Error).message);
+      Log.module("useliquidityquote").error("Error during quote: ", (error as Error).message);
       return null;
     }
   });
