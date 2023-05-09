@@ -1,20 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TokenInput } from "src/components/Swap/TokenInput";
-import { TokenValue } from "@beanstalk/sdk";
+import { TokenInput } from "../../components/Swap/TokenInput";
+import { Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useQuery } from "@tanstack/react-query";
-import { LiquidityAmounts } from "./types";
+import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
 import { Button } from "../Swap/Button";
-import gearIcon from "/src/assets/images/gear.svg";
-import infoIcon from "/src/assets/images/info.svg";
-import useSdk from "src/utils/sdk/useSdk";
-import { formatEther } from "ethers/lib/utils.js";
-import useEthPrice from "./useEthPrice";
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
-import { Log } from "src/utils/logger";
+import { Log } from "../../utils/logger";
+import QuoteDetails from "./QuoteDetails";
 
 type AddLiquidityProps = {
   well: Well;
@@ -23,17 +19,34 @@ type AddLiquidityProps = {
   slippageSettingsClickHandler: () => void;
 };
 
+export type AddLiquidityQuote = {
+  quote: {
+    quote: TokenValue[];
+  };
+  estimate: TokenValue;
+};
+
 export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler }: AddLiquidityProps) => {
   const { address } = useAccount();
-  const sdk = useSdk();
-  // TODO: This should be added to the main app provider I think, e.g. TokenProvider
-  const ethPrice = useEthPrice();
-
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
   const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
+
+  const bothAmountsNonZero = useMemo(() => {
+    if (!well.tokens) {
+      return false;
+    }
+
+    if (well.tokens.length === 0) {
+      return false;
+    }
+
+    const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
+
+    return nonZeroValues === well.tokens?.length;
+  }, [amounts, well.tokens]);
 
   const checkMinAllowanceForAllTokens = useCallback(async () => {
     if (!address) {
@@ -45,7 +58,9 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       // only check approval if this token has an amount gt zero
       if (amounts[index] && amounts[index].gt(0)) {
         const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index]);
-        Log.module("addliquidity").debug(`Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`);
+        Log.module("AddLiquidity").debug(
+          `Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`
+        );
         _tokenAllowance.push(tokenHasMinAllowance);
       } else {
         _tokenAllowance.push(false);
@@ -58,8 +73,6 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   // Subsequent quote invocations shows a spinner in the Expected Output row
   const [showQuoteDetails, setShowQuoteDetails] = useState<boolean>(false);
 
-  const atLeastOneAmountNonzero = useCallback(() => Object.values(amounts).filter((amount) => amount.value.gt("0")).length > 0, [amounts]);
-
   const resetAmounts = useCallback(() => {
     if (well.tokens) {
       const initialAmounts: LiquidityAmounts = {};
@@ -69,7 +82,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
       setAmounts(initialAmounts);
     }
-  }, [well.tokens]);
+  }, [well.tokens, setAmounts]);
 
   useEffect(() => {
     if (well.tokens) {
@@ -85,15 +98,19 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
 
   const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
-    if (!atLeastOneAmountNonzero()) {
+    Log.module("AddLiquidity").debug("Getting quote");
+    Log.module("AddLiquidity").debug("amounts", amounts);
+    Log.module("AddLiquidity").debug("bothAmountsNonZero", bothAmountsNonZero);
+    Log.module("AddLiquidity").debug("address", address);
+    Log.module("AddLiquidity").debug("allTokensHaveMinAllowance", allTokensHaveMinAllowance);
+    
+    if (!bothAmountsNonZero) {
       return null;
     }
 
     if (!allTokensHaveMinAllowance) {
       return null;
     }
-
-    let quote: TokenValue;
 
     // so we show the quote details page on first quote
     setShowQuoteDetails(true);
@@ -106,7 +123,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         estimate
       };
     } catch (error: any) {
-      Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
+      Log.module("AddLiquidity").error("Error during quote: ", (error as Error).message);
       return null;
     }
   });
@@ -138,39 +155,17 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       return;
     }
 
-    if (!atLeastOneAmountNonzero) {
+    if (!bothAmountsNonZero) {
       return;
     }
 
     checkMinAllowanceForAllTokens();
-  }, [well.tokens, address, atLeastOneAmountNonzero, amounts, checkMinAllowanceForAllTokens]);
+  }, [well.tokens, address, bothAmountsNonZero, amounts, checkMinAllowanceForAllTokens]);
 
   const addLiquidityButtonEnabled = useMemo(
-    () => address && atLeastOneAmountNonzero() && allTokensHaveMinAllowance,
-    [address, atLeastOneAmountNonzero, allTokensHaveMinAllowance]
+    () => address && bothAmountsNonZero && allTokensHaveMinAllowance,
+    [address, bothAmountsNonZero, allTokensHaveMinAllowance]
   );
-
-  const [gasFeeUsd, setGasFeeUsd] = useState<String>("");
-
-  useEffect(() => {
-    const getGasInUsd = async () => {
-      const feeData = await sdk.provider.getFeeData();
-      const gBn = quote?.estimate.toBigNumber();
-      if (quote?.estimate && feeData.maxFeePerGas && gBn && ethPrice.data) {
-        const txEthAmount = gBn.mul(feeData.maxFeePerGas);
-        const txEthAmountNumber = formatEther(txEthAmount);
-        const usd = parseFloat(ethPrice.data) * parseFloat(txEthAmountNumber);
-        setGasFeeUsd(
-          `~${usd.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD"
-          })}`
-        );
-      }
-    };
-
-    getGasInUsd();
-  }, [quote?.estimate, sdk.provider, ethPrice]);
 
   const approveTokenButtonClickHandler = useCallback(
     (tokenIndex: number) => async () => {
@@ -191,7 +186,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
   );
 
-  const buttonLabel = useMemo(() => (!atLeastOneAmountNonzero() ? "Input Token Amount" : "Add Liquidity"), [atLeastOneAmountNonzero]);
+  const buttonLabel = useMemo(() => (!bothAmountsNonZero ? "Input Token Amount" : "Add Liquidity"), [bothAmountsNonZero]);
 
   return (
     <div>
@@ -199,7 +194,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         <div>
           <div>
             <TokenListContainer>
-              {well.tokens?.map((token, index) => (
+              {well.tokens?.map((token: Token, index: number) => (
                 <TokenInput
                   key={`input${index}`}
                   id={`input${index}`}
@@ -214,34 +209,21 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
               <Divider />
             </TokenListContainer>
             {showQuoteDetails && (
-              <QuoteContainer>
-                <QuoteDetailLine>
-                  <QuoteDetailLabel bold>Expected Output</QuoteDetailLabel>
-                  <QuoteDetailValue bold>{quote ? quote.quote.toHuman("0,0.0000") + " " + well.lpToken?.symbol : "-"}</QuoteDetailValue>
-                </QuoteDetailLine>
-                <QuoteDetailLine>
-                  <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-                  <QuoteDetailValue>{"1.00%"}</QuoteDetailValue>
-                  <GearImage src={infoIcon} alt={"More Info"} />
-                </QuoteDetailLine>
-                <QuoteDetailLine>
-                  <QuoteDetailLabel>Slippage Tolerance</QuoteDetailLabel>
-                  <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
-                  <GearImage src={gearIcon} alt={"Slippage Settings"} onClick={slippageSettingsClickHandler} />
-                </QuoteDetailLine>
-                <QuoteDetailLine>
-                  <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
-                  <QuoteDetailValue>{`${gasFeeUsd}`}</QuoteDetailValue>
-                </QuoteDetailLine>
-              </QuoteContainer>
+              <QuoteDetails
+                type={LIQUIDITY_OPERATION_TYPE.ADD}
+                quote={quote}
+                wellLpToken={well.lpToken}
+                slippageSettingsClickHandler={slippageSettingsClickHandler}
+                slippage={slippage}
+              />
             )}
             {/* // TODO: Should be a notification */}
             {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
             {well.tokens!.length > 0 &&
-              well.tokens!.map((token, index) => {
+              well.tokens!.map((token: Token, index: number) => {
                 if (!tokenAllowance[index] && amounts[index]) {
                   return (
-                    <ButtonWrapper>
+                    <ButtonWrapper key={`approvebuttonwrapper${index}`}>
                       <ApproveTokenButton
                         key={`approvebutton${index}`}
                         disabled={amounts && amounts[index].lte(0)}
@@ -253,7 +235,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                   );
                 }
 
-                return <></>;
+                return null;
               })}
             <ButtonWrapper>
               <AddLiquidityButton
@@ -281,42 +263,6 @@ const ButtonWrapper = styled.div`
 `;
 
 const ApproveTokenButton = styled(Button)`
-  margin-bottom: 10px;
-`;
-
-const GearImage = styled.img`
-  margin-left: 10px;
-`;
-
-type QuoteDetailProps = {
-  bold?: boolean;
-};
-
-const QuoteDetailLabel = styled.div<QuoteDetailProps>`
-  align-items: flex-start;
-  width: 50%;
-  font-weight: ${(props) => (props.bold ? "bold" : "normal")};
-`;
-
-const QuoteDetailValue = styled.div<QuoteDetailProps>`
-  align-items: flex-end;
-  text-align: right;
-  width: 50%;
-  font-weight: ${(props) => (props.bold ? "bold" : "normal")};
-`;
-
-const QuoteDetailLine = styled.div`
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
-`;
-
-const QuoteContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
   margin-bottom: 10px;
 `;
 

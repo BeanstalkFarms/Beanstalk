@@ -1,8 +1,11 @@
-import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
+import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { Log } from "src/utils/logger";
 
-const hasMinimumAllowance = async (walletAddress: string, spender: string, token: ERC20Token, mininumAllowance: TokenValue) => {
+const hasMinimumAllowance = async (walletAddress: string, spender: string, token: ERC20Token | Token, mininumAllowance: TokenValue) => {
   const existingAllowance = await token.getAllowance(walletAddress, spender);
+  if (!existingAllowance) {
+    return false;
+  }
   return existingAllowance.gte(mininumAllowance);
 };
 
