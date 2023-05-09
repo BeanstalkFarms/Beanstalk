@@ -301,8 +301,7 @@ const BuyPropProvider: FC<{}> = () => {
   const { preferredTokens, tokenList } = useMemo(() => {
     const _preferredTokens: PreferredToken[] =
       BuyFertilizerFarmStep.getPreferredTokens(sdk.tokens);
-    const _tokenList = BuyFertilizerFarmStep.getTokenList(sdk.tokens);
-
+    const _tokenList = [sdk.tokens.ETH, sdk.tokens.WETH, sdk.tokens.BEAN, sdk.tokens.CRV3, sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT];
     return {
       preferredTokens: _preferredTokens,
       tokenList: _tokenList,
