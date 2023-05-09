@@ -10,6 +10,7 @@ import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { Spinner } from "../Spinner";
+import { ChevronDown } from "../Icons";
 
 type Props = {
   token: Token;
@@ -54,13 +55,13 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
       <Button editable={editable} onClick={openModal}>
         {token ? (
           <>
-            <TokenLogo token={token} size={20} />
+            <TokenLogo token={token} size={16} />
             <TokenSymbol>{token.symbol}</TokenSymbol>
           </>
         ) : (
           <div>Select a Token</div>
         )}
-        {editable && <Image src={chevDown} alt={"Token Dropdown"} size={9} />}
+        {editable && <ChevronDown width={8} color="#adadad" />}
       </Button>
       {modalOpen && (
         <>
@@ -79,7 +80,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
                         <Symbol>{token.symbol}</Symbol>
                         <Name>{token.displayName}</Name>
                       </Details>
-                      {(balancesLoading || isFetching) ? <Spinner size={14}/> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
+                      {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
                     </TokenRow>
                   ))}
                 </Ol>
@@ -197,13 +198,13 @@ const Button = styled.button<ContainerProps>`
   align-self: end;
   white-space: nowrap;
   height: 40px;
-  background: #2f3242;
+  background: #ffffff;
   border: none;
-  border-radius: 12px;
-  color: white;
+
+  color: #000000;
   appearance: none;
 
-  padding: 4px 10px;
+  padding: 0px;
   gap: 6px;
   cursor: ${(props) => (props.editable ? "pointer" : "auto")};
 `;
@@ -211,7 +212,7 @@ const Button = styled.button<ContainerProps>`
 const TokenSymbol = styled.div`
   font-family: "Inter";
   font-style: normal;
-  font-weight: 600;
-  font-size: 18px;
+  font-weight: 400;
+  font-size: 14px;
   line-height: 24px;
 `;

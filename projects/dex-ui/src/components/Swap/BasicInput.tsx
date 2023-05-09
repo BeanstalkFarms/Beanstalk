@@ -117,15 +117,15 @@ const StyledInput = styled.input`
   padding: 0px 0px;
   box-sizing: border-box;
   width: 100%;
-  background: #272a37;
+  background: #ffffff;
   font-family: "Inter";
   font-style: normal;
-  font-weight: 500;
-  font-size: 30px;
-  line-height: 36px;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
   text-align: left;
 
-  color: #b0b1b5;
+  color: #;
   outline: none;
 `;
 

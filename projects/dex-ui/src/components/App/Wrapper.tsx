@@ -18,7 +18,7 @@ export const Wrapper: FC<{}> = ({ children }) => {
     <HashRouter>
       <WagmiConfig client={client}>
         <ConnectKitProvider
-          theme="auto"
+          theme="minimal"
           mode="dark"
           options={{
             customAvatar: Avatar,

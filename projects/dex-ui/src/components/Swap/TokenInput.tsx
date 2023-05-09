@@ -159,18 +159,17 @@ const LoadingContainer = styled.div<ContainerProps>`
   display: flex;
   flex-direction: column;
   width: ${(props) => props.width};
-  height: 96px;
+  height: 72px;
 
   padding: 0px 16px;
   background: #272a37;
 
   border: 2px solid rgb("0 0 0 / 0%");
   box-sizing: border-box;
-  border-radius: 12px;
+  
 
   overflow: hidden;
   justify-content: center;
-  gap: 8px;
   cursor: text;
 
   animation-duration: 2s;
@@ -186,18 +185,18 @@ const Container = styled.div<ContainerProps>`
   display: flex;
   flex-direction: column;
   width: ${(props) => props.width};
-  height: 96px;
+  height: 72px;
 
   padding: 0px 16px;
-  background: #272a37;
+  background: #ffffff;
 
-  border: 2px solid rgb(${(props) => (props.focused ? "157 202 230" : "0 0 0 / 0%")});
+  // 70 185 85 is the rbg version of the green
+  outline: 1px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
   box-sizing: border-box;
-  border-radius: 12px;
 
   overflow: hidden;
   justify-content: center;
-  gap: 8px;
+
   cursor: text;
 `;
 

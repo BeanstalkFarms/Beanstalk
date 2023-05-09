@@ -4,6 +4,9 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { ConnectKitButton } from "connectkit";
 import { useNetwork } from "wagmi";
+import { Grid } from "../Grid";
+import grid from "src/assets/images/grid.svg";
+import { Footer } from "./Footer";
 
 export const Frame: FC<{}> = ({ children }) => {
   const { chain } = useNetwork();
@@ -20,40 +23,41 @@ export const Frame: FC<{}> = ({ children }) => {
   }
 
   return (
-    <Container>
+    <Container id="frame">
       <NavContainer>
-        <NavLinks>
-          {/* <Link to="/"> */}
-          <svg width={32} height={32} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g clipPath="url(#a)">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M7.071 8.929 0 16l7.071 7.071L14.142 16l-7.07-7.071Zm8.485 8.485-7.07 7.071 7.07 7.071 7.071-7.07-7.07-7.072Zm-7.07-9.9 7.07-7.07 7.071 7.07-7.07 7.072-7.072-7.071ZM24.041 8.93 16.97 16l7.07 7.071L31.114 16l-7.071-7.071Z"
-                fill="#fff"
-              />
-            </g>
-            <defs>
-              <clipPath id="a">
-                <path fill="#fff" d="M0 0h32v32H0z" />
-              </clipPath>
-            </defs>
-          </svg>
-          {/* </Link> */}
-
-          <Link to="/swap">Swap</Link>
-          <Link to="/wells">Wells</Link>
-          <Link to="/silo">Silo</Link>
-        </NavLinks>
-        <ConnectArea>
-          {net}
-          <ConnectKitButton />
-        </ConnectArea>
+        <Brand>
+          <strong>[BASIN]</strong>
+        </Brand>
+        <RightSide>
+          <NavLinks>
+            <NavLink to="/wells">Liquidity</NavLink>
+            <NavLink to="/build">Build</NavLink>
+            <NavLink to="/swap">Swap</NavLink>
+          </NavLinks>
+          {/* {net} */}
+          <ConnectionContainer>
+            <ConnectKitButton />
+          </ConnectionContainer>
+        </RightSide>
       </NavContainer>
-      <ContentContainer>{children}</ContentContainer>
+      <TokenMarquee />
+      <ContentContainer>
+        {children}
+      </ContentContainer>
+      <Footer />
     </Container>
   );
 };
+
+const TokenMarquee = styled.div`
+  display: flex;
+  height: 48px;
+  box-sizing: border-box;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+  width: 100vw;
+`;
 
 const Container = styled.div`
   // border: 1px solid red;
@@ -61,38 +65,81 @@ const Container = styled.div`
   flex-direction: column;
   box-sizing: border-box;
   width: 100vw;
+  min-height: 100vh;
   align-items: center;
 `;
 
 const NavContainer = styled.nav`
-  // border-bottom: 1px solid gray;
+  border: 1px solid black;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   width: 100vw;
+  height: 64px;
   box-sizing: border-box;
-  padding: 5px 40px;
+  padding: 0px 48px;
   align-items: center;
 `;
 
 const NavLinks = styled.div`
   display: flex;
+  align-self: stretch;
   align-items: center;
-  gap: 20px;
 `;
-const ConnectArea = styled.div`
+const NavLink = styled(Link)`
+  border-left: 1px solid black;
+  box-sizing: border-box;
+  display: flex;
+  width: 192px;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: black;
+  outline: none !important;
+
+  :focus {
+    outline: none !important;
+  }
+`;
+const RightSide = styled.div`
+  // border: 1px solid red;
   display: flex;
   flex-direction: row;
+  align-self: stretch;
   align-items: center;
 `;
 
 const ContentContainer = styled.main`
-  // border: 1px solid green;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  background-image: url("${grid}");
+
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 20px;
-  padding-top: 48px;
-  align-items: center;
-  width: 1200px
+  background-color: #f9f8f6; // grid background
+  // align-items: center;
+  width: 100vw;
+  flex: 1;
+  padding: 48px;
 `;
+
+const Brand = styled.div`
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+`;
+
+const ConnectionContainer = styled.div`
+  border-left: 1px solid black;
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  padding-left: 48px;
+`;
+
