@@ -433,19 +433,6 @@ contract Storage {
         uint256 balanceOfUnderlying;
         bytes32 merkleRoot;
     }
-    
-   /**
-    * @notice Metadata stores the metadata for a given Deposit.
-    * Deposits are stored as a bytes32, which is the hash of the Deposit's metadata for gas efficency. 
-    * In the future, there may be a need for a deposit to have metadata of the deposit. 
-    * This struct is used to store that metadata.
-    * this metadata is not initalized on deposit, but rather when someone calls "setMetadata" for the first time.
-    */
-    struct Metadata {
-        address token; // the address of the token for a deposit 
-        int96 stem; // the grown stalk per BDV assoiated with the deposit
-        uint256 id; // the id of the deposit
-    }
 }
 
 /**

@@ -2125,6 +2125,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
+    "@ethereum-waffle/chai": 4.0.10
     "@nomicfoundation/hardhat-network-helpers": ^1.0.7
     "@nomiclabs/hardhat-ethers": ^2.2.1
     "@nomiclabs/hardhat-etherscan": ^3.1.2
@@ -2133,8 +2134,8 @@ __metadata:
     "@openzeppelin/contracts-upgradeable": ^3.4.0
     "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3"
     "@openzeppelin/hardhat-upgrades": ^1.17.0
-    "@uniswap/v3-core": "github:uniswap/v3-core"
-    "@uniswap/v3-periphery": "github:uniswap/v3-periphery"
+    "@uniswap/v3-core": ^1.0.1
+    "@uniswap/v3-periphery": ^1.4.3
     bignumber: ^1.1.0
     chai: ^4.3.4
     csvtojson: ^2.0.10
@@ -11079,13 +11080,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uniswap/v3-core@github:uniswap/v3-core":
-  version: 1.0.1
-  resolution: "@uniswap/v3-core@https://github.com/uniswap/v3-core.git#commit=d8b1c635c275d2a9450bd6a78f3fa2484fef73eb"
-  checksum: 325011a78af3be8c4591d075db8f487ec6554b39bd1d36037e34241d90030e8fdf817b24ebcc3206fc6f1e2b685c5afc245deb41f67b0f89a9bc6857051c2f75
-  languageName: node
-  linkType: hard
-
 "@uniswap/v3-core@npm:1.0.0":
   version: 1.0.0
   resolution: "@uniswap/v3-core@npm:1.0.0"
@@ -11093,16 +11087,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uniswap/v3-periphery@github:uniswap/v3-periphery":
+"@uniswap/v3-core@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@uniswap/v3-core@npm:1.0.1"
+  checksum: 4bfd8b218391a3d9efde44e0f984cfec3bc25889cd4d1386766828521006e71b210a3583ee32b52f3c81d384af9e8c39f471f2229e9af4d50da6801446ecb3e4
+  languageName: node
+  linkType: hard
+
+"@uniswap/v3-periphery@npm:^1.4.3":
   version: 1.4.3
-  resolution: "@uniswap/v3-periphery@https://github.com/uniswap/v3-periphery.git#commit=6cce88e63e176af1ddb6cc56e029110289622317"
+  resolution: "@uniswap/v3-periphery@npm:1.4.3"
   dependencies:
     "@openzeppelin/contracts": 3.4.2-solc-0.7
     "@uniswap/lib": ^4.0.1-alpha
     "@uniswap/v2-core": 1.0.1
     "@uniswap/v3-core": 1.0.0
     base64-sol: 1.0.1
-  checksum: 233e937f40ae48e8c233ae60b4e0d39f2396fcacb6af32cc3591ea7c98770d59ff095272a52fc3a8f320f317f167c79236764e0f0bcc936cd985e314e47da13b
+  checksum: 50636951fc0a7737cfeef988ab38f4ddf26f6165a19df95b84294929088cc8b05fdbc7910168610ce9daebcce5d7a408fa5a02228ef9dfb73c23c695acc8b741
   languageName: node
   linkType: hard
 

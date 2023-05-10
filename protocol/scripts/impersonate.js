@@ -159,6 +159,7 @@ async function bean() {
 
   const bean = await ethers.getContractAt("MockToken", BEAN);
   await bean.setDecimals(6);
+  await bean.setSymbol("BEAN");
   return BEAN;
 }
 
