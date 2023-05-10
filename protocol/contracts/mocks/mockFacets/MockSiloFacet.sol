@@ -317,6 +317,10 @@ contract MockSiloFacet is SiloFacet {
     /**
      * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
      *
+     * This function is only used for tests, it's the old version of getDeposit
+     * that uses the V2 storage slots, new deposits use V3, see
+     * LibTokenSilo's tokenDeposit.
+     *
      * Silo V2 Deposits are stored within each {Account} as a mapping of:
      *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
      *

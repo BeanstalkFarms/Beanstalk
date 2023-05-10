@@ -292,12 +292,11 @@ library LibTokenSilo {
     /**
      * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
      * 
-     * Silo V2 Deposits are stored within each {Account} as a mapping of:
-     *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
+     * Silo V3 Deposits are stored within each {Account} as a mapping of:
+     *  `address token => int96 stem => { uint128 amount, uint128 bdv }`
      * 
-     * Unripe BEAN and Unripe LP are handled independently so that data
-     * stored in the legacy Silo V1 format and the new Silo V2 format can
-     * be appropriately merged. See {LibUnripeSilo} for more information.
+     * Silo V2 deposits are only usable after a successful migration, see
+     * mowAndMigrate within the Migration facet.
      *
      * FIXME(naming): rename to `getDeposit()`?
      */
