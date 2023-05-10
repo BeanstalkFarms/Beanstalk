@@ -31,8 +31,29 @@ async function ebip6(mock = true, account = undefined) {
     await bipDiamondCut("EBIP-6", dc, account, mock)
 }
 
-// Used for EBIP-7 and EBIP-8
-async function ebipEnrootDeposits(mock = true, account = undefined) {
+async function ebip7(mock = true, account = undefined) {
+    if (account == undefined) {
+        account = await impersonateBeanstalkOwner()
+        await mintEth(account.address)
+    }
+
+    const siloFacet = await (await ethers.getContractFactory('SiloFacet', account)).deploy({maxFeePerGas: 40757798654})
+    await siloFacet.deployed()
+    console.log(`SiloFacet deployed to ${siloFacet.address}`)
+    const dc = {
+        diamondCut: [[
+            siloFacet.address,
+            1,
+            ['0xd5d2ea8c', '0x83b9e85d']
+        ]],
+        initFacetAddress: '0x0000000000000000000000000000000000000000',
+        functionCall: '0x'
+    }
+    await bipDiamondCut("EBIP-7", dc, account, mock)
+
+}
+
+async function ebip8(mock = true, account = undefined) {
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()
         await mintEth(account.address)
@@ -41,7 +62,8 @@ async function ebipEnrootDeposits(mock = true, account = undefined) {
     await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: [
-            'SiloFacet'
+            'SiloFacet',
+            'ConvertFacet'
         ],
         bip: false,
         object: !mock,
@@ -49,6 +71,7 @@ async function ebipEnrootDeposits(mock = true, account = undefined) {
         account: account
     })
 }
+
 
 async function bipDiamondCut(name, dc, account, mock = true) {
     beanstalk = await getBeanstalk()
@@ -68,5 +91,5 @@ async function bipDiamondCut(name, dc, account, mock = true) {
 }
 
 exports.ebip6 = ebip6
-exports.ebip7 = ebipEnrootDeposits
-exports.ebip8 = ebipEnrootDeposits
+exports.ebip7 = ebip7
+exports.ebip8 = ebip8
