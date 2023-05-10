@@ -1,5 +1,3 @@
-const DEBUG = import.meta.env.VITE_DEBUG;
-
 class Logger {
   static debugConfig: Record<string, boolean> = {
     DEFAULT: false
@@ -18,7 +16,7 @@ class Logger {
       globalThis.debug = (param?: string) => {
         if (param !== undefined) {
           if (typeof param === "boolean") {
-            for (const [key, val] of Object.entries(Logger.debugConfig)) {
+            for (const [key, _] of Object.entries(Logger.debugConfig)) {
               Logger.debugConfig[key] = param;
             }
           } else {

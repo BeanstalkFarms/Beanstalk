@@ -53,7 +53,12 @@ export const LiquidityRoot = ({ well, txnCompleteCallback }: LiquidityRootProps)
           </Tabs>
           <div>
             {showRemove ? (
-              <RemoveLiquidity well={well} txnCompleteCallback={txnCompleteCallback} />
+              <RemoveLiquidity
+                slippage={slippage}
+                slippageSettingsClickHandler={slippageSettingsClickHandler}
+                well={well}
+                txnCompleteCallback={txnCompleteCallback}
+              />
             ) : (
               <AddLiquidity
                 well={well}
