@@ -4,7 +4,6 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { ConnectKitButton } from "connectkit";
 import { useNetwork } from "wagmi";
-import { Grid } from "../Grid";
 import grid from "src/assets/images/grid.svg";
 import { Footer } from "./Footer";
 
@@ -41,9 +40,7 @@ export const Frame: FC<{}> = ({ children }) => {
         </RightSide>
       </NavContainer>
       <TokenMarquee />
-      <ContentContainer>
-        {children}
-      </ContentContainer>
+      <ContentContainer>{children}</ContentContainer>
       <Footer />
     </Container>
   );
@@ -53,9 +50,9 @@ const TokenMarquee = styled.div`
   display: flex;
   height: 48px;
   box-sizing: border-box;
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
+  border-left: 0.5px solid black;
+  border-right: 0.5px solid black;
+  border-bottom: 0.25px solid black;
   width: 100vw;
 `;
 
@@ -65,12 +62,12 @@ const Container = styled.div`
   flex-direction: column;
   box-sizing: border-box;
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   align-items: center;
 `;
 
 const NavContainer = styled.nav`
-  border: 1px solid black;
+  border: 0.5px solid black;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -87,7 +84,7 @@ const NavLinks = styled.div`
   align-items: center;
 `;
 const NavLink = styled(Link)`
-  border-left: 1px solid black;
+  border-left: 0.5px solid black;
   box-sizing: border-box;
   display: flex;
   width: 192px;
@@ -114,18 +111,18 @@ const RightSide = styled.div`
 `;
 
 const ContentContainer = styled.main`
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-  background-image: url("${grid}");
-
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background-color: #f9f8f6; // grid background
-  // align-items: center;
   width: 100vw;
   flex: 1;
+  background-color: #f9f8f6; // grid background
+  border-left: 0.5px solid black;
+  border-right: 0.5px solid black;
+  background-image: url("${grid}");
   padding: 48px;
+  overflow-y: scroll;
+  overflow-x: hidden;
 `;
 
 const Brand = styled.div`
@@ -135,11 +132,10 @@ const Brand = styled.div`
 `;
 
 const ConnectionContainer = styled.div`
-  border-left: 1px solid black;
+  border-left: 0.5px solid black;
   display: flex;
   align-self: stretch;
   align-items: center;
   justify-content: center;
   padding-left: 48px;
 `;
-
