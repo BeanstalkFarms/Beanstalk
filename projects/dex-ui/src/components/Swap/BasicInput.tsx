@@ -111,6 +111,7 @@ export const BasicInput: FC<Props> = ({
 
 const StyledInput = styled.input`
   // border: 1px solid red;
+  border: none;
   display: flex;
   flex-direction: row;
   align-items: center;

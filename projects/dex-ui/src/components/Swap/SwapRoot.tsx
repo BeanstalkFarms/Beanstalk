@@ -238,7 +238,7 @@ const ArrowContainer = styled.div`
 `;
 
 const SwapDetailsContainer = styled.div`
-  border: 1px dashed pink;
+  // border: 1px dashed pink;
   display: flex;
   flex-direction: column;
   justify-content: center;

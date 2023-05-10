@@ -21,13 +21,16 @@ body {
   /** Prevent page overscrolling: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior */
   overscroll-behavior: none;
 }
-input,
+
+/* Remove the arrows on input type=number */
+/* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
   border: none;
 }
+/* Firefox */
 input[type="number"] {
   -moz-appearance: textfield;
 }
@@ -49,11 +52,9 @@ input[type="number"] {
 }
 
 *::-webkit-scrollbar-track {
-  background: #272a37;
+  background: #eee;
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #494c58;
-  border-radius: 10px;
-  border: 0px none #000000;
+  background-color: #aaa;
 }

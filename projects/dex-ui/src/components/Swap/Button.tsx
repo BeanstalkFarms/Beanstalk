@@ -25,7 +25,7 @@ export const Button: FC<Props> = ({ label, disabled, loading, onClick }) => {
 
 const StyledButton = styled.button<ButtonProps>`
   background: ${({ disabled, $loading }) => (disabled ? "#D1D5DB" : $loading ? "#D1D5DB" : "#000")};
-  height: 60px;
+  height: 48px;
   border: none;
   color: ${({ disabled, $loading }) => (disabled ? "#fff" : $loading ? "#fff" : "#fff")};
   line-height: 24px;
@@ -33,6 +33,7 @@ const StyledButton = styled.button<ButtonProps>`
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
+
 
   :hover {
     outline: ${({ disabled }) => (disabled ? "none" : "2px solid #46b955")};

@@ -133,7 +133,7 @@ export const TokenInput: FC<TokenInput> = ({
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
         />
-        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} />
+        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id}/>
       </TopRow>
 
       {showBalance && (
@@ -164,7 +164,7 @@ const LoadingContainer = styled.div<ContainerProps>`
   padding: 0px 16px;
   background: #272a37;
 
-  border: 2px solid rgb("0 0 0 / 0%");
+  outline: 1px solid black;
   box-sizing: border-box;
   
 
@@ -178,7 +178,7 @@ const LoadingContainer = styled.div<ContainerProps>`
   animation-name: ${shimmer};
   animation-timing-function: linear;
   background: #ddd;
-  background: linear-gradient(65deg, rgba(39, 42, 55, 1) 10%, rgba(48, 52, 68, 1) 20%, rgba(39, 42, 55, 1) 30%);
+  background: linear-gradient(65deg, #f9f8f6 10%, #fff 20%, #f9f8f6 30%);
   background-size: 1200px 100%;
 `;
 const Container = styled.div<ContainerProps>`
@@ -231,4 +231,5 @@ const MaxButton = styled.button`
   text-align: center;
   color: #f6e27f;
   cursor: pointer;
+  padding: 0px 5px;
 `;
