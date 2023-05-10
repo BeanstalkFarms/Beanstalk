@@ -348,7 +348,7 @@ library LibTokenSilo {
 
     function grownStalkForDeposit(
         address account,
-        IERC20 token,
+        address token,
         int96 stem
     )
         internal
@@ -356,12 +356,12 @@ library LibTokenSilo {
         returns (uint grownStalk)
     {
         // stemTipForToken(token) > depositGrownStalkPerBdv for all valid Deposits
-        int96 _stemTip = stemTipForToken(address(token));
+        int96 _stemTip = stemTipForToken(token);
         require(stem <= _stemTip, "Silo: Invalid Deposit");
          // The check in the above line guarantees that subtraction result is positive
          // and thus the cast to `uint256` is safe.
         uint deltaStemTip = uint256(_stemTip.sub(stem));
-        (, uint bdv) = tokenDeposit(account, address(token), stem);
+        (, uint bdv) = tokenDeposit(account, token, stem);
         
         grownStalk = deltaStemTip.mul(bdv);
         

@@ -138,6 +138,24 @@ contract SiloExit is ReentrancyGuard {
             );
     }
 
+    /**
+     * @notice Returns the balance of Grown Stalk for a single deposit of `token`
+     * in `stem` for `account`. Grown Stalk is earned each Season from BDV and
+     * must be Mown via `SiloFacet-mow` to apply it to a user's balance.
+     *
+     * @dev This passes in the last stem the user mowed at and the current stem
+     */
+    function grownStalkForDeposit(
+        address account,
+        address token,
+        int96 stem
+    )
+        public
+        view
+        returns (uint grownStalk)
+    {
+        LibTokenSilo.grownStalkForDeposit(account, token, stem);
+    }
     
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans

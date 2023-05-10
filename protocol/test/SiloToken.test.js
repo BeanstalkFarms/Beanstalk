@@ -156,6 +156,14 @@ describe('Silo Token', function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, stem, '1000', '1000');
       });
+
+      //it uses grownStalkForDeposit to verify the deposit amount is correct
+      it.only('verifies the grown stalk for deposit is correct', async function () {
+        expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq(to6('0'));
+        //verify still correct after one season
+        await this.season.lightSunrise();
+        expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq(to6('1000000'));
+      });
     });
   
     describe('2 deposits same grown stalk per bdv', function () {
