@@ -93,25 +93,21 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
           lpTokenAmount,
           well.tokens![singleTokenIndex],
           quoteAmountLessSlippage,
-          address,
-          undefined,
-          { gasLimit: 1000000 }
+          address
         );
       } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
         if (!balancedQuote) {
           return;
         }
         const quoteAmountLessSlippage = balancedQuote.quote.map((q) => q.subSlippage(slippage));
-        removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address, undefined, { gasLimit: 1000000 });
+        removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address);
       } else {
         if (!customRatioQuote) {
           return;
         }
-        
+
         const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
-        removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, Object.values(amounts), address, undefined, {
-          gasLimit: 1000000
-        });
+        removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, Object.values(amounts), address);
       }
 
       const receipt = await removeLiquidityTxn.wait();
