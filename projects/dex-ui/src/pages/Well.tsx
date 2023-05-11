@@ -10,16 +10,17 @@ import useSdk from "src/utils/sdk/useSdk";
 import { TokenValue } from "@beanstalk/sdk";
 import { H1 } from "src/components/Typography";
 import styled from "styled-components";
+import { Title } from "src/components/PageComponents/Title";
 
 export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
 
-
+  const title = (well?.tokens ?? []).map((t) => t.symbol).join(":");
 
   return (
     <Container>
-      <H1>Liquidity</H1>
+      <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} />
     </Container>
   );
 };

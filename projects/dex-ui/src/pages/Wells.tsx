@@ -1,6 +1,7 @@
 import { Well } from "@beanstalk/sdk/Wells";
 import React, { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Title } from "src/components/PageComponents/Title";
 import { Row, TBody, THead, Table, Td, Th, Tr } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";
 import { H1 } from "src/components/Typography";
@@ -48,7 +49,7 @@ export const Wells = () => {
 
   return (
     <Container>
-      <H1>Liquidity</H1>
+      <Title title="Liquidity"/>
 
       <Table>
         <THead>

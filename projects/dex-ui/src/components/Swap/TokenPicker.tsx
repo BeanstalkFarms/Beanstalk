@@ -117,14 +117,14 @@ const InAnimation = keyframes`
   100% {stroke-dashoffset:0px;}
 `;
 const InConnector = styled.div`
-position: relative;
-top: 106px;
-left: -431px;
-> svg > #line {
-  stroke-dasharray: 48px;
-  stroke-dashoffset: 48px;
-  animation: ${InAnimation} .5s cubic-bezier(0, 0.55, 0.45, 1) forwards;
-}
+  position: relative;
+  top: 106px;
+  left: -431px;
+  > svg > #line {
+    stroke-dasharray: 48px;
+    stroke-dashoffset: 48px;
+    animation: ${InAnimation} 0.5s cubic-bezier(0, 0.55, 0.45, 1) forwards;
+  }
 `;
 const OutAnimation = keyframes`
   0% {stroke-dashoffset: 225;}
@@ -138,7 +138,7 @@ const OutConnector = styled.div`
   > svg > #line {
     stroke-dasharray: 225px;
     stroke-dashoffset: 225px;
-    animation: ${OutAnimation} .5s cubic-bezier(0, 0.55, 0.45, 1) forwards;
+    animation: ${OutAnimation} 0.5s cubic-bezier(0, 0.55, 0.45, 1) forwards;
   }
 `;
 
@@ -263,9 +263,9 @@ const Button = styled.button<ContainerProps>`
 `;
 
 const TokenSymbol = styled.div`
-  font-family: "Inter";
   font-style: normal;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 24px;
+  color: #4b5563;
 `;

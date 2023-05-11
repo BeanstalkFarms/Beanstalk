@@ -30,7 +30,6 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
             stroke: "#D6D3D1"
           }}
           d={`M ${SMALL_SPACING} 0 L 0 0 0 ${SMALL_SPACING}`}
-          fill="none"
           stroke="#eee"
         />
       </pattern>
@@ -47,8 +46,6 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
       </pattern>
     </React.Fragment>
   );
-
-  console.log("Grid Width: ", width);
 
   useEffect(() => {
     document.addEventListener("mousemove", mouseMove);
@@ -101,7 +98,7 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
         pathData = `${pathData} L ${x} ${y}`;
       }
     }
-    const roundedPathData = roundPathCorners(pathData, 3, false);
+    const roundedPathData = roundPathCorners(pathData, 4.5, false);
     path.setAttribute("d", roundedPathData);
   };
 
@@ -111,12 +108,13 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
     <svg ref={svgRef} width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g id="Grid" className="grid">
         <defs>{gridPattern}</defs>
+        <rect x={0} y={0} width={width} height={2000} fill="#F9F8F6" />
         <rect x={0} y={0} width={width} height={2000} fill={`url(#${bigGrid ? "bigGrid" : "smallGrid"})`} />
         <path
           ref={item}
           style={{
-            strokeWidth: "1px",
-            stroke: "rgb(70 185 85 / 60%)"
+            strokeWidth: "2.5px",
+            stroke: "rgb(70 185 85 / 70%)"
           }}
           d=""
           fill="none"

@@ -12,7 +12,7 @@ import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
-import { H1 } from "../Typography";
+import { Title } from "../PageComponents/Title";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -155,7 +155,7 @@ export const SwapRoot = () => {
   return (
     <Container>
       <SwapHeaderContainer>
-        <H1>Swap</H1>
+        <Title title="Swap"/>
         <div>
           <Image src={gear} size={16} alt="Transaction Settings" />
         </div>
@@ -219,7 +219,7 @@ const SwapHeaderContainer = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  font-family: "Inter";
+
   
   align-items: center;
 `;
