@@ -185,7 +185,7 @@ contract SiloExit is ReentrancyGuard {
         if (s.s.roots == 0) return 0;
 
         uint256 stalk;
-        if(block.number - s.season.sunriseBlock <= LibSilo.EARNED_BEAN_VESTING_BLOCKS){
+        if(LibSilo.inVestingPeriod()){
             stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
                 s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
                 s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
