@@ -1,6 +1,47 @@
-@font-face {
+/* @font-face {
   font-family: "Inter";
   src: url("src/assets/fonts/Inter.ttf");
+} */
+
+@font-face {
+  font-family: "PPMori";
+  font-weight: 100;
+  src: url("src/assets/fonts/PPMori-Extralight.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 200;
+  src: url("src/assets/fonts/PPMori-Light.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 300;
+  src: url("src/assets/fonts/PPMori-Book.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 400;
+  src: url("src/assets/fonts/PPMori-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 500;
+  src: url("src/assets/fonts/PPMori-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 600;
+  src: url("src/assets/fonts/PPMori-SemiBold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 700;
+  src: url("src/assets/fonts/PPMori-Bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 800;
+  src: url("src/assets/fonts/PPMori-ExtraBold.woff2") format("woff2");
 }
 
 html,
@@ -15,7 +56,8 @@ body {
 body {
   position: relative;
   margin: 0;
-  font-family: "Inter";
+  font-family: "PPMori";
+  font-weight: regular;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /** Prevent page overscrolling: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior */

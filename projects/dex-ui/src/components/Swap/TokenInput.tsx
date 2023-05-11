@@ -139,7 +139,6 @@ export const TokenInput: FC<TokenInput> = ({
       {showBalance && (
         <BalanceRow>
           <Balance>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
-          {showMax && !isBalanceLoading && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
         </BalanceRow>
       )}
     </Container>
@@ -191,7 +190,7 @@ const Container = styled.div<ContainerProps>`
   background: #ffffff;
 
   // 70 185 85 is the rbg version of the green
-  outline: 1px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
+  outline: .5px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
   box-sizing: border-box;
 
   overflow: hidden;
@@ -212,22 +211,21 @@ const BalanceRow = styled.div`
 const Balance = styled.div`
   display: flex;
   align-items: center;
-  font-family: "Inter";
   font-style: normal;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
-  color: #b0b1b5;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #9ca3af;
+  text-decoration: underline;
 `;
 
 const MaxButton = styled.button`
   background: none;
   border: none;
-  font-family: "Inter";
   font-style: normal;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
   text-align: center;
   color: #f6e27f;
   cursor: pointer;

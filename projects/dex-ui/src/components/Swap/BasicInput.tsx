@@ -119,7 +119,6 @@ const StyledInput = styled.input`
   box-sizing: border-box;
   width: 100%;
   background: #ffffff;
-  font-family: "Inter";
   font-style: normal;
   font-weight: 400;
   font-size: 20px;

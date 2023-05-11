@@ -12,9 +12,7 @@ export const Frame: FC<{}> = ({ children }) => {
   return (
     <Container id="frame">
       <NavContainer>
-        <Brand>
-          <strong>[BASIN]</strong>
-        </Brand>
+        <Brand>[BASIN]</Brand>
         <RightSide>
           <NavLinks>
             <NavLink to="/wells">Liquidity</NavLink>
@@ -37,6 +35,7 @@ export const Frame: FC<{}> = ({ children }) => {
 const TokenMarquee = styled.div`
   display: flex;
   height: 48px;
+  min-height: 48px;
   box-sizing: border-box;
   border-left: 0.5px solid black;
   border-right: 0.5px solid black;
@@ -61,6 +60,7 @@ const NavContainer = styled.nav`
   justify-content: space-between;
   width: 100vw;
   height: 64px;
+  min-height: 64px;
   box-sizing: border-box;
   padding: 0px 48px;
   align-items: center;
@@ -82,7 +82,10 @@ const NavLink = styled(Link)`
 
   text-decoration: none;
   text-transform: uppercase;
-  font-weight: 700;
+
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
   color: black;
   outline: none !important;
 
@@ -117,6 +120,9 @@ const Brand = styled.div`
   display: flex;
   align-self: stretch;
   align-items: center;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
 `;
 
 const ConnectionContainer = styled.div`

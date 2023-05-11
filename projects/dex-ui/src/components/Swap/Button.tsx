@@ -28,12 +28,12 @@ const StyledButton = styled.button<ButtonProps>`
   height: 48px;
   border: none;
   color: ${({ disabled, $loading }) => (disabled ? "#fff" : $loading ? "#fff" : "#fff")};
-  line-height: 24px;
-  text-transform: uppercase;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
 
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
 
   :hover {
     outline: ${({ disabled }) => (disabled ? "none" : "2px solid #46b955")};

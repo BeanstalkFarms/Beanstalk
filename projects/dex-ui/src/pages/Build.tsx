@@ -1,11 +1,12 @@
 import React from "react";
+import { Title } from "src/components/PageComponents/Title";
 
 
 export const Build = () => {
   return (
     <div>
-      <h2>Build</h2>
-      <div>[WIP] //</div>
+      <Title title="Build"/>
+      <div> // wip</div>
     </div>
   );
 };
