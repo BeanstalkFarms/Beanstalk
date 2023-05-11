@@ -385,7 +385,7 @@ library LibTokenSilo {
         returns (uint256 _grownStalk, int96 stem)
     {
         int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
-        stem = _stemTipForToken-toInt96(grownStalk.div(bdv));
+        stem = _stemTipForToken.sub(toInt96(grownStalk.div(bdv)));
         _grownStalk = uint256(_stemTipForToken.sub(stem).mul(toInt96(bdv)));
     }
 
@@ -404,10 +404,7 @@ library LibTokenSilo {
         //end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
         int96 grownStalkPerBdv = bdv > 0 ? toInt96(grownStalk.div(bdv)) : 0;
         //then subtract from the current latest index, so we get the index the deposit should have happened at
-        //note that we want this to be able to "subtraction overflow" aka go below zero, because
-        //there will be many cases where you'd want to convert and need to go far back enough in the
-        //grown stalk index to need a negative index
-        return _stemTipForToken - grownStalkPerBdv;
+        return _stemTipForToken.sub(grownStalkPerBdv);
     }
 
     function toInt96(uint256 value) internal pure returns (int96 downcasted) {

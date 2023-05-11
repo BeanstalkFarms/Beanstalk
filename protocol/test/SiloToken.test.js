@@ -158,7 +158,7 @@ describe('Silo Token', function () {
       });
 
       //it uses grownStalkForDeposit to verify the deposit amount is correct
-      it.only('verifies the grown stalk for deposit is correct', async function () {
+      it('verifies the grown stalk for deposit is correct', async function () {
         expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq(to6('0'));
         //verify still correct after one season
         await this.season.lightSunrise();
