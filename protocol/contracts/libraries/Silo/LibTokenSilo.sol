@@ -362,9 +362,8 @@ library LibTokenSilo {
          // and thus the cast to `uint256` is safe.
         uint deltaStemTip = uint256(_stemTip.sub(stem));
         (, uint bdv) = tokenDeposit(account, token, stem);
-        
+
         grownStalk = deltaStemTip.mul(bdv);
-        
     }
 
     //this does not include stalk that has not been mowed

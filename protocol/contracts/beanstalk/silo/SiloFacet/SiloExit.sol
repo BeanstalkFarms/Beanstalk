@@ -154,7 +154,7 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint grownStalk)
     {
-        LibTokenSilo.grownStalkForDeposit(account, token, stem);
+        return LibTokenSilo.grownStalkForDeposit(account, token, stem);
     }
     
     /**

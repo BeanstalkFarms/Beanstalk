@@ -162,7 +162,7 @@ describe('Silo Token', function () {
         expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq(to6('0'));
         //verify still correct after one season
         await this.season.lightSunrise();
-        expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq(to6('1000000'));
+        expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq('1000');
       });
     });
   
