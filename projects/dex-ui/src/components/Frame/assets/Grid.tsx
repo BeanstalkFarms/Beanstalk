@@ -6,6 +6,7 @@ import throttle from "lodash/throttle";
 import { roundPathCorners } from "./Rounding";
 // @ts-ignore
 import Segment from "segment-js";
+import styled from "styled-components";
 
 type Grid = {
   bigGrid?: boolean;
@@ -105,7 +106,7 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
   useRequestAnimationFrame(animate, {});
 
   return (
-    <svg ref={svgRef} width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <Svg ref={svgRef} width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g id="Grid" className="grid">
         <defs>{gridPattern}</defs>
         <rect x={0} y={0} width={width} height={2000} fill="#F9F8F6" />
@@ -122,9 +123,16 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
           strokeLinecap="round"
         />
       </g>
-    </svg>
+    </Svg>
   );
 };
+
+const Svg = styled.svg`
+  // // position: fixed;
+  // top: 0;
+  // left: 0;
+  // z-index: 1;
+`;
 
 const snap = (pos: number) => {
   const grid = 24;
