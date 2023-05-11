@@ -6,20 +6,14 @@ import { ConnectKitButton } from "connectkit";
 import { useNetwork } from "wagmi";
 import grid from "src/assets/images/grid.svg";
 import { Footer } from "./Footer";
+import { Window } from "./Window";
 
-export const Frame: FC<{}> = ({ children }) => {
+type Props = {
+  routes: Record<string, JSX.Element>;
+};
+
+export const Frame: FC<Props> = ({ children, routes }) => {
   const { chain } = useNetwork();
-  let net;
-  switch (chain?.name) {
-    case "localhost:8545":
-      net = "DEV";
-      break;
-    case "Ethereum":
-      net = "ETH";
-      break;
-    default:
-      net = "X";
-  }
 
   return (
     <Container id="frame">
@@ -40,7 +34,7 @@ export const Frame: FC<{}> = ({ children }) => {
         </RightSide>
       </NavContainer>
       <TokenMarquee />
-      <ContentContainer>{children}</ContentContainer>
+      <Window routes={routes}>{children}</Window>
       <Footer />
     </Container>
   );
@@ -116,10 +110,10 @@ const ContentContainer = styled.main`
   box-sizing: border-box;
   width: 100vw;
   flex: 1;
-  background-color: #f9f8f6; // grid background
+  // background-color: #f9f8f6; // grid background
+  // background-image: url("${grid}");
   border-left: 0.5px solid black;
   border-right: 0.5px solid black;
-  background-image: url("${grid}");
   padding: 48px;
   overflow-y: scroll;
   overflow-x: hidden;
