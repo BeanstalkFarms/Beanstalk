@@ -27,13 +27,13 @@ library LibWhitelist {
      * ```
      * 
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
-     * @param stalkEarnedPerBdv The Stalk per BDV received from depositing `token`.
+     * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
-        uint256 stalkEarnedPerBdv
+        uint256 stalkIssuedPerBdv
     );
 
     /**
