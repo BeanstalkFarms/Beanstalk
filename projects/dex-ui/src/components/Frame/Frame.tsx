@@ -8,13 +8,7 @@ import grid from "src/assets/images/grid.svg";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
 
-type Props = {
-  routes: Record<string, JSX.Element>;
-};
-
-export const Frame: FC<Props> = ({ children, routes }) => {
-  const { chain } = useNetwork();
-
+export const Frame: FC<{}> = ({ children }) => {
   return (
     <Container id="frame">
       <NavContainer>
@@ -34,7 +28,7 @@ export const Frame: FC<Props> = ({ children, routes }) => {
         </RightSide>
       </NavContainer>
       <TokenMarquee />
-      <Window routes={routes}>{children}</Window>
+      <Window>{children}</Window>
       <Footer />
     </Container>
   );

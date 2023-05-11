@@ -10,29 +10,10 @@ import { Frame } from "src/components/Frame/Frame";
 import { Build } from "src/pages/Build";
 
 export const App = ({}) => {
-  const [prevLocation, setPrevLocation] = useState<Location>();
-  const [curLocation, setCurLocation] = useState<Location>();
-  const location = useLocation();
-  useEffect(() => {
-    if (curLocation! !== location) {
-      setCurLocation(location);
-    }
-    if (prevLocation! !== curLocation) {
-      setPrevLocation(curLocation);
-    }
-  }, [location]);
-  // console.log("loc", location?.pathname, "cur: ", curLocation?.pathname, "prev ", prevLocation?.pathname);
-  // console.log(location);
-  const routes = useMemo<Record<string, JSX.Element>>(() => {
-    return {
-      "/wells": <Wells />,
-      "/build": <Build />,
-      "/swap": <SwapPage />
-    };
-  }, []);
+
   return (
-    <Frame routes={routes}>
-      {/* <Routes>
+    <Frame>
+      <Routes>
         <Route index element={<Home />} />
         <Route path="/wells" element={<Wells />} />
         <Route path="/wells/:address" element={<Well />} />
@@ -40,7 +21,7 @@ export const App = ({}) => {
         <Route path="/swap" element={<SwapPage />} />
         <Route path="/dev" element={<Dev />} />
         <Route path="*" element={<NotFound />} />
-      </Routes> */}
+      </Routes>
     </Frame>
   );
 };

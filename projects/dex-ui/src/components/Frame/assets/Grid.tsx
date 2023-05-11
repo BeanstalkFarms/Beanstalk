@@ -8,16 +8,16 @@ import { roundPathCorners } from "./Rounding";
 import Segment from "segment-js";
 
 type Grid = {
-  width: number;
   bigGrid?: boolean;
 };
 
-export const Grid: FC<Grid> = ({ width = 500, bigGrid = false }) => {
+export const Grid: FC<Grid> = ({ bigGrid = false }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const item = useRef<SVGEllipseElement>(null);
   const mouseLocations = useRef<Queue>(new Queue(10));
   const segment = useRef();
 
+  const width = 3000;
   const SMALL_SPACING = 24;
   const BIG_SPACING = SMALL_SPACING * 10;
 
