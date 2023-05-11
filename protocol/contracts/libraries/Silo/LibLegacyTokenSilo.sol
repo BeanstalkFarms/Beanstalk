@@ -351,14 +351,9 @@ library LibLegacyTokenSilo {
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
     ) internal returns (uint256) {
-        //typically a migrationNeeded should be enough to allow the user to migrate, however
-        //for Unripe unit testing convenience, (Update Unripe Deposit -> "1 deposit, some", 
-        //"1 deposit after 1 season, all", and "2 deposit, all" tests), they cannot migrate
-        //since the test expects to add a Legacy deposit (which updates lastUpdated) and
-        //migrate in the same season, which doesn't work since lastUpdated is updated
-        //on deposit. By allow migration if balanceOfSeeds > 0, everything works smoothly.
-        //You would never be able to migrate twice since the old deposits would be removed already,
-        //and balanceOfSeeds would be 0 on 2nd migration attempt.
+        //The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
+        //in the same Season as BIP execution. Such that s.a[account].lastUpdate == s.season.stemStartSeason,
+        //but they have not migrated yet
         require((LibSilo.migrationNeeded(account) || balanceOfSeeds(account) > 0), "no migration needed");
 
 
