@@ -13,6 +13,7 @@ import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
 import { Title } from "../PageComponents/Title";
+import { Page } from "../Frame/assets/Page";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -153,50 +154,52 @@ export const SwapRoot = () => {
   }, [account, inAmount, needsApproval, outAmount]);
 
   return (
-    <Container>
-      <SwapHeaderContainer>
-        <Title title="Swap"/>
-        <div>
-          <Image src={gear} size={16} alt="Transaction Settings" />
-        </div>
-      </SwapHeaderContainer>
-      <Div>
-        <SwapInputContainer>
-          <TokenInput
-            id="input-amount"
-            label={`Input amount in ${inToken.symbol}`}
-            token={inToken}
-            amount={inAmount}
-            onAmountChange={handleInputChange}
-            onTokenChange={handleInputTokenChange}
-            canChangeToken={true}
-            loading={isLoadingAllBalances}
-          />
-        </SwapInputContainer>
-        <ArrowContainer>
-          <ArrowButton onClick={arrowHandler} />
-        </ArrowContainer>
+    <Page>
+      <Container>
+        <SwapHeaderContainer>
+          <Title title="Swap" />
+          <div>
+            <Image src={gear} size={16} alt="Transaction Settings" />
+          </div>
+        </SwapHeaderContainer>
+        <Div>
+          <SwapInputContainer>
+            <TokenInput
+              id="input-amount"
+              label={`Input amount in ${inToken.symbol}`}
+              token={inToken}
+              amount={inAmount}
+              onAmountChange={handleInputChange}
+              onTokenChange={handleInputTokenChange}
+              canChangeToken={true}
+              loading={isLoadingAllBalances}
+            />
+          </SwapInputContainer>
+          <ArrowContainer>
+            <ArrowButton onClick={arrowHandler} />
+          </ArrowContainer>
 
-        <SwapInputContainer>
-          <TokenInput
-            id="output-amount"
-            label={`Output amount in ${inToken.symbol}`}
-            token={outToken}
-            amount={outAmount}
-            onAmountChange={handleOutputChange}
-            onTokenChange={handleOutputTokenChange}
-            canChangeToken={true}
-            showBalance={true}
-            showMax={false}
-            loading={isLoadingAllBalances}
-          />
-        </SwapInputContainer>
-      </Div>
-      <SwapDetailsContainer>Details</SwapDetailsContainer>
-      <SwapButtonContainer>
-        <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
-      </SwapButtonContainer>
-    </Container>
+          <SwapInputContainer>
+            <TokenInput
+              id="output-amount"
+              label={`Output amount in ${inToken.symbol}`}
+              token={outToken}
+              amount={outAmount}
+              onAmountChange={handleOutputChange}
+              onTokenChange={handleOutputTokenChange}
+              canChangeToken={true}
+              showBalance={true}
+              showMax={false}
+              loading={isLoadingAllBalances}
+            />
+          </SwapInputContainer>
+        </Div>
+        <SwapDetailsContainer>Details</SwapDetailsContainer>
+        <SwapButtonContainer>
+          <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
+        </SwapButtonContainer>
+      </Container>
+    </Page>
   );
 };
 
@@ -220,7 +223,6 @@ const SwapHeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
 
-  
   align-items: center;
 `;
 
@@ -228,7 +230,6 @@ const SwapInputContainer = styled.div`
   // outline: 1px dashed green;
   display: flex;
   flex-direction: row;
-
 `;
 const ArrowContainer = styled.div`
   // border: 1px dashed orange;
