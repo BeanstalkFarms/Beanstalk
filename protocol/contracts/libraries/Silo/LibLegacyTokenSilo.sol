@@ -17,11 +17,13 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 /**
  * @title LibLegacyTokenSilo
- * @author Publius
- * @notice Contains functions for depositing, withdrawing and claiming
- * whitelisted Silo tokens.
- *
- * For functionality related to Seeds, Stalk, and Roots, see {LibSilo}.
+ * @author Publius, pizzaman1337
+ * @notice Contains legacy silo logic, used for migrating to the
+ * new SiloV3 stems-based system, and for claiming in-flight withdrawals
+ * from the old silo system.
+ * 
+ * After all Silos are migrated to V3 and all deposits are claimed, this 
+ * library should no longer be necessary.
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
