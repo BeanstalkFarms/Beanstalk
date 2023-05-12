@@ -12,7 +12,7 @@ export const Row = styled.tr`
 
   :hover {
     cursor: pointer;
-    background-color: #F0FDF4;
+    background-color: #f0fdf4;
   }
 `;
 export const Th = styled.th`
@@ -30,7 +30,10 @@ export const Td = styled.td`
   text-align: ${(props) => props.align || "left"};
 `;
 export const THead = styled.thead`
-  background-color: #f9f9f9;
-  border-bottom: 0.5px solid #000;
+  ${Row} {
+    height: 48px;
+    background-color: #f9f9f9;
+    border-bottom: 0.5px solid #000;
+  }
 `;
 export const TBody = styled.tbody``;
