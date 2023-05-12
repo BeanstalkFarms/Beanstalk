@@ -1,6 +1,7 @@
 import { Well } from "@beanstalk/sdk/Wells";
 import React, { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Page } from "src/components/Frame/assets/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { Row, TBody, THead, Table, Td, Th, Tr } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";
@@ -48,8 +49,8 @@ export const Wells = () => {
   });
 
   return (
-    <Container>
-      <Title title="Liquidity"/>
+    <Page>
+      <Title title="Liquidity" />
 
       <Table>
         <THead>
@@ -60,15 +61,9 @@ export const Wells = () => {
         </THead>
         <TBody>{rows}</TBody>
       </Table>
-    </Container>
+    </Page>
   );
 };
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-`;
 
 const WellDetail = styled.div``;
 const TokenLogos = styled.div`
