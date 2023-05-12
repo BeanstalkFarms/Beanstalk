@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { ConnectKitButton } from "connectkit";
-import { useNetwork } from "wagmi";
+
 import grid from "src/assets/images/grid.svg";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
