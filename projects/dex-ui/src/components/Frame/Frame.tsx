@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { ConnectKitButton } from "connectkit";
-
-import grid from "src/assets/images/grid.svg";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
 
@@ -99,21 +97,6 @@ const RightSide = styled.div`
   flex-direction: row;
   align-self: stretch;
   align-items: center;
-`;
-
-const ContentContainer = styled.main`
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  width: 100vw;
-  flex: 1;
-  // background-color: #f9f8f6; // grid background
-  // background-image: url("${grid}");
-  border-left: 0.5px solid black;
-  border-right: 0.5px solid black;
-  padding: 48px;
-  overflow-y: scroll;
-  overflow-x: hidden;
 `;
 
 const Brand = styled.div`

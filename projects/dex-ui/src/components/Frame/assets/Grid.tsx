@@ -1,117 +1,56 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useRef } from "react";
 // @ts-ignore
-import Segment from "segment-js";
+
 import { FC } from "src/types";
-import useRequestAnimationFrame from "./useAnimationFrame";
-import { Queue } from "./Queue";
-import throttle from "lodash/throttle";
-import { roundPathCorners } from "./Rounding";
+
 import styled from "styled-components";
-import segment_js from "src/types/segment-js";
+
+import { useWiggle } from "./useWiggle";
 
 type Grid = {
   bigGrid?: boolean;
+  gridSize?: number;
 };
 
-export const Grid: FC<Grid> = ({ bigGrid = false }) => {
+export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const item = useRef<SVGEllipseElement>(null);
-  const mouseLocations = useRef<Queue>(new Queue(10));
-  const segment = useRef<segment_js>();
+  const pathRef = useRef<SVGPathElement>(null);
 
   const width = 3000;
-  const SMALL_SPACING = 24;
-  const BIG_SPACING = SMALL_SPACING * 10;
+  const bigGridSize = gridSize * 10;
 
-  const gridPattern = (
-    <React.Fragment>
-      <pattern id="smallGrid" width={SMALL_SPACING} height={SMALL_SPACING} patternUnits="userSpaceOnUse">
-        <path
-          style={{
-            strokeWidth: "1px",
-            stroke: "#D6D3D1"
-          }}
-          d={`M ${SMALL_SPACING} 0 L 0 0 0 ${SMALL_SPACING}`}
-          stroke="#eee"
-        />
-      </pattern>
-      <pattern id="bigGrid" width={BIG_SPACING} height={BIG_SPACING} patternUnits="userSpaceOnUse">
-        <rect width={BIG_SPACING} height={BIG_SPACING} fill="url(#smallGrid)" />
-        <path
-          style={{
-            strokeWidth: "3px",
-            stroke: "#D6D3D1"
-          }}
-          d={`M ${BIG_SPACING} 0 L 0 0 0 ${BIG_SPACING}`}
-          fill="none"
-        />
-      </pattern>
-    </React.Fragment>
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousemove", mouseMove);
-    return () => {
-      document.removeEventListener("mousemove", mouseMove);
-    };
-  });
-
-  const mouseMove = throttle((e: MouseEvent) => {
-    const svg = svgRef.current;
-    const prev = mouseLocations.current.last();
-
-    if (!svg) return;
-
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX;
-    pt.y = e.clientY;
-    const loc = pt.matrixTransform(svg.getScreenCTM()?.inverse());
-    loc.x = snap(loc.x);
-    loc.y = snap(loc.y);
-
-    noDiagonal(loc, prev);
-    mouseLocations.current.push(loc);
-    if (segment.current) {
-      segment.current.stop();
-    }
-    segment.current = new Segment(item.current!);
-    segment.current!.draw("100%", "100%", 0.1, {
-      // Once the segment animation is over, delete all points (ie, delete the path)
-      callback: () => {
-        console.log("done");
-        mouseLocations.current.items = [];
-      }
-    });
-  }, 20); // <-- THIS IS IMPORTANT: It affects the "resolution" of the path
-
-  const animate = (_: number) => {
-    const path = item.current;
-    if (!path) return;
-
-    let pathData = "";
-    const points = mouseLocations.current.items as DOMPoint[];
-    for (const [i, point] of points.entries()) {
-      const { x, y } = point;
-      if (i == 0) {
-        pathData = `M ${x} ${y}`;
-      } else {
-        pathData = `${pathData} L ${x} ${y}`;
-      }
-    }
-    const roundedPathData = roundPathCorners(pathData, 4.5, false);
-    path.setAttribute("d", roundedPathData);
-  };
-
-  useRequestAnimationFrame(animate, {});
-
+  useWiggle(pathRef, svgRef);
   return (
     <Svg ref={svgRef} width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g id="Grid" className="grid">
-        <defs>{gridPattern}</defs>
+        <defs>
+          {" "}
+          <pattern id="smallGrid" width={gridSize} height={gridSize} patternUnits="userSpaceOnUse">
+            <path
+              style={{
+                strokeWidth: "1px",
+                stroke: "#D6D3D1"
+              }}
+              d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`}
+              stroke="#eee"
+            />
+          </pattern>
+          <pattern id="bigGrid" width={bigGridSize} height={bigGridSize} patternUnits="userSpaceOnUse">
+            <rect width={bigGridSize} height={bigGridSize} fill="url(#smallGrid)" />
+            <path
+              style={{
+                strokeWidth: "3px",
+                stroke: "#D6D3D1"
+              }}
+              d={`M ${bigGridSize} 0 L 0 0 0 ${bigGridSize}`}
+              fill="none"
+            />
+          </pattern>
+        </defs>
         <rect x={0} y={0} width={width} height={2000} fill="#F9F8F6" />
         <rect x={0} y={0} width={width} height={2000} fill={`url(#${bigGrid ? "bigGrid" : "smallGrid"})`} />
         <path
-          ref={item}
+          ref={pathRef}
           style={{
             strokeWidth: "2.5px",
             stroke: "rgb(70 185 85 / 70%)"
@@ -127,28 +66,3 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
 };
 
 const Svg = styled.svg``;
-
-const snap = (pos: number) => {
-  const grid = 24;
-  const quotient = Math.floor(pos / grid);
-  const remainder = pos % grid;
-  const final = remainder >= grid / 2 ? quotient + 1 : quotient;
-
-  return final * grid;
-};
-
-/**
- * Mutates the `pos` parameter!
- */
-const noDiagonal = (pos: DOMPoint, prev: DOMPoint) => {
-  if (!prev) return;
-  if (pos.x !== prev.x && pos.y !== prev.y) {
-    const dx = Math.abs(pos.x - prev.x);
-    const dy = Math.abs(pos.y - prev.y);
-    if (dx >= dy) {
-      pos.y = prev.y;
-    } else {
-      pos.x = prev.x;
-    }
-  }
-};
