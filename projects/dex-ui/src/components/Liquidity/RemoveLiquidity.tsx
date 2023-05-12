@@ -466,10 +466,6 @@ const Radio = styled.input`
   height: 1em;
   background-color: white;
   border-radius: 50%;
-
-  // :checked {
-  //   background-color: yellow;
-  // }
 `;
 
 const TokenAmount = styled.div`

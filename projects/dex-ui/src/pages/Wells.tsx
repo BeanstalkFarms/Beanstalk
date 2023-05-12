@@ -22,7 +22,7 @@ export const Wells = () => {
     const gotoWell = () => navigate(`/wells/${well.address}`);
 
     tokens.map((token) => {
-      logos.push(<TokenLogo token={token} size={25} />);
+      logos.push(<TokenLogo token={token} size={25} key={token.symbol} />);
       symbols.push(token.symbol);
     });
 
@@ -54,10 +54,12 @@ export const Wells = () => {
 
       <Table>
         <THead>
-          <Th>Pool Name and Details</Th>
-          <Th>Pricing Function</Th>
-          <Th>Pump(s)</Th>
-          <Th align="right">Total Liquidity</Th>
+          <Row>
+            <Th>Well Name and Details</Th>
+            <Th>Pricing Function</Th>
+            <Th>Pump(s)</Th>
+            <Th align="right">Total Liquidity</Th>
+          </Row>
         </THead>
         <TBody>{rows}</TBody>
       </Table>
