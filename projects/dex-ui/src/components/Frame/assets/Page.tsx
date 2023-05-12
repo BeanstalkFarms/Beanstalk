@@ -8,7 +8,8 @@ export const Page: FC<{}> = ({ children }) => {
 };
 
 const PageContainer = styled.div`
-  // border: 3px solid red;
   display: flex;
+  flex-direction: column;
+  gap: 24px;
   padding: 48px;
 `;

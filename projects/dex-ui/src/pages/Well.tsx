@@ -11,6 +11,7 @@ import { TokenValue } from "@beanstalk/sdk";
 import { H1 } from "src/components/Typography";
 import styled from "styled-components";
 import { Title } from "src/components/PageComponents/Title";
+import { Page } from "src/components/Frame/assets/Page";
 
 export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
@@ -19,14 +20,8 @@ export const Well = () => {
   const title = (well?.tokens ?? []).map((t) => t.symbol).join(":");
 
   return (
-    <Container>
+    <Page>
       <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} />
-    </Container>
+    </Page>
   );
 };
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-`;

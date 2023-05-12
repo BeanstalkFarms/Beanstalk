@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+// @ts-ignore
+import Segment from "segment-js";
 import { FC } from "src/types";
 import useRequestAnimationFrame from "./useAnimationFrame";
 import { Queue } from "./Queue";
 import throttle from "lodash/throttle";
 import { roundPathCorners } from "./Rounding";
-// @ts-ignore
-import Segment from "segment-js";
 import styled from "styled-components";
+import segment_js from "src/types/segment-js";
 
 type Grid = {
   bigGrid?: boolean;
@@ -16,7 +17,7 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const item = useRef<SVGEllipseElement>(null);
   const mouseLocations = useRef<Queue>(new Queue(10));
-  const segment = useRef();
+  const segment = useRef<segment_js>();
 
   const width = 3000;
   const SMALL_SPACING = 24;
@@ -70,13 +71,11 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
 
     noDiagonal(loc, prev);
     mouseLocations.current.push(loc);
-    // @ts-ignore
     if (segment.current) {
       segment.current.stop();
     }
-    segment.current = new Segment(item.current);
-    // segment.current.draw('100%', '100%', .25);
-    segment.current.draw("100%", "100%", 0.1, {
+    segment.current = new Segment(item.current!);
+    segment.current!.draw("100%", "100%", 0.1, {
       // Once the segment animation is over, delete all points (ie, delete the path)
       callback: () => {
         console.log("done");
@@ -127,9 +126,7 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
   );
 };
 
-const Svg = styled.svg`
-
-`;
+const Svg = styled.svg``;
 
 const snap = (pos: number) => {
   const grid = 24;
