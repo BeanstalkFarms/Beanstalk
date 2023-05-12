@@ -16,7 +16,8 @@ library LibConvertData {
         UNRIPE_LP_TO_UNRIPE_BEANS,
         LAMBDA_LAMBDA,
         BEANS_TO_WELL_LP,
-        WELL_LP_TO_BEANS
+        WELL_LP_TO_BEANS,
+        UNRIPE_BEANS_TO_BEANS
     }
 
     /// @notice Decoder for the Convert Enum

@@ -58,6 +58,9 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
                 .convertLPToBeans(convertData);
+        } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_BEANS) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
+                .convertUnripeBeansToBeans(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
@@ -95,6 +98,10 @@ library LibConvert {
         // Well LP Token -> Bean
         if (tokenIn.isWell() && tokenOut == C.beanAddress())
             return LibWellConvert.lpToPeg(tokenIn);
+        
+        // UrBEAN -> Bean
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.beanAddress())
+            return LibChopConvert.lpToPeg(tokenIn);
 
         revert("Convert: Tokens not supported");
     }
@@ -131,6 +138,10 @@ library LibConvert {
         // Well LP Token -> Bean
         if (tokenIn.isWell() && tokenOut == C.beanAddress())
             return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
+        
+        // UrBEAN -> Bean
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.beanAddress())
+            return LibChopConvert.getBeanAmountOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
     }
