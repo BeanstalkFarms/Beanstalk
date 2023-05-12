@@ -128,10 +128,7 @@ export const Grid: FC<Grid> = ({ bigGrid = false }) => {
 };
 
 const Svg = styled.svg`
-  // // position: fixed;
-  // top: 0;
-  // left: 0;
-  // z-index: 1;
+
 `;
 
 const snap = (pos: number) => {
