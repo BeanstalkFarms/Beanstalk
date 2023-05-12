@@ -9,7 +9,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import BigNumber from 'bignumber.js';
 import GovernanceActions from '~/components/Governance/Actions';
 import ProposalContent from '~/components/Governance/Proposal';
 import { useProposalQuery } from '~/generated/graphql';
@@ -19,7 +18,6 @@ import PageNotFound from '~/pages/error/404';
 import { FC } from '~/types';
 import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
 import useAccount from '~/hooks/ledger/useAccount';
-import { ZERO_BN } from '~/constants';
 import PagePath from '~/components/Common/PagePath';
 
 const getCrumbTitle = (title: string) => {
@@ -33,10 +31,6 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
 
   /// Query: Quorum
   const quorum = useProposalBlockData(proposal, account);
-  const score =
-    proposal.space.id === 'wearebeansprout.eth'
-      ? new BigNumber(proposal.scores_total || ZERO_BN)
-      : new BigNumber(proposal.scores[0] || ZERO_BN);
 
   return (
     <Container maxWidth="lg">
@@ -50,7 +44,6 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
             },
           ]}
         />
-        {/* <PageHeader returnPath="/governance" /> */}
         <Grid
           container
           wrap="nowrap"
