@@ -35,14 +35,6 @@ library LibLegacyTokenSilo {
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
     bytes32 constant DISCREPANCY_MERKLE_ROOT = 0xb81b71efcfb245c4d596e20e403b2a6f70c05c68f59a5e57083881eacacc9671;
 
-    //important to note that this event is only here for unit tests purposes of legacy code and to ensure unripe all works with new bdv system
-    event AddDeposit(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount,
-        uint256 bdv
-    );
 
     //this is the legacy seasons-based remove deposits event, emitted on migration
     event RemoveDeposit(
