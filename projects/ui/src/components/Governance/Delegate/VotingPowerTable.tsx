@@ -10,7 +10,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import useAccount from '~/hooks/ledger/useAccount';
 import AddressIcon from '~/components/Common/AddressIcon';
 import beanNFTIconDark from '~/img/tokens/beanft-dark-logo.svg';
-import useFarmerVotingPower from '~/hooks/beanstalk/useFarmerVotingPower';
+import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
 const FarmerRow: React.FC<{
   address: string;

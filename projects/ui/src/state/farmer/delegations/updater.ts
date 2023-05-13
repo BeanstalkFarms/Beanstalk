@@ -53,7 +53,7 @@ export function useReadDelegatesDev() {
       );
       const mapped = result.reduce((prev, curr) => ({ ...prev, ...curr }), {});
 
-      console.debug('[useReadDelegatesDev] RESULT = ', mapped);
+      console.debug('[useReadDelegatesDev/fetch] RESULT = ', mapped);
 
       dispatch(setFarmerDelegates(mapped));
       return mapped;
@@ -106,12 +106,12 @@ export function useFetchFarmerDelegates() {
           {}
         );
 
-        console.debug('[farmer/delegations/fetchDelegates] RESULT =', result);
+        console.debug('[useFetchFarmerDelegates/fetch] RESULT =', result);
 
         shouldDispatch && dispatch(setFarmerDelegates(result));
         return result;
       } catch (e) {
-        console.debug('[useFarmerDelegations/fetchDelegates] FAILED:', e);
+        console.debug('[useFetchFarmerDelegates/fetch] FAILED:', e);
         return undefined;
       }
     },
@@ -170,12 +170,12 @@ export function useFetchFarmerDelegators() {
           {}
         );
 
-        console.debug('[farmer/delegations/fetchDelegators] RESULT = ', result);
+        console.debug('[useFetchFarmerDelegators/fetch] RESULT = ', result);
 
         shouldDispatch && dispatch(setFarmerDelegators(result));
         return result;
-      } catch (e) {
-        console.debug('[useFarmerDelegations/fetchDelegators] FAILED:', e);
+      } catch (err) {
+        console.debug('[useFetchFarmerDelegators/fetch] FAILED:', err);
         return undefined;
       }
     },
@@ -232,14 +232,11 @@ export function useFetchNFTVotingPower() {
         })
       );
 
-      console.debug(
-        '[farmer/delegations/useFetchNFTVotingPower] RESULT = ',
-        votingPower
-      );
+      console.debug('[useFetchNFTVotingPower/fetch] RESULT = ', votingPower);
 
       return votingPower;
     } catch (err) {
-      console.debug('[farmer/delegations/useFetchNFTVotingPower] FAILED:', err);
+      console.debug('[useFetchNFTVotingPower/fetch] FAILED:', err);
       return undefined;
     }
   }, [account, delegators, dispatch, triggerQuery]);
@@ -328,17 +325,11 @@ export function useFetchStalkVotingPower() {
         }
       });
 
-      console.debug(
-        '[farmer/delegations/useFetchStalkVotingPower] Result = ',
-        votingPower
-      );
+      console.debug('[useFetchStalkVotingPower/fetch] Result = ', votingPower);
 
       return votingPower;
     } catch (err) {
-      console.debug(
-        '[farmer/delegations/useFetchStalkVotingPower] FAILED:',
-        err
-      );
+      console.debug('[useFetchStalkVotingPower/fetch] FAILED:', err);
       return undefined;
     }
   }, [account, delegators.length, triggerQuery, farmerDelegators, dispatch]);

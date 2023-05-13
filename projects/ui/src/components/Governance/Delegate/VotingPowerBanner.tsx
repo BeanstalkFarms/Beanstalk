@@ -6,21 +6,19 @@ import { GovSpace } from '~/lib/Beanstalk/Governance';
 
 import { BeanstalkPalette, IconSize } from '../../App/muiTheme';
 import { STALK } from '~/constants/tokens';
-import { displayFullBN } from '~/util';
+import { GOV_SLUGS, displayFullBN, getGovSpaceWithTab } from '~/util';
 import Row from '../../Common/Row';
 import TokenIcon from '../../Common/TokenIcon';
 import useAccount from '~/hooks/ledger/useAccount';
 import beanNFTIconDark from '~/img/tokens/beanft-dark-logo.svg';
-import useFarmerVotingPower from '~/hooks/beanstalk/useFarmerVotingPower';
+import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
 const VotingPowerBanner: React.FC<{
   tab: number;
-  getSlug: (_tab: number) => string;
-  space: GovSpace;
-}> = ({ tab, space, getSlug }) => {
+  votingPower: ReturnType<typeof useFarmerVotingPower>['votingPower'];
+}> = ({ tab, votingPower }) => {
   const account = useAccount();
-
-  const { votingPower } = useFarmerVotingPower(space);
+  const space = getGovSpaceWithTab(tab);
 
   const isNFT = space === GovSpace.BeanNFT;
 
@@ -40,7 +38,7 @@ const VotingPowerBanner: React.FC<{
           borderColor: 'primary.main',
         },
       }}
-      to={`/governance/vp/${getSlug(tab)}`}
+      to={`/governance/vp/${GOV_SLUGS[tab]}`}
       component={RouterLink}
     >
       <Row justifyContent="space-between" width="100%" p={2}>

@@ -8,17 +8,18 @@ import {
   GOV_SLUGS_TAB_MAP,
   Proposal,
   getGovSpaceLabel,
+  getGovSpaceWithTab,
 } from '~/util/Governance';
 import { Module, ModuleTabs, ModuleContent } from '../Common/Module';
-import { StyledTab, ChipLabel } from '../Common/Tabs';
+import { StyledTab, ChipLabel } from '~/components/Common/Tabs';
 import ProposalList from './Proposals/ProposalList';
-import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
+import { useAppSelector } from '~/state';
+import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
 const GovernanceSpaces: React.FC<{}> = () => {
   const [tab, handleChange] = useTabs(GOV_SLUGS, 'type');
-  const farmerDelegations = useFarmerDelegations();
-
-  const getSlug = useCallback((_tab: number) => GOV_SLUGS[_tab], []);
+  const farmerDelegations = useAppSelector((s) => s._farmer.delegations);
+  const votingPower = useFarmerVotingPower(getGovSpaceWithTab(tab));
 
   // Query Proposals
   const { loading, data } = useProposalsQuery({
@@ -138,8 +139,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
         {tab === 0 && (
           <ProposalList
             tab={0}
-            getSlug={getSlug}
-            space={GovSpace.BeanstalkDAO}
+            votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
             proposals={daoProposals.allProposals}
           />
@@ -147,28 +147,25 @@ const GovernanceSpaces: React.FC<{}> = () => {
         {tab === 1 && (
           <ProposalList
             tab={1}
-            getSlug={getSlug}
-            space={GovSpace.BeanstalkFarms}
+            votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={beanstalkFarmsProposals.allProposals}
+            proposals={daoProposals.allProposals}
           />
         )}
         {tab === 2 && (
           <ProposalList
             tab={2}
-            getSlug={getSlug}
-            space={GovSpace.BeanSprout}
+            votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={beanSproutProposals.allProposals}
+            proposals={daoProposals.allProposals}
           />
         )}
         {tab === 3 && (
           <ProposalList
             tab={3}
-            getSlug={getSlug}
-            space={GovSpace.BeanNFT}
+            votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={beaNFTDaoProposals.allProposals}
+            proposals={daoProposals.allProposals}
           />
         )}
       </ModuleContent>
