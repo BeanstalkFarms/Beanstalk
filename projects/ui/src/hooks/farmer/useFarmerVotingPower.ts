@@ -6,6 +6,12 @@ import { ZERO_BN } from '~/constants';
 import { useAppSelector } from '~/state';
 import useFarmerBeaNFTs from '~/hooks/farmer/useFarmerBeaNFTs';
 
+/**
+ * Returns the voting power of the farmer and their delegators.
+ * The voting power returned here is not the voting power for a specific proposal.
+ *
+ * To obtain the voting power for a specific proposal, use `useProposalVotingPowerQuery`.
+ */
 export default function useFarmerVotingPower(space: GovSpace) {
   const farmerDelegators = useAppSelector(
     (state) => state._farmer.delegations.delegators

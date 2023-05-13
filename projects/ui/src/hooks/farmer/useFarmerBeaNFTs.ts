@@ -37,7 +37,10 @@ const parseBeaNFTsResult = (_data: ReturnType<typeof useBeaNftUsersQuery>) => {
   }, {});
 };
 
-export default function useFarmerBeaNFTs(_addresses?: string[]) {
+export default function useFarmerBeaNFTs(
+  _addresses?: string[],
+  skip?: boolean
+) {
   const account = useAccount();
 
   const addresses = _addresses || (account ? [account] : undefined);
@@ -50,7 +53,7 @@ export default function useFarmerBeaNFTs(_addresses?: string[]) {
       subgraph: 'beanft',
     },
     fetchPolicy: 'cache-and-network',
-    skip: !addresses || !addresses.length,
+    skip: !addresses || !addresses.length || skip,
   });
 
   const parsedNFTData = parseBeaNFTsResult(query);
