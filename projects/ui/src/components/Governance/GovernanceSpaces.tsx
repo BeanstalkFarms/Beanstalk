@@ -149,7 +149,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             tab={1}
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={daoProposals.allProposals}
+            proposals={beanstalkFarmsProposals.allProposals}
           />
         )}
         {tab === 2 && (
@@ -157,7 +157,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             tab={2}
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={daoProposals.allProposals}
+            proposals={beanSproutProposals.allProposals}
           />
         )}
         {tab === 3 && (
@@ -165,7 +165,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             tab={3}
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={daoProposals.allProposals}
+            proposals={beaNFTDaoProposals.allProposals}
           />
         )}
       </ModuleContent>
