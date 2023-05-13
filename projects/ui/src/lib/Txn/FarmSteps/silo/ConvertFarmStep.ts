@@ -158,10 +158,10 @@ export class ConvertFarmStep extends FarmStep {
     ];
 
     const index = tokenIn.isUnripe ? 1 : 0;
-
     const path = pathMatrix[index];
-    const tokenOutIndex = Number(Boolean(!tokenIn.isLP));
-    const tokenInIndex = Number(Boolean(tokenIn.isLP));
+
+    const tokenInIndex = path.findIndex((t) => t.equals(tokenIn));
+    const tokenOutIndex = Number(Boolean(!tokenInIndex));
 
     return {
       path: sdkTokenPathMatrix[index],

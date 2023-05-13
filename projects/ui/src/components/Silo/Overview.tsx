@@ -100,7 +100,7 @@ const Overview: FC<{
           sx={{ minWidth: 200, ml: 0 }}
         />
         <Stat
-          title="Stalk Grown per Day"
+          title="Grown Stalk per Day"
           titleTooltip="The number of Stalk your Seeds will grow every 24 Seasons based on your current Seed balance."
           amount={displayStalk(
             farmerSilo.seeds.active.times(STALK_PER_SEED_PER_SEASON).times(24)

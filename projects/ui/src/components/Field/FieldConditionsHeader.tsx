@@ -31,8 +31,7 @@ const FieldConditionsHeader: React.FC<{}> = () => {
           </Typography>
         </Typography>
         <Typography color="text.secondary">
-          Temperature and Available Soil are temporariliy adjusted during the
-          Morning every Season
+          Temperature increases during the Morning each Season.
         </Typography>
       </Stack>
     );

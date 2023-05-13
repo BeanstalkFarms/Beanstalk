@@ -127,11 +127,11 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
               <Typography variant="bodySmall">New Beans</Typography>
             </Grid>
             <Grid item xs={3} md={2} textAlign="right">
-              <Typography variant="bodySmall">Soil</Typography>
+              <Typography variant="bodySmall">Max Soil</Typography>
             </Grid>
             <Grid item xs={4} md={2.75}>
               <Stack alignItems="flex-end">
-                <Typography variant="bodySmall">Temperature</Typography>
+                <Typography variant="bodySmall">Max Temperature</Typography>
               </Stack>
             </Grid>
             <Grid
