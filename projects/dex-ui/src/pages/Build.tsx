@@ -1,13 +1,24 @@
 import React from "react";
-import { Page } from "src/components/Frame/assets/Page";
+import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
-import { BodyL } from "src/components/Typography";
+import styled from "styled-components";
 
 export const Build = () => {
   return (
     <Page>
       <Title title="Build" />
-      <div> // wip</div>
+      <Box data-trace="true"></Box>
+      <Box data-trace="true"></Box>
     </Page>
   );
 };
+
+const Box = styled.div`
+  outline: 0.5px solid black;
+  outline-offset: -0.5px;
+  background-color: #ffffff00;
+  height: 96px;
+  width: 384px;
+  margin-left: 96px;
+  box-sizing: borderbox;
+`;

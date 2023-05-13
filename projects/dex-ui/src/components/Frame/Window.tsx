@@ -1,14 +1,18 @@
-import React from "react";
+import React, { RefCallback, useCallback, useRef, useState } from "react";
 import styled from "styled-components";
 import { FC } from "src/types";
-import { Grid } from "src/components/Frame/assets/Grid";
+import { Grid } from "src/components/Frame/Grid/Grid";
 export const Window: FC<{}> = ({ children }) => {
+  const [contentElement, setContentElement] = useState<HTMLDivElement>();
+
+  const ref: RefCallback<HTMLDivElement> = useCallback((node: HTMLDivElement | null) => {
+    if (node) setContentElement(node);
+  }, []);
+
   return (
     <ViewPort id="viewport">
-      <GridContainer>
-        <Grid />
-      </GridContainer>
-      <Content>{children}</Content>
+      <GridContainer>{contentElement && <Grid content={contentElement} />}</GridContainer>
+      <Content ref={ref}>{children}</Content>
     </ViewPort>
   );
 };
@@ -18,7 +22,6 @@ const ViewPort = styled.main`
   width: 100vw;
   height: 100%;
   overflow: hidden;
-  // overflow-y: auto;
   cursor: crosshair;
   box-sizing: border-box;
 `;

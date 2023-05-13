@@ -8,7 +8,7 @@ type ArrowButtonType = {
 };
 
 export const ArrowButton: FC<ArrowButtonType> = ({ onClick }) => (
-  <Container>
+  <Container data-trace="true" >
     <Button onClick={onClick}>
       <svg width={14} height={20} fill="none" xmlns="http://www.w3.org/2000/svg" strokeWidth={1.5}>
         <path
@@ -32,7 +32,10 @@ const Button = styled.button`
   justify-content: center;
   width: 48px;
   height: 48px;
-  border: 1px solid #9ca3af;
+  outline: 0.5px solid #9ca3af;
+  outline-offset: -.5px;
+  border: none;
+  box-sizing: border-box;
   background-color: #f9f8f6;
   color: #c7c8cb;
 
