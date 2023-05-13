@@ -17,7 +17,7 @@ import {
   setFarmerDelegators,
 } from './actions';
 import { useDelegatesRegistryContract } from '~/hooks/ledger/useContract';
-import { GOV_SPACE_BY_ID, IS_DEV, tokenResult } from '~/util';
+import { GOV_SPACE_BY_ID, tokenResult } from '~/util';
 import { STALK } from '~/constants/tokens';
 import { useAppSelector } from '~/state';
 import { AddressMap, ZERO_ADDRESS } from '~/constants';
@@ -81,7 +81,7 @@ export function useFetchFarmerDelegates() {
   const fetch = useCallback(
     async (_account?: string, options?: { dispatch?: boolean }) => {
       try {
-        if (IS_DEV) return readDelegatesDev(_account);
+        // if (IS_DEV) return readDelegatesDev(_account);
         const address = _account || account;
         const shouldDispatch = options?.dispatch ?? true;
         if (!address) return undefined;
@@ -106,16 +106,16 @@ export function useFetchFarmerDelegates() {
           {}
         );
 
-        console.debug('[useFetchFarmerDelegates/fetch] RESULT =', result);
+        console.log('[useFetchFarmerDelegates/fetch] RESULT =', result);
 
         shouldDispatch && dispatch(setFarmerDelegates(result));
         return result;
       } catch (e) {
-        console.debug('[useFetchFarmerDelegates/fetch] FAILED:', e);
+        console.log('[useFetchFarmerDelegates/fetch] FAILED:', e);
         return undefined;
       }
     },
-    [account, dispatch, fetchDelegates, readDelegatesDev]
+    [account, dispatch, fetchDelegates]
   );
 
   const clear = useCallback(() => {
@@ -170,12 +170,12 @@ export function useFetchFarmerDelegators() {
           {}
         );
 
-        console.debug('[useFetchFarmerDelegators/fetch] RESULT = ', result);
+        console.log('[useFetchFarmerDelegators/fetch] RESULT = ', result);
 
         shouldDispatch && dispatch(setFarmerDelegators(result));
         return result;
       } catch (err) {
-        console.debug('[useFetchFarmerDelegators/fetch] FAILED:', err);
+        console.log('[useFetchFarmerDelegators/fetch] FAILED:', err);
         return undefined;
       }
     },
@@ -232,11 +232,11 @@ export function useFetchNFTVotingPower() {
         })
       );
 
-      console.debug('[useFetchNFTVotingPower/fetch] RESULT = ', votingPower);
+      console.log('[useFetchNFTVotingPower/fetch] RESULT = ', votingPower);
 
       return votingPower;
     } catch (err) {
-      console.debug('[useFetchNFTVotingPower/fetch] FAILED:', err);
+      console.log('[useFetchNFTVotingPower/fetch] FAILED:', err);
       return undefined;
     }
   }, [account, delegators, dispatch, triggerQuery]);
@@ -325,11 +325,11 @@ export function useFetchStalkVotingPower() {
         }
       });
 
-      console.debug('[useFetchStalkVotingPower/fetch] Result = ', votingPower);
+      console.log('[useFetchStalkVotingPower/fetch] Result = ', votingPower);
 
       return votingPower;
     } catch (err) {
-      console.debug('[useFetchStalkVotingPower/fetch] FAILED:', err);
+      console.log('[useFetchStalkVotingPower/fetch] FAILED:', err);
       return undefined;
     }
   }, [account, delegators.length, triggerQuery, farmerDelegators, dispatch]);
@@ -357,6 +357,8 @@ export default function FarmerDelegationsUpdater() {
     (s) => s._farmer.delegations.delegators
   );
   const account = useAccount();
+
+  console.log('farmerDelegators:', farmerDelegators);
 
   const [fetchDelegates, clearDelegates] = useFetchFarmerDelegates();
   const [fetchDelgators, clearDelegators] = useFetchFarmerDelegators();

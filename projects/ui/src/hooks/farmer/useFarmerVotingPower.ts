@@ -28,7 +28,10 @@ export default function useFarmerVotingPower(space: GovSpace) {
   const farmerVotingPower = useMemo(() => {
     if (isBeaNFT) {
       const nfts = Object.values(farmerBeaNFTsResult.data)[0];
-      const { barnRaise, winter, genesis } = nfts;
+      if (!nfts) return ZERO_BN;
+      const barnRaise = nfts.barnRaise;
+      const winter = nfts.winter;
+      const genesis = nfts.genesis;
 
       return new BigNumber(
         barnRaise.ids.length + winter.ids.length + genesis.ids.length
