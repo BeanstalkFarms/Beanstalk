@@ -3,17 +3,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTokens } from "src/tokens/TokenProvider";
 import styled from "styled-components";
 import { ArrowButton } from "./ArrowButton";
-import gear from "src/assets/images/gear.svg";
 import { TokenInput } from "./TokenInput";
-import { Image } from "../Image";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { useSwapBuilder } from "./useSwapBuilder";
 import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
-import { Title } from "../PageComponents/Title";
-import { Page } from "../Frame/assets/Page";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -188,7 +184,7 @@ export const SwapRoot = () => {
         </SwapInputContainer>
       </Div>
       <SwapDetailsContainer>Details</SwapDetailsContainer>
-      <SwapButtonContainer>
+      <SwapButtonContainer data-trace="true">
         <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
       </SwapButtonContainer>
     </Container>

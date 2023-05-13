@@ -11,9 +11,9 @@ import { basin } from "./utils/useBasin";
 basin();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  // <React.StrictMode>
-  <Wrapper>
-    <App />
-  </Wrapper>
-  // </React.StrictMode>
+  <React.StrictMode>
+    <Wrapper>
+      <App />
+    </Wrapper>
+  </React.StrictMode>
 );

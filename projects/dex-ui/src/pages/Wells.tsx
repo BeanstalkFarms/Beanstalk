@@ -1,7 +1,7 @@
 import { Well } from "@beanstalk/sdk/Wells";
 import React, { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Page } from "src/components/Frame/assets/Page";
+import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { Row, TBody, THead, Table, Td, Th, Tr } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";

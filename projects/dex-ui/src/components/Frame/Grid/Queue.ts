@@ -1,12 +1,12 @@
-export class Queue {
-  maxLenth: number = 5;
-  items: any[] = [];
+export class Queue<T> {
+  maxLength: number = 5;
+  items: T[] = [];
   constructor(size: number) {
-    this.maxLenth = size;
+    this.maxLength = size;
   }
 
-  push(item: any) {
-    if (this.items.length < this.maxLenth) {
+  push(item: T) {
+    if (this.items.length < this.maxLength) {
       this.items.push(item);
     } else {
       this.items = this.items.splice(1);
@@ -18,11 +18,15 @@ export class Queue {
     return this.items[this.items.length - 1];
   }
 
-  pop(): any {
+  pop(): T {
     const result = this.items.splice(1);
     const item = this.items[0];
     this.items = result;
 
     return item;
+  }
+
+  get length(): number {
+    return this.items.length;
   }
 }

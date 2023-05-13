@@ -96,7 +96,7 @@ export const TokenInput: FC<TokenInput> = ({
   }, [inputRef]);
 
   /**
-   * We have a fake focus outline around TokenInput which 
+   * We have a fake focus outline around TokenInput which
    * imitates the focus of a normal input. This focus is lost when
    * use clicks on other things inside TokenInput, but not on the input
    * so we use this method to stop other elements from stealing focus.
@@ -110,7 +110,7 @@ export const TokenInput: FC<TokenInput> = ({
     }
   }, []);
 
-  if (loading) return <LoadingContainer width={width} focused={focused} />;
+  if (loading) return <LoadingContainer width={width} focused={focused} data-trace="true"ƒß/>;
 
   return (
     <Container
@@ -120,6 +120,7 @@ export const TokenInput: FC<TokenInput> = ({
       onClick={handleClick}
       onMouseDown={dontStealFocus}
       onDoubleClick={handleDoubleClick}
+      data-trace="true"
     >
       <TopRow>
         <BasicInput
@@ -133,7 +134,7 @@ export const TokenInput: FC<TokenInput> = ({
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
         />
-        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id}/>
+        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} />
       </TopRow>
 
       {showBalance && (
@@ -163,9 +164,9 @@ const LoadingContainer = styled.div<ContainerProps>`
   padding: 0px 16px;
   background: #272a37;
 
-  outline: 1px solid black;
+  outline: 0.5px solid black;
+  outline-offset: -1px;
   box-sizing: border-box;
-  
 
   overflow: hidden;
   justify-content: center;
@@ -190,7 +191,8 @@ const Container = styled.div<ContainerProps>`
   background: #ffffff;
 
   // 70 185 85 is the rbg version of the green
-  outline: .5px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
+  outline: 0.5px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
+  outline-offset: -0.5px;
   box-sizing: border-box;
 
   overflow: hidden;
