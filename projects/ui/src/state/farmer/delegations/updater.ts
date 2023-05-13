@@ -72,7 +72,6 @@ export function useFetchFarmerDelegates() {
 
   const dispatch = useDispatch();
 
-  const [readDelegatesDev] = useReadDelegatesDev();
   const [fetchDelegates] = useVoterDelegatesLazyQuery({
     fetchPolicy: 'cache-and-network',
     context: { subgraph: 'snapshot-labs' },
@@ -92,6 +91,10 @@ export function useFetchFarmerDelegates() {
             voter_address: address,
           },
         });
+        console.log(
+          '[useFetchFarmerDelegates/fetch] QUERY RESULT =',
+          queryData
+        );
 
         const delegations = queryData?.data?.delegations || [];
         const result = delegations.reduce<FarmerDelegation['delegates']>(
@@ -151,6 +154,10 @@ export function useFetchFarmerDelegators() {
             voter_address: address,
           },
         });
+        console.log(
+          '[useFetchFarmerDelegators/fetch] QUERY RESULT =',
+          queryData
+        );
         const d = queryData.data?.delegations || [];
         const result = d.reduce<FarmerDelegation['delegators']['users']>(
           (prev, curr) => {

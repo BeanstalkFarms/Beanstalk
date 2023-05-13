@@ -21,8 +21,6 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const farmerDelegations = useAppSelector((s) => s._farmer.delegations);
   const votingPower = useFarmerVotingPower(getGovSpaceWithTab(tab));
 
-  console.log('votingPower: ', votingPower);
-
   // Query Proposals
   const { loading, data } = useProposalsQuery({
     variables: { space_in: SNAPSHOT_SPACES },
