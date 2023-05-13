@@ -91,7 +91,7 @@ export function useFetchFarmerDelegates() {
             voter_address: address,
           },
         });
-        console.log(
+        console.debug(
           '[useFetchFarmerDelegates/fetch] QUERY RESULT =',
           queryData
         );
@@ -109,12 +109,12 @@ export function useFetchFarmerDelegates() {
           {}
         );
 
-        console.log('[useFetchFarmerDelegates/fetch] RESULT =', result);
+        console.debug('[useFetchFarmerDelegates/fetch] RESULT =', result);
 
         shouldDispatch && dispatch(setFarmerDelegates(result));
         return result;
       } catch (e) {
-        console.log('[useFetchFarmerDelegates/fetch] FAILED:', e);
+        console.debug('[useFetchFarmerDelegates/fetch] FAILED:', e);
         return undefined;
       }
     },
@@ -154,10 +154,7 @@ export function useFetchFarmerDelegators() {
             voter_address: address,
           },
         });
-        console.log(
-          '[useFetchFarmerDelegators/fetch] QUERY RESULT =',
-          queryData
-        );
+
         const d = queryData.data?.delegations || [];
         const result = d.reduce<FarmerDelegation['delegators']['users']>(
           (prev, curr) => {
@@ -177,12 +174,12 @@ export function useFetchFarmerDelegators() {
           {}
         );
 
-        console.log('[useFetchFarmerDelegators/fetch] RESULT = ', result);
+        console.debug('[useFetchFarmerDelegators/fetch] RESULT = ', result);
 
         shouldDispatch && dispatch(setFarmerDelegators(result));
         return result;
       } catch (err) {
-        console.log('[useFetchFarmerDelegators/fetch] FAILED:', err);
+        console.debug('[useFetchFarmerDelegators/fetch] FAILED:', err);
         return undefined;
       }
     },
@@ -239,11 +236,11 @@ export function useFetchNFTVotingPower() {
         })
       );
 
-      console.log('[useFetchNFTVotingPower/fetch] RESULT = ', votingPower);
+      console.debug('[useFetchNFTVotingPower/fetch] RESULT = ', votingPower);
 
       return votingPower;
     } catch (err) {
-      console.log('[useFetchNFTVotingPower/fetch] FAILED:', err);
+      console.debug('[useFetchNFTVotingPower/fetch] FAILED:', err);
       return undefined;
     }
   }, [account, delegators, dispatch, triggerQuery]);
@@ -332,11 +329,11 @@ export function useFetchStalkVotingPower() {
         }
       });
 
-      console.log('[useFetchStalkVotingPower/fetch] Result = ', votingPower);
+      console.debug('[useFetchStalkVotingPower/fetch] Result = ', votingPower);
 
       return votingPower;
     } catch (err) {
-      console.log('[useFetchStalkVotingPower/fetch] FAILED:', err);
+      console.debug('[useFetchStalkVotingPower/fetch] FAILED:', err);
       return undefined;
     }
   }, [account, delegators.length, triggerQuery, farmerDelegators, dispatch]);
@@ -364,8 +361,6 @@ export default function FarmerDelegationsUpdater() {
     (s) => s._farmer.delegations.delegators
   );
   const account = useAccount();
-
-  console.log('farmerDelegators:', farmerDelegators);
 
   const [fetchDelegates, clearDelegates] = useFetchFarmerDelegates();
   const [fetchDelgators, clearDelegators] = useFetchFarmerDelegators();
