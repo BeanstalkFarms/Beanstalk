@@ -66,6 +66,7 @@ import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDr
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, FormTxn, SowFarmStep } from '~/lib/Txn';
+import useTemperature from '~/hooks/beanstalk/useTemperature';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment & {
@@ -391,7 +392,8 @@ const SowFormContainer: FC<{}> = () => {
   const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
     (state) => state._beanstalk.field
   );
-  const temperature = beanstalkField.temperature.scaled;
+  const [{ current: temperature }] = useTemperature();
+  // const temperature = beanstalkField.temperature.scaled;
   const soil = beanstalkField.soil;
 
   /// Farmer
@@ -498,10 +500,7 @@ const SowFormContainer: FC<{}> = () => {
           throw new Error('Slippage required');
         }
 
-        const _scaledTemp = await sdk.contracts.beanstalk.temperature();
-        const scaledTemp = TokenValue.fromBlockchain(_scaledTemp, 6);
-
-        console.log('scaledTemperature: ', scaledTemp);
+        const scaledTemp = TokenValue.fromHuman(temperature.toString(), 6);
 
         const _minTemp = TokenValue.fromHuman(
           (values.settings.minTemperature || ZERO_BN).toString(),
@@ -510,9 +509,7 @@ const SowFormContainer: FC<{}> = () => {
         const minTemperature = _minTemp.gt(scaledTemp) ? _minTemp : scaledTemp;
         const minSoil = amountBeans.mul(1 - values.settings.slippage / 100);
 
-        const amountPods = totalBeans.mul(
-          temperature.div(100).plus(1).toNumber()
-        );
+        const amountPods = totalBeans.mul(minTemperature.div(100).add(1));
 
         txToast = new TransactionToast({
           loading: `Sowing ${displayFullBN(
