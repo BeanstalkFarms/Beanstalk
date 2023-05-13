@@ -41,6 +41,8 @@ const {
   },
 } = chartHelpers;
 
+const NON_MORNING_BN = new BigNumber(26);
+
 const getInterval = (d: MorningBlockTemperature) => d.interval.toNumber();
 
 const getTemperature = (d: MorningBlockTemperature) => d.temperature.toNumber();
@@ -91,7 +93,7 @@ const useTemperatureChart = ({
   const temperatureScale = useMemo(
     () =>
       scaleLinear<number>({
-        range: [yMax, 0],
+        range: [yMax, margin.bottom],
         round: true,
         domain: [0, lastScaledTemperature.toNumber() * 1.05],
       }),
@@ -167,7 +169,7 @@ const Chart: React.FC<Props> = ({
         tickFormat={tickFormatPercentage}
         tickStroke={axisColor}
         tickLabelProps={yTickLabelProps}
-        numTicks={6}
+        numTicks={4}
         strokeWidth={0}
       />
     );
@@ -248,8 +250,9 @@ const ChartWrapper: React.FC<{
 };
 
 const MorningTemperature: React.FC<{
+  show: boolean;
   height?: string;
-}> = ({ height = '200px' }) => {
+}> = ({ show = false, height = '200px' }) => {
   const morning = useSelector<AppState, Sun['morning']>(
     (state) => state._beanstalk.sun.morning
   );
@@ -258,7 +261,12 @@ const MorningTemperature: React.FC<{
   const temperatureMap = useMemo(() => generate(), [generate]);
 
   const blockNumber = morning.blockNumber;
-  const interval = morning.index.plus(1);
+  const interval = useMemo(() => {
+    if (morning.isMorning) {
+      return morning.index.plus(1);
+    }
+    return NON_MORNING_BN;
+  }, [morning.index, morning.isMorning]);
   const season = useSeason();
 
   const [temperatures, loading] = useMemo(() => {
@@ -272,7 +280,7 @@ const MorningTemperature: React.FC<{
     undefined
   );
   // We debounce b/c part of the Stat is rendered conditionally
-  // base on the hover state and causes flickering
+  // based on the hover state and causes flickering
   const _setHovered = useMemo(
     () => debounce(setHovered, 40, { trailing: true }),
     []
@@ -297,7 +305,7 @@ const MorningTemperature: React.FC<{
   return (
     <>
       <ChartInfoOverlay
-        gap={0}
+        gap={0.5}
         title="Temperature"
         titleTooltip={
           <Box>
@@ -309,20 +317,24 @@ const MorningTemperature: React.FC<{
         amount={
           <Row alignItems="center" gap={0.5}>
             <Typography variant="h2">
-              {displayFullBN(temperatureDisplay || ZERO_BN, 0)}%
+              {`${(temperatureDisplay || ZERO_BN).toFixed(0)}%`}
             </Typography>
-            {!hovered && (
+            {!hovered && !show && (
               <Typography color="text.secondary">
                 (
                 <Typography color="primary" component="span">
                   +{displayFullBN(temperatureIncrease, 0)}%
-                </Typography>
-                &nsbp; in <FieldBlockCountdown />)
+                </Typography>{' '}
+                in <FieldBlockCountdown />)
               </Typography>
             )}
           </Row>
         }
-        subtitle={<Typography>Season {season.toString()}</Typography>}
+        subtitle={
+          <Typography variant="bodySmall">
+            Season {season.toString()}
+          </Typography>
+        }
         isLoading={!temperatureDisplay}
       />
       <Box width="100%" sx={{ height, position: 'relative' }}>

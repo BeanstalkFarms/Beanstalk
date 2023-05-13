@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 
 import { useSelector } from 'react-redux';
 import { FontWeight } from '~/components/App/muiTheme';
@@ -8,8 +8,12 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { BLOCKS_PER_MORNING } from '~/state/beanstalk/sun/morning';
 import { AppState } from '~/state';
 import { Sun } from '~/state/beanstalk/sun';
+import Row from '~/components/Common/Row';
 
-const FieldConditionsHeader: React.FC<{}> = () => {
+const FieldConditionsHeader: React.FC<{
+  toggled: boolean;
+  toggleMorning: () => void;
+}> = ({ toggled, toggleMorning }) => {
   const morning = useSelector<AppState, Sun['morning']>(
     (state) => state._beanstalk.sun.morning
   );
@@ -38,9 +42,26 @@ const FieldConditionsHeader: React.FC<{}> = () => {
   }
 
   return (
-    <Typography variant="h4" fontWeight={FontWeight.bold}>
-      🌤️ Field Conditions, Season {season.gt(0) && season.toString()}
-    </Typography>
+    <Row gap={0.2} width="100%" justifyContent="space-between">
+      <Typography variant="h4" fontWeight={FontWeight.bold}>
+        🌤️ Field Conditions, Season {season.gt(0) && season.toString()}
+      </Typography>
+      <Box onClick={toggleMorning}>
+        <Typography
+          sx={{
+            cursor: 'pointer',
+            color: 'text.secondary',
+            '&:hover': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          {toggled
+            ? 'View Normal Field Conditions'
+            : 'View Morning Field Conditions'}
+        </Typography>
+      </Box>
+    </Row>
   );
 };
 
