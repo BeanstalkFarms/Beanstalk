@@ -9,24 +9,24 @@ import { scaleBand, scaleLinear } from '@visx/scale';
 import { Axis, Orientation } from '@visx/axis';
 
 import { useSelector } from 'react-redux';
-import { Typography, Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { chartHelpers } from '~/components/Common/Charts/ChartPropProvider';
 import { tickFormatPercentage } from '~/components/Analytics/formatters';
 
 import './chart.css';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { selectMorning } from '~/state/beanstalk/sun';
+import { Sun } from '~/state/beanstalk/sun';
 import Row from '~/components/Common/Row';
 import { displayFullBN } from '~/util';
 import Centered from '~/components/Common/ZeroState/Centered';
 import ChartInfoOverlay from '~/components/Common/Charts/ChartInfoOverlay';
 import { ZERO_BN } from '~/constants';
 import { getIsMorningInterval } from '~/state/beanstalk/sun/morning';
-import { selectFieldTemperature } from '~/state/beanstalk/field/reducer';
 import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
-import useMorningTemperature, {
+import useTemperature, {
   MorningBlockTemperature,
-} from '~/hooks/beanstalk/useMorningTemperature';
+} from '~/hooks/beanstalk/useTemperature';
+import { AppState } from '~/state';
 
 const {
   common: {
@@ -250,13 +250,15 @@ const ChartWrapper: React.FC<{
 const MorningTemperature: React.FC<{
   height?: string;
 }> = ({ height = '200px' }) => {
-  const [hovered, setHovered] = useState<MorningBlockTemperature | undefined>(
-    undefined
+  const morning = useSelector<AppState, Sun['morning']>(
+    (state) => state._beanstalk.sun.morning
   );
 
-  const temperatureMap = useMorningTemperature();
-  const { max } = useSelector(selectFieldTemperature);
-  const { interval, blockNumber } = useSelector(selectMorning);
+  const [{ current, max }, { generate }] = useTemperature();
+  const temperatureMap = useMemo(() => generate(), [generate]);
+
+  const blockNumber = morning.blockNumber;
+  const interval = morning.index.plus(1);
   const season = useSeason();
 
   const [temperatures, loading] = useMemo(() => {
@@ -266,6 +268,9 @@ const MorningTemperature: React.FC<{
     return [_temperatures, _loading] as const;
   }, [temperatureMap]);
 
+  const [hovered, setHovered] = useState<MorningBlockTemperature | undefined>(
+    undefined
+  );
   // We debounce b/c part of the Stat is rendered conditionally
   // base on the hover state and causes flickering
   const _setHovered = useMemo(
@@ -273,8 +278,7 @@ const MorningTemperature: React.FC<{
     []
   );
 
-  const temperatureDisplay =
-    hovered?.temperature || temperatureMap[blockNumber.toString()]?.temperature;
+  const temperatureDisplay = hovered?.temperature || current;
 
   const temperatureIncrease = useMemo(() => {
     const nextInterval = interval.plus(1);
@@ -292,42 +296,34 @@ const MorningTemperature: React.FC<{
 
   return (
     <>
-      <Row justifyContent="space-between">
-        <ChartInfoOverlay
-          gap={0}
-          title="Temperature (Morning)"
-          titleTooltip={
-            <Box>
-              The interest rate for Sowing Beans. Beanstalk will
-              logarithmicallly increase the Temperature for the first 25 blocks
-              of each season.
-            </Box>
-          }
-          amount={
-            <Row alignItems="center" gap={0.5}>
-              <Typography variant="h2">
-                {displayFullBN(temperatureDisplay || ZERO_BN, 0)}%
+      <ChartInfoOverlay
+        gap={0}
+        title="Temperature (Morning)"
+        titleTooltip={
+          <Box>
+            The interest rate for Sowing Beans. Beanstalk will logarithmicallly
+            increase the Temperature for the first 25 blocks of each season.
+          </Box>
+        }
+        amount={
+          <Row alignItems="center" gap={0.5}>
+            <Typography variant="h2">
+              {displayFullBN(temperatureDisplay || ZERO_BN, 0)}%
+            </Typography>
+            {!hovered && (
+              <Typography color="text.secondary">
+                (
+                <Typography color="primary" component="span">
+                  +{displayFullBN(temperatureIncrease, 0)}%
+                </Typography>{' '}
+                in <FieldBlockCountdown />)
               </Typography>
-              {!hovered && (
-                <Typography color="text.secondary">
-                  (
-                  <Typography color="primary" component="span">
-                    +{displayFullBN(temperatureIncrease, 0)}%
-                  </Typography>{' '}
-                  in <FieldBlockCountdown />)
-                </Typography>
-              )}
-            </Row>
-          }
-          subtitle={<Typography>Season {season.toString()}</Typography>}
-          isLoading={!temperatureDisplay}
-        />
-        <Box alignSelf="flex-start" display={{ xs: 'none', sm: 'block' }}>
-          <Typography textAlign="right" color="text.secondary">
-            Next increase in <FieldBlockCountdown />
-          </Typography>
-        </Box>
-      </Row>
+            )}
+          </Row>
+        }
+        subtitle={<Typography>Season {season.toString()}</Typography>}
+        isLoading={!temperatureDisplay}
+      />
       <Box width="100%" sx={{ height, position: 'relative' }}>
         {loading ? (
           <Centered minHeight={height}>

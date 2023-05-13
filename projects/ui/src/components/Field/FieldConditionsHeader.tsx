@@ -4,20 +4,23 @@ import { Stack, Typography } from '@mui/material';
 
 import { useSelector } from 'react-redux';
 import { FontWeight } from '~/components/App/muiTheme';
-import { selectMorning } from '~/state/beanstalk/sun';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { BLOCKS_PER_MORNING } from '~/state/beanstalk/sun/morning';
+import { AppState } from '~/state';
+import { Sun } from '~/state/beanstalk/sun';
 
 const FieldConditionsHeader: React.FC<{}> = () => {
-  const { interval, isMorning } = useSelector(selectMorning);
+  const morning = useSelector<AppState, Sun['morning']>(
+    (state) => state._beanstalk.sun.morning
+  );
   const season = useSeason();
+  const interval = morning.index.plus(1).toString();
 
-  if (isMorning) {
+  if (morning.isMorning) {
     return (
       <Stack gap={0.2}>
         <Typography variant="h4" fontWeight={FontWeight.bold}>
-          🌤️ Morning: Block {interval.toString()} of {BLOCKS_PER_MORNING},
-          Season
+          🌤️ Morning: Block {interval} of {BLOCKS_PER_MORNING}, Season
           <Typography
             variant="inherit"
             component="span"
