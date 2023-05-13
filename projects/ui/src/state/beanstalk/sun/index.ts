@@ -3,6 +3,7 @@ import { DateTime, Duration } from 'luxon';
 import { Beanstalk } from '~/generated';
 import { bigNumberResult } from '~/util';
 import { APPROX_SECS_PER_BLOCK } from './morning';
+import { BlockInfo } from '~/hooks/chain/useFetchLatestBlock';
 
 export type Sun = {
   // season: BigNumber;
@@ -30,17 +31,22 @@ export type Sun = {
     timestamp: DateTime;
   };
   morning: {
-    /** the current morning block 1 - 25 */
+    /** The current Block Number on chain */
     blockNumber: BigNumber;
-    blockMap: MorningBlockMap;
-    time: {
-      /** Whether we are awaiting morning field updates / confirmed block updates */
-      awaiting: boolean;
-      /** the Duration remaining until the next block update  */
-      remaining: Duration;
-      /** The DateTime of the next expected block update */
-      next: DateTime;
-    };
+    /** */
+    isMorning: boolean;
+    /** */
+    index: BigNumber;
+  };
+  morningTime: {
+    /** Whether we are awaiting morning field updates / confirmed block updates */
+    awaiting: boolean;
+    /** the Duration remaining until the next block update  */
+    remaining: Duration;
+    /** The DateTime of the next expected block update */
+    next: DateTime;
+    /** */
+    endTime: DateTime;
   };
 };
 
@@ -48,8 +54,9 @@ export type MorningBlockMap = {
   [_blockNumber: string]: {
     blockNumber: BigNumber;
     timestamp: DateTime;
+    rTimestamp: DateTime;
     next: DateTime;
-    offset?: number;
+    rNext: DateTime;
   };
 };
 
@@ -80,51 +87,76 @@ export const parseSeasonResult = (
   timestamp: DateTime.fromSeconds(bigNumberResult(result.timestamp).toNumber()), /// The timestamp of the start of the current Season.
 });
 
-export const initMorningBlockMap = (sunrise: {
-  sunriseBlock: BigNumber;
-  timestamp: DateTime;
-  offset?: {
-    // amount of seconds to offset the timestamp & next times by
-    seconds?: number;
-    // block in which to start adding the offset
-    block?: BigNumber;
-  };
-}) => {
-  const { sunriseBlock, timestamp: _timestamp, offset } = sunrise;
-  const offsetSeconds = offset?.seconds || 0;
-
-  return Array(25)
-    .fill(null)
-    .reduce<MorningBlockMap>((prev, _, i) => {
-      const block = sunriseBlock.plus(i);
-      const shouldApplyOffset = Boolean(
-        (offset?.block || sunriseBlock).lte(block.toNumber())
-      );
-      const blockSeconds = i * APPROX_SECS_PER_BLOCK;
-      const blockOffsetSeconds = shouldApplyOffset ? offsetSeconds : 0;
-      const adjustedTimestamp = _timestamp.toSeconds() - blockOffsetSeconds;
-      const timestamp = DateTime.fromSeconds(adjustedTimestamp + blockSeconds);
-
-      return {
-        [block.toString()]: {
-          blockNumber: block,
-          timestamp,
-          next: timestamp.plus({ seconds: APPROX_SECS_PER_BLOCK }),
-          offset: blockOffsetSeconds + blockSeconds,
-        },
-        ...prev,
-      };
-    }, {});
-};
-
-export const getDiffNow = (dt: DateTime) => {
-  const now = Math.floor(DateTime.now().toSeconds());
-  return dt.diff(DateTime.fromSeconds(now));
+export const getDiffNow = (dt: DateTime, _now?: DateTime) => {
+  const now = (_now || DateTime.now()).toSeconds();
+  const nowRounded = Math.floor(now);
+  return dt.diff(DateTime.fromSeconds(nowRounded));
 };
 
 export const getNowRounded = () => {
   const now = Math.floor(DateTime.now().toSeconds());
   return DateTime.fromSeconds(now);
+};
+
+export const getMorningTimeResult = (
+  sunriseTime: DateTime,
+  index: BigNumber
+) => {
+  const endTime = sunriseTime.plus({ minutes: 5 });
+  const seconds = index.times(12).toNumber();
+  const curr = sunriseTime.plus({ seconds });
+  const next = getNextExpectedBlockUpdate(curr);
+  const remaining = getDiffNow(next);
+
+  // console.log('remainng as secs: ', remaining.as('seconds'));
+
+  return {
+    next,
+    remaining,
+    awaiting: remaining.as('seconds') === APPROX_SECS_PER_BLOCK,
+    endTime,
+  };
+};
+
+export const getMorningResult = ({
+  timestamp: sunriseTime,
+  blockNumber: sunriseBlock,
+}: BlockInfo): Pick<Sun, 'morning' | 'morningTime'> => {
+  const sunriseSecs = sunriseTime.toSeconds();
+  const nowSecs = getNowRounded().toSeconds();
+
+  const secondsDiff = nowSecs - sunriseSecs;
+  const index = new BigNumber(Math.floor(secondsDiff / APPROX_SECS_PER_BLOCK));
+  console.log(`<------${index.toNumber()}------>`);
+  const isMorning = index.lt(25) && index.gte(0) && sunriseBlock.gt(0);
+
+  const blockNumber = sunriseBlock.plus(index);
+
+  const endTime = sunriseTime.plus({ minutes: 5 });
+  const seconds = index.times(12).toNumber();
+  const curr = sunriseTime.plus({ seconds });
+
+  const next = getNextExpectedBlockUpdate(curr);
+  const remaining = getDiffNow(next);
+  const awaiting = remaining.as('seconds') === APPROX_SECS_PER_BLOCK;
+
+  console.log('===== blockNumber: ', blockNumber.toNumber());
+  console.log('===== blockts: ', next.minus({ seconds: 12 }).toSeconds());
+  console.log('===== nextts: ', next.toSeconds());
+
+  return {
+    morning: {
+      isMorning,
+      blockNumber,
+      index: new BigNumber(index),
+    },
+    morningTime: {
+      next,
+      remaining,
+      awaiting,
+      endTime,
+    },
+  };
 };
 
 export * from './reducer';

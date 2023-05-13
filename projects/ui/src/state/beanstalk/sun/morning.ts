@@ -1,26 +1,24 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import BigNumber from 'bignumber.js';
+import { DateTime } from 'luxon';
 import {
   setAwaitingMorningBlock,
+  setMorning,
   setRemainingUntilBlockUpdate,
-  updateMorningBlock,
 } from './actions';
-import {
-  selectMorning,
-  selectMorningBlockMap,
-  selectMorningBlockTime,
-} from './reducer';
 import { BEAN } from '~/constants/tokens';
 import { tokenResult } from '~/util';
 import {
-  updateTotalSoil,
-  updateScaledTemperature,
   updateMaxTemperature,
+  updateScaledTemperature,
+  updateTotalSoil,
 } from '~/state/beanstalk/field/actions';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import useFetchLatestBlock from '~/hooks/chain/useFetchLatestBlock';
-import { getDiffNow } from '.';
+import { Sun, getDiffNow, getMorningResult, getNowRounded } from '.';
+import { AppState } from '~/state';
+import { BeanstalkField } from '../field';
+import useTemperature from '~/hooks/beanstalk/useTemperature';
 
 export const BLOCKS_PER_MORNING = 25;
 
@@ -31,86 +29,126 @@ export const APPROX_SECS_PER_BLOCK = 12;
 export const getIsMorningInterval = (interval: BigNumber) =>
   interval.gte(FIRST_MORNING_BLOCK) && interval.lte(BLOCKS_PER_MORNING);
 
+/// sometimes the calculated temperature is 1e(-6) off from the temperature from on chain,
+/// so we need to check if the temperature is within a certain range
+const isSimilarTo = (value: BigNumber, compare: BigNumber, delta: number) => {
+  const lower = compare.minus(delta);
+  const upper = compare.plus(delta);
+  return lower.lte(value) && upper.gte(value);
+};
+
 export function useFetchMorningField() {
   const beanstalk = useBeanstalkContract();
   const dispatch = useDispatch();
-  const [fetchLatestBlock] = useFetchLatestBlock();
 
-  const fetch = useCallback(async () => {
-    try {
-      if (beanstalk) {
+  const fetch = useCallback(
+    async (options?: { noUpdate: boolean }) => {
+      try {
+        if (!beanstalk) {
+          console.debug(
+            '[beanstalk/sun/useFetchMorningField] contract undefined'
+          );
+          return [undefined, undefined, undefined] as const;
+        }
+
         console.debug(
           `[beanstalk/sun/useFetchMorningField] FETCH (contract = ${beanstalk.address})`
         );
-        const [adjustedTemperature, maxTemperature, soil, blockData] =
-          await Promise.all([
-            beanstalk.temperature().then(tokenResult(BEAN)), // FIX ME
-            beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIX ME
-            beanstalk.totalSoil().then(tokenResult(BEAN)),
-            fetchLatestBlock(),
-            // beanstalk
-          ]);
+
+        const [adjustedTemperature, maxTemperature, soil] = await Promise.all([
+          beanstalk.temperature().then(tokenResult(BEAN)), // FIX ME
+          beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIX ME
+          beanstalk.totalSoil().then(tokenResult(BEAN)),
+        ]);
 
         console.debug('[beanstalksun/useFetchMorningField] RESULT = ', {
-          scaledTemperature: adjustedTemperature.toString(),
-          maxTemperature: maxTemperature.toString(),
-          soil: soil.toString(),
+          scaledTemperature: adjustedTemperature.toNumber(),
+          maxTemperature: maxTemperature.toNumber(),
+          soil: soil.toNumber(),
         });
 
-        dispatch(updateTotalSoil(soil));
-        dispatch(updateScaledTemperature(adjustedTemperature));
-        dispatch(updateMaxTemperature(maxTemperature));
-        dispatch(updateMorningBlock(blockData.blockNumber));
+        if (!options || !options.noUpdate) {
+          console.debug(
+            '[beanstalk/sun/useFetchMorningField] Updating store...'
+          );
+          dispatch(updateScaledTemperature(adjustedTemperature));
+          dispatch(updateMaxTemperature(maxTemperature));
+          dispatch(updateTotalSoil(soil));
+        }
 
-        return [adjustedTemperature, maxTemperature, soil, blockData] as const;
+        return [adjustedTemperature, maxTemperature, soil] as const;
+      } catch (e) {
+        console.debug('[beanstalk/sun/useFetchMorningField] FAILED', e);
+        console.error(e);
+        return [undefined, undefined, undefined] as const;
       }
-      return [undefined, undefined, undefined, undefined] as const;
-    } catch (e) {
-      console.debug('[beanstalk/sun/useFetchMorningField] FAILED', e);
-      console.error(e);
-      return [undefined, undefined, undefined, undefined] as const;
-    }
-  }, [beanstalk, dispatch, fetchLatestBlock]);
+    },
+    [beanstalk, dispatch]
+  );
 
   return [fetch] as const;
 }
 
 export default function MorningUpdater() {
-  const morningTime = useSelector(selectMorningBlockTime);
-  const blockMap = useSelector(selectMorningBlockMap);
-  const morning = useSelector(selectMorning);
+  const morningTime = useSelector<AppState, Sun['morningTime']>(
+    (state) => state._beanstalk.sun.morningTime
+  );
+  const season = useSelector<AppState, Sun['season']>(
+    (state) => state._beanstalk.sun.season
+  );
+  const morning = useSelector<AppState, Sun['morning']>(
+    (state) => state._beanstalk.sun.morning
+  );
+  const temperature = useSelector<AppState, BeanstalkField['temperature']>(
+    (state) => state._beanstalk.field.temperature
+  );
+  const [_, { calculate: calculateTemperature }] = useTemperature();
+
+  const sunriseTime = season.timestamp.toSeconds();
+  const sunriseBlock = season.sunriseBlock.toString();
+  const morningIndex = morning.index;
+  const next = morningTime.next;
+
+  const _scaledTemp = temperature.scaled.toString();
+  const maxTemp = temperature.max.toString();
 
   const [fetchMorningField] = useFetchMorningField();
+
   const dispatch = useDispatch();
 
   /// called when the state is notified that it needs to fetch for updates
-  /// If the block from on chain is greater than the block we have stored,
-  /// we know we have the most updated state.
   const fetch = useCallback(async () => {
-    const [_adjustedTemp, _maxTemp, _soil, blockData] =
-      await fetchMorningField();
-    console.debug(`[MorningUpdater][fetch], blockData = `, blockData);
+    const [scaled, max, soil] = await fetchMorningField({ noUpdate: true });
+    const calculated = calculateTemperature(morning.blockNumber);
 
-    if (blockData?.blockNumber.gt(morning.blockNumber)) {
+    if (scaled && isSimilarTo(scaled, calculated, 0.1)) {
+      console.debug('[morning][fetch] setting awaiting to', false);
+      dispatch(updateScaledTemperature(scaled));
+      dispatch(updateMaxTemperature(max));
+      dispatch(updateTotalSoil(soil));
       dispatch(setAwaitingMorningBlock(false));
     }
-  }, [fetchMorningField, morning.blockNumber, dispatch]);
+  }, [fetchMorningField, calculateTemperature, morning.blockNumber, dispatch]);
 
   useEffect(() => {
-    if (!morning.isMorning || !Object.keys(blockMap).length) return;
+    if (!morning.isMorning) return;
 
     // set up the timer while in the morning state.
     const intervalId = setInterval(async () => {
-      const _remaining = getDiffNow(morningTime.next);
+      const now = getNowRounded();
+      const nowAsSeconds = now.toSeconds();
+      const _remaining = getDiffNow(morningTime.next, now);
       const remainingSeconds = _remaining.as('seconds');
-      // If the lower limit hasn't been reached decrement the remaining time
-      if (remainingSeconds > 0) {
-        dispatch(setRemainingUntilBlockUpdate(_remaining));
-      }
-      // if the lower limit is reached, notify the state to
-      // fetch for updated block, temperature, & soil values
-      else if (remainingSeconds <= 0) {
-        dispatch(setAwaitingMorningBlock(true));
+      console.debug('[morning][interval]remaining secs: ', remainingSeconds);
+
+      if (nowAsSeconds === next.toSeconds() || remainingSeconds <= 0) {
+        console.debug('[morning][interval] setting awaiting to ', true);
+        const morningResult = getMorningResult({
+          timestamp: DateTime.fromSeconds(sunriseTime),
+          blockNumber: new BigNumber(sunriseBlock),
+        });
+        dispatch(setMorning(morningResult));
+      } else {
         dispatch(setRemainingUntilBlockUpdate(_remaining));
       }
     }, 1000);
@@ -121,15 +159,16 @@ export default function MorningUpdater() {
   }, [
     morning.isMorning,
     morningTime.next,
-    blockMap,
-    dispatch,
     morning.blockNumber,
+    sunriseTime,
+    sunriseBlock,
+    dispatch,
+    next,
   ]);
 
   /// Fetch & update the field / morning state if we are expecting a new block number
   useEffect(() => {
     if (!morningTime.awaiting || !morning.isMorning) return;
-
     const intervalId = setInterval(() => {
       fetch();
     }, 1000);
@@ -138,6 +177,34 @@ export default function MorningUpdater() {
       clearInterval(intervalId);
     };
   }, [morningTime.awaiting, morning.isMorning, fetch]);
+
+  /// Update the temperature if we have transitioned in/out of the morning state
+  useEffect(() => {
+    const scaledTemp = new BigNumber(_scaledTemp);
+
+    if (!morning.isMorning) {
+      if (!scaledTemp.eq(maxTemp)) {
+        console.debug(
+          '[beanstalk/sun/morning] Not Morning. Refetching morning field'
+        );
+        fetch();
+      }
+    }
+    if (!morning.isMorning || morningTime.awaiting) return;
+    if (morningIndex.eq(0) && scaledTemp.gt(1)) {
+      console.debug(
+        '[beanstalk/sun/morning] New Morning. Refetching morning field'
+      );
+      fetch();
+    }
+  }, [
+    fetch,
+    maxTemp,
+    morning.isMorning,
+    morningIndex,
+    morningTime.awaiting,
+    _scaledTemp,
+  ]);
 
   return null;
 }

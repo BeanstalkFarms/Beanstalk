@@ -7,11 +7,7 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import useFetchLatestBlock from '~/hooks/chain/useFetchLatestBlock';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
-import {
-  getNextExpectedSunrise,
-  initMorningBlockMap,
-  parseSeasonResult,
-} from '.';
+import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
   setAwaitingSunrise,
@@ -34,31 +30,25 @@ export const useSun = () => {
         console.debug(
           `[beanstalk/sun/useSun] FETCH (contract = ${beanstalk.address})`
         );
-        const [seasonTime, season, { blockNumber }] = await Promise.all([
+        const [seasonTime, season] = await Promise.all([
           beanstalk.seasonTime().then(bigNumberResult), /// the season that it could be if sunrise was called
           beanstalk.time().then((r) => parseSeasonResult(r)), /// SeasonStruct
-          fetchLatestBlock(),
         ] as const);
-
-        const morningBlockMap = initMorningBlockMap({
-          sunriseBlock: season.sunriseBlock,
-          timestamp: season.timestamp,
-        });
 
         console.debug(`[beanstalk/sun/useSun] time RESULT: = ${season}`);
         console.debug(
           `[beanstalk/sun/useSun] season = ${season.current}, seasonTime = ${seasonTime}`
         );
+        const morningResult = getMorningResult({
+          blockNumber: season.sunriseBlock,
+          timestamp: season.timestamp,
+        });
+
         dispatch(updateSeasonResult(season));
         dispatch(updateSeasonTime(seasonTime));
-        dispatch(
-          setMorning({
-            blockMap: morningBlockMap,
-            blockNumber,
-          })
-        );
+        dispatch(setMorning(morningResult));
 
-        return [season, seasonTime, blockNumber] as const;
+        return [season, seasonTime] as const;
       }
       return [undefined, undefined, undefined] as const;
     } catch (e) {
@@ -66,7 +56,7 @@ export const useSun = () => {
       console.error(e);
       return [undefined, undefined, undefined] as const;
     }
-  }, [beanstalk, fetchLatestBlock, dispatch]);
+  }, [beanstalk, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useSun] clear');

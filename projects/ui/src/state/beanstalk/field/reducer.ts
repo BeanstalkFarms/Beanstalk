@@ -7,6 +7,7 @@ import {
   updateHarvestableIndex,
   updateMaxTemperature,
   updateScaledTemperature,
+  updateTemperatureAndSoil,
 } from './actions';
 
 const initialState: BeanstalkField = {
@@ -44,6 +45,10 @@ export default createReducer(initialState, (builder) =>
     })
     .addCase(updateMaxTemperature, (state, { payload }) => {
       state.temperature.max = payload;
+    })
+    .addCase(updateTemperatureAndSoil, (state, { payload }) => {
+      state.temperature = payload.temperature;
+      state.soil = payload.soil;
     })
 );
 

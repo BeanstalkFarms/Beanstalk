@@ -23,3 +23,7 @@ export const updateMaxTemperature = createAction<BigNumber>(
 export const updateTotalSoil = createAction<BigNumber>(
   'beanstalk/field/updateTotalSoil'
 );
+
+export const updateTemperatureAndSoil = createAction<
+  Pick<BeanstalkField, 'soil' | 'temperature'>
+>('beanstalk/field/updateTemperatureAndSoil');
