@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/ReentrancyGuard.sol";
 import "~/libraries/Silo/LibSilo.sol";
 import "~/libraries/Silo/LibTokenSilo.sol";
+import "~/libraries/Silo/LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibPRBMath.sol";
@@ -29,8 +30,6 @@ contract SiloExit is ReentrancyGuard {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
     using LibPRBMath for uint256;
-
-    uint256 constant private EARNED_BEAN_VESTING_BLOCKS = 25; //  5 minutes
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -137,6 +136,24 @@ contract SiloExit is ReentrancyGuard {
             );
     }
 
+    /**
+     * @notice Returns the balance of Grown Stalk for a single deposit of `token`
+     * in `stem` for `account`. Grown Stalk is earned each Season from BDV and
+     * must be Mown via `SiloFacet-mow` to apply it to a user's balance.
+     *
+     * @dev This passes in the last stem the user mowed at and the current stem
+     */
+    function grownStalkForDeposit(
+        address account,
+        address token,
+        int96 stem
+    )
+        public
+        view
+        returns (uint grownStalk)
+    {
+        return LibTokenSilo.grownStalkForDeposit(account, token, stem);
+    }
     
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
@@ -168,7 +185,7 @@ contract SiloExit is ReentrancyGuard {
         if (s.s.roots == 0) return 0;
 
         uint256 stalk;
-        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
+        if(LibSilo.inVestingPeriod()){
             stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
                 s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
                 s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 

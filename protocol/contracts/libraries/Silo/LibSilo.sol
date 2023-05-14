@@ -197,10 +197,12 @@ library LibSilo {
         } else  {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (inVestingPeriod()) {
-                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - (s.newEarnedStalk));
-                uint256 deltaRoots = rootsWithoutEarned - roots;
-                s.vestingPeriodRoots = s.vestingPeriodRoots.add(uint128(deltaRoots));
-                s.a[account].deltaRoots = uint128(deltaRoots);
+                // Safe Math is unnecessary for because total Stalk > new Earned Stalk
+                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - s.newEarnedStalk);
+                // Safe Math is unnecessary for because rootsWithoutEarned >= roots
+                uint128 deltaRoots = (rootsWithoutEarned - roots).toUint128();
+                s.vestingPeriodRoots = s.vestingPeriodRoots.add(deltaRoots);
+                s.a[account].deltaRoots = deltaRoots;
             }
         }
 
@@ -232,7 +234,7 @@ library LibSilo {
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
         
-        // if the user withdraws in the same block as sunrise, they forfeit their earned beans for that season
+        // if the user withdraws in the vesting period, they forfeit their earned beans for that season
         // this is distrubuted to the other users.
         if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
             roots = s.s.roots.mulDiv(
@@ -310,7 +312,7 @@ library LibSilo {
      */
    function _mow(address account, address token) internal {
 
-        require(!LibSilo.migrationNeeded(account), "silo migration needed");
+        require(!LibSilo.migrationNeeded(account), "Silo: Migration needed");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         //sop stuff only needs to be updated once per season
@@ -457,7 +459,7 @@ library LibSilo {
                 previousPPR = lastRainPPR;
                 plenty = plenty.add(
                     plentyPerRoot.mul(s.a[account].sop.roots).div(
-                        C.getSopPrecision()
+                        C.SOP_PRECISION
                     )
                 );
             }
@@ -471,7 +473,7 @@ library LibSilo {
             uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
             plenty = plenty.add(
                 plentyPerRoot.mul(s.a[account].roots).div(
-                    C.getSopPrecision()
+                    C.SOP_PRECISION
                 )
             );
         }
@@ -525,7 +527,7 @@ library LibSilo {
                 msg.sender, // operator
                 account, // from
                 address(0), // to
-                uint256(LibBytes.packAddressAndStem(token, stem)), // depositid
+                LibBytes.packAddressAndStem(token, stem), // depositid
                 amount // token amount
             );
         }
@@ -560,7 +562,7 @@ library LibSilo {
                 amounts[i]
             );
             bdvsRemoved[i] = crateBdv;
-            removedDepositIDs[i] = uint256(LibBytes.packAddressAndStem(token, stems[i]));
+            removedDepositIDs[i] = LibBytes.packAddressAndStem(token, stems[i]);
             ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
 

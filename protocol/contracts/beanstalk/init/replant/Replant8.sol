@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../AppStorage.sol";
 import "../../../C.sol";
 import "../../../tokens/ERC20/BeanstalkERC20.sol";
+import "~/libraries/Silo/LibWhitelist.sol";
 import "../InitWhitelist.sol";
 
 /**

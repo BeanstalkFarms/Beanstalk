@@ -162,47 +162,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSowTime = number;
     }
 
-    // function setLastSoilPercentE(uint96 number) public {
-    //     s.w.lastSoilPercent = number;
-    // }
-
     function setSoilE(uint256 amount) public {
         setSoil(amount);
-    }
-
-    function resetAccount(address account) public {
-        uint32 _s = season();
-        for (uint32 j; j <= _s; ++j) {
-            if (s.a[account].field.plots[j] > 0) s.a[account].field.plots[j];
-            if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
-            if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
-            if (s.a[account].lp.depositSeeds[j] > 0) delete s.a[account].lp.depositSeeds[j];
-            if (s.a[account].bean.withdrawals[j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].bean.withdrawals[j+s.season.withdrawSeasons];
-            }
-            if (s.a[account].lp.withdrawals[j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].lp.withdrawals[j+s.season.withdrawSeasons];
-            }
-        }
-        for (uint32 i; i < s.g.bipIndex; ++i) {
-            s.g.voted[i][account] = false;
-        }
-        delete s.a[account];
-
-        resetAccountToken(account, C.CURVE_BEAN_METAPOOL);
-    }
-
-    function resetAccountToken(address account, address token) public {
-        uint32 _s = season();
-        for (uint32 j; j <= _s; ++j) {
-            bytes32 depositID = LibBytes.packAddressAndStem(token,j);
-            if (s.a[account].deposits[depositID].amount > 0) delete s.a[account].deposits[depositID];
-            if (s.a[account].withdrawals[token][j+s.season.withdrawSeasons] > 0)
-                {
-                    delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
-                }
-        }
-        delete s.siloBalances[token];
     }
 
     function resetState() public {
@@ -314,22 +275,22 @@ contract MockSeasonFacet is SeasonFacet {
 
         uint32 currentSeason = s.season.current;
 
-        s.ss[C.beanAddress()].stalkEarnedPerSeason = 2*1e6;
-        s.ss[C.beanAddress()].stalkIssuedPerBdv = 10000;
-        s.ss[C.beanAddress()].milestoneSeason = currentSeason;
-        s.ss[C.beanAddress()].milestoneStem = 0;
+        s.ss[C.BEAN].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.ss[C.BEAN].milestoneSeason = currentSeason;
+        s.ss[C.BEAN].milestoneStem = 0;
 
 
-        s.ss[C.curveMetapoolAddress()].stalkEarnedPerSeason = 4*1e6;
-        s.ss[C.curveMetapoolAddress()].stalkIssuedPerBdv = 10000;
-        s.ss[C.curveMetapoolAddress()].milestoneSeason = currentSeason;
-        s.ss[C.curveMetapoolAddress()].milestoneStem = 0;
+        s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = 4*1e6;
+        s.ss[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = 10000;
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
 
 
-        s.ss[C.unripeBeanAddress()].stalkEarnedPerSeason = 2*1e6;
-        s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv = 10000;
-        s.ss[C.unripeBeanAddress()].milestoneSeason = currentSeason;
-        s.ss[C.unripeBeanAddress()].milestoneStem = 0;
+        s.ss[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.ss[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
+        s.ss[C.UNRIPE_BEAN].milestoneStem = 0;
 
 
         s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;

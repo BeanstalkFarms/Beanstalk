@@ -96,18 +96,6 @@ library C {
         return ROOTS_BASE;
     }
 
-    function getSopPrecision() internal pure returns (uint256) {
-        return SOP_PRECISION;
-    }
-
-    function beanAddress() internal pure returns (address) {
-        return BEAN;
-    }
-
-    function curveMetapoolAddress() internal pure returns (address) {
-        return CURVE_BEAN_METAPOOL;
-    }
-
     /**
      * @dev The pre-exploit BEAN:3CRV Curve metapool address.
      */
@@ -120,20 +108,6 @@ library C {
      */
     function unripeLPPool2() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_LUSD_POOL;
-    }
-
-    /**
-     * @dev The post-exploit Unripe BEAN ERC20 token address.
-     */
-    function unripeBeanAddress() internal pure returns (address) {
-        return UNRIPE_BEAN;
-    }
-
-    /**
-     * @dev The post-exploit Unripe BEAN:3CRV LP ERC20 token address.
-     */
-    function unripeLPAddress() internal pure returns (address) {
-        return UNRIPE_LP;
     }
 
     function unripeBean() internal pure returns (IERC20) {

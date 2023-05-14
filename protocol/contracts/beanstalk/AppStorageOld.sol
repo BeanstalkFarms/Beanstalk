@@ -200,7 +200,6 @@ struct AppStorageOld {
     mapping (uint32 => SeasonOld.SeasonOfPlenty) sops;
     mapping (uint32 => SeasonOld.ResetBases) rbs;
     mapping (address => AccountOld.State) a;
-    uint256 earnedBeans;
 }
 
 /*

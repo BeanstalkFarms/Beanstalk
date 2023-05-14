@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
 import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
-import {IERC1155} from "~/interfaces/IERC1155.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
 import {LibBytes64} from "~/libraries/LibBytes64.sol";
 import {LibStrings} from "~/libraries/LibStrings.sol";
@@ -20,7 +20,7 @@ import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
  * @notice MetadataFacet is a contract that provides metadata for beanstalk ERC1155 deposits, 
  * as well as other auxiliary functions related to ERC1155 deposits.
  * 
- * @dev Deposits are represented by a bytes32, which is the concatination of the token address and the stem.
+ * @dev Deposits are represented by a uint256, which is the concatination of the token address and the stem.
  * This means that all the nessecary metadata needed for an ERC1155 can be derived from the depositId.
  * However, in the future, when beanstalk accepts ERC721 and ERC1155 deposits,
  * they will be represented by the *hash* of the token address, id, and stem.
@@ -44,11 +44,11 @@ contract MetadataFacet is IERC1155Receiver {
      * @notice Returns the URI for a given depositId.
      * @param depositId - the id of the deposit
      * @dev the URI is a base64 encoded JSON object that contains the metadata and base64 encoded svg.
-     * Deposits are stored as a mapping of a bytes32 to a Deposit struct. 
+     * Deposits are stored as a mapping of a uint256 to a Deposit struct.
      * ERC20 deposits are represented by the concatination of the token address and the stem. (20 + 12 bytes).
      * ERC721 and ERC1155 Deposits (not implmented) will be represented by the *hash* of the token address, id, and stem. (32 bytes).
      */
-    function uri(bytes32 depositId) external view returns (string memory) {
+    function uri(uint256 depositId) external view returns (string memory) {
         Storage.Metadata memory depositMetadata = getDepositMetadata(depositId);
         require(depositMetadata.token != address(0), "Silo: metadata does not exist");
         bytes memory attributes = abi.encodePacked(
@@ -72,35 +72,16 @@ contract MetadataFacet is IERC1155Receiver {
     }
 
     /**
-     * @notice sets the metadata of a given depositId.
-     * @param depositId - the id of the deposit
-     * 
-     * @dev the depositId is the concatination of the token address and the stem.
-     * the metadata struct is somewhat redundant for ERC20 deposits, but is left here commented out 
-     * to use in the future. 
-     */
-    // function setMetadata(bytes32 depositId) external returns (bool) {
-    //     (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
-    //     Storage.Metadata memory depositMetadata;
-    //     depositMetadata.token = token;
-    //     depositMetadata.id = 0;
-    //     depositMetadata.stem = stem;
-    //     s.metadata[depositId] = depositMetadata;
-    //     emit URI("", uint256(depositId));
-    //     return true;
-    // }
-
-    /**
      * @notice returns the metadata of a given depositId.
      * 
      * @dev since the silo only supports ERC20 deposits, the metadata can be derived from the depositId.
      * However, the function is designed with future compatability with ERC721 and ERC1155 deposits in mind.
      */
-    function getDepositMetadata(bytes32 depositId) public pure returns (Storage.Metadata memory) {
+    function getDepositMetadata(uint256 depositId) public pure returns (Storage.Metadata memory) {
         Storage.Metadata memory depositMetadata;
-        (address token, int96 stem) = LibBytes.getAddressAndStemFromBytes(depositId);
+        (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         depositMetadata.token = token;
-        depositMetadata.id = 0;
+        depositMetadata.id = depositId;
         depositMetadata.stem = stem;
         return depositMetadata;
     }

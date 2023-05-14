@@ -5,11 +5,10 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ICurvePool} from "~/interfaces/ICurve.sol";
-import "../LibAppStorage.sol";
-import "./LibConvertData.sol";
-import "./LibMetaCurveConvert.sol";
-import "../Curve/LibBeanMetaCurve.sol";
-import "~/libraries/LibInternal.sol";
+import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {LibMetaCurveConvert} from "./LibMetaCurveConvert.sol";
+import {C} from "~/C.sol";
 
 /**
  * @title LibCurveConvert
@@ -82,9 +81,8 @@ library LibCurveConvert {
     {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
-        LibInternal.mow(msg.sender, C.curveMetapoolAddress());
-        (amountOut, amountIn) = curveRemoveLPTowardsPeg(lp, minBeans, pool);
-        tokenOut = C.beanAddress();
+        (amountOut, amountIn) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
+        tokenOut = C.BEAN;
         tokenIn = pool;
     }
 
@@ -101,7 +99,6 @@ library LibCurveConvert {
             uint256 amountIn
         )
     {
-        LibInternal.mow(msg.sender, C.beanAddress());
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
         (amountOut, amountIn) = curveAddLiquidityTowardsPeg(

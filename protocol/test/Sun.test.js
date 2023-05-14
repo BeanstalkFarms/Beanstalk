@@ -309,6 +309,14 @@ describe('Sun', function () {
       await revertToSnapshot(snapshotId);
     }
   })
+
+  it("rewards more than type(uint128).max/10000 to silo", async function () {
+    await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+  })
+
+  it("rewards more than type(uint128).max Soil below peg", async function () {
+    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '0')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+  })
 })
 
 function viewGenericUint256Logs(logs) {

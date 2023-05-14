@@ -27,20 +27,20 @@ library LibWhitelist {
      * ```
      * 
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
-     * @param stalk The Stalk per BDV received from depositing `token`.
+     * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
-        uint256 stalk
+        uint256 stalkIssuedPerBdv
     );
 
     /**
      * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
      * @param token ERC-20 token being updated in the Silo Whitelist.
      * @param stalkEarnedPerSeason new stalk per bdv per season value for this token.
-     * @param season the current season.
+     * @param season the season that the new stalk per bdv per season value becomes active (The current season).
      */
     event UpdatedStalkPerBdvPerSeason(
         address indexed token,
@@ -66,6 +66,13 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        //verify you passed in a callable selector
+        bytes memory data = abi.encodeWithSelector(selector,0);
+        (bool success,) = address(this).staticcall(data);
+        require(success, "Invalid selector");
+
+        require(s.ss[token].milestoneSeason == 0, "Token already whitelisted");
+
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
@@ -86,31 +93,13 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
+
         s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); //store grown stalk milestone
         s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
-    }
-
-
-    //function not needed because we'll manually setup these initial values from the bip script?
-    //however it's referenced in the InitWhitelist.sol code
-    function whitelistTokenLegacy(
-        address token,
-        bytes4 selector,
-        uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
-
-        s.ss[token].milestoneSeason = s.season.current;
-
-        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
     /**
