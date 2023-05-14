@@ -76,8 +76,6 @@ const Overview: FC<{
   const account = useAccount();
   const { data, loading } = useFarmerSiloHistory(account, false, true);
 
-  console.log("SILO DATA", data)
-
   //
   const ownership =
     farmerSilo.stalk.active?.gt(0) && beanstalkSilo.stalk.total?.gt(0)

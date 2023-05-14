@@ -60,8 +60,6 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
     [current, season, date]
   );
 
-  console.log("DATE: ", date)
-
   const [tabState, setTimeTab] = useState<TimeTabState>([
     SeasonAggregation.HOUR,
     SeasonRange.WEEK,
