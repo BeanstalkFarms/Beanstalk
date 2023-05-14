@@ -23,7 +23,7 @@ export type OverviewPlotProps = {
   account: string | undefined;
   season: BigNumber;
   current: BigNumber[];
-  date: Date;
+  date: Date | string;
   series: BaseDataPoint[][];
   stats: (season: BigNumber, value: BigNumber[], date: string) => React.ReactElement;
   empty: boolean;
