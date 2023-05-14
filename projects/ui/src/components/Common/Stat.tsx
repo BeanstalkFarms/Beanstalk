@@ -28,6 +28,8 @@ export type StatProps = {
   amountTooltip?: JSX.Element | string;
   /** Subtext shown below the statistic (ex. "Season X") */
   subtitle?: JSX.Element | string;
+  /** Subtext shown below the subtitle */
+  secondSubtitle?: JSX.Element | string;
   /** Typography variant to use (default: h1) */
   variant?: TypographyProps['variant'];
   /** Typography styles */
@@ -46,6 +48,7 @@ const Stat: FC<StatProps> = ({
   amountIcon,
   amountTooltip = '',
   subtitle,
+  secondSubtitle,
   // Typography
   sx,
   variant = 'h2',
@@ -97,6 +100,12 @@ const Stat: FC<StatProps> = ({
       {subtitle !== undefined && (
         <Typography variant="bodySmall" color="text.primary">
           {subtitle}
+        </Typography>
+      )}
+      {/* Second Subtitle */}
+      {secondSubtitle !== undefined && (
+        <Typography variant="bodySmall" color="text.primary">
+          {secondSubtitle}
         </Typography>
       )}
     </Stack>

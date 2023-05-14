@@ -7,6 +7,7 @@ type ChartInfoProps = {
   titleTooltip?: JSX.Element | string;
   amount: JSX.Element | string;
   subtitle: JSX.Element | string;
+  secondSubtitle: JSX.Element | string;
   gap: any;
   sx?: object;
   isLoading: boolean;
