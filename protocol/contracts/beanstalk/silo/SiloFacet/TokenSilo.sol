@@ -71,6 +71,12 @@ contract TokenSilo is Silo {
         uint256 bdvRemoved;
     }
 
+    struct AssetsAdded {
+        uint256 stalkAdded;
+        uint256 seedsAdded;
+        uint256 bdvAdded;
+    }
+
     /**
      * Getters
      **/
