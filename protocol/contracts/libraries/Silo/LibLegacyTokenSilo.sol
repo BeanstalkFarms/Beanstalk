@@ -283,25 +283,6 @@ library LibLegacyTokenSilo {
         stem = (int96(season).sub(int96(s.season.stemStartSeason))).mul(int96(seedsPerBdv));
     }
 
-    //this function was used for some testing at some point, but there are currently
-    //no unit tests that use it. Leaving it here for now in case we need it later.
-    // function stemToSeason(uint256 seedsPerBdv, int128 stem)
-    //     internal
-    //     view
-    //     returns (uint32 season)
-    // {
-    //     // require(stem > 0);
-    //     AppStorage storage s = LibAppStorage.diamondStorage();
-    //     // uint256 seedsPerBdv = getSeedsPerToken(address(token));
-
-    //     require(seedsPerBdv > 0, "Silo: Token not supported");
-
-    //     int128 diff = stem.div(int128(seedsPerBdv));
-    //     //using regular + here becauase we want to "overflow" (which for signed just means add negative)
-    //     season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
-    //     // season = seasonAs256.toUint32();
-    // }
-
     /** 
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
      * @param account Address of the account to migrate
@@ -318,7 +299,6 @@ library LibLegacyTokenSilo {
 
         s.a[account].lastUpdate = s.season.stemStartSeason;
     }
-
 
     /** 
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
