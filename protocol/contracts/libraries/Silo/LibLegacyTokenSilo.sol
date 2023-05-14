@@ -28,6 +28,7 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
+    using SafeMath for uint128;
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
@@ -346,7 +347,7 @@ library LibLegacyTokenSilo {
             for (uint256 j = 0; j < seasons[i].length; j++) {
                 PerDepositData memory perDepositData;
                 perDepositData.season = seasons[i][j];
-                perDepositData.amount = uint128(amounts[i][j]);
+                perDepositData.amount = amounts[i][j].toUint128();
  
                 if (perDepositData.amount == 0) {
                     // skip deposit calculations if amount deposited in deposit is 0
@@ -363,14 +364,14 @@ library LibLegacyTokenSilo {
  
                 //calculate how much stalk has grown for this deposit
                 perDepositData.grownStalk = _calcGrownStalkForDeposit(
-                    crateBDV * getSeedsPerToken(address(perTokenData.token)),
+                    crateBDV.mul(getSeedsPerToken(address(perTokenData.token))),
                     perDepositData.season
                 );
  
                 // also need to calculate how much stalk has grown since the migration
-                uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
-                perDepositData.grownStalk += stalkGrownSinceStemStartSeason;
-                migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
+                uint128 stalkGrownSinceStemStartSeason = LibSilo.stalkReward(0, perTokenData.stemTip, crateBDV.toUint128()).toUint128();
+                perDepositData.grownStalk = perDepositData.grownStalk.add(stalkGrownSinceStemStartSeason).toUint128();
+                migrateData.totalGrownStalk = migrateData.totalGrownStalk.add(stalkGrownSinceStemStartSeason).toUint128();
  
                 // add to new silo
                 LibTokenSilo.addDepositToAccount(
@@ -387,7 +388,7 @@ library LibLegacyTokenSilo {
                 );
  
                 // add to running total of seeds
-                migrateData.totalSeeds += uint128(uint256(crateBDV) * getSeedsPerToken(address(perTokenData.token)));
+                migrateData.totalSeeds = migrateData.totalSeeds.add(crateBDV.mul(getSeedsPerToken(address(perTokenData.token)))).toUint128();
 
                 // emit legacy RemoveDeposit event
                 emit RemoveDeposit(account, perTokenData.token, perDepositData.season, perDepositData.amount);
