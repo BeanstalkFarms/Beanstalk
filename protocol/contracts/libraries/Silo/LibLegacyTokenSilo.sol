@@ -280,8 +280,7 @@ library LibLegacyTokenSilo {
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-        //using regular - here because we want it to overflow negative
-        stem = (int96(season)-int96(s.season.stemStartSeason)).mul(int96(seedsPerBdv));
+        stem = (int96(season).sub(int96(s.season.stemStartSeason))).mul(int96(seedsPerBdv));
     }
 
     //this function was used for some testing at some point, but there are currently
