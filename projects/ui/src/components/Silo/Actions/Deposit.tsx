@@ -167,11 +167,6 @@ const DepositForm: FC<
     [setFieldValue]
   );
 
-  const filteredFormTxns = useMemo(
-    () => (tokenIn.equals(sdk.tokens.ETH) ? [FormTxn.ENROOT] : undefined),
-    [sdk.tokens.ETH, tokenIn]
-  );
-
   const increasedStalkPct = stalk.div(beanstalkSilo.stalk.total).times(100);
   const increasedStalkPctStr = increasedStalkPct.lt(0.01)
     ? '<0.01%'
@@ -269,7 +264,7 @@ const DepositForm: FC<
                 }
               />
             </TokenOutput>
-            <AdditionalTxnsAccordion filter={filteredFormTxns} />
+            <AdditionalTxnsAccordion />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview actions={actions} {...txnActions} />

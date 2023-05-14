@@ -65,7 +65,7 @@ import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
-import { ClaimAndDoX, FormTxn, SowFarmStep } from '~/lib/Txn';
+import { ClaimAndDoX, SowFarmStep } from '~/lib/Txn';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment & {
@@ -229,11 +229,6 @@ const SowForm: FC<
     []
   );
 
-  const disabledActions = useMemo(() => {
-    const isEth = tokenIn.equals(sdk.tokens.ETH);
-    return isEth ? [FormTxn.ENROOT] : undefined;
-  }, [tokenIn, sdk.tokens.ETH]);
-
   return (
     <FormWithDrawer autoComplete="off" siblingRef={formRef}>
       <TokenSelectDialogNew
@@ -299,7 +294,7 @@ const SowForm: FC<
                 {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
               </WarningAlert>
             ) : null}
-            <AdditionalTxnsAccordion filter={disabledActions} />
+            <AdditionalTxnsAccordion />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
