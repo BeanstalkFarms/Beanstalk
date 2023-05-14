@@ -6,11 +6,8 @@ pragma experimental ABIEncoderV2;
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "~/C.sol";
 import {IBean} from "~/interfaces/IBean.sol";
 import {LibAppStorage} from "./LibAppStorage.sol";
-
-
 
 /**
  * @title LibChop
@@ -21,6 +18,13 @@ library LibChop {
     using SafeERC20 for IERC20;
     using LibTransfer for IERC20;
     using SafeMath for uint256;
+
+    event Chop(
+        address indexed account,
+        address indexed token,
+        uint256 amount,
+        uint256 underlying
+    );
 
     function chop(
         address unripeToken,
@@ -42,6 +46,8 @@ library LibChop {
         address underlyingToken = s.u[unripeToken].underlyingToken;
 
         IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
+        
+        emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
     }
 
     function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
@@ -59,26 +65,27 @@ library LibChop {
         unripe = s.u[unripeToken].underlyingToken != address(0);
     }
 
-// private?
     function getRecapPaidPercentAmount(uint256 amount)
         internal
         view
         returns (uint256 penalty)
     {
+        // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }
 
-// private?
      function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
         internal
         view
-        returns (uint256 redeem)
+        returns (uint256)
     {
+        // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
+        uint256 redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
             supply
         );
+        return redeem;
     }
 
 }

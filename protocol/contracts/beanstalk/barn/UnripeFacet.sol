@@ -36,13 +36,6 @@ contract UnripeFacet is ReentrancyGuard {
 
     event ChangeUnderlying(address indexed token, int256 underlying);
 
-    event Chop(
-        address indexed account,
-        address indexed token,
-        uint256 amount,
-        uint256 underlying
-    );
-
     event Pick(
         address indexed account,
         address indexed token,
@@ -50,26 +43,14 @@ contract UnripeFacet is ReentrancyGuard {
     );
 
     // LIBCHOP
-
     function chop(
         address unripeToken,
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
-        // uint256 unripeSupply = IERC20(unripeToken).totalSupply();
 
-        // amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
-
-        // underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
-
-        // LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
-
-        // address underlyingToken = s.u[unripeToken].underlyingToken;
-
-        // IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
         underlyingAmount = LibChop.chop(unripeToken, amount, fromMode, toMode);
-
     }
 
     function pick(
@@ -114,15 +95,11 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     //LIBCHOP
-
     function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
         private
         view
         returns (uint256 redeem)
     {
-        // redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
-        //     supply
-        // );
         redeem = LibChop._getUnderlying(unripeToken, amount, supply);
     }
 
@@ -143,22 +120,16 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     // LIBCHOP
-
     function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
         public
         view
         returns (uint256 redeem)
     {
-        // require(isUnripe(unripeToken), "not vesting");
-        // uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
-        // redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
         redeem = LibChop._getPenalizedUnderlying(unripeToken, amount, supply);
     }
 
     // LIBCHOP
-
     function isUnripe(address unripeToken) public view returns (bool unripe) {
-        // unripe = s.u[unripeToken].underlyingToken != address(0);
         unripe = LibChop.isUnripe(unripeToken);
     }
 
@@ -207,16 +178,6 @@ contract UnripeFacet is ReentrancyGuard {
     function getRecapPaidPercent() external view returns (uint256 penalty) {
         penalty = LibChop.getRecapPaidPercentAmount(DECIMALS);
     }
-
-    // LIBCHOP
-
-    // function getRecapPaidPercentAmount(uint256 amount)
-    //     private
-    //     view
-    //     returns (uint256 penalty)
-    // {
-    //     return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
-    // }
 
     function getUnderlyingPerUnripeToken(address unripeToken)
         external
