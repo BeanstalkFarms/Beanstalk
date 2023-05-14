@@ -20,31 +20,25 @@ library LibUnripeSilo {
     uint256 private constant AMOUNT_TO_BDV_BEAN_3CRV = 992035;
     uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
+    /**
+     * @dev Deletes the legacy Bean storage reference for a given `account` and `id`.
+     */
     function removeUnripeBeanDeposit(
         address account,
-        uint32 id,
-        uint256 amount
-    ) internal returns (uint256 bdv) {
-        _removeUnripeBeanDeposit(account, id, amount);
-        bdv = amount.mul(C.initialRecap()).div(1e18);
-    }
-
-    function _removeUnripeBeanDeposit(
-        address account,
-        uint32 id,
-        uint256 amount
-    ) private {
+        uint32 id
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.a[account].bean.deposits[id] = s.a[account].bean.deposits[id].sub(
-            amount,
-            "Silo: Crate balance too low."
-        );
+        delete s.a[account].bean.deposits[id];
     }
 
     function isUnripeBean(address token) internal pure returns (bool b) {
         b = token == C.UNRIPE_BEAN;
     }
 
+    /**
+     * @dev Returns the whole Unripe Bean Deposit for a given `account` and `season`.
+     * Includes non-legacy balance.
+     */
     function unripeBeanDeposit(address account, uint32 season)
         internal
         view
@@ -59,83 +53,28 @@ library LibUnripeSilo {
             .add(legacyAmount.mul(C.initialRecap()).div(1e18));
     }
 
+    /**
+     * @dev Deletes all legacy LP storage references for a given `account` and `id`.
+     */
     function removeUnripeLPDeposit(
         address account,
-        uint32 id,
-        uint256 amount
-    ) internal returns (uint256 bdv) {
-        bdv = _removeUnripeLPDeposit(account, id, amount);
-        bdv = bdv.mul(C.initialRecap()).div(1e18);
-    }
-
-    function _removeUnripeLPDeposit(
-        address account,
-        uint32 id,
-        uint256 amount
-    ) private returns (uint256 bdv) {
+        uint32 id
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        (uint256 amount1, uint256 bdv1) = getBeanEthUnripeLP(account, id);
-        if (amount1 >= amount) {
-            uint256 removed = amount.mul(s.a[account].lp.deposits[id]).div(
-                amount1
-            );
-            s.a[account].lp.deposits[id] = s.a[account].lp.deposits[id].sub(
-                removed
-            );
-            removed = amount.mul(bdv1).div(amount1);
-            s.a[account].lp.depositSeeds[id] = s
-                .a[account]
-                .lp
-                .depositSeeds[id]
-                .sub(removed.mul(4));
-            return removed;
-        }
-        amount -= amount1;
-        bdv = bdv1;
         delete s.a[account].lp.depositSeeds[id];
         delete s.a[account].lp.deposits[id];
-
-        (amount1, bdv1) = getBean3CrvUnripeLP(account, id);
-        if (amount1 >= amount) {
-            Account.Deposit storage d = s.a[account].deposits[
-                C.unripeLPPool1()
-            ][id];
-            uint128 removed = uint128(amount.mul(d.amount).div(amount1));
-            s.a[account].deposits[C.unripeLPPool1()][id].amount = d.amount.sub(
-                removed
-            );
-            removed = uint128(amount.mul(d.bdv).div(amount1));
-            s.a[account].deposits[C.unripeLPPool1()][id].bdv = d.bdv.sub(
-                removed
-            );
-            return bdv.add(removed);
-        }
-        amount -= amount1;
-        bdv = bdv.add(bdv1);
         delete s.a[account].deposits[C.unripeLPPool1()][id];
-
-        (amount1, bdv1) = getBeanLusdUnripeLP(account, id);
-        if (amount1 >= amount) {
-            Account.Deposit storage d = s.a[account].deposits[
-                C.unripeLPPool2()
-            ][id];
-            uint128 removed = uint128(amount.mul(d.amount).div(amount1));
-            s.a[account].deposits[C.unripeLPPool2()][id].amount = d.amount.sub(
-                removed
-            );
-            removed = uint128(amount.mul(d.bdv).div(amount1));
-            s.a[account].deposits[C.unripeLPPool2()][id].bdv = d.bdv.sub(
-                removed
-            );
-            return bdv.add(removed);
-        }
-        revert("Silo: Crate balance too low.");
+        delete s.a[account].deposits[C.unripeLPPool2()][id];
     }
 
     function isUnripeLP(address token) internal pure returns (bool b) {
         b = token == C.UNRIPE_LP;
     }
 
+    /**
+     * @dev Returns the whole Unripe LP Deposit for a given `account` and `season`.
+     * Includes non-legacy balance.
+     */
     function unripeLPDeposit(address account, uint32 season)
         internal
         view

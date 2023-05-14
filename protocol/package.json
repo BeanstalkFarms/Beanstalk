@@ -44,6 +44,7 @@
     "solidity-coverage": "^0.8.2"
   },
   "dependencies": {
+    "@ethereum-waffle/chai": "4.0.10",
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/contracts-upgradeable": "^3.4.0",
     "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3",
