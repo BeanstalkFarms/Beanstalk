@@ -1217,12 +1217,11 @@ describe('Silo Token', function () {
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.silo.totalStalk()).to.eq('50013711292'); //someone please check my math here, before it was 500.1 without the 3711292. That extra part comes from mow and migrate.
+        expect(await this.silo.totalStalk()).to.eq(toStalk('5.001'));
       });
 
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('50013711292');
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('10'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('5.001'));
       });
 
       it('properly removes the crate', async function () {

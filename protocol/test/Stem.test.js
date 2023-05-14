@@ -8,7 +8,8 @@ const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP } = require('
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
-const { ConvertEncoder } = require('./utils/encoder.js')
+const { ConvertEncoder } = require('./utils/encoder.js');
+const { BigNumber } = require('ethers');
 require('dotenv').config();
 
 let user,user2,owner;
@@ -139,7 +140,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         for(let i=0; i<seasons.length; i++) {
           const newSeason = [];
           for(let j=0; j<seasons[i].length; j++) {
-            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            const deposit = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
             newSeason.push(deposit[0].toString());
           }
           amounts.push(newSeason);
@@ -147,10 +148,17 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
   
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
+
+        const balanceOfStalkBefore = await this.silo.balanceOfStalk(depositorAddress);
+        const balanceOfStalkUpUntilStemsDeployment = await this.migrate.balanceOfGrownStalkUpToStemsDeployment(depositorAddress);
     
         //need an array of all the tokens that have been deposited and their corresponding seasons
         await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
-  
+
+        //verify balance of stalk after is equal to balance of stalk before plus the stalk earned up until stems deployment
+        const balanceOfStalkAfter = await this.silo.balanceOfStalk(depositorAddress);
+        expect(balanceOfStalkAfter).to.be.equal(balanceOfStalkBefore.add(balanceOfStalkUpUntilStemsDeployment));
+        
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
@@ -195,7 +203,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         for(let i=0; i<seasons.length; i++) {
           const newSeason = [];
           for(let j=0; j<seasons[i].length; j++) {
-            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            const deposit = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
             newSeason.push(deposit[0].toString());
           }
           amounts.push(newSeason);
@@ -264,7 +272,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         for(let i=0; i<seasons.length; i++) {
           const newSeason = [];
           for(let j=0; j<seasons[i].length; j++) {
-            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            const deposit = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
             newSeason.push(deposit[0].toString());
           }
           amounts.push(newSeason);
@@ -287,7 +295,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
             for(let i=0; i<seasons.length; i++) {
               const newSeason = [];
               for(let j=0; j<seasons[i].length; j++) {
-                const deposit = await this.silo.getDepositLegacy(this.depositorAddress, tokens[i], seasons[i][j]);
+                const deposit = await this.migrate.getDepositLegacy(this.depositorAddress, tokens[i], seasons[i][j]);
                 newSeason.push(deposit[0].toString());
               }
               amounts.push(newSeason);
@@ -299,17 +307,19 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
             this.stalkBeforeUser = await this.silo.balanceOfStalk(this.depositorAddress);
             this.stalkBeforeTotal = await this.silo.totalStalk();
+
+            this.balanceOfStalkUpUntilStemsDeployment = await this.migrate.balanceOfGrownStalkUpToStemsDeployment(this.depositorAddress);
         
             //need an array of all the tokens that have been deposited and their corresponding seasons
             await this.migrate.mowAndMigrate(this.depositorAddress, tokens, seasons, amounts, 0, 0, []);
         });
 
         it('properly migrates the user balances', async function () {
-          expect(await this.silo.balanceOfStalk(this.depositorAddress)).to.eq(this.stalkBeforeUser);
+          expect(await this.silo.balanceOfStalk(this.depositorAddress)).to.eq(this.stalkBeforeUser.add(this.balanceOfStalkUpUntilStemsDeployment));
         });
       
         it('properly migrates the total balances', async function () {
-          expect(await this.silo.totalStalk()).to.eq(this.stalkBeforeTotal);
+          expect(await this.silo.totalStalk()).to.eq(this.stalkBeforeTotal.add(this.balanceOfStalkUpUntilStemsDeployment));
         });
       });
 
@@ -393,7 +403,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         for(let i=0; i<seasons.length; i++) {
           const newSeason = [];
           for(let j=0; j<seasons[i].length; j++) {
-            const deposit = await this.silo.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            const deposit = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
             newSeason.push(deposit[0].toString());
           }
           amounts.push(newSeason);
@@ -403,6 +413,61 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await expect(this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, seasons, 0, 0, [])).to.be.revertedWith('seeds misalignment, double check submitted deposits');
         await expect(this.silo.mow(depositorAddress, this.beanMetapool.address)).to.be.revertedWith('Silo: Migration needed');
       })
+    });
+
+    describe("properly calculates stalk on migration if you migrate later", function () {
+      it("for a sample depositor", async function () {
+        const depositorAddress = "0x5e68bb3de6133baee55eeb6552704df2ec09a824";
+        const tokens = [
+          "0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449",
+          "0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d",
+          "0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab"
+        ];
+        const seasons = [[6074], [6061], [6137]];
+
+        const amounts = [];
+        for (let i = 0; i < seasons.length; i++) {
+          const newSeason = [];
+          for (let j = 0; j < seasons[i].length; j++) {
+            const deposit = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            newSeason.push(deposit[0].toString());
+          }
+          amounts.push(newSeason);
+        }
+
+        const depositorSigner = await impersonateSigner(depositorAddress);
+        await this.silo.connect(depositorSigner);
+
+        const seasonsJump = 1000000; //if you change this number to any other positive number, test should still pass
+
+        await this.season.fastForward(seasonsJump);
+
+        const balanceOfStalkBefore = await this.silo.balanceOfStalk(depositorAddress);
+        const balanceOfStalkUpUntilStemsDeployment = await this.migrate.balanceOfGrownStalkUpToStemsDeployment(depositorAddress);
+
+        //get balance of grown stalk for each token and add them up
+        var totalBalanceOfGrownStalk = ethers.BigNumber.from(0);
+        for (let i = 0; i < tokens.length; i++) {
+          const stemTip = await this.silo.stemTipForToken(tokens[i]);
+          const [amount, bdv] = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][0]);
+          const amountOfGrownStalkPerToken = stemTip.mul(bdv);
+          totalBalanceOfGrownStalk = totalBalanceOfGrownStalk.add(amountOfGrownStalkPerToken);
+        }
+
+        await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
+
+        //verify balance of stalk after is equal to balance of stalk before plus the stalk earned up until stems deployment
+        const balanceOfStalkAfter = await this.silo.balanceOfStalk(depositorAddress);
+
+        const calculatedTotalAfter = balanceOfStalkBefore.add(balanceOfStalkUpUntilStemsDeployment).add(totalBalanceOfGrownStalk);
+
+        //verify that the stalk amount for this user is equal to the grown stalk they should have earned up until stems deployment,
+        //plus the grown stalk they should have earned after stems deployment
+        expect(balanceOfStalkAfter).to.be.equal(calculatedTotalAfter);
+
+        //now mow and it shouldn't revert
+        await this.silo.mow(depositorAddress, this.beanMetapool.address);
+      });
     });
   
     describe('reverts if you try to mow before migrating', function () {

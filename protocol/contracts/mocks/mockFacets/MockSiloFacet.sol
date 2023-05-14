@@ -330,27 +330,27 @@ contract MockSiloFacet is SiloFacet {
      *
      * FIXME(naming): rename to `getDeposit()`?
      */
-    function getDepositLegacy(
-        address account,
-        address token,
-        uint32 season
-    ) external view returns (uint128, uint128) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    // function getDepositLegacy(
+    //     address account,
+    //     address token,
+    //     uint32 season
+    // ) external view returns (uint128, uint128) {
+    //     AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (LibUnripeSilo.isUnripeBean(token)){
-            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
-            return (uint128(amount), uint128(bdv));
-        }
-        if (LibUnripeSilo.isUnripeLP(token)){
-            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
-            return (uint128(amount), uint128(bdv));
-        }
+    //     if (LibUnripeSilo.isUnripeBean(token)){
+    //         (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
+    //         return (uint128(amount), uint128(bdv));
+    //     }
+    //     if (LibUnripeSilo.isUnripeLP(token)){
+    //         (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
+    //         return (uint128(amount), uint128(bdv));
+    //     }
 
-        return (
-            s.a[account].legacyDeposits[token][season].amount,
-            s.a[account].legacyDeposits[token][season].bdv
-        );
-    }
+    //     return (
+    //         s.a[account].legacyDeposits[token][season].amount,
+    //         s.a[account].legacyDeposits[token][season].bdv
+    //     );
+    // }
 
     function balanceOfSeeds(address account) public view returns (uint256) {
         return s.a[account].s.seeds;

@@ -10,6 +10,7 @@ import "./LibSilo.sol";
 import "./LibUnripeSilo.sol";
 import "../LibAppStorage.sol";
 import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
+import {LibSafeMath32} from "~/libraries/LibSafeMath32.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
@@ -30,6 +31,7 @@ library LibLegacyTokenSilo {
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
+    using LibSafeMath32 for uint32;
 
     //TODO: verify and update this root on launch if there's more drift
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
@@ -202,7 +204,7 @@ library LibLegacyTokenSilo {
         return
             stalkReward(
                 s.a[account].s.seeds,
-                s.a[account].lastUpdate-stemStartSeason
+                stemStartSeason.sub(s.a[account].lastUpdate)
             );
     }
 
@@ -350,8 +352,8 @@ library LibLegacyTokenSilo {
 
 
         //do a legacy mow using the old silo seasons deposits
-        updateLastUpdateToNow(account);
         LibSilo.mintGrownStalk(account, balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        updateLastUpdateToNow(account);
         //at this point we've completed the guts of the old mow function, now we need to do the migration
  
         MigrateData memory migrateData;
