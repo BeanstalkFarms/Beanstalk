@@ -89,11 +89,11 @@ library LibConvert {
             return type(uint256).max;
 
         // Bean -> Well LP Token
-        if (tokenIn == C.beanAddress() && tokenOut.isWell())
+        if (tokenIn == C.BEAN && tokenOut.isWell())
             return LibWellConvert.beansToPeg(tokenOut);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == C.beanAddress())
+        if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.lpToPeg(tokenIn);
 
         revert("Convert: Tokens not supported");
@@ -125,11 +125,11 @@ library LibConvert {
             return amountIn;
 
         // Bean -> Well LP Token
-        if (tokenIn == C.beanAddress() && tokenOut.isWell())
+        if (tokenIn == C.BEAN && tokenOut.isWell())
             return LibWellConvert.getLPAmountOut(tokenOut, amountIn);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == C.beanAddress())
+        if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");

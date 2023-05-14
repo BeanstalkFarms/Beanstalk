@@ -89,7 +89,7 @@ library LibWellConvert {
      * `amountIn` LP Tokens of a given `well`.
      */
     function getBeanAmountOut(address well, uint256 amountIn) internal view returns(uint256 beans) {
-        beans = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(C.beanAddress()));
+        beans = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(C.BEAN));
     }
 
     /**
@@ -123,7 +123,7 @@ library LibWellConvert {
     {
         (uint256 lp, uint256 minBeans, address well) = convertData.convertWithAddress();
 
-        tokenOut = C.beanAddress();
+        tokenOut = C.BEAN;
         tokenIn = well;
 
         (amountOut, amountIn) = _wellRemoveLiquidityTowardsPeg(lp, minBeans, well);
@@ -171,7 +171,7 @@ library LibWellConvert {
             .convertWithAddress();
     
         tokenOut = well;
-        tokenIn = C.beanAddress();
+        tokenIn = C.BEAN;
 
         (amountOut, amountIn) = _wellAddLiquidityTowardsPeg(
             beans,

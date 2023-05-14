@@ -35,7 +35,7 @@ library LibWell {
     ) {
         ratios = new uint[](tokens.length);
         for (uint i; i < tokens.length; ++i) {
-            if (C.beanAddress() == address(tokens[i])) {
+            if (C.BEAN == address(tokens[i])) {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
@@ -49,7 +49,7 @@ library LibWell {
      */
     function getBeanIndex(IERC20[] memory tokens) internal pure returns (uint beanIndex) {
         for (beanIndex; beanIndex < tokens.length; ++beanIndex) {
-            if (C.beanAddress() == address(tokens[beanIndex])) {
+            if (C.BEAN == address(tokens[beanIndex])) {
                 return beanIndex;
             }
         }

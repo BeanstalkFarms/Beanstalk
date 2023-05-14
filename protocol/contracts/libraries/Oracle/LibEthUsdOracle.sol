@@ -5,47 +5,59 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-// import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
+import {LibUniswapOracle} from "./LibUniswapOracle.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @author Publius
- * @title Oracle fetches the eth usd price
+ * @title Oracle fetches the usd price of a given token
  **/
 
+import {console} from "hardhat/console.sol";
 
 library LibEthUsdOracle {
 
-    // AggregatorV3Interface constant priceAggregator = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    using SafeMath for uint256;
 
-    // function getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
-    //     // First, try to get current decimal precision:
-    //     try priceAggregator.decimals() returns (uint8 decimals) {
-    //         // If call to Chainlink succeeds, record the current decimal precision
-    //         chainlinkResponse.decimals = decimals;
-    //     } catch {
-    //         // If call to Chainlink aggregator reverts, return a zero response with success = false
-    //         return chainlinkResponse;
-    //     }
+    uint256 constant MAX_GREEDY_DIFFERENCE = 0.005e18; // 0.5%
+    uint256 constant MAX_DIFFERENCE = 0.01e18; // 0.5%
+    uint256 constant ONE = 1e18;
+  
+    function getEthUsdPrice() internal view returns (uint256) {
+        uint256 chainlinkPrice = LibChainlinkOracle.getEthUsdPrice();
+        console.log("Chainlink: %s", chainlinkPrice);
+        uint256 usdcPrice = LibUniswapOracle.getEthUsdcPrice();
+        console.log("USDC: %s", chainlinkPrice);
 
-    //     // Secondly, try to get latest price data:
-    //     try priceAggregator.latestRoundData() returns
-    //     (
-    //         uint80 roundId,
-    //         int256 answer,
-    //         uint256 /* startedAt */,
-    //         uint256 timestamp,
-    //         uint80 /* answeredInRound */
-    //     )
-    //     {
-    //         // If call to Chainlink succeeds, return the response and success = true
-    //         chainlinkResponse.roundId = roundId;
-    //         chainlinkResponse.answer = answer;
-    //         chainlinkResponse.timestamp = timestamp;
-    //         chainlinkResponse.success = true;
-    //         return chainlinkResponse;
-    //     } catch {
-    //         // If call to Chainlink aggregator reverts, return a zero response with success = false
-    //         return chainlinkResponse;
-    //     }
-    // }
+        uint256 usdcChainlinkPercentDiff = usdcPrice.mul(1e18).div(chainlinkPrice);
+        usdcChainlinkPercentDiff = usdcPrice > chainlinkPrice ? 
+            usdcChainlinkPercentDiff - ONE :
+            ONE - usdcChainlinkPercentDiff;
+
+        if (usdcChainlinkPercentDiff < MAX_GREEDY_DIFFERENCE) {
+            return chainlinkPrice.add(usdcPrice).div(2);
+        }
+
+        uint256 usdtPrice = LibUniswapOracle.getEthUsdtPrice();
+        console.log("USDT: %s", chainlinkPrice);
+
+        uint256 usdtChainlinkPercentDiff = usdtPrice.mul(1e18).div(chainlinkPrice);
+        usdtChainlinkPercentDiff = usdtPrice > chainlinkPrice ? 
+            usdtChainlinkPercentDiff - ONE :
+            ONE - usdtChainlinkPercentDiff;
+
+        if (usdtChainlinkPercentDiff < usdcChainlinkPercentDiff) {
+            if (usdtChainlinkPercentDiff < MAX_DIFFERENCE) {
+                return chainlinkPrice.add(usdtPrice).div(2);
+            }
+            return 0;
+        } else {
+            if (usdcChainlinkPercentDiff < MAX_DIFFERENCE) {
+                return chainlinkPrice.add(usdcPrice).div(2);
+            }
+            return 0;
+        }
+
+    }
 }

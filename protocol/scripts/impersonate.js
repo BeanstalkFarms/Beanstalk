@@ -21,7 +21,9 @@ const {
   PRICE_DEPLOYER,
   BEANSTALK,
   BASE_FEE_CONTRACT,
-  ETH_USDC_UNISWAP_V3
+  ETH_USDC_UNISWAP_V3,
+  ETH_USDT_UNISWAP_V3,
+  USDT
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -244,6 +246,19 @@ async function ethUsdcUniswap() {
   ]);
 }
 
+async function ethUsdtUniswap() {
+  const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
+  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
+  await mockUniswapV3Factory.deployed()
+  const ethUdstPool = await mockUniswapV3Factory.callStatic.createPool(WETH, USDT, 3000)
+  await mockUniswapV3Factory.createPool(WETH, USDT, 3000)
+  const bytecode = await ethers.provider.getCode(ethUdstPool)
+  await network.provider.send("hardhat_setCode", [
+    ETH_USDT_UNISWAP_V3,
+    bytecode,
+  ]);
+}
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -257,4 +272,5 @@ exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
 exports.impersonateBlockBasefee = blockBasefee;
 exports.impersonateEthUsdcUniswap = ethUsdcUniswap
+exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
