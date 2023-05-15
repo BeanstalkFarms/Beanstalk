@@ -501,8 +501,6 @@ const SowFormContainer: FC<{}> = () => {
         const _scaledTemp = await sdk.contracts.beanstalk.temperature();
         const scaledTemp = TokenValue.fromBlockchain(_scaledTemp, 6);
 
-        console.log('scaledTemperature: ', scaledTemp);
-
         const _minTemp = TokenValue.fromHuman(
           (values.settings.minTemperature || ZERO_BN).toString(),
           6
@@ -532,6 +530,7 @@ const SowFormContainer: FC<{}> = () => {
 
         sowTxn.build(
           tokenIn,
+          amountIn,
           minTemperature,
           minSoil,
           balanceFromToMode(values.balanceFrom),

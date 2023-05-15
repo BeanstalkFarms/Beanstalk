@@ -20,6 +20,7 @@ export class SowFarmStep extends FarmStep {
 
   build(
     tokenIn: ERC20Token | NativeToken,
+    _amountIn: TokenValue,
     _minTemperature: TokenValue,
     _minSoil: TokenValue,
     _fromMode: FarmFromMode,
@@ -30,13 +31,13 @@ export class SowFarmStep extends FarmStep {
     const { beanstalk } = this._sdk.contracts;
     const { BEAN } = this._sdk.tokens;
 
-    const depositingBEAN = BEAN.equals(tokenIn);
+    const usingBean = BEAN.equals(tokenIn);
 
     const addiitonalBean = claimAndDoX.claimedBeansUsed;
 
     let fromMode = _fromMode;
 
-    if (!depositingBEAN) {
+    if (!usingBean && _amountIn.gt(0)) {
       const swap = this._sdk.swap.buildSwap(
         tokenIn,
         BEAN,
