@@ -134,7 +134,7 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    ) external nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
@@ -192,15 +192,15 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
+        LibSilo.AssetsAdded memory aa;
 
         // Get new BDV
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-        uint256 newStalk;
+        aa.bdvAdded = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
         int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
@@ -209,7 +209,7 @@ contract ConvertFacet is ReentrancyGuard {
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
-            uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            uint256 bdv = amounts[i].mul(aa.bdvAdded).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
@@ -219,7 +219,7 @@ contract ConvertFacet is ReentrancyGuard {
                 LibTokenSilo.Transfer.noEmitTransferSingle
             );
             
-            newStalk = newStalk.add(
+            aa.stalkAdded = aa.stalkAdded.add(
                 bdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
                         stems[i],
@@ -233,7 +233,7 @@ contract ConvertFacet is ReentrancyGuard {
         // Mint Stalk associated with the delta BDV.
         LibSilo.mintStalk(
             msg.sender,
-            newStalk.sub(ar.stalkRemoved)
+            aa.stalkAdded.sub(ar.stalkRemoved)
         );
     }
 
