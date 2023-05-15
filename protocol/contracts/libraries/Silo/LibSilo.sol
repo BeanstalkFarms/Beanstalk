@@ -323,11 +323,11 @@ library LibSilo {
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.stemStartSeason) {
-            uint32 _lastUpdate = lastUpdate(account);
-            if (_lastUpdate <= s.season.rainStart && _lastUpdate <= s.season.current) {
+            uint32 lastUpdate = _lastUpdate(account);
+            if (lastUpdate <= s.season.rainStart && lastUpdate <= s.season.current) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
-                handleRainAndSops(account, _lastUpdate);
+                handleRainAndSops(account, lastUpdate);
 
                 // Reset timer so that Grown Stalk for a particular Season can only be 
                 // claimed one time. 
@@ -383,16 +383,15 @@ library LibSilo {
     /**
      * @notice returns the last season an account interacted with the silo.
      */
-    function lastUpdate(address account) internal view returns (uint32) {
+    function _lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
     }
 
     /**
      * @dev internal logic to handle when beanstalk is raining.
-     * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
      */
-    function handleRainAndSops(address account, uint32 _lastUpdate) private {
+    function handleRainAndSops(address account, uint32 lastUpdate) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
@@ -401,13 +400,13 @@ library LibSilo {
             return;
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > _lastUpdate) {
+        if (s.season.lastSopSeason > lastUpdate) {
             s.a[account].sop.plenty = balanceOfPlenty(account);
             s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
-            if (s.season.rainStart > _lastUpdate) {
+            if (s.season.rainStart > lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
                 s.a[account].sop.roots = s.a[account].roots;
             }
@@ -474,7 +473,7 @@ library LibSilo {
         }
 
         // Handle and SOPs that started + ended before after last Silo update.
-        if (s.season.lastSop > lastUpdate(account)) {
+        if (s.season.lastSop > _lastUpdate(account)) {
             uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
             plenty = plenty.add(
                 plentyPerRoot.mul(s.a[account].roots).div(
