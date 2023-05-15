@@ -11,7 +11,7 @@ import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
 import { loadBean, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V2, CURVE_PRICE } from "./utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
-import { updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
@@ -100,6 +100,7 @@ function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: Big
 
   updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(pool, timestamp, blockNumber, newPrice);
+  updatePoolReserves(pool, token0Amount, token1Amount, blockNumber);
 }
 
 function handleSwap(
@@ -136,4 +137,5 @@ function handleSwap(
 
   updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(pool, timestamp, blockNumber, newPrice);
+  updatePoolReserves(pool, sold_id == ZERO_BI ? tokens_sold : tokens_bought, sold_id == ZERO_BI ? tokens_bought : tokens_sold, blockNumber);
 }

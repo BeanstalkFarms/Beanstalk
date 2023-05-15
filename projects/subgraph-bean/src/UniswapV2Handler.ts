@@ -83,7 +83,7 @@ export function handleSync(event: Sync): void {
 
   updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaBeans);
 
-  let currentBeanPrice = beanBalance.div(wethBalance.times(weth.lastPriceUSD));
+  let currentBeanPrice = wethBalance.times(weth.lastPriceUSD).div(beanBalance);
 
   updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
 

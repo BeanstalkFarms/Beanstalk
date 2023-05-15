@@ -36,6 +36,7 @@ type Bean @entity {
 
   "Last timestamp a cross was seen"
   lastCross: BigInt!
+
   "Last season seen from Beanstalk"
   lastSeason: Int!
 

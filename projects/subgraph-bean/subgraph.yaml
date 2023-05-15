@@ -11,7 +11,7 @@ dataSources:
       startBlock: 12974077
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Bean
@@ -33,7 +33,7 @@ dataSources:
       startBlock: 15278082
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Bean
@@ -55,7 +55,7 @@ dataSources:
       startBlock: 15278082
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Bean3CRV
@@ -87,7 +87,7 @@ dataSources:
       startBlock: 12974077
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Beanstalk
@@ -107,7 +107,7 @@ dataSources:
       startBlock: 12974077
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Approval
@@ -122,8 +122,6 @@ dataSources:
         - name: ERC20
           file: ./abis/ERC20.json
       eventHandlers:
-        # - event: Approval(indexed address,indexed address,uint256)
-        #   handler: handleApproval
         - event: Burn(indexed address,uint256,uint256,indexed address)
           handler: handleBurn
         - event: Mint(indexed address,uint256,uint256)
@@ -132,6 +130,72 @@ dataSources:
           handler: handleSwap
         - event: Sync(uint112,uint112)
           handler: handleSync
-        # - event: Transfer(indexed address,indexed address,uint256)
-        #   handler: handleTransfer
       file: ./src/UniswapV2Handler.ts
+  - kind: ethereum/contract
+    name: Bean3CRV-V1
+    network: mainnet
+    source:
+      address: "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD"
+      abi: Bean3CRV
+      startBlock: 13954026
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean3CRV
+      abis:
+        - name: Bean3CRV
+          file: ./abis/Bean3CRV.json
+        - name: CalculationsCurve
+          file: ./abis/CalculationsCurve.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchange
+        - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchangeUnderlying
+        - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleRemoveLiquidityImbalance
+        - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
+          handler: handleRemoveLiquidityOne
+      file: ./src/Bean3CRVHandler_V1.ts
+  - kind: ethereum/contract
+    name: BeanLUSD-V1
+    network: mainnet
+    source:
+      address: "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D"
+      abi: Bean3CRV
+      startBlock: 14450075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean3CRV
+      abis:
+        - name: Bean3CRV
+          file: ./abis/Bean3CRV.json
+        - name: CalculationsCurve
+          file: ./abis/CalculationsCurve.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchange
+        - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchangeUnderlying
+        - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleRemoveLiquidityImbalance
+        - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
+          handler: handleRemoveLiquidityOne
+      file: ./src/Bean3CRVHandler_V1.ts
