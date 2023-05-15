@@ -153,9 +153,9 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   const currentSeason = (
     displaySeason !== undefined ? displaySeason : defaults.season
   ).toFixed();
-
+    
   const currentDate = (
-    displayDate !== undefined ? displayDate.toLocaleString() : defaults.date.toLocaleString()
+    displayDate !== undefined ? displayDate.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}) : defaults.date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'})
   );
 
   const containerStyle = {

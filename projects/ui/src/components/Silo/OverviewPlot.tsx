@@ -44,17 +44,17 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
 }) => {
   const [displaySeason, setDisplaySeason] = useState<BigNumber>(season);
   const [displayValue, setDisplayValue] = useState<BigNumber[]>(current);
-  const [displayDate, setDisplayDate] = useState<string>(date.toLocaleString());
+  const [displayDate, setDisplayDate] = useState<string>(date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}));
 
   useEffect(() => setDisplayValue(current), [current]);
   useEffect(() => setDisplaySeason(season), [season]);
-  useEffect(() => setDisplayDate(date.toLocaleString()), [date]);
+  useEffect(() => setDisplayDate(date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'})), [date]);
 
   const handleCursor = useCallback(
     (dps?: BaseDataPoint[]) => {
       setDisplaySeason(dps ? new BigNumber(dps[0].season) : season);
       setDisplayValue(dps ? dps.map((dp) => new BigNumber(dp.value)) : current);
-      setDisplayDate(dps ? new Date(dps[0].date).toLocaleString() : date.toLocaleString());
+      setDisplayDate(dps ? new Date(dps[0].date).toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}) : date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}));
     },
     
     [current, season, date]
