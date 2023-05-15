@@ -67,7 +67,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
       {modalOpen && (
         <>
           <Modal id="modal-background" onClick={closeModal} role="dialog" aria-labelledby="dialog-title">
-            <ModalContainer id="modal">
+            <ModalContainer id="modal" data-trace="true">
               <ModalHeader>
                 <div id="dialog-title">Select a token</div>
                 <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
@@ -91,17 +91,17 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
               <InConnector>
                 <svg xmlns="http://www.w3.org/2000/svg" width={48} height={6} fill="none">
                   <path id="line" stroke="#46B955" d="M0 3h47.5" />
-                  <path fill="#F9F8F6" stroke="#3E404B" d="M47.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-                  <path fill="#F9F8F6" stroke="#46B955" d="M.5.55a2.5 2.5 0 0 1 0 4.9V.55Z" />
+                  <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
+                  <path fill="#F9F8F6" stroke="#46B955" d="M0 .55a2.5 2.5 0 0 1 0 4.9V.55Z" />
                 </svg>
               </InConnector>
             )}
             {connectorFor === "output-amount" && (
               <OutConnector>
                 <svg xmlns="http://www.w3.org/2000/svg" width={48} height={184} fill="none">
-                  <path id="line" stroke="#46B955" d="M.5 182H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
-                  <path fill="#F9F8F6" stroke="#3E404B" d="M47.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-                  <path fill="#F9F8F6" stroke="#46B955" d="M.5 178.55a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
+                  <path id="line" stroke="#46B955" d="M-1 171H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
+                  <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
+                  <path fill="#F9F8F6" stroke="#46B955" d="M0 167.55a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
                 </svg>
               </OutConnector>
             )}
@@ -119,7 +119,7 @@ const InAnimation = keyframes`
 const InConnector = styled.div`
   position: relative;
   top: 106px;
-  left: -431px;
+  left: -432px;
   > svg > #line {
     stroke-dasharray: 48px;
     stroke-dashoffset: 48px;
@@ -133,7 +133,7 @@ const OutAnimation = keyframes`
 const OutConnector = styled.div`
   position: relative;
   top: 118px;
-  left: -431px;
+  left: -432px;
 
   > svg > #line {
     stroke-dasharray: 225px;

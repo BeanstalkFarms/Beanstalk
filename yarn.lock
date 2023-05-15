@@ -19938,7 +19938,6 @@ __metadata:
     react-hot-toast: 2.4.1
     react-jazzicon: 1.0.4
     react-router-dom: ^6.4.4
-    segment-js: 1.1.2
     styled-components: 5.3.9
     typechain: 8.1.1
     typescript: 4.8.4
@@ -37071,13 +37070,6 @@ __metadata:
     seek-bunzip: bin/seek-bunzip
     seek-table: bin/seek-bzip-table
   checksum: c2ab3291e7085558499efd4e99d1466ee6782f6c4a4e4c417aa859e1cd2f5117fb3b5444f3d27c38ec5908c0f0312e2a0bc69dff087751f97b3921b5bde4f9ed
-  languageName: node
-  linkType: hard
-
-"segment-js@npm:1.1.2":
-  version: 1.1.2
-  resolution: "segment-js@npm:1.1.2"
-  checksum: a586ad53959da1ad17c80f54b851fb9a2827adc9b33602a0b663c33cc3d0e52587861caa97ad037aac25f4a6b4a542e2c8d71135c0c24985cd09055f66fa991e
   languageName: node
   linkType: hard
 

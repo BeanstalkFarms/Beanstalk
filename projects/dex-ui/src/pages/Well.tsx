@@ -11,7 +11,7 @@ import { TokenValue } from "@beanstalk/sdk";
 import { H1 } from "src/components/Typography";
 import styled from "styled-components";
 import { Title } from "src/components/PageComponents/Title";
-import { Page } from "src/components/Frame/assets/Page";
+import { Page } from "src/components/Page";
 
 export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
