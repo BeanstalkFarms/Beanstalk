@@ -12,6 +12,8 @@ import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
+import { Title } from "../PageComponents/Title";
+import { Page } from "../Frame/assets/Page";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -153,12 +155,6 @@ export const SwapRoot = () => {
 
   return (
     <Container>
-      <SwapHeaderContainer>
-        <div>Swap</div>
-        <div>
-          <Image src={gear} size={16} alt="Transaction Settings" />
-        </div>
-      </SwapHeaderContainer>
       <Div>
         <SwapInputContainer>
           <TokenInput
@@ -200,40 +196,23 @@ export const SwapRoot = () => {
 };
 
 const Container = styled.div`
-  width: 465px;
+  // border: 1px solid red;
+  width: 384px;
   display: flex;
   flex-direction: column;
-  background: #1b1e2b;
-  border-radius: 16px;
-  padding: 12px;
-  gap: 12px;
+  gap: 24px;
 `;
 
 const Div = styled.div`
   display: flex;
   flex-direction: column;
-`;
-
-const SwapHeaderContainer = styled.div`
-  // border: 1px dotted blue;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  padding: 8px 12px;
-  height: 36px;
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 20px;
-  align-items: center;
+  gap: 24px;
 `;
 
 const SwapInputContainer = styled.div`
-  // border: 1px dashed green;
+  // outline: 1px dashed green;
   display: flex;
   flex-direction: row;
-  margin: 2.5px 0px;
 `;
 const ArrowContainer = styled.div`
   // border: 1px dashed orange;

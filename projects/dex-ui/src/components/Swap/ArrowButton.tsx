@@ -24,22 +24,20 @@ export const ArrowButton: FC<ArrowButtonType> = ({ onClick }) => (
 
 const Container = styled.div`
   display: flex;
-  margin: -20px;
   z-index: 100;
 `;
 const Button = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 5px solid #1b1e2b;
-  border-radius: 12px;
-  background-color: rgb(40 44 59);
+  width: 48px;
+  height: 48px;
+  border: 1px solid #9ca3af;
+  background-color: #f9f8f6;
   color: #c7c8cb;
 
   :hover {
-    background-color: rgb(69 73 89);
+    background-color: #f1efec;
     cursor: pointer;
   }
 `;

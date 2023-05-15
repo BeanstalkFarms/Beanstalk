@@ -24,17 +24,18 @@ export const Button: FC<Props> = ({ label, disabled, loading, onClick }) => {
 };
 
 const StyledButton = styled.button<ButtonProps>`
-  background: ${({ disabled, $loading }) => (disabled ? "#333335" : $loading ? "#3152db" : "#4c6ae9")};
-  height: 60px;
-  border-radius: 10px;
-  outline: none;
+  background: ${({ disabled, $loading }) => (disabled ? "#D1D5DB" : $loading ? "#D1D5DB" : "#000")};
+  height: 48px;
   border: none;
-  color: ${({ disabled, $loading }) => (disabled ? "#575757" : $loading ? "#d6dbff" : "#d6dbff")};
-  line-height: 1.5rem;
-  font-size: 1.5rem;
+  color: ${({ disabled, $loading }) => (disabled ? "#fff" : $loading ? "#fff" : "#fff")};
+
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
   cursor: pointer;
 
   :hover {
-    background: ${({ disabled }) => (disabled ? "#333335" : "#3152db")};
+    outline: ${({ disabled }) => (disabled ? "none" : "2px solid #46b955")};
   }
 `;

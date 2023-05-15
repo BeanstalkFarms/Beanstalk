@@ -1,13 +1,13 @@
 import React from "react";
 import { Page } from "src/components/Frame/assets/Page";
 import { Title } from "src/components/PageComponents/Title";
-import { SwapRoot } from "src/components/Swap/SwapRoot";
+import { BodyL } from "src/components/Typography";
 
-export const Swap = () => {
+export const Build = () => {
   return (
     <Page>
-      <Title title="Swap" />
-      <SwapRoot />
+      <Title title="Build" />
+      <div> // wip</div>
     </Page>
   );
 };

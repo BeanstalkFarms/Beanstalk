@@ -111,21 +111,21 @@ export const BasicInput: FC<Props> = ({
 
 const StyledInput = styled.input`
   // border: 1px solid red;
+  border: none;
   display: flex;
   flex-direction: row;
   align-items: center;
   padding: 0px 0px;
   box-sizing: border-box;
   width: 100%;
-  background: #272a37;
-  font-family: "Inter";
+  background: #ffffff;
   font-style: normal;
-  font-weight: 500;
-  font-size: 30px;
-  line-height: 36px;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
   text-align: left;
 
-  color: #b0b1b5;
+  color: #;
   outline: none;
 `;
 

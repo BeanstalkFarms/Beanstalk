@@ -133,13 +133,12 @@ export const TokenInput: FC<TokenInput> = ({
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
         />
-        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} />
+        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id}/>
       </TopRow>
 
       {showBalance && (
         <BalanceRow>
           <Balance>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
-          {showMax && !isBalanceLoading && <MaxButton onClick={handleClickMax}>Max</MaxButton>}
         </BalanceRow>
       )}
     </Container>
@@ -159,18 +158,17 @@ const LoadingContainer = styled.div<ContainerProps>`
   display: flex;
   flex-direction: column;
   width: ${(props) => props.width};
-  height: 96px;
+  height: 72px;
 
   padding: 0px 16px;
   background: #272a37;
 
-  border: 2px solid rgb("0 0 0 / 0%");
+  outline: 1px solid black;
   box-sizing: border-box;
-  border-radius: 12px;
+  
 
   overflow: hidden;
   justify-content: center;
-  gap: 8px;
   cursor: text;
 
   animation-duration: 2s;
@@ -179,25 +177,25 @@ const LoadingContainer = styled.div<ContainerProps>`
   animation-name: ${shimmer};
   animation-timing-function: linear;
   background: #ddd;
-  background: linear-gradient(65deg, rgba(39, 42, 55, 1) 10%, rgba(48, 52, 68, 1) 20%, rgba(39, 42, 55, 1) 30%);
+  background: linear-gradient(65deg, #f9f8f6 10%, #fff 20%, #f9f8f6 30%);
   background-size: 1200px 100%;
 `;
 const Container = styled.div<ContainerProps>`
   display: flex;
   flex-direction: column;
   width: ${(props) => props.width};
-  height: 96px;
+  height: 72px;
 
   padding: 0px 16px;
-  background: #272a37;
+  background: #ffffff;
 
-  border: 2px solid rgb(${(props) => (props.focused ? "157 202 230" : "0 0 0 / 0%")});
+  // 70 185 85 is the rbg version of the green
+  outline: .5px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
   box-sizing: border-box;
-  border-radius: 12px;
 
   overflow: hidden;
   justify-content: center;
-  gap: 8px;
+
   cursor: text;
 `;
 
@@ -213,23 +211,23 @@ const BalanceRow = styled.div`
 const Balance = styled.div`
   display: flex;
   align-items: center;
-  font-family: "Inter";
   font-style: normal;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
-  color: #b0b1b5;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #9ca3af;
+  text-decoration: underline;
 `;
 
 const MaxButton = styled.button`
   background: none;
   border: none;
-  font-family: "Inter";
   font-style: normal;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
   text-align: center;
   color: #f6e27f;
   cursor: pointer;
+  padding: 0px 5px;
 `;
