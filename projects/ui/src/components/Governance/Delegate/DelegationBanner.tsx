@@ -7,39 +7,36 @@ import { Link as RouterLink } from 'react-router-dom';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import Row from '~/components/Common/Row';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
-import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
-import { displayFullBN, getGovSpaceLabel, trimAddress } from '~/util';
-import { STALK } from '~/constants/tokens';
+import {
+  GOV_SLUGS,
+  displayFullBN,
+  getGovSpaceLabel,
+  getGovSpaceWithTab,
+  trimAddress,
+} from '~/util';
 import { FarmerDelegation } from '~/state/farmer/delegations';
 import useAccount from '~/hooks/ledger/useAccount';
+import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
+import useSdk from '~/hooks/sdk';
 
 export type DelegationBannerProps = {
   tab: number;
-  space: GovSpace;
-  getSlug: (_tab: number) => string;
   farmerDelegations: FarmerDelegation;
+  votingPower: ReturnType<typeof useFarmerVotingPower>['votingPower'];
 };
 
 const DelegationBanner: React.FC<DelegationBannerProps> = ({
   tab,
-  space,
-  getSlug,
   farmerDelegations,
+  votingPower,
 }) => {
-  const farmerSilo = useFarmerSilo();
+  const sdk = useSdk();
+  const space = getGovSpaceWithTab(tab);
   const account = useAccount();
 
-  const stalkAmount = farmerSilo.stalk.active;
+  const stalk = sdk.tokens.STALK;
 
   const delegate = farmerDelegations.delegates[space];
-
-  const getLabel = (prependThe: boolean = false) => {
-    const _label = getGovSpaceLabel(space);
-    if (!prependThe) {
-      return _label;
-    }
-    return _label.toLowerCase().includes('dao') ? _label : `the ${_label}`;
-  };
 
   const isNFT = space === GovSpace.BeanNFT;
 
@@ -49,7 +46,7 @@ const DelegationBanner: React.FC<DelegationBannerProps> = ({
     <Button
       variant="outlined"
       component={RouterLink}
-      to={`/governance/delegate/${getSlug(tab)}`}
+      to={`/governance/delegate/${GOV_SLUGS[tab]}`}
       sx={{
         p: 0,
         height: '100%',
@@ -69,8 +66,8 @@ const DelegationBanner: React.FC<DelegationBannerProps> = ({
           />
           {delegate ? (
             <Typography>
-              Your {displayFullBN(stalkAmount, 0)} {STALK.name} is delegated
-              to&nbsp;
+              Your {displayFullBN(votingPower.farmer, 0)}&nbsp;
+              {isNFT ? 'BEANFT' : stalk.name} is delegated to&nbsp;
               <Link
                 component="a"
                 href={`https://snapshot.org/#/profile/${delegate.address}`}
@@ -81,10 +78,10 @@ const DelegationBanner: React.FC<DelegationBannerProps> = ({
               >
                 {trimAddress(delegate.address)}
               </Link>
-              &nbsp;for {getLabel()} proposals
+              &nbsp;for {getGovSpaceLabel(space)} proposals
             </Typography>
           ) : (
-            <Typography variant="subtitle1">
+            <Typography>
               Delegate your {isNFT ? 'BeaNFT' : 'Stalk'} votes to another Farmer
               on&nbsp;
               <Typography component="span" variant="h4">
