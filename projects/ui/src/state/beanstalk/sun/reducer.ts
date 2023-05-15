@@ -1,5 +1,4 @@
 import { createReducer, createSelector } from '@reduxjs/toolkit';
-import BigNumber from 'bignumber.js';
 import { NEW_BN, ZERO_BN } from '~/constants';
 import {
   getDiffNow,
@@ -128,23 +127,18 @@ export const selectMorning = createSelector(
   selectMorningState,
   (season, { blockNumber }) => {
     const sunriseBlock = season.sunriseBlock;
-    const sunrisetime = season.timestamp;
+    const sunriseTime = season.timestamp;
     const currentBlock = blockNumber;
 
-    const endTime = sunrisetime.plus({ minutes: 5 });
+    const endTime = sunriseTime.plus({ minutes: 5 });
 
     const nowSecs = getNowRounded().toSeconds();
-    const sunriseSecs = sunrisetime.toSeconds();
+    const sunriseSecs = sunriseTime.toSeconds();
     const isMorning = nowSecs >= sunriseSecs && nowSecs < endTime.toSeconds();
 
-    const maxSeconds = endTime.toSeconds() - sunriseSecs;
-    const currentSeconds = nowSecs - sunriseSecs;
-
-    // console.log('maxSeconds: ', maxSeconds.toString());
-    // console.log('currentSeconds: ', currentSeconds.toString());
-
-    const secondsDiff = new BigNumber(maxSeconds).minus(currentSeconds);
-    // console.log('secondsDiff: ', secondsDiff.toString());
+    // const maxSeconds = endTime.toSeconds() - sunriseSecs;
+    // const currentSeconds = nowSecs - sunriseSecs;
+    // const secondsDiff = new BigNumber(maxSeconds).minus(currentSeconds);
 
     // interval range [1 to 25]
     const blockDiff = currentBlock.minus(sunriseBlock);

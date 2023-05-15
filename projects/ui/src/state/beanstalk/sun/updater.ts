@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import useFetchLatestBlock from '~/hooks/chain/useFetchLatestBlock';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
 import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
@@ -21,8 +20,6 @@ import {
 export const useSun = () => {
   const dispatch = useDispatch();
   const beanstalk = useBeanstalkContract();
-
-  const [fetchLatestBlock] = useFetchLatestBlock();
 
   const fetch = useCallback(async () => {
     try {
@@ -93,7 +90,7 @@ const SunUpdater = () => {
       return () => clearInterval(i);
     }
     /// When awaiting sunrise, check every 3 seconds to see
-    /// if the season has incremented bumped.
+    /// if the Season has incremented.
     const i = setInterval(() => {
       (async () => {
         const [newSeason] = await fetch();
