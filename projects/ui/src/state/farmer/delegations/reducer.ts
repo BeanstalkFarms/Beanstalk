@@ -1,5 +1,4 @@
 import { createReducer } from '@reduxjs/toolkit';
-import { DateTime } from 'luxon';
 import { FarmerDelegation } from '.';
 
 import {
@@ -9,34 +8,30 @@ import {
 } from './actions';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
 
+export const getDefaultGovSpaceMap = () => ({
+  [GovSpace.BeanNFT]: {},
+  [GovSpace.BeanSprout]: {},
+  [GovSpace.BeanstalkDAO]: {},
+  [GovSpace.BeanstalkFarms]: {},
+});
+
 const initialState: FarmerDelegation = {
-  delegators: {},
-  delegates: {},
-  votingPower: {},
-  updated: {
-    delegators: undefined,
-    delegates: undefined,
-    stalk: undefined,
-    nft: undefined,
+  delegators: {
+    users: getDefaultGovSpaceMap(),
+    votingPower: getDefaultGovSpaceMap(),
   },
+  delegates: {},
 };
 
 export default createReducer(initialState, (builder) =>
   builder
     .addCase(setFarmerDelegators, (state, { payload }) => {
-      state.delegators = payload;
-      state.updated.delegators = DateTime.now();
+      state.delegators.users = payload;
+    })
+    .addCase(setDelegatorsVotingPower, (state, { payload }) => {
+      state.delegators.votingPower[payload.space] = payload.data;
     })
     .addCase(setFarmerDelegates, (state, { payload }) => {
       state.delegates = payload;
-      state.updated.delegates = DateTime.now();
-    })
-    .addCase(setDelegatorsVotingPower, (state, { payload }) => {
-      state.votingPower[payload.space] = payload.data;
-      if (payload.space === GovSpace.BeanNFT) {
-        state.updated.nft = DateTime.now();
-      } else {
-        state.updated.stalk = DateTime.now();
-      }
     })
 );

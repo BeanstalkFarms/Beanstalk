@@ -1,5 +1,7 @@
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import throttle from 'lodash/throttle';
+import type { TypedUseSelectorHook } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { saveState } from '~/util';
 
 import app from './app/reducer';
@@ -36,3 +38,5 @@ export default store;
 
 export type AppState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+export const useAppSelector: TypedUseSelectorHook<AppState> = useSelector;

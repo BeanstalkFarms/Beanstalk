@@ -63,7 +63,7 @@ import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
-import { BuyFertilizerFarmStep, ClaimAndDoX, FormTxn } from '~/lib/Txn';
+import { BuyFertilizerFarmStep, ClaimAndDoX } from '~/lib/Txn';
 
 // ---------------------------------------------------
 
@@ -159,11 +159,6 @@ const BuyForm: FC<
     return _params;
   }, [values.balanceFrom]);
 
-  const disabledActions = useMemo(() => {
-    const isEth = tokenIn.equals(sdk.tokens.ETH);
-    return isEth ? [FormTxn.ENROOT] : undefined;
-  }, [tokenIn, sdk.tokens.ETH]);
-
   return (
     <FormWithDrawer autoComplete="off" noValidate siblingRef={formRef}>
       <Stack gap={1} ref={formRef}>
@@ -217,7 +212,7 @@ const BuyForm: FC<
                 USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT.
               </WarningAlert>
               <Box width="100%">
-                <AdditionalTxnsAccordion filter={disabledActions} />
+                <AdditionalTxnsAccordion />
               </Box>
               <Box sx={{ width: '100%', mt: 0 }}>
                 <TxnAccordion defaultExpanded={false}>
@@ -267,7 +262,7 @@ const BuyForm: FC<
           Buy
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Assets">
+      <FormWithDrawer.Drawer title="Use Claimable Beans">
         <ClaimBeanDrawerContent<BuyQuoteHandlerParams>
           quoteProviderProps={{
             tokenOut: token,

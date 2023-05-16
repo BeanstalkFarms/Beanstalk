@@ -26,6 +26,7 @@ const lineChartProps: Partial<LineChartProps> = {
 const Price: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
   const price = usePrice();
   const season = useSeason();
+  const date = new Date();
   return (
     <SeasonPlot
       document={SeasonalPriceDocument}

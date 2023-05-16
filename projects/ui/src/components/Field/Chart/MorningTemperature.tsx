@@ -295,12 +295,12 @@ const MorningTemperature: React.FC<{
       <Row justifyContent="space-between">
         <ChartInfoOverlay
           gap={0}
-          title="Temperature (Morning)"
+          title="Temperature"
           titleTooltip={
             <Box>
-              The interest rate for Sowing Beans. Beanstalk will
-              logarithmicallly increase the Temperature for the first 25 blocks
-              of each season.
+              The interest rate for Sowing Beans. Beanstalk
+              logarithmically increases the Temperature for the first 25 blocks
+              of each Season up to the Max Temperature.
             </Box>
           }
           amount={

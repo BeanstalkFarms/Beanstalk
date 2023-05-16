@@ -65,7 +65,7 @@ import FormWithDrawer from '~/components/Common/Form/FormWithDrawer';
 import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDrawerContent';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
-import { ClaimAndDoX, FormTxn, SowFarmStep } from '~/lib/Txn';
+import { ClaimAndDoX, SowFarmStep } from '~/lib/Txn';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment & {
@@ -229,11 +229,6 @@ const SowForm: FC<
     []
   );
 
-  const disabledActions = useMemo(() => {
-    const isEth = tokenIn.equals(sdk.tokens.ETH);
-    return isEth ? [FormTxn.ENROOT] : undefined;
-  }, [tokenIn, sdk.tokens.ETH]);
-
   return (
     <FormWithDrawer autoComplete="off" siblingRef={formRef}>
       <TokenSelectDialogNew
@@ -299,7 +294,7 @@ const SowForm: FC<
                 {/* You are Sowing {displayFullBN(maxAmountUsed.times(100), 4, 0)}% of remaining Soil.  */}
               </WarningAlert>
             ) : null}
-            <AdditionalTxnsAccordion filter={disabledActions} />
+            <AdditionalTxnsAccordion />
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -364,7 +359,7 @@ const SowForm: FC<
           Sow
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Assets">
+      <FormWithDrawer.Drawer title="Use Claimable Beans">
         <ClaimBeanDrawerContent
           maxBeans={soil}
           beansUsed={beans}
@@ -501,8 +496,6 @@ const SowFormContainer: FC<{}> = () => {
         const _scaledTemp = await sdk.contracts.beanstalk.temperature();
         const scaledTemp = TokenValue.fromBlockchain(_scaledTemp, 6);
 
-        console.log('scaledTemperature: ', scaledTemp);
-
         const _minTemp = TokenValue.fromHuman(
           (values.settings.minTemperature || ZERO_BN).toString(),
           6
@@ -532,6 +525,7 @@ const SowFormContainer: FC<{}> = () => {
 
         sowTxn.build(
           tokenIn,
+          amountIn,
           minTemperature,
           minSoil,
           balanceFromToMode(values.balanceFrom),

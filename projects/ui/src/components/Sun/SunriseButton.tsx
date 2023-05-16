@@ -145,7 +145,7 @@ const SunriseButton: FC<{}> = () => {
                                   target="_blank"
                                   rel="noreferrer"
                                 >
-                                  sunrise()
+                                  sunrise
                                 </Link>
                               </strong>
                             </Box>
@@ -162,7 +162,7 @@ const SunriseButton: FC<{}> = () => {
                       variant="body1"
                       color={BeanstalkPalette.washedRed}
                     >
-                      Calling this function from the app is strongly discouraged
+                      Calling this function from the UI is strongly discouraged
                       because there is a high likelihood that your transaction
                       will get front-run by bots.
                     </Typography>
