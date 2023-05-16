@@ -1,0 +1,11 @@
+query ProposalVotingPower($voter_address: String!, $space: String!, $proposal_id: String!) {
+  vp(
+    voter: $voter_address,
+    space: $space,
+    proposal: $proposal_id,
+  ) {
+  	vp
+    vp_state
+    vp_by_strategy
+  }
+}

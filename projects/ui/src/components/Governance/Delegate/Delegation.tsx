@@ -2,10 +2,9 @@ import React, { useCallback, useMemo } from 'react';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Button, Link, Stack, Typography } from '@mui/material';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import useFarmerDelegations from '~/hooks/farmer/useFarmerDelegations';
 import { useDelegatesRegistryContract } from '~/hooks/ledger/useContract';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
-import { useFetchFarmerDelegations } from '~/state/farmer/delegations/updater';
+import { useFetchFarmerDelegates } from '~/state/farmer/delegations/updater';
 import useAccount from '~/hooks/ledger/useAccount';
 import TransactionToast from '~/components/Common/TxnToast';
 import { DelegateRegistry } from '~/generated';
@@ -18,6 +17,7 @@ import { SmartSubmitButton } from '~/components/Common/Form';
 import { GOV_SPACE_BY_ID, trimAddress } from '~/util';
 import Row from '~/components/Common/Row';
 import { FontWeight } from '~/components/App/muiTheme';
+import { useAppSelector } from '~/state';
 
 type DelegateValues = {
   delegate: string;
@@ -31,7 +31,7 @@ type Props = {
 type DelegateProps = Props & {
   delegate: FarmerDelegation['delegates'][GovSpace] | undefined;
   contract: DelegateRegistry;
-  fetchDelegates: ReturnType<typeof useFetchFarmerDelegations>[0];
+  fetchDelegates: ReturnType<typeof useFetchFarmerDelegates>[0];
   account: ReturnType<typeof useAccount>;
 };
 
@@ -220,11 +220,11 @@ const Delegation: React.FC<Props> = ({ space }) => {
   const delegatesRegistry = useDelegatesRegistryContract(signer);
 
   /// Farmer
-  const delegations = useFarmerDelegations();
+  const delegations = useAppSelector((s) => s._farmer.delegations);
   const account = useAccount();
 
   /// Refetch
-  const [fetchDelegates] = useFetchFarmerDelegations();
+  const [fetchDelegates] = useFetchFarmerDelegates();
 
   /// Derived
   const delegate = useMemo(

@@ -1,4 +1,4 @@
-import { GovSpace } from '~/lib/Beanstalk/Governance';
+import { GovSpace, getGovTypeByTag } from '~/lib/Beanstalk/Governance';
 import { getDateCountdown } from '~/util/Time';
 
 export type Proposal = {
@@ -59,8 +59,12 @@ export const getProposalTag = (title: string) => {
   return sep > -1 ? title.substring(0, sep) : title;
 };
 
-export const getProposalType = (tag: string) =>
-  tag.substring(0, tag.lastIndexOf('-', tag.length - 1));
+export const getProposalType = (tag: string) => {
+  const proposalType = tag.substring(0, tag.lastIndexOf('-', tag.length - 1));
+  return getGovTypeByTag(proposalType);
+};
+
+/// Governance Space Slugs / Tabs / Labels utils
 
 export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout', 'beanft'];
 
@@ -71,12 +75,8 @@ export const GOV_SLUGS_TAB_MAP = {
   3: GovSpace.BeanNFT,
 };
 
-export const GOV_SPACE_LABEL_MAP = {
-  [GovSpace.BeanstalkDAO]: 'DAO',
-  [GovSpace.BeanstalkFarms]: 'Beanstalk Farms',
-  [GovSpace.BeanSprout]: 'Bean Sprout',
-  [GovSpace.BeanNFT]: '"BeanNFT DAO"',
-};
+export const getGovSpaceWithTab = (tab: number) =>
+  GOV_SLUGS_TAB_MAP[tab as keyof typeof GOV_SLUGS_TAB_MAP];
 
 export const getGovSlugIndex = (slug: string) => GOV_SLUGS.indexOf(slug);
 
@@ -109,6 +109,9 @@ export const GOV_SPACE_BY_ID: { [key in GovSpace]: string } = {
   [GovSpace.BeanNFT]:
     '0x6265616e66742e65746800000000000000000000000000000000000000000000',
 };
+
+///
+
 /** Returns true if two number[] arrays are equal. */
 export function arraysEqual(a: number[], b: number[]) {
   if (a === b) return true;

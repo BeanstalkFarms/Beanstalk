@@ -1,5 +1,7 @@
 const fs = require('fs')
+const { BEANSTALK } = require('../test/utils/constants')
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, strDisplay } = require("../utils")
+const { upgradeWithNewFacets } = require('./diamond')
 
 async function ebip6(mock = true, account = undefined) {
     if (account == undefined) {
@@ -51,6 +53,26 @@ async function ebip7(mock = true, account = undefined) {
 
 }
 
+async function ebip8(mock = true, account = undefined) {
+    if (account == undefined) {
+        account = await impersonateBeanstalkOwner()
+        await mintEth(account.address)
+    }
+
+    await upgradeWithNewFacets({
+        diamondAddress: BEANSTALK,
+        facetNames: [
+            'SiloFacet',
+            'ConvertFacet'
+        ],
+        bip: false,
+        object: !mock,
+        verbose: true,
+        account: account
+    })
+}
+
+
 async function bipDiamondCut(name, dc, account, mock = true) {
     beanstalk = await getBeanstalk()
     if (mock) {
@@ -70,3 +92,4 @@ async function bipDiamondCut(name, dc, account, mock = true) {
 
 exports.ebip6 = ebip6
 exports.ebip7 = ebip7
+exports.ebip8 = ebip8

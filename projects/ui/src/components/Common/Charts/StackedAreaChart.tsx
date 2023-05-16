@@ -121,13 +121,12 @@ const Graph = (props: Props) => {
       const containerY =
         ('clientY' in event ? event.clientY : 0) - containerBounds.top - 10;
       const pointerData = getPointerValue(event, scales, series)[0];
-
       showTooltip({
         tooltipLeft: containerX,
         tooltipTop: containerY,
         tooltipData: pointerData,
       });
-      onCursor?.(pointerData.season, getDisplayValue([pointerData]));
+      onCursor?.(pointerData.season, getDisplayValue([pointerData]), pointerData.date);
     },
     [
       containerBounds,

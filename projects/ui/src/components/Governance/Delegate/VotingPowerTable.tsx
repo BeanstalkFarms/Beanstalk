@@ -10,7 +10,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import useAccount from '~/hooks/ledger/useAccount';
 import AddressIcon from '~/components/Common/AddressIcon';
 import beanNFTIconDark from '~/img/tokens/beanft-dark-logo.svg';
-import useFarmerVotingPower from '~/hooks/beanstalk/useFarmerVotingPower';
+import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
 const FarmerRow: React.FC<{
   address: string;
@@ -74,7 +74,7 @@ const VotingPowerTable: React.FC<{ space: GovSpace }> = ({ space }) => {
           <Row gap={0.5}>
             <TokenIcon token={STALK} css={{ height: IconSize.small }} />
             <Typography variant="bodyLarge">
-              {displayFullBN(votingPower.farmer, 0)} STALK
+              {displayFullBN(votingPower.total, 0)} STALK
             </Typography>
           </Row>
         ) : (
@@ -89,7 +89,7 @@ const VotingPowerTable: React.FC<{ space: GovSpace }> = ({ space }) => {
               }}
             />
             <Typography variant="bodyLarge">
-              {displayFullBN(votingPower.farmer, 0)} BEANFT
+              {displayFullBN(votingPower.total, 0)} BEANFT
             </Typography>
           </Row>
         )}
