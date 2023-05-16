@@ -98,26 +98,6 @@ export const getNowRounded = () => {
   return DateTime.fromSeconds(now);
 };
 
-export const getMorningTimeResult = (
-  sunriseTime: DateTime,
-  index: BigNumber
-) => {
-  const endTime = sunriseTime.plus({ minutes: 5 });
-  const seconds = index.times(12).toNumber();
-  const curr = sunriseTime.plus({ seconds });
-  const next = getNextExpectedBlockUpdate(curr);
-  const remaining = getDiffNow(next);
-
-  // console.log('remainng as secs: ', remaining.as('seconds'));
-
-  return {
-    next,
-    remaining,
-    awaiting: remaining.as('seconds') === APPROX_SECS_PER_BLOCK,
-    endTime,
-  };
-};
-
 export const getMorningResult = ({
   timestamp: sunriseTime,
   blockNumber: sunriseBlock,
@@ -127,7 +107,6 @@ export const getMorningResult = ({
 
   const secondsDiff = nowSecs - sunriseSecs;
   const index = new BigNumber(Math.floor(secondsDiff / APPROX_SECS_PER_BLOCK));
-  console.log(`<------${index.toNumber()}------>`);
   const isMorning = index.lt(25) && index.gte(0) && sunriseBlock.gt(0);
 
   const blockNumber = sunriseBlock.plus(index);
@@ -139,10 +118,6 @@ export const getMorningResult = ({
   const next = getNextExpectedBlockUpdate(curr);
   const remaining = getDiffNow(next);
   const awaiting = remaining.as('seconds') === APPROX_SECS_PER_BLOCK;
-
-  console.log('===== blockNumber: ', blockNumber.toNumber());
-  console.log('===== blockts: ', next.minus({ seconds: 12 }).toSeconds());
-  console.log('===== nextts: ', next.toSeconds());
 
   return {
     morning: {

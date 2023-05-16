@@ -35,6 +35,12 @@ export type SeasonPlotBaseProps = {
    */
   defaultSeason?: number;
   /**
+   * The date displayed when the chart isn't being hovered.
+   * If not provided, uses the `date` of the last data point if available,
+   * otherwise returns the current timestamp.
+   */
+  defaultDate?: Date;
+  /**
    * Height applied to the chart range. Can be a fixed
    * pixel number or a percent if the parent element has a constrained height.
    */
@@ -67,6 +73,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   document,
   defaultValue: _defaultValue,
   defaultSeason: _defaultSeason,
+  defaultDate: _defaultDate,
   getValue,
   formatValue = defaultValueFormatter,
   height = '175px',

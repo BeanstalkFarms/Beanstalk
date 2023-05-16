@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { useEffect, useState } from 'react';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
+import { useProposalVotingPowerQuery } from '~/generated/graphql';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { getQuorumPct } from '~/lib/Beanstalk/Governance';
 import { getProposalTag, getProposalType, Proposal, tokenResult } from '~/util';
@@ -52,20 +53,29 @@ export default function useProposalBlockData(
       ? new BigNumber(proposal.scores_total || ZERO_BN)
       : new BigNumber(proposal.scores[0] || ZERO_BN);
 
+  const { data: vpData } = useProposalVotingPowerQuery({
+    variables: {
+      voter_address: account?.toLowerCase() || '',
+      proposal_id: proposal?.id.toLowerCase() || '',
+      space: proposal?.space?.id?.toLowerCase() || '',
+    },
+    skip: !account || !proposal?.id || !proposal?.space?.id,
+    context: { subgraph: 'snapshot' },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'network-only',
+  });
+
+  // TODO: This will only work when the space is not BeaNFTDao.eth.
   useEffect(() => {
     (async () => {
       try {
         if (!proposal.snapshot) return;
         const blockTag = parseInt(proposal.snapshot, 10);
         const stalkResult = tokenResult(STALK);
-        const [_totalStalk, _votingPower] = await Promise.all([
-          beanstalk.totalStalk({ blockTag }).then(stalkResult),
-          account
-            ? beanstalk.balanceOfStalk(account, { blockTag }).then(stalkResult)
-            : Promise.resolve(undefined),
-        ]);
+        const _totalStalk = await beanstalk
+          .totalStalk({ blockTag })
+          .then(stalkResult);
         setTotalStalk(_totalStalk);
-        setVotingPower(_votingPower);
       } catch (e) {
         console.error(e);
       } finally {
@@ -73,6 +83,11 @@ export default function useProposalBlockData(
       }
     })();
   }, [beanstalk, tag, proposal.snapshot, account]);
+
+  useEffect(() => {
+    const vp = vpData?.vp?.vp || 0;
+    setVotingPower(new BigNumber(vp));
+  }, [vpData?.vp?.vp]);
 
   //
   const stalkForQuorum =

@@ -87,7 +87,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
         tooltipTop: containerY, // in pixels
       });
       const season = pointerData.length ? pointerData[0].season : undefined;
-      onCursor?.(season, getDisplayValue(pointerData));
+      onCursor?.(season, getDisplayValue(pointerData), pointerData[0].date);
     },
     [
       containerBounds,
