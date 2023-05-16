@@ -166,7 +166,7 @@ contract UnripeFacet is ReentrancyGuard {
         }
         revert("not vesting");
     }
-
+    // LIBCHOP
     function getPercentPenalty(address unripeToken)
         external
         view
@@ -174,7 +174,7 @@ contract UnripeFacet is ReentrancyGuard {
     {
         return LibChop.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
     }
-
+    // LIBCHOP
     function getRecapPaidPercent() external view returns (uint256 penalty) {
         penalty = LibChop.getRecapPaidPercentAmount(DECIMALS);
     }
