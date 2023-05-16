@@ -13,7 +13,7 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 
 const getValue = (season: SeasonalVolumeQuery['seasons'][number]) =>
-  parseFloat(season.hourlyVolumeUSD);
+  parseFloat(season.deltaVolumeUSD);
 const formatValue = (value: number) =>
   `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {
@@ -29,6 +29,7 @@ const lineChartProps: Partial<LineChartProps> = {
 
 const Volume: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
   const season = useSeason();
+  console.log(SeasonalVolumeDocument);
   return (
     <SeasonPlot
       document={SeasonalVolumeDocument}

@@ -13,8 +13,7 @@ import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
 
-const getValue = (season: SnapshotData<SeasonalCrossesQuery>) =>
-  season.totalCrosses;
+const getValue = (season: SnapshotData<SeasonalCrossesQuery>) => season.crosses;
 const formatValue = (value: number) => `${value}`;
 const statProps = {
   title: 'Peg Crosses',

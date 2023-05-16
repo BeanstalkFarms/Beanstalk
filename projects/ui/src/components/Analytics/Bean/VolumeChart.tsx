@@ -1,16 +1,16 @@
 import { CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useMemo, useState } from 'react';
+import { timeFormat, timeParse } from 'd3-time-format';
+import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import {
   SeasonalVolumeDocument,
   SeasonalVolumeQuery,
 } from '~/generated/graphql';
-import { timeFormat, timeParse } from 'd3-time-format';
 
 import BarChart from '~/components/Common/Charts/BarChart';
 import { BaseDataPoint } from '../../Common/Charts/ChartPropProvider';
 import ChartInfoOverlay from '../../Common/Charts/ChartInfoOverlay';
 import { FC } from '~/types';
-import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { QueryData } from '~/components/Common/Charts/BaseSeasonPlot';
 import QueryState from '../../Common/Charts/QueryState';
 import Row from '../../Common/Row';
@@ -50,7 +50,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
   );
 
   const getValue = (season: SeasonalVolumeQuery['seasons'][number]) =>
-    parseFloat(season.hourlyVolumeUSD);
+    parseFloat(season.deltaVolumeUSD);
 
   const queryData: QueryData = useGenerateChartSeries(
     [{ query: seasonsQuery, getValue, key: 'value' }],

@@ -14,7 +14,7 @@ import { FC } from '~/types';
 
 /// Setup SeasonPlot
 const getValue = (season: SeasonalLiquidityQuery['seasons'][number]) =>
-  parseFloat(season.totalLiquidityUSD);
+  parseFloat(season.liquidityUSD);
 const formatValue = (value: number) => (
   <Typography variant="h2" color="text.primary">
     ${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}
@@ -27,7 +27,7 @@ const StatProps = {
   sx: { ml: 0 },
 };
 const queryConfig = {
-  variables: { season_gt: 6073 },
+  variables: { season_gt: 0 },
   context: { subgraph: 'bean' },
 };
 
