@@ -36,7 +36,7 @@ export function checkCrossAndUpdate(
   let poolInfo = loadOrCreatePool(pool, blockNumber);
   let token = poolInfo.bean;
   let bean = loadBean(token);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
   let nextCross = bean.id == BEAN_ERC20_V1.toHexString() ? bean.crosses : bean.crosses + getV1Crosses();
 

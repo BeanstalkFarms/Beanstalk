@@ -23,12 +23,13 @@ export function loadBean(token: string): Bean {
   return bean as Bean;
 }
 
-export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt): BeanHourlySnapshot {
+export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt, season: i32): BeanHourlySnapshot {
   let hour = hourFromTimestamp(timestamp);
-  let snapshot = BeanHourlySnapshot.load(hour);
+  let id = token + "-" + season.toString();
+  let snapshot = BeanHourlySnapshot.load(id);
   if (snapshot == null) {
     let bean = loadBean(token);
-    snapshot = new BeanHourlySnapshot(hour);
+    snapshot = new BeanHourlySnapshot(id);
     snapshot.bean = bean.id;
     snapshot.totalSupply = ZERO_BI;
     snapshot.marketCap = bean.marketCap;
@@ -87,7 +88,7 @@ export function updateBeanValues(
   deltaLiquidityUSD: BigDecimal
 ): void {
   let bean = loadBean(token);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
   bean.price = newPrice;
@@ -121,7 +122,10 @@ export function updateBeanValues(
 
 export function updateBeanSeason(token: string, timestamp: BigInt, season: i32): void {
   let bean = loadBean(token);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp);
+  bean.lastSeason = season;
+  bean.save();
+
+  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, season);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
 
   beanHourly.season = season;
