@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { DateTime } from 'luxon';
 import {
@@ -15,9 +15,8 @@ import {
   updateTotalSoil,
 } from '~/state/beanstalk/field/actions';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { Sun, getDiffNow, getMorningResult, getNowRounded } from '.';
-import { AppState } from '~/state';
-import { BeanstalkField } from '../field';
+import { getDiffNow, getMorningResult, getNowRounded } from '.';
+import { useAppSelector } from '~/state';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
 
 export const BLOCKS_PER_MORNING = 25;
@@ -90,19 +89,13 @@ export function useFetchMorningField() {
 }
 
 export default function MorningUpdater() {
-  const morningTime = useSelector<AppState, Sun['morningTime']>(
-    (state) => state._beanstalk.sun.morningTime
-  );
-  const season = useSelector<AppState, Sun['season']>(
-    (state) => state._beanstalk.sun.season
-  );
-  const morning = useSelector<AppState, Sun['morning']>(
-    (state) => state._beanstalk.sun.morning
-  );
-  const temperature = useSelector<AppState, BeanstalkField['temperature']>(
-    (state) => state._beanstalk.field.temperature
-  );
+  const morningTime = useAppSelector((s) => s._beanstalk.sun.morningTime);
+  const season = useAppSelector((s) => s._beanstalk.sun.season);
+  const morning = useAppSelector((s) => s._beanstalk.sun.morning);
+  const temperature = useAppSelector((s) => s._beanstalk.field.temperature);
   const [_, { calculate: calculateTemperature }] = useTemperature();
+
+  console.log('[morning/updater]awaiting: ', morningTime.awaiting);
 
   const sunriseTime = season.timestamp.toSeconds();
   const sunriseBlock = season.sunriseBlock.toString();
@@ -122,7 +115,7 @@ export default function MorningUpdater() {
     const calculated = calculateTemperature(morning.blockNumber);
 
     if (scaled && isSimilarTo(scaled, calculated, 0.1)) {
-      console.debug('[morning][fetch] setting awaiting to', false);
+      console.log('[morning][fetch] setting awaiting to', false);
       dispatch(updateScaledTemperature(scaled));
       dispatch(updateMaxTemperature(max));
       dispatch(updateTotalSoil(soil));
@@ -139,13 +132,16 @@ export default function MorningUpdater() {
       const nowAsSeconds = now.toSeconds();
       const _remaining = getDiffNow(morningTime.next, now);
       const remainingSeconds = _remaining.as('seconds');
-      console.debug('[morning][interval]remaining secs: ', remainingSeconds);
+      console.log('remainingSeconds: ', remainingSeconds);
 
       if (nowAsSeconds === next.toSeconds() || remainingSeconds <= 0) {
-        console.debug('[morning][interval] setting awaiting to ', true);
+        console.log('[morning][interval] setting awaiting to ', true);
         const morningResult = getMorningResult({
           timestamp: DateTime.fromSeconds(sunriseTime),
           blockNumber: new BigNumber(sunriseBlock),
+          options: {
+            isAwaiting: true,
+          },
         });
         dispatch(setMorning(morningResult));
       } else {
@@ -184,7 +180,7 @@ export default function MorningUpdater() {
 
     if (!morning.isMorning) {
       if (!scaledTemp.eq(maxTemp)) {
-        console.debug(
+        console.log(
           '[beanstalk/sun/morning] Not Morning. Refetching morning field'
         );
         fetch();
@@ -192,7 +188,7 @@ export default function MorningUpdater() {
     }
     if (!morning.isMorning || morningTime.awaiting) return;
     if (morningIndex.eq(0) && scaledTemp.gt(1)) {
-      console.debug(
+      console.log(
         '[beanstalk/sun/morning] New Morning. Refetching morning field'
       );
       fetch();

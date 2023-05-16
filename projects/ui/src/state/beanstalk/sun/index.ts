@@ -50,16 +50,6 @@ export type Sun = {
   };
 };
 
-export type MorningBlockMap = {
-  [_blockNumber: string]: {
-    blockNumber: BigNumber;
-    timestamp: DateTime;
-    rTimestamp: DateTime;
-    next: DateTime;
-    rNext: DateTime;
-  };
-};
-
 export const getNextExpectedSunrise = () => {
   const now = DateTime.now();
   return now.set({ minute: 0, second: 0, millisecond: 0 }).plus({ hour: 1 });
@@ -101,7 +91,12 @@ export const getNowRounded = () => {
 export const getMorningResult = ({
   timestamp: sunriseTime,
   blockNumber: sunriseBlock,
-}: BlockInfo): Pick<Sun, 'morning' | 'morningTime'> => {
+  options,
+}: BlockInfo & {
+  options?: {
+    isAwaiting?: boolean;
+  };
+}): Pick<Sun, 'morning' | 'morningTime'> => {
   const sunriseSecs = sunriseTime.toSeconds();
   const nowSecs = getNowRounded().toSeconds();
 
@@ -117,7 +112,10 @@ export const getMorningResult = ({
 
   const next = getNextExpectedBlockUpdate(curr);
   const remaining = getDiffNow(next);
-  const awaiting = remaining.as('seconds') === APPROX_SECS_PER_BLOCK;
+
+  const awaiting = !options?.isAwaiting
+    ? remaining.as('seconds') === APPROX_SECS_PER_BLOCK
+    : true;
 
   return {
     morning: {
