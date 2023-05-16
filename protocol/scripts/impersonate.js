@@ -23,7 +23,8 @@ const {
   BASE_FEE_CONTRACT,
   ETH_USDC_UNISWAP_V3,
   ETH_USDT_UNISWAP_V3,
-  USDT
+  USDT,
+  ETH_USD_CHAINLINK_AGGREGATOR
 } = require('../test/utils/constants');
 const { impersonateSigner, mintEth } = require('../utils');
 
@@ -152,27 +153,27 @@ async function curveLUSD() {
 }
 
 async function bean() {
-  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
-
-  await network.provider.send("hardhat_setCode", [
-    BEAN,
-    JSON.parse(tokenJson).deployedBytecode,
-  ]);
-
-  const bean = await ethers.getContractAt("MockToken", BEAN);
-  await bean.setDecimals(6);
-  return BEAN;
+  await token(BEAN, 6)
 }
 
 async function usdc() {
+  await token(USDC, 6)
+}
+
+async function usdt() {
+  await token(USDT, 6)
+}
+
+async function token(address, decimals) {
   let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
   await network.provider.send("hardhat_setCode", [
-    USDC,
+    address,
     JSON.parse(tokenJson).deployedBytecode,
   ]);
 
-  const usdc = await ethers.getContractAt("MockToken", USDC);
-  await usdc.setDecimals(6);
+  const token = await ethers.getContractAt("MockToken", address);
+  await token.setDecimals(decimals);
+
 }
 
 async function fertilizer() {
@@ -247,6 +248,7 @@ async function ethUsdcUniswap() {
 }
 
 async function ethUsdtUniswap() {
+  await usdt()
   const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
   const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
   await mockUniswapV3Factory.deployed()
@@ -256,6 +258,15 @@ async function ethUsdtUniswap() {
   await network.provider.send("hardhat_setCode", [
     ETH_USDT_UNISWAP_V3,
     bytecode,
+  ]);
+}
+
+async function ethUsdChainlinkAggregator() {
+  let chainlinkAggregatorJson = fs.readFileSync(`./artifacts/contracts/mocks/chainlink/MockChainlinkAggregator.sol/MockChainlinkAggregator.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    ETH_USD_CHAINLINK_AGGREGATOR,
+    JSON.parse(chainlinkAggregatorJson).deployedBytecode,
   ]);
 }
 
@@ -274,3 +285,4 @@ exports.impersonateBlockBasefee = blockBasefee;
 exports.impersonateEthUsdcUniswap = ethUsdcUniswap
 exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
+exports.impersonateEthUsdChainlinkAggregator = ethUsdChainlinkAggregator

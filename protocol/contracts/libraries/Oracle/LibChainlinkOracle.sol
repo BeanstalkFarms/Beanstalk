@@ -47,6 +47,7 @@ library LibChainlinkOracle {
             if (roundId == 0) return 0;
             // Check for an invalid timeStamp that is 0, or in the future
             if (timestamp == 0 || timestamp > block.timestamp) return 0;
+            // TODO: Check if chainlink oracle expired
             // Check for non-positive price
             if (answer <= 0) return 0;
             // Return the 

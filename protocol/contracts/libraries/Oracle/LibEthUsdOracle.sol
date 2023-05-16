@@ -20,15 +20,15 @@ library LibEthUsdOracle {
 
     using SafeMath for uint256;
 
-    uint256 constant MAX_GREEDY_DIFFERENCE = 0.005e18; // 0.5%
-    uint256 constant MAX_DIFFERENCE = 0.01e18; // 0.5%
+    uint256 constant MAX_GREEDY_DIFFERENCE = 0.00000001e18; // 0.5%
+    uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%
     uint256 constant ONE = 1e18;
   
     function getEthUsdPrice() internal view returns (uint256) {
         uint256 chainlinkPrice = LibChainlinkOracle.getEthUsdPrice();
         console.log("Chainlink: %s", chainlinkPrice);
         uint256 usdcPrice = LibUniswapOracle.getEthUsdcPrice();
-        console.log("USDC: %s", chainlinkPrice);
+        console.log("USDC: %s", usdcPrice);
 
         uint256 usdcChainlinkPercentDiff = usdcPrice.mul(1e18).div(chainlinkPrice);
         usdcChainlinkPercentDiff = usdcPrice > chainlinkPrice ? 
@@ -40,7 +40,7 @@ library LibEthUsdOracle {
         }
 
         uint256 usdtPrice = LibUniswapOracle.getEthUsdtPrice();
-        console.log("USDT: %s", chainlinkPrice);
+        console.log("USDT: %s", usdtPrice);
 
         uint256 usdtChainlinkPercentDiff = usdtPrice.mul(1e18).div(chainlinkPrice);
         usdtChainlinkPercentDiff = usdtPrice > chainlinkPrice ? 

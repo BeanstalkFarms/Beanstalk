@@ -67,8 +67,14 @@ library LibWhitelist {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         //verify you passed in a callable selector
-        bytes memory data = abi.encodeWithSelector(selector,0);
-        (bool success,) = address(this).staticcall(data);
+        (bool success,) = address(this).staticcall(
+            LibTokenSilo.encodeBdvFunction(
+                token,
+                encodeType,
+                selector,
+                0
+            )
+        );
         require(success, "Invalid selector");
 
         require(s.ss[token].milestoneSeason == 0, "Token already whitelisted");
