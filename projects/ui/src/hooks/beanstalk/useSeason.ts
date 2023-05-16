@@ -1,6 +1,5 @@
-import { useSelector } from 'react-redux';
-import { selectCurrentSeason } from '~/state/beanstalk/sun/reducer';
+import { useAppSelector } from '~/state';
 
 export default function useSeason() {
-  return useSelector(selectCurrentSeason);
+  return useAppSelector((s) => s._beanstalk.sun.season.current);
 }

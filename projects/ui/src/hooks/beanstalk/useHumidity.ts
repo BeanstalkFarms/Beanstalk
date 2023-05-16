@@ -1,11 +1,10 @@
 import { useCallback } from 'react';
 import BigNumber from 'bignumber.js';
-import { useSelector } from 'react-redux';
 import { MaxBN } from '~/util/Tokens';
 import { SupportedChainId } from '~/constants/chains';
 import { ZERO_BN } from '~/constants';
 import useChainConstant from '../chain/useChainConstant';
-import { selectCurrentSeason } from '~/state/beanstalk/sun/reducer';
+import useSeason from './useSeason';
 
 // ----------------------------------------
 
@@ -75,7 +74,7 @@ export const useHumidityAtId = () =>
 // ----------------------------------------
 
 export default function useHumidity() {
-  const season = useSelector(selectCurrentSeason);
+  const season = useSeason();
   const humidityAt = useHumidityAtSeason();
   return humidityAt(season);
 }

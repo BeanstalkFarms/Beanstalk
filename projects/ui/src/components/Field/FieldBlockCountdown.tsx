@@ -1,9 +1,8 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { selectMorningTime } from '~/state/beanstalk/sun';
+import { useAppSelector } from '~/state';
 
 const FieldBlockCountdown: React.FC<{}> = () => {
-  const { remaining } = useSelector(selectMorningTime);
+  const { remaining } = useAppSelector((s) => s._beanstalk.sun.morningTime);
 
   return <>{remaining.toFormat('ss')} seconds</>;
 };
