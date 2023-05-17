@@ -287,7 +287,6 @@ library LibSilo {
         uint256 stalk
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // (Fixme?) Calculate the amount of Roots for the given amount of Stalk.
         uint256 roots = stalk == s.a[sender].s.stalk
             ? s.a[sender].roots
             : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
