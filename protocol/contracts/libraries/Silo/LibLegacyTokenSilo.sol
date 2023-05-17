@@ -201,11 +201,13 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
+        uint32 lastUpdate = s.a[account].lastUpdate;
 
+        if(lastUpdate > stemStartSeason) return 0; 
         return
             stalkReward(
                 s.a[account].s.seeds,
-                stemStartSeason.sub(s.a[account].lastUpdate)
+                stemStartSeason.sub(lastUpdate)
             );
     }
 
