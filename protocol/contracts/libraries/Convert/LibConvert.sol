@@ -7,6 +7,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
+import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibConvertData} from "./LibConvertData.sol";
 import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibWell} from "~/libraries/Well/LibWell.sol";
@@ -100,7 +101,7 @@ library LibConvert {
             return LibWellConvert.lpToPeg(tokenIn);
         
         // UrBEAN -> BEAN
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.beanAddress())
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
             return type(uint256).max;
 
         revert("Convert: Tokens not supported");
@@ -140,7 +141,7 @@ library LibConvert {
             return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
         
         // UrBEAN -> Bean
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.beanAddress())
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
             return LibChopConvert.getBeanAmountOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
