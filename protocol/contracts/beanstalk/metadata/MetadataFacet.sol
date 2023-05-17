@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
-import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
 import {LibBytes64} from "~/libraries/LibBytes64.sol";
@@ -26,19 +25,10 @@ import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
  * they will be represented by the *hash* of the token address, id, and stem.
  * The functions are designed to be extensible to support this.
  */
-contract MetadataFacet is IERC1155Receiver {
+contract MetadataFacet {
     using LibStrings for uint256;
 
     AppStorage internal s;
-
-    /**
-     * @dev Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI.
-     *
-     * If an {URI} event was emitted for `id`, the standard
-     * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
-     * returned by {IERC1155MetadataURI-uri}.
-     */
-    event URI(string value, uint256 indexed id);
 
     /**
      * @notice Returns the URI for a given depositId.
@@ -91,41 +81,5 @@ contract MetadataFacet is IERC1155Receiver {
      */
     function imageURI() public pure returns (string memory){
         return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzgiIGhlaWdodD0iMzkiIHZpZXdCb3g9IjAgMCAzOCAzOSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeT0iMC41MTk1MzEiIHdpZHRoPSIzNy45NjI5IiBoZWlnaHQ9IjM3Ljk2MjkiIHJ4PSIxOC45ODE0IiBmaWxsPSIjM0VCOTRFIi8+CjxwYXRoIGQ9Ik0yNC4zMTM1IDQuNTE5NTNMMTMuMjI5IDM0LjEzMjhDMTMuMjI5IDM0LjEzMjggMC45Mzg4NDIgMTMuMTY2NyAyNC4zMTM1IDQuNTE5NTNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTUuODA0NyAzMi4yOTU1TDIzLjU5NDIgMTEuMTI3QzIzLjU5NDIgMTEuMTI3IDM3Ljk0OTcgMjIuNzQwNCAxNS44MDQ3IDMyLjI5NTVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=";
-    }
-
-    //////////////////////// ERC1155Reciever ////////////////////////
-
-    /**
-     * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
-     * 
-     * @dev as ERC1155 deposits are not accepted yet, 
-     * this function will send the tokens back to the sender.
-     */
-    function onERC1155Received(
-        address,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        IERC1155(msg.sender).safeTransferFrom(address(this), from, id, value, data);
-        return IERC1155Receiver.onERC1155Received.selector;
-    }
-
-    /**
-     * @notice onERC1155BatchReceived function that allows the silo to receive ERC1155 tokens.
-     * 
-     * @dev as ERC1155 deposits are not accepted yet, 
-     * this function will send the tokens back to the sender.
-     */
-    function onERC1155BatchReceived(
-        address,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        IERC1155(msg.sender).safeBatchTransferFrom(address(this), from, ids, values, data);
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 }
