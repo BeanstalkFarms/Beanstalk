@@ -18,6 +18,7 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { getDiffNow, getMorningResult, getNowRounded } from '.';
 import { useAppSelector } from '~/state';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
+import { ZERO_BN } from '~/constants';
 
 export const BLOCKS_PER_MORNING = 25;
 
@@ -114,14 +115,27 @@ export default function MorningUpdater() {
     const [scaled, max, soil] = await fetchMorningField({ noUpdate: true });
     const calculated = calculateTemperature(morning.blockNumber);
 
+    console.log('scaled: ', scaled?.toNumber());
+    console.log('calculated: ', calculated?.toNumber());
+    const isSimilar = isSimilarTo(scaled || ZERO_BN, calculated, 0.1);
+    console.log('isSimilar: ', isSimilar);
+
     if (scaled && isSimilarTo(scaled, calculated, 0.1)) {
       console.log('[morning][fetch] setting awaiting to', false);
       dispatch(updateScaledTemperature(scaled));
       dispatch(updateMaxTemperature(max));
       dispatch(updateTotalSoil(soil));
       dispatch(setAwaitingMorningBlock(false));
+    } else if (!morningTime.awaiting) {
+      dispatch(setAwaitingMorningBlock(true));
     }
-  }, [fetchMorningField, calculateTemperature, morning.blockNumber, dispatch]);
+  }, [
+    fetchMorningField,
+    calculateTemperature,
+    morningTime.awaiting,
+    morning.blockNumber,
+    dispatch,
+  ]);
 
   useEffect(() => {
     if (!morning.isMorning) return;
@@ -134,15 +148,18 @@ export default function MorningUpdater() {
       const remainingSeconds = _remaining.as('seconds');
       console.log('remainingSeconds: ', remainingSeconds);
 
-      if (nowAsSeconds === next.toSeconds() || remainingSeconds <= 0) {
+      if (nowAsSeconds === next.toSeconds() || remainingSeconds <= 2) {
         console.log('[morning][interval] setting awaiting to ', true);
-        const morningResult = getMorningResult({
+        const _morningResult = getMorningResult({
           timestamp: DateTime.fromSeconds(sunriseTime),
           blockNumber: new BigNumber(sunriseBlock),
-          options: {
-            isAwaiting: true,
-          },
         });
+
+        const morningResult = {
+          ..._morningResult,
+          awaiting: true,
+        };
+
         dispatch(setMorning(morningResult));
       } else {
         dispatch(setRemainingUntilBlockUpdate(_remaining));
@@ -177,7 +194,6 @@ export default function MorningUpdater() {
   /// Update the temperature if we have transitioned in/out of the morning state
   useEffect(() => {
     const scaledTemp = new BigNumber(_scaledTemp);
-
     if (!morning.isMorning) {
       if (!scaledTemp.eq(maxTemp)) {
         console.log(
@@ -185,8 +201,9 @@ export default function MorningUpdater() {
         );
         fetch();
       }
+      return;
     }
-    if (!morning.isMorning || morningTime.awaiting) return;
+    if (morningTime.awaiting) return;
     if (morningIndex.eq(0) && scaledTemp.gt(1)) {
       console.log(
         '[beanstalk/sun/morning] New Morning. Refetching morning field'

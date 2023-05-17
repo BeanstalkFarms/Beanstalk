@@ -91,12 +91,7 @@ export const getNowRounded = () => {
 export const getMorningResult = ({
   timestamp: sunriseTime,
   blockNumber: sunriseBlock,
-  options,
-}: BlockInfo & {
-  options?: {
-    isAwaiting?: boolean;
-  };
-}): Pick<Sun, 'morning' | 'morningTime'> => {
+}: BlockInfo): Pick<Sun, 'morning' | 'morningTime'> => {
   const sunriseSecs = sunriseTime.toSeconds();
   const nowSecs = getNowRounded().toSeconds();
 
@@ -113,9 +108,7 @@ export const getMorningResult = ({
   const next = getNextExpectedBlockUpdate(curr);
   const remaining = getDiffNow(next);
 
-  const awaiting = !options?.isAwaiting
-    ? remaining.as('seconds') === APPROX_SECS_PER_BLOCK
-    : true;
+  const awaiting = remaining.as('seconds') === APPROX_SECS_PER_BLOCK;
 
   return {
     morning: {
