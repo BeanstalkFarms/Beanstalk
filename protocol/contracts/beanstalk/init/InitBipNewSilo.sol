@@ -20,7 +20,6 @@ import {LibDiamond} from "~/libraries/LibDiamond.sol";
 contract InitBipNewSilo {
 
     AppStorage internal s;
-    LibDiamond.DiamondStorage internal ds;
 
     uint32 constant private BEAN_SEEDS_PER_BDV = 2e6;
     uint32 constant private BEAN_3CRV_SEEDS_PER_BDV = 4e6;
@@ -38,6 +37,7 @@ contract InitBipNewSilo {
     
     
     function init() external {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         
         // this adds the ERC1155 indentifier to the diamond:
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
@@ -73,9 +73,7 @@ contract InitBipNewSilo {
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), UNRIPE_BEAN_3CRV_SEEDS_PER_BDV, s.season.current);
         emit UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
 
-
-
         //set the stemStartSeason to the current season
-        s.season.stemStartSeason = uint16(s.season.current); //storing as uint16 to save storage space
+        s.season.stemStartSeason = uint16(currentSeason); //storing as uint16 to save storage space
     }
 }

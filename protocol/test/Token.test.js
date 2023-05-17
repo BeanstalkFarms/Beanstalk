@@ -496,8 +496,7 @@ describe('Token', function () {
         });
       });
 
-    describe.only("ERC1155 transfer", async function () {
-
+    describe("ERC1155 transfer", async function () {
       it('properly updates users token allowance', async function () {
         await expect(this.ERC1155token.connect(this.user).safeTransferFrom(this.user.address, BEANSTALK, 1, 1000, [])).to.be.revertedWith('Silo: ERC1155 deposits are not accepted yet.')
       })

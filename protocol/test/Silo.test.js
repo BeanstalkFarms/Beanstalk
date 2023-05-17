@@ -350,8 +350,8 @@ describe('Silo', function () {
     });
 
     // TODO: need to add with the correct interface
-    it("properly gives the correct ERC-165 identifier", async function () {
-      expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(false);
+    it.only("properly gives the correct ERC-165 identifier", async function () {
+      expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(true);
     });
   });
 
