@@ -92,40 +92,4 @@ contract MetadataFacet is IERC1155Receiver {
     function imageURI() public pure returns (string memory){
         return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzgiIGhlaWdodD0iMzkiIHZpZXdCb3g9IjAgMCAzOCAzOSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeT0iMC41MTk1MzEiIHdpZHRoPSIzNy45NjI5IiBoZWlnaHQ9IjM3Ljk2MjkiIHJ4PSIxOC45ODE0IiBmaWxsPSIjM0VCOTRFIi8+CjxwYXRoIGQ9Ik0yNC4zMTM1IDQuNTE5NTNMMTMuMjI5IDM0LjEzMjhDMTMuMjI5IDM0LjEzMjggMC45Mzg4NDIgMTMuMTY2NyAyNC4zMTM1IDQuNTE5NTNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTUuODA0NyAzMi4yOTU1TDIzLjU5NDIgMTEuMTI3QzIzLjU5NDIgMTEuMTI3IDM3Ljk0OTcgMjIuNzQwNCAxNS44MDQ3IDMyLjI5NTVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=";
     }
-
-    //////////////////////// ERC1155Reciever ////////////////////////
-
-    /**
-     * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
-     * 
-     * @dev as ERC1155 deposits are not accepted yet, 
-     * this function will send the tokens back to the sender.
-     */
-    function onERC1155Received(
-        address,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        IERC1155(msg.sender).safeTransferFrom(address(this), from, id, value, data);
-        return IERC1155Receiver.onERC1155Received.selector;
-    }
-
-    /**
-     * @notice onERC1155BatchReceived function that allows the silo to receive ERC1155 tokens.
-     * 
-     * @dev as ERC1155 deposits are not accepted yet, 
-     * this function will send the tokens back to the sender.
-     */
-    function onERC1155BatchReceived(
-        address,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        IERC1155(msg.sender).safeBatchTransferFrom(address(this), from, ids, values, data);
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
-    }
 }

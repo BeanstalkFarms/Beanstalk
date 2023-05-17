@@ -162,6 +162,42 @@ contract TokenFacet is ReentrancyGuard {
         return LibTokenPermit.nonces(owner);
     }
 
+    //////////////////////// ERC1155Reciever ////////////////////////
+
+    /**
+     * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
+     * 
+     * @dev as ERC1155 deposits are not accepted yet, 
+     * this function will send the tokens back to the sender.
+     */
+    function onERC1155Received(
+        address,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        revert("Silo: ERC1155 deposits are not accepted yet.");
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    /**
+     * @notice onERC1155BatchReceived function that allows the silo to receive ERC1155 tokens.
+     * 
+     * @dev as ERC1155 deposits are not accepted yet, 
+     * this function will send the tokens back to the sender.
+     */
+    function onERC1155BatchReceived(
+        address,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        revert("Silo: ERC1155 deposits are not accepted yet.");
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
+
     /**
      * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
      */
