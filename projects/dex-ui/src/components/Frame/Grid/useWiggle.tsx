@@ -95,7 +95,7 @@ export const useWiggle = (pathRef: RefObject<SVGPathElement>, svgRef: RefObject<
 
     // Get a list of all elements we should trace.
     // These need to be manually tagged with a `data-trace
-    const traceables = getTraceables(contentEl);
+    const traceables = getTraceables(contentEl, svg);
 
     DEBUG && debugPoint(mouse, "debugpoint", svgRef);
     DEBUG && debugLine(mouse, lastPoint, svgRef);
