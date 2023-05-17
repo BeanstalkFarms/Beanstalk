@@ -34,6 +34,13 @@ contract UnripeFacet is ReentrancyGuard {
         bytes32 merkleRoot
     );
 
+    event Chop(
+        address indexed account,
+        address indexed token,
+        uint256 amount,
+        uint256 underlying
+    );
+
     event ChangeUnderlying(address indexed token, int256 underlying);
 
     event Pick(
@@ -49,8 +56,15 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
-
-        underlyingAmount = LibChop.chop(unripeToken, amount, fromMode, toMode);
+        // burn the token from the msg.sender address
+        amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
+        // get ripe address and ripe amount
+        (address underlyingToken, uint256 underlyingRipeAmount) = LibChop.chop(unripeToken, amount);
+        underlyingAmount = underlyingRipeAmount;
+        // send the ripe asset to msg.sender
+        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
+        // emit the event
+        emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
     }
 
     function pick(

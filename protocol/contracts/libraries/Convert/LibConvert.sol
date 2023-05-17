@@ -59,7 +59,6 @@ library LibConvert {
             (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
                 .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_BEANS) {
-            //LIBCHOPCONVERT
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
                 .convertUnripeBeansToBeans(convertData);
         } else {
@@ -102,7 +101,6 @@ library LibConvert {
         
         // UrBEAN -> BEAN
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.beanAddress())
-            //LIBCHOPCONVERT
             return type(uint256).max;
 
         revert("Convert: Tokens not supported");
@@ -143,7 +141,6 @@ library LibConvert {
         
         // UrBEAN -> Bean
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.beanAddress())
-            // LIBCHOPCONVERT
             return LibChopConvert.getBeanAmountOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");

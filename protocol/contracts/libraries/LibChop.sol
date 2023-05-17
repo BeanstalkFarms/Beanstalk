@@ -3,7 +3,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBean} from "~/interfaces/IBean.sol";
@@ -15,47 +14,30 @@ import {LibAppStorage} from "./LibAppStorage.sol";
  */
 library LibChop {
 
-    using SafeERC20 for IERC20;
-    using LibTransfer for IERC20;
     using SafeMath for uint256;
-
-    event Chop(
-        address indexed account,
-        address indexed token,
-        uint256 amount,
-        uint256 underlying
-    );
 
     /**
      * @notice Chops an unripe asset into its ripe counterpart according to the recapitalization % 
      * @param unripeToken The address of the unripe token to be converted into its ripe counterpart
      * @param amount The amount of the of the unripe token to be converted into its ripe counterpart
-     * @param fromMode The balance from which the unripe tokens will be converted (e.g INTERNAL , EXTERNAL)
-     * @param toMode The balance to which the ripe tokens will be credited (e.g INTERNAL , EXTERNAL)
+     * @return underlyingToken The address of ripe asset received after the chop.
      * @return underlyingAmount The amount of ripe asset received after the chop.
      */
     function chop(
         address unripeToken,
-        uint256 amount,
-        LibTransfer.From fromMode,
-        LibTransfer.To toMode
-    ) internal returns (uint256 underlyingAmount) {
+        uint256 amount
+    ) internal returns (address underlyingToken, uint256 underlyingAmount) {
         // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint256 unripeSupply = IERC20(unripeToken).totalSupply();
 
-        amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
-
         underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
-        address underlyingToken = s.u[unripeToken].underlyingToken;
+        underlyingToken = s.u[unripeToken].underlyingToken;
 
-        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
-        
-        emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
     }
 
     /**

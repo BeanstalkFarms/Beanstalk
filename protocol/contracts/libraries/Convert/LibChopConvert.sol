@@ -7,6 +7,7 @@ import "~/libraries/Token/LibTransfer.sol";
 import "./LibConvertData.sol";
 import "~/libraries/LibChop.sol";
 import "../../C.sol";
+import {IBean} from "../../interfaces/IBean.sol";
 
 /**
  * @title LibChopConvert
@@ -32,12 +33,15 @@ library LibChopConvert {
             uint256 amountIn
         )
     {
-        // decode convertdata == amount of unripe to be converted
+        // Decode convertdata
         (amountIn, tokenIn) = convertData.lambdaConvert();
-        // get the tokenOut address (BEAN address)
-        tokenOut = C.beanAddress();
-        // perform the convert (chop)
-        amountOut = LibChop.chop(tokenIn, amountIn, LibTransfer.From.INTERNAL , LibTransfer.To.INTERNAL);
+        // LibChop.chop just decrements the amount of unripe beans in circulation from the storage
+        (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(tokenIn, amountIn);
+        // UnBEAN still needs to be burned directly (not from an address) 
+        IBean(tokenIn).burn(amountIn);
+        // get the underlying ripe token address and amount and return
+        tokenOut = underlyingToken;
+        amountOut = underlyingAmount;
     }
 
     /**
@@ -51,29 +55,4 @@ library LibChopConvert {
         amount = LibChop._getPenalizedUnderlying(tokenIn, amountIn, unripeSupply);
     }
 }
-
-
-
-//
-// library LibLambdaConvert {
-//     using LibConvertData for bytes;
-
-//     function convert(bytes memory convertData)
-//         internal
-//         returns (
-//             address tokenOut,
-//             address tokenIn,
-//             uint256 amountOut,
-//             uint256 amountIn
-//         )
-//     {
-//         (amountIn, tokenIn) = convertData.lambdaConvert();
-//         LibInternal.mow(msg.sender, tokenIn);
-//         if (tokenIn != tokenOut) {
-//             LibInternal.mow(msg.sender, tokenOut);
-//         }
-//         tokenOut = tokenIn;
-//         amountOut = amountIn;
-//     }
-// }
 
