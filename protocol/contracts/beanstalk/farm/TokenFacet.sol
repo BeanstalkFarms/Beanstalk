@@ -5,6 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import "~/libraries/Token/LibTransfer.sol";
 import "~/libraries/Token/LibWeth.sol";
 import "~/libraries/Token/LibEth.sol";
@@ -17,7 +18,7 @@ import "../ReentrancyGuard.sol";
  * @author Publius
  * @title TokenFacet handles transfers of assets
  */
-contract TokenFacet is ReentrancyGuard {
+contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     struct Balance {
         uint256 internalBalance;
         uint256 externalBalance;
@@ -200,34 +201,32 @@ contract TokenFacet is ReentrancyGuard {
      * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
      * 
      * @dev as ERC1155 deposits are not accepted yet, 
-     * this function will send the tokens back to the sender.
+     * this function will revert.
      */
     function onERC1155Received(
         address,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
         revert("Silo: ERC1155 deposits are not accepted yet.");
-        return IERC1155Receiver.onERC1155Received.selector;
     }
 
     /**
      * @notice onERC1155BatchReceived function that allows the silo to receive ERC1155 tokens.
      * 
      * @dev as ERC1155 deposits are not accepted yet, 
-     * this function will send the tokens back to the sender.
+     * this function will revert.
      */
     function onERC1155BatchReceived(
         address,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external pure override returns (bytes4) {
         revert("Silo: ERC1155 deposits are not accepted yet.");
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
     /**

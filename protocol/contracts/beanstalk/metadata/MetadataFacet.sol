@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
-import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
 import {LibBytes64} from "~/libraries/LibBytes64.sol";
@@ -26,19 +25,10 @@ import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
  * they will be represented by the *hash* of the token address, id, and stem.
  * The functions are designed to be extensible to support this.
  */
-contract MetadataFacet is IERC1155Receiver {
+contract MetadataFacet {
     using LibStrings for uint256;
 
     AppStorage internal s;
-
-    /**
-     * @dev Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI.
-     *
-     * If an {URI} event was emitted for `id`, the standard
-     * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
-     * returned by {IERC1155MetadataURI-uri}.
-     */
-    event URI(string value, uint256 indexed id);
 
     /**
      * @notice Returns the URI for a given depositId.
