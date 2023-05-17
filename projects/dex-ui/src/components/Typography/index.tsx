@@ -76,3 +76,13 @@ export const PageTitle = styled.h1`
   padding: 0px;
   text-transform: uppercase;
 `;
+
+// Helps nudge text to work around the font's
+// messed up baseline, when we want the text
+// to be vertically centered.
+type NudgeProps = { amount: number };
+export const TextNudge = styled.div<NudgeProps>`
+  margin-top: ${({ amount }) => amount}px;
+  margin-bottom: ${({ amount }) => -1 * amount}px;
+  overflow-
+`;

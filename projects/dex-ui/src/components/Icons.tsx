@@ -41,3 +41,23 @@ export const Github = ({ color = "#000", width, height }: SVGProps) => (
     />
   </svg>
 );
+
+export const YieldSparkle = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <path
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m4.43 8.623 1.422.54a4 4 0 0 1 2.318 2.319l.54 1.421a.667.667 0 0 0 1.247 0l.54-1.421a4 4 0 0 1 2.318-2.319l1.422-.54a.667.667 0 0 0 0-1.246l-1.422-.54a4 4 0 0 1-2.318-2.319l-.54-1.422a.667.667 0 0 0-1.247 0l-.54 1.422a4 4 0 0 1-2.318 2.318l-1.422.54a.667.667 0 0 0 0 1.247Z"
+      clipRule="evenodd"
+    />
+    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M4 14v-2.666M2.667 12.667h2.666M3.333 4.667V2M2 3.333h2.667" />
+  </svg>
+);
+
+export const WellFunction = ({ color = "#000", width = 14, height = 14 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M5 1.349a5.996 5.996 0 1 0 4.69 11.008" />
+    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M7 1v6l4.243 4.243A6 6 0 0 0 7 1h0Z" clipRule="evenodd" />
+  </svg>
+);
