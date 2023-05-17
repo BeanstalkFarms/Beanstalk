@@ -11,6 +11,7 @@ import "./LibUnripeSilo.sol";
 import "../LibAppStorage.sol";
 import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
 import {LibSafeMath32} from "~/libraries/LibSafeMath32.sol";
+import {LibSafeMath128} from "~/libraries/LibSafeMath128.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "~/libraries/LibBytes.sol";
@@ -28,11 +29,11 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
-    using SafeMath for uint128;
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
 
     //TODO: verify and update this root on launch if there's more drift
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
@@ -372,8 +373,8 @@ library LibLegacyTokenSilo {
  
                 // also need to calculate how much stalk has grown since the migration
                 uint128 stalkGrownSinceStemStartSeason = LibSilo.stalkReward(0, perTokenData.stemTip, crateBDV.toUint128()).toUint128();
-                perDepositData.grownStalk = perDepositData.grownStalk.add(stalkGrownSinceStemStartSeason).toUint128();
-                migrateData.totalGrownStalk = migrateData.totalGrownStalk.add(stalkGrownSinceStemStartSeason).toUint128();
+                perDepositData.grownStalk = perDepositData.grownStalk.add(stalkGrownSinceStemStartSeason);
+                migrateData.totalGrownStalk = migrateData.totalGrownStalk.add(stalkGrownSinceStemStartSeason);
  
                 // add to new silo
                 LibTokenSilo.addDepositToAccount(
@@ -390,7 +391,7 @@ library LibLegacyTokenSilo {
                 );
  
                 // add to running total of seeds
-                migrateData.totalSeeds = migrateData.totalSeeds.add(crateBDV.mul(getSeedsPerToken(address(perTokenData.token)))).toUint128();
+                migrateData.totalSeeds = migrateData.totalSeeds.add(crateBDV.mul(getSeedsPerToken(address(perTokenData.token))).toUint128());
 
                 // emit legacy RemoveDeposit event
                 emit RemoveDeposit(account, perTokenData.token, perDepositData.season, perDepositData.amount);
