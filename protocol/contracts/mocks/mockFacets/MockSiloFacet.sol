@@ -45,33 +45,33 @@ contract MockSiloFacet is SiloFacet {
         else if (t == 1) addDepositToAccountLegacy(msg.sender, C.unripeLPPool1(), _s, amount, bdv);
         else if (t == 2) addDepositToAccountLegacy(msg.sender, C.unripeLPPool2(), _s, amount, bdv);
         uint256 unripeLP = getUnripeForAmount(t, amount);
-        LibTokenSilo.incrementTotalDeposited(C.unripeLPAddress(), unripeLP);
+        LibTokenSilo.incrementTotalDeposited(C.UNRIPE_LP, unripeLP);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
-        uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeLPAddress()));
-        uint256 stalk = bdv.mul(s.ss[C.unripeLPAddress()].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
+        uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
+        uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
-        uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv.add(amount);
-        s.a[msg.sender].mowStatuses[C.unripeLPAddress()].bdv = uint128(newBdv);
-        LibTransfer.receiveToken(IERC20(C.unripeLPAddress()), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
+        uint256 newBdv = s.a[msg.sender].mowStatuses[C.UNRIPE_LP].bdv.add(amount);
+        s.a[msg.sender].mowStatuses[C.UNRIPE_LP].bdv = uint128(newBdv);
+        LibTransfer.receiveToken(IERC20(C.UNRIPE_LP), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
    function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
         _mowLegacy(msg.sender);
         s.a[msg.sender].bean.deposits[_s] += amount;
-        LibTokenSilo.incrementTotalDeposited(C.unripeBeanAddress(), amount);
+        LibTokenSilo.incrementTotalDeposited(C.UNRIPE_BEAN, amount);
         amount = amount.mul(C.initialRecap()).div(1e18);
         
-        uint256 seeds = amount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.unripeBeanAddress()));
+        uint256 seeds = amount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_BEAN));
         
         
         
-        uint256 stalk = amount.mul(s.ss[C.unripeBeanAddress()].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
+        uint256 stalk = amount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         
         LibSilo.mintStalk(msg.sender, stalk);
         mintSeeds(msg.sender, seeds);
-        uint256 newBdv = s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv.add(amount);
-        s.a[msg.sender].mowStatuses[C.unripeBeanAddress()].bdv = uint128(newBdv);
-        LibTransfer.receiveToken(IERC20(C.unripeBeanAddress()), amount, msg.sender, LibTransfer.From.EXTERNAL);
+        uint256 newBdv = s.a[msg.sender].mowStatuses[C.UNRIPE_BEAN].bdv.add(amount);
+        s.a[msg.sender].mowStatuses[C.UNRIPE_BEAN].bdv = uint128(newBdv);
+        LibTransfer.receiveToken(IERC20(C.UNRIPE_BEAN), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
     modifier mowSenderLegacy() {
@@ -314,40 +314,6 @@ contract MockSiloFacet is SiloFacet {
         }
     }
 
-    /**
-     * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
-     *
-     * Silo V2 Deposits are stored within each {Account} as a mapping of:
-     *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
-     *
-     * Unripe BEAN and Unripe LP are handled independently so that data
-     * stored in the legacy Silo V1 format and the new Silo V2 format can
-     * be appropriately merged. See {LibUnripeSilo} for more information.
-     *
-     * FIXME(naming): rename to `getDeposit()`?
-     */
-    function getDepositLegacy(
-        address account,
-        address token,
-        uint32 season
-    ) external view returns (uint128, uint128) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        if (LibUnripeSilo.isUnripeBean(token)){
-            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
-            return (uint128(amount), uint128(bdv));
-        }
-        if (LibUnripeSilo.isUnripeLP(token)){
-            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
-            return (uint128(amount), uint128(bdv));
-        }
-
-        return (
-            s.a[account].legacyDeposits[token][season].amount,
-            s.a[account].legacyDeposits[token][season].bdv
-        );
-    }
-
     function balanceOfSeeds(address account) public view returns (uint256) {
         return s.a[account].s.seeds;
     }
@@ -376,13 +342,13 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function getSeedsPerToken(address token) public pure override returns (uint256) { //could be pure without console log?
-        if (token == C.beanAddress()) {
+        if (token == C.BEAN) {
             return 2;
-        } else if (token == C.unripeBeanAddress()) {
+        } else if (token == C.UNRIPE_BEAN) {
             return 2;
-        } else if (token == C.unripeLPAddress()) {
+        } else if (token == C.UNRIPE_LP) {
             return 4;
-        } else if (token == C.curveMetapoolAddress()) {
+        } else if (token == C.CURVE_BEAN_METAPOOL) {
             return 4;
         }
         

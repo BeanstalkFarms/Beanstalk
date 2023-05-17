@@ -305,7 +305,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
         var progress = 0;
         for (const depositorAddress in deposits) {
-            console.log('depositorAddress: ', depositorAddress);
+            console.log('progress:', progress, 'depositorAddress: ', depositorAddress);
 
             const tokens = deposits[depositorAddress]['tokenAddresses'];
             const seasons = deposits[depositorAddress]['seasonsArray'];
@@ -326,7 +326,6 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         
             await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
 
-            console.log('progress: ', progress);
             progress++;
         }
       });

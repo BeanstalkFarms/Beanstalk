@@ -14,7 +14,6 @@ import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/Silo/LibLegacyTokenSilo.sol";
 import "~/libraries/Convert/LibConvert.sol";
 import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibInternal.sol";
 
 /**
  * @author pizzaman1337
@@ -65,5 +64,49 @@ contract MigrationFacet is ReentrancyGuard {
         LibLegacyTokenSilo._migrateNoDeposits(account);
     }
 
+    function balanceOfLegacySeeds(address account) external view returns (uint256) {
+        return LibLegacyTokenSilo.balanceOfSeeds(account);
+    }
+
+    function balanceOfGrownStalkUpToStemsDeployment(address account)
+        external
+        view
+        returns (uint256)
+    {
+        return LibLegacyTokenSilo.balanceOfGrownStalkUpToStemsDeployment(account);
+    }
+
+    /**
+     * @dev Locate the `amount` and `bdv` for a user's Deposit in legacy storage.
+     * 
+     * Silo V2 Deposits are stored within each {Account} as a mapping of:
+     *  `address token => uint32 season => { uint128 amount, uint128 bdv }`
+     * 
+     * Unripe BEAN and Unripe LP are handled independently so that data
+     * stored in the legacy Silo V1 format and the new Silo V2 format can
+     * be appropriately merged. See {LibUnripeSilo} for more information.
+     *
+     */
+    function getDepositLegacy(
+        address account,
+        address token,
+        uint32 season
+    ) external view returns (uint128, uint128) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (LibUnripeSilo.isUnripeBean(token)){
+            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeBeanDeposit(account, season);
+            return (uint128(amount), uint128(bdv));
+        }
+        if (LibUnripeSilo.isUnripeLP(token)){
+            (uint256 amount, uint256 bdv) = LibUnripeSilo.unripeLPDeposit(account, season);
+            return (uint128(amount), uint128(bdv));
+        }
+
+        return (
+            s.a[account].legacyDeposits[token][season].amount,
+            s.a[account].legacyDeposits[token][season].bdv
+        );
+    }
 
 }

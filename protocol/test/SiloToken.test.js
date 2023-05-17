@@ -157,6 +157,14 @@ describe('Silo Token', function () {
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, stem, '1000', '1000');
       });
+
+      //it uses grownStalkForDeposit to verify the deposit amount is correct
+      it('verifies the grown stalk for deposit is correct', async function () {
+        expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq(to6('0'));
+        //verify still correct after one season
+        await this.season.lightSunrise();
+        expect(await this.silo.grownStalkForDeposit(userAddress, this.siloToken.address, 0)).to.eq('1000');
+      });
     });
   
     describe('2 deposits same grown stalk per bdv', function () {
@@ -1210,12 +1218,11 @@ describe('Silo Token', function () {
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.silo.totalStalk()).to.eq('50013711292'); //someone please check my math here, before it was 500.1 without the 3711292. That extra part comes from mow and migrate.
+        expect(await this.silo.totalStalk()).to.eq(toStalk('5.001'));
       });
 
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq('50013711292');
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('10'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('5.001'));
       });
 
       it('properly removes the crate', async function () {

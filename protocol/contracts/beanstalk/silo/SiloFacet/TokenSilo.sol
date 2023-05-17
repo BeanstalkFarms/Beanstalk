@@ -300,7 +300,7 @@ contract TokenSilo is Silo {
             msg.sender, 
             sender, 
             recipient, 
-            uint256(LibBytes.packAddressAndStem(token, stem)), 
+            LibBytes.packAddressAndStem(token, stem),
             amount
         );
 
@@ -410,13 +410,6 @@ contract TokenSilo is Silo {
     }
 
     /**
-     * @notice Get the total amount of `token` currently Withdrawn from the Silo across all users.
-     */
-    function getTotalWithdrawn(address token) external view returns (uint256) {
-        return s.siloBalances[token].withdrawn;
-    }
-
-    /**
      * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
      *
      * Contains:
@@ -445,7 +438,7 @@ contract TokenSilo is Silo {
         address account, 
         uint256 depositId
     ) external view returns (uint256 amount) {
-        return s.a[account].deposits[bytes32(depositId)].amount;
+        return s.a[account].deposits[depositId].amount;
     }
 
     /**
@@ -461,7 +454,7 @@ contract TokenSilo is Silo {
         );
         uint256[] memory balances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
-            balances[i] = s.a[accounts[i]].deposits[bytes32(depositIds[i])].amount;
+            balances[i] = s.a[accounts[i]].deposits[depositIds[i]].amount;
         }
         return balances;
     }
@@ -472,7 +465,7 @@ contract TokenSilo is Silo {
     function getDepositId(
         address token, 
         int96 stem
-    ) external pure returns (bytes32) {
+    ) external pure returns (uint256) {
         return LibBytes.packAddressAndStem(token, stem);
     }
 }

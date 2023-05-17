@@ -90,6 +90,7 @@ contract SunTest is  Sun, TestHelper {
 
   function test_deltaB_negative(int256 deltaB) public {
     vm.assume(deltaB < 0);
+    vm.assume(deltaB > - 2 ** 127); 
     vm.expectEmit(true, false, false, true);
     emit Soil(season.season() + 1, uint256(-deltaB)); // sunSunrise should emit this; ASK ABOUT CASTING
     season.sunSunrise(deltaB, 8); // deltaB = -100

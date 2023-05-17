@@ -3,8 +3,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibConvertData.sol";
-import "~/libraries/LibInternal.sol";
+import {LibConvertData} from "./LibConvertData.sol";
 
 /**
  * @title LibLambdaConvert
@@ -15,6 +14,7 @@ library LibLambdaConvert {
 
     function convert(bytes memory convertData)
         internal
+        pure
         returns (
             address tokenOut,
             address tokenIn,
@@ -23,10 +23,6 @@ library LibLambdaConvert {
         )
     {
         (amountIn, tokenIn) = convertData.lambdaConvert();
-        LibInternal.mow(msg.sender, tokenIn);
-        if (tokenIn != tokenOut) {
-            LibInternal.mow(msg.sender, tokenOut);
-        }
         tokenOut = tokenIn;
         amountOut = amountIn;
     }

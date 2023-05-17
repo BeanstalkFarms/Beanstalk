@@ -5,9 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import {AppStorage} from "../AppStorage.sol";
-import "~/C.sol";
+import {IBean} from "~/interfaces/IBean.sol";
 
 /**
  * @author Publius
@@ -27,7 +26,7 @@ contract InitBip8 {
     function init() external {
         s.deprecated_isBudget[beanSprout] = true;
         s.deprecated_isBudget[beanstalkFarms] = true;
-        C.bean().mint(beanSprout, beanSproutBudget);
-        C.bean().mint(beanstalkFarms, beanstalkFarmsBudget);
+        IBean(s.c.bean).mint(beanSprout, beanSproutBudget);
+        IBean(s.c.bean).mint(beanstalkFarms, beanstalkFarmsBudget);
     }
 }

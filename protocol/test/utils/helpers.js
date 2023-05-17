@@ -38,6 +38,10 @@ function to6(amount) {
   return ethers.utils.parseUnits(amount,6);
 }
 
+function toX(amount, x) {
+  return ethers.utils.parseUnits(amount,x);
+}
+
 exports.toBean = toBean
 exports.toStalk = toStalk
 exports.toEther = toEther
@@ -46,3 +50,4 @@ exports.to6 = to6
 exports.parseJson = parseJson
 exports.getEthSpentOnGas = getEthSpentOnGas
 exports.incrementTime = incrementTime
+exports.toX = toX

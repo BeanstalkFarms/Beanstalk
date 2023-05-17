@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Silo/LibWhitelist.sol";
+import "~/libraries/Silo/LibLegacyWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 import {BDVFacet} from "~/beanstalk/silo/BDVFacet.sol";
 
@@ -30,8 +30,8 @@ contract InitWhitelist {
     }
 
     function whitelistBean3Crv() internal {
-        LibWhitelist.whitelistTokenLegacy(
-            C.curveMetapoolAddress(),
+        LibLegacyWhitelist.whitelistToken(
+            C.CURVE_BEAN_METAPOOL,
             BDVFacet.curveToBDV.selector,
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS * 1e6 //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
@@ -39,8 +39,8 @@ contract InitWhitelist {
     }
 
     function whitelistBean() internal {
-        LibWhitelist.whitelistTokenLegacy(
-            C.beanAddress(),
+        LibLegacyWhitelist.whitelistToken(
+            C.BEAN,
             BDVFacet.beanToBDV.selector,
             BEAN_STALK,
             BEAN_SEEDS * 1e6
@@ -48,8 +48,8 @@ contract InitWhitelist {
     }
 
     function whitelistUnripeBean() internal {
-        LibWhitelist.whitelistTokenLegacy(
-            C.unripeBeanAddress(),
+        LibLegacyWhitelist.whitelistToken(
+            C.UNRIPE_BEAN,
             BDVFacet.unripeBeanToBDV.selector,
             BEAN_STALK,
             BEAN_SEEDS * 1e6
@@ -57,8 +57,8 @@ contract InitWhitelist {
     }
 
     function whitelistUnripeLP() internal {
-        LibWhitelist.whitelistTokenLegacy(
-            C.unripeLPAddress(),
+        LibLegacyWhitelist.whitelistToken(
+            C.UNRIPE_LP,
             BDVFacet.unripeLPToBDV.selector,
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS * 1e6

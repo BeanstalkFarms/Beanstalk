@@ -66,8 +66,10 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
     address internal constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address internal constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
+    address internal constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8; // 0.3% pool
+    address internal constant UNIV3_ETH_USDT_POOL = 0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36; // 0.3% pool
 
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
@@ -96,18 +98,6 @@ library C {
         return ROOTS_BASE;
     }
 
-    function getSopPrecision() internal pure returns (uint256) {
-        return SOP_PRECISION;
-    }
-
-    function beanAddress() internal pure returns (address) {
-        return BEAN;
-    }
-
-    function curveMetapoolAddress() internal pure returns (address) {
-        return CURVE_BEAN_METAPOOL;
-    }
-
     /**
      * @dev The pre-exploit BEAN:3CRV Curve metapool address.
      */
@@ -120,20 +110,6 @@ library C {
      */
     function unripeLPPool2() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_LUSD_POOL;
-    }
-
-    /**
-     * @dev The post-exploit Unripe BEAN ERC20 token address.
-     */
-    function unripeBeanAddress() internal pure returns (address) {
-        return UNRIPE_BEAN;
-    }
-
-    /**
-     * @dev The post-exploit Unripe BEAN:3CRV LP ERC20 token address.
-     */
-    function unripeLPAddress() internal pure returns (address) {
-        return UNRIPE_LP;
     }
 
     function unripeBean() internal pure returns (IERC20) {

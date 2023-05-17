@@ -73,17 +73,12 @@ library LibBytes {
         return memBytes;
     }
 
-    function packAddressAndStem(address _address, int96 Stem) internal pure returns (bytes32){
-        return bytes32(uint256(_address) << 96 | uint96(Stem));
+    function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
+        return uint256(_address) << 96 | uint96(stem);
     }
-    function getAddressFromBytes(bytes32 data) internal pure returns(address) {
-        return address(bytes20(data));
-    }
-    function getStemFromBytes(bytes32 data) internal pure returns(int96) {
-        return int96(int256(data));
-    }
-    function getAddressAndStemFromBytes(bytes32 data) internal pure returns(address, int96) {
-        return (address(bytes20(data)), int96(int256(data)));
+
+    function unpackAddressAndStem(uint256 data) internal pure returns(address, int96) {
+        return (address(uint160(data >> 96)), int96(int256(data)));
     }
 
 
