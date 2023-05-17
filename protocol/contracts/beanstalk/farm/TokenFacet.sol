@@ -15,7 +15,7 @@ import "../ReentrancyGuard.sol";
 
 /**
  * @author Publius
- * @title Transfer Facet handles transfers of assets
+ * @title TokenFacet handles transfers of assets
  */
 contract TokenFacet is ReentrancyGuard {
     struct Balance {
@@ -40,10 +40,18 @@ contract TokenFacet is ReentrancyGuard {
         uint256 amount
     );
 
-    /**
-     * Transfer
-     **/
+    //////////////////////// Transfer ////////////////////////
 
+    /**
+     * @notice transfers a token from msg.sender to `recipient`.
+     * @dev enables transfers between internal and external balances.
+     * 
+     * @param token The token to transfer.
+     * @param recipient The recipient of the transfer.
+     * @param amount The amount to transfer.
+     * @param fromMode The source of token from the sender. See {LibTransfer.From}.
+     * @param toMode The destination of token to the recipient. See {LibTransfer.To}.
+     */
     function transferToken(
         IERC20 token,
         address recipient,
@@ -61,6 +69,10 @@ contract TokenFacet is ReentrancyGuard {
         );
     }
 
+    /**
+     * @notice transfers a token from `sender` to an `recipient` Internal balance.
+     * @dev differs from transferToken as it does not use msg.sender.
+     */
     function transferInternalTokenFrom(
         IERC20 token,
         address sender,
@@ -82,10 +94,12 @@ contract TokenFacet is ReentrancyGuard {
         }
     }
 
-    /**
-     * Approval
-     **/
+    //////////////////////// Transfer ////////////////////////
 
+    /**
+     * @notice approves a token for a spender.
+     * @dev this approves a token for both internal and external balances.
+     */
     function approveToken(
         address spender,
         IERC20 token,
@@ -94,6 +108,9 @@ contract TokenFacet is ReentrancyGuard {
         LibTokenApprove.approve(msg.sender, spender, token, amount);
     }
 
+    /**
+     * @notice increases approval for a token for a spender.
+     */
     function increaseTokenAllowance(
         address spender,
         IERC20 token,
@@ -108,14 +125,10 @@ contract TokenFacet is ReentrancyGuard {
         return true;
     }
 
-    function tokenAllowance(
-        address account,
-        address spender,
-        IERC20 token
-    ) public view virtual returns (uint256) {
-        return LibTokenApprove.allowance(account, spender, token);
-    }
-
+    
+    /**
+     * @notice decreases approval for a token for a spender.
+     */
     function decreaseTokenAllowance(
         address spender,
         IERC20 token,
@@ -139,6 +152,22 @@ contract TokenFacet is ReentrancyGuard {
         return true;
     }
 
+    /**
+     * @notice returns the allowance for a token for a spender.
+     */
+    function tokenAllowance(
+        address account,
+        address spender,
+        IERC20 token
+    ) public view virtual returns (uint256) {
+        return LibTokenApprove.allowance(account, spender, token);
+    }
+
+    //////////////////////// Permit ////////////////////////
+
+    /**
+     * @notice approves a token for a spender using EIP2612.
+     */
     function permitToken(
         address owner,
         address spender,
@@ -153,6 +182,9 @@ contract TokenFacet is ReentrancyGuard {
         LibTokenApprove.approve(owner, spender, IERC20(token), value);
     }
 
+    /**
+     * @notice returns the current permit nonce for a token for an owner.
+     */
     function tokenPermitNonces(address owner)
         public
         view
@@ -206,25 +238,28 @@ contract TokenFacet is ReentrancyGuard {
         return LibTokenPermit._domainSeparatorV4();
     }
 
-    /**
-     * Weth
-     **/
+    //////////////////////// WETH ////////////////////////
 
+    /**
+     * @notice wraps ETH into WETH.
+     */
     function wrapEth(uint256 amount, LibTransfer.To mode) external payable {
         LibWeth.wrap(amount, mode);
         LibEth.refundEth();
     }
 
+    /**
+     * @notice unwraps WETH into ETH.
+     */
     function unwrapEth(uint256 amount, LibTransfer.From mode) external payable {
         LibWeth.unwrap(amount, mode);
     }
 
+    //////////////////////// GETTERS ////////////////////////
+
     /**
-     * Getters
-     **/
-
-    // Internal
-
+     * @notice returns the internal balance of a token for an account.
+     */
     function getInternalBalance(address account, IERC20 token)
         public
         view
@@ -233,6 +268,9 @@ contract TokenFacet is ReentrancyGuard {
         balance = LibBalance.getInternalBalance(account, token);
     }
 
+    /**
+     * @notice returns the internal balances of tokens for an account.
+     */
     function getInternalBalances(address account, IERC20[] memory tokens)
         external
         view
@@ -246,6 +284,9 @@ contract TokenFacet is ReentrancyGuard {
 
     // External
 
+    /**
+     * @notice returns the external balance of a token for an account.
+     */
     function getExternalBalance(address account, IERC20 token)
         public
         view
@@ -254,6 +295,9 @@ contract TokenFacet is ReentrancyGuard {
         balance = token.balanceOf(account);
     }
 
+    /**
+     * @notice returns the external balances of tokens for an account.
+     */
     function getExternalBalances(address account, IERC20[] memory tokens)
         external
         view
@@ -265,8 +309,11 @@ contract TokenFacet is ReentrancyGuard {
         }
     }
 
-    // Total
 
+    /**
+     * @notice returns the total balance (internal and external) 
+     * of a token 
+     */
     function getBalance(address account, IERC20 token)
         public
         view
@@ -275,6 +322,10 @@ contract TokenFacet is ReentrancyGuard {
         balance = LibBalance.getBalance(account, token);
     }
 
+    /**
+     * @notice returns the total balances (internal and external) 
+     * of a token for an account.
+     */
     function getBalances(address account, IERC20[] memory tokens)
         external
         view
@@ -286,8 +337,10 @@ contract TokenFacet is ReentrancyGuard {
         }
     }
 
-    // All
-
+    /**
+     * @notice returns the total balance (internal and external) 
+     * of a token, in a balance struct (internal, external, total).
+     */
     function getAllBalance(address account, IERC20 token)
         public
         view
@@ -298,6 +351,10 @@ contract TokenFacet is ReentrancyGuard {
         b.totalBalance = b.internalBalance.add(b.externalBalance);
     }
 
+    /**
+     * @notice returns the total balance (internal and external) 
+     * of a token, in a balance struct (internal, external, total).
+     */
     function getAllBalances(address account, IERC20[] memory tokens)
         external
         view
