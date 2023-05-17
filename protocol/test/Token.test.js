@@ -24,6 +24,7 @@ describe('Token', function () {
 
         const MockToken = await ethers.getContractFactory('MockToken')
         this.token = await MockToken.connect(this.user).deploy('Mock', 'MOCK')
+
         await this.token.deployed()
         await this.token.connect(this.user).mint(this.user.address, '1000')
         await this.token.connect(this.user2).mint(this.user2.address, '1000')
@@ -36,6 +37,11 @@ describe('Token', function () {
 
         this.weth = await ethers.getContractAt('IWETH', WETH)
         await this.weth.connect(this.user).approve(this.tokenFacet.address, to18('1000000000000000'))
+
+        const MockERC1155Token = await ethers.getContractFactory("MockERC1155");
+        this.ERC1155token = await MockERC1155Token.connect(this.user).deploy('MOCKERC1155')
+        await this.ERC1155token.deployed()
+        await this.ERC1155token.connect(this.user).mockMint(this.user.address,'1', '1000')
     });
 
     beforeEach(async function () {
@@ -489,4 +495,11 @@ describe('Token', function () {
           });
         });
       });
+
+    describe.only("ERC1155 transfer", async function () {
+
+      it('properly updates users token allowance', async function () {
+        await expect(this.ERC1155token.connect(this.user).safeTransferFrom(this.user.address, BEANSTALK, 1, 1000, [])).to.be.revertedWith('Silo: ERC1155 deposits are not accepted yet.')
+      })
+    });
 });

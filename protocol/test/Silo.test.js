@@ -342,33 +342,6 @@ describe('Silo', function () {
       expect(await this.approval.isApprovedForAll(userAddress, user2Address)).to.eq(true);
     });
 
-    // it("properly emits URI for when correctly setting metadata:", async function () {
-    //   season = this.season.season()
-    //   stem = this.silo.seasonToStem(this.bean.address, season)
-    //   depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
-    //   await expect(this.metadata.connect(user).setMetadata(
-    //     depositID, // depositId,
-    //     this.bean.address, // token,
-    //     stem, // stem
-    //     0 // id (set to 0, but can be anything)
-    //   )).to.emit(this.metadata, 'URI').withArgs(
-    //     "",
-    //     depositID
-    //   )
-    // });
-
-    // it("reverts when incorrectly setting metadata:", async function () {
-    //   season = this.season.season()
-    //   stem = this.silo.seasonToStem(this.bean.address, season)
-    //   depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB999999999999999999999999';     
-    //   await expect(this.metadata.connect(user).setMetadata(
-    //     depositID, // depositId,
-    //     this.bean.address, // token,
-    //     stem, // stem
-    //     0 // id (set to 0, but can be anything)
-    //   )).to.be.revertedWith("Silo: invalid depositId");
-    // });
-
     it("properly gives an URI", async function () {
       season = this.season.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
