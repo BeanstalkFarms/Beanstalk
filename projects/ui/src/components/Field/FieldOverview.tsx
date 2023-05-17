@@ -1,15 +1,10 @@
 import React, { useEffect } from 'react';
 import { Card, Stack } from '@mui/material';
 
-import { useSelector } from 'react-redux';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import EmbeddedCard from '~/components/Common/EmbeddedCard';
 
-import useSdk from '~/hooks/sdk';
-
-import { AppState } from '~/state';
-import { BeanstalkField } from '~/state/beanstalk/field';
-import { Sun } from '~/state/beanstalk/sun';
+import { useAppSelector } from '~/state';
 
 import Temperature from '~/components/Analytics/Field/Temperature';
 import FieldConditionsHeader from '~/components/Field/FieldConditionsHeader';
@@ -25,15 +20,10 @@ const getSx = (isMorning: boolean) => ({
   background: isMorning ? BeanstalkPalette.lightYellow : undefined,
 });
 
-const FieldOverview: React.FC<{
-  beanstalkField: BeanstalkField;
-}> = ({ beanstalkField }) => {
-  const sdk = useSdk();
+const FieldOverview: React.FC<{}> = () => {
   const [open, show, hide] = useToggle();
 
-  const morning = useSelector<AppState, Sun['morning']>(
-    (state) => state._beanstalk.sun.morning
-  );
+  const morning = useAppSelector((s) => s._beanstalk.sun.morning);
   const isMorning = morning.isMorning;
 
   const toggle = () => {
@@ -59,13 +49,10 @@ const FieldOverview: React.FC<{
             ) : (
               <Temperature height={CHART_HEIGHT} statsRowFullWidth />
             )}
-            <FieldStats beanstalkField={beanstalkField} />
+            <FieldStats />
           </Stack>
         </EmbeddedCard>
-        <FieldInfo
-          harvestableIndex={beanstalkField.harvestableIndex}
-          PODS={sdk.tokens.PODS}
-        />
+        <FieldInfo />
       </Stack>
     </Card>
   );

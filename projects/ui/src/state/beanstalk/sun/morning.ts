@@ -18,7 +18,6 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { getDiffNow, getMorningResult, getNowRounded } from '.';
 import { useAppSelector } from '~/state';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
-import { ZERO_BN } from '~/constants';
 
 export const BLOCKS_PER_MORNING = 25;
 
@@ -96,8 +95,6 @@ export default function MorningUpdater() {
   const temperature = useAppSelector((s) => s._beanstalk.field.temperature);
   const [_, { calculate: calculateTemperature }] = useTemperature();
 
-  console.log('[morning/updater]awaiting: ', morningTime.awaiting);
-
   const sunriseTime = season.timestamp.toSeconds();
   const sunriseBlock = season.sunriseBlock.toString();
   const morningIndex = morning.index;
@@ -110,23 +107,27 @@ export default function MorningUpdater() {
 
   const dispatch = useDispatch();
 
+  console.log('awaiting: ', morningTime.awaiting);
+
   /// called when the state is notified that it needs to fetch for updates
   const fetch = useCallback(async () => {
     const [scaled, max, soil] = await fetchMorningField({ noUpdate: true });
     const calculated = calculateTemperature(morning.blockNumber);
-
-    console.log('scaled: ', scaled?.toNumber());
-    console.log('calculated: ', calculated?.toNumber());
-    const isSimilar = isSimilarTo(scaled || ZERO_BN, calculated, 0.1);
-    console.log('isSimilar: ', isSimilar);
-
     if (scaled && isSimilarTo(scaled, calculated, 0.1)) {
-      console.log('[morning][fetch] setting awaiting to', false);
+      console.log(
+        '[morning][fetch] temperatures match. Setting awaiting to',
+        false
+      );
+      console.log('-------------------');
       dispatch(updateScaledTemperature(scaled));
       dispatch(updateMaxTemperature(max));
       dispatch(updateTotalSoil(soil));
       dispatch(setAwaitingMorningBlock(false));
     } else if (!morningTime.awaiting) {
+      console.log(
+        '[morning][fetch] temperatures dont match. Setting awaiting to',
+        true
+      );
       dispatch(setAwaitingMorningBlock(true));
     }
   }, [
@@ -147,18 +148,25 @@ export default function MorningUpdater() {
       const _remaining = getDiffNow(morningTime.next, now);
       const remainingSeconds = _remaining.as('seconds');
       console.log('remainingSeconds: ', remainingSeconds);
-
-      if (nowAsSeconds === next.toSeconds() || remainingSeconds <= 2) {
+      if (nowAsSeconds === next.toSeconds() || remainingSeconds <= 0) {
         console.log('[morning][interval] setting awaiting to ', true);
-        const _morningResult = getMorningResult({
+        const morningResult = getMorningResult({
           timestamp: DateTime.fromSeconds(sunriseTime),
           blockNumber: new BigNumber(sunriseBlock),
         });
 
-        const morningResult = {
-          ..._morningResult,
-          awaiting: true,
+        const printResult = {
+          morningTime: {
+            awaiting: morningResult.morningTime.awaiting,
+          },
+          morning: {
+            index: morningResult.morning.index.toNumber(),
+            isMorning: morningResult.morning.isMorning,
+            blockNumber: morningResult.morning.blockNumber.toNumber(),
+          },
         };
+
+        console.log('[morning][interval] morning result = ', printResult);
 
         dispatch(setMorning(morningResult));
       } else {

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Stack, Typography, Box } from '@mui/material';
-import BigNumber from 'bignumber.js';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { BeanstalkToken } from '@beanstalk/sdk';
 import { Link } from 'react-router-dom';
 import { displayFullBN } from '~/util';
 import EmbeddedCard from '../Common/EmbeddedCard';
 import Row from '../Common/Row';
 import TokenIcon from '../Common/TokenIcon';
 import { BeanstalkPalette } from '../App/muiTheme';
+import { useAppSelector } from '~/state';
+import useSdk from '~/hooks/sdk';
 
 const ThinDivider: React.FC<{}> = () => (
   <Box
@@ -21,10 +21,13 @@ const ThinDivider: React.FC<{}> = () => (
   />
 );
 
-const FieldInfo: React.FC<{
-  harvestableIndex: BigNumber;
-  PODS: BeanstalkToken;
-}> = ({ harvestableIndex, PODS }) => {
+const FieldInfo: React.FC<{}> = () => {
+  const sdk = useSdk();
+  const harvestableIndex = useAppSelector(
+    (s) => s._beanstalk.field.harvestableIndex
+  );
+  const PODS = sdk.tokens.PODS;
+
   const [open, setOpen] = useState(false);
 
   const handleOnClick = () => {
