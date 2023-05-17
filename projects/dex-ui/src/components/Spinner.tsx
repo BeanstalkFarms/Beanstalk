@@ -31,7 +31,7 @@ const SpinnerContainer = styled.div<Props>`
   position: relative;
   width: ${({ size }) => size}px;
   height: ${({ size }) => size}px;
-  padding-left: 5px;
+  // padding-left: 5px;
 
   div {
     box-sizing: border-box;

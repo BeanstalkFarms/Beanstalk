@@ -16,7 +16,7 @@ export const Build = () => {
 const Box = styled.div`
   outline: 0.5px solid black;
   outline-offset: -0.5px;
-  background-color: #ffffff00;
+  background-color: #ffffffff ;
   height: 96px;
   width: 384px;
   margin-left: 96px;

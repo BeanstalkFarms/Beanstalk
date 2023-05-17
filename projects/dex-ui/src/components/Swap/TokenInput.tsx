@@ -110,7 +110,7 @@ export const TokenInput: FC<TokenInput> = ({
     }
   }, []);
 
-  if (loading) return <LoadingContainer width={width} focused={focused} data-trace="true"ƒß/>;
+  if (loading) return <LoadingContainer width={width} focused={focused} data-trace="true" />;
 
   return (
     <Container
