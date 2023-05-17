@@ -971,7 +971,7 @@ describe('Silo Token', function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.approval.connect(user).increaseDepositAllowance(ownerAddress, this.siloToken.address, '100');
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '50')
       })
@@ -1028,7 +1028,7 @@ describe('Silo Token', function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.approval.connect(user).increaseDepositAllowance(ownerAddress, this.siloToken.address, '100');
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '100');
       })
@@ -1074,7 +1074,7 @@ describe('Silo Token', function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '200');
+        await this.approval.connect(user).increaseDepositAllowance(ownerAddress, this.siloToken.address, '200');
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
         await this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'])
@@ -1142,7 +1142,7 @@ describe('Silo Token', function () {
   describe("Deposit Approval", async function () {
     describe("approve allowance", async function () {
       beforeEach(async function () {
-        this.result = await this.approval.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+        this.result = await this.approval.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
       })
 
       it('properly updates users token allowance', async function () {
@@ -1156,7 +1156,7 @@ describe('Silo Token', function () {
 
     describe("increase and decrease allowance", async function () {
       beforeEach(async function () {
-        await this.approval.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+        await this.approval.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
       })
 
       it('properly increase users token allowance', async function () {
