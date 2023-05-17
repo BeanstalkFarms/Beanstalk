@@ -118,21 +118,32 @@ export const flattenDiagonals = (pos: DOMPoint, prev: DOMPoint) => {
 };
 
 export const getTraceables = throttle(
-  (container: HTMLDivElement): DOMRect[] => {
+  (container: HTMLDivElement, svg: SVGSVGElement): DOMRect[] => {
+    // get the SVG offsets
+    const svgPosition = svg.getBoundingClientRect();
+    // console.log("SVG: ", svgPosition);
     // Get all children of the container and find any that have a 'data-trace' attribtue
     const descendants = Array.from(container.querySelectorAll("*"));
     const elements = descendants.filter((e: Element) => e.getAttribute("data-trace") === "true");
     // for each one, return a DOMRect made up of its coordinates
     const traceables = elements.map((e) => {
       const el = e as HTMLElement;
-      // use offsetLeft/Right here to get the position relative to 'parent', which should be the svg
-      // this is a hacky assumption, but it should work if all pages follow the same structure
-      const x = el.offsetLeft;
-      const y = el.offsetTop;
+      // We need to return the location of each traceable rectangle, but with two caveats:
+      // -- the location, taking into account scroll position
+      // -- the coordinates relative to the SVG coordinate system
+      // First, get the coordinates relative to the browser viewport
+      const box = el.getBoundingClientRect();
+      // substract the SVG possition
+      const x = box.x - svgPosition.x;
+      const y = box.x - svgPosition.y;
+      // and convert to to SVG plane
+      let pos = converToSvgPoint(x, y, svg);
+      pos.x = box.x - svgPosition.x;
+      pos.y = box.y - svgPosition.y;
 
       // Important. clientWidth/Height will get us the size without
       // borders, otherwise things don't line up with the grid
-      const svgBox = new DOMRect(x, y, el.clientWidth, el.clientHeight);
+      const svgBox = new DOMRect(pos.x, pos.y, el.clientWidth, el.clientHeight);
 
       return svgBox;
     });
