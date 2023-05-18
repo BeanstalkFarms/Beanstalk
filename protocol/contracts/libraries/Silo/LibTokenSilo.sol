@@ -293,14 +293,14 @@ library LibTokenSilo {
      * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
      * 
      * Silo V3 Deposits are stored within each {Account} as a mapping of:
-     *  `address token => int96 stem => { uint128 amount, uint128 bdv }`
+     *  `uint256 DepositID => { uint128 amount, uint128 bdv }`
+     *  The DepositID is the concatination of the token address and the stem.
      * 
      * Silo V2 deposits are only usable after a successful migration, see
      * mowAndMigrate within the Migration facet.
      *
-     * FIXME(naming): rename to `getDeposit()`?
      */
-    function tokenDeposit(
+    function getDeposit(
         address account,
         address token,
         int96 stem
