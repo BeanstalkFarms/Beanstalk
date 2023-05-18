@@ -2,33 +2,21 @@ import React, { useCallback, useMemo } from 'react';
 import { InputAdornment } from '@mui/material';
 import { Form } from 'formik';
 import { useProvider } from 'wagmi';
-import {
-  TokenAdornment,
-  TokenInputField,
-} from '~/components/Common/Form';
+import { TokenAdornment, TokenInputField } from '~/components/Common/Form';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { Beanstalk } from '~/generated';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchFarmerMarket } from '~/state/farmer/market/updater';
 import Farm from '~/lib/Beanstalk/Farm';
 import { optimizeFromMode } from '~/util/Farm';
-import {
-  toStringBaseUnitBN,
-  displayTokenAmount,
-  bnToTokenValue,
-} from '~/util';
+import { toStringBaseUnitBN, displayTokenAmount, bnToTokenValue } from '~/util';
 import { BEAN, ETH, PODS } from '~/constants/tokens';
 import { ONE_BN, POD_MARKET_TOOLTIPS } from '~/constants';
 import SliderField from '~/components/Common/Form/SliderField';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
 import { BuyPlotsFarmStep } from '~/lib/Txn/FarmSteps/market/BuyPlotsFarmStep';
-import {
-  ERC20Token,
-  FarmFromMode,
-  NativeToken,
-  Token,
-} from '@beanstalk/sdk';
+import { ERC20Token, FarmFromMode, NativeToken, Token } from '@beanstalk/sdk';
 import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Formik, FormikHelpers, FormikProps } from 'formik';
@@ -60,15 +48,10 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { AppState } from '~/state';
 import { FC } from '~/types';
-import {
-  displayBN,
-  displayFullBN,
-  tokenValueToBN,
-} from '~/util';
+import { displayBN, displayFullBN, tokenValueToBN } from '~/util';
 import { ActionType } from '~/util/Actions';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
-
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
@@ -231,8 +214,12 @@ const CreateOrderV2Form: FC<
                 key={`tokens.${index}`}
                 name={`tokens.${index}`}
                 tokenOut={Bean}
-                balance={state.token.address === '' ? balances['eth'] : balances[state.token.address] || ZERO_BN}
-                state={state}  
+                balance={
+                  state.token.address === ''
+                    ? balances['eth']
+                    : balances[state.token.address] || ZERO_BN
+                }
+                state={state}
                 params={quoteHandlerParams}
                 showTokenSelect={handleOpen}
                 handleQuote={handleQuote}
@@ -323,7 +310,6 @@ const CreateOrderV2Form: FC<
 // ---------------------------------------------------
 
 const CreateOrderProvider: FC<{}> = () => {
-
   const sdk = useSdk();
 
   /// Tokens
@@ -387,22 +373,21 @@ const CreateOrderProvider: FC<{}> = () => {
   /// Handlers
 
   const handleQuote = useCallback(
-    async (_tokenIn:any, _amountIn:any, _tokenOut:any) => {
-
+    async (_tokenIn: any, _amountIn: any, _tokenOut: any) => {
       const amountOut = await BuyPlotsFarmStep.getAmountOut(
         sdk,
         _tokenIn,
         _amountIn.toString(),
         FarmFromMode.EXTERNAL,
-        account,
+        account
       );
 
       return {
         amountOut: tokenValueToBN(amountOut),
         tokenValue: amountOut,
-      }
-
-    }, [Weth, farm]
+      };
+    },
+    [Weth, farm]
   );
 
   const onSubmit = useCallback(
@@ -457,7 +442,6 @@ const CreateOrderProvider: FC<{}> = () => {
         }
 
         /// Buy and Create Pod Order
-        
         else {
           /// Require a quote
           if (!tokenData.amountOut) {
@@ -465,24 +449,27 @@ const CreateOrderProvider: FC<{}> = () => {
           }
           const data: string[] = [];
 
-          const beanAmountOut = await handleQuote(tokenData.token, tokenData.amount, BEAN)
+          const beanAmountOut = await handleQuote(
+            tokenData.token,
+            tokenData.amount,
+            BEAN
+          );
 
           const orderTxn = new BuyPlotsFarmStep(sdk, account!);
           orderTxn.build(
             tokenData.token,
             beanAmountOut.tokenValue,
             pricePerPod,
-            placeInLine,
+            placeInLine
           );
 
           const { execute } = await txnBundler.bundle(
             orderTxn,
             bnToTokenValue(tokenData.token, tokenData.amount),
-            values.settings.slippage,
+            values.settings.slippage
           );
 
           txn = await execute();
-
         }
 
         txToast.confirming(txn);
