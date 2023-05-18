@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { InputAdornment } from '@mui/material';
 import { Form } from 'formik';
 import { useProvider } from 'wagmi';
@@ -350,7 +350,7 @@ const CreateOrderProvider: FC<{}> = () => {
 
   /// Form
   const middleware = useFormMiddleware();
-  const { txnBundler, refetch } = useFormTxnContext();
+  const { txnBundler } = useFormTxnContext();
 
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const initialValues: CreateOrderFormValues = useMemo(
@@ -416,7 +416,6 @@ const CreateOrderProvider: FC<{}> = () => {
         ///
         let call;
         let txn;
-        let value = ZERO_BN;
         const inputToken = tokenData.token;
 
         ///
@@ -447,7 +446,6 @@ const CreateOrderProvider: FC<{}> = () => {
           if (!tokenData.amountOut) {
             throw new Error(`No quote available for ${tokenData.token.symbol}`);
           }
-          const data: string[] = [];
 
           const beanAmountOut = await handleQuote(
             tokenData.token,
@@ -542,9 +540,7 @@ const CreateOrderProvider: FC<{}> = () => {
   );
 };
 
-const CreateOrder: FC<{
-  token: ERC20Token | NativeToken;
-}> = (props) => (
+const CreateOrder: FC<{}> = (props) => (
   <FormTxnProvider>
     <CreateOrderProvider {...props} />
   </FormTxnProvider>
