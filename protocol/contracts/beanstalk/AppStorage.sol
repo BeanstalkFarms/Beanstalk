@@ -241,6 +241,7 @@ contract Storage {
     /**
      * @notice System-level Silo state; contains deposit and withdrawal data for a particular whitelisted Token.
      * @param deposited The total amount of this Token currently Deposited in the Silo.
+     * @param bdv The total bdv of this Token currently Deposited in the Silo.
      * @param withdrawn The total amount of this Token currently Withdrawn From the Silo.
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
      * 
@@ -248,7 +249,8 @@ contract Storage {
      * but not yet Claimed. This will be removed in a future BIP.
      */
     struct AssetSilo {
-        uint256 deposited;
+        uint128 deposited;
+        uint128 depositedBdv;
         uint256 withdrawn;
     }
 

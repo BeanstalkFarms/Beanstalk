@@ -134,6 +134,7 @@ describe('Silo Token', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('1000');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('1000');
         //expect(await this.silo.totalSeeds()).to.eq('1000');
         expect(await this.silo.totalStalk()).to.eq('10000000');
       });
@@ -176,6 +177,7 @@ describe('Silo Token', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('2000');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('2000');
         //expect(await this.silo.totalSeeds()).to.eq('2000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
       });
@@ -203,6 +205,7 @@ describe('Silo Token', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('2000');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('2000');
         //expect(await this.silo.totalSeeds()).to.eq('2000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
       });
@@ -255,6 +258,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('0');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('0');
           expect(await this.silo.totalStalk()).to.eq('0');
           //expect(await this.silo.totalSeeds()).to.eq('0');
         });
@@ -292,6 +296,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('500');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('500');
           expect(await this.silo.totalStalk()).to.eq('5000000');
           //expect(await this.silo.totalSeeds()).to.eq('500');
         });
@@ -332,6 +337,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('500');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('500');
           expect(await this.silo.totalStalk()).to.eq('5000500');
           //expect(await this.silo.totalSeeds()).to.eq('500');
         });
@@ -365,6 +371,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('0');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('0');
           expect(await this.silo.totalStalk()).to.eq('0');
           //expect(await this.silo.totalSeeds()).to.eq('0');
         });
