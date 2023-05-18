@@ -204,7 +204,7 @@ library LibLegacyTokenSilo {
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
         uint32 lastUpdate = s.a[account].lastUpdate;
 
-        if(lastUpdate > stemStartSeason) return 0; 
+        if (lastUpdate > stemStartSeason) return 0; 
         return
             stalkReward(
                 s.a[account].s.seeds,
