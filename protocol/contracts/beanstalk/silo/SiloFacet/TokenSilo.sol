@@ -399,7 +399,7 @@ contract TokenSilo is Silo {
         address token,
         int96 stem
     ) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, stem);
+        return LibTokenSilo.getDeposit(account, token, stem);
     }
 
     /**

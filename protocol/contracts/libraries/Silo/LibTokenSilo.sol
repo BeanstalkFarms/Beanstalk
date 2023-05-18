@@ -361,7 +361,7 @@ library LibTokenSilo {
          // The check in the above line guarantees that subtraction result is positive
          // and thus the cast to `uint256` is safe.
         uint deltaStemTip = uint256(_stemTip.sub(stem));
-        (, uint bdv) = tokenDeposit(account, token, stem);
+        (, uint bdv) = getDeposit(account, token, stem);
 
         grownStalk = deltaStemTip.mul(bdv);
     }
