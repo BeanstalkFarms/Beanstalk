@@ -7,7 +7,8 @@ const ConvertKind = {
   UNRIPE_LP_TO_BEANS: 3,
   LAMBDA_LAMBDA: 4,
   BEANS_TO_WELL_LP: 5,
-  WELL_LP_TO_BEANS: 6
+  WELL_LP_TO_BEANS: 6,
+  UNRIPE_BEANS_TO_BEANS: 7
 }
 
 class ConvertEncoder {
@@ -71,6 +72,18 @@ class ConvertEncoder {
     ['uint256', 'uint256', 'uint256', 'address'],
     [ConvertKind.BEANS_TO_WELL_LP, beans, minLP, address]
   );
+  
+  /**
+   * Encodes the userData parameter for performing an Unripe-->Ripe convert
+   * @param unripeAmount - the amount of unripe beans to be converted
+   * @param unripeToken - the address of the unripe asset
+   */
+  static convertUnripeBeansToBeans = (unripeAmount, unripeToken) =>
+  defaultAbiCoder.encode(
+    ['uint256', 'uint256', 'address'],
+    [ConvertKind.UNRIPE_BEANS_TO_BEANS, unripeAmount, unripeToken]
+  );
+
 }
 
 exports.ConvertEncoder = ConvertEncoder

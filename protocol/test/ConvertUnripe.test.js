@@ -11,6 +11,7 @@ let userAddress, ownerAddress, user2Address;
 
 describe('Unripe Convert', function () {
   before(async function () {
+    // get accounts
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
@@ -19,21 +20,25 @@ describe('Unripe Convert', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
+    // SILOFACET
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
+    // CONVERTFACET
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
 
+    // GIVE 10000 3CRV TO USER
     await this.threeCurve.mint(userAddress, to18('100000'));
     await this.threePool.set_virtual_price(to18('1'));
     await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'));
 
     await this.beanMetapool.connect(user).approve(this.threeCurve.address, to18('100000000000'));
     await this.beanMetapool.connect(user).approve(this.silo.address, to18('100000000000'));
-
+    // GO FORWARD 1 SEASON
     await this.season.siloSunrise(0);
+    // MINT 1000000000 BEANS TO THE USER
     await this.bean.mint(userAddress, toBean('1000000000'));
     await this.bean.mint(user2Address, toBean('1000000000'));
     await this.bean.connect(user).approve(this.beanMetapool.address, to18('100000000000'));
@@ -43,20 +48,27 @@ describe('Unripe Convert', function () {
     await this.beanMetapool.connect(user).add_liquidity([toBean('1000'), to18('1000')], to18('2000'));
     await this.beanMetapool.connect(user).transfer(ownerAddress, to18('1000'))
 
+    //UNRIPE
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+    // FERTILIZER CONTRACT
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+
+    // MINT 10000 UNRIPE TO USER
     await this.unripeBean.mint(userAddress, to6('10000'))
     await this.unripeLP.mint(userAddress, to6('9422.960000'))
     await this.unripeBean.connect(user).approve(this.diamond.address, to18('100000000'))
     await this.unripeLP.connect(user).approve(this.diamond.address, to18('100000000'))
     await this.fertilizer.setFertilizerE(true, to6('10000'))
+    // INDEX THE UNRIPE TOKEN
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES)
+    // MINT 5000 BEAN TO OWNER
     await this.bean.mint(ownerAddress, to6('5000'))
     await this.bean.approve(this.diamond.address, to6('5000'))
     await this.beanMetapool.approve(this.diamond.address, to18('10000'))
+    //uint256 recapitalized, uint256 fertilized
     await this.fertilizer.setPenaltyParams(to6('500'), '0')
     await this.unripe.connect(owner).addUnderlying(
       UNRIPE_BEAN,
@@ -419,6 +431,65 @@ describe('Unripe Convert', function () {
       it('properly updates user values', async function () {
         //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('600'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('200'));
+      });
+    });
+  });
+
+
+
+
+
+
+
+  // BEFORE: convert lp to beans
+  // Unripe to Ripe test
+
+  describe('convert unripe beans to beans', async function () {
+
+    beforeEach(async function () {
+      await this.season.teleportSunrise(10);
+      this.season.deployStemsUpgrade();
+    });
+
+    describe('Simple urBEAN-->BEAN convert', function () {
+      
+      // PERFORM A DEPOSIT AND A CONVERT BEFORE EVERY TEST
+      beforeEach(async function () {
+        // user deposits 500 UrBEAN to the silo from external account
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('500'), EXTERNAL);
+        // GO FORWARD 2 SEASONS AND DONT DISTRIBUTE ANY REWARDS TO SILO
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
+        // user deposits 500 UrBEAN to the silo from external account
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('500'), EXTERNAL);
+        // this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('990'), this.unripeLP.address), ['0', '4'], [to6('500'), to6('500')])
+        // INTERACTING WITH THE CONVERT FACET CONVERT(bytes calldata convertData, int96[] memory stems,uint256[] memory amounts) FUNCTION
+        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToBeans(to6('500') , this.unripeBean.address) , ['0'], [to6('500')] );
+      });
+
+      it('properly updates total values', async function () {
+        expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1006.18167'));
+        expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
+        expect(await this.silo.totalStalk()).to.eq(toStalk('100.6282288167'));
+        //same as normal curve convert tests, old value was 100.6382906334 but now with rounding it's a bit different
+      });
+
+      it('properly updates user values', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('100.6282288167'));
+      });
+
+      it('properly updates user deposits', async function () {
+        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 3))[0]).to.eq(to6('1006.18167'));
+        const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 2);
+        expect(deposit[0]).to.eq(to6('0'));
+        expect(deposit[1]).to.eq(toBean('0'));
+      });
+
+      it('emits events', async function () {
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
+          .withArgs(userAddress, this.unripeLP.address, [0, 4], [to6('500'), to6('500')], to6('1000'), [to6('50'), to6('50')]);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
+          .withArgs(userAddress, this.unripeBean.address, 3, to6('1006.18167'), to6('100.618167'));
       });
     });
   });
