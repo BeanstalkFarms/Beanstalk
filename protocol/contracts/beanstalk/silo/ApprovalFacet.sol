@@ -35,6 +35,25 @@ contract ApprovalFacet is ReentrancyGuard {
     //////////////////////// APPROVE ////////////////////////
 
     /** 
+     * @notice Approve `spender` to Transfer Deposits for `msg.sender`.     
+     *
+     * Sets the allowance to `amount`.
+     * 
+     * @dev Gas optimization: We neglect to check whether `token` is actually
+     * whitelisted. If a token is not whitelisted, it cannot be Deposited,
+     * therefore it cannot be Transferred.
+     */
+    function approveDeposit(
+        address spender,
+        address token,
+        uint256 amount
+    ) external payable nonReentrant {
+        require(spender != address(0), "approve from the zero address");
+        require(token != address(0), "approve to the zero address");
+        LibSiloPermit._approveDeposit(msg.sender, spender, token, amount);
+    }
+
+    /** 
      * @notice Increase the Transfer allowance for `spender`.
      * 
      * @dev Gas optimization: We neglect to check whether `token` is actually
