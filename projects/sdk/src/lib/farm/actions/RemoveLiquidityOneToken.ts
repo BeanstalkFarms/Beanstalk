@@ -29,6 +29,8 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
     let registry
     if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry.address) {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry;
+    } else if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.cryptoFactory.address) {
+      registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.cryptoFactory;
     } else {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.metaFactory;
     };
