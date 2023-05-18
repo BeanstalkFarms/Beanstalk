@@ -9,13 +9,10 @@ import {
 } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { PreferredToken } from '~/hooks/farmer/usePreferredToken';
-import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
-import { makeLocalOnlyStep } from '../../util';
+import { FarmStep } from '~/lib/Txn/Interface';
 import { BEAN, PODS } from '~/constants/tokens';
-import { Bean } from '@beanstalk/sdk/dist/types/lib/bean';
 import { ethers } from 'ethers';
 import { toStringBaseUnitBN, tokenValueToBN } from '~/util';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 
 export class BuyPlotsFarmStep extends FarmStep {
   constructor(_sdk: BeanstalkSDK, private _account: string) {
