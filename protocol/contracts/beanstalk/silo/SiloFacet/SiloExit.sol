@@ -110,7 +110,8 @@ contract SiloExit is ReentrancyGuard {
      * Roots are used to calculate Earned Bean, Earned Stalk and Plantable Seed
      * balances.
      *
-     * Roots are also used when a flood occurs, to calculate the plenty balance of a user.
+     * When a Flood occurs, Plenty is distributed based on a Farmer's balance 
+     * of Roots when it started Raining.
      */
     function balanceOfRoots(address account) public view returns (uint256) {
         return s.a[account].roots;
