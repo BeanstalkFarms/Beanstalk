@@ -140,6 +140,7 @@ describe('Silo Enroot', function () {
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')).div('10000'));
         expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
       });
 
