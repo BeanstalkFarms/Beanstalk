@@ -241,9 +241,15 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
       /// value is different. For example, if the displayValue
       /// goes from '1.0' -> '1.00', don't trigger an update.
       if (newValue === null || !newValue.eq(field.value)) {
-        const clampedValue = clamp(newValue);
-        form.setFieldValue(field.name, clampedValue);
-        onChange?.(clampedValue); // bubble up if necessary
+        /// Prevent infinite loop caused by balances under 0.000001
+        if (balance && balance.lte(BigNumber(0.000001))) {
+          form.setFieldValue(field.name, BigNumber(0));
+          onChange?.(BigNumber(0));
+        } else {
+          const clampedValue = clamp(newValue);
+          form.setFieldValue(field.name, clampedValue);
+          onChange?.(clampedValue); // bubble up if necessary
+        }
       }
     },
     [form, field.name, field.value, onChange, clamp]
