@@ -95,12 +95,12 @@ contract Replant8 is InitWhitelist {
 
         BeanstalkERC20 ub = new BeanstalkERC20{salt: UNRIPE_BEAN_SALT}(address(this), "Unripe Bean", "urBEAN");
         ub.mint(address(this), NON_DEPOSITED_UNRIPE_BEANS + DEPOSITED_UNRIPE_BEANS + EARNED_UNRIPE_BEANS);
-        s.siloBalances[address(ub)].deposited = DEPOSITED_UNRIPE_BEANS + EARNED_UNRIPE_BEANS;
+        s.siloBalances[address(ub)].deposited = uint128(DEPOSITED_UNRIPE_BEANS + EARNED_UNRIPE_BEANS);
         addUnripeToken(address(ub), address(bean), UNRIPE_BEAN_MERKLE_ROOT);
 
         BeanstalkERC20 ub3 = new BeanstalkERC20{salt: UNRIPE_BEAN3CRV_SALT}(address(this), "Unripe BEAN3CRV", "urBEAN3CRV");
         ub3.mint(address(this), NON_DEPOSITED_UNRIPE_BEAN3CRV + DEPOSITED_UNRIPE_BEAN3CRV);
-        s.siloBalances[address(ub3)].deposited = DEPOSITED_UNRIPE_BEAN3CRV;
+        s.siloBalances[address(ub3)].deposited = uint128(DEPOSITED_UNRIPE_BEAN3CRV);
         addUnripeToken(address(ub3), metapool, UNRIPE_LP_MERKLE_ROOT);
 
         whitelistPools();
