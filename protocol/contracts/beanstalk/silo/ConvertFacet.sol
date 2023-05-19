@@ -207,30 +207,40 @@ contract ConvertFacet is ReentrancyGuard {
         int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
+        uint256 depositBdv;
+
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
-            uint256 bdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            if (i+1 == stems.length) {
+                // Ensure that a rounding error does not occur by using the 
+                // remainder BDV for the last Deposit.
+                depositBdv = newTotalBdv.sub(bdvAdded);
+            } else {
+                // bdb is a proportional amount of the total bdv.
+                // Cheaper than calling the BDV function multiple times.
+                depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
+            }
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
                 stems[i],
                 amounts[i],
-                bdv,
+                depositBdv,
                 LibTokenSilo.Transfer.noEmitTransferSingle
             );
             
             stalkAdded = stalkAdded.add(
-                bdv.mul(_stalkPerBdv).add(
+                depositBdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
                         stems[i],
                         _lastStem,
-                        uint128(bdv)
+                        uint128(depositBdv)
                     )
                 )
             );
 
-            bdvAdded = bdvAdded.add(bdv);
+            bdvAdded = bdvAdded.add(depositBdv);
         }
 
         LibTokenSilo.incrementTotalDepositedBdv(token, bdvAdded.sub(ar.bdvRemoved));
