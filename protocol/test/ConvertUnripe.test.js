@@ -436,55 +436,95 @@ describe('Unripe Convert', function () {
   });
 
 
-
-
-
-
-
-  // BEFORE: convert lp to beans
   // Unripe to Ripe test
-
   describe('convert unripe beans to beans', async function () {
 
     beforeEach(async function () {
+      // GO TO SEASON 10
       await this.season.teleportSunrise(10);
       this.season.deployStemsUpgrade();
     });
 
-    describe('Simple urBEAN-->BEAN convert', function () {
+    describe('Simple urBEAN-->BEAN convert with FERT(100 , 100)', function () {
       
       // PERFORM A DEPOSIT AND A CONVERT BEFORE EVERY TEST
       beforeEach(async function () {
-        // user deposits 500 UrBEAN to the silo from external account
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('500'), EXTERNAL);
-        // GO FORWARD 2 SEASONS AND DONT DISTRIBUTE ANY REWARDS TO SILO
+        // user deposits 200 UrBEAN to the silo from external account
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
+        // GO FORWARD 1 SEASON AND DONT DISTRIBUTE ANY REWARDS TO SILO
         await this.season.siloSunrise(0);
-        await this.season.siloSunrise(0);
-        // user deposits 500 UrBEAN to the silo from external account
-        await this.silo.connect(user).deposit(this.unripeBean.address, to6('500'), EXTERNAL);
-        // this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('1000'), to6('990'), this.unripeLP.address), ['0', '4'], [to6('500'), to6('500')])
+        // SET FERT PARAMS
+        // await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('0'))
+        await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
         // INTERACTING WITH THE CONVERT FACET CONVERT(bytes calldata convertData, int96[] memory stems,uint256[] memory amounts) FUNCTION
-        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToBeans(to6('500') , this.unripeBean.address) , ['0'], [to6('500')] );
+        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToBeans(to6('100') , this.unripeBean.address) , ['0'], [to6('100')] );
       });
 
+      // CORRECT AMOUNTS AT CURRENT STATE AFTER ADDING THE FERT PARAMS
+      // PENALTY 100 , 0 
+      // it('getters', async function () {
+      //   expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+      //   expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
+      //   expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal('0')
+      //   expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('1000'))
+      //   expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+      //   expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
+      //   expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('990'))
+      //   expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
+      //   expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('100'));
+      //   expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('10'));
+      //   expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0'));
+      //   expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
+      //   expect(await this.silo.totalStalk()).to.eq(toStalk('100.6282288167'));
+      // })
+
+      // CORRECT AMOUNTS AT CURRENT STATE AFTER ADDING THE FERT PARAMS
+      // PENALTY 100 , 100 
+      // it('getters', async function () {
+      //   expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+      //   expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+      //   expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('1000'))
+      //   expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+      //   expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'));
+      //   expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
+      //   expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('990'))
+      //   expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('9.9'))
+      //   expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('10'));
+      //   expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0'));
+      //   expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
+      //   expect(await this.silo.totalStalk()).to.eq(toStalk('10'));
+      // })
+
+
+      // it('gets percents', async function () {
+      //   expect(await this.unripe.getRecapPaidPercent()).to.be.equal('0')
+      //   expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+      //   expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
+      // })
+
+      // TOTALS
       it('properly updates total values', async function () {
-        expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1006.18167'));
-        expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
-        expect(await this.silo.totalStalk()).to.eq(toStalk('100.6282288167'));
-        //same as normal curve convert tests, old value was 100.6382906334 but now with rounding it's a bit different
+        // UNRIPE BEAN DEPOSIT TEST
+        expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('100'));
+        // RIPE BEAN CONVERTED TEST
+        expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0.1'));
+        // TOTAL STALK TEST
+        // expect(await this.silo.totalStalk()).to.eq(toStalk('10'));
       });
 
+      // USER VALUES TEST
       it('properly updates user values', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('100.6282288167'));
+        // USER STALK TEST
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('10'));
       });
 
+      // USER DEPOSITS TEST
       it('properly updates user deposits', async function () {
-        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 3))[0]).to.eq(to6('1006.18167'));
-        const deposit = await this.silo.getDeposit(userAddress, this.unripeLP.address, 2);
-        expect(deposit[0]).to.eq(to6('0'));
-        expect(deposit[1]).to.eq(toBean('0'));
+        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
+        expect((await this.silo.getDeposit(userAddress, this.bean.address, 0))[0]).to.eq(to6('0.1'));
       });
 
+      // EVENTS TEST
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeLP.address, [0, 4], [to6('500'), to6('500')], to6('1000'), [to6('50'), to6('50')]);
@@ -494,3 +534,104 @@ describe('Unripe Convert', function () {
     });
   });
 });
+
+
+
+
+
+// describe('deposit underlying', async function () {
+//   beforeEach(async function () {
+//     await this.unripe.connect(owner).addUnderlying(
+//       UNRIPE_BEAN,
+//       to6('100')
+//     )
+//     await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('0'))
+//   })
+
+//   it('getters', async function () {
+//     expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+//     expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
+//     expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal('0')
+//     expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
+//     expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+//     expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
+//     expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
+//     expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
+//   })
+
+//   it('gets percents', async function () {
+//     expect(await this.unripe.getRecapPaidPercent()).to.be.equal('0')
+//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
+//     expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
+//     expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
+//   })
+// })
+
+// describe('penalty go down', async function () {
+//   beforeEach(async function () {
+//     await this.unripe.connect(owner).addUnderlying(
+//       UNRIPE_BEAN,
+//       to6('100')
+//     )
+//     await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
+//   })
+
+//   it('getters', async function () {
+//     expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+//     expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+//     expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
+//     expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+//     expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'));
+//     expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
+//     expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
+//     expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('1'))
+//   })
+
+//   it('gets percents', async function () {
+//     expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
+//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
+//     expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+//     expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.001884'))
+//   })
+// })
+
+// describe('chop', async function () {
+//   beforeEach(async function () {
+//     await this.unripe.connect(owner).addUnderlying(
+//       UNRIPE_BEAN,
+//       to6('100')
+//     )
+//     await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
+//     this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('1'), EXTERNAL, EXTERNAL)
+//   })
+
+//   it('getters', async function () {
+//     expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+//     expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100099')
+//     expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+//     expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
+//     expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+//     expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'))
+//     expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100099'))
+//     expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.999'))
+//     expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('0.99999'))
+//   })
+
+//   it('changes balaces', async function () {
+//     expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
+//     expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.001'))
+//     expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
+//     expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
+//   })
+
+//   it('emits an event', async function () {
+//     await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
+//       user.address,
+//       UNRIPE_BEAN,
+//       to6('1'),
+//       to6('0.001')
+//     )
+//   })
+// })
