@@ -367,13 +367,25 @@ export default function FarmerDelegationsUpdater() {
   const [fetchNFTVP, clearNFTVP] = useFetchNFTVotingPower();
   const [fetchStalkVP, clearStalkVP] = useFetchStalkVotingPower();
 
-  const delegatorsLen = Object.keys(farmerDelegators.users).length;
-  const delegatorsVPLen = Object.keys(farmerDelegators.votingPower).length;
+  const numUsers = Object.values(farmerDelegators.users).reduce(
+    (prev, curr) => {
+      const addresses = Object.keys(curr);
+      prev += addresses.length;
+      return prev;
+    },
+    0
+  );
 
-  const fetchVP = useMemo(() => {
-    if (!account) return false;
-    return delegatorsLen !== delegatorsVPLen;
-  }, [account, delegatorsLen, delegatorsVPLen]);
+  const numVP = Object.values(farmerDelegators.votingPower).reduce(
+    (prev, curr) => {
+      const addresses = Object.keys(curr);
+      prev += addresses.length;
+      return prev;
+    },
+    0
+  );
+
+  const fetchVP = numUsers !== numVP;
 
   /// Fetch delegations and delegators
   useEffect(() => {
