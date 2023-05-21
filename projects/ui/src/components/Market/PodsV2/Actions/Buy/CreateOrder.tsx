@@ -1,55 +1,62 @@
-import { useCallback, useMemo } from 'react';
-import { InputAdornment } from '@mui/material';
-import { Form } from 'formik';
-import { useProvider } from 'wagmi';
-import { TokenAdornment, TokenInputField } from '~/components/Common/Form';
-import useChainConstant from '~/hooks/chain/useChainConstant';
-import { Beanstalk } from '~/generated';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
-import { useFetchFarmerMarket } from '~/state/farmer/market/updater';
-import Farm from '~/lib/Beanstalk/Farm';
-import { optimizeFromMode } from '~/util/Farm';
-import { toStringBaseUnitBN, displayTokenAmount, bnToTokenValue } from '~/util';
-import { BEAN, ETH, PODS } from '~/constants/tokens';
-import { ONE_BN, POD_MARKET_TOOLTIPS } from '~/constants';
-import SliderField from '~/components/Common/Form/SliderField';
-import FieldWrapper from '~/components/Common/Form/FieldWrapper';
-import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
-import { BuyPlotsFarmStep } from '~/lib/Txn/FarmSteps/market/BuyPlotsFarmStep';
-import { ERC20Token, FarmFromMode, NativeToken, Token } from '@beanstalk/sdk';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, InputAdornment, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
-import { Formik, FormikHelpers, FormikProps } from 'formik';
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useProvider } from 'wagmi';
+import TransactionToast from '~/components/Common/TxnToast';
+import TxnAccordion from '~/components/Common/TxnAccordion';
+import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
   FormTokenStateNew,
   SettingInput,
   SmartSubmitButton,
+  TokenAdornment,
+  TokenInputField,
   TxnPreview,
   TxnSeparator,
   TxnSettings,
 } from '~/components/Common/Form';
-import TokenOutput from '~/components/Common/Form/TokenOutput';
-import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
-import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import TxnAccordion from '~/components/Common/TxnAccordion';
-import TransactionToast from '~/components/Common/TxnToast';
-import { ZERO_BN } from '~/constants';
+import { ERC20Token, FarmFromMode, NativeToken, Token } from '@beanstalk/sdk';
+import useChainConstant from '~/hooks/chain/useChainConstant';
+import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import useToggle from '~/hooks/display/useToggle';
-import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import usePreferredToken from '~/hooks/farmer/usePreferredToken';
+import { Beanstalk } from '~/generated';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import useAccount from '~/hooks/ledger/useAccount';
-import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
-import { AppState } from '~/state';
-import { FC } from '~/types';
-import { displayBN, displayFullBN, tokenValueToBN } from '~/util';
+import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
+import { useFetchFarmerMarket } from '~/state/farmer/market/updater';
 import { ActionType } from '~/util/Actions';
+import Farm from '~/lib/Beanstalk/Farm';
+import { optimizeFromMode } from '~/util/Farm';
+import {
+  displayFullBN,
+  toStringBaseUnitBN,
+  displayTokenAmount,
+  displayBN,
+} from '~/util';
+import { AppState } from '~/state';
+import { BEAN, ETH, PODS } from '~/constants/tokens';
+import { ONE_BN, ZERO_BN, POD_MARKET_TOOLTIPS } from '~/constants';
+import SliderField from '~/components/Common/Form/SliderField';
+import FieldWrapper from '~/components/Common/Form/FieldWrapper';
+import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+
+import { FC } from '~/types';
+import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
+
+import { bnToTokenValue } from '~/util';
+import { BuyPlotsFarmStep } from '~/lib/Txn/FarmSteps/market/BuyPlotsFarmStep';
+import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
+import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
+import usePreferredToken from '~/hooks/farmer/usePreferredToken';
+import useAccount from '~/hooks/ledger/useAccount';
+import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import { getNewToOldToken } from '~/hooks/sdk';
+import { tokenValueToBN } from '~/util';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 
