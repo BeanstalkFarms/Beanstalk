@@ -58,6 +58,7 @@ const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
             plots={plots!}
             harvestableIndex={harvestableIndex}
             selected={selected}
+            multiSelect={multiSelect}
           />
         ) : (
           <EmptyState message="You have no Plots." />

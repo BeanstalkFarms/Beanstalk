@@ -20,6 +20,7 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 import { PlotFragment } from '.';
+import SelectionItem from '../SelectionItem';
 
 export interface PlotSelectProps {
   /** A farmer's plots */
@@ -30,6 +31,8 @@ export interface PlotSelectProps {
   handlePlotSelect: any;
   /** index of the selected plot */
   selected?: PlotFragment[] | string | PlotFragment | null;
+  /** use multi select version? **/
+  multiSelect?: boolean | undefined;
 }
 
 const PlotSelect: FC<PlotSelectProps> = ({
@@ -37,6 +40,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
   harvestableIndex,
   handlePlotSelect,
   selected,
+  multiSelect,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -63,12 +67,11 @@ const PlotSelect: FC<PlotSelectProps> = ({
       selected ? (isSelected = true) : (isSelected = false);
     }
     if (listing) numAlreadyListed += 1;
+    if (multiSelect) {
     return (
-      <ListItem
-        key={index}
-        color="primary"
+      <SelectionItem
         selected={isSelected}
-        disablePadding
+        checkIcon="left"
         onClick={() => handlePlotSelect(index)}
         sx={{
           // ListItem is used elsewhere so we define here
@@ -82,9 +85,10 @@ const PlotSelect: FC<PlotSelectProps> = ({
             lineHeight: '1.25rem',
             // color: BeanstalkPalette.lightGrey
           },
+          mb: 1,
+          '&:last-child': {mb: 0}
         }}
-      >
-        <ListItemButton disableRipple>
+        >
           <Row justifyContent="space-between" sx={{ width: '100%' }}>
             <Row justifyContent="center">
               <ListItemIcon sx={{ pr: 1 }}>
@@ -99,6 +103,8 @@ const PlotSelect: FC<PlotSelectProps> = ({
                 />
               </ListItemIcon>
               <ListItemText
+                primaryTypographyProps={{ style: {display: 'flex'}, color: 'text.primary' }}
+                secondaryTypographyProps={{ style: {display: 'flex'} }}
                 primary="PODS"
                 secondary={
                   <>
@@ -111,14 +117,71 @@ const PlotSelect: FC<PlotSelectProps> = ({
               />
             </Row>
             {plots[index] ? (
-              <Typography variant="bodyLarge">
+              <Typography variant="bodyLarge" sx={{ color: 'text.primary' }}>
                 {displayFullBN(plots[index], PODS.displayDecimals)}
               </Typography>
             ) : null}
           </Row>
-        </ListItemButton>
+      </SelectionItem>
+    );
+    } else {
+    return (
+      <ListItem
+      key={index}
+      color="primary"
+      selected={isSelected}
+      disablePadding
+      onClick={() => handlePlotSelect(index)}
+      sx={{
+        // ListItem is used elsewhere so we define here
+        // instead of in muiTheme.ts
+        '& .MuiListItemText-primary': {
+          fontSize: FontSize['1xl'],
+          lineHeight: '1.875rem',
+        },
+        '& .MuiListItemText-secondary': {
+          fontSize: FontSize.base,
+          lineHeight: '1.25rem',
+          // color: BeanstalkPalette.lightGrey
+        },
+      }}
+    >
+      <ListItemButton disableRipple>
+        <Row justifyContent="space-between" sx={{ width: '100%' }}>
+          <Row justifyContent="center">
+            <ListItemIcon sx={{ pr: 1 }}>
+              <Box
+                component="img"
+                src={podIcon}
+                alt=""
+                sx={{
+                  width: IconSize.tokenSelect,
+                  height: IconSize.tokenSelect,
+                }}
+              />
+            </ListItemIcon>
+            <ListItemText
+              primary="PODS"
+              secondary={
+                <>
+                  {isMobile ? '@' : 'Place in Line:'}{' '}
+                  {displayBN(new BigNumber(index).minus(harvestableIndex))}
+                  {listing ? <>&nbsp;&middot; Currently listed</> : null}
+                </>
+              }
+              sx={{ my: 0 }}
+            />
+          </Row>
+          {plots[index] ? (
+            <Typography variant="bodyLarge">
+              {displayFullBN(plots[index], PODS.displayDecimals)}
+            </Typography>
+          ) : null}
+        </Row>
+      </ListItemButton>
       </ListItem>
     );
+    }
   });
 
   return (
