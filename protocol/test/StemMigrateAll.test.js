@@ -7,6 +7,11 @@ const { upgradeWithNewFacets } = require("../scripts/diamond");
 const beanstalkABI = require("../abi/Beanstalk.json");
 const fs = require('fs');
 
+const BLOCK_NUMBER = 17301500; //a recent block number
+
+//17251905 is the block the enroot fix was deployed
+
+
 describe('Silo V3: Stem deployment migrate everyone', function () {
     before(async function () {
 
@@ -17,7 +22,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             {
               forking: {
                 jsonRpcUrl: process.env.FORKING_RPC,
-                blockNumber: 16993151 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+                blockNumber: BLOCK_NUMBER
               },
             },
           ],
@@ -27,8 +32,9 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         console.log(error);
         return
       }
-  
-      const signer = await impersonateBeanstalkOwner()
+
+      const signer = await impersonateBeanstalkOwner();
+      // const signer = await impersonateSigner(BCM);
       await mintEth(signer.address);
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
@@ -66,7 +72,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
     async function getDepositsForAccount(account, onChainBdv = false) {
 
         const START_BLOCK = 0;
-        const END_BLOCK = 16993151;
+        const END_BLOCK = BLOCK_NUMBER;
         // const END_BLOCK = 'latest'
         
         //couldn't quickly figure out how to just use the hardhat network provider?
@@ -276,7 +282,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         //check to see if /data/deposits.json exists
         //this is done just to make repeat testing faster, delete the file to re-fetch all deposits
         if (!fs.existsSync(__dirname + '/data/deposits.json')) {
-            let accounts = JSON.parse(await fs.readFileSync(__dirname + '/data/farmers.json'));
+            let accounts = JSON.parse(await fs.readFileSync(__dirname + '/data/farmers.json')); //where did this file come from?
             let deposits = {};
     
             //loop through accounts and get deposits
@@ -324,8 +330,14 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             const depositorSigner = await impersonateSigner(depositorAddress);
             await this.silo.connect(depositorSigner);
         
-            await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
+            const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
 
+            //one way to verify the stalk balance change event is correct is to remove all deposits,
+            //verify the on-chain stalk function returns 0, and then add up all the stalk balance changed
+            //events and verify those add up to zero as well
+
+            //TODO: first store the StalkBalanceChanged event emitted from migrateResult
+            
             progress++;
         }
       });
