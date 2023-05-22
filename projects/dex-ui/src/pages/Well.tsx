@@ -19,7 +19,6 @@ import { LearnWellFunction } from "src/components/Well/LearnWellFunction";
 import { LearnPump } from "src/components/Well/LearnPump";
 import { ChartSection } from "src/components/Well/Chart/ChartSection";
 import { TabButton } from "src/components/TabButton";
-import { ActivitySection } from "src/components/Well/Activity/ActivitySection";
 import { OtherSection } from "src/components/Well/OtherSection";
 import { WellHistory } from "src/components/Well/Activity/WellHistory";
 
