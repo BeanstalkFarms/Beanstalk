@@ -49,7 +49,6 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount
     );
 
-    // LIBCHOP
     function chop(
         address unripeToken,
         uint256 amount,
