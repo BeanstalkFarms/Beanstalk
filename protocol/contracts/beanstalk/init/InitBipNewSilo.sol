@@ -42,6 +42,7 @@ contract InitBipNewSilo {
         // this adds the ERC1155 indentifier to the diamond:
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
+        // Clear the storage variable
         delete s.s.deprecated_seeds;
 
         //update all silo info for current Silo-able assets
