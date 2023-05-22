@@ -6,10 +6,40 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const beanstalkABI = require("../abi/Beanstalk.json");
 const fs = require('fs');
+const { BigNumber } = require('ethers');
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
+const { expect } = require('chai');
 
 const BLOCK_NUMBER = 17301500; //a recent block number
 
 //17251905 is the block the enroot fix was deployed
+
+
+const eventsAbi = [
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "account", type: "address" },
+      { indexed: false, internalType: "int256", name: "delta", type: "int256" },
+      { indexed: false, internalType: "int256", name: "deltaRoots", type: "int256" },
+    ],
+    name: "StalkBalanceChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "account", type: "address" },
+      { indexed: true, internalType: "address", name: "token", type: "address" },
+      { indexed: false, internalType: "int96", name: "stem", type: "int96" },
+      { indexed: false, internalType: "uint256", name: "amount", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "bdv", type: "uint256" },
+    ],
+    name: "AddDeposit",
+    type: "event",
+  },
+];
+
 
 
 describe('Silo V3: Stem deployment migrate everyone', function () {
@@ -70,8 +100,6 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
     });
 
     async function getDepositsForAccount(account, onChainBdv = false) {
-
-        const START_BLOCK = 0;
         const END_BLOCK = BLOCK_NUMBER;
         // const END_BLOCK = 'latest'
         
@@ -236,6 +264,75 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         return [deposits]
     }
 
+    async function getStalkBalanceChangedForAccount(account, onChainBdv = false) {
+      const END_BLOCK = BLOCK_NUMBER;
+      //couldn't quickly figure out how to just use the hardhat network provider?
+      const provider = new ethers.providers.JsonRpcProvider(process.env.FORKING_RPC);
+      const contract = new ethers.Contract(BEANSTALK, beanstalkABI, provider);
+      const eventsInterface = new ethers.utils.Interface(eventsAbi);
+        
+      const queryEvents = async (oldEventSignature, account, interface) => {
+          const oldEventTopic = ethers.utils.id(oldEventSignature);
+          // Create the filter object
+          const oldFilter = {
+              fromBlock: 0,
+              toBlock: END_BLOCK,
+              address: contract.address,
+              topics: [oldEventTopic, ethers.utils.hexZeroPad(account, 32)],
+          };
+
+          // Query the old events
+          const oldEvents = await contract.provider.getLogs(oldFilter, 0, END_BLOCK);
+          
+          const updatedEvents = oldEvents.map((eventLog) => {
+              let parsedLog;
+
+              parsedLog = interface.parseLog(eventLog);
+            
+              if (parsedLog) {
+                  const { args } = parsedLog;
+                  eventLog = { ...eventLog, ...args };
+                  const eventName = oldEventSignature.split('(')[0];
+                  eventLog['event'] = eventName;
+              }
+              return eventLog;
+            });
+
+          return updatedEvents;
+      };
+
+      let stalkBalanceChangedEvents = await Promise.all([
+          queryEvents("StalkBalanceChanged(address,int256,int256)", account, eventsInterface),
+      ]);
+
+      stalkBalanceChangedEvents = (await stalkBalanceChangedEvents).flat()
+
+      stalkBalanceChangedEvents = stalkBalanceChangedEvents.sort((a,b) => {
+          if (a.blockNumber == b.blockNumber) return a.logIndex - b.logIndex
+          return a.blockNumber - b.blockNumber
+      })
+
+      console.log('-----------------------------')
+      console.log('checking: ', account)
+      console.log(`Found: ${stalkBalanceChangedEvents.length} events`)
+
+      //////////////////////////////////////////////////////////////
+      
+      let changed = [];
+
+      for (let i = 0; i < stalkBalanceChangedEvents.length; i++) {
+          let d = stalkBalanceChangedEvents[i]
+
+          if (d.event == 'StalkBalanceChanged') {
+            changed.push(d.delta);
+          }
+
+          lastBlock = d.blockNumber
+      }
+
+      return changed;
+  }
+
     function reformatData(data) {
         const result = {};
       
@@ -288,12 +385,24 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             //loop through accounts and get deposits
             for (let i = 0; i < accounts.length; i++) {
                 let account = accounts[i];
-                console.log('account: ', i, account);
                 deposits[account] = await getDepositsForAccount(account);
             }
             //write deposits to disk
             await fs.writeFileSync(__dirname + '/data/deposits.json', JSON.stringify(deposits, null, 4))
         }
+
+        if (!fs.existsSync(__dirname + '/data/stalk_balance_changed.json')) {
+          let accounts = JSON.parse(await fs.readFileSync(__dirname + '/data/farmers.json'));
+          let stalkChanges = {};
+  
+          //loop through accounts and get stalk_balance_changed events
+          for (let i = 0; i < accounts.length; i++) {
+              let account = accounts[i];
+              stalkChanges[account] = await getStalkBalanceChangedForAccount(account);
+          }
+          //write stalk_balance_changed to disk
+          await fs.writeFileSync(__dirname + '/data/stalk_balance_changed.json', JSON.stringify(stalkChanges, null, 4))
+      }
 
         //load deposits from disk
         let deposits = JSON.parse(await fs.readFileSync(__dirname + '/data/deposits.json'));
@@ -301,6 +410,9 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
         //load seed/stalk diff from disk
         let seedStalkDiff = JSON.parse(await fs.readFileSync(__dirname + '/../scripts/silov3-merkle/data/seed-stalk-merkle.json'));
+
+        //load stalk balance changed from disk
+        let stalkChanges = JSON.parse(await fs.readFileSync(__dirname + '/data/stalk_balance_changed.json'));
 
         //eth addresses here have the checksum casing, need just lowercase
         //to match up with the stored data
@@ -328,15 +440,61 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             }
 
             const depositorSigner = await impersonateSigner(depositorAddress);
+            mintEth(depositorAddress);
             await this.silo.connect(depositorSigner);
         
             const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
 
+            //loop through all the AddDeposit events
+            const receipt = await migrateResult.wait();
+
+            const eventsInterface = new ethers.utils.Interface(eventsAbi);
+            
+            const migratedDeposits = []; //stores AddDeposit events emitted by migrate
+            let migrateStalkBalanceChanged = BigNumber.from(0); //stores stalk balance changes from migrate
+
+            for (const log of receipt.logs) {
+              try {
+                const parsedStalkBalanceChanged = eventsInterface.parseLog(log);
+                if (parsedStalkBalanceChanged.name === "StalkBalanceChanged") {
+                  migrateStalkBalanceChanged = migrateStalkBalanceChanged.add(parsedStalkBalanceChanged.args.delta);
+                }
+                if (parsedStalkBalanceChanged.name === "AddDeposit") {
+                  migratedDeposits.push(parsedStalkBalanceChanged.args);
+                }
+              } catch (error) {}
+            }
+            
             //one way to verify the stalk balance change event is correct is to remove all deposits,
             //verify the on-chain stalk function returns 0, and then add up all the stalk balance changed
             //events and verify those add up to zero as well
 
-            //TODO: first store the StalkBalanceChanged event emitted from migrateResult
+            //add up all the stalk balance changes from pre-migration
+            let stalkBalanceChangedSum = BigNumber.from(0);
+            for (let i = 0; i < stalkChanges[depositorAddress].length; i++) {
+              stalkBalanceChangedSum = stalkBalanceChangedSum.add(stalkChanges[depositorAddress][i]);
+            }
+
+            //add up all the StalkBalanceChanged events emitted from migrateResult
+            let deltaSum = ethers.BigNumber.from(0);
+
+            for (let k = 0; k < migratedDeposits.length; k++) {
+              const migratedDeposit = migratedDeposits[k];
+              const withdraw = await this.silo.connect(depositorSigner).withdrawDeposit(migratedDeposit.token, migratedDeposit.stem, migratedDeposit.amount, EXTERNAL);
+              const receipt = await withdraw.wait();
+
+              for (const log of receipt.logs) {
+                try {
+                  const parsedLog = eventsInterface.parseLog(log);
+                  if (parsedLog.name === "StalkBalanceChanged") {
+                    deltaSum = deltaSum.add(parsedLog.args.delta);
+                  }
+                } catch (error) {}
+              }
+            }
+
+            const finalStalkSum = deltaSum.add(stalkBalanceChangedSum).add(migrateStalkBalanceChanged);
+            expect(finalStalkSum).to.equal('0');
             
             progress++;
         }

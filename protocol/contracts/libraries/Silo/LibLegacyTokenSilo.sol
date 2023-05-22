@@ -38,7 +38,7 @@ library LibLegacyTokenSilo {
     //TODO: verify and update this root on launch if there's more drift
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
     bytes32 constant DISCREPANCY_MERKLE_ROOT = 0xa84dc86252c556839dff46b290f0c401088a65584aa38a163b6b3f7dd7a5b0e8;
-    uint32 constant ENROOT_FIX_SEASON = 12917; //season in which enroot ebip-8 fix was deployed
+    uint32 constant ENROOT_FIX_SEASON = 12793; //season in which enroot ebip-8 fix was deployed
 
 
     //this is the legacy seasons-based remove deposits event, emitted on migration
@@ -431,20 +431,19 @@ library LibLegacyTokenSilo {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        //emit that all their seeds are gone, note need to take into account seedsDiff
+        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds.add));
 
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
 
-        //emit that all their seeds are gone
-        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
-
-        //stalk drive was calculated based on ENROOT_FIX_SEASON, so we need to calculate
+        //stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
         //the amount of stalk that has grown since then
         uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON)).mul(seedsDiff).add(stalkDiff);
 
         //emit the stalk variance
         if (currentStalkDiff > 0) {
-            emit StalkBalanceChanged(account, -currentStalkDiff.toInt256(), 0);
+            LibSilo.burnStalk(account, currentStalkDiff);
         }
     }
 
