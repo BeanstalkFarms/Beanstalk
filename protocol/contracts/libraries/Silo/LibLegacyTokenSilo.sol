@@ -391,7 +391,7 @@ library LibLegacyTokenSilo {
                 );
 
                 // Include Deposit in the total Deposited BDV.
-                LibTokenSilo.incrementTotalDepositedBdv(perTokenData.token, crateBdv);
+                LibTokenSilo.incrementTotalDepositedBdv(perTokenData.token, crateBDV);
  
                 // add to running total of seeds
                 migrateData.totalSeeds = migrateData.totalSeeds.add(crateBDV.mul(getSeedsPerToken(address(perTokenData.token))).toUint128());
