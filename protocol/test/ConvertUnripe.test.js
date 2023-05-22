@@ -460,47 +460,25 @@ describe('Unripe Convert', function () {
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToBeans(to6('100') , this.unripeBean.address) , ['0'], [to6('100')] );
       });
 
-      // CORRECT AMOUNTS AT CURRENT STATE AFTER ADDING THE FERT PARAMS
-      // PENALTY 100 , 0 
-      // it('getters', async function () {
-      //   expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      //   expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
-      //   expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal('0')
-      //   expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('1000'))
-      //   expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      //   expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
-      //   expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('990'))
-      //   expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
-      //   expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('100'));
-      //   expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('10'));
-      //   expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0'));
-      //   expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
-      //   expect(await this.silo.totalStalk()).to.eq(toStalk('100.6282288167'));
-      // })
-
-      // CORRECT AMOUNTS AT CURRENT STATE AFTER ADDING THE FERT PARAMS
-      // PENALTY 100 , 100 
-      // it('getters', async function () {
-      //   expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-      //   expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-      //   expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('1000'))
-      //   expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-      //   expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'));
-      //   expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
-      //   expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('990'))
-      //   expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('9.9'))
-      //   expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('10'));
-      //   expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0'));
-      //   expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
-      //   expect(await this.silo.totalStalk()).to.eq(toStalk('10'));
-      // })
-
-
       // it('gets percents', async function () {
       //   expect(await this.unripe.getRecapPaidPercent()).to.be.equal('0')
       //   expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
       //   expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
       // })
+
+
+// CHECK TO SEE THAT RECAP AND PENALTY VALUES ARE UPDATED AFTER THE CONVERT
+    it('getters', async function () {
+      expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+      expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100099')
+      expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
+      expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
+      expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+      expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'))
+      expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100099'))
+      expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.999'))
+      expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('0.99999'))
+    })
 
       // TOTALS
       it('properly updates total values', async function () {
@@ -515,7 +493,8 @@ describe('Unripe Convert', function () {
       // USER VALUES TEST
       it('properly updates user values', async function () {
         // USER STALK TEST
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('10'));
+        // 1 urBEAN yeilds 2/10000 grown stalk every season witch is claimable with mow after every silo interaction(here --> convert) 
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('20.004'));
       });
 
       // USER DEPOSITS TEST
@@ -525,11 +504,34 @@ describe('Unripe Convert', function () {
       });
 
       // EVENTS TEST
+
+    //   event RemoveDeposits(
+    //     address indexed account,
+    //     address indexed token,
+    //     int96[] stems,
+    //     uint256[] amounts,
+    //     uint256 amount,
+    //     uint256[] bdvs
+    // );
+
+
+    //   event AddDeposit(
+    //     address indexed account,
+    //     address indexed token,
+    //     int96 stem,
+    //     uint256 amount,
+    //     uint256 bdv
+    // );
+
+    //  emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
+
       it('emits events', async function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-          .withArgs(userAddress, this.unripeLP.address, [0, 4], [to6('500'), to6('500')], to6('1000'), [to6('50'), to6('50')]);
+          .withArgs(userAddress, this.unripeBean.address, [0], [to6('100')], to6('100'), [to6('10')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeBean.address, 3, to6('1006.18167'), to6('100.618167'));
+          .withArgs(userAddress, this.bean.address, 0 , to6('0.1'), to6('10'));
+        await expect(this.result).to.emit(this.convert, 'Convert')
+          .withArgs(userAddress, this.unripeBean.address, this.bean.address, to6('100') , to6('0.1'));
       });
     });
   });
