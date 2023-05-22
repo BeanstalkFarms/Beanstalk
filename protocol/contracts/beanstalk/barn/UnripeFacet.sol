@@ -108,7 +108,6 @@ contract UnripeFacet is ReentrancyGuard {
         return _getUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
     }
 
-    //LIBCHOP
     function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
         private
         view
@@ -133,7 +132,6 @@ contract UnripeFacet is ReentrancyGuard {
         return _getPenalizedUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
     }
 
-    // LIBCHOP
     function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
         public
         view
@@ -142,7 +140,6 @@ contract UnripeFacet is ReentrancyGuard {
         redeem = LibChop._getPenalizedUnderlying(unripeToken, amount, supply);
     }
 
-    // LIBCHOP
     function isUnripe(address unripeToken) public view returns (bool unripe) {
         unripe = LibChop.isUnripe(unripeToken);
     }
@@ -180,7 +177,7 @@ contract UnripeFacet is ReentrancyGuard {
         }
         revert("not vesting");
     }
-    // LIBCHOP
+
     function getPercentPenalty(address unripeToken)
         external
         view
@@ -188,7 +185,7 @@ contract UnripeFacet is ReentrancyGuard {
     {
         return LibChop.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
     }
-    // LIBCHOP
+    
     function getRecapPaidPercent() external view returns (uint256 penalty) {
         penalty = LibChop.getRecapPaidPercentAmount(DECIMALS);
     }
