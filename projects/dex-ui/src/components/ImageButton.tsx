@@ -1,23 +1,27 @@
-import React from "react";
+import React, { JSXElementConstructor } from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
 
 type Props = {
-  src: string;
   size?: number;
   alt: string;
   padding?: string;
-  onClick: () => void;
-};
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+} & ({ src: string; component?: never } | { src?: never; component?: JSXElementConstructor<any> });
 
 type StyleProps = {
   padding?: string;
 };
 
-export const ImageButton: FC<Props> = ({ size = 32, src, alt = "Image", onClick, padding }) => {
+// This component supports accepting either an imagine in two ways:
+// -- as a string url via `src`
+// -- as an SVG component via `component`. See src/components/Icons.tsx
+// for acceptable components
+export const ImageButton: FC<Props> = ({ size = 32, src, component, alt = "Image", onClick, padding }) => {
   return (
     <Button onClick={onClick} padding={padding}>
-      <img src={src} alt={alt} width={size} />
+      {src && <img src={src} alt={alt} width={size} />}
+      {component && React.createElement(component, { width: 9, color: "#000" })}
     </Button>
   );
 };

@@ -4,17 +4,21 @@ import styled from "styled-components";
 import { useWiggle } from "./useWiggle";
 
 type Grid = {
+  type?: "line" | "dot";
   bigGrid?: boolean;
   gridSize?: number;
+  color?: string;
   content: HTMLDivElement;
 };
 
-export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false, content }) => {
+export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false, content, color = "#E7E4E6", type = "dot" }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
 
   const width = 3000;
-  const bigGridSize = gridSize * 10;
+  const bigWidth = gridSize * 10;
+  const radius = 2;
+  const bigRadius = 4;
 
   useWiggle(pathRef, svgRef, content);
 
@@ -24,25 +28,43 @@ export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false, content }) => {
         <defs>
           {" "}
           <pattern id="smallGrid" width={gridSize} height={gridSize} patternUnits="userSpaceOnUse">
-            <path
-              style={{
-                strokeWidth: "1px",
-                stroke: "#D6D3D1"
-              }}
-              d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`}
-              stroke="#eee"
-            />
+            {type === "line" ? (
+              <path
+                style={{
+                  strokeWidth: "1px",
+                  stroke: "#D6D3D1"
+                }}
+                d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`}
+                stroke="#eee"
+              />
+            ) : (
+              <>
+                <ellipse cx={0} cy={0} rx={radius} ry={radius} fill={color} stroke="none" />
+                <ellipse cx={0} cy={gridSize} rx={radius} ry={radius} fill={color} stroke="none" />
+                <ellipse cx={gridSize} cy={gridSize} rx={radius} ry={radius} fill={color} stroke="none" />
+                <ellipse cx={gridSize} cy={0} rx={radius} ry={radius} fill={color} stroke="none" />
+              </>
+            )}
           </pattern>
-          <pattern id="bigGrid" width={bigGridSize} height={bigGridSize} patternUnits="userSpaceOnUse">
-            <rect width={bigGridSize} height={bigGridSize} fill="url(#smallGrid)" />
-            <path
-              style={{
-                strokeWidth: "3px",
-                stroke: "#D6D3D1"
-              }}
-              d={`M ${bigGridSize} 0 L 0 0 0 ${bigGridSize}`}
-              fill="none"
-            />
+          <pattern id="bigGrid" width={bigWidth} height={bigWidth} patternUnits="userSpaceOnUse">
+            <rect width={bigWidth} height={bigWidth} fill="url(#smallGrid)" />
+            {type === "line" ? (
+              <path
+                style={{
+                  strokeWidth: "3px",
+                  stroke: "#D6D3D1"
+                }}
+                d={`M ${bigWidth} 0 L 0 0 0 ${bigWidth}`}
+                fill="none"
+              />
+            ) : (
+              <>
+                <ellipse cx={0} cy={0} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
+                <ellipse cx={0} cy={bigWidth} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
+                <ellipse cx={bigWidth} cy={bigWidth} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
+                <ellipse cx={bigWidth} cy={0} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
+              </>
+            )}
           </pattern>
         </defs>
         <rect x={0} y={0} width={width} height={2000} fill="#F9F8F6" />

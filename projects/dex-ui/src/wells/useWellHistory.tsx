@@ -15,6 +15,7 @@ export type BaseEvent = {
   type: EVENT_TYPE;
   tx: string;
   timestamp?: number;
+  block?: number;
 };
 
 export type SwapEvent = BaseEvent & {

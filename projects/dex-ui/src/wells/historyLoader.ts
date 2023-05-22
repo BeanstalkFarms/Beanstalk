@@ -43,7 +43,8 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
     const type = getEventType(e.topics);
     const base: BaseEvent = {
       type,
-      tx: e.transactionHash
+      tx: e.transactionHash,
+      block: e.blockNumber
     };
 
     if (type === EVENT_TYPE.SWAP) {
@@ -98,9 +99,9 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well) => {
     const fromToken = well.getTokenByAddress(e.fromToken.id)!;
     const toToken = well.getTokenByAddress(e.toToken.id)!;
     const event: SwapEvent = {
-      timestamp: e.timestamp,
       type: EVENT_TYPE.SWAP,
       tx: e.hash,
+      timestamp: e.timestamp,
       fromToken,
       fromAmount: fromToken.fromBlockchain(e.amountIn),
       toToken,
