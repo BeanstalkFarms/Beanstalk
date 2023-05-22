@@ -37,7 +37,7 @@ library LibChopConvert {
         (amountIn, tokenIn) = convertData.lambdaConvert();
         // LibChop.chop just decrements the amount of unripe beans in circulation from the storage
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(tokenIn, amountIn);
-        // UnBEAN still needs to be burned directly (not from an address) 
+        // UrBEAN still needs to be burned directly (not from an address) 
         IBean(tokenIn).burn(amountIn);
         // get the underlying ripe token address and amount and return
         tokenOut = underlyingToken;

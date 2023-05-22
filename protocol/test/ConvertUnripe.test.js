@@ -445,7 +445,7 @@ describe('Unripe Convert', function () {
       this.season.deployStemsUpgrade();
     });
 
-    describe('Simple urBEAN-->BEAN convert with FERT(100 , 100)', function () {
+    describe('basic urBEAN-->BEAN convert', function () {
       
       // PERFORM A DEPOSIT AND A CONVERT BEFORE EVERY TEST
       beforeEach(async function () {
@@ -488,8 +488,8 @@ describe('Unripe Convert', function () {
       it('properly updates user values', async function () {
         // USER STALK TEST
         // 1 urBEAN yeilds 2/10000 grown stalk every season witch is claimable with mow()
-        // after every silo interaction(here --> convert)
-        // since we go forward a season after the deposit the user should now have 400/10000 grown stalk 
+        // after every silo interaction(here --> convert).
+        // Since we go forward a season after the deposit, the user should now have 400/10000 grown stalk 
         // not affected by the unripe --> ripe convert
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('20.004'));
       });
@@ -513,103 +513,3 @@ describe('Unripe Convert', function () {
   });
 });
 
-
-
-
-
-// describe('deposit underlying', async function () {
-//   beforeEach(async function () {
-//     await this.unripe.connect(owner).addUnderlying(
-//       UNRIPE_BEAN,
-//       to6('100')
-//     )
-//     await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('0'))
-//   })
-
-//   it('getters', async function () {
-//     expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-//     expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
-//     expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal('0')
-//     expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
-//     expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-//     expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
-//     expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
-//     expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal('0')
-//   })
-
-//   it('gets percents', async function () {
-//     expect(await this.unripe.getRecapPaidPercent()).to.be.equal('0')
-//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
-//     expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0'))
-//     expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0'))
-//   })
-// })
-
-// describe('penalty go down', async function () {
-//   beforeEach(async function () {
-//     await this.unripe.connect(owner).addUnderlying(
-//       UNRIPE_BEAN,
-//       to6('100')
-//     )
-//     await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
-//   })
-
-//   it('getters', async function () {
-//     expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-//     expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-//     expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('100'))
-//     expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-//     expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'));
-//     expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1'))
-//     expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('100'))
-//     expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('1'))
-//   })
-
-//   it('gets percents', async function () {
-//     expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_BEAN)).to.be.equal(to6('0.1'))
-//     expect(await this.unripe.getRecapFundedPercent(UNRIPE_LP)).to.be.equal(to6('0.188459'))
-//     expect(await this.unripe.getPercentPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-//     expect(await this.unripe.getPercentPenalty(UNRIPE_LP)).to.be.equal(to6('0.001884'))
-//   })
-// })
-
-// describe('chop', async function () {
-//   beforeEach(async function () {
-//     await this.unripe.connect(owner).addUnderlying(
-//       UNRIPE_BEAN,
-//       to6('100')
-//     )
-//     await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
-//     this.result = await this.unripe.connect(user).chop(UNRIPE_BEAN, to6('1'), EXTERNAL, EXTERNAL)
-//   })
-
-//   it('getters', async function () {
-//     expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-//     expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100099')
-//     expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.001'))
-//     expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('99.999'))
-//     expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
-//     expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.001'))
-//     expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.100099'))
-//     expect(await this.unripe.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('99.999'))
-//     expect(await this.unripe.balanceOfPenalizedUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal(to6('0.99999'))
-//   })
-
-//   it('changes balaces', async function () {
-//     expect(await this.unripeBean.balanceOf(userAddress)).to.be.equal(to6('999'))
-//     expect(await this.bean.balanceOf(userAddress)).to.be.equal(to6('0.001'))
-//     expect(await this.unripeBean.totalSupply()).to.be.equal(to6('999'))
-//     expect(await this.bean.balanceOf(this.unripe.address)).to.be.equal(to6('99.999'))
-//   })
-
-//   it('emits an event', async function () {
-//     await expect(this.result).to.emit(this.unripe, 'Chop').withArgs(
-//       user.address,
-//       UNRIPE_BEAN,
-//       to6('1'),
-//       to6('0.001')
-//     )
-//   })
-// })

@@ -90,7 +90,6 @@ library LibChop {
         view
         returns (uint256)
     {
-        // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
             supply
