@@ -4,6 +4,7 @@ import { Well } from "@beanstalk/sdk/Wells";
 import useWellHistory, { EVENT_TYPE, WellEvent } from "src/wells/useWellHistory";
 import styled from "styled-components";
 import { renderEvent } from "./eventRender";
+import { Row, TBody, THead, Table, Th } from "src/components/Well/Table";
 
 type WellHistoryProps = {
   well: Well;
@@ -21,22 +22,22 @@ export const WellHistory = ({ well }: WellHistoryProps) => {
     <WellHistoryContainer>
       {!loading && (
         <>
-          <h1>Well History</h1>
-          <div>
+          {/* <div>
             <button onClick={() => setFilter(null)}>All</button>
             <button onClick={() => setFilter(EVENT_TYPE.SWAP)}>Swaps</button>
             <button onClick={() => setFilter(EVENT_TYPE.ADD_LIQUIDITY)}>Deposits</button>
             <button onClick={() => setFilter(EVENT_TYPE.REMOVE_LIQUIDITY)}>Withdraws</button>
-          </div>
-          <Table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>{eventRows}</tbody>
+          </div> */}
+          <Table width="100%">
+            <THead>
+              <Row>
+                <Th>Action</Th>
+                <Th>Value</Th>
+                <Th>Description</Th>
+                <Th>Time</Th>
+              </Row>
+            </THead>
+            <TBody>{eventRows}</TBody>
           </Table>
         </>
       )}
@@ -45,23 +46,5 @@ export const WellHistory = ({ well }: WellHistoryProps) => {
 };
 
 const WellHistoryContainer = styled.div`
-  width: 800px;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  border: 0px;
-  & thead {
-    background: #1b1e2b;
-    height: ;
-  }
-  & td,
-  th {
-    padding: 15px 0px;
-  }
-
-  & th {
-    text-align: left;
-  }
+  display: flex;
 `;
