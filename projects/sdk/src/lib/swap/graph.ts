@@ -112,5 +112,78 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "3CRV"
   });
 
+  // 3CRV>USDC
+  graph.setEdge("3CRV", "USDC", {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.RemoveLiquidityOneToken(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.USDC.address,
+        from,
+        to
+      ),
+    from: "3CRV",
+    to: "USDC"
+  });
+  
+  // USDC<>USDT
+  graph.setEdge("USDC", "USDT", {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.USDC,
+        sdk.tokens.USDT,
+        from,
+        to
+      ),
+    from: "USDC",
+    to: "USDT"
+  });
+
+  graph.setEdge("USDT", "USDC", {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.USDT,
+        sdk.tokens.USDC,
+        from,
+        to
+      ),
+    from: "USDT",
+    to: "USDC"
+  });
+
+  // USDC<>DAI
+  graph.setEdge("USDC", "DAI", {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.USDC,
+        sdk.tokens.DAI,
+        from,
+        to
+      ),
+    from: "USDC",
+    to: "DAI"
+  });
+
+  graph.setEdge("DAI", "USDC", {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.DAI,
+        sdk.tokens.USDC,
+        from,
+        to
+      ),
+    from: "DAI",
+    to: "USDC"
+  });
+
+
   return graph;
 };
