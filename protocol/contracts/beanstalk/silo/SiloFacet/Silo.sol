@@ -47,7 +47,7 @@ contract Silo is SiloExit {
      * 
      * @dev Flood was previously called a "Season of Plenty". For backwards
      * compatibility, the event has not been changed. For more information on 
-     * Flood, see: {FIXME(doc)}.
+     * Flood, see: {Weather.sop}.
      */
     event ClaimPlenty(
         address indexed account,

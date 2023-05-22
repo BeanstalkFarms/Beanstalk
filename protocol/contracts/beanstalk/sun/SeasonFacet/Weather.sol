@@ -217,9 +217,12 @@ contract Weather is Sun {
     }
 
     /**
-     * @dev Update Rain state based on the current state and Weather Case.
+     * @dev Oversaturated was previously referred to as Raining. If P > 1 and the
+     * Pod Rate is less than 5%, the Farm is Oversaturated. If it is Oversaturated
+     * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
     function handleRain(uint256 caseId) internal {
+        // cases 4-7 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId < 4 || caseId > 7) {
             if (s.season.raining) {
                 s.season.raining = false;
@@ -242,7 +245,15 @@ contract Weather is Sun {
     }
 
     /**
-     * @dev Sell Beans on the Curve pool for 3CRV.
+     * @dev Flood was previously called a "Season of Plenty" (SOP for short).
+     * When Beanstalk has been Oversaturated for a Season, Beanstalk returns the
+     * Bean price to its peg by minting additional Beans and selling them directly
+     * on Curve. Proceeds  from the sale in the form of 3CRV are distributed to
+     * Stalkholders at the beginning of a Season in proportion to their Stalk
+     * ownership when the Farm became Oversaturated. Also, at the beginning of the
+     * Flood, all Pods that were minted before the Farm became Oversaturated Ripen
+     * and become Harvestable.
+     * For more information On Oversaturation see {Weather.handleRain}.
      */
     function sop() private {
         int256 newBeans = LibBeanMetaCurve.getDeltaB();
