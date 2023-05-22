@@ -10,7 +10,7 @@ const { BigNumber } = require('ethers');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai');
 
-const BLOCK_NUMBER = 17301500; //a recent block number
+const BLOCK_NUMBER = 17301500; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised
 
 //17251905 is the block the enroot fix was deployed
 
@@ -38,8 +38,16 @@ const eventsAbi = [
     name: "AddDeposit",
     type: "event",
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "account", type: "address" },
+      { indexed: false, internalType: "int256", name: "delta", type: "int256" },
+    ],
+    name: "SeedsBalanceChanged",
+    type: "event",
+  }
 ];
-
 
 
 describe('Silo V3: Stem deployment migrate everyone', function () {
@@ -264,49 +272,38 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         return [deposits]
     }
 
-    async function getStalkBalanceChangedForAccount(account, onChainBdv = false) {
+    async function getStalkBalanceChangedForAccount(account) {
       const END_BLOCK = BLOCK_NUMBER;
-      //couldn't quickly figure out how to just use the hardhat network provider?
       const provider = new ethers.providers.JsonRpcProvider(process.env.FORKING_RPC);
       const contract = new ethers.Contract(BEANSTALK, beanstalkABI, provider);
       const eventsInterface = new ethers.utils.Interface(eventsAbi);
-        
-      const queryEvents = async (oldEventSignature, account, interface) => {
-          const oldEventTopic = ethers.utils.id(oldEventSignature);
+      const queryEvents = async (eventSignature, account, interface) => {
+          const eventTopic = ethers.utils.id(eventSignature);
           // Create the filter object
-          const oldFilter = {
+          const filter = {
               fromBlock: 0,
               toBlock: END_BLOCK,
               address: contract.address,
-              topics: [oldEventTopic, ethers.utils.hexZeroPad(account, 32)],
+              topics: [eventTopic, ethers.utils.hexZeroPad(account, 32)],
           };
-
-          // Query the old events
-          const oldEvents = await contract.provider.getLogs(oldFilter, 0, END_BLOCK);
-          
-          const updatedEvents = oldEvents.map((eventLog) => {
+          const events = await contract.provider.getLogs(filter, 0, END_BLOCK);
+          const updatedEvents = events.map((eventLog) => {
               let parsedLog;
-
               parsedLog = interface.parseLog(eventLog);
-            
               if (parsedLog) {
                   const { args } = parsedLog;
                   eventLog = { ...eventLog, ...args };
-                  const eventName = oldEventSignature.split('(')[0];
+                  const eventName = eventSignature.split('(')[0];
                   eventLog['event'] = eventName;
               }
               return eventLog;
             });
-
           return updatedEvents;
       };
-
       let stalkBalanceChangedEvents = await Promise.all([
           queryEvents("StalkBalanceChanged(address,int256,int256)", account, eventsInterface),
       ]);
-
       stalkBalanceChangedEvents = (await stalkBalanceChangedEvents).flat()
-
       stalkBalanceChangedEvents = stalkBalanceChangedEvents.sort((a,b) => {
           if (a.blockNumber == b.blockNumber) return a.logIndex - b.logIndex
           return a.blockNumber - b.blockNumber
@@ -316,22 +313,68 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
       console.log('checking: ', account)
       console.log(`Found: ${stalkBalanceChangedEvents.length} events`)
 
-      //////////////////////////////////////////////////////////////
-      
       let changed = [];
-
       for (let i = 0; i < stalkBalanceChangedEvents.length; i++) {
           let d = stalkBalanceChangedEvents[i]
-
           if (d.event == 'StalkBalanceChanged') {
             changed.push(d.delta);
           }
-
           lastBlock = d.blockNumber
       }
-
       return changed;
   }
+
+  async function getSeedBalanceChangedForAccount(account) {
+    const END_BLOCK = BLOCK_NUMBER;
+    const provider = new ethers.providers.JsonRpcProvider(process.env.FORKING_RPC);
+    const contract = new ethers.Contract(BEANSTALK, beanstalkABI, provider);
+    const eventsInterface = new ethers.utils.Interface(eventsAbi);
+    const queryEvents = async (eventSignature, account, interface) => {
+        const eventTopic = ethers.utils.id(eventSignature);
+        // Create the filter object
+        const filter = {
+            fromBlock: 0,
+            toBlock: END_BLOCK,
+            address: contract.address,
+            topics: [eventTopic, ethers.utils.hexZeroPad(account, 32)],
+        };
+        const events = await contract.provider.getLogs(filter, 0, END_BLOCK);
+        const updatedEvents = events.map((eventLog) => {
+            let parsedLog;
+            parsedLog = interface.parseLog(eventLog);
+            if (parsedLog) {
+                const { args } = parsedLog;
+                eventLog = { ...eventLog, ...args };
+                const eventName = eventSignature.split('(')[0];
+                eventLog['event'] = eventName;
+            }
+            return eventLog;
+          });
+        return updatedEvents;
+    };
+    let seedChangedEvents = await Promise.all([
+        queryEvents("SeedsBalanceChanged(address,int256)", account, eventsInterface),
+    ]);
+    seedChangedEvents = (await seedChangedEvents).flat()
+    seedChangedEvents = seedChangedEvents.sort((a,b) => {
+        if (a.blockNumber == b.blockNumber) return a.logIndex - b.logIndex
+        return a.blockNumber - b.blockNumber
+    })
+
+    console.log('-----------------------------')
+    console.log('checking: ', account)
+    console.log(`Found: ${seedChangedEvents.length} events`)
+
+    let changed = [];
+    for (let i = 0; i < seedChangedEvents.length; i++) {
+        let d = seedChangedEvents[i]
+        if (d.event == 'SeedsBalanceChanged') {
+          changed.push(d.delta);
+        }
+        lastBlock = d.blockNumber
+    }
+    return changed;
+}
 
     function reformatData(data) {
         const result = {};
@@ -402,7 +445,20 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
           }
           //write stalk_balance_changed to disk
           await fs.writeFileSync(__dirname + '/data/stalk_balance_changed.json', JSON.stringify(stalkChanges, null, 4))
-      }
+        }
+
+        if (!fs.existsSync(__dirname + '/data/seed_balance_changed.json')) {
+          let accounts = JSON.parse(await fs.readFileSync(__dirname + '/data/farmers.json'));
+          let seedChanges = {};
+  
+          //loop through accounts and get seed_balance_changed events
+          for (let i = 0; i < accounts.length; i++) {
+              let account = accounts[i];
+              seedChanges[account] = await getSeedBalanceChangedForAccount(account);
+          }
+          //write stalk_balance_changed to disk
+          await fs.writeFileSync(__dirname + '/data/seed_balance_changed.json', JSON.stringify(seedChanges, null, 4))
+        }
 
         //load deposits from disk
         let deposits = JSON.parse(await fs.readFileSync(__dirname + '/data/deposits.json'));
@@ -414,12 +470,16 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         //load stalk balance changed from disk
         let stalkChanges = JSON.parse(await fs.readFileSync(__dirname + '/data/stalk_balance_changed.json'));
 
+        //load seed balance changed from disk
+        let seedChanges = JSON.parse(await fs.readFileSync(__dirname + '/data/seed_balance_changed.json'));
+
         //eth addresses here have the checksum casing, need just lowercase
         //to match up with the stored data
         for (const key in seedStalkDiff) {
           seedStalkDiff[key.toLowerCase()] = seedStalkDiff[key];
         }
 
+        const eventsInterface = new ethers.utils.Interface(eventsAbi);
 
         var progress = 0;
         for (const depositorAddress in deposits) {
@@ -444,23 +504,24 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
             await this.silo.connect(depositorSigner);
         
             const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
-
-            //loop through all the AddDeposit events
             const receipt = await migrateResult.wait();
 
-            const eventsInterface = new ethers.utils.Interface(eventsAbi);
             
             const migratedDeposits = []; //stores AddDeposit events emitted by migrate
             let migrateStalkBalanceChanged = BigNumber.from(0); //stores stalk balance changes from migrate
+            let migrateSeedBalanceChanged = BigNumber.from(0); //stores seed balance changes from migrate
 
             for (const log of receipt.logs) {
               try {
-                const parsedStalkBalanceChanged = eventsInterface.parseLog(log);
-                if (parsedStalkBalanceChanged.name === "StalkBalanceChanged") {
-                  migrateStalkBalanceChanged = migrateStalkBalanceChanged.add(parsedStalkBalanceChanged.args.delta);
+                const parsedEvent = eventsInterface.parseLog(log);
+                if (parsedEvent.name === "StalkBalanceChanged") {
+                  migrateStalkBalanceChanged = migrateStalkBalanceChanged.add(parsedEvent.args.delta);
                 }
-                if (parsedStalkBalanceChanged.name === "AddDeposit") {
-                  migratedDeposits.push(parsedStalkBalanceChanged.args);
+                if (parsedEvent.name === "AddDeposit") {
+                  migratedDeposits.push(parsedEvent.args);
+                }
+                if (parsedEvent.name === "SeedsBalanceChanged") {
+                  migrateSeedBalanceChanged = migrateSeedBalanceChanged.add(parsedEvent.args.delta);
                 }
               } catch (error) {}
             }
@@ -475,8 +536,15 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
               stalkBalanceChangedSum = stalkBalanceChangedSum.add(stalkChanges[depositorAddress][i]);
             }
 
+            //add up all the seed balance changes from pre-migration
+            let seedBalanceChangedSum = BigNumber.from(0);
+            for (let i = 0; i < seedChanges[depositorAddress].length; i++) {
+              seedBalanceChangedSum = seedBalanceChangedSum.add(seedChanges[depositorAddress][i]);
+            }
+
             //add up all the StalkBalanceChanged events emitted from migrateResult
-            let deltaSum = ethers.BigNumber.from(0);
+            let stalkDeltaSum = ethers.BigNumber.from(0);
+            let seedDeltaSum = ethers.BigNumber.from(0);
 
             for (let k = 0; k < migratedDeposits.length; k++) {
               const migratedDeposit = migratedDeposits[k];
@@ -487,14 +555,20 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
                 try {
                   const parsedLog = eventsInterface.parseLog(log);
                   if (parsedLog.name === "StalkBalanceChanged") {
-                    deltaSum = deltaSum.add(parsedLog.args.delta);
+                    stalkDeltaSum = stalkDeltaSum.add(parsedLog.args.delta);
+                  }
+                  if (parsedLog.name === "SeedsBalanceChanged") {
+                    seedDeltaSum = seedDeltaSum.add(parsedLog.args.delta);
                   }
                 } catch (error) {}
               }
             }
 
-            const finalStalkSum = deltaSum.add(stalkBalanceChangedSum).add(migrateStalkBalanceChanged);
+            const finalStalkSum = stalkDeltaSum.add(stalkBalanceChangedSum).add(migrateStalkBalanceChanged);
             expect(finalStalkSum).to.equal('0');
+
+            const finalSeedSum = seedDeltaSum.add(seedBalanceChangedSum).add(migrateSeedBalanceChanged);
+            expect(finalSeedSum).to.equal('0');
             
             progress++;
         }

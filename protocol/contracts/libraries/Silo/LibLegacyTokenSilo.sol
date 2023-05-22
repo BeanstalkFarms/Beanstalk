@@ -432,7 +432,7 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         //emit that all their seeds are gone, note need to take into account seedsDiff
-        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds.add));
+        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
 
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
