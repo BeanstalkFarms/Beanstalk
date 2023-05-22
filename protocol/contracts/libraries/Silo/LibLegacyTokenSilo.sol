@@ -126,16 +126,24 @@ library LibLegacyTokenSilo {
             s.a[account].legacyDeposits[token][season].bdv
         );
 
-        // Partial remove
+        // If amount to remove is greater than the amount in the Deposit, migrate legacy Deposit to new Deposit
+        if (amount > crateAmount) {
+            // If Unripe Deposit, fetch whole Deposit balance and delete legacy deposit references.
+            if (LibUnripeSilo.isUnripeBean(token)) {
+                (crateAmount, crateBDV) = LibUnripeSilo.unripeBeanDeposit(account, season);
+                LibUnripeSilo.removeUnripeBeanDeposit(account, season);
+            } else if (LibUnripeSilo.isUnripeLP(token)) {
+                (crateAmount, crateBDV) = LibUnripeSilo.unripeLPDeposit(account, season);
+                LibUnripeSilo.removeUnripeLPDeposit(account, season);
+            }
+            require(crateAmount >= amount, "Silo: Crate balance too low.");
+        }
+
+        // Partial Withdraw
         if (amount < crateAmount) {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            uint256 updatedBDV = uint256(
-                s.a[account].legacyDeposits[token][season].bdv
-            ).sub(removedBDV);
-            uint256 updatedAmount = uint256(
-                s.a[account].legacyDeposits[token][season].amount
-            ).sub(amount);
-
+            uint256 updatedBDV = crateBDV.sub(removedBDV);
+            uint256 updatedAmount = crateAmount.sub(amount);
             require(
                 updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1),
                 "Silo: uint128 overflow."
@@ -151,35 +159,8 @@ library LibLegacyTokenSilo {
             return removedBDV;
         }
 
-        // Full remove
-        if (crateAmount > 0) delete s.a[account].legacyDeposits[token][season];
-
-        // Excess remove
-        // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
-        // result of using Silo V1 storage slots to store Unripe BEAN/LP
-        // Deposit information. See {AppStorage.sol:Account-State}.
-        if (amount > crateAmount) {
-            amount -= crateAmount;
-            if (LibUnripeSilo.isUnripeBean(token))
-                return
-                    crateBDV.add(
-                        LibUnripeSilo.removeUnripeBeanDeposit(
-                            account,
-                            season,
-                            amount
-                        )
-                    );
-            else if (LibUnripeSilo.isUnripeLP(token))
-                return
-                    crateBDV.add(
-                        LibUnripeSilo.removeUnripeLPDeposit(
-                            account,
-                            season,
-                            amount
-                        )
-                    );
-            revert("Silo: Crate balance too low.");
-        }
+        // Full Remove
+        delete s.a[account].legacyDeposits[token][season];
     }
 
     //////////////////////// GETTERS ////////////////////////

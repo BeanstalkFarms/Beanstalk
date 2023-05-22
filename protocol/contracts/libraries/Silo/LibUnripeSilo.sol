@@ -160,8 +160,8 @@ library LibUnripeSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         delete s.a[account].lp.depositSeeds[id];
         delete s.a[account].lp.deposits[id];
-        delete s.a[account].deposits[C.unripeLPPool1()][id];
-        delete s.a[account].deposits[C.unripeLPPool2()][id];
+        delete s.a[account].legacyDeposits[C.unripeLPPool1()][id];
+        delete s.a[account].legacyDeposits[C.unripeLPPool2()][id];
     }
 
     /**

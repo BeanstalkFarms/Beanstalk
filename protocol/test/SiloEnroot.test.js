@@ -11,6 +11,8 @@ const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
+const ENROOT_FIX_SEASON = 12793
+
 let pru;
 
 function pruneToSeeds(value, seeds = 2) {
@@ -41,6 +43,9 @@ describe('Silo Enroot', function () {
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
     this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
+    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
+
+    await this.season.teleportSunrise(ENROOT_FIX_SEASON)
 
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
@@ -60,7 +65,6 @@ describe('Silo Enroot', function () {
       '10000',
       '1');
 
-    await this.season.siloSunrise(0);
     await this.siloToken.connect(user).approve(this.silo.address, '100000000000');
     await this.siloToken.connect(user2).approve(this.silo.address, '100000000000');
     await this.siloToken.mint(userAddress, '10000');
@@ -120,20 +124,19 @@ describe('Silo Enroot', function () {
 
     describe("1 deposit, some", async function () {
       beforeEach(async function () {
-        await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
 
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL)
-        await this.silo.connect(user).mockUnripeBeanDeposit(10, to6('5'))
+        await this.silo.connect(user).mockUnripeBeanDeposit(ENROOT_FIX_SEASON, to6('5'))
 
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_BEAN,
           to6('1000')
         )
 
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
         //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
-        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]], 0, 0, []);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON]], [[to6('10')]], 0, 0, []);
         
         this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
@@ -148,7 +151,7 @@ describe('Silo Enroot', function () {
       });
 
       it('properly removes the crate', async function () {
-        const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
+        const stem10 = await this.silo.seasonToStem(this.siloToken.address, ENROOT_FIX_SEASON);
         let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
         
         expect(dep[0]).to.equal(to6('10'))
@@ -156,7 +159,7 @@ describe('Silo Enroot', function () {
       });
 
       it('emits Remove and Add Deposit event', async function () {
-        const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
+        const stem10 = await this.silo.seasonToStem(this.siloToken.address, ENROOT_FIX_SEASON);
         await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
@@ -164,11 +167,11 @@ describe('Silo Enroot', function () {
 
     describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
-        await this.season.teleportSunrise(10);
+        await this.season.teleportSunrise(ENROOT_FIX_SEASON);
         this.season.deployStemsUpgrade();
 
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL) //need to do legacy deposit to simulate pre-stems upgrade
-        await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
+        await this.silo.connect(user).mockUnripeBeanDeposit(ENROOT_FIX_SEASON, to6('5'))
         
         await this.season.lightSunrise()
 
@@ -179,7 +182,7 @@ describe('Silo Enroot', function () {
 
         // const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
 
-        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10']], [[to6('10')]], 0, 0, []);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON]], [[to6('10')]], 0, 0, []);
 
         this.result = await this.convert.connect(user).enrootDeposit(UNRIPE_BEAN, '0', to6('10'));
       })
@@ -194,14 +197,14 @@ describe('Silo Enroot', function () {
       });
 
       it('properly removes the crate', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
         let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(to6('5'))
       });
 
       it('emits Remove and Add Deposit event', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
         await expect(this.result).to.emit(this.convert, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
       });
@@ -209,8 +212,7 @@ describe('Silo Enroot', function () {
 
     describe("2 deposit, all", async function () {
       beforeEach(async function () {
-        await this.season.teleportSunrise(10);
-        await this.silo.connect(user).mockUnripeBeanDeposit('10', to6('5'))
+        await this.silo.connect(user).mockUnripeBeanDeposit(ENROOT_FIX_SEASON, to6('5'))
 
         await this.season.lightSunrise()
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL)
@@ -223,11 +225,11 @@ describe('Silo Enroot', function () {
         )
 
 
-        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [['10', '11']], [[to6('5'), to6('5')]], 0, 0, []);
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON, ENROOT_FIX_SEASON+1]], [[to6('5'), to6('5')]], 0, 0, []);
 
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
 
-        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, '11');
+        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
         this.result = await this.convert.connect(user).enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6('5'), to6('5')]);
       })
 
@@ -243,15 +245,15 @@ describe('Silo Enroot', function () {
       });
 
       it('properly removes the crate', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
         let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
         expect(dep[0]).to.equal(to6('5'))
         expect(dep[1]).to.equal(to6('2.5'))
       });
 
       it('emits Remove and Add Deposits event', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
-        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, '11');
+        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, UNRIPE_BEAN, [stem10,stem11], [to6('5'), to6('5')], to6('10'), ['927823', '927823']);
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), to6('2.5'));
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem11, to6('5'), to6('2.5'));
@@ -261,28 +263,37 @@ describe('Silo Enroot', function () {
     describe("2 deposit, round", async function () {
 
       beforeEach(async function () {
-        await this.silo.connect(user).mockUnripeLPDeposit('0', '1', to18('0.000000083406453'), to6('10'))
-        await this.silo.connect(user).mockUnripeLPDeposit('0', '2', to18('0.000000083406453'), to6('10'))
         await this.unripe.connect(owner).addUnderlying(UNRIPE_LP, '147796000000000')
-        this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_LP, ['1', '2'], [to6('10'), to6('10')]);
+        await this.silo.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON, to18('0.000000083406453'), to6('10'))
+        await this.season.lightSunrise()
+        await this.silo.connect(user).mockUnripeLPDeposit('0', ENROOT_FIX_SEASON+1, to18('0.000000083406453'), to6('10'))
+
+        this.season.deployStemsUpgrade();
+        await this.migrate.mowAndMigrate(user.address, [UNRIPE_LP], [[ENROOT_FIX_SEASON, ENROOT_FIX_SEASON+1]], [[to6('10'), to6('10')]], 0, 0, []);
+
+        const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
+        this.result = await this.convert.connect(user).enrootDeposits(UNRIPE_LP, [stem10, stem11], [to6('10'), to6('10')]);
       })
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('14.845168'));
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the user balance', async function () {
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('14.845168'));
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the crate', async function () {
-        let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 1);
+        const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem10);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal('1855646')
-        dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+        const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
+        dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem11);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal('1855646')
       });
