@@ -317,7 +317,7 @@ export const parseActionMessage = (a: Action) => {
         a.stalk.abs(),
         2
       )} Stalk and ${
-        a.seeds.lt(0) ? (a.stalk.gt(0) ? 'burn ' : '') : ''
+        a.seeds.lt(0) ? (a.stalk.gte(0) ? 'burn ' : '') : ''
       }${displayFullBN(a.seeds.abs(), 2)} Seeds.`;
     case ActionType.CLAIM_WITHDRAWAL:
       return `Claim ${displayFullBN(a.amount, 2)} ${a.token.name}.`;
