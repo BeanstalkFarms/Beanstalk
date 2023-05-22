@@ -6,7 +6,7 @@ import PoolCard from './PoolCard';
 
 export default {
   component: PoolCard,
-  args: {}
+  args: {},
 } as ComponentMeta<typeof PoolCard>;
 
 const poolState: BeanPoolState = {
@@ -14,7 +14,7 @@ const poolState: BeanPoolState = {
   reserves: [new BigNumber(100), new BigNumber(100)],
   deltaB: new BigNumber(100000),
   liquidity: new BigNumber(123567),
-  supply: new BigNumber(1234)
+  supply: new BigNumber(1234),
 };
 
 const Template: ComponentStory<typeof PoolCard> = (args: any) => (

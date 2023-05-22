@@ -12,7 +12,7 @@ export const mockLiquidityByToken = {
 export type LiquidityDatum = {
   label: string;
   value: number;
-}
+};
 
 export default Object.keys(mockLiquidityByToken).map((key) => ({
   label: key.substring(0, 6),

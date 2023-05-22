@@ -784,7 +784,7 @@ describe('Silo Token', function () {
           const stem = await this.silo.seasonToStem(UNRIPE_LP, '10');
           let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem);
           expect(dep[0]).to.equal(to6('1'))
-          expect(dep[1]).to.equal(prune(to6('1')))
+          expect(dep[1]).to.equal(this.bdvBefore.sub(this.bdvBefore.mul('9').div('10')))
         });
 
         it('emits RemoveDeposit event', async function () {

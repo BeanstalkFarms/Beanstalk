@@ -33,25 +33,29 @@ export type RewardsBarProps = {
   hideRevitalized?: boolean;
 };
 
-const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = (
-  {
-    beans,
-    stalk,
-    seeds,
-    revitalizedStalk = NEW_BN,
-    revitalizedSeeds = NEW_BN,
-    action,
-    hideRevitalized,
-    compact = false,
-  }) => {
+const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = ({
+  beans,
+  stalk,
+  seeds,
+  revitalizedStalk = NEW_BN,
+  revitalizedSeeds = NEW_BN,
+  action,
+  hideRevitalized,
+  compact = false,
+}) => {
   const GAP_LG = compact ? 2 : 3.5;
   const GAP_MD = compact ? 1 : 2;
   const GAP_XS = compact ? 0.5 : 1;
 
-  const selectedActionIncludes = (c: ClaimRewardsAction) => action && hoverMap[action].includes(c);
+  const selectedActionIncludes = (c: ClaimRewardsAction) =>
+    action && hoverMap[action].includes(c);
 
   return (
-    <Stack direction={{ lg: 'row', xs: 'column' }} columnGap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }} rowGap={1.5}>
+    <Stack
+      direction={{ lg: 'row', xs: 'column' }}
+      columnGap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}
+      rowGap={1.5}
+    >
       {/* Earned */}
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
@@ -60,7 +64,11 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = (
           amount={beans.earned}
           icon={beanIcon}
           compact={compact}
-          isClaimable={action && (action === ClaimRewardsAction.PLANT_AND_MOW || action === ClaimRewardsAction.CLAIM_ALL)}
+          isClaimable={
+            action &&
+            (action === ClaimRewardsAction.PLANT_AND_MOW ||
+              action === ClaimRewardsAction.CLAIM_ALL)
+          }
         />
         <RewardItem
           title="Earned Stalk"
@@ -68,10 +76,17 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = (
           amount={stalk.earned}
           icon={stalkIcon}
           compact={compact}
-          isClaimable={action && (action === ClaimRewardsAction.PLANT_AND_MOW || action === ClaimRewardsAction.CLAIM_ALL)}
+          isClaimable={
+            action &&
+            (action === ClaimRewardsAction.PLANT_AND_MOW ||
+              action === ClaimRewardsAction.CLAIM_ALL)
+          }
         />
       </Row>
-      <Box display={{ xs: 'block', lg: compact ? 'none' : 'block' }} sx={{ borderLeft: '0.5px solid', borderColor: 'divider' }} />
+      <Box
+        display={{ xs: 'block', lg: compact ? 'none' : 'block' }}
+        sx={{ borderLeft: '0.5px solid', borderColor: 'divider' }}
+      />
       {/* Grown */}
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
@@ -91,7 +106,10 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = (
           isClaimable={selectedActionIncludes(ClaimRewardsAction.MOW)}
         />
       </Row>
-      <Box display={{ xs: 'block', lg: compact ? 'none' : 'block' }} sx={{ borderLeft: '0.5px solid', borderColor: 'divider' }} />
+      <Box
+        display={{ xs: 'block', lg: compact ? 'none' : 'block' }}
+        sx={{ borderLeft: '0.5px solid', borderColor: 'divider' }}
+      />
       {/* Revitalized */}
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
@@ -100,7 +118,11 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = (
           amount={revitalizedStalk}
           icon={stalkIcon}
           compact={compact}
-          isClaimable={hideRevitalized ? false : selectedActionIncludes(ClaimRewardsAction.ENROOT_AND_MOW)}
+          isClaimable={
+            hideRevitalized
+              ? false
+              : selectedActionIncludes(ClaimRewardsAction.ENROOT_AND_MOW)
+          }
         />
         <RewardItem
           title="Revitalized Seeds"
@@ -108,7 +130,11 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = (
           amount={revitalizedSeeds}
           icon={seedIcon}
           compact={compact}
-          isClaimable={hideRevitalized ? false : selectedActionIncludes(ClaimRewardsAction.ENROOT_AND_MOW)}
+          isClaimable={
+            hideRevitalized
+              ? false
+              : selectedActionIncludes(ClaimRewardsAction.ENROOT_AND_MOW)
+          }
         />
       </Row>
     </Stack>

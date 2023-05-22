@@ -16,7 +16,7 @@ export type MarketEvent = {
   id: string;
   // the individual event id, usually includes txn hash
   eventId: string;
-  type: 'listing' | 'order';  
+  type: 'listing' | 'order';
   action: 'create' | 'cancel' | 'fill';
   amountPods: BigNumber;
   placeInLine: BigNumber;
@@ -54,62 +54,75 @@ const useMarketActivityData = () => {
     },
   });
   const [getPodOrders, podOrdersQuery] = useHistoricalPodOrdersLazyQuery({
-    fetchPolicy: 'network-only'
+    fetchPolicy: 'network-only',
   });
   const [getPodListings, podListingsQuery] = useHistoricalPodListingsLazyQuery({
-    fetchPolicy: 'network-only'
+    fetchPolicy: 'network-only',
   });
 
-  const error = (
-    marketEventsQuery.error
-    || podOrdersQuery.error
-    || podListingsQuery.error
+  const error =
+    marketEventsQuery.error || podOrdersQuery.error || podListingsQuery.error;
+
+  // fetch
+  const _fetch = useCallback(
+    async (first: number, after: string) => {
+      setLoading(true);
+      setPage((p) => p + 1);
+      const result = await getMarketEvents({
+        variables: { events_first: first, events_timestamp_lt: after },
+      });
+
+      // run join query if we loaded more market events
+      if (result.data?.marketEvents.length) {
+        // find IDs to join against
+        const [orderIDs, listingIDs] = result.data.marketEvents.reduce<
+          [string[], string[]]
+        >(
+          (prev, curr) => {
+            if (
+              curr.__typename === 'PodOrderFilled' ||
+              curr.__typename === 'PodOrderCancelled'
+            ) {
+              prev[0].push(curr.historyID);
+            } else if (
+              curr.__typename === 'PodListingFilled' ||
+              curr.__typename === 'PodListingCancelled'
+            ) {
+              prev[1].push(curr.historyID);
+            }
+            return prev;
+          },
+          [[], []]
+        );
+
+        // lookup all of the orders and listings needed to join to the above query
+        await Promise.all([
+          getPodOrders({
+            variables: {
+              historyIDs: orderIDs,
+            },
+          }),
+          getPodListings({
+            variables: {
+              historyIDs: listingIDs,
+            },
+          }),
+        ]);
+      }
+
+      setLoading(false);
+    },
+    [getMarketEvents, getPodListings, getPodOrders]
   );
-
-  // fetch 
-  const _fetch = useCallback(async (first: number, after: string) => {
-    setLoading(true);
-    setPage((p) => p + 1);
-    const result = await getMarketEvents({ variables: { events_first: first, events_timestamp_lt: after } });
-
-    // run join query if we loaded more market events
-    if (result.data?.marketEvents.length) {
-      // find IDs to join against
-      const [orderIDs, listingIDs] = result.data.marketEvents.reduce<[string[], string[]]>((prev, curr) => {
-        if (curr.__typename === 'PodOrderFilled' || curr.__typename === 'PodOrderCancelled') {
-          prev[0].push(curr.historyID);
-        } else if (curr.__typename === 'PodListingFilled' || curr.__typename === 'PodListingCancelled') {
-          prev[1].push(curr.historyID);
-        }
-        return prev;
-      }, [[], []]);
-
-      // lookup all of the orders and listings needed to join to the above query
-      await Promise.all([
-        getPodOrders({
-          variables: { 
-            historyIDs: orderIDs,
-          }
-        }),
-        getPodListings({
-          variables: { 
-            historyIDs: listingIDs,
-          }
-        }),
-      ]);
-    }
-
-    setLoading(false);
-  }, [getMarketEvents, getPodListings, getPodOrders]);
 
   // look up the next set of marketplaceEvents using the last known timestamp
   const fetchMoreData = useCallback(async () => {
     const first = QUERY_AMOUNT;
-    const after = (
-      marketEventsQuery.data?.marketEvents?.length
-        ? marketEventsQuery.data?.marketEvents[marketEventsQuery.data?.marketEvents.length - 1].createdAt
-        : MAX_TIMESTAMP
-    );
+    const after = marketEventsQuery.data?.marketEvents?.length
+      ? marketEventsQuery.data?.marketEvents[
+          marketEventsQuery.data?.marketEvents.length - 1
+        ].createdAt
+      : MAX_TIMESTAMP;
     console.debug('Fetch more: ', first, after);
     await _fetch(first, after);
   }, [_fetch, marketEventsQuery.data?.marketEvents]);
@@ -119,19 +132,25 @@ const useMarketActivityData = () => {
     const events = marketEventsQuery.data?.marketEvents;
     if (!loading && events?.length) {
       const podOrdersById = keyBy(podOrdersQuery.data?.podOrders, 'historyID');
-      const podListingsById = keyBy(podListingsQuery.data?.podListings, 'historyID');
+      const podListingsById = keyBy(
+        podListingsQuery.data?.podListings,
+        'historyID'
+      );
 
       // FIXME:
       // This duplicates logic from `castPodListing` and `castPodOrder`.
       // The `marketplaceEvent` entity contains partial information about
       // Orders and Listings during Creation, but NO information during cancellations
-      // and fills. In both cases, casting doesn't work because of missing data. 
+      // and fills. In both cases, casting doesn't work because of missing data.
       const parseEvent = (e: typeof events[number]) => {
         switch (e.__typename) {
           case 'PodOrderCreated': {
             const pricePerPod = toTokenUnitsBN(e.pricePerPod, BEAN[1].decimals);
             const amount = toTokenUnitsBN(e.amount, BEAN[1].decimals);
-            const placeInLine = toTokenUnitsBN(e.maxPlaceInLine, BEAN[1].decimals);        
+            const placeInLine = toTokenUnitsBN(
+              e.maxPlaceInLine,
+              BEAN[1].decimals
+            );
             // HOTFIX: amountPods is using the legacy bean amount format for these events
             const amountPods = amount;
             const amountBeans = amount.multipliedBy(pricePerPod);
@@ -154,11 +173,18 @@ const useMarketActivityData = () => {
             const podOrder = podOrdersById[e.historyID];
             if (!e.historyID || !podOrder) return null;
 
-            const podAmount = toTokenUnitsBN(podOrder.podAmount || 0, BEAN[1].decimals);
-            const pricePerPod = toTokenUnitsBN(new BigNumber(podOrder.pricePerPod || 0), BEAN[1].decimals);
-            const totalBeans = podAmount && pricePerPod
-              ? podAmount.multipliedBy(pricePerPod)
-              : undefined;
+            const podAmount = toTokenUnitsBN(
+              podOrder.podAmount || 0,
+              BEAN[1].decimals
+            );
+            const pricePerPod = toTokenUnitsBN(
+              new BigNumber(podOrder.pricePerPod || 0),
+              BEAN[1].decimals
+            );
+            const totalBeans =
+              podAmount && pricePerPod
+                ? podAmount.multipliedBy(pricePerPod)
+                : undefined;
 
             return <MarketEvent>{
               id: podOrder.id,
@@ -167,8 +193,14 @@ const useMarketActivityData = () => {
               type: 'order' as const,
               action: 'cancel' as const,
               amountPods: toTokenUnitsBN(podOrder?.podAmount, BEAN[1].decimals),
-              placeInLine: toTokenUnitsBN(podOrder?.maxPlaceInLine, BEAN[1].decimals),
-              pricePerPod: toTokenUnitsBN(new BigNumber(podOrder?.pricePerPod || 0), BEAN[1].decimals),
+              placeInLine: toTokenUnitsBN(
+                podOrder?.maxPlaceInLine,
+                BEAN[1].decimals
+              ),
+              pricePerPod: toTokenUnitsBN(
+                new BigNumber(podOrder?.pricePerPod || 0),
+                BEAN[1].decimals
+              ),
               amountBeans: totalBeans,
               amountUSD: totalBeans ? getUSD(BEAN[1], totalBeans) : undefined,
               createdAt: e.createdAt,
@@ -179,17 +211,29 @@ const useMarketActivityData = () => {
             const podOrder = podOrdersById[e.historyID];
             if (!e.historyID || !podOrder) return null;
 
-            const pricePerPod = toTokenUnitsBN(new BigNumber(podOrder.pricePerPod || 0), BEAN[1].decimals);
-            const podAmountFilled = toTokenUnitsBN(podOrder.podAmountFilled, BEAN[1].decimals);
-            const totalBeans =  getUSD(BEAN[1], podAmountFilled.multipliedBy(pricePerPod));
-            return <MarketEvent> {
+            const pricePerPod = toTokenUnitsBN(
+              new BigNumber(podOrder.pricePerPod || 0),
+              BEAN[1].decimals
+            );
+            const podAmountFilled = toTokenUnitsBN(
+              podOrder.podAmountFilled,
+              BEAN[1].decimals
+            );
+            const totalBeans = getUSD(
+              BEAN[1],
+              podAmountFilled.multipliedBy(pricePerPod)
+            );
+            return <MarketEvent>{
               id: podOrder.id,
               eventId: e.id,
               hash: e.hash,
               type: 'order' as const,
               action: 'fill' as const,
               amountPods: podAmountFilled,
-              placeInLine: toTokenUnitsBN(new BigNumber(e.index), BEAN[1].decimals).minus(harvestableIndex),
+              placeInLine: toTokenUnitsBN(
+                new BigNumber(e.index),
+                BEAN[1].decimals
+              ).minus(harvestableIndex),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
@@ -200,14 +244,16 @@ const useMarketActivityData = () => {
             const numPods = toTokenUnitsBN(e.amount, BEAN[1].decimals);
             const pricePerPod = toTokenUnitsBN(e.pricePerPod, BEAN[1].decimals);
             const totalBeans = numPods.multipliedBy(pricePerPod);
-            return <MarketEvent> {
+            return <MarketEvent>{
               id: e.historyID.split('-')[1],
               eventId: e.id,
               hash: e.hash,
               type: 'listing' as const,
               action: 'create' as const,
               amountPods: numPods,
-              placeInLine: toTokenUnitsBN(e.index, BEAN[1].decimals).minus(harvestableIndex),
+              placeInLine: toTokenUnitsBN(e.index, BEAN[1].decimals).minus(
+                harvestableIndex
+              ),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
@@ -219,17 +265,23 @@ const useMarketActivityData = () => {
             if (!e.historyID || !podListing) return null;
 
             const numPods = toTokenUnitsBN(podListing.amount, BEAN[1].decimals);
-            const pricePerPod = toTokenUnitsBN(new BigNumber(podListing.pricePerPod || 0), BEAN[1].decimals);
+            const pricePerPod = toTokenUnitsBN(
+              new BigNumber(podListing.pricePerPod || 0),
+              BEAN[1].decimals
+            );
             const totalBeans = numPods.multipliedBy(pricePerPod);
 
-            return <MarketEvent> {
+            return <MarketEvent>{
               id: e.historyID.split('-')[1],
               eventId: e.id,
               hash: e.hash,
               type: 'listing' as const,
               action: 'cancel' as const,
               amountPods: numPods,
-              placeInLine: toTokenUnitsBN(podListing?.index, BEAN[1].decimals).minus(harvestableIndex),
+              placeInLine: toTokenUnitsBN(
+                podListing?.index,
+                BEAN[1].decimals
+              ).minus(harvestableIndex),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
@@ -240,17 +292,26 @@ const useMarketActivityData = () => {
             const podListing = podListingsById[e.historyID];
             if (!e.historyID || !podListing) return null;
 
-            const numPodsFilled = toTokenUnitsBN(podListing?.filledAmount, BEAN[1].decimals);
-            const pricePerPod = toTokenUnitsBN(new BigNumber(podListing?.pricePerPod || 0), BEAN[1].decimals);
+            const numPodsFilled = toTokenUnitsBN(
+              podListing?.filledAmount,
+              BEAN[1].decimals
+            );
+            const pricePerPod = toTokenUnitsBN(
+              new BigNumber(podListing?.pricePerPod || 0),
+              BEAN[1].decimals
+            );
             const totalBeans = numPodsFilled.multipliedBy(pricePerPod);
-            return <MarketEvent> {
+            return <MarketEvent>{
               id: e.historyID.split('-')[1],
               eventId: e.id,
               hash: e.hash,
               type: 'listing' as const,
               action: 'fill' as const,
               amountPods: numPodsFilled,
-              placeInLine: toTokenUnitsBN(podListing?.index, BEAN[1].decimals).minus(harvestableIndex),
+              placeInLine: toTokenUnitsBN(
+                podListing?.index,
+                BEAN[1].decimals
+              ).minus(harvestableIndex),
               pricePerPod: pricePerPod,
               amountBeans: totalBeans,
               amountUSD: getUSD(BEAN[1], totalBeans),
@@ -263,9 +324,9 @@ const useMarketActivityData = () => {
         }
       };
 
-      const _data : MarketEvent[] = [];
+      const _data: MarketEvent[] = [];
       const _max = Math.min(events.length, QUERY_AMOUNT * page);
-      for (let i = 0; i < _max; i += 1)  {
+      for (let i = 0; i < _max; i += 1) {
         const parsed = parseEvent(events[i]);
         if (parsed) _data.push(parsed);
       }
@@ -273,11 +334,11 @@ const useMarketActivityData = () => {
       setData(_data);
     }
   }, [
-    getUSD, 
-    harvestableIndex, 
-    loading, 
-    marketEventsQuery.data, 
-    podListingsQuery.data, 
+    getUSD,
+    harvestableIndex,
+    loading,
+    marketEventsQuery.data,
+    podListingsQuery.data,
     podOrdersQuery.data,
     page,
   ]);
@@ -294,7 +355,7 @@ const useMarketActivityData = () => {
     loading,
     error,
     fetchMoreData,
-    page
+    page,
   };
 };
 

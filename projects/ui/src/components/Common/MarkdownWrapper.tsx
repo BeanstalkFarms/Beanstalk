@@ -1,6 +1,10 @@
 import React from 'react';
 import MuiMarkdown from 'mui-markdown'; // peer dep: prism-react-renderer
-import { BeanstalkPalette, FontSize, FontWeight } from '~/components/App/muiTheme';
+import {
+  BeanstalkPalette,
+  FontSize,
+  FontWeight,
+} from '~/components/App/muiTheme';
 import { FC } from '~/types';
 
 const MarkdownWrapper: FC<{}> = ({ children }) => (
@@ -12,8 +16,8 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
           style: {
             marginTop: '8px',
             marginBottom: '16px', // fixme: nested
-          }
-        }
+          },
+        },
       },
       li: {
         component: 'li',
@@ -22,8 +26,8 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             fontSize: FontSize.base,
             lineHeight: '1.33rem',
             marginBottom: '4px',
-            wordBreak: 'normal'
-          }
+            wordBreak: 'normal',
+          },
         } as React.HTMLProps<HTMLParagraphElement>,
       },
       p: {
@@ -35,8 +39,8 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             marginBottom: '8px',
             lineHeight: '1.33rem',
             fontSize: FontSize.base,
-            wordBreak: 'normal'
-          }
+            wordBreak: 'normal',
+          },
         } as React.HTMLProps<HTMLParagraphElement>,
       },
       h1: {
@@ -46,7 +50,7 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             fontFamily: 'Futura PT',
             fontSize: FontSize['2xl'], // 24px
             fontWeight: FontWeight.semiBold,
-            wordBreak: 'normal'
+            wordBreak: 'normal',
           },
         } as React.HTMLProps<HTMLParagraphElement>,
       },
@@ -73,7 +77,7 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             marginBottom: '8px',
             fontSize: FontSize.lg,
             fontWeight: FontWeight.semiBold,
-            wordBreak: 'normal'
+            wordBreak: 'normal',
           },
         } as React.HTMLProps<HTMLParagraphElement>,
       },
@@ -85,7 +89,7 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             fontSize: FontSize.base, // 16px
             fontWeight: FontWeight.semiBold,
             lineHeight: '1.25rem',
-            wordBreak: 'normal'
+            wordBreak: 'normal',
           },
         } as React.HTMLProps<HTMLParagraphElement>,
       },
@@ -97,8 +101,8 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             fontSize: FontSize.sm, // 14px
             lineHeight: '1.15rem',
             fontWeight: FontWeight.semiBold,
-            wordBreak: 'normal'
-          }
+            wordBreak: 'normal',
+          },
         } as React.HTMLProps<HTMLParagraphElement>,
       },
       code: {
@@ -110,9 +114,9 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
             padding: 0.75,
             paddingRight: 5,
             paddingLeft: 5,
-            fontSize: FontSize.sm
-          }
-        }
+            fontSize: FontSize.sm,
+          },
+        },
       },
       // table: {
       //   props: {
@@ -128,16 +132,16 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
           style: {
             wordBreak: 'break-word',
             color: 'primary.main',
-          }
-        }
+          },
+        },
       },
       img: {
         props: {
           style: {
-            width: '100%'
-          }
-        }
-      }
+            maxWidth: '100%',
+          },
+        },
+      },
     }}
   >
     {children as any}

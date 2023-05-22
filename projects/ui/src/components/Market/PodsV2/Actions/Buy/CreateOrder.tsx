@@ -14,7 +14,6 @@ import {
   SmartSubmitButton,
   TokenAdornment,
   TokenInputField,
-  TokenOutputField,
   TokenQuoteProvider,
   TokenSelectDialog,
   TxnPreview,
@@ -52,6 +51,8 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 
 import { FC } from '~/types';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
+import TokenOutput from '~/components/Common/Form/TokenOutput';
+import useSdk from '~/hooks/sdk';
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
@@ -73,7 +74,8 @@ const PlaceInLineInputProps = {
             // HOTFIX: Small forms
             mr: -0.2,
             fontSize: 17.6,
-          }}>
+          }}
+        >
           0 -
         </Typography>
       </Stack>
@@ -88,7 +90,7 @@ const PricePerPodInputProps = {
       // HOTFIX: Small forms
       size="small"
     />
-  )
+  ),
 };
 
 const SLIDER_FIELD_KEYS = ['placeInLine'];
@@ -109,6 +111,7 @@ const CreateOrderV2Form: FC<
   tokenList,
   contract,
 }) => {
+  const sdk = useSdk();
   const getChainToken = useGetChainToken();
   const balances = useFarmerBalances();
 
@@ -212,11 +215,13 @@ const CreateOrderV2Form: FC<
         {isReady ? (
           <>
             <TxnSeparator mt={-1} />
-            <TokenOutputField
-              token={PODS}
-              amount={amountPods}
-              size="small"
-            />
+            <TokenOutput size="small">
+              <TokenOutput.Row
+                token={sdk.tokens.PODS}
+                amount={amountPods}
+                size="small"
+              />
+            </TokenOutput>
             {/* <Alert
               color="warning"
               icon={
@@ -313,8 +318,8 @@ const CreateOrder: FC<{}> = () => {
   const balances = useFarmerBalances();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
   const [refetchFarmerMarket] = useFetchFarmerMarket();
-    // subgraph queries
-    const { fetch: fetchFarmerMarketItems } = useFetchFarmerMarketItems();
+  // subgraph queries
+  const { fetch: fetchFarmerMarketItems } = useFetchFarmerMarketItems();
 
   /// Form
   const middleware = useFormMiddleware();
@@ -454,9 +459,12 @@ const CreateOrder: FC<{}> = () => {
           );
 
           console.log('tokenoutamount: ', Bean.stringify(tokenData.amountOut));
-          console.log('pricePerPod: ',  Bean.stringify(pricePerPod));
+          console.log('pricePerPod: ', Bean.stringify(pricePerPod));
           console.log('placeInLine: ', Bean.stringify(placeInLine));
-          console.log('minfillaount: ', toStringBaseUnitBN(new BigNumber(1), PODS.decimals));
+          console.log(
+            'minfillaount: ',
+            toStringBaseUnitBN(new BigNumber(1), PODS.decimals)
+          );
 
           call = beanstalk.farm(data, { value: Eth.stringify(value) });
         }
@@ -465,7 +473,11 @@ const CreateOrder: FC<{}> = () => {
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([refetchFarmerBalances(), refetchFarmerMarket(), fetchFarmerMarketItems()]);
+        await Promise.all([
+          refetchFarmerBalances(),
+          refetchFarmerMarket(),
+          fetchFarmerMarketItems(),
+        ]);
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
@@ -479,15 +491,15 @@ const CreateOrder: FC<{}> = () => {
       }
     },
     [
-      middleware, 
-      Bean, 
-      refetchFarmerBalances, 
-      refetchFarmerMarket, 
-      fetchFarmerMarketItems, 
-      beanstalk, 
-      balances, 
-      Eth
-  ]
+      middleware,
+      Bean,
+      refetchFarmerBalances,
+      refetchFarmerMarket,
+      fetchFarmerMarketItems,
+      beanstalk,
+      balances,
+      Eth,
+    ]
   );
 
   return (

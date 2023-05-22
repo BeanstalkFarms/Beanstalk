@@ -45,14 +45,13 @@ const MarketItemDetailsDialog: React.FC<Props> = ({
     }
   }, [cancelListing, item, setOpen, setOpen2]);
 
-  const handleCancelOrder = useCallback(async (mode: FarmToMode) => {
-    if (!item || !item.source) return;
-    cancelOrder(
-      item.source as PodOrder, 
-      mode, 
-      () => setOpen2(false)
-    );
-  }, [cancelOrder, item, setOpen2]);
+  const handleCancelOrder = useCallback(
+    async (mode: FarmToMode) => {
+      if (!item || !item.source) return;
+      cancelOrder(item.source as PodOrder, mode, () => setOpen2(false));
+    },
+    [cancelOrder, item, setOpen2]
+  );
 
   if (!data) {
     return null;

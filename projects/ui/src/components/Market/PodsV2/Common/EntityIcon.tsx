@@ -7,16 +7,17 @@ import { PODS } from '~/constants/tokens';
 
 import { FC } from '~/types';
 
-const EntityIcon : FC<{ size?: number, type: 'listing' | 'order' } & StackProps> = ({ size = 25, type, sx }) => (
+const EntityIcon: FC<
+  { size?: number; type: 'listing' | 'order' } & StackProps
+> = ({ size = 25, type, sx }) => (
   <Stack
     alignItems="center"
     justifyContent="center"
     sx={{
-      backgroundColor: (
+      backgroundColor:
         type === 'listing'
           ? BeanstalkPalette.mediumRed
-          : BeanstalkPalette.mediumGreen
-      ),
+          : BeanstalkPalette.mediumGreen,
       width: size,
       height: size,
       fontSize: size / 1.1,

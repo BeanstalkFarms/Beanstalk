@@ -10,7 +10,7 @@ export type Crate = {
   amount: BigNumber;
   /** The Season that the Crate was created. */
   season: BigNumber;
-}
+};
 
 /**
  * A "Deposit" represents an amount of a Whitelisted Silo Token
@@ -23,14 +23,14 @@ export type DepositCrate = Crate & {
   stalk: BigNumber;
   /** The amount of Seeds granted for this Deposit. */
   seeds: BigNumber;
-}
+};
 
 /**
  * A "Withdrawal" represents an amount of a "Deposit"
  * that was removed from the Silo. Withdrawals remain pending
  * for several seasons until they are ready to be Claimed.
  */
-export type WithdrawalCrate = Crate & {}
+export type WithdrawalCrate = Crate & {};
 
 /**
  * A "Silo Balance" provides all information
@@ -63,35 +63,35 @@ export type FarmerSiloBalance = {
   };
   wrapped: BigNumber;
   circulating: BigNumber;
-}
+};
 
 /**
  * "Silo Balances" track the detailed balances of
  * all whitelisted Silo tokens, including the amount
  * of each token deposited, claimable, withdrawn, and circulating.
- * 
+ *
  * FIXME: enforce that `address` is a key of whitelisted tokens?
  */
 export type FarmerSiloBalances = {
   balances: TokenMap<FarmerSiloBalance>;
-}
+};
 
 /**
- * "Silo Rewards" are rewards earned for 
+ * "Silo Rewards" are rewards earned for
  * holding tokens in the Silo.
  */
 export type FarmerSiloRewards = {
   beans: {
     /**
-     * The amount of Beans the Farmer has earned 
+     * The amount of Beans the Farmer has earned
      * from their ownership of the Silo.
      */
     earned: BigNumber;
-  }
+  };
   stalk: {
     /**
      * The total amount of Stalk associated with the Farmer.
-     * 
+     *
      * `total = active + grown`
      */
     total: BigNumber;
@@ -100,10 +100,10 @@ export type FarmerSiloRewards = {
      */
     active: BigNumber;
     /**
-     * Earned Stalk are Stalk granted upon reception of earned 
-     * Beans (since 1 Deposited Bean = 1 Stalk). 
-     * Earned Stalk are also "active" because it increases 
-     * the Farmer's relative ownership in the Silo. 
+     * Earned Stalk are Stalk granted upon reception of earned
+     * Beans (since 1 Deposited Bean = 1 Stalk).
+     * Earned Stalk are also "active" because it increases
+     * the Farmer's relative ownership in the Silo.
      */
     earned: BigNumber;
     /**
@@ -114,16 +114,16 @@ export type FarmerSiloRewards = {
   seeds: {
     /**
      * The total amount of Seeds associated with the Farmer.
-     * 
+     *
      * `total = active`.
      */
     total: BigNumber;
     /**
-     * 
+     *
      */
     active: BigNumber;
-    /** 
-     * Plantable Seeds are Seeds granted upon reception of 
+    /**
+     * Plantable Seeds are Seeds granted upon reception of
      * earned Beans (since 1 Deposited Bean = 2 Stalk).
      */
     earned: BigNumber;
@@ -131,9 +131,6 @@ export type FarmerSiloRewards = {
   roots: {
     total: BigNumber;
   };
-}
+};
 
-export type FarmerSilo = (
-  FarmerSiloBalances 
-  & FarmerSiloRewards
-);
+export type FarmerSilo = FarmerSiloBalances & FarmerSiloRewards;

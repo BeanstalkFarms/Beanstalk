@@ -3,12 +3,12 @@ import { BeanstalkGovernance } from '.';
 import {
   resetBeanstalkGovernance,
   updateActiveProposals,
-  updateMultisigBalances
+  updateMultisigBalances,
 } from './actions';
 
-const initialState : BeanstalkGovernance = {
+const initialState: BeanstalkGovernance = {
   activeProposals: [],
-  multisigBalances: {}
+  multisigBalances: {},
 };
 
 export default createReducer(initialState, (builder) =>

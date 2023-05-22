@@ -6,7 +6,7 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const TxnSeparator : FC<StackProps> = ({ ...props }) => (
+const TxnSeparator: FC<StackProps> = ({ ...props }) => (
   <Row justifyContent="center" {...props}>
     <ExpandMoreIcon width={IconSize.xs} sx={{ color: BeanstalkPalette.blue }} />
   </Row>

@@ -10,16 +10,18 @@ import { FC } from '~/types';
 
 const PaginationItem = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'isActive',
-})<{ isActive: boolean }>(({ isActive, theme }) => theme.unstable_sx({
-  height: '5px',
-  minWidth: '20px',
-  width: '100%',
-  borderRadius: 0.5,
-  background: isActive
-    ? theme.palette.primary.main
-    : BeanstalkPalette.lightestGrey,
-  cursor: 'pointer',
-}));
+})<{ isActive: boolean }>(({ isActive, theme }) =>
+  theme.unstable_sx({
+    height: '5px',
+    minWidth: '20px',
+    width: '100%',
+    borderRadius: 0.5,
+    background: isActive
+      ? theme.palette.primary.main
+      : BeanstalkPalette.lightestGrey,
+    cursor: 'pointer',
+  })
+);
 
 const PaginationArrow: FC<{
   disabled: boolean;
@@ -32,9 +34,9 @@ const PaginationArrow: FC<{
       transform: `rotate(${isRightArrow ? '180' : '0'}deg)`,
       cursor: disabled ? 'default' : 'pointer',
       color: disabled ? 'text.tertiary' : 'text.primary',
-      ':hover': { 
-        color: disabled ? 'text.tertiary' : 'primary.main'
-      }
+      ':hover': {
+        color: disabled ? 'text.tertiary' : 'primary.main',
+      },
     }}
   />
 );

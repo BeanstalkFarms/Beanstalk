@@ -14,9 +14,14 @@ export interface CardEmptyStateProps {
 
 const EmptyState: FC<CardEmptyStateProps & BoxProps> = ({
   message,
-  height
+  height,
 }) => (
-  <Box height={height !== undefined ? height : 300} display="flex" alignItems="center" justifyContent="center">
+  <Box
+    height={height !== undefined ? height : 300}
+    display="flex"
+    alignItems="center"
+    justifyContent="center"
+  >
     <Typography variant="body1" color="gray">
       {message}
     </Typography>

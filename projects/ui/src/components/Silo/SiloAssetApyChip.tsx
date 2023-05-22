@@ -52,11 +52,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
 
   const val = apys ? apys[metric].times(100) : null;
   const displayString = `${
-    val
-      ? val.gt(0) && val.lt(0.1)
-        ? '< 0.1'
-        : val.toFixed(1)
-      : '0.0'
+    val ? (val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)) : '0.0'
   }%`;
 
   return (

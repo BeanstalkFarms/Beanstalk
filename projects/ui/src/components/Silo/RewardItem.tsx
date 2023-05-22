@@ -45,7 +45,12 @@ const RewardItem: FC<RewardItemProps> = ({
       {tooltip && (
         <Tooltip title={tooltip ?? ''} placement="top">
           <HelpOutlineIcon
-            sx={{ display: 'inline', mb: 0.5, fontSize: '11px', color: 'text.secondary' }}
+            sx={{
+              display: 'inline',
+              mb: 0.5,
+              fontSize: '11px',
+              color: 'text.secondary',
+            }}
           />
         </Tooltip>
       )}

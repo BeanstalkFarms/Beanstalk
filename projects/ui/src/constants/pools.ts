@@ -20,8 +20,8 @@ export const BEANCRV3_CURVE_MAINNET = new CurveMetaPool(
     name: 'BEAN:3CRV Pool',
     logo: curveLogo,
     symbol: 'BEAN:3CRV',
-    color: '#ed9f9c'
-  },
+    color: '#ed9f9c',
+  }
 );
 
 // --------------------------------------------------

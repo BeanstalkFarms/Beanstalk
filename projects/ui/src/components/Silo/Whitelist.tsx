@@ -1,16 +1,38 @@
 import React from 'react';
-import { Box, Button, Card, Chip, CircularProgress, Divider, Grid, Link, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  Chip,
+  CircularProgress,
+  Divider,
+  Grid,
+  Link,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Pool, Token } from '~/classes';
 import { AppState } from '~/state';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { BEAN, SEEDS, STALK, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
+import {
+  BEAN,
+  SEEDS,
+  STALK,
+  UNRIPE_BEAN,
+  UNRIPE_BEAN_CRV3,
+} from '~/constants/tokens';
 import { AddressMap, ONE_BN, ZERO_BN } from '~/constants';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import useBDV from '~/hooks/beanstalk/useBDV';
-import { BeanstalkPalette, FontSize, IconSize } from '~/components/App/muiTheme';
+import {
+  BeanstalkPalette,
+  FontSize,
+  IconSize,
+} from '~/components/App/muiTheme';
 import Fiat from '~/components/Common/Fiat';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useSetting from '~/hooks/app/useSetting';
@@ -33,35 +55,36 @@ const TOOLTIP_COMPONENT_PROPS = {
     sx: {
       maxWidth: 'none !important',
       // boxShadow: '0px 6px 20px 10px rgba(255,255,255,0.3) !important'
-    }
-  }
+    },
+  },
 };
 
-const Whitelist : FC<{
+const Whitelist: FC<{
   farmerSilo: AppState['_farmer']['silo'];
   config: {
     whitelist: Token[];
     poolsByAddress: AddressMap<Pool>;
   };
-}> = ({
-  farmerSilo,
-  config,
-}) => {
+}> = ({ farmerSilo, config }) => {
   /// Settings
   const [denomination] = useSetting('denomination');
 
   /// Chain
   const getChainToken = useGetChainToken();
-  const Bean          = getChainToken(BEAN);
-  const urBean        = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3    = getChainToken(UNRIPE_BEAN_CRV3);
+  const Bean = getChainToken(BEAN);
+  const urBean = getChainToken(UNRIPE_BEAN);
+  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   /// State
-  const apyQuery      = useAPY();
-  const getBDV        = useBDV();
-  const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>((state) => state._beanstalk.silo);
-  const unripeTokens  = useSelector<AppState, AppState['_bean']['unripe']>((state) => state._bean.unripe);
+  const apyQuery = useAPY();
+  const getBDV = useBDV();
+  const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
+    (state) => state._beanstalk.silo
+  );
+  const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
+    (state) => state._bean.unripe
+  );
 
   return (
     <Card>

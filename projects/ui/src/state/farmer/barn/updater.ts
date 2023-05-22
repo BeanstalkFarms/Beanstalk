@@ -1,7 +1,10 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import useChainConstant from '~/hooks/chain/useChainConstant';
-import { useBeanstalkContract, useFertilizerContract } from '~/hooks/ledger/useContract';
+import {
+  useBeanstalkContract,
+  useFertilizerContract,
+} from '~/hooks/ledger/useContract';
 import { REPLANT_INITIAL_ID } from '~/hooks/beanstalk/useHumidity';
 import useChainId from '~/hooks/chain/useChainId';
 import { tokenResult } from '~/util';
@@ -16,98 +19,106 @@ import { useFertilizerBalancesLazyQuery } from '~/generated/graphql';
 
 export const useFetchFarmerBarn = () => {
   /// Helpers
-  const dispatch  = useDispatch();
+  const dispatch = useDispatch();
   const replantId = useChainConstant(REPLANT_INITIAL_ID);
 
   /// Contracts
   const [fetchFertBalances] = useFertilizerBalancesLazyQuery();
   const fertContract = useFertilizerContract();
-  const beanstalk    = useBeanstalkContract();
-  const blocks       = useBlocks();
-  const account      = useAccount();
+  const beanstalk = useBeanstalkContract();
+  const blocks = useBlocks();
+  const account = useAccount();
 
   /// Events
-  const getQueryFilters = useCallback<GetQueryFilters>((
-    _account,
-    fromBlock,
-    toBlock,
-  ) => [
-    /// Send FERT
-    fertContract.queryFilter(
-      fertContract.filters.TransferSingle(
-        null,     // operator
-        _account, // from
-        null,     // to
-        null,     // id
-        null,     // value
+  const getQueryFilters = useCallback<GetQueryFilters>(
+    (_account, fromBlock, toBlock) => [
+      /// Send FERT
+      fertContract.queryFilter(
+        fertContract.filters.TransferSingle(
+          null, // operator
+          _account, // from
+          null, // to
+          null, // id
+          null // value
+        ),
+        fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
+        toBlock || 'latest'
       ),
-      fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
-      toBlock   || 'latest',
-    ),
-    fertContract.queryFilter(
-      fertContract.filters.TransferBatch(
-        null,     // operator
-        _account, // from
-        null,     // to
-        null,     // ids
-        null,     // values
+      fertContract.queryFilter(
+        fertContract.filters.TransferBatch(
+          null, // operator
+          _account, // from
+          null, // to
+          null, // ids
+          null // values
+        ),
+        fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
+        toBlock || 'latest'
       ),
-      fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
-      toBlock   || 'latest',
-    ),
-    /// Receive FERT
-    fertContract.queryFilter(
-      fertContract.filters.TransferSingle(
-        null,     // operator
-        null,     // from
-        _account, // to
-        null,     // id
-        null,     // value
+      /// Receive FERT
+      fertContract.queryFilter(
+        fertContract.filters.TransferSingle(
+          null, // operator
+          null, // from
+          _account, // to
+          null, // id
+          null // value
+        ),
+        fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
+        toBlock || 'latest'
       ),
-      fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
-      toBlock   || 'latest',
-    ),
-    fertContract.queryFilter(
-      fertContract.filters.TransferBatch(
-        null,     // operator
-        null,     // from
-        _account, // to
-        null,     // ids
-        null,     // values
+      fertContract.queryFilter(
+        fertContract.filters.TransferBatch(
+          null, // operator
+          null, // from
+          _account, // to
+          null, // ids
+          null // values
+        ),
+        fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
+        toBlock || 'latest'
       ),
-      fromBlock || blocks.FERTILIZER_LAUNCH_BLOCK,
-      toBlock   || 'latest',
-    ),
-  ], [blocks.FERTILIZER_LAUNCH_BLOCK, fertContract]);
+    ],
+    [blocks.FERTILIZER_LAUNCH_BLOCK, fertContract]
+  );
 
   const [fetchEvents] = useEvents(EventCacheName.FERTILIZER, getQueryFilters);
 
-  const initialized = (
-    fertContract
-    && account 
-    && fetchEvents
-  );
+  const initialized = fertContract && account && fetchEvents;
 
-  /// Handlers 
+  /// Handlers
   const fetch = useCallback(async () => {
     if (initialized) {
-      console.debug('[farmer/fertilizer/updater] FETCH: ', replantId.toString());
+      console.debug(
+        '[farmer/fertilizer/updater] FETCH: ',
+        replantId.toString()
+      );
 
-      const query = await fetchFertBalances({ variables: { account }, fetchPolicy: 'network-only', });
-      const balances = query.data?.fertilizerBalances.map(castFertilizerBalance) || [];
+      const query = await fetchFertBalances({
+        variables: { account },
+        fetchPolicy: 'network-only',
+      });
+      const balances =
+        query.data?.fertilizerBalances.map(castFertilizerBalance) || [];
       const idStrings = balances.map((bal) => bal.token.id.toString());
 
-      const [
-        unfertilized,
-        fertilized,
-      ] = await Promise.all([
+      const [unfertilized, fertilized] = await Promise.all([
         /// How much of each ID is Unfertilized (aka a Sprout)
-        beanstalk.balanceOfUnfertilized(account, idStrings).then(tokenResult(SPROUTS)),
+        beanstalk
+          .balanceOfUnfertilized(account, idStrings)
+          .then(tokenResult(SPROUTS)),
         /// How much of each ID is Fertilized   (aka a Fertilized Sprout)
-        beanstalk.balanceOfFertilized(account, idStrings).then(tokenResult(SPROUTS)),
+        beanstalk
+          .balanceOfFertilized(account, idStrings)
+          .then(tokenResult(SPROUTS)),
       ] as const);
 
-      console.debug('[farmer/fertilizer/updater] RESULT: balances =', balances, unfertilized.toString(), fertilized.toString());
+      console.debug(
+        '[farmer/fertilizer/updater] RESULT: balances =',
+        balances,
+        unfertilized.toString(),
+        fertilized.toString()
+      );
 
       /// FIXME: Fallback to `fetchEvents()` if subgraph fails.
       /// Fetch new events and re-run the processor.
@@ -115,7 +126,7 @@ export const useFetchFarmerBarn = () => {
       // const { tokens } = new ERC1155EventProcessor(account, 0).ingestAll(allEvents || []);
       // const ids = Object.keys(tokens);
       // const idStrings = ids.map((id) => id.toString());
-      
+
       /// Key the amount of fertilizer by ID.
       // let sum = ZERO_BN;
       // const fertById = balances.reduce((prev, curr, index) => {
@@ -125,22 +136,17 @@ export const useFetchFarmerBarn = () => {
       // }, {} as { [key: string] : BigNumber });
       // console.debug('[farmer/fertilizer/updater] fertById =', fertById, sum.toString());
 
-      dispatch(updateFarmerBarn({
-        balances,
-        unfertilizedSprouts: unfertilized,
-        fertilizedSprouts:   fertilized,
-      }));
+      dispatch(
+        updateFarmerBarn({
+          balances,
+          unfertilizedSprouts: unfertilized,
+          fertilizedSprouts: fertilized,
+        })
+      );
     }
-  }, [
-    dispatch,
-    beanstalk,
-    replantId,
-    initialized,
-    account,
-    fetchFertBalances,
-  ]); 
+  }, [dispatch, beanstalk, replantId, initialized, account, fetchFertBalances]);
 
-  const clear = useCallback(() => { 
+  const clear = useCallback(() => {
     dispatch(resetFarmerBarn());
   }, [dispatch]);
 

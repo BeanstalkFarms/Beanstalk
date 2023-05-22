@@ -29,7 +29,7 @@ const marketActionsV2Sx = (theme: Theme) => ({
     top: 0,
     right: 0,
     width: SECTION_MAX_WIDTH,
-  }
+  },
 });
 
 const MarketPage: React.FC<{}> = () => {

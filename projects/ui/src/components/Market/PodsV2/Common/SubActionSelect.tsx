@@ -13,7 +13,7 @@ const BUTTON_SX = {
   fontSize: FontSize.xs,
   // https://stackoverflow.com/a/63276424
   '&:disabled': {
-    pointerEvents: 'auto !important'
+    pointerEvents: 'auto !important',
   },
   backgroundColor: undefined,
   '&.Mui-active': {
@@ -27,17 +27,14 @@ const BUTTON_SX = {
 };
 
 const SubActionSelect: FC<{
-  action: 'buy' | 'sell',
+  action: 'buy' | 'sell';
   id?: string;
-}> = ({
-  action,
-  id,
-}) => (
+}> = ({ action, id }) => (
   // Hack: if `id` is present, the user navigated to a specific listing/order,
   // so we switch the selected tab to 1. Otherwise it's 0. Change is handled
   // by NavLink routing to `to` so we don't need a handleChange function.
   <Row gap={0.8}>
-    <Button 
+    <Button
       variant="text"
       component={NavLink}
       to={`/market/${action}`}
@@ -46,9 +43,17 @@ const SubActionSelect: FC<{
     >
       {action === 'buy' ? 'ORDER' : 'LIST'}
     </Button>
-    <Tooltip title={id ? '' : `Select a Pod ${action === 'buy' ? 'Listing' : 'Order'} on the graph to Fill.`}>
+    <Tooltip
+      title={
+        id
+          ? ''
+          : `Select a Pod ${
+              action === 'buy' ? 'Listing' : 'Order'
+            } on the graph to Fill.`
+      }
+    >
       <div>
-        <Button 
+        <Button
           variant="text"
           component={NavLink}
           disabled={!id}

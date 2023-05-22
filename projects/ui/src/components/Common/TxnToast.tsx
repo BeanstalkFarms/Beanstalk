@@ -16,25 +16,53 @@ function dismissErrors(id?: any) {
   }
 }
 
-export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, hash?: string, msg?: string, rawError?: string, id?: any }) {
-  const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
+export function ToastAlert({
+  desc,
+  hash,
+  msg,
+  rawError,
+  id,
+}: {
+  desc?: string;
+  hash?: string;
+  msg?: string;
+  rawError?: string;
+  id?: any;
+}) {
+  const handleClick = useCallback(
+    () => (id !== null ? dismissErrors(id) : dismissErrors()),
+    [id]
+  );
   const chainInfo = useChainConstant(CHAIN_INFO);
   return (
-    <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+    <Box
+      sx={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'row',
+      }}
+    >
       <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
         <span>
           {desc}
           {hash && (
             <>
               &nbsp;
-              <Link href={`${chainInfo.explorer}/tx/${hash}`} target="_blank" rel="noreferrer">View on Etherscan</Link>
+              <Link
+                href={`${chainInfo.explorer}/tx/${hash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View on Etherscan
+              </Link>
             </>
           )}
         </span>
         {msg && (
           <Box
             display="inline"
-            sx={{ 
+            sx={{
               wordBreak: 'break-all',
               'div:first-letter': { textTransform: 'capitalize' },
             }}
@@ -53,10 +81,12 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
             '& svg': {
               width: '18px',
               height: '18px',
-            }
+            },
           }}
           size="small"
-          onClick={() => { navigator.clipboard.writeText(rawError); }}
+          onClick={() => {
+            navigator.clipboard.writeText(rawError);
+          }}
         >
           <ContentCopyIcon />
         </IconButton>
@@ -71,7 +101,7 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string, h
             '& svg': {
               width: '18px',
               height: '18px',
-            }
+            },
           }}
           size="small"
           onClick={handleClick}
@@ -91,7 +121,7 @@ type ToastMessages = {
   loading?: string;
   success?: string;
   error?: string;
-}
+};
 
 /**
  * A lightweight wrapper around react-hot-toast
@@ -106,13 +136,9 @@ export default class TransactionToast {
 
   constructor(messages: ToastMessages) {
     this.messages = messages;
-    this.toastId = toast.loading(
-      <ToastAlert
-        desc={this.messages.loading}
-      />, {
-        duration: Infinity,
-      }
-    );
+    this.toastId = toast.loading(<ToastAlert desc={this.messages.loading} />, {
+      duration: Infinity,
+    });
   }
 
   /**

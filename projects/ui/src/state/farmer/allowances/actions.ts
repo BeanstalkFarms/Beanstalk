@@ -4,8 +4,8 @@ import { Token } from '~/classes';
 
 export type UpdateAllowancePayload = {
   contract: string;
-  token: Token,
-  allowance: BigNumber
+  token: Token;
+  allowance: BigNumber;
 };
 
 export const updateAllowances = createAction<UpdateAllowancePayload[]>(

@@ -2,7 +2,7 @@ import { createReducer } from '@reduxjs/toolkit';
 import { BeanPools } from '.';
 import { resetPools, updateBeanPool, updateBeanPools } from './actions';
 
-const initialState : BeanPools = {};
+const initialState: BeanPools = {};
 
 export default createReducer(initialState, (builder) =>
   builder

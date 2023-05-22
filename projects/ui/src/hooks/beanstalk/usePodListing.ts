@@ -7,18 +7,24 @@ import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 
 const usePodListing = (index: string | undefined) => {
   const farmerListings = useFarmerListingsLedger();
-  const query          = usePodListingQuery({ variables: { index: index || '' }, skip: !index });
+  const query = usePodListingQuery({
+    variables: { index: index || '' },
+    skip: !index,
+  });
   const harvestableIndex = useHarvestableIndex();
   const [data, source] = useMemo(() => {
     if (index && query.data?.podListings?.[0]) {
-      return [castPodListing(query.data.podListings[0], harvestableIndex), Source.SUBGRAPH];
+      return [
+        castPodListing(query.data.podListings[0], harvestableIndex),
+        Source.SUBGRAPH,
+      ];
     }
     if (index && farmerListings[index]) {
       return [farmerListings[index], Source.LOCAL];
     }
     return [undefined, undefined];
   }, [farmerListings, harvestableIndex, index, query.data?.podListings]);
-  
+
   return {
     ...query,
     /// If the query finished loading and has no data,

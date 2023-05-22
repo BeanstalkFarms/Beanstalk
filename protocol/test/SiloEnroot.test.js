@@ -257,5 +257,35 @@ describe('Silo Enroot', function () {
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem11, to6('5'), to6('2.5'));
       });
     });
+
+    describe("2 deposit, round", async function () {
+
+      beforeEach(async function () {
+        await this.silo.connect(user).mockUnripeLPDeposit('0', '1', to18('0.000000083406453'), to6('10'))
+        await this.silo.connect(user).mockUnripeLPDeposit('0', '2', to18('0.000000083406453'), to6('10'))
+        await this.unripe.connect(owner).addUnderlying(UNRIPE_LP, '147796000000000')
+        this.result = await this.silo.connect(user).enrootDeposits(UNRIPE_LP, ['1', '2'], [to6('10'), to6('10')]);
+      })
+  
+      it('properly updates the total balances', async function () {
+        expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('14.845168'));
+      });
+  
+      it('properly updates the user balance', async function () {
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('14.845168'));
+      });
+  
+      it('properly updates the crate', async function () {
+        let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 1);
+        expect(dep[0]).to.equal(to6('10'))
+        expect(dep[1]).to.equal('1855646')
+        dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, 2);
+        expect(dep[0]).to.equal(to6('10'))
+        expect(dep[1]).to.equal('1855646')
+      });
+    });
   });
 });

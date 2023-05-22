@@ -5,8 +5,8 @@ import { castPodOrder } from '~/state/farmer/market';
 import useFarmerOrdersLedger from '../farmer/useFarmerOrdersLedger';
 
 const usePodOrder = (id: string | undefined) => {
-  const farmerOrders   = useFarmerOrdersLedger();
-  const query          = usePodOrderQuery({ variables: { id: id || '' }, skip: !id });
+  const farmerOrders = useFarmerOrdersLedger();
+  const query = usePodOrderQuery({ variables: { id: id || '' }, skip: !id });
   const [data, source] = useMemo(() => {
     if (id && query.data?.podOrder) {
       return [castPodOrder(query.data.podOrder), Source.SUBGRAPH];
@@ -16,7 +16,7 @@ const usePodOrder = (id: string | undefined) => {
     }
     return [undefined, undefined];
   }, [farmerOrders, id, query.data?.podOrder]);
-  
+
   return {
     ...query,
     /// If the query finished loading and has no data,

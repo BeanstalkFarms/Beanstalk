@@ -2,7 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { StyledDialog, StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '../Common/Dialog';
+import {
+  StyledDialog,
+  StyledDialogActions,
+  StyledDialogContent,
+  StyledDialogTitle,
+} from '../Common/Dialog';
 import { AppState } from '~/state';
 import { ActiveProposal } from '~/state/beanstalk/governance';
 import { displayBN } from '~/util';
@@ -21,11 +26,19 @@ const NewProposalsDialog: FC<{}> = () => {
   /// Local state
   const [modalOpen, showModal, hideModal] = useToggle();
   const [unseenProposals, setUnseenProposals] = useState<ActiveProposal[]>([]);
-  const [getLastSeen, setLastSeen] = useAppFlag<number>('last_gov_prompt', 'int', 0);
+  const [getLastSeen, setLastSeen] = useAppFlag<number>(
+    'last_gov_prompt',
+    'int',
+    0
+  );
 
   /// State
-  const activeProposals = useSelector<AppState, ActiveProposal[]>((state) => state._beanstalk.governance.activeProposals);
-  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>((state) => state._farmer.silo);
+  const activeProposals = useSelector<AppState, ActiveProposal[]>(
+    (state) => state._beanstalk.governance.activeProposals
+  );
+  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
+    (state) => state._farmer.silo
+  );
 
   const dismiss = useCallback(() => {
     setLastSeen(Math.floor(new Date().getTime() / 1000));
@@ -34,28 +47,24 @@ const NewProposalsDialog: FC<{}> = () => {
 
   useEffect(() => {
     const lastSeen = getLastSeen();
-    const _unseenProposals = activeProposals.filter(
-      (p) => p.start > lastSeen,
-    );
+    const _unseenProposals = activeProposals.filter((p) => p.start > lastSeen);
     if (_unseenProposals.length > 0) {
       setUnseenProposals(_unseenProposals);
       showModal(true);
     }
   }, [activeProposals, getLastSeen, setLastSeen, showModal]);
 
-  const destination = unseenProposals.length === 1
-    ? `/governance/${unseenProposals[0].id}`
-    : '/governance';
-  const buttonText = unseenProposals.length === 1
-    ? `View ${getProposalTag(unseenProposals[0].title) || 'proposal'}`
-    : 'View proposals';
+  const destination =
+    unseenProposals.length === 1
+      ? `/governance/${unseenProposals[0].id}`
+      : '/governance';
+  const buttonText =
+    unseenProposals.length === 1
+      ? `View ${getProposalTag(unseenProposals[0].title) || 'proposal'}`
+      : 'View proposals';
 
   return (
-    <StyledDialog
-      onClose={dismiss}
-      open={modalOpen}
-      fullWidth
-    >
+    <StyledDialog onClose={dismiss} open={modalOpen} fullWidth>
       <StyledDialogTitle onClose={dismiss}>
         New governance proposals
       </StyledDialogTitle>
@@ -70,7 +79,11 @@ const NewProposalsDialog: FC<{}> = () => {
         </Box>
         <Stack gap={0.5}>
           {unseenProposals.map((p) => (
-            <Row key={p.id} alignItems="flex-start" justifyContent="space-between">
+            <Row
+              key={p.id}
+              alignItems="flex-start"
+              justifyContent="space-between"
+            >
               <Typography>{p.title}</Typography>
               <Typography variant="body2" whiteSpace="nowrap" fontWeight="bold">
                 Ends {getDateCountdown(p.end * 1000)[0]}
@@ -80,12 +93,7 @@ const NewProposalsDialog: FC<{}> = () => {
         </Stack>
       </StyledDialogContent>
       <StyledDialogActions sx={{ gap: 1 }}>
-        <Button
-          onClick={dismiss}
-          fullWidth
-          color="primary"
-          variant="outlined"
-        >
+        <Button onClick={dismiss} fullWidth color="primary" variant="outlined">
           <Typography variant="body1">Not now</Typography>
         </Button>
         <Button onClick={dismiss} component={Link} to={destination} fullWidth>

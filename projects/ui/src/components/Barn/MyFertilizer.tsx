@@ -36,25 +36,36 @@ enum TabState {
 
 const MyFertilizer: FC<{}> = () => {
   /// Data
-  const beanstalkBarn = useSelector<AppState, AppState['_beanstalk']['barn']>((state) => state._beanstalk.barn);
-  const farmerBarn = useSelector<AppState, AppState['_farmer']['barn']>((state) => state._farmer.barn);
+  const beanstalkBarn = useSelector<AppState, AppState['_beanstalk']['barn']>(
+    (state) => state._beanstalk.barn
+  );
+  const farmerBarn = useSelector<AppState, AppState['_farmer']['barn']>(
+    (state) => state._farmer.barn
+  );
 
   /// Helpers
   const [tab, handleChange] = useTabs();
-  const pctRepaid = useCallback((balance: FertilizerBalance) => (
-    MinBN(
-      (beanstalkBarn.currentBpf.minus(balance.token.startBpf))
-        .div(balance.token.id.minus(balance.token.startBpf)),
-      ONE_BN
-    )
-  ), [beanstalkBarn.currentBpf]);
+  const pctRepaid = useCallback(
+    (balance: FertilizerBalance) =>
+      MinBN(
+        beanstalkBarn.currentBpf
+          .minus(balance.token.startBpf)
+          .div(balance.token.id.minus(balance.token.startBpf)),
+        ONE_BN
+      ),
+    [beanstalkBarn.currentBpf]
+  );
 
-  const filteredBalances = useMemo(() => farmerBarn.balances?.filter((balance) => {
-    const pct = pctRepaid(balance);
-    if (tab === TabState.ACTIVE && pct.gte(1)) return false;
-    if (tab === TabState.USED && pct.lt(1)) return false;
-    return true;
-  }) || [], [farmerBarn.balances, pctRepaid, tab]);
+  const filteredBalances = useMemo(
+    () =>
+      farmerBarn.balances?.filter((balance) => {
+        const pct = pctRepaid(balance);
+        if (tab === TabState.ACTIVE && pct.gte(1)) return false;
+        if (tab === TabState.USED && pct.lt(1)) return false;
+        return true;
+      }) || [],
+    [farmerBarn.balances, pctRepaid, tab]
+  );
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -65,15 +76,12 @@ const MyFertilizer: FC<{}> = () => {
       <Stack sx={{ p: 2 }} gap={1}>
         <Typography variant="h4">Fertilizer</Typography>
         <Stack gap={1}>
-          <Row
-            alignItems="center"
-            justifyContent="space-between"
-          >
+          <Row alignItems="center" justifyContent="space-between">
             <Typography variant="body1">
               Sprouts&nbsp;
               <Tooltip
                 title="The number of Beans left to be earned from your Fertilizer. Sprouts become Rinsable on a pari passu basis."
-                placement={isMobile ? "top" : "bottom"}
+                placement={isMobile ? 'top' : 'bottom'}
               >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
@@ -84,20 +92,18 @@ const MyFertilizer: FC<{}> = () => {
               <TokenIcon token={SPROUTS} />
               <Typography>
                 {displayFullBN(
-                  MaxBN(farmerBarn.unfertilizedSprouts, ZERO_BN), SPROUTS.displayDecimals
+                  MaxBN(farmerBarn.unfertilizedSprouts, ZERO_BN),
+                  SPROUTS.displayDecimals
                 )}
               </Typography>
             </Row>
           </Row>
-          <Row
-            alignItems="center"
-            justifyContent="space-between"
-          >
+          <Row alignItems="center" justifyContent="space-between">
             <Typography variant="body1">
               Rinsable Sprouts&nbsp;
               <Tooltip
                 title="Sprouts that are redeemable for 1 Bean each. Rinsable Sprouts must be Rinsed in order to use them."
-                placement={isMobile ? "top" : "bottom"}
+                placement={isMobile ? 'top' : 'bottom'}
               >
                 <HelpOutlineIcon
                   sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
@@ -108,7 +114,8 @@ const MyFertilizer: FC<{}> = () => {
               <TokenIcon token={RINSABLE_SPROUTS} />
               <Typography>
                 {displayFullBN(
-                  MaxBN(farmerBarn.fertilizedSprouts, ZERO_BN), RINSABLE_SPROUTS.displayDecimals
+                  MaxBN(farmerBarn.fertilizedSprouts, ZERO_BN),
+                  RINSABLE_SPROUTS.displayDecimals
                 )}
               </Typography>
             </Row>
@@ -135,7 +142,9 @@ const MyFertilizer: FC<{}> = () => {
                 const pct = pctRepaid(balance);
                 const status = pct.eq(1) ? 'used' : 'active';
                 const humidity = balance.token.humidity;
-                const debt = balance.amount.multipliedBy(humidity.div(100).plus(1));
+                const debt = balance.amount.multipliedBy(
+                  humidity.div(100).plus(1)
+                );
                 const sprouts = debt.multipliedBy(ONE_BN.minus(pct));
                 const rinsableSprouts = debt.multipliedBy(pct);
                 return (
@@ -156,7 +165,12 @@ const MyFertilizer: FC<{}> = () => {
               })}
             </Grid>
           ) : (
-            <EmptyState message={`Your ${tab === 0 ? 'Active' : 'Used'} Fertilizer will appear here.`} height={150} />
+            <EmptyState
+              message={`Your ${
+                tab === 0 ? 'Active' : 'Used'
+              } Fertilizer will appear here.`}
+              height={150}
+            />
           )}
         </Box>
       </Stack>

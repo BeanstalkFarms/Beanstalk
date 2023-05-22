@@ -18,4 +18,4 @@ export type BeanstalkBarn = {
    * of Fertilizer debt that has been repaid.
    */
   fertilized: BigNumber;
-}
+};
