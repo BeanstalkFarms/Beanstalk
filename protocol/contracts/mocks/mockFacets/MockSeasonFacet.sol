@@ -268,6 +268,7 @@ contract MockSeasonFacet is SeasonFacet {
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
         uint32 currentSeason = s.season.current;
+        delete s.s.deprecated_seeds;
 
         s.ss[C.BEAN].stalkEarnedPerSeason = 2*1e6;
         s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
