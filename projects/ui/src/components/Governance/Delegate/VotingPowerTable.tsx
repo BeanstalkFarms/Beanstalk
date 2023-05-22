@@ -47,7 +47,7 @@ const FarmerRow: React.FC<{
     ) : (
       <Row gap={0.3}>
         <TokenIcon token={STALK} css={{ height: IconSize.xs }} />
-        <Typography>{displayBN(amount)} STALK</Typography>
+        <Typography>{amount.lt(1) ? '<1' : displayBN(amount)} STALK</Typography>
       </Row>
     )}
   </Row>
