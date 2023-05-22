@@ -191,8 +191,8 @@ const WithdrawForm: FC<
                     },
                     {
                       type: ActionType.UPDATE_SILO_REWARDS,
-                      stalk: toBN(withdrawResult.stalk),
-                      seeds: toBN(withdrawResult.seeds),
+                      stalk: toBN(withdrawResult.stalk.mul(-1)),
+                      seeds: toBN(withdrawResult.seeds.mul(-1)),
                     },
                     {
                       type: ActionType.IN_TRANSIT,
