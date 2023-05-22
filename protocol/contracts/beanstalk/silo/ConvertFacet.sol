@@ -217,7 +217,7 @@ contract ConvertFacet is ReentrancyGuard {
                 // remainder BDV for the last Deposit.
                 depositBdv = newTotalBdv.sub(bdvAdded);
             } else {
-                // bdb is a proportional amount of the total bdv.
+                // depositBdv is a proportional amount of the total bdv.
                 // Cheaper than calling the BDV function multiple times.
                 depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
             }
