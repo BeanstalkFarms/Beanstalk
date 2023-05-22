@@ -13,6 +13,10 @@ type StyleProps = {
   padding?: string;
 };
 
+// This component supports accepting either an imagine in two ways:
+// -- as a string url via `src`
+// -- as an SVG component via `component`. See src/components/Icons.tsx
+// for acceptable components
 export const ImageButton: FC<Props> = ({ size = 32, src, component, alt = "Image", onClick, padding }) => {
   return (
     <Button onClick={onClick} padding={padding}>

@@ -1,6 +1,7 @@
 import { Well } from "@beanstalk/sdk/Wells";
 import React from "react";
 import { AddEvent, EVENT_TYPE, RemoveEvent, SwapEvent, WellEvent } from "src/wells/useWellHistory";
+import { Row, Td } from "../Table";
 
 export const renderEvent = (event: WellEvent, well: Well) => {
   let action;
@@ -36,11 +37,12 @@ export const renderEvent = (event: WellEvent, well: Well) => {
       break;
   }
   return (
-    <tr key={event.tx}>
-      <td>{action}</td>
-      <td>{description}</td>
-      <td>{time}</td>
-    </tr>
+    <Row key={event.tx}>
+      <Td>{action}</Td>
+      <Td>-</Td>
+      <Td>{description}</Td>
+      <Td>{time || event.block}</Td>
+    </Row>
   );
 };
 
