@@ -21,7 +21,7 @@ import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
  * @notice Contains functions for minting, burning, and transferring of
  * Stalk and Roots within the Silo.
  *
- * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
+ * @dev Here, we refer to "minting" as the combination of
  * increasing the total balance of Stalk/Roots, as well as allocating
  * them to a particular account. However, in other places throughout Beanstalk
  * (like during the Sunrise), Beanstalk's total balance of Stalk increases
