@@ -39,14 +39,10 @@ export type Sun = {
     index: BigNumber;
   };
   morningTime: {
-    /** Whether we are awaiting morning field updates / confirmed block updates */
-    awaiting: boolean;
     /** the Duration remaining until the next block update  */
     remaining: Duration;
     /** The DateTime of the next expected block update */
     next: DateTime;
-    /** */
-    endTime: DateTime;
   };
 };
 
@@ -94,21 +90,31 @@ export const getMorningResult = ({
 }: BlockInfo): Pick<Sun, 'morning' | 'morningTime'> => {
   const sunriseSecs = sunriseTime.toSeconds();
   const nowSecs = getNowRounded().toSeconds();
-
   const secondsDiff = nowSecs - sunriseSecs;
   const index = new BigNumber(Math.floor(secondsDiff / APPROX_SECS_PER_BLOCK));
   const isMorning = index.lt(25) && index.gte(0) && sunriseBlock.gt(0);
 
   const blockNumber = sunriseBlock.plus(index);
-
-  const endTime = sunriseTime.plus({ minutes: 5 });
   const seconds = index.times(12).toNumber();
   const curr = sunriseTime.plus({ seconds });
 
   const next = getNextExpectedBlockUpdate(curr);
   const remaining = getDiffNow(next);
 
-  const awaiting = remaining.as('seconds') === APPROX_SECS_PER_BLOCK;
+  const printResult = {
+    morningTime: {
+      remaining: remaining.as('seconds'),
+      next: next.toLocaleString(DateTime.TIME_WITH_SECONDS),
+    },
+    morning: {
+      interval: index.plus(1).toNumber(),
+      index: index.toNumber(),
+      isMorning: isMorning,
+      blockNumber: blockNumber.toNumber(),
+    },
+  };
+
+  console.log('[getMorningResult]: morningResult', printResult);
 
   return {
     morning: {
@@ -119,8 +125,6 @@ export const getMorningResult = ({
     morningTime: {
       next,
       remaining,
-      awaiting,
-      endTime,
     },
   };
 };
