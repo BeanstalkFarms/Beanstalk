@@ -9,7 +9,7 @@ const WELL_ABI = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../src/c
 const AQUIFER_ABI = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../src/constants/abi/Aquifer.json"), "utf8"));
 const MOCK_PUMP_ABI = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../src/constants/abi/MockPump.json"), "utf8"));
 const CONSTANT_PRODUCT_WELL_FUNCTION_ABI = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, "../../src/constants/abi/ConstantProduct2.json"), "utf8")
+  fs.readFileSync(path.resolve(__dirname, "../../src/constants/abi/ConstantProduct.json"), "utf8")
 );
 
 export interface Call {

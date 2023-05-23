@@ -14,6 +14,8 @@ export class Tokens {
   WETH: ERC20Token;
   BEAN: ERC20Token;
   USDC: ERC20Token;
+  DAI: ERC20Token;
+  USDT: ERC20Token;
 
   constructor(sdk: WellsSDK) {
     Tokens.sdk = sdk;
@@ -67,6 +69,36 @@ export class Tokens {
     );
 
     this.tokens.add(this.USDC);
+
+    // DAI
+    this.DAI = new ERC20Token(
+      cid,
+      sdk.addresses.DAI.get(Tokens.sdk.chainId),
+      18,
+      "DAI",
+      {
+        name: "Dai Stablecoin",
+        displayDecimals: 4
+      },
+      provider
+    );
+
+    this.tokens.add(this.DAI);
+
+    // USDT
+    this.USDT = new ERC20Token(
+      cid,
+      sdk.addresses.USDT.get(Tokens.sdk.chainId),
+      6,
+      "USDT",
+      {
+        name: "Tether USD",
+        displayDecimals: 2
+      },
+      provider
+    );
+
+    this.tokens.add(this.USDT);
   }
 
   /**

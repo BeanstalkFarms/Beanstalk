@@ -42,6 +42,8 @@ export class BlockchainUtils {
       this.setUSDCBalance(account, this.sdk.tokens.USDC.amount(amount)),
       this.setWETHBalance(account, this.sdk.tokens.WETH.amount(amount)),
       this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
+      this.setUSDTBalance(account, this.sdk.tokens.USDT.amount(amount)),
+      this.setDAIBalance(account, this.sdk.tokens.DAI.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
@@ -56,12 +58,20 @@ export class BlockchainUtils {
   async setBEANBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN, account, balance);
   }
+  async setDAIBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.DAI, account, balance);
+  }
+  async setUSDTBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.USDT, account, balance);
+  }
 
   private getBalanceConfig(tokenAddress: string) {
     const slotConfig = new Map();
     slotConfig.set(this.sdk.tokens.USDC.address, [9, false]);
     slotConfig.set(this.sdk.tokens.WETH.address, [3, false]);
     slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.USDT.address, [2, false]);
+    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
     return slotConfig.get(tokenAddress);
   }
 
