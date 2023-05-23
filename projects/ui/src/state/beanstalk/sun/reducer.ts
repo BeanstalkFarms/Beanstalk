@@ -14,7 +14,6 @@ import {
   resetSun,
   updateSeasonResult,
   setRemainingUntilBlockUpdate,
-  setAwaitingMorningBlock,
   setMorning,
 } from './actions';
 
@@ -79,9 +78,6 @@ export default createReducer(initialState, (builder) =>
     .addCase(setMorning, (state, { payload }) => {
       state.morning = payload.morning;
       state.morningTime = payload.morningTime;
-    })
-    .addCase(setAwaitingMorningBlock, (state, { payload }) => {
-      state.morningTime.awaiting = payload;
     })
     .addCase(setRemainingUntilBlockUpdate, (state, { payload }) => {
       state.morningTime.remaining = payload;
