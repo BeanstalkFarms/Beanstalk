@@ -420,11 +420,13 @@ library LibLegacyTokenSilo {
 
         //stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
         //the amount of stalk that has grown since then
-        uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON)).mul(seedsDiff).add(stalkDiff);
+        if (seedsDiff > 0) {
+            uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON)).mul(seedsDiff).add(stalkDiff);
 
-        //emit the stalk variance
-        if (currentStalkDiff > 0) {
-            LibSilo.burnStalk(account, currentStalkDiff);
+            //emit the stalk variance
+            if (currentStalkDiff > 0) {
+                LibSilo.burnStalk(account, currentStalkDiff);
+            }
         }
     }
 
