@@ -319,7 +319,7 @@ const DepositPropProvider: FC<{
   const initTokenList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [tokens.ETH, tokens.BEAN];
+      return [tokens.BEAN, tokens.ETH, tokens.WETH, tokens.CRV3, tokens.DAI, tokens.USDC, tokens.USDT];
     }
     return [
       tokens.BEAN,
