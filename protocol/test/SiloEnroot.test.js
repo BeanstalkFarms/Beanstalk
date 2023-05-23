@@ -143,6 +143,7 @@ describe('Silo Enroot', function () {
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')).div('10000'));
         expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
       });
 
@@ -189,6 +190,7 @@ describe('Silo Enroot', function () {
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('5.001'));
       });
 
@@ -235,6 +237,7 @@ describe('Silo Enroot', function () {
 
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('5.0005'));
         //expect(await this.silo.totalSeeds()).to.eq(to6('10'));
       });

@@ -111,11 +111,6 @@ library LibSilo {
         uint256 bdvRemoved;
     }
 
-    struct AssetsAdded {
-        uint256 stalkAdded;
-        uint256 bdvAdded;
-    }
-
     /**
      * @notice Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
      * transfers.

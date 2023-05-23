@@ -188,7 +188,7 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, ) = LibSilo._removeDepositFromAccount(
+        (uint256 stalkRemoved, uint256 bdvRemoved) = LibSilo._removeDepositFromAccount(
             account,
             address(token),
             stem,
@@ -200,6 +200,7 @@ contract TokenSilo is Silo {
             account,
             address(token),
             amount,
+            bdvRemoved,
             stalkRemoved
         );
     }
@@ -242,6 +243,7 @@ contract TokenSilo is Silo {
             account,
             token,
             ar.tokensRemoved,
+            ar.bdvRemoved,
             ar.stalkRemoved
         );
 
@@ -257,9 +259,10 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount,
+        uint256 bdv,
         uint256 stalk
     ) private {
-        LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited in the silo.
+        LibTokenSilo.decrementTotalDeposited(token, amount, bdv); // Decrement total Deposited in the silo.
         LibSilo.burnStalk(account, stalk); // Burn stalk and roots associated with the stalk.
     }
 
@@ -413,6 +416,13 @@ contract TokenSilo is Silo {
      */
     function getTotalDeposited(address token) external view returns (uint256) {
         return s.siloBalances[token].deposited;
+    }
+
+    /**
+     * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
+     */
+    function getTotalDepositedBdv(address token) external view returns (uint256) {
+        return s.siloBalances[token].depositedBdv;
     }
 
     /**
