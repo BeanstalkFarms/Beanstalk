@@ -209,7 +209,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
         })
 
         console.log('-----------------------------')
-        console.log('checking: ', account)
+        console.log('stalk balance checking: ', account)
         console.log(`Found: ${lpEvent.length} events`)
 
         //////////////////////////////////////////////////////////////
@@ -362,7 +362,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
     })
 
     console.log('-----------------------------')
-    console.log('checking: ', account)
+    console.log('seed balance checking: ', account)
     console.log(`Found: ${seedChangedEvents.length} events`)
 
     let changed = [];
@@ -469,6 +469,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
         //load stalk balance changed from disk
         let stalkChanges = JSON.parse(await fs.readFileSync(__dirname + '/data/stalk_balance_changed.json'));
+        console.log('stalkChanges: ', stalkChanges);
 
         //load seed balance changed from disk
         let seedChanges = JSON.parse(await fs.readFileSync(__dirname + '/data/seed_balance_changed.json'));
@@ -532,14 +533,18 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
 
             //add up all the stalk balance changes from pre-migration
             let stalkBalanceChangedSum = BigNumber.from(0);
-            for (let i = 0; i < stalkChanges[depositorAddress].length; i++) {
-              stalkBalanceChangedSum = stalkBalanceChangedSum.add(stalkChanges[depositorAddress][i]);
+            if (stalkChanges[depositorAddress]) {
+              for (let i = 0; i < stalkChanges[depositorAddress].length; i++) {
+                stalkBalanceChangedSum = stalkBalanceChangedSum.add(stalkChanges[depositorAddress][i]);
+              }
             }
 
             //add up all the seed balance changes from pre-migration
             let seedBalanceChangedSum = BigNumber.from(0);
-            for (let i = 0; i < seedChanges[depositorAddress].length; i++) {
-              seedBalanceChangedSum = seedBalanceChangedSum.add(seedChanges[depositorAddress][i]);
+            if (seedChanges[depositorAddress]) {
+              for (let i = 0; i < seedChanges[depositorAddress].length; i++) {
+                seedBalanceChangedSum = seedBalanceChangedSum.add(seedChanges[depositorAddress][i]);
+              }
             }
 
             //add up all the StalkBalanceChanged events emitted from migrateResult

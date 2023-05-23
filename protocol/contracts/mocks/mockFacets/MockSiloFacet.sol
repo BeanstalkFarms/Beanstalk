@@ -286,6 +286,7 @@ contract MockSiloFacet is SiloFacet {
 
     function beanDenominatedValueLegacy(address token, uint256 amount)
         internal
+        view
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -296,7 +297,7 @@ contract MockSiloFacet is SiloFacet {
             amount
         );
 
-        (bool success, bytes memory data) = address(this).call(
+        (bool success, bytes memory data) = address(this).staticcall(
             callData
         );
 

@@ -279,6 +279,7 @@ library LibTokenSilo {
      */
     function beanDenominatedValue(address token, uint256 amount)
         internal
+        view
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -289,7 +290,7 @@ library LibTokenSilo {
             amount
         );
 
-        (bool success, bytes memory data) = address(this).call(
+        (bool success, bytes memory data) = address(this).staticcall(
             callData
         );
 
