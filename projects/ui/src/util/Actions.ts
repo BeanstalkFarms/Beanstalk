@@ -30,6 +30,7 @@ export enum ActionType {
   HARVEST,
   RECEIVE_BEANS,
   TRANSFER_PODS,
+  TRANSFER_MULTIPLE_PLOTS,
 
   /// MARKET
   CREATE_ORDER,
@@ -186,6 +187,13 @@ export type TransferPodsAction = {
   placeInLine: BigNumber;
 };
 
+export type TransferMultiplePlotsAction = {
+  type: ActionType.TRANSFER_MULTIPLE_PLOTS;
+  amount: BigNumber;
+  address: string;
+  plots: number;
+};
+
 /// ////////////////////////////// MARKET /////////////////////////////////
 
 export type CreateOrderAction = {
@@ -252,6 +260,7 @@ export type Action =
   | ReceiveBeansAction
   | BuyBeansAction
   | TransferPodsAction
+  | TransferMultiplePlotsAction
   /// MARKET
   | CreateOrderAction
   | BuyPodsAction
@@ -374,6 +383,10 @@ export const parseActionMessage = (a: Action) => {
       return `Transfer ${displayTokenAmount(a.amount, PODS)} at ${displayBN(
         a.placeInLine
       )} in Line to ${a.address}.`;
+    case ActionType.TRANSFER_MULTIPLE_PLOTS:
+      return `Transfer ${displayTokenAmount(a.amount, PODS)} in ${
+        a.plots
+      } Plots to ${a.address}.`;
 
     /// BARN
     case ActionType.RINSE:

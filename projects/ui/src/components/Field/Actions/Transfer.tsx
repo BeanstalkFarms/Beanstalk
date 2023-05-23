@@ -29,13 +29,17 @@ import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { FC } from '~/types';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
+import { StepGenerator } from '@beanstalk/sdk';
+import { ethers } from 'ethers';
 
 export type TransferFormValues = {
   plot: PlotFragment;
   to: string | null;
+  selectedPlots: PlotFragment[];
   settings: PlotSettingsFragment & {
     slippage: number; // 0.1%
   };
+  totalAmount: BigNumber;
 };
 
 export interface SendFormProps {}
@@ -58,7 +62,7 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
   return (
     <Form autoComplete="off">
       <Stack gap={1}>
-        <PlotInputField plots={plots} />
+        <PlotInputField plots={plots} multiSelect />
         {plot.index && (
           <FieldWrapper label="Transfer to">
             <AddressInputField name="to" />
@@ -69,30 +73,54 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
           <>
             <TxnSeparator />
             <TokenOutput>
-              <TokenOutput.Row
-                amount={plot.amount.negated()}
-                token={sdk.tokens.PODS}
-              />
+              {values.selectedPlots !== undefined &&
+              values.selectedPlots.length > 1 ? (
+                <TokenOutput.Row
+                  amount={values.totalAmount.negated()}
+                  token={sdk.tokens.PODS}
+                />
+              ) : (
+                <TokenOutput.Row
+                  amount={plot.amount.negated()}
+                  token={sdk.tokens.PODS}
+                />
+              )}
             </TokenOutput>
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
                 <AccordionDetails>
                   <TxnPreview
-                    actions={[
-                      {
-                        type: ActionType.TRANSFER_PODS,
-                        amount: plot.amount || ZERO_BN,
-                        address: values.to !== null ? values.to : '',
-                        placeInLine: new BigNumber(plot.index)
-                          .minus(harvestableIndex)
-                          .plus(plot.start),
-                      },
-                      {
-                        type: ActionType.END_TOKEN,
-                        token: PODS,
-                      },
-                    ]}
+                    actions={
+                      values.selectedPlots !== undefined &&
+                      values.selectedPlots.length > 1
+                        ? [
+                            {
+                              type: ActionType.TRANSFER_MULTIPLE_PLOTS,
+                              amount: values.totalAmount || ZERO_BN,
+                              address: values.to !== null ? values.to : '',
+                              plots: values.selectedPlots.length,
+                            },
+                            {
+                              type: ActionType.END_TOKEN,
+                              token: PODS,
+                            },
+                          ]
+                        : [
+                            {
+                              type: ActionType.TRANSFER_PODS,
+                              amount: plot.amount || ZERO_BN,
+                              address: values.to !== null ? values.to : '',
+                              placeInLine: new BigNumber(plot.index)
+                                .minus(harvestableIndex)
+                                .plus(plot.start),
+                            },
+                            {
+                              type: ActionType.END_TOKEN,
+                              token: PODS,
+                            },
+                          ]
+                    }
                   />
                 </AccordionDetails>
               </Accordion>
@@ -121,6 +149,9 @@ const Transfer: FC<{}> = () => {
   const account = useAccount();
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
+  const sdk = useSdk();
+  const workflow = sdk.farm.create('Multi Plot Transfer!', 'beanstalk');
+  const _beanstalk = sdk.contracts.beanstalk;
 
   /// Farmer
   const [refetchFarmerField] = useFetchFarmerField();
@@ -135,6 +166,8 @@ const Transfer: FC<{}> = () => {
         end: null,
         amount: null,
       },
+      selectedPlots: [],
+      totalAmount: BigNumber(0),
       to: null,
       settings: {
         slippage: 0.1, // 0.1%
@@ -162,23 +195,73 @@ const Transfer: FC<{}> = () => {
         if (!to || !index || !start || !end || !amount)
           throw new Error('Missing data.');
 
-        const call = beanstalk.transferPlot(
-          account,
-          to.toString(),
-          toStringBaseUnitBN(index, PODS.decimals),
-          toStringBaseUnitBN(start, PODS.decimals),
-          toStringBaseUnitBN(end, PODS.decimals)
-        );
+        let txn;
 
-        txToast = new TransactionToast({
-          loading: `Transferring ${displayFullBN(
-            amount.abs(),
-            PODS.decimals
-          )} Pods to ${trimAddress(to, true)}...`,
-          success: 'Plot Transfer successful.',
-        });
+        if (values.selectedPlots.length === 1) {
+          txToast = new TransactionToast({
+            loading: `Transferring ${displayFullBN(
+              amount.abs(),
+              PODS.decimals
+            )} Pods to ${trimAddress(to, true)}...`,
+            success: 'Plot Transfer successful.',
+          });
 
-        const txn = await call;
+          const call = beanstalk.transferPlot(
+            account,
+            to.toString(),
+            toStringBaseUnitBN(index, PODS.decimals),
+            toStringBaseUnitBN(start, PODS.decimals),
+            toStringBaseUnitBN(end, PODS.decimals)
+          );
+          txn = await call;
+        } else {
+          for (let i = 0; i < values.selectedPlots.length; i++) {
+            let index = values.selectedPlots[i].index!;
+            let start = values.selectedPlots[i].start!;
+            let end = values.selectedPlots[i].end!;
+            let data: StepGenerator = (_amountInStep) => ({
+              name: 'transferPlot',
+              amountOut: _amountInStep,
+              prepare: () => ({
+                target: _beanstalk.address,
+                callData: _beanstalk.interface.encodeFunctionData(
+                  'transferPlot',
+                  [
+                    account,
+                    to.toString(),
+                    toStringBaseUnitBN(index, PODS.decimals),
+                    toStringBaseUnitBN(start, PODS.decimals),
+                    toStringBaseUnitBN(end, PODS.decimals),
+                  ]
+                ),
+              }),
+              decode: (data: string) =>
+                _beanstalk.interface.decodeFunctionResult('transferPlot', data),
+              decodeResult: (result: string) =>
+                _beanstalk.interface.decodeFunctionResult(
+                  'transferPlot',
+                  result
+                ),
+            });
+            workflow.add(data);
+          }
+
+          txToast = new TransactionToast({
+            loading: `Transferring ${displayFullBN(
+              values.totalAmount.abs(),
+              PODS.decimals
+            )} Pods in ${values.selectedPlots.length} Plots to ${trimAddress(
+              to,
+              true
+            )}...`,
+            success: 'Multi Plot Transfer successful.',
+          });
+
+          txn = await workflow.execute(ethers.BigNumber.from(0), {
+            slippage: values.settings.slippage,
+          });
+        }
+
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -186,6 +269,7 @@ const Transfer: FC<{}> = () => {
 
         txToast.success(receipt);
         formActions.resetForm();
+        values.selectedPlots = [];
       } catch (err) {
         if (txToast) {
           txToast.error(err);
