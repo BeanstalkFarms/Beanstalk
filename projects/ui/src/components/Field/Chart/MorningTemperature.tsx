@@ -209,7 +209,6 @@ const Chart: React.FC<Props> = ({
                 width={barWidth}
                 height={barHeight}
                 className={className}
-                cursor="pointer"
                 radius={0}
                 top
                 onMouseEnter={() => onHover(d)}

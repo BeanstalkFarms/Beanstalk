@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Stack, Typography, Box } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Link } from 'react-router-dom';
-import { displayFullBN } from '~/util';
+import { displayFullBN, normalizeBN } from '~/util';
 import EmbeddedCard from '../Common/EmbeddedCard';
 import Row from '../Common/Row';
 import TokenIcon from '../Common/TokenIcon';
@@ -43,7 +43,7 @@ const FieldInfo: React.FC<{}> = () => {
               <Typography>Harvested Pods:</Typography>
               <TokenIcon token={PODS} />
               <Typography component="span" variant="h4">
-                {displayFullBN(harvestableIndex, 0)}
+                {displayFullBN(normalizeBN(harvestableIndex), 0)}
               </Typography>
             </Row>
             <Typography color="text.secondary">
