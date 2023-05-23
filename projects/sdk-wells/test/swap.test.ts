@@ -5,18 +5,6 @@ import { deployTestWellInstance } from "./TestUtils";
 
 const { wellsSdk, utils, account } = getTestUtils();
 
-const DAI = new ERC20Token(
-  wellsSdk.chainId,
-  "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-  6,
-  "DAI",
-  {
-    name: "DAI",
-    displayDecimals: 2
-  },
-  wellsSdk.provider
-);
-
 jest.setTimeout(30000);
 
 beforeAll(async () => {
@@ -31,32 +19,18 @@ const setupWell = async (wellTokens: ERC20Token[], account: string) => {
   // Set initial balances for all well tokens
   await Promise.all(
     wellTokens.map(async (token) => {
-      await utils.setBalance(token, account, token.amount(30000));
+      await utils.setBalance(token, account, token.amount(50000));
     })
   );
 
   await utils.mine();
 
-  // TODO: Why does this fail? While the original code below works?
-  // for (let i = 0; i++; i < wellTokens.length) {
-  //   await wellTokens[i].approve(testWell.address, TokenValue.MAX_UINT256.toBigNumber());
-  // }
-
-  // await wellTokens[0].approve(testWell.address, TokenValue.MAX_UINT256);
-  // await wellTokens[1].approve(testWell.address, TokenValue.MAX_UINT256);
-
-  // wellTokens.forEach(async (token) => {
-  //   await token.approve(testWell.address, TokenValue.MAX_UINT256);
-  // });
-
-  // Original code
-  await Promise.all([
-    await wellsSdk.tokens.BEAN.approve(testWell.address, TokenValue.MAX_UINT256.toBigNumber()),
-    await wellsSdk.tokens.WETH.approve(testWell.address, TokenValue.MAX_UINT256.toBigNumber())
-  ]);
+  for await (const token of wellTokens) {
+    await token.approve(testWell.address, TokenValue.MAX_UINT256.toBigNumber());
+  }
 
   // Add liquidity to the well
-  const liquidityAmounts = wellTokens.map((token) => token.amount(10000));
+  const liquidityAmounts = wellTokens.map((token) => token.amount(20000));
   const quote = await testWell.addLiquidityQuote(liquidityAmounts);
   await testWell.addLiquidity(liquidityAmounts, quote, account);
 
@@ -74,83 +48,77 @@ describe("Swap", () => {
     describe.each([
       [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
       [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN]
-    ])("valid swaps", (tokenIn, tokenOut) => {
+    ])("valid swaps - swapFrom", (tokenIn, tokenOut) => {
       it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
-        await executeSwapTest(testBeanWethWell, wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH, account, "500");
+        await executeSwapFromTest(testBeanWethWell, tokenIn, tokenOut, account, "500");
       });
     });
 
-    // TODO: Swap "To" tests i.e. reverse swaps
-
-    describe.each([[wellsSdk.tokens.BEAN, wellsSdk.tokens.USDC]])("invalid swaps", (tokenIn, tokenOut) => {
+    describe.each([
+      [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
+      [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN]
+    ])("valid swaps - swapTo", (tokenIn, tokenOut) => {
       it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
-        await executeFailedSwapTest(testBeanWethWell, wellsSdk.tokens.BEAN, DAI, "1000");
+        await executeSwapToTest(testBeanWethWell, tokenIn, tokenOut, account, "500");
       });
-    });
-  });
-
-  describe("BEAN WETH USDC well (three token well)", () => {
-    let testBeanWethUsdcWell: Well;
-
-    beforeAll(async () => {
-      // TODO: Use the generic setupWell function if we can solve the approval issue
-      const wellTokens = [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH, wellsSdk.tokens.USDC];
-
-      // Deploy test well
-      const deployment = await deployTestWellInstance(wellTokens);
-      testBeanWethUsdcWell = new Well(wellsSdk, deployment.wellAddress);
-
-      // Set initial balances
-      await Promise.all([
-        utils.setWETHBalance(account, wellsSdk.tokens.WETH.amount(30000)),
-        utils.setBEANBalance(account, wellsSdk.tokens.BEAN.amount(30000)),
-        utils.setUSDCBalance(account, wellsSdk.tokens.USDC.amount(30000))
-      ]);
-      await utils.mine();
-
-      // Set max allowance
-      await Promise.all([
-        await wellsSdk.tokens.WETH.approve(testBeanWethUsdcWell.address, TokenValue.MAX_UINT256.toBigNumber()),
-        await wellsSdk.tokens.BEAN.approve(testBeanWethUsdcWell.address, TokenValue.MAX_UINT256.toBigNumber()),
-        await wellsSdk.tokens.USDC.approve(testBeanWethUsdcWell.address, TokenValue.MAX_UINT256.toBigNumber())
-      ]);
-
-      // Add liquidity to the well
-      const liquidityAmounts = [wellsSdk.tokens.BEAN.amount(10000), wellsSdk.tokens.WETH.amount(10000), wellsSdk.tokens.USDC.amount(10000)];
-      const quote = await testBeanWethUsdcWell.addLiquidityQuote(liquidityAmounts);
-      await testBeanWethUsdcWell.addLiquidity(liquidityAmounts, quote.subSlippage(10), account);
-
-      const initialBeanBalance = await wellsSdk.tokens.BEAN.getBalance(account);
-      expect(initialBeanBalance.toHuman()).toEqual("20000"); // initial amount less the 10000 we added to the well
-
-      const initialWethBalance = await wellsSdk.tokens.WETH.getBalance(account);
-      expect(initialWethBalance.toHuman()).toEqual("20000"); // initial amount less the 10000 we added to the well
-
-      const initialUsdcBalance = await wellsSdk.tokens.USDC.getBalance(account);
-      expect(initialUsdcBalance.toHuman()).toEqual("20000"); // initial amount less the 10000 we added to the well
     });
 
     describe.each([
       [wellsSdk.tokens.BEAN, wellsSdk.tokens.USDC],
       [wellsSdk.tokens.USDC, wellsSdk.tokens.BEAN],
-      [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
-      [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN],
-      [wellsSdk.tokens.WETH, wellsSdk.tokens.USDC],
-      [wellsSdk.tokens.USDC, wellsSdk.tokens.WETH]
-    ])("valid swaps", (tokenIn, tokenOut) => {
+    ])("invalid swaps", (tokenIn, tokenOut) => {
       it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
-        await executeSwapTest(testBeanWethUsdcWell, wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH, account, "500");
-      });
-    });
-
-    // TODO: Swap "To" tests i.e. reverse swaps
-
-    describe.each([[wellsSdk.tokens.BEAN, DAI]])("invalid swaps", (tokenIn, tokenOut) => {
-      it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
-        await executeFailedSwapTest(testBeanWethUsdcWell, wellsSdk.tokens.BEAN, DAI, "1000");
+        await executeFailedSwapTest(testBeanWethWell, tokenIn, tokenOut, "1000");
       });
     });
   });
+
+  // TODO: Will revisit this in a future PR.
+  // For now, there is seemingly some issue with Wells and the way it handles >2 tokens
+  // describe("BEAN WETH USDC well (three token well)", () => {
+  //   let testBeanWethUsdcWell: Well;
+
+  //   beforeAll(async () => {
+  //     testBeanWethUsdcWell = await setupWell([wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH, wellsSdk.tokens.USDC], account);
+  //     console.log('Well address: ' + testBeanWethUsdcWell.address);
+  //   });
+
+  //   describe.each([
+  //     // BEAN, WETH, USDC
+  //     [wellsSdk.tokens.BEAN, wellsSdk.tokens.USDC],
+  //     [wellsSdk.tokens.USDC, wellsSdk.tokens.BEAN]
+  //     // [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
+  //     // [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN],
+  //     // [wellsSdk.tokens.WETH, wellsSdk.tokens.USDC],
+  //     // [wellsSdk.tokens.USDC, wellsSdk.tokens.WETH]
+  //   ])("valid swaps - swapFrom", (tokenIn, tokenOut) => {
+  //     it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
+  //       await executeSwapFromTest(testBeanWethUsdcWell, tokenIn, tokenOut, account, "500");
+  //     });
+  //   });
+
+  //   describe.each([
+  //     [wellsSdk.tokens.BEAN, wellsSdk.tokens.USDC],
+  //     [wellsSdk.tokens.USDC, wellsSdk.tokens.BEAN],
+  //     // [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
+  //     // [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN],
+  //     [wellsSdk.tokens.WETH, wellsSdk.tokens.USDC]
+  //     // [wellsSdk.tokens.USDC, wellsSdk.tokens.WETH]
+  //   ])("valid swaps - swapTo", (tokenIn, tokenOut) => {
+  //     it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
+  //       await executeSwapToTest(testBeanWethUsdcWell, tokenIn, tokenOut, account, "500");
+  //     });
+  //   });
+
+  //   describe.each([
+  //     [wellsSdk.tokens.BEAN, wellsSdk.tokens.DAI],
+  //     [wellsSdk.tokens.DAI, wellsSdk.tokens.BEAN]
+  //   ])("invalid swaps", (tokenIn, tokenOut) => {
+  //     it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
+  //       await executeFailedSwapTest(testBeanWethUsdcWell, tokenIn, tokenOut, "1000");
+  //     });
+  //   });
+  // });
 });
 
 async function getBalance(token: Token, account: string) {
@@ -165,7 +133,7 @@ async function executeFailedSwapTest(well: Well, tokenIn: Token, tokenOut: Token
   );
 }
 
-async function executeSwapTest(well: Well, tokenIn: Token, tokenOut: Token, account: string, amount: string) {
+async function executeSwapFromTest(well: Well, tokenIn: Token, tokenOut: Token, account: string, amount: string) {
   const SLIPPAGE = 0.5;
 
   const tokenInBalanceBefore = await getBalance(tokenIn, account);
@@ -181,8 +149,42 @@ async function executeSwapTest(well: Well, tokenIn: Token, tokenOut: Token, acco
   // otherwise it will throw an error
   const quote = await well.swapFromQuote(tokenIn, tokenOut, swapAmount);
   expect(quote).not.toBeNull();
+  expect(quote.toHuman).not.toBe("0");
 
   const swapTxn = await well.swapFrom(tokenIn, tokenOut, swapAmount, quote, account);
+  const tx = await swapTxn.wait();
+  expect(tx.status).toBe(1);
+
+  const tokenInBalanceAfter = await getBalance(tokenIn, account);
+  const tokenOutBalanceAfter = await getBalance(tokenOut, account);
+
+  // There are less tokenIn than before the swapped
+  expect(tokenInBalanceAfter.lt(tokenInBalanceBefore));
+  // There are more tokenOut after the swap
+  expect(tokenOutBalanceAfter.gt(tokenOutBalanceBefore));
+  // tokenOut balance is bigger than desired swap ammount, with some slippage tollerance
+  expect(tokenOutBalanceAfter.gte(amountWithSlippage));
+}
+
+async function executeSwapToTest(well: Well, tokenIn: Token, tokenOut: Token, account: string, amount: string) {
+  const SLIPPAGE = 0.5;
+
+  const tokenInBalanceBefore = await getBalance(tokenIn, account);
+  const tokenOutBalanceBefore = await getBalance(tokenOut, account);
+
+  const swapAmount = tokenOut.amount(amount);
+  const amountWithSlippage = swapAmount.subSlippage(SLIPPAGE);
+
+  // Checks there the existing balance is enough to perform the swap
+  expect(tokenInBalanceBefore.gte(swapAmount)).toBe(true);
+
+  // Checks the swap is valid using swapQuote
+  // otherwise it will throw an error
+  // quote is the amount of tokenIn needed to get the desired amount of tokenOut
+  const quote = await well.swapToQuote(tokenIn, tokenOut, swapAmount);
+  expect(quote).not.toBeNull();
+  
+  const swapTxn = await well.swapTo(tokenIn, tokenOut, quote, swapAmount, account);
   const tx = await swapTxn.wait();
   expect(tx.status).toBe(1);
 

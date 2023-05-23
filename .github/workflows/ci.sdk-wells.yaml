@@ -43,5 +43,6 @@ jobs:
           ANVIL_FORK_URL: ${{ secrets.ANVIL_FORK_URL }}
       - name: Build All
         run: yarn build
-      - run: yarn sdk-wells:test
+      - name: Run Tests
+        run: yarn sdk-wells:test
         working-directory: projects/sdk-wells
