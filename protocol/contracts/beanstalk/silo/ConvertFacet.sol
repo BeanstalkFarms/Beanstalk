@@ -159,6 +159,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
+        LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
 
         // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
@@ -197,43 +198,57 @@ contract ConvertFacet is ReentrancyGuard {
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
-        LibSilo.AssetsAdded memory aa;
 
         // Get new BDV
-        aa.bdvAdded = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+        uint256 newTotalBdv = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+        uint256 stalkAdded; uint256 bdvAdded;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
         int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
+        uint256 depositBdv;
+
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
-            uint256 bdv = amounts[i].mul(aa.bdvAdded).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            if (i+1 == stems.length) {
+                // Ensure that a rounding error does not occur by using the 
+                // remainder BDV for the last Deposit.
+                depositBdv = newTotalBdv.sub(bdvAdded);
+            } else {
+                // depositBdv is a proportional amount of the total bdv.
+                // Cheaper than calling the BDV function multiple times.
+                depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
+            }
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
                 stems[i],
                 amounts[i],
-                bdv,
+                depositBdv,
                 LibTokenSilo.Transfer.noEmitTransferSingle
             );
             
-            aa.stalkAdded = aa.stalkAdded.add(
-                bdv.mul(_stalkPerBdv).add(
+            stalkAdded = stalkAdded.add(
+                depositBdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
                         stems[i],
                         _lastStem,
-                        uint128(bdv)
+                        uint128(depositBdv)
                     )
                 )
             );
+
+            bdvAdded = bdvAdded.add(depositBdv);
         }
+
+        LibTokenSilo.incrementTotalDepositedBdv(token, bdvAdded.sub(ar.bdvRemoved));
 
         // Mint Stalk associated with the delta BDV.
         LibSilo.mintStalk(
             msg.sender,
-            aa.stalkAdded.sub(ar.stalkRemoved)
+            stalkAdded.sub(ar.stalkRemoved)
         );
     }
 
@@ -327,7 +342,7 @@ contract ConvertFacet is ReentrancyGuard {
             a.tokensRemoved == maxTokens,
             "Convert: Not enough tokens removed."
         );
-        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
+        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
         LibSilo.burnStalk(
             msg.sender,
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
@@ -357,7 +372,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
-        LibTokenSilo.incrementTotalDeposited(token, amount);
+        LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
         LibTokenSilo.addDepositToAccount(
             msg.sender, 
             token, 

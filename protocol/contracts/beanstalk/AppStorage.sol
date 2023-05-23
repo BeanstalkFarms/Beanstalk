@@ -241,14 +241,18 @@ contract Storage {
     /**
      * @notice System-level Silo state; contains deposit and withdrawal data for a particular whitelisted Token.
      * @param deposited The total amount of this Token currently Deposited in the Silo.
+     * @param depositedBdv The total bdv of this Token currently Deposited in the Silo.
      * @param withdrawn The total amount of this Token currently Withdrawn From the Silo.
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
+     * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
+     * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
      * 
      * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
      * but not yet Claimed. This will be removed in a future BIP.
      */
     struct AssetSilo {
-        uint256 deposited;
+        uint128 deposited;
+        uint128 depositedBdv;
         uint256 withdrawn;
     }
 

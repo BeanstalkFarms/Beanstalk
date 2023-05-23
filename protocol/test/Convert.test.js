@@ -94,6 +94,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('100');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('100');
         expect(await this.silo.totalStalk()).to.equal('1000100');
         //expect(await this.silo.totalSeeds()).to.equal('100');
       })
@@ -128,6 +129,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('100');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('100');
         expect(await this.silo.totalStalk()).to.equal('1000100');
         //expect(await this.silo.totalSeeds()).to.equal('100');
       })
@@ -161,6 +163,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('50');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('50');
         expect(await this.silo.totalStalk()).to.equal('500000');
         //expect(await this.silo.totalSeeds()).to.equal('50');
       })
@@ -192,6 +195,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('50');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('50');
         expect(await this.silo.totalStalk()).to.equal('500000');
         //expect(await this.silo.totalSeeds()).to.equal('50');
       })
@@ -234,6 +238,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
         expect(await this.silo.totalStalk()).to.equal('3000100');
         //expect(await this.silo.totalSeeds()).to.equal('300');
       })
@@ -265,6 +270,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
         expect(await this.silo.totalStalk()).to.equal('3000200');
         //expect(await this.silo.totalSeeds()).to.equal('300');
       })
@@ -295,6 +301,7 @@ describe('Convert', function () {
 
       it('Decrements totals', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
         expect(await this.silo.totalStalk()).to.equal('3000300');
         //expect(await this.silo.totalSeeds()).to.equal('300');
       })
@@ -354,6 +361,7 @@ describe('Convert', function () {
 
     it('Decrements totals', async function () {
       expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('200');
+      expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('200');
       expect(await this.silo.totalStalk()).to.equal('2000000');
       //expect(await this.silo.totalSeeds()).to.equal('200');
     })

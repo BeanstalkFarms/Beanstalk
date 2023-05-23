@@ -141,8 +141,10 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates total values', async function () {
-        expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1000'));  
+        expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1000'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('100'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq('1006344767');
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('100'));
         //expect(await this.silo.totalSeeds()).to.eq(toBean('600'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('200'));
       });
@@ -187,7 +189,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to18('0'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to18('0'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq('2008324306');
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('200'));
         expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('200.08'));
       });
 
@@ -229,7 +233,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1500'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('300'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq('503172383');
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('100'));
         //expect(await this.silo.totalSeeds()).to.eq(toBean('1000'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('400'));
       });
@@ -269,7 +275,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1500'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('150'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq('503761210');
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq('97342214');
         expect(await this.silo.totalStalk()).to.eq('2473422140000');
       });
 
@@ -324,7 +332,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1006.18167'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('100.618167'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));
         //expect(await this.silo.totalSeeds()).to.eq(to6('201.236334'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('100.618167'));
       });
@@ -350,7 +360,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1006.18167'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('100.618167'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('100.6282288167'));
         //same as normal curve convert tests, old value was 100.6382906334 but now with rounding it's a bit different
       });
@@ -387,7 +399,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1006.18167'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('192.037852'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));
         //expect(await this.silo.totalSeeds()).to.eq(to6('384.075704'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('192.037852'));
       });
@@ -411,7 +425,9 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('503.090835'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('100'));
         expect(await this.silo.getTotalDeposited(this.unripeLP.address)).to.eq(to6('500'));
+        expect(await this.silo.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('100'));
         //expect(await this.silo.totalSeeds()).to.eq(to6('600'));
         expect(await this.silo.totalStalk()).to.eq(toStalk('200'));
       });
