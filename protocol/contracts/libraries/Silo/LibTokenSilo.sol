@@ -72,22 +72,38 @@ library LibTokenSilo {
     //////////////////////// ACCOUNTING: TOTALS ////////////////////////
     
     /**
-     * @dev Increment the total amount of `token` deposited in the Silo.
+     * @dev Increment the total amount and bdv of `token` deposited in the Silo.
      */
-    function incrementTotalDeposited(address token, uint256 amount) internal {
+    function incrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
-            amount
+            amount.toUint128()
+        );
+        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+            bdv.toUint128()
         );
     }
 
     /**
-     * @dev Decrement the total amount of `token` deposited in the Silo.
+     * @dev Decrement the total amount and bdv of `token` deposited in the Silo.
      */
-    function decrementTotalDeposited(address token, uint256 amount) internal {
+    function decrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.sub(
-            amount
+            amount.toUint128()
+        );
+        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.sub(
+            bdv.toUint128()
+        );
+    }
+
+    /**
+     * @dev Increment the total bdv of `token` deposited in the Silo. Used in Enroot.
+     */
+    function incrementTotalDepositedBdv(address token, uint256 bdv) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
+            bdv.toUint128()
         );
     }
 
@@ -125,7 +141,7 @@ library LibTokenSilo {
         require(bdv > 0, "Silo: No Beans under Token.");
         AppStorage storage s = LibAppStorage.diamondStorage();
         
-        incrementTotalDeposited(token, amount);     
+        incrementTotalDeposited(token, amount, bdv);
         addDepositToAccount(
             account, 
             token, 

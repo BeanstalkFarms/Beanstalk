@@ -197,10 +197,16 @@ contract Sun is Oracle {
         s.newEarnedStalk = seasonStalk.toUint128();
         s.vestingPeriodRoots = 0;
 
+        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].deposited = s
             .siloBalances[C.BEAN]
             .deposited
-            .add(amount);
+            .add(uint128(amount));
+
+        s.siloBalances[C.BEAN].depositedBdv = s
+            .siloBalances[C.BEAN]
+            .depositedBdv
+            .add(uint128(amount));
     }
 
     //////////////////// SET SOIL ////////////////////
