@@ -8,6 +8,7 @@ export class Address {
   private addresses: AddressDefinition;
   public MAINNET: string;
   public LOCALHOST: string;
+  public ANVIL1: string;
 
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
@@ -30,6 +31,7 @@ export class Address {
     this.addresses = addresses;
     this.MAINNET = this.addresses[ChainId.MAINNET];
     this.LOCALHOST = this.addresses[ChainId.LOCALHOST];
+    this.ANVIL1 = this.addresses[ChainId.ANVIL1];
   }
 
   get(chainId?: number) {
