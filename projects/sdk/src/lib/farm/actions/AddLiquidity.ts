@@ -8,11 +8,11 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
   public name: string = "addLiquidity";
 
   constructor(
-    private _pool: string,
-    private _registry: string,
-    private _amounts: readonly [number, number] | readonly [number, number, number],
-    private _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
-    private _toMode: FarmToMode = FarmToMode.INTERNAL
+    public readonly _pool: string,
+    public readonly _registry: string,
+    public readonly _amounts: readonly [number, number] | readonly [number, number, number],
+    public readonly _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
+    public readonly _toMode: FarmToMode = FarmToMode.INTERNAL
   ) {
     super();
   }

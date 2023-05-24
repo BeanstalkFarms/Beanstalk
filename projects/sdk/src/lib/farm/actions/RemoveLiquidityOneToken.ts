@@ -7,11 +7,11 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
   public name: string = "RemoveLiquidityOneToken";
 
   constructor(
-    private _pool: string,
-    private _registry: string,
-    private _tokenOut: string,
-    private _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
-    private _toMode: FarmToMode = FarmToMode.INTERNAL
+    public readonly _pool: string,
+    public readonly _registry: string,
+    public readonly _tokenOut: string,
+    public readonly _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
+    public readonly _toMode: FarmToMode = FarmToMode.INTERNAL
   ) {
     super();
   }
@@ -26,14 +26,14 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
       toMode: this._toMode,
       context
     });
-    let registry
+    let registry;
     if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry.address) {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry;
     } else if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.cryptoFactory.address) {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.cryptoFactory;
     } else {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.metaFactory;
-    };
+    }
     const coins = await registry.callStatic.get_coins(this._pool, { gasLimit: 10000000 });
     const i = coins.findIndex((addr) => addr.toLowerCase() === this._tokenOut.toLowerCase());
 

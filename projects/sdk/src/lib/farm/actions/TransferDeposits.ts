@@ -5,11 +5,11 @@ export class TransferDeposits extends StepClass<BasicPreparedResult> {
   public name: string = "transferDeposits";
 
   constructor(
-    private _signer: string,
-    private _to: string,
-    private _tokenIn: string,
-    private _seasons: ethers.BigNumberish[],
-    private _amounts: ethers.BigNumberish[]
+    public readonly _signer: string,
+    public readonly _to: string,
+    public readonly _tokenIn: string,
+    public readonly _seasons: ethers.BigNumberish[],
+    public readonly _amounts: ethers.BigNumberish[]
   ) {
     super();
   }
