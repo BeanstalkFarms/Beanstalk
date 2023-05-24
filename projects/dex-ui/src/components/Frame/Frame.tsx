@@ -5,8 +5,11 @@ import styled from "styled-components";
 import { ConnectKitButton } from "connectkit";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
+import { Settings } from "src/settings";
 
 export const Frame: FC<{}> = ({ children }) => {
+  const isNotProd = !Settings.PRODUCTION;
+
   return (
     <Container id="frame">
       <NavContainer>
@@ -16,8 +19,8 @@ export const Frame: FC<{}> = ({ children }) => {
             <NavLink to="/wells">Liquidity</NavLink>
             <NavLink to="/build">Build</NavLink>
             <NavLink to="/swap">Swap</NavLink>
+            {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
-          {/* {net} */}
           <ConnectionContainer>
             <ConnectKitButton />
           </ConnectionContainer>
