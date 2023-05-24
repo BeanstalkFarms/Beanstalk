@@ -7,7 +7,7 @@ import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 
-export const anvilFork: Chain = {
+export const localFork: Chain = {
   id: 1337,
   name: "localhost:8545",
   network: "localhost",
@@ -31,7 +31,31 @@ export const anvilFork: Chain = {
   }
 };
 
-const networks = import.meta.env.DEV ? [anvilFork, mainnet] : [mainnet];
+export const anvil1: Chain = {
+  id: 1007,
+  name: "anvil1.bean.money",
+  network: "anvil",
+  nativeCurrency: {
+    decimals: 18,
+    name: "localhost",
+    symbol: "ETH"
+  },
+  rpcUrls: {
+    public: { http: ["http://anvil1.bean.money:8545"] },
+    default: { http: ["http://anvil1.bean.money:8545"] }
+  },
+  blockExplorers: {
+    default: { name: "Etherscan", url: "https://etherscan.io" }
+  },
+  contracts: {
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+      blockCreated: 11_907_934
+    }
+  }
+};
+
+const networks = import.meta.env.DEV ? [localFork, anvil1, mainnet] : [mainnet];
 
 const { chains, provider } = configureChains(networks, [
   alchemyProvider({
