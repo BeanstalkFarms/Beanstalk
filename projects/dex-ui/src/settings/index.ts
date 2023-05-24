@@ -13,9 +13,9 @@ export type DexSettings = {
   SUBGRAPH_URL: string;
   WELLS_ORIGIN_BLOCK: number;
   LOAD_HISTORY_FROM_GRAPH: boolean;
-  NETLIFY_CONTEXT: string;
-  NETLIFY_COMMIT_HASH: string;
-  NETLIFY_BUILD_ID: string;
+  NETLIFY_CONTEXT?: string;
+  NETLIFY_COMMIT_HASH?: string;
+  NETLIFY_BUILD_ID?: string;
 };
 
 const temp = netlifyContext === "production" ? ProdSettings : DevSettings;
