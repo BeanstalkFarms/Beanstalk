@@ -3,6 +3,7 @@ import { DevSettings } from "./development";
 import { ProdSettings } from "./production";
 
 export type DexSettings = {
+  PRODUCTION: boolean;
   AQUIFER_ADDRESS: Address;
   SUBGRAPH_URL: string;
   WELLS_ORIGIN_BLOCK: number;
