@@ -171,63 +171,25 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
 
   /// USDC<>USDT via 3Pool Exchange
 
-  graph.setEdge("USDC", "USDT", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.Exchange(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.USDC,
-        sdk.tokens.USDT,
-        from,
-        to
-      ),
-    from: "USDC",
-    to: "USDT"
-  });
-
-  graph.setEdge("USDT", "USDC", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.Exchange(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.USDT,
-        sdk.tokens.USDC,
-        from,
-        to
-      ),
-    from: "USDT",
-    to: "USDC"
-  });
+  setBidirectionalExchangeEdges(
+    sdk,
+    graph,
+    sdk.contracts.curve.pools.pool3.address,
+    sdk.contracts.curve.registries.poolRegistry.address,
+    sdk.tokens.USDC,
+    sdk.tokens.USDT
+  );
 
   /// USDC<>DAI via 3Pool Exchange
 
-  graph.setEdge("USDC", "DAI", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.Exchange(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.USDC,
-        sdk.tokens.DAI,
-        from,
-        to
-      ),
-    from: "USDC",
-    to: "DAI"
-  });
-
-  graph.setEdge("DAI", "USDC", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.Exchange(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.DAI,
-        sdk.tokens.USDC,
-        from,
-        to
-      ),
-    from: "DAI",
-    to: "USDC"
-  });
+  setBidirectionalExchangeEdges(
+    sdk,
+    graph,
+    sdk.contracts.curve.pools.pool3.address,
+    sdk.contracts.curve.registries.poolRegistry.address,
+    sdk.tokens.USDC,
+    sdk.tokens.DAI
+  );
 
   /// USDT<>DAI via 3Pool Exchange
 
