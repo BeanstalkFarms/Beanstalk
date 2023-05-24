@@ -1,3 +1,4 @@
+import { Settings } from "src/settings";
 import { Chain, configureChains, createClient, mainnet } from "wagmi";
 import { CoinbaseWalletConnector } from "wagmi/connectors/coinbaseWallet";
 import { InjectedConnector } from "wagmi/connectors/injected";
@@ -55,7 +56,7 @@ export const anvil1: Chain = {
   }
 };
 
-const networks = import.meta.env.DEV ? [localFork, anvil1, mainnet] : [mainnet];
+const networks = Settings.PRODUCTION ? [mainnet] : [localFork, anvil1, mainnet];
 
 const { chains, provider } = configureChains(networks, [
   alchemyProvider({
