@@ -44,8 +44,8 @@ library LibSilo {
     // The `VESTING_PERIOD` is the number of blocks that must pass before
     // a farmer is credited with their earned beans issued that season. 
     uint256 internal constant VESTING_PERIOD = 10;
+
     //////////////////////// EVENTS ////////////////////////    
-    uint256 constant EARNED_BEAN_VESTING_BLOCKS = 25;
      
     /**
      * @notice Emitted when `account` gains or loses Stalk.
@@ -235,13 +235,13 @@ library LibSilo {
         // We round up as it prevents an account having roots but no stalk.
         
         // if the user withdraws in the vesting period, they forfeit their earned beans for that season
-        // this is distrubuted to the other users.
-        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
+        // this is distributed to the other users.
+        if(inVestingPeriod()){
             roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk-s.newEarnedStalk,
             LibPRBMath.Rounding.Up);
-
+            s.a[account].deltaRoots = s.a[account].deltaRoots.mul(stalk.toUint128()).div(s.a[account].s.stalk.toUint128());
         } else { 
             roots = s.s.roots.mulDiv(
             stalk,
