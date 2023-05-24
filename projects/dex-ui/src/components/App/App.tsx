@@ -8,8 +8,11 @@ import { Wells } from "src/pages/Wells";
 import { Frame } from "src/components/Frame/Frame";
 import { Build } from "src/pages/Build";
 import { Swap } from "src/pages/Swap";
+import { Settings } from "src/settings";
 
 export const App = ({}) => {
+  const isNotProd = !Settings.PRODUCTION
+  
   return (
     <Frame>
       <Routes>
@@ -18,7 +21,7 @@ export const App = ({}) => {
         <Route path="/wells/:address" element={<Well />} />
         <Route path="/build" element={<Build />} />
         <Route path="/swap" element={<Swap />} />
-        <Route path="/dev" element={<Dev />} />
+        {isNotProd && <Route path="/dev" element={<Dev />} />}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Frame>

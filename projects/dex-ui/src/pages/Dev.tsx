@@ -1,32 +1,40 @@
-import { TestUtils, Token, TokenValue } from "@beanstalk/sdk";
-import React, { useEffect, useState } from "react";
+import { BeanstalkSDK, TestUtils, Token, TokenValue } from "@beanstalk/sdk";
+import { ethers } from "ethers";
+import React, { useState } from "react";
+import { Page } from "src/components/Page";
+import { Title } from "src/components/PageComponents/Title";
 import { Button } from "src/components/Swap/Button";
 import { TokenInput } from "src/components/Swap/TokenInput";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { useWellTokens } from "src/tokens/useWellTokens";
-import useSdk from "src/utils/sdk/useSdk";
-import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
-import { useAccount } from "wagmi";
+import { useAccount, useProvider } from "wagmi";
 
 export const Dev = () => {
-  const [balances, setBalances] = useState<Record<string, TokenValue>>({});
-  const [b, setB] = useState<any>();
-  const sdk = useSdk();
+  const provider = useProvider();
   const account = useAccount();
-
   const { data } = useWellTokens();
+  const [amounts, setAmounts] = useState<Map<string, TokenValue>>(new Map());
+  const { refetch: refetchTokenBalances } = useAllTokensBalance();
+  const sdk = new BeanstalkSDK({ provider: provider as ethers.providers.JsonRpcProvider });
+
+  const tokens = new Set<Token>();
+  for (const token of data || []) {
+    tokens.add(token);
+  }
 
   const rows = [];
-  console.log("Fuck:", balances);
 
   const goBalance = async (token: Token) => {
-    const amount = balances[token.symbol] || TokenValue.ZERO;
+    const amount = amounts.get(token.symbol) || TokenValue.ZERO;
     const utils = new TestUtils.BlockchainUtils(sdk);
     await utils.setBalance(token, account.address || "", amount);
-    alert(`Set balance to ${amount.toHuman()}`);
+    await utils.mine()
+    await refetchTokenBalances();
+    
   };
 
-  for (let token of data || []) {
+  for (let token of tokens) {
     rows.push(
       <Row key={token.symbol}>
         <TokenInput
@@ -34,13 +42,9 @@ export const Dev = () => {
           canChangeToken={false}
           label="token"
           loading={false}
-          // amount={balances[token.symbol]}
-          amount={b}
+          amount={amounts.get(token.symbol)}
           onAmountChange={(amount) => {
-            balances[token.symbol] = amount;
-            console.log(balances);
-            setBalances(balances);
-            setB(amount);
+            setAmounts(new Map(amounts.set(token.symbol, amount)));
           }}
         />
 
@@ -56,11 +60,25 @@ export const Dev = () => {
     );
   }
 
-  return <div>{rows}</div>;
+  return (
+    <Page>
+      <Title title="Developer" />
+      <span>Give yourself some tokens</span>
+      <Container>{rows}</Container>
+    </Page>
+  );
 };
 
 const Row = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
+  width: 400px;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 5px;
 `;
