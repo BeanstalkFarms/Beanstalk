@@ -10,7 +10,7 @@ import "./SiloExit.sol";
 
 /**
  * @title Silo
- * @author Publius
+ * @author Publius, Pizzaman1337, Brean
  * @notice Provides utility functions for claiming Silo rewards, including:
  *
  * - Grown Stalk (see "Mow")

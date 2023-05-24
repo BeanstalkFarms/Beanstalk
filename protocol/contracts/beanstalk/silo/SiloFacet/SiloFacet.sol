@@ -12,7 +12,7 @@ import "~/libraries/Silo/LibSiloPermit.sol";
 
 /**
  * @title SiloFacet
- * @author Publius, Brean
+ * @author Publius, Brean, Pizzaman1337
  * @notice SiloFacet is the entry point for all Silo functionality.
  * 
  * SiloFacet           public functions for modifying an account's Silo.

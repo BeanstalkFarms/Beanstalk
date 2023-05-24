@@ -18,7 +18,7 @@ import "~/libraries/LibBytes.sol";
 
 /**
  * @title LibTokenSilo
- * @author Publius
+ * @author Publius, Pizzaman1337
  * @notice Contains functions for depositing, withdrawing and claiming
  * whitelisted Silo tokens.
  *

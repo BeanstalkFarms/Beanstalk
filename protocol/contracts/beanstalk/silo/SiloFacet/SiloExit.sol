@@ -13,12 +13,11 @@ import "~/libraries/Silo/LibTokenSilo.sol";
 import "~/libraries/Silo/LibLegacyTokenSilo.sol";
 import "~/libraries/LibSafeMath32.sol";
 import "~/libraries/LibSafeMath128.sol";
-import "~/libraries/LibPRBMath.sol";
 import "~/C.sol";
 
 /**
- * @title SiloExit, Brean
- * @author Publius
+ * @title SiloExit
+ * @author Publius, Brean, Pizzaman1337
  * @notice Exposes public view functions for Silo total balances, account
  * balances, account update history, and Season of Plenty (SOP) balances.
  *
@@ -29,7 +28,6 @@ contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
-    using LibPRBMath for uint256;
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -187,17 +185,13 @@ contract SiloExit is ReentrancyGuard {
 
         uint256 stalk;
         if(LibSilo.inVestingPeriod()){
-            stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
-                s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
-                s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
-                LibPRBMath.Rounding.Up
-            );
+            stalk = s.s.stalk.sub(s.newEarnedStalk)
+                .mul(s.a[account].roots.add(s.a[account].deltaRoots)) // add the delta roots of the user
+                .div(s.s.roots.add(s.vestingPeriodRoots)); // add delta of global roots 
         } else {
-            stalk = s.s.stalk.mulDiv(
-                s.a[account].roots,
-                s.s.roots,
-                LibPRBMath.Rounding.Up
-            );
+            stalk = s.s.stalk
+                .mul(s.a[account].roots)
+                .div(s.s.roots);
         }
         
         // Beanstalk rounds down when minting Roots. Thus, it is possible that

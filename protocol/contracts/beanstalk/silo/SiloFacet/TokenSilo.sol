@@ -9,7 +9,7 @@ import "./Silo.sol";
 
 /**
  * @title TokenSilo
- * @author Publius, Brean
+ * @author Publius, Brean, Pizzaman1337
  * @notice This contract contains functions for depositing, withdrawing and 
  * claiming whitelisted Silo tokens.
  *
