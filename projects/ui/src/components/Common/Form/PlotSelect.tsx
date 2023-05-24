@@ -61,6 +61,7 @@ function RowContent({isMobile, index, harvestableIndex, listing, plots}: IRowCon
       </ListItemIcon>
       <ListItemText
         primary="PODS"
+        primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
         secondary={
           <>
             {isMobile ? '@' : 'Place in Line:'}{' '}
@@ -72,7 +73,7 @@ function RowContent({isMobile, index, harvestableIndex, listing, plots}: IRowCon
       />
     </Row>
     {plots[index] ? (
-      <Typography variant="bodyLarge">
+      <Typography variant="bodyLarge" sx={{ color: 'text.primary' }}>
         {displayFullBN(plots[index], PODS.displayDecimals)}
       </Typography>
     ) : null}
