@@ -18,6 +18,7 @@ const getSDK = (provider?: JsonRpcProvider, signer?: Signer) => {
 };
 
 const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
+// TODO: use the correct RPC_URL for the current network
 const RPC_URL = IS_DEVELOPMENT_ENV ? "http://localhost:8545" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
 export const BeanstalkSDKContext = createContext<BeanstalkSDK>(new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV }));
