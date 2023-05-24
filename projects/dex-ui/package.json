@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "start": "vite --port 2424",
-    "build": "yarn all:build && yarn generate:graphql && tsc && vite build",
+    "build": "yarn all:build && yarn generate && tsc && vite build",
     "build:netlify": "./utils/build-netlify.sh",
     "generate:graphql": "graphql-codegen --config codegen.ts",
     "generate:typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/generated/types './src/abi/*.json'",
