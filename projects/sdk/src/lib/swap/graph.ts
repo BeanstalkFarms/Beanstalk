@@ -3,6 +3,35 @@ import { ERC20Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
 
+export const setBidirectionalAddRemoveLiquidityEdges = (
+  sdk: BeanstalkSDK,
+  g: Graph,
+  pool: string,
+  registry: string,
+  lpToken: ERC20Token,
+  underlyingToken: ERC20Token,
+  underlyingTokenIndex: number,
+  underlyingTokenCount: number = 3
+) => {
+  // creates an array like [1, 0, 0], [0, 1, 0], [0, 0, 1].
+  const amounts = Array.from({ length: underlyingTokenCount }, (_, i) => (i === underlyingTokenIndex ? 1 : 0));
+
+  // Underlying -> LP uses AddLiquidity.
+  g.setEdge(underlyingToken.symbol, lpToken.symbol, {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.AddLiquidity(pool, registry, amounts as any, from, to),
+    from: underlyingToken.symbol,
+    to: lpToken.symbol
+  });
+
+  // LP -> Underlying is RemoveLiquidity
+  g.setEdge(lpToken.symbol, underlyingToken.symbol, {
+    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+      new sdk.farm.actions.RemoveLiquidityOneToken(pool, registry, underlyingToken.address, from, to),
+    from: lpToken.symbol,
+    to: underlyingToken.symbol
+  });
+};
+
 /**
  * Creates an instance of sdk.farm.actions.Exchange to swap between token0 <> token1 via `pool`.
  * Simplifies the `getSwapGraph` setup code below and ensures that both edges are added to the graph.
@@ -123,6 +152,7 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   });
 
   /// CRV3<>BEAN via Metapool Exchange
+  // TODO: Switch to use setBidirectionalExchangeEdges()
 
   graph.setEdge("3CRV", "BEAN", {
     build: (_: string, from: FarmFromMode, to: FarmToMode) =>
@@ -154,17 +184,18 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
 
-  graph.setEdge("3CRV", "USDC", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.RemoveLiquidityOneToken(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.USDC.address,
-        from,
-        to
-      ),
-    from: "3CRV",
-    to: "USDC"
+  // HEADS UP: the ordering of these tokens needs to match their indexing in the 3CRV LP token.
+  // Should be: 0 = DAI, 1 = USDC, 2 = USDT.
+  [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT].forEach((token, index) => {
+    setBidirectionalAddRemoveLiquidityEdges(
+      sdk,
+      graph,
+      sdk.contracts.curve.pools.pool3.address,
+      sdk.contracts.curve.registries.poolRegistry.address,
+      sdk.tokens.CRV3, // LP token
+      token, // underlying token
+      index
+    );
   });
 
   ////// 3Pool Exchanges

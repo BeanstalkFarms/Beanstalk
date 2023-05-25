@@ -29,6 +29,7 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
     });
 
     /// [0, 0, 1] => [0, 0, amountIn]
+    /// FIXME: this uses a binary approach instead of a multiplier.
     const amountInStep = this._amounts.map((k) => (k === 1 ? _amountInStep : ethers.BigNumber.from(0)));
 
     /// Get amount out based on the selected pool
