@@ -101,21 +101,6 @@ export const getMorningResult = ({
   const next = getNextExpectedBlockUpdate(curr);
   const remaining = getDiffNow(next);
 
-  const printResult = {
-    morningTime: {
-      remaining: remaining.as('seconds'),
-      next: next.toLocaleString(DateTime.TIME_WITH_SECONDS),
-    },
-    morning: {
-      interval: index.plus(1).toNumber(),
-      index: index.toNumber(),
-      isMorning: isMorning,
-      blockNumber: blockNumber.toNumber(),
-    },
-  };
-
-  console.log('[getMorningResult]: morningResult', printResult);
-
   return {
     morning: {
       isMorning,

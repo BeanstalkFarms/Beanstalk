@@ -97,7 +97,6 @@ function useUpdateMorning() {
         now.toSeconds() === morningTime.next.toSeconds() ||
         _remaining.as('seconds') <= 0
       ) {
-        console.log('-------------------');
         const morningResult = getMorningResult({
           timestamp: sTimestamp,
           blockNumber: sunriseBlock,
@@ -106,7 +105,7 @@ function useUpdateMorning() {
         const scaledTemp = calculateTemperature(morningBlock.plus(1));
         const nextSoil = abovePeg ? calculateNextSoil(morningBlock) : undefined;
 
-        console.log('[beanstalk/sun/useUpdateMorning]: new block: ', {
+        console.debug('[beanstalk/sun/useUpdateMorning]: new block: ', {
           temp: scaledTemp.toNumber(),
           soil: nextSoil?.toNumber() || 'N/A',
           blockNumber: morningResult.morning.blockNumber.toNumber(),

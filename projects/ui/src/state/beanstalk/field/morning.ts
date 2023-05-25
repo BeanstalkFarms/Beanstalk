@@ -6,36 +6,51 @@ import { useAppSelector } from '~/state';
 import { useFetchBeanstalkField } from './updater';
 import { BEAN } from '~/constants/tokens';
 import { tokenResult } from '~/util';
-import { getNowRounded, getDiffNow } from '../sun';
+import { getNowRounded, getDiffNow } from '~/state/beanstalk/sun';
 import { updateTotalSoil } from './actions';
+import { useSeasonalTemperatureQuery } from '~/generated/graphql';
+
+/**
+ * useUpdateMorningField's primary function is to ensure that the redux store data
+ * reflects the most on-chain data during & right after the morning.
+ */
 
 export function useUpdateMorningField() {
-  /// Contract
-  const beanstalk = useBeanstalkContract();
   /// App State
   const morning = useAppSelector((s) => s._beanstalk.sun.morning);
   const season = useAppSelector((s) => s._beanstalk.sun.season);
   const soil = useAppSelector((s) => s._beanstalk.field.soil);
-  const storedTemperatures = useAppSelector(
-    (s) => s._beanstalk.field.temperature
-  );
-  const morningTimeNext = useAppSelector(
-    (s) => s._beanstalk.sun.morningTime.next
-  );
+  const temperature = useAppSelector((s) => s._beanstalk.field.temperature);
+  const next = useAppSelector((s) => s._beanstalk.sun.morningTime.next);
 
+  /// Fetch
   const [fetchBeanstalkField] = useFetchBeanstalkField();
+  const temperatureQuery = useSeasonalTemperatureQuery({
+    fetchPolicy: 'cache-and-network',
+    skip: morning.isMorning,
+  });
+
+  /// Contract
+  const beanstalk = useBeanstalkContract();
 
   const dispatch = useDispatch();
 
   /// Derived
   const morningBlock = morning.blockNumber;
   const sunriseBlock = season.sunriseBlock;
-
   const deltaBlocks = morningBlock.minus(sunriseBlock);
+
+  /// Temperature Season Data
+  const seasonData = temperatureQuery.data?.seasons;
+  const currentSeason = season.current;
+  const first = seasonData?.[0];
+
+  /// -------------------------------------
+  /// Callbacks
 
   const fetchSoil = useCallback(async () => {
     if (!beanstalk) {
-      console.log(`[beanstalk/field/morning] fetch: contract undefined`);
+      console.debug(`[beanstalk/field/morning] fetch: contract undefined`);
       return;
     }
     try {
@@ -45,20 +60,21 @@ export function useUpdateMorningField() {
         dispatch(updateTotalSoil(_soil));
       }
     } catch (err) {
-      console.log('[beanstalk/field/morning] fetch: error', err);
+      console.debug('[beanstalk/field/morning] fetch FAILED', err);
     }
   }, [soil, beanstalk, dispatch]);
 
-  /**
-   * If it is morning, then we fetch the soil every 4 seconds
-   */
+  /// -------------------------------------
+  /// Effects
+
+  // If it is morning, then we fetch the soil every 4 seconds
   useEffect(() => {
     if (!morning.isMorning) return;
 
     const soilUpdateInterval = setInterval(() => {
       const now = getNowRounded();
 
-      const remaining = getDiffNow(morningTimeNext, now).as('seconds');
+      const remaining = getDiffNow(next, now).as('seconds');
       if (remaining % 4 === 0) {
         fetchSoil();
       }
@@ -67,13 +83,13 @@ export function useUpdateMorningField() {
     return () => {
       clearInterval(soilUpdateInterval);
     };
-  }, [fetchSoil, morning.isMorning, morningTimeNext]);
+  }, [fetchSoil, morning.isMorning, next]);
+
   /**
-   * There are certain conditions in which we need to fetch the field
-   * If these conditions are met, then we fetch the field every 2 seconds
+   * Refetch the field every 2 seconds for updates if:
    *
-   * If it is not the morning:
-   *    If the max temperature is not equal to the scaled temperature
+   * It is not morning:
+   * - If the max temperature is not equal to the scaled temperature
    *
    * OR
    *
@@ -81,42 +97,43 @@ export function useUpdateMorningField() {
    *    We are in the 1st interval of the morning & the scaled temperature is not equal to 1.
    *    The temperature of the 1st interval of the morning is always 1%.
    */
-  const shouldUpdate = (() => {
+  const shouldUpdateField = (() => {
     if (!morning.isMorning) {
-      return !storedTemperatures.max.eq(storedTemperatures.scaled);
+      return !temperature.max.eq(temperature.scaled);
     }
     if (morning.isMorning) {
-      return deltaBlocks.isZero() && !storedTemperatures.scaled.eq(1);
+      return deltaBlocks.isZero() && !temperature.scaled.eq(1);
     }
     return false;
   })();
 
   useEffect(() => {
-    console.debug('shouldUpdate: ', shouldUpdate);
-    if (shouldUpdate) {
-      const interval = setInterval(() => {
-        fetchBeanstalkField();
-      }, 1000);
-      return () => {
-        clearInterval(interval);
-      };
-    }
-  }, [
-    deltaBlocks,
-    shouldUpdate,
-    morning.isMorning,
-    storedTemperatures.max,
-    storedTemperatures.scaled,
-    fetchBeanstalkField,
-  ]);
+    if (!shouldUpdateField) return;
 
-  // useEffect(() => {
-  //   const seasonData = temperatureQuery.data?.seasons;
-  //   const first = seasonData?.[0];
-  //   if (first?.season && first.season !== season.current.toNumber()) {
-  //     temperatureQuery.refetch();
-  //   }
-  // }, [season, temperatureQuery]);
+    const interval = setInterval(() => {
+      console.debug('[beanstalk/field/morning]: Refetching field');
+      fetchBeanstalkField();
+    }, 2000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [fetchBeanstalkField, shouldUpdateField]);
+
+  /// If the user is behind 1 season, update the temperature data
+  /// This is to prevent the morning temperature chart & max temperature
+  /// chart from being out of sync.
+  useEffect(() => {
+    /// data not loaded yet
+    if (!first || currentSeason.lte(0)) return;
+
+    /// If we are behind 1 season, refetch
+    if (currentSeason.minus(first.season).eq(1)) {
+      console.debug('refetching temperature data...');
+      temperatureQuery.refetch({
+        season_lte: currentSeason.toNumber(),
+      });
+    }
+  }, [currentSeason, first, temperatureQuery]);
 
   return null;
 }

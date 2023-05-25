@@ -1,38 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { Grid, Stack, Typography } from '@mui/material';
+import React from 'react';
+import { Grid, Typography } from '@mui/material';
 
-import BigNumber from 'bignumber.js';
 import { displayFullBN, normalizeBN } from '~/util';
 
 import Stat from '~/components/Common/Stat';
 import { useAppSelector } from '~/state';
 import useSoil from '~/hooks/beanstalk/useSoil';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-import { ZERO_BN } from '~/constants';
-import FieldBlockCountdown from './FieldBlockCountdown';
+import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
 
 const FieldStats: React.FC<{}> = () => {
+  const isMorning = useAppSelector((s) => s._beanstalk.sun.morning.isMorning);
   const podLine = useAppSelector((s) => s._beanstalk.field.podLine);
   const [fieldSoil] = useSoil();
 
   const soil = fieldSoil.soil;
   const nextSoil = fieldSoil.nextSoil;
 
-  console.log('soil: ', soil.toNumber());
-  console.log('nextSoil: ', nextSoil.toNumber());
-
   const blockDeltaSoil = nextSoil.minus(soil);
-  console.log('blockDeltaSoil: ', blockDeltaSoil.toNumber());
-
-  const [soils, setSoil] = useState<BigNumber[]>([]);
-
-  useEffect(() => {
-    const last = soils[soils.length - 1] || ZERO_BN;
-
-    if (!last.eq(soil) && soil.gt(0)) {
-      setSoil((prev) => [...prev, soil]);
-    }
-  }, [soil, soils]);
 
   return (
     <Grid container spacing={2}>
@@ -46,7 +31,7 @@ const FieldStats: React.FC<{}> = () => {
               sx={{ display: 'inline-flex', alignItems: 'center' }}
             >
               {displayFullBN(normalizeBN(soil), 0)}
-              {!nextSoil.eq(soil) && (
+              {isMorning && !nextSoil.eq(soil) && (
                 <Typography
                   component="span"
                   sx={{
@@ -77,15 +62,6 @@ const FieldStats: React.FC<{}> = () => {
             </Typography>
           }
         />
-      </Grid>
-      <Grid item>
-        <Stack gap={0}>
-          {soils.map((s, i) => (
-            <Typography key={i} variant="caption" color="text.secondary">
-              {displayFullBN(s, 0)}
-            </Typography>
-          ))}
-        </Stack>
       </Grid>
     </Grid>
   );
