@@ -32,12 +32,12 @@ const loadFromGraph = async (): Promise<WellAddresses> => {
   return results.wells.map((w) => w.id);
 };
 
-export const getWellAddresses = memoize(
+export const findWells = memoize(
   async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
     const addresses = await Promise.any([
       loadFromChain(sdk)
         .then((res) => {
-          Log.module("wells").debug("Loaded well addresses from blockchain");
+          Log.module("wells").debug("Used blockchain to load wells");
           return res;
         })
         .catch((err) => {
@@ -46,7 +46,7 @@ export const getWellAddresses = memoize(
         }),
       loadFromGraph()
         .then((res) => {
-          Log.module("wells").debug("Loaded wells addresses from subgraph");
+          Log.module("wells").debug("Used subgraph to load wells");
           return res;
         })
         .catch((err) => {
@@ -54,7 +54,9 @@ export const getWellAddresses = memoize(
           throw err;
         })
     ]);
-    if (addresses.length === 0) throw new Error("No deployed wells found");
+    if (addresses.length === 0) {
+      throw new Error("No deployed wells found");
+    }
 
     return addresses;
   },
