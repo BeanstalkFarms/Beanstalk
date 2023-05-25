@@ -1,5 +1,12 @@
 import React from 'react';
-import { Button, ButtonProps as MuiButtonProps, Card, LinkProps, Stack, Typography } from '@mui/material';
+import {
+  Button,
+  ButtonProps as MuiButtonProps,
+  Card,
+  LinkProps,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { BeanPoolState } from '~/state/bean/pools';
 import { displayBeanPrice, displayBN } from '~/util';
 import { Pool } from '~/classes';
@@ -16,11 +23,7 @@ const PoolCard: FC<{
   pool: Pool;
   poolState: BeanPoolState;
   ButtonProps?: MuiButtonProps & LinkProps;
-}> = ({
-  pool,
-  poolState,
-  ButtonProps,
-}) => {
+}> = ({ pool, poolState, ButtonProps }) => {
   const cardContent = (
     <Row justifyContent="space-between">
       <Row alignItems="center" gap={1.0}>
@@ -56,7 +59,7 @@ const PoolCard: FC<{
       </Stack>
     </Row>
   );
-  
+
   return ButtonProps ? (
     <Button
       variant="outlined-secondary"

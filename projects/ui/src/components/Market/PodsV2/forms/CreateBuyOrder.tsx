@@ -19,8 +19,8 @@ export type CreateOrderFormValues = {
   tokens: FormTokenState[];
   settings: {
     slippage: number;
-  }
-}
+  };
+};
 
 export const createOrderFormAtom = atom<CreateOrderFormValues>({
   placeInLine: null,

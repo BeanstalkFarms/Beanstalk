@@ -21,8 +21,11 @@ const toggleOptions = [
 ];
 
 const OrderBook: React.FC<{}> = () => {
-  const [precision, setPrecision] = useState<OrderbookPrecision>(precisionOptions[0]);
-  const [aggregation, setAggregation] = useState<OrderbookAggregation>('min-max');
+  const [precision, setPrecision] = useState<OrderbookPrecision>(
+    precisionOptions[0]
+  );
+  const [aggregation, setAggregation] =
+    useState<OrderbookAggregation>('min-max');
   const { data, error, reduceByPrecision } = useOrderbook();
 
   const filteredData = useMemo(() => {
@@ -55,7 +58,6 @@ const OrderBook: React.FC<{}> = () => {
         </Row>
       }
     >
-      
       <Stack
         height="100%"
         py={1}
@@ -79,7 +81,7 @@ const OrderBook: React.FC<{}> = () => {
         ) : (
           <Stack
             height={{ xs: '300px', lg: 'calc(100% - 48px)' }}
-            pb={{ xs: 1, lg:  6 }}
+            pb={{ xs: 1, lg: 6 }}
             sx={{ overflow: 'auto' }}
           >
             {filteredData.map(([priceKey, bucket]) => (
@@ -92,7 +94,6 @@ const OrderBook: React.FC<{}> = () => {
           </Stack>
         )}
       </Stack>
-      
     </CondensedCard>
   );
 };

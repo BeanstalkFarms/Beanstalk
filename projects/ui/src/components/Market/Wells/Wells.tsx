@@ -1,5 +1,13 @@
 import React from 'react';
-import { Box, Button, Card, Grid, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  Grid,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { Link as RouterLink } from 'react-router-dom';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -13,15 +21,15 @@ const TOOLTIP_COMPONENT_PROPS = {
   tooltip: {
     sx: {
       maxWidth: 'none !important',
-      boxShadow: '0px 6px 20px 10px rgba(255,255,255,0.3) !important'
-    }
-  }
+      boxShadow: '0px 6px 20px 10px rgba(255,255,255,0.3) !important',
+    },
+  },
 };
 
 /**
  *
  */
-const Wells : React.FC = () => {
+const Wells: React.FC = () => {
   /// Settings
   const [denomination] = useSetting('denomination');
 
@@ -30,9 +38,9 @@ const Wells : React.FC = () => {
       <Box
         display="flex"
         sx={{
-          px: 3,      // 1 + 2 from Table Body
+          px: 3, // 1 + 2 from Table Body
           pt: '14px', // manually adjusted
-          pb: '5px',  // manually adjusted
+          pb: '5px', // manually adjusted
           borderBottomStyle: 'solid',
           borderBottomColor: 'secondary.main',
           borderBottomWidth: 1.5,
@@ -44,9 +52,7 @@ const Wells : React.FC = () => {
           </Grid>
           <Grid item md={2.25} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Tooltip title="Tooltip">
-              <Typography color="gray">
-                Type
-              </Typography>
+              <Typography color="gray">Type</Typography>
             </Tooltip>
           </Grid>
           <Grid item md={2} xs={0} display={{ xs: 'none', md: 'block' }}>
@@ -57,7 +63,15 @@ const Wells : React.FC = () => {
           <Grid item md={2} xs={0} display={{ xs: 'none', md: 'block' }}>
             <Typography color="gray">Volume (7D)</Typography>
           </Grid>
-          <Grid item md={2} xs={8} sx={{ textAlign: 'right', paddingRight: { xs: 0, md: `${ARROW_CONTAINER_WIDTH}px` } }}>
+          <Grid
+            item
+            md={2}
+            xs={8}
+            sx={{
+              textAlign: 'right',
+              paddingRight: { xs: 0, md: `${ARROW_CONTAINER_WIDTH}px` },
+            }}
+          >
             <Tooltip title="Title">
               <Typography color="gray">deltaB</Typography>
             </Tooltip>
@@ -81,8 +95,8 @@ const Wells : React.FC = () => {
           >
             <Grid container alignItems="center">
               {/**
-                * Cell: Token
-                */}
+               * Cell: Token
+               */}
               <Grid item md={3.75} xs={7}>
                 <Row gap={1}>
                   <Row gap={0.1}>
@@ -97,8 +111,8 @@ const Wells : React.FC = () => {
               </Grid>
 
               {/**
-                * Cell: Type
-                */}
+               * Cell: Type
+               */}
               <Grid item md={2.25} xs={0} display={{ xs: 'none', md: 'block' }}>
                 <Tooltip placement="right" title="Tooltip">
                   <Typography display="inline" color="black">
@@ -108,8 +122,8 @@ const Wells : React.FC = () => {
               </Grid>
 
               {/**
-                * Cell: Total Liquidity
-                */}
+               * Cell: Total Liquidity
+               */}
               <Grid item md={2} xs={0} display={{ xs: 'none', md: 'block' }}>
                 <Tooltip
                   placement="right"
@@ -123,28 +137,29 @@ const Wells : React.FC = () => {
               </Grid>
 
               {/**
-                * Cell: Volume
-                */}
+               * Cell: Volume
+               */}
               <Grid item md={2} xs={0} display={{ xs: 'none', md: 'block' }}>
-                <Typography color="black">
-                  $500,000
-                </Typography>
+                <Typography color="black">$500,000</Typography>
               </Grid>
 
               {/**
-                * Cell: deltaB
-                */}
+               * Cell: deltaB
+               */}
               <Grid item md={2} xs={5}>
                 <Row justifyContent="flex-end">
                   <Tooltip
                     placement="left"
                     componentsProps={TOOLTIP_COMPONENT_PROPS}
-                    title="Toooltip">
-                    <Typography color="black">
-                      -10,000
-                    </Typography>
+                    title="Toooltip"
+                  >
+                    <Typography color="black">-10,000</Typography>
                   </Tooltip>
-                  <Stack display={{ xs: 'none', md: 'block' }} sx={{ width: ARROW_CONTAINER_WIDTH }} alignItems="center">
+                  <Stack
+                    display={{ xs: 'none', md: 'block' }}
+                    sx={{ width: ARROW_CONTAINER_WIDTH }}
+                    alignItems="center"
+                  >
                     <ArrowRightIcon />
                   </Stack>
                 </Row>

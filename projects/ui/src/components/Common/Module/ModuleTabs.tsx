@@ -3,10 +3,10 @@ import React from 'react';
 import { ModuleHeader } from '~/components/Common/Module';
 import { FC } from '~/types';
 
-export const ModuleTabs : FC<TabsProps> = ({ children, sx, ...props }) => (
+export const ModuleTabs: FC<TabsProps> = ({ children, sx, ...props }) => (
   <ModuleHeader>
-    <Tabs 
-      sx={{ 
+    <Tabs
+      sx={{
         overflow: 'visible',
         ...sx,
       }}

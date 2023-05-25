@@ -19,13 +19,7 @@ const UnripeTokenRow: FC<{
   bdv?: BigNumber;
   tooltip: string | React.ReactElement;
   token: Token;
-}> = ({
-  name,
-  amount,
-  bdv,
-  tooltip,
-  token,
-}) => {
+}> = ({ name, amount, bdv, tooltip, token }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const primaryColor = amount.eq(0) ? 'text.tertiary' : null;
@@ -40,7 +34,7 @@ const UnripeTokenRow: FC<{
         <Typography
           sx={{
             color: primaryColor,
-            textTransform: 'capitalize'
+            textTransform: 'capitalize',
           }}
         >
           {name}
@@ -53,10 +47,18 @@ const UnripeTokenRow: FC<{
           </Tooltip>
         )}
       </Row>
-      <Stack direction={isMobile ? 'column' : 'row'} alignItems="center" gap={0.3}>
-        {(amount && bdv) ? (
+      <Stack
+        direction={isMobile ? 'column' : 'row'}
+        alignItems="center"
+        gap={0.3}
+      >
+        {amount && bdv ? (
           // LP states
-          <Stack direction={isMobile ? 'column' : 'row'} sx={{ alignItems: isMobile ? 'end' : null }} gap={0.5}>
+          <Stack
+            direction={isMobile ? 'column' : 'row'}
+            sx={{ alignItems: isMobile ? 'end' : null }}
+            gap={0.5}
+          >
             <Row gap={0.3}>
               <img src={token.logo} alt="Circulating Beans" height={13} />
               <Typography sx={{ color: primaryColor }}>
@@ -64,13 +66,10 @@ const UnripeTokenRow: FC<{
               </Typography>
             </Row>
             <Row gap={0.3}>
-              <Typography sx={{ color: primaryColor }}>
-                (
-              </Typography>
+              <Typography sx={{ color: primaryColor }}>(</Typography>
               <img src={greenBeanIcon} alt="Circulating Beans" width={13} />
               <Typography sx={{ color: primaryColor }}>
-                {displayFullBN(bdv)}
-                )
+                {displayFullBN(bdv)})
               </Typography>
             </Row>
           </Stack>
@@ -78,10 +77,12 @@ const UnripeTokenRow: FC<{
           // Bean states
           <Row gap={0.3}>
             <img src={greenBeanIcon} alt="Circulating Beans" width={13} />
-            <Typography sx={{
-              fontSize: '16px',
-              color: amount.eq(0) ? 'text.secondary' : null
-            }}>
+            <Typography
+              sx={{
+                fontSize: '16px',
+                color: amount.eq(0) ? 'text.secondary' : null,
+              }}
+            >
               {displayFullBN(amount)}
             </Typography>
           </Row>

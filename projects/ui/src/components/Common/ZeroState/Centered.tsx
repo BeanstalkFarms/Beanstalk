@@ -3,8 +3,14 @@ import { Stack, StackProps } from '@mui/material';
 
 import { FC } from '~/types';
 
-const Centered : FC<StackProps> = ({ children, ...props }) => (
-  <Stack direction="column" alignItems="center" justifyContent="center" height="100%" {...props}>
+const Centered: FC<StackProps> = ({ children, ...props }) => (
+  <Stack
+    direction="column"
+    alignItems="center"
+    justifyContent="center"
+    height="100%"
+    {...props}
+  >
     {children}
   </Stack>
 );

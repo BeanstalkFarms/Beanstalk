@@ -4,14 +4,15 @@ import { ComponentMeta, ComponentStory } from '@storybook/react';
 
 export default {
   component: Card,
-  args: {}
+  args: {},
 } as ComponentMeta<typeof Card>;
 
 const Template: ComponentStory<typeof Card> = (args: any) => (
   <Card {...args}>
     <CardContent>
       <Typography>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex, sit amet blandit leo lobortis eget.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+        malesuada lacus ex, sit amet blandit leo lobortis eget.
       </Typography>
     </CardContent>
   </Card>
@@ -20,6 +21,4 @@ const Template: ComponentStory<typeof Card> = (args: any) => (
 const Primary = Template.bind({});
 Primary.args = {};
 
-export {
-  Primary
-};
+export { Primary };

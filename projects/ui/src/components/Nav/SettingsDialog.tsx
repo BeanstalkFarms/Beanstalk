@@ -1,20 +1,35 @@
-import { Box, Button, ButtonGroup, MenuItem, Select, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  MenuItem,
+  Select,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { DateTime } from 'luxon';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { FontSize } from '~/components/App/muiTheme';
-import { StyledDialog, StyledDialogContent, StyledDialogTitle } from '~/components/Common/Dialog';
+import {
+  StyledDialog,
+  StyledDialogContent,
+  StyledDialogTitle,
+} from '~/components/Common/Dialog';
 import Row from '~/components/Common/Row';
 import { SGEnvironments, SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import useSetting from '~/hooks/app/useSetting';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import { save } from '~/state';
-import { setNextSunrise, setRemainingUntilSunrise } from '~/state/beanstalk/sun/actions';
+import {
+  setNextSunrise,
+  setRemainingUntilSunrise,
+} from '~/state/beanstalk/sun/actions';
 import { clearApolloCache } from '~/util';
 
 import { FC } from '~/types';
 
-const Split : FC<{}> = ({ children }) => (
+const Split: FC<{}> = ({ children }) => (
   <Row justifyContent="space-between" gap={1}>
     {children}
   </Row>
@@ -43,13 +58,16 @@ const buttonProps = <T extends any>(curr: T, set: (v: any) => void, v: T) => {
 const SelectInputProps = {
   sx: {
     py: 0.5,
-    fontSize: FontSize.base
-  }
+    fontSize: FontSize.base,
+  },
 };
 
-const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, onClose }) => {
+const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
+  open,
+  onClose,
+}) => {
   const [denomination, setDenomination] = useSetting('denomination');
-  const [subgraphEnv, setSubgraphEnv]   = useSetting('subgraphEnv');
+  const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
@@ -57,11 +75,14 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
   const clearCache = useCallback(() => {
     clearApolloCache();
   }, []);
-  const updateSubgraphEnv = useCallback((env: SGEnvironments) => {
-    setSubgraphEnv(env);
-    save();
-    clearApolloCache();
-  }, [setSubgraphEnv]);
+  const updateSubgraphEnv = useCallback(
+    (env: SGEnvironments) => {
+      setSubgraphEnv(env);
+      save();
+      clearApolloCache();
+    },
+    [setSubgraphEnv]
+  );
 
   /// Dev Controls
   const setSeasonTimer = useCallback(() => {
@@ -70,19 +91,22 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
     dispatch(setRemainingUntilSunrise(_next.diffNow()));
   }, [dispatch]);
   const exportDepositsCSV = useCallback(() => {
-    const rows = Object.keys(siloBalances).reduce((prev, curr) => {
-      prev.push(
-        ...siloBalances[curr].deposited.crates.map((crate) => ([
-          curr,
-          crate.amount,
-          crate.bdv,
-          crate.season,
-          crate.stalk,
-          crate.seeds,
-        ]))
-      );
-      return prev;
-    }, [['Token', 'Amount', 'BDV', 'Season', 'Stalk', 'Seeds']] as any[]);
+    const rows = Object.keys(siloBalances).reduce(
+      (prev, curr) => {
+        prev.push(
+          ...siloBalances[curr].deposited.crates.map((crate) => [
+            curr,
+            crate.amount,
+            crate.bdv,
+            crate.season,
+            crate.stalk,
+            crate.seeds,
+          ])
+        );
+        return prev;
+      },
+      [['Token', 'Amount', 'BDV', 'Season', 'Stalk', 'Seeds']] as any[]
+    );
     window.open(
       encodeURI(
         `data:text/csv;charset=utf-8,${rows.map((r) => r.join(',')).join('\n')}`
@@ -100,8 +124,18 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
               <Typography color="text.secondary">Fiat display</Typography>
               {/* @ts-ignore */}
               <ButtonGroup variant="outlined" color="dark" disableRipple>
-                <Button {...buttonStyle} {...buttonProps(denomination, setDenomination, 'usd')}>{denomination === 'usd' ? '✓ ' : undefined}USD</Button>
-                <Button {...buttonStyle} {...buttonProps(denomination, setDenomination, 'bdv')}>{denomination === 'bdv' ? '✓ ' : undefined}BDV</Button>
+                <Button
+                  {...buttonStyle}
+                  {...buttonProps(denomination, setDenomination, 'usd')}
+                >
+                  {denomination === 'usd' ? '✓ ' : undefined}USD
+                </Button>
+                <Button
+                  {...buttonStyle}
+                  {...buttonProps(denomination, setDenomination, 'bdv')}
+                >
+                  {denomination === 'bdv' ? '✓ ' : undefined}BDV
+                </Button>
               </ButtonGroup>
             </Split>
             <Split>
@@ -110,12 +144,15 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
                 <Select
                   value={subgraphEnv || SGEnvironments.BF_PROD}
                   size="small"
-                  onChange={(e) => updateSubgraphEnv(e.target.value as SGEnvironments)}
+                  onChange={(e) =>
+                    updateSubgraphEnv(e.target.value as SGEnvironments)
+                  }
                   inputProps={SelectInputProps}
                 >
                   {Object.values(SGEnvironments).map((value) => (
                     <MenuItem key={value} value={value}>
-                      {SUBGRAPH_ENVIRONMENTS[value as SGEnvironments]?.name || 'Unknown'}
+                      {SUBGRAPH_ENVIRONMENTS[value as SGEnvironments]?.name ||
+                        'Unknown'}
                     </MenuItem>
                   ))}
                 </Select>
@@ -132,11 +169,15 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
             <Typography variant="h4">Info</Typography>
             <Split>
               <Typography color="text.secondary">Version</Typography>
-              <Box>{(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0,6)}</Box>
+              <Box>
+                {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0, 6)}
+              </Box>
             </Split>
             <Split>
               <Typography color="text.secondary">Commit</Typography>
-              <Box>{import.meta.env.VITE_GIT_COMMIT_REF?.slice(0, 6) || 'HEAD'}</Box>
+              <Box>
+                {import.meta.env.VITE_GIT_COMMIT_REF?.slice(0, 6) || 'HEAD'}
+              </Box>
             </Split>
             <Split>
               <Typography color="text.secondary">Host</Typography>
@@ -148,12 +189,20 @@ const SettingsDialog : FC<{ open: boolean; onClose?: () => void; }> = ({ open, o
               <Stack gap={1}>
                 <Typography variant="h4">Dev Controls</Typography>
                 <Split>
-                  <Typography color="text.secondary">Set season timer</Typography>
-                  <Button {...buttonStyle} onClick={setSeasonTimer}>in 5s</Button>
+                  <Typography color="text.secondary">
+                    Set season timer
+                  </Typography>
+                  <Button {...buttonStyle} onClick={setSeasonTimer}>
+                    in 5s
+                  </Button>
                 </Split>
                 <Split>
-                  <Typography color="text.secondary">Export deposits</Typography>
-                  <Button {...buttonStyle} onClick={exportDepositsCSV}>Export</Button>
+                  <Typography color="text.secondary">
+                    Export deposits
+                  </Typography>
+                  <Button {...buttonStyle} onClick={exportDepositsCSV}>
+                    Export
+                  </Button>
                 </Split>
               </Stack>
             </>

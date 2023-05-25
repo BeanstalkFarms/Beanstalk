@@ -6,28 +6,23 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const FarmerChip : FC<{ account: string }> = ({ account }) => (
+const FarmerChip: FC<{ account: string }> = ({ account }) => (
   <Button
     size="small"
     variant="text"
     color="primary"
     sx={{
       fontWeight: 400,
-      color: 'text.primary'
+      color: 'text.primary',
     }}
     href={`https://etherscan.io/address/${account}`}
     target="_blank"
     rel="noreferrer"
   >
     <Row gap={0.5}>
-      <AddressIcon
-        address={account}
-        size={IconSize.xs}
-      />
-      <Typography>
-        {account.substring(0, 6)}
-      </Typography>
-    </Row>  
+      <AddressIcon address={account} size={IconSize.xs} />
+      <Typography>{account.substring(0, 6)}</Typography>
+    </Row>
   </Button>
 );
 

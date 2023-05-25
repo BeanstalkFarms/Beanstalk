@@ -1,8 +1,6 @@
 import React from 'react';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark'; import {
-  Box,
-  Button,
-} from '@mui/material';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import { Box, Button } from '@mui/material';
 import { FontSize } from '~/components/App/muiTheme';
 import GuideDialog from '~/components/Common/Guide/GuideDialog';
 import useToggle from '~/hooks/display/useToggle';
@@ -13,7 +11,7 @@ import { FC } from '~/types';
 export type GuideProps = {
   title: string;
   guides: Guide[];
-}
+};
 
 const GuideButton: FC<{ title: string; guides: Guide[] }> = (props) => {
   const [isOpen, show, hide] = useToggle();
@@ -24,9 +22,17 @@ const GuideButton: FC<{ title: string; guides: Guide[] }> = (props) => {
           onClick={show}
           variant="contained"
           color="primary"
-          sx={{ p: 1, borderRadius: 100, minWidth: 0, width: '25px', height: '25px' }}
+          sx={{
+            p: 1,
+            borderRadius: 100,
+            minWidth: 0,
+            width: '25px',
+            height: '25px',
+          }}
         >
-          <QuestionMarkIcon sx={{ fontSize: FontSize.sm, background: 'primary.main' }} />
+          <QuestionMarkIcon
+            sx={{ fontSize: FontSize.sm, background: 'primary.main' }}
+          />
         </Button>
       </Box>
       <GuideDialog open={isOpen} onClose={hide} {...props} />

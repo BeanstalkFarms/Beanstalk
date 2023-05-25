@@ -1,10 +1,15 @@
-export const sleep = (ms: number = 1000) => new Promise<void>((r) => setTimeout(() => { r(); }, ms));
+export const sleep = (ms: number = 1000) =>
+  new Promise<void>((r) =>
+    setTimeout(() => {
+      r();
+    }, ms)
+  );
 
 export const secondsToDate = (ts: string) => new Date(parseInt(ts, 10) * 1000);
 
 export const getDateCountdown = (
   /** ms since epoch; getTime() */
-  time: number 
+  time: number
 ) => {
   /// Dates
   let msg;
@@ -12,9 +17,9 @@ export const getDateCountdown = (
   const end = new Date(time);
 
   /// Calculations
-  const differenceInTime  = end.getTime() - now.getTime();
+  const differenceInTime = end.getTime() - now.getTime();
   const differenceInHours = differenceInTime / (1000 * 3600);
-  const differenceInDays  = differenceInHours / 24;
+  const differenceInDays = differenceInHours / 24;
   now.setHours(0, 0, 0, 0);
 
   const active = differenceInHours > 0;
@@ -35,11 +40,9 @@ export const getDateCountdown = (
       const diff = Math.round(differenceInHours - 24);
       if (diff === 24) {
         msg = 'in 2 days';
-      }
-      else if (diff === 0) {
+      } else if (diff === 0) {
         msg = 'in 1 day';
-      }
-      else {
+      } else {
         msg = `in 1 day, ${diff} hour${diff === 1 ? '' : 's'}`;
       }
     } else if (differenceInHours > 48 && differenceInDays <= 7) {
@@ -50,7 +53,7 @@ export const getDateCountdown = (
       msg = `on ${end.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       })}`;
     }
   } else {
@@ -58,7 +61,7 @@ export const getDateCountdown = (
     msg = `on ${end.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })}`;
   }
 

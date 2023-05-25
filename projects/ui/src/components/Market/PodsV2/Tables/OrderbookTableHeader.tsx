@@ -1,9 +1,7 @@
 import { Grid, Typography } from '@mui/material';
 import React from 'react';
 
-const OrderbookTableHeader: React.FC<{ isMinMax: boolean }> = (
-  isMinMax
-) => (
+const OrderbookTableHeader: React.FC<{ isMinMax: boolean }> = (isMinMax) => (
   <Grid container direction="row" spacing={1} px={1.5}>
     <Grid item container xs={1.5}>
       <Grid item xs={12} alignItems="flex-start" textAlign="left">
@@ -37,6 +35,6 @@ const OrderbookTableHeader: React.FC<{ isMinMax: boolean }> = (
       </Grid>
     </Grid>
   </Grid>
-  );
+);
 
 export default OrderbookTableHeader;

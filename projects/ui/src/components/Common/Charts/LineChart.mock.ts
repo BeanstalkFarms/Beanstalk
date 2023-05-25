@@ -12,7 +12,7 @@ export const mockDepositData = new Array(N).fill(null).map((_, i) => ({
 export const mockOwnershipPctData = new Array(N).fill(null).map((_, i) => ({
   season: 6074 - N + i,
   date: today.minus({ days: N - i }).toJSDate(),
-  value: 0.01 - 0.0001 * i + 0.001 * (Math.random() - 0.5)
+  value: 0.01 - 0.0001 * i + 0.001 * (Math.random() - 0.5),
 }));
 
 export const mockTWAPData = new Array(N).fill(null).map((_, i) => ({
@@ -26,7 +26,7 @@ export const mockTWAPDataVariable = new Array(N).fill(null).map((_, i) => ({
   season: 6074 - N + i,
   date: today.minus({ days: N - i }).toJSDate(),
   // value: 0.01 - 0.0001 * i + 0.001 * (Math.random() - 0.5)
-  value: (i < 15 || i > 25) ? 1 + 0.4 * Math.random() : 1 - 0.4 * Math.random(),
+  value: i < 15 || i > 25 ? 1 + 0.4 * Math.random() : 1 - 0.4 * Math.random(),
 }));
 
 export const mockPodRateData = new Array(N).fill(null).map((_, i) => ({

@@ -9,12 +9,14 @@ export default function useUnripeUnderlyingMap(
 ) {
   const unripe = useTokenList(UNRIPE_TOKENS);
   const underlying = useTokenList(UNRIPE_UNDERLYING_TOKENS);
-  return useMemo(() => 
-    unripe.reduce<AddressMap<ERC20Token>>((prev, unripeToken, index) => {
-      if (keyedBy === 'unripe') prev[unripeToken.address] = underlying[index]; // address => Ripe Token
-      else prev[underlying[index].address] = unripeToken;                      // address => Unripe Token
-      return prev;
-    }, {}),
+  return useMemo(
+    () =>
+      unripe.reduce<AddressMap<ERC20Token>>((prev, unripeToken, index) => {
+        if (keyedBy === 'unripe') prev[unripeToken.address] = underlying[index];
+        // address => Ripe Token
+        else prev[underlying[index].address] = unripeToken; // address => Unripe Token
+        return prev;
+      }, {}),
     [keyedBy, underlying, unripe]
   );
 }

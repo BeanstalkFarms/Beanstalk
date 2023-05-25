@@ -3,15 +3,12 @@ import { Box, BoxProps } from '@mui/system';
 
 import { FC } from '~/types';
 
-const Dot : FC<BoxProps & {
-  color?: BoxProps['color'],
-  size?: number;
-}> = ({
-  size  = 8,
-  color = 'primary.main',
-  sx,
-  ...props
-}) => (
+const Dot: FC<
+  BoxProps & {
+    color?: BoxProps['color'];
+    size?: number;
+  }
+> = ({ size = 8, color = 'primary.main', sx, ...props }) => (
   <Box
     className="B-badge"
     sx={{
@@ -19,7 +16,7 @@ const Dot : FC<BoxProps & {
       height: size,
       backgroundColor: color,
       borderRadius: size / 2,
-      ...sx
+      ...sx,
     }}
     {...props}
   />

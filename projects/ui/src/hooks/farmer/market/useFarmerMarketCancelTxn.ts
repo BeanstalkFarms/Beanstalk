@@ -49,10 +49,7 @@ export default function useFarmerMarketCancelTxn() {
           txToast.confirming(txn);
 
           const receipt = await txn.wait();
-          await Promise.all([
-            refetchFarmerField(),
-            refetchFarmerMarketItems()
-          ]);
+          await Promise.all([refetchFarmerField(), refetchFarmerMarketItems()]);
           txToast.success(receipt);
         } catch (err) {
           txToast.error(err);
@@ -92,7 +89,7 @@ export default function useFarmerMarketCancelTxn() {
           // a bogus PodOrderCancelled event.
           const verify = await beanstalk.podOrder(account, ...params);
           if (!verify || verify.eq(0)) throw new Error('Order not found');
-          
+
           const txn = await beanstalk.cancelPodOrder(...params, destination);
           txToast.confirming(txn);
 
@@ -111,7 +108,14 @@ export default function useFarmerMarketCancelTxn() {
         }
       })();
     },
-    [account, middleware, Bean, beanstalk, refetchFarmerMarketItems, refetchFarmerBalances]
+    [
+      account,
+      middleware,
+      Bean,
+      beanstalk,
+      refetchFarmerMarketItems,
+      refetchFarmerBalances,
+    ]
   );
 
   return {

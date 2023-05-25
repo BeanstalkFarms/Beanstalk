@@ -7,14 +7,14 @@ import {
   ListItemText,
   List,
   Box,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { useTheme } from '@mui/material/styles';
 import { BEAN, PODS } from '~/constants/tokens';
 import useFarmerListingsLedger from '~/hooks/farmer/useFarmerListingsLedger';
 import { FontSize, IconSize } from '~/components/App/muiTheme';
-import { displayBN, displayFullBN, toStringBaseUnitBN , PlotMap } from '~/util';
+import { displayBN, displayFullBN, toStringBaseUnitBN, PlotMap } from '~/util';
 import podIcon from '~/img/beanstalk/pod-icon.svg';
 import Row from '~/components/Common/Row';
 
@@ -35,7 +35,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
   plots,
   harvestableIndex,
   handlePlotSelect,
-  selected
+  selected,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -47,7 +47,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
     return Object.keys(plots).sort((a, b) => parseFloat(a) - parseFloat(b));
   }, [plots]);
   if (!plots || !orderedPlotKeys) return null;
-  
+
   ///
   let numAlreadyListed = 0;
   const items = orderedPlotKeys.map((index) => {
@@ -66,7 +66,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
           // instead of in muiTheme.ts
           '& .MuiListItemText-primary': {
             fontSize: FontSize['1xl'],
-            lineHeight: '1.875rem'
+            lineHeight: '1.875rem',
           },
           '& .MuiListItemText-secondary': {
             fontSize: FontSize.base,
@@ -91,11 +91,13 @@ const PlotSelect: FC<PlotSelectProps> = ({
               </ListItemIcon>
               <ListItemText
                 primary="PODS"
-                secondary={(
+                secondary={
                   <>
-                    {isMobile ? '@' : 'Place in Line:'} {displayBN(new BigNumber(index).minus(harvestableIndex))}{listing ? <>&nbsp;&middot; Currently listed</> : null}
+                    {isMobile ? '@' : 'Place in Line:'}{' '}
+                    {displayBN(new BigNumber(index).minus(harvestableIndex))}
+                    {listing ? <>&nbsp;&middot; Currently listed</> : null}
                   </>
-                )}
+                }
                 sx={{ my: 0 }}
               />
             </Row>
@@ -103,13 +105,13 @@ const PlotSelect: FC<PlotSelectProps> = ({
               <Typography variant="bodyLarge">
                 {displayFullBN(plots[index], PODS.displayDecimals)}
               </Typography>
-              ) : null}
+            ) : null}
           </Row>
         </ListItemButton>
       </ListItem>
     );
   });
-  
+
   return (
     <>
       {numAlreadyListed > 0 ? (
@@ -120,9 +122,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
           </Typography>
         </Box>
       ) : null}
-      <List sx={{ p: 0 }}>
-        {items}
-      </List>
+      <List sx={{ p: 0 }}>{items}</List>
     </>
   );
 };

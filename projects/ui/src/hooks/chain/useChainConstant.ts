@@ -10,7 +10,9 @@ export function useGetChainConstant() {
   );
 }
 
-export default function useChainConstant<T extends ChainConstant>(map: T) : T[keyof T] {
+export default function useChainConstant<T extends ChainConstant>(
+  map: T
+): T[keyof T] {
   const { chain } = useNetwork();
   return getChainConstant<T>(map, chain?.id);
 }

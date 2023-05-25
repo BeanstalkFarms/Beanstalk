@@ -6,14 +6,14 @@ import { setEthPrices, setGlobal, updateSetting } from './actions';
 
 export const initialState: App = {
   ethPrices: null,
-  settings: { 
+  settings: {
     denomination: 'usd',
     subgraphEnv: SGEnvironments.BF_PROD,
-    ...persistedState?.app?.settings
+    ...persistedState?.app?.settings,
   },
   globals: {
     showSettings: false,
-  }
+  },
 };
 
 export default createReducer(initialState, (builder) =>

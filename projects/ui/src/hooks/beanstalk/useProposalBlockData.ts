@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { useEffect, useState } from 'react';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
+import { useProposalVotingPowerQuery } from '~/generated/graphql';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { getQuorumPct } from '~/lib/Beanstalk/Governance';
 import { getProposalTag, getProposalType, Proposal, tokenResult } from '~/util';
@@ -23,14 +24,14 @@ export type ProposalBlockData = {
   pctOfQuorum: number | undefined;
   /** The voting power (in Stalk) of `account` at the proposal block. */
   votingPower: BigNumber | undefined;
-}
+};
 
 export default function useProposalBlockData(
   proposal: Proposal,
-  account?: string,
-) : {
-  loading: boolean,
-  data: ProposalBlockData
+  account?: string
+): {
+  loading: boolean;
+  data: ProposalBlockData;
 } {
   /// Proposal info
   const tag = getProposalTag(proposal.title);
@@ -39,28 +40,42 @@ export default function useProposalBlockData(
 
   /// Beanstalk
   const beanstalk = useBeanstalkContract();
-  const [totalStalk, setTotalStalk] = useState<undefined | BigNumber>(undefined);
-  const [votingPower, setVotingPower] = useState<undefined | BigNumber>(undefined);
+  const [totalStalk, setTotalStalk] = useState<undefined | BigNumber>(
+    undefined
+  );
+  const [votingPower, setVotingPower] = useState<undefined | BigNumber>(
+    undefined
+  );
   const [loading, setLoading] = useState(true);
-  
-  const score = (
+
+  const score =
     proposal.space.id === 'wearebeansprout.eth'
       ? new BigNumber(proposal.scores_total || ZERO_BN)
-      : new BigNumber(proposal.scores[0] || ZERO_BN)
-  );
-  
+      : new BigNumber(proposal.scores[0] || ZERO_BN);
+
+  const { data: vpData } = useProposalVotingPowerQuery({
+    variables: {
+      voter_address: account?.toLowerCase() || '',
+      proposal_id: proposal?.id.toLowerCase() || '',
+      space: proposal?.space?.id?.toLowerCase() || '',
+    },
+    skip: !account || !proposal?.id || !proposal?.space?.id,
+    context: { subgraph: 'snapshot' },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'network-only',
+  });
+
+  // TODO: This will only work when the space is not BeaNFTDao.eth.
   useEffect(() => {
     (async () => {
       try {
         if (!proposal.snapshot) return;
         const blockTag = parseInt(proposal.snapshot, 10);
         const stalkResult = tokenResult(STALK);
-        const [_totalStalk, _votingPower] = await Promise.all([
-          beanstalk.totalStalk({ blockTag }).then(stalkResult),
-          account ? beanstalk.balanceOfStalk(account, { blockTag }).then(stalkResult) : Promise.resolve(undefined),
-        ]);
+        const _totalStalk = await beanstalk
+          .totalStalk({ blockTag })
+          .then(stalkResult);
         setTotalStalk(_totalStalk);
-        setVotingPower(_votingPower);
       } catch (e) {
         console.error(e);
       } finally {
@@ -68,14 +83,19 @@ export default function useProposalBlockData(
       }
     })();
   }, [beanstalk, tag, proposal.snapshot, account]);
-  
+
+  useEffect(() => {
+    const vp = vpData?.vp?.vp || 0;
+    setVotingPower(new BigNumber(vp));
+  }, [vpData?.vp?.vp]);
+
   //
-  const stalkForQuorum = (pctStalkForQuorum && totalStalk)
-    ? totalStalk.times(pctStalkForQuorum)
-    : undefined;
-  const pctOfQuorum = (score && stalkForQuorum)
-    ? score.div(stalkForQuorum).toNumber()
-    : undefined;
+  const stalkForQuorum =
+    pctStalkForQuorum && totalStalk
+      ? totalStalk.times(pctStalkForQuorum)
+      : undefined;
+  const pctOfQuorum =
+    score && stalkForQuorum ? score.div(stalkForQuorum).toNumber() : undefined;
 
   return {
     loading,
@@ -91,6 +111,6 @@ export default function useProposalBlockData(
       pctOfQuorum,
       // Account
       votingPower,
-    }
+    },
   };
 }

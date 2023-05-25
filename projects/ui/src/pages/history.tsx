@@ -24,21 +24,27 @@ const facetByTab = {
 const TransactionHistoryPage: FC<{}> = () => {
   const account = useAccount();
   const [tab, setTab] = useState<0 | 1 | 2>(0);
-  const events = useSelector<AppState, AppState['_farmer']['events2']>((state) => state._farmer.events2);
+  const events = useSelector<AppState, AppState['_farmer']['events2']>(
+    (state) => state._farmer.events2
+  );
   const [walletEvents, setWalletEvents] = useState<Event[]>();
   const chainId = useChainId();
 
-  const handleSetTab = (event: React.SyntheticEvent, newValue: 0 | 1 | 2) => setTab(newValue);
+  const handleSetTab = (event: React.SyntheticEvent, newValue: 0 | 1 | 2) =>
+    setTab(newValue);
 
   useEffect(() => {
     function filterEventsByFacet() {
       if (account) {
         if (tab === 0) {
           // ALL EVENTS
-          const allEvents = Object.keys(events).reduce<Event[]>((prev, curr) => {
-            const eventsByCacheId = events[curr].events;
-            return prev.concat(eventsByCacheId);
-          }, []);
+          const allEvents = Object.keys(events).reduce<Event[]>(
+            (prev, curr) => {
+              const eventsByCacheId = events[curr].events;
+              return prev.concat(eventsByCacheId);
+            },
+            []
+          );
           allEvents.sort((a, b) => b.blockNumber - a.blockNumber);
           setWalletEvents(allEvents);
         } else if (facetByTab[tab]) {
@@ -58,7 +64,13 @@ const TransactionHistoryPage: FC<{}> = () => {
   // FIXME: use zero state
   if (!account) {
     return (
-      <Card component={Stack} direction="row" alignItems="center" justifyContent="center" sx={{ p: 4 }}>
+      <Card
+        component={Stack}
+        direction="row"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ p: 4 }}
+      >
         <WalletButton variant="outlined" color="primary" />
       </Card>
     );
@@ -77,17 +89,22 @@ const TransactionHistoryPage: FC<{}> = () => {
           {walletEvents !== undefined && walletEvents.length > 0 ? (
             <Grid container>
               {walletEvents.map((event, i) => (
-                <Grid key={`${event.transactionHash}-${event.logIndex}`} item width="100%" px={2}>
+                <Grid
+                  key={`${event.transactionHash}-${event.logIndex}`}
+                  item
+                  width="100%"
+                  px={2}
+                >
                   <EventItem
                     event={event}
                     account={account ? account.toString().toLowerCase() : ''}
-                        />
+                  />
                 </Grid>
               ))}
             </Grid>
-            ) : (
-              <EmptyState message="No transactions of this type." />
-            )}
+          ) : (
+            <EmptyState message="No transactions of this type." />
+          )}
         </ModuleContent>
       </Module>
     </Container>

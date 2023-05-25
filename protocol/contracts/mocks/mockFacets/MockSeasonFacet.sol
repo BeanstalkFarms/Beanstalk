@@ -269,6 +269,9 @@ contract MockSeasonFacet is SeasonFacet {
 
         uint32 currentSeason = s.season.current;
 
+        // Clear the storage variable
+        delete s.s.deprecated_seeds;
+
         s.ss[C.BEAN].stalkEarnedPerSeason = 2*1e6;
         s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
         s.ss[C.BEAN].milestoneSeason = currentSeason;

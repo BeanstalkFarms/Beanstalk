@@ -1,8 +1,14 @@
 import React from 'react';
 import { Chip } from '@mui/material';
-import { BeanstalkPalette, FontSize, FontWeight } from '~/components/App/muiTheme';
+import {
+  BeanstalkPalette,
+  FontSize,
+  FontWeight,
+} from '~/components/App/muiTheme';
 
-const WhitelistBadge: React.FC<{ isWhitelisted: boolean }> = ({ isWhitelisted }) => (
+const WhitelistBadge: React.FC<{ isWhitelisted: boolean }> = ({
+  isWhitelisted,
+}) => (
   <>
     {isWhitelisted ? (
       <Chip
@@ -31,9 +37,7 @@ const WhitelistBadge: React.FC<{ isWhitelisted: boolean }> = ({ isWhitelisted })
         }}
       />
     )}
-
   </>
-
 );
 
 export default WhitelistBadge;

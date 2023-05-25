@@ -51,23 +51,25 @@ export type FertilizerData = {
    * font weight of 'Sprouts text'
    */
   fontWeight?: keyof typeof FontWeight;
-}
+};
 
-const FertilizerItem: FC<FertilizerData & {
-  /**
-   * Customize the Fertilizer image used.
-   * Fertilizer can be `unused` -> `active` -> `used`.
-   */
-  state?: FertilizerState;
-  /**
-   * Change copy and animations when we're purchasing new FERT.
-   */
-  isNew?: boolean;
-  /**
-   * 
-   */
-  tooltip: FertilizerTooltip;
-}> = ({
+const FertilizerItem: FC<
+  FertilizerData & {
+    /**
+     * Customize the Fertilizer image used.
+     * Fertilizer can be `unused` -> `active` -> `used`.
+     */
+    state?: FertilizerState;
+    /**
+     * Change copy and animations when we're purchasing new FERT.
+     */
+    isNew?: boolean;
+    /**
+     *
+     */
+    tooltip: FertilizerTooltip;
+  }
+> = ({
   id,
   amount,
   humidity,
@@ -77,29 +79,35 @@ const FertilizerItem: FC<FertilizerData & {
   tooltip,
   state,
   isNew,
-  fontWeight = 'bold'
+  fontWeight = 'bold',
 }) => (
   <Stack width="100%" alignItems="center" rowGap={0.75}>
-    <FertilizerImage
-      isNew={isNew}
-      state={state}
-      progress={progress}
-      id={id}
-      />
+    <FertilizerImage isNew={isNew} state={state} progress={progress} id={id} />
     {amount.eq(0) ? (
       <Typography textAlign="center">x0</Typography>
     ) : (
       <Stack width="100%" direction="column" rowGap={0.25}>
         <Row justifyContent="space-between">
           {/* <Typography sx={{ fontSize: '14px', opacity: 1 }} color="text.secondary"> */}
-          <Typography sx={{ fontSize: '14px', opacity: 0.8 }} color="text.secondary">
+          <Typography
+            sx={{ fontSize: '14px', opacity: 0.8 }}
+            color="text.secondary"
+          >
             x{displayFullBN(amount, 0)}
           </Typography>
           <Tooltip title={tooltip.humidity} placement="right">
             <Row gap={0.2} alignItems="center">
               <img alt="" src={humidityIcon} height="13px" />
-              <Typography sx={{ fontSize: '14px', opacity: 0.6 }} color="text.secondary">
-                {humidity ? `${humidity.times(100).toNumber().toLocaleString('en-us', { maximumFractionDigits: 1 })}%` : '---'}
+              <Typography
+                sx={{ fontSize: '14px', opacity: 0.6 }}
+                color="text.secondary"
+              >
+                {humidity
+                  ? `${humidity
+                      .times(100)
+                      .toNumber()
+                      .toLocaleString('en-us', { maximumFractionDigits: 1 })}%`
+                  : '---'}
               </Typography>
             </Row>
           </Tooltip>
@@ -107,23 +115,36 @@ const FertilizerItem: FC<FertilizerData & {
         <Tooltip
           title={
             tooltip.name === 'my-fertilizer'
-              ? tooltip.reward(rinsableSprouts, (sprouts || ZERO_BN).minus(rinsableSprouts || ZERO_BN))
-              : tooltip.reward}
-          placement="right">
+              ? tooltip.reward(
+                  rinsableSprouts,
+                  (sprouts || ZERO_BN).minus(rinsableSprouts || ZERO_BN)
+                )
+              : tooltip.reward
+          }
+          placement="right"
+        >
           <Row justifyContent="space-between">
-            <Typography sx={{ fontSize: '14px' }} color="text.primary" fontWeight={fontWeight}>
+            <Typography
+              sx={{ fontSize: '14px' }}
+              color="text.primary"
+              fontWeight={fontWeight}
+            >
               Sprouts
             </Typography>
             <Row alignItems="center" gap={0.2}>
               <TokenIcon token={SPROUTS} css={{ width: '14px' }} />
-              <Typography sx={{ fontSize: '14px' }} color="text.primary" fontWeight={fontWeight}>
+              <Typography
+                sx={{ fontSize: '14px' }}
+                color="text.primary"
+                fontWeight={fontWeight}
+              >
                 {sprouts ? displayBN(sprouts) : '?'}
               </Typography>
             </Row>
           </Row>
         </Tooltip>
       </Stack>
-      )}
+    )}
   </Stack>
 );
 

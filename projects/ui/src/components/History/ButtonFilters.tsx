@@ -11,7 +11,7 @@ const buttonStyle = {
   pr: 1,
   pt: 0.5,
   pb: 0.5,
-  borderRadius: '25px'
+  borderRadius: '25px',
 };
 
 export interface ButtonTabsProps {

@@ -10,23 +10,21 @@ import WalletButton from '~/components/Common/Connection/WalletButton';
  * */
 import { FC } from '~/types';
 
-const AuthEmptyState: FC<{
-  /** Card title */
-  title?: string;
-  /**
-   * Overrides default message
-   * when wallet is connected.
-   */
-  message?: string;
-  /**
-   * 
-   */
-  hideWalletButton?: boolean;
-} & StackProps> = ({
-  message,
-  children,
-  hideWalletButton = false,
-}) => {
+const AuthEmptyState: FC<
+  {
+    /** Card title */
+    title?: string;
+    /**
+     * Overrides default message
+     * when wallet is connected.
+     */
+    message?: string;
+    /**
+     *
+     */
+    hideWalletButton?: boolean;
+  } & StackProps
+> = ({ message, children, hideWalletButton = false }) => {
   const account = useAccount();
   return (
     <Stack
@@ -41,9 +39,15 @@ const AuthEmptyState: FC<{
       textAlign="center"
       gap={1}
     >
-      {message && <Typography variant="body1" color="text.tertiary">{message}</Typography>}
+      {message && (
+        <Typography variant="body1" color="text.tertiary">
+          {message}
+        </Typography>
+      )}
       {children}
-      {!account && !hideWalletButton && <WalletButton variant="contained" color="primary" />}
+      {!account && !hideWalletButton && (
+        <WalletButton variant="contained" color="primary" />
+      )}
     </Stack>
   );
 };

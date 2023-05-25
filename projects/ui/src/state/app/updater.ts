@@ -32,38 +32,92 @@ export default function AppUpdater() {
   const dispatch = useDispatch();
   const [denomination] = useSetting('denomination');
   const navigate = useNavigate();
-  
+
   useEthPrices();
 
-  useHotkeys('opt+f, alt+f', (/* event, handler */) => {
-    dispatch(updateSetting({ key: 'denomination', value: denomination === 'bdv' ? 'usd' : 'bdv' }));
-    toast.success(`Updated setting: Show fiat in ${denomination === 'bdv' ? 'USD' : 'BDV'}.`);
-  }, { keyup: true, }, [denomination]);
-  
-  useHotkeys('opt+q, alt+q', () => {
-    navigate('/');
-  }, {}, [navigate]);
-  useHotkeys('opt+w, alt+w', () => {
-    navigate('/silo');
-  }, {}, [navigate]);
-  useHotkeys('opt+e, alt+e', () => {
-    navigate('/field');
-  }, {}, [navigate]);
-  useHotkeys('opt+r, alt+r', () => {
-    navigate('/barn');
-  }, {}, [navigate]);
-  useHotkeys('opt+t, alt+t', () => {
-    navigate('/market');
-  }, {}, [navigate]);
-  useHotkeys('opt+a, alt+a', () => {
-    navigate('/analytics');
-  }, {}, [navigate]);
-  useHotkeys('opt+s, alt+s', () => {
-    navigate('/balances');
-  }, {}, [navigate]);
-  useHotkeys('opt+d, alt+d', () => {
-    navigate('/balances');
-  }, {}, [navigate]);
+  useHotkeys(
+    'opt+f, alt+f',
+    (/* event, handler */) => {
+      dispatch(
+        updateSetting({
+          key: 'denomination',
+          value: denomination === 'bdv' ? 'usd' : 'bdv',
+        })
+      );
+      toast.success(
+        `Updated setting: Show fiat in ${
+          denomination === 'bdv' ? 'USD' : 'BDV'
+        }.`
+      );
+    },
+    { keyup: true },
+    [denomination]
+  );
+
+  useHotkeys(
+    'opt+q, alt+q',
+    () => {
+      navigate('/');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+w, alt+w',
+    () => {
+      navigate('/silo');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+e, alt+e',
+    () => {
+      navigate('/field');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+r, alt+r',
+    () => {
+      navigate('/barn');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+t, alt+t',
+    () => {
+      navigate('/market');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+a, alt+a',
+    () => {
+      navigate('/analytics');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+s, alt+s',
+    () => {
+      navigate('/balances');
+    },
+    {},
+    [navigate]
+  );
+  useHotkeys(
+    'opt+d, alt+d',
+    () => {
+      navigate('/balances');
+    },
+    {},
+    [navigate]
+  );
 
   return null;
 }

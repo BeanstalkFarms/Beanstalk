@@ -5,14 +5,15 @@ import forecast from '~/img/beanstalk/forecast-banner.svg';
 
 import { FC } from '~/types';
 
-const ComingSoonCard : FC<{ title: string }> = ({ title }) => (
+const ComingSoonCard: FC<{ title: string }> = ({ title }) => (
   <Card sx={{ px: 4, py: 6 }}>
-    <Stack direction="column" alignItems="center" justifyContent="center" gap={4}>
-      <img
-        src={forecast}
-        alt="Barn"
-        css={{ maxWidth: 400 }}
-      />
+    <Stack
+      direction="column"
+      alignItems="center"
+      justifyContent="center"
+      gap={4}
+    >
+      <img src={forecast} alt="Barn" css={{ maxWidth: 400 }} />
       <Typography variant="h1">The {title} page is coming soon</Typography>
       <Stack direction="column" gap={2}>
         <Button
@@ -22,7 +23,7 @@ const ComingSoonCard : FC<{ title: string }> = ({ title }) => (
           variant="outlined"
           size="large"
           sx={{ px: 4 }}
-          >
+        >
           Support the Barn Raise
         </Button>
       </Stack>

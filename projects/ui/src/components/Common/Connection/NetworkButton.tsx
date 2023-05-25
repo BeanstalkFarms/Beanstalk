@@ -8,10 +8,12 @@ import TokenIcon from '../TokenIcon';
 import DropdownIcon from '../DropdownIcon';
 import NetworkDialog from './NetworkDialog';
 
-const NetworkButton: React.FC<ButtonProps & {
-  showIcons?: boolean;
-  wrongNetworkText?: string;
-}> = ({ 
+const NetworkButton: React.FC<
+  ButtonProps & {
+    showIcons?: boolean;
+    wrongNetworkText?: string;
+  }
+> = ({
   showIcons = true,
   wrongNetworkText = 'Switch Network',
   children,
@@ -22,26 +24,24 @@ const NetworkButton: React.FC<ButtonProps & {
   /// Dialog
   const [anchor, toggleAnchor] = useAnchor();
   const open = Boolean(anchor);
-  
+
   if (!chain) return null;
-  const text = (
-    SupportedChainId[chain.id]
-      ? chain.name 
-      : wrongNetworkText
-  );
-  
+  const text = SupportedChainId[chain.id] ? chain.name : wrongNetworkText;
+
   return (
     <>
       <Button
         disableFocusRipple
         variant="contained"
         color="light"
-        startIcon={showIcons && (
-          <TokenIcon
-            token={ETH[SupportedChainId.MAINNET]}
-            css={{ height: '1.4em' }}
-          />
-        )}
+        startIcon={
+          showIcons && (
+            <TokenIcon
+              token={ETH[SupportedChainId.MAINNET]}
+              css={{ height: '1.4em' }}
+            />
+          )
+        }
         endIcon={showIcons && <DropdownIcon open={open} />}
         onClick={toggleAnchor}
         {...props}
@@ -56,16 +56,26 @@ const NetworkButton: React.FC<ButtonProps & {
             // xs: 0,
           },
           '& .MuiButton-startIcon': {
-            marginRight: { 
-              md: 0.8,  // FIXME: couldn't get 'inherit' to work here
-              xs: 0
-            }
+            marginRight: {
+              md: 0.8, // FIXME: couldn't get 'inherit' to work here
+              xs: 0,
+            },
           },
-          ...props.sx
+          borderStyle: 'solid',
+          borderColor: 'white',
+          borderWidth: 1,
+          transition: 'none !important',
+          '&:hover': {
+            borderColor: 'divider',
+          },
+          ...props.sx,
         }}
       >
         {children || (
-          <Typography variant="bodyMedium" sx={{ display: { xl: 'block', xs: 'none' }, color: 'text.primary' }}>
+          <Typography
+            variant="bodyMedium"
+            sx={{ display: { xl: 'block', xs: 'none' }, color: 'text.primary' }}
+          >
             {text}
           </Typography>
         )}

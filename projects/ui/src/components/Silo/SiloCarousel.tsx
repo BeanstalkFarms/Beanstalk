@@ -40,15 +40,22 @@ const useCardContentWithToken = (token: ERC20Token) => [
     texts: [
       `Use the form to Deposit ${token.symbol} into the Silo.`,
       `Beanstalk allows you to use ${
-        token.isUnripe ? token.symbol : 
-          token.symbol === 'BEAN' 
-            ? 'BEAN or ETH'
-            : 'BEAN, ETH, 3CRV, DAI, USDC, or USDT'
-      } from your wallet or Farm balance to Deposit ${token.symbol} into the Silo.${
-        token.isUnripe ? '' : ` If you aren't using ${token.symbol}, the UI will swap${
-          token.isLP ? ', add liquidity, and Deposit the LP token' : ' and Deposit'
-        } for you in one transaction.`
-      }`
+        token.isUnripe
+          ? token.symbol
+          : token.symbol === 'BEAN'
+          ? 'BEAN or ETH'
+          : 'BEAN, ETH, 3CRV, DAI, USDC, or USDT'
+      } from your wallet or Farm balance to Deposit ${
+        token.symbol
+      } into the Silo.${
+        token.isUnripe
+          ? ''
+          : ` If you aren't using ${token.symbol}, the UI will swap${
+              token.isLP
+                ? ', add liquidity, and Deposit the LP token'
+                : ' and Deposit'
+            } for you in one transaction.`
+      }`,
     ],
     imageSrc: depositCardContentByToken[token.address]?.img || depositBeanImg,
   },
@@ -132,9 +139,7 @@ const SiloCarousel: FC<{ token: ERC20Token }> = ({ token }) => {
                 disableSlide
                 elements={content.map(({ title, texts }, k) => (
                   <React.Fragment key={`${k}-info`}>
-                    <Typography color="text.primary">
-                      {title}
-                    </Typography>
+                    <Typography color="text.primary">{title}</Typography>
                     <Stack sx={{ whiteSpace: 'pre-wrap' }}>
                       {texts.map((text, i) => (
                         <Typography

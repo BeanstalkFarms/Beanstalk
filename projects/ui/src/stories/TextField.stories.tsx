@@ -6,13 +6,13 @@ export default {
   component: TextField,
 };
 
-const Template : any = (args : any) => (
+const Template: any = (args: any) => (
   <TextField
     type="text"
     variant="outlined"
     placeholder="Placeholder"
     InputProps={{
-      endAdornment: args.endAdornment
+      endAdornment: args.endAdornment,
     }}
   />
 );
@@ -31,6 +31,4 @@ WithAdornment.args = {
   ),
 };
 
-export {
-  WithAdornment
-};
+export { WithAdornment };

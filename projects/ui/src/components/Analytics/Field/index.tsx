@@ -31,7 +31,7 @@ const FieldAnalytics: FC<{}> = () => {
         sx={{ px: 2, pt: 2, pb: 1.5 }}
       >
         <Tab label="RRoR" />
-        <Tab label="Temperature" />
+        <Tab label="Max Temperature" />
         <Tab label="Pods" />
         <Tab label="Pod Rate" />
         <Tab label="Sown" />

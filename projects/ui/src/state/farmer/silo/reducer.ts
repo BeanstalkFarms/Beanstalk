@@ -1,11 +1,15 @@
 import { createReducer } from '@reduxjs/toolkit';
 import BigNumber from 'bignumber.js';
 import { FarmerSilo } from '.';
-import { resetFarmerSilo, updateFarmerSiloRewards, updateFarmerSiloBalances } from './actions';
+import {
+  resetFarmerSilo,
+  updateFarmerSiloRewards,
+  updateFarmerSiloBalances,
+} from './actions';
 
 const NEG1 = new BigNumber(-1);
 
-export const initialFarmerSilo : FarmerSilo = {
+export const initialFarmerSilo: FarmerSilo = {
   balances: {},
   beans: {
     earned: NEG1,
@@ -22,8 +26,8 @@ export const initialFarmerSilo : FarmerSilo = {
     total: NEG1,
   },
   roots: {
-    total: NEG1, 
-  }
+    total: NEG1,
+  },
 };
 
 export default createReducer(initialFarmerSilo, (builder) =>
@@ -35,7 +39,7 @@ export default createReducer(initialFarmerSilo, (builder) =>
         const a = address.toLowerCase();
         state.balances[a] = {
           ...state.balances[a],
-          ...payload[address]
+          ...payload[address],
         };
       });
     })

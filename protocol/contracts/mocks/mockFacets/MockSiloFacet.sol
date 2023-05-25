@@ -51,8 +51,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
         uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
-        uint256 newBdv = amount.add(s.a[msg.sender].mowStatuses[C.UNRIPE_LP].bdv);
-        s.a[msg.sender].mowStatuses[C.UNRIPE_LP].bdv = uint128(newBdv);
+        mintSeeds(msg.sender, seeds);
         LibTransfer.receiveToken(IERC20(C.UNRIPE_LP), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
@@ -67,8 +66,6 @@ contract MockSiloFacet is SiloFacet {
         
         LibSilo.mintStalk(msg.sender, stalk);
         mintSeeds(msg.sender, seeds);
-        uint256 newBdv = partialAmount.add(s.a[msg.sender].mowStatuses[C.UNRIPE_BEAN].bdv);
-        s.a[msg.sender].mowStatuses[C.UNRIPE_BEAN].bdv = uint128(newBdv);
         LibTransfer.receiveToken(IERC20(C.UNRIPE_BEAN), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
 
