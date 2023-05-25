@@ -70,10 +70,9 @@ contract FundraiserFacet is ReentrancyGuard {
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
 
-        // FIXME: TEMPORARY SAFEGUARD. The {FundraiserFacet} was initially
-        // created to support USDC, which has the same number of decimals as Bean (6).
-        // Fundraisers created with tokens measured to a different number of decimals
-        // are not yet supported.
+        // The {FundraiserFacet} was initially created to support USDC, which has the
+        // same number of decimals as Bean (6). Fundraisers created with tokens measured
+        // to a different number of decimals are not yet supported.
         if (ERC20(token).decimals() != 6) {
             revert("Fundraiser: Token decimals");
         }
@@ -88,7 +87,7 @@ contract FundraiserFacet is ReentrancyGuard {
 
         // Mint Beans to pay for the Fundraiser. During {fund}, 1 Bean is burned
         // for each `token` provided to the Fundraiser.
-        // FIXME: adjust `amount` based on `token` decimals.
+        // Adjust `amount` based on `token` decimals to support tokens with different decimals.
         C.bean().mint(address(this), amount);
 
         emit CreateFundraiser(id, payee, token, amount);
@@ -99,8 +98,8 @@ contract FundraiserFacet is ReentrancyGuard {
      * @param id The Fundraiser ID
      * @param amount Amount of `fundraisers[id].token` to provide
      * @param mode Balance to spend tokens from
-     * @dev FIXME: this assumes that `.token` is measured to the same number
-     * of decimals as Bean (1e6). A safeguard has been applied during {createFundraiser}.
+     * @dev This assumes that `.token` is measured to the same number of
+     * decimals as Bean (1e6). A safeguard is applied during {createFundraiser}.
      */
     function fund(
         uint32 id,

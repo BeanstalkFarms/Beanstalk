@@ -257,10 +257,6 @@ contract MockSiloFacet is SiloFacet {
      *
      * `s.ss[token].seeds` stores the number of Seeds per BDV for `token`.
      * `s.ss[token].stalk` stores the number of Stalk per BDV for `token`.
-     *
-     * FIXME(discuss): If we think of Deposits like 1155s, we might call the
-     * combination of "incrementTotalDeposited" and "addDepositToAccount" as 
-     * "minting a deposit".
      */
     function depositWithBDVLegacy(
         address account,

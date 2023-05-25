@@ -87,12 +87,12 @@ library LibUnripeSilo {
      * Since Deposited Beans have a BDV of 1, 1 Bean in Silo V1 storage equals
      * 1 Unripe Bean. 
      */
-    function removeUnripeBeanDeposit(
+    function removeLegacyUnripeBeanDeposit(
         address account,
-        uint32 id
+        uint32 season
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        delete s.a[account].bean.deposits[id];
+        delete s.a[account].bean.deposits[season];
     }
 
     /**
@@ -153,15 +153,15 @@ library LibUnripeSilo {
      * 2. Silo V2 format, pre-exploit BEAN:3CRV LP token
      * 3. Silo V2 format, pre-exploit BEAN:LUSD LP token
      */
-    function removeUnripeLPDeposit(
+    function removeLegacyUnripeLPDeposit(
         address account,
-        uint32 id
+        uint32 season
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        delete s.a[account].lp.depositSeeds[id];
-        delete s.a[account].lp.deposits[id];
-        delete s.a[account].legacyDeposits[C.unripeLPPool1()][id];
-        delete s.a[account].legacyDeposits[C.unripeLPPool2()][id];
+        delete s.a[account].lp.depositSeeds[season];
+        delete s.a[account].lp.deposits[season];
+        delete s.a[account].legacyDeposits[C.unripeLPPool1()][season];
+        delete s.a[account].legacyDeposits[C.unripeLPPool2()][season];
     }
 
     /**

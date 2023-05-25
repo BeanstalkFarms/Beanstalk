@@ -74,10 +74,6 @@ contract FieldFacet is ReentrancyGuard {
      * If someone sends a Sow transaction at the end of a Season, it could be 
      * executed early in the following Season, at which time the temperature may be
      * significantly lower due to Morning Auction functionality.
-     * 
-     * FIXME Migration notes:
-     * - Added `minTemperature` as second parameter
-     * - `minTemperature` is uint256 measured to 1e6 instead of uint32
      */
     function sow(
         uint256 beans,

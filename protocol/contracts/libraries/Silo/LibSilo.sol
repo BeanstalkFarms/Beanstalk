@@ -264,9 +264,11 @@ library LibSilo {
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
         
-        // If it is Raining, subtract Roots from both the account's and 
-        // Beanstalk's RainRoots balances.
-        // For more info on Rain, see {FIXME(doc)}. 
+        // Oversaturated was previously referred to as Raining and thus
+        // code references mentioning Rain really refer to Oversaturation
+        // If Beanstalk is Oversaturated, subtract Roots from both the
+        // account's and Beanstalk's Oversaturated Roots balances.
+        // For more info on Oversaturation, See {Weather.handleRain}
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
             s.a[account].sop.roots = s.a[account].roots;

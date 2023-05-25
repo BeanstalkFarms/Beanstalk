@@ -281,7 +281,7 @@ contract SiloFacet is TokenSilo {
 
 
     /** 
-     * @notice Claim Earned Beans and their associated Stalk for 
+     * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
      * `msg.sender`.
      *
      * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
@@ -294,17 +294,13 @@ contract SiloFacet is TokenSilo {
      * 
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
      * the current Season.
-     * 
-     * FIXME(doc): Publius has suggested we explain `plant()` as "Planting Seeds"
-     * and that this happens to deposit Earned Beans, rather than the above approach.
      */
     function plant(address token) external payable returns (uint256 beans) {
         return _plant(msg.sender, token);
     }
 
     /** 
-     * @notice Claim rewards from a Season Of Plenty (SOP)
-     * @dev FIXME(naming): rename to Flood
+     * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
