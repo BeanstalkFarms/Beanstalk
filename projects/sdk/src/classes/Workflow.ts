@@ -3,9 +3,6 @@ import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { TokenValue } from "src/TokenValue";
 
-/**
- *
- */
 export type BasicPreparedResult = {
   /** Pipe calls have `target` */
   target?: string;
@@ -106,6 +103,11 @@ export type StepFunction<P extends BasicPreparedResult = BasicPreparedResult> = 
 /**
  * A Step represents one pre-estimated Ethereum function call
  * which can be encoded and executed on-chain.
+ *
+ * Calling `prepare()` returns an object containing the target contract,
+ * calldata, and other encoded data necessary to execute this Step on chain.
+ *
+ * @fixme make this a class
  */
 export type Step<P extends BasicPreparedResult> = {
   name: string;
@@ -132,13 +134,13 @@ type StepGenerators<P extends BasicPreparedResult = BasicPreparedResult> =
  */
 type StepGeneratorOptions = {
   /**
-   * Only run this StepGenerator when executing
+   * Only run this StepGenerator when executing the Workflow.
    * @fixme this is really more like "onlyStatic"
    */
   onlyExecute?: boolean;
 
   /**
-   * This StepGenerator only runs locally. It does not add anything to the callData chain
+   * This StepGenerator only runs locally. It does not add anything to the callData chain.
    */
   onlyLocal?: boolean;
 
@@ -148,7 +150,8 @@ type StepGeneratorOptions = {
   tag?: string;
 
   /**
-   *
+   * Skip this step when true. For example, you might skip a step that creates a permit during estimation,
+   * since you don't want the user to have to sign a permit before estimating.
    */
   skip?: boolean | ((amountInStep: ethers.BigNumber, context: RunContext) => boolean | Promise<boolean>);
 };
@@ -159,7 +162,8 @@ type StepGeneratorOptions = {
  * the `pipeMulti` and `pipeAdvanced` functions provided by Pipeline and Depot,
  * etc.
  *
- * ## BASICS
+ * BASICS
+ * -----------------------
  *
  * There are three main components of a workflow:
  *
@@ -177,7 +181,8 @@ type StepGeneratorOptions = {
  * 3. The `encode()` function, which condenses each Step encoded within `.steps` into
  *    a single hex-encoded string for submission to Ethereum.
  *
- * ## NESTING
+ * NESTING
+ * -----------------------
  *
  * `_generators` is a flat list of:
  *  a. StepFunction [a type of StepGenerator]
@@ -189,9 +194,8 @@ type StepGeneratorOptions = {
  *
  * See `.buildStep()` for a description of how Workflows are handled.
  *
- * @fixme nesting a Farm inside a Farm should fail (?)
- *
- * ## GENERATION PIPELINE
+ * GENERATION PIPELINE
+ * -----------------------
  *
  * 1. Add StepGenerators to a Workflow.
  *
