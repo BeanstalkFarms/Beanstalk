@@ -190,7 +190,7 @@ contract TokenSilo is Silo {
         // Remove the Deposit from `account`.
         (uint256 stalkRemoved, uint256 bdvRemoved) = LibSilo._removeDepositFromAccount(
             account,
-            address(token),
+            token,
             stem,
             amount,
             LibTokenSilo.Transfer.emitTransferSingle

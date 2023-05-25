@@ -194,7 +194,7 @@ library LibSilo {
         uint256 roots;
         if (s.s.roots == 0) {
             roots = stalk.mul(C.getRootsBase());
-        } else  {
+        } else {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (inVestingPeriod()) {
                 // Safe Math is unnecessary for because total Stalk > new Earned Stalk
@@ -238,10 +238,15 @@ library LibSilo {
         // this is distributed to the other users.
         if(inVestingPeriod()){
             roots = s.s.roots.mulDiv(
-            stalk,
-            s.s.stalk-s.newEarnedStalk,
-            LibPRBMath.Rounding.Up);
-            s.a[account].deltaRoots = s.a[account].deltaRoots.mul(stalk.toUint128()).div(s.a[account].s.stalk.toUint128());
+                stalk,
+                s.s.stalk-s.newEarnedStalk,
+                LibPRBMath.Rounding.Up
+            );
+            uint128 deltaRootsRemoved = s.a[account].deltaRoots
+                .mul(stalk.toUint128())
+                .div(s.a[account].s.stalk.toUint128());
+            s.a[account].deltaRoots = s.a[account].deltaRoots.sub(deltaRootsRemoved);
+            s.vestingPeriodRoots = s.vestingPeriodRoots.sub(deltaRootsRemoved);
         } else { 
             roots = s.s.roots.mulDiv(
             stalk,
@@ -311,7 +316,7 @@ library LibSilo {
      */
    function _mow(address account, address token) internal {
 
-        require(!LibSilo.migrationNeeded(account), "Silo: Migration needed");
+        require(!migrationNeeded(account), "Silo: Migration needed");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         //sop stuff only needs to be updated once per season
@@ -358,7 +363,7 @@ library LibSilo {
                 return;
             }
 
-            LibSilo.mintGrownStalk(
+            mintGrownStalk(
                 account,
                 _balanceOfGrownStalk(
                     _lastStem,
@@ -506,7 +511,7 @@ library LibSilo {
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(
+            stalkReward(
                 stem, //this is the index of when it was deposited
                 LibTokenSilo.stemTipForToken(token), //this is latest for this token
                 bdvRemoved.toUint128()
@@ -565,7 +570,7 @@ library LibSilo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
 
             ar.stalkRemoved = ar.stalkRemoved.add(
-                LibSilo.stalkReward(
+                stalkReward(
                     stems[i],
                     LibTokenSilo.stemTipForToken(token),
                     crateBdv.toUint128()

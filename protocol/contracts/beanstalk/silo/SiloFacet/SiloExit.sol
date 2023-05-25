@@ -21,7 +21,7 @@ import "~/C.sol";
  * @notice Exposes public view functions for Silo total balances, account
  * balances, account update history, and Season of Plenty (SOP) balances.
  *
- * Provieds utility functions like {_season} for upstream usage throughout
+ * Provides utility functions like {_season} for upstream usage throughout
  * SiloFacet.
  */
 contract SiloExit is ReentrancyGuard {
