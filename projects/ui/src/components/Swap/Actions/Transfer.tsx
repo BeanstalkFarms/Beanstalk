@@ -53,6 +53,22 @@ type TransferFormValues = {
   approving: boolean;
 };
 
+const Warning: FC<{ color?: 'warning' | 'error' }> = ({
+  children,
+  color = 'warning',
+}) => (
+  <Alert
+    color={color}
+    icon={
+      <IconWrapper boxSize={IconSize.medium}>
+        <WarningAmberIcon sx={{ fontSize: IconSize.small }} />
+      </IconWrapper>
+    }
+  >
+    {children}
+  </Alert>
+);
+
 const TransferForm: FC<
   FormikProps<TransferFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
@@ -249,19 +265,6 @@ const TransferForm: FC<
     modeCheck &&
     (sameAddressCheck ? !internalExternalCheck : true);
 
-  const Warning: FC<{}> = ({ children }) => (
-    <Alert
-      color="warning"
-      icon={
-        <IconWrapper boxSize={IconSize.medium}>
-          <WarningAmberIcon sx={{ fontSize: IconSize.small }} />
-        </IconWrapper>
-      }
-    >
-      {children}
-    </Alert>
-  );
-
   return (
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
       <TokenSelectDialog
@@ -353,6 +356,16 @@ const TransferForm: FC<
             {`Transfer amount higher than your ${copy.MODES[values.fromMode]}.`}
           </Warning>
         ) : null}
+        {toMode === FarmToMode.INTERNAL && (
+          <Warning color="error">
+            You are transferring assets to the Farm Balance, so the recipient
+            will need access to Beanstalk to utilize them.{' '}
+            <strong>
+              Do not send assets to the Farm Balance of an exchange wallet
+            </strong>{' '}
+            like Coinbase.
+          </Warning>
+        )}
         <SmartSubmitButton
           type="submit"
           variant="contained"
