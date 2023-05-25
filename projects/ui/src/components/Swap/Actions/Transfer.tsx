@@ -358,12 +358,9 @@ const TransferForm: FC<
         ) : null}
         {toMode === FarmToMode.INTERNAL && (
           <Warning color="error">
-            You are transferring assets to the Farm Balance, so the recipient
-            will need access to Beanstalk to utilize them.{' '}
-            <strong>
-              Do not send assets to the Farm Balance of an exchange wallet
-            </strong>{' '}
-            like Coinbase.
+            If you send assets to the Farm Balance of contracts, centralized
+            exchanges, etc. that don&apos;t support Farm Balances, the assets
+            will be lost.
           </Warning>
         )}
         <SmartSubmitButton
