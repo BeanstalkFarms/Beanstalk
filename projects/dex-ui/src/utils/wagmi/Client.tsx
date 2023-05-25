@@ -42,8 +42,8 @@ export const anvil1: Chain = {
     symbol: "ETH"
   },
   rpcUrls: {
-    public: { http: ["http://anvil1.bean.money:8545"] },
-    default: { http: ["http://anvil1.bean.money:8545"] }
+    public: { http: ["https://anvil1.bean.money:443"] },
+    default: { http: ["https://anvil1.bean.money:443"] }
   },
   blockExplorers: {
     default: { name: "Etherscan", url: "https://etherscan.io" }
