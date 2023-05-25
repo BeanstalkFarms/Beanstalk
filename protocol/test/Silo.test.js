@@ -692,7 +692,7 @@ describe('Silo', function () {
   
         });
 
-        it.only('farmer partial withdraws during vesting period', async function () {
+        it('farmer partial withdraws during vesting period', async function () {
           // in this test, 100 beans are given to silo holders 
           // in the previous and current season. 
           // for the previous season, user 1-4 own 25% of the silo each (1000/4000).
