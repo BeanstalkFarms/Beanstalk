@@ -13,4 +13,8 @@ export function assert(value: any, message?: string) {
   }
 }
 
+export function expectInstanceOf<T extends new (...args: any[]) => any>(x: unknown, of: T): asserts x is InstanceType<T> {
+  expect(x).toBeInstanceOf(of);
+}
+
 export const zeros = (numZeros: number) => "".padEnd(numZeros, "0");
