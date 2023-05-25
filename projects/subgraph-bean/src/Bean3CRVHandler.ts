@@ -8,10 +8,10 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
-import { loadBean, updateBeanValues } from "./utils/Bean";
+import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V2, CURVE_PRICE } from "./utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
-import { updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
+import { setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
@@ -68,7 +68,7 @@ export function handleRemoveLiquidityImbalance(event: RemoveLiquidityImbalance):
 }
 
 export function handleRemoveLiquidityOne(event: RemoveLiquidityOne): void {
-  handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, event.params.token_amount, ZERO_BI);
+  handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, event.params.coin_amount, ZERO_BI);
 }
 
 function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: BigInt, token0Amount: BigInt, token1Amount: BigInt): void {
@@ -100,7 +100,9 @@ function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: Big
 
   updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(pool, timestamp, blockNumber, newPrice);
-  updatePoolReserves(pool, token0Amount, token1Amount, blockNumber);
+  setPoolReserves(pool, curve.value.balances, blockNumber);
+
+  updateBeanSupplyPegPercent(blockNumber);
 }
 
 function handleSwap(
@@ -137,5 +139,7 @@ function handleSwap(
 
   updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(pool, timestamp, blockNumber, newPrice);
-  updatePoolReserves(pool, sold_id == ZERO_BI ? tokens_sold : tokens_bought, sold_id == ZERO_BI ? tokens_bought : tokens_sold, blockNumber);
+  setPoolReserves(pool, curve.value.balances, blockNumber);
+
+  updateBeanSupplyPegPercent(blockNumber);
 }

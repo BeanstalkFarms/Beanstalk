@@ -7,20 +7,10 @@ import {
   TokenExchange,
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
-import { loadBean, updateBeanValues } from "./utils/Bean";
-import {
-  BEAN_3CRV_V1,
-  BEAN_ERC20_V1,
-  BEAN_ERC20_V2,
-  BEAN_LUSD_V1,
-  CALCULATIONS_CURVE,
-  CRV3_POOL,
-  CRV3_POOL_V1,
-  CURVE_PRICE,
-  LUSD_3POOL
-} from "./utils/Constants";
+import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { BEAN_3CRV_V1, BEAN_ERC20_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD_3POOL } from "./utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
-import { loadOrCreatePool, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
+import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { CalculationsCurve } from "../generated/Bean3CRV-V1/CalculationsCurve";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
@@ -174,7 +164,11 @@ function handleLiquidityChange(
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  updatePoolReserves(poolAddress, token0Amount, token1Amount, blockNumber);
+
+  let reserveBalances = lpContract.try_get_balances();
+  if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+
+  updateBeanSupplyPegPercent(blockNumber);
 }
 
 function handleSwap(
@@ -247,10 +241,9 @@ function handleSwap(
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
   updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-  updatePoolReserves(
-    poolAddress,
-    sold_id == ZERO_BI ? tokens_sold : tokens_bought,
-    sold_id == ZERO_BI ? tokens_bought : tokens_sold,
-    blockNumber
-  );
+
+  let reserveBalances = lpContract.try_get_balances();
+  if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
+
+  updateBeanSupplyPegPercent(blockNumber);
 }

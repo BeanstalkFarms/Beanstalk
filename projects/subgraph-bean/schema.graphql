@@ -22,6 +22,9 @@ type Bean @entity {
   "Current market cap"
   marketCap: BigDecimal!
 
+  "Percent of supply in LP used for peg maintenance"
+  supplyInPegLP: BigDecimal!
+
   "Cumulative volume of beans traded"
   volume: BigInt!
 
@@ -51,31 +54,72 @@ type Bean @entity {
 }
 
 type BeanHourlySnapshot @entity {
+  "{Token address}-{Season}"
   id: ID!
+
+  "Bean token address"
   bean: Bean!
-  totalSupply: BigInt!
+
+  "Current supply"
+  supply: BigInt!
+
+  "Current market cap"
   marketCap: BigDecimal!
+
+  "Percent of supply in LP used for peg maintenance"
+  supplyInPegLP: BigDecimal!
+
+  "Cumulative volume in BEAN"
   volume: BigInt!
+
+  "Cumulative volume in USD"
   volumeUSD: BigDecimal!
+
+  "Current liquidity in USD"
   liquidityUSD: BigDecimal!
+
+  "Current USD price"
   price: BigDecimal!
+
+  "Cumulative number of crosses"
   crosses: Int!
+
+  "Current deltaB for peg"
   deltaBeans: BigInt!
+
+  "Volume in BEAN for this snapshot"
   deltaVolume: BigInt!
+
+  "Volume in USD for this snapshot"
   deltaVolumeUSD: BigDecimal!
+
+  "Difference in liquidity for this snapshot"
   deltaLiquidityUSD: BigDecimal!
+
+  "Crosses occuring in this snapshot"
   deltaCrosses: Int!
+
+  "Detailed cross events during this snapshot"
   crossEvents: [Cross!]! @derivedFrom(field: "hourlySnapshot")
+
+  "Season associated with this snapshot"
   season: Int!
+
+  "Timestamp this snapshot was updated"
   timestamp: BigInt!
+
+  "Block number this snapshot was updated"
   blockNumber: BigInt!
 }
 
 type BeanDailySnapshot @entity {
   id: ID!
   bean: Bean!
-  totalSupply: BigInt!
+  supply: BigInt!
   marketCap: BigDecimal!
+
+  "Percent of supply in LP used for peg maintenance"
+  supplyInPegLP: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!

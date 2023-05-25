@@ -193,3 +193,9 @@ export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, de
   pool.reserves = reserves;
   pool.save();
 }
+
+export function setPoolReserves(poolAddress: string, reserves: BigInt[], blockNumber: BigInt): void {
+  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  pool.reserves = reserves;
+  pool.save();
+}

@@ -38,10 +38,9 @@ export function checkCrossAndUpdate(
   let bean = loadBean(token);
   let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
-  let nextCross = bean.id == BEAN_ERC20_V1.toHexString() ? bean.crosses : bean.crosses + getV1Crosses();
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
-    let cross = loadOrCreateCross(nextCross, pool, timestamp);
+    let cross = loadOrCreateCross(bean.crosses, pool, timestamp);
     cross.price = newPrice;
     cross.timeSinceLastCross = timestamp.minus(bean.lastCross);
     cross.above = false;
@@ -63,7 +62,7 @@ export function checkCrossAndUpdate(
   }
 
   if (oldPrice < ONE_BD && newPrice >= ONE_BD) {
-    let cross = loadOrCreateCross(nextCross, pool, timestamp);
+    let cross = loadOrCreateCross(bean.crosses, pool, timestamp);
     cross.price = newPrice;
     cross.timeSinceLastCross = timestamp.minus(bean.lastCross);
     cross.above = true;
@@ -85,7 +84,7 @@ export function checkCrossAndUpdate(
   }
 }
 
-function getV1Crosses(): i32 {
+export function getV1Crosses(): i32 {
   let bean = loadBean(BEAN_ERC20_V1.toHexString());
   return bean.crosses;
 }

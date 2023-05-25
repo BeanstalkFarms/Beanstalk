@@ -19,6 +19,7 @@ export const FERTILIZER = Address.fromString("0x402c84De2Ce49aF88f5e2eF3710ff89b
 
 // LP Addresses
 
+export const BEAN_WETH_V1 = Address.fromString("0x87898263B6C5BABe34b4ec53F22d98430b91e371");
 export const WETH_USDC_PAIR = Address.fromString("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc");
 export const BEAN_LUSD_V1 = Address.fromString("0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D");
 export const LUSD_3POOL = Address.fromString("0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA");

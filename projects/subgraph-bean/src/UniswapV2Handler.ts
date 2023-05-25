@@ -1,24 +1,27 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Burn, Mint, Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
-import { ZERO_BD, ZERO_BI } from "./helpers";
-import { updateBeanValues } from "./utils/Bean";
+import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "./utils/Constants";
-import { toBigInt, toDecimal } from "./utils/Decimals";
-import { loadOrCreatePool, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
+import { toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 
-export function handleMint(event: Mint): void {
-  updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
-}
+// export function handleMint(event: Mint): void {
+//   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
 
-export function handleBurn(event: Burn): void {
-  updatePoolReserves(
-    event.address.toHexString(),
-    ZERO_BI.minus(event.params.amount0),
-    ZERO_BI.minus(event.params.amount1),
-    event.block.number
-  );
-}
+//   updateBeanSupplyPegPercent(event.block.number);
+// }
+
+// export function handleBurn(event: Burn): void {
+//   updatePoolReserves(
+//     event.address.toHexString(),
+//     ZERO_BI.minus(event.params.amount0),
+//     ZERO_BI.minus(event.params.amount1),
+//     event.block.number
+//   );
+
+//   updateBeanSupplyPegPercent(event.block.number);
+// }
 
 // Liquidity and cross checks happen on the Sync event handler
 export function handleSwap(event: Swap): void {
@@ -51,6 +54,8 @@ export function handleSwap(event: Swap): void {
     event.params.amount1In.minus(event.params.amount1Out),
     event.block.number
   );
+
+  updateBeanSupplyPegPercent(event.block.number);
 }
 
 // Sync is called in UniswapV2 on any liquidity or swap transaction.
@@ -88,6 +93,10 @@ export function handleSync(event: Sync): void {
   updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
+
+  setPoolReserves(event.address.toHexString(), [reserves.value.value0, reserves.value.value1], event.block.number);
+
+  updateBeanSupplyPegPercent(event.block.number);
 }
 
 function updatePriceETH(): void {
