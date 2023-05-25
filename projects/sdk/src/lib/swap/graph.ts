@@ -152,35 +152,15 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   });
 
   /// CRV3<>BEAN via Metapool Exchange
-  // TODO: Switch to use setBidirectionalExchangeEdges()
 
-  graph.setEdge("3CRV", "BEAN", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.Exchange(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.contracts.curve.registries.metaFactory.address,
-        sdk.tokens.CRV3,
-        sdk.tokens.BEAN,
-        from,
-        to
-      ),
-    from: "3CRV",
-    to: "BEAN"
-  });
-
-  graph.setEdge("BEAN", "3CRV", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.Exchange(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.contracts.curve.registries.metaFactory.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.CRV3,
-        from,
-        to
-      ),
-    from: "BEAN",
-    to: "3CRV"
-  });
+  setBidirectionalExchangeEdges(
+    sdk,
+    graph,
+    sdk.contracts.curve.pools.beanCrv3.address,
+    sdk.contracts.curve.registries.metaFactory.address,
+    sdk.tokens.BEAN,
+    sdk.tokens.CRV3
+  );
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
 
