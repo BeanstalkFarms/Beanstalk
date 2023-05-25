@@ -94,7 +94,7 @@ contract Silo is SiloExit {
      * For more info on Planting, see: {SiloFacet-plant}
      */
      
-    function _plant(address account, address token) internal returns (uint256 beans) {
+    function _plant(address account) internal returns (uint256 beans) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans.
         
@@ -103,7 +103,7 @@ contract Silo is SiloExit {
         // during the vesting period, the earned beans are not issued to the user.
         // thus, the roots calculated for a given user is different. 
         // This is handled by the super mow function, which stores the difference in roots.
-        LibSilo._mow(account, token);
+        LibSilo._mow(account, C.BEAN);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
@@ -119,7 +119,7 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.BEAN,
-            LibTokenSilo.stemTipForToken(token),
+            LibTokenSilo.stemTipForToken(C.BEAN),
             beans, // amount
             beans, // bdv
             LibTokenSilo.Transfer.emitTransferSingle

@@ -298,8 +298,8 @@ contract SiloFacet is TokenSilo {
      * FIXME(doc): Publius has suggested we explain `plant()` as "Planting Seeds"
      * and that this happens to deposit Earned Beans, rather than the above approach.
      */
-    function plant(address token) external payable returns (uint256 beans) {
-        return _plant(msg.sender, token);
+    function plant() external payable returns (uint256 beans) {
+        return _plant(msg.sender);
     }
 
     /** 
