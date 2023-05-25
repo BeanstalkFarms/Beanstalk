@@ -131,10 +131,10 @@ library LibLegacyTokenSilo {
             // If Unripe Deposit, fetch whole Deposit balance and delete legacy deposit references.
             if (LibUnripeSilo.isUnripeBean(token)) {
                 (crateAmount, crateBDV) = LibUnripeSilo.unripeBeanDeposit(account, season);
-                LibUnripeSilo.removeUnripeBeanDeposit(account, season);
+                LibUnripeSilo.removeLegacyUnripeBeanDeposit(account, season);
             } else if (LibUnripeSilo.isUnripeLP(token)) {
                 (crateAmount, crateBDV) = LibUnripeSilo.unripeLPDeposit(account, season);
-                LibUnripeSilo.removeUnripeLPDeposit(account, season);
+                LibUnripeSilo.removeLegacyUnripeLPDeposit(account, season);
             }
             require(crateAmount >= amount, "Silo: Crate balance too low.");
         }
