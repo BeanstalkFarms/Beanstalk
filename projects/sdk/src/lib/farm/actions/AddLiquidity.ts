@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from "ethers";
-import { BasicPreparedResult, RunContext, Step, StepClass, Workflow } from "src/classes/Workflow";
+import { BasicPreparedResult, RunContext, RunMode, Step, StepClass, Workflow } from "src/classes/Workflow";
 import { CurveMetaPool__factory, CurvePlainPool__factory } from "src/constants/generated";
 import { assert } from "src/utils";
 import { FarmFromMode, FarmToMode } from "../types";
@@ -27,6 +27,10 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
       toMode: this._toMode,
       context
     });
+
+    if (context.runMode === RunMode.EstimateReversed) {
+      throw new Error("Reverse estimation is not yet supported for this action");
+    }
 
     /// [0, 0, 1] => [0, 0, amountIn]
     /// FIXME: this uses a binary approach instead of a multiplier.

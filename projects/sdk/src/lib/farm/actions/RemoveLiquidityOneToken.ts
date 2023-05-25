@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { BasicPreparedResult, RunContext, StepClass, Workflow } from "src/classes/Workflow";
+import { BasicPreparedResult, RunContext, RunMode, StepClass, Workflow } from "src/classes/Workflow";
 import { CurveMetaPool__factory, CurvePlainPool__factory } from "src/constants/generated";
 import { FarmFromMode, FarmToMode } from "../types";
 
@@ -26,6 +26,11 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
       toMode: this._toMode,
       context
     });
+
+    if (context.runMode === RunMode.EstimateReversed) {
+      throw new Error("Reverse estimation is not yet supported for this action");
+    }
+
     let registry;
     if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry.address) {
       registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry;
