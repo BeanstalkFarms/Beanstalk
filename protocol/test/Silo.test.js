@@ -121,7 +121,7 @@ describe('Silo', function () {
       await time.increase(3600); // wait until end of season to get earned
       await mine(25);
       await this.silo.mow(user2Address, this.bean.address)
-      this.result = await this.silo.connect(user).plant(this.bean.address)
+      this.result = await this.silo.connect(user).plant()
     })
 
     it('properly updates the earned balances', async function () {
@@ -149,7 +149,7 @@ describe('Silo', function () {
     })
 
     it('user2 earns rest', async function () {
-      await this.silo.connect(user2).plant(this.bean.address)
+      await this.silo.connect(user2).plant()
       expect(await this.silo.totalEarnedBeans()).to.eq('0');
     });
   });
@@ -384,7 +384,7 @@ describe('Silo', function () {
         it('a single farmer plants during and after vesting period', async function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
   
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
           expect(earned_beans[0]).to.eq(0);
@@ -396,7 +396,7 @@ describe('Silo', function () {
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
   
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(24999999);
           expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(25e6);
@@ -408,10 +408,10 @@ describe('Silo', function () {
           console.log("Current Block", await ethers.provider.getBlockNumber());
           console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
          
-          await this.silo.connect(user).plant(this.bean.address);
-          await this.silo.connect(user2).plant(this.bean.address);
-          await this.silo.connect(user3).plant(this.bean.address);
-          await this.silo.connect(user4).plant(this.bean.address);
+          await this.silo.connect(user).plant();
+          await this.silo.connect(user2).plant();
+          await this.silo.connect(user3).plant();
+          await this.silo.connect(user4).plant();
           stem = await this.silo.seasonToStem(this.bean.address, season);
   
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
@@ -425,8 +425,8 @@ describe('Silo', function () {
           
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant(this.bean.address);
-          await this.silo.connect(user2).plant(this.bean.address);
+          await this.silo.connect(user4).plant();
+          await this.silo.connect(user2).plant();
           earned_beans = await this.silo.getDeposit(user4Address,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(25e6);
           earned_beans = await this.silo.getDeposit(user3Address,this.bean.address,stem);
@@ -441,8 +441,8 @@ describe('Silo', function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
     
          
-          await this.silo.connect(user).plant(this.bean.address);
-          await this.silo.connect(user2).plant(this.bean.address);
+          await this.silo.connect(user).plant();
+          await this.silo.connect(user2).plant();
           stem = await this.silo.seasonToStem(this.bean.address, season);
 
   
@@ -456,8 +456,8 @@ describe('Silo', function () {
           
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant(this.bean.address);
-          await this.silo.connect(user3).plant(this.bean.address);
+          await this.silo.connect(user4).plant();
+          await this.silo.connect(user3).plant();
           earned_beans = await this.silo.getDeposit(user4Address,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(24999999);
           earned_beans = await this.silo.getDeposit(user3Address,this.bean.address,stem);
@@ -470,7 +470,7 @@ describe('Silo', function () {
 
         it("Some Earned Beans Prior to plant, some earned beans after plant", async function () {
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user).plant(this.bean.address); // root increased by X, stalk increased by 2
+          await this.silo.connect(user).plant(); // root increased by X, stalk increased by 2
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
   
@@ -491,12 +491,12 @@ describe('Silo', function () {
           expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(25e6); // 
           expect(await this.silo.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
         
-          await this.silo.connect(user).plant(this.bean.address); // root increased by Y, stalk increased by 2
+          await this.silo.connect(user).plant(); // root increased by Y, stalk increased by 2
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(user2Address,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(0);
 
-          await this.silo.connect(user2).plant(this.bean.address); // root increased by Y, stalk increased by 4
+          await this.silo.connect(user2).plant(); // root increased by Y, stalk increased by 4
           earned_beans = await this.silo.getDeposit(user2Address,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(25e6);
   
@@ -516,8 +516,8 @@ describe('Silo', function () {
           expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(49998780);
           expect(await this.silo.balanceOfEarnedBeans(user4Address)).to.eq(49998780);
 
-          await this.silo.connect(user3).plant(this.bean.address);
-          await this.silo.connect(user4).plant(this.bean.address); 
+          await this.silo.connect(user3).plant();
+          await this.silo.connect(user4).plant(); 
   
           earned_beans = await this.silo.getDeposit(user3Address,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(49998780);
@@ -533,7 +533,7 @@ describe('Silo', function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
           season = await this.season.season();
           expect(await this.silo.connect(user2).balanceOfEarnedBeans(userAddress)).to.eq(0);
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
 
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
@@ -555,7 +555,7 @@ describe('Silo', function () {
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
 
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(0);
           earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(50003658); // user gets the earned beans from the previous season + the beans from the current season
@@ -574,7 +574,7 @@ describe('Silo', function () {
           stem = await this.silo.seasonToStem(this.bean.address, season);
 
           await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL);
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
           expect(earned_beans[0]).to.eq(24996230); 
@@ -585,7 +585,7 @@ describe('Silo', function () {
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
           
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(14284400);
           expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(28571866);
@@ -609,7 +609,7 @@ describe('Silo', function () {
         it('a single farmer plants during and after vesting period', async function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
           
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
 
@@ -622,7 +622,7 @@ describe('Silo', function () {
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
   
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,stem);
 
           expect(earned_beans[0]).to.eq(49999999);
@@ -634,8 +634,8 @@ describe('Silo', function () {
         it('multiple farmers plants during and after vesting period', async function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
 
-          await this.silo.connect(user).plant(this.bean.address);
-          await this.silo.connect(user3).plant(this.bean.address);
+          await this.silo.connect(user).plant();
+          await this.silo.connect(user3).plant();
           stem = await this.silo.seasonToStem(this.bean.address, season);
 
   
@@ -650,8 +650,8 @@ describe('Silo', function () {
           
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant(this.bean.address);
-          await this.silo.connect(user2).plant(this.bean.address);
+          await this.silo.connect(user4).plant();
+          await this.silo.connect(user2).plant();
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem);
           expect(earned_beans[0]).to.eq(24999999);
           earned_beans = await this.silo.getDeposit(user2Address,this.bean.address, stem);
@@ -666,8 +666,8 @@ describe('Silo', function () {
         it('some farmers plants during, some farmers plant after vesting period', async function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
     
-          await this.silo.connect(user).plant(this.bean.address);
-          await this.silo.connect(user2).plant(this.bean.address);
+          await this.silo.connect(user).plant();
+          await this.silo.connect(user2).plant();
   
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
@@ -680,8 +680,8 @@ describe('Silo', function () {
           
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant(this.bean.address);
-          await this.silo.connect(user3).plant(this.bean.address);
+          await this.silo.connect(user4).plant();
+          await this.silo.connect(user3).plant();
           earned_beans = await this.silo.getDeposit(user4Address,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(49999999);
           earned_beans = await this.silo.getDeposit(user3Address,this.bean.address,stem);
@@ -707,7 +707,7 @@ describe('Silo', function () {
           stem = await this.silo.seasonToStem(this.bean.address, season);
 
           await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL);
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
           expect(earned_beans[0]).to.eq(24996925);
@@ -718,7 +718,7 @@ describe('Silo', function () {
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11);
           
-          await this.silo.connect(user).plant(this.bean.address);
+          await this.silo.connect(user).plant();
           earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,stem);
           expect(earned_beans[0]).to.eq(39580737);
           expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(53473087);

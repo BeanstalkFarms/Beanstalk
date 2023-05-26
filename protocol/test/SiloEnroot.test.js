@@ -281,24 +281,25 @@ describe('Silo Enroot', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120352584'));
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120342584'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120352584'));
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the crate', async function () {
+        const bdv = await this.bdv.bdv(UNRIPE_LP, to6('20'))
         const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
         let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem10);
         expect(dep[0]).to.equal(to6('10'))
-        expect(dep[1]).to.equal('1855646')
+        expect(dep[1]).to.equal(bdv.div('2'))
         const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
         dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem11);
         expect(dep[0]).to.equal(to6('10'))
-        expect(dep[1]).to.equal('1855646')
+        expect(dep[1]).to.equal(bdv.sub('1').div('2').add('1'))
       });
     });
   });
