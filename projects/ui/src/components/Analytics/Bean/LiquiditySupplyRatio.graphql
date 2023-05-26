@@ -1,0 +1,17 @@
+query LiquiditySupplyRatio($season_lte: Int, $first: Int, $season_gt: Int) {
+  seasons: beanHourlySnapshots(
+    first: $first
+    where: { season_lte: $season_lte, season_gte: $season_gt }
+    orderBy: season
+    orderDirection: desc
+  ) {
+    id
+    season
+    timestamp
+    liquidityUSD
+    price
+    bean {
+      supply
+    }
+  }
+}
