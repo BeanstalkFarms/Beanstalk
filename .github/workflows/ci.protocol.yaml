@@ -27,4 +27,6 @@ jobs:
       - run: yarn generate
         working-directory: protocol
       - run: yarn test
+        env:
+          FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
         working-directory: protocol
