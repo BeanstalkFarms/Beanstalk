@@ -8,12 +8,10 @@ import {
   LiquiditySupplyRatioQuery,
 } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { BEAN } from '~/constants/tokens';
 import { FC } from '~/types';
-import { toTokenUnitsBN } from '~/util';
 
 const getValue = (season: LiquiditySupplyRatioQuery['seasons'][number]) =>
-  (((parseFloat(season.liquidityUSD) / parseFloat(season.price)) / toTokenUnitsBN(season.bean.supply, BEAN[1].decimals).toNumber()) * 100);
+  ((season.supplyInPegLP) * 100);
 const formatValue = (value: number) =>
   `${value.toFixed(4)}%`;
 const statProps = {

@@ -8,10 +8,6 @@ query LiquiditySupplyRatio($season_lte: Int, $first: Int, $season_gt: Int) {
     id
     season
     timestamp
-    liquidityUSD
-    price
-    bean {
-      supply
-    }
+    supplyInPegLP
   }
 }
