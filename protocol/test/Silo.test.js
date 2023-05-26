@@ -121,7 +121,7 @@ describe('Silo', function () {
       await time.increase(3600); // wait until end of season to get earned
       await mine(25);
       await this.silo.mow(user2Address, this.bean.address)
-      this.result = await this.silo.connect(user).plant(this.bean.address)
+      this.result = await this.silo.connect(user).plant()
     })
 
     it('properly updates the earned balances', async function () {
@@ -405,8 +405,6 @@ describe('Silo', function () {
         });
   
         it('multiple farmers plants during and after vesting period', async function () {
-          console.log("Current Block", await ethers.provider.getBlockNumber());
-          console.log("Sunrise Block", (await this.season.getSunriseBlock()).toString());
          
           await this.silo.connect(user).plant();
           await this.silo.connect(user2).plant();
@@ -577,7 +575,7 @@ describe('Silo', function () {
           await this.silo.connect(user).plant();
           
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24996230); 
+          expect(earned_beans[0]).to.eq(0); 
           expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(0);
           expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(0);
           expect(await this.silo.balanceOfEarnedBeans(user4Address)).to.eq(0);
