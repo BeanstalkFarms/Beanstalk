@@ -186,7 +186,6 @@ library LibTokenSilo {
         s.a[account].deposits[depositId].bdv = 
             s.a[account].deposits[depositId].bdv.add(bdv.toUint128());
         
-        // get token and GSPBDV of the depositData, for updating mow status and emitting event 
         // update the mow status (note: mow status is per token, not per depositId)
         // SafeMath not necessary as the bdv is already checked to be <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = uint128(s.a[account].mowStatuses[token].bdv.add(uint128(bdv)));
@@ -348,7 +347,9 @@ library LibTokenSilo {
         return uint256(s.ss[token].stalkIssuedPerBdv);
     }
 
-    //this returns grown stalk with no decimals
+    /**
+     * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
+     */
     function stemTipForToken(address token)
         internal
         view
@@ -363,6 +364,9 @@ library LibTokenSilo {
         ).div(1e6); //round here 
     }
 
+    /**
+     * @dev returns the amount of grown stalk a deposit has earned.
+     */
     function grownStalkForDeposit(
         address account,
         address token,
@@ -383,48 +387,57 @@ library LibTokenSilo {
         grownStalk = deltaStemTip.mul(bdv);
     }
 
-    //this does not include stalk that has not been mowed
-    //this function is used to convert, to see how much stalk would have been grown by a deposit at a 
-    //given grown stalk index
-    function calculateStalkFromStemAndBdv(IERC20 token, int96 grownStalkIndexOfDeposit, uint256 bdv)
+    /**
+     * @dev returns the amount of grown stalk a deposit would have, based on the stem of the deposit.
+     */
+    function calculateStalkFromStemAndBdv(address token, int96 grownStalkIndexOfDeposit, uint256 bdv)
         internal
         view
         returns (int96 grownStalk)
     {
-        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
+        // current latest grown stalk index
+        int96 _stemTipForToken = stemTipForToken(address(token));
+
         return _stemTipForToken.sub(grownStalkIndexOfDeposit).mul(toInt96(bdv));
     }
 
-    //this is only used in ConvertFacet
-    function calculateGrownStalkAndStem(IERC20 token, uint256 grownStalk, uint256 bdv)
+    /**
+     * @dev returns the stem of a deposit, based on the amount of grown stalk it has earned.
+     */
+    function calculateGrownStalkAndStem(address token, uint256 grownStalk, uint256 bdv)
         internal
         view 
         returns (uint256 _grownStalk, int96 stem)
     {
-        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
+        int96 _stemTipForToken = stemTipForToken(token);
         stem = _stemTipForToken.sub(toInt96(grownStalk.div(bdv)));
         _grownStalk = uint256(_stemTipForToken.sub(stem).mul(toInt96(bdv)));
     }
 
 
-    //takes in grownStalk total by a previous deposit, and a bdv, returns
-    //what the stem index should be to have that same amount of grown stalk for the input token
-    function grownStalkAndBdvToStem(IERC20 token, uint256 grownStalk, uint256 bdv)
+    /**
+     * @dev returns the amount of grown stalk a deposit would have, based on the stem of the deposit.
+     * Similar to calculateStalkFromStemAndBdv, but has an additional check to prevent division by 0.
+     */
+    function grownStalkAndBdvToStem(address token, uint256 grownStalk, uint256 bdv)
         internal
         view
         returns (int96 cumulativeGrownStalk)
     {
-        //first get current latest grown stalk index
-        int96 _stemTipForToken = LibTokenSilo.stemTipForToken(address(token));
-        //then calculate how much stalk each individual bdv has grown
-        //there's a > 0 check here, because if you have a small amount of unripe bean deposit, the bdv could
-        //end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
+        // first get current latest grown stalk index
+        int96 _stemTipForToken = stemTipForToken(token);
+        // then calculate how much stalk each individual bdv has grown
+        // there's a > 0 check here, because if you have a small amount of unripe bean deposit, the bdv could
+        // end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
+
+        // prevent divide by zero error
         int96 grownStalkPerBdv = bdv > 0 ? toInt96(grownStalk.div(bdv)) : 0;
-        //then subtract from the current latest index, so we get the index the deposit should have happened at
+
+        // subtract from the current latest index, so we get the index the deposit should have happened at
         return _stemTipForToken.sub(grownStalkPerBdv);
     }
 
-    function toInt96(uint256 value) internal pure returns (int96 downcasted) {
+    function toInt96(uint256 value) internal pure returns (int96) {
         require(value <= uint256(type(int96).max), "SafeCast: value doesn't fit in an int96");
         return int96(value);
     }

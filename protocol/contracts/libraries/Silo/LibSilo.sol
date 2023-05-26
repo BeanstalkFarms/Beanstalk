@@ -612,13 +612,16 @@ library LibSilo {
     }
 
     /**
-     * @dev check whether beanstalk is in the vesting period:
+     * @dev check whether beanstalk is in the vesting period.
      */
     function inVestingPeriod() internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return block.number - s.season.sunriseBlock <= VESTING_PERIOD;
     }
 
+    /**
+     * @dev check whether the account needs to be migrated.
+     */
     function migrationNeeded(address account) internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate > 0 && s.a[account].lastUpdate < s.season.stemStartSeason;
