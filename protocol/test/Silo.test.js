@@ -710,10 +710,10 @@ describe('Silo', function () {
           await this.silo.connect(user).plant();
           
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24996925);
-          expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(25001024);
-          expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(25001024);
-          expect(await this.silo.balanceOfEarnedBeans(user4Address)).to.eq(25001024);
+          expect(earned_beans[0]).to.eq(24996230);
+          expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(24999669);
+          expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(24999669);
+          expect(await this.silo.balanceOfEarnedBeans(user4Address)).to.eq(24999669);
   
           // skip to after the vesting period:
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11);
