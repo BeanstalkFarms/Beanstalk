@@ -108,6 +108,7 @@ function handleLiquidityChange(
 
   let lpContract = Bean3CRV.bind(Address.fromString(poolAddress));
   let beanCrvPrice = ZERO_BD;
+  let lusd3crvPrice = ZERO_BD;
 
   if (poolAddress == BEAN_3CRV_V1.toHexString()) {
     beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
@@ -121,7 +122,7 @@ function handleLiquidityChange(
       toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).toString()
     ]);
 
-    let lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
+    lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
     beanCrvPrice = priceInLusd.times(lusd3crvPrice);
   }
 
@@ -135,18 +136,21 @@ function handleLiquidityChange(
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
   let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
+  let lusdContract = ERC20.bind(LUSD_3POOL);
 
-  let beanHolding = toDecimal(beanContract.balanceOf(BEAN_3CRV_V1));
-  let crvHolding = toDecimal(crv3PoolContract.balanceOf(BEAN_3CRV_V1), 18);
+  let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
+  let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
+  let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
 
   let beanValue = beanHolding.times(newPrice);
   let crvValue = crvHolding.times(metapoolPrice);
+  let lusdValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
 
   let deltaB = BigInt.fromString(
-    crvHolding.times(metapoolPrice).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
+    crvValue.plus(lusdValue).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
   );
 
-  let liquidityUSD = beanValue.plus(crvValue);
+  let liquidityUSD = beanValue.plus(crvValue).plus(lusdValue);
 
   let deltaLiquidityUSD = liquidityUSD.minus(pool.liquidityUSD);
 
@@ -188,6 +192,7 @@ function handleSwap(
 
   let lpContract = Bean3CRV.bind(Address.fromString(poolAddress));
   let beanCrvPrice = ZERO_BD;
+  let lusd3crvPrice = ZERO_BD;
 
   if (poolAddress == BEAN_3CRV_V1.toHexString()) {
     beanCrvPrice = toDecimal(lpContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromI32(1000000)), 18);
@@ -201,7 +206,7 @@ function handleSwap(
       toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18).toString()
     ]);
 
-    let lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
+    lusd3crvPrice = toDecimal(lusdContract.get_dy(ZERO_BI, BigInt.fromI32(1), BigInt.fromString("1000000000000000000")), 18);
     beanCrvPrice = priceInLusd.times(lusd3crvPrice);
   }
 
@@ -215,15 +220,18 @@ function handleSwap(
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
   let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
+  let lusdContract = ERC20.bind(LUSD_3POOL);
 
-  let beanHolding = toDecimal(beanContract.balanceOf(BEAN_3CRV_V1));
-  let crvHolding = toDecimal(crv3PoolContract.balanceOf(BEAN_3CRV_V1), 18);
+  let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
+  let crvHolding = toDecimal(crv3PoolContract.balanceOf(Address.fromString(poolAddress)), 18);
+  let lusdHolding = toDecimal(lusdContract.balanceOf(Address.fromString(poolAddress)), 18);
 
   let beanValue = beanHolding.times(newPrice);
   let crvValue = crvHolding.times(metapoolPrice);
+  let lusdValue = lusdHolding.times(lusd3crvPrice).times(metapoolPrice);
 
   let deltaB = BigInt.fromString(
-    crvHolding.times(metapoolPrice).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
+    crvValue.plus(lusdValue).minus(beanHolding).times(BigDecimal.fromString("1000000")).truncate(0).toString()
   );
 
   let liquidityUSD = beanValue.plus(crvValue);

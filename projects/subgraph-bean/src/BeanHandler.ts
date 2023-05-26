@@ -1,6 +1,6 @@
 import { log } from "@graphprotocol/graph-ts";
 import { Transfer } from "../generated/Bean/Bean";
-import { loadBean } from "./utils/Bean";
+import { loadBean, updateBeanSupplyPegPercent } from "./utils/Bean";
 import { ADDRESS_ZERO } from "./utils/Constants";
 
 export function handleTransfer(event: Transfer): void {
@@ -15,5 +15,7 @@ export function handleTransfer(event: Transfer): void {
       bean.supply = bean.supply.minus(event.params.value);
     }
     bean.save();
+
+    updateBeanSupplyPegPercent(event.block.number);
   }
 }

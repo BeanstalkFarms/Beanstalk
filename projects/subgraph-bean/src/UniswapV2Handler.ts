@@ -84,7 +84,7 @@ export function handleSync(event: Sync): void {
   let startLiquidityUSD = pool.liquidityUSD;
   let endLiquidityUSD = wethBalance.times(weth.lastPriceUSD).times(BigDecimal.fromString("2"));
   let deltaLiquidityUSD = endLiquidityUSD.minus(startLiquidityUSD);
-  let deltaBeans = toBigInt(beanBalance.minus(wethBalance.times(weth.lastPriceUSD)), 6);
+  let deltaBeans = toBigInt(wethBalance.times(weth.lastPriceUSD).minus(beanBalance), 6);
 
   updatePoolValues(event.address.toHexString(), event.block.timestamp, event.block.number, ZERO_BI, ZERO_BD, deltaLiquidityUSD, deltaBeans);
 
