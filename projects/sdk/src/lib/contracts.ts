@@ -42,7 +42,7 @@ type CurveContracts = {
     poolRegistry: CurveRegistry;
     metaFactory: CurveMetaFactory;
     cryptoFactory: CurveCryptoFactory;
-    [k: string]: BaseContract;
+    [k: string]: CurveRegistry | CurveMetaFactory | CurveCryptoFactory;
   };
   zap: CurveZap;
 };

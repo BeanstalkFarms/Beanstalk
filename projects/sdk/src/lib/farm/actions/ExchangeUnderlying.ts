@@ -8,11 +8,11 @@ export class ExchangeUnderlying extends StepClass<BasicPreparedResult> {
   public name: string = "exchangeUnderlying";
 
   constructor(
-    private pool: string,
-    private tokenIn: Token,
-    private tokenOut: Token,
-    private fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
-    private toMode: FarmToMode = FarmToMode.INTERNAL
+    public readonly pool: string,
+    public readonly tokenIn: Token,
+    public readonly tokenOut: Token,
+    public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
+    public readonly toMode: FarmToMode = FarmToMode.INTERNAL
   ) {
     super();
   }

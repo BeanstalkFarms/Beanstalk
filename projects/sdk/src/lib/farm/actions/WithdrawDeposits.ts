@@ -4,7 +4,11 @@ import { ethers } from "ethers";
 export class WithdrawDeposits extends StepClass<BasicPreparedResult> {
   public name: string = "withdrawDeposits";
 
-  constructor(private _tokenIn: string, private _seasons: ethers.BigNumberish[], private _amounts: ethers.BigNumberish[]) {
+  constructor(
+    public readonly _tokenIn: string,
+    public readonly _seasons: ethers.BigNumberish[],
+    public readonly _amounts: ethers.BigNumberish[]
+  ) {
     super();
   }
 

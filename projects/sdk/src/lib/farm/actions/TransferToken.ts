@@ -6,10 +6,10 @@ export class TransferToken extends StepClass<BasicPreparedResult> {
   public name: string = "transferToken";
 
   constructor(
-    private _tokenIn: string,
-    private _recipient: string,
-    private _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
-    private _toMode: FarmToMode = FarmToMode.INTERNAL
+    public readonly _tokenIn: string,
+    public readonly _recipient: string,
+    public readonly _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
+    public readonly _toMode: FarmToMode = FarmToMode.INTERNAL
   ) {
     super();
   }

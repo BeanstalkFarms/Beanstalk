@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { BasicPreparedResult, RunContext, StepClass, Workflow } from "src/classes/Workflow";
+import { BasicPreparedResult, RunContext, RunMode, StepClass, Workflow } from "src/classes/Workflow";
 import { CurveMetaPool__factory, CurvePlainPool__factory } from "src/constants/generated";
 import { FarmFromMode, FarmToMode } from "../types";
 
@@ -7,11 +7,11 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
   public name: string = "RemoveLiquidityOneToken";
 
   constructor(
-    private _pool: string,
-    private _registry: string,
-    private _tokenOut: string,
-    private _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
-    private _toMode: FarmToMode = FarmToMode.INTERNAL
+    public readonly _pool: string,
+    public readonly _registry: string,
+    public readonly _tokenOut: string,
+    public readonly _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
+    public readonly _toMode: FarmToMode = FarmToMode.INTERNAL
   ) {
     super();
   }
@@ -26,14 +26,14 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
       toMode: this._toMode,
       context
     });
-    let registry
-    if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry.address) {
-      registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.poolRegistry;
-    } else if (this._registry === RemoveLiquidityOneToken.sdk.contracts.curve.registries.cryptoFactory.address) {
-      registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.cryptoFactory;
-    } else {
-      registry = RemoveLiquidityOneToken.sdk.contracts.curve.registries.metaFactory;
-    };
+
+    if (context.runMode === RunMode.EstimateReversed) {
+      throw new Error("Reverse estimation is not yet supported for this action");
+    }
+
+    const registries = RemoveLiquidityOneToken.sdk.contracts.curve.registries;
+    const registry = registries[this._registry] || registries.metaFactory;
+
     const coins = await registry.callStatic.get_coins(this._pool, { gasLimit: 10000000 });
     const i = coins.findIndex((addr) => addr.toLowerCase() === this._tokenOut.toLowerCase());
 
