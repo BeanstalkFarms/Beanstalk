@@ -8,7 +8,9 @@ import { BEAN } from '~/constants/tokens';
 import { tokenResult } from '~/util';
 import { getNowRounded, getDiffNow } from '~/state/beanstalk/sun';
 import { updateTotalSoil } from './actions';
-import { useSeasonalTemperatureQuery } from '~/generated/graphql';
+
+const SOIL_UPDATE_INTERVAL = 4;
+const FIELD_REFRESH_MS = 2000;
 
 /**
  * useUpdateMorningField's primary function is to ensure that the redux store data
@@ -25,10 +27,6 @@ export function useUpdateMorningField() {
 
   /// Fetch
   const [fetchBeanstalkField] = useFetchBeanstalkField();
-  const temperatureQuery = useSeasonalTemperatureQuery({
-    fetchPolicy: 'cache-and-network',
-    skip: morning.isMorning,
-  });
 
   /// Contract
   const beanstalk = useBeanstalkContract();
@@ -39,11 +37,6 @@ export function useUpdateMorningField() {
   const morningBlock = morning.blockNumber;
   const sunriseBlock = season.sunriseBlock;
   const deltaBlocks = morningBlock.minus(sunriseBlock);
-
-  /// Temperature Season Data
-  const seasonData = temperatureQuery.data?.seasons;
-  const currentSeason = season.current;
-  const first = seasonData?.[0];
 
   /// -------------------------------------
   /// Callbacks
@@ -75,7 +68,7 @@ export function useUpdateMorningField() {
       const now = getNowRounded();
 
       const remaining = getDiffNow(next, now).as('seconds');
-      if (remaining % 4 === 0) {
+      if (remaining % SOIL_UPDATE_INTERVAL === 0) {
         fetchSoil();
       }
     }, 1000);
@@ -86,21 +79,17 @@ export function useUpdateMorningField() {
   }, [fetchSoil, morning.isMorning, next]);
 
   /**
+   * Notes:
+   *    We define 'interval' as (currentBlock - sunriseBlock + 1) where 1 <= interval <= 25.
+   *
    * Refetch the field every 2 seconds for updates if:
    *
-   * It is not morning:
-   * - If the max temperature is not equal to the scaled temperature
-   *
-   * OR
-   *
    * If it is the morning:
-   *    We are in the 1st interval of the morning & the scaled temperature is not equal to 1.
+   *    We are in the 1st interval of the morning & the scaled temperature in redux !== 1.
    *    The temperature of the 1st interval of the morning is always 1%.
+   *    - This occurs when we are transitioning into the morning state from the previous season.
    */
   const shouldUpdateField = (() => {
-    if (!morning.isMorning) {
-      return !temperature.max.eq(temperature.scaled);
-    }
     if (morning.isMorning) {
       return deltaBlocks.isZero() && !temperature.scaled.eq(1);
     }
@@ -113,27 +102,11 @@ export function useUpdateMorningField() {
     const interval = setInterval(() => {
       console.debug('[beanstalk/field/morning]: Refetching field');
       fetchBeanstalkField();
-    }, 2000);
+    }, FIELD_REFRESH_MS);
     return () => {
       clearInterval(interval);
     };
   }, [fetchBeanstalkField, shouldUpdateField]);
-
-  /// If the user is behind 1 season, update the temperature data
-  /// This is to prevent the morning temperature chart & max temperature
-  /// chart from being out of sync.
-  useEffect(() => {
-    /// data not loaded yet
-    if (!first || currentSeason.lte(0)) return;
-
-    /// If we are behind 1 season, refetch
-    if (currentSeason.minus(first.season).eq(1)) {
-      console.debug('refetching temperature data...');
-      temperatureQuery.refetch({
-        season_lte: currentSeason.toNumber(),
-      });
-    }
-  }, [currentSeason, first, temperatureQuery]);
 
   return null;
 }

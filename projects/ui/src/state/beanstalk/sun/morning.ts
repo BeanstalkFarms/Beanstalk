@@ -10,6 +10,7 @@ import { getDiffNow, getMorningResult, getNowRounded } from '.';
 import { useAppSelector } from '~/state';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
 import useSoil from '~/hooks/beanstalk/useSoil';
+import { useSeasonalTemperatureLazyQuery } from '~/generated/graphql';
 
 /**
  * Architecture Notes: @Bean-Sama
@@ -53,6 +54,9 @@ import useSoil from '~/hooks/beanstalk/useSoil';
  * MorningUpdater also calculates & updates the scaled temperature based on the next expected block number.
  * In addition, we also update the soil for the next morning block if we are above peg.
  *
+ * We calcuate the temperature for the next block via 'calculateTemperature' from useTemperature()
+ * When above peg, we calculate the soil amount for the next morning block. via 'calculateNextSoil' from useSoil().
+ *
  * ------------------------
  *
  * MorningFieldUpdater:
@@ -81,11 +85,14 @@ function useUpdateMorning() {
   const [_, { calculate: calculateTemperature }] = useTemperature();
   const [_soilData, { calculate: calculateNextSoil }] = useSoil();
 
+  const [triggerQuery] = useSeasonalTemperatureLazyQuery({
+    fetchPolicy: 'network-only',
+  });
+
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (!morning.isMorning) return;
-
     // set up the timer while in the  morning state.
     const intervalId = setInterval(async () => {
       const { abovePeg, sunriseBlock, timestamp: sTimestamp } = season;
@@ -113,6 +120,15 @@ function useUpdateMorning() {
           isMorning: morningResult.morning.isMorning,
         });
 
+        const _morning = morningResult.morning;
+
+        /// If we are transitioning out of the morning state, refetch the max Temperature from the subgraph.
+        /// This is to make sure that when transitioning out of the morning state, the max Temperature chart
+        /// shows the maxTemperature for the current season, not the previous season.
+        if (!_morning.isMorning && _morning.index.eq(25)) {
+          triggerQuery();
+        }
+
         dispatch(updateScaledTemperature(scaledTemp));
         nextSoil && dispatch(updateTotalSoil(nextSoil));
         dispatch(setMorning(morningResult));
@@ -128,6 +144,7 @@ function useUpdateMorning() {
     season,
     morning,
     morningTime.next,
+    triggerQuery,
     calculateNextSoil,
     calculateTemperature,
     dispatch,

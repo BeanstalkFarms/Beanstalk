@@ -34,8 +34,15 @@ import useTemperature from './useTemperature';
  * Refer to 'totalSoil()' in 'Beanstalk/protocol/contracts/field/FieldFacet.sol'
  *
  * Additional Notes:
- * It is recommended to use this hook to read the current amount of soil in the field
+ * - It is recommended to use this hook to read the current amount of soil in the field
  * instead of using the soil stored in the redux store.
+ *
+ * - We calculate 'nextSoil' instead of 'soil' b/c 'soil' would require us to know the temperature of the
+ * previous morning interval.
+ *    - If we are at index = 0, we cannot calculate the temperature of the previous interval, wheras if we
+ * calculate the soil for the next interval, if we are at interval 25, we can assume 'nextTemperature' is
+ * the maxTemperature for the season.
+ *
  */
 
 /**

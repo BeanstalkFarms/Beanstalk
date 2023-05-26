@@ -84,6 +84,20 @@ export const getNowRounded = () => {
   return DateTime.fromSeconds(now);
 };
 
+/**
+ * @param timestamp the timestamp of the block in which gm() was called
+ * @param blockNumber the blockNumber of the block in which gm() was called
+ *
+ * Ethereum block times don't include MS, so we use the current timestamp
+ * rounded down to the nearest second.
+ *
+ * We determine the current block using the difference in seconds between
+ * the current timestamp & the sunriseBlock timestamp.
+ *
+ * We determine it is morning by calcuating whether we are within 5 mins
+ * since sunrise was called.
+ *
+ */
 export const getMorningResult = ({
   timestamp: sunriseTime,
   blockNumber: sunriseBlock,
@@ -96,7 +110,9 @@ export const getMorningResult = ({
 
   const blockNumber = sunriseBlock.plus(index);
   const seconds = index.times(12).toNumber();
-  const curr = sunriseTime.plus({ seconds });
+  const curr = isMorning
+    ? sunriseTime.plus({ seconds })
+    : getNextExpectedSunrise().plus({ seconds });
 
   const next = getNextExpectedBlockUpdate(curr);
   const remaining = getDiffNow(next);

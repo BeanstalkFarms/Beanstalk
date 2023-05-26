@@ -82,9 +82,9 @@ const SunUpdater = () => {
       const i = setInterval(() => {
         const _remaining = next.diffNow();
         if (_remaining.as('seconds') <= 0) {
-          dispatch(setAwaitingSunrise(true));
+          // dispatch(setAwaitingSunrise(true));
         } else {
-          dispatch(setRemainingUntilSunrise(_remaining));
+          // dispatch(setRemainingUntilSunrise(_remaining));
         }
       }, 1000);
       return () => clearInterval(i);
