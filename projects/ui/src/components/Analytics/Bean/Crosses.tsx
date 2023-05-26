@@ -17,7 +17,7 @@ const getValue = (season: SnapshotData<SeasonalCrossesQuery>) => season.crosses;
 const formatValue = (value: number) => `${value}`;
 const statProps = {
   title: 'Peg Crosses',
-  titleTooltip: 'The number of times Bean has crossed its peg.',
+  titleTooltip: 'The number of times Bean has crossed its peg. Does not include peg crosses due to ETH price movement.',
   gap: 0.25,
   sx: { ml: 0 },
 };
