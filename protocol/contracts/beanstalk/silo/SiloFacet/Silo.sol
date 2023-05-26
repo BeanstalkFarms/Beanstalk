@@ -59,8 +59,7 @@ contract Silo is SiloExit {
      * @notice Emitted when `account` gains or loses Stalk.
      * @param account The account that gained or lost Stalk.
      * @param delta The change in Stalk.
-     * @param deltaRoots The change in Roots. For more info on Roots, see: 
-     * FIXME(doc)
+     * @param deltaRoots The change in Roots.
      *   
      * @dev {StalkBalanceChanged} should be emitted anytime a Deposit is added, removed or transferred AND
      * anytime an account Mows Grown Stalk.

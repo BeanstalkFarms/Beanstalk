@@ -217,7 +217,8 @@ contract Weather is Sun {
     }
 
     /**
-     * @dev Oversaturated was previously referred to as Raining. If P > 1 and the
+     * @dev Oversaturated was previously referred to as Raining and thus code
+     * references mentioning Rain really refer to Oversaturation. If P > 1 and the
      * Pod Rate is less than 5%, the Farm is Oversaturated. If it is Oversaturated
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */

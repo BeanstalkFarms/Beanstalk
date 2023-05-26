@@ -401,7 +401,7 @@ contract TokenSilo is Silo {
      * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
      *
      * @return amount The number of tokens contained in this Deposit.
-     * @return bdv The BDV associated with this Deposit. See {FIXME(doc)}.
+     * @return bdv The BDV associated with this Deposit.
      */
     function getDeposit(
         address account,

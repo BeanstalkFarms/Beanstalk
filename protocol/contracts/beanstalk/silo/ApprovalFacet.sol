@@ -59,8 +59,6 @@ contract ApprovalFacet is ReentrancyGuard {
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     *
-     * FIXME(doc): why does this return `true`?
      */
     function increaseDepositAllowance(
         address spender,
@@ -82,8 +80,6 @@ contract ApprovalFacet is ReentrancyGuard {
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     * 
-     * FIXME(doc): why does this return `true`?
      */
     function decreaseDepositAllowance(
         address spender,
