@@ -11,7 +11,7 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 
 const getValue = (season: LiquiditySupplyRatioQuery['seasons'][number]) =>
-  ((season.supplyInPegLP) * 100);
+  (season.supplyInPegLP * 100);
 const formatValue = (value: number) =>
   `${value.toFixed(4)}%`;
 const statProps = {
