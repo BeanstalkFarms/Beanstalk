@@ -242,12 +242,12 @@ library LibSilo {
                 s.s.stalk-s.newEarnedStalk,
                 LibPRBMath.Rounding.Up
             );
-            uint128 deltaRootsRemoved = s.a[account].deltaRoots
-                .mul(stalk.toUint128())
-                .div(s.a[account].s.stalk.toUint128());
-            s.a[account].deltaRoots = s.a[account].deltaRoots.sub(deltaRootsRemoved);
-            s.vestingPeriodRoots = s.vestingPeriodRoots.sub(deltaRootsRemoved);
-        } else { 
+            // cast to uint256 to prevent overflow
+            uint256 deltaRootsRemoved = uint256(s.a[account].deltaRoots)
+                .mul(stalk)
+                .div(s.a[account].s.stalk);
+            s.a[account].deltaRoots = s.a[account].deltaRoots.sub(deltaRootsRemoved.toUint128());
+        } else {
             roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk,

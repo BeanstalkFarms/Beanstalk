@@ -121,7 +121,7 @@ describe('Silo', function () {
       await time.increase(3600); // wait until end of season to get earned
       await mine(25);
       await this.silo.mow(user2Address, this.bean.address)
-      this.result = await this.silo.connect(user).plant()
+      this.result = await this.silo.connect(user).plant(this.bean.address)
     })
 
     it('properly updates the earned balances', async function () {
