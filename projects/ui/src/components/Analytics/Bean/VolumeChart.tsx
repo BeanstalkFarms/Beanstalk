@@ -25,6 +25,7 @@ type BarChartDatum = {
   maxSeason: number;
   minSeason: number;
   date: string;
+  rawDate: string;
 };
 
 type DataByDate = {
@@ -77,6 +78,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
       const seasons = dayData.map((datum) => datum.season);
       return {
         date: shortDateFormat(parseDate(date) as Date),
+        rawDate: (parseDate(date) as Date).toLocaleDateString(),
         maxSeason: Math.max(...seasons),
         minSeason: Math.min(...seasons),
         count: dayData.reduce((accum: number, datum) => accum + datum.value, 0),
@@ -93,6 +95,8 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
           currentHoverBar?.maxSeason ?? ''
         }`
       : 0;
+
+  const currentDate = currentHoverBar ? currentHoverBar.rawDate : (new Date()).toLocaleDateString();
 
   const chartControlsHeight = 75;
   const chartHeight = height - chartControlsHeight;
@@ -116,6 +120,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
           isLoading={queryData?.loading}
           amount={formatValue(currentHoverBar?.count ?? 0)}
           subtitle={`Season ${currentSeason}`}
+          secondSubtitle={currentDate}
         />
         <Stack alignItems="flex-end" alignSelf="flex-start">
           <TimeTabs
