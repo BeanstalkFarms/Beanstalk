@@ -363,7 +363,7 @@ library LibLegacyTokenSilo {
                     account, 
                     perTokenData.token, 
                     LibTokenSilo.grownStalkAndBdvToStem(
-                        IERC20(perTokenData.token), 
+                        perTokenData.token, 
                         perDepositData.grownStalk,
                         crateBDV
                     ), 

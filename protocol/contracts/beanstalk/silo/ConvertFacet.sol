@@ -368,7 +368,7 @@ contract ConvertFacet is ReentrancyGuard {
         // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
 
-        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(IERC20(token), grownStalk, bdv);
+        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
