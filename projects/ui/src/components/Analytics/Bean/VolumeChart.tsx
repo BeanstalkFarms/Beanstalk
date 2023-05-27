@@ -25,7 +25,6 @@ type BarChartDatum = {
   maxSeason: number;
   minSeason: number;
   date: Date;
-  readableDate: string;
 };
 
 type DataByDate = {
@@ -77,7 +76,6 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
       const seasons = dayData.map((datum) => datum.season);
       return {
         date: parseDate(date) as Date,
-        readableDate: (parseDate(date) as Date).toLocaleDateString(),
         maxSeason: Math.max(...seasons),
         minSeason: Math.min(...seasons),
         count: dayData.reduce((accum: number, datum) => accum + datum.value, 0),
@@ -95,7 +93,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
         }`
       : 0;
 
-  const currentDate = currentHoverBar ? currentHoverBar.readableDate : (new Date()).toLocaleDateString();
+  const currentDate = currentHoverBar ? currentHoverBar.date.toLocaleDateString() : (new Date()).toLocaleDateString();
 
   const chartControlsHeight = 75;
   const chartHeight = height - chartControlsHeight;
