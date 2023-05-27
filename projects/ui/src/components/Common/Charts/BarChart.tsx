@@ -24,7 +24,7 @@ type BarChartHookParams = {
   seriesData: any[];
   chartWidth: number;
   chartHeight: number;
-  getX: (datum: object) => Date;
+  getX: (datum: object) => string;
   getY: (datum: object) => number;
   xTickFormat: (datum: any) => string;
   yTickFormat: (datum: any) => string;
