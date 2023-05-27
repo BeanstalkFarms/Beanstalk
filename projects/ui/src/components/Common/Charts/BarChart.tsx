@@ -24,7 +24,7 @@ type BarChartHookParams = {
   seriesData: any[];
   chartWidth: number;
   chartHeight: number;
-  getX: (datum: object) => string;
+  getX: (datum: object) => Date;
   getY: (datum: object) => number;
   xTickFormat: (datum: any) => string;
   yTickFormat: (datum: any) => string;
@@ -47,7 +47,6 @@ const useBarChart = ({
     () =>
       scaleBand<string>({
         range: [0, xMax],
-        round: true,
         domain: seriesData.map(getX),
         padding: 0.4,
       }),

@@ -24,8 +24,8 @@ type BarChartDatum = {
   count: number;
   maxSeason: number;
   minSeason: number;
-  date: string;
-  rawDate: string;
+  date: Date;
+  readableDate: string;
 };
 
 type DataByDate = {
@@ -64,7 +64,6 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
 
     const dateFormat = timeFormat('%Y/%m/%d');
     const parseDate = timeParse('%Y/%m/%d');
-    const shortDateFormat = timeFormat('%m/%d');
     const dataByDate = data.reduce((accum: DataByDate, datum: any) => {
       const key = dateFormat(datum.date);
       if (!accum[key]) {
@@ -77,8 +76,8 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
     return Object.entries(dataByDate).map(([date, dayData]) => {
       const seasons = dayData.map((datum) => datum.season);
       return {
-        date: shortDateFormat(parseDate(date) as Date),
-        rawDate: (parseDate(date) as Date).toLocaleDateString(),
+        date: parseDate(date) as Date,
+        readableDate: (parseDate(date) as Date).toLocaleDateString(),
         maxSeason: Math.max(...seasons),
         minSeason: Math.min(...seasons),
         count: dayData.reduce((accum: number, datum) => accum + datum.value, 0),
@@ -96,7 +95,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
         }`
       : 0;
 
-  const currentDate = currentHoverBar ? currentHoverBar.rawDate : (new Date()).toLocaleDateString();
+  const currentDate = currentHoverBar ? currentHoverBar.readableDate : (new Date()).toLocaleDateString();
 
   const chartControlsHeight = 75;
   const chartHeight = height - chartControlsHeight;
@@ -149,7 +148,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
                 seriesData={transformData(queryData?.data[0])}
                 getX={(datum) => datum.date}
                 getY={(datum) => Number(datum.count)}
-                xTickFormat={(date: string) => date}
+                xTickFormat={(date: Date) => date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' })}
                 yTickFormat={tickFormatUSD}
                 width={width || parent.width}
                 height={chartHeight || parent.height}
