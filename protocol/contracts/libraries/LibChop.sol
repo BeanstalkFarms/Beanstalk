@@ -30,9 +30,7 @@ library LibChop {
         // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 unripeSupply = IERC20(unripeToken).totalSupply();
-
-        underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
+        underlyingAmount = _getPenalizedUnderlying(unripeToken, amount);
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
@@ -46,14 +44,14 @@ library LibChop {
      * @param supply The total unripe supply
      * @return redeem the amount of ripe underlying assets that can be redeemed from the unripe ones
      */
-    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
+    function _getPenalizedUnderlying(address unripeToken, uint256 amount)
         internal
         view
         returns (uint256 redeem)
     {
         require(isUnripe(unripeToken), "not vesting");
         uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
-        redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
+        redeem = LibUnripe.unripeToUnderlying(unripeToken, amount);
     }
 
     /**
@@ -78,23 +76,6 @@ library LibChop {
         // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
-    }
-
-    /**
-     * @param unripeToken The address of the unripe token
-     * @param supply The total supply of the unripe token
-     * @return redeem the final amount of ripe assets chopped from its unripe counterpart
-     */
-     function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
-        internal
-        view
-        returns (uint256)
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
-            supply
-        );
-        return redeem;
     }
 
 }

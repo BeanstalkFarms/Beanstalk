@@ -8,7 +8,7 @@ const ConvertKind = {
   LAMBDA_LAMBDA: 4,
   BEANS_TO_WELL_LP: 5,
   WELL_LP_TO_BEANS: 6,
-  UNRIPE_BEANS_TO_BEANS: 7
+  UNRIPE_TO_RIPE: 7
 }
 
 class ConvertEncoder {
@@ -81,7 +81,7 @@ class ConvertEncoder {
   static convertUnripeBeansToBeans = (unripeAmount, unripeToken) =>
   defaultAbiCoder.encode(
     ['uint256', 'uint256', 'address'],
-    [ConvertKind.UNRIPE_BEANS_TO_BEANS, unripeAmount, unripeToken]
+    [ConvertKind.UNRIPE_TO_RIPE, unripeAmount, unripeToken]
   );
 
 }
