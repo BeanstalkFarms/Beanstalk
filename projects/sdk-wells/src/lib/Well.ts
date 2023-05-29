@@ -1,12 +1,16 @@
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
-import { BigNumber, CallOverrides, ContractTransaction, Overrides } from "ethers";
+import { BigNumber, CallOverrides, constants, ContractFactory, ContractTransaction, Overrides } from "ethers";
 import { Well__factory } from "src/constants/generated";
 import { Well as WellContract } from "src/constants/generated";
+import fs from "fs";
+import path from "path";
 
 import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
 import {
   deadlineSecondsToBlockchain,
+  encodeWellImmutableData,
+  encodeWellInitFunctionCall,
   loadToken,
   setReadOnly,
   validateAddress,
@@ -16,6 +20,7 @@ import {
 } from "./utils";
 import { WellFunction } from "./WellFunction";
 import { WellsSDK } from "./WellsSDK";
+import { Call } from "src/types";
 
 export type WellDetails = {
   tokens: ERC20Token[];
@@ -864,5 +869,66 @@ export class Well {
     this.reserves = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
 
     return this.reserves;
+  }
+
+  /**
+   * Static function to deploy a well
+   * @param tokens
+   * @param name
+   * @param symbol
+   * @param wellFunction
+   */
+  static async Deploy(
+    sdk: WellsSDK,
+    aquifer: Aquifer,
+    name: string,
+    symbol: string,
+    tokens: ERC20Token[],
+    wellFunction: WellFunction,
+    pumps: Pump[]
+  ): Promise<Well> {
+    if (tokens.length < 2) {
+      throw new Error("Well must have at least 2 tokens");
+    }
+
+    const wellTokensAddresses = tokens.map((t) => t.address);
+
+    // ------------------------------ Well dependencies ------------------------------
+    // Pump
+
+    // TODO: Provide pump via param, or else don't use a pump
+    // TODO: Do we even need a pump? try it.
+    // const deployedMockPump = await Pump.BuildMockPump(sdk);
+
+    // Well implementation
+    const wellContract = new Well__factory(sdk.signer);
+    const deployedWell = await wellContract.deploy();
+
+    // Well immutable data dependencies
+    const wellFunctionCall = {
+      target: wellFunction.address,
+      data: new Uint8Array()
+    } as Call;
+
+    const pumpCalls = pumps?.map(
+      (p) =>
+        ({
+          target: p.address,
+          data: new Uint8Array()
+        } as Call)
+    );
+
+    const immutableData = encodeWellImmutableData(aquifer.address, wellTokensAddresses, wellFunctionCall, pumpCalls);
+
+    // Encode the Init function on the well
+    // TODO: Helper functions to generate symbol and name basd on tokens?
+    const initFunctionCall = await encodeWellInitFunctionCall(name, symbol);
+
+    // TODO: Salt as a param?
+    const saltBytes32 = constants.HashZero;
+
+    const boredWellAddress = await aquifer.boreWell(deployedWell.address, immutableData, initFunctionCall, saltBytes32);
+
+    return new Well(sdk, boredWellAddress);
   }
 }
