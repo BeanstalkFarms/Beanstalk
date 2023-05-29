@@ -58,8 +58,7 @@ contract UnripeFacet is ReentrancyGuard {
         // burn the token from the msg.sender address
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
         // get ripe address and ripe amount
-        (address underlyingToken, uint256 underlyingRipeAmount) = LibChop.chop(unripeToken, amount);
-        underlyingAmount = underlyingRipeAmount;
+        (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(unripeToken, amount);
         // send the ripe asset to msg.sender
         IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
         // emit the event
