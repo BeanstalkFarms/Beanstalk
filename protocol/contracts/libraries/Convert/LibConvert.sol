@@ -61,7 +61,7 @@ library LibConvert {
                 .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
-                .convertUnripeBeansToBeans(convertData);
+                .convertUnripeToRipe(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
@@ -104,6 +104,10 @@ library LibConvert {
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
             return type(uint256).max;
 
+        // UrBEAN:3CRV -> BEAN:3CRV
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.CURVE_BEAN_METAPOOL)
+            return type(uint256).max;
+
         revert("Convert: Tokens not supported");
     }
 
@@ -142,7 +146,11 @@ library LibConvert {
         
         // UrBEAN -> Bean
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
-            return LibChopConvert.getBeanAmountOut(tokenIn, amountIn);
+            return LibChopConvert.getRipeOut(tokenIn, amountIn);
+
+        // UrBEAN:3CRV -> BEAN:3CRV
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.CURVE_BEAN_METAPOOL)
+            return LibChopConvert.getRipeOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
     }
