@@ -123,7 +123,7 @@ contract UnripeFacet is ReentrancyGuard {
         return LibChop._getPenalizedUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
     }
 
-    function isUnripe(address unripeToken) public view returns (bool unripe) {
+    function isUnripe(address unripeToken) external view returns (bool unripe) {
         unripe = LibChop.isUnripe(unripeToken);
     }
 
