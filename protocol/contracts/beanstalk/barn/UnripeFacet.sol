@@ -103,17 +103,10 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
-        return _getUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
+        return LibChop._getUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
     }
 
-    function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
-        private
-        view
-        returns (uint256 redeem)
-    {
-        redeem = LibChop._getUnderlying(unripeToken, amount, supply);
-    }
-
+// PENALTY GETTERS
     function getPenalty(address unripeToken)
         external
         view
@@ -127,15 +120,7 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
-        return _getPenalizedUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
-    }
-
-    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
-        public
-        view
-        returns (uint256 redeem)
-    {
-        redeem = LibChop._getPenalizedUnderlying(unripeToken, amount, supply);
+        return LibChop._getPenalizedUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
     }
 
     function isUnripe(address unripeToken) public view returns (bool unripe) {
