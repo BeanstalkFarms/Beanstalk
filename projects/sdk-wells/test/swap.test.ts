@@ -1,7 +1,7 @@
 import { Well } from "../src/lib/Well";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { getTestUtils } from "./TestUtils/provider";
-import { deployTestWellInstance } from "./TestUtils";
+import { Aquifer, WellFunction } from "../src";
 
 const { wellsSdk, utils, account } = getTestUtils();
 
@@ -13,8 +13,9 @@ beforeAll(async () => {
 
 const setupWell = async (wellTokens: ERC20Token[], account: string) => {
   // Deploy test well
-  const deployment = await deployTestWellInstance(wellTokens);
-  const testWell = new Well(wellsSdk, deployment.wellAddress);
+  const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
+  const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
+  const testWell = await Well.Deploy(wellsSdk, testAquifer, "Test Well", "TW", wellTokens, wellFunction, []);
 
   // Set initial balances for all well tokens
   await Promise.all(
@@ -65,7 +66,7 @@ describe("Swap", () => {
 
     describe.each([
       [wellsSdk.tokens.BEAN, wellsSdk.tokens.USDC],
-      [wellsSdk.tokens.USDC, wellsSdk.tokens.BEAN],
+      [wellsSdk.tokens.USDC, wellsSdk.tokens.BEAN]
     ])("invalid swaps", (tokenIn, tokenOut) => {
       it(`${tokenIn.symbol} -> ${tokenOut.symbol}`, async () => {
         await executeFailedSwapTest(testBeanWethWell, tokenIn, tokenOut, "1000");
@@ -183,7 +184,7 @@ async function executeSwapToTest(well: Well, tokenIn: Token, tokenOut: Token, ac
   // quote is the amount of tokenIn needed to get the desired amount of tokenOut
   const quote = await well.swapToQuote(tokenIn, tokenOut, swapAmount);
   expect(quote).not.toBeNull();
-  
+
   const swapTxn = await well.swapTo(tokenIn, tokenOut, quote, swapAmount, account);
   const tx = await swapTxn.wait();
   expect(tx.status).toBe(1);

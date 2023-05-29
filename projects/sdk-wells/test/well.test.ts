@@ -1,30 +1,27 @@
 import { Well } from "../src/lib/Well";
 import { getTestUtils } from "./TestUtils/provider";
-import { BlockchainUtils, deployTestWellInstance } from "./TestUtils";
+import { BlockchainUtils } from "./TestUtils";
 import { Token } from "@beanstalk/sdk-core";
 import { WellsSDK } from "../src/lib/WellsSDK";
+import { Aquifer, Pump, WellFunction } from "../src";
 
 jest.setTimeout(30000);
 
 let testWell: Well;
 let testHelper: BlockchainUtils;
-let BEAN: Token;
-let WETH: Token;
-let deployment: {
-    wellsSdkInstance: WellsSDK;
-    wellAddress: string;
-}
-let wellsSdkInstance: WellsSDK
+let wellAddress: string;
+let wellsSdkInstance: WellsSDK;
 
 beforeAll(async () => {
   const { wellsSdk } = getTestUtils();
   wellsSdkInstance = wellsSdk;
-  BEAN = wellsSdkInstance.tokens.BEAN;
-  WETH = wellsSdkInstance.tokens.WETH;
-  const wellTokens = [BEAN, WETH];
-  
+  const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
+
   // Deploy test well
-  deployment = await deployTestWellInstance(wellTokens);
+  const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
+  const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
+  const testWell = await Well.Deploy(wellsSdk, testAquifer, "Test Well", "TW", wellTokens, wellFunction, []);
+  wellAddress = testWell.address;
   testHelper = new BlockchainUtils(wellsSdkInstance);
 });
 
@@ -34,15 +31,15 @@ afterAll(async () => {
 
 describe("Well", function () {
   beforeEach(() => {
-    testWell = new Well(wellsSdkInstance, deployment.wellAddress);
+    testWell = new Well(wellsSdkInstance, wellAddress);
   });
 
-  describe('loadWell', () => {
+  describe("loadWell", () => {
     beforeEach(() => {
-      testWell = new Well(wellsSdkInstance, deployment.wellAddress);
+      testWell = new Well(wellsSdkInstance, wellAddress);
     });
-  
-    it('should load all properties by default', async () => {
+
+    it("should load all properties by default", async () => {
       await testWell.loadWell();
 
       expect(testWell.name).toBeDefined();
@@ -54,10 +51,10 @@ describe("Well", function () {
       expect(testWell.reserves).toBeDefined();
     });
 
-    it('should load only specified properties', async () => {
+    it("should load only specified properties", async () => {
       await testWell.loadWell({
         name: true,
-        lpToken: true,
+        lpToken: true
       });
 
       expect(testWell.name).toBeDefined();
@@ -70,8 +67,8 @@ describe("Well", function () {
     });
   });
 
-  describe('getWell', () => {
-    it('should return the tokens, Well function, pumps, and aquifer associated with the well', async () => {
+  describe("getWell", () => {
+    it("should return the tokens, Well function, pumps, and aquifer associated with the well", async () => {
       const wellDetails = await testWell.getWell();
       expect(wellDetails.tokens).toBeDefined();
       expect(wellDetails.wellFunction).toBeDefined();
@@ -79,33 +76,33 @@ describe("Well", function () {
       expect(wellDetails.aquifer).toBeDefined();
     });
 
-    it('should set the tokens if they are not already set', async () => {
+    it("should set the tokens if they are not already set", async () => {
       testWell.tokens = undefined;
       await testWell.getWell();
       expect(testWell.tokens).toBeDefined();
     });
 
-    it('should set the Well function if it is not already set', async () => {
+    it("should set the Well function if it is not already set", async () => {
       testWell.wellFunction = undefined;
       await testWell.getWell();
       expect(testWell.wellFunction).toBeDefined();
     });
 
-    it('should set the pumps if they are not already set', async () => {
+    it("should set the pumps if they are not already set", async () => {
       testWell.pumps = undefined;
       await testWell.getWell();
       expect(testWell.pumps).toBeDefined();
     });
 
-    it('should set the aquifer if it is not already set', async () => {
+    it("should set the aquifer if it is not already set", async () => {
       testWell.aquifer = undefined;
       await testWell.getWell();
       expect(testWell.aquifer).toBeDefined();
     });
   });
 
-  describe('getName', () => {
-    it('should return the name and cache the value after the first call', async () => {
+  describe("getName", () => {
+    it("should return the name and cache the value after the first call", async () => {
       expect(testWell.name).toBeUndefined();
       const name = await testWell.getName();
       expect(name).toBeDefined();
@@ -113,8 +110,8 @@ describe("Well", function () {
     });
   });
 
-  describe('getTokens', () => {
-    it('should return the tokens and cache the value after the first call', async () => {
+  describe("getTokens", () => {
+    it("should return the tokens and cache the value after the first call", async () => {
       expect(testWell.tokens).toBeUndefined();
       const tokens = await testWell.getTokens();
       expect(tokens).toBeDefined();
@@ -122,8 +119,8 @@ describe("Well", function () {
     });
   });
 
-  describe('getWellFunction', () => {
-    it('should return the pumps and cache the value after the first call', async () => {
+  describe("getWellFunction", () => {
+    it("should return the pumps and cache the value after the first call", async () => {
       expect(testWell.wellFunction).toBeUndefined();
       const wellFunction = await testWell.getWellFunction();
       expect(wellFunction).toBeDefined();
@@ -131,8 +128,8 @@ describe("Well", function () {
     });
   });
 
-  describe('getPumps', () => {
-    it('should return the pumps and cache the value after the first call', async () => {
+  describe("getPumps", () => {
+    it("should return the pumps and cache the value after the first call", async () => {
       expect(testWell.pumps).toBeUndefined();
       const pumps = await testWell.getPumps();
       expect(pumps).toBeDefined();
@@ -140,8 +137,8 @@ describe("Well", function () {
     });
   });
 
-  describe('getAquifer', () => {
-    it('should return the aquifer and cache the value after the first call', async () => {
+  describe("getAquifer", () => {
+    it("should return the aquifer and cache the value after the first call", async () => {
       expect(testWell.aquifer).toBeUndefined();
       const aquifer = await testWell.getAquifer();
       expect(aquifer).toBeDefined();
@@ -149,13 +146,63 @@ describe("Well", function () {
     });
   });
 
-  describe('getReserves', () => {
-    it('should return the reserves and cache the value after the first call', async () => {
+  describe("getReserves", () => {
+    it("should return the reserves and cache the value after the first call", async () => {
       expect(testWell.reserves).toBeUndefined();
       const reserves = await testWell.getReserves();
       expect(reserves).toBeDefined();
       expect(testWell.reserves).toBeDefined();
     });
   });
-});
 
+  describe("Deploy", () => {
+    let aquifer: Aquifer;
+    beforeAll(async () => {
+      aquifer = await Aquifer.BuildAquifer(wellsSdkInstance);
+    });
+
+    describe("when pump is specified", () => {
+      it("should deploy a new well", async () => {
+        const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
+        const mockPump = await Pump.BuildMockPump(wellsSdkInstance);
+        const wellFunction = await WellFunction.BuildConstantProduct(wellsSdkInstance);
+        const deployedWell = await Well.Deploy(wellsSdkInstance, aquifer, "BEAN:WETH Test Well", "BEANWEATHtw", wellTokens, wellFunction, [
+          mockPump
+        ]);
+
+        expect(await deployedWell.getName()).toEqual("BEAN:WETH Test Well");
+
+        const wellLpToken = await deployedWell.getLPToken();
+        expect(wellLpToken.symbol).toEqual("BEANWEATHtw");
+
+        expect(await deployedWell.getWellFunction()).toEqual(wellFunction);
+
+        expect(await deployedWell.getPumps()).toEqual([mockPump]);
+        expect((await deployedWell.getAquifer()).address).toEqual(aquifer.address);
+
+        expect(deployedWell).toHaveProperty("tokens");
+        expect(deployedWell).toHaveProperty("reserves");
+      });
+    });
+
+    describe("when pump is not specified", () => {
+      it("should deploy a new well", async () => {
+        const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
+        const wellFunction = await WellFunction.BuildConstantProduct(wellsSdkInstance);
+        const deployedWell = await Well.Deploy(wellsSdkInstance, aquifer, "BEAN:WETH Test Well", "BEANWEATHtw", wellTokens, wellFunction, []);
+        expect(deployedWell).toBeDefined();
+        expect(await deployedWell.getName()).toEqual("BEAN:WETH Test Well");
+        const wellLpToken = await deployedWell.getLPToken();
+        expect(wellLpToken.symbol).toEqual("BEANWEATHtw");
+        expect(deployedWell).toHaveProperty("address");
+        expect(deployedWell).toHaveProperty("name");
+        expect(deployedWell).toHaveProperty("lpToken");
+        expect(deployedWell).toHaveProperty("wellFunction");
+        expect(deployedWell).toHaveProperty("pumps");
+        expect(deployedWell).toHaveProperty("aquifer");
+        expect(deployedWell).toHaveProperty("tokens");
+        expect(deployedWell).toHaveProperty("reserves");
+      });
+    });
+  });
+});

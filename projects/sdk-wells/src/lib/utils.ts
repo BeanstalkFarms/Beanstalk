@@ -1,6 +1,7 @@
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { WellsSDK } from "./WellsSDK";
+import { Call } from "src/types";
 
 export const loadToken = async (sdk: WellsSDK, address: string): Promise<ERC20Token> => {
   // First see this is a built in token provided by the SDK
@@ -61,3 +62,36 @@ export const setReadOnly = (obj: any, prop: string, value: any, visible?: boolea
     enumerable: visible ?? true
   });
 };
+
+export function encodeWellImmutableData(_aquifer: string, _tokens: string[], _wellFunction: Call, _pumps: Call[]): Uint8Array {
+  let packedPumps: Uint8Array[] = [];
+  for (let i = 0; i < _pumps.length; i++) {
+    packedPumps.push(
+      ethers.utils.arrayify(
+        ethers.utils.solidityPack(["address", "uint256", "bytes"], [_pumps[i].target, _pumps[i].data.length, _pumps[i].data])
+      )
+    );
+  }
+
+  const immutableData = ethers.utils.solidityPack(
+    ["address", "uint256", "address", "uint256", "uint256", "address[]", "bytes", "bytes"],
+    [
+      _aquifer,
+      _tokens.length,
+      _wellFunction.target,
+      _wellFunction.data.length,
+      _pumps.length,
+      _tokens,
+      _wellFunction.data,
+      ethers.utils.concat(packedPumps)
+    ]
+  );
+
+  return ethers.utils.arrayify(immutableData);
+}
+
+export async function encodeWellInitFunctionCall(name: string, symbol: string): Promise<Uint8Array> {
+  const wellInitInterface = new ethers.utils.Interface(["function init(string,string)"]);
+  const initFunctionCall = wellInitInterface.encodeFunctionData("init", [name, symbol]);
+  return ethers.utils.arrayify(initFunctionCall);
+}

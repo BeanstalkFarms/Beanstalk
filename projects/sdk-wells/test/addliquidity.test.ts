@@ -1,8 +1,8 @@
 import { Well } from "../src/lib/Well";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { getTestUtils } from "./TestUtils/provider";
-import { BlockchainUtils, deployTestWellInstance } from "./TestUtils";
-import { WellsSDK } from "../src";
+import { BlockchainUtils } from "./TestUtils";
+import { Aquifer, WellFunction, WellsSDK } from "../src";
 
 const { wellsSdk, utils, account } = getTestUtils();
 
@@ -11,31 +11,20 @@ jest.setTimeout(30000);
 let testWell: Well;
 let wellLpToken: Token;
 let testHelper: BlockchainUtils;
-let BEAN: Token;
-let WETH: Token;
-let deployment: {
-  wellsSdkInstance: WellsSDK;
-  wellAddress: string;
-};
 let wellsSdkInstance: WellsSDK;
 
 beforeAll(async () => {
   await utils.resetFork();
   const { wellsSdk } = getTestUtils();
   wellsSdkInstance = wellsSdk;
-  BEAN = wellsSdkInstance.tokens.BEAN;
-  WETH = wellsSdkInstance.tokens.WETH;
-  const wellTokens = [BEAN, WETH];
-
-  // Deploy test well
-  deployment = await deployTestWellInstance(wellTokens);
   testHelper = new BlockchainUtils(wellsSdkInstance);
 });
 
 const setupWell = async (wellTokens: ERC20Token[], account: string) => {
   // Deploy test well
-  const deployment = await deployTestWellInstance(wellTokens);
-  const testWell = new Well(wellsSdk, deployment.wellAddress);
+  const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
+  const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
+  const testWell = await Well.Deploy(wellsSdk, testAquifer, "Test Well", "TW", wellTokens, wellFunction, []);
 
   // Set initial balances for all well tokens
   await Promise.all(
