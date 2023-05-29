@@ -26,8 +26,6 @@ contract UnripeFacet is ReentrancyGuard {
     using LibTransfer for IERC20;
     using SafeMath for uint256;
 
-    uint256 constant DECIMALS = 1e6;
-
     event AddUnripeToken(
         address indexed unripeToken,
         address indexed underlyingToken,
@@ -112,7 +110,7 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 penalty)
     {
-        return getPenalizedUnderlying(unripeToken, DECIMALS);
+        return getPenalizedUnderlying(unripeToken, LibUnripe.DECIMALS);
     }
 
     function getPenalizedUnderlying(address unripeToken, uint256 amount)
@@ -170,7 +168,7 @@ contract UnripeFacet is ReentrancyGuard {
     }
     
     function getRecapPaidPercent() external view returns (uint256 penalty) {
-        penalty = LibChop.getRecapPaidPercentAmount(DECIMALS);
+        penalty = LibChop.getRecapPaidPercentAmount(LibUnripe.DECIMALS);
     }
 
     function getUnderlyingPerUnripeToken(address unripeToken)
@@ -181,7 +179,7 @@ contract UnripeFacet is ReentrancyGuard {
         underlyingPerToken = s
             .u[unripeToken]
             .balanceOfUnderlying
-            .mul(DECIMALS)
+            .mul(LibUnripe.DECIMALS)
             .div(IERC20(unripeToken).totalSupply());
     }
 
