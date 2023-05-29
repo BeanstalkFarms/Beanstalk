@@ -8,14 +8,11 @@ import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { Axis, Orientation } from '@visx/axis';
 
-import { useSelector } from 'react-redux';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { chartHelpers } from '~/components/Common/Charts/ChartPropProvider';
 import { tickFormatPercentage } from '~/components/Analytics/formatters';
 
 import './chart.css';
-import useSeason from '~/hooks/beanstalk/useSeason';
-import { Sun } from '~/state/beanstalk/sun';
 import Row from '~/components/Common/Row';
 import { displayFullBN } from '~/util';
 import Centered from '~/components/Common/ZeroState/Centered';
@@ -26,7 +23,7 @@ import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
 import useTemperature, {
   MorningBlockTemperature,
 } from '~/hooks/beanstalk/useTemperature';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 
 const {
   common: {
@@ -252,21 +249,33 @@ const MorningTemperature: React.FC<{
   show: boolean;
   height?: string;
 }> = ({ show = false, height = '200px' }) => {
-  const morning = useSelector<AppState, Sun['morning']>(
-    (state) => state._beanstalk.sun.morning
-  );
+  const sunSeason = useAppSelector((s) => s._beanstalk.sun.season);
+  const morning = useAppSelector((s) => s._beanstalk.sun.morning);
 
   const [{ current, max }, { generate }] = useTemperature();
   const temperatureMap = useMemo(() => generate(), [generate]);
 
+  /// Local State
+  const [hovered, setHovered] = useState<MorningBlockTemperature | undefined>(
+    undefined
+  );
+
+  /// Derived
   const blockNumber = morning.blockNumber;
-  const interval = useMemo(() => {
-    if (morning.isMorning) {
-      return morning.index.plus(1);
-    }
-    return NON_MORNING_BN;
-  }, [morning.index, morning.isMorning]);
-  const season = useSeason();
+  const season = sunSeason.current;
+  const interval = morning.isMorning ? morning.index.plus(1) : NON_MORNING_BN;
+  const temperatureDisplay = (hovered?.temperature || current).toNumber();
+  const displaySeconds = morning.isMorning
+    ? hovered
+      ? hovered.interval.times(12).toNumber()
+      : morning.index.times(12).toNumber()
+    : 0;
+  const displayTimestamp = new Date(
+    sunSeason.timestamp.plus({ seconds: displaySeconds }).toSeconds() * 1000
+  ).toLocaleString(undefined, {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
 
   const [temperatures, loading] = useMemo(() => {
     const _temperatures = Object.values(temperatureMap);
@@ -274,18 +283,6 @@ const MorningTemperature: React.FC<{
 
     return [_temperatures, _loading] as const;
   }, [temperatureMap]);
-
-  const [hovered, setHovered] = useState<MorningBlockTemperature | undefined>(
-    undefined
-  );
-  // We debounce b/c part of the Stat is rendered conditionally
-  // based on the hover state and causes flickering
-  const _setHovered = useMemo(
-    () => debounce(setHovered, 40, { trailing: true }),
-    []
-  );
-
-  const temperatureDisplay = hovered?.temperature || current;
 
   const temperatureIncrease = useMemo(() => {
     const nextInterval = interval.plus(1);
@@ -300,6 +297,13 @@ const MorningTemperature: React.FC<{
 
     return ZERO_BN;
   }, [blockNumber, interval, max, temperatureDisplay, temperatureMap]);
+
+  // We debounce b/c part of the Stat is rendered conditionally
+  // based on the hover state and causes flickering
+  const _setHovered = useMemo(
+    () => debounce(setHovered, 40, { trailing: true }),
+    []
+  );
 
   return (
     <>
@@ -334,6 +338,7 @@ const MorningTemperature: React.FC<{
             Season {season.toString()}
           </Typography>
         }
+        secondSubtitle={displayTimestamp}
         isLoading={!temperatureDisplay}
       />
       <Box width="100%" sx={{ height, position: 'relative' }}>

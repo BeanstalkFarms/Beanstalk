@@ -8,6 +8,7 @@ import { useAppSelector } from '~/state';
 import useSoil from '~/hooks/beanstalk/useSoil';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import FieldBlockCountdown from '~/components/Field/FieldBlockCountdown';
+import Row from '../Common/Row';
 
 const FieldStats: React.FC<{}> = () => {
   const isMorning = useAppSelector((s) => s._beanstalk.sun.morning.isMorning);
@@ -26,23 +27,26 @@ const FieldStats: React.FC<{}> = () => {
           gap={0}
           title="Soil"
           amount={
-            <Typography
-              variant="inherit"
-              sx={{ display: 'inline-flex', alignItems: 'center' }}
-            >
-              {displayFullBN(normalizeBN(soil), 0)}
-              {isMorning && !nextSoil.eq(soil) && (
-                <Typography
-                  component="span"
-                  sx={{
-                    color: BeanstalkPalette.trueRed,
-                    ml: 0.5,
-                  }}
-                >
-                  {displayFullBN(blockDeltaSoil, 0)} in <FieldBlockCountdown />
-                </Typography>
-              )}
-            </Typography>
+            <Row gap={0.5}>
+              <Typography variant="inherit">
+                {displayFullBN(normalizeBN(soil), 0)}
+              </Typography>
+              <Typography component="span" color="text.secondary">
+                {isMorning && !nextSoil.eq(soil) && (
+                  <>
+                    (
+                    <Typography
+                      component="span"
+                      sx={{ color: `${BeanstalkPalette.trueRed} !important` }}
+                    >
+                      {displayFullBN(blockDeltaSoil, 0)} in{' '}
+                      <FieldBlockCountdown />
+                    </Typography>
+                    )
+                  </>
+                )}
+              </Typography>
+            </Row>
           }
           subtitle={
             <Typography color="text.secondary">
