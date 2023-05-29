@@ -24,7 +24,7 @@ library LibChopConvert {
      * @return amountOut The amount of the ripe asset credited after the convert
      * @return amountIn The amount of the unripe asset to be converted
      */
-    function convertUnripeBeansToBeans(bytes memory convertData)
+    function convertUnripeToRipe(bytes memory convertData)
         internal
         returns (
             address tokenOut,
@@ -36,12 +36,9 @@ library LibChopConvert {
         // Decode convertdata
         (amountIn, tokenIn) = convertData.lambdaConvert();
         // LibChop.chop just decrements the amount of unripe beans in circulation from the storage
-        (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(tokenIn, amountIn);
+        (tokenOut, amountOut) = LibChop.chop(tokenIn, amountIn);
         // UrBEAN still needs to be burned directly (not from an address) 
         IBean(tokenIn).burn(amountIn);
-        // get the underlying ripe token address and amount and return
-        tokenOut = underlyingToken;
-        amountOut = underlyingAmount;
     }
 
     /**
@@ -49,7 +46,7 @@ library LibChopConvert {
      * @param tokenIn The address of the unripe token converted
      * @param amountIn The amount of the unripe asset converted
      */
-    function getBeanAmountOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
+    function getRipeOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
         // tokenIn == unripe bean address
         uint256 unripeSupply = IERC20(tokenIn).totalSupply();
         amount = LibChop._getPenalizedUnderlying(tokenIn, amountIn, unripeSupply);
