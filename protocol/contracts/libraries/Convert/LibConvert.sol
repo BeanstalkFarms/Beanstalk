@@ -59,7 +59,7 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
                 .convertLPToBeans(convertData);
-        } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_BEANS) {
+        } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
                 .convertUnripeToRipe(convertData);
         } else {
