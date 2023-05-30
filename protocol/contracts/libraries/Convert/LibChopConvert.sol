@@ -48,8 +48,7 @@ library LibChopConvert {
      */
     function getRipeOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
         // tokenIn == unripe bean address
-        uint256 unripeSupply = IERC20(tokenIn).totalSupply();
-        amount = LibChop._getPenalizedUnderlying(tokenIn, amountIn, unripeSupply);
+        amount = LibChop._getPenalizedUnderlying(tokenIn, amountIn);
     }
 }
 

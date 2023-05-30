@@ -41,7 +41,6 @@ library LibChop {
     /**
      * @param unripeToken The address of the unripe token 
      * @param amount The amount of the of the unripe token
-     * @param supply The total unripe supply
      * @return redeem the amount of ripe underlying assets that can be redeemed from the unripe ones
      */
     function _getPenalizedUnderlying(address unripeToken, uint256 amount)
