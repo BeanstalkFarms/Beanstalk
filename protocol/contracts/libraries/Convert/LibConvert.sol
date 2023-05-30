@@ -80,10 +80,6 @@ library LibConvert {
         if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
             return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
-        /// urBEAN:3CRV LP -> urBEAN
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
-            return LibUnripeConvert.lpToPeg();
-
         // Lambda -> Lambda
         if (tokenIn == tokenOut) 
             return type(uint256).max;
@@ -96,9 +92,15 @@ library LibConvert {
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.lpToPeg(tokenIn);
 
-        // UrBEAN:3CRV -> BEAN:3CRV
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.CURVE_BEAN_METAPOOL)
-            return type(uint256).max;
+        // urBEAN3CRV Convert
+        if (tokenIn == C.UNRIPE_LP){
+            // urBEAN:3CRV -> urBEAN
+            if(tokenOut == C.UNRIPE_BEAN)
+                return LibUnripeConvert.lpToPeg();
+            // UrBEAN:3CRV -> BEAN:3CRV
+            if(tokenOut == C.CURVE_BEAN_METAPOOL)
+                return type(uint256).max;
+        }
 
         // urBEAN Convert
         if (tokenIn == C.UNRIPE_BEAN){
