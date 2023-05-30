@@ -19,7 +19,7 @@ import "~/libraries/LibChop.sol";
 
 /**
  * @title UnripeFacet
- * @author ZrowGz, Publius
+ * @author ZrowGz, Publius , deadmanwalking
  * @notice @notice Manage the logic of the vesting process for the Barnraised Funds
  */
 
@@ -137,7 +137,7 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to get the corresponding pealty associated with an unripe asset.
+     * @notice Getter function to get the corresponding penalty associated with an unripe asset.
      * @param unripeToken The address of the unripe token.
      * @return penalty The current penalty for converting unripe --> ripe
      */
