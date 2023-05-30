@@ -90,7 +90,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice Calculates the amount of unripe assets received from their ripe counterpart.
+     * @notice Calculates the amount of unripe that correspond to the underlying.
      * @param unripeToken The address of the unripe token.
      * @param underlying The amount of the of the underlying token to be taken as input.
      * @return unripe The amount of the of the unripe token to be credited from its ripe counterpart.
