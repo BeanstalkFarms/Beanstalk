@@ -240,7 +240,6 @@ contract UnripeFacet is ReentrancyGuard {
     
     /**
      * @notice Getter function to get the % of the recapitalization of an unripe asset.
-     * @param unripeToken The address of the unripe token.
      * @return penalty The penalty % stemming from the recap.
      */
     function getRecapPaidPercent() external view returns (uint256 penalty) {

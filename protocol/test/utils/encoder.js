@@ -78,7 +78,7 @@ class ConvertEncoder {
    * @param unripeAmount - the amount of unripe beans to be converted
    * @param unripeToken - the address of the unripe asset
    */
-  static convertUnripeBeansToBeans = (unripeAmount, unripeToken) =>
+  static convertUnripeToRipe = (unripeAmount, unripeToken) =>
   defaultAbiCoder.encode(
     ['uint256', 'uint256', 'address'],
     [ConvertKind.UNRIPE_TO_RIPE, unripeAmount, unripeToken]

@@ -457,13 +457,13 @@ describe('Unripe Convert', function () {
         // SET FERT PARAMS
         await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
         // INTERACTING WITH THE CONVERT FACET CONVERT(bytes calldata convertData, int96[] memory stems,uint256[] memory amounts) FUNCTION
-        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeBeansToBeans(to6('100') , this.unripeBean.address) , ['0'], [to6('100')] );
+        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeToRipe(to6('100') , this.unripeBean.address) , ['0'], [to6('100')] );
       });
 
       // CHECK TO SEE THAT RECAP AND PENALTY VALUES ARE UPDATED AFTER THE CONVERT
       it('getters', async function () {
         expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
-        expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('101000')
+        expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('100000')
         expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.00101'))
         expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('999.90'))
         expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
@@ -477,7 +477,7 @@ describe('Unripe Convert', function () {
         // UNRIPE BEAN DEPOSIT TEST
         expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('100'));
         // RIPE BEAN CONVERTED TEST
-        expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0.1'));
+        expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('1'));
         // TOTAL STALK TEST
         expect(await this.silo.totalStalk()).to.eq(toStalk('20.004'));
         // VERIFY urBEANS ARE BURNED
@@ -497,7 +497,7 @@ describe('Unripe Convert', function () {
       // USER DEPOSITS TEST
       it('properly updates user deposits', async function () {
         expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
-        expect((await this.silo.getDeposit(userAddress, this.bean.address, 0))[0]).to.eq(to6('0.1'));
+        expect((await this.silo.getDeposit(userAddress, this.bean.address, 0))[0]).to.eq(to6('1'));
       });
 
       // EVENTS TEST
@@ -505,9 +505,9 @@ describe('Unripe Convert', function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('100')], to6('100'), [to6('10')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.bean.address, 0 , to6('0.1'), to6('10'));
+          .withArgs(userAddress, this.bean.address, 0 , to6('1'), to6('10'));
         await expect(this.result).to.emit(this.convert, 'Convert')
-          .withArgs(userAddress, this.unripeBean.address, this.bean.address, to6('100') , to6('0.1'));
+          .withArgs(userAddress, this.unripeBean.address, this.bean.address, to6('100') , to6('1'));
       });
     });
   });
