@@ -165,14 +165,14 @@ function handleLiquidityChange(
     volumeBean = ZERO_BI;
   }
 
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-
   let reserveBalances = lpContract.try_get_balances();
   if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
 
   updateBeanSupplyPegPercent(blockNumber);
+
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 }
 
 function handleSwap(
@@ -245,13 +245,13 @@ function handleSwap(
     volumeBean = tokens_bought;
   }
 
-  let volumeUSD = toDecimal(volumeBean).times(newPrice);
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
-  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
-
   let reserveBalances = lpContract.try_get_balances();
   if (!reserveBalances.reverted) setPoolReserves(poolAddress, reserveBalances.value, blockNumber);
 
   updateBeanSupplyPegPercent(blockNumber);
+
+  let volumeUSD = toDecimal(volumeBean).times(newPrice);
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 }

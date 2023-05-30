@@ -110,6 +110,7 @@ export function updateBeanValues(
   beanHourly.price = bean.price;
   beanHourly.supply = bean.supply;
   beanHourly.marketCap = bean.marketCap;
+  beanHourly.supplyInPegLP = bean.supplyInPegLP;
   beanHourly.deltaVolume = beanHourly.deltaVolume.plus(deltaVolume);
   beanHourly.deltaVolumeUSD = beanHourly.deltaVolumeUSD.plus(deltaVolumeUSD);
   beanHourly.deltaLiquidityUSD = beanHourly.deltaLiquidityUSD.plus(deltaLiquidityUSD);
@@ -121,6 +122,7 @@ export function updateBeanValues(
   beanDaily.price = bean.price;
   beanDaily.supply = bean.supply;
   beanDaily.marketCap = bean.marketCap;
+  beanDaily.supplyInPegLP = bean.supplyInPegLP;
   beanDaily.deltaVolume = beanDaily.deltaVolume.plus(deltaVolume);
   beanDaily.deltaVolumeUSD = beanDaily.deltaVolumeUSD.plus(deltaVolumeUSD);
   beanDaily.deltaLiquidityUSD = beanDaily.deltaLiquidityUSD.plus(deltaLiquidityUSD);

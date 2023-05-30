@@ -46,8 +46,6 @@ export function handleSwap(event: Swap): void {
     pool.deltaBeans
   );
 
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, pool.lastPrice, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
-
   updatePoolReserves(
     event.address.toHexString(),
     event.params.amount0In.minus(event.params.amount0Out),
@@ -56,6 +54,8 @@ export function handleSwap(event: Swap): void {
   );
 
   updateBeanSupplyPegPercent(event.block.number);
+
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, pool.lastPrice, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD);
 }
 
 // Sync is called in UniswapV2 on any liquidity or swap transaction.
@@ -92,11 +92,11 @@ export function handleSync(event: Sync): void {
 
   updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
 
-  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
-
   setPoolReserves(event.address.toHexString(), [reserves.value.value0, reserves.value.value1], event.block.number);
 
   updateBeanSupplyPegPercent(event.block.number);
+
+  updateBeanValues(BEAN_ERC20_V1.toHexString(), event.block.timestamp, currentBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD);
 }
 
 function updatePriceETH(): void {
