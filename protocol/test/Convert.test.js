@@ -363,4 +363,13 @@ describe('Convert', function () {
       await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.siloToken.address, 2, '200', '200');
     })
   })
+
+  //describe test for farm convert
+  describe("farm convert", async function () {
+    it('does a simple farm convert', async function() {
+
+    });
+  });
+
+
 });

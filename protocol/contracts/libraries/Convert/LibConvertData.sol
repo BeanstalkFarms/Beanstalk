@@ -16,51 +16,69 @@ library LibConvertData {
         UNRIPE_LP_TO_UNRIPE_BEANS,
         LAMBDA_LAMBDA,
         BEANS_TO_WELL_LP,
-        WELL_LP_TO_BEANS
+        WELL_LP_TO_BEANS,
+        FARM_CONVERT
     }
 
     /// @notice Decoder for the Convert Enum
-    function convertKind(bytes memory self)
+    function convertKind(bytes memory data)
         internal
         pure
         returns (ConvertKind)
     {
-        return abi.decode(self, (ConvertKind));
+        return abi.decode(data, (ConvertKind));
     }
 
     /// @notice Decoder for the addLPInBeans Convert
-    function basicConvert(bytes memory self)
+    function basicConvert(bytes memory data)
         internal
         pure
-        returns (uint256 amountIn, uint256 minAmontOut)
+        returns (uint256 amountIn, uint256 minAmountOut)
     {
-        (, amountIn, minAmontOut) = abi.decode(
-            self,
+        (, amountIn, minAmountOut) = abi.decode(
+            data,
             (ConvertKind, uint256, uint256)
         );
     }
 
     /// @notice Decoder for the addLPInBeans Convert
-    function convertWithAddress(bytes memory self)
+    function convertWithAddress(bytes memory data)
         internal
         pure
         returns (
             uint256 amountIn,
-            uint256 minAmontOut,
+            uint256 minAmountOut,
             address token
         )
     {
-        (, amountIn, minAmontOut, token) = abi.decode(
-            self,
+        (, amountIn, minAmountOut, token) = abi.decode(
+            data,
             (ConvertKind, uint256, uint256, address)
         );
     }
 
-    function lambdaConvert(bytes memory self)
+    function lambdaConvert(bytes memory data)
         internal
         pure
         returns (uint256 amount, address token)
     {
-        (, amount, token) = abi.decode(self, (ConvertKind, uint256, address));
+        (, amount, token) = abi.decode(data, (ConvertKind, uint256, address));
+    }
+
+    function farmConvert(bytes memory data)
+        internal
+        pure
+        returns (
+            uint256 amountIn, //amount of whitelisted asset passed in to convert
+            uint256 minAmountOut,
+            address tokenIn,
+            address tokenOut,
+            AdvancedFarmCall[] calldata farmData
+        )
+    {
+        (, amountIn, minAmountOut, tokenIn, tokenOut, farmData) = abi.decode(
+            data,
+            (ConvertKind, uint256, uint256, address, address, AdvancedFarmCall[])
+        );
     }
 }

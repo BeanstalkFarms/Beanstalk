@@ -58,11 +58,15 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
                 .convertLPToBeans(convertData);
+        } else if (kind == LibConvertData.ConvertKind.FARM_CONVERT) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibFarmConvert
+                .convertWithFarm(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
     }
 
+    //todo: add note here saying doesn't work for farm functions
     function getMaxAmountIn(address tokenIn, address tokenOut)
         internal
         view
@@ -96,9 +100,12 @@ library LibConvert {
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.lpToPeg(tokenIn);
 
+        //we don't support farm converts here since we would affect state in the process
+
         revert("Convert: Tokens not supported");
     }
 
+    //todo: add note here saying doesn't work for farm functions
     function getAmountOut(address tokenIn, address tokenOut, uint256 amountIn)
         internal
         view
@@ -131,6 +138,8 @@ library LibConvert {
         // Well LP Token -> Bean
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
+
+        //we can't support farm converts here since it would affect state
 
         revert("Convert: Tokens not supported");
     }
