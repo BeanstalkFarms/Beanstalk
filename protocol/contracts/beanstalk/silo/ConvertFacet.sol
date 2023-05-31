@@ -52,64 +52,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] values
     );
 
-    //make new convert function here for pipeline converts, or shove it into existing?
-
-    //what should be used: pipe, multiPipe or advancedPipe?
-
-    //how do you pass args to pipe?
-    //how do you get amount of LP/beans you want to convert to pass to a pipe call
-    //I assume we'd target wells/curve converts using pipeline, what do we need to consider to add support for uniswap/etc?
-
-    //so you'd pass in stems/amounts, converData would contain to/from and the pipeline call?
-
-    //seems like pipeline is deployed at the beanstalk address? is it part of the diamond? do we need to consider upgrades?
-
-    //say we want to convert stem 123 with amount 234 from curve lp to well lp, I assumed we'd need to pass in:
-    //1. the curve lp token address
-    //2. the well lp token address
-    //3. the amount of LP total we're pulling out? or should we let this function add up total amount?
-    //when we have the total amount, how do we pass that into the pipeline function?
-
-
-
-
-
-    //at end:
-    //
-    //price of bean gets closer to peg
-
-    //pipelineConvert
-
-    //consider that this may be reentrant?
-    /*function farmConvert(
-        bytes calldata convertData,
-        AdvancedFarmCall[] calldata farmData,
-        int96[] memory stems,
-        uint256[] memory amounts
-    )
-        external
-        payable
-        returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
-    {
-
-        //farm function data inside convertData
-
-        //farm function
-        //depot pipeline
-        //regular pipeline
-
-        //grab bdv amount of this asset (should be stored in deposit data)
-
-        //pass farm data to farm function
-        //TODO move FarmFacet to inheret from 
-        address(this).call(advancedFarm(farmData));
-
-
-        //calc bdv diff, give stalk for new bdv diff amount
-
-
-    }
-*/
 
 
     /**

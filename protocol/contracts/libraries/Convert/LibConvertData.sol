@@ -20,6 +20,11 @@ library LibConvertData {
         FARM_CONVERT
     }
 
+    struct AdvancedFarmCall {
+        bytes callData;
+        bytes clipboard;
+    }
+
     /// @notice Decoder for the Convert Enum
     function convertKind(bytes memory data)
         internal
@@ -73,7 +78,7 @@ library LibConvertData {
             uint256 minAmountOut,
             address tokenIn,
             address tokenOut,
-            AdvancedFarmCall[] calldata farmData
+            AdvancedFarmCall[] memory farmData
         )
     {
         (, amountIn, minAmountOut, tokenIn, tokenOut, farmData) = abi.decode(

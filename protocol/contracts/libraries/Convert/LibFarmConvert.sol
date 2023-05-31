@@ -8,10 +8,12 @@ import "~/interfaces/IPipeline.sol";
 
 /**
  * @title LibFarmConvert
- * @author Publius, brean, pizzaman1337
+ * @author Publius, pizzaman1337, brean
  */
 library LibFarmConvert {
     using LibConvertData for bytes;
+
+    address internal constant PIPELINE = 0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa;
 
     function convertWithFarm(bytes memory convertData)
         internal
@@ -22,32 +24,47 @@ library LibFarmConvert {
             uint256 amountIn
         )
     {
+        int256 initalDeltaB = getOracleprice();
+        uint256 minAmountOut;
+        LibConvertData.AdvancedFarmCall[] memory farmData;
         (amountIn, minAmountOut, tokenIn, tokenOut, farmData) = convertData.farmConvert();
         
 
         //assume amount returned here is the amount of tokenOut, and assume they left it in pipeline, then we'll take it out on their behalf
-        bytes[] farmResult = address(this).call(advancedFarm(farmData));
 
-        //assume the first value returned is the userReturnedConvertValue
-        amountOut = farmResult[0];
+        // FIXME: probably better to call an pipe/AdvancePipe here, rather than using .call()
+        (, convertData) = address(this).call(
+           abi.encodeWithSignature(
+                "farm(bytes[])",
+                farmData
+            )
+        );
+
+        int256 newDeltaB = getOracleprice();
+
+        // todo: check deltaB   
+        // check that price has improved or stayed the same
+        if(initalDeltaB < newDeltaB) {
+            revert("Convert: oracle price increased");
+        }
+
+        // assume the first value returned is the userReturnedConvertValue
+        amountOut = abi.decode(convertData,(uint256));
 
         require(amountOut >= minAmountOut, "Convert: slippage");
 
-        //assume the user left the converted assets in pipeline
-        //actually pull those assets out of pipeline
+        // assume the user left the converted assets in pipeline
+        // actually pull those assets out of pipeline
+        // this confirms whether the pipeline call succeeded or not
         transferTokensFromPipeline(tokenOut, amountOut);
-        //do an ERC20 token transfer call from the pipeline address to beanstalk address
-
-        //at this point if we didn't revert then the transfer of the amount the user said they'd give us worked
-
     }
     
     function transferTokensFromPipeline(address tokenOut, uint256 userReturnedConvertValue) private {
-        //todo investigate not using the entire interface but just using the function selector here
-        Pipe p;
-        p.address = address(tokenOut); //contract that pipeline will call
-        p.data = abi.encodeWithSelector(
-            ERC20.transfer.selector,
+        // todo investigate not using the entire interface but just using the function selector here
+        PipeCall memory p;
+        p.target = address(tokenOut); //contract that pipeline will call
+        p.data = abi.encodeWithSignature(
+            "transfer(address,uint256)",
             address(this),
             userReturnedConvertValue
         );
@@ -57,5 +74,10 @@ library LibFarmConvert {
         // LibFunction.checkReturn(success, result);
 
         IPipeline(PIPELINE).pipe(p);
+    }
+
+    // todo: implement oracle
+    function getOracleprice() internal returns (int256) {
+        return 1e6;
     }
 }

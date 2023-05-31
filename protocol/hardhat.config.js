@@ -194,7 +194,10 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 1000,
+            details: {
+              yul: false
+            }
           }
         }
       },
@@ -205,6 +208,7 @@ module.exports = {
             enabled: true,
             runs: 1000
           }
+          
         }
       },
     ],
