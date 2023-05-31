@@ -31,7 +31,7 @@ type BaseSeasonPlotProps = {
    * otherwise returns 0.
    */
   defaultSeason?: number;
-    /**
+  /**
    * The date displayed when the chart isn't being hovered.
    * If not provided, uses the `date` of the last data point if available,
    * otherwise returns the current timestamp.
@@ -59,6 +59,7 @@ export type QueryData = {
   keys: string[];
 };
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 type Props<T extends MinimumViableSnapshotQuery> = BaseSeasonPlotProps & {
   queryData?: QueryData;
   formatValue?: (value: number) => string | JSX.Element;
@@ -92,12 +93,14 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   const [displaySeason, setDisplaySeason] = useState<number | undefined>(
     undefined
   );
-  const [displayDate, setDisplayDate] = useState<any | undefined>(
-    undefined
-  );
+  const [displayDate, setDisplayDate] = useState<any | undefined>(undefined);
 
   const handleCursor = useCallback(
-    (season: number | undefined, value?: number | undefined, date?: Date | undefined ) => {
+    (
+      season: number | undefined,
+      value?: number | undefined,
+      date?: Date | undefined
+    ) => {
       if (!season || !value) {
         setDisplaySeason(undefined);
         setDisplayValue(undefined);
@@ -115,8 +118,9 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
 
   /// If one of the defaults is missing, use the last data point.
   const defaults = useMemo(() => {
-    const dataArray = seriesInput && seriesInput[0] ? seriesInput[0] : [{date: new Date()}];
-    const lastUpdateDate = dataArray[dataArray.length -1];
+    const dataArray =
+      seriesInput && seriesInput[0] ? seriesInput[0] : [{ date: new Date() }];
+    const lastUpdateDate = dataArray[dataArray.length - 1];
     const d = {
       value: _defaultValue ?? 0,
       season: _defaultSeason ?? 0,
@@ -145,7 +149,14 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     }
 
     return d;
-  }, [_defaultSeason, _defaultValue, chartProps, seriesInput, stackedArea]);
+  }, [
+    _defaultDate,
+    _defaultSeason,
+    _defaultValue,
+    chartProps.getDisplayValue,
+    seriesInput,
+    stackedArea,
+  ]);
 
   if (!seriesInput || !queryData) {
     return null;
@@ -153,10 +164,17 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   const currentSeason = (
     displaySeason !== undefined ? displaySeason : defaults.season
   ).toFixed();
-    
-  const currentDate = (
-    displayDate !== undefined ? displayDate.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}) : defaults.date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'})
-  );
+
+  const currentDate =
+    displayDate !== undefined
+      ? displayDate.toLocaleString(undefined, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        })
+      : defaults.date.toLocaleString(undefined, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        });
 
   const containerStyle = {
     height: '100%',

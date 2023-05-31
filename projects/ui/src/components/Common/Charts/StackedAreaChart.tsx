@@ -126,7 +126,11 @@ const Graph = (props: Props) => {
         tooltipTop: containerY,
         tooltipData: pointerData,
       });
-      onCursor?.(pointerData.season, getDisplayValue([pointerData]), pointerData.date);
+      onCursor?.(
+        pointerData.season,
+        getDisplayValue([pointerData]),
+        pointerData.date
+      );
     },
     [
       containerBounds,

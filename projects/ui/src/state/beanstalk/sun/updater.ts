@@ -4,14 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import useFetchLatestBlock from '~/hooks/chain/useFetchLatestBlock';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
-import {
-  getNextExpectedSunrise,
-  initMorningBlockMap,
-  parseSeasonResult,
-} from '.';
+import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
   setAwaitingSunrise,
@@ -26,39 +21,31 @@ export const useSun = () => {
   const dispatch = useDispatch();
   const beanstalk = useBeanstalkContract();
 
-  const [fetchLatestBlock] = useFetchLatestBlock();
-
   const fetch = useCallback(async () => {
     try {
       if (beanstalk) {
         console.debug(
           `[beanstalk/sun/useSun] FETCH (contract = ${beanstalk.address})`
         );
-        const [seasonTime, season, { blockNumber }] = await Promise.all([
+        const [seasonTime, season] = await Promise.all([
           beanstalk.seasonTime().then(bigNumberResult), /// the season that it could be if sunrise was called
           beanstalk.time().then((r) => parseSeasonResult(r)), /// SeasonStruct
-          fetchLatestBlock(),
         ] as const);
-
-        const morningBlockMap = initMorningBlockMap({
-          sunriseBlock: season.sunriseBlock,
-          timestamp: season.timestamp,
-        });
 
         console.debug(`[beanstalk/sun/useSun] time RESULT: = ${season}`);
         console.debug(
           `[beanstalk/sun/useSun] season = ${season.current}, seasonTime = ${seasonTime}`
         );
+        const morningResult = getMorningResult({
+          blockNumber: season.sunriseBlock,
+          timestamp: season.timestamp,
+        });
+
         dispatch(updateSeasonResult(season));
         dispatch(updateSeasonTime(seasonTime));
-        dispatch(
-          setMorning({
-            blockMap: morningBlockMap,
-            blockNumber,
-          })
-        );
+        dispatch(setMorning(morningResult));
 
-        return [season, seasonTime, blockNumber] as const;
+        return [season, seasonTime] as const;
       }
       return [undefined, undefined, undefined] as const;
     } catch (e) {
@@ -66,7 +53,7 @@ export const useSun = () => {
       console.error(e);
       return [undefined, undefined, undefined] as const;
     }
-  }, [beanstalk, fetchLatestBlock, dispatch]);
+  }, [beanstalk, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useSun] clear');
@@ -95,15 +82,15 @@ const SunUpdater = () => {
       const i = setInterval(() => {
         const _remaining = next.diffNow();
         if (_remaining.as('seconds') <= 0) {
-          dispatch(setAwaitingSunrise(true));
+          // dispatch(setAwaitingSunrise(true));
         } else {
-          dispatch(setRemainingUntilSunrise(_remaining));
+          // dispatch(setRemainingUntilSunrise(_remaining));
         }
       }, 1000);
       return () => clearInterval(i);
     }
     /// When awaiting sunrise, check every 3 seconds to see
-    /// if the season has incremented bumped.
+    /// if the Season has incremented.
     const i = setInterval(() => {
       (async () => {
         const [newSeason] = await fetch();
