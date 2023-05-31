@@ -1,9 +1,10 @@
-import { Token } from "@beanstalk/sdk-core";
+import { ERC20Token, Token } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import * as fs from "fs";
 import * as path from "path";
 import { WellsSDK } from "../../src/lib/WellsSDK";
 import { ACCOUNTS, getProvider } from "./provider";
+import { Well } from "../../src/lib/Well";
 
 const WELL_ABI = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../src/constants/abi/Well.json"), "utf8"));
 const AQUIFER_ABI = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../src/constants/abi/Aquifer.json"), "utf8"));
