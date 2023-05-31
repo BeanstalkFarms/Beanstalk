@@ -64,15 +64,16 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant returns (uint256 underlyingAmount) {
+    ) external payable nonReentrant returns (uint256) {
         // burn the token from the msg.sender address
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
         // get ripe address and ripe amount
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(unripeToken, amount);
-        // send the ripe asset to msg.sender
+        // send the corresponding amount of ripe token to the user address
         IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
         // emit the event
         emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
+        return underlyingAmount;
     }
 
 
