@@ -49,8 +49,7 @@ library LibChop {
         returns (uint256 redeem)
     {
         require(isUnripe(unripeToken), "not vesting");
-        uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
-        redeem = LibUnripe.unripeToUnderlying(unripeToken, amount);
+        redeem = LibUnripe.unripeToUnderlying(unripeToken, getRecapPaidPercentAmount(amount));
     }
 
     /**
