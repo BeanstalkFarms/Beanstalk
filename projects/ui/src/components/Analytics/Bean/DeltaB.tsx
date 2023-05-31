@@ -23,6 +23,12 @@ const statProps = {
   titleTooltip: 'The liquidity and time weighted average shortage of Beans in liquidity pools on the Oracle Whitelist at the end of every Season.',
   gap: 0.25,
 };
+
+const queryConfig = {
+  variables: { season_gte: 6074 },
+  context: { subgraph: 'beanstalk' },
+};
+
 const lineChartProps: Partial<LineChartProps> = {
   yTickFormat: tickFormatLocale,
   horizontalLineNumber: 0,
@@ -34,6 +40,7 @@ const DeltaB: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => (
     height={height}
     getValue={getValue}
     formatValue={formatValue}
+    queryConfig={queryConfig}
     StatProps={statProps}
     LineChartProps={lineChartProps}
   />
