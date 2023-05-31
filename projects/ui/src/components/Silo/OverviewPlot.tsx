@@ -25,7 +25,11 @@ export type OverviewPlotProps = {
   current: BigNumber[];
   date: Date | string;
   series: BaseDataPoint[][];
-  stats: (season: BigNumber, value: BigNumber[], date: string) => React.ReactElement;
+  stats: (
+    season: BigNumber,
+    value: BigNumber[],
+    date: string
+  ) => React.ReactElement;
   empty: boolean;
   loading: boolean;
   label: string;
@@ -44,19 +48,40 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
 }) => {
   const [displaySeason, setDisplaySeason] = useState<BigNumber>(season);
   const [displayValue, setDisplayValue] = useState<BigNumber[]>(current);
-  const [displayDate, setDisplayDate] = useState<string>(date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}));
+  const [displayDate, setDisplayDate] = useState<string>(
+    date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+  );
 
   useEffect(() => setDisplayValue(current), [current]);
   useEffect(() => setDisplaySeason(season), [season]);
-  useEffect(() => setDisplayDate(date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'})), [date]);
+  useEffect(
+    () =>
+      setDisplayDate(
+        date.toLocaleString(undefined, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        })
+      ),
+    [date]
+  );
 
   const handleCursor = useCallback(
     (dps?: BaseDataPoint[]) => {
       setDisplaySeason(dps ? new BigNumber(dps[0].season) : season);
       setDisplayValue(dps ? dps.map((dp) => new BigNumber(dp.value)) : current);
-      setDisplayDate(dps ? new Date(dps[0].date).toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}) : date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'}));
+      setDisplayDate(
+        dps
+          ? new Date(dps[0].date).toLocaleString(undefined, {
+              dateStyle: 'short',
+              timeStyle: 'short',
+            })
+          : date.toLocaleString(undefined, {
+              dateStyle: 'short',
+              timeStyle: 'short',
+            })
+      );
     },
-    
+
     [current, season, date]
   );
 

@@ -11,7 +11,7 @@ import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import { AppState } from '~/state';
 import useFarmerSiloBalances from './useFarmerSiloBalances';
 import useGetChainToken from '../chain/useGetChainToken';
-import { selectCurrentSeason } from '~/state/beanstalk/sun/reducer';
+import useSeason from '~/hooks/beanstalk/useSeason';
 
 /**
  * Calculate the Farmer's current number of revitalized Stalk and Seeds.
@@ -25,7 +25,7 @@ export default function useRevitalized() {
   const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
     (state) => state._beanstalk.silo
   );
-  const currentSeason = useSelector(selectCurrentSeason);
+  const currentSeason = useSeason();
 
   return useMemo(() => {
     const urBean = getChainToken(UNRIPE_BEAN);

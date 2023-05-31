@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Box, Container, Stack, Typography } from '@mui/material';
-import { useSelector } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { DataGridProps } from '@mui/x-data-grid';
 import PageHeader from '~/components/Common/PageHeader';
@@ -19,7 +18,7 @@ import {
 
 import { FC } from '~/types';
 import { XXLWidth } from '~/components/App/muiTheme';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 
 export const podlineColumns: DataGridProps['columns'] = [
   {
@@ -51,11 +50,9 @@ const FieldPage: FC<{}> = () => {
   const authState = !account ? 'disconnected' : 'ready';
 
   /// Data
-  const farmerField = useSelector<AppState, AppState['_farmer']['field']>(
-    (state) => state._farmer.field
-  );
-  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
-    (state) => state._beanstalk.field
+  const farmerField = useAppSelector((s) => s._farmer.field);
+  const harvestableIndex = useAppSelector(
+    (s) => s._beanstalk.field.harvestableIndex
   );
 
   const harvestablePods = farmerField.harvestablePods;
@@ -73,15 +70,13 @@ const FieldPage: FC<{}> = () => {
       data.push(
         ...Object.keys(farmerField.plots).map((index) => ({
           id: index,
-          placeInLine: new BigNumber(index).minus(
-            beanstalkField.harvestableIndex
-          ),
+          placeInLine: new BigNumber(index).minus(harvestableIndex),
           amount: new BigNumber(farmerField.plots[index]),
         }))
       );
     }
     return data;
-  }, [beanstalkField.harvestableIndex, farmerField.plots, harvestablePods]);
+  }, [harvestableIndex, farmerField.plots, harvestablePods]);
 
   return (
     <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
@@ -104,7 +99,7 @@ const FieldPage: FC<{}> = () => {
         />
         <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
           <Box width="100%" height="100%" sx={{ minWidth: 0 }}>
-            <FieldOverview beanstalkField={beanstalkField} />
+            <FieldOverview />
           </Box>
           <Stack gap={2} width="100%" maxWidth={{ lg: '470px' }}>
             <FieldActions />
