@@ -47,7 +47,6 @@ const useBarChart = ({
     () =>
       scaleBand<string>({
         range: [0, xMax],
-        round: true,
         domain: seriesData.map(getX),
         padding: 0.4,
       }),
