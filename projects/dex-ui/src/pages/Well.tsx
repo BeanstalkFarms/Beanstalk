@@ -1,5 +1,5 @@
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
@@ -24,6 +24,7 @@ import { WellHistory } from "src/components/Well/Activity/WellHistory";
 
 export const Well = () => {
   const sdk = useSdk();
+  const navigate = useNavigate();
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
@@ -60,9 +61,8 @@ export const Well = () => {
   const haveDollarAmounts = !reserves.find((r) => !r.dollarAmount);
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
-  const goLiquidity = () => {
-    console.log("go liquidity");
-  };
+  const goLiquidity = () => navigate(`./liquidity`)
+
   const goSwap = () => {
     console.log("go goSwap");
   };
