@@ -97,8 +97,8 @@ const QuoteDetails = ({
   return (
     <QuoteContainer>
       <QuoteDetailLine>
-        <QuoteDetailLabel bold>Expected Output</QuoteDetailLabel>
-        <QuoteDetailValue bold>{quoteValue}</QuoteDetailValue>
+        <QuoteDetailLabel bold title>Expected Output</QuoteDetailLabel>
+        <QuoteDetailValue bold title>{quoteValue}</QuoteDetailValue>
       </QuoteDetailLine>
       <QuoteDetailLine>
         <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
@@ -126,12 +126,14 @@ const GearImage = styled.img`
 
 type QuoteDetailProps = {
   bold?: boolean;
+  title?: boolean;
 };
 
 const QuoteDetailLabel = styled.div<QuoteDetailProps>`
   align-items: flex-start;
   width: 50%;
   font-weight: ${(props) => (props.bold ? "bold" : "normal")};
+  ${(props) => (props.title ? "" : "color: #9CA3AF;")}
 `;
 
 const QuoteDetailValue = styled.div<QuoteDetailProps>`
@@ -139,19 +141,16 @@ const QuoteDetailValue = styled.div<QuoteDetailProps>`
   text-align: right;
   width: 50%;
   font-weight: ${(props) => (props.bold ? "bold" : "normal")};
+  ${(props) => (props.title ? "" : "color: #9CA3AF;")}
 `;
 
 const QuoteDetailLine = styled.div`
   display: flex;
   flex-direction: row;
   width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
 `;
 
 const QuoteContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
-  margin-bottom: 10px;
 `;

@@ -200,8 +200,8 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                   loading={false}
                 />
               ))}
-              <Divider />
             </TokenListContainer>
+            <br/>
             {showQuoteDetails && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.ADD}
@@ -213,7 +213,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
             )}
             {/* // TODO: Should be a notification */}
             {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
-            {well.tokens!.length > 0 &&
+            {/*well.tokens!.length > 0 &&
               well.tokens!.map((token: Token, index: number) => {
                 if (!tokenAllowance[index] && amounts[index]) {
                   return (
@@ -228,14 +228,13 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                     </ButtonWrapper>
                   );
                 }
-
                 return null;
-              })}
+              })*/}
             <ButtonWrapper>
               <AddLiquidityButton
                 disabled={!addLiquidityButtonEnabled}
                 loading={false}
-                label={buttonLabel}
+                label={`${buttonLabel} →`}
                 onClick={addLiquidityButtonClickHandler}
               />
             </ButtonWrapper>
@@ -254,6 +253,7 @@ const ButtonWrapper = styled.div`
   :last-of-type {
     margin-bottom: 0;
   }
+  margin-top: 10px;
 `;
 
 const ApproveTokenButton = styled(Button)`
@@ -270,11 +270,8 @@ const Divider = styled.hr`
 `;
 
 const TokenListContainer = styled.div`
-  width: 465px;
+  width: full;
   display: flex;
   flex-direction: column;
-  background: #1b1e2b;
-  border-radius: 16px;
-  padding: 12px;
   gap: 12px;
 `;

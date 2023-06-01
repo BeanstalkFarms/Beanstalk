@@ -14,6 +14,7 @@ import { Button } from "../Swap/Button";
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
 import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
+import { TabButton } from "../TabButton";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -248,9 +249,11 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 loading={false}
               />
             </TokenContainer>
+            <OutputModeSelectorContainer>
             <div>Claim LP Tokens as</div>
             <Tabs>
               <Tab>
+                <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)} active={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken} stretch>
                 <TabRadio
                   type="radio"
                   id="singleTokenRadio"
@@ -259,17 +262,20 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                   onChange={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}
                 />{" "}
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}>Single Token</TabLabel>
+                </TabButton>
               </Tab>
               <Tab>
+              <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)} active={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken} stretch>
                 <TabRadio
                   type="radio"
                   value={REMOVE_LIQUIDITY_MODE.Balanced}
                   checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
-                  onChange={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}
-                />{" "}
+                />
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
+                </TabButton>
               </Tab>
             </Tabs>
+            </OutputModeSelectorContainer>
             {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
               <MultipleTokenContainer>
                 {well.tokens!.map((token: Token, index: number) => (
@@ -322,28 +328,25 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 {well.tokens!.map((token: Token, index: number) => (
                   <TokenContainer key={`token${index}`}>
                     <ReadOnlyTokenValueRow>
-                      <div>
-                        <Radio
-                          type="radio"
-                          name="singleToken"
-                          value={index}
-                          checked={singleTokenIndex === index}
-                          onChange={() => handleSwitchSingleToken(index)}
-                        />
-                      </div>
+                      <Radio
+                        type="radio"
+                        name="singleToken"
+                        value={index}
+                        checked={singleTokenIndex === index}
+                        onChange={() => handleSwitchSingleToken(index)}
+                      />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
                       {singleTokenIndex === index ? (
-                        <TokenAmount>{oneTokenQuote ? oneTokenQuote.quote.toHuman() : ""}</TokenAmount>
+                        <TokenAmount>{oneTokenQuote ? oneTokenQuote.quote.toHuman() : "0"}</TokenAmount>
                       ) : (
-                        <TokenAmount>{""}</TokenAmount>
+                        <TokenAmount>{"0"}</TokenAmount>
                       )}
                     </ReadOnlyTokenValueRow>
                   </TokenContainer>
                 ))}
               </div>
             )}
-            <Divider />
             {showQuoteDetails && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.REMOVE}
@@ -357,7 +360,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             )}
             {/* // TODO: Should be a notification */}
             {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
-            {!tokenAllowance && (
+            {!tokenAllowance ? (
               <ButtonWrapper>
                 <ApproveTokenButton
                   disabled={approveButtonDisabled}
@@ -366,8 +369,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                   onClick={approveTokenButtonClickHandler}
                 />
               </ButtonWrapper>
-            )}
-            <ButtonWrapper>
+            ) : (
+              <ButtonWrapper>
               <Button
                 disabled={!removeLiquidityButtonEnabled}
                 label={buttonLabel}
@@ -375,6 +378,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 loading={false}
               />
             </ButtonWrapper>
+            )}
           </div>
         </div>
       )}
@@ -409,6 +413,8 @@ const BalancedCheckbox = styled.input`
 const MultipleTokenContainer = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 13px;
+  margin-bottom: 13px;
 `;
 
 const TabLabel = styled.div`
@@ -418,15 +424,12 @@ const TabLabel = styled.div`
 const Tab = styled.div`
   display: flex;
   width: 100%;
-  border: 1px solid white;
-  height: 40px;
-  align-items: center;
-  padding-left: 10px;
 `;
 
 const Tabs = styled.div`
   display: flex;
   flex-direction: row;
+  gap: 13px;
 `;
 
 const ApproveTokenButton = styled(Button)`
@@ -449,9 +452,6 @@ const TabRadio = styled.input`
   margin-right: 10px;
   width: 1em;
   height: 1em;
-  background-color: white;
-  border-radius: 50%;
-  border: 1px solid white;
 
   :checked {
     background-color: yellow;
@@ -462,10 +462,9 @@ const Radio = styled.input`
   // TODO: Somehow the default input styled
   // Are not showing the radio buttons
   margin-right: 10px;
-  width: 1em;
-  height: 1em;
+  width: 1.4em;
+  height: 1.4em;
   background-color: white;
-  border-radius: 50%;
 `;
 
 const TokenAmount = styled.div`
@@ -485,14 +484,23 @@ const SmallTokenLogo = styled.img`
 const ReadOnlyTokenValueRow = styled.div`
   display: flex;
   flex-direction: row;
+  background-color: white;
+  border: 1px solid black;
+  height: 40px;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-bottom: 13px;
 `;
 
 const TokenContainer = styled.div`
-  width: 465px;
+  width: full;
   display: flex;
   flex-direction: column;
-  background: #1b1e2b;
-  border-radius: 16px;
-  padding: 12px;
   gap: 12px;
 `;
+
+const OutputModeSelectorContainer = styled.div`
+ margin-top: 24px;
+ margin-bottom: 10px;
+`
