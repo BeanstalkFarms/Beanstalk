@@ -18,7 +18,7 @@ const setupWell = async (wellTokens: ERC20Token[], account: string) => {
   // Deploy test well
   const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
   const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
-  const testWell = await Well.DeployWell(wellsSdk, testAquifer, wellTokens, wellFunction, []);
+  const testWell = await Well.DeployViaAquifer(wellsSdk, testAquifer, wellTokens, wellFunction, []);
 
   // Set initial balances for all well tokens
   await Promise.all(

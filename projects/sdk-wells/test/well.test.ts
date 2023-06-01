@@ -20,7 +20,7 @@ beforeAll(async () => {
   // Deploy test well
   const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
   const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
-  const testWell = await Well.DeployWell(wellsSdk, testAquifer, wellTokens, wellFunction, []);
+  const testWell = await Well.DeployViaAquifer(wellsSdk, testAquifer, wellTokens, wellFunction, []);
   wellAddress = testWell.address;
   testHelper = new BlockchainUtils(wellsSdkInstance);
 });
@@ -166,7 +166,7 @@ describe("Well", function () {
         const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
         const mockPump = await Pump.BuildMockPump(wellsSdkInstance);
         const wellFunction = await WellFunction.BuildConstantProduct(wellsSdkInstance);
-        const deployedWell = await Well.DeployWell(wellsSdkInstance, aquifer, wellTokens, wellFunction, [mockPump]);
+        const deployedWell = await Well.DeployViaAquifer(wellsSdkInstance, aquifer, wellTokens, wellFunction, [mockPump]);
 
         expect(await deployedWell.getName()).toEqual("BEAN:WETH Constant Product Well");
 
@@ -187,7 +187,7 @@ describe("Well", function () {
       it("should deploy a new well", async () => {
         const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
         const wellFunction = await WellFunction.BuildConstantProduct(wellsSdkInstance);
-        const deployedWell = await Well.DeployWell(wellsSdkInstance, aquifer, wellTokens, wellFunction, []);
+        const deployedWell = await Well.DeployViaAquifer(wellsSdkInstance, aquifer, wellTokens, wellFunction, []);
         expect(deployedWell).toBeDefined();
         expect(await deployedWell.getName()).toEqual("BEAN:WETH Constant Product Well");
         const wellLpToken = await deployedWell.getLPToken();
