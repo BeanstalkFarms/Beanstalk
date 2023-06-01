@@ -16,7 +16,6 @@ import {LibBytes} from "~/libraries/LibBytes.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {FarmFacet} from "../farm/FarmFacet.sol";
 
 /**
  * @author Publius

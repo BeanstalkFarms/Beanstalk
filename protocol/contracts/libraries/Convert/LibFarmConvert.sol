@@ -4,17 +4,41 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibConvertData} from "./LibConvertData.sol";
-import "~/interfaces/IPipeline.sol";
+import {LibTransfer} from "~/libraries/Token/LibTransfer.sol";
+import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IPipeline, PipeCall} from "~/interfaces/IPipeline.sol";
+import {AppStorage, LibAppStorage} from "~/libraries/LibAppStorage.sol";
+
 
 /**
  * @title LibFarmConvert
- * @author Publius, pizzaman1337, brean
+ * @author Publius, Pizzaman1337, Brean
  */
+
+interface IAdvancedFarm {
+    function advancedFarm(
+        LibConvertData.AdvancedFarmCall[] calldata data
+    ) external returns (bytes[] memory results);
+}
 library LibFarmConvert {
     using LibConvertData for bytes;
 
     address internal constant PIPELINE = 0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa;
 
+    /**
+     * @dev convertWithFarm is a generalized convert function that allows for a set of
+     * arbitary actions to be performed with a deposit given:
+     *  - beans are closer to the value peg.
+     *  - the BDV of the new amount is greater than the input.
+     * 
+     *  At a high level, {convertWithFarm}: 
+     * - gets the instaenous deltaB.
+     * - transfers 'tokenIn' from beanstalk to pipeline.
+     * - performs a set of arbitary actions with {FarmFacet.AdvancedFarm}.
+     * - checks that deltaB has not increased.
+     * - transfers 'tokenOut' from pipeline to beanstalk.
+     */
     function convertWithFarm(bytes memory convertData)
         internal
         returns (
@@ -23,39 +47,54 @@ library LibFarmConvert {
             uint256 amountOut,
             uint256 amountIn
         )
-    {
-        int256 initalDeltaB = getOracleprice();
+    {   
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // {ConvertFacet._withdrawTokens} checks that the token is whitelisted, but 
+        // {ConvertFacet._depositTokensForConvert} does not check the new token is whitelisted.
+        require(s.ss[tokenOut].milestoneSeason != 0, "Token not whitelisted");
+
+        uint256 initalDeltaB = getOracleprice();
         uint256 minAmountOut;
         LibConvertData.AdvancedFarmCall[] memory farmData;
         (amountIn, minAmountOut, tokenIn, tokenOut, farmData) = convertData.farmConvert();
-        
 
-        //assume amount returned here is the amount of tokenOut, and assume they left it in pipeline, then we'll take it out on their behalf
+        // Transfer tokenIn from beanstalk to pipeline
+        IERC20(tokenIn).transfer(PIPELINE, amountIn);
 
         // FIXME: probably better to call an pipe/AdvancePipe here, rather than using .call()
+        // convertData is used again to save an instantiation. Can be instanteated again if needed.
+        // perform advanced farm operations.
+        
+        // todo: advancefarm returns a bytes[].
         (, convertData) = address(this).call(
-           abi.encodeWithSignature(
-                "farm(bytes[])",
+           abi.encodeWithSelector(
+                IAdvancedFarm.advancedFarm.selector,
                 farmData
             )
         );
 
-        int256 newDeltaB = getOracleprice();
+        bytes[] memory results = abi.decode(convertData, (bytes[]));
 
-        // todo: check deltaB   
-        // check that price has improved or stayed the same
-        if(initalDeltaB < newDeltaB) {
-            revert("Convert: oracle price increased");
-        }
+        uint256 newDeltaB = getOracleprice();
 
-        // assume the first value returned is the userReturnedConvertValue
-        amountOut = abi.decode(convertData,(uint256));
+        // todo: check deltaB abs
+        // check that deltaB is closer to 0
+        require(newDeltaB <= initalDeltaB, "Convert: deltaB Increased");
+
+        // assume last value is the amountOut
+        // todo: for full functionality, we should instead have the user specify the index of the amountOut
+        // in the convertData.
+        amountOut = abi.decode(results[results.length - 1], (uint256));
 
         require(amountOut >= minAmountOut, "Convert: slippage");
+        
+        // verify BDV of new amount is greater than the input.
+        require(
+            _bdv(tokenIn,amountIn) >= _bdv(tokenOut ,amountOut), 
+            "Convert: BDV decreased");
 
-        // assume the user left the converted assets in pipeline
-        // actually pull those assets out of pipeline
-        // this confirms whether the pipeline call succeeded or not
+        // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         transferTokensFromPipeline(tokenOut, amountOut);
     }
     
@@ -77,7 +116,11 @@ library LibFarmConvert {
     }
 
     // todo: implement oracle
-    function getOracleprice() internal returns (int256) {
+    function getOracleprice() internal returns (uint256) {
         return 1e6;
+    }
+    
+    function _bdv(address token, uint256 amount) internal returns (uint256) {
+        return LibTokenSilo.beanDenominatedValue(token, amount);
     }
 }
