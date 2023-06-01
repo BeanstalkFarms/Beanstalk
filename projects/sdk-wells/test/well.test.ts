@@ -20,7 +20,7 @@ beforeAll(async () => {
   // Deploy test well
   const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
   const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
-  const testWell = await Well.Deploy(wellsSdk, testAquifer, "Test Well", "TW", wellTokens, wellFunction, []);
+  const testWell = await Well.DeployWell(wellsSdk, testAquifer, wellTokens, wellFunction, []);
   wellAddress = testWell.address;
   testHelper = new BlockchainUtils(wellsSdkInstance);
 });
@@ -166,16 +166,14 @@ describe("Well", function () {
         const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
         const mockPump = await Pump.BuildMockPump(wellsSdkInstance);
         const wellFunction = await WellFunction.BuildConstantProduct(wellsSdkInstance);
-        const deployedWell = await Well.Deploy(wellsSdkInstance, aquifer, "BEAN:WETH Test Well", "BEANWEATHtw", wellTokens, wellFunction, [
-          mockPump
-        ]);
+        const deployedWell = await Well.DeployWell(wellsSdkInstance, aquifer, wellTokens, wellFunction, [mockPump]);
 
-        expect(await deployedWell.getName()).toEqual("BEAN:WETH Test Well");
+        expect(await deployedWell.getName()).toEqual("BEAN:WETH Constant Product Well");
 
         const wellLpToken = await deployedWell.getLPToken();
-        expect(wellLpToken.symbol).toEqual("BEANWEATHtw");
+        expect(wellLpToken.symbol).toEqual("BEANWETHCPw");
 
-        expect(await deployedWell.getWellFunction()).toEqual(wellFunction);
+        expect((await deployedWell.getWellFunction()).address).toEqual(wellFunction.address);
 
         expect(await deployedWell.getPumps()).toEqual([mockPump]);
         expect((await deployedWell.getAquifer()).address).toEqual(aquifer.address);
@@ -189,11 +187,11 @@ describe("Well", function () {
       it("should deploy a new well", async () => {
         const wellTokens = [wellsSdkInstance.tokens.BEAN, wellsSdkInstance.tokens.WETH];
         const wellFunction = await WellFunction.BuildConstantProduct(wellsSdkInstance);
-        const deployedWell = await Well.Deploy(wellsSdkInstance, aquifer, "BEAN:WETH Test Well", "BEANWEATHtw", wellTokens, wellFunction, []);
+        const deployedWell = await Well.DeployWell(wellsSdkInstance, aquifer, wellTokens, wellFunction, []);
         expect(deployedWell).toBeDefined();
-        expect(await deployedWell.getName()).toEqual("BEAN:WETH Test Well");
+        expect(await deployedWell.getName()).toEqual("BEAN:WETH Constant Product Well");
         const wellLpToken = await deployedWell.getLPToken();
-        expect(wellLpToken.symbol).toEqual("BEANWEATHtw");
+        expect(wellLpToken.symbol).toEqual("BEANWETHCPw");
         expect(deployedWell).toHaveProperty("address");
         expect(deployedWell).toHaveProperty("name");
         expect(deployedWell).toHaveProperty("lpToken");
