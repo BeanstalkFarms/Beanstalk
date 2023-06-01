@@ -34,6 +34,9 @@ export const Liquidity = () => {
     setTab(i);
   }, []);
 
+  if (loading) return <div>loading...</div>;
+  if (error) return <div>{error.message}</div>;
+
     return(
         <Page>
         <ContentWrapper>
