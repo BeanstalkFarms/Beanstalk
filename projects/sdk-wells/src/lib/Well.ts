@@ -886,7 +886,7 @@ export class Well {
    * @param symbol
    * @param wellFunction
    */
-  static async DeployWell(
+  static async DeployViaAquifer(
     sdk: WellsSDK,
     aquifer: Aquifer,
     tokens: ERC20Token[],
@@ -905,4 +905,8 @@ export class Well {
 
     return well;
   }
+
+  /**
+   * TODO: Implement Deploy() that deploys a well without an aquifer
+   */
 }
