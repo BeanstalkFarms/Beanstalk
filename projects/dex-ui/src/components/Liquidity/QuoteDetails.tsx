@@ -23,6 +23,7 @@ type QuoteDetailsProps = {
   slippage: number;
   wellLpToken?: ERC20Token | undefined;
   wellTokens?: Token[] | undefined;
+  selectedTokenIndex?: number;
   slippageSettingsClickHandler: () => void;
 };
 
@@ -33,6 +34,7 @@ const QuoteDetails = ({
   slippage,
   wellLpToken,
   wellTokens,
+  selectedTokenIndex,
   slippageSettingsClickHandler
 }: QuoteDetailsProps) => {
   const sdk = useSdk();
@@ -73,11 +75,15 @@ const QuoteDetails = ({
 
     if (
       type === LIQUIDITY_OPERATION_TYPE.ADD ||
-      removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken ||
       removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom
     ) {
       const _quoteValue = quote?.quote as TokenValue;
       return `${_quoteValue.toHuman("0,0.0000")} ${wellLpToken!.symbol}`;
+    }
+
+    if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
+      const _quoteValue = quote?.quote as TokenValue;
+      return `${_quoteValue.toHuman("0,0.0000")} ${wellTokens![selectedTokenIndex || 0]!.symbol}`;
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
