@@ -20,6 +20,7 @@ type QuoteDetailsProps = {
       }
     | null
     | undefined;
+  inputs?: TokenValue[];
   slippage: number;
   wellLpToken?: ERC20Token | undefined;
   wellTokens?: Token[] | undefined;
@@ -31,6 +32,7 @@ const QuoteDetails = ({
   type,
   removeLiquidityMode,
   quote,
+  inputs,
   slippage,
   wellLpToken,
   wellTokens,
@@ -73,12 +75,21 @@ const QuoteDetails = ({
       }
     }
 
-    if (
-      type === LIQUIDITY_OPERATION_TYPE.ADD ||
-      removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom
-    ) {
+    if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
       return `${_quoteValue.toHuman("0,0.0000")} ${wellLpToken!.symbol}`;
+    }
+
+    if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
+      const _quoteValue = inputs as TokenValue[];
+      const allTokensValue: string[] = [];
+      if (!wellTokens!.length || wellTokens!.length !== _quoteValue.length) {
+        return null;
+      }
+      wellTokens?.forEach((token, index) => {
+        allTokensValue.push(`${_quoteValue[index].toHuman("0,0.0000")} ${token.symbol}`);
+      });
+      return allTokensValue.join(", ");
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
