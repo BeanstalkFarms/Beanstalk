@@ -356,6 +356,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 slippage={slippage}
                 wellTokens={well.tokens}
                 removeLiquidityMode={removeLiquidityMode}
+                selectedTokenIndex={singleTokenIndex}
               />
             )}
             {/* // TODO: Should be a notification */}
