@@ -139,7 +139,7 @@ export const TokenInput: FC<TokenInput> = ({
 
       {showBalance && (
         <BalanceRow>
-          <Balance>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
+          <Balance onClick={balance ? () => updateAmount(balance?.[token.symbol].toHuman()) : undefined}>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
         </BalanceRow>
       )}
     </Container>
@@ -219,6 +219,7 @@ const Balance = styled.div`
   line-height: 24px;
   color: #9ca3af;
   text-decoration: underline;
+  cursor:pointer;
 `;
 
 const MaxButton = styled.button`
