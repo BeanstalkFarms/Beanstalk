@@ -213,7 +213,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
             )}
             {/* // TODO: Should be a notification */}
             {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
-            {/*well.tokens!.length > 0 &&
+            {well.tokens!.length > 0 &&
               well.tokens!.map((token: Token, index: number) => {
                 if (!tokenAllowance[index] && amounts[index]) {
                   return (
@@ -229,7 +229,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                   );
                 }
                 return null;
-              })*/}
+              })}
             <ButtonWrapper>
               <AddLiquidityButton
                 disabled={!addLiquidityButtonEnabled}
