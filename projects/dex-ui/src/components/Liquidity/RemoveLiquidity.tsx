@@ -335,13 +335,28 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                         checked={singleTokenIndex === index}
                         onChange={() => handleSwitchSingleToken(index)}
                       />
-                      <SmallTokenLogo src={token.logo} />
+                      <TokenInput
+                        key={`token${index}`}
+                        id={`token${index}`}
+                        label={`Input amount in ${token.symbol}`}
+                        token={token}
+                        amount={singleTokenIndex === index ? oneTokenQuote ? oneTokenQuote.quote : undefined : undefined}
+                        onAmountChange={handleImbalancedInputChange(index)}
+                        canChangeToken={false}
+                        canChangeValue={true}
+                        showMax={false}
+                        showBalance={false}
+                        loading={false}
+                        simpleDisplayMode={true}           
+                      >
+                      </TokenInput>
+                      {/*<SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
                       {singleTokenIndex === index ? (
                         <TokenAmount>{oneTokenQuote ? oneTokenQuote.quote.toHuman() : "0"}</TokenAmount>
                       ) : (
                         <TokenAmount>{"0"}</TokenAmount>
-                      )}
+                      )}*/}
                     </ReadOnlyTokenValueRow>
                   </TokenContainer>
                 ))}

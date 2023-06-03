@@ -13,7 +13,12 @@ type Props = {
   onFocus?: FocusEventHandler<HTMLInputElement>;
   onBlur?: FocusEventHandler<HTMLInputElement>;
   canChangeValue?: boolean;
+  alignRight?: boolean;
 };
+
+type StyledInputProps = {
+  alignTextOnRight: Boolean;
+}
 
 export const BasicInput: FC<Props> = ({
   id: _id,
@@ -24,10 +29,13 @@ export const BasicInput: FC<Props> = ({
   onFocus,
   onBlur,
   inputRef,
-  canChangeValue = true
+  canChangeValue = true,
+  alignRight
 }) => {
   const [id, _] = useState(_id ?? Math.random().toString(36).substring(2, 7));
   const [displayValue, setDisplayValue] = useState(value);
+
+  const specialTextAlignment = alignRight || false
 
   useEffect(() => {
     if (value === displayValue) return;
@@ -104,12 +112,13 @@ export const BasicInput: FC<Props> = ({
         autoCorrect="off"
         autoComplete="off"
         readOnly={!canChangeValue}
+        alignTextOnRight={specialTextAlignment}
       />
     </>
   );
 };
 
-const StyledInput = styled.input`
+const StyledInput = styled.input<StyledInputProps>`
   // border: 1px solid red;
   border: none;
   display: flex;
@@ -123,7 +132,7 @@ const StyledInput = styled.input`
   font-weight: 400;
   font-size: 20px;
   line-height: 24px;
-  text-align: left;
+  text-align: ${(props) => props.alignTextOnRight  ? 'right' : 'left'};
 
   color: #;
   outline: none;
