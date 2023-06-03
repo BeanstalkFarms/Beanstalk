@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 
 import { useSelector } from 'react-redux';
 import { FontWeight } from '~/components/App/muiTheme';
@@ -19,6 +19,8 @@ const FieldConditionsHeader: React.FC<{
   );
   const season = useSeason();
   const interval = morning.index.plus(1).toString();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   if (morning.isMorning) {
     return (
@@ -44,7 +46,9 @@ const FieldConditionsHeader: React.FC<{
   return (
     <Row gap={0.2} width="100%" justifyContent="space-between">
       <Typography variant="h4" fontWeight={FontWeight.bold}>
-        🌤️ Field Conditions, Season {season.gt(0) && season.toString()}
+        {isMobile 
+          ? '🌤️ Field Conditions'
+          : `🌤️ Field Conditions, Season ${season.gt(0) && season.toString()}`}
       </Typography>
       <Box onClick={toggleMorning}>
         <Typography
@@ -56,9 +60,13 @@ const FieldConditionsHeader: React.FC<{
             },
           }}
         >
-          {toggled
-            ? 'View Normal Field Conditions'
-            : 'View Morning Field Conditions'}
+          {isMobile
+            ? toggled
+              ? 'View Normal'
+              : 'View Morning'
+            : toggled
+              ? 'View Normal Field Conditions'
+              : 'View Morning Field Conditions'}
         </Typography>
       </Box>
     </Row>
