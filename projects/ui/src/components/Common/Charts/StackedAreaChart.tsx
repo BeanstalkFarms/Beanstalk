@@ -74,7 +74,7 @@ const Graph = (props: Props) => {
 
   // generate ticks
   const [tickSeasons, tickDates] = useMemo(() => {
-    const interval = Math.ceil(data.length / 12);
+    const interval = Math.ceil(series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9));
     const shift = Math.ceil(interval / 3); // slight shift on tick labels
     return data.reduce<[number[], string[]]>(
       (prev, curr, i) => {
@@ -90,7 +90,7 @@ const Graph = (props: Props) => {
       },
       [[], []]
     );
-  }, [data]);
+  }, [data, scales]);
 
   // tooltip
   const { containerRef, containerBounds } = useTooltipInPortal({
