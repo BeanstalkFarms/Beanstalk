@@ -85,7 +85,7 @@ contract TokenSilo is Silo {
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
-    ); //add bdv[] here? in favor of array
+    );
     
     // per the zero withdraw update, there is no claiming function for withdraws.abi
     // events are kept for backwards compatibility
