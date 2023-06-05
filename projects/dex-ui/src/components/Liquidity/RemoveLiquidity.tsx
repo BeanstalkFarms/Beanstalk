@@ -34,6 +34,13 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
 
   const [showQuoteDetails, setShowQuoteDetails] = useState<boolean>(true);
+  const [singleTokenAmountMode, setSingleTokenAmountMode] = useState<string>("lp");
+
+  // Temp
+  const [lpTokenBalance, setLpTokenBalance] = useState<TokenValue | undefined>();
+  const [maxOneTokenOutputs, setMaxOneTokenOutputs] = useState<TokenValue[] | undefined>();
+  const [oneTokenOutputs, setOneTokenOutputs] = useState<TokenValue[] | undefined>([]);
+  const [totalLpSupply, setTotalLpSupply] = useState<TokenValue | undefined>();
 
   const onQuoteHandler = useCallback(() => {
     setShowQuoteDetails(true);
@@ -60,7 +67,25 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
       setLpTokenAmount(undefined);
       setWellLpToken(lpTokenWithMetadata);
     }
-  }, [well.lpToken]);
+  }, [well.lpToken, address]);
+
+  useEffect(() => {
+    const fetchLpTokenBalance = async() => {
+      if (well.lpToken) {
+        if (address && well.lpToken && well.tokens) {
+          let _lpBalance: TokenValue
+          _lpBalance = await well.lpToken!.getBalance(address)
+          setLpTokenBalance(_lpBalance)
+          let _maxOneTokenOutputs: TokenValue[] = []
+          for (let i = 0; i < well.tokens.length; i++) {
+            _maxOneTokenOutputs[i] = await well.removeLiquidityOneTokenQuote(_lpBalance, well.tokens[i])
+          }
+          setMaxOneTokenOutputs([..._maxOneTokenOutputs])  
+        }
+      }
+    }
+    fetchLpTokenBalance();
+  }, [well.lpToken, address])
 
   useEffect(() => {
     if (customRatioQuote) {
@@ -145,6 +170,59 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const handleSwitchSingleToken = (selectedTokenIndex: number) => {
     setSingleTokenIndex(selectedTokenIndex);
   };
+
+  useMemo(() => {
+    async function getLPSupply() {
+      let _lpSupply = await well.lpToken!.getTotalSupply()
+      setTotalLpSupply(_lpSupply)
+    }
+    if (well.lpToken) {
+      getLPSupply()
+    }
+  }, [well.lpToken])
+
+  const handleOneTokenInputChange = useCallback(
+    (amountFromInput: TokenValue) => {
+      if (singleTokenAmountMode === "output") {
+        let _newInputs: TokenValue[] = []
+        _newInputs[singleTokenIndex] = amountFromInput
+        // FIXME: Not using ConstantProduct function
+        let _lpPercentage = amountFromInput.div(maxOneTokenOutputs![singleTokenIndex])
+        let _lpAmount = (_lpPercentage.mul(lpTokenBalance ? lpTokenBalance : TokenValue.ZERO))
+        if (_lpAmount.gt(lpTokenBalance!)) {
+          _lpAmount = lpTokenBalance!
+        } else {
+          _lpAmount = well.lpToken!.amount(_lpAmount.humanString)
+        }
+        setOneTokenOutputs([..._newInputs])
+        setLpTokenAmount(_lpAmount)
+      }
+    }, [setOneTokenOutputs, oneTokenQuote]
+  );
+
+  const handleOneTokenModeChange = (mode: string, index?: number) => {
+    if (mode === 'lp') {
+      if (mode === singleTokenAmountMode) return
+      setLpTokenAmount(TokenValue.ZERO)
+      setOneTokenOutputs([])
+      setSingleTokenAmountMode("lp")
+    } else {
+      if (index === singleTokenIndex) return
+      setLpTokenAmount(TokenValue.ZERO)
+      setOneTokenOutputs([])
+      setSingleTokenAmountMode("output")
+    }
+  }
+
+  useMemo(() => {
+    if (singleTokenAmountMode === "lp") {
+      let _newInputs: TokenValue[] = []
+      if (oneTokenQuote) {
+        _newInputs[singleTokenIndex] = oneTokenQuote.quote
+      }
+      setOneTokenOutputs([..._newInputs])
+    }
+  }, [oneTokenQuote, singleTokenIndex, singleTokenAmountMode])
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (amount: TokenValue) => {
@@ -235,7 +313,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
       {wellLpToken && (
         <div>
           <div>
-            <TokenContainer>
+            <TokenContainer onClick={() => handleOneTokenModeChange("lp")}>
               <TokenInput
                 id={"inputLpToken"}
                 label={`Input amount in ${wellLpToken.symbol}`}
@@ -279,7 +357,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
               <MultipleTokenContainer>
                 {well.tokens!.map((token: Token, index: number) => (
-                  <TokenContainer key={`tokencontainer1${index}`}>
+                  <TokenContainer key={`tokencontainer1${index}`}
+                  >
                     <TokenInput
                       key={`token${index}`}
                       id={`token${index}`}
@@ -326,30 +405,30 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             {removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && (
               <div>
                 {well.tokens!.map((token: Token, index: number) => (
-                  <TokenContainer key={`token${index}`}>
+                  <TokenContainer key={`token${index}`} onClick={() => handleSwitchSingleToken(index)}>
                     <ReadOnlyTokenValueRow>
                       <Radio
                         type="radio"
                         name="singleToken"
                         value={index}
                         checked={singleTokenIndex === index}
-                        onChange={() => handleSwitchSingleToken(index)}
                       />
+                      <div onClick={() => handleOneTokenModeChange("output", index)}>
                       <TokenInput
                         key={`token${index}`}
                         id={`token${index}`}
                         label={`Input amount in ${token.symbol}`}
                         token={token}
-                        amount={singleTokenIndex === index ? oneTokenQuote ? oneTokenQuote.quote : undefined : undefined}
-                        onAmountChange={handleImbalancedInputChange(index)}
+                        amount={oneTokenOutputs ? oneTokenOutputs[index] || TokenValue.ZERO : TokenValue.ZERO}
+                        onAmountChange={handleOneTokenInputChange}
                         canChangeToken={false}
                         canChangeValue={true}
                         showMax={false}
                         showBalance={false}
                         loading={false}
-                        simpleDisplayMode={true}           
-                      >
-                      </TokenInput>
+                        simpleDisplayMode={true}
+                      />
+                      </div>
                       {/*<SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
                       {singleTokenIndex === index ? (
