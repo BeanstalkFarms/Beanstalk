@@ -26,7 +26,6 @@ type TokenInput = {
   onAmountChange?: (a: TokenValue) => void;
   onTokenChange?: (t: Token) => void;
   canChangeValue?: boolean;
-  simpleDisplayMode?: boolean;
 };
 
 export const TokenInput: FC<TokenInput> = ({
@@ -42,8 +41,7 @@ export const TokenInput: FC<TokenInput> = ({
   showMax = true,
   loading = false,
   allowNegative = false,
-  canChangeValue = true,
-  simpleDisplayMode
+  canChangeValue = true
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -113,24 +111,6 @@ export const TokenInput: FC<TokenInput> = ({
   }, []);
 
   if (loading) return <LoadingContainer width={width} focused={focused} data-trace="true" />;
-
-  if (simpleDisplayMode) return (
-    <SimpleModeContainer width={width} focused={focused}>
-      <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} />
-        <BasicInput
-          id={id}
-          label={label}
-          value={amount?.toHuman() || ""}
-          onChange={handleAmountChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          inputRef={inputRef}
-          allowNegative={allowNegative}
-          canChangeValue={!!canChangeValue}
-          alignRight={true}
-        />
-  </SimpleModeContainer>
-  )
 
   return (
     <Container
@@ -220,13 +200,6 @@ const Container = styled.div<ContainerProps>`
 
   cursor: text;
 `;
-
-const SimpleModeContainer = styled.div<ContainerProps>`
-  display: flex;
-  flex-direction: row;
-  width: ${(props) => props.width};
-  text-align: right;
-`
 
 const TopRow = styled.div`
   display: flex;
