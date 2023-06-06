@@ -28,7 +28,7 @@ export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
-  const [wellFunctionName, setWellFunctionName] = useState<String>('-')
+  const [wellFunctionName, setWellFunctionName] = useState<string>('-')
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -136,7 +136,7 @@ export const Well = () => {
           </Row>
           <LiquidityBox lpToken={well?.lpToken!} />
           <LearnYield />
-          <LearnWellFunction name={wellFunctionName.toString()} />
+          <LearnWellFunction name={wellFunctionName} />
           <LearnPump />
         </SideBar>
       </ContentWrapper>
