@@ -213,12 +213,6 @@ contract TokenSilo is Silo {
         );
     }
 
-    struct AssetsAdded {
-        uint256 stalkAdded;
-        uint256 seedsAdded;
-        uint256 bdvAdded;
-    }
-
     /**
      * @notice Handles withdraw accounting for multiple deposits.
      *
