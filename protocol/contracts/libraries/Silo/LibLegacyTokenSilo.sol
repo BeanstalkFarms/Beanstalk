@@ -222,29 +222,6 @@ library LibLegacyTokenSilo {
     }
 
     /** 
-     * @notice Determines if the given stem corresponds to a seasons-based deposit
-     * @param seedsPerBdv Seeds per bdv for the token you want to see if the stem corresponds
-     * to a seasons-based deposit for
-     * @param season The season you want to to see if the stem corresponds to a seasons-based deposit
-     *
-     * @dev This function was used when support for accessing old deposits without requiring migration
-     * was supported, after support was removed this function is no longer necessary.
-     */
-    /*function isDepositSeason(uint256 seedsPerBdv, int96 stem)
-        internal
-        pure
-        returns (bool)
-    {
-        if (seedsPerBdv == 0) {
-            return false; //shortcut since we know it's a newer token?
-        }
-        
-        return
-            stem <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
-            uint256(-stem) % seedsPerBdv == 0;
-    }*/
-
-    /** 
      * @notice Calculates stem based on input season
      * @param seedsPerBdv Seeds per bdv for the token you want to find the corresponding stem for
      * @param season The season you want to find the corresponding stem for
