@@ -21,6 +21,8 @@ import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
 import tripleCopyIcon from "/src/assets/images/triple-copy.svg";
+import { Log } from "src/utils/logger";
+import SlippagePanel from "src/components/Liquidity/SlippagePanel";
 
 
 export const Liquidity = () => {
@@ -28,6 +30,21 @@ export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
   const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
+
+    // Slippage-related
+    const [showSlippageSettings, setShowSlippageSettings] = useState<boolean>(false);
+    const [slippage, setSlippage] = useState<number>(0.1);
+  
+    const slippageSettingsClickHandler = useCallback(() => {
+      setShowSlippageSettings(!showSlippageSettings);
+    }, [showSlippageSettings]);
+  
+    const handleSlippageValueChange = (value: string) => {
+      Log.module("liquidity").debug(`Slippage changed: ${parseFloat(value)}`);
+      setSlippage(parseFloat(value));
+    };
+    // /Slippage-related
+  
 
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
@@ -49,20 +66,27 @@ export const Liquidity = () => {
           <LearnPump />
         </SideBar>
         <SideBar id="centerbar">
+        {showSlippageSettings && (
+        <SlippagePanel
+          slippageValue={slippage}
+          closeModal={slippageSettingsClickHandler}
+          slippageValueChanged={handleSlippageValueChange}
+        />
+        )}
         <Row gap={0}>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch>
-                Add Liquidity
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify>
+                <span>Add Liquidity</span>
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch>
-                Remove Liquidity
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch bold justify>
+                <span>Remove Liquidity</span>
               </TabButton>
             </Item>
           </Row>
-        {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={0.1} slippageSettingsClickHandler={() => console.log("slippageSettings")} />}
-        {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={0.1} slippageSettingsClickHandler={() => console.log("slippageSettings")}  /> }
+        {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} />}
+        {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  /> }
         </SideBar>
         <SideBar id="rightbar">
           <AboutBox>
