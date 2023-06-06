@@ -65,6 +65,10 @@ export const Well = () => {
   const haveDollarAmounts = !reserves.find((r) => !r.dollarAmount);
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
+  reserves.forEach(reserve => {
+    reserve.percentage = reserve.dollarAmount ? reserve.dollarAmount.div(totalUSD) : null
+  })
+  
   const goLiquidity = () => navigate(`./liquidity`)
 
   const goSwap = () => navigate(`../swap?token1=${well.tokens[0].symbol}&token2=${well.tokens[1].symbol}`)
