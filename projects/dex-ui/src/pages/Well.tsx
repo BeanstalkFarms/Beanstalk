@@ -28,7 +28,7 @@ export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
-  const [wellFunctionName, setWellFunctionName] = useState<string>('-')
+  const [wellFunctionName, setWellFunctionName] = useState<string | undefined>('-')
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -37,13 +37,17 @@ export const Well = () => {
 
   useEffect(() => {
     const run = async () => {
-      if (!well?.tokens) return;
+      if (!well) return
 
-      const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
-      setPrices(prices);
+      if (well.tokens) {
+        const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+        setPrices(prices);
+      }
 
-      const _wellName = await well.wellFunction.contract.name()
-      setWellFunctionName(_wellName)
+      if (well.wellFunction) {
+        const _wellName = await well.wellFunction.contract.name()
+        setWellFunctionName(_wellName)
+      }
     };
 
     run();
@@ -59,20 +63,20 @@ export const Well = () => {
     return {
       token,
       amount,
-      dollarAmount: price ? amount.mul(price) : null
+      dollarAmount: price ? amount.mul(price) : null,
+      percentage: TokenValue.ZERO
     };
   });
   const haveDollarAmounts = !reserves.find((r) => !r.dollarAmount);
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
   reserves.forEach(reserve => {
-    reserve.percentage = reserve.dollarAmount ? reserve.dollarAmount.div(totalUSD) : null
+    reserve.percentage = reserve.dollarAmount ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
   })
 
   const goLiquidity = () => navigate(`./liquidity`)
 
-  const goSwap = () => navigate(`../swap?token1=${well.tokens[0].symbol}&token2=${well.tokens[1].symbol}`)
-
+  const goSwap = () => (well && well.tokens ? navigate(`../swap?token1=${well.tokens[0].symbol}&token2=${well.tokens[1].symbol}`) : null)
 
   if (loading)
     return (
@@ -136,7 +140,7 @@ export const Well = () => {
           </Row>
           <LiquidityBox lpToken={well?.lpToken!} />
           <LearnYield />
-          <LearnWellFunction name={wellFunctionName} />
+          <LearnWellFunction name={wellFunctionName || "A Well Function"} />
           <LearnPump />
         </SideBar>
       </ContentWrapper>
