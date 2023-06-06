@@ -33,20 +33,13 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
 
-  const [showQuoteDetails, setShowQuoteDetails] = useState<boolean>(true);
-
-  const onQuoteHandler = useCallback(() => {
-    setShowQuoteDetails(true);
-  }, []);
-
   const { balanced, oneToken, custom } = useLiquidityQuote(
     well,
     removeLiquidityMode,
     lpTokenAmount || TokenValue.ZERO,
     singleTokenIndex,
     well.tokens!,
-    amounts,
-    onQuoteHandler
+    amounts
   );
 
   const { balancedQuote } = balanced;
@@ -77,7 +70,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
       setAmounts(initialAmounts);
       setLpTokenAmount(undefined);
-      setShowQuoteDetails(false);
     }
   }, [well.tokens]);
 
@@ -163,7 +155,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
     // - If we are entering custom mode, reset to 0
     // - If we are switching between balanced and one token, don't reset
     setLpTokenAmount(TokenValue.ZERO);
-  }, [removeLiquidityMode, showQuoteDetails]);
+  }, [removeLiquidityMode]);
 
   const buttonLabel = useMemo(() => (lpTokenAmountNonZero ? "Remove Liquidity" : "Input Token Amount"), [lpTokenAmountNonZero]);
 
@@ -347,7 +339,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 ))}
               </div>
             )}
-            {showQuoteDetails && (
+            {selectedQuote?.quote && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.REMOVE}
                 quote={selectedQuote}
