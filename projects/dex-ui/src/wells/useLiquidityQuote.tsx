@@ -73,7 +73,7 @@ export const useLiquidityQuote = (
       return null;
     }
 
-    if (!lpTokenAmount || !address) {
+    if (!lpTokenAmount || lpTokenAmount.eq(TokenValue.ZERO) || !address) {
       return null;
     }
 
