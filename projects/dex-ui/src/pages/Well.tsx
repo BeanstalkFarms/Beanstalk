@@ -68,7 +68,7 @@ export const Well = () => {
   reserves.forEach(reserve => {
     reserve.percentage = reserve.dollarAmount ? reserve.dollarAmount.div(totalUSD) : null
   })
-  
+
   const goLiquidity = () => navigate(`./liquidity`)
 
   const goSwap = () => navigate(`../swap?token1=${well.tokens[0].symbol}&token2=${well.tokens[1].symbol}`)
@@ -136,7 +136,7 @@ export const Well = () => {
           </Row>
           <LiquidityBox lpToken={well?.lpToken!} />
           <LearnYield />
-          <LearnWellFunction name={"CHANGEME"} />
+          <LearnWellFunction name={wellFunctionName.toString()} />
           <LearnPump />
         </SideBar>
       </ContentWrapper>
