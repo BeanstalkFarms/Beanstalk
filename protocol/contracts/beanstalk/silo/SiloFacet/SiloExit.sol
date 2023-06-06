@@ -270,6 +270,17 @@ contract SiloExit is ReentrancyGuard {
 
     //////////////////////// STEM ////////////////////////
 
+    /**
+     * @notice Returns the "stemTip" for a given token.
+     * @dev the stemTip is the Cumulative Grown Stalk Per BDV 
+     * of a given deposited asset since whitelist. 
+     * 
+     * note that a deposit for a given asset may have 
+     * a higher Grown Stalk Per BDV than the stemTip.
+     * 
+     * This can occur when a deposit is converted from an asset
+     * with a larger seeds per BDV, to a lower seeds per BDV.
+     */
     function stemTipForToken(address token)
         public
         view
@@ -281,7 +292,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev given the season/token, returns the stem assoicated with that deposit.
+     * @notice given the season/token, returns the stem assoicated with that deposit.
      * kept for legacy reasons. 
      */
     function seasonToStem(address token, uint32 season)
@@ -294,7 +305,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev returns the seeds per token, for legacy tokens.
+     * @notice returns the seeds per token, for legacy tokens.
      * calling with an non-legacy token will return 0, 
      * even after the token is whitelisted.
      * kept for legacy reasons. 
@@ -304,27 +315,34 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev returns the season in which beanstalk initalized siloV3.
+     * @notice returns the season in which beanstalk initalized siloV3.
      */
     function stemStartSeason() public view virtual returns (uint16) {
         return s.season.stemStartSeason;
     }
 
-
+    /**
+     * @notice returns whether an account needs to migrate to siloV3.
+     */
     function migrationNeeded(address account) public view returns (bool) {
         return LibSilo.migrationNeeded(account);
     }
 
     /**
-     * @dev returns whether beanstalk is in the vesting period or not.
+     * @notice Returns true if Earned Beans from the previous
+     * Sunrise call are still vesting. 
+     * 
+     * Vesting Earned Beans cannot be received via `plant()` 
+     * until the vesting period is over, and will be forfeited 
+     * if a farmer withdraws during the vesting period. 
      */
-    function inVestingPeriod() public view returns (bool){
+    function inVestingPeriod() public view returns (bool) {
         return LibSilo.inVestingPeriod();
     }
     //////////////////////// INTERNAL ////////////////////////
 
     /**
-     * @dev Returns the current Season number.
+     * @notice Returns the current Season number.
      */
     function _season() internal view returns (uint32) {
         return s.season.current;
