@@ -63,9 +63,8 @@ export const Well = () => {
 
   const goLiquidity = () => navigate(`./liquidity`)
 
-  const goSwap = () => {
-    console.log("go goSwap");
-  };
+  const goSwap = () => navigate(`../swap?token1=${well.tokens[0].symbol}&token2=${well.tokens[1].symbol}`)
+
 
   if (loading)
     return (
