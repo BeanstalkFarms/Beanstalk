@@ -26,6 +26,7 @@ import tripleCopyIcon from "/src/assets/images/triple-copy.svg";
 export const Liquidity = () => {
     
   const { address: wellAddress } = useParams<"address">();
+  const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
 
   const [tab, setTab] = useState(0);
@@ -41,7 +42,7 @@ export const Liquidity = () => {
         <Page>
         <ContentWrapper>
         <SideBar id="sidebar">
-          <Button secondary label="← Back To Well Details" />
+          <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
           <LiquidityBox lpToken={well?.lpToken!} />
           <LearnYield />
           <LearnWellFunction name={"CHANGEME"} />
