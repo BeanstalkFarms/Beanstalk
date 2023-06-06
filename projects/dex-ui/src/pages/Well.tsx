@@ -28,6 +28,7 @@ export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
+  const [wellFunctionName, setWellFunctionName] = useState<String>('-')
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -40,6 +41,9 @@ export const Well = () => {
 
       const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
       setPrices(prices);
+
+      const _wellName = await well.wellFunction.contract.name()
+      setWellFunctionName(_wellName)
     };
 
     run();
@@ -94,7 +98,7 @@ export const Well = () => {
               </Header>
             </Item>
             <Item column stretch right>
-              <FunctionName>ConstantChangeMe</FunctionName>
+              <FunctionName>{wellFunctionName}</FunctionName>
               <Fee>4.20% Tradading Fee</Fee>
             </Item>
           </Row>
