@@ -201,7 +201,7 @@ contract SiloExit is ReentrancyGuard {
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.
-        beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
+        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN); // Note: SafeMath is redundant here.
         if (beans > s.earnedBeans) return s.earnedBeans;
 
         return beans;
@@ -218,7 +218,7 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256)
     {
-        return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
+        return balanceOfEarnedBeans(account).mul(C.STALK_PER_BEAN);
     }
 
     //////////////////////// SEASON OF PLENTY ////////////////////////

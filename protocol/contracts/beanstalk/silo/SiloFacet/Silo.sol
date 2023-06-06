@@ -129,7 +129,9 @@ contract Silo is SiloExit {
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
         // Similarly, `account` does not receive additional Roots from Earned Stalk during a Plant.
         // The following lines allocate Earned Stalk that has already been minted to `account`.
-        uint256 stalk = beans.mul(C.getStalkPerBean());
+        // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
+        // for gas savings.
+        uint256 stalk = beans.mul(C.STALK_PER_BEAN);
         s.a[account].s.stalk = accountStalk.add(stalk);
 
 

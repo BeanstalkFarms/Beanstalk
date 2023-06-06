@@ -188,7 +188,7 @@ contract Sun is Oracle {
         //
         // Stalk is created here, rather than in {rewardBeans}, because only
         // Beans that are allocated to the Silo will receive Stalk. 
-        uint256 seasonStalk = amount.mul(C.getStalkPerBean());
+        uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
         s.s.stalk = s.s.stalk.add(seasonStalk);
         // `s.newEarnedStalk` is an accounting mechanism that tracks the  number
         // of Earned stalk that is allocated during the season. 
