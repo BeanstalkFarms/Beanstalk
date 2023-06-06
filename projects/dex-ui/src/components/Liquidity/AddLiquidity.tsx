@@ -99,25 +99,26 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
   const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
     if (!bothAmountsNonZero) {
+      setShowQuoteDetails(false);
       return null;
     }
 
     if (!allTokensHaveMinAllowance) {
+      setShowQuoteDetails(false);
       return null;
     }
-
-    // so we show the quote details page on first quote
-    setShowQuoteDetails(true);
 
     try {
       const quote = await well.addLiquidityQuote(Object.values(amounts));
       const estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      setShowQuoteDetails(true);
       return {
         quote,
         estimate
       };
     } catch (error: any) {
       Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
+      setShowQuoteDetails(false);
       return null;
     }
   });

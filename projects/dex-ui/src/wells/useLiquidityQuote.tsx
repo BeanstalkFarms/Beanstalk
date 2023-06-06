@@ -12,8 +12,7 @@ export const useLiquidityQuote = (
   lpTokenAmount: TokenValue,
   singleTokenIndex: number,
   wellTokens: Token[],
-  amounts: LiquidityAmounts,
-  onQuoteHandler: () => void,
+  amounts: LiquidityAmounts
 ) => {
   const { address } = useAccount();
 
@@ -49,8 +48,6 @@ export const useLiquidityQuote = (
       return null;
     }
 
-    onQuoteHandler();
-
     try {
       const quote = await well.removeLiquidityQuote(lpTokenAmount);
       const estimate = await well.removeLiquidityEstimateGas(lpTokenAmount, quote, address);
@@ -77,8 +74,6 @@ export const useLiquidityQuote = (
       return null;
     }
 
-    onQuoteHandler();
-
     try {
       const quote = await well.removeLiquidityOneTokenQuote(lpTokenAmount, wellTokens![singleTokenIndex]);
       const estimate = await well.removeLiquidityOneTokenGasEstimate(lpTokenAmount, wellTokens![singleTokenIndex], quote, address);
@@ -104,8 +99,6 @@ export const useLiquidityQuote = (
     if (!amounts || !bothAmountsNonZero || !address) {
       return null;
     }
-
-    onQuoteHandler();
 
     try {
       const quote = await well.removeLiquidityImbalancedQuote(Object.values(amounts));
