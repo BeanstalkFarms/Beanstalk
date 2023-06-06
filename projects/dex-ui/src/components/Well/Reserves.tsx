@@ -11,6 +11,7 @@ type Props = {
     token: Token;
     amount: TokenValue;
     dollarAmount: TokenValue | null;
+    percentage: TokenValue | null;
   }[];
 };
 export const Reserves: FC<Props> = ({ reserves }) => {
@@ -20,7 +21,7 @@ export const Reserves: FC<Props> = ({ reserves }) => {
       <Wrapper>
         <TokenLogo token={r.token} size={14} />
         <Amount>{r.amount.toHuman("0,0.00")}</Amount>
-        <Percent>(69%)</Percent>
+        <Percent>{`(${r.percentage?.mul(100).toHuman("0,0")}%)`}</Percent>
       </Wrapper>
     </Item>
   ));
