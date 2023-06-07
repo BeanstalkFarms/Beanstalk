@@ -68,6 +68,10 @@ const NetworkButton: React.FC<
           '&:hover': {
             borderColor: 'divider',
           },
+          // Follow similar pattern as WalletButton & show red bottom border if we are on localhost
+          ...(chain.id === SupportedChainId.LOCALHOST
+            ? { borderBottom: '2px solid red' }
+            : {}),
           ...props.sx,
         }}
       >
