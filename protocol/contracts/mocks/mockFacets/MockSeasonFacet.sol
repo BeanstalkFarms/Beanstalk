@@ -9,6 +9,7 @@ import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
 import "~/libraries/LibBytes.sol";
 import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "~/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "~/libraries/LibAppStorage.sol";
 
 /**
@@ -326,6 +327,10 @@ contract MockSeasonFacet is SeasonFacet {
 
     function getT() external view returns (uint256) {
         return uint256(s.w.t);
+    }
+
+    function getUsdPrice(address token) external view returns (uint256) {
+        return LibUsdOracle.getUsdPrice(token);
     }
 
     function getEthUsdPrice() external view returns (uint256) {
