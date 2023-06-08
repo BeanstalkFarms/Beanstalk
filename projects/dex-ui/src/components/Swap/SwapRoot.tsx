@@ -127,6 +127,9 @@ export const SwapRoot = () => {
   const approve = async () => {
     Log.module("swap").debug("Doing approval");
     if (!quote!.doApproval) throw new Error("quote.doApproval() is missing. Bad logic");
+
+    setTxLoading(true);
+
     const toast = new TransactionToast({
       loading: "Waiting for approval",
       error: "Approval failed",
@@ -141,33 +144,54 @@ export const SwapRoot = () => {
       toast.success(receipt);
       setNeedsApproval(false); // TODO:
     } catch (err) {
+      Log.module("swap").error("Approval Failed", err);
       toast.error(err);
+    } finally {
       setTxLoading(false);
     }
   };
 
   const swap = async () => {
     Log.module("swap").debug("Doing swap");
+    setTxLoading(true);
+
+    const toast = new TransactionToast({
+      loading: "Confirming swap",
+      error: "Swap failed",
+      success: "Swap confirmed"
+    });
+
     try {
       const tx = await quote!.doSwap();
-      await tx.wait();
+      toast.confirming(tx);
+
+      const receipt = await tx.wait();
+      toast.success(receipt);
+
+      setInAmount(undefined);
+      setOutAmount(undefined);
       setNeedsApproval(true);
       setReadyToSwap(false);
       setQuote(undefined);
-    } catch (err) {}
+    } catch (err) {
+      Log.module("swap").error("Swap Failed", err);
+      toast.error(err);
+    } finally {
+      setTxLoading(false);
+    }
   };
 
   const handleButtonClick = async () => {
     if (!quote) throw new Error("Bad state, there is no quote. Button should've been disabled");
-    setTxLoading(true);
     try {
       if (needsApproval) {
         await approve();
       } else {
         await swap();
       }
-    } catch (err) {}
-    setTxLoading(false);
+    } catch (err) {
+      Log.module("swap").error("Operation Failed", err);
+    }
   };
 
   const getLabel = useCallback(() => {
@@ -180,6 +204,7 @@ export const SwapRoot = () => {
 
   if (Object.keys(tokens).length === 0)
     return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
+
 
   return (
     <Container>
