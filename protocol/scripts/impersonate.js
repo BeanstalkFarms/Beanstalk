@@ -268,6 +268,8 @@ async function ethUsdChainlinkAggregator() {
     ETH_USD_CHAINLINK_AGGREGATOR,
     JSON.parse(chainlinkAggregatorJson).deployedBytecode,
   ]);
+  const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+  await ethUsdChainlinkAggregator.setDecimals(6)
 }
 
 exports.impersonateRouter = router

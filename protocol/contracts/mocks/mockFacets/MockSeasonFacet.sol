@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 import "../MockToken.sol";
 import "~/libraries/LibBytes.sol";
-import {LibEthUsdOracle} from "~/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "~/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibAppStorage} from "~/libraries/LibAppStorage.sol";
 
 /**
@@ -330,5 +330,17 @@ contract MockSeasonFacet is SeasonFacet {
 
     function getEthUsdPrice() external view returns (uint256) {
         return LibEthUsdOracle.getEthUsdPrice();
+    }
+
+    function getEthUsdcPrice() external view returns (uint256) {
+        return LibUniswapOracle.getEthUsdcPrice();
+    }
+
+    function getEthUsdtPrice() external view returns (uint256) {
+        return LibUniswapOracle.getEthUsdtPrice();
+    }
+
+    function getChainlinkEthUsdPrice() external view returns (uint256) {
+        return LibChainlinkOracle.getEthUsdPrice();
     }
 }

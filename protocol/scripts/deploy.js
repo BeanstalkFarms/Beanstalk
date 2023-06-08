@@ -185,13 +185,13 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     if (reset) {
       await impersonateCurve()
       await impersonateWeth()
+      await impersonateEthUsdcUniswap()
+      await impersonateEthUsdtUniswap()
     }
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
     await impersonateBlockBasefee();
-    await impersonateEthUsdcUniswap()
-    await impersonateEthUsdtUniswap()
     await impersonateEthUsdChainlinkAggregator()
   }
 

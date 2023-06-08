@@ -5,6 +5,7 @@ const { BEAN, BEANSTALK_PUMP, WETH } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
 const { getWellContractFactory, whitelistWell, getWellContractAt, deployMockWell } = require('../utils/well.js');
+const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -34,6 +35,10 @@ describe('Well Minting', function () {
     await this.bean.mint(userAddress, to18('1'));
 
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
+
+    await setEthUsdPrice('999.998018')
+    await setEthUsdcPrice('1000')
+    await setEthUsdtPrice('1000')
 
     await whitelistWell(this.well.address, '10000', to6('4'))
 
