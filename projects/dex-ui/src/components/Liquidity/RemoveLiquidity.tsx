@@ -15,6 +15,7 @@ import { ensureAllowance, hasMinimumAllowance } from "./allowance";
 import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
 import { TabButton } from "../TabButton";
+import { TransactionToast } from "../TxnToast/TransactionToast";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -29,7 +30,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
   const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue | undefined>();
-  const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
   const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
@@ -76,38 +76,50 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   const removeLiquidityButtonClickHandler = useCallback(async () => {
     const hasQuote = oneTokenQuote || balancedQuote || customRatioQuote;
+
     if (hasQuote && address && lpTokenAmount) {
+      const toast = new TransactionToast({
+        loading: "Removing liquidity...",
+        error: "Removal failed",
+        success: "Liquidity removed"
+      }); 
       let removeLiquidityTxn;
-      if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
-        if (!oneTokenQuote) {
-          return;
+      try {
+        if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
+          if (!oneTokenQuote) {
+            return;
+          }
+          const quoteAmountLessSlippage = oneTokenQuote.quote.subSlippage(slippage);
+          removeLiquidityTxn = await well.removeLiquidityOneToken(
+            lpTokenAmount,
+            well.tokens![singleTokenIndex],
+            quoteAmountLessSlippage,
+            address
+          );
+          toast.confirming(removeLiquidityTxn);
+        } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
+          if (!balancedQuote) {
+            return;
+          }
+          const quoteAmountLessSlippage = balancedQuote.quote.map((q) => q.subSlippage(slippage));
+          removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address);
+          toast.confirming(removeLiquidityTxn);
+        } else {
+          if (!customRatioQuote) {
+            return;
+          }
+          const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
+          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, Object.values(amounts), address);
+          toast.confirming(removeLiquidityTxn);
         }
-        const quoteAmountLessSlippage = oneTokenQuote.quote.subSlippage(slippage);
-        removeLiquidityTxn = await well.removeLiquidityOneToken(
-          lpTokenAmount,
-          well.tokens![singleTokenIndex],
-          quoteAmountLessSlippage,
-          address
-        );
-      } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
-        if (!balancedQuote) {
-          return;
+        const receipt = await removeLiquidityTxn.wait();
+        toast.success(receipt);
+        resetState();
+        txnCompleteCallback();
+        } catch (error) {
+          Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
+          toast.error(error);
         }
-        const quoteAmountLessSlippage = balancedQuote.quote.map((q) => q.subSlippage(slippage));
-        removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address);
-      } else {
-        if (!customRatioQuote) {
-          return;
-        }
-
-        const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
-        removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, Object.values(amounts), address);
-      }
-
-      const receipt = await removeLiquidityTxn.wait();
-      setReceipt(receipt);
-      resetState();
-      txnCompleteCallback();
     }
   }, [
     well,
@@ -354,8 +366,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 selectedTokenIndex={singleTokenIndex}
               />
             )}
-            {/* // TODO: Should be a notification */}
-            {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
             {!tokenAllowance ? (
               <ButtonWrapper>
                 <ApproveTokenButton
