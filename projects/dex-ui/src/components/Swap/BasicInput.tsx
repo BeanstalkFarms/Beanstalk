@@ -31,7 +31,13 @@ export const BasicInput: FC<Props> = ({
 
   useEffect(() => {
     if (value === displayValue) return;
-    setDisplayValue(value === "0" ? "" : numeral(value).format('0.00000'));
+
+    // handle edge case where someone types "1.0" and wants to keep tying, for ex: 1.005.
+    // Look for displayValues that contain a period and end in zero, and don't update them.
+    if (displayValue?.includes(".") && displayValue?.endsWith("0") && value?.slice(-1) === displayValue?.slice(-1)) {
+      return;
+    }
+    setDisplayValue(value === "0" || value === "" ? "" : numeral(value).format("0.00000"));
   }, [value, displayValue]);
 
   const handleChange = useCallback(
@@ -45,7 +51,6 @@ export const BasicInput: FC<Props> = ({
       if (rawValue.startsWith(".") && rawValue.length > 1) {
         rawValue = `0${rawValue}`;
       }
-
       setDisplayValue(rawValue);
       onChange?.(cleanValue);
     },
