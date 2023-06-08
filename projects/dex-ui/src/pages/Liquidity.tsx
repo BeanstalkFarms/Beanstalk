@@ -30,21 +30,31 @@ export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
   const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
+  const [ wellFunctionName, setWellFunctionName ] = useState<string>("This Well's Function")
 
-    // Slippage-related
-    const [showSlippageSettings, setShowSlippageSettings] = useState<boolean>(false);
-    const [slippage, setSlippage] = useState<number>(0.1);
+  // Slippage-related
+  const [showSlippageSettings, setShowSlippageSettings] = useState<boolean>(false);
+  const [slippage, setSlippage] = useState<number>(0.1);
   
-    const slippageSettingsClickHandler = useCallback(() => {
-      setShowSlippageSettings(!showSlippageSettings);
-    }, [showSlippageSettings]);
+  const slippageSettingsClickHandler = useCallback(() => {
+    setShowSlippageSettings(!showSlippageSettings);
+  }, [showSlippageSettings]);
+
+  const handleSlippageValueChange = (value: string) => {
+    Log.module("liquidity").debug(`Slippage changed: ${parseFloat(value)}`);
+    setSlippage(parseFloat(value));
+  };
+  // /Slippage-related
   
-    const handleSlippageValueChange = (value: string) => {
-      Log.module("liquidity").debug(`Slippage changed: ${parseFloat(value)}`);
-      setSlippage(parseFloat(value));
+  useEffect(() => {
+    const run  = async() => {
+      if (well && well.wellFunction) {
+        const _wellName = await well.wellFunction.contract.name();
+        setWellFunctionName(_wellName);
+      }
     };
-    // /Slippage-related
-  
+    run();
+  }, [well])
 
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
@@ -62,7 +72,7 @@ export const Liquidity = () => {
           <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
           <LiquidityBox lpToken={well?.lpToken!} />
           <LearnYield />
-          <LearnWellFunction name={"CHANGEME"} />
+          <LearnWellFunction name={wellFunctionName} />
           <LearnPump />
         </SideBar>
         <SideBar id="centerbar">
