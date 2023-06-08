@@ -66,13 +66,6 @@ export const Liquidity = () => {
           <LearnPump />
         </SideBar>
         <SideBar id="centerbar">
-        {showSlippageSettings && (
-        <SlippagePanel
-          slippageValue={slippage}
-          closeModal={slippageSettingsClickHandler}
-          slippageValueChanged={handleSlippageValueChange}
-        />
-        )}
         <Row gap={0}>
             <Item stretch>
               <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify>
@@ -85,8 +78,8 @@ export const Liquidity = () => {
               </TabButton>
             </Item>
           </Row>
-        {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} />}
-        {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  /> }
+        {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} handleSlippageValueChange={handleSlippageValueChange}/>}
+        {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  handleSlippageValueChange={handleSlippageValueChange}/> }
         </SideBar>
         <SideBar id="rightbar">
           <AboutBox>

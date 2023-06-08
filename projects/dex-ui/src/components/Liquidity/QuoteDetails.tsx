@@ -9,6 +9,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
 import { getPrice } from "src/utils/price/usePrice";
 import { getGasInUsd } from "src/utils/gasprice";
+import SlippagePanel from "./SlippagePanel";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE;
@@ -26,6 +27,7 @@ type QuoteDetailsProps = {
   wellTokens?: Token[] | undefined;
   selectedTokenIndex?: number;
   slippageSettingsClickHandler: () => void;
+  handleSlippageValueChange: (value: string) => void;
 };
 
 const QuoteDetails = ({
@@ -37,7 +39,8 @@ const QuoteDetails = ({
   wellLpToken,
   wellTokens,
   selectedTokenIndex,
-  slippageSettingsClickHandler
+  slippageSettingsClickHandler,
+  handleSlippageValueChange
 }: QuoteDetailsProps) => {
   const sdk = useSdk();
   const [gasFeeUsd, setGasFeeUsd] = useState<string>("");
@@ -123,9 +126,13 @@ const QuoteDetails = ({
         <GearImage src={infoIcon} alt={"More Info"} />
       </QuoteDetailLine>
       <QuoteDetailLine>
-        <QuoteDetailLabel>Slippage Tolerance</QuoteDetailLabel>
+        <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
         <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
-        <GearImage src={gearIcon} alt={"Slippage Settings"} onClick={slippageSettingsClickHandler} />
+        <SlippagePanel
+          slippageValue={slippage}
+          connectorFor={"slippage"}
+          handleSlippageValueChange={handleSlippageValueChange}
+        />
       </QuoteDetailLine>
       <QuoteDetailLine>
         <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
