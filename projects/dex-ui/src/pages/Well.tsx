@@ -71,7 +71,7 @@ export const Well = () => {
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
   reserves.forEach(reserve => {
-    reserve.percentage = reserve.dollarAmount ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
+    reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
   })
 
   const goLiquidity = () => navigate(`./liquidity`)
