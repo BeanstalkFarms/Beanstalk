@@ -42,9 +42,9 @@ const SlippagePanel = ({ handleSlippageValueChange, connectorFor, slippageValue 
       {connectorFor === "slippage" && modalOpen && (
       <InConnector>
         <svg xmlns="http://www.w3.org/2000/svg" width={48} height={80} fill="none">
-        <path id="line" stroke="#46B955" d="M-1 75H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
-        <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-        <path fill="#F9F8F6" stroke="#46B955" d="M0 73a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
+          <path id="line" stroke="#46B955" d="M-1 75H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
+          <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
+          <path fill="#F9F8F6" stroke="#46B955" d="M0 73a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
         </svg>
       </InConnector>
       )}
