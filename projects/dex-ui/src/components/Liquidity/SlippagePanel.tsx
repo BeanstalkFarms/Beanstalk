@@ -15,15 +15,12 @@ type SlippagePanelProps = {
 const SlippagePanel = ({ handleSlippageValueChange, connectorFor, slippageValue }: SlippagePanelProps) => {
   
   const [modalOpen, setModalOpen] = useState(false);
-  const openModal = useCallback(() => setModalOpen(true), []);
   const closeModal = useCallback(() => setModalOpen(false), []);
 
   return (
     <Slippage>
-    <Icon src={gearIcon} onClick={openModal} modalOpen={modalOpen}/>
-    {modalOpen && (
-    <>
-    <Modal id="modal-background" role="dialog" aria-labelledby="dialog-title">
+      <Icon src={gearIcon} onClick={() => setModalOpen(!modalOpen)} modalOpen={modalOpen}/>
+      {modalOpen && (
       <ModalContainer id="modal" data-trace="true">
         <ModalHeader>
           <div id="dialog-title">Adjust Slippage</div>
@@ -31,28 +28,25 @@ const SlippagePanel = ({ handleSlippageValueChange, connectorFor, slippageValue 
         </ModalHeader>
         <ModalContent>
           <InputContainer>
-          <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
-          <InputAdornment>Slippage Amount</InputAdornment>
+            <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
+            <InputAdornment>Slippage Amount</InputAdornment>
           </InputContainer>
           Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that you
           are willing to tolerate.
           <SlippageTextBottom>
-          Your transaction will revert if the price changes by more than the percentage specified.
+            Your transaction will revert if the price changes by more than the percentage specified.
           </SlippageTextBottom>
-          </ModalContent>
-            </ModalContainer>
-
-          </Modal>
-        </>
+        </ModalContent>
+      </ModalContainer>
       )}
       {connectorFor === "slippage" && modalOpen && (
-        <InConnector>
-          <svg xmlns="http://www.w3.org/2000/svg" width={48} height={80} fill="none">
-          <path id="line" stroke="#46B955" d="M-1 75H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
-          <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-          <path fill="#F9F8F6" stroke="#46B955" d="M0 73a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
-          </svg>
-        </InConnector>
+      <InConnector>
+        <svg xmlns="http://www.w3.org/2000/svg" width={48} height={80} fill="none">
+        <path id="line" stroke="#46B955" d="M-1 75H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
+        <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
+        <path fill="#F9F8F6" stroke="#46B955" d="M0 73a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
+        </svg>
+      </InConnector>
       )}
     </Slippage>
   );
@@ -77,8 +71,7 @@ const InputContainer = styled.div`
   padding-right: 12px;
   margin-bottom: 8px;
 `
-const InputAdornment = styled.div`
-  
+const InputAdornment = styled.div`  
 `
 
 type GearIconProps = {
@@ -92,14 +85,14 @@ const Icon = styled.img<GearIconProps>`
 `;
 
 const SlippageTextBottom = styled.div`
-  // TODO: Why doesn't this go to the bottom?
   margin-top: 24px;
 `;
 
 const InAnimation = keyframes`
-0% {stroke-dashoffset: 124;}
-100% {stroke-dashoffset:0px;}
+  0% {stroke-dashoffset: 124;}
+  100% {stroke-dashoffset:0px;}
 `;
+
 const InConnector = styled.div`
   position: absolute;
   top: -68px;
@@ -111,28 +104,17 @@ const InConnector = styled.div`
   }
 `;
 
-const Modal = styled.div`
-  position: fixed;
-  top: 112px;
-  left: 0px;
-  bottom: 72px;
-  right: 0;
-  background: #00000000;
-  cursor: auto;
-  display: flex;
-  z-index: 1024;
-`;
 const ModalContainer = styled.div`
+  position: absolute;
+  top: -90px;
+  left: 74px;
+  background: #00000000;
   display: flex;
   align-self: flex-start;
   flex-direction: column;
-  margin-left: 960px;
-  margin-top: 260px;
   width: 408px;
-  height: 310px;
   overflow: hidden;
   color: #000;
-
   z-index: 1000;
 `;
 
