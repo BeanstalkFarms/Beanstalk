@@ -7,9 +7,10 @@ export type SVGProps = {
 };
 
 export const ChevronDown = ({ color = "#000", width, height }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 9 6" fill="none">
-    <path fill={color} d="M1.058 0 4.5 3.708 7.942 0 9 1.142 4.5 6 0 1.142 1.058 0Z" />
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 10 6" fill="none">
+    <path d="M1 1L5 5L9 1" stroke={color} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
+  
 );
 
 export const Discord = ({ color = "#000", width, height }: SVGProps) => (

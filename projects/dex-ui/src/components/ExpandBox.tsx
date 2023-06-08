@@ -32,9 +32,9 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
 
   return (
     <Container width={width} data-trace="true">
-      <Header id="header">
+      <Header id="header" onClick={toggle}>
         {header}
-        <ImageButton component={ChevronDown} padding="12px" onClick={toggle} alt="Click to epand this box and learn how to earn yield" />
+        <ImageButton component={ChevronDown} size={12} onClick={toggle} padding="0px" alt="Click to expand this box and learn how to earn yield" />
       </Header>
 
       {open && body}
@@ -58,6 +58,7 @@ const Header = styled.div`
   padding: 12px 16px;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
 `;
 const Body = styled.div`
   display: flex;

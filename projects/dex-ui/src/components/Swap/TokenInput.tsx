@@ -139,7 +139,7 @@ export const TokenInput: FC<TokenInput> = ({
 
       {showBalance && (
         <BalanceRow>
-          <Balance onClick={balance ? () => updateAmount(balance?.[token.symbol].toHuman()) : undefined}>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
+          <Balance onClick={balance ? () => updateAmount(balance?.[token.symbol].toHuman()) : undefined}>Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
         </BalanceRow>
       )}
     </Container>
