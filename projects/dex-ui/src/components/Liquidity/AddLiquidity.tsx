@@ -17,6 +17,7 @@ type AddLiquidityProps = {
   txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
+  handleSlippageValueChange: (value: string) => void;
 };
 
 export type AddLiquidityQuote = {
@@ -26,7 +27,7 @@ export type AddLiquidityQuote = {
   estimate: TokenValue;
 };
 
-export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler }: AddLiquidityProps) => {
+export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
   const { address } = useAccount();
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
   const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
@@ -209,6 +210,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 quote={quote}
                 wellLpToken={well.lpToken}
                 slippageSettingsClickHandler={slippageSettingsClickHandler}
+                handleSlippageValueChange={handleSlippageValueChange}
                 slippage={slippage}
               />
             )}

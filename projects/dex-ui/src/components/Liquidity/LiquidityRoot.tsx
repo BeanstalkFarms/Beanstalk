@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { Well } from "@beanstalk/sdk/Wells";
 import { AddLiquidity } from "./AddLiquidity";
 import { RemoveLiquidity } from "./RemoveLiquidity";
-import SlippagePanel from "./SlippagePanel";
 import { Log } from "src/utils/logger";
 
 type LiquidityRootProps = {
@@ -30,14 +29,6 @@ export const LiquidityRoot = ({ well, txnCompleteCallback }: LiquidityRootProps)
 
   return (
     <Container>
-      {showSlippageSettings && (
-        <SlippagePanel
-          slippageValue={slippage}
-          closeModal={slippageSettingsClickHandler}
-          slippageValueChanged={handleSlippageValueChange}
-        />
-      )}
-      {!showSlippageSettings && (
         <>
           <Tabs>
             <Tab>
@@ -53,23 +44,12 @@ export const LiquidityRoot = ({ well, txnCompleteCallback }: LiquidityRootProps)
           </Tabs>
           <div>
             {showRemove ? (
-              <RemoveLiquidity
-                slippage={slippage}
-                slippageSettingsClickHandler={slippageSettingsClickHandler}
-                well={well}
-                txnCompleteCallback={txnCompleteCallback}
-              />
+              <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  handleSlippageValueChange={handleSlippageValueChange}/>
             ) : (
-              <AddLiquidity
-                well={well}
-                txnCompleteCallback={txnCompleteCallback}
-                slippageSettingsClickHandler={slippageSettingsClickHandler}
-                slippage={slippage}
-              />
+              <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} handleSlippageValueChange={handleSlippageValueChange}/>
             )}
           </div>
         </>
-      )}
     </Container>
   );
 };

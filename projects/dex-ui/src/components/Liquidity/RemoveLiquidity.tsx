@@ -21,9 +21,10 @@ type RemoveLiquidityProps = {
   txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
+  handleSlippageValueChange: (value: string) => void;
 };
 
-export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler }: RemoveLiquidityProps) => {
+export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
@@ -346,6 +347,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 inputs={Object.values(amounts)}
                 wellLpToken={well.lpToken}
                 slippageSettingsClickHandler={slippageSettingsClickHandler}
+                handleSlippageValueChange={handleSlippageValueChange}
                 slippage={slippage}
                 wellTokens={well.tokens}
                 removeLiquidityMode={removeLiquidityMode}
