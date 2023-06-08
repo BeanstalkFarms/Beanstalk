@@ -80,7 +80,7 @@ export const Copy = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   </svg>
 );
 
-export const Error = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+export const Error = ({ color = "#000", width = 19, height = 19 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="2 2 19 19">
     <path
       fill={color}

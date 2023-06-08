@@ -10,10 +10,6 @@ type ToastMessages = {
   error: string;
 };
 
-/**
- * A lightweight wrapper around react-hot-toast
- * to minimize repetitive Toast code when issuing transactions.
- */
 export class TransactionToast {
   messages: ToastMessages;
   toastId: any;
@@ -23,25 +19,15 @@ export class TransactionToast {
     this.toastId = toast.loading(<ToastAlert desc={this.messages.loading} />);
   }
 
-  /**
-   * Shows a loading message with Etherscan txn link while
-   * a transaction is confirming
-   * @param response The ethers.ContractTransaction response
-   */
   confirming(response: ContractTransaction) {
     toast.loading(<ToastAlert desc={this.messages.loading} hash={response.hash} id={this.toastId} />, {
       id: this.toastId
     });
   }
 
-  /**
-   * After a transaction confirms, show a success message
-   * and set a timeout duration for the toast.
-   * @param value The ethers.ContractReceipt confirming the txn.
-   */
   success(value?: ContractReceipt) {
     toast.success(<ToastAlert desc={this.messages.success} hash={value?.transactionHash} id={this.toastId} />, {
-      id: this.toastId,
+      id: this.toastId
     });
   }
 

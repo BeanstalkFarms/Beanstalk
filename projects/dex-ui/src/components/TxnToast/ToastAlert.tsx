@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import toast from "react-hot-toast";
-import { Link as Linky } from "react-router-dom";
 import styled from "styled-components";
 import { ImageButton } from "src/components/ImageButton";
 import { Copy, X } from "../Icons";
@@ -49,8 +48,9 @@ ToastAlert.defaultProps = {
 };
 
 const Container = styled.div`
-  width: 100%;
+  
   display: flex;
+  flex-grow: 1;
   alignitems: center;
   flexdirection: row;
   // border: 1px solid red;

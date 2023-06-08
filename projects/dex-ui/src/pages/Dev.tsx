@@ -69,7 +69,8 @@ export const Dev = () => {
       <Title title="Developer" />
       <span>Give yourself some tokens</span>
       <Container>{rows}</Container>
-      <Button onClick={mine} label={"Mine Block"} disabled={false} loading={false} />
+      <hr />
+      <Row><Button onClick={mine} label={"Mine Block"} disabled={false} loading={false} /></Row>
     </Page>
   );
 };

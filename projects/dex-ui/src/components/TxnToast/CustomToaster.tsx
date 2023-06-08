@@ -7,9 +7,9 @@ export const CustomToaster: FC<{}> = () => (
   <Toaster
     containerStyle={{
       // TODO: these need to be adjusted for mobile, also this is strange
-      position: "relative",
-      top: 48,
-      left: -48
+      position: "fixed",
+      top: 136,
+      right: 24
     }}
     toastOptions={{
       duration: 4000,
@@ -19,15 +19,23 @@ export const CustomToaster: FC<{}> = () => (
         secondary: "black"
       },
       loading: {
-        duration: Infinity,
+        duration: Infinity
       },
       success: {
-        duration: Infinity,
-        icon: <Success color="#46b955" width={16}/>
+        duration: 4000,
+        icon: (
+          <div>
+            <Success color="#46b955" width={16} height={16} />
+          </div>
+        )
       },
       error: {
         duration: Infinity,
-        icon: null
+        icon: (
+          <div>
+            <Error color="#ef4444" width={16} height={16} />
+          </div>
+        )
       },
       style: {
         display: "flex",
@@ -39,20 +47,12 @@ export const CustomToaster: FC<{}> = () => (
         borderRadius: 0,
         outline: "0.5px solid #000",
         boxShadow: "none",
-        transition: "margin-right 0.4s ease-in-out",
-        animation: "none"
+        transition: "margin-right 0.4s ease-in-out"
       }
     }}
   >
     {(t) => {
-      return (
-        <ToastBar
-          toast={t}
-          style={{
-            marginRight: t.visible ? 0 : -500
-          }}
-        />
-      );
+      return <ToastBar toast={t} />;
     }}
   </Toaster>
 );
