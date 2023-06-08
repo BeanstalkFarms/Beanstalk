@@ -35,7 +35,7 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
     <Container width={width} open={open} data-trace="true">
       <Header id="header" onClick={toggle}>
         {header}
-        <ImageButton component={ChevronDown} size={12} onClick={toggle} padding="0px" alt="Click to expand this box and learn how to earn yield" />
+        <ImageButton component={ChevronDown} size={12} rotate={open ? "180" : "0"} onClick={toggle} padding="0px" alt="Click to expand this box and learn how to earn yield" />
       </Header>
 
       {open && body}
