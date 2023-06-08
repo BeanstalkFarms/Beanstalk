@@ -11,6 +11,7 @@ import { Button } from "../Swap/Button";
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
 import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
+import { TransactionToast } from "../TxnToast/TransactionToast";
 
 type AddLiquidityProps = {
   well: Well;
@@ -30,7 +31,6 @@ export type AddLiquidityQuote = {
 export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
   const { address } = useAccount();
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
-  const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
@@ -126,13 +126,24 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
   const addLiquidityButtonClickHandler = useCallback(async () => {
     if (quote && address) {
-      const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
-      const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
-      const receipt = await addLiquidityTxn.wait();
-      setReceipt(receipt);
-      resetAmounts();
-      checkMinAllowanceForAllTokens();
-      txnCompleteCallback();
+      const toast = new TransactionToast({
+        loading: "Adding liquidity...",
+        error: "Approval failed",
+        success: "Liquidity added"
+      }); 
+      try {
+        const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
+        const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
+        toast.confirming(addLiquidityTxn);
+        const receipt = await addLiquidityTxn.wait();
+        toast.success(receipt);
+        resetAmounts();
+        checkMinAllowanceForAllTokens();
+        txnCompleteCallback(); 
+      } catch (error) {
+        Log.module("AddLiquidity").error("Error adding liquidity: ", (error as Error).message);
+        toast.error(error);
+      }
     }
   }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback]);
 
@@ -214,8 +225,6 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 slippage={slippage}
               />
             )}
-            {/* // TODO: Should be a notification */}
-            {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
             {well.tokens!.length > 0 &&
               well.tokens!.map((token: Token, index: number) => {
                 if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false ) {
