@@ -58,6 +58,7 @@ const Slippage = styled.div`
 
 const StyledInput = styled.input`
   border: none;
+  outline: none;
 `;
 
 const InputContainer = styled.div`
@@ -70,6 +71,9 @@ const InputContainer = styled.div`
   padding-left: 12px;
   padding-right: 12px;
   margin-bottom: 8px;
+  &:focus-within {
+    border: 1px solid #46B955;
+  }
 `
 const InputAdornment = styled.div`  
 `
