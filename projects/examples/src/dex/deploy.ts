@@ -5,7 +5,7 @@ import { TokenValue } from "@beanstalk/sdk-core";
 import { getWellsFromAquifer } from "./utils";
 
 let sdk;
-let forkUtils;
+let forkUtils: TestUtils.BlockchainUtils;
 
 // Setup multiple wells with liquidity
 main()
@@ -26,7 +26,7 @@ async function main() {
     console.log(`=== Processing ${well.name} ===`);
     await loadWell(bsdk.wells, well.address);
   }
-  console.log('\n\n---- AQUIFER ------');
+  console.log("\n\n---- AQUIFER ------");
   console.log(aquifer.address);
 }
 
@@ -40,6 +40,8 @@ async function deploy(bsdk: BeanstalkSDK) {
   const aquifer = await Aquifer.BuildAquifer(sdk);
   const { address } = await Well.DeployContract(sdk);
   const constantProduct = await WellFunction.BuildConstantProduct(sdk);
+
+  await forkUtils.mine();
 
   const well1 = await aquifer.boreWell(address, [BEAN, WETH], constantProduct, []);
   await well1.loadWell();
@@ -59,7 +61,7 @@ async function deploy(bsdk: BeanstalkSDK) {
 async function loadWell(sdk: WellsSDK, address: string) {
   const beanAmount = 50_000_000;
 
-  const a = {
+  const amounts = {
     BEAN: sdk.tokens.BEAN.amount(beanAmount),
     WETH: sdk.tokens.WETH.amount(beanAmount / 2000),
     USDC: sdk.tokens.USDC.amount(beanAmount),
@@ -71,17 +73,17 @@ async function loadWell(sdk: WellsSDK, address: string) {
 
   for (const token of tokens) {
     // console.log("\tSetting balance for", token.symbol);
-    await forkUtils.setBalance(token.address, account, a[token.symbol]);
-    await token.approve(well.address, TokenValue.MAX_UINT256);
+    await forkUtils.setBalance(token.address, account, amounts[token.symbol]);
+    await token.approve(well.address, amounts[token.symbol]);
   }
 
-  const amounts = tokens.map((t) => a[t.symbol]);
+  const amountsArray = tokens.map((t) => amounts[t.symbol]);
 
   console.log("\tAdding liquidity");
-  const quote = await well.addLiquidityQuote(amounts);
-  const tx = await well.addLiquidity(amounts, quote, account);
+  const quote = await well.addLiquidityQuote(amountsArray);
+  const tx = await well.addLiquidity(amountsArray, quote, account);
   await tx.wait();
 
   const reserves = await well.getReserves();
-  console.log("\tReserves: ", reserves.map(tv => tv.toHuman()).join(" - "));
+  console.log("\tReserves: ", reserves.map((tv) => tv.toHuman()).join(" - "));
 }

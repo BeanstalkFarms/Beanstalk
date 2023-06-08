@@ -223,7 +223,7 @@ export const parseError = (error: any): Error => {
     /// MetaMask - RPC Error: MetaMask Tx Signature: User denied transaction signature.
     case 4001:
     case "ACTION_REJECTED":
-      errorMessage.message = "You rejected the signature request.";
+      errorMessage.message = "Rejected by user.";
       return errorMessage;
 
     /// Unknown Error (Ideally, we shouldn't be reaching this stage)
