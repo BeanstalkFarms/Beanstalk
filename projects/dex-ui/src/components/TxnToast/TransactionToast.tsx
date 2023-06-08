@@ -5,27 +5,22 @@ import { parseError } from "src/utils/parseError";
 import { ToastAlert } from "./ToastAlert";
 
 type ToastMessages = {
-  loading?: string;
-  success?: string;
-  error?: string;
+  loading: string;
+  success: string;
+  error: string;
 };
 
 /**
  * A lightweight wrapper around react-hot-toast
  * to minimize repetitive Toast code when issuing transactions.
  */
-export default class TransactionToast {
-  /** */
+export class TransactionToast {
   messages: ToastMessages;
-
-  /** */
   toastId: any;
 
   constructor(messages: ToastMessages) {
     this.messages = messages;
-    this.toastId = toast.loading(<ToastAlert desc={this.messages.loading} />, {
-      duration: Infinity
-    });
+    this.toastId = toast.loading(<ToastAlert desc={this.messages.loading} />);
   }
 
   /**
@@ -35,8 +30,7 @@ export default class TransactionToast {
    */
   confirming(response: ContractTransaction) {
     toast.loading(<ToastAlert desc={this.messages.loading} hash={response.hash} id={this.toastId} />, {
-      id: this.toastId,
-      duration: Infinity
+      id: this.toastId
     });
   }
 
@@ -48,16 +42,13 @@ export default class TransactionToast {
   success(value?: ContractReceipt) {
     toast.success(<ToastAlert desc={this.messages.success} hash={value?.transactionHash} id={this.toastId} />, {
       id: this.toastId,
-      duration: 5000
     });
   }
 
   error(error: any) {
-    const duration = Infinity;
     const msg = parseError(error);
     toast.error(<ToastAlert desc={this.messages.error} msg={msg.message} rawError={msg.rawError} id={this.toastId} />, {
-      id: this.toastId,
-      duration: duration
+      id: this.toastId
     });
     return msg;
   }

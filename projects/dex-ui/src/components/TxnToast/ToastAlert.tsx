@@ -1,10 +1,10 @@
 import React, { useCallback } from "react";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link as Linky } from "react-router-dom";
 import styled from "styled-components";
 import { ImageButton } from "src/components/ImageButton";
-import copyIcon from "src/assets/images/copy.svg";
-import x from "src/assets/images/x.svg";
+import { Copy, X } from "../Icons";
+import { BodyCaps, BodyS, LinksTextLink } from "../Typography";
 
 function dismissErrors(id?: any) {
   if (id) {
@@ -19,23 +19,19 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string; h
 
   return (
     <Container>
-      <div>
-        <span>
-          {desc}
-          {hash && (
-            <>
-              &nbsp;
-              <Link to={`https://etherscan.io/tx/${hash}`} target="_blank" rel="noreferrer">
-                View on Etherscan
-              </Link>
-            </>
-          )}
-        </span>
+      <Text>
+        <Title>{desc}</Title>
+        {hash && (
+          <Link href={`https://etherscan.io/tx/${hash}`} target="_blank" rel="noreferrer">
+            View on Etherscan
+          </Link>
+        )}
+
         {msg && <MessageContainer>{msg}</MessageContainer>}
-      </div>
+      </Text>
       {rawError && (
         <ImageButton
-          src={copyIcon}
+          component={Copy}
           alt="Close token selector modal"
           size={10}
           onClick={() => {
@@ -43,7 +39,7 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string; h
           }}
         />
       )}
-      {msg && <ImageButton src={copyIcon} alt="Close token selector modal" size={10} onClick={handleClick} />}
+      {msg && <ImageButton component={X} alt="Close token selector modal" size={24} onClick={handleClick} />}
     </Container>
   );
 }
@@ -57,9 +53,30 @@ const Container = styled.div`
   display: flex;
   alignitems: center;
   flexdirection: row;
+  // border: 1px solid red;
+`;
+
+const Link = styled.a`
+  ${LinksTextLink}
+  letter-spacing: 0.02em;
+  text-decoration-line: underline;
+  color: #000000;
+`;
+
+const Text = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 2;
+`;
+
+const Title = styled.div`
+  ${BodyCaps}
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 `;
 
 const MessageContainer = styled.div`
+  ${BodyS}
   wordbreak: break-all;
   :first-letter: {
     texttransform: capitalize;

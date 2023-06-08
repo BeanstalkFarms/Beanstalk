@@ -11,6 +11,7 @@ import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
 import { useParams, useSearchParams } from "react-router-dom";
+import { TransactionToast } from "../TxnToast/TransactionToast";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -123,24 +124,47 @@ export const SwapRoot = () => {
     setOutToken(token);
   }, []);
 
+  const approve = async () => {
+    Log.module("swap").debug("Doing approval");
+    if (!quote!.doApproval) throw new Error("quote.doApproval() is missing. Bad logic");
+    const toast = new TransactionToast({
+      loading: "Waiting for approval",
+      error: "Approval failed",
+      success: "Approved"
+    });
+
+    try {
+      const tx = await quote!.doApproval();
+      toast.confirming(tx);
+
+      const receipt = await tx.wait();
+      toast.success(receipt);
+      setNeedsApproval(false); // TODO:
+    } catch (err) {
+      toast.error(err);
+      setTxLoading(false);
+    }
+  };
+
+  const swap = async () => {
+    Log.module("swap").debug("Doing swap");
+    try {
+      const tx = await quote!.doSwap();
+      await tx.wait();
+      setNeedsApproval(true);
+      setReadyToSwap(false);
+      setQuote(undefined);
+    } catch (err) {}
+  };
+
   const handleButtonClick = async () => {
     if (!quote) throw new Error("Bad state, there is no quote. Button should've been disabled");
     setTxLoading(true);
     try {
       if (needsApproval) {
-        Log.module("swap").debug("Doing approval");
-        if (!quote.doApproval) throw new Error("quote.doApproval() is missing. Bad logic");
-        const tx = await quote.doApproval();
-        await tx.wait();
-
-        setNeedsApproval(false);
+        await approve();
       } else {
-        Log.module("swap").debug("Doing swap");
-        const tx = await quote.doSwap();
-        await tx.wait();
-        setNeedsApproval(true);
-        setReadyToSwap(false);
-        setQuote(undefined);
+        await swap();
       }
     } catch (err) {}
     setTxLoading(false);
@@ -154,9 +178,9 @@ export const SwapRoot = () => {
     return "Swap";
   }, [account, inAmount, needsApproval, outAmount]);
 
+  if (Object.keys(tokens).length === 0)
+    return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
 
-  if (Object.keys(tokens).length === 0) return <Container>There are no tokens. Please check you are connected to the right network.</Container>
-  
   return (
     <Container>
       <Div>

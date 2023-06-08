@@ -11,6 +11,7 @@ export const ChevronDown = ({ color = "#000", width, height }: SVGProps) => (
     <path fill={color} d="M1.058 0 4.5 3.708 7.942 0 9 1.142 4.5 6 0 1.142 1.058 0Z" />
   </svg>
 );
+
 export const Discord = ({ color = "#000", width, height }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 16" fill="none">
     <path
@@ -21,6 +22,7 @@ export const Discord = ({ color = "#000", width, height }: SVGProps) => (
     />
   </svg>
 );
+
 export const Twitter = ({ color = "#000", width, height }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 16" fill="none">
     <path
@@ -31,6 +33,7 @@ export const Twitter = ({ color = "#000", width, height }: SVGProps) => (
     />
   </svg>
 );
+
 export const Github = ({ color = "#000", width, height }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 20" fill="none">
     <path
@@ -59,5 +62,37 @@ export const WellFunction = ({ color = "#000", width = 14, height = 14 }: SVGPro
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
     <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M5 1.349a5.996 5.996 0 1 0 4.69 11.008" />
     <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M7 1v6l4.243 4.243A6 6 0 0 0 7 1h0Z" clipRule="evenodd" />
+  </svg>
+);
+
+export const X = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <path fill="#000" d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19Z" />
+  </svg>
+);
+
+export const Copy = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <path
+      stroke={color}
+      d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+    />
+  </svg>
+);
+
+export const Error = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="2 2 19 19">
+    <path
+      fill={color}
+      fillRule="evenodd"
+      d="M7.91 3.23 3.23 7.913v-.01a.81.81 0 0 0-.23.57v7.054c0 .22.08.42.23.57L7.9 20.77c.15.15.36.23.57.23h7.06c.22 0 .42-.08.57-.23l4.67-4.673a.81.81 0 0 0 .23-.57V8.473c0-.22-.08-.42-.23-.57L16.1 3.23a.81.81 0 0 0-.57-.23H8.48c-.22 0-.42.08-.57.23ZM12 7a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1Zm-1 9a1 1 0 0 1 1-1h.008a1 1 0 1 1 0 2H12a1 1 0 0 1-1-1Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
+export const Success = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 52 52">
+    <path fill={color} d="M26 2C12.7 2 2 12.7 2 26s10.7 24 24 24 24-10.7 24-24S39.3 2 26 2zm13.4 18L24.1 35.5c-.6.6-1.6.6-2.2 0L13.5 27c-.6-.6-.6-1.6 0-2.2l2.2-2.2c.6-.6 1.6-.6 2.2 0l4.4 4.5c.4.4 1.1.4 1.5 0L35 15.5c.6-.6 1.6-.6 2.2 0l2.2 2.2c.7.6.7 1.6 0 2.3z" />
   </svg>
 );
