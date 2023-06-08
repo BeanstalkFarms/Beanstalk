@@ -6,6 +6,7 @@ import { ConnectKitButton } from "connectkit";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
+import { CustomToaster } from "../TxnToast/CustomToaster";
 
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
@@ -27,7 +28,10 @@ export const Frame: FC<{}> = ({ children }) => {
         </RightSide>
       </NavContainer>
       <TokenMarquee />
-      <Window>{children}</Window>
+      <Window>
+        <CustomToaster />
+        {children}
+      </Window>
       <Footer />
     </Container>
   );
