@@ -29,9 +29,13 @@ export const Dev = () => {
     const amount = amounts.get(token.symbol) || TokenValue.ZERO;
     const utils = new TestUtils.BlockchainUtils(sdk);
     await utils.setBalance(token, account.address || "", amount);
-    await utils.mine()
+    await mine();
     await refetchTokenBalances();
-    
+  };
+
+  const mine = async () => {
+    const utils = new TestUtils.BlockchainUtils(sdk);
+    await utils.mine();
   };
 
   for (let token of tokens) {
@@ -65,6 +69,7 @@ export const Dev = () => {
       <Title title="Developer" />
       <span>Give yourself some tokens</span>
       <Container>{rows}</Container>
+      <Button onClick={mine} label={"Mine Block"} disabled={false} loading={false} />
     </Page>
   );
 };

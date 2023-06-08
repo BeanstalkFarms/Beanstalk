@@ -21,7 +21,7 @@ export const ImageButton: FC<Props> = ({ size = 32, src, component, alt = "Image
   return (
     <Button onClick={onClick} padding={padding}>
       {src && <img src={src} alt={alt} width={size} />}
-      {component && React.createElement(component, { width: 9, color: "#000" })}
+      {component && React.createElement(component, { width: size, height: size, color: "#000" })}
     </Button>
   );
 };
