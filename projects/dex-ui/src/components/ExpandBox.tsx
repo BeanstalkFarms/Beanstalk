@@ -16,6 +16,7 @@ interface Composition {
 
 type Props = {
   width?: number;
+  open?: boolean;
 };
 export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) => {
   const [open, setOpen] = useState(false);
@@ -31,7 +32,7 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
   );
 
   return (
-    <Container width={width} data-trace="true">
+    <Container width={width} open={open} data-trace="true">
       <Header id="header" onClick={toggle}>
         {header}
         <ImageButton component={ChevronDown} size={12} onClick={toggle} padding="0px" alt="Click to expand this box and learn how to earn yield" />
@@ -45,14 +46,16 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
 const Container = styled.div<Props>`
   display: flex;
   flex-direction: column;
-  outline: 0.5px solid #9ca3af;
-  outline-offset: -0.5px;
+  border-top: 1px solid #9ca3af;
+  border-left: 1px solid #9ca3af;
+  border-right: 1px solid #9ca3af;
+  border-bottom: ${(p) => p.open ? '1px' : '0px'} solid #9caeaf;
   width: ${(p) => p.width}px;
   min-width: ${(p) => p.width}px;
 `;
 const Header = styled.div`
   background-color: #f9f8f6;
-  border-bottom: 0.5px solid #9ca3af;
+  border-bottom: 1px solid #9ca3af;
   display: flex;
   flex-direction: row;
   padding: 12px 16px;
