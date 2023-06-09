@@ -73,8 +73,10 @@ const VoteForm: FC<
   const endDate = new Date(proposal.end * 1000);
   const differenceInTime = endDate.getTime() - today.getTime();
 
-  /// Proposal
-  const isNFT = proposal.space.id !== GovSpace.BeanNFT;
+  /// Derived
+  const isNFT = proposal.space.id === GovSpace.BeanNFT;
+  const canVote = farmerVP.votingPower.total.gt(0);
+  const isClosed = differenceInTime <= 0;
 
   /// Handlers
   const handleClick = useCallback(
@@ -95,9 +97,6 @@ const VoteForm: FC<
     },
     [proposal.type, setFieldValue, values.choices]
   );
-
-  const canVote = farmerVP.votingPower.total.gt(0);
-  const isClosed = differenceInTime <= 0;
 
   const createVoteButtons = () => {
     switch (proposal.type) {
