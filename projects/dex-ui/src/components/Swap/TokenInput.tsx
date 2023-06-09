@@ -218,7 +218,9 @@ const Balance = styled.div`
   font-size: 16px;
   line-height: 24px;
   color: #9ca3af;
+  font-weight: 600;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   cursor:pointer;
 `;
 

@@ -238,8 +238,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   return (
     <div>
       {wellLpToken && (
-        <div>
-          <div>
+        <LargeGapContainer>
             <TokenContainer>
               <TokenInput
                 id={"inputLpToken"}
@@ -254,6 +253,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 loading={false}
               />
             </TokenContainer>
+            <MediumGapContainer>
             <OutputModeSelectorContainer>
             <div>Claim LP Tokens as</div>
             <Tabs>
@@ -282,7 +282,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             </Tabs>
             </OutputModeSelectorContainer>
             {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
-              <MultipleTokenContainer>
+              <>
                 {well.tokens!.map((token: Token, index: number) => (
                   <TokenContainer key={`tokencontainer1${index}`}>
                     <TokenInput
@@ -306,33 +306,13 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                     />
                   </TokenContainer>
                 ))}
-                <BalancedCheckboxContainer>
-                  <BalancedCheckbox
-                    type="checkbox"
-                    checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
-                    onChange={() =>
-                      handleSwitchRemoveMode(
-                        removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                      )
-                    }
-                  />
-                  <TabLabel
-                    onClick={() =>
-                      handleSwitchRemoveMode(
-                        removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                      )
-                    }
-                  >
-                    Claim in balanced proportion
-                  </TabLabel>
-                </BalancedCheckboxContainer>
-              </MultipleTokenContainer>
+              </>
             )}
             {removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && (
-              <div>
+              <MediumGapContainer>
                 {well.tokens!.map((token: Token, index: number) => (
                   <TokenContainer key={`token${index}`}>
-                    <ReadOnlyTokenValueRow>
+                    <ReadOnlyTokenValueRow selected={singleTokenIndex === index}>
                       <Radio
                         type="radio"
                         name="singleToken"
@@ -350,7 +330,30 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                     </ReadOnlyTokenValueRow>
                   </TokenContainer>
                 ))}
-              </div>
+              </MediumGapContainer>
+            )}
+            </MediumGapContainer>
+            {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
+              <BalancedCheckboxContainer>
+                    <BalancedCheckbox
+                      type="checkbox"
+                      checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
+                      onChange={() =>
+                        handleSwitchRemoveMode(
+                          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
+                        )
+                      }
+                    />
+                    <TabLabel
+                      onClick={() =>
+                        handleSwitchRemoveMode(
+                          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
+                        )
+                      }
+                    >
+                      Claim in balanced proportion
+                    </TabLabel>
+              </BalancedCheckboxContainer>
             )}
             {selectedQuote?.quote && (
               <QuoteDetails
@@ -385,12 +388,15 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
               />
             </ButtonWrapper>
             )}
-          </div>
-        </div>
+        </LargeGapContainer>
       )}
     </div>
   );
 };
+
+type ReadOnlyRowProps = {
+  selected?: boolean
+}
 
 const Divider = styled.hr`
   width: 100%;
@@ -398,6 +404,18 @@ const Divider = styled.hr`
   border: none;
   height: 2px;
 `;
+
+const LargeGapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`
+
+const MediumGapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
 
 const BalancedCheckboxContainer = styled.div`
   display: flex;
@@ -416,13 +434,6 @@ const BalancedCheckbox = styled.input`
   }
 `;
 
-const MultipleTokenContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  margin-bottom: 13px;
-`;
-
 const TabLabel = styled.div`
   cursor: pointer;
 `;
@@ -435,11 +446,10 @@ const Tab = styled.div`
 const Tabs = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 13px;
+  gap: 8px;
 `;
 
 const ApproveTokenButton = styled(Button)`
-  margin-bottom: 10px;
 `;
 
 const ButtonWrapper = styled.div`
@@ -458,10 +468,13 @@ const TabRadio = styled.input`
   margin-right: 10px;
   width: 1em;
   height: 1em;
-
-  :checked {
-    background-color: yellow;
+  outline: none;
+  border: none;
+  background-color: #F9F8F6;
+  &:checked {
+    background-color: white;
   }
+  cursor: pointer;
 `;
 
 const Radio = styled.input`
@@ -470,7 +483,13 @@ const Radio = styled.input`
   margin-right: 10px;
   width: 1.4em;
   height: 1.4em;
-  background-color: white;
+  outline: none;
+  border: none;
+  background-color: #F9F8F6;
+  &:checked {
+    background-color: white;
+  }
+  cursor: pointer;
 `;
 
 const TokenAmount = styled.div`
@@ -487,26 +506,24 @@ const SmallTokenLogo = styled.img`
   height: 20px;
 `;
 
-const ReadOnlyTokenValueRow = styled.div`
+const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   display: flex;
   flex-direction: row;
-  background-color: white;
+  font-weight: ${(props) => props.selected ? '600' : 'normal'};
+  background-color: ${(props) => props.selected ? 'white' : '#F9F8F6'};
   border: 1px solid black;
-  height: 40px;
+  margin: -1px;
+  height: 60px;
   align-items: center;
-  padding-left: 10px;
-  padding-right: 10px;
-  margin-bottom: 13px;
+  padding-left: 8px;
+  padding-right: 8px;
 `;
 
 const TokenContainer = styled.div`
   width: full;
   display: flex;
   flex-direction: column;
-  gap: 12px;
 `;
 
 const OutputModeSelectorContainer = styled.div`
- margin-top: 24px;
- margin-bottom: 10px;
 `
