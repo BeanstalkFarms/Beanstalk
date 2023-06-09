@@ -205,7 +205,6 @@ export const SwapRoot = () => {
   if (Object.keys(tokens).length === 0)
     return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
 
-
   return (
     <Container>
       <Div>
