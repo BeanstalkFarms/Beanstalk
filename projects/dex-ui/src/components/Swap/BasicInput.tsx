@@ -2,6 +2,7 @@ import React, { FocusEventHandler, RefObject, useCallback, useEffect, useState }
 import { FC } from "src/types";
 import styled from "styled-components";
 import numeral from "numeral";
+import { TokenValue } from "@beanstalk/sdk";
 
 type Props = {
   id?: string;
@@ -30,15 +31,18 @@ export const BasicInput: FC<Props> = ({
   const [displayValue, setDisplayValue] = useState(value);
 
   useEffect(() => {
-    if (value === displayValue) return;
+    // We need to use TokenValue comparison here because there are edge cases where
+    // a user my type "1.04", then delete the "4". Now you have a value of "1" and a displayValue of "1.0"
+    // which are mathematically equal, so we shouldn't update the displayValue.
+    // But we need to do this comparison in big number space, using TokenValue.
 
-    // handle edge case where someone types "1.0" and wants to keep tying, for ex: 1.005.
-    // Look for displayValues that contain a period and end in zero, and don't update them.
-    if (displayValue?.includes(".") && displayValue?.endsWith("0") && value?.slice(-1) === displayValue?.slice(-1)) {
-      return;
-    }
-    setDisplayValue(value === "0" || value === "" ? "" : numeral(value).format("0.00000"));
-  }, [value, displayValue]);
+    if (TokenValue.fromHuman(value || 0, 18).eq(TokenValue.fromHuman(displayValue || 0, 18))) return;
+    // setDisplayValue(value === "0" || value === "" ? "" : numeral(value).format("0.00000"));
+    setDisplayValue(value === "0" || value === "" ? "" : value);
+
+    // adding displayValue to the dependency array breaks the input in some edge cases
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,10 +52,17 @@ export const BasicInput: FC<Props> = ({
       if (rawValue === ".") {
         cleanValue = "0";
       }
+      if (rawValue == "00") cleanValue = "0";
       if (rawValue.startsWith(".") && rawValue.length > 1) {
         rawValue = `0${rawValue}`;
       }
-      setDisplayValue(rawValue);
+      // strip out multiple zeros at the beginning
+      // ex: "0004" => "04"
+      let cleanRaw = rawValue.replace(/^0+/, "0");
+      // remove the leading zero if not followed by a "."
+      cleanRaw = rawValue.replace(/(^0)(?=[^\.])/, "");
+
+      setDisplayValue(cleanRaw);
       onChange?.(cleanValue);
     },
     [onChange]
