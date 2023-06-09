@@ -8,9 +8,9 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
   box-sizing: border-box;
   align-items: center;
   ${({ justify }) => justify && `justify-content: center;`}
-  padding: 12px 16px;
+  padding: 12px 8px;
   ${({ stretch }) => stretch && `width: 100%;`}
-  font-weight: ${({ bold }) => (bold ? "600" : "normal")};
+  font-weight: ${({ bold, active }) => bold || active ? "600" : "normal"};
   z-index: ${({ active }) => (active ? "2" : "1")};
   outline: 0.5px solid ${({ active }) => (active ? "#000" : "#9CA3AF")};
   outline-offset: -0.5px;

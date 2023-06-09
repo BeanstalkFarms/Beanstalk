@@ -85,7 +85,7 @@ type GearIconProps = {
 const Icon = styled.img<GearIconProps>`
   margin-left: 10px;
   transition: rotate 0.1s;
-  rotate: ${(props) => props.modalOpen ? `30deg` : `0deg` }; 
+  rotate: ${(props) => props.modalOpen ? `30deg` : `0deg` };
 `;
 
 const SlippageTextBottom = styled.div`
