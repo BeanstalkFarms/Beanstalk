@@ -56,13 +56,8 @@ export const BasicInput: FC<Props> = ({
       if (rawValue.startsWith(".") && rawValue.length > 1) {
         rawValue = `0${rawValue}`;
       }
-      // strip out multiple zeros at the beginning
-      // ex: "0004" => "04"
-      let cleanRaw = rawValue.replace(/^0+/, "0");
-      // remove the leading zero if not followed by a "."
-      cleanRaw = rawValue.replace(/(^0)(?=[^\.])/, "");
 
-      setDisplayValue(cleanRaw);
+      setDisplayValue(rawValue);
       onChange?.(cleanValue);
     },
     [onChange]
