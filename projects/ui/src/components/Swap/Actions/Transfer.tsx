@@ -44,18 +44,23 @@ import copy from '~/constants/copy';
 type TransferFormValues = {
   tokensIn: FormTokenState[]; // token, amount
   balanceFrom: BalanceFrom;
-  fromMode: FarmFromMode.INTERNAL | FarmFromMode.EXTERNAL | FarmFromMode.INTERNAL_EXTERNAL;
+  fromMode:
+    | FarmFromMode.INTERNAL
+    | FarmFromMode.EXTERNAL
+    | FarmFromMode.INTERNAL_EXTERNAL;
   toMode: FarmToMode;
   destination: string;
   approving: boolean;
-}
+};
 
-const TransferForm: FC<FormikProps<TransferFormValues> & {
-  balances: ReturnType<typeof useFarmerBalances>;
-  beanstalk: Beanstalk;
-  tokenList: (ERC20Token | NativeToken)[];
-  defaultValues: TransferFormValues;
-}> = ({
+const TransferForm: FC<
+  FormikProps<TransferFormValues> & {
+    balances: ReturnType<typeof useFarmerBalances>;
+    beanstalk: Beanstalk;
+    tokenList: (ERC20Token | NativeToken)[];
+    defaultValues: TransferFormValues;
+  }
+> = ({
   values,
   setFieldValue,
   isSubmitting,
@@ -63,18 +68,18 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
   beanstalk,
   tokenList,
   defaultValues,
-  submitForm
+  submitForm,
 }) => {
   /// Tokens
   const { status } = useConnect();
   const account = useAccount();
 
   /// Derived values
-  const stateIn     = values.tokensIn[0];
-  const tokenIn     = stateIn.token;
-  const fromMode    = values.fromMode;
-  const toMode      = values.toMode;
-  const amount      = stateIn.amount;
+  const stateIn = values.tokensIn[0];
+  const tokenIn = stateIn.token;
+  const fromMode = values.fromMode;
+  const toMode = values.toMode;
+  const amount = stateIn.amount;
   const destination = values.destination;
 
   const balanceInMax = useMemo(() => {
@@ -96,7 +101,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     return ZERO_BN;
   }, [balances, fromMode, tokenIn.address]);
 
-  const noBalance = !(balanceInMax?.gt(0));
+  const noBalance = !balanceInMax?.gt(0);
 
   const handleSetDefault = useCallback(() => {
     setFieldValue('tokensIn.0', { ...defaultValues.tokensIn[0] });
@@ -106,65 +111,82 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     setFieldValue('destination', defaultValues.destination);
   }, [defaultValues, setFieldValue]);
 
-  const handleChangeToMode = useCallback((v: FarmToMode) => {
-    setFieldValue('toMode', v);
-  }, [setFieldValue]);
-
-  /// Token Select
-  const [tokenSelect, setTokenSelect] =  useState<null | 'tokensIn'>(null);
-  const selectedTokens = (
-    tokenSelect === 'tokensIn' ? values.tokensIn.map((x) => x.token) : []
+  const handleChangeToMode = useCallback(
+    (v: FarmToMode) => {
+      setFieldValue('toMode', v);
+    },
+    [setFieldValue]
   );
 
+  /// Token Select
+  const [tokenSelect, setTokenSelect] = useState<null | 'tokensIn'>(null);
+  const selectedTokens =
+    tokenSelect === 'tokensIn' ? values.tokensIn.map((x) => x.token) : [];
+
   const handleCloseTokenSelect = useCallback(() => setTokenSelect(null), []);
-  
-  const handleShowTokenSelect  = useCallback((which: 'tokensIn') => () => setTokenSelect(which), []);
-  
-  const handleTokenSelectSubmit = useCallback((_tokens: Set<Token>) => {
-    if (tokenSelect === 'tokensIn') {
-      const newTokenIn = Array.from(_tokens)[0];
-      setFieldValue('tokensIn.0', {
-        token: newTokenIn,
-        amount: undefined
-      });
-    }
-  }, [setFieldValue, tokenSelect]);
-  
-  const handleApprovalMode = useCallback((v: boolean) => {
-    if (v === true) {
-    setFieldValue('approving', true);
-   } else {
-    setFieldValue('approving', false);
-   }
-  }, [setFieldValue]);
 
-  const handleSubmitWrapper = useCallback((e: React.FormEvent) => {
-    // Note: We need to wrap the formik handler to set the swapOperation form value first
-    e.preventDefault();
-    submitForm();
-  }, [submitForm]);
+  const handleShowTokenSelect = useCallback(
+    (which: 'tokensIn') => () => setTokenSelect(which),
+    []
+  );
 
-  const handleSetBalanceFrom = useCallback((_balanceFrom: BalanceFrom) => {
-    switch (_balanceFrom) {
-      case BalanceFrom.INTERNAL:
-        setFieldValue('balanceFrom', _balanceFrom);
-        setFieldValue('fromMode', FarmFromMode.INTERNAL);
-        break;
-      case BalanceFrom.EXTERNAL:
-        setFieldValue('balanceFrom', _balanceFrom);
-        setFieldValue('fromMode', FarmFromMode.EXTERNAL);
-        break;
-      default: // case BalanceFrom.INTERNAL_EXTERNAL
-        setFieldValue('balanceFrom', _balanceFrom);
-        setFieldValue('fromMode', FarmFromMode.INTERNAL_EXTERNAL);
-        break;
-    }
-  }, [setFieldValue]);
+  const handleTokenSelectSubmit = useCallback(
+    (_tokens: Set<Token>) => {
+      if (tokenSelect === 'tokensIn') {
+        const newTokenIn = Array.from(_tokens)[0];
+        setFieldValue('tokensIn.0', {
+          token: newTokenIn,
+          amount: undefined,
+        });
+      }
+    },
+    [setFieldValue, tokenSelect]
+  );
+
+  const handleApprovalMode = useCallback(
+    (v: boolean) => {
+      if (v === true) {
+        setFieldValue('approving', true);
+      } else {
+        setFieldValue('approving', false);
+      }
+    },
+    [setFieldValue]
+  );
+
+  const handleSubmitWrapper = useCallback(
+    (e: React.FormEvent) => {
+      // Note: We need to wrap the formik handler to set the swapOperation form value first
+      e.preventDefault();
+      submitForm();
+    },
+    [submitForm]
+  );
+
+  const handleSetBalanceFrom = useCallback(
+    (_balanceFrom: BalanceFrom) => {
+      switch (_balanceFrom) {
+        case BalanceFrom.INTERNAL:
+          setFieldValue('balanceFrom', _balanceFrom);
+          setFieldValue('fromMode', FarmFromMode.INTERNAL);
+          break;
+        case BalanceFrom.EXTERNAL:
+          setFieldValue('balanceFrom', _balanceFrom);
+          setFieldValue('fromMode', FarmFromMode.EXTERNAL);
+          break;
+        default: // case BalanceFrom.INTERNAL_EXTERNAL
+          setFieldValue('balanceFrom', _balanceFrom);
+          setFieldValue('fromMode', FarmFromMode.INTERNAL_EXTERNAL);
+          break;
+      }
+    },
+    [setFieldValue]
+  );
 
   /// reset to default values when user switches wallet addresses or disconnects
   useEffect(() => {
     handleSetDefault();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, status]);
 
   /// behaviour when user changes destination address or fromMode
@@ -195,51 +217,46 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
           break;
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleSetBalanceFrom, account, toMode]);
 
   /// Checks
-  const shouldApprove = (fromMode === FarmFromMode.EXTERNAL || fromMode === FarmFromMode.INTERNAL_EXTERNAL);
+  const shouldApprove =
+    fromMode === FarmFromMode.EXTERNAL ||
+    fromMode === FarmFromMode.INTERNAL_EXTERNAL;
 
-  const amountsCheck = (
-    amount?.gt(0)
-  );
-  const enoughBalanceCheck = (
-    amount
-      ? amount.gt(0) && balanceInMax.gte(amount)
-      : true
-  );
+  const amountsCheck = amount?.gt(0);
+  const enoughBalanceCheck = amount
+    ? amount.gt(0) && balanceInMax.gte(amount)
+    : true;
 
-  const addressCheck = (
-    values.destination.length === 42
-  );
+  const addressCheck = values.destination.length === 42;
 
-  const modeCheck = (
+  const modeCheck =
     destination === account && fromMode !== FarmFromMode.INTERNAL_EXTERNAL
-    ? fromMode.valueOf() !== toMode.valueOf()
-    : true
-  );
+      ? fromMode.valueOf() !== toMode.valueOf()
+      : true;
 
-  const sameAddressCheck = (
-    values.destination.toLowerCase() === account?.toLowerCase()
-  );
+  const sameAddressCheck =
+    values.destination.toLowerCase() === account?.toLowerCase();
 
-  const internalExternalCheck = (
-    fromMode === FarmFromMode.INTERNAL_EXTERNAL
-  );
+  const internalExternalCheck = fromMode === FarmFromMode.INTERNAL_EXTERNAL;
 
-  const isValid = (
-    amountsCheck
-    && enoughBalanceCheck
-    && addressCheck
-    && modeCheck
-    && (sameAddressCheck ? !internalExternalCheck : true)
-  );
+  const isValid =
+    amountsCheck &&
+    enoughBalanceCheck &&
+    addressCheck &&
+    modeCheck &&
+    (sameAddressCheck ? !internalExternalCheck : true);
 
-  const Warning : FC<{}> = ({ children }) => (
+  const Warning: FC<{}> = ({ children }) => (
     <Alert
       color="warning"
-      icon={<IconWrapper boxSize={IconSize.medium}><WarningAmberIcon sx={{ fontSize: IconSize.small }} /></IconWrapper>}
+      icon={
+        <IconWrapper boxSize={IconSize.medium}>
+          <WarningAmberIcon sx={{ fontSize: IconSize.small }} />
+        </IconWrapper>
+      }
     >
       {children}
     </Alert>
@@ -249,9 +266,9 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
       <TokenSelectDialog
         title="Select Token to Transfer"
-        open={tokenSelect !== null}   // 'tokensIn' | 'tokensOut'
-        handleClose={handleCloseTokenSelect}     //
-        handleSubmit={handleTokenSelectSubmit}   //
+        open={tokenSelect !== null} // 'tokensIn' | 'tokensOut'
+        handleClose={handleCloseTokenSelect} //
+        handleSubmit={handleTokenSelectSubmit} //
         selected={selectedTokens}
         balances={balances}
         balanceFrom={values.balanceFrom}
@@ -274,15 +291,19 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
                   balanceFrom={values.balanceFrom}
                   onClick={handleShowTokenSelect('tokensIn')}
                 />
-              )
+              ),
             }}
-            balanceLabel={undefined}
+            balanceLabel={copy.MODES[values.fromMode]}
             balance={balanceInMax}
           />
         </>
         {/* Output */}
         <>
-          <AddressInputField name="destination" allowTransferToSelf newLabel="Transfer to" />
+          <AddressInputField
+            name="destination"
+            allowTransferToSelf
+            newLabel="Transfer to"
+          />
           <FarmModeField
             name="toMode"
             label="Destination"
@@ -299,26 +320,24 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
               <StyledAccordionSummary title="Transfer Details" />
               <AccordionDetails>
                 <TxnPreview
-                  actions={
-                    [
-                      {
-                        type: ActionType.TRANSFER_BALANCE,
-                        amount: amount!,
-                        token: tokenIn,
-                        source: fromMode,
-                        destination: toMode,
-                        to: (destination === account) ? undefined : destination,
-                      },
-                      {
-                        type: ActionType.RECEIVE_TOKEN,
-                        amount: amount!,
-                        token: tokenIn,
-                        destination: toMode,
-                        to: (destination === account) ? undefined : destination,
-                        hideMessage: true,
-                      }
-                    ]
-                  }
+                  actions={[
+                    {
+                      type: ActionType.TRANSFER_BALANCE,
+                      amount: amount!,
+                      token: tokenIn,
+                      source: fromMode,
+                      destination: toMode,
+                      to: destination === account ? undefined : destination,
+                    },
+                    {
+                      type: ActionType.RECEIVE_TOKEN,
+                      amount: amount!,
+                      token: tokenIn,
+                      destination: toMode,
+                      to: destination === account ? undefined : destination,
+                      hideMessage: true,
+                    },
+                  ]}
                 />
               </AccordionDetails>
             </Accordion>
@@ -346,11 +365,11 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
           mode="auto"
           nowApproving={handleApprovalMode}
         >
-          {noBalance 
-            ? 'Nothing to transfer' 
-            // : !enoughBalanceCheck
-            // ? 'Not enough to transfer'
-            : 'Transfer'}
+          {noBalance
+            ? 'Nothing to transfer'
+            : // : !enoughBalanceCheck
+              // ? 'Not enough to transfer'
+              'Transfer'}
         </SmartSubmitButton>
       </Stack>
     </Form>
@@ -359,14 +378,7 @@ const TransferForm: FC<FormikProps<TransferFormValues> & {
 
 // ---------------------------------------------------
 
-const SUPPORTED_TOKENS = [
-  BEAN,
-  WETH,
-  CRV3,
-  DAI,
-  USDC,
-  USDT,
-];
+const SUPPORTED_TOKENS = [BEAN, WETH, CRV3, DAI, USDC, USDT];
 
 const Transfer: FC<{}> = () => {
   /// Ledger
@@ -376,11 +388,11 @@ const Transfer: FC<{}> = () => {
 
   /// Tokens
   const getChainToken = useGetChainToken();
-  const Bean          = getChainToken(BEAN);
-  
+  const Bean = getChainToken(BEAN);
+
   /// Token List
-  const tokenMap      = useTokenMap<ERC20Token | NativeToken>(SUPPORTED_TOKENS);
-  const tokenList     = useMemo(() => Object.values(tokenMap), [tokenMap]);
+  const tokenMap = useTokenMap<ERC20Token | NativeToken>(SUPPORTED_TOKENS);
+  const tokenList = useMemo(() => Object.values(tokenMap), [tokenMap]);
 
   /// Farmer
   const farmerBalances = useFarmerBalances();
@@ -388,20 +400,28 @@ const Transfer: FC<{}> = () => {
 
   /// Form
   const middleware = useFormMiddleware();
-  const initialValues: TransferFormValues = useMemo(() => ({
-      tokensIn: [{
-        token: Bean,
-        amount: undefined,
-      }],
+  const initialValues: TransferFormValues = useMemo(
+    () => ({
+      tokensIn: [
+        {
+          token: Bean,
+          amount: undefined,
+        },
+      ],
       balanceFrom: BalanceFrom.TOTAL,
       fromMode: FarmFromMode.INTERNAL_EXTERNAL,
       toMode: FarmToMode.INTERNAL,
       destination: '',
       approving: false,
-    }), [Bean]);
+    }),
+    [Bean]
+  );
 
   const onSubmit = useCallback(
-    async (values: TransferFormValues, formActions: FormikHelpers<TransferFormValues>) => {
+    async (
+      values: TransferFormValues,
+      formActions: FormikHelpers<TransferFormValues>
+    ) => {
       let txToast;
       try {
         middleware.before();
@@ -412,11 +432,13 @@ const Transfer: FC<{}> = () => {
 
         const tokenAddress = tokenIn.token.address;
         const recipient = values.destination;
-        
+
         const fromMode = values.fromMode;
         const toMode = values.toMode;
-        
-        const amount = ethers.BigNumber.from(toStringBaseUnitBN(tokenAmount!, tokenDecimals));
+
+        const amount = ethers.BigNumber.from(
+          toStringBaseUnitBN(tokenAmount!, tokenDecimals)
+        );
         const approving = values.approving;
 
         if (!tokenAmount) throw new Error('No input amount set.');
@@ -426,16 +448,20 @@ const Transfer: FC<{}> = () => {
 
         txToast = new TransactionToast({
           loading: 'Transferring...',
-          success: 'Transfer successful..'
+          success: 'Transfer successful..',
         });
 
-        const txn = await beanstalk.transferToken(tokenAddress, recipient, amount, fromMode, toMode);
+        const txn = await beanstalk.transferToken(
+          tokenAddress,
+          recipient,
+          amount,
+          fromMode,
+          toMode
+        );
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([
-          refetchFarmerBalances()
-        ]);
+        await Promise.all([refetchFarmerBalances()]);
         txToast.success(receipt);
         // formActions.resetForm();
         formActions.setFieldValue('tokensIn.0', {
@@ -459,7 +485,7 @@ const Transfer: FC<{}> = () => {
     <Formik<TransferFormValues>
       enableReinitialize
       initialValues={initialValues}
-      onSubmit={onSubmit} 
+      onSubmit={onSubmit}
     >
       {(formikProps: FormikProps<TransferFormValues>) => (
         <>

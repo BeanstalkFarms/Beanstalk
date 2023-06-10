@@ -117,8 +117,8 @@ contract Replant1 {
         // emit BeanRemove(PROPOSER, seasons, amounts, PROPOSER_AMOUNT);
 
         // 2. Decrement Total Deposited for each token
-        LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_1, EXPLOITER_AMOUNT_1);
-        LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_2, EXPLOITER_AMOUNT_2);
+        LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_1, EXPLOITER_AMOUNT_1, 0);
+        LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_2, EXPLOITER_AMOUNT_2, 0);
         // LibBeanSilo.decrementDepositedBeans(PROPOSER_AMOUNT);
 
         // 3. Decrement total Stalk, Seeds, Roots 

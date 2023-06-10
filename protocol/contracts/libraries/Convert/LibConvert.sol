@@ -9,8 +9,8 @@ import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
 import {LibConvertData} from "./LibConvertData.sol";
 import {LibWellConvert} from "./LibWellConvert.sol";
-import {LibWell} from "~/libraries/Well/LibWell.sol";
-import {C} from "~/C.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title LibConvert

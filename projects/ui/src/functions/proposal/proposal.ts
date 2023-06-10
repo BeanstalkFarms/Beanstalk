@@ -4,7 +4,7 @@ import { Handler } from '@netlify/functions';
  * Return BIP content for prior on-chain BIPs.
  * @unused
  */
-const handler: Handler = async () =>  ({
+const handler: Handler = async () => ({
   statusCode: 404,
 });
 

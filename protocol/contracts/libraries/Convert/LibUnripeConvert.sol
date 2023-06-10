@@ -3,8 +3,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {C} from "~/C.sol";
-import {IBean} from "~/interfaces/IBean.sol";
+import {C} from "contracts/C.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripe} from "../LibUnripe.sol";
 import {LibConvertData} from "./LibConvertData.sol";

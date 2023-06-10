@@ -9,7 +9,7 @@ import "./Silo.sol";
 
 /**
  * @title TokenSilo
- * @author Publius, Brean
+ * @author Publius, Brean, Pizzaman1337
  * @notice This contract contains functions for depositing, withdrawing and 
  * claiming whitelisted Silo tokens.
  *
@@ -86,22 +86,6 @@ contract TokenSilo is Silo {
         uint256 amount,
         uint256[] bdvs
     ); //add bdv[] here? in favor of array
-    
-    // per the zero withdraw update, there is no claiming function for withdraws.abi
-    // events are kept for backwards compatibility
-    event RemoveWithdrawals(
-        address indexed account,
-        address indexed token,
-        uint32[] seasons,
-        uint256 amount
-    );
-    
-    event RemoveWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
 
     // ERC1155 events
     
@@ -140,6 +124,30 @@ contract TokenSilo is Silo {
         uint256[] ids,
         uint256[] values
     );
+    
+    // LEGACY EVENTS
+
+    /**
+     * @notice these events are kept for backwards compatability, 
+     * and therefore should not be changed. 
+     * placed here in order for the ABI to generate properly. 
+     * See {LibLegacyTokenSilo} for implmentation.
+     */
+    event RemoveWithdrawals(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256 amount
+    );
+    
+    event RemoveWithdrawal(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount
+    );
+
+    
 
     //////////////////////// DEPOSIT ////////////////////////
 
@@ -158,7 +166,7 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount
-    ) internal returns (uint256 stalk, int96 stem){
+    ) internal returns (uint256 stalk, int96 stem) {
         stalk = LibTokenSilo.deposit(
             account,
             token,
@@ -188,9 +196,9 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, ) = LibSilo._removeDepositFromAccount(
+        (uint256 stalkRemoved, uint256 bdvRemoved) = LibSilo._removeDepositFromAccount(
             account,
-            address(token),
+            token,
             stem,
             amount,
             LibTokenSilo.Transfer.emitTransferSingle
@@ -200,6 +208,7 @@ contract TokenSilo is Silo {
             account,
             address(token),
             amount,
+            bdvRemoved,
             stalkRemoved
         );
     }
@@ -236,6 +245,7 @@ contract TokenSilo is Silo {
             account,
             token,
             ar.tokensRemoved,
+            ar.bdvRemoved,
             ar.stalkRemoved
         );
 
@@ -251,9 +261,10 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount,
+        uint256 bdv,
         uint256 stalk
     ) private {
-        LibTokenSilo.decrementTotalDeposited(token, amount); // Decrement total Deposited in the silo.
+        LibTokenSilo.decrementTotalDeposited(token, amount, bdv); // Decrement total Deposited in the silo.
         LibSilo.burnStalk(account, stalk); // Burn stalk and roots associated with the stalk.
     }
 
@@ -392,14 +403,14 @@ contract TokenSilo is Silo {
      * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
      *
      * @return amount The number of tokens contained in this Deposit.
-     * @return bdv The BDV associated with this Deposit. See {FIXME(doc)}.
+     * @return bdv The BDV associated with this Deposit.
      */
     function getDeposit(
         address account,
         address token,
         int96 stem
     ) external view returns (uint256, uint256) {
-        return LibTokenSilo.tokenDeposit(account, token, stem);
+        return LibTokenSilo.getDeposit(account, token, stem);
     }
 
     /**
@@ -407,6 +418,13 @@ contract TokenSilo is Silo {
      */
     function getTotalDeposited(address token) external view returns (uint256) {
         return s.siloBalances[token].deposited;
+    }
+
+    /**
+     * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
+     */
+    function getTotalDepositedBdv(address token) external view returns (uint256) {
+        return s.siloBalances[token].depositedBdv;
     }
 
     /**

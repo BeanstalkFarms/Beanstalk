@@ -135,6 +135,7 @@ describe('Silo Token', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('1000');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('1000');
         //expect(await this.silo.totalSeeds()).to.eq('1000');
         expect(await this.silo.totalStalk()).to.eq('10000000');
       });
@@ -177,6 +178,7 @@ describe('Silo Token', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('2000');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('2000');
         //expect(await this.silo.totalSeeds()).to.eq('2000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
       });
@@ -204,6 +206,7 @@ describe('Silo Token', function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('2000');
+        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('2000');
         //expect(await this.silo.totalSeeds()).to.eq('2000');
         expect(await this.silo.totalStalk()).to.eq('20000000');
       });
@@ -256,6 +259,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('0');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('0');
           expect(await this.silo.totalStalk()).to.eq('0');
           //expect(await this.silo.totalSeeds()).to.eq('0');
         });
@@ -293,6 +297,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('500');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('500');
           expect(await this.silo.totalStalk()).to.eq('5000000');
           //expect(await this.silo.totalSeeds()).to.eq('500');
         });
@@ -333,6 +338,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('500');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('500');
           expect(await this.silo.totalStalk()).to.eq('5000500');
           //expect(await this.silo.totalSeeds()).to.eq('500');
         });
@@ -366,6 +372,7 @@ describe('Silo Token', function () {
     
         it('properly updates the total balances', async function () {
           expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.eq('0');
+          expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('0');
           expect(await this.silo.totalStalk()).to.eq('0');
           //expect(await this.silo.totalSeeds()).to.eq('0');
         });
@@ -785,7 +792,7 @@ describe('Silo Token', function () {
           const stem = await this.silo.seasonToStem(UNRIPE_LP, '10');
           let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem);
           expect(dep[0]).to.equal(to6('1'))
-          expect(dep[1]).to.equal(prune(to6('1')))
+          expect(dep[1]).to.equal(this.bdvBefore.sub(this.bdvBefore.mul('9').div('10')))
         });
 
         it('emits RemoveDeposit event', async function () {
@@ -972,7 +979,7 @@ describe('Silo Token', function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.approval.connect(user).increaseDepositAllowance(ownerAddress, this.siloToken.address, '100');
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '50')
       })
@@ -1029,7 +1036,7 @@ describe('Silo Token', function () {
         await this.season.teleportSunrise(10);
         this.season.deployStemsUpgrade();
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '100');
+        await this.approval.connect(user).increaseDepositAllowance(ownerAddress, this.siloToken.address, '100');
         const stem = await this.silo.seasonToStem(this.siloToken.address, '10');
         await this.silo.connect(owner).transferDeposit(userAddress, user2Address, this.siloToken.address, stem, '100');
       })
@@ -1075,7 +1082,7 @@ describe('Silo Token', function () {
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
         await this.season.siloSunrise('0')
         await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.approval.connect(user).approveDeposit(ownerAddress, this.siloToken.address, '200');
+        await this.approval.connect(user).increaseDepositAllowance(ownerAddress, this.siloToken.address, '200');
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
         await this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'])
@@ -1294,7 +1301,7 @@ describe('Silo Token', function () {
   describe("Deposit Approval", async function () {
     describe("approve allowance", async function () {
       beforeEach(async function () {
-        this.result = await this.approval.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+        this.result = await this.approval.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
       })
 
       it('properly updates users token allowance', async function () {
@@ -1308,7 +1315,7 @@ describe('Silo Token', function () {
 
     describe("increase and decrease allowance", async function () {
       beforeEach(async function () {
-        await this.approval.connect(user).approveDeposit(user2Address, this.siloToken.address, '100');
+        await this.approval.connect(user).increaseDepositAllowance(user2Address, this.siloToken.address, '100');
       })
 
       it('properly increase users token allowance', async function () {

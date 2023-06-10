@@ -15,7 +15,7 @@ export type BeanstalkSiloBalance = {
     /** The total amount of this Token currently in the Withdrawn state. */
     amount: BigNumber;
   };
-}
+};
 
 /**
  * "Silo Balances" track the detailed balances of
@@ -26,7 +26,7 @@ export type BeanstalkSiloBalance = {
  */
 export type BeanstalkSiloBalances = {
   balances: TokenMap<BeanstalkSiloBalance>;
-}
+};
 
 /**
  * "Silo Assets" are rewards earned for holding tokens in the Silo.
@@ -35,7 +35,7 @@ export type BeanstalkSiloAssets = {
   beans: {
     earned: BigNumber;
     total: BigNumber;
-  }
+  };
   stalk: {
     total: BigNumber;
     active: BigNumber;
@@ -51,10 +51,7 @@ export type BeanstalkSiloAssets = {
   roots: {
     total: BigNumber;
   };
-}
+};
 
-export type BeanstalkSilo = (
-  BeanstalkSiloBalances
-  & BeanstalkSiloAssets
-  & { withdrawSeasons: BigNumber; }
-);
+export type BeanstalkSilo = BeanstalkSiloBalances &
+  BeanstalkSiloAssets & { withdrawSeasons: BigNumber };

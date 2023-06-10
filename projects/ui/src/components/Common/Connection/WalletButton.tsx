@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useDisconnect, useNetwork , useAccount as useWagmiAccount } from 'wagmi';
+import {
+  useDisconnect,
+  useNetwork,
+  useAccount as useWagmiAccount,
+} from 'wagmi';
 import {
   Box,
   Button,
   ButtonProps,
   Card,
-  Divider, Drawer,
+  Divider,
   ListItemText,
-  Menu,
   MenuItem,
   MenuList,
   Typography,
@@ -27,16 +30,18 @@ import useToggle from '~/hooks/display/useToggle';
 import useAccount from '~/hooks/ledger/useAccount';
 import { CHAIN_INFO } from '~/constants';
 import WalletDialog from './WalletDialog';
-import DropdownIcon from '~/components/Common/DropdownIcon';
 import PickBeansDialog from '~/components/Farmer/Unripe/PickDialog';
 import AddressIcon from '~/components/Common/AddressIcon';
 import useGlobal from '~/hooks/app/useGlobal';
 import Row from '~/components/Common/Row';
+import FolderMenu from '~/components/Nav/FolderMenu';
 
 import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
-const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props }) => {
+const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
+  ...props
+}) => {
   const account = useAccount();
   const { address } = useWagmiAccount();
   const { chain: _chain } = useNetwork();
@@ -71,7 +76,13 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
           onClick={showWallets}
         >
           Connect
-          <Box component="span" display={{ xs: props.showFullText ? 'inline' : 'none', md: 'inline' }}>
+          <Box
+            component="span"
+            display={{
+              xs: props.showFullText ? 'inline' : 'none',
+              md: 'inline',
+            }}
+          >
             &nbsp;Wallet
           </Box>
         </Button>
@@ -85,11 +96,21 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
   }
 
   const menu = (
-    <MenuList sx={{ minWidth: 250, background: BeanstalkPalette.white, border: '1px solid', borderColor: 'divider' }} component={Card}>
-      <MenuItem onClick={() => {
-        toggleMenuAnchor();
-        setSettingsOpen(true);
-      }}>
+    <MenuList
+      component={Card}
+      sx={{
+        minWidth: 250,
+        background: BeanstalkPalette.white,
+        border: '0px solid transparent',
+        borderTopRightRadius: 0,
+      }}
+    >
+      <MenuItem
+        onClick={() => {
+          toggleMenuAnchor();
+          setSettingsOpen(true);
+        }}
+      >
         <ListItemText>
           <Row gap={1}>
             <img src={gearIcon} alt="Settings" width={20} />
@@ -148,7 +169,7 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
             backgroundColor: BeanstalkPalette.lightBrown,
             '&:hover': {
               backgroundColor: BeanstalkPalette.lightBrown,
-              opacity: 0.96
+              opacity: 0.96,
             },
           }}
         >
@@ -162,13 +183,13 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
           fullWidth
           color="primary"
           href="/#/chop"
-          sx={{ 
+          sx={{
             background: BeanstalkPalette.brown,
             py: 1.25,
             '&:hover': {
               background: BeanstalkPalette.darkBrown,
-              opacity: 0.96
-            }
+              opacity: 0.96,
+            },
           }}
         >
           <Row alignItems="center">
@@ -183,64 +204,40 @@ const WalletButton: FC<{ showFullText?: boolean; } & ButtonProps> = ({ ...props 
   return (
     <>
       {/* Wallet Button */}
-      <Button
-        disableFocusRipple
-        variant="contained"
-        color="light"
+      <FolderMenu
+        buttonContent={
+          <Typography
+            variant="bodyMedium"
+            display={{ xs: 'none', sm: 'block' }}
+          >
+            {/* Use `accountRaw` to match capitalization of wallet provider
+             * assert existence of accountRaw.address since we check `account` prior. */}
+            {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
+          </Typography>
+        }
         startIcon={<AddressIcon address={account} />}
-        endIcon={<DropdownIcon open={menuVisible} />}
-        {...props}
-        onClick={toggleMenuAnchor}
-        sx={import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT ? {
-          color: 'text.primary',
-          borderBottomColor: 'red',
-          borderBottomWidth: 2,
-          borderBottomStyle: 'solid',
-          ...props.sx,
-        } : props.sx}
-      >
-        <Typography variant="bodyMedium" display={{ xs: 'none', sm: 'block' }}>
-          {/* Use `accountRaw` to match capitalization of wallet provider
-            * assert existence of accountRaw.address since we check `account` prior. */}
-          {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
-        </Typography>
-      </Button>
-      {/* Mobile: Drawer */}
-      <Drawer anchor="bottom" open={menuVisible} onClose={toggleMenuAnchor} sx={{ display: { xs: 'block', lg: 'none' } }}>
-        {menu}
-      </Drawer>
-      {/* Popup Menu */}
-      <Menu
-        sx={{ display: { xs: 'none', lg: 'block' } }}
-        elevation={0}
-        anchorEl={menuAnchor}
-        open={menuVisible}
+        popoverContent={menu}
+        drawerContent={menu}
+        onOpen={toggleMenuAnchor}
         onClose={toggleMenuAnchor}
-        MenuListProps={{
-          sx: {
-            py: 0,
-            mt: 0,
-          },
-        }}
-        disablePortal
-        // Align the menu to the bottom
-        // right side of the anchor button.
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        {menu}
-      </Menu>
-      {/* Pick Beans Dialog */}
-      <PickBeansDialog
-        open={picking}
-        handleClose={hidePick}
+        popperWidth="260px"
+        hotkey="opt+2, alt+2"
+        popoverPlacement="bottom-end"
+        zeroTopRightRadius
+        sx={
+          import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT
+            ? {
+                color: 'text.primary',
+                borderBottomColor: 'red',
+                borderBottomWidth: 2,
+                borderBottomStyle: 'solid',
+                ...props.sx,
+              }
+            : props.sx
+        }
       />
+      {/* Pick Beans Dialog */}
+      <PickBeansDialog open={picking} handleClose={hidePick} />
     </>
   );
 };

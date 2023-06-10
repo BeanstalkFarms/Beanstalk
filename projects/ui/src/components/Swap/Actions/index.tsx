@@ -9,9 +9,9 @@ import { FC } from '~/types';
 
 const SLUGS = ['swap', 'transfer'];
 
-const SwapActions : FC<{}> = () => {
+const SwapActions: FC<{}> = () => {
   const [tab, handleChange] = useTabs(SLUGS, 'action');
-  
+
   return (
     <Module>
       <ModuleTabs value={tab} onChange={handleChange}>

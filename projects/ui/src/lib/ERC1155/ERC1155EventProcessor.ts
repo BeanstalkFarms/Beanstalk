@@ -1,6 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import { TransferBatchEvent, TransferSingleEvent } from '~/generated/projects/ui/src/constants/abi/Beanstalk/BeanstalkFertilizer';
+import {
+  TransferBatchEvent,
+  TransferSingleEvent,
+} from '~/generated/projects/ui/src/constants/abi/Beanstalk/BeanstalkFertilizer';
 import { decimalBN, Event } from '~/lib/Beanstalk/EventProcessor';
 
 export default class ERC1155EventProcessor {
@@ -9,21 +12,25 @@ export default class ERC1155EventProcessor {
     'TransferBatch',
   ] as const);
 
-  account : string;
-  
+  account: string;
+
   decimals: number;
 
-  tokens : { [id: string] : BigNumber }
+  tokens: { [id: string]: BigNumber };
 
   constructor(account: string, decimals: number) {
-    this.account  = account.toLowerCase();
+    this.account = account.toLowerCase();
     this.decimals = decimals;
-    this.tokens   = {};
+    this.tokens = {};
   }
 
   ingest<T extends Event>(event: T) {
-    if (!event.event) { return; }
-    if (!ERC1155EventProcessor.SUPPORTED_EVENTS.has(event.event as any)) { return; }
+    if (!event.event) {
+      return;
+    }
+    if (!ERC1155EventProcessor.SUPPORTED_EVENTS.has(event.event as any)) {
+      return;
+    }
     // @ts-ignore
     return this[event.event](event as any);
   }
@@ -39,28 +46,21 @@ export default class ERC1155EventProcessor {
     };
   }
 
-  _transfer(
-    from:   string,
-    to:     string,
-    id:     string,
-    value:  ethers.BigNumber
-  ) {
+  _transfer(from: string, to: string, id: string, value: ethers.BigNumber) {
     if (from === to) return;
     const valueBN = decimalBN(value, this.decimals);
 
     /// Sent token
     if (from === this.account) {
-      if (!this.tokens[id] || this.tokens[id].lt(valueBN)) throw new Error('ERC1155: Value is greater than known balance');
+      if (!this.tokens[id] || this.tokens[id].lt(valueBN))
+        throw new Error('ERC1155: Value is greater than known balance');
       this.tokens[id] = this.tokens[id].minus(valueBN);
       if (this.tokens[id].eq(0)) delete this.tokens[id];
     }
 
     /// Received token
     else if (to === this.account) {
-      this.tokens[id] = (
-        this.tokens[id]?.plus(valueBN)
-        || valueBN
-      );
+      this.tokens[id] = this.tokens[id]?.plus(valueBN) || valueBN;
     }
   }
 
@@ -70,7 +70,7 @@ export default class ERC1155EventProcessor {
       event.args.from.toLowerCase(),
       event.args.to.toLowerCase(),
       event.args.id.toString(),
-      event.args.value,
+      event.args.value
     );
   }
 
@@ -81,7 +81,7 @@ export default class ERC1155EventProcessor {
         event.args.from.toLowerCase(),
         event.args.to.toLowerCase(),
         id.toString(),
-        event.args.values[index],
+        event.args.values[index]
       );
     });
   }

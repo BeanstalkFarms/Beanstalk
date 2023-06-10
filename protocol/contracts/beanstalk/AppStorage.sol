@@ -115,7 +115,7 @@ contract Account {
          * Previously held the V1 Silo Deposits/Withdrawals for Beans.
 
          * NOTE: While the Silo V1 format is now deprecated, this storage slot is used for gas
-         * efficiency to store Unripe BEAN deposits. See {FIXME(doc)} for more.
+         * efficiency to store Unripe BEAN deposits. See {LibUnripeSilo} for more.
          */
         AssetSilo bean; 
 
@@ -128,7 +128,7 @@ contract Account {
          * format in the `s.a[account].legacyDeposits` mapping.
          *
          * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
-         * stored in this storage slot. See {FIXME(doc)} for more.
+         * stored in this storage slot. See {LibUnripeSilo} for more.
          * 
          */
         AssetSilo lp; 
@@ -138,11 +138,6 @@ contract Account {
          */
         Silo s;
         
-        /*
-         * @notice DEPRECATED
-         * 
-         * @dev FIXME(doc)
-         */
         uint32 votedUntil; // DEPRECATED – Replant removed on-chain governance including the ability to vote on BIPs.
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
@@ -201,7 +196,6 @@ contract Storage {
      * @notice DEPRECATED: Contained data about each BIP (Beanstalk Improvement Proposal).
      * @dev Replant moved governance off-chain. This struct is left for future reference.
      * 
-     * FIXME: pauseOrUnpause takes up an entire slot
      */
     struct Bip {
         address proposer; // ───┐ 20
@@ -241,14 +235,18 @@ contract Storage {
     /**
      * @notice System-level Silo state; contains deposit and withdrawal data for a particular whitelisted Token.
      * @param deposited The total amount of this Token currently Deposited in the Silo.
+     * @param depositedBdv The total bdv of this Token currently Deposited in the Silo.
      * @param withdrawn The total amount of this Token currently Withdrawn From the Silo.
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
+     * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
+     * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
      * 
      * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
      * but not yet Claimed. This will be removed in a future BIP.
      */
     struct AssetSilo {
-        uint256 deposited;
+        uint128 deposited;
+        uint128 depositedBdv;
         uint256 withdrawn;
     }
 
@@ -283,7 +281,7 @@ contract Storage {
     /**
      * @notice System-level Rain balances. Rain occurs when P > 1 and the Pod Rate Excessively Low.
      * @dev The `raining` storage variable is stored in the Season section for a gas efficient read operation.
-     * @param deprecated Previously held FIXME
+     * @param deprecated Previously held Rain start and Rain status variables. Now moved to Season struct for gas efficiency.
      * @param pods The number of Pods when it last started Raining.
      * @param roots The number of Roots when it last started Raining.
      */
@@ -386,8 +384,6 @@ contract Storage {
          * 
          * It is called by `LibTokenSilo` through the use of `delegatecall`
          * to calculate a token's BDV at the time of Deposit.
-         *
-         * FIXME(doc) LibTokenSilo performs a call, not a delegatecall.
          */
         bytes4 selector;
         /*

@@ -11,20 +11,20 @@ export type FertilizerTooltip = {
   humidity: string;
   fertilizer: string;
   reward: any;
-}
+};
 
 export const BUY_FERTILIZER: FertilizerTooltip = {
   name: 'buy-fertilizer',
   humidity: 'Humidity, the interest rate on buying Fertilizer.',
   fertilizer: '1 FERT = 1 USDC put into the Barn Raise.',
-  reward: 'The number of Beans to be earned from this Fertilizer.'
+  reward: 'The number of Beans to be earned from this Fertilizer.',
 };
 
 export const MY_FERTILIZER: FertilizerTooltip = {
   name: 'my-fertilizer',
   humidity: 'Humidity',
   fertilizer: '1 FERT = 1 USDC put into the Barn Raise.',
-  reward: (fertilized: BigNumber, unfertilized: BigNumber) => ((
+  reward: (fertilized: BigNumber, unfertilized: BigNumber) => (
     <Stack width={200}>
       <Row justifyContent="space-between">
         <Typography>Sprouts:</Typography>
@@ -41,5 +41,5 @@ export const MY_FERTILIZER: FertilizerTooltip = {
         </Row>
       </Row>
     </Stack>
-  ))
+  ),
 };

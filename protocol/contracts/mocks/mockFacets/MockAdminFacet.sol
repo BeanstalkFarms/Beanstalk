@@ -4,9 +4,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/C.sol";
-import "~/libraries/Token/LibTransfer.sol";
-import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import "contracts/C.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
 
 /**
  * @author Publius

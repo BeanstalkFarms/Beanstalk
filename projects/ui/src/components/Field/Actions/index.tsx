@@ -11,18 +11,33 @@ import { FC } from '~/types';
 
 const SLUGS = ['sow', 'transfer', 'harvest'];
 
-const FieldActions : FC<{}> = () => {
+const FieldActions: FC<{}> = () => {
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const farmerField = useFarmerField();
   return (
     <Card sx={{ position: 'relative' }}>
       <Stack gap={1.5}>
         {/* Header */}
-        <Row justifyContent="space-between" sx={{ overflow: 'visible', px: 2, pt: 2 }}>
-          <Tabs value={tab} onChange={handleChange} sx={{ minHeight: 0, overflow: 'visible', '& .MuiTabs-scroller': { overflow: 'visible' } }} variant="scrollable">
+        <Row
+          justifyContent="space-between"
+          sx={{ overflow: 'visible', px: 2, pt: 2 }}
+        >
+          <Tabs
+            value={tab}
+            onChange={handleChange}
+            sx={{
+              minHeight: 0,
+              overflow: 'visible',
+              '& .MuiTabs-scroller': { overflow: 'visible' },
+            }}
+            variant="scrollable"
+          >
             <Tab label="Sow" />
             <Tab label="Transfer" />
-            <BadgeTab label="Harvest" showBadge={farmerField.harvestablePods.gt(0)} />
+            <BadgeTab
+              label="Harvest"
+              showBadge={farmerField.harvestablePods.gt(0)}
+            />
           </Tabs>
         </Row>
         <Box sx={{ px: 1, pb: 1 }}>

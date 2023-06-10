@@ -62,9 +62,7 @@ import "~/libraries/Token/LibTransfer.sol";
 
 import "~/C.sol";
 
-// FIXME: 
-// currently with all tests, we deploy every facet, even if its unused
-// 
+// We deploy every facet, even if a facet is unused
 abstract contract TestHelper is Test {
     using strings for *;
     

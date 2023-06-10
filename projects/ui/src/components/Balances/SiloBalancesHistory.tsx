@@ -3,9 +3,14 @@ import { Box, Stack, Typography } from '@mui/material';
 import useAccount from '~/hooks/ledger/useAccount';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
-import BaseSeasonPlot, { QueryData } from '~/components/Common/Charts/BaseSeasonPlot';
+import BaseSeasonPlot, {
+  QueryData,
+} from '~/components/Common/Charts/BaseSeasonPlot';
 import { SILO_WHITELIST } from '~/constants/tokens';
-import { SEASON_RANGE_TO_COUNT, SeasonRange } from '~/hooks/beanstalk/useSeasonsQuery';
+import {
+  SEASON_RANGE_TO_COUNT,
+  SeasonRange,
+} from '~/hooks/beanstalk/useSeasonsQuery';
 import MockPlot from '../Silo/MockPlot';
 import BlurComponent from '../Common/ZeroState/BlurComponent';
 import WalletButton from '../Common/Connection/WalletButton';
@@ -33,8 +38,8 @@ const SiloBalancesHistory: React.FC<{}> = () => {
     if (timeTabParams[0][1] !== SeasonRange.ALL) {
       if (Array(seriesInput)) {
         return [seriesInput].map((s) =>
-          s.slice(-(SEASON_RANGE_TO_COUNT[timeTabParams[0][1]] as number)
-        ));
+          s.slice(-(SEASON_RANGE_TO_COUNT[timeTabParams[0][1]] as number))
+        );
       }
     }
     return Array(seriesInput);
@@ -44,7 +49,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
     data: filteredSeries as BaseDataPoint[][],
     loading: loading,
     keys: SILO_WHITELIST.map((t) => t[1].address),
-    error: undefined
+    error: undefined,
   };
 
   return (
@@ -69,8 +74,15 @@ const SiloBalancesHistory: React.FC<{}> = () => {
         <>
           <MockPlot />
           <BlurComponent>
-            <Stack justifyContent="center" alignItems="center" height="100%" gap={1}> 
-              <Typography variant="body1" color="text.tertiary">Your Deposits will appear here.</Typography>
+            <Stack
+              justifyContent="center"
+              alignItems="center"
+              height="100%"
+              gap={1}
+            >
+              <Typography variant="body1" color="text.tertiary">
+                Your Deposits will appear here.
+              </Typography>
               <WalletButton showFullText color="primary" sx={{ height: 45 }} />
             </Stack>
           </BlurComponent>

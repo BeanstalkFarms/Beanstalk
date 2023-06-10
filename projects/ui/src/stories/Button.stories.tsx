@@ -9,18 +9,18 @@ export default {
   argTypes: {
     color: {
       options: ['primary', 'secondary'],
-      control: { type: 'radio' }
+      control: { type: 'radio' },
     },
     variant: {
       options: ['text', 'contained', 'outlined'],
-      control: { type: 'radio' }
-    }
+      control: { type: 'radio' },
+    },
   },
   args: {
     color: 'primary',
     children: 'Example',
     variant: 'contained',
-  }
+  },
 } as ComponentMeta<typeof Button>;
 
 const Template: ComponentStory<typeof Button> = (args) => (
@@ -39,7 +39,7 @@ Dropdown.args = {
   variant: 'contained',
   color: 'secondary',
   children: 'Select a token',
-  endIcon: <ArrowDropDownIcon />
+  endIcon: <ArrowDropDownIcon />,
 };
 
 const Large = Template.bind({});
@@ -51,8 +51,4 @@ Large.args = {
   fullWidth: true,
 };
 
-export {
-  Primary,
-  Dropdown,
-  Large,
-};
+export { Primary, Dropdown, Large };

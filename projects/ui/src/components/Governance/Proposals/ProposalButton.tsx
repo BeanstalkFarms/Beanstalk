@@ -23,7 +23,7 @@ const ProposalButton: FC<{ proposal: Proposal }> = ({ proposal }) => {
     },
     fetchPolicy: 'cache-and-network',
     skip: !account, // only send query when wallet connected
-    context: { subgraph: 'snapshot' }
+    context: { subgraph: 'snapshot' },
   });
 
   /// Time
@@ -44,29 +44,50 @@ const ProposalButton: FC<{ proposal: Proposal }> = ({ proposal }) => {
         borderColor: 'divider',
         background: BeanstalkPalette.white,
         '&:hover': {
-          borderColor: 'primary.main'
-        }
+          borderColor: 'primary.main',
+        },
       }}
     >
       <Stack gap={1} width="100%">
         {/* Top row */}
-        <Stack direction={{ xs: 'column-reverse', md: 'row' }} justifyContent="space-between">
-          <Typography display={{ xs: 'none', md: 'block' }} textAlign="left" variant="bodyLarge">
+        <Stack
+          direction={{ xs: 'column-reverse', md: 'row' }}
+          justifyContent="space-between"
+        >
+          <Typography
+            display={{ xs: 'none', md: 'block' }}
+            textAlign="left"
+            variant="bodyLarge"
+          >
             {proposal.title}
           </Typography>
-          <Typography display={{ xs: 'block', md: 'none' }} textAlign="left" variant="bodyLarge" sx={{ fontSize: { xs: '20px', md: 'inherit' }, lineHeight: '24px' }}>
-            {proposal.title.substring(0, 55)}{proposal.title.length > 55 ? '...' : null}
+          <Typography
+            display={{ xs: 'block', md: 'none' }}
+            textAlign="left"
+            variant="bodyLarge"
+            sx={{ fontSize: { xs: '20px', md: 'inherit' }, lineHeight: '24px' }}
+          >
+            {proposal.title.substring(0, 55)}
+            {proposal.title.length > 55 ? '...' : null}
           </Typography>
           {/* Show if user has voted */}
-          {(account && voteData?.votes?.length) ? (
+          {account && voteData?.votes?.length ? (
             <Row gap={0.5}>
-              <CheckIcon sx={{ color: BeanstalkPalette.logoGreen, width: IconSize.small }} />
+              <CheckIcon
+                sx={{
+                  color: BeanstalkPalette.logoGreen,
+                  width: IconSize.small,
+                }}
+              />
               <Typography variant="body1">Voted</Typography>
             </Row>
           ) : null}
         </Stack>
         {/* Bottom row */}
-        <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between">
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          justifyContent="space-between"
+        >
           <ProposalStats
             proposal={proposal}
             // totalStalk={totalStalk}

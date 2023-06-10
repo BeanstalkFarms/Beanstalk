@@ -5,6 +5,4 @@ export const updateFarmerBarn = createAction<FarmerBarn>(
   'farmer/barn/updateBarn'
 );
 
-export const resetFarmerBarn = createAction(
-  'farmer/barn/reset'
-);
+export const resetFarmerBarn = createAction('farmer/barn/reset');

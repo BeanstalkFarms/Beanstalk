@@ -13,7 +13,7 @@ export default {
 const n = new BigNumber(60_740);
 const s = {
   value: n,
-  byToken: {}
+  byToken: {},
 };
 
 const Template: ComponentStory<typeof Overview> = (args: any) => (
@@ -24,11 +24,11 @@ const Template: ComponentStory<typeof Overview> = (args: any) => (
       totalValue: n,
       states: {
         circulating: s,
-        farm:      s,
+        farm: s,
         claimable: s,
         deposited: s,
         withdrawn: s,
-      }
+      },
     }}
     season={new BigNumber(6074)}
   />

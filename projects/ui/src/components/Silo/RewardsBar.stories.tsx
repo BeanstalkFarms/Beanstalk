@@ -5,7 +5,7 @@ import RewardsBar from './RewardsBar';
 
 export default {
   component: RewardsBar,
-  args: {}
+  args: {},
 } as ComponentMeta<typeof RewardsBar>;
 
 const Template: ComponentStory<typeof RewardsBar> = (args: any) => (

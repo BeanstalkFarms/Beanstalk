@@ -12,17 +12,21 @@ export default function Leaves() {
   const width = window.innerWidth;
   return (
     <div id="leaves">
-      {Array(Math.floor(width / 100)).fill(0).map((_, i) => (
-        <i
-          key={i}
-          className={sample(leaves)}
-          style={{
-            left: `${getRandomInt(width)}px`,
-            animationDuration: `${getRandomInt(60) + 10}s, ${getRandomInt(10) + 3}s`,
-            animationDelay: `${getRandomInt(30)}s`,
-          }}
-        />
-      ))}
+      {Array(Math.floor(width / 100))
+        .fill(0)
+        .map((_, i) => (
+          <i
+            key={i}
+            className={sample(leaves)}
+            style={{
+              left: `${getRandomInt(width)}px`,
+              animationDuration: `${getRandomInt(60) + 10}s, ${
+                getRandomInt(10) + 3
+              }s`,
+              animationDelay: `${getRandomInt(30)}s`,
+            }}
+          />
+        ))}
     </div>
   );
 }

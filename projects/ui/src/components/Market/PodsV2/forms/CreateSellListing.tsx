@@ -38,12 +38,12 @@ import {
 } from '~/util';
 
 export type CreateListingFormValues = {
-  plot:        PlotFragment
+  plot: PlotFragment;
   pricePerPod: BigNumber | null;
-  expiresAt:   BigNumber | null;
+  expiresAt: BigNumber | null;
   destination: FarmToMode | null;
-  settings:    PlotSettingsFragment & {};
-}
+  settings: PlotSettingsFragment & {};
+};
 
 const initValues = {
   plot: {

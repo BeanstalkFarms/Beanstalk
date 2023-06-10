@@ -4,12 +4,12 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/SafeCast.sol";
-import "~/libraries/Decimal.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibFertilizer.sol";
-import "~/libraries/LibSafeMath128.sol";
-import "~/libraries/LibPRBMath.sol";
-import "~/C.sol";
+import "contracts/libraries/Decimal.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibFertilizer.sol";
+import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/libraries/LibPRBMath.sol";
+import "contracts/C.sol";
 import "./Oracle.sol";
 
 /**
@@ -187,8 +187,10 @@ contract Sun is Oracle {
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //
         // Stalk is created here, rather than in {rewardBeans}, because only
-        // Beans that are allocated to the Silo will receive Stalk. 
-        uint256 seasonStalk = amount.mul(C.getStalkPerBean());
+        // Beans that are allocated to the Silo will receive Stalk.
+        // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
+        // for gas savings.
+        uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
         s.s.stalk = s.s.stalk.add(seasonStalk);
         // `s.newEarnedStalk` is an accounting mechanism that tracks the  number
         // of Earned stalk that is allocated during the season. 
@@ -197,10 +199,16 @@ contract Sun is Oracle {
         s.newEarnedStalk = seasonStalk.toUint128();
         s.vestingPeriodRoots = 0;
 
+        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].deposited = s
             .siloBalances[C.BEAN]
             .deposited
-            .add(amount);
+            .add(uint128(amount));
+
+        s.siloBalances[C.BEAN].depositedBdv = s
+            .siloBalances[C.BEAN]
+            .depositedBdv
+            .add(uint128(amount));
     }
 
     //////////////////// SET SOIL ////////////////////

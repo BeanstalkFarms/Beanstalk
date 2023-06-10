@@ -1,5 +1,13 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Link, LinkProps, Stack, Typography, StackProps as MuiStackProps } from '@mui/material';
+import {
+  Box,
+  Button,
+  Link,
+  LinkProps,
+  Stack,
+  Typography,
+  StackProps as MuiStackProps,
+} from '@mui/material';
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import React from 'react';
 import EastIcon from '@mui/icons-material/East';
@@ -8,19 +16,26 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const PageHeader : FC<{
-  /** The Field: The Decentralized Credit Facility */
-  title?: any;
-  /** "Earn yield through lending beans..." */
-  description?: string;
-  /** Show a back button to return to `returnPath`. */
-  returnPath?: string;
-  /**  */
-  control?: React.ReactElement;
-  /** */
-  OuterStackProps?: MuiStackProps;
-} & Omit<LinkProps, 'title'>> = (props) => (
-  <Stack direction={{ md: 'row', xs: 'column' }} justifyContent="space-between" gap={1} {...props.OuterStackProps}>
+const PageHeader: FC<
+  {
+    /** The Field: The Decentralized Credit Facility */
+    title?: any;
+    /** "Earn yield through lending beans..." */
+    description?: string;
+    /** Show a back button to return to `returnPath`. */
+    returnPath?: string;
+    /**  */
+    control?: React.ReactElement;
+    /** */
+    OuterStackProps?: MuiStackProps;
+  } & Omit<LinkProps, 'title'>
+> = (props) => (
+  <Stack
+    direction={{ md: 'row', xs: 'column' }}
+    justifyContent="space-between"
+    gap={1}
+    {...props.OuterStackProps}
+  >
     <Row gap={1.5}>
       {/* Back button */}
       {props.returnPath && (
@@ -34,11 +49,14 @@ const PageHeader : FC<{
             color: 'text.secondary',
             '&:hover': {
               color: 'primary.main',
-            }
-        }}
+            },
+          }}
         >
           <Row gap={0.5}>
-            <KeyboardBackspaceIcon sx={{ width: IconSize.small }} height="auto" />
+            <KeyboardBackspaceIcon
+              sx={{ width: IconSize.small }}
+              height="auto"
+            />
             <Typography variant="h4">Back</Typography>
           </Row>
         </Button>
@@ -67,13 +85,24 @@ const PageHeader : FC<{
                   alignItems="center"
                   target="_blank"
                   rel="noreferrer"
-                  sx={{ display: 'inline', ml: 0.3, '&:hover': { opacity: 0.85 } }}
+                  sx={{
+                    display: 'inline',
+                    ml: 0.3,
+                    '&:hover': { opacity: 0.85 },
+                  }}
                 >
-                  <Typography display="inline" variant="subtitle1" sx={{ lineHeight: '1.5rem' }} alignItems="center">
+                  <Typography
+                    display="inline"
+                    variant="subtitle1"
+                    sx={{ lineHeight: '1.5rem' }}
+                    alignItems="center"
+                  >
                     Learn more
                   </Typography>
                   &nbsp;
-                  <EastIcon sx={{ height: '100%', fontSize: FontSize.base, mb: -0.3 }} />
+                  <EastIcon
+                    sx={{ height: '100%', fontSize: FontSize.base, mb: -0.3 }}
+                  />
                 </Link>
               )}
             </Typography>

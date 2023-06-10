@@ -8,14 +8,14 @@ import { FC } from '~/types';
 
 export type PillSelectFieldProps = {
   /** Options */
-  options: ({
+  options: {
     title: string;
     description: string;
     icon: string | ReactNode;
     pill: string | ReactNode;
     value: any;
     titleProps?: TypographyProps;
-  })[]
+  }[];
   /** Field name */
   name: string;
   /** Field label */
@@ -23,14 +23,14 @@ export type PillSelectFieldProps = {
   /** pill description override. otherwise use label prop  */
   infoLabel?: string | JSX.Element;
   /** Field label props */
-  labelProps?: Omit<TypographyProps, 'color'>
+  labelProps?: Omit<TypographyProps, 'color'>;
   /** Tooltip */
-  tooltip?: string,
+  tooltip?: string;
   /** */
   onChange?: (v: any) => void;
 };
 
-const PillSelectField : FC<PillSelectFieldProps> = ({
+const PillSelectField: FC<PillSelectFieldProps> = ({
   options,
   name,
   label,
@@ -43,7 +43,8 @@ const PillSelectField : FC<PillSelectFieldProps> = ({
   return (
     <Field name={name}>
       {(fieldProps: FieldProps<any>) => {
-        const pill = options.find((x) => x.value === fieldProps.field.value)?.pill || <Typography variant="body1">Select {label}</Typography>; // FIXME: inefficient
+        const pill = options.find((x) => x.value === fieldProps.field.value)
+          ?.pill || <Typography variant="body1">Select {label}</Typography>; // FIXME: inefficient
         const set = (v: any) => () => {
           fieldProps.form.setFieldValue(name, v);
           onChange?.(v);

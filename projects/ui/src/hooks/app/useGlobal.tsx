@@ -6,10 +6,12 @@ import { setGlobal } from '~/state/app/actions';
 
 export default function useGlobal(key: keyof Globals) {
   const dispatch = useDispatch();
-  const visible = useSelector<AppState, boolean>((state) => state.app.globals[key]);
-  const update = useCallback((value: boolean) => dispatch(setGlobal({ key, value })), [dispatch, key]);
-  return [
-    visible,
-    update,
-  ] as const;
+  const visible = useSelector<AppState, boolean>(
+    (state) => state.app.globals[key]
+  );
+  const update = useCallback(
+    (value: boolean) => dispatch(setGlobal({ key, value })),
+    [dispatch, key]
+  );
+  return [visible, update] as const;
 }

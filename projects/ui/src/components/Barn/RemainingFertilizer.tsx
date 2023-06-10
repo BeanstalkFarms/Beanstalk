@@ -1,6 +1,13 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Card, Stack, Typography, Tooltip, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  Card,
+  Stack,
+  Typography,
+  Tooltip,
+  useMediaQuery,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import useHumidity from '~/hooks/beanstalk/useHumidity';
@@ -18,14 +25,19 @@ import FertilizerAPYChip from './FertilizerAPYChip';
 const RemainingFertilizer: FC<{}> = () => {
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [humidity, nextDecreaseAmount] = useHumidity();
-  const { recapFundedPct, remaining } = useSelector<AppState, AppState['_beanstalk']['barn']>((state) => state._beanstalk.barn);
+  const { recapFundedPct, remaining } = useSelector<
+    AppState,
+    AppState['_beanstalk']['barn']
+  >((state) => state._beanstalk.barn);
   const season = useSeason();
 
   // eslint-disable-next-line unused-imports/no-unused-vars
-  const nextDecreaseTimeString = season.eq(6074) 
-    ? 'per Season upon Unpause'
-    : <SunriseCountdown />;
-  
+  const nextDecreaseTimeString = season.eq(6074) ? (
+    'per Season upon Unpause'
+  ) : (
+    <SunriseCountdown />
+  );
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -40,8 +52,16 @@ const RemainingFertilizer: FC<{}> = () => {
           gap={3}
         >
           {/* left column */}
-          <Box sx={{ width: 130, display: { xs: 'none', md: 'block' }, aspectRatio: '1/1' }}>
-            <FertilizerImage progress={Math.max(recapFundedPct.toNumber(), 0.05)} />
+          <Box
+            sx={{
+              width: 130,
+              display: { xs: 'none', md: 'block' },
+              aspectRatio: '1/1',
+            }}
+          >
+            <FertilizerImage
+              progress={Math.max(recapFundedPct.toNumber(), 0.05)}
+            />
           </Box>
           {/* right column */}
           <Stack justifyContent="space-between" gap={2}>
@@ -50,7 +70,7 @@ const RemainingFertilizer: FC<{}> = () => {
                 Available Fertilizer&nbsp;
                 <Tooltip
                   title="The number of Fertilizer that can be bought from Beanstalk in exchange for 1 USDC each."
-                  placement={isMobile ? "top" : "bottom"}
+                  placement={isMobile ? 'top' : 'bottom'}
                 >
                   <HelpOutlineIcon
                     sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
@@ -81,7 +101,7 @@ const RemainingFertilizer: FC<{}> = () => {
                 Humidity&nbsp;
                 <Tooltip
                   title="The interest rate on Fertilizer. The Humidity determines how many Sprouts come with Fertilizer."
-                  placement={isMobile ? "top" : "bottom"}
+                  placement={isMobile ? 'top' : 'bottom'}
                 >
                   <HelpOutlineIcon
                     sx={{ color: 'text.secondary', fontSize: FontSize.sm }}

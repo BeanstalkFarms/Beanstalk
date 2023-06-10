@@ -32,6 +32,7 @@ const CSP = buildCSP({
     '*.infura.io', // Infura RPC
     '*.bean.money', // Beanstalk APIs
     '*.snapshot.org', // Snapshot GraphQL API
+    'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot', // Snapshot Labs GraphQL API
     'wss://*.walletconnect.org',
     'wss://*.bridge.walletconnect.org',
     'registry.walletconnect.com',
@@ -57,6 +58,7 @@ const CSP = buildCSP({
     'https://arweave.net', // Arweave images included in gov proposals
     '*.walletconnect.com', // WalletConnect wallet viewer
     'data:', // Wallet connectors use data-uri QR codes
+    'https://ipfs.io/', // BeaNFT images
   ],
 });
 

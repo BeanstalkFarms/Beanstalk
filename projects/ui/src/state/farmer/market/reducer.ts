@@ -2,9 +2,9 @@ import { createReducer } from '@reduxjs/toolkit';
 import { FarmerMarket } from '.';
 import { resetFarmerMarket, updateFarmerMarket } from './actions';
 
-const initialState : FarmerMarket = {
+const initialState: FarmerMarket = {
   listings: {},
-  orders: {}
+  orders: {},
 };
 
 export default createReducer(initialState, (builder) =>
@@ -12,6 +12,6 @@ export default createReducer(initialState, (builder) =>
     .addCase(resetFarmerMarket, () => initialState)
     .addCase(updateFarmerMarket, (state, { payload }) => {
       state.listings = payload.listings;
-      state.orders   = payload.orders;
+      state.orders = payload.orders;
     })
 );

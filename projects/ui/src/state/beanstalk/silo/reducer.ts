@@ -3,7 +3,7 @@ import { NEW_BN } from '~/constants';
 import { BeanstalkSilo } from '.';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 
-export const initialBeanstalkSilo : BeanstalkSilo = {
+export const initialBeanstalkSilo: BeanstalkSilo = {
   // Balances
   balances: {},
   // Rewards
@@ -23,7 +23,7 @@ export const initialBeanstalkSilo : BeanstalkSilo = {
     total: NEW_BN,
   },
   roots: {
-    total: NEW_BN, 
+    total: NEW_BN,
   },
   // Metadata
   withdrawSeasons: NEW_BN,

@@ -24,7 +24,9 @@ const FarmerOrders: React.FC<{
 }> = ({ data, initializing }) => {
   const [open, setOpen] = useState(false);
   const [showModeDialog, setShowModeDialog] = useState(false);
-  const [activeItem, setActiveItem] = useState<FarmerMarketOrder | undefined>(undefined);
+  const [activeItem, setActiveItem] = useState<FarmerMarketOrder | undefined>(
+    undefined
+  );
 
   const rows = useMemo(() => {
     if (!data || !data?.length) return [];

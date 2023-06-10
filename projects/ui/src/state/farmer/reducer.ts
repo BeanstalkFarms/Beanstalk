@@ -7,6 +7,7 @@ import events2 from './events2/reducer';
 import field from './field/reducer';
 import market from './market/reducer';
 import silo from './silo/reducer';
+import delegations from './delegations/reducer';
 
 export default combineReducers({
   allowances,
@@ -16,4 +17,5 @@ export default combineReducers({
   field,
   market,
   silo,
+  delegations,
 });
