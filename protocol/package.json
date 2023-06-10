@@ -39,7 +39,6 @@
     "hardhat": "2.14.0",
     "hardhat-contract-sizer": "^2.8.0",
     "hardhat-gas-reporter": "^1.0.4",
-    "hardhat-preprocessor": "^0.1.5",
     "json-bigint": "^1.0.0",
     "solidity-coverage": "^0.8.2"
   },

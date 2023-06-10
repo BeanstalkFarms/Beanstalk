@@ -3,8 +3,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Token/LibTransfer.sol";
-import "~/libraries/LibIncentive.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/LibIncentive.sol";
 import "./Weather.sol";
 
 /**

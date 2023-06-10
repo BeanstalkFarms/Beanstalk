@@ -9,10 +9,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../ReentrancyGuard.sol";
-import "~/libraries/LibDiamond.sol";
-import "~/libraries/LibDibbler.sol";
-import "~/libraries/Token/LibTransfer.sol";
-import {C} from "~/C.sol";
+import "contracts/libraries/LibDiamond.sol";
+import "contracts/libraries/LibDibbler.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title Fundraiser Facet

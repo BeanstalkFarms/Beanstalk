@@ -4,12 +4,12 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/SafeCast.sol";
-import "~/libraries/Decimal.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibFertilizer.sol";
-import "~/libraries/LibSafeMath128.sol";
-import "~/libraries/LibPRBMath.sol";
-import "~/C.sol";
+import "contracts/libraries/Decimal.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibFertilizer.sol";
+import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/libraries/LibPRBMath.sol";
+import "contracts/C.sol";
 import "./Oracle.sol";
 
 /**

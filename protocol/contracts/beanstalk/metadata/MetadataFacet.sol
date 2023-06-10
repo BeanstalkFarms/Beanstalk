@@ -7,11 +7,11 @@ pragma experimental ABIEncoderV2;
 
 import "../AppStorage.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {LibBytes} from "~/libraries/LibBytes.sol";
-import {LibBytes64} from "~/libraries/LibBytes64.sol";
-import {LibStrings} from "~/libraries/LibStrings.sol";
-import {LibLegacyTokenSilo} from "~/libraries/Silo/LibLegacyTokenSilo.sol";
-import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
+import {LibStrings} from "contracts/libraries/LibStrings.sol";
+import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @title MetadataFacet

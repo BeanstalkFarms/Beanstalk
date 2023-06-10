@@ -9,11 +9,11 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "../LibAppStorage.sol";
 import "../../C.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibSafeMath128.sol";
-import "~/libraries/LibSafeMathSigned128.sol";
-import "~/libraries/LibSafeMathSigned96.sol";
-import "~/libraries/LibBytes.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/libraries/LibSafeMathSigned128.sol";
+import "contracts/libraries/LibSafeMathSigned96.sol";
+import "contracts/libraries/LibBytes.sol";
 
 
 /**

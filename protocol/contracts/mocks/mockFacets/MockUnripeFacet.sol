@@ -5,8 +5,8 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/beanstalk/barn/UnripeFacet.sol";
-import "~/libraries/LibAppStorage.sol";
+import "contracts/beanstalk/barn/UnripeFacet.sol";
+import "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @author Publius
