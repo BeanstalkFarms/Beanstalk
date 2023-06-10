@@ -86,22 +86,6 @@ contract TokenSilo is Silo {
         uint256 amount,
         uint256[] bdvs
     ); //add bdv[] here? in favor of array
-    
-    // per the zero withdraw update, there is no claiming function for withdraws.abi
-    // events are kept for backwards compatibility
-    event RemoveWithdrawals(
-        address indexed account,
-        address indexed token,
-        uint32[] seasons,
-        uint256 amount
-    );
-    
-    event RemoveWithdrawal(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount
-    );
 
     // ERC1155 events
     
@@ -140,6 +124,30 @@ contract TokenSilo is Silo {
         uint256[] ids,
         uint256[] values
     );
+    
+    // LEGACY EVENTS
+
+    /**
+     * @notice these events are kept for backwards compatability, 
+     * and therefore should not be changed. 
+     * placed here in order for the ABI to generate properly. 
+     * See {LibLegacyTokenSilo} for implmentation.
+     */
+    event RemoveWithdrawals(
+        address indexed account,
+        address indexed token,
+        uint32[] seasons,
+        uint256 amount
+    );
+    
+    event RemoveWithdrawal(
+        address indexed account,
+        address indexed token,
+        uint32 season,
+        uint256 amount
+    );
+
+    
 
     //////////////////////// DEPOSIT ////////////////////////
 
@@ -158,7 +166,7 @@ contract TokenSilo is Silo {
         address account,
         address token,
         uint256 amount
-    ) internal returns (uint256 stalk, int96 stem){
+    ) internal returns (uint256 stalk, int96 stem) {
         stalk = LibTokenSilo.deposit(
             account,
             token,
@@ -203,12 +211,6 @@ contract TokenSilo is Silo {
             bdvRemoved,
             stalkRemoved
         );
-    }
-
-    struct AssetsAdded {
-        uint256 stalkAdded;
-        uint256 seedsAdded;
-        uint256 bdvAdded;
     }
 
     /**
