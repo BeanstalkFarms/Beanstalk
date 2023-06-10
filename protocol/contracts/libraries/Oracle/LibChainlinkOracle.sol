@@ -5,8 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {C} from "~/C.sol";
-import {IChainlinkAggregator} from "~/interfaces/chainlink/IChainlinkAggregator.sol";
+import {C} from "contracts/C.sol";
+import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**

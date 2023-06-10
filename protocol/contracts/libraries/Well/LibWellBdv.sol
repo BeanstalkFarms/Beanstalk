@@ -9,7 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol";
 import {Call, IWell} from "@wells/interfaces/IWell.sol";
 import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
-import {LibWell} from "~/libraries/Well/LibWell.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title Well Bdv Library contains a function to calulate

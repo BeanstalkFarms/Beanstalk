@@ -6,10 +6,10 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {LibConvertData} from "~/libraries/Convert/LibConvertData.sol";
-import {LibWell} from "~/libraries/Well/LibWell.sol";
+import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 import {Call, IWell} from "@wells/interfaces/IWell.sol";
 import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.sol";
 

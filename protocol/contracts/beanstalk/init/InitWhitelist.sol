@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "contracts/libraries/Silo/LibLegacyWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
-import {BDVFacet} from "~/beanstalk/silo/BDVFacet.sol";
+import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 
 /**
  * @author Publius

@@ -11,8 +11,8 @@ import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol
 import {ICumulativePump} from "@wells/interfaces/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "@wells/interfaces/IWell.sol";
-import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
-import {LibWell} from "~/libraries/Well/LibWell.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 

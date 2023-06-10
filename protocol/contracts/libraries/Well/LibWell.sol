@@ -10,9 +10,9 @@ import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "@wells/interfaces/IWell.sol";
 import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
-import {LibUsdOracle} from "~/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 /**=
  * @title Well Library contains Well helper functions.
  **/

@@ -5,10 +5,10 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
+import "contracts/libraries/Silo/LibSilo.sol";
+import "contracts/libraries/Silo/LibTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
-import "~/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibSafeMath32.sol";
 import "../ReentrancyGuard.sol";
 
 
@@ -58,7 +58,7 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    ) external nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
@@ -83,6 +83,7 @@ contract EnrootFacet is ReentrancyGuard {
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
+        LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
 
         // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
@@ -116,48 +117,62 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
 
         // Get new BDV
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-        uint256 newStalk;
+        uint256 newTotalBdv = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+        uint256 stalkAdded; uint256 bdvAdded;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
         int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
+        uint256 depositBdv;
+
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
-            uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            if (i+1 == stems.length) {
+                // Ensure that a rounding error does not occur by using the
+                // remainder BDV for the last Deposit.
+                depositBdv = newTotalBdv.sub(bdvAdded);
+            } else {
+                // depositBdv is a proportional amount of the total bdv.
+                // Cheaper than calling the BDV function multiple times.
+                depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
+            }
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
                 stems[i],
                 amounts[i],
-                bdv,
+                depositBdv,
                 LibTokenSilo.Transfer.noEmitTransferSingle
             );
             
-            newStalk = newStalk.add(
-                bdv.mul(_stalkPerBdv).add(
+            stalkAdded = stalkAdded.add(
+                depositBdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
                         stems[i],
                         _lastStem,
-                        uint128(bdv)
+                        uint128(depositBdv)
                     )
                 )
             );
+
+            bdvAdded = bdvAdded.add(depositBdv);
         }
+
+        LibTokenSilo.incrementTotalDepositedBdv(token, bdvAdded.sub(ar.bdvRemoved));
 
         // Mint Stalk associated with the delta BDV.
         LibSilo.mintStalk(
             msg.sender,
-            newStalk.sub(ar.stalkRemoved)
+            stalkAdded.sub(ar.stalkRemoved)
         );
     }
 }

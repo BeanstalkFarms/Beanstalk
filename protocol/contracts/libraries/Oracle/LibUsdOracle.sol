@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @author Publius

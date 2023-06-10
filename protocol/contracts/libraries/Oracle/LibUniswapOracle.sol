@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
 /**

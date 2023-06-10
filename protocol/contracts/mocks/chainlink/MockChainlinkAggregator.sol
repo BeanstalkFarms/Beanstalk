@@ -4,7 +4,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/interfaces/chainlink/IChainlinkAggregator.sol";
+import "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 
 contract MockChainlinkAggregator is IChainlinkAggregator {
     uint80 lastRound;
