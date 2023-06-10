@@ -6,7 +6,6 @@ import governance from './governance/reducer';
 import silo from './silo/reducer';
 import sun from './sun/reducer';
 import tokenPrices from './tokenPrices/reducer';
-import nft from './nft/reducer';
 
 export default combineReducers({
   barn,
@@ -15,5 +14,4 @@ export default combineReducers({
   silo,
   sun,
   tokenPrices,
-  nft,
 });
