@@ -9,12 +9,12 @@ import "../../C.sol";
 import "./LibSilo.sol";
 import "./LibUnripeSilo.sol";
 import "../LibAppStorage.sol";
-import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
-import {LibSafeMath32} from "~/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "~/libraries/LibSafeMath128.sol";
+import {LibSafeMathSigned128} from "contracts/libraries/LibSafeMathSigned128.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {LibBytes} from "~/libraries/LibBytes.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 /**

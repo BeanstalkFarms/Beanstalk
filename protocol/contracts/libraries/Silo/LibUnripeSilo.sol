@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {AppStorage, LibAppStorage, Account} from "../LibAppStorage.sol";
 import {LibSafeMath128} from "../LibSafeMath128.sol";
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title LibUnripeSilo
@@ -164,7 +164,7 @@ library LibUnripeSilo {
         delete s.a[account].legacyDeposits[C.unripeLPPool2()][season];
     }
 
-    /**
+    /**1000000000000000017348
      * @dev Returns true if the provided address is the Unripe LP token address.
      */
     function isUnripeLP(address token) internal pure returns (bool b) {

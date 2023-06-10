@@ -6,9 +6,9 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./TokenSilo.sol";
-import "~/beanstalk/ReentrancyGuard.sol";
-import "~/libraries/Token/LibTransfer.sol";
-import "~/libraries/Silo/LibSiloPermit.sol";
+import "contracts/beanstalk/ReentrancyGuard.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/Silo/LibSiloPermit.sol";
 
 /**
  * @title SiloFacet

@@ -5,12 +5,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
-import "~/libraries/Token/LibTransfer.sol";
-import "~/libraries/Token/LibWeth.sol";
-import "~/libraries/Token/LibEth.sol";
-import "~/libraries/Token/LibTokenPermit.sol";
-import "~/libraries/Token/LibTokenApprove.sol";
+import {IERC1155Receiver} from "contracts/interfaces/IERC1155Receiver.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/Token/LibWeth.sol";
+import "contracts/libraries/Token/LibEth.sol";
+import "contracts/libraries/Token/LibTokenPermit.sol";
+import "contracts/libraries/Token/LibTokenApprove.sol";
 import "../AppStorage.sol";
 import "../ReentrancyGuard.sol";
 

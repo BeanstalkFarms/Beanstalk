@@ -4,7 +4,7 @@
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
-import "~/beanstalk/AppStorage.sol";
+import "contracts/beanstalk/AppStorage.sol";
 /**
  * @author Publius, Brean
  * @title InitBip33 re-initalizes the weather struct for BIP-33, for gas efficency  

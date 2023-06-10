@@ -6,7 +6,6 @@ require("solidity-coverage");
 require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
-require("hardhat-preprocessor");
 require('hardhat-contract-sizer');
 
 const fs = require('fs')
@@ -242,23 +241,6 @@ module.exports = {
   },
   mocha: {
     timeout: 100000000
-  },
-  // The following is pulled from this Foundry guide:
-  // https://book.getfoundry.sh/config/hardhat#instructions
-  preprocess: {
-    eachLine: (hre) => ({
-      transform: (line) => {
-        if (line.match(/^\s*import /i)) {
-          for (const [from, to] of getRemappings()) {
-            if (line.includes(from)) {
-              line = line.replace(from, to);
-              break;
-            }
-          }
-        }
-        return line;
-      }
-    })
   },
   paths: {
     sources: "./contracts",

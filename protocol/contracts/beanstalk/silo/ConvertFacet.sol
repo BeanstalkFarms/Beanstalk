@@ -5,14 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {C} from "~/C.sol";
-import {LibSilo} from "~/libraries/Silo/LibSilo.sol";
-import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
+import {C} from "contracts/C.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {Silo} from "./SiloFacet/Silo.sol";
-import {LibSafeMath32} from "~/libraries/LibSafeMath32.sol";
-import {LibConvert} from "~/libraries/Convert/LibConvert.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
-import {LibBytes} from "~/libraries/LibBytes.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
