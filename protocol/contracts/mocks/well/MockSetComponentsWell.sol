@@ -7,8 +7,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Call} from "@wells/interfaces/IWell.sol";
-import {IPump} from "@wells/interfaces/pumps/IPump.sol";
+import {Call} from "contracts/interfaces/basin/IWell.sol";
+import {IPump} from "contracts/interfaces/basin/pumps/IPump.sol";
 import {MockToken} from "../MockToken.sol";
 
 /**

@@ -7,13 +7,13 @@ pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {SafeMath, C, LibMinting} from "./LibMinting.sol";
-import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol";
-import {ICumulativePump} from "@wells/interfaces/pumps/ICumulativePump.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
+import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Call, IWell} from "@wells/interfaces/IWell.sol";
+import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**

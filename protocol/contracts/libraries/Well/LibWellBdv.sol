@@ -6,9 +6,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol";
-import {Call, IWell} from "@wells/interfaces/IWell.sol";
-import {IWellFunction} from "@wells/interfaces/IWellFunction.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
+import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**

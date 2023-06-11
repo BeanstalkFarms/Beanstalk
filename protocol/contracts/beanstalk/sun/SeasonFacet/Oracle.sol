@@ -3,9 +3,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Oracle/LibCurveOracle.sol";
+import "contracts/libraries/Minting/LibCurveMinting.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
-import "contracts/libraries/Minting/LibWellOracle.sol";
+import "contracts/libraries/Minting/LibWellMinting.sol";
 import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**

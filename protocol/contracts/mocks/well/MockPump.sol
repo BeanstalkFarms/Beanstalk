@@ -6,7 +6,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {IInstantaneousPump} from "@wells/interfaces/pumps/IInstantaneousPump.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 
 /**
  * @title Mock Pump

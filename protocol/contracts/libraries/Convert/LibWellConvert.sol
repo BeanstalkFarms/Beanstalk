@@ -10,8 +10,8 @@ import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {C} from "contracts/C.sol";
-import {Call, IWell} from "@wells/interfaces/IWell.sol";
-import {IBeanstalkWellFunction} from "@wells/interfaces/IBeanstalkWellFunction.sol";
+import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 
 /**
  * @title Well Convert Library
