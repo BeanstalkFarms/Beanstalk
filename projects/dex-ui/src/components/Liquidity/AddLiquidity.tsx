@@ -12,6 +12,8 @@ import { ensureAllowance, hasMinimumAllowance } from "./allowance";
 import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
 import { TransactionToast } from "../TxnToast/TransactionToast";
+import { getPrice } from "src/utils/price/usePrice";
+import useSdk from "src/utils/sdk/useSdk";
 
 type AddLiquidityProps = {
   well: Well;
@@ -31,9 +33,24 @@ export type AddLiquidityQuote = {
 export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
   const { address } = useAccount();
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
+  const [balancedMode, setBalancedMode] = useState(true);
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
+  const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
+
+  const sdk = useSdk();
+
+  useEffect(() => {
+    const run = async () => {
+      if (!well) return
+      if (well.tokens) {
+        const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+        setPrices(prices);
+      }
+    };
+    run();
+  }, [sdk, well?.tokens]);
 
   const bothAmountsNonZero = useMemo(() => {
     if (!well.tokens) {
@@ -147,9 +164,30 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     }
   }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback]);
 
-  const handleInputChange = useCallback(
+  const handleImbalancedInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
       setAmounts({ ...amounts, [index]: a });
+    },
+    [amounts]
+  );
+
+  const handleBalancedInputChange = useCallback(
+    (index: number) => (amount: TokenValue) => {
+      if (!prices[index]) {
+        setAmounts({ ...amounts, [index]: amount });
+        return
+      };
+      const amountInUSD = amount.mul(prices[index]!);
+      let _amounts = [];
+      for (let i = 0; i < prices.length; i++) {
+        if (i !== index) {
+          const conversion = amountInUSD.div(prices[i]!)
+          _amounts[i] = conversion
+        } else {
+          _amounts[i] = amount
+        };
+      };
+      setAmounts(Object.assign({}, _amounts));
     },
     [amounts]
   );
@@ -208,13 +246,28 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                   label={`Input amount in ${token.symbol}`}
                   token={well.tokens![index]}
                   amount={amounts[index]}
-                  onAmountChange={handleInputChange(index)}
+                  onAmountChange={balancedMode ? handleBalancedInputChange(index) : handleImbalancedInputChange(index)}
                   canChangeToken={false}
                   loading={false}
                 />
               ))}
             </TokenListContainer>
-            <br/>
+            <BalancedCheckboxContainer>
+              <BalancedCheckbox
+                type="checkbox"
+                checked={balancedMode}
+                onChange={() =>
+                  setBalancedMode(!balancedMode)
+                }
+              />
+              <TabLabel
+                onClick={() =>
+                  setBalancedMode(!balancedMode)
+                }
+              >
+                Add tokens in balanced proportion
+              </TabLabel>
+            </BalancedCheckboxContainer>
             {showQuoteDetails && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.ADD}
@@ -286,4 +339,25 @@ const TokenListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+`;
+
+const BalancedCheckboxContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`;
+
+const BalancedCheckbox = styled.input`
+  margin-right: 10px;
+  width: 1em;
+  height: 1em;
+  background-color: white;
+
+  :checked {
+    background-color: red;
+  }
+`;
+
+const TabLabel = styled.div`
+  cursor: pointer;
 `;
