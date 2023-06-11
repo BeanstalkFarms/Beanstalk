@@ -51,14 +51,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] bdvs
     );
 
-    event TransferBatch(
-        address indexed operator, 
-        address indexed from, 
-        address indexed to, 
-        uint256[] ids, 
-        uint256[] values
-    );
-
     struct AssetsRemoved {
         uint256 tokensRemoved;
         uint256 stalkRemoved;
@@ -329,7 +321,7 @@ contract ConvertFacet is ReentrancyGuard {
                 bdvsRemoved
             );
 
-            emit TransferBatch(
+            emit LibSilo.TransferBatch(
                 msg.sender, 
                 msg.sender,
                 address(0), 
