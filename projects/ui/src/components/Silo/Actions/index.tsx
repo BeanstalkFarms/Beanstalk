@@ -26,7 +26,7 @@ import Convert from './Convert';
  *     up by tabs. Each tab contains a single form.
  * (2) a table of Deposits and Withdrawals, shown dependent on the
  *     selected tab. The Withdrawals table also displays an aggregated
- *     "claimable" row and is shown for both Withdraw & Claim tabs.
+ *     "claimable" row and is shown for the Claim tab only (updated since Silo V3)
  */
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
@@ -76,10 +76,10 @@ const SiloActions: FC<{
         </ModuleContent>
       </Module>
       {/* Tables */}
-      <Box sx={{ display: tab <= 2 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab <= 3 ? 'block' : 'none' }}>
         <Deposits token={props.token} siloBalance={props.siloBalance} />
       </Box>
-      <Box sx={{ display: tab >= 3 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab >= 4 ? 'block' : 'none' }}>
         <Withdrawals token={props.token} siloBalance={props.siloBalance} />
       </Box>
     </>
