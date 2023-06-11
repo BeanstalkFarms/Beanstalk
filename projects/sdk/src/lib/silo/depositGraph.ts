@@ -151,6 +151,25 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     });
   }
 
+    /**
+   * Setup edges to removeLiquidityOneToken to Curve 3pool.
+   *
+   * 3CRV => USDT
+   */
+    {
+      const from = sdk.tokens.CRV3
+      const targetToken = sdk.tokens.USDT;
+      const pool = sdk.contracts.curve.pools.pool3;
+      const registry = sdk.contracts.curve.registries.poolRegistry.address;
+      graph.setEdge(from.symbol, targetToken.symbol, {
+          build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+            new sdk.farm.actions.RemoveLiquidityOneToken(pool.address, registry, targetToken.address, fromMode, toMode),
+          from: from.symbol,
+          to: targetToken.symbol,
+          label: "removeLiquidityOneToken"
+        });
+     }
+
   /**
    * Handle WETH / ETH
    */
@@ -179,6 +198,19 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       from: "USDT",
       to: "BEAN"
     });
+
+    graph.setEdge("USDC", "BEAN", {
+      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdc2bean(from, to),
+      from: "USDC",
+      to: "BEAN"
+    });
+
+    graph.setEdge("DAI", "BEAN", {
+      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.dai2bean(from, to),
+      from: "DAI",
+      to: "BEAN"
+    });
+
   }
 
   return graph;

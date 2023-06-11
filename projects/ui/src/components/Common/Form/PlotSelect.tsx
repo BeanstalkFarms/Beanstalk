@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { ReactElement, useMemo } from 'react';
 import {
   Typography,
   ListItem,
@@ -19,6 +19,9 @@ import podIcon from '~/img/beanstalk/pod-icon.svg';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { PlotFragment } from '.';
+import SelectionItem from '../SelectionItem';
+import { PodListing } from '~/state/farmer/market';
 
 export interface PlotSelectProps {
   /** A farmer's plots */
@@ -28,7 +31,54 @@ export interface PlotSelectProps {
   /** Custom function to set the selected plot index */
   handlePlotSelect: any;
   /** index of the selected plot */
-  selected?: string | null;
+  selected?: PlotFragment[] | string | PlotFragment | null;
+  /** use multi select version? **/
+  multiSelect?: boolean | undefined;
+}
+
+interface IRowContent {
+  isMobile: boolean | null;
+  index: string;
+  harvestableIndex: BigNumber;
+  listing: PodListing | null;
+  plots: PlotMap<BigNumber>;
+}
+
+function RowContent({isMobile, index, harvestableIndex, listing, plots}: IRowContent): ReactElement {
+  return (
+    <Row justifyContent="space-between" sx={{ width: '100%' }}>
+    <Row justifyContent="center">
+      <ListItemIcon sx={{ pr: 1 }}>
+        <Box
+          component="img"
+          src={podIcon}
+          alt=""
+          sx={{
+            width: IconSize.tokenSelect,
+            height: IconSize.tokenSelect,
+          }}
+        />
+      </ListItemIcon>
+      <ListItemText
+        primary="PODS"
+        primaryTypographyProps={{ color: 'text.primary', display: 'flex' }}
+        secondary={
+          <>
+            {isMobile ? '@' : 'Place in Line:'}{' '}
+            {displayBN(new BigNumber(index).minus(harvestableIndex))}
+            {listing ? <>&nbsp;&middot; Currently listed</> : null}
+          </>
+        }
+        sx={{ my: 0 }}
+      />
+    </Row>
+    {plots[index] ? (
+      <Typography variant="bodyLarge" sx={{ color: 'text.primary' }}>
+        {displayFullBN(plots[index], PODS.displayDecimals)}
+      </Typography>
+    ) : null}
+  </Row>
+  );
 }
 
 const PlotSelect: FC<PlotSelectProps> = ({
@@ -36,6 +86,7 @@ const PlotSelect: FC<PlotSelectProps> = ({
   harvestableIndex,
   handlePlotSelect,
   selected,
+  multiSelect,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -53,13 +104,20 @@ const PlotSelect: FC<PlotSelectProps> = ({
   const items = orderedPlotKeys.map((index) => {
     const id = toStringBaseUnitBN(index, BEAN[1].decimals);
     const listing = farmerListings[id];
+    let isSelected: boolean;
+    if (Array.isArray(selected)) {
+      selected!.findIndex((item) => item.index == index) > -1
+        ? (isSelected = true)
+        : (isSelected = false);
+    } else {
+      selected ? (isSelected = true) : (isSelected = false);
+    }
     if (listing) numAlreadyListed += 1;
+    if (multiSelect) {
     return (
-      <ListItem
-        key={index}
-        color="primary"
-        selected={selected ? selected === index : undefined}
-        disablePadding
+      <SelectionItem
+        selected={isSelected}
+        checkIcon="left"
         onClick={() => handlePlotSelect(index)}
         sx={{
           // ListItem is used elsewhere so we define here
@@ -73,43 +131,53 @@ const PlotSelect: FC<PlotSelectProps> = ({
             lineHeight: '1.25rem',
             // color: BeanstalkPalette.lightGrey
           },
+          mb: 1,
+          '&:last-child': {mb: 0}
         }}
-      >
-        <ListItemButton disableRipple>
-          <Row justifyContent="space-between" sx={{ width: '100%' }}>
-            <Row justifyContent="center">
-              <ListItemIcon sx={{ pr: 1 }}>
-                <Box
-                  component="img"
-                  src={podIcon}
-                  alt=""
-                  sx={{
-                    width: IconSize.tokenSelect,
-                    height: IconSize.tokenSelect,
-                  }}
-                />
-              </ListItemIcon>
-              <ListItemText
-                primary="PODS"
-                secondary={
-                  <>
-                    {isMobile ? '@' : 'Place in Line:'}{' '}
-                    {displayBN(new BigNumber(index).minus(harvestableIndex))}
-                    {listing ? <>&nbsp;&middot; Currently listed</> : null}
-                  </>
-                }
-                sx={{ my: 0 }}
-              />
-            </Row>
-            {plots[index] ? (
-              <Typography variant="bodyLarge">
-                {displayFullBN(plots[index], PODS.displayDecimals)}
-              </Typography>
-            ) : null}
-          </Row>
-        </ListItemButton>
-      </ListItem>
+        >
+          <RowContent
+          isMobile={isMobile}
+          index={index}
+          harvestableIndex={harvestableIndex}
+          listing={listing}
+          plots={plots}
+          />
+      </SelectionItem>
     );
+    } else {
+    return (
+      <ListItem
+      key={index}
+      color="primary"
+      selected={isSelected}
+      disablePadding
+      onClick={() => handlePlotSelect(index)}
+      sx={{
+        // ListItem is used elsewhere so we define here
+        // instead of in muiTheme.ts
+        '& .MuiListItemText-primary': {
+          fontSize: FontSize['1xl'],
+          lineHeight: '1.875rem',
+        },
+        '& .MuiListItemText-secondary': {
+          fontSize: FontSize.base,
+          lineHeight: '1.25rem',
+          // color: BeanstalkPalette.lightGrey
+        },
+      }}
+    >
+      <ListItemButton disableRipple>
+        <RowContent
+        isMobile={isMobile}
+        index={index}
+        harvestableIndex={harvestableIndex}
+        listing={listing}
+        plots={plots}
+        />
+      </ListItemButton>
+    </ListItem>
+    );
+    }
   });
 
   return (

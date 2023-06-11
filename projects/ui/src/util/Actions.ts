@@ -30,6 +30,7 @@ export enum ActionType {
   HARVEST,
   RECEIVE_BEANS,
   TRANSFER_PODS,
+  TRANSFER_MULTIPLE_PLOTS,
 
   /// MARKET
   CREATE_ORDER,
@@ -186,6 +187,13 @@ export type TransferPodsAction = {
   placeInLine: BigNumber;
 };
 
+export type TransferMultiplePlotsAction = {
+  type: ActionType.TRANSFER_MULTIPLE_PLOTS;
+  amount: BigNumber;
+  address: string;
+  plots: number;
+};
+
 /// ////////////////////////////// MARKET /////////////////////////////////
 
 export type CreateOrderAction = {
@@ -252,6 +260,7 @@ export type Action =
   | ReceiveBeansAction
   | BuyBeansAction
   | TransferPodsAction
+  | TransferMultiplePlotsAction
   /// MARKET
   | CreateOrderAction
   | BuyPodsAction
@@ -317,7 +326,7 @@ export const parseActionMessage = (a: Action) => {
         a.stalk.abs(),
         2
       )} Stalk and ${
-        a.seeds.lt(0) ? (a.stalk.gt(0) ? 'burn ' : '') : ''
+        a.seeds.lt(0) ? (a.stalk.gte(0) ? 'burn ' : '') : ''
       }${displayFullBN(a.seeds.abs(), 2)} Seeds.`;
     case ActionType.CLAIM_WITHDRAWAL:
       return `Claim ${displayFullBN(a.amount, 2)} ${a.token.name}.`;
@@ -374,6 +383,10 @@ export const parseActionMessage = (a: Action) => {
       return `Transfer ${displayTokenAmount(a.amount, PODS)} at ${displayBN(
         a.placeInLine
       )} in Line to ${a.address}.`;
+    case ActionType.TRANSFER_MULTIPLE_PLOTS:
+      return `Transfer ${displayTokenAmount(a.amount, PODS)} in ${
+        a.plots
+      } Plots to ${a.address}.`;
 
     /// BARN
     case ActionType.RINSE:

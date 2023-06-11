@@ -6,6 +6,7 @@ import {
   FontWeight,
 } from '~/components/App/muiTheme';
 import { FC } from '~/types';
+import { Link } from '@mui/material';
 
 const MarkdownWrapper: FC<{}> = ({ children }) => (
   <MuiMarkdown
@@ -128,11 +129,9 @@ const MarkdownWrapper: FC<{}> = ({ children }) => (
       //   }
       // },
       a: {
+        component: Link,
         props: {
-          style: {
-            wordBreak: 'break-word',
-            color: 'primary.main',
-          },
+          underline: 'hover',
         },
       },
       img: {

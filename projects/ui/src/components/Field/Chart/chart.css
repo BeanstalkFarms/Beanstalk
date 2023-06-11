@@ -16,7 +16,7 @@
 }
 
 .bar-current {
-  animation: color-breathe 2000ms infinite linear;
+  animation: color-breathe 3000ms infinite linear;
   fill: rgba(70, 185, 85, 0.35);
   /* padding-left: 3px;
   padding-right: 3px; */

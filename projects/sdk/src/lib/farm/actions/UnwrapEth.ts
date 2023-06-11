@@ -5,7 +5,7 @@ import { FarmFromMode } from "../types";
 export class UnwrapEth extends StepClass<BasicPreparedResult> {
   public name: string = "unwrapEth";
 
-  constructor(private fromMode: FarmFromMode = FarmFromMode.INTERNAL) {
+  constructor(public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL) {
     super();
   }
 

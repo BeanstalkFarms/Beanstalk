@@ -19,7 +19,7 @@ export type SelectionItemProps = {
   /**
    * Placement of the check icon
    */
-  checkIcon?: 'top-left' | 'top-right';
+  checkIcon?: 'top-left' | 'top-right' | 'left';
   /**
    * NOTE: only 'card' variant supports title
    */
@@ -62,6 +62,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
   const isPill = variant === 'pill';
   const isCircle = variant === 'circle';
   const isCard = variant === 'card';
+  const checkIconLeft = checkIcon === 'left';
 
   return (
     <Button
@@ -105,6 +106,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
         <Stack
           width="100%"
           p={isCard ? 1 : 0}
+          direction={checkIconLeft ? 'row' : 'column'}
           gap={gap}
           sx={{
             borderRadius: isCircle ? '50%' : undefined,
@@ -118,6 +120,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
               justifyContent={
                 checkIcon === 'top-left' ? 'flex-start' : 'space-between'
               }
+              alignItems={checkIcon === 'left' ? 'center' : undefined}
               gap={0.5}
             >
               {checkIcon ? (
@@ -144,7 +147,7 @@ const SelectionItem: React.FC<SelectionItemProps> = ({
               ) : null}
             </Row>
           ) : null}
-          <Box>{children}</Box>
+          <Box sx={{ display: 'flex', flexGrow: '1' }}>{children}</Box>
         </Stack>
       )}
     </Button>

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Stack, Typography, Box } from '@mui/material';
-import BigNumber from 'bignumber.js';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { BeanstalkToken } from '@beanstalk/sdk';
 import { Link } from 'react-router-dom';
-import { displayFullBN } from '~/util';
+import { displayFullBN, normalizeBN } from '~/util';
 import EmbeddedCard from '../Common/EmbeddedCard';
 import Row from '../Common/Row';
 import TokenIcon from '../Common/TokenIcon';
 import { BeanstalkPalette } from '../App/muiTheme';
+import { useAppSelector } from '~/state';
+import useSdk from '~/hooks/sdk';
 
 const ThinDivider: React.FC<{}> = () => (
   <Box
@@ -21,10 +21,13 @@ const ThinDivider: React.FC<{}> = () => (
   />
 );
 
-const FieldInfo: React.FC<{
-  harvestableIndex: BigNumber;
-  PODS: BeanstalkToken;
-}> = ({ harvestableIndex, PODS }) => {
+const FieldInfo: React.FC<{}> = () => {
+  const sdk = useSdk();
+  const harvestableIndex = useAppSelector(
+    (s) => s._beanstalk.field.harvestableIndex
+  );
+  const PODS = sdk.tokens.PODS;
+
   const [open, setOpen] = useState(false);
 
   const handleOnClick = () => {
@@ -40,12 +43,12 @@ const FieldInfo: React.FC<{
               <Typography>Harvested Pods:</Typography>
               <TokenIcon token={PODS} />
               <Typography component="span" variant="h4">
-                {displayFullBN(harvestableIndex, 0)}
+                {displayFullBN(normalizeBN(harvestableIndex), 0)}
               </Typography>
             </Row>
             <Typography color="text.secondary">
-              Debt repaid by Beanstalk to Pod holders since deployment (does not count towards the
-              current Pod Line).
+              Debt repaid by Beanstalk to Pod holders since deployment (does not
+              count towards the current Pod Line).
             </Typography>
           </Stack>
           <Link to="/analytics?field=harvested">
@@ -71,14 +74,14 @@ const FieldInfo: React.FC<{
                 The number of Pods received from 1 Sown Bean is determined by
                 the Temperature at the time of Sowing. Newly issued Pods
                 accumulate in the back of the Pod Line. The front of the Pod
-                Line receives 1/3 of new Bean mints when there are  outstanding 
-                Sprouts (Sprouts are issued by the Barn). If
-                there are no outstanding Sprouts, the front of the Pod Line
-                receives 1/2 of new Bean mints.
+                Line receives 1/3 of new Bean mints when there are outstanding
+                Sprouts (Sprouts are issued by the Barn). If there are no
+                outstanding Sprouts, the front of the Pod Line receives 1/2 of
+                new Bean mints.
               </Typography>
               <Typography>
-                Pods become Harvestable (redeemable) into Beans on a FIFO basis. Pods
-                are tradeable on the Market.
+                Pods become Harvestable (redeemable) into Beans on a FIFO basis.
+                Pods are tradeable on the Market.
               </Typography>
             </>
           ) : null}

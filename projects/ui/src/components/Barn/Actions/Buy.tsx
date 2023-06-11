@@ -297,7 +297,6 @@ const BuyPropProvider: FC<{}> = () => {
     const _preferredTokens: PreferredToken[] =
       BuyFertilizerFarmStep.getPreferredTokens(sdk.tokens);
     const _tokenList = BuyFertilizerFarmStep.getTokenList(sdk.tokens);
-
     return {
       preferredTokens: _preferredTokens,
       tokenList: _tokenList,
