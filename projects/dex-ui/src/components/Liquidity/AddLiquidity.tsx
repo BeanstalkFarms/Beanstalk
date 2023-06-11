@@ -175,14 +175,15 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     (index: number) => (amount: TokenValue) => {
       if (!prices[index]) {
         setAmounts({ ...amounts, [index]: amount });
-        return
+        return;
       };
       const amountInUSD = amount.mul(prices[index]!);
       let _amounts = [];
       for (let i = 0; i < prices.length; i++) {
         if (i !== index) {
           const conversion = amountInUSD.div(prices[i]!)
-          _amounts[i] = conversion
+          const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals)
+          _amounts[i] = conversionFormatted
         } else {
           _amounts[i] = amount
         };
@@ -236,8 +237,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   return (
     <div>
       {well.tokens!.length > 0 && (
-        <div>
-          <div>
+        <LargeGapContainer>
             <TokenListContainer>
               {well.tokens?.map((token: Token, index: number) => (
                 <TokenInput
@@ -256,15 +256,9 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
               <BalancedCheckbox
                 type="checkbox"
                 checked={balancedMode}
-                onChange={() =>
-                  setBalancedMode(!balancedMode)
-                }
+                onChange={() => setBalancedMode(!balancedMode)}
               />
-              <TabLabel
-                onClick={() =>
-                  setBalancedMode(!balancedMode)
-                }
-              >
+              <TabLabel onClick={() => setBalancedMode(!balancedMode)}>
                 Add tokens in balanced proportion
               </TabLabel>
             </BalancedCheckboxContainer>
@@ -278,6 +272,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 slippage={slippage}
               />
             )}
+            <MediumGapContainer>
             {well.tokens!.length > 0 &&
               well.tokens!.map((token: Token, index: number) => {
                 if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false ) {
@@ -303,22 +298,29 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 onClick={addLiquidityButtonClickHandler}
               />
             </ButtonWrapper>
-          </div>
-        </div>
+            </MediumGapContainer>
+        </LargeGapContainer>
       )}
     </div>
   );
 };
 
+const LargeGapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`
+
+const MediumGapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
 const ButtonWrapper = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 10px;
-  :last-of-type {
-    margin-bottom: 0;
-  }
-  margin-top: 10px;
 `;
 
 const ApproveTokenButton = styled(Button)`
