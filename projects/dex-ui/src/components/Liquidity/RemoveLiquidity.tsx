@@ -41,7 +41,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   useEffect(() => {
     const run = async () => {
-      if (!well) return
+      if (!well) return;
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);

@@ -15,8 +15,8 @@ function YieldDetails() {
       <div>Stalk holders intermittently receive Beans as yield.</div>
       <StyledLink href="https://app.bean.money/">Add Liquidity and Deposit in one transaction using the Beanstalk site!</StyledLink>
     </TextContainer>
-  )
-}
+  );
+};
 
 export const LearnYield: FC<Props> = ({}) => {
   return (
@@ -35,10 +35,10 @@ const TextContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   color: #4B5563;
-`
+`;
 
 const StyledLink = styled.a`
   font-weight: 600;
   color: #4B5563;
   text-decoration-thickness: 1px;
-`
+`;

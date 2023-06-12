@@ -43,7 +43,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
   useEffect(() => {
     const run = async () => {
-      if (!well) return
+      if (!well) return;
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);
@@ -181,11 +181,11 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       let _amounts = [];
       for (let i = 0; i < prices.length; i++) {
         if (i !== index) {
-          const conversion = amountInUSD.div(prices[i]!)
-          const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals)
-          _amounts[i] = conversionFormatted
+          const conversion = amountInUSD.div(prices[i]!);
+          const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals);
+          _amounts[i] = conversionFormatted;
         } else {
-          _amounts[i] = amount
+          _amounts[i] = amount;
         };
       };
       setAmounts(Object.assign({}, _amounts));
