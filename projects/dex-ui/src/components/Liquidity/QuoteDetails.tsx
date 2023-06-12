@@ -21,6 +21,7 @@ type QuoteDetailsProps = {
       }
     | null
     | undefined;
+  lpTokenAmount?: TokenValue;
   inputs?: TokenValue[];
   slippage: number;
   wellLpToken?: ERC20Token | undefined;
@@ -36,6 +37,7 @@ const QuoteDetails = ({
   type,
   removeLiquidityMode,
   quote,
+  lpTokenAmount,
   inputs,
   slippage,
   wellLpToken,
@@ -54,15 +56,14 @@ const QuoteDetails = ({
     const _setGasFeeUsd = async () => {
       if (!quote || !quote.estimate) {
         setGasFeeUsd("0.00");
+      } else {
+        const usd = await getGasInUsd(sdk, quote!.estimate.toBigNumber());
+        setGasFeeUsd(`~${usd.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD"
+          })}`
+        );
       }
-
-      const usd = await getGasInUsd(sdk, quote!.estimate.toBigNumber());
-
-      setGasFeeUsd(`~${usd.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD"
-        })}`
-      );
     };
 
     _setGasFeeUsd();
@@ -130,7 +131,7 @@ const QuoteDetails = ({
             totalUSDValue = totalUSDValue.add(valueInUSD);
           } else {
             for (let i = 0; i < tokenPrices.length; i++) {
-              valueInUSD = tokenPrices![i]!.mul(Array.isArray(quote.quote) ? quote.quote![i] || TokenValue.ZERO : TokenValue.ZERO);
+              valueInUSD = tokenPrices![i]!.mul(removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote) ? quote.quote[i] : inputs![i]);
               totalUSDValue = totalUSDValue.add(valueInUSD);
             }
           }
@@ -159,6 +160,60 @@ const QuoteDetails = ({
     run();
   }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex]);
 
+  const priceImpact = useMemo(() => {
+
+    if (!tokenReserves || !inputs) return TokenValue.ZERO
+
+    function calculatePrice(prevVal: any, token: any, index: any) {
+      if (token.eq(TokenValue.ZERO)) {
+        return TokenValue.ZERO
+      };
+      return prevVal!.div(token!);
+    };
+
+    const currentData = tokenReserves.map((token, index) =>
+      tokenReserves[index]?.mul(tokenPrices![index]!)
+        //'reservesUSD': tokenReserves[index]!.mul(tokenPrices![index]!)
+    );
+
+    const newData = tokenReserves.map((token, index) => {
+      if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
+        if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
+          return (tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!));
+        } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && !Array.isArray(quote!.quote)) {
+          return (tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices![index]!));
+        } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote!.quote)) {
+          return (tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices![index]!).mul(tokenPrices![index]!));
+        } else {
+          return TokenValue.ZERO
+        };
+      } else {
+        return (tokenReserves[index]?.add(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!));
+      };
+    });
+
+    const oldPrice = currentData.reduce(calculatePrice)
+    const newPrice = newData.reduce(calculatePrice)
+
+    let priceDiff
+    if (!newPrice || !oldPrice) {
+      priceDiff = TokenValue.ZERO;
+    } else if (newPrice?.eq(TokenValue.ZERO)) {
+      priceDiff = TokenValue.fromHuman(-100, 6);
+    } else if (oldPrice?.eq(TokenValue.ZERO)) {
+      priceDiff = TokenValue.fromHuman(100, 6);
+    } else {
+      if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
+        priceDiff = newPrice.div(oldPrice).mul(TokenValue.fromHuman(newPrice.gte(oldPrice) ? 100 : -100, 6));
+      } else {
+        priceDiff = newPrice.div(oldPrice).mul(TokenValue.fromHuman(100, 6)).sub(TokenValue.fromHuman(100, 6)).mul(TokenValue.fromHuman(-1, 6));
+      }
+    }
+
+    return priceDiff
+
+  }, [tokenReserves, inputs, lpTokenAmount])
+
   return (
     <QuoteContainer>
       <QuoteDetailLine>
@@ -171,7 +226,7 @@ const QuoteDetails = ({
       </QuoteDetailLine>
       <QuoteDetailLine>
         <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-        <QuoteDetailValue>{"1.00%"}</QuoteDetailValue>
+        <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
         <Icon src={infoIcon} alt={"More Info"} />
       </QuoteDetailLine>
       <QuoteDetailLine>

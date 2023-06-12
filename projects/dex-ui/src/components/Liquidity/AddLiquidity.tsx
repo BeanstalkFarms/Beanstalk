@@ -52,6 +52,20 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     run();
   }, [sdk, well?.tokens]);
 
+  const bothAmountsZero = useMemo(() => {
+    if (!well.tokens) {
+      return true;
+    }
+
+    if (well.tokens.length === 0) {
+      return true;
+    }
+
+    const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
+
+    return nonZeroValues === 0;
+  }, [amounts, well.tokens]);
+
   const bothAmountsNonZero = useMemo(() => {
     if (!well.tokens) {
       return false;
@@ -116,7 +130,12 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
 
   const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
-    if (!bothAmountsNonZero) {
+    if (!bothAmountsNonZero && balancedMode) {
+      setShowQuoteDetails(false);
+      return null;
+    }
+
+    if (bothAmountsZero) {
       setShowQuoteDetails(false);
       return null;
     }

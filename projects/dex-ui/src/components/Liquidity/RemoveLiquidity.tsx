@@ -375,6 +375,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.REMOVE}
                 quote={selectedQuote}
+                lpTokenAmount={lpTokenAmount}
                 inputs={Object.values(amounts)}
                 wellLpToken={well.lpToken}
                 slippageSettingsClickHandler={slippageSettingsClickHandler}
