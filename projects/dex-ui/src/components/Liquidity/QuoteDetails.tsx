@@ -123,42 +123,41 @@ const QuoteDetails = ({
     const run = async() => {
       if (tokenPrices && tokenReserves && quote && quote.quote) {
         if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
-
-          let totalUSDValue = TokenValue.ZERO
+          let totalUSDValue = TokenValue.ZERO;
           let valueInUSD
           if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
-            valueInUSD = tokenPrices![selectedTokenIndex!]!.mul(!Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO)
-            totalUSDValue = totalUSDValue.add(valueInUSD)
+            valueInUSD = tokenPrices![selectedTokenIndex!]!.mul(!Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO);
+            totalUSDValue = totalUSDValue.add(valueInUSD);
           } else {
             for (let i = 0; i < tokenPrices.length; i++) {
-              valueInUSD = tokenPrices![i]!.mul(Array.isArray(quote.quote) ? quote.quote![i] || TokenValue.ZERO : TokenValue.ZERO)
-              totalUSDValue = totalUSDValue.add(valueInUSD)
+              valueInUSD = tokenPrices![i]!.mul(Array.isArray(quote.quote) ? quote.quote![i] || TokenValue.ZERO : TokenValue.ZERO);
+              totalUSDValue = totalUSDValue.add(valueInUSD);
             }
           }
-          setTokenUSDValue(totalUSDValue)
+          setTokenUSDValue(totalUSDValue);
 
         } else if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
 
-          let totalReservesUSDValue = TokenValue.ZERO
+          let totalReservesUSDValue = TokenValue.ZERO;
           for (let i = 0; i < tokenPrices.length; i++) {
-            const reserveValueInUSD = tokenPrices![i]!.mul(tokenReserves[i]!.add(inputs![i] || TokenValue.ZERO))
-            totalReservesUSDValue = totalReservesUSDValue.add(reserveValueInUSD)
+            const reserveValueInUSD = tokenPrices![i]!.mul(tokenReserves[i]!.add(inputs![i] || TokenValue.ZERO));
+            totalReservesUSDValue = totalReservesUSDValue.add(reserveValueInUSD);
           }
-          const lpTokenSupply = await wellLpToken?.getTotalSupply()
+          const lpTokenSupply = await wellLpToken?.getTotalSupply();
           if (!lpTokenSupply || lpTokenSupply.eq(TokenValue.ZERO)) {
-            setTokenUSDValue(TokenValue.ZERO)
-            return
+            setTokenUSDValue(TokenValue.ZERO);
+            return;
           }
-          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply)
-          const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO
-          setTokenUSDValue(finalUSDValue)
+          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply);
+          const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
+          setTokenUSDValue(finalUSDValue);
 
         }
       }
     }
 
     run();
-  }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex])
+  }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex]);
 
   return (
     <QuoteContainer>

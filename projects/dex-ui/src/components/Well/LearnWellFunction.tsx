@@ -13,16 +13,16 @@ function WellFunctionDetails(functionName: any) {
         <div><FunctionNameStyled>Constant Product</FunctionNameStyled> is a reusable pricing function which prices tokens using:</div>
         <div><Bold>x * y = k</Bold>, where <Bold>x</Bold> is the amount of one token, <Bold>y</Bold> is the amount of the other and <Bold>k</Bold> is a fixed constant.</div>
       </TextContainer>
-    )
+    );
   } else {
     return (
       <TextContainer>
         <div>Each Well utilizes a unique pricing function to price the tokens in the Well.</div>
         <div>Brief descriptions of a Well's pricing function will appear in this box.</div>
       </TextContainer>
-    )
-  }
-}
+    );
+  };
+};
 
 export const LearnWellFunction: FC<{ name: string }> = ({ name }) => {
   return (
@@ -41,14 +41,14 @@ const TextContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   color: #4B5563;
-`
+`;
 
 const FunctionNameStyled = styled.span`
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 1px;
-`
+`;
 
 const Bold = styled.span`
   font-weight: 600;
-`
+`;
