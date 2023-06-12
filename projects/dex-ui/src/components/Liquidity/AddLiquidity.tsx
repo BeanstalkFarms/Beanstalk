@@ -266,10 +266,13 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.ADD}
                 quote={quote}
+                inputs={Object.values(amounts)}
                 wellLpToken={well.lpToken}
                 slippageSettingsClickHandler={slippageSettingsClickHandler}
                 handleSlippageValueChange={handleSlippageValueChange}
                 slippage={slippage}
+                tokenPrices={prices}
+                tokenReserves={well.reserves}
               />
             )}
             <MediumGapContainer>
