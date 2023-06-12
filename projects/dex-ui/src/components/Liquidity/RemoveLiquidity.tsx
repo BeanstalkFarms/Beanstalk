@@ -16,6 +16,8 @@ import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
 import { TabButton } from "../TabButton";
 import { TransactionToast } from "../TxnToast/TransactionToast";
+import useSdk from "src/utils/sdk/useSdk";
+import { getPrice } from "src/utils/price/usePrice";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -33,6 +35,20 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
+  const [prices, setPrices] = useState<(TokenValue | null)[]>();
+
+  const sdk = useSdk();
+
+  useEffect(() => {
+    const run = async () => {
+      if (!well) return
+      if (well.tokens) {
+        const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+        setPrices(prices);
+      }
+    };
+    run();
+  }, [sdk, well?.tokens]);
 
   const { balanced, oneToken, custom } = useLiquidityQuote(
     well,
@@ -367,6 +383,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 wellTokens={well.tokens}
                 removeLiquidityMode={removeLiquidityMode}
                 selectedTokenIndex={singleTokenIndex}
+                tokenPrices={prices}
+                tokenReserves={well.reserves}
               />
             )}
             {!tokenAllowance ? (
