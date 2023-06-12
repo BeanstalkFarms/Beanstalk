@@ -87,12 +87,6 @@ export class Quote {
     this.slippage = slippage;
 
     const fwd = direction === Direction.FORWARD;
-    if (fwd) {
-      console.log(`QUOTING: ${amount.toHuman()} ${this.fromToken.symbol} => ? ${this.toToken.symbol}`);
-    } else {
-      console.log(`QUOTING: ? ${this.fromToken.symbol} => ${amount.toHuman()} ${this.toToken.symbol}`);
-    }
-
     const steps = fwd ? this.steps : [...this.steps].reverse();
     const isMultiReverse = !fwd && steps.length > 1;
 
