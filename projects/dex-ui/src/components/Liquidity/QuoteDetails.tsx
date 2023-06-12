@@ -173,7 +173,7 @@ const QuoteDetails = ({
       <QuoteDetailLine>
         <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
         <QuoteDetailValue>{"1.00%"}</QuoteDetailValue>
-        <GearImage src={infoIcon} alt={"More Info"} />
+        <Icon src={infoIcon} alt={"More Info"} />
       </QuoteDetailLine>
       <QuoteDetailLine>
         <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
@@ -194,7 +194,7 @@ const QuoteDetails = ({
 
 export default QuoteDetails;
 
-const GearImage = styled.img`
+const Icon = styled.img`
   margin-left: 10px;
 `;
 
