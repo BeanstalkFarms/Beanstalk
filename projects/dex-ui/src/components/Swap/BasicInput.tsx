@@ -138,6 +138,10 @@ const StyledInput = styled.input`
 
   color: #;
   outline: none;
+
+  ::placeholder {
+    color: #a3a3a3;
+  }
 `;
 
 /**

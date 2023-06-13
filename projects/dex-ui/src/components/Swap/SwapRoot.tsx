@@ -17,13 +17,13 @@ export const SwapRoot = () => {
   const { address: account } = useAccount();
 
   const [tokenSwapParams, setTokenSwapParams] = useSearchParams();
-  const fromToken = tokenSwapParams.get("fromToken")
-  const toToken = tokenSwapParams.get("toToken")
+  const fromToken = tokenSwapParams.get("fromToken");
+  const toToken = tokenSwapParams.get("toToken");
 
   const tokens = useTokens();
   const [inAmount, setInAmount] = useState<TokenValue>();
-  const [inToken, setInToken] = useState<Token>(fromToken ? tokens[fromToken] ? tokens[fromToken] : tokens["WETH"] : tokens["WETH"]);
-  const [outToken, setOutToken] = useState<Token>(toToken ? tokens[toToken] ? tokens[toToken] : tokens["BEAN"] : tokens["BEAN"]);
+  const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["WETH"]) : tokens["WETH"]);
+  const [outToken, setOutToken] = useState<Token>(toToken ? (tokens[toToken] ? tokens[toToken] : tokens["BEAN"]) : tokens["BEAN"]);
   const [outAmount, setOutAmount] = useState<TokenValue>();
   const [slippage, setSlippage] = useState<number>(0.1);
   const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
@@ -64,21 +64,23 @@ export const SwapRoot = () => {
   };
 
   const handleInputChange = useCallback(
-    async (a: TokenValue) => {
-      setInAmount(a);
-      if (a.eq(0)) {
+    async (amount: TokenValue) => {
+      setInAmount(amount);
+      if (amount.eq(0)) {
         setOutAmount(outToken.amount(0));
         return;
       }
 
       try {
-        const quote = await quoter?.quoteForward(a, account!, slippage);
+        const quote = await quoter?.quoteForward(amount, account!, slippage);
         Log.module("swap").debug("Forward quote", quote);
         if (!quote) {
           setOutAmount(undefined);
           setNeedsApproval(true);
           setQuote(undefined);
           setReadyToSwap(false);
+
+          return;
         }
         setReadyToSwap(true);
         setOutAmount(quote?.amount);
@@ -90,7 +92,9 @@ export const SwapRoot = () => {
         setQuote(quote);
       } catch (err: unknown) {
         Log.module("swap").error("Error during quote: ", (err as Error).message);
-        setOutAmount(undefined); // TODO: clear this better
+        setOutAmount(undefined);
+        setNeedsApproval(true);
+        setQuote(undefined);
         setReadyToSwap(false);
       }
     },
@@ -98,19 +102,35 @@ export const SwapRoot = () => {
   );
 
   const handleOutputChange = useCallback(
-    async (a: TokenValue) => {
-      setOutAmount(a);
-      if (a.eq(0)) {
+    async (amount: TokenValue) => {
+      setOutAmount(amount);
+      if (amount.eq(0)) {
         setInAmount(inToken.amount(0));
         return;
       }
       try {
-        const quote = await quoter?.quoteReverse(a, account!, slippage);
+        const quote = await quoter?.quoteReverse(amount, account!, slippage);
         Log.module("swap").debug("Reverse quote", quote);
+        if (!quote) {
+          setInAmount(undefined);
+          setNeedsApproval(true);
+          setQuote(undefined);
+          setReadyToSwap(false);
+
+          return;
+        }
+
+        setReadyToSwap(true);
         setInAmount(quote!.amount);
+        if (quote?.doApproval) {
+          setNeedsApproval(true);
+        } else {
+          setNeedsApproval(false);
+        }
+        setQuote(quote);
       } catch (err: unknown) {
         Log.module("swap").error("Error during quote: ", (err as Error).message);
-        setInAmount(undefined); // TODO: clear this better
+        setInAmount(undefined);
         setReadyToSwap(false);
       }
     },
@@ -234,7 +254,6 @@ export const SwapRoot = () => {
             onTokenChange={handleOutputTokenChange}
             canChangeToken={true}
             showBalance={true}
-            showMax={false}
             loading={isLoadingAllBalances}
           />
         </SwapInputContainer>

@@ -1,5 +1,6 @@
 import React, { MouseEvent, useCallback, useRef, useState } from "react";
 import { Token, TokenValue } from "@beanstalk/sdk";
+import debounce from "lodash/debounce";
 import { FC } from "src/types";
 import styled, { keyframes } from "styled-components";
 import { BasicInput } from "./BasicInput";
@@ -20,12 +21,12 @@ type TokenInput = {
   width?: string;
   canChangeToken?: boolean;
   showBalance?: boolean;
-  showMax?: boolean;
   allowNegative?: boolean;
   loading: boolean;
   onAmountChange?: (a: TokenValue) => void;
   onTokenChange?: (t: Token) => void;
   canChangeValue?: boolean;
+  debounceTime?: number;
 };
 
 export const TokenInput: FC<TokenInput> = ({
@@ -40,7 +41,8 @@ export const TokenInput: FC<TokenInput> = ({
   showBalance = true,
   loading = false,
   allowNegative = false,
-  canChangeValue = true
+  canChangeValue = true,
+  debounceTime = 500
 }) => {
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,12 +50,13 @@ export const TokenInput: FC<TokenInput> = ({
   const { data: balance, isLoading: isBalanceLoading } = useTokenBalance(token);
   width = width ?? "100%";
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateAmount = useCallback(
-    (value: string) => {
+    debounce((value: string) => {
       if (!token) return;
       const newAmount = token.amount(value);
       onAmountChange && onAmountChange(newAmount);
-    },
+    }, debounceTime),
     [token, onAmountChange]
   );
 
@@ -138,7 +141,9 @@ export const TokenInput: FC<TokenInput> = ({
 
       {showBalance && (
         <BalanceRow>
-          <Balance onClick={handleClickMax}>Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
+          <Balance onClick={handleClickMax}>
+            Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}
+          </Balance>
         </BalanceRow>
       )}
     </Container>
@@ -220,5 +225,5 @@ const Balance = styled.div`
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  cursor:pointer;
+  cursor: pointer;
 `;
