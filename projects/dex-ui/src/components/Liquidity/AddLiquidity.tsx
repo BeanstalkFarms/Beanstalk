@@ -3,7 +3,6 @@ import { TokenInput } from "../../components/Swap/TokenInput";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useQuery } from "@tanstack/react-query";
 import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
@@ -43,30 +42,14 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
   useEffect(() => {
     const run = async () => {
-      if (!well) return;
-      if (well.tokens) {
-        const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
-        setPrices(prices);
-      }
+      if (!well?.tokens) return;
+      const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+      setPrices(prices);
     };
     run();
   }, [sdk, well?.tokens]);
 
-  const bothAmountsZero = useMemo(() => {
-    if (!well.tokens) {
-      return true;
-    }
-
-    if (well.tokens.length === 0) {
-      return true;
-    }
-
-    const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
-
-    return nonZeroValues === 0;
-  }, [amounts, well.tokens]);
-
-  const bothAmountsNonZero = useMemo(() => {
+  const atLeastOneAmountNonZero = useMemo(() => {
     if (!well.tokens) {
       return false;
     }
@@ -77,8 +60,8 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
     const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
 
-    return nonZeroValues === well.tokens?.length;
-  }, [amounts, well.tokens]);
+    return nonZeroValues !== 0;
+  }, [amounts, well.tokens])
 
   const checkMinAllowanceForAllTokens = useCallback(async () => {
     if (!address) {
@@ -87,8 +70,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
     const _tokenAllowance = [];
     for (let [index, token] of well.tokens!.entries()) {
-      // only check approval if this token has an amount gt zero
-      if (amounts[index] && amounts[index].gt(0)) {
+      if (amounts[index]) {
         const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index]);
         Log.module("AddLiquidity").debug(
           `Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`
@@ -130,24 +112,20 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
 
   const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
-    if (!bothAmountsNonZero && balancedMode) {
-      setShowQuoteDetails(false);
-      return null;
-    }
-
-    if (bothAmountsZero) {
-      setShowQuoteDetails(false);
-      return null;
-    }
-
-    if (!allTokensHaveMinAllowance) {
+    
+    if (!atLeastOneAmountNonZero) {
       setShowQuoteDetails(false);
       return null;
     }
 
     try {
       const quote = await well.addLiquidityQuote(Object.values(amounts));
-      const estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      let estimate
+      if (allTokensHaveMinAllowance) {
+        estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      } else {
+        estimate = TokenValue.ZERO
+      }
       setShowQuoteDetails(true);
       return {
         quote,
@@ -155,7 +133,6 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       };
     } catch (error: any) {
       Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
-      setShowQuoteDetails(false);
       return null;
     }
   });
@@ -196,11 +173,11 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         setAmounts({ ...amounts, [index]: amount });
         return;
       };
-      const amountInUSD = amount.mul(prices[index]!);
+      const amountInUSD = amount.mul(prices[index] || TokenValue.ZERO);
       let _amounts = [];
       for (let i = 0; i < prices.length; i++) {
         if (i !== index) {
-          const conversion = amountInUSD.div(prices[i]!);
+          const conversion = prices[i] && prices[i]?.gt(TokenValue.ZERO) ? amountInUSD.div(prices[i]!) : TokenValue.ZERO
           const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals);
           _amounts[i] = conversionFormatted;
         } else {
@@ -209,7 +186,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       };
       setAmounts(Object.assign({}, _amounts));
     },
-    [amounts]
+    [amounts, prices, well.tokens]
   );
 
   useEffect(() => {
@@ -220,16 +197,16 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       return;
     }
 
-    if (!bothAmountsNonZero) {
+    if (!atLeastOneAmountNonZero) {
       return;
     }
 
     checkMinAllowanceForAllTokens();
-  }, [well.tokens, address, bothAmountsNonZero, amounts, checkMinAllowanceForAllTokens]);
+  }, [well.tokens, address, atLeastOneAmountNonZero, amounts, checkMinAllowanceForAllTokens]);
 
   const addLiquidityButtonEnabled = useMemo(
-    () => address && bothAmountsNonZero && allTokensHaveMinAllowance,
-    [address, bothAmountsNonZero, allTokensHaveMinAllowance]
+    () => address && atLeastOneAmountNonZero && allTokensHaveMinAllowance,
+    [address, atLeastOneAmountNonZero, allTokensHaveMinAllowance]
   );
 
   const approveTokenButtonClickHandler = useCallback(
@@ -251,7 +228,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
   );
 
-  const buttonLabel = useMemo(() => (!bothAmountsNonZero ? "Input Tokens" : "Add Liquidity"), [bothAmountsNonZero]);
+  const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Input Tokens" : "Add Liquidity"), [atLeastOneAmountNonZero]);
 
   return (
     <div>
@@ -350,13 +327,6 @@ const ApproveTokenButton = styled(Button)`
 `;
 
 const AddLiquidityButton = styled(Button)``;
-
-const Divider = styled.hr`
-  width: 100%;
-  background-color: #000;
-  border: none;
-  height: 2px;
-`;
 
 const TokenListContainer = styled.div`
   width: full;
