@@ -2,7 +2,7 @@ import { Well } from "@beanstalk/sdk/Wells";
 import { useQuery } from "@tanstack/react-query";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { useMemo } from "react";
-import { LiquidityAmounts, REMOVE_LIQUIDITY_MODE } from "src/components/Liquidity/types";
+import { REMOVE_LIQUIDITY_MODE } from "src/components/Liquidity/types";
 import { Log } from "src/utils/logger";
 import { useAccount } from "wagmi";
 
@@ -12,11 +12,11 @@ export const useLiquidityQuote = (
   lpTokenAmount: TokenValue,
   singleTokenIndex: number,
   wellTokens: Token[],
-  amounts: LiquidityAmounts
+  amounts: TokenValue[],
 ) => {
   const { address } = useAccount();
 
-  const bothAmountsNonZero = useMemo(
+  const oneAmountNonZero = useMemo(
     () => {
       if (!well.tokens) {
         return false;
@@ -26,14 +26,14 @@ export const useLiquidityQuote = (
         return false;
       }
 
-      const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
+      const nonZeroValues = amounts.filter((amount) => amount && amount.value.gt("0")).length;
       
-      return nonZeroValues === well.tokens?.length;
+      return nonZeroValues !== 0;
     },
     [amounts, well.tokens]
   );
 
-  Log.module("useliquidityquote").debug("Quote details:", { amounts, bothAmountsNonZero, removeLiquidityMode });
+  Log.module("useliquidityquote").debug("Quote details:", { amounts, oneAmountNonZero, removeLiquidityMode });
 
   const {
     data: balancedQuote,
@@ -96,13 +96,14 @@ export const useLiquidityQuote = (
       return null;
     }
 
-    if (!amounts || !bothAmountsNonZero || !address) {
+    if (!amounts || !oneAmountNonZero || !address) {
       return null;
     }
 
     try {
-      const quote = await well.removeLiquidityImbalancedQuote(Object.values(amounts));
-      const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, Object.values(amounts), address);
+      console.log("AMOUNTS:", amounts)
+      const quote = await well.removeLiquidityImbalancedQuote(amounts);
+      const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, amounts, address);
       return {
         quote,
         estimate

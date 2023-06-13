@@ -6,10 +6,9 @@ import { Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { images } from "src/assets/images/tokens";
 import { useAccount } from "wagmi";
-import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useLiquidityQuote } from "src/wells/useLiquidityQuote";
-import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts, REMOVE_LIQUIDITY_MODE } from "./types";
+import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
 import { Button } from "../Swap/Button";
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
 import { Log } from "../../utils/logger";
@@ -34,18 +33,16 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue | undefined>();
   const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
-  const [amounts, setAmounts] = useState<LiquidityAmounts>({});
+  const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
 
   const sdk = useSdk();
 
   useEffect(() => {
     const run = async () => {
-      if (!well) return;
-      if (well.tokens) {
-        const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
-        setPrices(prices);
-      }
+      if (!well.tokens) return;
+      const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+      setPrices(prices);
     };
     run();
   }, [sdk, well?.tokens]);
@@ -80,12 +77,12 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   const resetState = useCallback(() => {
     if (well.tokens) {
-      const initialAmounts: LiquidityAmounts = {};
+      const initialAmounts = []
       for (let i = 0; i < well.tokens.length; i++) {
-        delete initialAmounts[i];
+        initialAmounts[i] = TokenValue.ZERO
       }
 
-      setAmounts(initialAmounts);
+      setAmounts([...initialAmounts]);
       setLpTokenAmount(undefined);
     }
   }, [well.tokens]);
@@ -125,7 +122,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             return;
           }
           const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
-          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, Object.values(amounts), address);
+          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, amounts, address);
           toast.confirming(removeLiquidityTxn);
         }
         const receipt = await removeLiquidityTxn.wait();
@@ -152,16 +149,24 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
     slippage
   ]);
 
+  const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
+    if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom && newMode === REMOVE_LIQUIDITY_MODE.Balanced) {
+      setRemoveLiquidityMode(newMode);
+    } else {
+      setLpTokenAmount(TokenValue.ZERO);
+      setRemoveLiquidityMode(newMode);
+    }
+  };
+
   const handleInputChange = useCallback(
     (amountFromInput: TokenValue) => {
+      if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
+        setRemoveLiquidityMode(REMOVE_LIQUIDITY_MODE.Balanced)
+      }
       setLpTokenAmount(amountFromInput);
     },
-    [setLpTokenAmount]
+    [setLpTokenAmount, removeLiquidityMode]
   );
-
-  const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
-    setRemoveLiquidityMode(newMode);
-  };
 
   const handleSwitchSingleToken = (selectedTokenIndex: number) => {
     setSingleTokenIndex(selectedTokenIndex);
@@ -169,7 +174,14 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (amount: TokenValue) => {
-      setAmounts({ ...amounts, [index]: amount });
+      let _newAmounts = [...amounts]
+      _newAmounts[index] = amount
+      for (let i = 0; i < _newAmounts.length; i++) {
+        if (!_newAmounts[i]) {
+          _newAmounts[i] = TokenValue.ZERO
+        }
+      }
+      setAmounts([..._newAmounts]);
     },
     [amounts]
   );
@@ -177,14 +189,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const lpTokenAmountNonZero = useMemo(() => lpTokenAmount && lpTokenAmount.gt(0), [lpTokenAmount]);
 
   const removeLiquidityButtonEnabled = useMemo(() => address && lpTokenAmountNonZero, [address, lpTokenAmountNonZero]);
-
-  useEffect(() => {
-    // TODO: Could be a little more complicated. For example:
-    // - If we are leaving custom mode, reset to 0
-    // - If we are entering custom mode, reset to 0
-    // - If we are switching between balanced and one token, don't reset
-    setLpTokenAmount(TokenValue.ZERO);
-  }, [removeLiquidityMode]);
 
   const buttonLabel = useMemo(() => (lpTokenAmountNonZero ? "Remove Liquidity" : "Input Token Amount"), [lpTokenAmountNonZero]);
 
@@ -264,8 +268,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 onAmountChange={handleInputChange}
                 canChangeToken={false}
                 canChangeValue={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
-                showBalance={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
-                showMax={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
+                showBalance={true}
                 loading={false}
               />
             </TokenContainer>
@@ -327,14 +330,13 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             {removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && (
               <MediumGapContainer>
                 {well.tokens!.map((token: Token, index: number) => (
-                  <TokenContainer key={`token${index}`}>
+                  <ContainerSingleTokenRow key={`token${index}`} onClick={() => handleSwitchSingleToken(index)}>
                     <ReadOnlyTokenValueRow selected={singleTokenIndex === index}>
                       <Radio
                         type="radio"
                         name="singleToken"
                         value={index}
                         checked={singleTokenIndex === index}
-                        onChange={() => handleSwitchSingleToken(index)}
                       />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
@@ -344,7 +346,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                         <TokenAmount>{"0"}</TokenAmount>
                       )}
                     </ReadOnlyTokenValueRow>
-                  </TokenContainer>
+                  </ContainerSingleTokenRow>
                 ))}
               </MediumGapContainer>
             )}
@@ -376,7 +378,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 type={LIQUIDITY_OPERATION_TYPE.REMOVE}
                 quote={selectedQuote}
                 lpTokenAmount={lpTokenAmount}
-                inputs={Object.values(amounts)}
+                inputs={amounts}
                 wellLpToken={well.lpToken}
                 slippageSettingsClickHandler={slippageSettingsClickHandler}
                 handleSlippageValueChange={handleSlippageValueChange}
@@ -416,13 +418,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 type ReadOnlyRowProps = {
   selected?: boolean
 }
-
-const Divider = styled.hr`
-  width: 100%;
-  background-color: #000;
-  border: none;
-  height: 2px;
-`;
 
 const LargeGapContainer = styled.div`
   display: flex;
@@ -542,6 +537,13 @@ const TokenContainer = styled.div`
   width: full;
   display: flex;
   flex-direction: column;
+`;
+
+const ContainerSingleTokenRow = styled.div`
+  width: full;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
 `;
 
 const OutputModeSelectorContainer = styled.div`
