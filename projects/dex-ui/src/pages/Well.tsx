@@ -76,7 +76,7 @@ export const Well = () => {
 
   const goLiquidity = () => navigate(`./liquidity`)
 
-  const goSwap = () => (well && well.tokens ? navigate(`../swap?token1=${well.tokens[0].symbol}&token2=${well.tokens[1].symbol}`) : null)
+  const goSwap = () => (well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null)
 
   if (loading)
     return (
