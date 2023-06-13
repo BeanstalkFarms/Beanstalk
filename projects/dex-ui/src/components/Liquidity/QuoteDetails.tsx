@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
-import { formatEther } from "ethers/lib/utils";
-
-import gearIcon from "/src/assets/images/gear.svg";
-import infoIcon from "/src/assets/images/info.svg";
 import useSdk from "src/utils/sdk/useSdk";
 import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
-import { getPrice } from "src/utils/price/usePrice";
 import { getGasInUsd } from "src/utils/gasprice";
 import SlippagePanel from "./SlippagePanel";
+import { Info } from "../Icons";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE;
@@ -37,13 +33,11 @@ const QuoteDetails = ({
   type,
   removeLiquidityMode,
   quote,
-  lpTokenAmount,
   inputs,
   slippage,
   wellLpToken,
   wellTokens,
   selectedTokenIndex,
-  slippageSettingsClickHandler,
   handleSlippageValueChange,
   tokenPrices,
   tokenReserves
@@ -118,7 +112,7 @@ const QuoteDetails = ({
       return allTokensValue.join(", ");
     }
     throw new Error("invalid type or removeLiquidityMode");
-  }, [quote, type, wellLpToken, wellTokens, removeLiquidityMode]);
+  }, [quote, type, wellLpToken, wellTokens, removeLiquidityMode, inputs, selectedTokenIndex]);
 
  useEffect(() => {
     const run = async() => {
@@ -158,13 +152,13 @@ const QuoteDetails = ({
     }
 
     run();
-  }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex]);
+  }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex, inputs, removeLiquidityMode, wellLpToken]);
 
   const priceImpact = useMemo(() => {
 
     if (!tokenReserves || !inputs) return TokenValue.ZERO
 
-    function calculatePrice(prevVal: any, token: any, index: any) {
+    function calculatePrice(prevVal: any, token: any) {
       if (token.eq(TokenValue.ZERO)) {
         return TokenValue.ZERO
       };
@@ -212,7 +206,7 @@ const QuoteDetails = ({
 
     return priceDiff
 
-  }, [tokenReserves, inputs, lpTokenAmount])
+  }, [tokenReserves, inputs, quote, removeLiquidityMode, selectedTokenIndex, tokenPrices, type])
 
   return (
     <QuoteContainer>
@@ -227,7 +221,9 @@ const QuoteDetails = ({
       <QuoteDetailLine>
         <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
         <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
-        <Icon src={infoIcon} alt={"More Info"} />
+        <IconContainer>
+          <Info color={"#9CA3AF"} />
+        </IconContainer>
       </QuoteDetailLine>
       <QuoteDetailLine>
         <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
@@ -248,14 +244,16 @@ const QuoteDetails = ({
 
 export default QuoteDetails;
 
-const Icon = styled.img`
-  margin-left: 10px;
-`;
-
 type QuoteDetailProps = {
   bold?: boolean;
   color?: string;
 };
+
+const IconContainer = styled.div`
+  margin-left: 10px;
+  margin-top: 2px;
+  margin-bottom: -2px;
+`
 
 const QuoteDetailLabel = styled.div<QuoteDetailProps>`
   align-items: flex-start;

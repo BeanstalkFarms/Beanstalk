@@ -10,7 +10,6 @@ export const ChevronDown = ({ color = "#000", width, height }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 10 6" fill="none">
     <path d="M1 1L5 5L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
-  
 );
 
 export const Discord = ({ color = "#000", width, height }: SVGProps) => (
@@ -68,7 +67,7 @@ export const WellFunction = ({ color = "#000", width = 14, height = 14 }: SVGPro
 
 export const X = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
-    <path fill="#000" d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19Z" />
+    <path fill={color} d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19Z" />
   </svg>
 );
 
@@ -95,5 +94,13 @@ export const Error = ({ color = "#000", width = 19, height = 19 }: SVGProps) => 
 export const Success = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 52 52">
     <path fill={color} d="M26 2C12.7 2 2 12.7 2 26s10.7 24 24 24 24-10.7 24-24S39.3 2 26 2zm13.4 18L24.1 35.5c-.6.6-1.6.6-2.2 0L13.5 27c-.6-.6-.6-1.6 0-2.2l2.2-2.2c.6-.6 1.6-.6 2.2 0l4.4 4.5c.4.4 1.1.4 1.5 0L35 15.5c.6-.6 1.6-.6 2.2 0l2.2 2.2c.7.6.7 1.6 0 2.3z" />
+  </svg>
+);
+
+export const Info = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg width={width} height={height} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fillRule="evenodd" clipRule="evenodd" d="M10.6676 14.0025H5.33204C3.4906 14.0025 1.99731 12.5092 1.99731 10.6678V5.33222C1.99731 3.49079 3.4906 1.9975 5.33204 1.9975H10.6676C12.509 1.9975 14.0023 3.49079 14.0023 5.33222V10.6678C14.0023 12.5092 12.509 14.0025 10.6676 14.0025Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7.99907 5.33223C7.90703 5.33223 7.83233 5.40693 7.833 5.49897C7.833 5.59101 7.9077 5.66571 7.99973 5.66571C8.09177 5.66571 8.16647 5.59101 8.16647 5.49897C8.16647 5.40693 8.09177 5.33223 7.99907 5.33223" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8.16646 10.7905V7.6225H7.49951" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
