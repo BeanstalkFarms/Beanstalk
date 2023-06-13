@@ -1,29 +1,19 @@
-import React, { ReactNode, useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
-import { BodyL, BodyS, TextNudge } from "src/components/Typography";
 import styled from "styled-components";
-import { Title } from "src/components/PageComponents/Title";
 import { Page } from "src/components/Page";
-import { TokenLogo } from "src/components/TokenLogo";
-import { Reserves } from "src/components/Well/Reserves";
 import { LiquidityBox } from "src/components/Well/LiquidityBox";
-import { Spinner2 } from "src/components/Spinner2";
 import { Button } from "src/components/Swap/Button";
 import { LearnYield } from "src/components/Well/LearnYield";
 import { Item, Row } from "src/components/Layout";
 import { LearnWellFunction } from "src/components/Well/LearnWellFunction";
 import { LearnPump } from "src/components/Well/LearnPump";
-import { ChartSection } from "src/components/Well/Chart/ChartSection";
 import { TabButton } from "src/components/TabButton";
-import { OtherSection } from "src/components/Well/OtherSection";
-import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
 import tripleCopyIcon from "/src/assets/images/triple-copy.svg";
 import { Log } from "src/utils/logger";
-import SlippagePanel from "src/components/Liquidity/SlippagePanel";
-
 
 export const Liquidity = () => {
     

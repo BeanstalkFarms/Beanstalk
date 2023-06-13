@@ -171,6 +171,7 @@ const QuoteDetails = ({
     );
 
     const newData = tokenReserves.map((token, index) => {
+      if (!quote) return TokenValue.ZERO;
       if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
           return (tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!));

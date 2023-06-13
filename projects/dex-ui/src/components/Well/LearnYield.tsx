@@ -10,7 +10,7 @@ type Props = {};
 function YieldDetails() {
   return (
     <TextContainer>
-      <div>This Well has <strong>NO</strong> trading fees!</div> 
+      <div>This Well has <strong>NO</strong> trading fees!</div> 
       <div>Instead, Beanstalk will issue Stalk rewards to users who Deposit LP Tokens.</div>
       <div>Stalk holders intermittently receive Beans as yield.</div>
       <StyledLink href="https://app.bean.money/">Add Liquidity and Deposit in one transaction using the Beanstalk site!</StyledLink>
