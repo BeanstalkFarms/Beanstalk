@@ -125,7 +125,7 @@ const QuoteDetails = ({
             totalUSDValue = totalUSDValue.add(valueInUSD);
           } else {
             for (let i = 0; i < tokenPrices.length; i++) {
-              valueInUSD = tokenPrices![i]!.mul(removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote) ? quote.quote[i] : inputs![i]);
+              valueInUSD = tokenPrices![i]!.mul(removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote) ? quote.quote[i] || TokenValue.ZERO : inputs![i] || TokenValue.ZERO);
               totalUSDValue = totalUSDValue.add(valueInUSD);
             }
           }
@@ -177,7 +177,7 @@ const QuoteDetails = ({
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && !Array.isArray(quote!.quote)) {
           return (tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices![index]!));
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote!.quote)) {
-          return (tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices![index]!).mul(tokenPrices![index]!));
+          return (tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices![index]!));
         } else {
           return TokenValue.ZERO
         };
@@ -191,19 +191,16 @@ const QuoteDetails = ({
 
     let priceDiff
     if (!newPrice || !oldPrice) {
-      priceDiff = TokenValue.ZERO;
+      return TokenValue.ZERO;
     } else if (newPrice?.eq(TokenValue.ZERO)) {
-      priceDiff = TokenValue.fromHuman(-100, 6);
+      return TokenValue.fromHuman(-100, 6);
     } else if (oldPrice?.eq(TokenValue.ZERO)) {
-      priceDiff = TokenValue.fromHuman(100, 6);
+      return TokenValue.fromHuman(100, 6);
     } else {
-      if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
-        priceDiff = newPrice.div(oldPrice).mul(TokenValue.fromHuman(newPrice.gte(oldPrice) ? 100 : -100, 6));
-      } else {
-        priceDiff = newPrice.div(oldPrice).mul(TokenValue.fromHuman(100, 6)).sub(TokenValue.fromHuman(100, 6)).mul(TokenValue.fromHuman(-1, 6));
-      }
+      priceDiff = oldPrice.sub(newPrice).div(newPrice).mul(TokenValue.fromHuman(100, 6))
     }
 
+    if (priceDiff.abs().lt(TokenValue.fromHuman('0.01', 6))) return TokenValue.ZERO
     return priceDiff
 
   }, [tokenReserves, inputs, quote, removeLiquidityMode, selectedTokenIndex, tokenPrices, type])
