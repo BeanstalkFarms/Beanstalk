@@ -37,21 +37,21 @@ export const Well = () => {
 
   useEffect(() => {
     const run = async () => {
-      if (!well) return
+      if (!well?.tokens) return;
 
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);
-      }
+      };
 
       if (well.wellFunction) {
         const _wellName = await well.wellFunction.contract.name()
         setWellFunctionName(_wellName)
-      }
+      };
     };
 
     run();
-  }, [sdk, well?.tokens]);
+  }, [sdk, well]);
 
   const title = (well?.tokens ?? []).map((t) => t.symbol).join("/");
   const logos: ReactNode[] = (well?.tokens || []).map((token) => <TokenLogo token={token} size={48} key={token.symbol} />);
@@ -67,7 +67,6 @@ export const Well = () => {
       percentage: TokenValue.ZERO
     };
   });
-  const haveDollarAmounts = !reserves.find((r) => !r.dollarAmount);
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
   reserves.forEach(reserve => {
