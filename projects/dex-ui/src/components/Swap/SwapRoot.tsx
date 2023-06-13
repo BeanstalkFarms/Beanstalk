@@ -10,15 +10,20 @@ import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
+import { useParams, useSearchParams } from "react-router-dom";
 import { TransactionToast } from "../TxnToast/TransactionToast";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
 
+  const [tokenSwapParams, setTokenSwapParams] = useSearchParams();
+  const fromToken = tokenSwapParams.get("fromToken")
+  const toToken = tokenSwapParams.get("toToken")
+
   const tokens = useTokens();
   const [inAmount, setInAmount] = useState<TokenValue>();
-  const [inToken, setInToken] = useState<Token>(tokens["WETH"]);
-  const [outToken, setOutToken] = useState<Token>(tokens["BEAN"]);
+  const [inToken, setInToken] = useState<Token>(fromToken ? tokens[fromToken] ? tokens[fromToken] : tokens["WETH"] : tokens["WETH"]);
+  const [outToken, setOutToken] = useState<Token>(toToken ? tokens[toToken] ? tokens[toToken] : tokens["BEAN"] : tokens["BEAN"]);
   const [outAmount, setOutAmount] = useState<TokenValue>();
   const [slippage, setSlippage] = useState<number>(0.1);
   const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);

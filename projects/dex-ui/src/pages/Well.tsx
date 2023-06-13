@@ -1,5 +1,5 @@
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
@@ -24,9 +24,11 @@ import { WellHistory } from "src/components/Well/Activity/WellHistory";
 
 export const Well = () => {
   const sdk = useSdk();
+  const navigate = useNavigate();
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
+  const [wellFunctionName, setWellFunctionName] = useState<string | undefined>('-')
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -37,12 +39,19 @@ export const Well = () => {
     const run = async () => {
       if (!well?.tokens) return;
 
-      const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
-      setPrices(prices);
+      if (well.tokens) {
+        const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+        setPrices(prices);
+      };
+
+      if (well.wellFunction) {
+        const _wellName = await well.wellFunction.contract.name()
+        setWellFunctionName(_wellName)
+      };
     };
 
     run();
-  }, [sdk, well?.tokens]);
+  }, [sdk, well]);
 
   const title = (well?.tokens ?? []).map((t) => t.symbol).join("/");
   const logos: ReactNode[] = (well?.tokens || []).map((token) => <TokenLogo token={token} size={48} key={token.symbol} />);
@@ -54,18 +63,19 @@ export const Well = () => {
     return {
       token,
       amount,
-      dollarAmount: price ? amount.mul(price) : null
+      dollarAmount: price ? amount.mul(price) : null,
+      percentage: TokenValue.ZERO
     };
   });
-  const haveDollarAmounts = !reserves.find((r) => !r.dollarAmount);
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
-  const goLiquidity = () => {
-    console.log("go liquidity");
-  };
-  const goSwap = () => {
-    console.log("go goSwap");
-  };
+  reserves.forEach(reserve => {
+    reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
+  })
+
+  const goLiquidity = () => navigate(`./liquidity`)
+
+  const goSwap = () => (well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null)
 
   if (loading)
     return (
@@ -95,7 +105,7 @@ export const Well = () => {
               </Header>
             </Item>
             <Item column stretch right>
-              <FunctionName>ConstantChangeMe</FunctionName>
+              <FunctionName>{wellFunctionName}</FunctionName>
               <Fee>4.20% Tradading Fee</Fee>
             </Item>
           </Row>
@@ -129,7 +139,7 @@ export const Well = () => {
           </Row>
           <LiquidityBox lpToken={well?.lpToken!} />
           <LearnYield />
-          <LearnWellFunction name={"CHANGEME"} />
+          <LearnWellFunction name={wellFunctionName || "A Well Function"} />
           <LearnPump />
         </SideBar>
       </ContentWrapper>

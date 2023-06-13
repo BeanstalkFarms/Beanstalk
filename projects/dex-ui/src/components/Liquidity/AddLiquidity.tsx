@@ -3,7 +3,6 @@ import { TokenInput } from "../../components/Swap/TokenInput";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { ContractReceipt } from "ethers";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useQuery } from "@tanstack/react-query";
 import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
@@ -11,12 +10,16 @@ import { Button } from "../Swap/Button";
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
 import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
+import { TransactionToast } from "../TxnToast/TransactionToast";
+import { getPrice } from "src/utils/price/usePrice";
+import useSdk from "src/utils/sdk/useSdk";
 
 type AddLiquidityProps = {
   well: Well;
   txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
+  handleSlippageValueChange: (value: string) => void;
 };
 
 export type AddLiquidityQuote = {
@@ -26,15 +29,27 @@ export type AddLiquidityQuote = {
   estimate: TokenValue;
 };
 
-export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler }: AddLiquidityProps) => {
+export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
   const { address } = useAccount();
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
-  const [receipt, setReceipt] = useState<ContractReceipt | null>(null);
+  const [balancedMode, setBalancedMode] = useState(true);
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
+  const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
 
-  const bothAmountsNonZero = useMemo(() => {
+  const sdk = useSdk();
+
+  useEffect(() => {
+    const run = async () => {
+      if (!well?.tokens) return;
+      const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
+      setPrices(prices);
+    };
+    run();
+  }, [sdk, well?.tokens]);
+
+  const atLeastOneAmountNonZero = useMemo(() => {
     if (!well.tokens) {
       return false;
     }
@@ -45,8 +60,8 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
     const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
 
-    return nonZeroValues === well.tokens?.length;
-  }, [amounts, well.tokens]);
+    return nonZeroValues !== 0;
+  }, [amounts, well.tokens])
 
   const checkMinAllowanceForAllTokens = useCallback(async () => {
     if (!address) {
@@ -55,8 +70,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
     const _tokenAllowance = [];
     for (let [index, token] of well.tokens!.entries()) {
-      // only check approval if this token has an amount gt zero
-      if (amounts[index] && amounts[index].gt(0)) {
+      if (amounts[index]) {
         const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index]);
         Log.module("AddLiquidity").debug(
           `Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`
@@ -98,20 +112,21 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const allTokensHaveMinAllowance = useMemo(() => tokenAllowance.filter((a) => a === false).length === 0, [tokenAllowance]);
 
   const { data: quote } = useQuery(["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance], async () => {
-    if (!bothAmountsNonZero) {
+    
+    if (!atLeastOneAmountNonZero) {
+      setShowQuoteDetails(false);
       return null;
     }
-
-    if (!allTokensHaveMinAllowance) {
-      return null;
-    }
-
-    // so we show the quote details page on first quote
-    setShowQuoteDetails(true);
 
     try {
       const quote = await well.addLiquidityQuote(Object.values(amounts));
-      const estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      let estimate
+      if (allTokensHaveMinAllowance) {
+        estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      } else {
+        estimate = TokenValue.ZERO
+      }
+      setShowQuoteDetails(true);
       return {
         quote,
         estimate
@@ -124,21 +139,54 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
 
   const addLiquidityButtonClickHandler = useCallback(async () => {
     if (quote && address) {
-      const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
-      const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
-      const receipt = await addLiquidityTxn.wait();
-      setReceipt(receipt);
-      resetAmounts();
-      checkMinAllowanceForAllTokens();
-      txnCompleteCallback();
+      const toast = new TransactionToast({
+        loading: "Adding liquidity...",
+        error: "Approval failed",
+        success: "Liquidity added"
+      }); 
+      try {
+        const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
+        const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
+        toast.confirming(addLiquidityTxn);
+        const receipt = await addLiquidityTxn.wait();
+        toast.success(receipt);
+        resetAmounts();
+        checkMinAllowanceForAllTokens();
+        txnCompleteCallback(); 
+      } catch (error) {
+        Log.module("AddLiquidity").error("Error adding liquidity: ", (error as Error).message);
+        toast.error(error);
+      }
     }
   }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback]);
 
-  const handleInputChange = useCallback(
+  const handleImbalancedInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
       setAmounts({ ...amounts, [index]: a });
     },
     [amounts]
+  );
+
+  const handleBalancedInputChange = useCallback(
+    (index: number) => (amount: TokenValue) => {
+      if (!prices[index]) {
+        setAmounts({ ...amounts, [index]: amount });
+        return;
+      };
+      const amountInUSD = amount.mul(prices[index] || TokenValue.ZERO);
+      let _amounts = [];
+      for (let i = 0; i < prices.length; i++) {
+        if (i !== index) {
+          const conversion = prices[i] && prices[i]?.gt(TokenValue.ZERO) ? amountInUSD.div(prices[i]!) : TokenValue.ZERO
+          const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals);
+          _amounts[i] = conversionFormatted;
+        } else {
+          _amounts[i] = amount;
+        };
+      };
+      setAmounts(Object.assign({}, _amounts));
+    },
+    [amounts, prices, well.tokens]
   );
 
   useEffect(() => {
@@ -149,16 +197,16 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
       return;
     }
 
-    if (!bothAmountsNonZero) {
+    if (!atLeastOneAmountNonZero) {
       return;
     }
 
     checkMinAllowanceForAllTokens();
-  }, [well.tokens, address, bothAmountsNonZero, amounts, checkMinAllowanceForAllTokens]);
+  }, [well.tokens, address, atLeastOneAmountNonZero, amounts, checkMinAllowanceForAllTokens]);
 
   const addLiquidityButtonEnabled = useMemo(
-    () => address && bothAmountsNonZero && allTokensHaveMinAllowance,
-    [address, bothAmountsNonZero, allTokensHaveMinAllowance]
+    () => address && atLeastOneAmountNonZero && allTokensHaveMinAllowance,
+    [address, atLeastOneAmountNonZero, allTokensHaveMinAllowance]
   );
 
   const approveTokenButtonClickHandler = useCallback(
@@ -180,13 +228,12 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
     [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
   );
 
-  const buttonLabel = useMemo(() => (!bothAmountsNonZero ? "Input Token Amount" : "Add Liquidity"), [bothAmountsNonZero]);
+  const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Input Tokens" : "Add Liquidity"), [atLeastOneAmountNonZero]);
 
   return (
     <div>
       {well.tokens!.length > 0 && (
-        <div>
-          <div>
+        <LargeGapContainer>
             <TokenListContainer>
               {well.tokens?.map((token: Token, index: number) => (
                 <TokenInput
@@ -195,27 +242,39 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                   label={`Input amount in ${token.symbol}`}
                   token={well.tokens![index]}
                   amount={amounts[index]}
-                  onAmountChange={handleInputChange(index)}
+                  onAmountChange={balancedMode ? handleBalancedInputChange(index) : handleImbalancedInputChange(index)}
                   canChangeToken={false}
                   loading={false}
                 />
               ))}
-              <Divider />
             </TokenListContainer>
+            <BalancedCheckboxContainer>
+              <BalancedCheckbox
+                type="checkbox"
+                checked={balancedMode}
+                onChange={() => setBalancedMode(!balancedMode)}
+              />
+              <TabLabel onClick={() => setBalancedMode(!balancedMode)}>
+                Add tokens in balanced proportion
+              </TabLabel>
+            </BalancedCheckboxContainer>
             {showQuoteDetails && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.ADD}
                 quote={quote}
+                inputs={Object.values(amounts)}
                 wellLpToken={well.lpToken}
                 slippageSettingsClickHandler={slippageSettingsClickHandler}
+                handleSlippageValueChange={handleSlippageValueChange}
                 slippage={slippage}
+                tokenPrices={prices}
+                tokenReserves={well.reserves}
               />
             )}
-            {/* // TODO: Should be a notification */}
-            {receipt && <h2>{`txn hash: ${receipt.transactionHash.substring(0, 6)}...`}</h2>}
+            <MediumGapContainer>
             {well.tokens!.length > 0 &&
               well.tokens!.map((token: Token, index: number) => {
-                if (!tokenAllowance[index] && amounts[index]) {
+                if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false ) {
                   return (
                     <ButtonWrapper key={`approvebuttonwrapper${index}`}>
                       <ApproveTokenButton
@@ -228,32 +287,39 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                     </ButtonWrapper>
                   );
                 }
-
                 return null;
               })}
             <ButtonWrapper>
               <AddLiquidityButton
                 disabled={!addLiquidityButtonEnabled}
                 loading={false}
-                label={buttonLabel}
+                label={`${buttonLabel} →`}
                 onClick={addLiquidityButtonClickHandler}
               />
             </ButtonWrapper>
-          </div>
-        </div>
+            </MediumGapContainer>
+        </LargeGapContainer>
       )}
     </div>
   );
 };
 
+const LargeGapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`
+
+const MediumGapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
 const ButtonWrapper = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 10px;
-  :last-of-type {
-    margin-bottom: 0;
-  }
 `;
 
 const ApproveTokenButton = styled(Button)`
@@ -262,19 +328,30 @@ const ApproveTokenButton = styled(Button)`
 
 const AddLiquidityButton = styled(Button)``;
 
-const Divider = styled.hr`
-  width: 100%;
-  background-color: #000;
-  border: none;
-  height: 2px;
-`;
-
 const TokenListContainer = styled.div`
-  width: 465px;
+  width: full;
   display: flex;
   flex-direction: column;
-  background: #1b1e2b;
-  border-radius: 16px;
-  padding: 12px;
   gap: 12px;
+`;
+
+const BalancedCheckboxContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`;
+
+const BalancedCheckbox = styled.input`
+  margin-right: 10px;
+  width: 1em;
+  height: 1em;
+  background-color: white;
+
+  :checked {
+    background-color: red;
+  }
+`;
+
+const TabLabel = styled.div`
+  cursor: pointer;
 `;

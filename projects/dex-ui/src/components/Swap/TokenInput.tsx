@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import React, { MouseEvent, useCallback, useRef, useState } from "react";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { FC } from "src/types";
 import styled, { keyframes } from "styled-components";
@@ -38,7 +38,6 @@ export const TokenInput: FC<TokenInput> = ({
   width,
   canChangeToken = false,
   showBalance = true,
-  showMax = true,
   loading = false,
   allowNegative = false,
   canChangeValue = true
@@ -46,7 +45,7 @@ export const TokenInput: FC<TokenInput> = ({
   const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: balance, isLoading: isBalanceLoading, error: balanceError } = useTokenBalance(token);
+  const { data: balance, isLoading: isBalanceLoading } = useTokenBalance(token);
   width = width ?? "100%";
 
   const updateAmount = useCallback(
@@ -139,7 +138,7 @@ export const TokenInput: FC<TokenInput> = ({
 
       {showBalance && (
         <BalanceRow>
-          <Balance>Balance {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
+          <Balance onClick={handleClickMax}>Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}</Balance>
         </BalanceRow>
       )}
     </Container>
@@ -218,18 +217,8 @@ const Balance = styled.div`
   font-size: 16px;
   line-height: 24px;
   color: #9ca3af;
+  font-weight: 600;
   text-decoration: underline;
-`;
-
-const MaxButton = styled.button`
-  background: none;
-  border: none;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  text-align: center;
-  color: #f6e27f;
-  cursor: pointer;
-  padding: 0px 5px;
+  text-decoration-thickness: 1px;
+  cursor:pointer;
 `;
