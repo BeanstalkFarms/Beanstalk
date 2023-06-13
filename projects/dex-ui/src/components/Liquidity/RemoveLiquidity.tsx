@@ -150,7 +150,9 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   ]);
 
   const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
-    if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom && newMode === REMOVE_LIQUIDITY_MODE.Balanced) {
+    const currentMode = removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom || removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced
+    const _newMode = newMode === REMOVE_LIQUIDITY_MODE.Custom || newMode === REMOVE_LIQUIDITY_MODE.Balanced
+    if (currentMode && _newMode) {
       setRemoveLiquidityMode(newMode);
     } else {
       setLpTokenAmount(TokenValue.ZERO);
@@ -176,14 +178,12 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
     (index: number) => (amount: TokenValue) => {
       let _newAmounts = [...amounts]
       _newAmounts[index] = amount
-      for (let i = 0; i < _newAmounts.length; i++) {
-        if (!_newAmounts[i]) {
-          _newAmounts[i] = TokenValue.ZERO
-        }
+      for (let i = 0; i < well.tokens!.length; i++) {
+        _newAmounts[i] = _newAmounts[i] ? _newAmounts[i] : i === index ? amount : TokenValue.ZERO;
       }
       setAmounts([..._newAmounts]);
     },
-    [amounts]
+    [amounts, well.tokens]
   );
 
   const lpTokenAmountNonZero = useMemo(() => lpTokenAmount && lpTokenAmount.gt(0), [lpTokenAmount]);
@@ -301,6 +301,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                   type="radio"
                   value={REMOVE_LIQUIDITY_MODE.Balanced}
                   checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
+                  readOnly
                 />
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
                 </TabButton>
@@ -344,6 +345,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                         name="singleToken"
                         value={index}
                         checked={singleTokenIndex === index}
+                        readOnly
                       />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
