@@ -255,6 +255,13 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
     }
   }, [removeLiquidityMode, oneTokenQuote, balancedQuote, customRatioQuote]);
 
+  useEffect(() => {
+    const nonZeroValues = amounts.filter((amount) => amount && amount.value.gt("0")).length;
+    if (nonZeroValues === 0) {
+      setLpTokenAmount(undefined)
+    }
+  }, [amounts])
+
   return (
     <div>
       {wellLpToken && (
@@ -373,7 +380,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                     </TabLabel>
               </BalancedCheckboxContainer>
             )}
-            {selectedQuote?.quote && (
+            {lpTokenAmountNonZero && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.REMOVE}
                 quote={selectedQuote}
