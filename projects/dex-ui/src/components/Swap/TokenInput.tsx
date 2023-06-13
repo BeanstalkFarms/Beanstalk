@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef } from "react";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import debounce from "lodash/debounce";
 import { FC } from "src/types";
@@ -10,7 +10,6 @@ import { Spinner } from "../Spinner";
 
 type ContainerProps = {
   width: string;
-  focused: boolean;
 };
 
 type TokenInput = {
@@ -44,7 +43,6 @@ export const TokenInput: FC<TokenInput> = ({
   canChangeValue = true,
   debounceTime = 500
 }) => {
-  const [focused, setFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data: balance, isLoading: isBalanceLoading } = useTokenBalance(token);
@@ -79,8 +77,6 @@ export const TokenInput: FC<TokenInput> = ({
     [amount, onAmountChange, onTokenChange]
   );
 
-  const handleFocus = useCallback(() => setFocused(true), []);
-  const handleBlur = useCallback(() => setFocused(false), []);
   const handleClick = useCallback(() => {
     inputRef.current && inputRef.current.focus();
   }, []);
@@ -90,38 +86,13 @@ export const TokenInput: FC<TokenInput> = ({
     handleAmountChange(val);
   }, [balance, handleAmountChange, token.symbol]);
 
-  const handleDoubleClick = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [inputRef]);
-
-  /**
-   * We have a fake focus outline around TokenInput which
-   * imitates the focus of a normal input. This focus is lost when
-   * use clicks on other things inside TokenInput, but not on the input
-   * so we use this method to stop other elements from stealing focus.
-   *
-   * We also need to add an exception for the input element itself, otherwise
-   * events like double-clicking to select won't work
-   */
-  const dontStealFocus = useCallback((e: MouseEvent) => {
-    if ((e.target as HTMLElement).tagName !== "INPUT") {
-      e.preventDefault();
-    }
-  }, []);
-
-  if (loading) return <LoadingContainer width={width} focused={focused} data-trace="true" />;
+  if (loading) return <LoadingContainer width={width} data-trace="true" />;
 
   return (
     <Container
       width={width}
-      focused={focused}
       id="token-input"
       onClick={handleClick}
-      onMouseDown={dontStealFocus}
-      onDoubleClick={handleDoubleClick}
       data-trace="true"
     >
       <TopRow>
@@ -130,8 +101,6 @@ export const TokenInput: FC<TokenInput> = ({
           label={label}
           value={amount?.toHuman() || ""}
           onChange={handleAmountChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
           inputRef={inputRef}
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
@@ -194,15 +163,19 @@ const Container = styled.div<ContainerProps>`
   padding: 0px 16px;
   background: #ffffff;
 
-  // 70 185 85 is the rbg version of the green
-  outline: 0.5px solid rgb(${(props) => (props.focused ? "70 185 85" : "0 0 0")});
-  outline-offset: -0.5px;
+  outline: 1px solid #000;
   box-sizing: border-box;
 
   overflow: hidden;
   justify-content: center;
 
   cursor: text;
+  :focus-within {
+    outline: 1px solid #46b955;
+  };
+  :hover {
+    outline: 2px solid #46b955;
+  };
 `;
 
 const TopRow = styled.div`
