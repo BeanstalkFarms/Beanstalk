@@ -12,7 +12,6 @@ import { LearnPump } from "src/components/Well/LearnPump";
 import { TabButton } from "src/components/TabButton";
 import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
-import tripleCopyIcon from "/src/assets/images/triple-copy.svg";
 import { Log } from "src/utils/logger";
 
 export const Liquidity = () => {
@@ -56,43 +55,33 @@ export const Liquidity = () => {
   if (error) return <div>{error.message}</div>;
 
     return(
-        <Page>
+      <Page>
         <ContentWrapper>
-        <SideBar id="sidebar">
-          <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
-          <LiquidityBox lpToken={well?.lpToken!} />
-          <LearnYield />
-          <LearnWellFunction name={wellFunctionName} />
-          <LearnPump />
-        </SideBar>
-        <SideBar id="centerbar">
-        <Row gap={0}>
-            <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify>
-                <span>Add Liquidity</span>
-              </TabButton>
-            </Item>
-            <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch bold justify>
-                <span>Remove Liquidity</span>
-              </TabButton>
-            </Item>
-          </Row>
+          <SideBar id="sidebar">
+            <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
+            <LiquidityBox lpToken={well?.lpToken!} />
+            <LearnYield />
+            <LearnWellFunction name={wellFunctionName} />
+            <LearnPump />
+          </SideBar>
+          <SideBar id="centerbar">
+            <Row gap={0}>
+              <Item stretch>
+                <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify>
+                  <span>Add Liquidity</span>
+                </TabButton>
+              </Item>
+              <Item stretch>
+                <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch bold justify>
+                  <span>Remove Liquidity</span>
+                </TabButton>
+              </Item>
+            </Row>
         {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} handleSlippageValueChange={handleSlippageValueChange}/>}
         {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  handleSlippageValueChange={handleSlippageValueChange}/> }
-        </SideBar>
-        <SideBar id="rightbar">
-          <AboutBox>
-            <AboutBoxContainer>
-              <AboutBoxIcon src={tripleCopyIcon} alt={"Transaction Batching"} />
-              <div>Add Liquidity and Deposit LP Tokens into the Silo in a single transaction on the Beanstalk Site.</div>
-              <div />
-              <AboutBoxLink href="https://app.bean.money/">Visit the Beanstalk Site</AboutBoxLink>
-            </AboutBoxContainer>
-          </AboutBox>
-        </SideBar>
+          </SideBar>
         </ContentWrapper>
-        </Page>
+      </Page>
     )
 }
 
@@ -111,27 +100,3 @@ const SideBar = styled.div`
   min-width: calc(17 * 24px);
   gap: 24px;
 `;
-
-const AboutBox = styled.div`
-  width: 360px;
-  border: 1px solid #9CA3AF;
-  background-color: #EDF8EE;
-`
-
-const AboutBoxContainer = styled.div`
-  padding: 12px;
-  display: grid;
-  grid-direction: column;
-  grid-template-columns: 32px 1fr;
-  align-items: center;
-`
-
-const AboutBoxIcon = styled.img`
-  
-`;
-
-const AboutBoxLink = styled.a`
-  font-weight: bold;
-  color: black;
-  margin-top: 8px;
-`
