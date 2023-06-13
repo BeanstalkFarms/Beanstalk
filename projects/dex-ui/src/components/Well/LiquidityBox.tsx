@@ -13,7 +13,7 @@ type Props = {
 
 export const LiquidityBox: FC<Props> = ({ lpToken }) => {
 
-  const { data: balance, isLoading: isBalanceLoading, error: balanceError } = useTokenBalance(lpToken);
+  const { data: balance } = useTokenBalance(lpToken);
 
   return (
     <InfoBox width={408}>
@@ -49,11 +49,4 @@ const BoxHeaderAmount = styled.div`
   align-items: center;
   gap: 4px;
   ${LinksButtonText}
-`;
-const FooterAmount = styled.div`
-  display: flex;
-  ${BodyCaps}
-  align-self: flex-end;
-  flex: 2;
-  justify-content: flex-end;
 `;

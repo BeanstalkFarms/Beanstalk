@@ -15,7 +15,6 @@ export const useLiquidityQuote = (
   amounts: TokenValue[],
 ) => {
   const { address } = useAccount();
-
   const oneAmountNonZero = useMemo(
     () => {
       if (!well.tokens) {
@@ -101,9 +100,12 @@ export const useLiquidityQuote = (
     }
 
     try {
-      console.log("AMOUNTS:", amounts)
-      const quote = await well.removeLiquidityImbalancedQuote(amounts);
-      const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, amounts, address);
+      let _amountsFilled = []
+      for (let i = 0; i < wellTokens.length; i++) {
+        _amountsFilled[i] = !amounts[i] ? TokenValue.ZERO : amounts[i];
+      };
+      const quote = await well.removeLiquidityImbalancedQuote(_amountsFilled);
+      const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, _amountsFilled, address);
       return {
         quote,
         estimate

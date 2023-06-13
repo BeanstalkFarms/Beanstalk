@@ -17,8 +17,8 @@ function WellFunctionDetails(functionName: any) {
   } else {
     return (
       <TextContainer>
-        <div>Each Well utilizes a unique pricing function to price the tokens in the Well.</div>
-        <div>Brief descriptions of a Well's pricing function will appear in this box.</div>
+        <div>{"Each Well utilizes a unique pricing function to price the tokens in the Well."}</div>
+        <div>{"Brief descriptions of a Well's pricing function will appear in this box."}</div>
       </TextContainer>
     );
   };
