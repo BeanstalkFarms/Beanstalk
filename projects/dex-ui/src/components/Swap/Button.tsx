@@ -42,8 +42,8 @@ const StyledButton = styled.button<ButtonProps>`
   }};
   height: 48px;
   border: none;
-  outline: ${({ secondary }) => (secondary ? "1px solid #9CA3AF" : "0px")};
-  outline-offset: ${({ secondary }) => (secondary ? "-1px" : "0px")};
+  outline: ${({ secondary }) => (secondary ? "0.5px solid #9CA3AF" : "0px")};
+  outline-offset: ${({ secondary }) => (secondary ? "-0.5px" : "0px")};
   color: ${({ secondary }) => (secondary ? "#000" : "#FFF")};
   width: ${({ $width }) => $width};
 

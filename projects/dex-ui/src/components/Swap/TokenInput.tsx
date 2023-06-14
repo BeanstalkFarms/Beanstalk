@@ -163,7 +163,7 @@ const Container = styled.div<ContainerProps>`
   padding: 0px 16px;
   background: #ffffff;
 
-  outline: 1px solid #000;
+  outline: 0.5px solid #000;
   box-sizing: border-box;
 
   overflow: hidden;
@@ -171,7 +171,7 @@ const Container = styled.div<ContainerProps>`
 
   cursor: text;
   :focus-within {
-    outline: 1px solid #46b955;
+    outline: 0.5px solid #46b955;
   };
   :hover {
     outline: 2px solid #46b955;
