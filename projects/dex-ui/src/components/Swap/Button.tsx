@@ -55,4 +55,8 @@ const StyledButton = styled.button<ButtonProps>`
   :hover {
     outline: ${({ disabled }) => (disabled ? "none" : "2px solid #46b955")};
   }
+
+  :focus {
+    outline: 2px solid #46b955;
+  }
 `;
