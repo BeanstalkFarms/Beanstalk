@@ -14,10 +14,8 @@ export const useWellReserves = (well: Well) => {
       return reserves;
     },
     {
-      staleTime: 1000 * 60,
-      refetchInterval: 1000 * 60,
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: "always"
+      staleTime: Infinity,
+      refetchOnWindowFocus: false
     }
   );
 

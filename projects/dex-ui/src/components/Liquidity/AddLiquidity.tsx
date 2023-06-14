@@ -40,7 +40,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
 
   const sdk = useSdk();
-  const wellReserves = useWellReserves(well);
+  const { reserves: wellReserves, refetch: refetchWellReserves }  = useWellReserves(well);
 
   useEffect(() => {
     const run = async () => {
@@ -154,6 +154,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         toast.success(receipt);
         resetAmounts();
         checkMinAllowanceForAllTokens();
+        refetchWellReserves();
         txnCompleteCallback(); 
       } catch (error) {
         Log.module("AddLiquidity").error("Error adding liquidity: ", (error as Error).message);
@@ -270,7 +271,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 handleSlippageValueChange={handleSlippageValueChange}
                 slippage={slippage}
                 tokenPrices={prices}
-                tokenReserves={wellReserves.reserves}
+                tokenReserves={wellReserves}
               />
             )}
             <MediumGapContainer>

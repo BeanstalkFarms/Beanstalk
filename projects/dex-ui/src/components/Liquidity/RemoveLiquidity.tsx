@@ -38,7 +38,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
 
   const sdk = useSdk();
-  const wellReserves = useWellReserves(well);
+  const { reserves: wellReserves, refetch: refetchWellReserves }  = useWellReserves(well);
 
   useEffect(() => {
     const run = async () => {
@@ -130,6 +130,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
         const receipt = await removeLiquidityTxn.wait();
         toast.success(receipt);
         resetState();
+        refetchWellReserves();
         txnCompleteCallback();
         } catch (error) {
           Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
@@ -398,7 +399,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 removeLiquidityMode={removeLiquidityMode}
                 selectedTokenIndex={singleTokenIndex}
                 tokenPrices={prices}
-                tokenReserves={wellReserves.reserves}
+                tokenReserves={wellReserves}
               />
             )}
             {!tokenAllowance ? (
