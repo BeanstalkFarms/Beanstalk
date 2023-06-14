@@ -36,6 +36,22 @@ export const validateAmount = (value: TokenValue, name: string) => {
   }
 };
 
+export const validateAtleastOneNonZeroAmount = (values: TokenValue[]) => {
+  if (values.length === 0) {
+    throw new Error("Must have at least one non-zero amount");
+  }
+  let atleastOneNonZero = false;
+  for (const value of values) {
+    if (value.gt(TokenValue.ZERO)) {
+      atleastOneNonZero = true;
+      break;
+    }
+  }
+  if (!atleastOneNonZero) {
+    throw new Error("Must have at least one non-zero amount");
+  }
+};
+
 export const validateAddress = (address: string, name: string) => {
   if (!ethers.utils.isAddress(address)) {
     throw new Error(`${name} is not a valid address`);

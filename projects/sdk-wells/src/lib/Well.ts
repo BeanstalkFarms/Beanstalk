@@ -15,6 +15,7 @@ import {
   setReadOnly,
   validateAddress,
   validateAmount,
+  validateAtleastOneNonZeroAmount,
   validateDeadline,
   validateToken
 } from "./utils";
@@ -501,8 +502,7 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
-    // TODO: validate at least one isn't zero
-    tokenAmountsIn.forEach((v, i) => validateAmount(v, `tokenAmountsIn[${i}]`));
+    validateAtleastOneNonZeroAmount(tokenAmountsIn);
     validateAmount(minLpAmountOut, "minLpAmountOut");
     validateAddress(recipient, "recipient");
     validateDeadline(deadline);
@@ -567,9 +567,8 @@ export class Well {
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
-    // TODO: validate at least one isn't zero
     // TODO: validate at least one (or all?) is fee-on-transfer
-    tokenAmountsIn.forEach((v, i) => validateAmount(v, `tokenAmountsIn[${i}]`));
+    validateAtleastOneNonZeroAmount(tokenAmountsIn)
     validateAmount(minLpAmountOut, "minLpAmountOut");
     validateAddress(recipient, "recipient");
     validateDeadline(deadline);
