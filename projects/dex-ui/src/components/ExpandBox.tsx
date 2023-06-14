@@ -46,31 +46,31 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
 const Container = styled.div<Props>`
   display: flex;
   flex-direction: column;
-  border-top: 1px solid #9ca3af;
-  border-left: 1px solid #9ca3af;
-  border-right: 1px solid #9ca3af;
-  border-bottom: ${(p) => p.open ? '1px' : '0px'} solid #9caeaf;
+  border-top: 0.5px solid #9ca3af;
+  border-left: 0.5px solid #9ca3af;
+  border-right: 0.5px solid #9ca3af;
+  border-bottom: ${(p) => p.open ? '0.5px' : '0px'} solid #9caeaf;
   width: ${(p) => p.width}px;
   min-width: ${(p) => p.width}px;
   cursor: pointer;
   :hover {
-    border-top: 1px solid #46b955;
-    border-left: 1px solid #46b955;
-    border-right: 1px solid #46b955;
-    border-bottom: ${(p) => p.open ? '1px' : '0px'} solid #46b955;
-    outline: 1px solid #46b955;
+    border-top: 0.5px solid #46b955;
+    border-left: 0.5px solid #46b955;
+    border-right: 0.5px solid #46b955;
+    border-bottom: ${(p) => p.open ? '0.5px' : '0px'} solid #46b955;
+    outline: 0.5px solid #46b955;
   };
 `;
 const Header = styled.div<Props>`
   background-color: #f9f8f6;
-  border-bottom: 1px solid #9ca3af;
+  border-bottom: 0.5px solid #9ca3af;
   display: flex;
   flex-direction: row;
   padding: 12px 16px;
   justify-content: space-between;
   align-items: center;
   :hover {
-    border-bottom: 1px solid ${(p) => !p.open ? '#46b955' : '#9ca3af'};
+    border-bottom: 0.5px solid ${(p) => !p.open ? '#46b955' : '#9ca3af'};
   };
 `;
 const Body = styled.div`
