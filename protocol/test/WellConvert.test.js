@@ -23,7 +23,7 @@ describe('Well Convert', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
-    this.well = await deployWell([BEAN, WETH]);
+    this.well = await deployWell([BEAN, WETH], verbose=true);
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
@@ -144,7 +144,7 @@ describe('Well Convert', function () {
         expect(toAmount).to.be.equal('3338505354221892343955')
       })
 
-      it('depost and convert below max', async function () {
+      it('deposit and convert below max', async function () {
         const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.well.address)
         await this.bean.connect(owner).approve(this.beanstalk.address, to6('100000'))
         await this.beanstalk.connect(owner).deposit(BEAN, to6('100000'), 0)
@@ -188,7 +188,7 @@ describe('Well Convert', function () {
         expect(fromToken).to.be.equal(this.well.address)
         expect(fromAmount).to.be.equal(to18('2000'))
         expect(toToken).to.be.equal(BEAN)
-        expect(toAmount).to.be.equal('134564064606')
+        expect(toAmount).to.be.equal('134564064605')
       })
 
       it('convert equal to max', async function () {
@@ -219,7 +219,7 @@ describe('Well Convert', function () {
         expect(toAmount).to.be.equal(to6('200000'))
       })
 
-      it('depost and convert below max', async function () {
+      it('deposit and convert below max', async function () {
         const convertData = ConvertEncoder.convertWellLPToBeans(to18('2000'), to6('100000'), this.well.address)
         await this.beanstalk.connect(owner).deposit(this.well.address, to18('2000'), 0)
         await this.convert.connect(owner).convert(
@@ -228,7 +228,7 @@ describe('Well Convert', function () {
           [to18('2000')]
         )
         deposit = await this.beanstalk.getDeposit(owner.address, BEAN, '0')
-        expect(deposit[0]).to.be.equal('134564064606')
+        expect(deposit[0]).to.be.equal('134564064605')
       })
     });
 

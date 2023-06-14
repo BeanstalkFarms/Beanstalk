@@ -13,6 +13,8 @@ import {C} from "contracts/C.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 
+import {console} from "hardhat/console.sol";
+
 /**
  * @title Well Convert Library
  * @notice Contains Functions to convert from/to Bean:3Crv to/from Beans
@@ -41,12 +43,21 @@ library LibWellConvert {
         uint256[] memory ratios;
         (ratios, beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
 
+        console.log(1);
+
+        console.log("Ratio0: %s, Ratio1: %s", ratios[0], ratios[1]);
+
+        console.log("Reserves0: %s, Reserves1: %s", reserves[0], reserves[1]);
+        console.log("Beanstalk Well Function: %s", wellFunction.target);
+
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
             reserves,
             beanIndex,
             ratios,
             wellFunction.data
         );
+
+        console.log("Beans at peg: %s", beansAtPeg);
         if (beansAtPeg <= reserves[beanIndex]) return (0, beanIndex);
         // SafeMath is unnecessary as above line performs the check
         beans = beansAtPeg - reserves[beanIndex];

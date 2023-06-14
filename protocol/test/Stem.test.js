@@ -34,13 +34,13 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
         console.log(error);
         return
-      }
+      }4
   
       const signer = await impersonateBeanstalkOwner()
       await mintEth(signer.address);
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
-        facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
+        facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
         initFacetName: 'InitBipNewSilo',
         bip: false,
         object: false,

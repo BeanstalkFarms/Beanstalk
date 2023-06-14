@@ -2125,6 +2125,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
+    "@beanstalk/wells": 0.3.5
     "@ethereum-waffle/chai": 4.0.10
     "@nomicfoundation/hardhat-network-helpers": ^1.0.7
     "@nomiclabs/hardhat-ethers": ^2.2.1
@@ -2210,6 +2211,13 @@ __metadata:
     ethers: 5.6.8
   languageName: unknown
   linkType: soft
+
+"@beanstalk/wells@npm:0.3.5":
+  version: 0.3.5
+  resolution: "@beanstalk/wells@npm:0.3.5"
+  checksum: cf20f1d8d7243ac41518e3fe9fd89c83bad9393912575fc9db872de5dcc797f706c5f32bef7a6550b103ee88e2c99b22c10e7814399337f6e6c4c0e8302965fc
+  languageName: node
+  linkType: hard
 
 "@bugsnag/browser@npm:^7.18.0":
   version: 7.18.0

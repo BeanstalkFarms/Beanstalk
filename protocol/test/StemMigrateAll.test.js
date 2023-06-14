@@ -76,7 +76,7 @@ describe('Silo V3: Stem deployment migrate everyone', function () {
       await mintEth(signer.address);
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
-        facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockAdminFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
+        facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
         // libraryNames: ['LibLegacyTokenSilo'],
         initFacetName: 'InitBipNewSilo',
         bip: false,
