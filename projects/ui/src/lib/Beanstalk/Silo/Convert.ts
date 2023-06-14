@@ -128,39 +128,3 @@ export function convert(
     deltaCrates,
   };
 }
-
-/**
- * @deprecated Use SDK function instead.
- * 
- * Encoded converts follow this structure:
- * [ConvertKind, amountIn, minAmountOut(, pool?)]
- *
- * @note A pool is required when the convert involves Curve LP. The pool parameter specifies
- * which LP token `amountLP` refers to. This is unecessary for unripe beans since
- * unripe beans don't have pools of their own.
- */
-export class Encoder {
-  static curveLPToBeans = (amountLP: string, minBeans: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.CURVE_LP_TO_BEANS, amountLP, minBeans, pool]
-    );
-
-  static beansToCurveLP = (amountBeans: string, minLP: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.BEANS_TO_CURVE_LP, amountBeans, minLP, pool]
-    );
-
-  static unripeLPToBeans = (amountLP: string, minBeans: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNRIPE_LP_TO_BEANS, amountLP, minBeans]
-    );
-
-  static unripeBeansToLP = (amountBeans: string, minLP: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNRIPE_BEANS_TO_LP, amountBeans, minLP]
-    );
-}
