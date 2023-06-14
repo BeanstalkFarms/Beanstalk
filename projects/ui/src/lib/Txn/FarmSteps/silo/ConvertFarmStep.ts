@@ -27,7 +27,8 @@ export class ConvertFarmStep extends FarmStep {
     this._tokenOut = path.tokenOut;
   }
 
-  /// this logic exists in the SDK but won't work b/c we need to add plant
+  // HEADS UP: This logic exists in the SDK but won't work b/c we need to add plant
+  // FIXME: refactor to use sdk primitives
   static async _handleConversion(
     sdk: BeanstalkSDK,
     _crates: TokenSiloBalance['deposited']['crates'],
@@ -65,26 +66,34 @@ export class ConvertFarmStep extends FarmStep {
       _tokenOut.address,
       conversion.amount.toBlockchain()
     );
-
     const amountOut = _tokenOut.fromBlockchain(amountOutBN);
     const minAmountOut = amountOut.pct(100 - slippage);
     console.debug('[ConvertFarmStep] minAmountOut: ', minAmountOut);
 
+    const encoding = siloConvert.calculateEncoding(
+      _tokenIn,
+      _tokenOut,
+      amountIn,
+      minAmountOut
+    )
+
+    console.log('[ConvertFarmStep] encoding: ', encoding)
+
+    const convertArgs = [
+      encoding,
+      conversion.crates.map((c) => c.season.toString()),
+      conversion.crates.map((c) => c.amount.abs().toBlockchain()),
+    ] as const;
+
+    const callStatic = await beanstalk.callStatic.convert(...convertArgs);
+
     const getEncoded = () =>
-      beanstalk.interface.encodeFunctionData('convert', [
-        siloConvert.calculateEncoding(
-          _tokenIn,
-          _tokenOut,
-          amountIn,
-          minAmountOut
-        ),
-        conversion.crates.map((c) => c.season.toString()),
-        conversion.crates.map((c) => c.amount.abs().toBlockchain()),
-      ]);
+      beanstalk.interface.encodeFunctionData('convert', convertArgs as any);
 
     return {
       conversion,
       minAmountOut,
+      callStatic,
       getEncoded,
     };
   }
