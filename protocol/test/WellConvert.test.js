@@ -23,7 +23,7 @@ describe('Well Convert', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
-    this.well = await deployWell([BEAN, WETH], verbose=true);
+    this.well = await deployWell([BEAN, WETH]);
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
