@@ -17,6 +17,7 @@ import { TabButton } from "../TabButton";
 import { TransactionToast } from "../TxnToast/TransactionToast";
 import useSdk from "src/utils/sdk/useSdk";
 import { getPrice } from "src/utils/price/usePrice";
+import { useWellReserves } from "src/wells/useWellReserves";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -37,6 +38,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
 
   const sdk = useSdk();
+  const wellReserves = useWellReserves(well);
 
   useEffect(() => {
     const run = async () => {
@@ -396,7 +398,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 removeLiquidityMode={removeLiquidityMode}
                 selectedTokenIndex={singleTokenIndex}
                 tokenPrices={prices}
-                tokenReserves={well.reserves}
+                tokenReserves={wellReserves.reserves}
               />
             )}
             {!tokenAllowance ? (
