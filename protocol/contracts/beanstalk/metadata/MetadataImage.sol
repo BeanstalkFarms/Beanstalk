@@ -7,6 +7,7 @@ import {LibBytes} from "~/libraries/LibBytes.sol";
 import {LibBytes64} from "~/libraries/LibBytes64.sol";
 import {IBean} from "~/interfaces/IBean.sol";
 import {LibStrings} from "~/libraries/LibStrings.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
 /**
@@ -16,43 +17,27 @@ import {LibStrings} from "~/libraries/LibStrings.sol";
  * @dev fully on-chain generated SVG.
  */
 
-// TODO: https://github.com/fiveoutofnine/colormap-registry
 contract MetadataImage {
     AppStorage internal s;
 
     using LibStrings for uint256;
 
-    // string[3] LEAF_COLORS = [
-    //     '#238254',
-    //     '#89A62F',
-    //     '#33B074'
-    // ];
-    // int256[2][8] XYPLOT = [
-    //     [int256(50),29],
-    //     [int256(-50),29],
-    //     [int256(0),58],
-    //     [int256(-100),58],
-    //     [int256(-50),87],
-    //     [int256(100),58],
-    //     [int256(50),87],
-    //     [int256(0),116]
-    // ];
-    // string BACKGROUND = '#253326';
+    string constant LEAF_COLOR_0 = '#A8C83A';
+    string constant LEAF_COLOR_1 = '#89A62F';
 
-    function imageURI(uint256 depositId, address account) public view returns (string memory){
-        uint256 bdv = s.a[account].deposits[depositId].bdv;
-        uint256 amount = s.a[account].deposits[depositId].amount;
-        return string(abi.encodePacked("data:image/svg+xml;base64,",LibBytes64.encode(bytes(generateImage(bdv, depositId, account)))));
+    function imageURI(uint256 depositId) public view returns (string memory){
+        return string(abi.encodePacked("data:image/svg+xml;base64,",LibBytes64.encode(bytes(generateImage(depositId)))));
     }
-    function generateImage(uint256 bdv, uint256 depositId, address account) internal view returns (string memory) {
+
+    function generateImage(uint256 depositId) internal view returns (string memory) {
+        (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         return string(
             abi.encodePacked(
                 '<svg class="svgBody" width="255" height="350" viewBox="0 0 255 350" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">',
                 defs(),
                 back(),
-                printPlots(bdv),
-                stats(depositId, account),
-                // border(),
+                printPlots(stem),
+                blackBars(token),
                 '</svg>'
             )
         );
@@ -74,6 +59,7 @@ contract MetadataImage {
             bar(),
             leaf(),
             silo(),
+            beanToken(),
             // mask(),
             leafRow(),
             '</defs>'
@@ -104,18 +90,13 @@ contract MetadataImage {
     }
 
     function fullLeafPlot() internal view returns (string memory) {
-        string[3] memory leafColors = [
-        '#238254',
-        '#89A62F',
-        '#33B074'
-        ];
         return string(abi.encodePacked(
             '<g id="fullLeafPlot">',
-            useAsset('plot',0,0),
-            useAssetFill('leafRow',0,0, leafColors[0]),
-            useAssetFill('leafRow',-12,7, leafColors[1]),
-            useAssetFill('leafRow',-24,14, leafColors[0]),
-            useAssetFill('leafRow',-36,21, leafColors[1]),
+            useAssetTransform('plot',-35,0),
+            useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
+            useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
+            useAssetTransformFill('leafRow',-60,14, LEAF_COLOR_0),
+            useAssetTransformFill('leafRow',-73,21, LEAF_COLOR_1),
             '</g>'
         ));
     }
@@ -123,7 +104,7 @@ contract MetadataImage {
     function emptyPlot() internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<g id="emptyPlot">',
-            useAsset('plot',0,0),
+            useAssetTransform('plot',-35,0),
             '</g>'
         ));
     }
@@ -136,76 +117,110 @@ contract MetadataImage {
         ];
         return string(abi.encodePacked(
             '<g id="partialLeafPlot">',
-            useAsset('plot',0,0),
-            useAssetFill('leafRow',0,0, leafColors[0]),
-            useAssetFill('leafRow',-12,7, leafColors[1]),
+            useAssetTransform('plot',-35,0),
+            useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
+            useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
             '</g>'
         ));
     }
 
-    function printPlots(uint256 _bdv) internal view returns (string memory) {
+    function printPlots(int96 stem) internal view returns (string memory) {
         return string(abi.encodePacked(
             '<use xlink:href="#silo" x="99" y="55"/>',
             '<g id="allPlot" clip-path="url(#borderMask)">',
-                plotLogic(_bdv),
+                plotLogic(stem),
             '</g>'
         ));
     }
 
-    function plotLogic(uint256 _bdv) internal view returns (string memory) {
-        int256[2][8] memory xyPlot = [
-            [int256(50),29],
-            [int256(-50),29],
-            [int256(0),58],
-            [int256(-100),58],
-            [int256(-50),87],
-            [int256(100),58],
-            [int256(50),87],
-            [int256(0),116]
+    function plotLogic(int96 stem) internal pure returns (string memory) {
+
+        int256[2][21] memory XYPLOT = [
+
+        [int256(-69),-164], // 20
+        [int256(69),-164], // 19
+
+        [int256(0),-124], // 13
+        [int256(138),-124], // 18
+        [int256(-138),-124], // 21
+
+        [int256(-69),-84], // 14
+        [int256(69),-84], // 12
+
+        [int256(-138),-44], // 15
+        [int256(0),-44], // 5
+        [int256(138),-44], // 11
+
+        [int256(-69),-4], // 6
+        [int256(69),-4], // 4
+
+        [int256(-138),36], // 7
+        [int256(138),36], // 3
+
+        [int256(-69),76], // 8 
+        [int256(69),76], // 2
+
+        [int256(-138),116], // 16
+        [int256(0),116], // 1
+        [int256(138),116], // 10
+            
+        [int256(69),156], // 9
+        [int256(-69),156] // 17
+        
         ];
-        // every plot is equal to 10k BDV 
-        // total is 8 plots 
+        // 20 plots are generated: 
+        // 1 plot is filled 100% at start. 
+        // for every 2% absolute growth in stalk (0.02 stalk per BDV), one sprout is planted (32%)
+        // there are 3 sets of plots, with varying amount of sprouts:
+        // 16, 10,7, 5.
+        uint256[21] memory order = [uint256(20),19,13,18,21,14,12,15,5,11,6,4,7,3,8,2,16,1,10,9,17];
+
         bytes memory _plot;
-        uint256 numPlots = _bdv/10000;
-        if (numPlots < 3){
-            numPlots = 3;
-        } else {
-            numPlots = 8;
-        }
-        for(uint256 i = numPlots; i > 0; --i) {
-            if(_bdv >= 10000){
+        uint256 numPlots = 21;
+        // uint256 gspBDVRatio = grownStalkPerBDV*100/maxGrownStalkPerBDV;
+        // uint256 numPlotsToFill = (gspBDVRatio * 20 / 100) + 1;
+        uint256 numPlotsToFill = 12;
+        
+        for(uint256 i = 0; i < numPlots; ++i) {
+            uint256 plotNo = order[i];
+            if(plotNo < numPlotsToFill){
                 _plot = abi.encodePacked(
                     _plot,
                     useAsset(
                         'fullLeafPlot',
-                        xyPlot[numPlots - i][0],
-                        xyPlot[numPlots - i][1]
+                        XYPLOT[i][0],
+                        XYPLOT[i][1]
                     )
                 );
-                _bdv = _bdv - 10000;
-            } else if (_bdv == 0){
+            } else if(plotNo == numPlotsToFill) {
                 _plot = abi.encodePacked(
                     _plot,
                     useAsset(
-                        'emptyPlot',
-                        xyPlot[numPlots - i][0],
-                        xyPlot[numPlots - i][1]
+                        'partialLeafPlot',
+                        XYPLOT[i][0],
+                        XYPLOT[i][1]
                     )
                 );
             } else {
                 _plot = abi.encodePacked(
                     _plot,
                     useAsset(
-                        'partialLeafPlot',
-                        xyPlot[numPlots - i][0],
-                        xyPlot[numPlots - i][1]
+                        'emptyPlot',
+                        XYPLOT[i][0],
+                        XYPLOT[i][1]
                     )
                 );
-                _bdv = 0;
+            }
+            if(i == 11){
+                _plot= abi.encodePacked(
+                    _plot,
+                    '<use xlink:href="#silo" x="47" y="55" transform="scale(1.7)"/>'
+                );
             }
         }
         return string(_plot);
     }
+
     function useAsset(string memory assetName, int256 x, int256 y) internal pure returns (string memory) { 
         return string(abi.encodePacked(
             '<use xlink:href="#',
@@ -282,36 +297,6 @@ contract MetadataImage {
         );
     }
 
-    function stats(uint256 depositId, address account) internal view returns (string memory) {
-        (address token,int96 stem) = LibBytes.unpackAddressAndStem(depositId);
-        uint256 bdv = s.a[account].deposits[depositId].bdv;
-        uint256 amount = s.a[account].deposits[depositId].amount;
-        return string(
-            abi.encodePacked(
-                '<rect x="30" y="238" width="195" height="80" rx="5" fill="#070707" opacity="0.55" />',
-                // '<polygon points="128,232 123.959,238.689 132.041,238.689" fill="#3D2612" />',
-                // '<rect x="219" y="244" width="2" height="9" rx="1" fill="#4A3A27"/>',
-                // '<rect x="33" y="242" width="2" height="12" rx="1" fill="#4A3A27"/>',
-                // '<rect x="33" y="258" width="2" height="7" rx="1" fill="#4A3A27"/>',
-                // '<rect x="219" y="285" width="2" height="4" rx="1" fill="#4A3A27"/>',
-                // '<use xlink:href="#bar" x="0" y="0"/>',
-                // '<use xlink:href="#bar" x="0" y="22"/>',
-                // '<use xlink:href="#bar" x="0" y="44"/>',
-                '<text x="48" y="261" font-size="12" fill="White" font-family="Futura PT, sans-serif">Grown Stalk</text>',
-                viewGrownStalk(bdv, token),
-                '<text x="48" y="283" font-size="12" fill="White" font-family="Futura PT, sans-serif">Stalk</text>',
-                viewStalk(bdv, token),
-                '<text x="48" y="305" font-size="12" fill="White" font-family="Futura PT, sans-serif">Seeds</text>',
-                viewSeeds(bdv, token),
-                '<text x="128" y="41" font-size="13" fill="White" text-anchor="middle" font-family="Futura PT, sans-serif">Deposit Value</text>',
-                viewBDV(bdv),
-                '<text x="128" y="85" font-size="13" fill="White" text-anchor="middle" font-family="Futura PT, sans-serif">',
-                IBean(token).symbol(),
-                '</text>'
-            )
-        );
-    }
-
     function viewGrownStalk(uint256 bdv, address token) internal view returns (string memory) {
         uint256 grownStalk = bdv * uint256(LibTokenSilo.stemTipForToken(token)) / 1e10;
         return string(
@@ -351,6 +336,127 @@ contract MetadataImage {
             abi.encodePacked(
                 '<text x="128" y="68" font-size="25" fill="White" text-anchor="middle" font-family="Futura PT, sans-serif">',
                 (_bdv/1e6).toString(),
+                '</text>'
+            )
+        );
+    }
+
+    function beanToken() internal pure returns (string memory){
+        return string(abi.encodePacked(
+            '<g id="bean">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '</g>'
+            )
+        );
+    }
+
+    function bean3CRVToken() internal pure returns (string memory){
+        return string(abi.encodePacked(
+            '<g id="bean3CRV">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '</g>'
+            )
+        );
+    }
+
+    function urBeanToken() internal pure returns (string memory){
+        return string(abi.encodePacked(
+            '<g id="urBean">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '</g>'
+            )
+        );
+    }
+
+    function urBean3CRVToken() internal pure returns (string memory){
+        return string(abi.encodePacked(
+            '<g id="urBean3CRV">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '</g>'
+            )
+        );
+    }
+
+    function urBeanETHToken() internal pure returns (string memory){
+        return string(abi.encodePacked(
+            '<g id="urBeanETH">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '</g>'
+            )
+        );
+    }
+
+    function beanETHToken() internal pure returns (string memory){
+        return string(
+            abi.encodePacked(
+            '<g id="beanETH">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '</g>'
+            )
+        );
+    }
+
+    function useAssetTransform(string memory assetName, int256 x, int256 y) internal pure returns (string memory) { 
+        return string(abi.encodePacked(
+            '<use xlink:href="#',
+            assetName,
+            '" x="',
+            helperFunction1(x),
+            '" y="',
+            helperFunction1(y),
+            '" transform="scale(1.4)"/>'
+        ));
+    }
+
+    function useAssetTransformFill(string memory assetName, int256 x, int256 y, string memory color) internal pure returns (string memory) { 
+        return string(abi.encodePacked(
+            '<use xlink:href="#',
+            assetName,
+            '" x="',
+            helperFunction1(x),
+            '" y="',
+            helperFunction1(y),
+            '" fill="',
+            color,
+            '" transform="scale(1.4)"/>'
+        ));
+    }
+
+    function blackBars(address token) internal view returns(string memory) {
+        return string(
+            abi.encodePacked(
+                '<rect x="0" y="0" width="255" height="20" rx="5" fill="Black"/>',
+                tokenName(token),
+                useAsset('bean', 76, 4),
+                '<rect x="0" y="330" width="255" height="20" rx="5" fill="Black"/>',
+                movingTokenAddress(token)
+            )
+        );
+    }
+
+    function tokenName(address token) internal view returns (string memory) {
+        return string(
+            abi.encodePacked(
+                '<text x="127" y="15" font-size="12" fill="White" text-anchor="middle" font-family="Futura PT, sans-serif">',
+                string(ERC20(token).name()),
+                ' Deposit',
+                '</text>'
+            )
+        );
+    }
+
+    function movingTokenAddress(address token) internal view returns (string memory) {
+        return string(
+            abi.encodePacked(
+                '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="Futura PT, sans-serif">',
+                '<tspan><animate attributeName="x" from="375" to="50" dur="10s" repeatCount="indefinite" />',
+                LibStrings.toHexString(token),
+                '</tspan>',
+                '</text>'
+                '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="Futura PT, sans-serif">',
+                '<tspan><animate attributeName="x" from="50" to="-275" dur="10s" repeatCount="indefinite" />',
+                LibStrings.toHexString(token),
+                '</tspan>',
                 '</text>'
             )
         );

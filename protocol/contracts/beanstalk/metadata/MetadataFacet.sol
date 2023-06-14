@@ -72,7 +72,7 @@ contract MetadataFacet is MetadataImage, IERC1155Receiver {
                 '{',
                     '"name": "Beanstalk Deposit", ',
                     '"description": "A Beanstalk Deposit", ',
-                    string(abi.encodePacked('"image": "', imageURI(depositId, account))),
+                    string(abi.encodePacked('"image": "', imageURI(depositId))),
                     string(abi.encodePacked('", "attributes": ', attributes)),
                 '}'
             ))
