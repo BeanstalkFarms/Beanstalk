@@ -140,13 +140,12 @@ const QuoteDetails = ({
           }
           const lpTokenSupply = await wellLpToken?.getTotalSupply();
           if (!lpTokenSupply || lpTokenSupply.eq(TokenValue.ZERO)) {
-            setTokenUSDValue(TokenValue.ZERO);
+            setTokenUSDValue(totalReservesUSDValue);
             return;
           }
           const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply);
           const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
-
         }
       }
     }
@@ -156,7 +155,7 @@ const QuoteDetails = ({
 
   const priceImpact = useMemo(() => {
 
-    if (!tokenReserves || !inputs) return TokenValue.ZERO
+    if (!tokenReserves || !inputs || !tokenPrices) return TokenValue.ZERO
 
     function calculatePrice(prevVal: any, token: any) {
       if (token.eq(TokenValue.ZERO)) {
