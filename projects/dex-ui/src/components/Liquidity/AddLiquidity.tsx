@@ -13,6 +13,7 @@ import QuoteDetails from "./QuoteDetails";
 import { TransactionToast } from "../TxnToast/TransactionToast";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
+import { useWellReserves } from "src/wells/useWellReserves";
 
 type AddLiquidityProps = {
   well: Well;
@@ -39,6 +40,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
 
   const sdk = useSdk();
+  const wellReserves = useWellReserves(well);
 
   useEffect(() => {
     const run = async () => {
@@ -268,7 +270,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 handleSlippageValueChange={handleSlippageValueChange}
                 slippage={slippage}
                 tokenPrices={prices}
-                tokenReserves={well.reserves}
+                tokenReserves={wellReserves.reserves}
               />
             )}
             <MediumGapContainer>
