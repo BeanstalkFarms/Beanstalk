@@ -346,9 +346,8 @@ describe('Silo', function () {
     });
 
     it("properly gives an URI", async function () {
+      await this.season.farmSunrises(10);  
       const depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImage.txt', 'utf-8');
-      season = this.season.season()
-      stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
     
       expect(await this.metadata.uri(depositID,userAddress)).to.eq(depositmetadata);

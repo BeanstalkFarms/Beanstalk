@@ -62,10 +62,10 @@ contract MetadataFacet is MetadataImage, IERC1155Receiver {
         bytes memory attributes = abi.encodePacked(
             '{',
                 '"token address": "', LibStrings.toHexString(uint256(depositMetadata.token), 20),
-                '", "id": ', depositMetadata.id.toString(),
-                ', "stem": ', uint256(depositMetadata.stem).toString(),
-                ', "total stalk": ', uint256(LibTokenSilo.stemTipForToken(depositMetadata.token)).toString(),
-                ', "seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
+                '", "id": ', depositMetadata.id.toHexString(32),
+                ', "Deposit stem": ', uint256(depositMetadata.stem).toString(),
+                ', "Deposit stalk per BDV": ', uint256(LibTokenSilo.stemTipForToken(depositMetadata.token)).toString(),
+                ', "Deposit seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
             '}'
         );
         return string(abi.encodePacked("data:application/json;base64,",LibBytes64.encode(abi.encodePacked(

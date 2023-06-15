@@ -17,6 +17,7 @@ contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
 
     uint8 private _decimals = 18;
     string private _symbol = "MOCK";
+    string private _name = "MockToken";
 
     constructor(string memory name, string memory symbol)
     ERC20(name, symbol)
@@ -43,6 +44,7 @@ contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
     function decimals() public view virtual override returns (uint8) {
         return _decimals;
     }
+
     function setSymbol(string memory sym) public {
         _symbol = sym;
     }
@@ -50,5 +52,8 @@ contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
     function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
-
+    
+    function setName(string memory name_) public {
+        _name = name_;
+    }
 }

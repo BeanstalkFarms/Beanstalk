@@ -31,12 +31,13 @@ contract MetadataImage {
 
     function generateImage(uint256 depositId) internal view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
+        int96 stemTip = LibTokenSilo.stemTipForToken(token);
         return string(
             abi.encodePacked(
                 '<svg class="svgBody" width="255" height="350" viewBox="0 0 255 350" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">',
                 defs(),
                 back(),
-                printPlots(stem),
+                printPlots(stemTip),
                 blackBars(token),
                 '</svg>'
             )
@@ -110,11 +111,6 @@ contract MetadataImage {
     }
 
     function partialLeafPlot() internal view returns (string memory) {
-        string[3] memory leafColors = [
-        '#238254',
-        '#89A62F',
-        '#33B074'
-        ];
         return string(abi.encodePacked(
             '<g id="partialLeafPlot">',
             useAssetTransform('plot',-35,0),
@@ -124,16 +120,16 @@ contract MetadataImage {
         ));
     }
 
-    function printPlots(int96 stem) internal view returns (string memory) {
+    function printPlots(int96 stalkPerBDV) internal view returns (string memory) {
         return string(abi.encodePacked(
             '<use xlink:href="#silo" x="99" y="55"/>',
             '<g id="allPlot" clip-path="url(#borderMask)">',
-                plotLogic(stem),
+                plotLogic(stalkPerBDV),
             '</g>'
         ));
     }
 
-    function plotLogic(int96 stem) internal pure returns (string memory) {
+    function plotLogic(int96 stalkPerBDV) internal pure returns (string memory) {
 
         int256[2][21] memory XYPLOT = [
 
@@ -170,16 +166,15 @@ contract MetadataImage {
         ];
         // 20 plots are generated: 
         // 1 plot is filled 100% at start. 
-        // for every 2% absolute growth in stalk (0.02 stalk per BDV), one sprout is planted (32%)
+        // for every 2% absolute growth in stalk (0.02 stalk per BDV), one sprout is planted.
+        // this means every plot is a growth of 32% (linearly).
         // there are 3 sets of plots, with varying amount of sprouts:
-        // 16, 10,7, 5.
         uint256[21] memory order = [uint256(20),19,13,18,21,14,12,15,5,11,6,4,7,3,8,2,16,1,10,9,17];
 
         bytes memory _plot;
         uint256 numPlots = 21;
-        // uint256 gspBDVRatio = grownStalkPerBDV*100/maxGrownStalkPerBDV;
-        // uint256 numPlotsToFill = (gspBDVRatio * 20 / 100) + 1;
-        uint256 numPlotsToFill = 12;
+    
+        uint256 numPlotsToFill = uint256(stalkPerBDV);
         
         for(uint256 i = 0; i < numPlots; ++i) {
             uint256 plotNo = order[i];
