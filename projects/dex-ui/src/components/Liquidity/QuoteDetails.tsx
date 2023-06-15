@@ -205,7 +205,7 @@ const QuoteDetails = ({
 
   return (
     <QuoteContainer>
-      <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)}>
+      <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)} cursor="pointer">
         <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>Expected Output</QuoteDetailLabel>
         <QuoteDetailValue bold color={"black"} cursor={"pointer"}>{quoteValue}</QuoteDetailValue>
         <ImageButton component={ChevronDown} size={8} rotate={accordionOpen ? "180" : "0"} onClick={() => setAccordionOpen(!accordionOpen)} padding="0px" margin="-2px 0px 0px 8px" alt="Click to view more information about this transaction" />
@@ -269,7 +269,6 @@ const QuoteDetailLabel = styled.div<QuoteDetailProps>`
   width: 50%;
   font-weight: ${(props) => (props.bold ? "bold" : "normal")};
   color: ${(props) => (props.color ? props.color : "#9CA3AF")};
-  cursor: ${(props) => (props.cursor ? props.cursor : "auto")};
 `;
 
 const QuoteDetailValue = styled.div<QuoteDetailProps>`
@@ -277,14 +276,14 @@ const QuoteDetailValue = styled.div<QuoteDetailProps>`
   text-align: right;
   width: 50%;
   font-weight: ${(props) => (props.bold ? "bold" : "normal")};
-  color: ${(props) => (props.color ? props.color : "#9CA3AF")}; 
-  cursor: ${(props) => (props.cursor ? props.cursor : "auto")};
+  color: ${(props) => (props.color ? props.color : "#9CA3AF")};
 `;
 
-const QuoteDetailLine = styled.div`
+const QuoteDetailLine = styled.div<QuoteDetailProps>`
   display: flex;
   flex-direction: row;
   width: 100%;
+  cursor: ${(props) => (props.cursor ?? "auto")};
 `;
 
 const QuoteContainer = styled.div`
