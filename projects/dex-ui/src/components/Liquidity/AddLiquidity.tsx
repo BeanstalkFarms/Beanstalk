@@ -14,6 +14,7 @@ import { TransactionToast } from "../TxnToast/TransactionToast";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { useWellReserves } from "src/wells/useWellReserves";
+import { Checkbox } from "../Checkbox";
 
 type AddLiquidityProps = {
   well: Well;
@@ -251,16 +252,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 />
               ))}
             </TokenListContainer>
-            <BalancedCheckboxContainer>
-              <BalancedCheckbox
-                type="checkbox"
-                checked={balancedMode}
-                onChange={() => setBalancedMode(!balancedMode)}
-              />
-              <TabLabel onClick={() => setBalancedMode(!balancedMode)}>
-                Add tokens in balanced proportion
-              </TabLabel>
-            </BalancedCheckboxContainer>
+            <Checkbox label={"Add tokens in balanced proportion"} checked={balancedMode} onClick={() => setBalancedMode(!balancedMode)} />
             {showQuoteDetails && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.ADD}
