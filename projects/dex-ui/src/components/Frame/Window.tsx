@@ -22,7 +22,6 @@ const ViewPort = styled.main`
   width: 100vw;
   height: 100%;
   overflow: hidden;
-  cursor: crosshair;
   box-sizing: border-box;
 `;
 
