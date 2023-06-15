@@ -41,6 +41,7 @@ const Button = styled.button`
 
   :hover {
     background-color: #f1efec;
+    outline: 2px solid #46b955;
     cursor: pointer;
   }
   
