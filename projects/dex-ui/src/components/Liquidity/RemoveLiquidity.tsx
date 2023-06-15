@@ -150,7 +150,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
     address,
     txnCompleteCallback,
     resetState,
-    slippage
+    slippage,
+    refetchWellReserves
   ]);
 
   const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
@@ -432,23 +433,6 @@ const MediumGapContainer = styled.div`
   flex-direction: column;
   gap: 12px;
 `
-
-const BalancedCheckboxContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const BalancedCheckbox = styled.input`
-  margin-right: 10px;
-  width: 1em;
-  height: 1em;
-  background-color: white;
-
-  :checked {
-    background-color: red;
-  }
-`;
 
 const TabLabel = styled.div`
   cursor: pointer;

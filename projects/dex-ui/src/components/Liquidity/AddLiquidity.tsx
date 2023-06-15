@@ -162,7 +162,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         toast.error(error);
       }
     }
-  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback]);
+  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback, refetchWellReserves]);
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
@@ -328,25 +328,4 @@ const TokenListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const BalancedCheckboxContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const BalancedCheckbox = styled.input`
-  margin-right: 10px;
-  width: 1em;
-  height: 1em;
-  background-color: white;
-
-  :checked {
-    background-color: red;
-  }
-`;
-
-const TabLabel = styled.div`
-  cursor: pointer;
 `;
