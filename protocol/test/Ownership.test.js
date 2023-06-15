@@ -109,7 +109,7 @@ describe('Ownership', function () {
           this.siloToken.address, 
           this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
           '10000',
-          '1')).to.be.revertedWith("Token already whitelisted");
+          '1')).to.be.revertedWith("Whitelist: Token already whitelisted");
     })
 
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
