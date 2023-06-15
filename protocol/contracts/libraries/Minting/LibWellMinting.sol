@@ -68,8 +68,6 @@ library LibWellMinting {
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
             (deltaB, ) = twaDeltaB(well, lastSnapshot);
-        } else {
-            deltaB = 0;
         }
 
         deltaB = LibMinting.checkForMaxDeltaB(deltaB);
