@@ -18,6 +18,7 @@ import { TransactionToast } from "../TxnToast/TransactionToast";
 import useSdk from "src/utils/sdk/useSdk";
 import { getPrice } from "src/utils/price/usePrice";
 import { useWellReserves } from "src/wells/useWellReserves";
+import { Checkbox } from "../Checkbox";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -363,26 +364,16 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             )}
             </MediumGapContainer>
             {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
-              <BalancedCheckboxContainer>
-                    <BalancedCheckbox
-                      type="checkbox"
-                      checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
-                      onChange={() =>
-                        handleSwitchRemoveMode(
-                          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                        )
-                      }
-                    />
-                    <TabLabel
-                      onClick={() =>
-                        handleSwitchRemoveMode(
-                          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                        )
-                      }
-                    >
-                      Claim in balanced proportion
-                    </TabLabel>
-              </BalancedCheckboxContainer>
+              <>
+              <Checkbox 
+                label={"Claim in balanced proportion"}
+                checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
+                onClick={() =>
+                  handleSwitchRemoveMode(
+                    removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
+                  )}
+                />
+              </>
             )}
             {lpTokenAmountNonZero && (
               <QuoteDetails
