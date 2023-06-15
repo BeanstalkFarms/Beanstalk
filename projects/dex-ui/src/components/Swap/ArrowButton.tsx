@@ -33,7 +33,7 @@ const Button = styled.button`
   width: 48px;
   height: 48px;
   outline: 0.5px solid #9ca3af;
-  outline-offset: -.5px;
+  outline-offset: -0.5px;
   border: none;
   box-sizing: border-box;
   background-color: #f9f8f6;
@@ -41,6 +41,12 @@ const Button = styled.button`
 
   :hover {
     background-color: #f1efec;
+    outline: 2px solid #46b955;
     cursor: pointer;
+  }
+  
+  :focus {
+    outline: 0.5px solid #46b955;
+    outline-offset: -0.5px;
   }
 `;
