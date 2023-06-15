@@ -6,16 +6,26 @@ require("solidity-coverage");
 require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
-require('hardhat-contract-sizer');
+require("hardhat-contract-sizer");
 
-const fs = require('fs')
-const { upgradeWithNewFacets } = require("./scripts/diamond")
-const { impersonateSigner, mintUsdc, mintBeans, getBeanMetapool, getUsdc, getBean, getBeanstalkAdminControls, impersonateBeanstalkOwner, mintEth } = require('./utils');
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./test/utils/balances.js')
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require('./test/utils/constants.js')  
-const { to6 } = require('./test/utils/helpers.js')
+const fs = require("fs");
+const { upgradeWithNewFacets } = require("./scripts/diamond");
+const {
+  impersonateSigner,
+  mintUsdc,
+  mintBeans,
+  getBeanMetapool,
+  getUsdc,
+  getBean,
+  getBeanstalkAdminControls,
+  impersonateBeanstalkOwner,
+  mintEth
+} = require("./utils");
+const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require("./test/utils/constants.js");
+const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
-const { task } = require("hardhat/config")
+const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 
 //////////////////////// UTILITIES ////////////////////////
