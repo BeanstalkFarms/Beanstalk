@@ -68,12 +68,12 @@ export const Liquidity = () => {
         <SideBar id="centerbar">
         <Row gap={0}>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify>
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify hover>
                 <span>Add Liquidity</span>
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch bold justify>
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch bold justify hover>
                 <span>Remove Liquidity</span>
               </TabButton>
             </Item>
