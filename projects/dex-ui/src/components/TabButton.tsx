@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bold?: boolean, justify?: boolean }>`
+export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bold?: boolean, justify?: boolean, hover?: boolean }>`
   display: flex;
   flex-direction: row;
   height: 48px;
@@ -16,4 +16,10 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
   outline-offset: -0.5px;
   background-color: ${({ active }) => (active ? "#fff" : "#F9F8F6")};
   cursor: pointer;
+
+  ${({ hover }) => (hover && 
+    `:hover {
+      background-color: #f0fdf4;
+    };`
+    )}
 `;
