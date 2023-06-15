@@ -87,4 +87,15 @@ describe('Whitelist', function () {
       1
     )).to.revertedWith('Whitelist: Token already whitelisted');
   });
+
+  it('reverts if wrong encode type', async function () {
+    await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+      this.siloToken.address,
+      this.bdv.interface.getSighash('wellBdv'),
+      1,
+      1,
+      2
+    )).to.revertedWith('Silo: Invalid encodeType');
+  });
+
 });
