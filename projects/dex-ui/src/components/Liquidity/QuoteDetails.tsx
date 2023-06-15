@@ -5,7 +5,8 @@ import useSdk from "src/utils/sdk/useSdk";
 import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
 import { getGasInUsd } from "src/utils/gasprice";
 import SlippagePanel from "./SlippagePanel";
-import { Info } from "../Icons";
+import { ChevronDown, Info } from "../Icons";
+import { ImageButton } from "../ImageButton";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE;
@@ -45,6 +46,7 @@ const QuoteDetails = ({
   const sdk = useSdk();
   const [gasFeeUsd, setGasFeeUsd] = useState<string>("");
   const [tokenUSDValue, setTokenUSDValue] = useState<TokenValue>(TokenValue.ZERO);
+  const [accordionOpen, setAccordionOpen] = useState<boolean>(false)
 
   useEffect(() => {
     const _setGasFeeUsd = async () => {
@@ -64,17 +66,13 @@ const QuoteDetails = ({
   }, [sdk.provider, sdk, quote]);
 
   const quoteValue = useMemo(() => {
-    if (!quote) {
-      return null;
-    }
-
-    if (!quote.quote) {
-      return null;
+    if (!quote || !quote.quote) {
+      return 'X.XXXX TOKEN';
     }
 
     if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
       if (!wellTokens) {
-        return null;
+        return 'X.XXXX TOKEN';
       }
     }
 
@@ -207,34 +205,37 @@ const QuoteDetails = ({
 
   return (
     <QuoteContainer>
-      <QuoteDetailLine>
-        <QuoteDetailLabel bold color={"black"}>Expected Output</QuoteDetailLabel>
-        <QuoteDetailValue bold color={"black"}>{quoteValue}</QuoteDetailValue>
+      <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)}>
+        <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>Expected Output</QuoteDetailLabel>
+        <QuoteDetailValue bold color={"black"} cursor={"pointer"}>{quoteValue}</QuoteDetailValue>
+        <ImageButton component={ChevronDown} size={8} rotate={accordionOpen ? "180" : "0"} onClick={() => setAccordionOpen(!accordionOpen)} padding="0px" margin="-2px 0px 0px 8px" alt="Click to view more information about this transaction" />
       </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel>USD Value</QuoteDetailLabel>
-        <QuoteDetailValue>{`$${tokenUSDValue.toHuman("0,0.00")}`}</QuoteDetailValue>
-      </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-        <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
-        <IconContainer>
-          <Info color={"#9CA3AF"} />
-        </IconContainer>
-      </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
-        <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
-        <SlippagePanel
-          slippageValue={slippage}
-          connectorFor={"slippage"}
-          handleSlippageValueChange={handleSlippageValueChange}
-        />
-      </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
-        <QuoteDetailValue>{`${gasFeeUsd}`}</QuoteDetailValue>
-      </QuoteDetailLine>
+      <AccordionContainer open={accordionOpen}>
+        <QuoteDetailLine>
+          <QuoteDetailLabel>USD Value</QuoteDetailLabel>
+          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("0,0.00")}`}</QuoteDetailValue>
+        </QuoteDetailLine>
+        <QuoteDetailLine>
+          <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
+          <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
+          <IconContainer>
+            <Info color={"#9CA3AF"} />
+          </IconContainer>
+        </QuoteDetailLine>
+        <QuoteDetailLine>
+          <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
+          <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
+          <SlippagePanel
+            slippageValue={slippage}
+            connectorFor={"slippage"}
+            handleSlippageValueChange={handleSlippageValueChange}
+          />
+        </QuoteDetailLine>
+        <QuoteDetailLine>
+          <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
+          <QuoteDetailValue>{`${gasFeeUsd}`}</QuoteDetailValue>
+        </QuoteDetailLine>
+      </AccordionContainer>
     </QuoteContainer>
   );
 };
@@ -244,7 +245,18 @@ export default QuoteDetails;
 type QuoteDetailProps = {
   bold?: boolean;
   color?: string;
+  cursor?: string;
 };
+
+type AccordionProps = {
+  open?: boolean;
+}
+
+const AccordionContainer = styled.div<AccordionProps>`
+  height: ${(props) => (props.open ? '94px' : '0px')};
+  overflow: hidden;
+  transition: height 0.2s
+`
 
 const IconContainer = styled.div`
   margin-left: 10px;
@@ -257,6 +269,7 @@ const QuoteDetailLabel = styled.div<QuoteDetailProps>`
   width: 50%;
   font-weight: ${(props) => (props.bold ? "bold" : "normal")};
   color: ${(props) => (props.color ? props.color : "#9CA3AF")};
+  cursor: ${(props) => (props.cursor ? props.cursor : "auto")};
 `;
 
 const QuoteDetailValue = styled.div<QuoteDetailProps>`
@@ -264,7 +277,8 @@ const QuoteDetailValue = styled.div<QuoteDetailProps>`
   text-align: right;
   width: 50%;
   font-weight: ${(props) => (props.bold ? "bold" : "normal")};
-  color: ${(props) => (props.color ? props.color : "#9CA3AF")};
+  color: ${(props) => (props.color ? props.color : "#9CA3AF")}; 
+  cursor: ${(props) => (props.cursor ? props.cursor : "auto")};
 `;
 
 const QuoteDetailLine = styled.div`
