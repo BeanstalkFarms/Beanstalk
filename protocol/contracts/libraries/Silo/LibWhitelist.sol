@@ -75,9 +75,9 @@ library LibWhitelist {
                 0
             )
         );
-        require(success, "Invalid selector");
+        require(success, "Whitelist: Invalid selector");
 
-        require(s.ss[token].milestoneSeason == 0, "Token already whitelisted");
+        require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
