@@ -7,6 +7,7 @@ import { getGasInUsd } from "src/utils/gasprice";
 import SlippagePanel from "./SlippagePanel";
 import { ChevronDown, Info } from "../Icons";
 import { ImageButton } from "../ImageButton";
+import { Tooltip } from "../Tooltip";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE;
@@ -219,7 +220,21 @@ const QuoteDetails = ({
           <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
           <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
           <IconContainer>
-            <Info color={"#9CA3AF"} />
+            <Tooltip 
+              offsetX={-89}
+              offsetY={320}
+              arrowSize={4}
+              arrowOffset={95}
+              side={"top"}
+              width={283}
+              content={
+                <>
+                <div>*PRICE IMPACT*</div>
+                Change in Token price on this Well caused directly by this action.
+                </>
+              }>
+                <Info color={"#9CA3AF"} />
+            </Tooltip>
           </IconContainer>
         </QuoteDetailLine>
         <QuoteDetailLine>
@@ -252,16 +267,17 @@ type AccordionProps = {
   open?: boolean;
 }
 
-const AccordionContainer = styled.div<AccordionProps>`
-  height: ${(props) => (props.open ? '94px' : '0px')};
-  overflow: hidden;
-  transition: height 0.2s
-`
-
 const IconContainer = styled.div`
   margin-left: 10px;
   margin-top: 2px;
   margin-bottom: -2px;
+  cursor: pointer;
+`
+
+const AccordionContainer = styled.div<AccordionProps>`
+  height: ${(props) => (props.open ? '94px' : '0px')};
+  overflow: ${(props) => (props.open ? 'visible' : 'hidden')};
+  transition: height 0.2s
 `
 
 const QuoteDetailLabel = styled.div<QuoteDetailProps>`
