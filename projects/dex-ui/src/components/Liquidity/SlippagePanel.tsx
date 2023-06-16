@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useCallback, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import React, { MouseEvent, useCallback, useState } from "react";
+import styled from "styled-components";
 import gearIcon from "/src/assets/images/gear.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
@@ -12,16 +12,24 @@ type SlippagePanelProps = {
   connectorFor?: string;
 };
 
-const SlippagePanel = ({ handleSlippageValueChange, connectorFor, slippageValue }: SlippagePanelProps) => {
+const SlippagePanel = ({ handleSlippageValueChange, slippageValue }: SlippagePanelProps) => {
   
   const [modalOpen, setModalOpen] = useState(false);
   const closeModal = useCallback(() => setModalOpen(false), []);
+
+  const dontStealFocus = useCallback((e: MouseEvent) => {
+      if ((e.target as HTMLElement).id === "modal") {
+        closeModal();
+      }
+  }, [closeModal]);
 
   return (
     <Slippage>
       <Icon src={gearIcon} onClick={() => setModalOpen(!modalOpen)} modalOpen={modalOpen}/>
       {modalOpen && (
-      <ModalContainer id="modal" data-trace="true">
+      <>
+      <Modal onMouseDown={dontStealFocus} id="modal"/>
+      <ModalContainer data-trace="true" onMouseDown={dontStealFocus}>
         <ModalHeader>
           <div id="dialog-title">Adjust Slippage</div>
           <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
@@ -38,22 +46,13 @@ const SlippagePanel = ({ handleSlippageValueChange, connectorFor, slippageValue 
           </SlippageTextBottom>
         </ModalContent>
       </ModalContainer>
-      )}
-      {connectorFor === "slippage" && modalOpen && (
-      <InConnector>
-        <svg xmlns="http://www.w3.org/2000/svg" width={48} height={80} fill="none">
-          <path id="line" stroke="#46B955" d="M-1 75H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
-          <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-          <path fill="#F9F8F6" stroke="#46B955" d="M0 73a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
-        </svg>
-      </InConnector>
+      </>
       )}
     </Slippage>
   );
 };
 
 const Slippage = styled.div`
-  position: relative;
 `
 
 const StyledInput = styled.input`
@@ -63,7 +62,7 @@ const StyledInput = styled.input`
 
 const InputContainer = styled.div`
   height: 40px;
-  border: 1px solid #3e404b;
+  border: 0.5px solid #3e404b;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -72,7 +71,7 @@ const InputContainer = styled.div`
   padding-right: 12px;
   margin-bottom: 8px;
   &:focus-within {
-    border: 1px solid #46B955;
+    border: 0.5px solid #46B955;
   }
 `
 const InputAdornment = styled.div`  
@@ -98,34 +97,30 @@ const SlippageTextBottom = styled.div`
   margin-top: 24px;
 `;
 
-const InAnimation = keyframes`
-  0% {stroke-dashoffset: 124;}
-  100% {stroke-dashoffset:0px;}
-`;
-
-const InConnector = styled.div`
-  position: absolute;
-  top: -68px;
-  left: 26px;
-  > svg > #line {
-    stroke-dasharray: 124px;
-    stroke-dashoffset: 124px;
-    animation: ${InAnimation} 0.5s cubic-bezier(0, 0.55, 0.45, 1) forwards;
-  }
+const Modal = styled.div`
+  position: fixed;
+  top: 112px;
+  left: 0px;
+  bottom: 72px;
+  right: 0px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: auto;
+  display: flex;
+  z-index: 900;
 `;
 
 const ModalContainer = styled.div`
-  position: absolute;
-  top: -90px;
-  left: 74px;
-  background: #00000000;
   display: flex;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   align-self: flex-start;
   flex-direction: column;
   width: 408px;
   overflow: hidden;
   color: #000;
-  z-index: 1000;
+  z-index: 999;
 `;
 
 const ModalHeader = styled.div`
@@ -137,7 +132,7 @@ const ModalHeader = styled.div`
   padding: 16px;
   height: 48px;
   background: #fff;
-  border: 1px solid #3e404b;
+  border: 0.5px solid #3e404b;
   font-weight: 500;
   font-size: 16px;
 `;
@@ -146,7 +141,7 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-width: 0px 1px 1px 1px;
+  border-width: 0px 0.5px 0.5px 0.5px;
   border-style: solid;
   border-color: #3e404b;
   min-height: calc(3 * 48px);

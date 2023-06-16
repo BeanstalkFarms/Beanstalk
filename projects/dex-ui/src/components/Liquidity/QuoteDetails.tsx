@@ -242,7 +242,6 @@ const QuoteDetails = ({
           <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
           <SlippagePanel
             slippageValue={slippage}
-            connectorFor={"slippage"}
             handleSlippageValueChange={handleSlippageValueChange}
           />
         </QuoteDetailLine>
