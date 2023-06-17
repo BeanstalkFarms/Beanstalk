@@ -7,6 +7,9 @@ import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
 import { CustomToaster } from "../TxnToast/CustomToaster";
+import buildIcon from "src/assets/images/navbar/build.svg";
+import swapIcon from "src/assets/images/navbar/swap.svg";
+import wellsIcon from "src/assets/images/navbar/wells.svg";
 
 export const BasinConnectButton = () => {
   return (
@@ -33,9 +36,9 @@ export const Frame: FC<{}> = ({ children }) => {
         </BrandContainer>
         <RightSide>
           <NavLinks>
-            <NavLink to="/wells">Liquidity</NavLink>
-            <NavLink to="/build">Build</NavLink>
-            <NavLink to="/swap">Swap</NavLink>
+            <NavLink to="/wells" hoverIcon={wellsIcon}>Liquidity</NavLink>
+            <NavLink to="/build" hoverIcon={buildIcon}>Build</NavLink>
+            <NavLink to="/swap" hoverIcon={swapIcon}>Swap</NavLink>
             {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
         </RightSide>
@@ -52,6 +55,10 @@ export const Frame: FC<{}> = ({ children }) => {
     </Container>
   );
 };
+
+type NavLinkProps = {
+  hoverIcon?: string;
+}
 
 const TokenMarquee = styled.div`
   display: flex;
@@ -92,7 +99,7 @@ const NavLinks = styled.div`
   align-self: stretch;
   align-items: center;
 `;
-const NavLink = styled(Link)`
+const NavLink = styled(Link)<NavLinkProps>`
   border-left: 0.5px solid black;
   box-sizing: border-box;
   display: flex;
@@ -109,6 +116,7 @@ const NavLink = styled(Link)`
   line-height: 24px;
   color: black;
   outline: none !important;
+  cursor: ${(props) => (props.hoverIcon ? `url(${props.hoverIcon}), auto;` : 'pointer')}
 
   :focus {
     outline: none !important;
