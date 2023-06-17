@@ -5,6 +5,11 @@ import { TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { WellFunction } from "../Icons";
 
+type Props = {
+  name: string;
+  width?: number;
+}
+
 function WellFunctionDetails(functionName: any) {
   if (functionName.functionName === "Constant Product") {
     return (
@@ -24,9 +29,9 @@ function WellFunctionDetails(functionName: any) {
   };
 };
 
-export const LearnWellFunction: FC<{ name: string }> = ({ name }) => {
+export const LearnWellFunction: FC<Props> = ({ name, width }) => {
   return (
-    <ExpandBox width={408}>
+    <ExpandBox width={width || 408}>
       <ExpandBox.Header>
         <WellFunction />
         <TextNudge amount={1}>What is {name}?</TextNudge>
