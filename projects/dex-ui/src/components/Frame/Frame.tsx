@@ -116,7 +116,7 @@ const NavLink = styled(Link)<NavLinkProps>`
   line-height: 24px;
   color: black;
   outline: none !important;
-  cursor: ${(props) => (props.hoverIcon ? `url(${props.hoverIcon}), auto;` : 'pointer')}
+  cursor: ${(props) => (props.hoverIcon ? `url(${props.hoverIcon}), auto` : 'pointer')};
 
   :focus {
     outline: none !important;
