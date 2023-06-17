@@ -3,6 +3,7 @@ import styled from "styled-components";
 export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bold?: boolean, justify?: boolean, hover?: boolean }>`
   display: flex;
   flex-direction: row;
+  gap: 8px;
   height: 48px;
   border: none;
   box-sizing: border-box;
