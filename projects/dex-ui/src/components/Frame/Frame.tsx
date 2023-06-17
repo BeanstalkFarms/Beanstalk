@@ -36,9 +36,9 @@ export const Frame: FC<{}> = ({ children }) => {
         </BrandContainer>
         <RightSide>
           <NavLinks>
-            <NavLink to="/wells" hoverIcon={wellsIcon}>Liquidity</NavLink>
-            <NavLink to="/build" hoverIcon={buildIcon}>Build</NavLink>
-            <NavLink to="/swap" hoverIcon={swapIcon}>Swap</NavLink>
+            <NavLink to="/wells" hovericon={wellsIcon}>Liquidity</NavLink>
+            <NavLink to="/build" hovericon={buildIcon}>Build</NavLink>
+            <NavLink to="/swap" hovericon={swapIcon}>Swap</NavLink>
             {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
         </RightSide>
@@ -57,7 +57,7 @@ export const Frame: FC<{}> = ({ children }) => {
 };
 
 type NavLinkProps = {
-  hoverIcon?: string;
+  hovericon?: string;
 }
 
 const TokenMarquee = styled.div`
@@ -116,7 +116,7 @@ const NavLink = styled(Link)<NavLinkProps>`
   line-height: 24px;
   color: black;
   outline: none !important;
-  cursor: ${(props) => (props.hoverIcon ? `url(${props.hoverIcon}), auto` : 'pointer')};
+  cursor: ${(props) => (props.hovericon ? `url(${props.hovericon}), auto` : 'pointer')};
 
   :focus {
     outline: none !important;
@@ -173,7 +173,3 @@ const StyledConnectButton = styled.button`
     background-color: #f0fdf4;
   };
 `
-
-//align-self: stretch;
-//align-items: center;
-//justify-content: center;
