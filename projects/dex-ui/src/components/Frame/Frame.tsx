@@ -22,10 +22,10 @@ export const Frame: FC<{}> = ({ children }) => {
             <NavLink to="/swap">Swap</NavLink>
             {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
-          <ConnectionContainer>
-            <ConnectKitButton />
-          </ConnectionContainer>
         </RightSide>
+        <ConnectionContainer>
+          <ConnectKitButton />
+        </ConnectionContainer>
       </NavContainer>
       <TokenMarquee />
       <Window>
@@ -96,6 +96,9 @@ const NavLink = styled(Link)`
 
   :focus {
     outline: none !important;
+  }
+  &:last-child {
+    border-right: 0.5px solid black;
   }
 `;
 const RightSide = styled.div`

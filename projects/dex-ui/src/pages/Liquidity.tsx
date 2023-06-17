@@ -79,7 +79,8 @@ export const Liquidity = () => {
           </Row>
         {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} handleSlippageValueChange={handleSlippageValueChange}/>}
         {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  handleSlippageValueChange={handleSlippageValueChange}/> }
-          </SideBar>
+        </SideBar>
+        <SideBar id="leftbar" />
         </ContentWrapper>
       </Page>
     )
@@ -89,6 +90,7 @@ const ContentWrapper = styled.div`
   // outline: 1px solid red;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   gap: 48px;
 `;
 
