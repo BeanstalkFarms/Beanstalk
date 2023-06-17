@@ -121,6 +121,7 @@ const ModalContainer = styled.div`
   overflow: hidden;
   color: #000;
   z-index: 999;
+  border: 2px solid black;
 `;
 
 const ModalHeader = styled.div`
@@ -132,7 +133,7 @@ const ModalHeader = styled.div`
   padding: 16px;
   height: 48px;
   background: #fff;
-  border: 0.5px solid #3e404b;
+  border-bottom: 0.5px solid #3e404b;
   font-weight: 500;
   font-size: 16px;
 `;
@@ -141,9 +142,6 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-width: 0px 0.5px 0.5px 0.5px;
-  border-style: solid;
-  border-color: #3e404b;
   min-height: calc(3 * 48px);
 
   // 64px nav, 48px token bar, 96px four rows of margin, 72px footer,
