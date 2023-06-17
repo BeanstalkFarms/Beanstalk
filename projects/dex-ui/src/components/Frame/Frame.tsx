@@ -8,13 +8,29 @@ import { Window } from "./Window";
 import { Settings } from "src/settings";
 import { CustomToaster } from "../TxnToast/CustomToaster";
 
+export const BasinConnectButton = () => {
+  return (
+    <ConnectKitButton.Custom>
+      {({ isConnected, show, truncatedAddress, ensName }) => {
+        return (
+          <StyledConnectButton onClick={show}>
+            {isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}
+          </StyledConnectButton>
+        );
+      }}
+    </ConnectKitButton.Custom>
+  );
+};
+
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
 
   return (
     <Container id="frame">
       <NavContainer>
-        <Brand>[BASIN]</Brand>
+        <BrandContainer>
+          <Brand>[BASIN]</Brand>
+        </BrandContainer>
         <RightSide>
           <NavLinks>
             <NavLink to="/wells">Liquidity</NavLink>
@@ -23,9 +39,9 @@ export const Frame: FC<{}> = ({ children }) => {
             {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
         </RightSide>
-        <ConnectionContainer>
-          <ConnectKitButton />
-        </ConnectionContainer>
+        <StyledConnectContainer>
+          <BasinConnectButton />
+        </StyledConnectContainer>
       </NavContainer>
       <TokenMarquee />
       <Window>
@@ -67,7 +83,7 @@ const NavContainer = styled.nav`
   height: 64px;
   min-height: 64px;
   box-sizing: border-box;
-  padding: 0px 48px;
+  padding: 0px;
   align-items: center;
 `;
 
@@ -109,21 +125,41 @@ const RightSide = styled.div`
   align-items: center;
 `;
 
-const Brand = styled.div`
+const BrandContainer = styled.div`
   display: flex;
+  direction: row;
+  flex: 1;
   align-self: stretch;
   align-items: center;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 24px;
-  width: 192px;
 `;
 
-const ConnectionContainer = styled.div`
-  border-left: 0.5px solid black;
+const Brand = styled.div`
+  padding-left: 48px;
+`
+
+const StyledConnectContainer = styled.div`
   display: flex;
+  direction: row;
+  flex: 1;
   align-self: stretch;
   align-items: center;
   justify-content: center;
-  width: 192px;
-`;
+`
+
+const StyledConnectButton = styled.button`
+  display: flex;
+  direction: row;
+  flex: 1;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  border: 1px dotted red;
+  cursor: pointer;
+  border: 0px;
+  color: #000;
+  background: #FFF;
+`
+
+//align-self: stretch;
+//align-items: center;
+//justify-content: center;
