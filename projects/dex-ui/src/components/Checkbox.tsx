@@ -5,21 +5,25 @@ import styled from "styled-components";
 type Props = {
   label?: string;
   checked?: boolean;
+  mode?: string;
+  checkboxColor?: string;
   onClick?: () => void;
 };
 
-export const Checkbox: FC<Props> = ({ label = "This is a checkbox", checked = false, onClick = () => {} }) => {
+export const Checkbox: FC<Props> = ({ label, checked = false, mode, checkboxColor, onClick = () => {} }) => {
   return (
     <StyledCheckbox>
       <HiddenCheckbox type="checkbox" role={"checkbox"} checked={checked} />
       <HoverContainer>
-        <StyledCheckboxContainer checked={checked} onClick={onClick}>
-          <HoverCheckmark checked={checked} />
-          <Checkmark checked={checked} />
+        <StyledCheckboxContainer checked={checked} onClick={onClick} mode={mode} checkboxColor={checkboxColor}>
+          <HoverCheckmark checked={checked} checkboxColor={checkboxColor} />
+          <Checkmark checked={checked} checkboxColor={checkboxColor} />
         </StyledCheckboxContainer>
+        {label &&
         <CheckboxText checked={checked} onClick={onClick}>
           {label}
         </CheckboxText>
+        }
       </HoverContainer>
     </StyledCheckbox>
   );
@@ -27,6 +31,8 @@ export const Checkbox: FC<Props> = ({ label = "This is a checkbox", checked = fa
 
 type CheckboxProps = {
   checked?: boolean;
+  checkboxColor?: string;
+  mode?: string;
 };
 
 const StyledCheckbox = styled.div`
@@ -49,25 +55,26 @@ const HiddenCheckbox = styled.input.attrs({ type: "checkbox" })`
 `;
 
 const StyledCheckboxContainer = styled.div<CheckboxProps>`
-  border: 1px solid;
+  border: 1px solid ${(props) => (props.checkboxColor && props.checked ? props.checkboxColor : '#000')};
   border-radius: 1em;
   width: 16px;
   height: 16px;
-  position: absolute;
-  top: 2px;
+  position: ${(props) => (props.mode === "checkOnly" ? 'relative' : 'absolute')};
+  top: ${(props) => (props.mode === "checkOnly" ? '0px' : '2px')};
   cursor: pointer;
 `;
 
 const Checkmark = styled.div<CheckboxProps>`
-  border: 1px solid;
+  border: 1px solid ${(props) => (props.checkboxColor ? props.checkboxColor : '#FFF')};
   border-radius: 1em;
   width: 8px;
   height: 8px;
-  position: absolute;
+  position: ${(props) => (props.mode === "checkOnly" ? 'relative' : 'absolute')};
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #000;
+  background: ${(props) => (props.checkboxColor ? props.checkboxColor : '#FFF')};
+  filter: ${(props) => (props.checkboxColor ? "brightness(100%);" : "brightness(0%);")}
   opacity: ${(props) => (props.checked ? "1" : "0")};
   z-index: 2;
 `;
@@ -77,14 +84,15 @@ const HoverCheckmark = styled.div<CheckboxProps>`
   border-radius: 1em;
   width: 8px;
   height: 8px;
-  position: absolute;
+  position: ${(props) => (props.mode === "checkOnly" ? 'relative' : 'absolute')};
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: transparent;
   ${HoverContainer}:hover & {
-    border: 1px solid #9ca3af;
-    background: #9ca3af;
+    border: 1px solid ${(props) => (props.checkboxColor ? props.checkboxColor : '#FFF')};
+    background: ${(props) => (props.checkboxColor ? props.checkboxColor : '#FFF')};
+    filter: brightness(50%);
   }
   z-index: 1;
 `;

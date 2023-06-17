@@ -290,23 +290,20 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             <Tabs>
               <Tab>
                 <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)} active={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken} stretch>
-                <TabRadio
-                  type="radio"
-                  id="singleTokenRadio"
-                  value={REMOVE_LIQUIDITY_MODE.Balanced}
+                <Checkbox
                   checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken}
-                  onChange={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}
-                />{" "}
+                  mode={"checkOnly"}
+                  checkboxColor="#46b955"
+                />
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}>Single Token</TabLabel>
                 </TabButton>
               </Tab>
               <Tab>
               <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)} active={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken} stretch>
-                <TabRadio
-                  type="radio"
-                  value={REMOVE_LIQUIDITY_MODE.Balanced}
+                <Checkbox
                   checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
-                  readOnly
+                  mode={"checkOnly"}
+                  checkboxColor="#46b955"
                 />
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
                 </TabButton>
@@ -344,12 +341,10 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 {well.tokens!.map((token: Token, index: number) => (
                   <ContainerSingleTokenRow key={`token${index}`} onClick={() => handleSwitchSingleToken(index)}>
                     <ReadOnlyTokenValueRow selected={singleTokenIndex === index}>
-                      <Radio
-                        type="radio"
-                        name="singleToken"
-                        value={index}
+                      <Checkbox
                         checked={singleTokenIndex === index}
-                        readOnly
+                        mode={"checkOnly"}
+                        checkboxColor="#46b955"
                       />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
@@ -498,7 +493,6 @@ const TokenAmount = styled.div`
 `;
 
 const TokenSymbol = styled.div`
-  margin-left: 10px;
 `;
 
 const SmallTokenLogo = styled.img`
@@ -514,6 +508,7 @@ const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   border: 0.5px solid black;
   margin: -0.5px;
   height: 60px;
+  gap: 8px;
   align-items: center;
   padding-left: 8px;
   padding-right: 8px;
