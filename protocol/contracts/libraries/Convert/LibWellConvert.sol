@@ -61,7 +61,7 @@ library LibWellConvert {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
         Call memory wellFunction = IWell(well).wellFunction();
-        uint beanIndex = LibWell.getBeanIndex(tokens);
+        uint256 beanIndex;
         uint256[] memory ratios;
         (ratios, beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
 
