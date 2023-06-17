@@ -112,10 +112,13 @@ const NavLink = styled(Link)`
 
   :focus {
     outline: none !important;
-  }
+  };
+  :hover {
+    background-color: #f0fdf4;
+  };
   &:last-child {
     border-right: 0.5px solid black;
-  }
+  };
 `;
 const RightSide = styled.div`
   // border: 1px solid red;
@@ -158,6 +161,9 @@ const StyledConnectButton = styled.button`
   border: 0px;
   color: #000;
   background: #FFF;
+  :hover {
+    background-color: #f0fdf4;
+  };
 `
 
 //align-self: stretch;
