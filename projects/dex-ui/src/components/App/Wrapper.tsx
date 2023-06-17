@@ -25,6 +25,10 @@ export const Wrapper: FC<{}> = ({ children }) => {
             initialChainId: 0,
             hideBalance: true
           }}
+          customTheme={{
+            "--ck-font-family": "PPMori",
+            "--ck-modal-box-shadow": "0px 0px 0px 2px black",
+          }}
         >
           <QueryClientProvider client={queryClient}>
             <ReactQueryDevtools initialIsOpen={false} />
