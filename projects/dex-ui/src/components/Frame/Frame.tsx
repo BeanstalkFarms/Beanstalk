@@ -116,6 +116,7 @@ const Brand = styled.div`
   font-weight: 600;
   font-size: 16px;
   line-height: 24px;
+  width: 192px;
 `;
 
 const ConnectionContainer = styled.div`
@@ -124,5 +125,5 @@ const ConnectionContainer = styled.div`
   align-self: stretch;
   align-items: center;
   justify-content: center;
-  padding-left: 48px;
+  width: 192px;
 `;
