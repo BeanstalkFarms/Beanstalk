@@ -511,8 +511,8 @@ const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   flex-direction: row;
   font-weight: ${(props) => props.selected ? '600' : 'normal'};
   background-color: ${(props) => props.selected ? 'white' : '#F9F8F6'};
-  border: 1px solid black;
-  margin: -1px;
+  border: 0.5px solid black;
+  margin: -0.5px;
   height: 60px;
   align-items: center;
   padding-left: 8px;
