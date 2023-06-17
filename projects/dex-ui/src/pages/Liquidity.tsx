@@ -59,12 +59,12 @@ export const Liquidity = () => {
         <ContentWrapper>
         <SideBar id="sidebar">
           <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
-          <LiquidityBox lpToken={well?.lpToken!} />
-          <LearnYield />
-          <LearnWellFunction name={wellFunctionName} />
-          <LearnPump />
+          <LiquidityBox lpToken={well?.lpToken!} width={384} />
+          <LearnYield width={384}/>
+          <LearnWellFunction name={wellFunctionName} width={384}/>
+          <LearnPump width={384}/>
         </SideBar>
-        <SideBar id="centerbar">
+        <CenterBar id="centerbar">
         <Row gap={0}>
             <Item stretch>
               <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify hover>
@@ -79,7 +79,7 @@ export const Liquidity = () => {
           </Row>
         {tab === 0 && <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} handleSlippageValueChange={handleSlippageValueChange}/>}
         {tab === 1 && <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  handleSlippageValueChange={handleSlippageValueChange}/> }
-        </SideBar>
+        </CenterBar>
         <SideBar id="leftbar" />
         </ContentWrapper>
       </Page>
@@ -95,6 +95,15 @@ const ContentWrapper = styled.div`
 `;
 
 const SideBar = styled.div`
+  // outline: 1px solid green;
+  display: flex;
+  flex-direction: column;
+  width: calc(16 * 24px);
+  min-width: calc(16 * 24px);
+  gap: 24px;
+`
+
+const CenterBar = styled.div`
   // outline: 1px solid green;
   display: flex;
   flex-direction: column;
