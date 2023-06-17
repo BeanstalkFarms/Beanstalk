@@ -143,17 +143,17 @@ library LibCurveMinting {
     function twaBalances()
         internal
         view
-        returns (uint256[2] memory twaBalances, uint256[2] memory cumulativeBalances)
+        returns (uint256[2] memory _twaBalances, uint256[2] memory cumulativeBalances)
     {
         cumulativeBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_price_cumulative_last();
-        twaBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
+        _twaBalances = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).get_balances();
         uint256 lastTimestamp = IMeta3CurveOracle(C.CURVE_BEAN_METAPOOL).block_timestamp_last();
 
         cumulativeBalances[0] = cumulativeBalances[0].add(
-            twaBalances[0].mul(block.timestamp.sub(lastTimestamp))
+            _twaBalances[0].mul(block.timestamp.sub(lastTimestamp))
         );
         cumulativeBalances[1] = cumulativeBalances[1].add(
-            twaBalances[1].mul(block.timestamp.sub(lastTimestamp))
+            _twaBalances[1].mul(block.timestamp.sub(lastTimestamp))
         );
 
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -161,8 +161,8 @@ library LibCurveMinting {
 
         uint256 deltaTimestamp = block.timestamp.sub(s.season.timestamp);
 
-        twaBalances[0] = cumulativeBalances[0].sub(o.balances[0]).div(deltaTimestamp);
-        twaBalances[1] = cumulativeBalances[1].sub(o.balances[1]).div(deltaTimestamp);
+        _twaBalances[0] = cumulativeBalances[0].sub(o.balances[0]).div(deltaTimestamp);
+        _twaBalances[1] = cumulativeBalances[1].sub(o.balances[1]).div(deltaTimestamp);
     }
 
     /**

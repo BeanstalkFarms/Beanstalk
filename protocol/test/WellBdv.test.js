@@ -59,4 +59,9 @@ describe('Well BDV', function () {
     this.pump.setInstantaneousReserves([to18('1'), to18('4')])
     expect(await this.beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('999999', '1000001')
   })
+
+  it("Fails if balance too low", async function () {
+    this.pump.setInstantaneousReserves([to6('1'), to18('1')])
+    await expect(this.beanstalk.bdv(this.well.address, to6('1000000'))).to.be.revertedWith('Silo: Well Bean balance below min')
+  })
 })
