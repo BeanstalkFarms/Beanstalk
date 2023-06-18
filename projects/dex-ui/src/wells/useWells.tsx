@@ -20,7 +20,9 @@ export const useWells = () => {
             sdk.wells
               .getWell(address, {
                 name: true,
-                tokens: true
+                tokens: true,
+                wellFunction: true,
+                reserves: true,
               })
               .catch((err) => {
                 Log.module("wells").log(`Failed to load Well [${address}]: ${err.message}`);
