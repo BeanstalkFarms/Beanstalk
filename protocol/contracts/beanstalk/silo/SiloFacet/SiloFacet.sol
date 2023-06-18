@@ -55,7 +55,7 @@ contract SiloFacet is TokenSilo {
         payable 
         nonReentrant 
         mowSender(token) 
-        returns (uint256 amount, uint256 bdv, int96 stem)
+        returns (uint256 amount, uint256 _bdv, int96 stem)
     {
         amount = LibTransfer.receiveToken(
             IERC20(token),
@@ -63,7 +63,7 @@ contract SiloFacet is TokenSilo {
             msg.sender,
             mode
         );
-        (bdv, stem) = _deposit(msg.sender, token, amount);
+        (_bdv, stem) = _deposit(msg.sender, token, amount);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -132,7 +132,7 @@ contract SiloFacet is TokenSilo {
      * @param token Address of the whitelisted ERC20 token to Transfer.
      * @param stem stem of Deposit from which to Transfer.
      * @param amount Amount of `token` to Transfer.
-     * @return bdv The BDV included in this transfer, now owned by `recipient`.
+     * @return _bdv The BDV included in this transfer, now owned by `recipient`.
      *
      * @dev An allowance is required if `sender !== msg.sender`
      * 
@@ -146,14 +146,14 @@ contract SiloFacet is TokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) public payable nonReentrant returns (uint256 bdv) {
+    ) public payable nonReentrant returns (uint256 _bdv) {
         if (sender != msg.sender) {
             LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
         }
         LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
         LibSilo._mow(recipient, token);
-        bdv = _transferDeposit(sender, recipient, token, stem, amount);
+        _bdv = _transferDeposit(sender, recipient, token, stem, amount);
     }
 
     /** 
@@ -309,9 +309,9 @@ contract SiloFacet is TokenSilo {
     function bdv(address token, uint256 amount)
         external
         view
-        returns (uint256 bdv)
+        returns (uint256 _bdv)
     {
-        bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+        _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
     }
 
 }
