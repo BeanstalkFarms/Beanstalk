@@ -116,5 +116,26 @@ describe('Well Minting', function () {
       expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('-225006447371')
     })
   })
+
+  describe("Beans below min", async function () {
+    beforeEach(async function () {
+      await this.well.setReserves([to6('1'), to18('1000')])
+      await this.well.setReserves([to6('1'), to18('1000')])
+      await advanceTime(3600)
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+    })
+
+    it("Captures a Beans below min", async function () {
+      expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
+    })
+
+    it("Checks a Beans below min", async function () {
+      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('0')
+    })
+
+  })
   
 })
