@@ -330,7 +330,6 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                       onAmountChange={handleImbalancedInputChange(index)}
                       canChangeToken={false}
                       canChangeValue={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom}
-                      showMax={false}
                       showBalance={false}
                       loading={false}
                     />
