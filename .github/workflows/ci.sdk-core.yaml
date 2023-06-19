@@ -1,0 +1,45 @@
+name: SDK Core
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'projects/sdk-core/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: SDK Core Tests
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - name: Cache Node Modules
+        id: node-modules-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - name: Install Dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          profile: minimal
+          override: true
+      - name: Install Anvil
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Launch Anvil
+        run: anvil --fork-url $ANVIL_FORK_URL --chain-id 1337 &
+        env:
+          ANVIL_FORK_URL: ${{ secrets.ANVIL_FORK_URL }}
+      - name: Build All
+        run: yarn build
+      - name: Test SDK Core
+        run: yarn sdk-core:test
