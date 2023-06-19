@@ -296,7 +296,7 @@ Input:
 yarn analyze <DIR>/Beanstalk/protocol/contracts
 ```
 
-You can see the output at `4naly3er_report.md`, we've highlighted the most important parts below:
+You can see the output at [`4naly3er_report.md`](./protocol/4naly3er_report.md), we've highlighted the most important parts below:
 
 ### Appendix 3 - Coverage
 
