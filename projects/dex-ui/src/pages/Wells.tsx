@@ -12,56 +12,63 @@ import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
+import { useAccount } from "wagmi";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
   const navigate = useNavigate();
   const sdk = useSdk();
+  const { address } = useAccount();
   const [wellLiquidity, setWellLiquidity] = useState<any>([]);
   const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([])
+  const [wellLpBalances, setWellLpBalances] = useState<any>([])
   const [tab, showTab] = useState<number>(0)
-
+  
   useMemo(() => {
     const run = async() => {
       if (!wells || !wells.length) return;
-      let _wellsLiquidityUSD = []
+      let _wellsLiquidityUSD = [];
       for (let i = 0; i < wells.length; i++) {
         if (!wells[i].tokens) return;
         const _tokenPrices = await Promise.all(wells[i].tokens!.map((token) => getPrice(token, sdk)));
         const _reserveValues = wells[i].reserves?.map((tokenReserve, index) => tokenReserve.mul(_tokenPrices[index] as TokenValue || TokenValue.ZERO));
         let initialValue = TokenValue.ZERO;
-        const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue)
+        const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue);
 
-        _wellsLiquidityUSD[i] = _totalWellLiquidity
+        _wellsLiquidityUSD[i] = _totalWellLiquidity;
       }
-      setWellLiquidity(_wellsLiquidityUSD)
+      setWellLiquidity(_wellsLiquidityUSD);
 
-      let _wellsFunctionNames = []
+      let _wellsFunctionNames = [];
       for (let i = 0; i < wells.length; i++) {
-        const _wellName = await wells[i].wellFunction!.contract.name()
-        _wellsFunctionNames[i] = _wellName
+        const _wellName = await wells[i].wellFunction!.contract.name();
+        _wellsFunctionNames[i] = _wellName;
       }
-      setWellFunctionNames(_wellsFunctionNames)
+      setWellFunctionNames(_wellsFunctionNames);
 
+      let _wellsLpBalances = [];
+      for (let i = 0; i < wells.length; i++) {
+        if (!address || !wells[i].lpToken) return;
+        const _lpBalance = await wells[i].lpToken?.getBalance(address);
+        _wellsLpBalances[i] = _lpBalance;
+      }
+      setWellLpBalances(_wellsLpBalances);
     }
 
     run();
-  }, [sdk, wells])
-
-
+  }, [sdk, wells, address]);
 
   if (isLoading) return <div>loading...</div>;
   if (error) return <div>{error.message}</div>;
 
-
-
-  const rows = wells?.map((well, index) => {
+  function WellRow(well: any, index: any) {
+    if (!well) return;
     const tokens = well.tokens || [];
     const logos: ReactNode[] = [];
     const symbols: string[] = [];
     const gotoWell = () => navigate(`/wells/${well.address}`);
 
-    tokens.map((token) => {
+    tokens.map((token: any) => {
       logos.push(<TokenLogo token={token} size={25} key={token.symbol} />);
       symbols.push(token.symbol);
     });
@@ -92,8 +99,37 @@ export const Wells = () => {
           : null }
         </Td>
       </Row>
-    );
-  });
+    )
+  };
+
+  function MyLPsRow(well: any, index: any) {
+    if (!well || !wellLpBalances || !wellLpBalances[index] || wellLpBalances[index].eq(TokenValue.ZERO)) return;
+    const tokens = well.tokens || [];
+    const logos: ReactNode[] = [];
+    const symbols: string[] = [];
+    const gotoWell = () => navigate(`/wells/${well.address}`);
+
+    tokens.map((token: any) => {
+      logos.push(<TokenLogo token={token} size={25} key={token.symbol} />);
+      symbols.push(token.symbol);
+    });
+
+    return (
+      <Row key={well.address} onClick={gotoWell}>
+        <Td>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          </WellDetail>
+        </Td>
+        <Td align="right">
+          <div>{`${wellLpBalances[index].toHuman()} ${well.lpToken.symbol}`}</div>
+        </Td>
+      </Row>
+    )
+  };
+
+  const rows = wells?.map((well, index) => { return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index) })
 
   return (
     <Page>
@@ -111,6 +147,7 @@ export const Wells = () => {
         </Item>
       </TabRow>
       <Table>
+        {tab === 0 ?
         <THead>
           <Row>
             <Th>Well</Th>
@@ -120,6 +157,14 @@ export const Wells = () => {
             <Th align="right">Reserves</Th>
           </Row>
         </THead>
+        : 
+        <THead>
+          <Row>
+            <Th>My Positions</Th>
+            <Th align="right">My Liquidity</Th>
+          </Row>
+        </THead>
+        }
         <TBody>{rows}</TBody>
       </Table>
     </Page>
@@ -127,6 +172,7 @@ export const Wells = () => {
 };
 
 const WellDetail = styled.div``;
+
 const TokenLogos = styled.div`
   display: flex;
   div:not(:first-child) {
@@ -152,11 +198,11 @@ const Reserves = styled.div`
   justify-content flex-end;
   gap: 8px;
   flex: 1;
-`
+`;
 
 const MoreReserves = styled.div`
   color: #9CA3AF;
-`
+`;
 
 const TradingFee = styled.div`
   font-size: 16px;
@@ -170,5 +216,3 @@ const WellPricing = styled.div`
   line-height: 24px;
   text-transform: capitalize;
 `;
-
-//#4B5563

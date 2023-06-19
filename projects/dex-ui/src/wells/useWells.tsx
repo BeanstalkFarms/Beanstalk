@@ -23,6 +23,7 @@ export const useWells = () => {
                 tokens: true,
                 wellFunction: true,
                 reserves: true,
+                lpToken: true,
               })
               .catch((err) => {
                 Log.module("wells").log(`Failed to load Well [${address}]: ${err.message}`);
