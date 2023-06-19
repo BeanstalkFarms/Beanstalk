@@ -159,9 +159,11 @@ export abstract class Token {
    *
    * Ex: BEAN.toHuman(BigNumber.from('3140000)) => "3.14"
    * @param value A BigNumber with a value of this token, for ex: 1000000 would be 1 BEAN
+   * @param format Optional format string, "short" is the only allowed option. A human readable string that is abbreviated
    * @returns string
    */
-  toHuman(value: BigNumber): string {
+  toHuman(value: BigNumber, format?: string): string {
+    if (format) return TokenValue.fromBlockchain(value, this.decimals).toHuman(format);
     return utils.formatUnits(value, this.decimals);
   }
 
