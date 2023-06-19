@@ -13,7 +13,7 @@ type Props = {
 export const Checkbox: FC<Props> = ({ label, checked = false, mode, checkboxColor, onClick = () => {} }) => {
   return (
     <StyledCheckbox>
-      <HiddenCheckbox type="checkbox" role={"checkbox"} checked={checked} />
+      <HiddenCheckbox type="checkbox" role={"checkbox"} checked={checked} readOnly/>
       <HoverContainer>
         <StyledCheckboxContainer checked={checked} onClick={onClick} mode={mode} checkboxColor={checkboxColor}>
           <HoverCheckmark checked={checked} checkboxColor={checkboxColor} />
