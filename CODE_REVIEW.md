@@ -54,7 +54,7 @@ yarn npm audit
 ## Code Quality
 
 - Indexers use events to monitor the state of the system, when an event's ABI changes, this can "break" the way the indexer is collecting data. [AddDeposit](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/contracts/libraries/Silo/LibTokenSilo.sol#L54) is updating from a season ID to a stem ID, which can cause indexers to be confused. It might be worth renaming the event, or at least calling out in the developer documentation how an indexer can keep track of the new seasons based on the block number (indexing season update transactions).
-- In `Bean.t.sol` you don't need to use `experimental ABIEncoderV2` as that was added in solidity 0.7.4, you can just use `abicoder v2` isntead of `experimental ABIEncoderV2`.
+- Use of `experimental ABIEncoderV2` in `Bean.t.sol` is not required as this was added in solidity 0.7.4. You can use `abicoder v2` instead of `experimental ABIEncoderV2`.
 - There are _many_ commented out chunks of code, TODOs, and seemingly "unfinished" tests and pieces of code, such as [here](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/test/Stem.test.js#L326), [protocol/test/Root.test.js](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/test/Root.test.js), and others.
 - `yarn format` is not a commit hook, and files are not all formatted systemically. Consider adding a commit hook to format all files before committing. We formatted at least `hardhat.config.js` for you.
 - Consider using named imports over generalized ones to ensure you're importing what you need, and know where keywords are coming from:
