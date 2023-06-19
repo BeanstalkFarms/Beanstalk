@@ -42,7 +42,7 @@ The aim of this code review is to review the PR for Silo V3, aka BIP-36, aka [PR
 
 ## Security
 
-- Running the forking test suite makes a _lot_ of RPC calls, and takes a long time. This could potentially be a security issue if people skimp out on finishing running all the tests. Consider moving test suite to foundry to speed up the process.
+- Running the forking test suite makes a _lot_ of RPC calls, and takes a long time. This could potentially be a security issue if developers fail to finish running all the tests. Consider moving test suite to Foundry to speed up the process.
 - Versioning of codebase should be the same throughout, consider using `pragma solidity =0.7.6;` for all files.
 - Their are several `high` confidence and `high` severity rating outputs from static analysis tools, linked at the appendix. You can tell slither to ignore them but adding `//slither-disable-next-line DETECTOR_NAME` above the line that is causing the issue. We recommend addressing them **after making sure they are not needed.**
 
