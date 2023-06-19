@@ -4,7 +4,7 @@
 | ------------- | -------------------------------------------------------------------------------------------- |
 | Date          | 2023-06-13                                                                                   |
 | Author        | [Patrick Collins](https://twitter.com/patrickalphac)                                         |
-| Reviewer      | [Alex Roan](https://twitter.com/alexroan)                                                    |
+| Reviewer      | [Giovanni Di Siena](https://twitter.com/giovannidisiena)                                     |
 | Repo          | [Beanstalk Core](https://github.com/BeanstalkFarms/Beanstalk)                                |
 | Commit Hash   | `5b978351d9f8d3a824ffa157557139da8b1a6db0`                                                   |
 | Area of Focus | [PR #410 for the `protocol` dir](https://github.com/BeanstalkFarms/Beanstalk/pull/410/files) |
