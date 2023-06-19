@@ -270,7 +270,7 @@ export class TokenValue {
   friendlyFormat(tv: TokenValue): string {
     if (tv.eq(0)) return "0";
 
-    if (tv.lte(TokenValue.fromHuman("0.0000001", 7))) return "<.00000001";
+    if (tv.lte(TokenValue.fromHuman("0.00000001", 8))) return "<.00000001";
 
     if (tv.lte(TokenValue.fromHuman(1e-3, 3))) {
       return this.trimDecimals(tv, 8).toHuman();
