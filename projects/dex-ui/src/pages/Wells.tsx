@@ -1,9 +1,12 @@
 import { TokenValue } from "@beanstalk/sdk";
 import React, { ReactNode, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Item } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
+import { TabButton } from "src/components/TabButton";
 import { Row, TBody, THead, Table, Td, Th } from "src/components/Table";
+import { Row as TabRow } from "src/components/Layout";
 import { TokenLogo } from "src/components/TokenLogo";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
@@ -16,6 +19,7 @@ export const Wells = () => {
   const sdk = useSdk();
   const [wellLiquidity, setWellLiquidity] = useState<any>([]);
   const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([])
+  const [tab, showTab] = useState<number>(0)
 
   useMemo(() => {
     const run = async() => {
@@ -94,6 +98,18 @@ export const Wells = () => {
   return (
     <Page>
       <Title title="WELLS" />
+      <TabRow gap={24}>
+        <Item stretch>
+          <TabButton onClick={() => showTab(0)} active={tab === 0} stretch bold justify>
+            <span>View Wells</span>
+          </TabButton>
+        </Item>
+        <Item stretch>
+          <TabButton onClick={() => showTab(1)} active={tab === 1} stretch bold justify>
+            <span>My Liquidity Positions</span>
+          </TabButton>
+        </Item>
+      </TabRow>
       <Table>
         <THead>
           <Row>
