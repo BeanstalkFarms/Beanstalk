@@ -72,13 +72,20 @@ export const Wells = () => {
           </WellDetail>
         </Td>
         <Td>
-          <DataText>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</DataText>
+          <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
         </Td>
-        <Td>
-          <DataText>pump</DataText>
+        <Td align="right">
+          <TradingFee>0.00%</TradingFee>
         </Td>
         <Td align="right">
           <Amount>${wellLiquidity[index] ? wellLiquidity[index].toHuman("0,0.00") : "-.--"}</Amount>
+        </Td>
+        <Td align="right">
+          <Reserves>{logos[0]}{well.reserves![0] ? well.reserves![0].toHuman("0,0.00") : "-.--"}</Reserves>
+          <Reserves>{logos[1]}{well.reserves![1] ? well.reserves![1].toHuman("0,0.00") : "-.--"}</Reserves>
+          {well.reserves && well.reserves.length > 2 ? 
+          <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves>
+          : null }
         </Td>
       </Row>
     );
@@ -86,15 +93,15 @@ export const Wells = () => {
 
   return (
     <Page>
-      <Title title="Liquidity" />
-
+      <Title title="WELLS" />
       <Table>
         <THead>
           <Row>
-            <Th>Well Name and Details</Th>
-            <Th>Pricing Function</Th>
-            <Th>Pump(s)</Th>
+            <Th>Well</Th>
+            <Th>Well Pricing Function</Th>
+            <Th align="right">Trading Fees</Th>
             <Th align="right">Total Liquidity</Th>
+            <Th align="right">Reserves</Th>
           </Row>
         </THead>
         <TBody>{rows}</TBody>
@@ -106,13 +113,11 @@ export const Wells = () => {
 const WellDetail = styled.div``;
 const TokenLogos = styled.div`
   display: flex;
-
   div:not(:first-child) {
     margin-left: -8px;
   }
 `;
 const TokenSymbols = styled.div`
-  font-weight: 700;
   font-size: 20px;
   line-height: 24px;
   color: #1c1917;
@@ -120,15 +125,34 @@ const TokenSymbols = styled.div`
 
 const Amount = styled.div`
   font-weight: 500;
-  font-size: 24px;
-  line-height: 30px;
+  font-size: 20px;
+  line-height: 24px;
   color: #1c1917;
 `;
 
-const DataText = styled.div`
-  font-weight: 400;
+const Reserves = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content flex-end;
+  gap: 8px;
+  flex: 1;
+`
+
+const MoreReserves = styled.div`
+  color: #9CA3AF;
+`
+
+const TradingFee = styled.div`
   font-size: 16px;
   line-height: 24px;
-  color: #9ca3af;
+  color: #4B5563;
   text-transform: uppercase;
 `;
+
+const WellPricing = styled.div`
+  font-size: 16px;
+  line-height: 24px;
+  text-transform: capitalize;
+`;
+
+//#4B5563
