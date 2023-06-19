@@ -13,6 +13,7 @@
 
 - [Cyfrin Code Review (DRAFT - THIS IS A WORK IN PROGRESS AND IS NOT COMPLETE)](#cyfrin-code-review-draft---this-is-a-work-in-progress-and-is-not-complete)
   - [Contents](#contents)
+  - [About this PR](#about-this-pr)
   - [Disclaimer](#disclaimer)
   - [Security](#security)
   - [Code Quality](#code-quality)
@@ -26,6 +27,15 @@
     - [Appendix 3 - Coverage](#appendix-3---coverage)
 - [Reviewer Checklist (Internal, feel free to ignore)](#reviewer-checklist-internal-feel-free-to-ignore)
 
+## About this PR
+
+PR #410 aka SiloV3 contains the following upgrades:
+
+- Withdrawal Freeze Removal
+- Seeds per BDV Upgrades
+- ERC-1155 Deposits
+- Other `SiloFacet` changes
+
 ## Disclaimer
 
 This document represents feedback from a formal code review, emphasizing suggestions to improve Developer Experience, Code Quality, Gas Optimization, and common Security pitfalls. It does not represent a security audit nor an endorsement of the underlying business or product, and the code review was time-boxed to 4 days.
@@ -35,8 +45,32 @@ The aim of this code review is to review the PR for Silo V3, aka BIP-36, aka [PR
 ## Security
 
 - Running the forking test suite makes a _lot_ of RPC calls, and takes a long time. This could potentially be a security issue if people skimp out on finishing running all the tests. Consider moving test suite to foundry to speed up the process.
+- Versioning of codebase should be the same throughout, consider using `pragma solidity =0.7.6;` for all files.
+- Their are several `high` confidence and `high` severity rating outputs from static analysis tools, linked at the appendix. You can tell slither to ignore them but adding `//slither-disable-next-line DETECTOR_NAME` above the line that is causing the issue. We recommend addressing them **after making sure they are not needed.**
+-
 
 ## Code Quality
+
+- Indexers use events to monitor the state of the system, when an event's ABI changes, this can "break" the way the indexer is collecting data. [AddDeposit](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/contracts/libraries/Silo/LibTokenSilo.sol#L54) is updating from a season ID to a stem ID, which can cause indexers to be confused. It might be worth renaming the event, or at least calling out in the developer documentation how an indexer can keep track of the new seasons based on the block number (indexing season update transactions).
+- In `Bean.t.sol` you don't need to use `experimental ABIEncoderV2` as that was added in solidity 0.7.4, you can just use `abicoder v2` isntead of `experimental ABIEncoderV2`.
+- There are _many_ commented out chunks of code, TODOs, and seemingly "unfinished" tests and pieces of code, such as [here](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/test/Stem.test.js#L326), [protocol/test/Root.test.js](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/test/Root.test.js), and others.
+- `yarn format` is not a commit hook, and files are not all formatted systemically. Consider adding a commit hook to format all files before committing. We formatted at least `hardhat.config.js` for you.
+- Consider using named imports over generalized ones to ensure you're importing what you need, and know where keywords are coming from:
+
+❌ Change
+
+```
+import "contracts/C.sol";
+```
+
+✅ To
+
+```
+import {C} from "contracts/C.sol";
+```
+
+- Coverage is ~`71.96%` for all files. This isn't desirable. Granted, a lot of the files are one-off scripts like the `initbips` contracts and are ok to ignore, however it is concerning to see important contracts such as `Sun.sol` only have a 50% test coverage, or `FieldFacet.sol` with 22%.
+- Improvements like [this](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/contracts/libraries/Silo/LibUnripeSilo.sol#L64) where additional natspec and newer syntatic sugar is used are great additions in this PR.
 
 ## Gas Optimizations
 
@@ -90,6 +124,7 @@ It's these mechanisms that keep the price of BEAN stable.
   - Introduction - Farmers' Almanac - Why Beanstalk - How Beanstalk Works
     Instead of what it currently is. This way users can go in conceptual order. 1. What is this? 2. Why do we need this? 3. How does it work?
 - Just a note, we [categorize stablecoins](https://patrickalphac.medium.com/what-is-a-stablecoin-but-actually-186b81e545cd) into 3 categories, and it was interesting to [compare to your categorizations](https://docs.bean.money/almanac/advanced/stablecoin-overview#stablecoin-features)!
+- The inclusion of Publius' audio walking through different sections is a nice touch.
 
 ## Developer Experience
 
@@ -108,11 +143,10 @@ It's these mechanisms that keep the price of BEAN stable.
   - `npm install` doesn't work well with `yarn workspace`
 - Make sure to include setting a `FORKING_URL` environment variable in `./protocol/README.md`
 - In `Testing a BIP` instead of a number of manual steps, you could create an environment variable flag like `BIP_TEST=True` and check for it in the `hardhat.config.js`, and automatically apply the changes desired. This would make it easier for a developer to test a BIP.
-- `yarn format` is not a commit hook, and files are not all formatted systemically. Consider adding a commit hook to format all files before committing. We formatted at least `hardhat.config.js` for you.
 
 ### Our PR with this code review
 
-In this code review, we have included a PR with our suggested changes to `DEVELOPER.md`
+In this code review, we have included a PR with our suggested changes to `DEVELOPER.md`, and a few other files. These are just suggestions so please take them as such.
 
 ## Appendix
 
@@ -266,9 +300,6 @@ You can see the output at `4naly3er_report.md`, we've highlighted the most impor
 
 ### Appendix 3 - Coverage
 
-```
-
-----------------------------------------------|----------|----------|----------|----------|----------------|
 | File                                           | % Stmts    | % Branch   | % Funcs    | % Lines    | Uncovered Lines  |
 | ---------------------------------------------- | ---------- | ---------- | ---------- | ---------- | ---------------- |
 | contracts/                                     | 79.31      | 100        | 79.31      | 79.31      |                  |
@@ -447,7 +478,6 @@ You can see the output at `4naly3er_report.md`, we've highlighted the most impor
 | ---------------------------------------------- | ---------- | ---------- | ---------- | ---------- | ---------------- |
 | All files                                      | 71.96      | 58.23      | 74.48      | 71.78      |                  |
 | ---------------------------------------------- | ---------- | ---------- | ---------- | ---------- | ---------------- |
-```
 
 # Reviewer Checklist (Internal, feel free to ignore)
 
