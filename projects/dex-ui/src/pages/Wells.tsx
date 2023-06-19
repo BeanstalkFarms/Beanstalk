@@ -235,4 +235,4 @@ const NoLPMessage = styled.div`
   display: flex;
   justify-content: center;
   color: #4B5563;
-`
+`;
