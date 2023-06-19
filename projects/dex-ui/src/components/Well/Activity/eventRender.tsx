@@ -11,7 +11,7 @@ export const renderEvent = (event: WellEvent, well: Well) => {
     case EVENT_TYPE.SWAP:
       event = event as SwapEvent;
       action = "Swap";
-      description = `${event.fromAmount.toHuman("0.0a")} ${event.fromToken.symbol} for ${event.toAmount.toHuman("0.0a")} ${
+      description = `${event.fromAmount.toHuman("short")} ${event.fromToken.symbol} for ${event.toAmount.toHuman("short")} ${
         event.toToken.symbol
       }`;
 
@@ -22,7 +22,7 @@ export const renderEvent = (event: WellEvent, well: Well) => {
 
       description = event.tokenAmounts
         .map((amount, i) => {
-          return `${amount.toHuman("0.0a")} ${well.tokens![i].symbol}`;
+          return `${amount.toHuman("short")} ${well.tokens![i].symbol}`;
         })
         .join(" and ");
       break;
@@ -31,7 +31,7 @@ export const renderEvent = (event: WellEvent, well: Well) => {
       action = "Remove Liquidity";
       description = event.tokenAmounts
         .map((amount, i) => {
-          return `${amount.toHuman("0.0a")} ${well.tokens![i].symbol}`;
+          return `${amount.toHuman("short")} ${well.tokens![i].symbol}`;
         })
         .join(" and ");
       break;

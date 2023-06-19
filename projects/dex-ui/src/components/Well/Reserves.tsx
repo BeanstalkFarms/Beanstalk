@@ -20,8 +20,8 @@ export const Reserves: FC<Props> = ({ reserves }) => {
       <Symbol>{r.token?.symbol}</Symbol>
       <Wrapper>
         <TokenLogo token={r.token} size={14} />
-        <Amount>{r.amount.toHuman("0,0.00")}</Amount>
-        <Percent>{`(${r.percentage?.mul(100).toHuman("0,0")}%)`}</Percent>
+        <Amount>{r.amount.toHuman("short")}</Amount>
+        <Percent>{`(${r.percentage?.mul(100).toHuman("short")}%)`}</Percent>
       </Wrapper>
     </Item>
   ));
