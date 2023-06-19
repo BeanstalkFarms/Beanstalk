@@ -65,11 +65,13 @@ export const Wells = () => {
     if (!well) return;
     const tokens = well.tokens || [];
     const logos: ReactNode[] = [];
+    const smallLogos: ReactNode[] = [];
     const symbols: string[] = [];
     const gotoWell = () => navigate(`/wells/${well.address}`);
 
     tokens.map((token: any) => {
       logos.push(<TokenLogo token={token} size={25} key={token.symbol} />);
+      smallLogos.push(<TokenLogo token={token} size={16} key={token.symbol} />);
       symbols.push(token.symbol);
     });
 
@@ -92,8 +94,8 @@ export const Wells = () => {
           <Amount>${wellLiquidity[index] ? wellLiquidity[index].toHuman("0,0.00") : "-.--"}</Amount>
         </Td>
         <Td align="right">
-          <Reserves>{logos[0]}{well.reserves![0] ? well.reserves![0].toHuman("0,0.00") : "-.--"}</Reserves>
-          <Reserves>{logos[1]}{well.reserves![1] ? well.reserves![1].toHuman("0,0.00") : "-.--"}</Reserves>
+          <Reserves>{smallLogos[0]}{well.reserves![0] ? well.reserves![0].toHuman("0,0.00") : "-.--"}</Reserves>
+          <Reserves>{smallLogos[1]}{well.reserves![1] ? well.reserves![1].toHuman("0,0.00") : "-.--"}</Reserves>
           {well.reserves && well.reserves.length > 2 ? 
           <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves>
           : null }
@@ -123,7 +125,7 @@ export const Wells = () => {
           </WellDetail>
         </Td>
         <Td align="right">
-          <div>{`${wellLpBalances[index].toHuman()} ${well.lpToken.symbol}`}</div>
+          <WellLPBalance>{`${wellLpBalances[index].toHuman()} ${well.lpToken.symbol}`}</WellLPBalance>
         </Td>
       </Row>
     )
@@ -131,19 +133,19 @@ export const Wells = () => {
 
   const rows = wells?.map((well, index) => { return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index) })
 
-  const anyLpPositions = rows.every((row) => row !== undefined)
+  const anyLpPositions = !rows.every((row) => row === undefined)
 
   return (
     <Page>
-      <Title title="WELLS" />
+      <Title fontweight={"600"} title="WELLS" />
       <TabRow gap={24}>
         <Item stretch>
-          <TabButton onClick={() => showTab(0)} active={tab === 0} stretch bold justify>
+          <TabButton onClick={() => showTab(0)} active={tab === 0} stretch bold justify hover>
             <span>View Wells</span>
           </TabButton>
         </Item>
         <Item stretch>
-          <TabButton onClick={() => showTab(1)} active={tab === 1} stretch bold justify>
+          <TabButton onClick={() => showTab(1)} active={tab === 1} stretch bold justify hover>
             <span>My Liquidity Positions</span>
           </TabButton>
         </Item>
@@ -168,7 +170,7 @@ export const Wells = () => {
         </THead>
         }
         <TBody>
-          {!anyLpPositions && tab === 1 ? 
+          {anyLpPositions === false && tab === 1 ? 
             <NoLPRow colSpan={2}><NoLPMessage>Liquidity Positions will appear here.</NoLPMessage></NoLPRow>
             :
             rows
@@ -179,7 +181,8 @@ export const Wells = () => {
   );
 };
 
-const WellDetail = styled.div``;
+const WellDetail = styled.div`
+`;
 
 const TokenLogos = styled.div`
   display: flex;
@@ -190,6 +193,7 @@ const TokenLogos = styled.div`
 const TokenSymbols = styled.div`
   font-size: 20px;
   line-height: 24px;
+  margin-top: 8px;
   color: #1c1917;
 `;
 
@@ -213,14 +217,14 @@ const MoreReserves = styled.div`
 `;
 
 const TradingFee = styled.div`
-  font-size: 16px;
+  font-size: 20px;
   line-height: 24px;
   color: #4B5563;
   text-transform: uppercase;
 `;
 
 const WellPricing = styled.div`
-  font-size: 16px;
+  font-size: 20px;
   line-height: 24px;
   text-transform: capitalize;
 `;
@@ -236,3 +240,8 @@ const NoLPMessage = styled.div`
   justify-content: center;
   color: #4B5563;
 `;
+
+const WellLPBalance = styled.div`
+  font-size: 20px;
+  line-height: 24px;
+`

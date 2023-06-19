@@ -23,7 +23,7 @@ export const Th = styled.th`
   color: #4b5563;
   font-weight: 400;
   font-size: 16px;
-  line-height: 17px;
+  line-height: 16px;
   text-align: ${(props) => props.align || "left"};
   text-transform: uppercase;
 `;
