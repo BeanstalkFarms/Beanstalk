@@ -41,8 +41,7 @@
     "publish": "yarn build && yarn npm publish --access public"
   },
   "dependencies": {
-    "ethers": "^5.0.0",
-    "numeral": "2.0.6"
+    "ethers": "^5.0.0"
   },
   "peerDependencies": {
     "ethers": "^5.0.0"
@@ -55,7 +54,6 @@
     "@typechain/ethers-v5": "^10.1.0",
     "@types/chai": "^4",
     "@types/jest": "^29.1.2",
-    "@types/numeral": "^2",
     "@types/rimraf": "^3",
     "chai": "4.3.6",
     "dotenv": "^16.0.3",

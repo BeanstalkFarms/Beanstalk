@@ -1,5 +1,4 @@
 import { BigNumber, utils, constants } from "ethers";
-import numeral from "numeral";
 import { DecimalBigNumber } from "src/lib/DecimalBigNumber";
 
 const blocker = {};
