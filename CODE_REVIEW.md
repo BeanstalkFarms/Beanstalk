@@ -160,7 +160,7 @@ yarn compile
 slither . --compile-force-framework hardhat --hardhat-ignore-compile --disable-color > slither-output.txt 2>&1
 ```
 
-You can view the full output at `slither-output.txt`.
+You can view the full output at [`slither-output.txt`](./protocol/slither-output.txt).
 
 However, we wanted to draw attention to the results that have a `high` confidence and `high` severity rating. We recommend addressing them and labelling sections with `//slither-disable-next-line DETECTOR_NAME` if you choose to ignore them.
 
