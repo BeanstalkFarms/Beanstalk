@@ -79,6 +79,7 @@ const QuoteDetails = ({
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
+      console.log('Here', _quoteValue, _quoteValue.toHuman(), _quoteValue.toHuman("short"));
       return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
     }
 
@@ -214,11 +215,11 @@ const QuoteDetails = ({
       <AccordionContainer open={accordionOpen}>
         <QuoteDetailLine>
           <QuoteDetailLabel>USD Value</QuoteDetailLabel>
-          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("0,0.00")}`}</QuoteDetailValue>
+          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
         </QuoteDetailLine>
         <QuoteDetailLine>
           <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-          <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
+          <QuoteDetailValue>{`${priceImpact.toHuman("short")}%`}</QuoteDetailValue>
           <IconContainer>
             <Tooltip 
               offsetX={-89}
