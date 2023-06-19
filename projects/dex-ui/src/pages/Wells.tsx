@@ -131,6 +131,8 @@ export const Wells = () => {
 
   const rows = wells?.map((well, index) => { return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index) })
 
+  const anyLpPositions = rows.every((row) => row !== undefined)
+
   return (
     <Page>
       <Title title="WELLS" />
@@ -165,7 +167,13 @@ export const Wells = () => {
           </Row>
         </THead>
         }
-        <TBody>{rows}</TBody>
+        <TBody>
+          {!anyLpPositions && tab === 1 ? 
+            <NoLPRow colSpan={2}><NoLPMessage>Liquidity Positions will appear here.</NoLPMessage></NoLPRow>
+            :
+            rows
+          }
+        </TBody>
       </Table>
     </Page>
   );
@@ -216,3 +224,15 @@ const WellPricing = styled.div`
   line-height: 24px;
   text-transform: capitalize;
 `;
+
+const NoLPRow = styled.td`
+  background-color: #fff;
+  height: 120px;
+  border-bottom: 0.5px solid #9CA3AF;
+`;
+
+const NoLPMessage = styled.div`
+  display: flex;
+  justify-content: center;
+  color: #4B5563;
+`
