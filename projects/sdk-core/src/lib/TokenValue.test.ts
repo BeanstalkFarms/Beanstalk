@@ -321,7 +321,7 @@ describe("TokenValues", function () {
       ["0.0001", "0.0001"],
       ["0.00001", "0.00001"],
       ["0.000001", "0.000001"],
-      ["0.0000001", "<.00000001"],
+      ["0.0000001", "0.0000001"],
       ["0.00000001", "<.00000001"],
       ["0.000000001", "<.00000001"],
       ["0.0000000001", "<.00000001"],
@@ -364,6 +364,11 @@ describe("TokenValues", function () {
       // @ts-ignore
       expect(TokenValue.fromBlockchain(value, decimals).toHuman("short")).toEqual(res);
     }
+
+    // Specific test cases for prior bugs
+    expect(TokenValue.fromHuman("0.000000004082455198", 18).toHuman("short")).toEqual("<.00000001");
+    expect(TokenValue.fromHuman("0.000000044082455198", 18).toHuman("short")).toEqual("0.00000004");
+    expect(TokenValue.fromHuman("0.000000528989462382", 18).toHuman("short")).toEqual("0.00000052");
   });
 
   it("toHuman() throws with bad format", () => {
