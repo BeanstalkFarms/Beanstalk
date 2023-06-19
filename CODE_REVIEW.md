@@ -27,7 +27,7 @@
 
 ## About this PR
 
-PR #410 aka SiloV3 contains the following upgrades:
+PR #410 aka Silo V3 contains the following upgrades:
 
 - Withdrawal Freeze Removal
 - Seeds per BDV Upgrades
