@@ -32,7 +32,13 @@ export class TokenValue {
    */
   static fromHuman(value: string | number | BigNumber, decimals: number): TokenValue {
     if (typeof value === "string") return TokenValue.fromString(value, decimals);
-    if (typeof value === "number") return TokenValue.fromString(value.toString(), decimals);
+    if (typeof value === "number") {
+      if (value.toString().includes("e")) {
+        return TokenValue.fromString(value.toFixed(decimals), decimals);
+      } else {
+        return TokenValue.fromString(value.toString(), decimals);
+      }
+    }
     if (value instanceof BigNumber) {
       // TODO: are we ok with this warning? should we add ability to ignore it?
       console.warn(
@@ -141,14 +147,15 @@ export class TokenValue {
 
   /**
    * Returns a human readable string, for example "3.14"
-   * @param format Formatting options. See http://numeraljs.com/#format for
-   * possible options
+   * @param format "short" for short format.
    * @returns string
    */
   public toHuman(format?: string): string {
     if (!format) return this.value.toString();
 
-    return numeral(this.value.toString()).format(format).toUpperCase();
+    if (format === "short") return this.friendlyFormat(this);
+
+    throw new Error(`Unsupported formatting option: ${format}`);
   }
 
   // Used mostly by the math functions to normalize the input
@@ -254,5 +261,76 @@ export class TokenValue {
    */
   addSlippage(slippage: number) {
     return this.pct(100 + slippage);
+  }
+
+  /**
+   * Formats a TokenValue to a human readable string that is abbreviated
+   * @param tv TokenValue to format
+   * @returns formatted string
+   */
+  friendlyFormat(tv: TokenValue): string {
+    if (tv.eq(0)) return "0";
+
+    if (tv.lte(TokenValue.fromHuman("0.0000001", 7))) return "<.00000001";
+
+    if (tv.lte(TokenValue.fromHuman(1e-3, 3))) {
+      return this.trimDecimals(tv, 8).toHuman();
+    }
+
+    const quadrillion = TokenValue.fromHuman(1e15, 0);
+    if (tv.gte(quadrillion)) {
+      return `${this.trimDecimals(tv.div(quadrillion), 4).toHuman()}Q`;
+    }
+
+    const trillion = TokenValue.fromHuman(1e12, 0);
+    if (tv.gte(trillion)) {
+      return `${this.trimDecimals(tv.div(trillion), 4).toHuman()}T`;
+    }
+
+    const billion = TokenValue.fromHuman(1e9, 0);
+    if (tv.gte(billion)) {
+      return `${this.trimDecimals(tv.div(billion), 3).toHuman()}B`;
+    }
+
+    const hmillion = TokenValue.fromHuman(1e8, 0);
+    const millions = TokenValue.fromHuman(1e6, 0);
+    if (tv.gte(hmillion)) {
+      return `${this.trimDecimals(tv.div(millions), 2).toHuman()}M`;
+    }
+    if (tv.gte(millions)) {
+      return `${this.trimDecimals(tv.div(millions), 2).toHuman()}M`;
+    }
+
+    if (tv.gte(TokenValue.fromHuman(1e3, 0))) {
+      return tv.value.toApproxNumber().toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+    }
+
+    const decimals = tv.gt(10) ? 2 : tv.gt(1) ? 3 : 4;
+    return this.trimDecimals(tv, decimals).toHuman();
+  }
+
+  /**
+   * Trims a TokenValue to a set number of decimals
+   * @param tokenValue TokenValue to trim
+   * @param decimals Number of decimals to trim to
+   * @returns
+   */
+  public trimDecimals(tokenValue: TokenValue, decimals: number) {
+    const tvString = tokenValue.toHuman();
+    const decimalComponents = tvString.split(".");
+
+    // No decimals, just return;
+    if (decimalComponents.length < 2) return tokenValue;
+
+    const numOfDecimals = decimalComponents[1].length;
+    if (numOfDecimals <= decimals) return tokenValue;
+
+    const decimalsToTrim = numOfDecimals - decimals;
+    const newString = tvString.substring(0, tvString.length - decimalsToTrim);
+
+    return TokenValue.fromHuman(newString, decimals);
   }
 }
