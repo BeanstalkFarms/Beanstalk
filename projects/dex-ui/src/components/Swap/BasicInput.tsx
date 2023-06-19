@@ -1,7 +1,6 @@
 import React, { FocusEventHandler, RefObject, useCallback, useEffect, useState } from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import numeral from "numeral";
 import { TokenValue } from "@beanstalk/sdk";
 
 type Props = {
@@ -37,7 +36,6 @@ export const BasicInput: FC<Props> = ({
     // But we need to do this comparison in big number space, using TokenValue.
 
     if (TokenValue.fromHuman(value || 0, 18).eq(TokenValue.fromHuman(displayValue || 0, 18))) return;
-    // setDisplayValue(value === "0" || value === "" ? "" : numeral(value).format("0.00000"));
     setDisplayValue(value === "0" || value === "" ? "" : value);
 
     // adding displayValue to the dependency array breaks the input in some edge cases
