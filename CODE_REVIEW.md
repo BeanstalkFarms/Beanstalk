@@ -17,7 +17,6 @@
   - [Disclaimer](#disclaimer)
   - [Security](#security)
   - [Code Quality](#code-quality)
-  - [Gas Optimizations](#gas-optimizations)
   - [Documentation Experience](#documentation-experience)
   - [Developer Experience](#developer-experience)
     - [Our PR with this code review](#our-pr-with-this-code-review)
@@ -25,7 +24,6 @@
     - [Appendix 1 - Slither Output](#appendix-1---slither-output)
     - [Appendix 2 - 4naly3er Output](#appendix-2---4naly3er-output)
     - [Appendix 3 - Coverage](#appendix-3---coverage)
-- [Reviewer Checklist (Internal, feel free to ignore)](#reviewer-checklist-internal-feel-free-to-ignore)
 
 ## About this PR
 
@@ -47,7 +45,11 @@ The aim of this code review is to review the PR for Silo V3, aka BIP-36, aka [PR
 - Running the forking test suite makes a _lot_ of RPC calls, and takes a long time. This could potentially be a security issue if people skimp out on finishing running all the tests. Consider moving test suite to foundry to speed up the process.
 - Versioning of codebase should be the same throughout, consider using `pragma solidity =0.7.6;` for all files.
 - Their are several `high` confidence and `high` severity rating outputs from static analysis tools, linked at the appendix. You can tell slither to ignore them but adding `//slither-disable-next-line DETECTOR_NAME` above the line that is causing the issue. We recommend addressing them **after making sure they are not needed.**
--
+
+```bash
+yarn npm audit
+➤ YN0001: No audit suggestions
+```
 
 ## Code Quality
 
@@ -71,8 +73,6 @@ import {C} from "contracts/C.sol";
 
 - Coverage is ~`71.96%` for all files. This isn't desirable. Granted, a lot of the files are one-off scripts like the `initbips` contracts and are ok to ignore, however it is concerning to see important contracts such as `Sun.sol` only have a 50% test coverage, or `FieldFacet.sol` with 22%.
 - Improvements like [this](https://github.com/BeanstalkFarms/Beanstalk/blob/5b978351d9f8d3a824ffa157557139da8b1a6db0/protocol/contracts/libraries/Silo/LibUnripeSilo.sol#L64) where additional natspec and newer syntatic sugar is used are great additions in this PR.
-
-## Gas Optimizations
 
 ## Documentation Experience
 
@@ -478,16 +478,3 @@ You can see the output at `4naly3er_report.md`, we've highlighted the most impor
 | ---------------------------------------------- | ---------- | ---------- | ---------- | ---------- | ---------------- |
 | All files                                      | 71.96      | 58.23      | 74.48      | 71.78      |                  |
 | ---------------------------------------------- | ---------- | ---------- | ---------- | ---------- | ---------------- |
-
-# Reviewer Checklist (Internal, feel free to ignore)
-
-- [x] Read `README.md`
-  - [x] Walk through each of the steps (requirements, commands, etc), comment on their ease of use
-- [x] Obtain test coverage stats.
-- [ ] Check package versions against known security advisories (automatically)
-- [ ] Get familiar with repo layout & directories structure, looking for anything non-standard
-- [ ] Run [Slither](https://github.com/crytic/slither) & [4naly3er](https://github.com/Picodes/4naly3er)
-- [x] Create a notes markdown file
-- [ ] Make comments on code quality, tests, scripts (if to be used for deployment), naming conventions, function visibilities, custom errors, events
-- [ ] Ask about architectural decisions
-- [ ] Lean toward security over-optimization (which usually means readability) but also look to reduce loops and other glaring gas-inefficiencies
