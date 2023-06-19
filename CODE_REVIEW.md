@@ -1,8 +1,8 @@
-# Cyfrin Code Review (DRAFT - THIS IS A WORK IN PROGRESS AND IS NOT COMPLETE)
+# Cyfrin Code Review
 
 | Title         | Details                                                                                      |
 | ------------- | -------------------------------------------------------------------------------------------- |
-| Date          | 2023-06-13                                                                                   |
+| Date          | 2023-06-19                                                                                   |
 | Author        | [Patrick Collins](https://twitter.com/patrickalphac)                                         |
 | Reviewer      | [Giovanni Di Siena](https://twitter.com/giovannidisiena)                                     |
 | Repo          | [Beanstalk Core](https://github.com/BeanstalkFarms/Beanstalk)                                |
@@ -11,7 +11,7 @@
 
 ## Contents
 
-- [Cyfrin Code Review (DRAFT - THIS IS A WORK IN PROGRESS AND IS NOT COMPLETE)](#cyfrin-code-review-draft---this-is-a-work-in-progress-and-is-not-complete)
+- [Cyfrin Code Review](#cyfrin-code-review)
   - [Contents](#contents)
   - [About this PR](#about-this-pr)
   - [Disclaimer](#disclaimer)
@@ -30,7 +30,7 @@
 PR #410 aka Silo V3 contains the following upgrades:
 
 - Withdrawal Freeze Removal
-- Seeds per BDV Upgrades
+- Seeds per BDV (Bean denominated value) Upgrades
 - ERC-1155 Deposits
 - Other `SiloFacet` changes
 
