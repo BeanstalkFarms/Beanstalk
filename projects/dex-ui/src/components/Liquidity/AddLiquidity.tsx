@@ -14,6 +14,7 @@ import { TransactionToast } from "../TxnToast/TransactionToast";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { useWellReserves } from "src/wells/useWellReserves";
+import { Checkbox } from "../Checkbox";
 
 type AddLiquidityProps = {
   well: Well;
@@ -161,7 +162,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
         toast.error(error);
       }
     }
-  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback]);
+  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback, refetchWellReserves]);
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
@@ -251,16 +252,7 @@ export const AddLiquidity = ({ well, txnCompleteCallback, slippage, slippageSett
                 />
               ))}
             </TokenListContainer>
-            <BalancedCheckboxContainer>
-              <BalancedCheckbox
-                type="checkbox"
-                checked={balancedMode}
-                onChange={() => setBalancedMode(!balancedMode)}
-              />
-              <TabLabel onClick={() => setBalancedMode(!balancedMode)}>
-                Add tokens in balanced proportion
-              </TabLabel>
-            </BalancedCheckboxContainer>
+            <Checkbox label={"Add tokens in balanced proportion"} checked={balancedMode} onClick={() => setBalancedMode(!balancedMode)} />
             {showQuoteDetails && (
               <QuoteDetails
                 type={LIQUIDITY_OPERATION_TYPE.ADD}
@@ -336,25 +328,4 @@ const TokenListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const BalancedCheckboxContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const BalancedCheckbox = styled.input`
-  margin-right: 10px;
-  width: 1em;
-  height: 1em;
-  background-color: white;
-
-  :checked {
-    background-color: red;
-  }
-`;
-
-const TabLabel = styled.div`
-  cursor: pointer;
 `;

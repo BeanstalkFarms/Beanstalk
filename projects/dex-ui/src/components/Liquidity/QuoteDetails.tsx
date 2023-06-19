@@ -5,7 +5,9 @@ import useSdk from "src/utils/sdk/useSdk";
 import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
 import { getGasInUsd } from "src/utils/gasprice";
 import SlippagePanel from "./SlippagePanel";
-import { Info } from "../Icons";
+import { ChevronDown, Info } from "../Icons";
+import { ImageButton } from "../ImageButton";
+import { Tooltip } from "../Tooltip";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE;
@@ -45,6 +47,7 @@ const QuoteDetails = ({
   const sdk = useSdk();
   const [gasFeeUsd, setGasFeeUsd] = useState<string>("");
   const [tokenUSDValue, setTokenUSDValue] = useState<TokenValue>(TokenValue.ZERO);
+  const [accordionOpen, setAccordionOpen] = useState<boolean>(false)
 
   useEffect(() => {
     const _setGasFeeUsd = async () => {
@@ -64,17 +67,13 @@ const QuoteDetails = ({
   }, [sdk.provider, sdk, quote]);
 
   const quoteValue = useMemo(() => {
-    if (!quote) {
-      return null;
-    }
-
-    if (!quote.quote) {
-      return null;
+    if (!quote || !quote.quote) {
+      return 'X.XXXX TOKEN';
     }
 
     if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
       if (!wellTokens) {
-        return null;
+        return 'X.XXXX TOKEN';
       }
     }
 
@@ -207,34 +206,50 @@ const QuoteDetails = ({
 
   return (
     <QuoteContainer>
-      <QuoteDetailLine>
-        <QuoteDetailLabel bold color={"black"}>Expected Output</QuoteDetailLabel>
-        <QuoteDetailValue bold color={"black"}>{quoteValue}</QuoteDetailValue>
+      <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)} cursor="pointer">
+        <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>Expected Output</QuoteDetailLabel>
+        <QuoteDetailValue bold color={"black"} cursor={"pointer"}>{quoteValue}</QuoteDetailValue>
+        <ImageButton component={ChevronDown} size={8} rotate={accordionOpen ? "180" : "0"} onClick={() => setAccordionOpen(!accordionOpen)} padding="0px" margin="-2px 0px 0px 8px" alt="Click to view more information about this transaction" />
       </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel>USD Value</QuoteDetailLabel>
-        <QuoteDetailValue>{`$${tokenUSDValue.toHuman("0,0.00")}`}</QuoteDetailValue>
-      </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-        <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
-        <IconContainer>
-          <Info color={"#9CA3AF"} />
-        </IconContainer>
-      </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
-        <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
-        <SlippagePanel
-          slippageValue={slippage}
-          connectorFor={"slippage"}
-          handleSlippageValueChange={handleSlippageValueChange}
-        />
-      </QuoteDetailLine>
-      <QuoteDetailLine>
-        <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
-        <QuoteDetailValue>{`${gasFeeUsd}`}</QuoteDetailValue>
-      </QuoteDetailLine>
+      <AccordionContainer open={accordionOpen}>
+        <QuoteDetailLine>
+          <QuoteDetailLabel>USD Value</QuoteDetailLabel>
+          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("0,0.00")}`}</QuoteDetailValue>
+        </QuoteDetailLine>
+        <QuoteDetailLine>
+          <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
+          <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
+          <IconContainer>
+            <Tooltip 
+              offsetX={-89}
+              offsetY={320}
+              arrowSize={4}
+              arrowOffset={95}
+              side={"top"}
+              width={283}
+              content={
+                <>
+                <div>*PRICE IMPACT*</div>
+                Change in Token price on this Well caused directly by this action.
+                </>
+              }>
+                <Info color={"#9CA3AF"} />
+            </Tooltip>
+          </IconContainer>
+        </QuoteDetailLine>
+        <QuoteDetailLine>
+          <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
+          <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
+          <SlippagePanel
+            slippageValue={slippage}
+            handleSlippageValueChange={handleSlippageValueChange}
+          />
+        </QuoteDetailLine>
+        <QuoteDetailLine>
+          <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
+          <QuoteDetailValue>{`${gasFeeUsd}`}</QuoteDetailValue>
+        </QuoteDetailLine>
+      </AccordionContainer>
     </QuoteContainer>
   );
 };
@@ -244,12 +259,24 @@ export default QuoteDetails;
 type QuoteDetailProps = {
   bold?: boolean;
   color?: string;
+  cursor?: string;
 };
+
+type AccordionProps = {
+  open?: boolean;
+}
 
 const IconContainer = styled.div`
   margin-left: 10px;
   margin-top: 2px;
   margin-bottom: -2px;
+  cursor: pointer;
+`
+
+const AccordionContainer = styled.div<AccordionProps>`
+  height: ${(props) => (props.open ? '94px' : '0px')};
+  overflow: ${(props) => (props.open ? 'visible' : 'hidden')};
+  transition: height 0.2s
 `
 
 const QuoteDetailLabel = styled.div<QuoteDetailProps>`
@@ -267,10 +294,11 @@ const QuoteDetailValue = styled.div<QuoteDetailProps>`
   color: ${(props) => (props.color ? props.color : "#9CA3AF")};
 `;
 
-const QuoteDetailLine = styled.div`
+const QuoteDetailLine = styled.div<QuoteDetailProps>`
   display: flex;
   flex-direction: row;
   width: 100%;
+  cursor: ${(props) => (props.cursor ?? "auto")};
 `;
 
 const QuoteContainer = styled.div`
