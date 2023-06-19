@@ -18,6 +18,7 @@ import { TransactionToast } from "../TxnToast/TransactionToast";
 import useSdk from "src/utils/sdk/useSdk";
 import { getPrice } from "src/utils/price/usePrice";
 import { useWellReserves } from "src/wells/useWellReserves";
+import { Checkbox } from "../Checkbox";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -149,7 +150,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
     address,
     txnCompleteCallback,
     resetState,
-    slippage
+    slippage,
+    refetchWellReserves
   ]);
 
   const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
@@ -288,23 +290,20 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             <Tabs>
               <Tab>
                 <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)} active={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken} stretch>
-                <TabRadio
-                  type="radio"
-                  id="singleTokenRadio"
-                  value={REMOVE_LIQUIDITY_MODE.Balanced}
+                <Checkbox
                   checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken}
-                  onChange={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}
-                />{" "}
+                  mode={"checkOnly"}
+                  checkboxColor="#46b955"
+                />
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}>Single Token</TabLabel>
                 </TabButton>
               </Tab>
               <Tab>
               <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)} active={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken} stretch>
-                <TabRadio
-                  type="radio"
-                  value={REMOVE_LIQUIDITY_MODE.Balanced}
+                <Checkbox
                   checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
-                  readOnly
+                  mode={"checkOnly"}
+                  checkboxColor="#46b955"
                 />
                 <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
                 </TabButton>
@@ -342,12 +341,10 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 {well.tokens!.map((token: Token, index: number) => (
                   <ContainerSingleTokenRow key={`token${index}`} onClick={() => handleSwitchSingleToken(index)}>
                     <ReadOnlyTokenValueRow selected={singleTokenIndex === index}>
-                      <Radio
-                        type="radio"
-                        name="singleToken"
-                        value={index}
+                      <Checkbox
                         checked={singleTokenIndex === index}
-                        readOnly
+                        mode={"checkOnly"}
+                        checkboxColor="#46b955"
                       />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
@@ -363,26 +360,16 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
             )}
             </MediumGapContainer>
             {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
-              <BalancedCheckboxContainer>
-                    <BalancedCheckbox
-                      type="checkbox"
-                      checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
-                      onChange={() =>
-                        handleSwitchRemoveMode(
-                          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                        )
-                      }
-                    />
-                    <TabLabel
-                      onClick={() =>
-                        handleSwitchRemoveMode(
-                          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                        )
-                      }
-                    >
-                      Claim in balanced proportion
-                    </TabLabel>
-              </BalancedCheckboxContainer>
+              <>
+              <Checkbox 
+                label={"Claim in balanced proportion"}
+                checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
+                onClick={() =>
+                  handleSwitchRemoveMode(
+                    removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
+                  )}
+                />
+              </>
             )}
             {lpTokenAmountNonZero && (
               <QuoteDetails
@@ -441,23 +428,6 @@ const MediumGapContainer = styled.div`
   flex-direction: column;
   gap: 12px;
 `
-
-const BalancedCheckboxContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const BalancedCheckbox = styled.input`
-  margin-right: 10px;
-  width: 1em;
-  height: 1em;
-  background-color: white;
-
-  :checked {
-    background-color: red;
-  }
-`;
 
 const TabLabel = styled.div`
   cursor: pointer;
@@ -523,7 +493,6 @@ const TokenAmount = styled.div`
 `;
 
 const TokenSymbol = styled.div`
-  margin-left: 10px;
 `;
 
 const SmallTokenLogo = styled.img`
@@ -536,9 +505,10 @@ const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   flex-direction: row;
   font-weight: ${(props) => props.selected ? '600' : 'normal'};
   background-color: ${(props) => props.selected ? 'white' : '#F9F8F6'};
-  border: 1px solid black;
-  margin: -1px;
+  border: 0.5px solid black;
+  margin: -0.5px;
   height: 60px;
+  gap: 8px;
   align-items: center;
   padding-left: 8px;
   padding-right: 8px;
