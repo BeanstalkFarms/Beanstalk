@@ -296,7 +296,9 @@ Input:
 yarn analyze <DIR>/Beanstalk/protocol/contracts
 ```
 
-You can see the output at [`4naly3er_report.md`](./protocol/4naly3er_report.md), we've highlighted the most important parts below:
+You can see the output at [`4naly3er_report.md`](./protocol/4naly3er_report.md). We recommend going through the report and updating accordingly. Not everything from this script output is relevant (like slither) because it is a "dumb" static analysis tool.
+
+However, the findings like typos, gas optimizations, and similar are worth addressing.
 
 ### Appendix 3 - Coverage
 
