@@ -146,7 +146,7 @@ It's these mechanisms that keep the price of BEAN stable.
 
 ### Our PR with this code review
 
-In this code review, we have included a PR with our suggested changes to `DEVELOPER.md`, and a few other files. These are just suggestions so please take them as such.
+In this code review, we have [included a draft PR](https://github.com/BeanstalkFarms/Beanstalk/pull/492/files) with our suggested changes to `DEVELOPER.md`, and a few other files. These are just suggestions so please take them as such.
 
 ## Appendix
 
