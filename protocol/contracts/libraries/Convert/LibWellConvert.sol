@@ -61,14 +61,7 @@ library LibWellConvert {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
         Call memory wellFunction = IWell(well).wellFunction();
-        uint256 beanIndex;
-        uint256[] memory ratios;
-        (ratios, beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
-
-        uint256 lpSupplyNow = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
-            reserves,
-            wellFunction.data
-        );
+        (uint256[] memory ratios, uint256 beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
 
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
             reserves,
@@ -78,6 +71,12 @@ library LibWellConvert {
         );
 
         if (reserves[beanIndex] <= beansAtPeg) return 0;
+
+        uint256 lpSupplyNow = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+            reserves,
+            wellFunction.data
+        );
+
         reserves[beanIndex] = beansAtPeg;
         return lpSupplyNow.sub(IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
             reserves,

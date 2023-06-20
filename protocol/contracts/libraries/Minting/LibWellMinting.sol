@@ -107,7 +107,7 @@ library LibWellMinting {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
-        try ICumulativePump(LibWell.BEANSTALK_PUMP).readCumulativeReserves(
+        try ICumulativePump(C.BEANSTALK_PUMP).readCumulativeReserves(
             well,
             BYTES_ZERO
         ) returns (bytes memory lastSnapshot) {
@@ -150,7 +150,7 @@ library LibWellMinting {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Try to call `readTwaReserves` and handle failure gracefully, so Sunrise does not revert.
         // On failure, reset the Oracle by returning an empty snapshot and a delta B of 0.
-        try ICumulativePump(LibWell.BEANSTALK_PUMP).readTwaReserves(
+        try ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
             well,
             lastSnapshot,
             uint40(s.season.timestamp),

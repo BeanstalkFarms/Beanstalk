@@ -36,7 +36,7 @@ library LibWellBdv {
         uint beanIndex = LibWell.getBeanIndexFromWell(well);
 
         // For now, assume all Wells use the default Beanstalk Pump. This should be changed if/when a new Beanstalk Pump is deployed.
-        uint[] memory reserves = IInstantaneousPump(LibWell.BEANSTALK_PUMP).readInstantaneousReserves(well, BYTES_ZERO);
+        uint[] memory reserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, BYTES_ZERO);
         // If the Bean reserve is beneath the minimum balance, the oracle should be considered as off.
         require(reserves[beanIndex] >= C.WELL_MINIMUM_BEAN_BALANCE, "Silo: Well Bean balance below min");
         Call memory wellFunction = IWell(well).wellFunction();

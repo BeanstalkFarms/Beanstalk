@@ -19,9 +19,6 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 library LibWell {
 
-    // TODO: set
-    address constant internal BEANSTALK_PUMP = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
-
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
