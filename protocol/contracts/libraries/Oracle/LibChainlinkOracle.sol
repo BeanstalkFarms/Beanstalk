@@ -10,11 +10,11 @@ import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAgg
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
- * @author Publius
- * @title Oracle fetches the eth usd price
+ * @title Chainlink Oracle Library
+ * @notice Contains functionalty to fetch prices from Chainlink price feeds.
+ * @dev currently supports:
+ * - ETH/USD price feed
  **/
-
-
 library LibChainlinkOracle {
 
     using SafeMath for uint256;

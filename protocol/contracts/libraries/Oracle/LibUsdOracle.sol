@@ -10,10 +10,11 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Publius
- * @title Oracle fetches the usd price of a given token
+ * @title Eth Usd Oracle Library
+ * @notice Contains functionalty to fetch the manipulation resistant USD price of different tokens.
+ * @dev currently supports:
+ * - ETH/USD price
  **/
-
 library LibUsdOracle {
 
     using SafeMath for uint256;
