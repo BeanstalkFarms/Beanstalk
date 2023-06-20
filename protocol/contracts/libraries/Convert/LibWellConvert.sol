@@ -15,7 +15,7 @@ import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellF
 
 /**
  * @title Well Convert Library
- * @notice Contains Functions to convert from/to Bean:3Crv to/from Beans
+ * @notice Contains Functions to convert from/to Well LP tokens to/from Beans
  * in the direction of the Peg.
  **/
 library LibWellConvert {

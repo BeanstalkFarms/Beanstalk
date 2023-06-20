@@ -11,9 +11,10 @@ import {LibMetaCurveConvert} from "./LibMetaCurveConvert.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @title LibCurveConvert
- * @author Publius
- */
+ * @title Curve Convert Library
+ * @notice Contains Functions to convert from/to Curve LP tokens to/from Beans
+ * in the direction of the Peg.
+ **/
 library LibCurveConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;

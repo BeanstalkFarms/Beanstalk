@@ -13,10 +13,9 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @title Well Bdv Library contains a function to calulate
- * the BDV of a given Well LP Token
+ * @title Well Bdv Library
+ * @notice contains a function to calulate the BDV of a given Well LP Token
  **/
-
 library LibWellBdv {
     using SafeMath for uint256;
 

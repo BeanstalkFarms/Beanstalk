@@ -9,11 +9,9 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Publius
- * @title Well Minting calculates the deltaB in a Well over a given Season.
+ * @title Minting Library
+ * @notice Contains Helper Fucntions for Minting related functionality.
  **/
-
-
 library LibMinting {
 
     using SafeMath for uint256;

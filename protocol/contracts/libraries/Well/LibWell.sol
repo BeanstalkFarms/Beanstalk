@@ -13,10 +13,11 @@ import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-/**=
- * @title Well Library contains Well helper functions.
- **/
 
+/**
+ * @title Well Library
+ * Contains helper functions for common Well related functionality.
+ **/
 library LibWell {
 
     /**
