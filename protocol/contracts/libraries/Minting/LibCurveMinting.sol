@@ -33,9 +33,6 @@ interface IMeta3CurveOracle {
 library LibCurveMinting {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
-    
-    /* Constrains the deltaB to be +/- 1/X of the current Bean supply */
-    uint256 private constant MAX_DELTA_B_DENOMINATOR = 100;
 
     /**
      * @notice Emitted when the Curve Minting Oracle is captured.
@@ -183,16 +180,5 @@ library LibCurveMinting {
         cumulativeBalances[1] = cumulativeBalances[1].add(
             balances[1].mul(block.timestamp.sub(lastTimestamp))
         );
-    }
-
-    /**
-     * @dev Constrain `deltaB` to be less than +/- 1% of the total supply of Bean.
-     * 
-     * `1% = 1/MAX_DELTA_B_DENOMINATOR`
-     */
-    function checkForMaxDeltaB(int256 deltaB) private view returns (int256) {
-        int256 maxDeltaB = int256(C.bean().totalSupply().div(MAX_DELTA_B_DENOMINATOR));
-        if (deltaB < 0) return deltaB > -maxDeltaB ? deltaB : -maxDeltaB;
-        return deltaB < maxDeltaB ? deltaB : maxDeltaB;
     }
 }
