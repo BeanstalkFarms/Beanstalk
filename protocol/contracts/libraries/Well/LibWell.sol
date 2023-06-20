@@ -22,9 +22,6 @@ library LibWell {
     // TODO: set
     address constant internal BEANSTALK_PUMP = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
 
-    // TODO: Optionally fail if below minimum amount.
-    uint256 constant private MIN_BEANS = 1e11; // 10,000 Beans
-
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
