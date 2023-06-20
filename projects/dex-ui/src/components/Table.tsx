@@ -26,6 +26,7 @@ export const Th = styled.th`
   line-height: 16px;
   text-align: ${(props) => props.align || "left"};
   text-transform: uppercase;
+  cursor: default;
 `;
 export const Td = styled.td`
   padding: 16px;

@@ -19,9 +19,9 @@ export const Wells = () => {
   const navigate = useNavigate();
   const sdk = useSdk();
   const { address } = useAccount();
-  const [wellLiquidity, setWellLiquidity] = useState<any>([]);
+  const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
   const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([])
-  const [wellLpBalances, setWellLpBalances] = useState<any>([])
+  const [wellLpBalances, setWellLpBalances] = useState<(TokenValue | undefined)[]>([])
   const [tab, showTab] = useState<number>(0)
   
   useMemo(() => {
@@ -34,13 +34,13 @@ export const Wells = () => {
         const _reserveValues = wells[i].reserves?.map((tokenReserve, index) => tokenReserve.mul(_tokenPrices[index] as TokenValue || TokenValue.ZERO));
         let initialValue = TokenValue.ZERO;
         const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue);
-
         _wellsLiquidityUSD[i] = _totalWellLiquidity;
       }
       setWellLiquidity(_wellsLiquidityUSD);
 
       let _wellsFunctionNames = [];
       for (let i = 0; i < wells.length; i++) {
+        if (!wells[i].wellFunction) return;
         const _wellName = await wells[i].wellFunction!.contract.name();
         _wellsFunctionNames[i] = _wellName;
       }
@@ -91,7 +91,7 @@ export const Wells = () => {
           <TradingFee>0.00%</TradingFee>
         </Td>
         <Td align="right">
-          <Amount>${wellLiquidity[index] ? wellLiquidity[index].toHuman("0,0.00") : "-.--"}</Amount>
+          <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("0,0.00") : "-.--"}</Amount>
         </Td>
         <Td align="right">
           <Reserves>{smallLogos[0]}{well.reserves![0] ? well.reserves![0].toHuman("0,0.00") : "-.--"}</Reserves>
@@ -105,7 +105,7 @@ export const Wells = () => {
   };
 
   function MyLPsRow(well: any, index: any) {
-    if (!well || !wellLpBalances || !wellLpBalances[index] || wellLpBalances[index].eq(TokenValue.ZERO)) return;
+    if (!well || !wellLpBalances || !wellLpBalances[index] || wellLpBalances[index]!.eq(TokenValue.ZERO)) return;
     const tokens = well.tokens || [];
     const logos: ReactNode[] = [];
     const symbols: string[] = [];
@@ -125,7 +125,7 @@ export const Wells = () => {
           </WellDetail>
         </Td>
         <Td align="right">
-          <WellLPBalance>{`${wellLpBalances[index].toHuman()} ${well.lpToken.symbol}`}</WellLPBalance>
+          <WellLPBalance>{`${wellLpBalances[index]!.toHuman()} ${well.lpToken.symbol}`}</WellLPBalance>
         </Td>
       </Row>
     )
