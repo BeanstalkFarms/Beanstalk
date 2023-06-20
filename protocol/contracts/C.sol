@@ -22,6 +22,7 @@ library C {
 
     uint256 internal constant PRECISION = 1e18;
     uint256 private constant CHAIN_ID = 1;
+    bytes constant BYTES_ZERO = new bytes(0);
 
     /// @dev The block time for the chain in seconds.
     uint256 internal constant BLOCK_LENGTH_SECONDS = 12;

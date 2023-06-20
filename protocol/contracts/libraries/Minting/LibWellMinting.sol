@@ -32,9 +32,6 @@ library LibWellMinting {
 
     using SignedSafeMath for int256;
 
-    // A constant representing a bytes variable with a length of 0.
-    bytes constant BYTES_ZERO = new bytes(0);
-
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
      * @param season The season that the Well was captured.
@@ -109,7 +106,7 @@ library LibWellMinting {
         // Need to handle failure gracefully, so Sunrise does not revert.
         try ICumulativePump(C.BEANSTALK_PUMP).readCumulativeReserves(
             well,
-            BYTES_ZERO
+            C.BYTES_ZERO
         ) returns (bytes memory lastSnapshot) {
             s.wellOracleSnapshots[well] = lastSnapshot;
             emit WellOracle(s.season.current, well, 0, lastSnapshot);
@@ -154,7 +151,7 @@ library LibWellMinting {
             well,
             lastSnapshot,
             uint40(s.season.timestamp),
-            BYTES_ZERO
+            C.BYTES_ZERO
         ) returns (uint[] memory twaBalances, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
             (uint256[] memory ratios, uint256 beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);

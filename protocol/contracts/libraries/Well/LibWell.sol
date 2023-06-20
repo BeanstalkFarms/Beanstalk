@@ -36,6 +36,7 @@ library LibWell {
                 ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]));
             }
         }
+        revert("Bean not in Well.");
     }
     
     /**
@@ -47,6 +48,7 @@ library LibWell {
                 return beanIndex;
             }
         }
+        revert("Bean not in Well.");
     }
 
     /**
