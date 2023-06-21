@@ -10,16 +10,14 @@ import { CustomToaster } from "../TxnToast/CustomToaster";
 import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
+import { LinksNav } from "../Typography";
+import { Logo } from "../Icons";
 
 export const BasinConnectButton = () => {
   return (
     <ConnectKitButton.Custom>
       {({ isConnected, show, truncatedAddress, ensName }) => {
-        return (
-          <StyledConnectButton onClick={show}>
-            {isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}
-          </StyledConnectButton>
-        );
+        return <StyledConnectButton onClick={show}>{isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}</StyledConnectButton>;
       }}
     </ConnectKitButton.Custom>
   );
@@ -32,13 +30,23 @@ export const Frame: FC<{}> = ({ children }) => {
     <Container id="frame">
       <NavContainer>
         <BrandContainer>
-          <Brand>[BASIN]</Brand>
+          <Brand>
+            <Link to={"/"}>
+              <Logo /> <div>BASIN</div>
+            </Link>
+          </Brand>
         </BrandContainer>
         <RightSide>
           <NavLinks>
-            <NavLink to="/wells" hovericon={wellsIcon}>Liquidity</NavLink>
-            <NavLink to="/build" hovericon={buildIcon}>Build</NavLink>
-            <NavLink to="/swap" hovericon={swapIcon}>Swap</NavLink>
+            <NavLink to="/wells" hovericon={wellsIcon}>
+              Liquidity
+            </NavLink>
+            <NavLink to="/build" hovericon={buildIcon}>
+              Build
+            </NavLink>
+            <NavLink to="/swap" hovericon={swapIcon}>
+              Swap
+            </NavLink>
             {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
         </RightSide>
@@ -58,7 +66,7 @@ export const Frame: FC<{}> = ({ children }) => {
 
 type NavLinkProps = {
   hovericon?: string;
-}
+};
 
 const TokenMarquee = styled.div`
   display: flex;
@@ -116,17 +124,17 @@ const NavLink = styled(Link)<NavLinkProps>`
   line-height: 24px;
   color: black;
   outline: none !important;
-  cursor: ${(props) => (props.hovericon ? `url(${props.hovericon}), auto` : 'pointer')};
+  cursor: ${(props) => (props.hovericon ? `url(${props.hovericon}), auto` : "pointer")};
 
   :focus {
     outline: none !important;
-  };
+  }
   :hover {
     background-color: #f0fdf4;
-  };
+  }
   &:last-child {
     border-right: 0.5px solid black;
-  };
+  }
 `;
 const RightSide = styled.div`
   // border: 1px solid red;
@@ -145,8 +153,24 @@ const BrandContainer = styled.div`
 `;
 
 const Brand = styled.div`
+  display: flex;
+  flex-direction: row;
   padding-left: 48px;
-`
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    ${LinksNav}
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #0f172a;
+
+    :focus {
+      outline: none;
+    }
+  }
+`;
 
 const StyledConnectContainer = styled.div`
   display: flex;
@@ -155,7 +179,7 @@ const StyledConnectContainer = styled.div`
   align-self: stretch;
   align-items: center;
   justify-content: center;
-`
+`;
 
 const StyledConnectButton = styled.button`
   display: flex;
@@ -168,8 +192,8 @@ const StyledConnectButton = styled.button`
   cursor: pointer;
   border: 0px;
   color: #000;
-  background: #FFF;
+  background: #fff;
   :hover {
     background-color: #f0fdf4;
-  };
-`
+  }
+`;
