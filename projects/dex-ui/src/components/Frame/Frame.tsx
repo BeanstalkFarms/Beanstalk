@@ -47,7 +47,6 @@ export const Frame: FC<{}> = ({ children }) => {
             <NavLink to="/swap" hovericon={swapIcon}>
               Swap
             </NavLink>
-            {isNotProd && <NavLink to="/dev">Dev</NavLink>}
           </NavLinks>
         </RightSide>
         <StyledConnectContainer>

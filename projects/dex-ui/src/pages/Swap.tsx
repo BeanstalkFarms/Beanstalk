@@ -7,7 +7,7 @@ export const Swap = () => {
   return (
     <Page>
       <Title title="Swap" />
-      <SwapRoot />
+      Coming soon...
     </Page>
   );
 };

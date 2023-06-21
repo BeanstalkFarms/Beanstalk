@@ -7,8 +7,7 @@ export const Build = () => {
   return (
     <Page>
       <Title title="Build" />
-      <Box data-trace="true"></Box>
-      <Box data-trace="true"></Box>
+      Coming soon...
     </Page>
   );
 };
