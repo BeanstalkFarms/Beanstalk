@@ -91,11 +91,11 @@ export const Wells = () => {
           <TradingFee>0.00%</TradingFee>
         </Td>
         <Td align="right">
-          <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("0,0.00") : "-.--"}</Amount>
+          <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
         </Td>
         <Td align="right">
-          <Reserves>{smallLogos[0]}{well.reserves![0] ? well.reserves![0].toHuman("0,0.00") : "-.--"}</Reserves>
-          <Reserves>{smallLogos[1]}{well.reserves![1] ? well.reserves![1].toHuman("0,0.00") : "-.--"}</Reserves>
+          <Reserves>{smallLogos[0]}{well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}</Reserves>
+          <Reserves>{smallLogos[1]}{well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}</Reserves>
           {well.reserves && well.reserves.length > 2 ? 
           <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves>
           : null }
@@ -125,7 +125,7 @@ export const Wells = () => {
           </WellDetail>
         </Td>
         <Td align="right">
-          <WellLPBalance>{`${wellLpBalances[index]!.toHuman()} ${well.lpToken.symbol}`}</WellLPBalance>
+          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
         </Td>
       </Row>
     )
