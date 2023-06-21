@@ -8,7 +8,7 @@ export type SVGProps = {
 
 export const ChevronDown = ({ color = "#000", width, height }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 10 6" fill="none">
-    <path d="M1 1L5 5L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1 1L5 5L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -93,14 +93,118 @@ export const Error = ({ color = "#000", width = 19, height = 19 }: SVGProps) => 
 
 export const Success = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 52 52">
-    <path fill={color} d="M26 2C12.7 2 2 12.7 2 26s10.7 24 24 24 24-10.7 24-24S39.3 2 26 2zm13.4 18L24.1 35.5c-.6.6-1.6.6-2.2 0L13.5 27c-.6-.6-.6-1.6 0-2.2l2.2-2.2c.6-.6 1.6-.6 2.2 0l4.4 4.5c.4.4 1.1.4 1.5 0L35 15.5c.6-.6 1.6-.6 2.2 0l2.2 2.2c.7.6.7 1.6 0 2.3z" />
+    <path
+      fill={color}
+      d="M26 2C12.7 2 2 12.7 2 26s10.7 24 24 24 24-10.7 24-24S39.3 2 26 2zm13.4 18L24.1 35.5c-.6.6-1.6.6-2.2 0L13.5 27c-.6-.6-.6-1.6 0-2.2l2.2-2.2c.6-.6 1.6-.6 2.2 0l4.4 4.5c.4.4 1.1.4 1.5 0L35 15.5c.6-.6 1.6-.6 2.2 0l2.2 2.2c.7.6.7 1.6 0 2.3z"
+    />
   </svg>
 );
 
 export const Info = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
   <svg width={width} height={height} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fillRule="evenodd" clipRule="evenodd" d="M10.6676 14.0025H5.33204C3.4906 14.0025 1.99731 12.5092 1.99731 10.6678V5.33222C1.99731 3.49079 3.4906 1.9975 5.33204 1.9975H10.6676C12.509 1.9975 14.0023 3.49079 14.0023 5.33222V10.6678C14.0023 12.5092 12.509 14.0025 10.6676 14.0025Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M7.99907 5.33223C7.90703 5.33223 7.83233 5.40693 7.833 5.49897C7.833 5.59101 7.9077 5.66571 7.99973 5.66571C8.09177 5.66571 8.16647 5.59101 8.16647 5.49897C8.16647 5.40693 8.09177 5.33223 7.99907 5.33223" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8.16646 10.7905V7.6225H7.49951" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M10.6676 14.0025H5.33204C3.4906 14.0025 1.99731 12.5092 1.99731 10.6678V5.33222C1.99731 3.49079 3.4906 1.9975 5.33204 1.9975H10.6676C12.509 1.9975 14.0023 3.49079 14.0023 5.33222V10.6678C14.0023 12.5092 12.509 14.0025 10.6676 14.0025Z"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7.99907 5.33223C7.90703 5.33223 7.83233 5.40693 7.833 5.49897C7.833 5.59101 7.9077 5.66571 7.99973 5.66571C8.09177 5.66571 8.16647 5.59101 8.16647 5.49897C8.16647 5.40693 8.09177 5.33223 7.99907 5.33223"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M8.16646 10.7905V7.6225H7.49951" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const Logo = ({ width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <circle cx={12} cy={12} r={12} fill="#F9F8F6" />
+    <g clipPath="url(#a)">
+      <mask
+        id="b"
+        width={16}
+        height={14}
+        x={4}
+        y={6}
+        maskUnits="userSpaceOnUse"
+        style={{
+          maskType: "luminance"
+        }}
+      >
+        <path
+          fill="#fff"
+          d="M12.542 19.714v-7.53H20c0 4.159-3.339 7.53-7.458 7.53Zm-1.084 0v-7.53H4c0 4.159 3.339 7.53 7.458 7.53ZM17.65 6h-5.135v5.185c2.836 0 5.135-2.321 5.135-5.185Zm-6.192 5.185V6H6.323c0 2.864 2.3 5.185 5.136 5.185Z"
+        />
+      </mask>
+      <g mask="url(#b)">
+        <path fill="#46B955" d="M1.72 23.499h22.463V.817H1.719V23.5Z" />
+        <path
+          fill="#29A334"
+          d="M22.415 10.756c-3.346-.396-6.165-2.907-7.959-4.658-2.105-2.055-4.896-3.017-6.37-2.42-1.016.412-1.281 1.72-.533 2.755.747 1.035 1.338 4.606.539 6.47-.913 2.128-3.554 2.276-3.554 6.163v5.608h20.526V10.756h-2.65Z"
+        />
+        <path
+          fill="#000"
+          d="M22.415 10.756c-3.346-.396-6.165-2.907-7.959-4.658-2.105-2.055-4.896-3.017-6.37-2.42-1.016.412-1.281 1.72-.533 2.755.747 1.035 1.338 4.606.539 6.47-.913 2.128-3.554 2.276-3.554 6.163v5.608h20.526V10.756h-2.65Z"
+          opacity={0.06}
+          style={{
+            mixBlendMode: "multiply"
+          }}
+        />
+        <path
+          fill="#1B8E21"
+          d="M8.525 21.482s-2.863-1.914-2.35-3.093c.562-1.292 2.389-.967 3.668-2.054 1.296-1.1.995-2.932.332-4.54-.902-2.188-1.852-4.301-.303-6.108.911-1.063 2.796-.766 3.853.928 1.018 1.632 2.396 3.848 4.085 3.94 1.217.065 3.165.486 4.974 3.078h2.227v10.809H8.525v-2.96Z"
+        />
+        <path
+          fill="#000"
+          d="M8.525 21.482s-2.863-1.914-2.35-3.093c.562-1.292 2.389-.967 3.668-2.054 1.296-1.1.995-2.932.332-4.54-.902-2.188-1.852-4.301-.303-6.108.911-1.063 2.796-.766 3.853.928 1.018 1.632 2.396 3.848 4.085 3.94 1.217.065 3.165.486 4.974 3.078h2.227v10.809H8.525v-2.96Z"
+          opacity={0.06}
+          style={{
+            mixBlendMode: "multiply"
+          }}
+        />
+        <path
+          fill="#0C720E"
+          d="M9.795 22.567c-1.208-3.277.954-3.621 2.02-3.988 1.065-.366 2.154-.979 2.17-2.451.017-1.553-.968-2.03-1.718-3.084-.75-1.054-2.69-2.588-1.328-3.806 1.096-.98 2.99 1.519 4.75 1.519 1.76 0 5.63 1.2 6.195 2.148l1.567.282v9.38H9.795Z"
+        />
+        <path
+          fill="#000"
+          d="M9.795 22.567c-1.208-3.277.954-3.621 2.02-3.988 1.065-.366 2.154-.979 2.17-2.451.017-1.553-.968-2.03-1.718-3.084-.75-1.054-2.69-2.588-1.328-3.806 1.096-.98 2.99 1.519 4.75 1.519 1.76 0 5.63 1.2 6.195 2.148l1.567.282v9.38H9.795Z"
+          opacity={0.06}
+          style={{
+            mixBlendMode: "multiply"
+          }}
+        />
+      </g>
+    </g>
+    <defs>
+      <clipPath id="a">
+        <path fill="#fff" d="M4 6h16v13.714H4z" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+export const RightArrowCircle = ({ width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <path
+      stroke="#4B5563"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 21v0a9 9 0 0 1-9-9v0a9 9 0 0 1 9-9v0a9 9 0 0 1 9 9v0a9 9 0 0 1-9 9Z"
+      clipRule="evenodd"
+    />
+    <path stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" d="M16 12H8M13 9l3 3-3 3" />
+  </svg>
+);
+
+export const RightArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
+    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5M14 17l5-5M14 7l5 5" />
   </svg>
 );
