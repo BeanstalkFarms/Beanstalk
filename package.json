@@ -33,6 +33,8 @@
     "sdk-wells:test": "jest --selectProjects sdk-wells --runInBand --silent=false --",
     "sdk-wells:test:watch": "jest --selectProjects sdk-wells --runInBand --watch --verbose true --",
     "sdk:testdev": "jest --selectProjects sdk --watch --runInBand --",
+    "sdk-core:test": "jest --selectProjects sdk-core --silent --runInBand --",
+    "sdk-core:testdev": "jest --selectProjects sdk-core --watch --runInBand --",
     "sdk:prettier": "yarn prettier projects/sdk -w",
     "sdk:publish": "yarn workspace @beanstalk/sdk publish",
     "sdk:version": "yarn workspace @beanstalk/sdk version",

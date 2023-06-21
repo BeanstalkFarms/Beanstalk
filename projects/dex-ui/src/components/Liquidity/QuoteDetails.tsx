@@ -79,7 +79,8 @@ const QuoteDetails = ({
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
-      return `${_quoteValue.toHuman("0,0.0000")} ${wellLpToken!.symbol}`;
+      console.log('Here', _quoteValue, _quoteValue.toHuman(), _quoteValue.toHuman("short"));
+      return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
@@ -89,14 +90,14 @@ const QuoteDetails = ({
         return null;
       }
       wellTokens?.forEach((token, index) => {
-        allTokensValue.push(`${_quoteValue[index].toHuman("0,0.0000")} ${token.symbol}`);
+        allTokensValue.push(`${_quoteValue[index].toHuman("short")} ${token.symbol}`);
       });
       return allTokensValue.join(", ");
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
       const _quoteValue = quote?.quote as TokenValue;
-      return `${_quoteValue.toHuman("0,0.0000")} ${wellTokens![selectedTokenIndex || 0]!.symbol}`;
+      return `${_quoteValue.toHuman("short")} ${wellTokens![selectedTokenIndex || 0]!.symbol}`;
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
@@ -106,7 +107,7 @@ const QuoteDetails = ({
         return null;
       }
       wellTokens?.forEach((token, index) => {
-        allTokensValue.push(`${_quoteValue[index].toHuman("0,0.0000")} ${token.symbol}`);
+        allTokensValue.push(`${_quoteValue[index].toHuman("short")} ${token.symbol}`);
       });
       return allTokensValue.join(", ");
     }
@@ -214,11 +215,11 @@ const QuoteDetails = ({
       <AccordionContainer open={accordionOpen}>
         <QuoteDetailLine>
           <QuoteDetailLabel>USD Value</QuoteDetailLabel>
-          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("0,0.00")}`}</QuoteDetailValue>
+          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
         </QuoteDetailLine>
         <QuoteDetailLine>
           <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-          <QuoteDetailValue>{`${priceImpact.toHuman("0,0.00")}%`}</QuoteDetailValue>
+          <QuoteDetailValue>{`${priceImpact.toHuman("short")}%`}</QuoteDetailValue>
           <IconContainer>
             <Tooltip 
               offsetX={-89}
