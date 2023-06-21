@@ -27,6 +27,16 @@ const jestConfig: JestConfigWithTsJest = {
     {
       // @ts-ignore
       preset: "ts-jest",
+      displayName: "sdk-core",
+      rootDir: "projects/sdk-core",
+      testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)"],
+      moduleNameMapper: {
+        "^src/(.*)$": "<rootDir>/src/$1"
+      }
+    },
+    {
+      // @ts-ignore
+      preset: "ts-jest",
       displayName: "examples",
       rootDir: "projects/examples",
       testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)"]
