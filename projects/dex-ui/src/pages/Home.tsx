@@ -11,14 +11,17 @@ export const Home = () => {
           <svg xmlns="http://www.w3.org/2000/svg" width={8} height={8} fill="none">
             <circle cx={4} cy={4} r={4} fill="#46B955" />
           </svg>
-          🔮 Multi-block MEV manipulation resistant Oracle now live
+          🔮 Multi-block MEV manipulation resistant oracle{" "}
+          <OracleWP href="/multi-flow-pump.pdf" target="_blank">
+            whitepaper
+          </OracleWP>
           <RightArrowCircle />
         </MevBubble>
         <Title>A Composable EVM-native DEX </Title>
         <SubTitle>
           Customizable liquidity pools with shared components. &nbsp;
-          <WhitepaperLink href={"/whitepaper.pdf"} target="_blank">
-            Read the Whitepaper
+          <WhitepaperLink href={"/basin.pdf"} target="_blank">
+            Read the whitepaper
             <RightArrow color="#46B955" />
           </WhitepaperLink>
         </SubTitle>
@@ -28,19 +31,18 @@ export const Home = () => {
               🔮
             </Emoji>{" "}
             Build using components
-            <RightArrow />
           </Box>
           <Box>
             <Emoji role="img" aria-label="lightning">
               ⚡️
             </Emoji>{" "}
-            Deploy flexible liquidity <RightArrow />
+            Deploy flexible liquidity
           </Box>
           <Box>
             <Emoji role="img" aria-label="heart">
               ❤️
             </Emoji>{" "}
-            Zero-fee Swaps <RightArrow />
+            Zero-fee swaps
           </Box>
         </Boxes>
       </Content>
@@ -73,14 +75,13 @@ const MevBubble = styled.div`
   padding: 8px;
   gap: 8px;
   height: 40px;
-  width: 495px;
+  width: 522px;
   background: #ffffff;
   border: 0.25px solid #4b5563;
   border-radius: 100px;
 `;
 
 const Title = styled.div`
-  font-family: "PP Mori";
   font-style: normal;
   font-weight: 600;
   font-size: 72px;
@@ -91,7 +92,6 @@ const SubTitle = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-family: "PP Mori";
   font-style: normal;
   font-weight: 400;
   font-size: 20px;
@@ -99,6 +99,12 @@ const SubTitle = styled.div`
   color: #4b5563;
 `;
 
+const OracleWP = styled.a`
+  color: #46b955;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+`;
 const WhitepaperLink = styled.a`
   font-weight: 400;
   font-size: 20px;
