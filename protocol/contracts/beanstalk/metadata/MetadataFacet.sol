@@ -7,9 +7,9 @@ pragma experimental ABIEncoderV2;
 
 import {IERC1155Receiver} from "~/interfaces/IERC1155Receiver.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {LibStrings} from "~/libraries/LibStrings.sol";
 import {LibLegacyTokenSilo} from "~/libraries/Silo/LibLegacyTokenSilo.sol";
 import "./MetadataImage.sol";
+
 
 /**
  * @title MetadataFacet
@@ -56,24 +56,26 @@ contract MetadataFacet is MetadataImage, IERC1155Receiver {
      * ERC20 deposits are represented by the concatination of the token address and the stem. (20 + 12 bytes).
      * ERC721 and ERC1155 Deposits (not implmented) will be represented by the *hash* of the token address, id, and stem. (32 bytes).
      */
-    function uri(uint256 depositId, address account) external view returns (string memory) {
+    function uri(uint256 depositId) external view returns (string memory) {
         Metadata memory depositMetadata = getDepositMetadata(depositId);
         require(depositMetadata.token != address(0), "Silo: metadata does not exist");
         bytes memory attributes = abi.encodePacked(
-            '{',
-                '"token address": "', LibStrings.toHexString(uint256(depositMetadata.token), 20),
-                '", "id": ', depositMetadata.id.toHexString(32),
-                ', "Deposit stem": ', uint256(depositMetadata.stem).toString(),
-                ', "Deposit stalk per BDV": ', uint256(LibTokenSilo.stemTipForToken(depositMetadata.token)).toString(),
-                ', "Deposit seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
-            '}'
+            '\n\nToken Symbol: ', ERC20(depositMetadata.token).symbol(),
+            '\nToken Address: ', LibStrings.toHexString(uint256(depositMetadata.token), 20),
+            '\nId: ', depositMetadata.id.toHexString(32),
+            '\nDeposit stem: ', uint256(depositMetadata.stem).toString(),
+            '\nDeposit stalk per BDV": ', uint256(LibTokenSilo.stemTipForToken(depositMetadata.token)).toString(),
+            '\nDeposit seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(depositMetadata.token)).toString(),
+            '\n\nDISCLAIMER: Due diligence is imperative when assessing this NFT.',
+            'Opensea and other NFT marketplaces cache the svg output and thus,',
+            'may require the user to refresh the metadata to properly show the correct values."'
         );
         return string(abi.encodePacked("data:application/json;base64,",LibBytes64.encode(abi.encodePacked(
                 '{',
                     '"name": "Beanstalk Deposit", ',
-                    '"description": "A Beanstalk Deposit", ',
-                    string(abi.encodePacked('"image": "', imageURI(depositId))),
-                    string(abi.encodePacked('", "attributes": ', attributes)),
+                    '"description": "A Beanstalk Deposit.',
+                    attributes,
+                    string(abi.encodePacked(', "image": "', imageURI(depositId), '"')),
                 '}'
             ))
         ));
