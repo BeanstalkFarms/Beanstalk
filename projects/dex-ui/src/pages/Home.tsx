@@ -11,14 +11,14 @@ export const Home = () => {
           <svg xmlns="http://www.w3.org/2000/svg" width={8} height={8} fill="none">
             <circle cx={4} cy={4} r={4} fill="#46B955" />
           </svg>
-          🔮 Multi-block MEV manipulation resistant Oracle now live
+          🔮 Multi-block MEV manipulation resistant oracle whitepaper
           <RightArrowCircle />
         </MevBubble>
         <Title>A Composable EVM-native DEX </Title>
         <SubTitle>
           Customizable liquidity pools with shared components. &nbsp;
-          <WhitepaperLink href={"/whitepaper.pdf"} target="_blank">
-            Read the Whitepaper
+          <WhitepaperLink href={"/basin.pdf"} target="_blank">
+            Read the whitepaper
             <RightArrow color="#46B955" />
           </WhitepaperLink>
         </SubTitle>
@@ -28,19 +28,18 @@ export const Home = () => {
               🔮
             </Emoji>{" "}
             Build using components
-            <RightArrow />
           </Box>
           <Box>
             <Emoji role="img" aria-label="lightning">
               ⚡️
             </Emoji>{" "}
-            Deploy flexible liquidity <RightArrow />
+            Deploy flexible liquidity
           </Box>
           <Box>
             <Emoji role="img" aria-label="heart">
               ❤️
             </Emoji>{" "}
-            Zero-fee Swaps <RightArrow />
+            Zero-fee swaps
           </Box>
         </Boxes>
       </Content>
