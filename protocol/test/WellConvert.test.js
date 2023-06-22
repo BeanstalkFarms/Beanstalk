@@ -156,6 +156,16 @@ describe('Well Convert', function () {
         deposit = await this.beanstalk.getDeposit(owner.address, this.well.address, '0')
         expect(deposit[0]).to.be.equal('1715728752538099023967')
       })
+
+      it('reverts when USD oracle is broken', async function () {
+        await setEthUsdPrice('0')
+        const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.well.address)
+        await expect(this.convert.connect(owner).callStatic.convertInternalE(
+          this.bean.address,
+          to6('100000'),
+          convertData
+        )).to.be.revertedWith('Convert: USD Oracle failed')
+      });
     });
 
     describe('p <= 1', async function () {
@@ -230,6 +240,16 @@ describe('Well Convert', function () {
         deposit = await this.beanstalk.getDeposit(owner.address, BEAN, '0')
         expect(deposit[0]).to.be.equal('134564064605')
       })
+
+      it('reverts when USD oracle is broken', async function () {
+        await setEthUsdPrice('0')
+        const convertData = ConvertEncoder.convertWellLPToBeans('3018239549693752550560', to6('200000'), this.well.address)
+        await expect(this.convert.connect(owner).callStatic.convertInternalE(
+          this.well.address,
+          '3018239549693752550560',
+          convertData
+        )).to.be.revertedWith('Convert: USD Oracle failed')
+      });
     });
 
     describe('p > 1', async function () {

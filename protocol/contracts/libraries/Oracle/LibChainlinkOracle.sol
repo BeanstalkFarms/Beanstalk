@@ -20,7 +20,7 @@ library LibChainlinkOracle {
     using SafeMath for uint256;
 
     // Uses the same timeout as Liquity's Chainlink timeout.
-    int constant public CHAINLINK_TIMEOUT = 14400;  // 4 hours: 60 * 60 * 4
+    uint256 constant public CHAINLINK_TIMEOUT = 14400;  // 4 hours: 60 * 60 * 4
 
     IChainlinkAggregator constant priceAggregator = IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
@@ -56,7 +56,7 @@ library LibChainlinkOracle {
             // Check for an invalid timeStamp that is 0, or in the future
             if (timestamp == 0 || timestamp > block.timestamp) return 0;
             // Check if Chainlink's price feed has timed out
-            if (block.timestamp.sub(timestamp) > TIMEOUT) return 0;
+            if (block.timestamp.sub(timestamp) > CHAINLINK_TIMEOUT) return 0;
             // Check for non-positive price
             if (answer <= 0) return 0;
             // Return the 

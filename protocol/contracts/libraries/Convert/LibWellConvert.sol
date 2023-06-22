@@ -38,8 +38,10 @@ library LibWellConvert {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
         Call memory wellFunction = IWell(well).wellFunction();
-        uint256[] memory ratios;
-        (ratios, beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
+        uint256[] memory ratios; bool success;
+        (ratios, beanIndex, success) = LibWell.getRatiosAndBeanIndex(tokens);
+        // If the USD Oracle oracle call fails, the convert should not be allowed.
+        require(success, "Convert: USD Oracle failed");
 
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
             reserves,
@@ -61,7 +63,9 @@ library LibWellConvert {
         IERC20[] memory tokens = IWell(well).tokens();
         uint256[] memory reserves = IWell(well).getReserves();
         Call memory wellFunction = IWell(well).wellFunction();
-        (uint256[] memory ratios, uint256 beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
+        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
+        // If the USD Oracle oracle call fails, the convert should not be allowed.
+        require(success, "Convert: USD Oracle failed");
 
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
             reserves,

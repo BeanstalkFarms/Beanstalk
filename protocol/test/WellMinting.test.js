@@ -137,5 +137,15 @@ describe('Well Minting', function () {
     })
 
   })
+
+  it("Broken USD Oracle", async function () {
+    await setEthUsdPrice('0')
+    await advanceTime(3600)
+    await user.sendTransaction({
+      to: beanstalk.address,
+      value: 0
+    })
+    expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
+  })
   
 })

@@ -154,11 +154,18 @@ library LibWellMinting {
             C.BYTES_ZERO
         ) returns (uint[] memory twaBalances, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
-            (uint256[] memory ratios, uint256 beanIndex) = LibWell.getRatiosAndBeanIndex(tokens);
-            // If the Bean reserve is less than the minimum, the oracle should be considered off.
+            (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
+
+            // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaBalances[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
                 return (0, snapshot);
             }
+
+            // If the USD Oracle oracle call fails, the minting oracle should be considered off.
+            if (!success) {
+                return (0, snapshot);
+            }
+
             Call memory wellFunction = IWell(well).wellFunction();
             // Delta B is the difference between the target Bean reserve at the peg price
             // and the time weighted average Bean balance in the Well.

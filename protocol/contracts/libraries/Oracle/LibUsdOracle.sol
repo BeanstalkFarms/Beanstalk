@@ -25,8 +25,8 @@ library LibUsdOracle {
     function getUsdPrice(address token) internal view returns (uint256) {
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice();
-            require(ethUsdPrice > 0, "Oracle: Failed");
-            return uint256(1e24).div(LibEthUsdOracle.getEthUsdPrice());
+            if (ethUsdPrice == 0) return 0;
+            return uint256(1e24).div(ethUsdPrice);
         }
         revert("Oracle: Token not supported.");
     }

@@ -1,14 +1,9 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
-const { signERC2612Permit } = require("eth-permit");
-const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, PIPELINE, BEANSTALK, ETH_USDC_UNISWAP_V3, ETH_USDT_UNISWAP_V3, WETH, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
-const { to6, to18, toX } = require('./utils/helpers.js');
+const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
+const { ETH_USDC_UNISWAP_V3, ETH_USDT_UNISWAP_V3, WETH, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
+const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { deployMockWell } = require('../utils/well.js');
-const { upgradeWithNewFacets } = require('../scripts/diamond.js');
-const { impersonateBeanstalkOwner } = require('../utils/signer.js');
-const { mintEth } = require('../utils/mint.js');
 const { toBN } = require('../utils/helpers.js');
 
 let user, user2, owner;
@@ -66,10 +61,6 @@ describe('USD Oracle', function () {
         await setEthUsdPrice('10000')
         await setEthUsdcPrice('10000')
         await setEthUsdtPrice('10000')
-
-        console.log(await season.getEthUsdcPrice())
-
-        season = await ethers.getContractAt('MockSeasonFacet', BEANSTALK)
     })
 
     beforeEach(async function () {
@@ -174,7 +165,7 @@ describe('USD Oracle', function () {
         it("it gets the USD price when Chainlink << USDC & >> USDT", async function () {
             await setEthUsdcPrice('10500')
             await setEthUsdtPrice('9500')
-            await expect(season.getUsdPrice(WETH)).to.be.revertedWith("Oracle: Failed")
+            expect(await season.getUsdPrice(WETH)).to.be.equal('0')
             expect(await season.getEthUsdPrice()).to.be.equal('0')
         })
     })

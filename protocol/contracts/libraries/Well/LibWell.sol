@@ -20,24 +20,32 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
  **/
 library LibWell {
 
+    using SafeMath for uint256;
+
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
      */
     function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
         uint[] memory ratios,
-        uint beanIndex
+        uint beanIndex,
+        bool success
     ) {
+        success = true;
         ratios = new uint[](tokens.length);
+        beanIndex = type(uint256).max;
         for (uint i; i < tokens.length; ++i) {
             if (C.BEAN == address(tokens[i])) {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
                 ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]));
+                if (ratios[i] == 0) {
+                    success = false;
+                }
             }
         }
-        revert("Bean not in Well.");
+        require(beanIndex != type(uint256).max, "Bean not in Well.");
     }
     
     /**
