@@ -17,12 +17,15 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
  **/
 library LibUniswapOracle {
 
+    // The lookback in seconds for which to calculate the SMA in a Uniswap V3 pool.
     // TODO: Finalize. Currently set to 15 minutes
     uint32 constant PERIOD = 900;
+
     uint128 constant ONE_WETH = 1e18;
 
     /**
-     * @dev Uses the Uniswap V3 Oracle to get the price of WETH denominated in USDC.
+     * @dev Uses the Uniswap V3 Oracle to get the price of ETH denominated in USDC.
+     * Return value has 6 decimal precision.
      */
     function getEthUsdcPrice() internal view returns (uint256 price) {
         (int24 tick, ) = OracleLibrary.consult(C.UNIV3_ETH_USDC_POOL, PERIOD);
@@ -30,7 +33,8 @@ library LibUniswapOracle {
     }
 
     /**
-     * @dev Uses the Uniswap V3 Oracle to get the price of WETH denominated in USDT.
+     * @dev Uses the Uniswap V3 Oracle to get the price of ETH denominated in USDT.
+     * Return value has 6 decimal precision.
      */
     function getEthUsdtPrice() internal view returns (uint256 price) {
         (int24 tick, ) = OracleLibrary.consult(C.UNIV3_ETH_USDT_POOL, PERIOD);
