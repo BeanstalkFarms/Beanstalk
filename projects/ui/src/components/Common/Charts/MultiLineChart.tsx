@@ -87,7 +87,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
         tooltipTop: containerY, // in pixels
       });
       const season = pointerData.length ? pointerData[0].season : undefined;
-      onCursor?.(season, getDisplayValue(pointerData));
+      onCursor?.(season, getDisplayValue(pointerData), pointerData[0].date);
     },
     [
       containerBounds,
@@ -104,7 +104,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
   const xTickNum = width > 700 ? undefined : Math.floor(width / 70);
 
   const [tickSeasons, tickDates] = useMemo(() => {
-    const interval = Math.ceil(series[0].length / 12);
+    const interval = Math.ceil(series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9));
     const shift = Math.ceil(interval / 3); // slight shift on tick labels
     return series[0].reduce<[number[], string[]]>(
       (prev, curr, i) => {
@@ -116,7 +116,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
       },
       [[], []]
     );
-  }, [series]);
+  }, [series, scales]);
 
   const xTickFormat = useCallback(
     (_: any, i: number) => tickDates[i],
@@ -163,8 +163,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
       />
       <svg width={width} height={height}>
         {/**
-          * Lines
-          */}
+         * Lines
+         */}
         <Group
           width={width - common.yAxisWidth}
           height={dataRegion.yBottom - dataRegion.yTop}
@@ -194,8 +194,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
           ))}
         </Group>
         {/**
-          * Axis
-          */}
+         * Axis
+         */}
         <g transform={`translate(0, ${dataRegion.yBottom})`}>
           <Axis
             key="axis"
@@ -205,7 +205,6 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
             tickFormat={xTickFormat}
             tickStroke={common.axisColor}
             tickLabelProps={common.xTickLabelProps}
-            numTicks={xTickNum}
             tickValues={tickSeasons}
           />
         </g>
@@ -223,8 +222,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
           />
         </g>
         {/**
-          * Cursor
-          */}
+         * Cursor
+         */}
         {tooltipData && (
           <>
             <Line
@@ -274,10 +273,17 @@ const MultiLineChart: React.FC<BaseChartProps> = (props) => (
                 <ExploitLine {...childProps} />
                 {props.horizontalLineNumber !== undefined && (
                   <Line
-                    from={{ x: 0, y: childProps.scales[0].yScale(props.horizontalLineNumber) as number }}
+                    from={{
+                      x: 0,
+                      y: childProps.scales[0].yScale(
+                        props.horizontalLineNumber
+                      ) as number,
+                    }}
                     to={{
                       x: childProps.width - providerProps.common.yAxisWidth,
-                      y: childProps.scales[0].yScale(props.horizontalLineNumber) as number,
+                      y: childProps.scales[0].yScale(
+                        props.horizontalLineNumber
+                      ) as number,
                     }}
                     stroke={BeanstalkPalette.logoGreen}
                     strokeDasharray={4}

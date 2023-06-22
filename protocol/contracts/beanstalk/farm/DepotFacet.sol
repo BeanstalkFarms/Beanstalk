@@ -5,9 +5,9 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/interfaces/IPipeline.sol";
-import "~/libraries/LibFunction.sol";
-import "~/libraries/Token/LibEth.sol";
+import "contracts/interfaces/IPipeline.sol";
+import "contracts/libraries/LibFunction.sol";
+import "contracts/libraries/Token/LibEth.sol";
 
 /**
  * @title Depot Facet

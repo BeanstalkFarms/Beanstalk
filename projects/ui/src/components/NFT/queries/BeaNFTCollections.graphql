@@ -1,0 +1,6 @@
+query BeaNFTCollections($id_in: [ID!] ) {
+	collectionDatas(where: { id_in: $id_in }) {
+    id
+    minted
+  }
+}

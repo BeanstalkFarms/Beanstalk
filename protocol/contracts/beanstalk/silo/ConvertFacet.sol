@@ -5,14 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {C} from "~/C.sol";
-import {LibSilo} from "~/libraries/Silo/LibSilo.sol";
-import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
+import {C} from "contracts/C.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {Silo} from "./SiloFacet/Silo.sol";
-import {LibSafeMath32} from "~/libraries/LibSafeMath32.sol";
-import {LibConvert} from "~/libraries/Convert/LibConvert.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
-import {LibBytes} from "~/libraries/LibBytes.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -49,14 +49,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] amounts,
         uint256 amount,
         uint256[] bdvs
-    );
-
-    event TransferBatch(
-        address indexed operator, 
-        address indexed from, 
-        address indexed to, 
-        uint256[] ids, 
-        uint256[] values
     );
 
     struct AssetsRemoved {
@@ -134,7 +126,7 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         int96 stem,
         uint256 amount
-    ) external nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
@@ -159,6 +151,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
+        LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
 
         // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
@@ -192,48 +185,62 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external nonReentrant mowSender(token) {
+    ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
 
         // Get new BDV
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-        uint256 newStalk;
+        uint256 newTotalBdv = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+        uint256 stalkAdded; uint256 bdvAdded;
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
         int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
         uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
+        uint256 depositBdv;
+
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
-            uint256 bdv = amounts[i].mul(newBDV).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            if (i+1 == stems.length) {
+                // Ensure that a rounding error does not occur by using the 
+                // remainder BDV for the last Deposit.
+                depositBdv = newTotalBdv.sub(bdvAdded);
+            } else {
+                // depositBdv is a proportional amount of the total bdv.
+                // Cheaper than calling the BDV function multiple times.
+                depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
+            }
             LibTokenSilo.addDepositToAccount(
                 msg.sender,
                 token,
                 stems[i],
                 amounts[i],
-                bdv,
+                depositBdv,
                 LibTokenSilo.Transfer.noEmitTransferSingle
             );
             
-            newStalk = newStalk.add(
-                bdv.mul(_stalkPerBdv).add(
+            stalkAdded = stalkAdded.add(
+                depositBdv.mul(_stalkPerBdv).add(
                     LibSilo.stalkReward(
                         stems[i],
                         _lastStem,
-                        uint128(bdv)
+                        uint128(depositBdv)
                     )
                 )
             );
+
+            bdvAdded = bdvAdded.add(depositBdv);
         }
+
+        LibTokenSilo.incrementTotalDepositedBdv(token, bdvAdded.sub(ar.bdvRemoved));
 
         // Mint Stalk associated with the delta BDV.
         LibSilo.mintStalk(
             msg.sender,
-            newStalk.sub(ar.stalkRemoved)
+            stalkAdded.sub(ar.stalkRemoved)
         );
     }
 
@@ -314,7 +321,7 @@ contract ConvertFacet is ReentrancyGuard {
                 bdvsRemoved
             );
 
-            emit TransferBatch(
+            emit LibSilo.TransferBatch(
                 msg.sender, 
                 msg.sender,
                 address(0), 
@@ -327,7 +334,7 @@ contract ConvertFacet is ReentrancyGuard {
             a.tokensRemoved == maxTokens,
             "Convert: Not enough tokens removed."
         );
-        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved);
+        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
         LibSilo.burnStalk(
             msg.sender,
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
@@ -353,11 +360,11 @@ contract ConvertFacet is ReentrancyGuard {
         // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
 
-        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(IERC20(token), grownStalk, bdv);
+        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
 
         LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
-        LibTokenSilo.incrementTotalDeposited(token, amount);
+        LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
         LibTokenSilo.addDepositToAccount(
             msg.sender, 
             token, 

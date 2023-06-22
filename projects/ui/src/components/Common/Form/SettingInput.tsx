@@ -6,15 +6,11 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const SettingInput : FC<{
+const SettingInput: FC<{
   name: string;
   label: string;
   endAdornment?: React.ReactNode;
-}> = ({
-  name,
-  label,
-  endAdornment,
-}) => (
+}> = ({ name, label, endAdornment }) => (
   <Field name={name}>
     {(fieldProps: FieldProps) => (
       <Row gap={5} justifyContent="space-between">
@@ -25,21 +21,21 @@ const SettingInput : FC<{
             variant="standard"
             type="number"
             sx={{
-                minWidth: 'none',
-                width: 50,
-              }}
+              minWidth: 'none',
+              width: 50,
+            }}
             InputProps={{
-                endAdornment,
-                sx: {
-                  fontSize: 16,
-                }
-              }}
+              endAdornment,
+              sx: {
+                fontSize: 16,
+              },
+            }}
             {...fieldProps.field}
-            />
+          />
         </Box>
       </Row>
-      )}
+    )}
   </Field>
-  );
+);
 
 export default SettingInput;

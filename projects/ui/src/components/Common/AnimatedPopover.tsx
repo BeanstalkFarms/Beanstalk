@@ -63,8 +63,8 @@ const AnimatedPopover: React.FC<{
         }}
         sx={{
           '& .MuiPaper-root': {
-            boxShadow: 'none'
-          }
+            boxShadow: 'none',
+          },
         }}
       >
         {popperEl}

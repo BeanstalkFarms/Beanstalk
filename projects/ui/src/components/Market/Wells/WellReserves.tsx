@@ -1,8 +1,5 @@
 import React from 'react';
-import { Card, Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Card, Divider, Stack, Typography } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import Row from '~/components/Common/Row';
 import WhitelistBadge from '~/components/Market/Wells/WhitelistBadge';
@@ -52,9 +49,21 @@ const WellReserves: React.FC = () => (
             <Typography>+10,000</Typography>
           </Row>
         </Stack>
-        <Row p={1} gap={1} sx={{ borderRadius: 1, backgroundColor: BeanstalkPalette.lightestBlue }}>
-          <InfoIcon sx={{ width: IconSize.small, color: BeanstalkPalette.blue }} />
-          <Typography>Earn up to ~5.67% vAPY for adding liquidity to this Well and depositing the whitelisted liquidity token in the silo here.</Typography>
+        <Row
+          p={1}
+          gap={1}
+          sx={{
+            borderRadius: 1,
+            backgroundColor: BeanstalkPalette.lightestBlue,
+          }}
+        >
+          <InfoIcon
+            sx={{ width: IconSize.small, color: BeanstalkPalette.blue }}
+          />
+          <Typography>
+            Earn up to ~5.67% vAPY for adding liquidity to this Well and
+            depositing the whitelisted liquidity token in the silo here.
+          </Typography>
         </Row>
         {/* <Button fullWidth component={Link} to="/silo"> */}
         {/*  <Typography variant="h4">Deposit Liquidity through the Silo</Typography> */}

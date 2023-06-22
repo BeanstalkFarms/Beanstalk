@@ -10,8 +10,9 @@ import useToggle from '~/hooks/display/useToggle';
 import {
   placeInLineAtom,
   selectedPlotAmountAtom,
-  selectedPlotAtom, selectedPlotEndAtom,
-  selectedPlotStartAtom
+  selectedPlotAtom,
+  selectedPlotEndAtom,
+  selectedPlotStartAtom,
 } from '~/components/Market/PodsV2/info/atom-context';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import { ZERO_BN } from '~/constants';
@@ -226,5 +227,5 @@ const FillBuyListing: React.FC<{}> = () => (
       </Stack>
     </Stack>
   </Stack>
-  );
+);
 export default FillBuyListing;

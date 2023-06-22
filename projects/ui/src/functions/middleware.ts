@@ -8,9 +8,13 @@ import createError from 'http-errors';
 
 const checkRateLimit = LRL({ interval: 60 * 1000 }).check;
 
-export const rateLimit = (max = 12) : middy.MiddlewareObject<Event, Response> => ({
+export const rateLimit = (
+  max = 12
+): middy.MiddlewareObject<Event, Response> => ({
   before: async (request, next) => {
-    const ip = request.event.headers['x-nf-client-connection-ip'] || request.event.headers['client-ip'];
+    const ip =
+      request.event.headers['x-nf-client-connection-ip'] ||
+      request.event.headers['client-ip'];
     if (!ip) throw new createError.InternalServerError();
     try {
       await checkRateLimit(max, ip);
@@ -20,8 +24,10 @@ export const rateLimit = (max = 12) : middy.MiddlewareObject<Event, Response> =>
     next();
   },
   onError: async (handler) => {
-    handler.response.statusCode = (handler.error as createError.HttpError).statusCode;
-  }
+    handler.response.statusCode = (
+      handler.error as createError.HttpError
+    ).statusCode;
+  },
 });
 
 export { httpErrorHandler };

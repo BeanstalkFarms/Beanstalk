@@ -1,10 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  ButtonProps,
-  Stack,
-  Typography,
-  useMediaQuery,
-} from '@mui/material';
+import { ButtonProps, Stack, Typography, useMediaQuery } from '@mui/material';
 import throttle from 'lodash/throttle';
 import { useTheme } from '@mui/material/styles';
 import { useSelector } from 'react-redux';
@@ -25,19 +20,22 @@ import { FC } from '~/types';
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   // Data
-  const pools     = usePools();
-  const season    = useSeason();
+  const pools = usePools();
+  const season = useSeason();
   const beanPrice = usePrice();
   const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
     (state) => state._bean.pools
   );
   const [_refetchPools] = useFetchPools();
-  const refetchPools = useMemo(() => throttle(_refetchPools, 10_000), [_refetchPools]); // max refetch = 10s
+  const refetchPools = useMemo(
+    () => throttle(_refetchPools, 10_000),
+    [_refetchPools]
+  ); // max refetch = 10s
 
   // Theme
-  const theme    = useTheme();
+  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-  const isTiny   = useMediaQuery('(max-width:350px)');
+  const isTiny = useMediaQuery('(max-width:350px)');
 
   // Content
   const isLoading = beanPrice.eq(NEW_BN);
@@ -64,7 +62,13 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       onOpen={refetchPools}
       startIcon={startIcon}
       buttonContent={
-        <>${displayBeanPrice(beanPrice.gt(0) ? beanPrice : ZERO_BN, isMobile ? 2 : 4)}</>
+        <>
+          $
+          {displayBeanPrice(
+            beanPrice.gt(0) ? beanPrice : ZERO_BN,
+            isMobile ? 2 : 4
+          )}
+        </>
       }
       drawerContent={
         <Stack sx={{ p: 2 }} gap={1}>
@@ -74,8 +78,13 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           <Stack gap={1}>{poolsContent}</Stack>
         </Stack>
       }
-      popoverContent={<Stack gap={1} p={1}>{poolsContent}</Stack>}
+      popoverContent={
+        <Stack gap={1} p={1}>
+          {poolsContent}
+        </Stack>
+      }
       hotkey="opt+1, alt+1"
+      zeroTopLeftRadius
       {...props}
     />
   );

@@ -6,11 +6,11 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "~/beanstalk/AppStorage.sol";
-import "~/interfaces/IBean.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/beanstalk/ReentrancyGuard.sol";
-import "~/C.sol";
+import "contracts/beanstalk/AppStorage.sol";
+import "contracts/interfaces/IBean.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/beanstalk/ReentrancyGuard.sol";
+import "contracts/C.sol";
 
 /**
  * @author Publius

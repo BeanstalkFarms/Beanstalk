@@ -47,7 +47,7 @@ const TokenRow: FC<{
   isSelected = false,
   onMouseOver,
   onMouseOut,
-  onClick
+  onClick,
 }) => (
   <Row
     alignItems="flex-start"
@@ -73,18 +73,20 @@ const TokenRow: FC<{
           color={showColor ? color : 'transparent'}
           sx={{
             mt: '-2px',
-            ml: '-13px'
+            ml: '-13px',
           }}
         />
       )}
-      <Typography variant="body1" color="text.primary" sx={token ? { display: 'block' } : undefined}>
+      <Typography
+        variant="body1"
+        color="text.primary"
+        sx={token ? { display: 'block' } : undefined}
+      >
         {label}
       </Typography>
       {labelTooltip && (
         <Tooltip title={labelTooltip} placement="top">
-          <HelpOutlineIcon
-            sx={{ color: 'text.secondary', fontSize: '14px' }}
-          />
+          <HelpOutlineIcon sx={{ color: 'text.secondary', fontSize: '14px' }} />
         </Tooltip>
       )}
     </Row>

@@ -8,20 +8,21 @@ import { ActiveProposal } from '~/state/beanstalk/governance';
 import snapshotLogo from '~/img/ecosystem/snapshot-logo.svg';
 
 const useBanner = () => {
-  const activeProposals = useSelector<AppState, ActiveProposal[]>((state) => state._beanstalk.governance.activeProposals);
+  const activeProposals = useSelector<AppState, ActiveProposal[]>(
+    (state) => state._beanstalk.governance.activeProposals
+  );
   return useMemo(() => {
     if (activeProposals.length > 1) {
       return (
-        <Banner
-          height={BANNER_HEIGHT}
-          to="/governance"
-        >
+        <Banner height={BANNER_HEIGHT} to="/governance">
           <img
             src={snapshotLogo}
             alt="Snapshot"
             css={{ height: 14, marginBottom: -2 }}
-          />&nbsp;&nbsp;
-          {activeProposals.length} governance proposals are live.&nbsp;<strong>Vote now &rarr;</strong>
+          />
+          &nbsp;&nbsp;
+          {activeProposals.length} governance proposals are live.&nbsp;
+          <strong>Vote now &rarr;</strong>
         </Banner>
       );
     }
@@ -35,12 +36,15 @@ const useBanner = () => {
             src={snapshotLogo}
             alt="Snapshot"
             css={{ height: 14, marginBottom: -2 }}
-          />&nbsp;&nbsp;
+          />
+          &nbsp;&nbsp;
           <Box display={{ xs: 'inline', md: 'none' }}>
-            {activeProposals[0].title.substring(0, 35)}...&nbsp;<strong>Vote now &rarr;</strong>
+            {activeProposals[0].title.substring(0, 35)}...&nbsp;
+            <strong>Vote now &rarr;</strong>
           </Box>
           <Box display={{ xs: 'none', md: 'inline' }}>
-            {activeProposals[0].title} is live.&nbsp;<strong>Vote now &rarr;</strong>
+            {activeProposals[0].title} is live.&nbsp;
+            <strong>Vote now &rarr;</strong>
           </Box>
         </Banner>
       );

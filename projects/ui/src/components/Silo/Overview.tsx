@@ -27,7 +27,7 @@ import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
 
-const depositStats = (s: BigNumber, v: BigNumber[]) => (
+const depositStats = (s: BigNumber, v: BigNumber[], d: string) => (
   <Stat
     title="Value Deposited"
     titleTooltip={
@@ -41,6 +41,7 @@ const depositStats = (s: BigNumber, v: BigNumber[]) => (
     }
     color="primary"
     subtitle={`Season ${s.toString()}`}
+    secondSubtitle={d}
     amount={displayUSD(v[0])}
     amountIcon={undefined}
     gap={0.25}
@@ -48,11 +49,12 @@ const depositStats = (s: BigNumber, v: BigNumber[]) => (
   />
 );
 
-const seedsStats = (s: BigNumber, v: BigNumber[]) => (
+const seedsStats = (s: BigNumber, v: BigNumber[], d: string) => (
   <Stat
     title="Seed Balance"
     titleTooltip="Seeds are illiquid tokens that yield 1/10,000 Stalk each Season."
     subtitle={`Season ${s.toString()}`}
+    secondSubtitle={d}
     amount={displayStalk(v[0])}
     sx={{ minWidth: 180, ml: 0 }}
     amountIcon={undefined}
@@ -80,12 +82,13 @@ const Overview: FC<{
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
   const stalkStats = useCallback(
-    (s: BigNumber, v: BigNumber[]) => (
+    (s: BigNumber, v: BigNumber[], d: string) => (
       <>
         <Stat
           title="Stalk Balance"
           titleTooltip="Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs. Your Stalk is forfeited when you Withdraw your Deposited assets from the Silo."
           subtitle={`Season ${s.toString()}`}
+          secondSubtitle={d}
           amount={displayStalk(v[0])}
           color="text.primary"
           sx={{ minWidth: 220, ml: 0 }}
@@ -100,7 +103,7 @@ const Overview: FC<{
           sx={{ minWidth: 200, ml: 0 }}
         />
         <Stat
-          title="Stalk Grown per Day"
+          title="Grown Stalk per Day"
           titleTooltip="The number of Stalk your Seeds will grow every 24 Seasons based on your current Seed balance."
           amount={displayStalk(
             farmerSilo.seeds.active.times(STALK_PER_SEED_PER_SEASON).times(24)
@@ -153,6 +156,11 @@ const Overview: FC<{
             () => [breakdown.states.deposited.value],
             [breakdown.states.deposited.value]
           )}
+          date={
+            data.deposits[data.deposits.length - 1]
+              ? data.deposits[data.deposits.length - 1].date
+              : ''
+          }
           series={
             useMemo(() => [data.deposits], [data.deposits]) as BaseDataPoint[][]
           }
@@ -174,6 +182,11 @@ const Overview: FC<{
             ],
             [farmerSilo.stalk.active, ownership]
           )}
+          date={
+            data.stalk[data.stalk.length - 1]
+              ? data.stalk[data.stalk.length - 1].date
+              : ''
+          }
           series={useMemo(
             () => [
               data.stalk,
@@ -196,6 +209,11 @@ const Overview: FC<{
             [farmerSilo.seeds.active]
           )}
           series={useMemo(() => [data.seeds], [data.seeds])}
+          date={
+            data.seeds[data.seeds.length - 1]
+              ? data.seeds[data.seeds.length - 1].date
+              : ''
+          }
           season={season}
           stats={seedsStats}
           loading={loading}

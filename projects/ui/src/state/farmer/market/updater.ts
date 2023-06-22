@@ -12,65 +12,58 @@ import { resetFarmerMarket } from './actions';
 
 export const useFetchFarmerMarket = () => {
   /// Helpers
-  const dispatch  = useDispatch();
+  const dispatch = useDispatch();
 
   /// Contracts
   const beanstalk = useBeanstalkContract();
 
   /// Data
-  const account   = useAccount();
-  const blocks    = useBlocks();
+  const account = useAccount();
+  const blocks = useBlocks();
   const whitelist = useWhitelist();
-  const season    = useSeason();
+  const season = useSeason();
 
   /// Events
-  const getQueryFilters = useCallback<GetQueryFilters>((
-    _account,
-    fromBlock,
-    toBlock,
-  ) => [
-    beanstalk.queryFilter(
-      beanstalk.filters.PodListingCreated(_account),
-      fromBlock || blocks.BIP10_COMMITTED_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters['PodListingCancelled(address,uint256)'](_account),
-      fromBlock || blocks.BIP10_COMMITTED_BLOCK,
-      toBlock   || 'latest',
-    ),
-    // this account had a listing filled
-    beanstalk.queryFilter(
-      beanstalk.filters.PodListingFilled(null, _account), // to
-      fromBlock || blocks.BIP10_COMMITTED_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters.PodOrderCreated(_account), 
-      fromBlock || blocks.BIP10_COMMITTED_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters.PodOrderCancelled(_account), 
-      fromBlock || blocks.BIP10_COMMITTED_BLOCK,
-      toBlock   || 'latest',
-    ),
-    beanstalk.queryFilter(
-      beanstalk.filters.PodOrderFilled(null, _account), // to
-      fromBlock || blocks.BIP10_COMMITTED_BLOCK,
-      toBlock   || 'latest',
-    ),
-  ], [
-    blocks,
-    beanstalk,
-  ]);
-  
+  const getQueryFilters = useCallback<GetQueryFilters>(
+    (_account, fromBlock, toBlock) => [
+      beanstalk.queryFilter(
+        beanstalk.filters.PodListingCreated(_account),
+        fromBlock || blocks.BIP10_COMMITTED_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters['PodListingCancelled(address,uint256)'](_account),
+        fromBlock || blocks.BIP10_COMMITTED_BLOCK,
+        toBlock || 'latest'
+      ),
+      // this account had a listing filled
+      beanstalk.queryFilter(
+        beanstalk.filters.PodListingFilled(null, _account), // to
+        fromBlock || blocks.BIP10_COMMITTED_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters.PodOrderCreated(_account),
+        fromBlock || blocks.BIP10_COMMITTED_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters.PodOrderCancelled(_account),
+        fromBlock || blocks.BIP10_COMMITTED_BLOCK,
+        toBlock || 'latest'
+      ),
+      beanstalk.queryFilter(
+        beanstalk.filters.PodOrderFilled(null, _account), // to
+        fromBlock || blocks.BIP10_COMMITTED_BLOCK,
+        toBlock || 'latest'
+      ),
+    ],
+    [blocks, beanstalk]
+  );
+
   const [fetchMarketEvents] = useEvents(EventCacheName.MARKET, getQueryFilters);
 
-  const initialized = (
-    account
-    && fetchMarketEvents
-  );
+  const initialized = account && fetchMarketEvents;
 
   /// Handlers
   const fetch = useCallback(async () => {
@@ -79,7 +72,6 @@ export const useFetchFarmerMarket = () => {
     //   if (!allEvents) return;
     //   const p = new EventProcessor(account, { season, whitelist });
     //   p.ingestAll(allEvents);
-
     //   // Update Field
     //   dispatch(updateFarmerMarket({
     //     listings: p.listings,
@@ -87,7 +79,7 @@ export const useFetchFarmerMarket = () => {
     //   }));
     // }
   }, []);
-  
+
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerSilo] CLEAR');
     dispatch(resetFarmerMarket());

@@ -10,7 +10,7 @@ import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
 import {AppStorage} from "../beanstalk/AppStorage.sol";
 import "../C.sol";
-import "~/beanstalk/init/InitWhitelist.sol";
+import "contracts/beanstalk/init/InitWhitelist.sol";
 
 /**
  * @author Publius

@@ -115,6 +115,18 @@ describe('Ownership', function () {
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
       await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith("Token not whitelisted");
     });
+
+    it('reverts on whitelisting token with bad selector', async function () {
+      await expect(this.whitelist.connect(owner).whitelistToken(
+        this.siloToken.address,
+        '0x00000000',
+        '10000',
+        '1')).to.be.revertedWith("Invalid selector");
+    });
+
+    it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
+      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith("Token not whitelisted");
+    });
   })
 
   describe('update stalk per bdv per season for token', async function () {

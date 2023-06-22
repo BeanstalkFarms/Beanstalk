@@ -48,7 +48,7 @@ type ChartStyleConfig = {
   strokeWidth: number;
 };
 
-type ChartSharedValuesProps = {
+export type ChartSharedValuesProps = {
   strokeBuffer: number;
   margin: { top: number; bottom: number; left: number; right: number };
   chartPadding: { right: number };
@@ -142,7 +142,11 @@ export type BaseChartProps = {
   stackedArea?: boolean;
   tooltip?: boolean | (({ d }: { d?: BaseDataPoint[] }) => JSX.Element | null);
   getDisplayValue: (v: BaseDataPoint[]) => number;
-  onCursor?: (season: number | undefined, v?: number | undefined) => void;
+  onCursor?: (
+    season: number | undefined,
+    v?: number | undefined,
+    date?: Date | undefined
+  ) => void;
   children?: (props: ChartChildParams) => React.ReactElement | null;
   yTickFormat?: TickFormatter<NumberLike>;
   formatValue?: (value: number) => string | JSX.Element;

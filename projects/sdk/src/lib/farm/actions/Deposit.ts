@@ -6,7 +6,7 @@ import { Token } from "src/classes/Token";
 export class Deposit extends StepClass<BasicPreparedResult> {
   public name: string = "deposit";
 
-  constructor(private token: Token, private fromMode: FarmFromMode = FarmFromMode.INTERNAL_EXTERNAL) {
+  constructor(public readonly token: Token, public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL_EXTERNAL) {
     super();
   }
 

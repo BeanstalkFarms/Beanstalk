@@ -5,15 +5,15 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/C.sol";
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
-import "~/libraries/Silo/LibSiloPermit.sol";
-import "~/libraries/Silo/LibLegacyTokenSilo.sol";
+import "contracts/C.sol";
+import "contracts/libraries/Silo/LibSilo.sol";
+import "contracts/libraries/Silo/LibTokenSilo.sol";
+import "contracts/libraries/Silo/LibSiloPermit.sol";
+import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
 import "./SiloFacet/Silo.sol";
 import "./SiloFacet/TokenSilo.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/Convert/LibConvert.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/Convert/LibConvert.sol";
 import "../ReentrancyGuard.sol";
 
 /**
@@ -59,8 +59,6 @@ contract ApprovalFacet is ReentrancyGuard {
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     *
-     * FIXME(doc): why does this return `true`?
      */
     function increaseDepositAllowance(
         address spender,
@@ -82,8 +80,6 @@ contract ApprovalFacet is ReentrancyGuard {
      * @dev Gas optimization: We neglect to check whether `token` is actually
      * whitelisted. If a token is not whitelisted, it cannot be Deposited,
      * therefore it cannot be Transferred.
-     * 
-     * FIXME(doc): why does this return `true`?
      */
     function decreaseDepositAllowance(
         address spender,

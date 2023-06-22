@@ -142,7 +142,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(toBean('100'));
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq(toBean('100'));
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('100634476734756985505');
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(toBean('100'));
           //expect(await this.silo.totalSeeds()).to.eq(toBean('600'));
           expect(await this.silo.totalStalk()).to.eq(toStalk('200'));
         });
@@ -195,7 +197,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(toBean('100'));
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq(toBean('100'));
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('200832430692705624354');
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(toBean('200'));
           //expect(await this.silo.totalSeeds()).to.eq(toBean('1000'));
           expect(await this.silo.totalStalk()).to.eq(toStalk('300'));
         });
@@ -242,7 +246,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(toBean('0'));
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq(toBean('0'));
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('200832430692705624354');
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('200'));
           //expect(await this.silo.totalSeeds()).to.eq(toBean('800'));
           expect(await this.silo.totalStalk()).to.eq(toStalk('200'));
         });
@@ -292,7 +298,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(toBean('0'));
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq(toBean('0'));
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('200832430692705624354');
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('200'));
           //expect(await this.silo.totalSeeds()).to.eq(toBean('800'));
           expect(await this.silo.totalStalk()).to.eq(toStalk('200.08'));
         });
@@ -343,7 +351,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(toBean('0'));
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq(toBean('0'));
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('200832430692705624354');
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('200'));
           //expect(await this.silo.totalSeeds()).to.eq(toBean('800'));
           expect(await this.silo.totalStalk()).to.eq(toStalk('200.08'));
         });
@@ -424,7 +434,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('100618167');
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq('100618167');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('900'));
           //expect(await this.silo.totalSeeds()).to.eq('3801236334');
           expect(await this.silo.totalStalk()).to.eq('10006181670000');
         });
@@ -480,7 +492,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('200018189');
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq('200018189');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq('800814241685186471402');
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq('800814242');
           //expect(await this.silo.totalSeeds()).to.eq('3603293346');
           expect(await this.silo.totalStalk()).to.eq('10008324310000');
         });
@@ -533,7 +547,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('100618167');
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq('100618167');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('900'));
 
           // the seasons value for total stalk here was 10009982906334, because you would have
           // lost stalk when the deposit would have required a negative season
@@ -587,7 +603,9 @@ describe('Curve Convert', function () {
 
         it('properly updates total values', async function () {
           expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq('100618167');
+          expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq('100618167');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
+          expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('900'));
           expect(await this.silo.totalStalk()).to.eq('10008082288167'); //updated from 10007981670000 for season based system
         });
 

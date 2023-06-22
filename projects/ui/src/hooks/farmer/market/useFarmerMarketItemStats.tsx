@@ -20,10 +20,10 @@ export default function useFarmerMarketItemStats(
     }
 
     const items: { label: string; info: string }[] = [];
-    
+
     items.push({
       label: 'ID',
-      info: isOrder(item) ? item.id.substring(0,8) : item.id
+      info: isOrder(item) ? item.id.substring(0, 8) : item.id,
     });
 
     items.push({
@@ -50,9 +50,7 @@ export default function useFarmerMarketItemStats(
     }
     items.push({
       label: 'PLACE IN LINE',
-      info: `${isOrder(item) ? '0 - ' : ''}${displayBN(
-        item.placeInLine
-      )} PODS`,
+      info: `${isOrder(item) ? '0 - ' : ''}${displayBN(item.placeInLine)} PODS`,
     });
     if (isListing(item)) {
       items.push({

@@ -9,38 +9,37 @@ import "../../C.sol";
 import "./LibSilo.sol";
 import "./LibUnripeSilo.sol";
 import "../LibAppStorage.sol";
-import {LibSafeMathSigned128} from "~/libraries/LibSafeMathSigned128.sol";
+import {LibSafeMathSigned128} from "contracts/libraries/LibSafeMathSigned128.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {LibBytes} from "~/libraries/LibBytes.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 /**
  * @title LibLegacyTokenSilo
- * @author Publius
- * @notice Contains functions for depositing, withdrawing and claiming
- * whitelisted Silo tokens.
- *
- * For functionality related to Seeds, Stalk, and Roots, see {LibSilo}.
+ * @author Publius, pizzaman1337
+ * @notice Contains legacy silo logic, used for migrating to the
+ * new SiloV3 stems-based system, and for claiming in-flight withdrawals
+ * from the old silo system.
+ * 
+ * After all Silos are migrated to V3 and all deposits are claimed, this 
+ * library should no longer be necessary.
  */
 library LibLegacyTokenSilo {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMathSigned128 for int128;
     using LibSafeMathSigned96 for int96;
+    using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
 
     //TODO: verify and update this root on launch if there's more drift
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
-    bytes32 constant DISCREPANCY_MERKLE_ROOT = 0xb81b71efcfb245c4d596e20e403b2a6f70c05c68f59a5e57083881eacacc9671;
+    bytes32 constant DISCREPANCY_MERKLE_ROOT = 0xa84dc86252c556839dff46b290f0c401088a65584aa38a163b6b3f7dd7a5b0e8;
+    uint32 constant ENROOT_FIX_SEASON = 12793; //season in which enroot ebip-8 fix was deployed
 
-    //important to note that this event is only here for unit tests purposes of legacy code and to ensure unripe all works with new bdv system
-    event AddDeposit(
-        address indexed account,
-        address indexed token,
-        uint32 season,
-        uint256 amount,
-        uint256 bdv
-    );
 
     //this is the legacy seasons-based remove deposits event, emitted on migration
     event RemoveDeposit(
@@ -127,16 +126,24 @@ library LibLegacyTokenSilo {
             s.a[account].legacyDeposits[token][season].bdv
         );
 
-        // Partial remove
+        // If amount to remove is greater than the amount in the Deposit, migrate legacy Deposit to new Deposit
+        if (amount > crateAmount) {
+            // If Unripe Deposit, fetch whole Deposit balance and delete legacy deposit references.
+            if (LibUnripeSilo.isUnripeBean(token)) {
+                (crateAmount, crateBDV) = LibUnripeSilo.unripeBeanDeposit(account, season);
+                LibUnripeSilo.removeLegacyUnripeBeanDeposit(account, season);
+            } else if (LibUnripeSilo.isUnripeLP(token)) {
+                (crateAmount, crateBDV) = LibUnripeSilo.unripeLPDeposit(account, season);
+                LibUnripeSilo.removeLegacyUnripeLPDeposit(account, season);
+            }
+            require(crateAmount >= amount, "Silo: Crate balance too low.");
+        }
+
+        // Partial Withdraw
         if (amount < crateAmount) {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            uint256 updatedBDV = uint256(
-                s.a[account].legacyDeposits[token][season].bdv
-            ).sub(removedBDV);
-            uint256 updatedAmount = uint256(
-                s.a[account].legacyDeposits[token][season].amount
-            ).sub(amount);
-
+            uint256 updatedBDV = crateBDV.sub(removedBDV);
+            uint256 updatedAmount = crateAmount.sub(amount);
             require(
                 updatedBDV <= uint128(-1) && updatedAmount <= uint128(-1),
                 "Silo: uint128 overflow."
@@ -152,35 +159,8 @@ library LibLegacyTokenSilo {
             return removedBDV;
         }
 
-        // Full remove
-        if (crateAmount > 0) delete s.a[account].legacyDeposits[token][season];
-
-        // Excess remove
-        // This can only occur for Unripe Beans and Unripe LP Tokens, and is a
-        // result of using Silo V1 storage slots to store Unripe BEAN/LP
-        // Deposit information. See {AppStorage.sol:Account-State}.
-        if (amount > crateAmount) {
-            amount -= crateAmount;
-            if (LibUnripeSilo.isUnripeBean(token))
-                return
-                    crateBDV.add(
-                        LibUnripeSilo.removeUnripeBeanDeposit(
-                            account,
-                            season,
-                            amount
-                        )
-                    );
-            else if (LibUnripeSilo.isUnripeLP(token))
-                return
-                    crateBDV.add(
-                        LibUnripeSilo.removeUnripeLPDeposit(
-                            account,
-                            season,
-                            amount
-                        )
-                    );
-            revert("Silo: Crate balance too low.");
-        }
+        // Full Remove
+        delete s.a[account].legacyDeposits[token][season];
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -204,11 +184,13 @@ library LibLegacyTokenSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         uint32 stemStartSeason = uint32(s.season.stemStartSeason);
+        uint32 lastUpdate = s.a[account].lastUpdate;
 
+        if (lastUpdate > stemStartSeason) return 0; 
         return
             stalkReward(
                 s.a[account].s.seeds,
-                s.a[account].lastUpdate-stemStartSeason
+                stemStartSeason.sub(lastUpdate)
             );
     }
 
@@ -240,29 +222,6 @@ library LibLegacyTokenSilo {
     }
 
     /** 
-     * @notice Determines if the given stem corresponds to a seasons-based deposit
-     * @param seedsPerBdv Seeds per bdv for the token you want to see if the stem corresponds
-     * to a seasons-based deposit for
-     * @param season The season you want to to see if the stem corresponds to a seasons-based deposit
-     *
-     * @dev This function was used when support for accessing old deposits without requiring migration
-     * was supported, after support was removed this function is no longer necessary.
-     */
-    /*function isDepositSeason(uint256 seedsPerBdv, int96 stem)
-        internal
-        pure
-        returns (bool)
-    {
-        if (seedsPerBdv == 0) {
-            return false; //shortcut since we know it's a newer token?
-        }
-        
-        return
-            stem <= 0 && //old deposits in seasons will have a negative grown stalk per bdv
-            uint256(-stem) % seedsPerBdv == 0;
-    }*/
-
-    /** 
      * @notice Calculates stem based on input season
      * @param seedsPerBdv Seeds per bdv for the token you want to find the corresponding stem for
      * @param season The season you want to find the corresponding stem for
@@ -284,28 +243,8 @@ library LibLegacyTokenSilo {
         //negative grown stalk index.
 
         //find the difference between the input season and the Silo v3 epoch season
-        //using regular - here because we want it to overflow negative
-        stem = (int96(season)-int96(s.season.stemStartSeason)).mul(int96(seedsPerBdv));
+        stem = (int96(season).sub(int96(s.season.stemStartSeason))).mul(int96(seedsPerBdv));
     }
-
-    //this function was used for some testing at some point, but there are currently
-    //no unit tests that use it. Leaving it here for now in case we need it later.
-    // function stemToSeason(uint256 seedsPerBdv, int128 stem)
-    //     internal
-    //     view
-    //     returns (uint32 season)
-    // {
-    //     // require(stem > 0);
-    //     AppStorage storage s = LibAppStorage.diamondStorage();
-    //     // uint256 seedsPerBdv = getSeedsPerToken(address(token));
-
-    //     require(seedsPerBdv > 0, "Silo: Token not supported");
-
-    //     int128 diff = stem.div(int128(seedsPerBdv));
-    //     //using regular + here becauase we want to "overflow" (which for signed just means add negative)
-    //     season = uint256(int128(s.season.stemStartSeason)+diff).toUint32();
-    //     // season = seasonAs256.toUint32();
-    // }
 
     /** 
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
@@ -323,7 +262,6 @@ library LibLegacyTokenSilo {
 
         s.a[account].lastUpdate = s.season.stemStartSeason;
     }
-
 
     /** 
      * @notice Migrates farmer's deposits from old (seasons based) to new silo (stems based).
@@ -349,20 +287,15 @@ library LibLegacyTokenSilo {
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
     ) internal returns (uint256) {
-        //typically a migrationNeeded should be enough to allow the user to migrate, however
-        //for Unripe unit testing convenience, (Update Unripe Deposit -> "1 deposit, some", 
-        //"1 deposit after 1 season, all", and "2 deposit, all" tests), they cannot migrate
-        //since the test expects to add a Legacy deposit (which updates lastUpdated) and
-        //migrate in the same season, which doesn't work since lastUpdated is updated
-        //on deposit. By allow migration if balanceOfSeeds > 0, everything works smoothly.
-        //You would never be able to migrate twice since the old deposits would be removed already,
-        //and balanceOfSeeds would be 0 on 2nd migration attempt.
+        //The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
+        //in the same Season as BIP execution. Such that s.a[account].lastUpdate == s.season.stemStartSeason,
+        //but they have not migrated yet
         require((LibSilo.migrationNeeded(account) || balanceOfSeeds(account) > 0), "no migration needed");
 
 
         //do a legacy mow using the old silo seasons deposits
-        updateLastUpdateToNow(account);
         LibSilo.mintGrownStalk(account, balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        updateLastUpdateToNow(account);
         //at this point we've completed the guts of the old mow function, now we need to do the migration
  
         MigrateData memory migrateData;
@@ -376,7 +309,7 @@ library LibLegacyTokenSilo {
             for (uint256 j = 0; j < seasons[i].length; j++) {
                 PerDepositData memory perDepositData;
                 perDepositData.season = seasons[i][j];
-                perDepositData.amount = uint128(amounts[i][j]);
+                perDepositData.amount = amounts[i][j].toUint128();
  
                 if (perDepositData.amount == 0) {
                     // skip deposit calculations if amount deposited in deposit is 0
@@ -393,21 +326,21 @@ library LibLegacyTokenSilo {
  
                 //calculate how much stalk has grown for this deposit
                 perDepositData.grownStalk = _calcGrownStalkForDeposit(
-                    crateBDV * getSeedsPerToken(address(perTokenData.token)),
+                    crateBDV.mul(getSeedsPerToken(address(perTokenData.token))),
                     perDepositData.season
                 );
  
                 // also need to calculate how much stalk has grown since the migration
-                uint128 stalkGrownSinceStemStartSeason = uint128(LibSilo.stalkReward(0, perTokenData.stemTip, uint128(crateBDV)));
-                perDepositData.grownStalk += stalkGrownSinceStemStartSeason;
-                migrateData.totalGrownStalk += stalkGrownSinceStemStartSeason;
+                uint128 stalkGrownSinceStemStartSeason = LibSilo.stalkReward(0, perTokenData.stemTip, crateBDV.toUint128()).toUint128();
+                perDepositData.grownStalk = perDepositData.grownStalk.add(stalkGrownSinceStemStartSeason);
+                migrateData.totalGrownStalk = migrateData.totalGrownStalk.add(stalkGrownSinceStemStartSeason);
  
                 // add to new silo
                 LibTokenSilo.addDepositToAccount(
                     account, 
                     perTokenData.token, 
                     LibTokenSilo.grownStalkAndBdvToStem(
-                        IERC20(perTokenData.token), 
+                        perTokenData.token, 
                         perDepositData.grownStalk,
                         crateBDV
                     ), 
@@ -415,9 +348,12 @@ library LibLegacyTokenSilo {
                     crateBDV,
                     LibTokenSilo.Transfer.emitTransferSingle
                 );
+
+                // Include Deposit in the total Deposited BDV.
+                LibTokenSilo.incrementTotalDepositedBdv(perTokenData.token, crateBDV);
  
                 // add to running total of seeds
-                migrateData.totalSeeds += uint128(uint256(crateBDV) * getSeedsPerToken(address(perTokenData.token)));
+                migrateData.totalSeeds = migrateData.totalSeeds.add(crateBDV.mul(getSeedsPerToken(address(perTokenData.token))).toUint128());
 
                 // emit legacy RemoveDeposit event
                 emit RemoveDeposit(account, perTokenData.token, perDepositData.season, perDepositData.amount);
@@ -450,21 +386,28 @@ library LibLegacyTokenSilo {
                 "UnripeClaim: invalid proof"
             );
         }
-        
+
         //make sure seedsVariance equals seedsDiff input
         require(seedsVariance == seedsDiff, "seeds misalignment, double check submitted deposits");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        //emit that all their seeds are gone, note need to take into account seedsDiff
+        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
 
         //and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
 
-        //emit that all their seeds are gone
-        emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
+        //stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
+        //the amount of stalk that has grown since then
+        if (seedsDiff > 0) {
+            uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON)).mul(seedsDiff).add(stalkDiff);
 
-        //emit the stalk variance
-        emit StalkBalanceChanged(account, -int256(stalkDiff), 0);
+            //emit the stalk variance
+            if (currentStalkDiff > 0) {
+                LibSilo.burnStalk(account, currentStalkDiff);
+            }
+        }
     }
 
     /**

@@ -7,31 +7,27 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "~/beanstalk/ReentrancyGuard.sol";
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
-import "~/libraries/Silo/LibLegacyTokenSilo.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibSafeMath128.sol";
-import "~/libraries/LibPRBMath.sol";
-import "~/C.sol";
+import "contracts/beanstalk/ReentrancyGuard.sol";
+import "contracts/libraries/Silo/LibSilo.sol";
+import "contracts/libraries/Silo/LibTokenSilo.sol";
+import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/C.sol";
 
 /**
- * @title SiloExit, Brean
- * @author Publius
+ * @title SiloExit
+ * @author Publius, Brean, Pizzaman1337
  * @notice Exposes public view functions for Silo total balances, account
  * balances, account update history, and Season of Plenty (SOP) balances.
  *
- * Provieds utility functions like {_season} for upstream usage throughout
+ * Provides utility functions like {_season} for upstream usage throughout
  * SiloFacet.
  */
 contract SiloExit is ReentrancyGuard {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
-    using LibPRBMath for uint256;
-
-    uint256 constant private EARNED_BEAN_VESTING_BLOCKS = 25; //  5 minutes
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -112,7 +108,8 @@ contract SiloExit is ReentrancyGuard {
      * Roots are used to calculate Earned Bean, Earned Stalk and Plantable Seed
      * balances.
      *
-     * FIXME(doc): how do Roots relate to Raining?
+     * When a Flood occurs, Plenty is distributed based on a Farmer's balance 
+     * of Roots when it started Raining.
      */
     function balanceOfRoots(address account) public view returns (uint256) {
         return s.a[account].roots;
@@ -138,6 +135,24 @@ contract SiloExit is ReentrancyGuard {
             );
     }
 
+    /**
+     * @notice Returns the balance of Grown Stalk for a single deposit of `token`
+     * in `stem` for `account`. Grown Stalk is earned each Season from BDV and
+     * must be Mown via `SiloFacet-mow` to apply it to a user's balance.
+     *
+     * @dev This passes in the last stem the user mowed at and the current stem
+     */
+    function grownStalkForDeposit(
+        address account,
+        address token,
+        int96 stem
+    )
+        public
+        view
+        returns (uint grownStalk)
+    {
+        return LibTokenSilo.grownStalkForDeposit(account, token, stem);
+    }
     
     /**
      * @notice Returns the balance of Earned Beans for `account`. Earned Beans
@@ -169,18 +184,14 @@ contract SiloExit is ReentrancyGuard {
         if (s.s.roots == 0) return 0;
 
         uint256 stalk;
-        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
-            stalk = s.s.stalk.sub(s.newEarnedStalk).mulDiv(
-                s.a[account].roots.add(s.a[account].deltaRoots), // add the delta roots of the user
-                s.s.roots.add(s.vestingPeriodRoots), // add delta of global roots 
-                LibPRBMath.Rounding.Up
-            );
+        if(LibSilo.inVestingPeriod()){
+            stalk = s.s.stalk.sub(s.newEarnedStalk)
+                .mul(s.a[account].roots.add(s.a[account].deltaRoots)) // add the delta roots of the user
+                .div(s.s.roots.add(s.vestingPeriodRoots)); // add delta of global roots 
         } else {
-            stalk = s.s.stalk.mulDiv(
-                s.a[account].roots,
-                s.s.roots,
-                LibPRBMath.Rounding.Up
-            );
+            stalk = s.s.stalk
+                .mul(s.a[account].roots)
+                .div(s.s.roots);
         }
         
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
@@ -190,7 +201,7 @@ contract SiloExit is ReentrancyGuard {
         if (stalk <= accountStalk) return 0;
 
         // Calculate Earned Stalk and convert to Earned Beans.
-        beans = (stalk - accountStalk).div(C.getStalkPerBean()); // Note: SafeMath is redundant here.
+        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN); // Note: SafeMath is redundant here.
         if (beans > s.earnedBeans) return s.earnedBeans;
 
         return beans;
@@ -207,7 +218,7 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256)
     {
-        return balanceOfEarnedBeans(account).mul(C.getStalkPerBean());
+        return balanceOfEarnedBeans(account).mul(C.STALK_PER_BEAN);
     }
 
     //////////////////////// SEASON OF PLENTY ////////////////////////
@@ -259,6 +270,17 @@ contract SiloExit is ReentrancyGuard {
 
     //////////////////////// STEM ////////////////////////
 
+    /**
+     * @notice Returns the "stemTip" for a given token.
+     * @dev the stemTip is the Cumulative Grown Stalk Per BDV 
+     * of a given deposited asset since whitelist. 
+     * 
+     * note that a deposit for a given asset may have 
+     * a higher Grown Stalk Per BDV than the stemTip.
+     * 
+     * This can occur when a deposit is converted from an asset
+     * with a larger seeds per BDV, to a lower seeds per BDV.
+     */
     function stemTipForToken(address token)
         public
         view
@@ -270,7 +292,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev given the season/token, returns the stem assoicated with that deposit.
+     * @notice given the season/token, returns the stem assoicated with that deposit.
      * kept for legacy reasons. 
      */
     function seasonToStem(address token, uint32 season)
@@ -283,7 +305,7 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev returns the seeds per token, for legacy tokens.
+     * @notice returns the seeds per token, for legacy tokens.
      * calling with an non-legacy token will return 0, 
      * even after the token is whitelisted.
      * kept for legacy reasons. 
@@ -293,27 +315,34 @@ contract SiloExit is ReentrancyGuard {
     }
 
     /**
-     * @dev returns the season in which beanstalk initalized siloV3.
+     * @notice returns the season in which beanstalk initalized siloV3.
      */
     function stemStartSeason() public view virtual returns (uint16) {
         return s.season.stemStartSeason;
     }
 
-
+    /**
+     * @notice returns whether an account needs to migrate to siloV3.
+     */
     function migrationNeeded(address account) public view returns (bool) {
         return LibSilo.migrationNeeded(account);
     }
 
     /**
-     * @dev returns whether beanstalk is in the vesting period or not.
+     * @notice Returns true if Earned Beans from the previous
+     * Sunrise call are still vesting. 
+     * 
+     * Vesting Earned Beans cannot be received via `plant()` 
+     * until the vesting period is over, and will be forfeited 
+     * if a farmer withdraws during the vesting period. 
      */
-    function inVestingPeriod() public view returns (bool){
+    function inVestingPeriod() public view returns (bool) {
         return LibSilo.inVestingPeriod();
     }
     //////////////////////// INTERNAL ////////////////////////
 
     /**
-     * @dev Returns the current Season number.
+     * @notice Returns the current Season number.
      */
     function _season() internal view returns (uint32) {
         return s.season.current;

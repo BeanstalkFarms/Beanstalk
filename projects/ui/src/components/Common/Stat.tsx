@@ -4,7 +4,7 @@ import {
   TypographyProps,
   StackProps,
   Tooltip,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -28,6 +28,8 @@ export type StatProps = {
   amountTooltip?: JSX.Element | string;
   /** Subtext shown below the statistic (ex. "Season X") */
   subtitle?: JSX.Element | string;
+  /** Subtext shown below the subtitle */
+  secondSubtitle?: JSX.Element | string;
   /** Typography variant to use (default: h1) */
   variant?: TypographyProps['variant'];
   /** Typography styles */
@@ -46,6 +48,7 @@ const Stat: FC<StatProps> = ({
   amountIcon,
   amountTooltip = '',
   subtitle,
+  secondSubtitle,
   // Typography
   sx,
   variant = 'h2',
@@ -53,7 +56,6 @@ const Stat: FC<StatProps> = ({
   // Stack
   gap = 1,
 }) => {
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -61,11 +63,18 @@ const Stat: FC<StatProps> = ({
     <Stack gap={gap}>
       {/* Title */}
       <Row gap={0.5}>
-        {titleIcon && (<Typography><> {titleIcon}</></Typography>)}
+        {titleIcon && (
+          <Typography>
+            <> {titleIcon}</>
+          </Typography>
+        )}
         <Typography variant="body1">
           {title}
           {titleTooltip && (
-            <Tooltip title={titleTooltip} placement={isMobile ? "top" : "right" }>
+            <Tooltip
+              title={titleTooltip}
+              placement={isMobile ? 'top' : 'right'}
+            >
               <HelpOutlineIcon
                 sx={{
                   color: 'text.secondary',
@@ -91,6 +100,12 @@ const Stat: FC<StatProps> = ({
       {subtitle !== undefined && (
         <Typography variant="bodySmall" color="text.primary">
           {subtitle}
+        </Typography>
+      )}
+      {/* Second Subtitle */}
+      {secondSubtitle !== undefined && (
+        <Typography variant="bodySmall" color="text.primary">
+          {secondSubtitle}
         </Typography>
       )}
     </Stack>

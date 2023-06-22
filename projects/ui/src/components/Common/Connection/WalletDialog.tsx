@@ -1,9 +1,5 @@
 import React, { useCallback } from 'react';
-import {
-  Connector,
-  useAccount as useWagmiAccount,
-  useConnect,
-} from 'wagmi';
+import { Connector, useAccount as useWagmiAccount, useConnect } from 'wagmi';
 import {
   Alert,
   Button,
@@ -29,11 +25,10 @@ const WalletDialog: FC<{
   fullScreen: boolean;
 }> = ({ handleClose, open, fullScreen }) => {
   const { isConnecting } = useWagmiAccount();
-  const { connect, connectors, error, pendingConnector } =
-    useConnect({
-      onSuccess() {
-        handleClose();
-      }
+  const { connect, connectors, error, pendingConnector } = useConnect({
+    onSuccess() {
+      handleClose();
+    },
   });
   const handleConnect = useCallback(
     (connector: Connector) => () => connect({ connector }),
@@ -46,7 +41,7 @@ const WalletDialog: FC<{
       </StyledDialogTitle>
       <StyledDialogContent sx={{ pb: 1 }}>
         <Stack gap={1} mt={0.5}>
-          {connectors.map((connector) => (
+          {connectors.map((connector) =>
             // MetaMaskConnector extends InjectedConnector
             // Injected wallets like Rabby pretend to be MetaMask and so they show up twice
             // If you override the injected connector name it applies to all connectors, even
@@ -55,48 +50,56 @@ const WalletDialog: FC<{
             //    it must be an InjectedConnector. The user could connect to this wallet by clicking MetaMask.
             //    So we hide it from the list.
             // FIXME: "cannot redefine property: etherum"
-            (!connector.ready || (connector.name === 'MetaMask' && !(connector instanceof MetaMaskConnector)))
-              ? null
-              : (
-                <Button
-                  size="large"
-                  variant="outlined"
-                  color="primary"
-                  key={connector.id}
-                  disabled={!connector.ready}
-                  onClick={handleConnect(connector)}
-                  sx={{
-                    py: 1,
-                    minWidth: fullScreen ? null : 400,
-                    borderColor: grey[300]
-                  }}
+            !connector.ready ||
+            (connector.name === 'MetaMask' &&
+              !(connector instanceof MetaMaskConnector)) ? null : (
+              <Button
+                size="large"
+                variant="outlined"
+                color="primary"
+                key={connector.id}
+                disabled={!connector.ready}
+                onClick={handleConnect(connector)}
+                sx={{
+                  py: 1,
+                  minWidth: fullScreen ? null : 400,
+                  borderColor: grey[300],
+                }}
+              >
+                <Row
+                  justifyContent="space-between"
+                  sx={{ width: '100%' }}
+                  gap={3}
                 >
-                  <Row justifyContent="space-between" sx={{ width: '100%' }} gap={3}>
-                    <Typography color="text.primary" sx={{ fontSize: 20 }}>
-                      {isConnecting && (connector.id === pendingConnector?.id)
-                        ? <CircularProgress variant="indeterminate" color="primary" size={20} />
-                        : connector.name}
-                    </Typography>
-                    {CONNECTOR_LOGOS[connector.name] ? (
-                      <img
-                        src={CONNECTOR_LOGOS[connector.name]}
-                        alt=""
-                        css={{ height: 35 }}
+                  <Typography color="text.primary" sx={{ fontSize: 20 }}>
+                    {isConnecting && connector.id === pendingConnector?.id ? (
+                      <CircularProgress
+                        variant="indeterminate"
+                        color="primary"
+                        size={20}
                       />
                     ) : (
-                      <img
-                        src={ethereumLogo}
-                        alt=""
-                        css={{ height: 35 }}
-                      />
+                      connector.name
                     )}
-                  </Row>
-                </Button>
-              )
-          ))}
+                  </Typography>
+                  {CONNECTOR_LOGOS[connector.name] ? (
+                    <img
+                      src={CONNECTOR_LOGOS[connector.name]}
+                      alt=""
+                      css={{ height: 35 }}
+                    />
+                  ) : (
+                    <img src={ethereumLogo} alt="" css={{ height: 35 }} />
+                  )}
+                </Row>
+              </Button>
+            )
+          )}
           {error && (
             <Alert severity="error">
-              {CONNECT_WALLET_ERRORS[error.name || error.message]?.(pendingConnector) || `Error: ${error.message}`}
+              {CONNECT_WALLET_ERRORS[error.name || error.message]?.(
+                pendingConnector
+              ) || `Error: ${error.message}`}
             </Alert>
           )}
         </Stack>

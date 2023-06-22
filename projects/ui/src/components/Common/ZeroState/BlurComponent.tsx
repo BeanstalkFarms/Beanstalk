@@ -5,7 +5,12 @@ import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { hexToRgba } from '~/util/UI';
 
-const BlurComponent : FC<StackProps & { blur?: number; opacity?: number }> = ({ children, opacity = 0.4, blur = 8, sx }) => (
+const BlurComponent: FC<StackProps & { blur?: number; opacity?: number }> = ({
+  children,
+  opacity = 0.4,
+  blur = 8,
+  sx,
+}) => (
   <Stack
     sx={{
       width: '100%',
@@ -17,7 +22,7 @@ const BlurComponent : FC<StackProps & { blur?: number; opacity?: number }> = ({ 
       backdropFilter: `blur(${blur}px)`,
       zIndex: 999,
       textAlign: 'center',
-      ...sx
+      ...sx,
     }}
     alignItems="center"
     justifyContent="center"

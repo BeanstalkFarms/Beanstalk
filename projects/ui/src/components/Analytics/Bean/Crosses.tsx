@@ -1,27 +1,34 @@
 import React from 'react';
 import { tickFormatLocale } from '~/components/Analytics/formatters';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
-import SeasonPlot, { SeasonPlotBaseProps } from '~/components/Common/Charts/SeasonPlot';
-import { SeasonalCrossesDocument, SeasonalCrossesQuery } from '~/generated/graphql';
+import SeasonPlot, {
+  SeasonPlotBaseProps,
+} from '~/components/Common/Charts/SeasonPlot';
+import {
+  SeasonalCrossesDocument,
+  SeasonalCrossesQuery,
+} from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
 
-const getValue = (season: SnapshotData<SeasonalCrossesQuery>) => season.totalCrosses;
+const getValue = (season: SnapshotData<SeasonalCrossesQuery>) => season.crosses;
 const formatValue = (value: number) => `${value}`;
 const statProps = {
   title: 'Peg Crosses',
-  titleTooltip: 'The number of times Bean has crossed its peg.',
+  titleTooltip: 'The number of times Bean has crossed its peg. Does not include peg crosses due to ETH price movement.',
   gap: 0.25,
-  sx: { ml: 0 }
+  sx: { ml: 0 },
 };
 const queryConfig = { context: { subgraph: 'bean' } };
-const lineChartProps : Partial<LineChartProps> = {
-  yTickFormat: tickFormatLocale
+const lineChartProps: Partial<LineChartProps> = {
+  yTickFormat: tickFormatLocale,
 };
 
-const Crosses: FC<{height?: SeasonPlotBaseProps['height']}> = ({ height }) => {
+const Crosses: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
+  height,
+}) => {
   const season = useSeason();
   return (
     <SeasonPlot<SeasonalCrossesQuery>

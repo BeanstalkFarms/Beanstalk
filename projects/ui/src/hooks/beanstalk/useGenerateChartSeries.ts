@@ -3,16 +3,20 @@ import { ApolloError } from '@apollo/client';
 import BigNumber from 'bignumber.js';
 import { BaseDataPoint } from '../../components/Common/Charts/ChartPropProvider';
 import { TimeTabState } from '../../components/Common/Charts/TimeTabs';
-import useSeasonsQuery, {  MinimumViableSnapshot, MinimumViableSnapshotQuery, SeasonAggregation } from './useSeasonsQuery';
+import useSeasonsQuery, {
+  MinimumViableSnapshot,
+  MinimumViableSnapshotQuery,
+  SeasonAggregation,
+} from './useSeasonsQuery';
 import { secondsToDate, sortSeasons } from '~/util';
 
-type SeasonData = (Omit<MinimumViableSnapshot, 'id'> & any);
+type SeasonData = Omit<MinimumViableSnapshot, 'id'> & any;
 
 export type SeasonsQueryItem<T extends MinimumViableSnapshotQuery> = {
   /*
    * non-destructured value returned by useSeasonsQuery<T>
    */
-  query: ReturnType<typeof useSeasonsQuery<T>>
+  query: ReturnType<typeof useSeasonsQuery<T>>;
   /*
    * fn used to get value from query
    */
@@ -21,13 +25,16 @@ export type SeasonsQueryItem<T extends MinimumViableSnapshotQuery> = {
    * key of data
    */
   key?: string;
-}
+};
 
 /**
  * merges data from multiple instances of useSeasonsQuery
  * returns data in expected format for stacked area chart K[];
  */
-const reduceSeasonsQueries = <T extends MinimumViableSnapshotQuery>(params: SeasonsQueryItem<T>[], keys: string[]) => {
+const reduceSeasonsQueries = <T extends MinimumViableSnapshotQuery>(
+  params: SeasonsQueryItem<T>[],
+  keys: string[]
+) => {
   const seasonsRecord: Record<number, SeasonData> = {};
   params.forEach((param, i) => {
     const { query, getValue } = param;
@@ -42,12 +49,12 @@ const reduceSeasonsQueries = <T extends MinimumViableSnapshotQuery>(params: Seas
         seasonsRecord[s.season] = {
           season: s.season,
           timestamp: s.timestamp,
-          [key]: getValue(s)
+          [key]: getValue(s),
         };
       } else {
         seasonsRecord[s.season] = {
           ...seasonsRecord[s.season],
-          [key]: getValue(s)
+          [key]: getValue(s),
         };
       }
     });
@@ -61,8 +68,8 @@ const reduceSeasonsQueries = <T extends MinimumViableSnapshotQuery>(params: Seas
  * Note: Although Stacked area charts expect K[] as input, we return K[][] so we can share functions for line and stacked area charts
  */
 const generateStackedAreaSeriesData = <T extends MinimumViableSnapshotQuery>(
-  params: SeasonsQueryItem<T>[], 
-  seasonAggregation: SeasonAggregation, 
+  params: SeasonsQueryItem<T>[],
+  seasonAggregation: SeasonAggregation,
   keys: string[],
   dateKey: 'timestamp' | 'createdAt'
 ) => {
@@ -115,11 +122,11 @@ const generateStackedAreaSeriesData = <T extends MinimumViableSnapshotQuery>(
       points.push({
         ...seasonData,
         season: seasonData.season as number,
-        date: secondsToDate(seasonData[dateKey])
+        date: secondsToDate(seasonData[dateKey]),
       } as BaseDataPoint);
     }
   }
-  
+
   return [points.sort(sortSeasons)];
 };
 
@@ -128,7 +135,7 @@ const generateStackedAreaSeriesData = <T extends MinimumViableSnapshotQuery>(
  * Returns K[][] such that K = { season: number; date: Date; value: number } and where K[] is sorted by season in ascending order
  */
 const generateSeriesData = <T extends MinimumViableSnapshotQuery>(
-  params: SeasonsQueryItem<T>[], 
+  params: SeasonsQueryItem<T>[],
   seasonAggregation: SeasonAggregation,
   dateKey: 'timestamp' | 'createdAt'
 ) => {
@@ -188,7 +195,7 @@ export type ChartSeriesParams = {
   keys: string[];
   loading: boolean;
   stackedArea?: boolean;
-}
+};
 
 /**
  * Generates series data for line & stacked area charts.
@@ -199,20 +206,20 @@ const useGenerateChartSeries = <T extends MinimumViableSnapshotQuery>(
   // whereas the beanstalk subgraph uses 'createdAt', the bean subgraph uses 'timestamp'
   // include param to choose which key to use
   dateKey: 'timestamp' | 'createdAt',
-  stackedArea?: boolean,
+  stackedArea?: boolean
 ): ChartSeriesParams => {
-  const loading = !!(params.find((p) => p.query.loading));
+  const loading = !!params.find((p) => p.query.loading);
 
   const error = useMemo(() => {
     const errs = params
       .filter(({ query: q }) => q.error !== undefined)
-      .map(({ query: q }) => q.error) as ApolloError[]; 
+      .map(({ query: q }) => q.error) as ApolloError[];
     return errs.length ? errs : undefined;
   }, [params]);
 
   const mergeData = useMemo(() => {
     const _keys = params.map((param, i) => param.key ?? i.toString());
-    const series = stackedArea 
+    const series = stackedArea
       ? generateStackedAreaSeriesData(params, timeTabState[0], _keys, dateKey)
       : generateSeriesData(params, timeTabState[0], dateKey);
     return { data: series, keys: _keys };

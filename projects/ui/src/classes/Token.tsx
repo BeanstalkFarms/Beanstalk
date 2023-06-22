@@ -50,17 +50,17 @@ export default abstract class Token {
   public readonly slug?: string;
 
   /**
-   * 
+   *
    */
   public readonly contract?: any;
 
   /**
-   * 
+   *
    */
   public readonly rewards?: { stalk: number; seeds: number };
 
   /**
-   * 
+   *
    */
   public readonly displayDecimals: number;
 
@@ -81,11 +81,11 @@ export default abstract class Token {
     address: string | ChainConstant<string>,
     decimals: number,
     metadata: {
-      name: string,
-      symbol: string,
-      logo: string,
-      color?: string,
-      displayDecimals?: number,
+      name: string;
+      symbol: string;
+      logo: string;
+      color?: string;
+      displayDecimals?: number;
       isLP?: boolean;
       isUnripe?: boolean;
     },
@@ -95,9 +95,10 @@ export default abstract class Token {
     }
   ) {
     this.chainId = chainId;
-    this.address = typeof address === 'string' 
-      ? address.toLowerCase() 
-      : address[chainId].toLowerCase();
+    this.address =
+      typeof address === 'string'
+        ? address.toLowerCase()
+        : address[chainId].toLowerCase();
     this.decimals = decimals;
     this.symbol = metadata.symbol;
     this.name = metadata.name;
@@ -110,26 +111,29 @@ export default abstract class Token {
   }
 
   /** Get the amount of Stalk rewarded per deposited BDV of this Token. */
-  public getStalk(bdv?: BigNumber) : BigNumber {
+  public getStalk(bdv?: BigNumber): BigNumber {
     if (!this.rewards?.stalk) return ZERO_BN;
     if (!bdv) return new BigNumber(this.rewards.stalk);
     return bdv.times(this.rewards.stalk);
   }
-  
+
   /** Get the amount of Seeds rewarded per deposited BDV of this Token. */
-  public getSeeds(bdv?: BigNumber) : BigNumber {
+  public getSeeds(bdv?: BigNumber): BigNumber {
     if (!this.rewards?.seeds) return ZERO_BN;
     if (!bdv) return new BigNumber(this.rewards.seeds);
     return bdv.times(this.rewards.seeds);
   }
 
-  abstract getContract() : any;
+  abstract getContract(): any;
 
-  abstract getBalance(account: string) : Promise<BigNumber>;
+  abstract getBalance(account: string): Promise<BigNumber>;
 
-  abstract getAllowance(account: string, spender: string) : Promise<BigNumber | undefined>;
-  
-  abstract getTotalSupply() : Promise<BigNumber> | undefined;
+  abstract getAllowance(
+    account: string,
+    spender: string
+  ): Promise<BigNumber | undefined>;
+
+  abstract getTotalSupply(): Promise<BigNumber> | undefined;
 
   /**
    * Returns whether this currency is functionally equivalent to the other currency
@@ -146,12 +150,12 @@ export default abstract class Token {
   /**
    * Convert an `amount` of this Token into a string value
    * based on the configured number of decimals.
-   * 
+   *
    * FIXME: better name
    * FIXME: provide other side (toTokenUnitsBN)
-   * 
+   *
    * @param amount amount to convert
-   * @returns string 
+   * @returns string
    */
   public stringify(amount: BigNumber.Value) {
     return toStringBaseUnitBN(amount, this.decimals);
@@ -164,12 +168,16 @@ export class NativeToken extends Token {
     return client.provider;
   }
 
-  public getBalance(account: string) : Promise<BigNumber> {
-    console.debug(`[NativeToken] ${this.symbol} (${this.chainId} / ${this.address}) -> getBalance(${account})`);
-    return this.getContract().getBalance(account).then(
-      // No need to convert decimals because ethers does this already
-      (result) => bigNumberResult(result)
+  public getBalance(account: string): Promise<BigNumber> {
+    console.debug(
+      `[NativeToken] ${this.symbol} (${this.chainId} / ${this.address}) -> getBalance(${account})`
     );
+    return this.getContract()
+      .getBalance(account)
+      .then(
+        // No need to convert decimals because ethers does this already
+        (result) => bigNumberResult(result)
+      );
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -187,20 +195,35 @@ export class ERC20Token extends Token {
   public getContract() {
     return erc20TokenContract(this.address);
   }
-  
+
   public getBalance(account: string) {
-    console.debug(`[ERC20Token] ${this.symbol} (${this.chainId} / ${this.address}) -> balanceOf(${account})`);
-    return this.getContract().balanceOf(account).then(bigNumberResult).catch((err) => { console.error(`[ERC20Token] ${this.symbol} failed to call balanceOf(${account})`, err); throw err; });
+    console.debug(
+      `[ERC20Token] ${this.symbol} (${this.chainId} / ${this.address}) -> balanceOf(${account})`
+    );
+    return this.getContract()
+      .balanceOf(account)
+      .then(bigNumberResult)
+      .catch((err) => {
+        console.error(
+          `[ERC20Token] ${this.symbol} failed to call balanceOf(${account})`,
+          err
+        );
+        throw err;
+      });
   }
 
   // eslint-disable-next-line class-methods-use-this
   public getAllowance(account: string, spender: string) {
-    console.debug(`[ERC20Token] ${this.symbol} (${this.chainId} / ${this.address}) -> allowance(${account}, ${spender})`);
+    console.debug(
+      `[ERC20Token] ${this.symbol} (${this.chainId} / ${this.address}) -> allowance(${account}, ${spender})`
+    );
     return this.getContract().allowance(account, spender).then(bigNumberResult);
   }
 
   public getTotalSupply() {
-    console.debug(`[ERC20Token] ${this.symbol} (${this.chainId} / ${this.address}) -> totalSupply()`);
+    console.debug(
+      `[ERC20Token] ${this.symbol} (${this.chainId} / ${this.address}) -> totalSupply()`
+    );
     return this.getContract().totalSupply().then(bigNumberResult);
   }
 }
@@ -227,8 +250,4 @@ export class BeanstalkToken extends Token {
   }
 }
 
-export type AnyToken = (
-  BeanstalkToken
-  | ERC20Token
-  | NativeToken
-);
+export type AnyToken = BeanstalkToken | ERC20Token | NativeToken;

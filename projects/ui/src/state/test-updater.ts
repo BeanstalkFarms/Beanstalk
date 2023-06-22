@@ -9,7 +9,7 @@
 // const TestUpdater = () => {
 //   const [fetch] = useGetPools();
 //   const dispatch = useDispatch();
-//   const { status: netStatus, isLoading, pendingChainId } = useNetwork(); 
+//   const { status: netStatus, isLoading, pendingChainId } = useNetwork();
 //   const { status: connectStatus, pendingConnector } = useConnect();
 //   const { status: accountStatus, data: account } = useAccount();
 //   const provider = useProvider();
@@ -29,7 +29,7 @@
 //   //
 //   // On switch wallets:
 //   //    1. account.address = [new address]
-//   // 
+//   //
 //   useWhatChanged([
 //     netStatus,
 //     isLoading,

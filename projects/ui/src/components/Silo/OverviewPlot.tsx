@@ -10,7 +10,11 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import BlurComponent from '~/components/Common/ZeroState/BlurComponent';
 import MockPlot from '~/components/Silo/MockPlot';
 import { SEEDS, STALK } from '~/constants/tokens';
-import { SeasonAggregation, SeasonRange, SEASON_RANGE_TO_COUNT } from '~/hooks/beanstalk/useSeasonsQuery';
+import {
+  SeasonAggregation,
+  SeasonRange,
+  SEASON_RANGE_TO_COUNT,
+} from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
@@ -19,8 +23,13 @@ export type OverviewPlotProps = {
   account: string | undefined;
   season: BigNumber;
   current: BigNumber[];
+  date: Date | string;
   series: BaseDataPoint[][];
-  stats: (season: BigNumber, value: BigNumber[]) => React.ReactElement;
+  stats: (
+    season: BigNumber,
+    value: BigNumber[],
+    date: string
+  ) => React.ReactElement;
   empty: boolean;
   loading: boolean;
   label: string;
@@ -30,6 +39,7 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
   account,
   season,
   current,
+  date,
   series,
   stats,
   loading,
@@ -38,38 +48,61 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
 }) => {
   const [displaySeason, setDisplaySeason] = useState<BigNumber>(season);
   const [displayValue, setDisplayValue] = useState<BigNumber[]>(current);
+  const [displayDate, setDisplayDate] = useState<string>(
+    date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+  );
 
   useEffect(() => setDisplayValue(current), [current]);
   useEffect(() => setDisplaySeason(season), [season]);
+  useEffect(
+    () =>
+      setDisplayDate(
+        date.toLocaleString(undefined, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        })
+      ),
+    [date]
+  );
 
   const handleCursor = useCallback(
     (dps?: BaseDataPoint[]) => {
       setDisplaySeason(dps ? new BigNumber(dps[0].season) : season);
       setDisplayValue(dps ? dps.map((dp) => new BigNumber(dp.value)) : current);
+      setDisplayDate(
+        dps
+          ? new Date(dps[0].date).toLocaleString(undefined, {
+              dateStyle: 'short',
+              timeStyle: 'short',
+            })
+          : date.toLocaleString(undefined, {
+              dateStyle: 'short',
+              timeStyle: 'short',
+            })
+      );
     },
-    [current, season]
+
+    [current, season, date]
   );
 
-  const [tabState, setTimeTab] = useState<TimeTabState>([SeasonAggregation.HOUR, SeasonRange.WEEK]);
-  const handleChangeTimeTab = useCallback(
-    (tabs: TimeTabState) => {
-      setTimeTab(tabs);
-    },
-    []
-  );
+  const [tabState, setTimeTab] = useState<TimeTabState>([
+    SeasonAggregation.HOUR,
+    SeasonRange.WEEK,
+  ]);
+  const handleChangeTimeTab = useCallback((tabs: TimeTabState) => {
+    setTimeTab(tabs);
+  }, []);
 
   const filteredSeries = useMemo(() => {
     if (tabState[1] !== SeasonRange.ALL) {
-      return series.map((s) => s.slice(-(SEASON_RANGE_TO_COUNT[tabState[1]] as number)));
+      return series.map((s) =>
+        s.slice(-(SEASON_RANGE_TO_COUNT[tabState[1]] as number))
+      );
     }
     return series;
   }, [series, tabState]);
 
-  const ready = (
-    account
-    && !loading
-    && !empty
-  );
+  const ready = account && !loading && !empty;
 
   return (
     <>
@@ -80,7 +113,7 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
           sx={{ px: 2, pb: { xs: 2, md: 0 } }}
           alignItems="flex-start"
         >
-          {stats(displaySeason, displayValue)}
+          {stats(displaySeason, displayValue, displayDate)}
         </Stack>
         <Stack alignItems="right">
           <TimeTabs
@@ -92,25 +125,41 @@ const OverviewPlot: FC<OverviewPlotProps> = ({
       </Row>
       <Box sx={{ width: '100%', height: '220px', position: 'relative' }}>
         {ready ? (
-          <LineChart
-            series={filteredSeries}
-            onCursor={handleCursor}
-          />
+          <LineChart series={filteredSeries} onCursor={handleCursor} />
         ) : (
           <>
             <MockPlot />
             <BlurComponent>
-              <Stack justifyContent="center" alignItems="center" height="100%" gap={1}>
+              <Stack
+                justifyContent="center"
+                alignItems="center"
+                height="100%"
+                gap={1}
+              >
                 {!account ? (
                   <>
-                    <Typography variant="body1" color="text.tertiary">Your {label} will appear here.</Typography>
-                    <WalletButton showFullText color="primary" sx={{ height: 45 }} />
+                    <Typography variant="body1" color="text.tertiary">
+                      Your {label} will appear here.
+                    </Typography>
+                    <WalletButton
+                      showFullText
+                      color="primary"
+                      sx={{ height: 45 }}
+                    />
                   </>
                 ) : loading ? (
-                  <CircularProgress variant="indeterminate" thickness={4} color="primary" />
+                  <CircularProgress
+                    variant="indeterminate"
+                    thickness={4}
+                    color="primary"
+                  />
                 ) : empty ? (
                   <Typography variant="body1" color="text.tertiary">
-                    Receive <TokenIcon token={STALK} />Stalk and <TokenIcon token={SEEDS} />Seeds for Depositing whitelisted assets in the Silo. Stalkholders earn a portion of new Bean mints. Seeds grow into Stalk every Season.
+                    Receive <TokenIcon token={STALK} />
+                    Stalk and <TokenIcon token={SEEDS} />
+                    Seeds for Depositing whitelisted assets in the Silo.
+                    Stalkholders earn a portion of new Bean mints. Seeds grow
+                    into Stalk every Season.
                   </Typography>
                 ) : null}
               </Stack>

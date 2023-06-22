@@ -244,7 +244,7 @@ export const useFulfillTokenAtom = () => {
 
   useEffect(() => {
     if (baseToken && !fulfillToken) {
-      setFulfillToken(baseToken);
+      setFulfillToken(baseToken as Token);
     }
   }, [fulfillToken, baseToken, setFulfillToken]);
 

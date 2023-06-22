@@ -1,12 +1,12 @@
+import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { ApolloError } from '@apollo/client';
 import {
   BaseChartProps,
   BaseDataPoint,
   ExploitLine,
 } from './ChartPropProvider';
-import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-import React, { useCallback, useMemo, useState } from 'react';
-
-import { ApolloError } from '@apollo/client';
 import ChartInfoOverlay from './ChartInfoOverlay';
 import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import MultiLineChart from './MultiLineChart';
@@ -32,6 +32,12 @@ type BaseSeasonPlotProps = {
    */
   defaultSeason?: number;
   /**
+   * The date displayed when the chart isn't being hovered.
+   * If not provided, uses the `date` of the last data point if available,
+   * otherwise returns the current timestamp.
+   */
+  defaultDate?: Date;
+  /**
    * Height applied to the chart range. Can be a fixed
    * pixel number or a percent if the parent element has a constrained height.
    */
@@ -53,11 +59,13 @@ export type QueryData = {
   keys: string[];
 };
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 type Props<T extends MinimumViableSnapshotQuery> = BaseSeasonPlotProps & {
   queryData?: QueryData;
   formatValue?: (value: number) => string | JSX.Element;
   StatProps?: Omit<StatProps, 'amount' | 'subtitle'>;
   ChartProps: Omit<BaseChartProps, 'series' | 'keys'>;
+  statsRowFullWidth?: boolean;
 };
 
 function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
@@ -67,6 +75,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     // season plot base props
     defaultValue: _defaultValue,
     defaultSeason: _defaultSeason,
+    defaultDate: _defaultDate,
     height = '175px',
     stackedArea = false,
     formatValue = defaultValueFormatter,
@@ -74,6 +83,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     StatProps: statProps, // renamed to prevent type collision
     ChartProps: chartProps,
     timeTabParams,
+    statsRowFullWidth,
   } = props;
 
   /// Display values
@@ -83,16 +93,23 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   const [displaySeason, setDisplaySeason] = useState<number | undefined>(
     undefined
   );
+  const [displayDate, setDisplayDate] = useState<any | undefined>(undefined);
 
   const handleCursor = useCallback(
-    (season: number | undefined, v?: number | undefined) => {
-      if (!season || !v) {
+    (
+      season: number | undefined,
+      value?: number | undefined,
+      date?: Date | undefined
+    ) => {
+      if (!season || !value) {
         setDisplaySeason(undefined);
         setDisplayValue(undefined);
+        setDisplayDate(undefined);
         return;
       }
       setDisplaySeason(season);
-      setDisplayValue(v);
+      setDisplayValue(value);
+      setDisplayDate(date);
     },
     []
   );
@@ -101,9 +118,13 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
 
   /// If one of the defaults is missing, use the last data point.
   const defaults = useMemo(() => {
+    const dataArray =
+      seriesInput && seriesInput[0] ? seriesInput[0] : [{ date: new Date() }];
+    const lastUpdateDate = dataArray[dataArray.length - 1];
     const d = {
       value: _defaultValue ?? 0,
       season: _defaultSeason ?? 0,
+      date: _defaultDate ?? lastUpdateDate ? lastUpdateDate.date : new Date(),
     };
     const getVal = chartProps.getDisplayValue;
     const seriesLen = seriesInput?.length;
@@ -128,7 +149,14 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     }
 
     return d;
-  }, [_defaultSeason, _defaultValue, chartProps, seriesInput, stackedArea]);
+  }, [
+    _defaultDate,
+    _defaultSeason,
+    _defaultValue,
+    chartProps.getDisplayValue,
+    seriesInput,
+    stackedArea,
+  ]);
 
   if (!seriesInput || !queryData) {
     return null;
@@ -136,6 +164,17 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   const currentSeason = (
     displaySeason !== undefined ? displaySeason : defaults.season
   ).toFixed();
+
+  const currentDate =
+    displayDate !== undefined
+      ? displayDate.toLocaleString(undefined, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        })
+      : defaults.date.toLocaleString(undefined, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        });
 
   const containerStyle = {
     height: '100%',
@@ -145,7 +184,10 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
 
   return (
     <>
-      <Row justifyContent="space-between" sx={{ px: 2 }}>
+      <Row
+        justifyContent="space-between"
+        sx={{ px: statsRowFullWidth ? 0 : 2 }}
+      >
         {statProps && (
           <ChartInfoOverlay
             title={statProps.title}
@@ -155,6 +197,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
             isLoading={queryData?.loading}
             amount={formatValue(displayValue ?? defaults.value)}
             subtitle={`Season ${currentSeason}`}
+            secondSubtitle={currentDate ?? `${currentDate}`}
           />
         )}
 

@@ -4,15 +4,14 @@ import React from 'react';
 
 import { FC } from '~/types';
 
-const AboutPage : FC<{}> = () => 
+const AboutPage: FC<{}> = () => (
   // const beanstalk = useBeanstalkContract();
 
   // const [] = useState(null)
   // useEffect(() => {
   //   beanstalk.callStatic.
   // }, []);
-   (
-     <div>About</div>
-  );
+  <div>About</div>
+);
 
 export default AboutPage;

@@ -1,17 +1,20 @@
 import { TESTNET_CHAINS, SupportedChainId } from '~/constants';
 
-/// Convention: 
+/// Convention:
 /// "chain constant" = a value that is constant for a given chain.
-/// May or may not be constant across chains. For example, the 
+/// May or may not be constant across chains. For example, the
 /// BEAN token address is typically the same on every testnet,
 /// but the USDC token address is not. This requires manual configuration.
 
-export type ChainConstant = { [chainId: number] : any };
+export type ChainConstant = { [chainId: number]: any };
 
 /**
  * Return a constant from a supplied ChainConstant map, with fallback logic.
  */
-export function getChainConstant<T extends ChainConstant>(map: T, chainId?: SupportedChainId) : T[keyof T] {
+export function getChainConstant<T extends ChainConstant>(
+  map: T,
+  chainId?: SupportedChainId
+): T[keyof T] {
   // If no chain available, use the value for MAINNET.
   // This allows "fallback to Mainnet" behavior when a
   // wallet isn't connected (and thus there is no chainId).

@@ -21,7 +21,7 @@ import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
  * @notice Contains functions for minting, burning, and transferring of
  * Stalk and Roots within the Silo.
  *
- * @dev FIXME(DISCUSS): Here, we refer to "minting" as the combination of
+ * @dev Here, we refer to "minting" as the combination of
  * increasing the total balance of Stalk/Roots, as well as allocating
  * them to a particular account. However, in other places throughout Beanstalk
  * (like during the Sunrise), Beanstalk's total balance of Stalk increases
@@ -44,8 +44,8 @@ library LibSilo {
     // The `VESTING_PERIOD` is the number of blocks that must pass before
     // a farmer is credited with their earned beans issued that season. 
     uint256 internal constant VESTING_PERIOD = 10;
+
     //////////////////////// EVENTS ////////////////////////    
-    uint256 constant EARNED_BEAN_VESTING_BLOCKS = 25;
      
     /**
      * @notice Emitted when `account` gains or loses Stalk.
@@ -194,7 +194,7 @@ library LibSilo {
         uint256 roots;
         if (s.s.roots == 0) {
             roots = stalk.mul(C.getRootsBase());
-        } else  {
+        } else {
             roots = s.s.roots.mul(stalk).div(s.s.stalk);
             if (inVestingPeriod()) {
                 // Safe Math is unnecessary for because total Stalk > new Earned Stalk
@@ -235,14 +235,19 @@ library LibSilo {
         // We round up as it prevents an account having roots but no stalk.
         
         // if the user withdraws in the vesting period, they forfeit their earned beans for that season
-        // this is distrubuted to the other users.
-        if(block.number - s.season.sunriseBlock <= EARNED_BEAN_VESTING_BLOCKS){
+        // this is distributed to the other users.
+        if(inVestingPeriod()){
             roots = s.s.roots.mulDiv(
-            stalk,
-            s.s.stalk-s.newEarnedStalk,
-            LibPRBMath.Rounding.Up);
-
-        } else { 
+                stalk,
+                s.s.stalk-s.newEarnedStalk,
+                LibPRBMath.Rounding.Up
+            );
+            // cast to uint256 to prevent overflow
+            uint256 deltaRootsRemoved = uint256(s.a[account].deltaRoots)
+                .mul(stalk)
+                .div(s.a[account].s.stalk);
+            s.a[account].deltaRoots = s.a[account].deltaRoots.sub(deltaRootsRemoved.toUint128());
+        } else {
             roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk,
@@ -259,9 +264,11 @@ library LibSilo {
         s.s.roots = s.s.roots.sub(roots);
         s.a[account].roots = s.a[account].roots.sub(roots);
         
-        // If it is Raining, subtract Roots from both the account's and 
-        // Beanstalk's RainRoots balances.
-        // For more info on Rain, see {FIXME(doc)}. 
+        // Oversaturated was previously referred to as Raining and thus
+        // code references mentioning Rain really refer to Oversaturation
+        // If Beanstalk is Oversaturated, subtract Roots from both the
+        // account's and Beanstalk's Oversaturated Roots balances.
+        // For more info on Oversaturation, See {Weather.handleRain}
         if (s.season.raining) {
             s.r.roots = s.r.roots.sub(roots);
             s.a[account].sop.roots = s.a[account].roots;
@@ -282,7 +289,6 @@ library LibSilo {
         uint256 stalk
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // (Fixme?) Calculate the amount of Roots for the given amount of Stalk.
         uint256 roots = stalk == s.a[sender].s.stalk
             ? s.a[sender].roots
             : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
@@ -312,17 +318,17 @@ library LibSilo {
      */
    function _mow(address account, address token) internal {
 
-        require(!LibSilo.migrationNeeded(account), "Silo: Migration needed");
+        require(!migrationNeeded(account), "Silo: Migration needed");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         //sop stuff only needs to be updated once per season
         //if it started raininga nd it's still raining, or there was a sop
         if (s.season.rainStart > s.season.stemStartSeason) {
-            uint32 _lastUpdate = lastUpdate(account);
-            if (_lastUpdate <= s.season.rainStart && _lastUpdate <= s.season.current) {
+            uint32 lastUpdate = _lastUpdate(account);
+            if (lastUpdate <= s.season.rainStart && lastUpdate <= s.season.current) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
-                handleRainAndSops(account, _lastUpdate);
+                handleRainAndSops(account, lastUpdate);
 
                 // Reset timer so that Grown Stalk for a particular Season can only be 
                 // claimed one time. 
@@ -359,7 +365,7 @@ library LibSilo {
                 return;
             }
 
-            LibSilo.mintGrownStalk(
+            mintGrownStalk(
                 account,
                 _balanceOfGrownStalk(
                     _lastStem,
@@ -378,16 +384,15 @@ library LibSilo {
     /**
      * @notice returns the last season an account interacted with the silo.
      */
-    function lastUpdate(address account) internal view returns (uint32) {
+    function _lastUpdate(address account) internal view returns (uint32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate;
     }
 
     /**
      * @dev internal logic to handle when beanstalk is raining.
-     * FIXME(refactor): replace `lastUpdate()` -> `_lastUpdate()` and rename this param?
      */
-    function handleRainAndSops(address account, uint32 _lastUpdate) private {
+    function handleRainAndSops(address account, uint32 lastUpdate) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // If no roots, reset Sop counters variables
         if (s.a[account].roots == 0) {
@@ -396,13 +401,13 @@ library LibSilo {
             return;
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
-        if (s.season.lastSopSeason > _lastUpdate) {
+        if (s.season.lastSopSeason > lastUpdate) {
             s.a[account].sop.plenty = balanceOfPlenty(account);
             s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
             // If rain started after update, set account variables to track rain.
-            if (s.season.rainStart > _lastUpdate) {
+            if (s.season.rainStart > lastUpdate) {
                 s.a[account].lastRain = s.season.rainStart;
                 s.a[account].sop.roots = s.a[account].roots;
             }
@@ -469,7 +474,7 @@ library LibSilo {
         }
 
         // Handle and SOPs that started + ended before after last Silo update.
-        if (s.season.lastSop > lastUpdate(account)) {
+        if (s.season.lastSop > _lastUpdate(account)) {
             uint256 plentyPerRoot = s.sops[s.season.lastSop].sub(previousPPR);
             plenty = plenty.add(
                 plentyPerRoot.mul(s.a[account].roots).div(
@@ -508,7 +513,7 @@ library LibSilo {
 
         //need to get amount of stalk earned by this deposit (index of now minus index of when deposited)
         stalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(
+            stalkReward(
                 stem, //this is the index of when it was deposited
                 LibTokenSilo.stemTipForToken(token), //this is latest for this token
                 bdvRemoved.toUint128()
@@ -567,7 +572,7 @@ library LibSilo {
             ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
 
             ar.stalkRemoved = ar.stalkRemoved.add(
-                LibSilo.stalkReward(
+                stalkReward(
                     stems[i],
                     LibTokenSilo.stemTipForToken(token),
                     crateBdv.toUint128()
@@ -607,13 +612,16 @@ library LibSilo {
     }
 
     /**
-     * @dev check whether beanstalk is in the vesting period:
+     * @dev check whether beanstalk is in the vesting period.
      */
     function inVestingPeriod() internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return block.number - s.season.sunriseBlock <= VESTING_PERIOD;
     }
 
+    /**
+     * @dev check whether the account needs to be migrated.
+     */
     function migrationNeeded(address account) internal view returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate > 0 && s.a[account].lastUpdate < s.season.stemStartSeason;

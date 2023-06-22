@@ -3,10 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import Rinse from '~/components/Barn/Actions/Rinse';
 import Dot from '~/components/Common/Dot';
-import {
-  Module,
-  ModuleContent,
-} from '~/components/Common/Module';
+import { Module, ModuleContent } from '~/components/Common/Module';
 import Row from '~/components/Common/Row';
 import { AppState } from '~/state';
 

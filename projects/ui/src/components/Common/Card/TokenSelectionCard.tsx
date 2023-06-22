@@ -1,47 +1,41 @@
-import { Stack, Typography } from '@mui/material';
-import BigNumber from 'bignumber.js';
 import React from 'react';
-import Token from '~/classes/Token';
-import SelectionCard, {
-  SelectionCardProps,
-} from '~/components/Common/Card/SelectionCard';
+import { Token } from '@beanstalk/sdk';
+import BigNumber from 'bignumber.js';
+import { Typography } from '@mui/material';
+import { FC } from '~/types';
+import SelectionItem, { SelectionItemProps } from '../SelectionItem';
+import { FontSize, FontWeight } from '~/components/App/muiTheme';
 import { displayBN } from '~/util';
+import Row from '../Row';
 import TokenIcon from '../TokenIcon';
 
-export type TokenSelectionCardProps = {
+type Props = {
   token: Token;
-  title?: string;
   amount: BigNumber;
-} & SelectionCardProps;
+} & Omit<SelectionItemProps, 'title'>;
 
-const TokenSelectionCard: React.FC<TokenSelectionCardProps> = ({
-  token,
-  title,
-  amount,
-  ...props
-}) => (
-  <SelectionCard {...props}>
-    <Stack gap={0.2} width="100%" alignItems="flex-start">
-      <Typography
-        color={props.disabled ? 'text.disabled' : 'text.primary'}
-        component="span"
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          flexWrap: 'nowrap',
-        }}
-      >
-        <TokenIcon token={token} css={{ marginRight: '5px' }} />
-        {amount.gt(0) ? displayBN(amount) : '0'}
-      </Typography>
-      <Typography
-        color={props.disabled ? 'text.disabled' : 'text.primary'}
-        sx={{ whiteSpace: 'nowrap' }}
-      >
-        {title || token.symbol}
-      </Typography>
-    </Stack>
-  </SelectionCard>
+const TokenSelectionCard: FC<Props> = ({ token, amount, ...props }) => (
+  <SelectionItem
+    title={
+      <Row gap={0.2}>
+        <TokenIcon
+          token={token}
+          css={{ height: FontSize.sm, marginRight: '5px' }}
+        />
+        <Typography
+          variant="bodySmall"
+          fontWeight={FontWeight.semiBold}
+          component="span"
+          sx={{ flexWrap: 'nowrap' }}
+        >
+          {amount.gt(0) ? displayBN(amount) : '0'}
+        </Typography>
+      </Row>
+    }
+    checkIcon="top-right"
+    gap={0.2}
+    {...props}
+  />
 );
 
 export default TokenSelectionCard;

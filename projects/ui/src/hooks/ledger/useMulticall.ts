@@ -12,7 +12,7 @@
 // const useMulticall = () => {
 //   const provider = useProvider();
 //   const multicallProvider = useMemo(() => new MulticallProvider(provider, provider.network.chainId), [provider]);
-  
+
 //   return [multicallProvider, wrapMulticall] as const;
 // };
 

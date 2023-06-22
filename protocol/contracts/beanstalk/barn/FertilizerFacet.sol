@@ -6,10 +6,10 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
-import "~/libraries/Token/LibTransfer.sol";
-import "~/libraries/LibFertilizer.sol";
-import "~/C.sol";
-import {LibDiamond} from "~/libraries/LibDiamond.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/LibFertilizer.sol";
+import "contracts/C.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 /**
  * @author Publius

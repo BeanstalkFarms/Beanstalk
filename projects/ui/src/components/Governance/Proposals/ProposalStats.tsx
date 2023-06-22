@@ -17,13 +17,7 @@ const ProposalStats: FC<{
   totalStalk?: BigNumber;
   differenceInTime?: number;
   showLink?: boolean;
-}> = ({
-  proposal,
-  totalStalk,
-  quorum,
-  differenceInTime,
-  showLink = false,
-}) => (
+}> = ({ proposal, totalStalk, quorum, differenceInTime, showLink = false }) => (
   <Stack
     alignItems={{ xs: 'start', md: 'center' }}
     justifyContent="space-between"
@@ -35,23 +29,29 @@ const ProposalStats: FC<{
       <Row gap={0.5}>
         <Dot color={proposal.state === 'active' ? 'primary.main' : 'gray'} />
         <Typography variant="body1">
-          {proposal.state === 'active' 
-              ? 'Active'
-              : proposal.state === 'closed'
-              ? (quorum?.data.stalkForQuorum && quorum?.data.score)
-                ? quorum?.data.score.gt(quorum.data.stalkForQuorum)
-                  ? 'Closed'
-                  : 'Closed'
-                  // ? 'Passed'
-                  // : 'Rejected'
-                : 'Closed'
-              : <Typography sx={{ textTransform: 'capitalize' }}>{proposal.state}</Typography>}
+          {proposal.state === 'active' ? (
+            'Active'
+          ) : proposal.state === 'closed' ? (
+            quorum?.data.totalForQuorum && quorum?.data.score ? (
+              quorum?.data.score.gt(quorum.data.totalForQuorum) ? (
+                'Closed'
+              ) : (
+                'Closed'
+              )
+            ) : (
+              // ? 'Passed'
+              // : 'Rejected'
+              'Closed'
+            )
+          ) : (
+            <Typography sx={{ textTransform: 'capitalize' }}>
+              {proposal.state}
+            </Typography>
+          )}
         </Typography>
       </Row>
       <Tooltip title={new Date(proposal.end * 1000).toLocaleString()}>
-        <Typography variant="body1">
-          {getDateMessage(proposal.end)}
-        </Typography>
+        <Typography variant="body1">{getDateMessage(proposal.end)}</Typography>
       </Tooltip>
       {showLink && (
         <Link
@@ -59,23 +59,27 @@ const ProposalStats: FC<{
           target="_blank"
           rel="noreferrer"
           underline="hover"
-            >
+        >
           View on Snapshot
         </Link>
       )}
     </Row>
     {/* if there is time remaining... */}
-    {(differenceInTime && differenceInTime > 0 && totalStalk) && (
+    {differenceInTime && differenceInTime > 0 && totalStalk && (
       <Row gap={0.5}>
         <Tooltip
           title={
             <Stack gap={0.5}>
               <StatHorizontal label="Stalk voted For">
-                {displayFullBN(new BigNumber(proposal.scores[0]) || ZERO_BN, 2, 2)}
+                {displayFullBN(
+                  new BigNumber(proposal.scores[0]) || ZERO_BN,
+                  2,
+                  2
+                )}
               </StatHorizontal>
-              {quorum?.data.stalkForQuorum && (
+              {quorum?.data.totalForQuorum && (
                 <StatHorizontal label="Stalk for Quorum">
-                  ~{displayFullBN(quorum?.data.stalkForQuorum, 2, 2)}
+                  ~{displayFullBN(quorum?.data.totalForQuorum, 2, 2)}
                 </StatHorizontal>
               )}
               <StatHorizontal label="Eligible Stalk">
@@ -88,7 +92,8 @@ const ProposalStats: FC<{
           }
         >
           <Typography textAlign={{ xs: 'center', md: 'left' }} variant="body1">
-            {((quorum?.data.pctOfQuorum || 0) * 100).toFixed(0)}% of Stalk voted For
+            {((quorum?.data.pctOfQuorum || 0) * 100).toFixed(0)}% of Stalk voted
+            For
           </Typography>
         </Tooltip>
       </Row>

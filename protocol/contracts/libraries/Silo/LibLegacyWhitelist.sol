@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../C.sol";
 import "../LibAppStorage.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
+import "contracts/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @title LibLegacyWhitelist

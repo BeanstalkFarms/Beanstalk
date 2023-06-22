@@ -1,16 +1,16 @@
 import { CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useMemo, useState } from 'react';
+import { timeFormat, timeParse } from 'd3-time-format';
+import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import {
   SeasonalVolumeDocument,
   SeasonalVolumeQuery,
 } from '~/generated/graphql';
-import { timeFormat, timeParse } from 'd3-time-format';
 
 import BarChart from '~/components/Common/Charts/BarChart';
 import { BaseDataPoint } from '../../Common/Charts/ChartPropProvider';
 import ChartInfoOverlay from '../../Common/Charts/ChartInfoOverlay';
 import { FC } from '~/types';
-import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { QueryData } from '~/components/Common/Charts/BaseSeasonPlot';
 import QueryState from '../../Common/Charts/QueryState';
 import Row from '../../Common/Row';
@@ -24,7 +24,7 @@ type BarChartDatum = {
   count: number;
   maxSeason: number;
   minSeason: number;
-  date: string;
+  date: Date;
 };
 
 type DataByDate = {
@@ -50,7 +50,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
   );
 
   const getValue = (season: SeasonalVolumeQuery['seasons'][number]) =>
-    parseFloat(season.hourlyVolumeUSD);
+    parseFloat(season.deltaVolumeUSD);
 
   const queryData: QueryData = useGenerateChartSeries(
     [{ query: seasonsQuery, getValue, key: 'value' }],
@@ -63,7 +63,6 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
 
     const dateFormat = timeFormat('%Y/%m/%d');
     const parseDate = timeParse('%Y/%m/%d');
-    const shortDateFormat = timeFormat('%m/%d');
     const dataByDate = data.reduce((accum: DataByDate, datum: any) => {
       const key = dateFormat(datum.date);
       if (!accum[key]) {
@@ -76,7 +75,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
     return Object.entries(dataByDate).map(([date, dayData]) => {
       const seasons = dayData.map((datum) => datum.season);
       return {
-        date: shortDateFormat(parseDate(date) as Date),
+        date: parseDate(date) as Date,
         maxSeason: Math.max(...seasons),
         minSeason: Math.min(...seasons),
         count: dayData.reduce((accum: number, datum) => accum + datum.value, 0),
@@ -93,6 +92,8 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
           currentHoverBar?.maxSeason ?? ''
         }`
       : 0;
+
+  const currentDate = currentHoverBar ? currentHoverBar.date.toLocaleDateString() : (new Date()).toLocaleDateString();
 
   const chartControlsHeight = 75;
   const chartHeight = height - chartControlsHeight;
@@ -116,6 +117,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
           isLoading={queryData?.loading}
           amount={formatValue(currentHoverBar?.count ?? 0)}
           subtitle={`Season ${currentSeason}`}
+          secondSubtitle={currentDate}
         />
         <Stack alignItems="flex-end" alignSelf="flex-start">
           <TimeTabs
@@ -144,7 +146,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
                 seriesData={transformData(queryData?.data[0])}
                 getX={(datum) => datum.date}
                 getY={(datum) => Number(datum.count)}
-                xTickFormat={(date: string) => date}
+                xTickFormat={(date: Date) => date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' })}
                 yTickFormat={tickFormatUSD}
                 width={width || parent.width}
                 height={chartHeight || parent.height}

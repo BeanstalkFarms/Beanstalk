@@ -6,7 +6,7 @@ export class PermitERC20 extends StepClass<BasicPreparedResult> {
   public name: string = "attachPermitERC20";
 
   constructor(
-    private getPermit: string | SignedPermit<EIP2612PermitMessage> | ((context: RunContext) => any) = "permit" // any = permit
+    public readonly getPermit: string | SignedPermit<EIP2612PermitMessage> | ((context: RunContext) => any) = "permit" // any = permit
   ) {
     super();
   }

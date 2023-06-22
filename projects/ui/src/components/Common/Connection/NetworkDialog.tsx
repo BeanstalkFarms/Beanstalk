@@ -1,6 +1,14 @@
 import React, { useCallback } from 'react';
 import { useNetwork, useSwitchNetwork } from 'wagmi';
-import { Alert, Button, Dialog, DialogProps, Stack, Typography, useMediaQuery } from '@mui/material';
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogProps,
+  Stack,
+  Typography,
+  useMediaQuery,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SWITCH_NETWORK_ERRORS } from '~/constants/wallets';
 import { SupportedChainId, TESTNET_RPC_ADDRESSES } from '~/constants';
@@ -8,18 +16,16 @@ import { ETH } from '~/constants/tokens';
 import { StyledDialogContent, StyledDialogTitle } from '../Dialog';
 import Row from '~/components/Common/Row';
 
-const NetworkDialog: React.FC<DialogProps & {
-  open: boolean;
-  handleClose?: () => void;
-}> = ({
-  open,
-  handleClose,
-  ...props
-}) => {
+const NetworkDialog: React.FC<
+  DialogProps & {
+    open: boolean;
+    handleClose?: () => void;
+  }
+> = ({ open, handleClose, ...props }) => {
   /// Theme
   const theme = useTheme();
   const isMedium = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   ///
   const { chain: _chain } = useNetwork();
   const { chains, error, pendingChainId, switchNetwork } = useSwitchNetwork();
@@ -43,7 +49,8 @@ const NetworkDialog: React.FC<DialogProps & {
         <Stack gap={1}>
           {_chain?.id && !SupportedChainId[_chain.id] ? (
             <Alert severity="info">
-              {_chain.name} is not supported. Please select another network below.
+              {_chain.name} is not supported. Please select another network
+              below.
             </Alert>
           ) : null}
           {chains.map((chain) => (
@@ -62,7 +69,11 @@ const NetworkDialog: React.FC<DialogProps & {
                 // }
               }}
             >
-              <Row justifyContent="space-between" sx={{ width: '100%' }} gap={3}>
+              <Row
+                justifyContent="space-between"
+                sx={{ width: '100%' }}
+                gap={3}
+              >
                 <Typography color="text.primary" sx={{ fontSize: 20 }}>
                   {chain.name}
                 </Typography>
@@ -72,7 +83,10 @@ const NetworkDialog: React.FC<DialogProps & {
                   </Typography>
                 ) : (
                   <img
-                    src={ETH[chain.id as keyof typeof ETH]?.logo || ETH[SupportedChainId.MAINNET].logo}
+                    src={
+                      ETH[chain.id as keyof typeof ETH]?.logo ||
+                      ETH[SupportedChainId.MAINNET].logo
+                    }
                     alt=""
                     css={{ height: 35 }}
                   />
@@ -82,7 +96,9 @@ const NetworkDialog: React.FC<DialogProps & {
           ))}
           {error && (
             <Alert severity="error">
-              {SWITCH_NETWORK_ERRORS[error.name || error.message](pendingChainId) || error.message}
+              {SWITCH_NETWORK_ERRORS[error.name || error.message](
+                pendingChainId
+              ) || error.message}
             </Alert>
           )}
         </Stack>

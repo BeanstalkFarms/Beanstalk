@@ -13,15 +13,15 @@ export const setEthPrices = createAction<EthPriceResponse | null>(
 type SettingsPayload<T extends keyof Settings> = {
   key: T;
   value: Settings[T];
-}
+};
 
-export const updateSetting = createAction<SettingsPayload<keyof Settings>>(
-  'app/updateSetting'
-);
+export const updateSetting =
+  createAction<SettingsPayload<keyof Settings>>('app/updateSetting');
 
 type GlobalsPayload<T extends keyof Globals> = {
   key: T;
   value: Globals[T];
-}
+};
 
-export const setGlobal = createAction<GlobalsPayload<keyof Globals>>('app/setGlobal');
+export const setGlobal =
+  createAction<GlobalsPayload<keyof Globals>>('app/setGlobal');

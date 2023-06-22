@@ -5,8 +5,11 @@ import { BEANSTALK_PRICE_ADDRESSES } from '~/constants/addresses';
 import { cors, rateLimit } from '~/functions/middleware';
 import { BeanstalkPrice__factory } from '~/generated';
 
-const provider = new ethers.providers.AlchemyProvider(1, process.env.VITE_ALCHEMY_API_KEY);
-const address  = BEANSTALK_PRICE_ADDRESSES[1];
+const provider = new ethers.providers.AlchemyProvider(
+  1,
+  process.env.VITE_ALCHEMY_API_KEY
+);
+const address = BEANSTALK_PRICE_ADDRESSES[1];
 const contract = BeanstalkPrice__factory.connect(address, provider);
 
 /**
@@ -22,24 +25,24 @@ const _handler: Handler = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        price:      bp.price.toString(),
-        liquidity:  bp.liquidity.toString(),
-        deltaB:     bp.deltaB.toString(),
+        price: bp.price.toString(),
+        liquidity: bp.liquidity.toString(),
+        deltaB: bp.deltaB.toString(),
         ps: bp.ps.map((pool) => ({
-          pool:       pool.pool,
-          tokens:     pool.tokens.map((token) => token.toString()),
-          balances:   pool.balances.map((balance) => balance.toString()),
-          price:      pool.price.toString(),
-          liquidity:  pool.liquidity.toString(),
-          deltaB:     pool.deltaB.toString(),
-        }))
+          pool: pool.pool,
+          tokens: pool.tokens.map((token) => token.toString()),
+          balances: pool.balances.map((balance) => balance.toString()),
+          price: pool.price.toString(),
+          liquidity: pool.liquidity.toString(),
+          deltaB: pool.deltaB.toString(),
+        })),
       }),
     };
   } catch (e: any) {
     console.error(e);
     return {
       statusCode: 403,
-      body: e?.toString()
+      body: e?.toString(),
     };
   }
 };

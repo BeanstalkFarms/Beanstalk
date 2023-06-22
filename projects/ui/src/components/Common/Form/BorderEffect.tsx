@@ -22,31 +22,23 @@ const BorderEffect: FC<
   const actions = useMemo(() => {
     const handleMouseOver = () => {
       if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.padding = '1px';
-      ref.current.style.border = '1px solid';
-      ref.current.style.borderColor = BeanstalkPalette.textBlue;
+      ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.textBlue}`;
     };
 
     const handleMouseLeave = () => {
       if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.padding = '1px';
-      ref.current.style.border = '1px solid';
-      ref.current.style.borderColor = BeanstalkPalette.inputGrey;
+      ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`;
     };
 
     const handleOnClick = () => {
       if (!ref.current || activeRef.current || disabled) return;
-      ref.current.style.padding = '0px';
-      ref.current.style.border = '2px solid';
-      ref.current.style.borderColor = theme.palette.primary.main;
+      ref.current.style.boxShadow = `inset 0 0 0 2px ${theme.palette.primary.main}`;
       activeRef.current = true;
     };
 
     const handleClickAway = () => {
       if (!ref.current || !activeRef.current || disabled) return;
-      ref.current.style.padding = '1px';
-      ref.current.style.border = '1px solid';
-      ref.current.style.borderColor = BeanstalkPalette.inputGrey;
+      ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`;
       activeRef.current = false;
     };
 
@@ -72,10 +64,8 @@ const BorderEffect: FC<
       ref={ref}
       sx={{
         borderRadius: 1,
-        border: '1px solid',
-        padding: '1px',
-        boxSizing: 'border-box',
-        borderColor: BeanstalkPalette.inputGrey,
+        border: 'none',
+        boxShadow: `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`,
         backgroundColor: BeanstalkPalette.white,
       }}
       width={fullWidth ? '100%' : undefined}

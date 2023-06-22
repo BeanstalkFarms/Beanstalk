@@ -13,13 +13,17 @@ export const COMMONWEALTH_LINK = 'https://commonwealth.im/beanstalk/';
 export const DISCORD_LINK = 'https://discord.gg/y4cJNv5DTM';
 export const GITHUB_LINK = 'https://github.com/BeanstalkFarms/Beanstalk';
 export const MEDIUM_LINK = 'https://medium.com/beanstalkfarms';
-export const OPENSEA_LINK_GENESIS = 'https://opensea.io/collection/beanft-genesis';
-export const OPENSEA_LINK_COLLECTION = 'https://opensea.io/collection/beanft-collection';
+export const OPENSEA_LINK_GENESIS =
+  'https://opensea.io/collection/beanft-genesis';
+export const OPENSEA_LINK_COLLECTION =
+  'https://opensea.io/collection/beanft-collection';
 export const REDDIT_LINK = 'https://www.reddit.com/r/BeanstalkProtocol/';
 export const TELEGRAM_LINK = 'https://t.me/joinchat/OdWoJSyPVsRhYzgx';
 export const TWITTER_LINK = 'https://twitter.com/BeanstalkFarms';
-export const LICENSE_LINK = 'https://github.com/BeanstalkFarms/Beanstalk/blob/master/LICENSE.txt';
-export const CODE_OF_CONDUCT_LINK = 'https://github.com/BeanstalkFarms/Beanstalk/blob/master/CODE_OF_CONDUCT.md';
+export const LICENSE_LINK =
+  'https://github.com/BeanstalkFarms/Beanstalk/blob/master/LICENSE.txt';
+export const CODE_OF_CONDUCT_LINK =
+  'https://github.com/BeanstalkFarms/Beanstalk/blob/master/CODE_OF_CONDUCT.md';
 export const CURVE_LINK_OLD = 'https://curve.fi/factory/81/';
 export const CURVE_LINK = 'https://curve.fi/factory/152/';
 export const LUSD_LINK = 'https://curve.fi/factory/103/';
@@ -76,6 +80,6 @@ export const WINTER_NFT_SUBGRAPH_API_LINK =
 // export const BEANSTALK_SUBGRAPH_API_LINK =
 //   'https://api.studio.thegraph.com/query/6727/beanstalk/v1.1.6';
 export const BEANSTALK_SUBGRAPH_API_LINK =
-'https://gateway.thegraph.com/api/fe672ef9fcdfb617c4d7755f36a31131/subgraphs/id/0x925753106fcdb6d2f30c3db295328a0a1c5fd1d1-0';
+  'https://gateway.thegraph.com/api/fe672ef9fcdfb617c4d7755f36a31131/subgraphs/id/0x925753106fcdb6d2f30c3db295328a0a1c5fd1d1-0';
 export const SOIL_SUBGRAPH_API_LINK =
-'https://api.studio.thegraph.com/query/6727/beanstalk/1.1.10';
+  'https://api.studio.thegraph.com/query/6727/beanstalk/1.1.10';

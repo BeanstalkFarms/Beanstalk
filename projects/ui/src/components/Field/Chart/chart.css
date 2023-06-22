@@ -1,0 +1,35 @@
+@keyframes color-breathe {
+  0% {
+    fill: rgba(70, 185, 85, 1);
+  }
+  50% {
+    fill: rgba(70, 185, 85, 0.35);
+  }
+  100% {
+    fill: rgba(70, 185, 85, 1);
+  }
+}
+
+.bar-wrapper {
+  display: 'flex';
+  align-items: 'center';
+}
+
+.bar-current {
+  animation: color-breathe 3000ms infinite linear;
+  fill: rgba(70, 185, 85, 0.35);
+  /* padding-left: 3px;
+  padding-right: 3px; */
+}
+
+.bar-past {
+  fill: rgba(70, 185, 85, 0.2);
+  /* padding-left: 3px;
+  padding-right: 3px; */
+}
+
+.bar-future {
+  fill: rgba(217, 217, 217, 0.3);
+  /* padding-left: 3px;
+  padding-right: 3px; */
+}

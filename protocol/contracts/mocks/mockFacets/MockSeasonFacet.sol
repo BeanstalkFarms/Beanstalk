@@ -5,9 +5,11 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
-import "~/libraries/LibBytes.sol";
+import "contracts/libraries/LibBytes.sol";
 
 /**
  * @author Publius
@@ -20,6 +22,7 @@ interface ResetPool {
 }
 
 contract MockSeasonFacet is SeasonFacet {
+
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -260,8 +263,14 @@ contract MockSeasonFacet is SeasonFacet {
 
     //fake the grown stalk per bdv deployment, does same as InitBipNewSilo
     function deployStemsUpgrade() external {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+
+        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
         uint32 currentSeason = s.season.current;
+
+        // Clear the storage variable
+        delete s.s.deprecated_seeds;
 
         s.ss[C.BEAN].stalkEarnedPerSeason = 2*1e6;
         s.ss[C.BEAN].stalkIssuedPerBdv = 10000;

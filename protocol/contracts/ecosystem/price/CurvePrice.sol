@@ -3,8 +3,8 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
-import "~/libraries/Curve/LibMetaCurve.sol";
-import "~/libraries/Curve/LibCurve.sol";
+import "contracts/libraries/Curve/LibMetaCurve.sol";
+import "contracts/libraries/Curve/LibCurve.sol";
 
 interface IERC20D {
     function decimals() external view returns (uint8);

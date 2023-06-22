@@ -17,6 +17,10 @@ fs.createReadStream(csvPath)
     .on('data', (row) => {
         const item = [row['address'], row['stalk'], row['seeds']];
 
+        if (!row['address']) {
+            throw new Error('make sure `address,stalk,seeds` is at the top of the seed-stalk-discrepancies.csv file')
+        }
+
         //I initially tried these 2 methods, but they worked differently than solidity's `keccak256(abi.encodePacked(account, stalkDiff, seedsDiff));`
         //manually doing the padding like below made things line up with the solidity version
         // const leaf = ethers.utils.solidityKeccak256(

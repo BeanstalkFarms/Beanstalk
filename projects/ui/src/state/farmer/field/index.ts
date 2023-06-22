@@ -7,4 +7,4 @@ export type FarmerField = {
   pods: BigNumber;
   harvestablePlots: PlotMap<BigNumber>;
   harvestablePods: BigNumber;
-}
+};

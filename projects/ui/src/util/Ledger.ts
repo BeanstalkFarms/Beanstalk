@@ -11,7 +11,7 @@ import { ERROR_STRINGS } from '../constants/errors';
 
 export enum Source {
   SUBGRAPH,
-  LOCAL
+  LOCAL,
 }
 
 // -------------------------
@@ -21,18 +21,17 @@ export enum Source {
 export const identityResult = (result: any) => result;
 
 // FIXME: `instanceof BNJS` call; is this faster than always calling `.toString()`?
-export const bigNumberResult = (result: any) => new BigNumber(result instanceof BNJS ? result.toString() : result);
+export const bigNumberResult = (result: any) =>
+  new BigNumber(result instanceof BNJS ? result.toString() : result);
 
 export const tokenResult = (_token: Token | ChainConstant<Token>) => {
   // If a mapping is provided, default to MAINNET decimals.
   // ASSUMPTION: the number of decimals are the same across all chains.
-  const token = (_token as Token).decimals 
+  const token = (_token as Token).decimals
     ? (_token as Token)
     : (_token as ChainConstant<Token>)[SupportedChainId.MAINNET];
-  return (result: any) => toTokenUnitsBN(
-    bigNumberResult(result),
-    token.decimals
-  );
+  return (result: any) =>
+    toTokenUnitsBN(bigNumberResult(result), token.decimals);
 };
 
 /**
@@ -40,14 +39,21 @@ export const tokenResult = (_token: Token | ChainConstant<Token>) => {
  * @FIXME improve parsing
  */
 interface Error {
-  message: string,
-  rawError?: string,
+  message: string;
+  rawError?: string;
 }
 
 export const parseError = (error: any) => {
   const errorMessage: Error = { message: '' };
 
   const rawError = JSON.stringify(error);
+
+  /// JSON.stringify returns an empty object when given an Error object
+  if (rawError === '{}') {
+    errorMessage.message = `${error}`;
+    errorMessage.message = errorMessage.message.replace('Error: ', '');
+    return errorMessage;
+  }
 
   switch (error.code) {
     /// Common error codes
@@ -56,20 +62,21 @@ export const parseError = (error: any) => {
     case 'UNPREDICTABLE_GAS_LIMIT':
     case 'UNSUPPORTED_OPERATION':
     case 'CALL_EXCEPTION':
-
       if (error.reason) {
         errorMessage.message = error.reason.replace('execution reverted: ', '');
         return errorMessage;
       }
-      
+
       if (error.data && error.data.message) {
-        errorMessage.message = error.data.message.replace('execution reverted: ', '');
+        errorMessage.message = error.data.message.replace(
+          'execution reverted: ',
+          ''
+        );
         return errorMessage;
       }
 
       if (error.message) {
-        if (!error.message.includes("RPC '"))
-        {
+        if (!error.message.includes("RPC '")) {
           errorMessage.message = `${error.message}.`;
           return errorMessage;
         }
@@ -78,8 +85,8 @@ export const parseError = (error: any) => {
         const nestedError = JSON.parse(fixedString);
         if (nestedError) {
           if (error.code === -32603) {
-          errorMessage.message = `${nestedError.value.data.message}.`;
-          return errorMessage;
+            errorMessage.message = `${nestedError.value.data.message}.`;
+            return errorMessage;
           }
           errorMessage.message = `${nestedError.value.message}.`;
           return errorMessage;
@@ -93,7 +100,7 @@ export const parseError = (error: any) => {
       errorMessage.rawError = rawError;
       errorMessage.message = 'Unhandled error.';
       return errorMessage;
-    
+
     /// MetaMask - RPC Error: MetaMask Tx Signature: User denied transaction signature.
     case 4001:
     case 'ACTION_REJECTED':
@@ -102,30 +109,27 @@ export const parseError = (error: any) => {
 
     /// Unknown Error (Ideally, we shouldn't be reaching this stage)
     default:
-
+      // eslint-disable-next-line no-restricted-syntax
       for (const key in ERROR_STRINGS) {
-        if (rawError.includes(key))
-        {
-          if (key === 'CALL_EXCEPTION' && error.reason)
-          {
+        if (rawError.includes(key)) {
+          if (key === 'CALL_EXCEPTION' && error.reason) {
             errorMessage.message = `Call Exception: ${error.reason}`;
             return errorMessage;
           }
 
-          if (key === 'UNPREDICTABLE_GAS_LIMIT' && error.reason)
-          {
+          if (key === 'UNPREDICTABLE_GAS_LIMIT' && error.reason) {
             errorMessage.message = `Transaction Reverted: ${error.reason}`;
             return errorMessage;
           }
 
-          if (key === 'TRANSACTION_REPLACED' && error.reason)
-          {
+          if (key === 'TRANSACTION_REPLACED' && error.reason) {
             if (error.reason === 'cancelled') {
               errorMessage.message = 'Transaction cancelled.';
               return errorMessage;
             }
             if (error.reason === 'replaced') {
-              errorMessage.message = 'Transaction replaced by one with a higher gas price.';
+              errorMessage.message =
+                'Transaction replaced by one with a higher gas price.';
               return errorMessage;
             }
             if (error.reason === 'repriced') {
@@ -134,8 +138,7 @@ export const parseError = (error: any) => {
             }
           }
 
-          if (key === 'UNSUPPORTED_OPERATION' && error.reason)
-          {
+          if (key === 'UNSUPPORTED_OPERATION' && error.reason) {
             errorMessage.message = `Unsupported Operation: ${error.reason}`;
             return errorMessage;
           }
@@ -156,13 +159,14 @@ export const parseError = (error: any) => {
  * Recursively parse all instances of BNJS as BigNumber
  * @unused
  */
- export const bn = (v: any) => (v instanceof BNJS ? new BigNumber(v.toString()) : false);
- export const parseBNJS = (_o: { [key: string]: any }) => {
-   const o: { [key: string]: any } = {};
-   Object.keys(_o).forEach((k: string) => {
-     o[k] =
-       bn(_o[k]) ||
-       (Array.isArray(_o[k]) ? _o[k].map((v: any) => bn(v) || v) : _o[k]);
-   });
-   return o;
- };
+export const bn = (v: any) =>
+  v instanceof BNJS ? new BigNumber(v.toString()) : false;
+export const parseBNJS = (_o: { [key: string]: any }) => {
+  const o: { [key: string]: any } = {};
+  Object.keys(_o).forEach((k: string) => {
+    o[k] =
+      bn(_o[k]) ||
+      (Array.isArray(_o[k]) ? _o[k].map((v: any) => bn(v) || v) : _o[k]);
+  });
+  return o;
+};

@@ -1,6 +1,5 @@
-import { useSelector } from 'react-redux';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 
 export default function useSeason() {
-  return useSelector<AppState, AppState['_beanstalk']['sun']['season']>((state) => state._beanstalk.sun.season);
+  return useAppSelector((s) => s._beanstalk.sun.season.current);
 }

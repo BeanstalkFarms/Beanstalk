@@ -352,7 +352,8 @@ async function upgradeWithNewFacets ({
   object = false,
   p=0,
   verbose = false,
-  account = null
+  account = null,
+  verify = false
 }) {
 
   let totalGasUsed = ethers.BigNumber.from('0')
@@ -374,6 +375,11 @@ async function upgradeWithNewFacets ({
       let libraryFactory = await ethers.getContractFactory(name, account)
       libraryFactory = await libraryFactory.deploy()
       await libraryFactory.deployed()
+      if (verify) {
+        await run(`verify`, {
+          address: libraryFactory.address
+        });
+      }
       const receipt = await libraryFactory.deployTransaction.wait()
       if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
       totalGasUsed = totalGasUsed.add(receipt.gasUsed)
@@ -417,6 +423,11 @@ async function upgradeWithNewFacets ({
     const deployedFactory = await facetFactory.deploy();
     if (verbose) console.log(`${name} hash: ${deployedFactory.deployTransaction.hash}`);
     await deployedFactory.deployed()
+    if (verify) {
+      await run(`verify`, {
+        address: deployedFactory.address
+      });
+    }
     const receipt = await deployedFactory.deployTransaction.wait()
     if (verbose) console.log(`${name} deploy gas used: ` + strDisplay(receipt.gasUsed))
     totalGasUsed = totalGasUsed.add(receipt.gasUsed)
@@ -466,6 +477,11 @@ async function upgradeWithNewFacets ({
       const InitFacet = await ethers.getContractFactory(initFacetName, account)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()
+      if (verify) {
+        await run(`verify`, {
+          address: initFacet.address
+        });
+      }
       const receipt = await initFacet.deployTransaction.wait()
       if (verbose) console.log(`Init Diamond deploy gas used: ` + strDisplay(receipt.gasUsed))
       totalGasUsed = totalGasUsed.add(receipt.gasUsed)

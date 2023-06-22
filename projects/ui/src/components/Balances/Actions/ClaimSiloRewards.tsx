@@ -11,10 +11,7 @@ import { useSelector } from 'react-redux';
 import { Field, FieldProps } from 'formik';
 import { useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
-import {
-  Module,
-  ModuleContent,
-} from '~/components/Common/Module';
+import { Module, ModuleContent } from '~/components/Common/Module';
 import beanIcon from '~/img/tokens/bean-logo-circled.svg';
 import stalkIcon from '~/img/beanstalk/stalk-icon-winter.svg';
 import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
@@ -69,7 +66,17 @@ const ClaimRewardsContent: React.FC<
     hide: () => void;
     ctaDisabled?: boolean;
   }
-> = ({ submitForm, isSubmitting, values, gas, calls, open, show, hide, ctaDisabled }) => {
+> = ({
+  submitForm,
+  isSubmitting,
+  values,
+  gas,
+  calls,
+  open,
+  show,
+  hide,
+  ctaDisabled,
+}) => {
   // helpers
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -198,7 +205,11 @@ const ClaimRewardsContent: React.FC<
         loading={isSubmitting}
         disabled={isSubmitting}
         onClick={handleOnClick}
-        endIcon={!open ? <DropdownIcon open={false} disabled={isSubmitting || ctaDisabled} /> : null}
+        endIcon={
+          !open ? (
+            <DropdownIcon open={false} disabled={isSubmitting || ctaDisabled} />
+          ) : null
+        }
       >
         {!open
           ? 'Claim Rewards'
@@ -307,7 +318,15 @@ const RewardsContent: React.FC<{}> = () => {
           size="medium"
           variant="contained"
           sx={{ width: '100%', whiteSpace: 'nowrap', mt: '20px !important' }}
-          endIcon={!open ? <DropdownIcon open={false} disabled={breakdown?.totalValue?.eq(0)} light /> : null}
+          endIcon={
+            !open ? (
+              <DropdownIcon
+                open={false}
+                disabled={breakdown?.totalValue?.eq(0)}
+                light
+              />
+            ) : null
+          }
           onClick={() => {
             if (open) {
               hide();
@@ -328,7 +347,9 @@ const ClaimSiloRewards: React.FC<{}> = () => (
   <Module>
     <ModuleContent pt={1.5} px={1} pb={1}>
       <Stack spacing={1.5}>
-        <Typography variant="h4" sx={{ px: 0.5 }}>Rewards</Typography>
+        <Typography variant="h4" sx={{ px: 0.5 }}>
+          Rewards
+        </Typography>
         <RewardsContent />
       </Stack>
     </ModuleContent>

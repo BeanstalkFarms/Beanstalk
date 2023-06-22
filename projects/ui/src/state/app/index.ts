@@ -3,12 +3,12 @@ import { SGEnvironments } from '~/graph/endpoints';
 
 export type Settings = {
   denomination: 'usd' | 'bdv';
-  subgraphEnv: SGEnvironments
+  subgraphEnv: SGEnvironments;
 };
 
 export type Globals = {
   showSettings: boolean;
-}
+};
 
 /// Not included in `App` are "flags", which are values saved in localStorage
 /// See `useAppFlag`
@@ -20,4 +20,4 @@ export type App = {
   settings: Settings;
   /**  */
   globals: Globals;
-}
+};

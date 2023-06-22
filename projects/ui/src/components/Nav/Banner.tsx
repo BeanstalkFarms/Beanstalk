@@ -17,16 +17,9 @@ const sx = {
   backgroundColor: 'white',
 };
 
-const Banner : FC<
-  LinkProps
-  & { height: number }
-  & { to?: string } // fixme
-> = ({
-  height,
-  children,
-  to,
-  ...props
-}) => (
+const Banner: FC<
+  LinkProps & { height: number } & { to?: string } // fixme
+> = ({ height, children, to, ...props }) =>
   to ? (
     <Link
       component={Link2}
@@ -49,7 +42,6 @@ const Banner : FC<
     >
       {children}
     </Link>
-  )
-);
+  );
 
 export default Banner;

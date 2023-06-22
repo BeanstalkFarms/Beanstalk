@@ -7,7 +7,7 @@ import {
   Tooltip,
   Typography,
   StackProps as MuiStackProps,
-  TypographyProps
+  TypographyProps,
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { FontSize } from '~/components/App/muiTheme';
@@ -25,24 +25,26 @@ import { FC } from '~/types';
 
 const GAP = 2;
 
-const DescriptionButton: FC<ButtonProps & {
-  /** Title */
-  title?: string;
-  /** Description displayed below the title. */
-  description?: string;
-  /** Icon displayed next to the title. */
-  icon?: React.ReactNode | string;
-  /** Small element displayed on the right side of the button. */
-  tag?: JSX.Element;
-  /** Tooltip message to show next to the title if provided. */
-  titleTooltip?: string;
-  /** Whether the button is currently selected. */
-  isSelected?: boolean;
-  /** Props to apply to the first <Stack> that controls the button's internal layout. */
-  StackProps?: MuiStackProps;
-  /** Props applied to the title <Typography>. */
-  TitleProps?: TypographyProps;
-}> = ({
+const DescriptionButton: FC<
+  ButtonProps & {
+    /** Title */
+    title?: string;
+    /** Description displayed below the title. */
+    description?: string;
+    /** Icon displayed next to the title. */
+    icon?: React.ReactNode | string;
+    /** Small element displayed on the right side of the button. */
+    tag?: JSX.Element;
+    /** Tooltip message to show next to the title if provided. */
+    titleTooltip?: string;
+    /** Whether the button is currently selected. */
+    isSelected?: boolean;
+    /** Props to apply to the first <Stack> that controls the button's internal layout. */
+    StackProps?: MuiStackProps;
+    /** Props applied to the title <Typography>. */
+    TitleProps?: TypographyProps;
+  }
+> = ({
   title,
   description,
   icon,
@@ -70,9 +72,9 @@ const DescriptionButton: FC<ButtonProps & {
       backgroundColor: isSelected ? 'primary.light' : null,
       '&:hover': {
         backgroundColor: isSelected ? 'primary.light' : null,
-        borderColor: 'primary.main'
+        borderColor: 'primary.main',
       },
-      height: 'auto'
+      height: 'auto',
     }}
     {...props}
   >
@@ -80,19 +82,25 @@ const DescriptionButton: FC<ButtonProps & {
       {/* Icon + Title */}
       <Stack gap={0.5}>
         <Row gap={0.25}>
-          {icon && (
-            <>
-              {icon}&nbsp;
-            </>
-          )}
+          {icon && <>{icon}&nbsp;</>}
           <Typography variant="bodyMedium" {...TitleProps}>
             {title}
-            <Tooltip title={titleTooltip || ''} placement="top" sx={{ pointerEvents: 'all' }}>
+            <Tooltip
+              title={titleTooltip || ''}
+              placement="top"
+              sx={{ pointerEvents: 'all' }}
+            >
               <>
                 {titleTooltip && (
                   <>
                     &nbsp;
-                    <HelpOutlineIcon sx={{ color: 'text.tertiary', fontSize: FontSize.sm, display: 'inline' }} />
+                    <HelpOutlineIcon
+                      sx={{
+                        color: 'text.tertiary',
+                        fontSize: FontSize.sm,
+                        display: 'inline',
+                      }}
+                    />
                   </>
                 )}
               </>
@@ -100,17 +108,9 @@ const DescriptionButton: FC<ButtonProps & {
           </Typography>
         </Row>
         {/* Description */}
-        {description && (
-          <Typography>
-            {description}
-          </Typography>
-        )}
+        {description && <Typography>{description}</Typography>}
       </Stack>
-      {tag && (
-        <Box sx={{ flexWrap: 'nowrap' }}>
-          {tag}
-        </Box>
-      )}
+      {tag && <Box sx={{ flexWrap: 'nowrap' }}>{tag}</Box>}
     </Row>
   </Button>
 );
