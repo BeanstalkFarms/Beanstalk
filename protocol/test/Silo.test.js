@@ -2,18 +2,20 @@ const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
-const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP } = require('./utils/constants')
+const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, THREE_POOL } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
+const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
+const fs = require('fs');
 
-let user,user2,owner;
+let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
 describe('Silo', function () {
   before(async function () {
 
-    [owner,user,user2] = await ethers.getSigners();
-    [owner,user,user2,user3,user4] = await ethers.getSigners();
+    [owner, user, user2] = await ethers.getSigners();
+    [owner, user, user2, user3, user4] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
     user3Address = user3.address;
@@ -22,7 +24,7 @@ describe('Silo', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    
+
     await this.season.teleportSunrise(10);
 
     this.season.deployStemsUpgrade();
@@ -31,10 +33,19 @@ describe('Silo', function () {
     this.metadata = await ethers.getContractAt('MetadataFacet', this.diamond.address);
     this.diamondLoupe = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address);
     this.approval = await ethers.getContractAt('ApprovalFacet', this.diamond.address);
-
-
+    this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+    this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
+    await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES)
+    
 
     this.bean = await ethers.getContractAt('Bean', BEAN);
+    this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
+    this.unripeBean = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
+    this.unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
+    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
+    this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+
     await this.season.lightSunrise();
     await this.bean.connect(user).approve(this.silo.address, '100000000000');
     await this.bean.connect(user2).approve(this.silo.address, '100000000000'); 
@@ -344,10 +355,24 @@ describe('Silo', function () {
     });
 
     it("properly gives an URI", async function () {
-      season = this.season.season()
-      stem = this.silo.seasonToStem(this.bean.address, season)
-      depositID = '0xBEA0000029AD1C77D3D5D23BA2D8893DB9D1EFAB000000000000000000000002';
-      expect(await this.metadata.uri(depositID)).to.eq("data:application/json;base64,eyJuYW1lIjogIkJlYW5zdGFsayBEZXBvc2l0IiwgImRlc2NyaXB0aW9uIjogIkEgQmVhbnN0YWxrIERlcG9zaXQiLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpnaUlHaGxhV2RvZEQwaU16a2lJSFpwWlhkQ2IzZzlJakFnTUNBek9DQXpPU0lnWm1sc2JEMGlibTl1WlNJZ2VHMXNibk05SW1oMGRIQTZMeTkzZDNjdWR6TXViM0puTHpJd01EQXZjM1puSWo0S1BISmxZM1FnZVQwaU1DNDFNVGsxTXpFaUlIZHBaSFJvUFNJek55NDVOakk1SWlCb1pXbG5hSFE5SWpNM0xqazJNamtpSUhKNFBTSXhPQzQ1T0RFMElpQm1hV3hzUFNJak0wVkNPVFJGSWk4K0NqeHdZWFJvSUdROUlrMHlOQzR6TVRNMUlEUXVOVEU1TlROTU1UTXVNakk1SURNMExqRXpNamhETVRNdU1qSTVJRE0wTGpFek1qZ2dNQzQ1TXpnNE5ESWdNVE11TVRZMk55QXlOQzR6TVRNMUlEUXVOVEU1TlROYUlpQm1hV3hzUFNKM2FHbDBaU0l2UGdvOGNHRjBhQ0JrUFNKTk1UVXVPREEwTnlBek1pNHlPVFUxVERJekxqVTVORElnTVRFdU1USTNRekl6TGpVNU5ESWdNVEV1TVRJM0lETTNMamswT1RjZ01qSXVOelF3TkNBeE5TNDRNRFEzSURNeUxqSTVOVFZhSWlCbWFXeHNQU0ozYUdsMFpTSXZQZ284TDNOMlp6ND0iLCAiYXR0cmlidXRlcyI6IHsidG9rZW4gYWRkcmVzcyI6ICIweGJlYTAwMDAwMjlhZDFjNzdkM2Q1ZDIzYmEyZDg4OTNkYjlkMWVmYWIiLCAiaWQiOiA4NjIyMjEzNjc2NTU3NDE3MzA2MDYxNDQzNTU2NTI3MjMxNDA2MDI4NzQwMjk1OTk0NTkwNzk0NDU4OTU0Mjk1MzI1Mjk4NjgxNDQ2NiwgInN0ZW0iOiAyLCAidG90YWwgc3RhbGsiOiAyLCAic2VlZHMgcGVyIEJEViI6IDJ9fQ==");
+      await this.season.farmSunrises(10);  
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
+      depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
+      expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
+
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3Crv.txt', 'utf-8');
+      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000002';
+      expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
+      depositID2 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000002';
+      expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean3Crv.txt', 'utf-8');
+      depositID2 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D000000000000000000000002';
+      expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+
+
     });
 
     it("properly gives the correct ERC-165 identifier", async function () {
