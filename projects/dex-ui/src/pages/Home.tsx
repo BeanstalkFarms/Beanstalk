@@ -72,7 +72,7 @@ const MevBubble = styled.div`
   padding: 8px;
   gap: 8px;
   height: 40px;
-  width: 495px;
+  width: 520px;
   background: #ffffff;
   border: 0.25px solid #4b5563;
   border-radius: 100px;
