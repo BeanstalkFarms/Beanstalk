@@ -35,7 +35,6 @@ library LibLegacyTokenSilo {
     using LibSafeMath32 for uint32;
     using LibSafeMath128 for uint128;
 
-    //TODO: verify and update this root on launch if there's more drift
     //to get the new root, run `node scripts/silov3-merkle/stems_merkle.js`
     bytes32 constant DISCREPANCY_MERKLE_ROOT = 0xa84dc86252c556839dff46b290f0c401088a65584aa38a163b6b3f7dd7a5b0e8;
     uint32 constant ENROOT_FIX_SEASON = 12793; //season in which enroot ebip-8 fix was deployed

@@ -77,9 +77,6 @@ describe('Sun', function () {
     await this.season.setAbovePegE(true);
     await this.field.incrementTotalPodsE('10000');
     this.result = await this.season.sunSunrise('30000', 0);
-    console.log("temperature:",await this.field.temperature()); 
-    console.log("yield:",await this.field.yield()); 
-    console.log("totalSoil:",await this.field.totalSoil()); 
     expect(await this.field.totalSoil()).to.be.equal('14850');
   })
 

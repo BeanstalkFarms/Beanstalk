@@ -3,7 +3,7 @@
  **/
 
 pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "../LibAppStorage.sol";
 import {C} from "../../C.sol";
