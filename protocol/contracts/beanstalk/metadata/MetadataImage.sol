@@ -63,7 +63,6 @@ contract MetadataImage {
             emptyPlot(),
             partialLeafRow(sproutsInFinalRow),
             partialLeafPlot(stemTip),
-            bar(),
             leaf(),
             silo(),
             beanToken(),
@@ -374,16 +373,6 @@ contract MetadataImage {
         );
     }
 
-    function bar() internal pure returns (string memory) {
-        return string(
-            abi.encodePacked(
-                '<g id="bar">',
-                '<rect x="39" y="248" width="177" height="17" rx="5" fill="#8B938C" fill-opacity="0.1"/>',
-                '</g>'
-            )
-        );
-    }
-
     function leaf() internal pure returns (string memory) { 
         return string(
             abi.encodePacked(
@@ -515,10 +504,10 @@ contract MetadataImage {
     function blackBars(address token) internal pure returns(string memory) {
         return string(
             abi.encodePacked(
-                '<rect x="0" y="0" width="255" height="20" rx="5" fill="Black"/>',
+                '<rect x="0" y="0" width="255" height="20" rx="5" fill="#242424"/>',
                 tokenName(token),
                 useAsset(getTokenName(token), 240, 4),
-                '<rect x="0" y="330" width="255" height="20" rx="5" fill="Black"/>',
+                '<rect x="0" y="330" width="255" height="20" rx="5" fill="#242424"/>',
                 movingTokenAddress(token)
             )
         );
