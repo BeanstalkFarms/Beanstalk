@@ -162,20 +162,20 @@ contract MetadataImage {
         ));
     }
 
-    function partialLeafPlot(int96 stalkPerBDV) internal pure returns (string memory plot) {
+    function partialLeafPlot(int96 stalkPerBDV) internal pure returns (string memory _plot) {
         uint256 totalSprouts = uint256(stalkPerBDV).div(STALK_GROWTH).add(16);
         uint256 numRows = uint256(totalSprouts).div(4).mod(4);
         uint256 numSprouts = uint256(totalSprouts).mod(4);
         if(numRows == 0){
             if(numSprouts > 0){
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     useAssetTransform('plot',-35,0),
                     useAssetTransformFill('partialLeafRow',-35,0, LEAF_COLOR_0),
                     '</g>'
                 ));
             } else {
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     threeLeafRows(),
                     useAssetTransformFill('leafRow',-73,21, LEAF_COLOR_1),
@@ -185,14 +185,14 @@ contract MetadataImage {
         }
         if(numRows == 1){
             if(numSprouts > 0){
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     oneLeafRow(),
                     useAssetTransformFill('partialLeafRow',-47,7, LEAF_COLOR_1),
                     '</g>'
                 ));
             } else {
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     oneLeafRow(),
                     '</g>'
@@ -201,14 +201,14 @@ contract MetadataImage {
         }
         if(numRows == 2){
             if(numSprouts > 0) {
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     twoLeafRows(),
                     useAssetTransformFill('partialLeafRow',-60,14, LEAF_COLOR_0),
                     '</g>'
                 ));
             } else {
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     twoLeafRows(),
                     '</g>'
@@ -218,7 +218,7 @@ contract MetadataImage {
         }
         if(numRows == 3){
             if(numSprouts > 0){
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     threeLeafRows(),
                     useAssetTransformFill('partialLeafRow',-73,21, LEAF_COLOR_1),
@@ -226,7 +226,7 @@ contract MetadataImage {
                 ));
 
             } else {
-                plot = string(abi.encodePacked(
+                _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     threeLeafRows(),
                     '</g>'
