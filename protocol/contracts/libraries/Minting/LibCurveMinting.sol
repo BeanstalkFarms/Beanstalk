@@ -29,6 +29,8 @@ interface IMeta3CurveOracle {
  * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
  * it has been since the last Season instead of storing its own for efficiency purposes.
  * Each Capture stores the encoded cumulative balances returned by the Pump in `s.co`.
+ * Because Curve pools use `balances` refer to the quantity of tokens in each pool, {LibCurveMinting}
+ * does as well.
  */
 library LibCurveMinting {
     using SafeMath for uint256;

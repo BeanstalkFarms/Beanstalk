@@ -10,25 +10,30 @@ import "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title Bean Eth Well Oracle Library
- * @notice contains a function to store and read the Bean/Eth price in storage
+ * @notice Contains a function to store and read the BEAN/ETH price in storage.
  * @dev
- * Within a `sunrise`/`gm` call:
- * {LibWellMinting} sets the Bean/Eth price when evalulating the Bean Eth Well and
- * {LibIncentive} reads the Bean/Eth price when calculating the Sunrise incentive
+ * In each `sunrise`/`gm` call, {LibWellMinting} sets the BEAN/ETH price when
+ * evalulating the Bean Eth Well during minting and {LibIncentive} reads the
+ * BEAN/ETH price when calculating the Sunrise incentive.
  **/
 library LibBeanEthWellOracle {
     using SafeMath for uint256;
 
-    // The index of the Bean and Weth token addresses in all Bean/Eth Wells.
+    // The index of the Bean and Weth token addresses in all BEAN/ETH Wells.
     uint256 constant BEAN_INDEX = 0;
     uint256 constant ETH_INDEX = 1;
 
     /**
-     * @dev Sets the Bean/Eth price in {AppStorage} given a set of reserves
-     * Assumes that the reserves corresponding to a Bean/Eth Constant Product 2 Well.
+     * @dev Sets the BEAN/ETH price in {AppStorage} given a set of reserves.
+     * It assumes that the reserves correspond to a BEAN/ETH Constant Product Well
+     * given that it computes the price as beanReserve / ethReserve.
      */
     function setBeanEthWellPrice(uint256[] memory reserves) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // If the reserves length is 0, then {LibWellMinting} failed to compute
+        // valid manipulation resistant reserves and thus the price is set to 0
+        // indicating that the oracle failed to compute a valid price this Season.
         if (reserves.length == 0) {
             s.beanEthPrice = 0;
         } else {
@@ -39,7 +44,7 @@ library LibBeanEthWellOracle {
     /**
      * @dev Returns the BEAN / ETH price stored in {AppStorage} and resets the
      * storage variable to 1 to reduce gas cost. Only {LibIncentive} accesses
-     * the Bean/Eth price, so it is safe to assume it will only be read once for
+     * the BEAN/ETH price, so it is safe to assume it will only be read once for
      * each time it is set.
      */
     function getBeanEthWellPrice() internal returns (uint price) {

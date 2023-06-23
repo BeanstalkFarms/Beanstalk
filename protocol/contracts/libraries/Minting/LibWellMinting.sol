@@ -26,7 +26,7 @@ import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
  * @dev
  * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
  * it has been since the last Season instead of storing its own for efficiency purposes.
- * Each Capture stores the encoded cumulative balances returned by the Pump in `s.wellOracleSnapshots[well]`.
+ * Each Capture stores the encoded cumulative reserves returned by the Pump in `s.wellOracleSnapshots[well]`.
  **/
 
 library LibWellMinting {
@@ -38,13 +38,13 @@ library LibWellMinting {
      * @param season The season that the Well was captured.
      * @param well The Well that was captured.
      * @param deltaB The time weighted average delta B computed during the Oracle capture.
-     * @param cumulativeBalances The encoded cumulative balances that were snapshotted most by the Oracle capture.
+     * @param cumulativeReserves The encoded cumulative reserves that were snapshotted most by the Oracle capture.
      */
     event WellOracle(
         uint32 indexed season,
         address well,
         int256 deltaB,
-        bytes cumulativeBalances
+        bytes cumulativeReserves
     );
 
     using SafeMath for uint256;
@@ -125,15 +125,16 @@ library LibWellMinting {
         bytes memory lastSnapshot
     ) internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256[] memory twaBalances;
-        (deltaB, s.wellOracleSnapshots[well], twaBalances) = twaDeltaB(
+        uint256[] memory twaReserves;
+        (deltaB, s.wellOracleSnapshots[well], twaReserves) = twaDeltaB(
             well,
             lastSnapshot
         );
 
-        // If evaluating the Bean Eth, set the Bean/Eth price for the Sunrise incentive.
+        // If evaluating the Bean:Eth Constant Product Well, set the BEAN/ETH price so that it
+        // can be read when calculating the Sunrise reward. See {LibIncentive.determineReward}.
         if (well == C.BEAN_ETH_WELL) {
-            LibBeanEthWellOracle.setBeanEthWellPrice(twaBalances);
+            LibBeanEthWellOracle.setBeanEthWellPrice(twaReserves);
         }
 
         emit WellOracle(
@@ -160,30 +161,30 @@ library LibWellMinting {
             lastSnapshot,
             uint40(s.season.timestamp),
             C.BYTES_ZERO
-        ) returns (uint[] memory twaBalances, bytes memory snapshot) {
+        ) returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
             (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
-            if (twaBalances[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+            if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
                 return (0, snapshot, new uint256[](0));
             }
 
             // If the USD Oracle oracle call fails, the minting oracle should be considered off.
             if (!success) {
-                return (0, snapshot, twaBalances);
+                return (0, snapshot, twaReserves);
             }
 
             Call memory wellFunction = IWell(well).wellFunction();
             // Delta B is the difference between the target Bean reserve at the peg price
             // and the time weighted average Bean balance in the Well.
             int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                twaBalances,
+                twaReserves,
                 beanIndex,
                 ratios,
                 wellFunction.data
-            )).sub(int256(twaBalances[beanIndex]));
-            return (deltaB, snapshot, twaBalances);
+            )).sub(int256(twaReserves[beanIndex]));
+            return (deltaB, snapshot, twaReserves);
         }
         catch {}
     }
