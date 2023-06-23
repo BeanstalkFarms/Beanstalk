@@ -2,11 +2,10 @@
 
 pragma solidity ^0.7.6;
 import "../AppStorage.sol";
-import {LibTokenSilo} from "~/libraries/Silo/LibTokenSilo.sol";
-import {LibBytes} from "~/libraries/LibBytes.sol";
-import {LibBytes64} from "~/libraries/LibBytes64.sol";
-import {LibStrings} from "~/libraries/LibStrings.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
+import {LibStrings} from "contracts/libraries/LibStrings.sol";
 import {C} from "../../C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -27,7 +26,7 @@ contract MetadataImage {
     string constant LEAF_COLOR_0 = '#A8C83A';
     string constant LEAF_COLOR_1 = '#89A62F';
     uint256 constant NUM_PLOTS = 21;
-    uint256 constant STALK_GROWTH = 2e3;
+    uint256 constant STALK_GROWTH = 2e2;
 
     function imageURI(uint256 depositId) public view returns (string memory){
         return string(abi.encodePacked("data:image/svg+xml;base64,", LibBytes64.encode(bytes(generateImage(depositId)))));
@@ -164,7 +163,7 @@ contract MetadataImage {
     }
 
     function partialLeafPlot(int96 stalkPerBDV) internal pure returns (string memory plot) {
-        uint256 totalSprouts = uint256(stalkPerBDV).div(2e3).add(16);
+        uint256 totalSprouts = uint256(stalkPerBDV).div(STALK_GROWTH).add(16);
         uint256 numRows = uint256(totalSprouts).div(4).mod(4);
         uint256 numSprouts = uint256(totalSprouts).mod(4);
         if(numRows == 0){
@@ -178,10 +177,7 @@ contract MetadataImage {
             } else {
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
-                    useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
-                    useAssetTransformFill('leafRow',-60,14, LEAF_COLOR_0),
+                    threeLeafRows(),
                     useAssetTransformFill('leafRow',-73,21, LEAF_COLOR_1),
                     '</g>'
                 ));
@@ -191,16 +187,14 @@ contract MetadataImage {
             if(numSprouts > 0){
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
+                    oneLeafRow(),
                     useAssetTransformFill('partialLeafRow',-47,7, LEAF_COLOR_1),
                     '</g>'
                 ));
             } else {
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
+                    oneLeafRow(),
                     '</g>'
                 ));
             }
@@ -209,18 +203,14 @@ contract MetadataImage {
             if(numSprouts > 0) {
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
-                    useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
+                    twoLeafRows(),
                     useAssetTransformFill('partialLeafRow',-60,14, LEAF_COLOR_0),
                     '</g>'
                 ));
             } else {
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
-                    useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
+                    twoLeafRows(),
                     '</g>'
                 ));
             }
@@ -230,10 +220,7 @@ contract MetadataImage {
             if(numSprouts > 0){
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
-                    useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
-                    useAssetTransformFill('leafRow',-60,14, LEAF_COLOR_0),
+                    threeLeafRows(),
                     useAssetTransformFill('partialLeafRow',-73,21, LEAF_COLOR_1),
                     '</g>'
                 ));
@@ -241,10 +228,7 @@ contract MetadataImage {
             } else {
                 plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
-                    useAssetTransform('plot',-35,0),
-                    useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0),
-                    useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1),
-                    useAssetTransformFill('leafRow',-60,14, LEAF_COLOR_0),
+                    threeLeafRows(),
                     '</g>'
                 ));
             }
@@ -253,8 +237,7 @@ contract MetadataImage {
 
     function printPlots(int96 stalkPerBDV) internal pure returns (string memory) {
         return string(abi.encodePacked(
-            '<use xlink:href="#silo" x="99" y="55"/>',
-            '<g id="allPlot" clip-path="url(#borderMask)">',
+            '<use xlink:href="#silo" x="99" y="55"/><g id="allPlot" clip-path="url(#borderMask)">',
                 plotLogic(stalkPerBDV),
             '</g>'
         ));
@@ -430,43 +413,40 @@ contract MetadataImage {
     }
 
     function beanToken() internal pure returns (string memory){
-        return string(abi.encodePacked(
-            '<g id="bean">',
-            '<rect width="12" height="12" rx="6" fill="#46B955"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
-            '</g>'
-            )
-        );
+        return beanTemplateToken(false);
     }
 
     function bean3CRVToken() internal pure returns (string memory){
-        return string(abi.encodePacked(
-            '<g id="bean3CRV">',
-            '<rect y=".5" width="12" height="12" rx="6" fill="#46B955"/>',
-            '<path d="m7.687 1.764-3.504 9.36S.298 4.499 7.687 1.765Z" fill="#fff"/>',
-            '<path d="M8.132 8.078c-.466.64-1.297 1.323-2.695 1.992l2.126-5.777c.089.09.193.204.3.338.303.375.625.891.744 1.484.117.583.04 1.253-.475 1.963Z" fill="url(#a)" stroke="#fff" stroke-width=".5"/>',
-            '<defs><linearGradient id="a" x1="6.95" y1="3.853" x2="6.95" y2="10.544" gradientUnits="userSpaceOnUse">',
-            '<stop stop-color="#820202"/><stop offset=".182" stop-color="#F71E05"/>',
-            '<stop offset=".516" stop-color="#F0F507"/><stop offset=".734" stop-color="#85CD75"/><stop offset="1" stop-color="#029DFB"/>',
-            '</linearGradient></defs>',
-            '</g>'
-            )
-        );
+        return beanLPTemplateToken(false);
     }
 
     function urBeanToken() internal pure returns (string memory){
+        return beanTemplateToken(true);
+    }
+
+    function urBean3CRVToken() internal pure returns (string memory){
+        return beanLPTemplateToken(true);
+    }
+
+    function beanTemplateToken(bool ripe) internal pure returns (string memory){
         return string(abi.encodePacked( 
-            '<g id="urBean">',
-            '<rect width="12" height="12" rx="6" fill="#7F5533"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
+            '<g id="',
+            ripe ? 'urBean' : 'Bean',
+            '"><rect width="12" height="12" rx="6" fill="',
+            ripe ? '#7F5533' : '#46B955',
+            '"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
             '</g>'
             )
         );
     }
 
-    function urBean3CRVToken() internal pure returns (string memory){
+    function beanLPTemplateToken(bool ripe) internal pure returns (string memory){
         return string(abi.encodePacked(
-            '<g id="urBean3CRV">',
-            '<rect y=".5" width="12" height="12" rx="6" fill="#7F5533"/>',
-            '<path d="m7.687 1.764-3.504 9.36S.298 4.499 7.687 1.765Z" fill="#fff"/>',
+            '<g id="',
+            ripe ? 'urBean3CRV' : 'Bean3CRV',
+            '"><rect y=".5" width="12" height="12" rx="6" fill="',
+            ripe ? '#7F5533' : '#46B955',
+            '"/><path d="m7.687 1.764-3.504 9.36S.298 4.499 7.687 1.765Z" fill="#fff"/>',
             '<path d="M8.132 8.078c-.466.64-1.297 1.323-2.695 1.992l2.126-5.777c.089.09.193.204.3.338.303.375.625.891.744 1.484.117.583.04 1.253-.475 1.963Z" fill="url(#a)" stroke="#fff" stroke-width=".5"/>',
             '<defs><linearGradient id="a" x1="6.95" y1="3.853" x2="6.95" y2="10.544" gradientUnits="userSpaceOnUse">',
             '<stop stop-color="#820202"/><stop offset=".182" stop-color="#F71E05"/>',
@@ -475,7 +455,7 @@ contract MetadataImage {
             '</g>'
             )
         );
-    }
+    } 
 
     function useAssetTransform(string memory assetName, int256 x, int256 y) internal pure returns (string memory) { 
         return string(abi.encodePacked(
@@ -503,25 +483,53 @@ contract MetadataImage {
         ));
     }
 
-    function blackBars(address token) internal view returns(string memory) {
+    function threeLeafRows() internal pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                twoLeafRows(),
+                useAssetTransformFill('leafRow',-60,14, LEAF_COLOR_0)
+            )
+        );
+    }
+
+    function twoLeafRows() internal pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                oneLeafRow(),
+                useAssetTransformFill('leafRow',-47,7, LEAF_COLOR_1)
+            )
+        );
+    }
+
+    function oneLeafRow() internal pure returns(string memory) {
+        return string(
+            abi.encodePacked(
+                useAssetTransform('plot',-35,0),
+                useAssetTransformFill('leafRow',-35,0, LEAF_COLOR_0)
+            )
+        );
+    }
+
+    
+
+    function blackBars(address token) internal pure returns(string memory) {
         return string(
             abi.encodePacked(
                 '<rect x="0" y="0" width="255" height="20" rx="5" fill="Black"/>',
                 tokenName(token),
-                useAsset(getTokenIcon(token), 240, 4),
+                useAsset(getTokenName(token), 240, 4),
                 '<rect x="0" y="330" width="255" height="20" rx="5" fill="Black"/>',
                 movingTokenAddress(token)
             )
         );
     }
 
-    function tokenName(address token) internal view returns (string memory) {
+    function tokenName(address token) internal pure returns (string memory) {
         return string(
             abi.encodePacked(
                 '<text x="10" y="14.5" font-size="12" fill="White" text-anchor="start" font-family="futura">',
-                string(ERC20(token).symbol()),
-                ' Deposit',
-                '</text>'
+                getTokenName(token),
+                ' Deposit</text>'
             )
         );
     }
@@ -532,13 +540,11 @@ contract MetadataImage {
                 '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                 '<tspan><animate attributeName="x" from="375" to="50" dur="10s" repeatCount="indefinite" />',
                 LibStrings.toHexString(token),
-                '</tspan>',
-                '</text>'
+                '</tspan></text>'
                 '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                 '<tspan><animate attributeName="x" from="50" to="-275" dur="10s" repeatCount="indefinite" />',
                 LibStrings.toHexString(token),
-                '</tspan>',
-                '</text>'
+                '</tspan></text>'
             )
         );
     }   
@@ -554,12 +560,12 @@ contract MetadataImage {
         }        
     }
 
-    function getTokenIcon(address token) internal view returns (string memory tokenString) {
+    function getTokenName(address token) internal pure returns (string memory tokenString) {
         if(token == C.BEAN) {
-            tokenString = "bean";
+            tokenString = "Bean";
         }
         else if(token == C.CURVE_BEAN_METAPOOL) {
-            tokenString = "bean3CRV";
+            tokenString = "Bean3CRV";
         }
         else if(token == C.UNRIPE_BEAN) {
             tokenString = "urBean";
@@ -577,7 +583,7 @@ contract MetadataImage {
         returns (uint256 numStems, uint256 plots)
     {
         // 1 sprout on the image is equal to 0.02 stalk
-        numStems = uint256(grownStalkPerBDV).div(2e3);
+        numStems = uint256(grownStalkPerBDV).div(STALK_GROWTH);
         plots = numStems.div(16).add(1);
         if(numStems.mod(16) > 0) plots = plots.add(1);
     }
