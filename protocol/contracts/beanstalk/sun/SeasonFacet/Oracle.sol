@@ -19,16 +19,12 @@ contract Oracle is ReentrancyGuard {
 
     //////////////////// ORACLE GETTERS ////////////////////
 
-    // TODO: Set
-    address private constant BEAN_ETH_WELL =
-        0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7;
-
     /**
      * @notice Returns the current Delta B in the Curve liquidity pool.
      */
     function totalDeltaB() external view returns (int256 deltaB) {
         deltaB = LibCurveMinting.check().add(
-            LibWellMinting.check(BEAN_ETH_WELL)
+            LibWellMinting.check(C.BEAN_ETH_WELL)
         );
     }
 
@@ -43,9 +39,9 @@ contract Oracle is ReentrancyGuard {
 
     //////////////////// ORACLE INTERNAL ////////////////////
 
-    function stepOracle() internal returns (int256 deltaB, uint256[2] memory balances) {
-        (deltaB, balances) = LibCurveMinting.capture();
-        deltaB = deltaB.add(LibWellMinting.capture(BEAN_ETH_WELL));
+    function stepOracle() internal returns (int256 deltaB) {
+        deltaB = LibCurveMinting.capture();
+        deltaB = deltaB.add(LibWellMinting.capture(C.BEAN_ETH_WELL));
         s.season.timestamp = block.timestamp;
     }
 

@@ -7,26 +7,7 @@ let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
-let lastTimestamp = 1700000000;
-let timestamp;
 let snapshotId;
-
-async function resetTime() {
-  timestamp = lastTimestamp + 100000000
-  lastTimestamp = timestamp
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
-
-async function advanceTime(time) {
-  timestamp += time
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
 
 describe('BDV', function () {
   before(async function () {

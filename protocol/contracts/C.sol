@@ -79,6 +79,7 @@ library C {
 
     uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
     address constant internal BEANSTALK_PUMP = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
+    address constant BEAN_ETH_WELL = 0x9bAaB117304f7D6517048e371025dB8f89a8DbE5;
 
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;

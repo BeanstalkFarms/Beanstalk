@@ -11,7 +11,8 @@ async function getWellContractFactory(name) {
     const contractJson = JSON.parse(await fs.readFileSync(`${BASE_STRING}/${name}.sol/${name}.json`))
     return await ethers.getContractFactory(
         contractJson.abi,
-        contractJson.bytecode.object
+        contractJson.bytecode.object,
+        await getWellDeployer()
     );
 }
 
@@ -215,10 +216,10 @@ async function deployGeoEmaAndCumSmaPump() {
 
 async function deployMockWell() {
 
-    let wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
+    let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
 
-    let well = await (await ethers.getContractFactory('MockSetComponentsWell')).deploy()
+    let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
 
     pump = await deployGeoEmaAndCumSmaPump()
@@ -231,6 +232,10 @@ async function deployMockWell() {
     await well.setReserves([to6('1000000'), to18('1000')])
 
     return [well, wellFunction, pump]
+}
+
+async function getWellDeployer() {
+    return (await ethers.getSigners())[5]
 }
 
 exports.getWellContractFactory = getWellContractFactory;

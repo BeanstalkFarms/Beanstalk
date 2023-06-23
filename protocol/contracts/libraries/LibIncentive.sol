@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
@@ -51,7 +52,6 @@ library LibIncentive {
 
     /**
      * @param initialGasLeft The amount of gas left at the start of the transaction
-     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}
      * @param blocksLate The number of blocks late that {sunrise()} was called.
      * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
@@ -62,9 +62,8 @@ library LibIncentive {
      * `Y := ETH / USDC`
      * `Y / X := (ETH/USDC)/(BEAN/USD) := ETH / BEAN` (assuming 1 USD == 1 USDC)
      */
-    function determineReward(uint256 initialGasLeft, uint256[2] memory balances, uint256 blocksLate)
+    function determineReward(uint256 initialGasLeft, uint256 blocksLate)
         internal
-        view
         returns (uint256)
     {
 
@@ -74,21 +73,13 @@ library LibIncentive {
             blocksLate = MAX_BLOCKS_LATE;
         }
 
-        // If the Bean 3Crv pool is empty, it is impossible to determine the price of Bean. Therefore, return the max reward.
-        if (balances[0] == 0 || balances[1] == 0) {
+        // Read the Bean / Eth price calculated by the Minting Well.
+        uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
+
+        // If the Bean Eth pool couldn't calculate a valid price, use the max reward value.
+        if (beanEthPrice == 0) {
             return fracExp(MAX_REWARD, blocksLate);
         }
-
-        // Gets the current BEAN/USD price based on the Curve pool.
-        // In the future, this can be swapped out to another oracle
-        uint256 beanUsdPrice = getBeanUsdPrice(balances); // BEAN / USD
-
-        // `getEthUsdcPrice()` has 6 decimal precision
-        // Assumption: 1 USDC = 1 USD
-        uint256 ethUsdcPrice = getEthUsdcPrice(); // WETH / USDC
-
-        // Calculate ETH/BEAN price using the BEAN/USD price and the ETH/USDC price
-        uint256 ethBeanPrice = (ethUsdcPrice.mul(1e6)).div(beanUsdPrice); // WETH / BEAN
 
         // Sunrise gas overhead includes:
         //  - 21K for base transaction cost
@@ -105,7 +96,7 @@ library LibIncentive {
 
         // Calculates the Sunrise reward to pay in BEAN.
         uint256 sunriseReward = Math.min(
-            BASE_REWARD + gasCostWei.mul(ethBeanPrice).div(1e18), // divide by 1e18 to convert wei to eth
+            BASE_REWARD + gasCostWei.mul(beanEthPrice).div(1e18), // divide by 1e18 to convert wei to eth
             MAX_REWARD
         );
 
@@ -113,38 +104,6 @@ library LibIncentive {
         // `sunriseReward * (1 + 1/100)^(blocks late * seconds per block)`
         // NOTE: 1.01^(25 * 12) = 19.78, This is the maximum multiplier.
         return fracExp(sunriseReward, blocksLate);
-    }
-
-    //////////////////// PRICES ////////////////////
-
-    /**
-     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}.
-     * @dev Calculate the price of BEAN denominated in USD.
-     */
-    function getBeanUsdPrice(uint256[2] memory balances) internal view returns (uint256) {
-        uint256[2] memory rates = getRates();
-        uint256[2] memory xp = LibCurve.getXP(balances, rates);
-
-        uint256 a = C.curveMetapool().A_precise();
-        uint256 D = LibCurve.getD(xp, a);
-
-        return LibCurve.getPrice(xp, rates, a, D);
-    }
-
-    /**
-     * @dev Uses the Uniswap V3 Oracle to get the price of WETH denominated in USDC.
-     *
-     * {OracleLibrary.getQuoteAtTick} returns an arithmetic mean.
-     */
-    function getEthUsdcPrice() internal view returns (uint256) {
-        (int24 tick,) = OracleLibrary.consult(C.UNIV3_ETH_USDC_POOL, PERIOD); // 1 season tick
-        return OracleLibrary.getQuoteAtTick(tick, 1e18, C.WETH, C.USDC);
-    }
-
-    function getRates() private view returns (uint256[2] memory) {
-        // Decimals will always be 6 because we can only mint beans
-        // 10**(36-decimals)
-        return [1e30, C.curve3Pool().get_virtual_price()];
     }
 
     //////////////////// MATH UTILITIES ////////////////////
