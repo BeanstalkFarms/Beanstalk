@@ -1,25 +1,15 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { BEAN, BEANSTALK_PUMP, WETH } = require('./utils/constants');
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
-const { getWellContractFactory, whitelistWell, getWellContractAt, deployMockWell } = require('../utils/well.js');
+const { whitelistWell, deployMockWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { advanceTime } = require('../utils/helpers.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
-const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 let snapshotId;
-
-async function advanceTime(time) {
-  let timestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  timestamp += time
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
 
 describe('Well Minting', function () {
   before(async function () {

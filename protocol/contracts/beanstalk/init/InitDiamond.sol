@@ -63,6 +63,7 @@ contract InitDiamond {
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
+        s.beanEthPrice = 1;
         
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);

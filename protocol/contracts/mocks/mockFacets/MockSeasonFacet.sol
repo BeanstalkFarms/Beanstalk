@@ -239,7 +239,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function captureCurveE() external returns (int256 deltaB) {
-        (deltaB, ) = LibCurveMinting.capture();
+        deltaB = LibCurveMinting.capture();
         s.season.timestamp = block.timestamp;
         emit DeltaB(deltaB);
     }
@@ -317,11 +317,6 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     //constants for old seeds values
-    
-
-    function getEthPrice() external view returns (uint256 price) {
-        return LibIncentive.getEthUsdcPrice();
-    }
 
     function lastDSoil() external view returns (uint256) {
         return uint256(s.w.lastDSoil);

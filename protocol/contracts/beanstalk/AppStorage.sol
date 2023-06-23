@@ -556,5 +556,8 @@ struct AppStorage {
 
     // Ownership
     address ownerCandidate;
+
+    // Well
     mapping(address => bytes) wellOracleSnapshots;
+    uint256 beanEthPrice;
 }

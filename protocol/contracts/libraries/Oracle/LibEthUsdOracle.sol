@@ -80,7 +80,7 @@ library LibEthUsdOracle {
     /**
      * Gets the percent difference between two values with 18 decimal precision.
      */
-    function getPercentDifference(uint x, uint y) internal view returns (uint256 percentDifference) {
+    function getPercentDifference(uint x, uint y) internal pure returns (uint256 percentDifference) {
         percentDifference = x.mul(ONE).div(y);
         percentDifference = x > y ?
             percentDifference - ONE :
