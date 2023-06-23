@@ -294,7 +294,7 @@ contract SiloFacet is TokenSilo {
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
      * the current Season.
      */
-    function plant() external payable returns (uint256 beans) {
+    function plant() external payable returns (uint256 beans, int96 stem) {
         return _plant(msg.sender);
     }
 

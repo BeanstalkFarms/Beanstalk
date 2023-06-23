@@ -93,7 +93,7 @@ contract Silo is SiloExit {
      * For more info on Planting, see: {SiloFacet-plant}
      */
      
-    function _plant(address account) internal returns (uint256 beans) {
+    function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans.
         
@@ -107,8 +107,9 @@ contract Silo is SiloExit {
 
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
+        stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
         s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
-        if (beans == 0) return 0;
+        if (beans == 0) return (0,stemTip);
         
         // Reduce the Silo's supply of Earned Beans.
         // SafeCast unnecessary because beans is <= s.earnedBeans.
@@ -118,7 +119,7 @@ contract Silo is SiloExit {
         LibTokenSilo.addDepositToAccount(
             account,
             C.BEAN,
-            LibTokenSilo.stemTipForToken(C.BEAN),
+            stemTip,
             beans, // amount
             beans, // bdv
             LibTokenSilo.Transfer.emitTransferSingle
