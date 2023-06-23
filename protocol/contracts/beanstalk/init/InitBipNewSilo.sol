@@ -10,6 +10,7 @@ import {AppStorage} from "../AppStorage.sol";
 import "contracts/C.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 
 
 /**
@@ -23,17 +24,10 @@ contract InitBipNewSilo {
 
     uint32 constant private BEAN_SEEDS_PER_BDV = 2e6;
     uint32 constant private BEAN_3CRV_SEEDS_PER_BDV = 4e6;
-    uint32 constant private UNRIPE_BEAN_SEEDS_PER_BDV = 1e6;
-    uint32 constant private UNRIPE_BEAN_3CRV_SEEDS_PER_BDV = 1e6;
+    uint32 constant private UNRIPE_BEAN_SEEDS_PER_BDV = 0;
+    uint32 constant private UNRIPE_BEAN_3CRV_SEEDS_PER_BDV = 0;
     
     uint32 constant private STALK_ISSUED_PER_BDV = 10000;
-
-
-    event UpdatedStalkPerBdvPerSeason(
-        address indexed token,
-        uint32 stalkEarnedPerSeason,
-        uint32 season
-    );
     
     
     function init() external {
@@ -73,8 +67,8 @@ contract InitBipNewSilo {
         s.ss[address(C.unripeLP())].milestoneStem = 0;
 
         //emit event for unripe LP/Beans from 4 to 1 grown stalk per bdv per season
-        emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), UNRIPE_BEAN_3CRV_SEEDS_PER_BDV, s.season.current);
-        emit UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
+        emit LibWhitelist.UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), UNRIPE_BEAN_3CRV_SEEDS_PER_BDV, s.season.current);
+        emit LibWhitelist.UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
 
         //set the stemStartSeason to the current season
         s.season.stemStartSeason = uint16(currentSeason); //storing as uint16 to save storage space

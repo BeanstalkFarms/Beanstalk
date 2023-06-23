@@ -2,11 +2,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import "./TokenSilo.sol";
-import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibSiloPermit.sol";
 

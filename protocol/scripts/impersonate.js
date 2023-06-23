@@ -85,7 +85,7 @@ async function curveMetapool() {
     await beanMetapool.init(BEAN, THREE_CURVE, THREE_POOL);
     await beanMetapool.set_A_precise('1000');
     await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-  
+    await beanMetapool.setSymbol("BEAN3CRV-f");
 }
 
 async function weth() {
@@ -154,6 +154,10 @@ async function curveLUSD() {
 
 async function bean() {
   await token(BEAN, 6)
+  const bean = await ethers.getContractAt("MockToken", BEAN);
+  await bean.setSymbol("BEAN");
+  await bean.setName("Bean");
+  return BEAN;
 }
 
 async function usdc() {
@@ -195,11 +199,14 @@ async function unripe() {
 
   const unripeBean = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
   await unripeBean.setDecimals(6);
+  await unripeBean.setSymbol('urBEAN');
 
   await network.provider.send("hardhat_setCode", [
     UNRIPE_LP,
     JSON.parse(tokenJson).deployedBytecode,
   ]);
+  const unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
+  await unripeLP.setSymbol('urBEAN3CRV');
 }
 
 async function price() {

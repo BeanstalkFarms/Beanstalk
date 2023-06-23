@@ -43,14 +43,6 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] bdvs
     );
 
-    event TransferBatch(
-        address indexed operator, 
-        address indexed from, 
-        address indexed to, 
-        uint256[] ids, 
-        uint256[] values
-    );
-
     /**
      * @notice convert allows a user to convert a deposit to another deposit,
      * given that the conversion is supported by the ConvertFacet.
@@ -175,7 +167,7 @@ contract ConvertFacet is ReentrancyGuard {
                 bdvsRemoved
             );
 
-            emit TransferBatch(
+            emit LibSilo.TransferBatch(
                 msg.sender, 
                 msg.sender,
                 address(0), 

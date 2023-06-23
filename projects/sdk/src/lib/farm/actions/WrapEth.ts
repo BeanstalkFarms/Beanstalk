@@ -6,7 +6,7 @@ import { FarmToMode } from "../types";
 export class WrapEth extends StepClass<BasicPreparedResult> {
   public name: string = "wrapEth";
 
-  constructor(private toMode: FarmToMode = FarmToMode.INTERNAL) {
+  constructor(public readonly toMode: FarmToMode = FarmToMode.INTERNAL) {
     super();
   }
 

@@ -13,14 +13,12 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import snapshot from '@snapshot-labs/snapshot.js';
 import { Wallet } from 'ethers';
 import BigNumber from 'bignumber.js';
-import { useSelector } from 'react-redux';
 import { useVotesQuery } from '~/generated/graphql';
 import DescriptionButton from '~/components/Common/DescriptionButton';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { arraysEqual, displayBN, displayFullBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { Proposal } from '~/util/Governance';
-import { AppState } from '~/state';
 import useAccount from '~/hooks/ledger/useAccount';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import { SNAPSHOT_LINK, ZERO_BN } from '~/constants';
@@ -28,6 +26,8 @@ import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
 import StatHorizontal from '~/components/Common/StatHorizontal';
+import { GovSpace } from '~/lib/Beanstalk/Governance';
+import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
 type VoteFormValues = {
   /** For 'single-choice' proposals */
@@ -52,16 +52,16 @@ const VoteForm: FC<
 }) => {
   /// State
   const account = useAccount();
-  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
-    (state) => state._farmer.silo
-  );
+
+  const farmerVP = useFarmerVotingPower(proposal.space.id as GovSpace);
 
   ///  Quorum
   const {
     data: {
-      totalStalk,
-      stalkForQuorum,
-      pctStalkForQuorum: quorumPct,
+      totalOutstanding,
+      totalForQuorum,
+      pctForQuorum: quorumPct,
+      /// Proposal specific voting power
       votingPower,
       tag,
     },
@@ -72,6 +72,11 @@ const VoteForm: FC<
   const today = new Date();
   const endDate = new Date(proposal.end * 1000);
   const differenceInTime = endDate.getTime() - today.getTime();
+
+  /// Derived
+  const isNFT = proposal.space.id === GovSpace.BeanNFT;
+  const canVote = farmerVP.votingPower.total.gt(0);
+  const isClosed = differenceInTime <= 0;
 
   /// Handlers
   const handleClick = useCallback(
@@ -92,9 +97,6 @@ const VoteForm: FC<
     },
     [proposal.type, setFieldValue, values.choices]
   );
-
-  const canVote = farmerSilo.stalk.active.gt(0);
-  const isClosed = differenceInTime <= 0;
 
   const createVoteButtons = () => {
     switch (proposal.type) {
@@ -144,7 +146,7 @@ const VoteForm: FC<
                       proposal.choices[(existingChoice as number) - 1]
                     }`
                   : 'Vote'
-                : 'Need Stalk to Vote'}
+                : `Need ${isNFT ? 'Stalk' : 'BeaNFTs'} to Vote`}
             </LoadingButton>
           </>
         ) : (
@@ -194,7 +196,7 @@ const VoteForm: FC<
                 ? alreadyVotedThisChoice
                   ? 'Already Voted'
                   : 'Vote'
-                : 'Need Stalk to Vote'}
+                : `Need ${isNFT ? 'Stalk' : 'BeaNFTs'} to Vote`}
             </LoadingButton>
           </>
         ) : (
@@ -233,22 +235,23 @@ const VoteForm: FC<
          * Progress by choice
          */}
         <Stack px={1} pb={1} gap={1.5}>
-          {votingPower && totalStalk && (
+          {votingPower && totalOutstanding && (
             <StatHorizontal
               label="Voting Power"
               labelTooltip={
                 <div>
                   <Typography>
-                    A snapshot of your active STALK when voting on {tag} began.
+                    A snapshot of your active {isNFT ? 'BeaNFTs' : 'Stalk'} when
+                    voting on {tag} began.
                   </Typography>
                 </div>
               }
             >
-              {displayBN(votingPower)} STALK&nbsp;·&nbsp;
-              {displayBN(votingPower.div(totalStalk).multipliedBy(100))}%
+              {displayBN(votingPower)} {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
+              {displayBN(votingPower.div(totalOutstanding).multipliedBy(100))}%
             </StatHorizontal>
           )}
-          {quorumPct && stalkForQuorum && (
+          {quorumPct && totalForQuorum && (
             <StatHorizontal
               label={
                 <>
@@ -259,13 +262,17 @@ const VoteForm: FC<
               }
               labelTooltip={
                 <Stack gap={0.5}>
-                  {stalkForQuorum && (
-                    <StatHorizontal label="Stalk for Quorum">
-                      ~{displayFullBN(stalkForQuorum, 2, 2)}
+                  {totalForQuorum && (
+                    <StatHorizontal
+                      label={`${isNFT ? 'BeaNFT' : 'Stalk'} for Quorum`}
+                    >
+                      ~{displayFullBN(totalForQuorum, 2, 2)}
                     </StatHorizontal>
                   )}
-                  <StatHorizontal label="Eligible Stalk">
-                    ~{displayFullBN(totalStalk || ZERO_BN, 2, 2)}
+                  <StatHorizontal
+                    label={`Eligible ${isNFT ? 'BeaNFT' : 'Stalk'}`}
+                  >
+                    ~{displayFullBN(totalOutstanding || ZERO_BN, 2, 2)}
                   </StatHorizontal>
                   <StatHorizontal label="Snapshot Block">
                     {proposal.snapshot}
@@ -277,7 +284,8 @@ const VoteForm: FC<
                 <CircularProgress size={16} />
               ) : (
                 <>
-                  ~{displayFullBN(stalkForQuorum, 0)} STALK&nbsp;·&nbsp;
+                  ~{displayFullBN(totalForQuorum, 0)}{' '}
+                  {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
                   {(quorumPct * 100).toFixed(0)}%
                 </>
               )}
@@ -311,7 +319,7 @@ const VoteForm: FC<
                     0,
                     0
                   )}{' '}
-                  STALK
+                  {isNFT ? 'BEANFT' : 'STALK'}
                   <Typography
                     display={proposal.scores_total > 0 ? 'inline' : 'none'}
                   >

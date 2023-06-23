@@ -156,7 +156,11 @@ const Overview: FC<{
             () => [breakdown.states.deposited.value],
             [breakdown.states.deposited.value]
           )}
-          date={data.deposits[data.deposits.length - 1] ? data.deposits[data.deposits.length - 1].date : ""}
+          date={
+            data.deposits[data.deposits.length - 1]
+              ? data.deposits[data.deposits.length - 1].date
+              : ''
+          }
           series={
             useMemo(() => [data.deposits], [data.deposits]) as BaseDataPoint[][]
           }
@@ -178,7 +182,11 @@ const Overview: FC<{
             ],
             [farmerSilo.stalk.active, ownership]
           )}
-          date={data.stalk[data.stalk.length - 1] ? data.stalk[data.stalk.length - 1].date : ""}
+          date={
+            data.stalk[data.stalk.length - 1]
+              ? data.stalk[data.stalk.length - 1].date
+              : ''
+          }
           series={useMemo(
             () => [
               data.stalk,
@@ -201,7 +209,11 @@ const Overview: FC<{
             [farmerSilo.seeds.active]
           )}
           series={useMemo(() => [data.seeds], [data.seeds])}
-          date={data.seeds[data.seeds.length - 1] ? data.seeds[data.seeds.length - 1].date : ""}
+          date={
+            data.seeds[data.seeds.length - 1]
+              ? data.seeds[data.seeds.length - 1].date
+              : ''
+          }
           season={season}
           stats={seedsStats}
           loading={loading}

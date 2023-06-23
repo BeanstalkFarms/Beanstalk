@@ -244,12 +244,16 @@ export class BuyFertilizerFarmStep extends FarmStep {
   }
 
   public static getPreferredTokens(tokens: BeanstalkSDK['tokens']) {
-    const { BEAN, USDC, ETH } = tokens;
+    const { BEAN, ETH, WETH, CRV3, DAI, USDC, USDT } = tokens;
 
     return [
       { token: BEAN, minimum: new BigNumber(1) },
-      { token: USDC, minimum: new BigNumber(1) },
       { token: ETH, minimum: new BigNumber(0.01) },
+      { token: WETH, minimum: new BigNumber(0.01) },
+      { token: CRV3, minimum: new BigNumber(1) },
+      { token: DAI, minimum: new BigNumber(1) },
+      { token: USDC, minimum: new BigNumber(1) },
+      { token: USDT, minimum: new BigNumber(1) },      
     ];
   }
 

@@ -61,6 +61,7 @@ contract MockMeta3Curve {
     uint256 fee = 4000000;
     uint256 virtual_price;
     uint256 rate_multiplier;
+    string private _symbol = "BEAN3CRV-f";
 
     constructor(address _token, address _token2, address base_pool) {
         coins[0] = _token;
@@ -109,6 +110,14 @@ contract MockMeta3Curve {
 
     function set_virtual_price(uint256 _virtual_price) external {
         virtual_price = _virtual_price;
+    }
+
+    function symbol() public view returns (string memory) {
+        return _symbol;
+    }
+
+    function setSymbol(string memory sym) public {
+        _symbol = sym;
     }
 
     // TWAP

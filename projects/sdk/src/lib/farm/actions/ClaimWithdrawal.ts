@@ -5,7 +5,7 @@ import { FarmToMode } from "../types";
 export class ClaimWithdrawal extends StepClass<BasicPreparedResult> {
   public name: string = "claimWithdrawal";
 
-  constructor(private _tokenIn: string, private _season: ethers.BigNumberish, private _to: FarmToMode) {
+  constructor(public readonly _tokenIn: string, public readonly _season: ethers.BigNumberish, public readonly _to: FarmToMode) {
     super();
   }
 

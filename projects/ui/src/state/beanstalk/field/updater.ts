@@ -34,7 +34,14 @@ export const useFetchBeanstalkField = () => {
         beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIXME
       ] as const);
 
-      console.debug('[beanstalk/field/useBeanstalkField] RESULT');
+      console.debug('[beanstalk/field/useBeanstalkField] RESULT', {
+        harvestableIndex: harvestableIndex.toString(),
+        podIndex: podIndex.toString(),
+        soil: soil.toString(),
+        weather,
+        adjustedTemperature: adjustedTemperature.toString(),
+        maxTemperature: maxTemperature.toString(),
+      });
 
       dispatch(
         updateBeanstalkField({

@@ -26,12 +26,13 @@ export const setRemainingUntilSunrise = createAction<
 export const resetSun = createAction('beanstalk/sun/reset');
 
 /// morning
-export const updateMorningBlock = createAction<BigNumber>(
-  'beanstalk/sun/updateMorningBlock'
+
+export const setMorning = createAction<Pick<Sun, 'morning' | 'morningTime'>>(
+  'beanstalk/sun/setMorning'
 );
 
-export const setMorningBlockMap = createAction<Sun['morning']['blockMap']>(
-  'beanstalk/sun/setMorningBlockMap'
+export const updateMorningBlock = createAction<Sun['morning']['blockNumber']>(
+  'beanstalk/sun/updateMorningBlock'
 );
 
 export const setRemainingUntilBlockUpdate = createAction<Duration>(
@@ -40,8 +41,4 @@ export const setRemainingUntilBlockUpdate = createAction<Duration>(
 
 export const setAwaitingMorningBlock = createAction<boolean>(
   'beanstalk/sun/setAwaitingMorningBlock'
-);
-
-export const setMorning = createAction<Omit<Sun['morning'], 'time'>>(
-  'beanstalk/sun/setMorning'
 );

@@ -32,8 +32,8 @@ const ProposalStats: FC<{
           {proposal.state === 'active' ? (
             'Active'
           ) : proposal.state === 'closed' ? (
-            quorum?.data.stalkForQuorum && quorum?.data.score ? (
-              quorum?.data.score.gt(quorum.data.stalkForQuorum) ? (
+            quorum?.data.totalForQuorum && quorum?.data.score ? (
+              quorum?.data.score.gt(quorum.data.totalForQuorum) ? (
                 'Closed'
               ) : (
                 'Closed'
@@ -77,9 +77,9 @@ const ProposalStats: FC<{
                   2
                 )}
               </StatHorizontal>
-              {quorum?.data.stalkForQuorum && (
+              {quorum?.data.totalForQuorum && (
                 <StatHorizontal label="Stalk for Quorum">
-                  ~{displayFullBN(quorum?.data.stalkForQuorum, 2, 2)}
+                  ~{displayFullBN(quorum?.data.totalForQuorum, 2, 2)}
                 </StatHorizontal>
               )}
               <StatHorizontal label="Eligible Stalk">

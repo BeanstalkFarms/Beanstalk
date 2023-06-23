@@ -174,12 +174,24 @@ const Graph: React.FC<GraphProps> = (props) => {
 
   // const yTickNum = height > 180 ? undefined : 5;
   const xTickNum = width > 700 ? undefined : Math.floor(width / 70);
+  const [tickSeasons, tickDates] = useMemo(() => {
+    const interval = Math.ceil(series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9));
+    const shift = Math.ceil(interval / 3); // slight shift on tick labels
+    return series[0].reduce<[number[], string[]]>(
+      (prev, curr, i) => {
+        if (i % interval === shift) {
+          prev[0].push(curr.season);
+          prev[1].push(`${curr.date.getMonth() + 1}/${curr.date.getDate()}`);
+        }
+        return prev;
+      },
+      [[], []]
+    );
+  }, [series, scales]);
+
   const xTickFormat = useCallback(
-    (v: NumberValue) => {
-      const d = scales[0].dScale.invert(v);
-      return `${d.getMonth() + 1}/${d.getDate()}`;
-    },
-    [scales]
+    (_: any, i: number) => tickDates[i],
+    [tickDates]
   );
 
   // Empty state
@@ -253,7 +265,7 @@ const Graph: React.FC<GraphProps> = (props) => {
             tickFormat={xTickFormat}
             tickStroke={axisColor}
             tickLabelProps={xTickLabelProps}
-            numTicks={xTickNum}
+            tickValues={tickSeasons}
           />
         </g>
         <g transform={`translate(${width - chartPadding.right}, 1)`}>

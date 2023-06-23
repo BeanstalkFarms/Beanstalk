@@ -13,7 +13,7 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 
 const getValue = (season: SeasonalLiquidityQuery['seasons'][number]) =>
-  parseFloat(season.totalLiquidityUSD);
+  parseFloat(season.liquidityUSD);
 const formatValue = (value: number) =>
   `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {
@@ -23,7 +23,7 @@ const statProps = {
   gap: 0.25,
 };
 const queryConfig = {
-  variables: { season_gt: 6073 },
+  variables: { season_gt: 0 },
   context: { subgraph: 'bean' },
 };
 const lineChartProps: Partial<LineChartProps> = {

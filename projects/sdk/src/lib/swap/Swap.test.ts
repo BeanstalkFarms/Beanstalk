@@ -9,6 +9,8 @@ async function reset() {
   await utils.resetFork();
 }
 
+/////////////// Setup Tokens ///////////////
+
 beforeAll(async () => {
   // TODO: will reset() screw up other tests (files) that run in parallel?
   await reset();
@@ -35,7 +37,10 @@ beforeAll(async () => {
   ]);
 });
 
+/////////////// Test execution of swap routes ///////////////
+
 describe("Swap", function () {
+  // ETH, BEAN => x, using EXTERNAL as the source
   describe.each([
     // ETH => x
     [sdk.tokens.ETH, sdk.tokens.WETH],
@@ -54,7 +59,7 @@ describe("Swap", function () {
     [sdk.tokens.BEAN, sdk.tokens.DAI],
     [sdk.tokens.BEAN, sdk.tokens.BEAN],
     [sdk.tokens.BEAN, sdk.tokens.CRV3]
-  ])("BEAN->x", (tokenIn, tokenOut) => {
+  ])("ETH, BEAN -> Common Tokens", (tokenIn, tokenOut) => {
     it.each([
       [FarmFromMode.EXTERNAL, FarmToMode.EXTERNAL],
       [FarmFromMode.EXTERNAL, FarmToMode.INTERNAL]
@@ -66,28 +71,33 @@ describe("Swap", function () {
     });
   });
 
-  // x => BEAN
-  describe.each([sdk.tokens.USDC, sdk.tokens.USDT, sdk.tokens.DAI, sdk.tokens.CRV3, sdk.tokens.BEAN])("Buy BEAN", (tokenIn) => {
-    const BEAN = sdk.tokens.BEAN;
+  // x => BEAN, using both INTERNAL and EXTERNAL as a source
+  describe.each([sdk.tokens.USDC, sdk.tokens.USDT, sdk.tokens.DAI, sdk.tokens.CRV3, sdk.tokens.BEAN])(
+    "Common Tokens -> BEAN",
+    (tokenIn) => {
+      const BEAN = sdk.tokens.BEAN;
 
-    beforeAll(async () => {
-      await transferToFarmBalance(tokenIn, "10000");
-    });
+      beforeAll(async () => {
+        await transferToFarmBalance(tokenIn, "10000");
+      });
 
-    it(`${tokenIn.symbol}:BEAN - EXTERNAL -> INTERNAL`, async () => {
-      await swapTest(tokenIn, BEAN, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, "2000");
-    });
-    it(`${tokenIn.symbol}:BEAN - EXTERNAL -> EXTERNAL`, async () => {
-      await swapTest(tokenIn, BEAN, FarmFromMode.EXTERNAL, FarmToMode.EXTERNAL, "2000");
-    });
-    it(`${tokenIn.symbol}:BEAN - INTERNAL -> INTERNAL`, async () => {
-      await swapTest(tokenIn, BEAN, FarmFromMode.INTERNAL, FarmToMode.INTERNAL, "2000");
-    });
-    it(`${tokenIn.symbol}:BEAN - INTERNAL -> EXTERNAL`, async () => {
-      await swapTest(tokenIn, BEAN, FarmFromMode.INTERNAL, FarmToMode.EXTERNAL, "2000");
-    });
-  });
+      it(`${tokenIn.symbol}:BEAN - EXTERNAL -> INTERNAL`, async () => {
+        await swapTest(tokenIn, BEAN, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, "2000");
+      });
+      it(`${tokenIn.symbol}:BEAN - EXTERNAL -> EXTERNAL`, async () => {
+        await swapTest(tokenIn, BEAN, FarmFromMode.EXTERNAL, FarmToMode.EXTERNAL, "2000");
+      });
+      it(`${tokenIn.symbol}:BEAN - INTERNAL -> INTERNAL`, async () => {
+        await swapTest(tokenIn, BEAN, FarmFromMode.INTERNAL, FarmToMode.INTERNAL, "2000");
+      });
+      it(`${tokenIn.symbol}:BEAN - INTERNAL -> EXTERNAL`, async () => {
+        await swapTest(tokenIn, BEAN, FarmFromMode.INTERNAL, FarmToMode.EXTERNAL, "2000");
+      });
+    }
+  );
 });
+
+/////////////// Helpers ///////////////
 
 async function transferToFarmBalance(tokenIn: Token, _amount: string) {
   const tx = await sdk.contracts.beanstalk.transferToken(
@@ -100,9 +110,19 @@ async function transferToFarmBalance(tokenIn: Token, _amount: string) {
   await tx.wait();
 }
 
+/**
+ * Perform and assert a swap between two tokens.
+ *
+ * Fails if:
+ * 1. The Swap operation is invalid (i.e. the path could not be found)
+ * 2. The swap did not execute successfully
+ * 3. The tokenIn balance did not decrease
+ * 4. The tokenOut balance did not increase
+ * 5. The tokenOut balance is not greater than the desired swap amount, with some slippage tolerance
+ */
 async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to: FarmToMode, _amount?: string) {
-  const tokenInBalanceBefore = await getBalance(tokenIn, from);
-  const tokenOutBalanceBefore = await getBalance(tokenOut, to);
+  const [tokenInBalanceBefore, tokenOutBalanceBefore] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
+
   const v = ["ETH", "WETH"].includes(tokenIn.symbol) ? 30 : 300;
   const amount = tokenIn.fromHuman(_amount ? _amount : v);
   const slippage = 0.5;
@@ -118,14 +138,13 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
   let tx = await (await op.execute(amount, slippage)).wait();
   expect(tx.status).toBe(1);
 
-  const tokenInBalanceAfter = await getBalance(tokenIn, from);
-  const tokenOutBalanceAfter = await getBalance(tokenOut, to);
+  const [tokenInBalanceAfter, tokenOutBalanceAfter] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
 
   // There are less tokenIn than before the swapped
   expect(tokenInBalanceAfter.lt(tokenInBalanceBefore));
   // There are more tokenOut after the swap
   expect(tokenOutBalanceAfter.gt(tokenOutBalanceBefore));
-  // tokenOut balance is bigger than desired swap ammount, with some slippage tollerance
+  // tokenOut balance is bigger than desired swap ammount, with some slippage tolerance
   expect(tokenOutBalanceAfter.gte(amountWithSlippage));
 }
 
@@ -140,5 +159,5 @@ async function getBalance(token: Token, mode: string) {
   if (mode === "all") {
     return balances.total;
   }
-  throw new Error("Unknow mode");
+  throw new Error("Unknown mode");
 }
