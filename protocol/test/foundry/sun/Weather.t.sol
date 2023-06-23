@@ -83,7 +83,6 @@ contract ComplexWeatherTest is Weather, TestHelper {
           
         // }
         console.log("Case", i , "complete.");
-        // TODO ADD EMIT EVENT TRACKING
     }
     vm.stopPrank();
   }

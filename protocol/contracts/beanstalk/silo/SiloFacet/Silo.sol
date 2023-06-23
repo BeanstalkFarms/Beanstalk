@@ -3,7 +3,7 @@
  **/
 
 pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./SiloExit.sol";
@@ -154,6 +154,4 @@ contract Silo is SiloExit {
 
         emit ClaimPlenty(account, plenty);
     }
-
-
 }
