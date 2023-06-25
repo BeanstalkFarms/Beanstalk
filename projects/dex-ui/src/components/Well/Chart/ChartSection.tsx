@@ -49,7 +49,7 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
     setTab(i);
   }, []);
 
-  function SetChartRange(range: string) {
+  function setChartRange(range: string) {
     setShowDropdown(false);
     setTimePeriod(range);
     if (range === "day") {
@@ -75,16 +75,16 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
         <FilterButton onClick={() => {setShowDropdown(!showDropdown)}} hover>
           {dropdownButtonText} <ChevronDown width={6} />
           <Dropdown enabled={showDropdown}>
-            <DropdownItem stretch hover onClick={() => {SetChartRange("day")}}>
+            <DropdownItem stretch hover onClick={() => {setChartRange("day")}}>
               1 DAY
             </DropdownItem>
-            <DropdownItem stretch hover onClick={() => {SetChartRange("week")}}>
+            <DropdownItem stretch hover onClick={() => {setChartRange("week")}}>
               1 WEEK
             </DropdownItem>
-            <DropdownItem stretch hover onClick={() => {SetChartRange("month")}}>
+            <DropdownItem stretch hover onClick={() => {setChartRange("month")}}>
               1 MONTH
             </DropdownItem>
-            <DropdownItem stretch hover onClick={() => {SetChartRange("all")}}>
+            <DropdownItem stretch hover onClick={() => {setChartRange("all")}}>
               ALL
             </DropdownItem>
           </Dropdown>
