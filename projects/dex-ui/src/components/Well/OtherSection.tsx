@@ -42,10 +42,6 @@ export const OtherSection: FC<Props> = ({ well }) => {
               )
             }
           )}
-          <Row>
-            <Td><Detail>LP Token Address</Detail></Td>
-            <Td><Link href={`https://etherscan.io/address/${well.lpToken!.address}`}>{well.lpToken!.address || `-`}</Link></Td>
-          </Row>
         </TBody>
       </Table>
     </div>
