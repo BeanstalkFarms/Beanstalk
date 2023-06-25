@@ -239,7 +239,7 @@ const TransferForm: FC<
   /// Checks
   const shouldApprove =
     fromMode === FarmFromMode.EXTERNAL ||
-    fromMode === FarmFromMode.INTERNAL_EXTERNAL;
+    fromMode === FarmFromMode.INTERNAL_EXTERNAL && amount?.gt(balances[tokenIn.address]?.internal);
 
   const amountsCheck = amount?.gt(0);
   const enoughBalanceCheck = amount
