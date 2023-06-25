@@ -125,7 +125,7 @@ export const Well = () => {
           </Row>
           <BottomContainer>
             {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
-            {tab === 1 && <OtherSection />}
+            {tab === 1 && <OtherSection well={well!} />}
           </BottomContainer>
         </MainContent>
         <SideBar id="sidebar">
