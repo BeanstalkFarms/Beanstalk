@@ -20,8 +20,6 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
   const [liquidityData, setLiquidityData] = useState<any[]>([]);
   const [volumeData, setVolumeData] = useState<any[]>([]);
 
-  console.log("ERROR? ", error)
-
   useEffect(() => {
     if (!chartData) return;
     let _liquidityData: any = [];
