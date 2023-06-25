@@ -1,0 +1,13 @@
+query GetWellChartData($id: ID!, $lastUpdateTimestamp_gte: BigInt!) {
+  well(id: $id) {
+    hourlySnapshots(
+      orderBy: lastUpdateTimestamp
+      orderDirection: asc
+      where: {lastUpdateTimestamp_gte: $lastUpdateTimestamp_gte}
+    ) {
+      lastUpdateTimestamp
+      totalLiquidityUSD
+      deltaVolumeUSD
+    }
+  }
+}

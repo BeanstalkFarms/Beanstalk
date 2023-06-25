@@ -106,19 +106,19 @@ export const Well = () => {
             </Item>
             <Item column stretch right>
               <FunctionName>{wellFunctionName}</FunctionName>
-              <Fee>4.20% Tradading Fee</Fee>
+              <Fee>0.00% Trading Fee</Fee>
             </Item>
           </Row>
           <Reserves reserves={reserves} />
           <ChartSection well={well!} />
           <Row gap={24}>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch>
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
                 Activity
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch>
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
                 Other Details
               </TabButton>
             </Item>
