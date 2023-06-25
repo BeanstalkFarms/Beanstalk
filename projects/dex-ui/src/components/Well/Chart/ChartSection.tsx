@@ -70,7 +70,7 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
         <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} hover>
           VOLUME
         </TabButton>
-        <FilterButton onClick={() => {setShowDropdown(!showDropdown)}} hover>
+        <FilterButton onClick={() => {setShowDropdown(!showDropdown)}}>
           {dropdownButtonText} <ChevronDown width={6} />
           <Dropdown enabled={showDropdown}>
             <DropdownItem stretch hover onClick={() => {setChartRange("day")}}>
@@ -123,10 +123,22 @@ const Container = styled.div`
   background-color: #F9F8F6;
 `;
 
-const FilterButton = styled(TabButton)`
+const FilterButton = styled.div`
+  display: flex;
+  flex-direction: row;
+  height: 48px;
+  border: none;
+  box-sizing: border-box;
+  align-items: center;
   margin-left: auto;
   gap: 10px;
   padding: 16px 16px;
   background-color: #fff;
   position: relative;
+  outline: 0.5px solid #9CA3AF;
+  outline-offset: -0.5px;
+  cursor: pointer;
+  :hover {
+    background-color: #f0fdf4;
+  };
 `;
