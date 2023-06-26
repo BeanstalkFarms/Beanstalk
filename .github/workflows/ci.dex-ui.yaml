@@ -1,10 +1,10 @@
-name: Continuous Integration - DEX-UI
+name: DEX-UI
 
 on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'projects/dex-ui/**'
+      - "projects/dex-ui/**"
 
 jobs:
   build:
@@ -14,17 +14,17 @@ jobs:
       - name: Node Install
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: "16"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
       - name: Build SDKs
         run: yarn build
-      - name: Confirm DEX-UI Build 
+      - name: Confirm DEX-UI Build
         run: yarn workspace dex-ui build
