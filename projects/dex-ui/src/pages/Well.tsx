@@ -94,7 +94,7 @@ export const Well = () => {
 
   return (
     <Page>
-      <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} />
+      <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
       <ContentWrapper>
         <MainContent>
           <Row>
@@ -166,6 +166,7 @@ const ContentWrapper = styled.div`
   // outline: 1px solid red;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   gap: 48px;
 `;
 const MainContent = styled.div`
