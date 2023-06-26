@@ -24,9 +24,7 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - name: Build Wells SDK
-        run: yarn workspace @beanstalk/wells generate && yarn workspace @beanstalk/wells build
-      - name: Build Beanstalk SDK
-        run: yarn workspace @beanstalk/sdk generate && yarn workspace @beanstalk/sdk build
+      - name: Build SDKs
+        run: yarn build
       - name: Confirm DEX-UI Build 
         run: yarn workspace dex-ui build
