@@ -149,6 +149,11 @@ const SowForm: FC<
     claimBeansState: values.claimableBeans,
   });
 
+  /// Approval Checks
+  const shouldApprove = 
+    values.balanceFrom === BalanceFrom.EXTERNAL || 
+    values.balanceFrom === BalanceFrom.TOTAL && values.tokens[0].amount?.gt(balances[tokenIn.address].internal);
+
   const handleSetBalanceFrom = useCallback(
     (_balanceFrom: BalanceFrom) => {
       setFieldValue('balanceFrom', _balanceFrom);
@@ -354,7 +359,7 @@ const SowForm: FC<
           size="large"
           disabled={!isSubmittable || isSubmitting}
           contract={sdk.contracts.beanstalk}
-          tokens={values.tokens}
+          tokens={shouldApprove ? values.tokens : []}
           mode="auto"
         >
           Sow
