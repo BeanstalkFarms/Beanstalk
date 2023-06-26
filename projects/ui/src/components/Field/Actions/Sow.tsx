@@ -149,7 +149,7 @@ const SowForm: FC<
     claimBeansState: values.claimableBeans,
   });
 
-  /// Checks
+  /// Approval Checks
   const shouldApprove = 
     values.balanceFrom === BalanceFrom.EXTERNAL || 
     values.balanceFrom === BalanceFrom.TOTAL && values.tokens[0].amount?.gt(balances[tokenIn.address].internal);
