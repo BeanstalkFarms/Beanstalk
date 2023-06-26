@@ -14,4 +14,8 @@ export VITE_GIT_COMMIT_REF=$COMMIT_HASH
 echo "VITE_NAME=$VITE_NAME"
 echo "VITE_COMMIT_HASH=$VITE_COMMIT_HASH"
 
+# Build SDKs
+yarn all:build
+
+# Build UI
 yarn build
