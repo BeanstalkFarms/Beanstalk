@@ -355,21 +355,21 @@ describe('Silo', function () {
     });
 
     it("properly gives an URI", async function () {
-      await this.season.farmSunrises(10);  
+      await this.season.farmSunrises(1000); 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3Crv.txt', 'utf-8');
-      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000002';
+      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000200';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
-      depositID2 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000002';
+      depositID2 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean3Crv.txt', 'utf-8');
-      depositID2 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D000000000000000000000002';
+      depositID2 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D000000000000000000000684';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
 
 
