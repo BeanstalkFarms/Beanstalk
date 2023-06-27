@@ -1,11 +1,34 @@
 import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
-import { EventProcessorData } from "src/lib/events/processor";
 import { Silo } from "../silo";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate, MapValueType } from "./types";
-import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { assert } from "src/utils";
+
+// FIXME: Migrated from projects/sdk/src/lib/events/processor.ts
+// This can be removed or reduced
+export type DepositCrateRaw = {
+  amount: ethers.BigNumber;
+  bdv: ethers.BigNumber;
+};
+export type WithdrawalCrateRaw = {
+  amount: ethers.BigNumber;
+};
+
+export type EventProcessorData = {
+  deposits: Map<
+    Token,
+    {
+      [season: string]: DepositCrateRaw;
+    }
+  >;
+  withdrawals: Map<
+    Token,
+    {
+      [season: string]: WithdrawalCrateRaw;
+    }
+  >;
+};
 
 /**
  * Beanstalk doesn't automatically re-categorize withdrawals as "claimable".
