@@ -5,7 +5,7 @@ import {
   RemoveWithdrawalEvent,
   RemoveWithdrawalsEvent
 } from "src/constants/generated/protocol/abi/Beanstalk";
-import EventProcessor, { EventProcessingParameters } from "./processor";
+import { EventProcessor, EventProcessingParameters } from "./processor";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { getProvider } from "../../utils/TestUtils/provider";
 

@@ -87,7 +87,7 @@ export type Event = Simplify<ethers.Event>;
 
 //
 
-export default class EventProcessor {
+export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
   // ----------------------------
   // |       PROCESSING         |

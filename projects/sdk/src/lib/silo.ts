@@ -1,7 +1,7 @@
 import { BigNumber, ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "./BeanstalkSDK";
-import EventProcessor from "src/lib/events/processor";
+import { EventProcessor } from "src/lib/events/processor";
 import { EIP712TypedData } from "./permit";
 import * as utils from "./silo/utils";
 import * as permitUtils from "./silo/utils.permit";
