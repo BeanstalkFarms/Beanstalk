@@ -1,25 +1,15 @@
-import { BigNumber as EBN, ethers } from "ethers";
+import { ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import {
-  SowEvent,
-  HarvestEvent,
-  PlotTransferEvent,
+  // SowEvent,
+  // HarvestEvent,
+  // PlotTransferEvent,
   AddDepositEvent,
   RemoveDepositEvent,
-  RemoveDepositsEvent,
-  AddWithdrawalEvent,
-  RemoveWithdrawalEvent,
-  RemoveWithdrawalsEvent,
-  PodListingCreatedEvent,
-  PodListingCancelledEvent,
-  PodListingFilledEvent,
-  PodOrderCreatedEvent,
-  PodOrderCancelledEvent,
-  PodOrderFilledEvent
+  RemoveDepositsEvent
 } from "src/constants/generated/protocol/abi/Beanstalk";
 import { StringMap } from "../../types";
 import { BeanstalkSDK } from "../BeanstalkSDK";
-import { PodListing, PodOrder } from "./types";
 
 // ----------------------------------------
 
@@ -48,9 +38,9 @@ const SupportedEventsSet = new Set(SupportedEvents);
 // ----------------------------------------
 
 // TODO: commeting these out for now, tbd if they're needed.
-// export const BN = (v: EBN | BigNumber.Value) => (v instanceof EBN ? new BigNumber(v.toString()) : new BigNumber(v));
-// export const decimalBN = (v: EBN | BigNumber.Value, decimals: number) => BN(v).div(10 ** decimals);
-// export const tokenBN = (v: EBN | BigNumber.Value, token: Token) => decimalBN(v, token.decimals);
+// export const BN = (v: ethers.BigNumber | BigNumber.Value) => (v instanceof ethers.BigNumber ? new BigNumber(v.toString()) : new BigNumber(v));
+// export const decimalBN = (v: ethers.BigNumber | BigNumber.Value, decimals: number) => BN(v).div(10 ** decimals);
+// export const tokenBN = (v: ethers.BigNumber | BigNumber.Value, token: Token) => decimalBN(v, token.decimals);
 
 export const setToMap = (tokens: Set<Token>): Map<Token, any> => {
   const map = new Map<Token, any>();
@@ -63,20 +53,20 @@ export const setToMap = (tokens: Set<Token>): Map<Token, any> => {
 // ----------------------------------------
 
 export type EventProcessingParameters = {
-  season: EBN;
+  season: ethers.BigNumber;
   whitelist: Set<Token>;
 };
 
 export type DepositCrateRaw = {
-  amount: EBN;
-  bdv: EBN;
+  amount: ethers.BigNumber;
+  bdv: ethers.BigNumber;
 };
 export type WithdrawalCrateRaw = {
-  amount: EBN;
+  amount: ethers.BigNumber;
 };
 
 export type EventProcessorData = {
-  plots: StringMap<EBN>;
+  plots: StringMap<ethers.BigNumber>;
   deposits: Map<
     Token,
     {
@@ -89,12 +79,6 @@ export type EventProcessorData = {
       [season: string]: WithdrawalCrateRaw;
     }
   >;
-  listings: {
-    [plotIndex: string]: PodListing; // FIXME: need to use EBN here
-  };
-  orders: {
-    [orderId: string]: PodOrder; // FIXME: need to use EBN here
-  };
 };
 
 export type EventKeys = "event" | "args" | "blockNumber" | "transactionIndex" | "transactionHash" | "logIndex";
@@ -103,7 +87,7 @@ export type Event = Simplify<ethers.Event>;
 
 //
 
-export default class EventProcessor {
+export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
   // ----------------------------
   // |       PROCESSING         |
@@ -119,24 +103,23 @@ export default class EventProcessor {
   plots: EventProcessorData["plots"];
   deposits: EventProcessorData["deposits"]; // token => season => amount
   withdrawals: EventProcessorData["withdrawals"]; // token => season => amount
-  listings: EventProcessorData["listings"];
-  orders: EventProcessorData["orders"];
 
   /// /////////////////////// SETUP //////////////////////////
 
   constructor(sdk: BeanstalkSDK, account: string, epp: EventProcessingParameters, initialState?: Partial<EventProcessorData>) {
     if (!epp.whitelist || typeof epp !== "object") throw new Error("EventProcessor: Missing whitelist.");
     this.sdk = sdk;
+
     // Setup
     this.account = account.toLowerCase();
     this.epp = epp;
+
     // Silo
     this.deposits = initialState?.deposits || setToMap(this.epp.whitelist);
     this.withdrawals = initialState?.withdrawals || setToMap(this.epp.whitelist);
+
     // Field
     this.plots = initialState?.plots || {};
-    this.listings = initialState?.listings || {};
-    this.orders = initialState?.orders || {};
   }
 
   ingest<T extends Event>(event: T) {
@@ -161,9 +144,7 @@ export default class EventProcessor {
     return {
       plots: this.plots,
       deposits: this.deposits,
-      withdrawals: this.withdrawals,
-      listings: this.listings,
-      orders: this.orders
+      withdrawals: this.withdrawals
     };
   }
 
@@ -391,7 +372,7 @@ export default class EventProcessor {
 
   // /// /////////////////////// SILO: UTILS  //////////////////////////
 
-  // parseWithdrawals(_token: Token, _season: EBN) {
+  // parseWithdrawals(_token: Token, _season: ethers.BigNumber) {
   //   return EventProcessor._parseWithdrawals(
   //     this.withdrawals.get(_token)!,
   //     _season || this.epp.season
@@ -401,20 +382,20 @@ export default class EventProcessor {
   // static _parseWithdrawals(
   //   // withdrawals: EventProcessorData['withdrawals'] extends {[season:string]: infer I} ? I : undefined,
   //   withdrawals: MapValueType<EventProcessorData['withdrawals']>,
-  //   currentSeason: EBN
+  //   currentSeason: ethers.BigNumber
   // ): {
   //   withdrawn: TokenSiloBalance['withdrawn'];
   //   claimable: TokenSiloBalance['claimable'];
   // } {
-  //   let transitBalance = EBN.from(0);
-  //   let receivableBalance = EBN.from(0);
+  //   let transitBalance = ethers.BigNumber.from(0);
+  //   let receivableBalance = ethers.BigNumber.from(0);
   //   const transitWithdrawals: WithdrawalCrate[] = [];
   //   const receivableWithdrawals: WithdrawalCrate[] = [];
 
   //   // Split each withdrawal between `receivable` and `transit`.
   //   Object.keys(withdrawals).forEach((season: string) => {
   //     const v = withdrawals[season].amount;
-  //     const s = EBN.from(season);
+  //     const s = ethers.BigNumber.from(season);
   //     if (s.lte(currentSeason)) {
   //       receivableBalance = receivableBalance.add(v);
   //       receivableWithdrawals.push({
@@ -445,7 +426,7 @@ export default class EventProcessor {
   // /// /////////////////////// SILO: DEPOSIT  //////////////////////////
 
   // eslint-disable-next-line class-methods-use-this
-  _upsertDeposit(existing: DepositCrateRaw | undefined, amount: EBN, bdv: EBN) {
+  _upsertDeposit(existing: DepositCrateRaw | undefined, amount: ethers.BigNumber, bdv: ethers.BigNumber) {
     return existing
       ? {
           amount: existing.amount.add(amount),
@@ -457,7 +438,7 @@ export default class EventProcessor {
         };
   }
 
-  _removeDeposit(season: string, token: Token, amount: EBN) {
+  _removeDeposit(season: string, token: Token, amount: ethers.BigNumber) {
     if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
     const existingDeposit = this.deposits.get(token)?.[season];
     if (!existingDeposit) throw new Error(`Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${season}`);
@@ -481,196 +462,27 @@ export default class EventProcessor {
 
   AddDeposit(event: Simplify<AddDepositEvent>) {
     const token = this.getToken(event);
+    const stem = event.args.stem.toString();
+
     if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
 
     const tokDeposits = this.deposits.get(token);
     this.deposits.set(token, {
       ...tokDeposits,
-      [event.args.season]: this._upsertDeposit(tokDeposits?.[event.args.season], event.args.amount, event.args.bdv)
+      [stem]: this._upsertDeposit(tokDeposits?.[stem], event.args.amount, event.args.bdv)
     });
   }
 
   RemoveDeposit(event: Simplify<RemoveDepositEvent>) {
     const token = this.getToken(event);
-    this._removeDeposit(event.args.season.toString(), token, event.args.amount);
+    const stem = event.args.stem.toString();
+    this._removeDeposit(stem, token, event.args.amount);
   }
 
   RemoveDeposits(event: Simplify<RemoveDepositsEvent>) {
     const token = this.getToken(event);
-    event.args.seasons.forEach((season, index) => {
-      this._removeDeposit(season.toString(), token, event.args.amounts[index]);
+    event.args.stems.forEach((stem, index) => {
+      this._removeDeposit(stem.toString(), token, event.args.amounts[index]);
     });
   }
-
-  /// /////////////////////// SILO: WITHDRAW  //////////////////////////
-
-  // eslint-disable-next-line class-methods-use-this
-  _upsertWithdrawal(existing: WithdrawalCrateRaw | undefined, amount: EBN) {
-    return existing
-      ? {
-          amount: existing.amount.add(amount)
-        }
-      : {
-          amount
-        };
-  }
-
-  _removeWithdrawal(season: string, token: Token, _amount: EBN) {
-    // For gas optimization reasons, `RemoveWithdrawal` is emitted
-    // with a zero amount when the removeWithdrawal method is called with:
-    //  (a) a token that doesn't exist;
-    //  (b) a season that doesn't exist;
-    //  (c) a combo of (a) and (b) where there is no existing Withdrawal.
-    // In these cases we just ignore the event.
-    if (_amount.eq(0) || !this.epp.whitelist.has(token)) return;
-
-    const existingWithdrawal = this.withdrawals.get(token)?.[season];
-    if (!existingWithdrawal) throw new Error(`Received a RemoveWithdrawal(s) event for an unknown Withdrawal: ${token} ${season}`);
-
-    // Removing a Withdrawal always removes the entire season.
-    delete this.withdrawals.get(token)?.[season];
-  }
-
-  AddWithdrawal(event: Simplify<AddWithdrawalEvent>) {
-    const token = this.getToken(event);
-    if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
-
-    const tokWithdrawals = this.withdrawals.get(token);
-    this.withdrawals.set(token, {
-      ...tokWithdrawals,
-      [event.args.season]: this._upsertWithdrawal(tokWithdrawals?.[event.args.season], event.args.amount)
-    });
-  }
-
-  RemoveWithdrawal(event: Simplify<RemoveWithdrawalEvent>) {
-    const token = this.getToken(event);
-    this._removeWithdrawal(event.args.season.toString(), token, event.args.amount);
-  }
-
-  RemoveWithdrawals(event: Simplify<RemoveWithdrawalsEvent>) {
-    const token = this.getToken(event);
-    event.args.seasons.forEach((season) => {
-      this._removeWithdrawal(season.toString(), token, event.args.amount);
-    });
-  }
-
-  // /// /////////////////////// MARKET  //////////////////////////
-
-  // PodListingCreated(event: Simplify<PodListingCreatedEvent>) {
-  //   const id          = event.args.index.toString();
-  //   const amount      = tokenBN(event.args.amount, BEAN[1]);
-  //   this.listings[id] = {
-  //     id:               id,
-  //     account:          event.args.account.toLowerCase(),
-  //     index:            tokenBN(event.args.index, BEAN[1]), // 6 dec
-  //     start:            tokenBN(event.args.start, BEAN[1]), // 6 dec
-  //     pricePerPod:      tokenBN(event.args.pricePerPod, BEAN[1]),
-  //     maxHarvestableIndex: tokenBN(event.args.maxHarvestableIndex, BEAN[1]),
-  //     mode:             event.args.mode.toString() as FarmToMode,
-  //     amount:           amount,   //
-  //     totalAmount:      amount,   //
-  //     remainingAmount:  amount,   //
-  //     filledAmount:     BN(0),    //
-  //     status:           MarketStatus.Active,
-  //     placeInLine:      ZERO_BN,  // FIXME
-  //   };
-  // }
-
-  // PodListingCancelled(event: Simplify<PodListingCancelledEvent>) {
-  //   const id = event.args.index.toString();
-  //   if (this.listings[id]) delete this.listings[id];
-  // }
-
-  // /**
-  //  * Notes on behavior:
-  //  *
-  //  * PodListingCreated                          => `status = active`
-  //  * -> PodListingFilled (for the full amount)  => `status = filled-full`
-  //  * -> PodListingFilled (for a partial amount) => `status = filled-partial`
-  //  * -> PodListingCancelled                     => `status = cancelled`
-  //  *
-  //  * Every `PodListingFilled` event changes the `index` of the Listing.
-  //  * When a Listing is partially filled, the Subgraph creates a new Listing
-  //  * with the new index and `status = active`. The "old listing" now has
-  //  * `status = filled-partial`.
-  //  *
-  //  * This EventProcessor is intended to stand in for the subgraph when we can't
-  //  * connect, so we treat listings similarly:
-  //  * 1. When a `PodListingFilled` event is received, delete the listing stored
-  //  *    at the original `index` and create one at the new `index`. The new `index`
-  //  *    is always: `previous index + start + amount`.
-  //  *
-  //  * @param event
-  //  * @returns
-  //  */
-  // PodListingFilled(event: Simplify<PodListingFilledEvent>) {
-  //   const id = event.args.index.toString();
-  //   if (!this.listings[id]) return;
-
-  //   const indexBN     = BN(event.args.index);
-  //   const deltaAmount = tokenBN(event.args.amount, BEAN[1]);
-  //   // const start   = tokenBN(event.args.start,  BEAN[1]);
-
-  //   /// Move current listing's index up by |amount|
-  //   ///  FIXME: does this match the new marketplace behavior? Believe
-  //   ///  this assumes we are selling from the front (such that, as a listing
-  //   ///  is sold, the index increases).
-  //   const prevID = id;
-  //   const currentListing = this.listings[prevID]; // copy
-  //   delete this.listings[prevID];
-
-  //   /// The new index of the Plot, now that some of it has been sold.
-  //   const newIndex       = indexBN.plus(BN(event.args.amount)).plus(BN(event.args.start)); // no decimals
-  //   const newID          = newIndex.toString();
-  //   this.listings[newID] = currentListing;
-
-  //   /// Bump up |amountSold| for this listing
-  //   this.listings[newID].id              = newID;
-  //   this.listings[newID].index           = tokenBN(newIndex, BEAN[1]);
-  //   this.listings[newID].start           = new BigNumber(0); // After a Fill, the new start position is always zero (?)
-  //   this.listings[newID].filledAmount    = currentListing.filledAmount.plus(deltaAmount);
-  //   this.listings[newID].remainingAmount = currentListing.amount.minus(currentListing.filledAmount);
-  //   // others stay the same, incl. currentListing.totalAmount, etc.
-
-  //   const isFilled = this.listings[newID].remainingAmount.isEqualTo(0);
-  //   if (isFilled) {
-  //     this.listings[newID].status = MarketStatus.Filled;
-  //     // delete this.listings[newID];
-  //   }
-  // }
-
-  // PodOrderCreated(event: Simplify<PodOrderCreatedEvent>) {
-  //   const id = event.args.id.toString();
-  //   this.orders[id] = {
-  //     id:               id,
-  //     account:          event.args.account.toLowerCase(),
-  //     maxPlaceInLine:   tokenBN(event.args.maxPlaceInLine, BEAN[1]),
-  //     totalAmount:      tokenBN(event.args.amount, BEAN[1]),
-  //     pricePerPod:      tokenBN(event.args.pricePerPod, BEAN[1]),
-  //     remainingAmount:  tokenBN(event.args.amount, BEAN[1]),
-  //     filledAmount:     new BigNumber(0),
-  //     status:           MarketStatus.Active,
-  //   };
-  // }
-
-  // PodOrderCancelled(event: Simplify<PodOrderCancelledEvent>) {
-  //   const id = event.args.id.toString();
-  //   if (this.orders[id]) delete this.orders[id];
-  // }
-
-  // PodOrderFilled(event: Simplify<PodOrderFilledEvent>) {
-  //   const id = event.args.id.toString();
-  //   if (!this.orders[id]) return;
-
-  //   const amount = tokenBN(event.args.amount, BEAN[1]);
-  //   this.orders[id].filledAmount    = this.orders[id].filledAmount.plus(amount);
-  //   this.orders[id].remainingAmount = this.orders[id].totalAmount.minus(this.orders[id].filledAmount);
-
-  //   /// Update status
-  //   const isFilled = this.orders[id].remainingAmount.isEqualTo(0);
-  //   if (isFilled) {
-  //     this.orders[id].status = MarketStatus.Filled;
-  //     // delete this.orders[id];
-  //   }
-  // }
 }
