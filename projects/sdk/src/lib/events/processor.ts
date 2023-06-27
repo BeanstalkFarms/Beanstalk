@@ -502,58 +502,6 @@ export default class EventProcessor {
     });
   }
 
-  /// /////////////////////// SILO: WITHDRAW  //////////////////////////
-
-  // eslint-disable-next-line class-methods-use-this
-  _upsertWithdrawal(existing: WithdrawalCrateRaw | undefined, amount: EBN) {
-    return existing
-      ? {
-          amount: existing.amount.add(amount)
-        }
-      : {
-          amount
-        };
-  }
-
-  _removeWithdrawal(season: string, token: Token, _amount: EBN) {
-    // For gas optimization reasons, `RemoveWithdrawal` is emitted
-    // with a zero amount when the removeWithdrawal method is called with:
-    //  (a) a token that doesn't exist;
-    //  (b) a season that doesn't exist;
-    //  (c) a combo of (a) and (b) where there is no existing Withdrawal.
-    // In these cases we just ignore the event.
-    if (_amount.eq(0) || !this.epp.whitelist.has(token)) return;
-
-    const existingWithdrawal = this.withdrawals.get(token)?.[season];
-    if (!existingWithdrawal) throw new Error(`Received a RemoveWithdrawal(s) event for an unknown Withdrawal: ${token} ${season}`);
-
-    // Removing a Withdrawal always removes the entire season.
-    delete this.withdrawals.get(token)?.[season];
-  }
-
-  AddWithdrawal(event: Simplify<AddWithdrawalEvent>) {
-    const token = this.getToken(event);
-    if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
-
-    const tokWithdrawals = this.withdrawals.get(token);
-    this.withdrawals.set(token, {
-      ...tokWithdrawals,
-      [event.args.season]: this._upsertWithdrawal(tokWithdrawals?.[event.args.season], event.args.amount)
-    });
-  }
-
-  RemoveWithdrawal(event: Simplify<RemoveWithdrawalEvent>) {
-    const token = this.getToken(event);
-    this._removeWithdrawal(event.args.season.toString(), token, event.args.amount);
-  }
-
-  RemoveWithdrawals(event: Simplify<RemoveWithdrawalsEvent>) {
-    const token = this.getToken(event);
-    event.args.seasons.forEach((season) => {
-      this._removeWithdrawal(season.toString(), token, event.args.amount);
-    });
-  }
-
   // /// /////////////////////// MARKET  //////////////////////////
 
   // PodListingCreated(event: Simplify<PodListingCreatedEvent>) {
