@@ -23,16 +23,6 @@ export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
       await well.getName();
     } catch (err) {}
     const reversed = context.runMode === RunMode.EstimateReversed;
-    WellSwap.sdk.debug(`>[${this.name}.run()]`, {
-      wellName: well.name,
-      wellAddress: this.wellAddress,
-      fromToken: this.fromToken.symbol,
-      toToken: this.toToken.symbol,
-      amountInStep: _amountInStep,
-      recipient: this.recipient,
-      reversed,
-      context
-    });
 
     // Run estimate to calculate amountOut
     let estimate: TokenValue;

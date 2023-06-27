@@ -11,7 +11,6 @@ export class WrapEth extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    WrapEth.sdk.debug(`>[${this.name}.run()]`, { toMode: this.toMode, _amountInStep, context });
     return {
       name: this.name,
       amountOut: _amountInStep, // amountInStep should be an amount of ETH.

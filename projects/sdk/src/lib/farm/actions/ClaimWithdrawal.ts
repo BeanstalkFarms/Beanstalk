@@ -18,11 +18,6 @@ export class ClaimWithdrawal extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    ClaimWithdrawal.sdk.debug(`[${this.name}.run()]`, {
-      tokenIn: this._tokenIn,
-      seasons: this._season,
-      to: this._to
-    });
     return {
       name: this.name,
       amountOut: _amountInStep,

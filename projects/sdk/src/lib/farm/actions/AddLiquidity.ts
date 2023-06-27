@@ -18,16 +18,6 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext): Promise<Step<BasicPreparedResult>> {
-    AddLiquidity.sdk.debug(`[${this.name}.run()]`, {
-      pool: this._pool,
-      registry: this._registry,
-      amounts: this._amounts,
-      amountInStep: _amountInStep,
-      fromMode: this._fromMode,
-      toMode: this._toMode,
-      context
-    });
-
     if (context.runMode === RunMode.EstimateReversed) {
       throw new Error("Reverse estimation is not yet supported for this action");
     }

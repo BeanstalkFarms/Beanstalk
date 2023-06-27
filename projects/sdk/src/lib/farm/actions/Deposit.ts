@@ -11,12 +11,6 @@ export class Deposit extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    Deposit.sdk.debug(`[${this.name}.run()]`, {
-      token: this.token.symbol,
-      amountInStep: _amountInStep,
-      fromMode: this.fromMode,
-      context
-    });
     return {
       name: this.name,
       amountOut: _amountInStep,
