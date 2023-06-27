@@ -1,14 +1,12 @@
 import { BigNumber as EBN, ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import {
-  SowEvent,
-  HarvestEvent,
-  PlotTransferEvent,
+  // SowEvent,
+  // HarvestEvent,
+  // PlotTransferEvent,
   AddDepositEvent,
   RemoveDepositEvent,
-  RemoveDepositsEvent,
-  RemoveWithdrawalEvent,
-  RemoveWithdrawalsEvent
+  RemoveDepositsEvent
 } from "src/constants/generated/protocol/abi/Beanstalk";
 import { StringMap } from "../../types";
 import { BeanstalkSDK } from "../BeanstalkSDK";

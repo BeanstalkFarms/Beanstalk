@@ -26,11 +26,6 @@ export class EventManager {
         toBlock
       ),
       this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.AddWithdrawal(_account, _token),
-        fromBlockOrGenesis,
-        toBlock
-      ),
-      this.sdk.contracts.beanstalk.queryFilter(
         this.sdk.contracts.beanstalk.filters.RemoveWithdrawal(_account, _token),
         fromBlockOrGenesis,
         toBlock
@@ -81,11 +76,6 @@ export class EventManager {
       case EventType.SILO:
         return Promise.all([
           this.sdk.contracts.beanstalk.queryFilter(this.sdk.contracts.beanstalk.filters.AddDeposit(_account), fromBlockOrGenesis, toBlock),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.AddWithdrawal(_account),
-            fromBlockOrGenesis,
-            toBlock
-          ),
           this.sdk.contracts.beanstalk.queryFilter(
             this.sdk.contracts.beanstalk.filters.RemoveWithdrawal(_account),
             fromBlockOrGenesis,

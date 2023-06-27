@@ -1,7 +1,6 @@
 import { BigNumber as EBN } from "ethers";
 import {
   AddDepositEvent,
-  AddWithdrawalEvent,
   RemoveDepositEvent,
   RemoveWithdrawalEvent,
   RemoveWithdrawalsEvent
@@ -249,58 +248,6 @@ describe("the Silo", () => {
     });
   });
 
-  it("adds withdrawals", () => {
-    const p = mockProcessor();
-
-    // Withdrawal: 1000 Bean, Season 6074
-    const amount1 = EBN.from(1000 * 10 ** Bean.decimals); // Withdrew 1,000 Bean
-    p.ingest({
-      event: "AddWithdrawal",
-      args: propArray({
-        account,
-        token: Bean.address,
-        season: EBN.from(6074),
-        amount: amount1
-      })
-    } as AddWithdrawalEvent);
-
-    expect(p.withdrawals.get(Bean)?.["6074"]).toStrictEqual({
-      amount: amount1
-    });
-
-    // Withdrawal: 500 Bean, Season 6074
-    const amount2 = EBN.from(500 * 10 ** Bean.decimals); // Withdrew 500 Bean
-    p.ingest({
-      event: "AddWithdrawal",
-      args: propArray({
-        account,
-        token: Bean.address,
-        season: EBN.from(6074),
-        amount: amount2
-      })
-    } as AddWithdrawalEvent);
-
-    expect(p.withdrawals.get(Bean)?.["6074"]).toStrictEqual({
-      amount: amount1.add(amount2)
-    });
-
-    // Deposit: 1000 Bean:CRV3 LP, Season 6100
-    const amount3 = EBN.from(1000).mul(EBN.from(10).pow(BeanCrv3.decimals));
-    p.ingest({
-      event: "AddWithdrawal",
-      args: propArray({
-        account,
-        token: BeanCrv3.address,
-        season: EBN.from(6100),
-        amount: amount3 // Deposited 1,000 Bean:CRV3
-      })
-    } as AddWithdrawalEvent);
-
-    expect(p.withdrawals.get(BeanCrv3)?.["6100"]).toStrictEqual({
-      amount: amount3
-    });
-  });
-
   it("removes a single deposit, partial -> full", () => {
     const p = mockProcessor();
 
@@ -352,87 +299,6 @@ describe("the Silo", () => {
     } as RemoveDepositEvent);
 
     expect(p.deposits.get(Bean)?.["6074"]).toBeUndefined();
-  });
-
-  it("removes a single withdrawal", () => {
-    const p = mockProcessor();
-
-    // Withdraw: 1000 Bean in Season 6074
-    const amount1 = EBN.from(1000 * 10 ** Bean.decimals);
-    p.ingest({
-      event: "AddWithdrawal",
-      args: propArray({
-        account,
-        token: Bean.address,
-        season: EBN.from(6074),
-        amount: amount1
-      })
-    } as AddWithdrawalEvent);
-
-    // Claim: 600 Bean from Withdrawal in Season 6074
-    p.ingest({
-      event: "RemoveWithdrawal",
-      args: propArray({
-        account,
-        token: Bean.address,
-        season: EBN.from(6074),
-        amount: amount1
-      })
-    } as RemoveWithdrawalEvent);
-
-    // withdrawal should be deleted
-    expect(p.withdrawals.get(Bean)?.["6074"]).toBeUndefined();
-  });
-
-  it("removes multiple withdrawals, full", () => {
-    const p = mockProcessor();
-
-    // Withdraw: 1000 Bean in Season 6074
-    const amount1 = EBN.from(1000 * 10 ** Bean.decimals);
-    p.ingest({
-      event: "AddWithdrawal",
-      args: propArray({
-        account,
-        token: Bean.address,
-        season: EBN.from(6074),
-        amount: amount1
-      })
-    } as AddWithdrawalEvent);
-
-    expect(p.withdrawals.get(Bean)?.["6074"]).toStrictEqual({
-      amount: amount1
-    });
-
-    // Withdraw: 5000 Bean in Season 6100
-    const amount2 = EBN.from(5000 * 10 ** Bean.decimals);
-    p.ingest({
-      event: "AddWithdrawal",
-      args: propArray({
-        account,
-        token: Bean.address,
-        season: EBN.from(6100),
-        amount: amount2
-      })
-    } as AddWithdrawalEvent);
-
-    expect(p.withdrawals.get(Bean)?.["6100"]).toStrictEqual({
-      amount: amount2
-    });
-
-    // Claim: 1000 from 6074, 5000 from 6100
-    const amount3 = EBN.from(6000 * 10 ** Bean.decimals);
-    p.ingest({
-      event: "RemoveWithdrawals",
-      args: propArray({
-        account,
-        token: Bean.address,
-        seasons: ["6074", "6100"],
-        amount: amount3
-      })
-    } as RemoveWithdrawalsEvent);
-
-    expect(p.withdrawals.get(Bean)?.["6074"]).toBeUndefined();
-    expect(p.withdrawals.get(Bean)?.["6100"]).toBeUndefined();
   });
 
   it("ignores empty RemoveWithdrawal events", () => {
