@@ -1,4 +1,4 @@
-import { BigNumber as EBN, ethers } from "ethers";
+import { ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import {
   // SowEvent,
@@ -38,9 +38,9 @@ const SupportedEventsSet = new Set(SupportedEvents);
 // ----------------------------------------
 
 // TODO: commeting these out for now, tbd if they're needed.
-// export const BN = (v: EBN | BigNumber.Value) => (v instanceof EBN ? new BigNumber(v.toString()) : new BigNumber(v));
-// export const decimalBN = (v: EBN | BigNumber.Value, decimals: number) => BN(v).div(10 ** decimals);
-// export const tokenBN = (v: EBN | BigNumber.Value, token: Token) => decimalBN(v, token.decimals);
+// export const BN = (v: ethers.BigNumber | BigNumber.Value) => (v instanceof ethers.BigNumber ? new BigNumber(v.toString()) : new BigNumber(v));
+// export const decimalBN = (v: ethers.BigNumber | BigNumber.Value, decimals: number) => BN(v).div(10 ** decimals);
+// export const tokenBN = (v: ethers.BigNumber | BigNumber.Value, token: Token) => decimalBN(v, token.decimals);
 
 export const setToMap = (tokens: Set<Token>): Map<Token, any> => {
   const map = new Map<Token, any>();
@@ -53,20 +53,20 @@ export const setToMap = (tokens: Set<Token>): Map<Token, any> => {
 // ----------------------------------------
 
 export type EventProcessingParameters = {
-  season: EBN;
+  season: ethers.BigNumber;
   whitelist: Set<Token>;
 };
 
 export type DepositCrateRaw = {
-  amount: EBN;
-  bdv: EBN;
+  amount: ethers.BigNumber;
+  bdv: ethers.BigNumber;
 };
 export type WithdrawalCrateRaw = {
-  amount: EBN;
+  amount: ethers.BigNumber;
 };
 
 export type EventProcessorData = {
-  plots: StringMap<EBN>;
+  plots: StringMap<ethers.BigNumber>;
   deposits: Map<
     Token,
     {
@@ -372,7 +372,7 @@ export default class EventProcessor {
 
   // /// /////////////////////// SILO: UTILS  //////////////////////////
 
-  // parseWithdrawals(_token: Token, _season: EBN) {
+  // parseWithdrawals(_token: Token, _season: ethers.BigNumber) {
   //   return EventProcessor._parseWithdrawals(
   //     this.withdrawals.get(_token)!,
   //     _season || this.epp.season
@@ -382,20 +382,20 @@ export default class EventProcessor {
   // static _parseWithdrawals(
   //   // withdrawals: EventProcessorData['withdrawals'] extends {[season:string]: infer I} ? I : undefined,
   //   withdrawals: MapValueType<EventProcessorData['withdrawals']>,
-  //   currentSeason: EBN
+  //   currentSeason: ethers.BigNumber
   // ): {
   //   withdrawn: TokenSiloBalance['withdrawn'];
   //   claimable: TokenSiloBalance['claimable'];
   // } {
-  //   let transitBalance = EBN.from(0);
-  //   let receivableBalance = EBN.from(0);
+  //   let transitBalance = ethers.BigNumber.from(0);
+  //   let receivableBalance = ethers.BigNumber.from(0);
   //   const transitWithdrawals: WithdrawalCrate[] = [];
   //   const receivableWithdrawals: WithdrawalCrate[] = [];
 
   //   // Split each withdrawal between `receivable` and `transit`.
   //   Object.keys(withdrawals).forEach((season: string) => {
   //     const v = withdrawals[season].amount;
-  //     const s = EBN.from(season);
+  //     const s = ethers.BigNumber.from(season);
   //     if (s.lte(currentSeason)) {
   //       receivableBalance = receivableBalance.add(v);
   //       receivableWithdrawals.push({
@@ -426,7 +426,7 @@ export default class EventProcessor {
   // /// /////////////////////// SILO: DEPOSIT  //////////////////////////
 
   // eslint-disable-next-line class-methods-use-this
-  _upsertDeposit(existing: DepositCrateRaw | undefined, amount: EBN, bdv: EBN) {
+  _upsertDeposit(existing: DepositCrateRaw | undefined, amount: ethers.BigNumber, bdv: ethers.BigNumber) {
     return existing
       ? {
           amount: existing.amount.add(amount),
@@ -438,7 +438,7 @@ export default class EventProcessor {
         };
   }
 
-  _removeDeposit(season: string, token: Token, amount: EBN) {
+  _removeDeposit(season: string, token: Token, amount: ethers.BigNumber) {
     if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
     const existingDeposit = this.deposits.get(token)?.[season];
     if (!existingDeposit) throw new Error(`Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${season}`);
