@@ -41,9 +41,21 @@ export class Silo {
    * Mowing adds Grown Stalk to stalk balance
    * @param _account
    */
-  async mow(_account?: string): Promise<ContractTransaction> {
-    const account = _account ? _account : await Silo.sdk.getAccount();
-    return Silo.sdk.contracts.beanstalk.update(account);
+  async mow(_account?: string, _token?: Token): Promise<ContractTransaction> {
+    const account = _account ?? (await Silo.sdk.getAccount());
+    const token = _token ?? Silo.sdk.tokens.BEAN;
+
+    return Silo.sdk.contracts.beanstalk.mow(account, token.address);
+  }
+
+  async mowMultiple(_account?: string, _tokens?: Token[]): Promise<ContractTransaction> {
+    const account = _account ?? (await Silo.sdk.getAccount());
+    const tokens = _tokens ?? Array.from(Silo.sdk.tokens.siloWhitelist.values());
+
+    return Silo.sdk.contracts.beanstalk.mowMultiple(
+      account,
+      tokens.map((t) => t.address)
+    );
   }
 
   /**
