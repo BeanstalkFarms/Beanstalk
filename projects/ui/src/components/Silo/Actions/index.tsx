@@ -26,7 +26,7 @@ import Convert from './Convert';
  *     up by tabs. Each tab contains a single form.
  * (2) a table of Deposits and Withdrawals, shown dependent on the
  *     selected tab. The Withdrawals table also displays an aggregated
- *     "claimable" row and is shown for both Withdraw & Claim tabs.
+ *     "claimable" row and is shown for the Claim tab only (updated for Silo V3)
  */
 
 const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
@@ -52,6 +52,9 @@ const SiloActions: FC<{
     return null;
   }
 
+  /// TODO: TEMPORARY. FIX ME
+  const hasClaimableBeans = true;
+
   return (
     <>
       <Module>
@@ -60,11 +63,12 @@ const SiloActions: FC<{
           <Tab label="Convert" />
           <Tab label="Transfer" />
           <Tab label="Withdraw" />
-          <BadgeTab label="Claim" showBadge={hasClaimable} />
+          {hasClaimableBeans && (
+            <BadgeTab label="Claim" showBadge={hasClaimable} />
+          )}
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 && <Deposit token={token} />}
-          {/* {tab === 0 && token && <TempAction token={token} />} */}
           {tab === 1 && <Convert fromToken={token} />}
           {tab === 2 && (
             <Transfer token={token} siloBalance={siloBalanceAsync} />
@@ -72,14 +76,17 @@ const SiloActions: FC<{
           {tab === 3 && (
             <Withdraw token={token} siloBalance={siloBalanceAsync} />
           )}
-          {tab === 4 && <Claim token={token} siloBalance={props.siloBalance} />}
+
+          {hasClaimableBeans && tab === 4 && (
+            <Claim token={token} siloBalance={props.siloBalance} />
+          )}
         </ModuleContent>
       </Module>
       {/* Tables */}
-      <Box sx={{ display: tab <= 2 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab <= 3 ? 'block' : 'none' }}>
         <Deposits token={props.token} siloBalance={props.siloBalance} />
       </Box>
-      <Box sx={{ display: tab >= 3 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab >= 4 ? 'block' : 'none' }}>
         <Withdrawals token={props.token} siloBalance={props.siloBalance} />
       </Box>
     </>

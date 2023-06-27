@@ -11,8 +11,6 @@ import podIconGreen from '~/img/beanstalk/pod-icon-green.svg';
 import sproutsIconGrey from '~/img/beanstalk/sprout-icon-grey.svg';
 import sproutsIconGreen from '~/img/beanstalk/rinsable-sprout-icon.svg';
 
-import beanIconGreen from '~/img/tokens/bean-logo-circled.svg';
-import beanIconGrey from '~/img/tokens/bean-logo-circled-grey.svg';
 import IconWrapper from '~/components/Common/IconWrapper';
 import Centered from '~/components/Common/ZeroState/Centered';
 import useFarmerFormTxnsSummary, {
@@ -34,10 +32,6 @@ const actionsToIconMap = {
   [FormTxn.HARVEST]: {
     selected: podIconGreen,
     grey: podIconGrey,
-  },
-  [FormTxn.CLAIM]: {
-    selected: beanIconGreen,
-    grey: beanIconGrey,
   },
 };
 

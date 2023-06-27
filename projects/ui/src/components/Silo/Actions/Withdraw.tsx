@@ -9,6 +9,7 @@ import {
   TokenSiloBalance,
   TokenValue,
   BeanstalkSDK,
+  FarmToMode,
 } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
 import {
@@ -31,7 +32,6 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
-import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
@@ -41,6 +41,7 @@ import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsyn
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
+import FarmModeField from '~/components/Common/Form/FarmModeField';
 
 // -----------------------------------------------------------------------
 
@@ -48,7 +49,12 @@ import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
 const toBN = tokenValueToBN;
 
-type WithdrawFormValues = FormStateNew & FormTxnsFormState;
+type WithdrawFormValues = FormStateNew &
+  FormTxnsFormState & {
+    settings: {
+      destination: FarmToMode;
+    };
+  };
 
 const WithdrawForm: FC<
   FormikProps<WithdrawFormValues> & {
@@ -138,6 +144,8 @@ const WithdrawForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
+        {/** Setting: Destination  */}
+        <FarmModeField name="destination" />
         <AddPlantTxnToggle />
         {isReady ? (
           <Stack direction="column" gap={1}>
@@ -175,10 +183,6 @@ const WithdrawForm: FC<
                 amount={withdrawResult.seeds.mul(-1)}
               />
             </TokenOutput>
-            <WarningAlert>
-              You can Claim your Withdrawn assets at the start of the next
-              Season.
-            </WarningAlert>
             <AdditionalTxnsAccordion filter={disabledActions} />
             <Box>
               <TxnAccordion>
@@ -261,6 +265,9 @@ const WithdrawPropProvider: FC<{
         secondary: undefined,
         implied: [FormTxn.MOW],
       },
+      settings: {
+        destination: FarmToMode.INTERNAL,
+      },
     }),
     [sdk.tokens.BEAN, token]
   );
@@ -280,6 +287,7 @@ const WithdrawPropProvider: FC<{
 
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
+        const destination = values.settings.destination;
 
         const addPlant =
           primaryActions?.includes(FormTxn.PLANT) &&
@@ -292,6 +300,9 @@ const WithdrawPropProvider: FC<{
           : baseAmount;
 
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
+        if (!destination) {
+          throw new Error("Missing 'Destination' setting.");
+        }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
           ...farmerBalances.deposited.crates,
