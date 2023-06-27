@@ -4,7 +4,6 @@ import { enumFromValue } from "src/utils";
 import { addresses, ChainId } from "src/constants";
 import { Tokens } from "./tokens";
 import { Contracts } from "./contracts";
-import { EventManager } from "./events/EventManager";
 import { Silo } from "./silo";
 import { Sun } from "./sun";
 import { Farm } from "./farm/farm";
@@ -54,7 +53,6 @@ export class BeanstalkSDK {
 
   public readonly farm: Farm;
   public readonly silo: Silo;
-  public readonly events: EventManager;
   public readonly sun: Sun;
   public readonly permit: Permit;
   public readonly root: Root;
@@ -80,7 +78,6 @@ export class BeanstalkSDK {
     this.queries = getQueries(this.graphql);
 
     // Internal
-    this.events = new EventManager(this);
     this.permit = new Permit(this);
 
     // Facets

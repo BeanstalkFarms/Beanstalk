@@ -1,7 +1,6 @@
-import { BigNumber, ContractTransaction } from "ethers";
+import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "./BeanstalkSDK";
-import EventProcessor from "src/lib/events/processor";
 import { EIP712TypedData } from "./permit";
 import * as utils from "./silo/utils";
 import * as permitUtils from "./silo/utils.permit";
@@ -194,54 +193,11 @@ export class Silo {
     // FIXME: doesn't work if _token is an instance of a token created by the SDK consumer
     if (!Silo.sdk.tokens.siloWhitelist.has(_token)) throw new Error(`${_token.address} is not whitelisted in the Silo`);
 
-    ///  SETUP
-    const whitelist = Silo.sdk.tokens.siloWhitelist;
+    /// SETUP
     const balance: TokenSiloBalance = utils.makeTokenSiloBalance();
 
     if (source === DataSource.LEDGER) {
-      // Fetch and process events.
-      const seasonBN = BigNumber.from(currentSeason);
-      const events = await Silo.sdk.events.getSiloEvents(account, _token.address);
-      const processor = new EventProcessor(Silo.sdk, account, {
-        season: seasonBN,
-        whitelist
-      });
-
-      const { deposits, withdrawals } = processor.ingestAll(events);
-
-      // Handle deposits
-      {
-        const _crates = deposits.get(_token);
-
-        for (let s in _crates) {
-          const rawCrate = {
-            season: s.toString(),
-            amount: _crates[s].amount.toString(),
-            bdv: _crates[s].bdv.toString()
-          };
-          // Update the total deposited of this token
-          // and return a parsed crate object
-          utils.applyDeposit(balance.deposited, _token, rawCrate, currentSeason);
-        }
-
-        utils.sortCrates(balance.deposited);
-      }
-
-      // Handle withdrawals
-      {
-        const _crates = withdrawals.get(_token);
-        if (_crates) {
-          const { withdrawn, claimable } = utils.parseWithdrawalCrates(_token, _crates, seasonBN);
-
-          balance.withdrawn = withdrawn;
-          balance.claimable = claimable;
-
-          utils.sortCrates(balance.withdrawn);
-          utils.sortCrates(balance.claimable);
-        }
-      }
-
-      return balance;
+      throw new Error("Ledger source is currently unsupported");
     }
 
     /// SUBGRAPH
@@ -296,56 +252,7 @@ export class Silo {
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
-      // Fetch and process events.
-      const seasonBN = BigNumber.from(currentSeason); // FIXME
-      const events = await Silo.sdk.events.getSiloEvents(account);
-      const processor = new EventProcessor(Silo.sdk, account, {
-        season: seasonBN,
-        whitelist
-      });
-      const { deposits, withdrawals } = processor.ingestAll(events);
-
-      // Handle deposits.
-      // Attach stalk & seed counts for each crate.
-      deposits.forEach((_crates, token) => {
-        if (!balances.has(token)) {
-          balances.set(token, utils.makeTokenSiloBalance());
-        }
-        const state = balances.get(token)!.deposited;
-
-        for (let s in _crates) {
-          const rawCrate = {
-            season: s.toString(),
-            amount: _crates[s].amount.toString(),
-            bdv: _crates[s].bdv.toString()
-          };
-
-          // Update the total deposited of this token
-          // and return a parsed crate object
-          utils.applyDeposit(state, token, rawCrate, currentSeason);
-        }
-
-        utils.sortCrates(state);
-      });
-
-      // Handle withdrawals.
-      // Split crates into withdrawn and claimable.
-      withdrawals.forEach((_crates, token) => {
-        if (!balances.has(token)) {
-          balances.set(token, utils.makeTokenSiloBalance());
-        }
-
-        //
-        const { withdrawn, claimable } = utils.parseWithdrawalCrates(token, _crates, seasonBN);
-        const tokenBalance = balances.get(token);
-        tokenBalance!.withdrawn = withdrawn;
-        tokenBalance!.claimable = claimable;
-
-        utils.sortCrates(tokenBalance!.withdrawn);
-        utils.sortCrates(tokenBalance!.claimable);
-      });
-
-      return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances); // FIXME: sorting is redundant if this is instantiated
+      throw new Error("Ledger source is currently unsupported");
     }
 
     /// SUBGRAPH
