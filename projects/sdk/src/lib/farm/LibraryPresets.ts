@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { ERC20Token, NativeToken } from "src/classes/Token";
+import { ERC20Token, NativeToken, Token } from "src/classes/Token";
 import { BasicPreparedResult, RunContext, StepGenerator } from "src/classes/Workflow";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "../farm/types";
@@ -21,6 +21,7 @@ export class LibraryPresets {
 
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
+  public readonly wellWethBean;
 
   public readonly usdc2bean: ActionBuilder;
   public readonly bean2usdc: ActionBuilder;
@@ -138,14 +139,12 @@ export class LibraryPresets {
     this.bean2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDT, fromMode, toMode);
 
-
     ///////// USDC <> BEAN ///////////
     this.usdc2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.USDC, sdk.tokens.BEAN, fromMode, toMode);
-    
+
     this.bean2usdc = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDC, fromMode, toMode);
-
 
     ///////// DAI <> BEAN ///////////
     this.dai2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
@@ -154,17 +153,62 @@ export class LibraryPresets {
     this.bean2dai = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.DAI, fromMode, toMode);
 
-
-
     //////// WETH <> BEAN
     this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
-    
+
     this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
+
+    this.wellWethBean = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
+      const WELL_ADDRESS = sdk.addresses.BEANWETH_WELL.get(sdk.chainId);
+      const result = [];
+
+      // If the TO mode is INTERNAL that means this is not the last step of a swap/workflow.
+      // We must transfer result of the swap back to User's INTERNAL balance on Beanstalk.
+      // This means setting the swap recipient to PIPELINE, have PIPELINE approve Beanstalk to spend
+      // the output token, then transfer the output token from PIPELINE's external balance to USER's internal balance
+      const transferBack = to === FarmToMode.INTERNAL;
+
+      // Transfer input token to PIPELINE (via Beanstalk, so a beanstalk approval will be required, but
+      // that is a separate transaction, not part of this workflow)
+      const transfer = new sdk.farm.actions.TransferToken(fromToken.address, sdk.contracts.pipeline.address, from, FarmToMode.EXTERNAL);
+
+      // This transfers the output token back to Beanstalk, from PIPELINE. Used when transferBack == true
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL);
+
+      // This approves the transferToBeanstalk operation. Used when transferBack == true
+      const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address);
+
+      // When transferBack is true, we tell Wells to send the swap result to PIEPLINE, otherwise
+      // send it directly to the user
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
+
+      // Set up the AdvancedPipe workflow that will call Wells via PIPELINE
+      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+
+      // Approve WELL to spend PIPELINE's input token
+      const approve = new sdk.farm.actions.ApproveERC20(fromToken, WELL_ADDRESS);
+
+      // Swap opration executed on WELL, by PIPELINE
+      const swap = new sdk.farm.actions.WellSwap(WELL_ADDRESS, fromToken, toToken, recipient);
+
+      // Compose the steps
+      advancedPipe.add(approve);
+      advancedPipe.add(swap, { tag: "swap" });
+      if (transferBack) {
+        advancedPipe.add(approveBack);
+        advancedPipe.add(transferToBeanstalk);
+      }
+
+      result.push(transfer);
+      result.push(advancedPipe);
+
+      return result;
+    };
   }
 }

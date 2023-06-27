@@ -1,0 +1,16 @@
+<svg width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="Grid" class="grid">
+    <defs>
+      <pattern id="smallGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+        <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#eee" style="stroke-width: 1px; stroke: #D6D3D1;">
+        </path>
+      </pattern>
+      <pattern id="bigGrid" width="240" height="240" patternUnits="userSpaceOnUse">
+        <rect width="240" height="240" fill="url(#smallGrid)"></rect>
+        <path d="M 240 0 L 0 0 0 240" fill="none" style="stroke-width: 3px; stroke: #D6D3D1;">
+        </path>
+      </pattern>
+    </defs>
+    <rect x="-3000" y="-3000" width="6000" height="6000" fill="url(#smallGrid)"></rect>
+  </g>
+</svg>

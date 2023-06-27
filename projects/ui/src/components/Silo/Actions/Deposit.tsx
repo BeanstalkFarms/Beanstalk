@@ -179,6 +179,12 @@ const DepositForm: FC<
     values.tokens[0].amount === undefined &&
     values.claimableBeans.amount?.eq(0);
 
+  /// Approval Checks
+  const shouldApprove =
+    values.balanceFrom === BalanceFrom.EXTERNAL ||
+    (values.balanceFrom === BalanceFrom.TOTAL &&
+      values.tokens[0].amount?.gt(balances[tokenIn.address].internal));
+
   return (
     <FormWithDrawer noValidate autoComplete="off" siblingRef={siblingRef}>
       <TokenSelectDialogNew
@@ -280,7 +286,7 @@ const DepositForm: FC<
           color="primary"
           size="large"
           contract={contract}
-          tokens={values.tokens}
+          tokens={shouldApprove ? values.tokens : []}
           mode="auto"
         >
           Deposit
@@ -319,7 +325,15 @@ const DepositPropProvider: FC<{
   const initTokenList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [tokens.BEAN, tokens.ETH, tokens.WETH, tokens.CRV3, tokens.DAI, tokens.USDC, tokens.USDT];
+      return [
+        tokens.BEAN,
+        tokens.ETH,
+        tokens.WETH,
+        tokens.CRV3,
+        tokens.DAI,
+        tokens.USDC,
+        tokens.USDT,
+      ];
     }
     return [
       tokens.BEAN,

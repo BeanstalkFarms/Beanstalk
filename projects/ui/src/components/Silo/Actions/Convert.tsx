@@ -113,8 +113,11 @@ const ConvertForm: FC<
   const amountOut = values.tokens[0].amountOut; // amount of to token
   const maxAmountIn = values.maxAmountIn;
   const canConvert = maxAmountIn?.gt(0) || false;
-  const siloBalance = siloBalances[tokenIn.address]; // FIXME: this is mistyped, may not exist
+
+  // FIXME: these use old structs instead of SDK
+  const siloBalance = siloBalances[tokenIn.address];
   const depositedAmount = siloBalance?.deposited.amount || ZERO_BN;
+
   const isQuoting = values.tokens[0].quoting || false;
   const slippage = values.settings.slippage;
 
@@ -285,7 +288,7 @@ const ConvertForm: FC<
         mode={TokenSelectMode.SINGLE}
       />
       <Stack gap={1}>
-        {/* Input token */}
+        {/* User Input: token amount */}
         <TokenQuoteProviderWithParams
           name="tokens.0"
           tokenOut={(tokenOut || tokenIn) as ERC20Token}
@@ -310,7 +313,8 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : <AddPlantTxnToggle />}
-        {/* Output token */}
+
+        {/* User Input: destination token */}
         {depositedAmount.gt(0) ? (
           <PillRow
             isOpen={isTokenSelectVisible}
@@ -321,6 +325,7 @@ const ConvertForm: FC<
             <Typography>{tokenOut?.symbol || 'Select token'}</Typography>
           </PillRow>
         ) : null}
+
         {/* Warning Alert */}
         {!canConvert && tokenOut && maxAmountIn ? (
           <Box>
@@ -329,10 +334,11 @@ const ConvertForm: FC<
               deltaB{' '}
               {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? '<' : '>'} 0.
               <br />
-              {/* <Typography sx={{ opacity: 0.7 }} fontSize={FontSize.sm}>Press ⌥ + 1 to see deltaB.</Typography> */}
             </WarningAlert>
           </Box>
         ) : null}
+
+        {/* Outputs */}
         {totalAmountIn && tokenOut && maxAmountIn && amountOut?.gt(0) ? (
           <>
             <TxnSeparator mt={-1} />
@@ -377,6 +383,8 @@ const ConvertForm: FC<
                 }
               />
             </TokenOutput>
+
+            {/* Warnings */}
             {maxAmountUsed && maxAmountUsed.gt(0.9) ? (
               <Box>
                 <WarningAlert>
@@ -388,7 +396,19 @@ const ConvertForm: FC<
                 </WarningAlert>
               </Box>
             ) : null}
+
+            <Box>
+              <WarningAlert>
+                Due to an issue with the existing Silo implementation, some
+                Stalk may be lost during this Convert. An upcoming BIP known as
+                Silo V3 fixes this issue.
+              </WarningAlert>
+            </Box>
+
+            {/* Add-on transactions */}
             <AdditionalTxnsAccordion filter={disabledFormActions} />
+
+            {/* Transation preview */}
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -415,6 +435,8 @@ const ConvertForm: FC<
             </Box>
           </>
         ) : null}
+
+        {/* Submit */}
         <SmartSubmitButton
           loading={buttonLoading || isQuoting}
           disabled={!isReady || isSubmitting}

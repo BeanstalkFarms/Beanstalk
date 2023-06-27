@@ -129,7 +129,7 @@
     "start": "vite --port 4173",
     "dev": "netlify dev --command \"yarn start\" --targetPort 4173",
     "serve": "vite preview",
-    "build": "yarn workspace @beanstalk/sdk generate && yarn workspace @beanstalk/sdk build && yarn generate && tsc && vite build",
+    "build": "yarn generate && tsc && vite build",
     "build:dev": "tsc --noEmit --watch",
     "build:vite": "vite build",
     "build:storybook": "build-storybook -s public",

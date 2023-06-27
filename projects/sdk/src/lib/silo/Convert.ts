@@ -1,6 +1,6 @@
+import { TokenValue } from "@beanstalk/sdk-core";
 import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
-import { TokenValue } from "src/classes/TokenValue";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { ConvertEncoder } from "./ConvertEncoder";
 import { DepositCrate } from "./types";
@@ -119,30 +119,30 @@ export class Convert {
   calculateEncoding(fromToken: Token, toToken: Token, amountIn: TokenValue, minAmountOut: TokenValue) {
     let encoding;
 
-    if (fromToken === this.urBean && toToken === this.urBeanCrv3) {
+    if (fromToken.address === this.urBean.address && toToken.address === this.urBeanCrv3.address) {
       encoding = ConvertEncoder.unripeBeansToLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain() // minLP
       );
-    } else if (fromToken === this.urBeanCrv3 && toToken === this.urBean) {
+    } else if (fromToken.address === this.urBeanCrv3.address && toToken.address === this.urBean.address) {
       encoding = ConvertEncoder.unripeLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain() // minBeans
       );
-    } else if (fromToken === this.Bean && toToken === this.BeanCrv3) {
+    } else if (fromToken.address === this.Bean.address && toToken.address === this.BeanCrv3.address) {
       encoding = ConvertEncoder.beansToCurveLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain(), // minLP
         toToken.address // output token address = pool address
       );
-    } else if (fromToken === this.BeanCrv3 && toToken === this.Bean) {
+    } else if (fromToken.address === this.BeanCrv3.address && toToken.address === this.Bean.address) {
       encoding = ConvertEncoder.curveLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain(), // minBeans
         fromToken.address // output token address = pool address
       );
     } else {
-      throw new Error("Unknown conversion pathway");
+      throw new Error("SDK: Unknown conversion pathway");
     }
 
     return encoding;
@@ -166,7 +166,6 @@ export class Convert {
     }
 
     const deltaB = await Convert.sdk.bean.getDeltaB();
-    
 
     if (deltaB.gte(TokenValue.ZERO)) {
       if (fromToken.equals(this.BeanCrv3) || fromToken.equals(this.urBeanCrv3)) {

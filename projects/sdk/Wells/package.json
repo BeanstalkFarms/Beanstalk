@@ -1,0 +1,6 @@
+{
+  "main": "../dist/Wells/Wells.cjs.js",
+  "module": "../dist/Wells/Wells.esm.js",
+  "browser": "../dist/Wells/Wells.umd.js",
+  "typings": "../dist/types/Wells.d.ts"
+}

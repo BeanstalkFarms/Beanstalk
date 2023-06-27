@@ -2,7 +2,7 @@ import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { EventProcessorData } from "src/lib/events/processor";
 import { Silo } from "../silo";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate, MapValueType } from "./types";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { assert } from "src/utils";
@@ -83,9 +83,9 @@ export function sortCratesByBDVRatio<T extends DepositCrate<TokenValue>>(crates:
   const m = direction === "asc" ? -1 : 1;
   return [...crates].sort((a, b) => {
     // FIXME
-    const _a:TokenValue = a.bdv.div(a.amount);
-    const _b:TokenValue = b.bdv.div(b.amount);
-    return parseFloat(_b.sub(_a).mul(m).toHuman())
+    const _a: TokenValue = a.bdv.div(a.amount);
+    const _b: TokenValue = b.bdv.div(b.amount);
+    return parseFloat(_b.sub(_a).mul(m).toHuman());
   });
 }
 

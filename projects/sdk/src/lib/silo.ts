@@ -5,7 +5,7 @@ import EventProcessor from "src/lib/events/processor";
 import { EIP712TypedData } from "./permit";
 import * as utils from "./silo/utils";
 import * as permitUtils from "./silo/utils.permit";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { MAX_UINT256 } from "src/constants";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
@@ -153,7 +153,7 @@ export class Silo {
   }
 
   /**
-   * Convert from one Silo whitelisted token to another. 
+   * Convert from one Silo whitelisted token to another.
    * @param fromToken Token to convert from
    * @param toToken  Token to cnvert to
    * @param fromAmount Amount to convert
@@ -164,10 +164,10 @@ export class Silo {
   }
 
   /**
-   * Estimate a Silo convert() operation. 
-   * @param fromToken 
-   * @param toToken 
-   * @param fromAmount 
+   * Estimate a Silo convert() operation.
+   * @param fromToken
+   * @param toToken
+   * @param fromAmount
    * @returns An object containing minAmountOut, which is the estimated convert amount
    * and conversion, which contains details of the convert operation. conversion property
    * would be useful in a UI

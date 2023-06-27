@@ -1,8 +1,8 @@
 import BigNumber from 'bignumber.js';
-import { defaultAbiCoder } from 'ethers/lib/utils';
 import { Token } from '~/classes';
 import { DepositCrate } from '~/state/farmer/silo';
 import { sortCratesByBDVRatio, sortCratesBySeason } from './Utils';
+import { STALK_PER_SEED_PER_SEASON } from '~/util';
 
 export enum ConvertKind {
   BEANS_TO_CURVE_LP = 0,
@@ -12,6 +12,8 @@ export enum ConvertKind {
 }
 
 /**
+ * @deprecated Use SDK function instead.
+ *
  * Select Deposit Crates to convert. Calculate resulting gain/loss of Stalk and Seeds.
  *
  * @param fromToken Token converting from. Used to calculate stalk and seeds.
@@ -48,11 +50,13 @@ export function selectCratesToConvert(
   /// FIXME: symmetry with `Withdraw`
   sortedCrates.some((crate) => {
     // How much to remove from the current crate.
-    const crateAmountToRemove = totalAmountConverted
+    const isPartialRemove = totalAmountConverted
       .plus(crate.amount)
-      .isLessThanOrEqualTo(fromAmount)
+      .isLessThanOrEqualTo(fromAmount);
+    const crateAmountToRemove = isPartialRemove
       ? crate.amount // remove the entire crate
       : fromAmount.minus(totalAmountConverted); // remove the remaining amount
+
     const elapsedSeasons = currentSeason.minus(crate.season); //
     const cratePctToRemove = crateAmountToRemove.div(crate.amount); // (0, 1]
     const crateBDVToRemove = cratePctToRemove.times(crate.bdv); //
@@ -64,13 +68,14 @@ export function selectCratesToConvert(
     const baseStalkToRemove = fromToken.getStalk(crateBDVToRemove); // more or less, BDV * 1
     const accruedStalkToRemove = crateSeedsToRemove
       .times(elapsedSeasons)
-      .times(0.0001);
+      .times(STALK_PER_SEED_PER_SEASON);
     const crateStalkToRemove = baseStalkToRemove.plus(accruedStalkToRemove);
 
     // Update totals
     totalAmountConverted = totalAmountConverted.plus(crateAmountToRemove);
     totalBDVRemoved = totalBDVRemoved.plus(crateBDVToRemove);
     totalStalkRemoved = totalStalkRemoved.plus(crateStalkToRemove);
+
     deltaCrates.push({
       season: crate.season,
       amount: crateAmountToRemove.negated(),
@@ -95,6 +100,9 @@ export function selectCratesToConvert(
   };
 }
 
+/**
+ * @deprecated Use SDK function instead.
+ */
 export function convert(
   fromToken: Token,
   toToken: Token,
@@ -116,41 +124,7 @@ export function convert(
     bdv: deltaBDV,
     stalk: deltaStalk,
     seeds: fromToken.getSeeds(deltaBDV),
-    actions: [], /// FIXME: finalize `actions` pattern for SDK
+    actions: [],
     deltaCrates,
   };
-}
-
-/**
- * Encoded converts follow this structure:
- * [ConvertKind, amountIn, minAmountOut(, pool?)]
- *
- * @note A pool is required when the convert involves Curve LP. The pool parameter specifies
- * which LP token `amountLP` refers to. This is unecessary for unripe beans since
- * unripe beans don't have pools of their own.
- */
-export class Encoder {
-  static curveLPToBeans = (amountLP: string, minBeans: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.CURVE_LP_TO_BEANS, amountLP, minBeans, pool]
-    );
-
-  static beansToCurveLP = (amountBeans: string, minLP: string, pool: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256', 'address'],
-      [ConvertKind.BEANS_TO_CURVE_LP, amountBeans, minLP, pool]
-    );
-
-  static unripeLPToBeans = (amountLP: string, minBeans: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNRIPE_LP_TO_BEANS, amountLP, minBeans]
-    );
-
-  static unripeBeansToLP = (amountBeans: string, minLP: string) =>
-    defaultAbiCoder.encode(
-      ['uint256', 'uint256', 'uint256'],
-      [ConvertKind.UNRIPE_BEANS_TO_LP, amountBeans, minLP]
-    );
 }

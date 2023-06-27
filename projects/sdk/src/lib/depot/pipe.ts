@@ -5,7 +5,7 @@ import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { Clipboard } from "src/lib/depot/clipboard";
 import { AdvancedPipeCallStruct } from "src/lib/depot/depot";
 
-type AdvancedPipePreparedResult = {
+export type AdvancedPipePreparedResult = {
   target: string;
   callData: string;
   clipboard?: string;

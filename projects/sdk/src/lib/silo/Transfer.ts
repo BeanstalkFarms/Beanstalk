@@ -1,6 +1,6 @@
 import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
-import { TokenValue } from "src/classes/TokenValue";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 
 export class Transfer {
@@ -47,21 +47,9 @@ export class Transfer {
 
     const sender = await Transfer.sdk.getAccount();
     if (seasons.length === 1) {
-      contractCall = Transfer.sdk.contracts.beanstalk.transferDeposit(
-        sender,
-        destinationAddress,
-        token.address,
-        seasons[0],
-        amounts[0]
-      );
+      contractCall = Transfer.sdk.contracts.beanstalk.transferDeposit(sender, destinationAddress, token.address, seasons[0], amounts[0]);
     } else {
-      contractCall = Transfer.sdk.contracts.beanstalk.transferDeposits(
-        sender,
-        destinationAddress,
-        token.address,
-        seasons,
-        amounts
-      );
+      contractCall = Transfer.sdk.contracts.beanstalk.transferDeposits(sender, destinationAddress, token.address, seasons, amounts);
     }
 
     return contractCall;
