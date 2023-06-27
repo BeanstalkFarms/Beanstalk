@@ -48,9 +48,27 @@ export class Silo {
     return Silo.sdk.contracts.beanstalk.mow(account, token.address);
   }
 
+  /**
+   * TODO: prevent duplicate tokens from being passed.
+   */
   async mowMultiple(_account?: string, _tokens?: Token[]): Promise<ContractTransaction> {
     const account = _account ?? (await Silo.sdk.getAccount());
-    const tokens = _tokens ?? Array.from(Silo.sdk.tokens.siloWhitelist.values());
+    let tokens: Token[];
+
+    if (_tokens) {
+      if (_tokens.length === 0) throw new Error("No tokens provided");
+      if (_tokens.length === 1) {
+        console.warn("Optimization: use `mow()` instead of `mowMultiple()` for a single token");
+      }
+
+      const notWhitelisted = _tokens.find((token) => Silo.sdk.tokens.isWhitelisted(token) === true);
+      if (notWhitelisted) throw new Error(`${notWhitelisted.symbol} is not whitelisted`);
+
+      tokens = _tokens;
+    } else {
+      // Default: all whitelisted tokens
+      tokens = Array.from(Silo.sdk.tokens.siloWhitelist.values());
+    }
 
     return Silo.sdk.contracts.beanstalk.mowMultiple(
       account,
