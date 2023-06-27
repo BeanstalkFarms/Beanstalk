@@ -8,6 +8,7 @@ import {
 import { ethers } from 'ethers';
 import { EstimatesGas, FarmStep } from '~/lib/Txn/Interface';
 
+// TODO(silo-v3): something about this implementation chain breaks the typing of `this._sdk`
 export class ClaimFarmStep extends FarmStep implements EstimatesGas {
   constructor(
     _sdk: BeanstalkSDK,

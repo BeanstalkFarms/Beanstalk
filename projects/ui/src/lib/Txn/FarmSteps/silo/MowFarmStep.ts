@@ -1,9 +1,18 @@
 import { BeanstalkSDK } from '@beanstalk/sdk';
+import { Token } from '@beanstalk/sdk-core';
 import { ethers } from 'ethers';
 import { FarmStep, EstimatesGas } from '~/lib/Txn/Interface';
 
 export class MowFarmStep extends FarmStep implements EstimatesGas {
-  constructor(_sdk: BeanstalkSDK, private _account: string) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _account: string,
+
+    // TODO(silo-v3): .update doesn't exist anymore.
+    // Rewrite this mow step to use `mow()` or `mowMultiple()` depending on
+    // the tokens requested to be mown. this will require ui changes or defaults
+    private _tokens: Token[] = [],
+  ) {
     super(_sdk);
     this._account = _account;
   }
