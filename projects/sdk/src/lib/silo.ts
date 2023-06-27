@@ -53,27 +53,24 @@ export class Silo {
    */
   async mowMultiple(_account?: string, _tokens?: Token[]): Promise<ContractTransaction> {
     const account = _account ?? (await Silo.sdk.getAccount());
-    let tokens: Token[];
 
+    let addrs: string[];
     if (_tokens) {
       if (_tokens.length === 0) throw new Error("No tokens provided");
       if (_tokens.length === 1) {
         console.warn("Optimization: use `mow()` instead of `mowMultiple()` for a single token");
       }
 
-      const notWhitelisted = _tokens.find((token) => Silo.sdk.tokens.isWhitelisted(token) === true);
+      const notWhitelisted = _tokens.find((token) => Silo.sdk.tokens.isWhitelisted(token) === false);
       if (notWhitelisted) throw new Error(`${notWhitelisted.symbol} is not whitelisted`);
 
-      tokens = _tokens;
+      addrs = _tokens.map((t) => t.address);
     } else {
       // Default: all whitelisted tokens
-      tokens = Array.from(Silo.sdk.tokens.siloWhitelist.values());
+      addrs = Silo.sdk.tokens.siloWhitelistAddresses;
     }
 
-    return Silo.sdk.contracts.beanstalk.mowMultiple(
-      account,
-      tokens.map((t) => t.address)
-    );
+    return Silo.sdk.contracts.beanstalk.mowMultiple(account, addrs);
   }
 
   /**
@@ -457,7 +454,7 @@ export class Silo {
    */
   async getSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfSeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    return Silo.sdk.contracts.beanstalk.balanceOfLegacySeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
   }
 
   /**
@@ -486,18 +483,25 @@ export class Silo {
    */
   async getPlantableSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    // TODO: this is wrong
-    return Silo.sdk.contracts.beanstalk.balanceOfEarnedSeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    throw new Error("Not implemented");
   }
 
   /**
-   * Get a Farmer's Grown Stalk since last Mow.
-   * @param _account
-   * @returns
+   * Get a Farmer's Grown Stalk since last Mow. Aggregates Grown Stalk across
+   * all whitelisted tokens.
    */
   async getGrownStalk(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfGrownStalk(account).then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
+
+    const results = await Promise.all(
+      Silo.sdk.tokens.siloWhitelistAddresses.map((address) => {
+        return Silo.sdk.contracts.beanstalk.balanceOfGrownStalk(account, address);
+      })
+    );
+
+    return Silo.sdk.tokens.STALK.fromBlockchain(
+      results.reduce((a, b) => a.add(b), BigNumber.from(0)) // TODO: sum function?
+    );
   }
 
   /**
