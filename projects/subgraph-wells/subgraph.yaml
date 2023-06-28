@@ -1,0 +1,79 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Aquifer
+    network: mainnet
+    source:
+      address: "0x74ef2B06A1D2035C33244A4a263FF00B84504865"
+      abi: Aquifer
+      startBlock: 16650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Aquifer
+      abis:
+        - name: Aquifer
+          file: ../subgraph-core/abis/Aquifer.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
+          handler: handleBoreWell
+      file: ./src/templates/AquiferHandler.ts
+  - kind: ethereum/contract
+    name: Beanstalk
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 16650000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Beanstalk
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+      file: ./src/BeanstalkHandler.ts
+templates:
+  - kind: ethereum/contract
+    name: Well
+    network: mainnet
+    source:
+      abi: Well
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Well
+      abis:
+        - name: Well
+          file: ../subgraph-core/abis/Well.json
+        - name: CurvePrice
+          file: ../subgraph-core/abis/CurvePrice.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: AddLiquidity(uint256[],uint256,address)
+          handler: handleAddLiquidity
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: RemoveLiquidity(uint256,uint256[],address)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
+          handler: handleRemoveLiquidityOneToken
+        - event: Swap(address,address,uint256,uint256,address)
+          handler: handleSwap
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/WellHandler.ts

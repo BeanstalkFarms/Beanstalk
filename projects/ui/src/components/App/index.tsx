@@ -191,9 +191,6 @@ export default function App() {
                 element={<Navigate to="/market/sell/:orderID" />}
               />
             </Route>
-            {/* DEX CODE (hidden) */}
-            {/* <Route path="/market/wells" element={<WellHomePage />} /> */}
-            {/* <Route path="/market/wells/:id" element={<WellPage />} /> */}
             <Route path="/nft" element={<NFTPage />} />
             <Route path="/governance/:id" element={<ProposalPage />} />
             <Route

@@ -213,5 +213,27 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
 
   }
 
+  /**
+   * DO NOT TURN THIS ON YET. Doing so will FORCE all ETH<>BEAN trades
+   * through the Well, and it may not be ready/have enough liquidity/etc...
+   */
+  // /**
+  //  * Well Swap: WETH => BEAN
+  //  */
+  // {
+  //   graph.setEdge("WETH", "BEAN", {
+  //     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //       sdk.farm.presets.wellWethBean(sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+  //     from: "WETH",
+  //     to: "BEAN"
+  //   });
+  //   graph.setEdge("BEAN", "WETH", {
+  //     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //       sdk.farm.presets.wellWethBean(sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+  //     from: "BEAN",
+  //     to: "WETH"
+  //   });
+  // }
+
   return graph;
 };

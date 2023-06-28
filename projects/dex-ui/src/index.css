@@ -1,0 +1,102 @@
+/* @font-face {
+  font-family: "Inter";
+  src: url("src/assets/fonts/Inter.ttf");
+} */
+
+@font-face {
+  font-family: "PPMori";
+  font-weight: 100;
+  src: url("src/assets/fonts/PPMori-Extralight.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 200;
+  src: url("src/assets/fonts/PPMori-Light.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 300;
+  src: url("src/assets/fonts/PPMori-Book.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 400;
+  src: url("src/assets/fonts/PPMori-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 500;
+  src: url("src/assets/fonts/PPMori-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 600;
+  src: url("src/assets/fonts/PPMori-SemiBold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 700;
+  src: url("src/assets/fonts/PPMori-Bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PPMori";
+  font-weight: 800;
+  src: url("src/assets/fonts/PPMori-ExtraBold.woff2") format("woff2");
+}
+
+html,
+body {
+  height: 100%;
+  background-color: var(--background);
+  color: var(--primary);
+  overflow: hidden;
+  line-height: 24px;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  font-family: "PPMori";
+  font-weight: regular;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /** Prevent page overscrolling: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior */
+  overscroll-behavior: none;
+}
+
+/* Remove the arrows on input type=number */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  border: none;
+}
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+:focus {
+  outline: 1px solid #46b955;
+  box-sizing: border-box;
+}
+
+/* ===== Scrollbar CSS ===== */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #494c58 #272a37;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #eee;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+}

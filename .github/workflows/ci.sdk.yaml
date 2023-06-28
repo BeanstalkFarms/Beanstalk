@@ -1,10 +1,10 @@
-name: Continuous Integration - SDK
+name: SDK
 
 on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'projects/sdk/**'
+      - "projects/sdk/**"
 
 jobs:
   test:
@@ -14,18 +14,16 @@ jobs:
       - name: SDK Tests
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: "16"
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - name: Generate Typedefs
-        run: yarn sdk:generate
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -42,5 +40,7 @@ jobs:
         run: anvil --fork-url $ANVIL_FORK_URL --chain-id 1337 &
         env:
           ANVIL_FORK_URL: ${{ secrets.ANVIL_FORK_URL }}
+      - name: Build All
+        run: yarn build
       - run: yarn sdk:test
         working-directory: projects/sdk

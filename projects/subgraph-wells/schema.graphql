@@ -1,0 +1,440 @@
+# Custommized base schema from Messari
+# Subgraph Schema: DEX AMM (Extended)
+# Version: 3.0.3
+# See https://github.com/messari/subgraphs/blob/master/docs/Schema.md for details
+
+type Token @entity {
+  " Smart contract address of the token "
+  id: Bytes!
+
+  " Name of the token, mirrored from the smart contract "
+  name: String!
+
+  " Symbol of the token, mirrored from the smart contract "
+  symbol: String!
+
+  " The number of decimal places this token uses, default to 18 "
+  decimals: Int!
+
+  " Optional field to track the price of a token, mostly for caching purposes "
+  lastPriceUSD: BigDecimal!
+
+  " Optional field to track the block number of the last token price "
+  lastPriceBlockNumber: BigInt!
+}
+
+type Aquifer @entity {
+  " Smart contract address of the aquifer "
+  id: Bytes!
+
+  " Wells deployed by this aquifer "
+  wells: [Well!]!
+}
+
+type WellFunction @entity {
+  " {Well address}-{Well Function address}"
+  id: ID!
+  " Contract address of the well function"
+  target: Bytes!
+  " Calldata passed to the well function "
+  data: Bytes!
+  " Well associated with this well function"
+  well: Well!
+}
+
+type Pump @entity {
+  " {Well address}-{Pump address}"
+  id: ID!
+  " Contract address of the pump"
+  target: Bytes!
+  " Calldata passed to the pump "
+  data: Bytes!
+  " Well associated with this pump"
+  well: Well!
+}
+
+type Well @entity {
+  " Smart contract address of the well "
+  id: Bytes!
+
+  " The aquifer this well belongs to "
+  aquifer: Aquifer!
+
+  " Name of liquidity well (e.g. Curve.fi DAI/USDC/USDT) "
+  name: String
+
+  " Symbol of liquidity well (e.g. 3CRV) "
+  symbol: String
+
+  " Tokens that need to be deposited to take a position in protocol. e.g. WETH and USDC to deposit into the WETH-USDC well. Array to account for multi-asset wells like Curve and Balancer "
+  # Check for forced indexing of tokens
+  tokens: [Token!]!
+
+  " Pricing function contract used with this well "
+  wellFunction: WellFunction! @derivedFrom(field: "well")
+
+  " Pumps associated with this well "
+  pumps: [Pump!]! @derivedFrom(field: "well")
+
+  " The well implementation used to deploy this well "
+  implementation: Bytes!
+
+  " Creation timestamp "
+  createdTimestamp: BigInt!
+
+  " Creation block number "
+  createdBlockNumber: BigInt!
+
+  ##### Quantitative Data #####
+
+  " Total liquidity token supply for the well. "
+  lpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  totalLiquidityUSD: BigDecimal!
+
+  " Amount of each token in the well. The ordering should be the same as the well's `tokens` field. "
+  reserves: [BigInt!]!
+
+  " USD value of each token in the well. The ordering should be the same as the well's `tokens` field. "
+  reservesUSD: [BigDecimal!]!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  cumulativeVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  cumulativeDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  cumulativeWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  cumulativeSwapCount: Int!
+
+  " Day ID of the most recent daily snapshot "
+  lastSnapshotDayID: Int!
+
+  " Hour ID of the most recent hourly snapshot "
+  lastSnapshotHourID: Int!
+
+  " Timestamp of the last time this entity was updated "
+  lastUpdateTimestamp: BigInt!
+
+  " Block number of the last time this entity was updated "
+  lastUpdateBlockNumber: BigInt!
+
+  ##### Snapshots #####
+
+  " Liquidity well daily snapshots "
+  dailySnapshots: [WellDailySnapshot!]! @derivedFrom(field: "well")
+
+  " Liquidity well hourly snapshots "
+  hourlySnapshots: [WellHourlySnapshot!]! @derivedFrom(field: "well")
+
+  # ##### Events #####
+
+  " All deposit (add liquidity) events occurred in this well "
+  deposits: [Deposit!]! @derivedFrom(field: "well")
+
+  " All withdraw (remove liquidity) events occurred in this well "
+  withdraws: [Withdraw!]! @derivedFrom(field: "well")
+
+  " All trade (swap) events occurred in this well "
+  swaps: [Swap!]! @derivedFrom(field: "well")
+}
+
+type WellDailySnapshot @entity {
+  " {Smart contract address of the well}-{ # of days since Unix epoch time } "
+  id: Bytes!
+
+  " Number of hours since Unix epoch time "
+  day: Int!
+
+  " The well this snapshot belongs to "
+  well: Well!
+
+  ##### Cumulative Data #####
+
+  " Total liquidity token supply for the well. "
+  lpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  totalLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  cumulativeVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  cumulativeDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  cumulativeWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  cumulativeSwapCount: Int!
+
+  ##### Delta Amounts #####
+
+  " Total liquidity token supply for the well. "
+  deltalpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  deltaLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  deltaVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  deltaDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  deltaWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  deltaSwapCount: Int!
+
+  " Timestamp of the last time this entity was updated "
+  lastUpdateTimestamp: BigInt!
+
+  " Block number of the last time this entity was updated "
+  lastUpdateBlockNumber: BigInt!
+}
+
+type WellHourlySnapshot @entity {
+  " {Smart contract address of the well}-{ # of days since Unix epoch time } "
+  id: Bytes!
+
+  " Number of hours since Unix epoch time "
+  hour: Int!
+
+  " The well this snapshot belongs to "
+  well: Well!
+
+  ##### Cumulative Data #####
+
+  " Total liquidity token supply for the well. "
+  lpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  totalLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  cumulativeVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  cumulativeVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  cumulativeDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  cumulativeWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  cumulativeSwapCount: Int!
+
+  ##### Delta Amounts #####
+
+  " Total liquidity token supply for the well. "
+  deltalpTokenSupply: BigInt!
+
+  " The sum of all active and non-active liquidity in USD for this well. "
+  deltaLiquidityUSD: BigDecimal!
+
+  " All trade volume occurred for a specific token, in native amount. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReserves: [BigInt!]!
+
+  " All trade volume occurred for a specific token, in USD. The ordering should be the same as the well's `tokens` field. "
+  deltaVolumeReservesUSD: [BigDecimal!]!
+
+  " All historical trade volume occurred in this well, in USD "
+  deltaVolumeUSD: BigDecimal!
+
+  " Total number of deposit events (add liquidity) "
+  deltaDepositCount: Int!
+
+  " Total number of withdrawal events (remove liquidity) "
+  deltaWithdrawCount: Int!
+
+  " Total number of trades (swaps) "
+  deltaSwapCount: Int!
+
+  " Timestamp of the last time this entity was updated "
+  lastUpdateTimestamp: BigInt!
+
+  " Block number of the last time this entity was updated "
+  lastUpdateBlockNumber: BigInt!
+}
+
+type Account @entity {
+  id: Bytes!
+  deposits: [Deposit!]! @derivedFrom(field: "account")
+  withdraws: [Withdraw!]! @derivedFrom(field: "account")
+  swaps: [Swap!]! @derivedFrom(field: "account")
+}
+
+##### EVENT LEVEL ENTITIES #####
+
+" This maps to the AddLiquidity event "
+type Deposit @entity(immutable: true) {
+  " { Transaction hash }-{ Log index } "
+  id: ID!
+
+  " Transaction hash of the transaction that emitted this event "
+  hash: Bytes!
+
+  " Nonce of the transaction that emitted this event "
+  nonce: BigInt!
+
+  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  logIndex: Int!
+
+  " Gas limit of the transaction that emitted this event "
+  gasLimit: BigInt
+
+  " Gas used in this transaction. (Optional because not every chain will support this) "
+  gasUsed: BigInt
+
+  " Gas price of the transaction that emitted this event "
+  gasPrice: BigInt
+
+  " Account that emitted this event "
+  account: Account!
+
+  " The well involving this event "
+  well: Well!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
+
+  " Amount of liquidity tokens minted "
+  liquidity: BigInt!
+
+  " Input tokens of the well. E.g. WETH and USDC to a WETH-USDC well "
+  tokens: [Token!]!
+
+  " Amount of input tokens in the token's native unit "
+  reserves: [BigInt!]!
+
+  " USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a well) "
+  amountUSD: BigDecimal!
+}
+
+" This maps to RemoveLiquidity and RemoveLiquidityOneToken events "
+type Withdraw @entity(immutable: true) {
+  " { Transaction hash }-{ Log index }"
+  id: ID!
+
+  " Transaction hash of the transaction that emitted this event "
+  hash: Bytes!
+
+  " Nonce of the transaction that emitted this event "
+  nonce: BigInt!
+
+  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  logIndex: Int!
+
+  " Gas limit of the transaction that emitted this event "
+  gasLimit: BigInt
+
+  " Gas used in this transaction. (Optional because not every chain will support this) "
+  gasUsed: BigInt
+
+  " Gas price of the transaction that emitted this event "
+  gasPrice: BigInt
+
+  " Account that emitted this event "
+  account: Account!
+
+  " The well involving this event "
+  well: Well!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
+
+  " Amount of liquidity tokens burned "
+  liquidity: BigInt!
+
+  " Input tokens of the well (not input tokens of the event/transaction). E.g. WETH and USDC from a WETH-USDC well "
+  tokens: [Token!]!
+
+  " Amount of input tokens in the token's native unit "
+  reserves: [BigInt!]!
+
+  " USD-normalized value of the transaction of the underlying (e.g. sum of tokens withdrawn from a well) "
+  amountUSD: BigDecimal!
+}
+
+type Swap @entity(immutable: true) {
+  " Transaction hash-log index"
+  id: ID!
+
+  " Transaction hash of the event "
+  hash: Bytes!
+
+  " Nonce of the transaction "
+  nonce: BigInt!
+
+  " Log index of the event "
+  logIndex: Int!
+
+  " Gas limit of the transaction "
+  gasLimit: BigInt
+
+  " Gas used for the transaction "
+  gasUsed: BigInt
+
+  " Gas price for the transaction "
+  gasPrice: BigInt
+
+  " Address that sent the transaction "
+  account: Account!
+
+  " Well involving this event "
+  well: Well!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
+
+  " Token deposited into the well "
+  fromToken: Token!
+
+  " Amount of token deposited into the well in native units "
+  amountIn: BigInt!
+
+  " Token withdrawn from the well "
+  toToken: Token!
+
+  " Amount of the token withdrawn from the well in native units "
+  amountOut: BigInt!
+}
