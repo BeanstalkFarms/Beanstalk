@@ -303,3 +303,60 @@ describe("the Silo", () => {
     expect(p.deposits.get(Bean)?.["6074"]).toBeUndefined();
   });
 });
+
+describe("parsePlots", () => {
+  let p: EventProcessor;
+
+  beforeEach(() => {
+    p = mockProcessor();
+  });
+
+  it("should parse plots correctly when all are fully harvestable", () => {
+    const plots = [
+      ["1", EBN.from("5")],
+      ["2", EBN.from("10")]
+    ] as const;
+
+    p.plots = new Map(plots);
+    const harvestableIndex = EBN.from("20");
+
+    const result = p.parsePlots({ harvestableIndex });
+    expect(result.pods.toString()).toBe("0");
+    expect(result.harvestablePods.toString()).toBe("15");
+    expect(Array.from(result.plots.entries())).toEqual([]);
+    expect(Array.from(result.harvestablePlots.entries())).toEqual(plots);
+  });
+
+  it("should parse plots correctly when all are unharvestable", () => {
+    const plots = [
+      ["30", EBN.from("5")],
+      ["40", EBN.from("10")]
+    ] as const;
+
+    p.plots = new Map(plots);
+    const harvestableIndex = EBN.from("20");
+
+    const result = p.parsePlots({ harvestableIndex });
+    expect(result.pods.toString()).toBe("15");
+    expect(result.harvestablePods.toString()).toBe("0");
+    expect(Array.from(result.harvestablePlots.entries())).toEqual([]);
+    expect(Array.from(result.plots.entries())).toEqual(plots);
+  });
+
+  it("should parse plots correctly when plots are partially harvestable", () => {
+    p.plots = new Map([
+      ["10", EBN.from("15")], // 10 -> 25 = 15
+      ["30", EBN.from("5")] // 30 -> 35 = 5
+    ]);
+    const harvestableIndex = EBN.from("20");
+
+    const result = p.parsePlots({ harvestableIndex });
+    expect(result.pods.toString()).toBe("10");
+    expect(result.harvestablePods.toString()).toBe("10");
+    expect(Array.from(result.harvestablePlots.entries())).toEqual([["10", EBN.from("10")]]);
+    expect(Array.from(result.plots.entries())).toEqual([
+      ["20", EBN.from("5")],
+      ["30", EBN.from("5")]
+    ]);
+  });
+});

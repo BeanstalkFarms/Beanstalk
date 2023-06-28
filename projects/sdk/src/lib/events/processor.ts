@@ -10,6 +10,7 @@ import {
 } from "src/constants/generated/protocol/abi/Beanstalk";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { EventManager } from "src/lib/events/EventManager";
+import { ZERO_BN } from "src/constants";
 
 // ----------------------------------------
 
@@ -75,6 +76,8 @@ export class EventProcessor {
 
     // Field
     this.plots = initialState?.plots || new Map();
+
+    return this;
   }
 
   ingest<T extends EventManager.Event>(event: T) {
@@ -92,7 +95,7 @@ export class EventProcessor {
     events.forEach((event) => {
       this.ingest(event);
     });
-    return this.data();
+    return this;
   }
 
   data() {
@@ -300,52 +303,49 @@ export class EventProcessor {
     }
   }
 
-  // parsePlots(_harvestableIndex: BigNumber) {
-  //   return EventProcessor._parsePlots(
-  //     this.plots,
-  //     _harvestableIndex
-  //   );
-  // }
+  parsePlots({ harvestableIndex }: { harvestableIndex: ethers.BigNumber }) {
+    let pods = ZERO_BN;
+    let harvestablePods = ZERO_BN;
 
-  // static _parsePlots(
-  //   plots: EventProcessorData['plots'],
-  //   index: BigNumber
-  // ) {
-  //   console.debug(`[EventProcessor] Parsing plots with index ${index.toString()}`);
+    const unharvestablePlots: Map<string, ethers.BigNumber> = new Map();
+    const harvestablePlots: Map<string, ethers.BigNumber> = new Map();
 
-  //   let pods = new BigNumber(0);
-  //   let harvestablePods = new BigNumber(0);
-  //   const unharvestablePlots  : PlotMap<BigNumber> = {};
-  //   const harvestablePlots    : PlotMap<BigNumber> = {};
+    this.plots.forEach((plot, startIndexStr) => {
+      const startIndex = ethers.BigNumber.from(startIndexStr);
 
-  //   Object.keys(plots).forEach((p) => {
-  //     if (plots[p].plus(p).isLessThanOrEqualTo(index)) {
-  //       harvestablePods = harvestablePods.plus(plots[p]);
-  //       harvestablePlots[p] = plots[p];
-  //     } else if (new BigNumber(p).isLessThan(index)) {
-  //       harvestablePods = harvestablePods.plus(index.minus(p));
-  //       pods = pods.plus(
-  //         plots[p].minus(index.minus(p))
-  //       );
-  //       harvestablePlots[p] = index.minus(p);
-  //       unharvestablePlots[index.minus(p).plus(p).toString()] = plots[p].minus(
-  //         index.minus(p)
-  //       );
-  //     } else {
-  //       pods = pods.plus(plots[p]);
-  //       unharvestablePlots[p] = plots[p];
-  //     }
-  //   });
+      // Fully harvestable
+      if (startIndex.add(plot).lte(harvestableIndex)) {
+        harvestablePods = harvestablePods.add(plot);
+        harvestablePlots.set(startIndexStr, plot);
+      }
 
-  //   // FIXME: "unharvestable pods" are just Pods,
-  //   // but we can't reuse "plots" in the same way.
-  //   return {
-  //     pods,
-  //     harvestablePods,
-  //     plots: unharvestablePlots,
-  //     harvestablePlots
-  //   };
-  // }
+      // Partially harvestable
+      else if (startIndex.lt(harvestableIndex)) {
+        const partialAmount = harvestableIndex.sub(startIndex);
+
+        harvestablePods = harvestablePods.add(partialAmount);
+        pods = pods.add(plot.sub(partialAmount));
+
+        harvestablePlots.set(startIndexStr, partialAmount);
+        unharvestablePlots.set(harvestableIndex.toString(), plot.sub(partialAmount));
+      }
+
+      // Unharvestable
+      else {
+        pods = pods.add(plot);
+        unharvestablePlots.set(startIndexStr, plot);
+      }
+    });
+
+    // FIXME: "unharvestable pods" are just Pods,
+    // but we can't reuse "plots" in the same way.
+    return {
+      pods,
+      harvestablePods,
+      plots: unharvestablePlots,
+      harvestablePlots
+    };
+  }
 
   // /// /////////////////////// SILO: DEPOSIT  //////////////////////////
 
@@ -380,6 +380,7 @@ export class EventProcessor {
     });
 
     if (this.deposits.get(token)?.[stem]?.amount?.eq(0)) {
+      // FIXME: verify this works
       delete this.deposits.get(token)?.[stem];
     }
   }
