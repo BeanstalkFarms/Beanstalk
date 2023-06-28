@@ -268,5 +268,5 @@ const TokenSymbol = styled.div`
   font-size: 16px;
   line-height: 24px;
   color: #4b5563;
-  margin-top: 2px
+  margin-top: 2px;
 `;

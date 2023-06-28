@@ -28,7 +28,7 @@ export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
-  const [wellFunctionName, setWellFunctionName] = useState<string | undefined>('-')
+  const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -42,12 +42,12 @@ export const Well = () => {
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);
-      };
+      }
 
       if (well.wellFunction) {
-        const _wellName = await well.wellFunction.contract.name()
-        setWellFunctionName(_wellName)
-      };
+        const _wellName = await well.wellFunction.contract.name();
+        setWellFunctionName(_wellName);
+      }
     };
 
     run();
@@ -69,13 +69,14 @@ export const Well = () => {
   });
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
-  reserves.forEach(reserve => {
+  reserves.forEach((reserve) => {
     reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
-  })
+  });
 
-  const goLiquidity = () => navigate(`./liquidity`)
+  const goLiquidity = () => navigate(`./liquidity`);
 
-  const goSwap = () => (well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null)
+  const goSwap = () =>
+    well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null;
 
   if (loading)
     return (
