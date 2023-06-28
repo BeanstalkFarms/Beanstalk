@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
+import { EventProcessor } from '@beanstalk/sdk';
 import { BEAN_TO_SEEDS, BEAN_TO_STALK, ZERO_BN } from '~/constants';
 import { BEAN, SEEDS, STALK } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -8,7 +9,6 @@ import useChainId from '~/hooks/chain/useChainId';
 import { bigNumberResult, tokenResult } from '~/util';
 import useBlocks from '~/hooks/ledger/useBlocks';
 import useAccount from '~/hooks/ledger/useAccount';
-import EventProcessor from '~/lib/Beanstalk/EventProcessor';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { DepositCrate } from '.';

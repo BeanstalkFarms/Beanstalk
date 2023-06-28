@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import { EventProcessor } from '@beanstalk/sdk';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
 import useBlocks from '~/hooks/ledger/useBlocks';
 import useAccount from '~/hooks/ledger/useAccount';
-import EventProcessor from '~/lib/Beanstalk/EventProcessor';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
