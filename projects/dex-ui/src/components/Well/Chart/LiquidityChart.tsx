@@ -4,9 +4,5 @@ import { ChartContainer } from "./ChartStyles";
 
 type Props = {};
 export const LiquidityChart: FC<Props> = ({}) => {
-  return (
-    <ChartContainer>
-      LiquidityChart
-    </ChartContainer>
-  );
+  return <ChartContainer>LiquidityChart</ChartContainer>;
 };

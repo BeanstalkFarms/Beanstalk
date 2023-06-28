@@ -35,7 +35,14 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
     <Container width={width} open={open} onClick={toggle} data-trace="true">
       <Header id="header" open={open}>
         {header}
-        <ImageButton component={ChevronDown} size={12} rotate={open ? "180" : "0"} onClick={toggle} padding="0px" alt="Click to expand this box and learn how to earn yield" />
+        <ImageButton
+          component={ChevronDown}
+          size={12}
+          rotate={open ? "180" : "0"}
+          onClick={toggle}
+          padding="0px"
+          alt="Click to expand this box and learn how to earn yield"
+        />
       </Header>
 
       {open && body}
@@ -49,7 +56,7 @@ const Container = styled.div<Props>`
   border-top: 0.5px solid #9ca3af;
   border-left: 0.5px solid #9ca3af;
   border-right: 0.5px solid #9ca3af;
-  border-bottom: ${(p) => p.open ? '0.5px' : '0px'} solid #9caeaf;
+  border-bottom: ${(p) => (p.open ? "0.5px" : "0px")} solid #9caeaf;
   width: ${(p) => p.width}px;
   min-width: ${(p) => p.width}px;
   cursor: pointer;
@@ -57,9 +64,9 @@ const Container = styled.div<Props>`
     border-top: 0.5px solid #46b955;
     border-left: 0.5px solid #46b955;
     border-right: 0.5px solid #46b955;
-    border-bottom: ${(p) => p.open ? '0.5px' : '0px'} solid #46b955;
+    border-bottom: ${(p) => (p.open ? "0.5px" : "0px")} solid #46b955;
     outline: 0.5px solid #46b955;
-  };
+  }
 `;
 const Header = styled.div<Props>`
   background-color: #f9f8f6;
@@ -70,8 +77,8 @@ const Header = styled.div<Props>`
   justify-content: space-between;
   align-items: center;
   :hover {
-    border-bottom: 0.5px solid ${(p) => !p.open ? '#46b955' : '#9ca3af'};
-  };
+    border-bottom: 0.5px solid ${(p) => (!p.open ? "#46b955" : "#9ca3af")};
+  }
 `;
 const Body = styled.div`
   display: flex;

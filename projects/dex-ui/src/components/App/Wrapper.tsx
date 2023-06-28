@@ -27,7 +27,7 @@ export const Wrapper: FC<{}> = ({ children }) => {
           }}
           customTheme={{
             "--ck-font-family": "PPMori",
-            "--ck-modal-box-shadow": "0px 0px 0px 2px black",
+            "--ck-modal-box-shadow": "0px 0px 0px 2px black"
           }}
         >
           <QueryClientProvider client={queryClient}>

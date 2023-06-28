@@ -23,7 +23,7 @@ export const useWells = () => {
                 tokens: true,
                 wellFunction: true,
                 reserves: true,
-                lpToken: true,
+                lpToken: true
               })
               .catch((err) => {
                 Log.module("wells").log(`Failed to load Well [${address}]: ${err.message}`);
@@ -35,7 +35,7 @@ export const useWells = () => {
         return res.map((promise) => (promise.status === "fulfilled" ? promise.value : null)).filter<Well>((p): p is Well => !!p);
       } catch (err: unknown) {
         Log.module("useWells").debug(`Error during findWells(): ${(err as Error).message}`);
-        return []
+        return [];
       }
     },
     {

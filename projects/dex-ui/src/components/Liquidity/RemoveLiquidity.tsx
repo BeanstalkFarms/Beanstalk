@@ -28,7 +28,13 @@ type RemoveLiquidityProps = {
   handleSlippageValueChange: (value: string) => void;
 };
 
-export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
+export const RemoveLiquidity = ({
+  well,
+  txnCompleteCallback,
+  slippage,
+  slippageSettingsClickHandler,
+  handleSlippageValueChange
+}: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
@@ -39,7 +45,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
 
   const sdk = useSdk();
-  const { reserves: wellReserves, refetch: refetchWellReserves }  = useWellReserves(well);
+  const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
 
   useEffect(() => {
     const run = async () => {
@@ -80,9 +86,9 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   const resetState = useCallback(() => {
     if (well.tokens) {
-      const initialAmounts = []
+      const initialAmounts = [];
       for (let i = 0; i < well.tokens.length; i++) {
-        initialAmounts[i] = TokenValue.ZERO
+        initialAmounts[i] = TokenValue.ZERO;
       }
 
       setAmounts([...initialAmounts]);
@@ -98,7 +104,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
         loading: "Removing liquidity...",
         error: "Removal failed",
         success: "Liquidity removed"
-      }); 
+      });
       let removeLiquidityTxn;
       try {
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
@@ -133,10 +139,10 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
         resetState();
         refetchWellReserves();
         txnCompleteCallback();
-        } catch (error) {
-          Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
-          toast.error(error);
-        }
+      } catch (error) {
+        Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
+        toast.error(error);
+      }
     }
   }, [
     well,
@@ -155,8 +161,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   ]);
 
   const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
-    const currentMode = removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom || removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced
-    const _newMode = newMode === REMOVE_LIQUIDITY_MODE.Custom || newMode === REMOVE_LIQUIDITY_MODE.Balanced
+    const currentMode = removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom || removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced;
+    const _newMode = newMode === REMOVE_LIQUIDITY_MODE.Custom || newMode === REMOVE_LIQUIDITY_MODE.Balanced;
     if (currentMode && _newMode) {
       setRemoveLiquidityMode(newMode);
     } else {
@@ -168,7 +174,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   const handleInputChange = useCallback(
     (amountFromInput: TokenValue) => {
       if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
-        setRemoveLiquidityMode(REMOVE_LIQUIDITY_MODE.Balanced)
+        setRemoveLiquidityMode(REMOVE_LIQUIDITY_MODE.Balanced);
       }
       setLpTokenAmount(amountFromInput);
     },
@@ -181,8 +187,8 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (amount: TokenValue) => {
-      let _newAmounts = [...amounts]
-      _newAmounts[index] = amount
+      let _newAmounts = [...amounts];
+      _newAmounts[index] = amount;
       for (let i = 0; i < well.tokens!.length; i++) {
         _newAmounts[i] = _newAmounts[i] ? _newAmounts[i] : i === index ? amount : TokenValue.ZERO;
       }
@@ -263,52 +269,52 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
   useEffect(() => {
     const nonZeroValues = amounts.filter((amount) => amount && amount.value.gt("0")).length;
     if (nonZeroValues === 0) {
-      setLpTokenAmount(undefined)
+      setLpTokenAmount(undefined);
     }
-  }, [amounts])
+  }, [amounts]);
 
   return (
     <div>
       {wellLpToken && (
         <LargeGapContainer>
-            <TokenContainer>
-              <TokenInput
-                id={"inputLpToken"}
-                label={`Input amount in ${wellLpToken.symbol}`}
-                token={wellLpToken}
-                amount={lpTokenAmount}
-                onAmountChange={handleInputChange}
-                canChangeToken={false}
-                canChangeValue={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
-                showBalance={true}
-                loading={false}
-              />
-            </TokenContainer>
-            <MediumGapContainer>
+          <TokenContainer>
+            <TokenInput
+              id={"inputLpToken"}
+              label={`Input amount in ${wellLpToken.symbol}`}
+              token={wellLpToken}
+              amount={lpTokenAmount}
+              onAmountChange={handleInputChange}
+              canChangeToken={false}
+              canChangeValue={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
+              showBalance={true}
+              loading={false}
+            />
+          </TokenContainer>
+          <MediumGapContainer>
             <OutputModeSelectorContainer>
-            <div>Claim LP Tokens as</div>
-            <Tabs>
-              <Tab>
-                <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)} active={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken} stretch>
-                <Checkbox
-                  checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken}
-                  mode={"checkOnly"}
-                  checkboxColor="#46b955"
-                />
-                <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}>Single Token</TabLabel>
-                </TabButton>
-              </Tab>
-              <Tab>
-              <TabButton onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)} active={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken} stretch>
-                <Checkbox
-                  checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
-                  mode={"checkOnly"}
-                  checkboxColor="#46b955"
-                />
-                <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
-                </TabButton>
-              </Tab>
-            </Tabs>
+              <div>Claim LP Tokens as</div>
+              <Tabs>
+                <Tab>
+                  <TabButton
+                    onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}
+                    active={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken}
+                    stretch
+                  >
+                    <Checkbox checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken} mode={"checkOnly"} checkboxColor="#46b955" />
+                    <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}>Single Token</TabLabel>
+                  </TabButton>
+                </Tab>
+                <Tab>
+                  <TabButton
+                    onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}
+                    active={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
+                    stretch
+                  >
+                    <Checkbox checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken} mode={"checkOnly"} checkboxColor="#46b955" />
+                    <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
+                  </TabButton>
+                </Tab>
+              </Tabs>
             </OutputModeSelectorContainer>
             {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
               <>
@@ -341,11 +347,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 {well.tokens!.map((token: Token, index: number) => (
                   <ContainerSingleTokenRow key={`token${index}`} onClick={() => handleSwitchSingleToken(index)}>
                     <ReadOnlyTokenValueRow selected={singleTokenIndex === index}>
-                      <Checkbox
-                        checked={singleTokenIndex === index}
-                        mode={"checkOnly"}
-                        checkboxColor="#46b955"
-                      />
+                      <Checkbox checked={singleTokenIndex === index} mode={"checkOnly"} checkboxColor="#46b955" />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
                       {singleTokenIndex === index ? (
@@ -358,47 +360,48 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 ))}
               </MediumGapContainer>
             )}
-            </MediumGapContainer>
-            {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
-              <>
-              <Checkbox 
+          </MediumGapContainer>
+          {removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken && (
+            <>
+              <Checkbox
                 label={"Claim in balanced proportion"}
                 checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
                 onClick={() =>
                   handleSwitchRemoveMode(
                     removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
-                  )}
-                />
-              </>
-            )}
-            {lpTokenAmountNonZero && (
-              <QuoteDetails
-                type={LIQUIDITY_OPERATION_TYPE.REMOVE}
-                quote={selectedQuote}
-                lpTokenAmount={lpTokenAmount}
-                inputs={amounts}
-                wellLpToken={well.lpToken}
-                slippageSettingsClickHandler={slippageSettingsClickHandler}
-                handleSlippageValueChange={handleSlippageValueChange}
-                slippage={slippage}
-                wellTokens={well.tokens}
-                removeLiquidityMode={removeLiquidityMode}
-                selectedTokenIndex={singleTokenIndex}
-                tokenPrices={prices}
-                tokenReserves={wellReserves}
+                  )
+                }
               />
-            )}
-            {!tokenAllowance ? (
-              <ButtonWrapper>
-                <ApproveTokenButton
-                  disabled={approveButtonDisabled}
-                  loading={false}
-                  label={`Approve ${wellLpToken.symbol}`}
-                  onClick={approveTokenButtonClickHandler}
-                />
-              </ButtonWrapper>
-            ) : (
-              <ButtonWrapper>
+            </>
+          )}
+          {lpTokenAmountNonZero && (
+            <QuoteDetails
+              type={LIQUIDITY_OPERATION_TYPE.REMOVE}
+              quote={selectedQuote}
+              lpTokenAmount={lpTokenAmount}
+              inputs={amounts}
+              wellLpToken={well.lpToken}
+              slippageSettingsClickHandler={slippageSettingsClickHandler}
+              handleSlippageValueChange={handleSlippageValueChange}
+              slippage={slippage}
+              wellTokens={well.tokens}
+              removeLiquidityMode={removeLiquidityMode}
+              selectedTokenIndex={singleTokenIndex}
+              tokenPrices={prices}
+              tokenReserves={wellReserves}
+            />
+          )}
+          {!tokenAllowance ? (
+            <ButtonWrapper>
+              <ApproveTokenButton
+                disabled={approveButtonDisabled}
+                loading={false}
+                label={`Approve ${wellLpToken.symbol}`}
+                onClick={approveTokenButtonClickHandler}
+              />
+            </ButtonWrapper>
+          ) : (
+            <ButtonWrapper>
               <Button
                 disabled={!removeLiquidityButtonEnabled}
                 label={buttonLabel}
@@ -406,7 +409,7 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
                 loading={false}
               />
             </ButtonWrapper>
-            )}
+          )}
         </LargeGapContainer>
       )}
     </div>
@@ -414,20 +417,20 @@ export const RemoveLiquidity = ({ well, txnCompleteCallback, slippage, slippageS
 };
 
 type ReadOnlyRowProps = {
-  selected?: boolean
-}
+  selected?: boolean;
+};
 
 const LargeGapContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-`
+`;
 
 const MediumGapContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`
+`;
 
 const TabLabel = styled.div`
   cursor: pointer;
@@ -444,8 +447,7 @@ const Tabs = styled.div`
   gap: 8px;
 `;
 
-const ApproveTokenButton = styled(Button)`
-`;
+const ApproveTokenButton = styled(Button)``;
 
 const ButtonWrapper = styled.div`
   display: flex;
@@ -465,7 +467,7 @@ const TabRadio = styled.input`
   height: 1em;
   outline: none;
   border: none;
-  background-color: #F9F8F6;
+  background-color: #f9f8f6;
   &:checked {
     background-color: white;
   }
@@ -480,7 +482,7 @@ const Radio = styled.input`
   height: 1.4em;
   outline: none;
   border: none;
-  background-color: #F9F8F6;
+  background-color: #f9f8f6;
   &:checked {
     background-color: white;
   }
@@ -492,8 +494,7 @@ const TokenAmount = styled.div`
   text-align: right;
 `;
 
-const TokenSymbol = styled.div`
-`;
+const TokenSymbol = styled.div``;
 
 const SmallTokenLogo = styled.img`
   width: 20px;
@@ -503,8 +504,8 @@ const SmallTokenLogo = styled.img`
 const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   display: flex;
   flex-direction: row;
-  font-weight: ${(props) => props.selected ? '600' : 'normal'};
-  background-color: ${(props) => props.selected ? 'white' : '#F9F8F6'};
+  font-weight: ${(props) => (props.selected ? "600" : "normal")};
+  background-color: ${(props) => (props.selected ? "white" : "#F9F8F6")};
   border: 0.5px solid black;
   margin: -0.5px;
   height: 60px;
@@ -527,5 +528,4 @@ const ContainerSingleTokenRow = styled.div`
   cursor: pointer;
 `;
 
-const OutputModeSelectorContainer = styled.div`
-`
+const OutputModeSelectorContainer = styled.div``;

@@ -22,7 +22,7 @@ export const Title: FC<Props> = ({ title, parent, fontweight }) => (
 
 type TitleProps = {
   fontweight?: string;
-}
+};
 
 const Container = styled.div`
   display: flex;
@@ -30,7 +30,7 @@ const Container = styled.div`
 `;
 const TitleText = styled.div<TitleProps>`
   ${BodyL}
-  ${(props) => (props.fontweight && `font-weight: ${props.fontweight}`)};
+  ${(props) => props.fontweight && `font-weight: ${props.fontweight}`};
   text-transform: uppercase;
 `;
 const ParentText = styled(Link)`

@@ -12,25 +12,22 @@ export const useLiquidityQuote = (
   lpTokenAmount: TokenValue,
   singleTokenIndex: number,
   wellTokens: Token[],
-  amounts: TokenValue[],
+  amounts: TokenValue[]
 ) => {
   const { address } = useAccount();
-  const oneAmountNonZero = useMemo(
-    () => {
-      if (!well.tokens) {
-        return false;
-      }
+  const oneAmountNonZero = useMemo(() => {
+    if (!well.tokens) {
+      return false;
+    }
 
-      if (well.tokens.length === 0) {
-        return false;
-      }
+    if (well.tokens.length === 0) {
+      return false;
+    }
 
-      const nonZeroValues = amounts.filter((amount) => amount && amount.value.gt("0")).length;
-      
-      return nonZeroValues !== 0;
-    },
-    [amounts, well.tokens]
-  );
+    const nonZeroValues = amounts.filter((amount) => amount && amount.value.gt("0")).length;
+
+    return nonZeroValues !== 0;
+  }, [amounts, well.tokens]);
 
   Log.module("useliquidityquote").debug("Quote details:", { amounts, oneAmountNonZero, removeLiquidityMode });
 
@@ -100,10 +97,10 @@ export const useLiquidityQuote = (
     }
 
     try {
-      let _amountsFilled = []
+      let _amountsFilled = [];
       for (let i = 0; i < wellTokens.length; i++) {
         _amountsFilled[i] = !amounts[i] ? TokenValue.ZERO : amounts[i];
-      };
+      }
       const quote = await well.removeLiquidityImbalancedQuote(_amountsFilled);
       const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, _amountsFilled, address);
       return {

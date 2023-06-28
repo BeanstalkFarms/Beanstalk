@@ -16,7 +16,7 @@ const ensureAllowance = async (walletAddress: string, spender: string, token: ER
       loading: "Approving spending limit...",
       error: "Approval failed",
       success: "Spending limit approved"
-    }); 
+    });
     try {
       const approveTXN = await token.getContract().approve(spender, mininumAllowance.toBigNumber(), { gasLimit: 50000 });
       toast.confirming(approveTXN);

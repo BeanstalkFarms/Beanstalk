@@ -8,15 +8,20 @@ import { WellFunction } from "../Icons";
 type Props = {
   name: string;
   width?: number;
-}
+};
 
 function WellFunctionDetails(functionName: any) {
   if (functionName.functionName === "Constant Product") {
     return (
       <TextContainer>
         <div>Each Well utilizes a unique pricing function to price the tokens in the Well.</div>
-        <div><FunctionNameStyled>Constant Product</FunctionNameStyled> is a reusable pricing function which prices tokens using:</div>
-        <div><Bold>x * y = k</Bold>, where <Bold>x</Bold> is the amount of one token, <Bold>y</Bold> is the amount of the other and <Bold>k</Bold> is a fixed constant.</div>
+        <div>
+          <FunctionNameStyled>Constant Product</FunctionNameStyled> is a reusable pricing function which prices tokens using:
+        </div>
+        <div>
+          <Bold>x * y = k</Bold>, where <Bold>x</Bold> is the amount of one token, <Bold>y</Bold> is the amount of the other and{" "}
+          <Bold>k</Bold> is a fixed constant.
+        </div>
       </TextContainer>
     );
   } else {
@@ -26,8 +31,8 @@ function WellFunctionDetails(functionName: any) {
         <div>{"Brief descriptions of a Well's pricing function will appear in this box."}</div>
       </TextContainer>
     );
-  };
-};
+  }
+}
 
 export const LearnWellFunction: FC<Props> = ({ name, width }) => {
   return (
@@ -36,7 +41,9 @@ export const LearnWellFunction: FC<Props> = ({ name, width }) => {
         <WellFunction />
         <TextNudge amount={1}>What is {name}?</TextNudge>
       </ExpandBox.Header>
-      <ExpandBox.Body><WellFunctionDetails functionName={name}/></ExpandBox.Body>
+      <ExpandBox.Body>
+        <WellFunctionDetails functionName={name} />
+      </ExpandBox.Body>
     </ExpandBox>
   );
 };
@@ -45,7 +52,7 @@ const TextContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-  color: #4B5563;
+  color: #4b5563;
 `;
 
 const FunctionNameStyled = styled.span`
