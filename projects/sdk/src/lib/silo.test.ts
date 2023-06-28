@@ -5,7 +5,7 @@ import { getTestUtils, setupConnection } from "../utils/TestUtils/provider";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { Token } from "../classes/Token";
 import { TokenSiloBalance } from "./silo/types";
-import { calculateGrownStalk, parseWithdrawalCrates } from "./silo/utils";
+import { calculateGrownStalk } from "./silo/utils";
 import { BigNumber, ethers } from "ethers";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";
@@ -25,36 +25,9 @@ const account1 = "0x9a00beffa3fc064104b71f6b7ea93babdc44d9da"; // whale
 const account2 = "0x0"; // zero addy
 
 /// Setup
-const { sdk, account, utils } = getTestUtils();
+const { sdk, account } = getTestUtils();
 
 /// Tests
-describe("Utilities", function () {
-  it("Splits raw withdrawals into Withdrawn and Claimable", () => {
-    const crate1 = { amount: ethers.BigNumber.from(1000 * 1e6) };
-    const crate2 = { amount: ethers.BigNumber.from(2000 * 1e6) };
-    const crate3 = { amount: ethers.BigNumber.from(3000 * 1e6) };
-    const result = parseWithdrawalCrates(
-      sdk.tokens.BEAN,
-      {
-        "6074": crate1, // => claimable
-        "6075": crate2, // => withdrawn
-        "6076": crate3 // => withdrawn
-      },
-      BigNumber.from(6074)
-    );
-    chaiExpect(result.claimable.amount).to.be.instanceOf(TokenValue);
-    chaiExpect(result.withdrawn.amount).to.be.instanceOf(TokenValue);
-
-    // expect(result.claimable.amount.toBlockchain()).to.be.eq(BigNumber.from(1000 * 1e6).toString());
-    // expect(result.withdrawn.amount.toBlockchain()).to.be.eq(BigNumber.from((2000 + 3000) * 1e6).toString());
-    chaiExpect(result.claimable.amount.eq(TokenValue.fromHuman(1000, 6))).to.be.true;
-    chaiExpect(result.withdrawn.amount.eq(TokenValue.fromHuman(5000, 6))).to.be.true;
-
-    chaiExpect(result.claimable.crates.length).to.be.eq(1);
-    chaiExpect(result.withdrawn.crates.length).to.be.eq(2);
-  });
-});
-
 describe("Silo Balance loading", () => {
   describe("getBalance", function () {
     it("returns an empty object", async () => {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import BigNumberJS from 'bignumber.js';
 import {
   BEAN_TO_SEEDS,
   BEAN_TO_STALK,
@@ -9,7 +10,7 @@ import {
 } from '~/constants';
 import { bigNumberResult } from '~/util/Ledger';
 import { tokenResult, toStringBaseUnitBN } from '~/util';
-import { BEAN, SEEDS, STALK } from '~/constants/tokens';
+import { BEAN, STALK } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import { useGetChainConstant } from '~/hooks/chain/useChainConstant';
@@ -46,7 +47,8 @@ export const useFetchBeanstalkSilo = () => {
       ] = await Promise.all([
         // 0
         beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
-        beanstalk.totalSeeds().then(tokenResult(SEEDS)), // Does NOT include Plantable Seeds
+        // FIXME: what metric to put here now?
+        new BigNumberJS(0),
         beanstalk.totalRoots().then(bigNumberResult), //
         beanstalk.totalEarnedBeans().then(tokenResult(BEAN)),
         // 4
@@ -80,7 +82,7 @@ export const useFetchBeanstalkSilo = () => {
           )
         ),
         // 5
-        beanstalk.withdrawFreeze().then(bigNumberResult),
+        new BigNumberJS(0),
       ] as const);
 
       console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [

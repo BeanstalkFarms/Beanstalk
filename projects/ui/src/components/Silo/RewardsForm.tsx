@@ -15,6 +15,7 @@ import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { AppState } from '~/state';
 import TransactionToast from '~/components/Common/TxnToast';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
+import useSdk from '~/hooks/sdk';
 
 export type SendFormValues = {
   to?: string;
@@ -61,6 +62,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
 
   // Beanstalk data
   const getBDV = useBDV();
+  const sdk = useSdk();
 
   /// Contracts
   const beanstalk = useBeanstalkContract(signer);
@@ -98,8 +100,10 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
 
     const _calls: ClaimCalls = {
       [ClaimRewardsAction.MOW]: {
-        estimateGas: () => beanstalk.estimateGas.update(account),
-        execute: () => beanstalk.update(account),
+        // TODO: decide how to handle mowing w/ multiple tokens
+        estimateGas: () =>
+          beanstalk.estimateGas.mow(account, sdk.tokens.BEAN.address),
+        execute: () => beanstalk.mow(account, sdk.tokens.BEAN.address),
         enabled: farmerSilo.stalk.grown.gt(0),
       },
       [ClaimRewardsAction.PLANT_AND_MOW]: {
@@ -197,6 +201,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
     farmerSilo.seeds.earned,
     farmerSilo.stalk.grown,
     getBDV,
+    sdk.tokens.BEAN.address,
     signer,
     siloBalances,
     unripeTokens,

@@ -1,213 +1,163 @@
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { EventType, reduceEvent, sortEvents } from "./utils";
 import { Blocks } from "src/constants/blocks";
 import { ChainId } from "src/constants";
 import flattenDeep from "lodash.flattendeep";
-import { Event } from "ethers";
+import { ethers } from "ethers";
+import { Token } from "src/classes/Token";
+
+/**
+ * Extracts the argument types from a function
+ */
+type ArgumentTypes<F extends Function> = F extends (...args: infer A) => any ? A : never;
+
+/**
+ * Creates a mapping of event group => array of arguments
+ */
+type QueryFilterArgs = {
+  silo: ArgumentTypes<EventManager["getSiloEvents"]>;
+  field: ArgumentTypes<EventManager["getFieldEvents"]>;
+};
+
+/**
+ * Base options for all event queries
+ */
+type QueryFilterOptions = {
+  fromBlock?: string | number;
+  toBlock?: string | number;
+};
+
+/**
+ * Simplify an ethers.Event object
+ */
+
+export namespace EventManager {
+  export type Simplify<T extends ethers.Event> = Pick<
+    T,
+    "event" | "args" | "blockNumber" | "transactionIndex" | "transactionHash" | "logIndex"
+  > & { returnValues?: any };
+
+  /**
+   * Each event "group" queries multiple filters
+   */
+  export type Group = "silo" | "field";
+
+  /**
+   * The EventManager returns a simplified version of ethers' event
+   */
+  export type Event = Simplify<ethers.Event>;
+}
 
 export class EventManager {
   private readonly sdk: BeanstalkSDK;
-
-  private readonly filters: {
-    [key in EventType]: Function[];
-  };
 
   constructor(sdk: BeanstalkSDK) {
     this.sdk = sdk;
   }
 
-  async getSiloEvents(_account: string, _token?: string, _fromBlock?: number, _toBlock?: number) {
-    const fromBlockOrGenesis = _fromBlock || Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
-    const toBlock = _toBlock || "latest";
+  async getSiloEvents(account: string, opts: QueryFilterOptions & { token?: Token } = {}) {
+    if (!account) throw new Error("EventManager: getSiloEvents requires an account");
+
+    // TODO: set this to SiloV3 deployment block
+    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
+    const toBlock = opts.toBlock ?? "latest";
+
     return Promise.all([
       this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.AddDeposit(_account, _token),
-        fromBlockOrGenesis,
+        this.sdk.contracts.beanstalk.filters.AddDeposit(account, opts.token?.address),
+        fromBlock,
         toBlock
       ),
       this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.RemoveWithdrawal(_account, _token),
-        fromBlockOrGenesis,
+        this.sdk.contracts.beanstalk.filters.RemoveDeposit(account, opts.token?.address),
+        fromBlock,
         toBlock
       ),
       this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.RemoveWithdrawals(_account, _token),
-        fromBlockOrGenesis,
-        toBlock
-      ),
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.RemoveDeposit(_account, _token),
-        fromBlockOrGenesis,
-        toBlock
-      ),
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.RemoveDeposits(_account, _token),
-        fromBlockOrGenesis,
+        this.sdk.contracts.beanstalk.filters.RemoveDeposits(account, opts.token?.address),
+        fromBlock,
         toBlock
       )
-    ]).then(this.reduceAndSort);
+    ]);
   }
 
-  async getFieldEvents(_account: string, _fromBlock?: number, _toBlock?: number) {
-    if (!_account) throw new Error("account missing");
-    const rawEvents = await this.getRawEventsByType(EventType.FIELD, _account, _fromBlock, _toBlock);
-    return this.reduceAndSort(rawEvents);
+  async getFieldEvents(account: string, opts: QueryFilterOptions = {}) {
+    if (!account) throw new Error("EventManager: getSiloEvents requires an account");
+
+    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
+    const toBlock = opts.toBlock ?? "latest";
+
+    return Promise.all([
+      this.sdk.contracts.beanstalk.queryFilter(
+        this.sdk.contracts.beanstalk.filters["Sow(address,uint256,uint256,uint256)"](account),
+        fromBlock,
+        toBlock
+      ),
+      this.sdk.contracts.beanstalk.queryFilter(this.sdk.contracts.beanstalk.filters.Harvest(account), fromBlock, toBlock),
+      this.sdk.contracts.beanstalk.queryFilter(
+        this.sdk.contracts.beanstalk.filters.PlotTransfer(account, null), // from
+        fromBlock,
+        toBlock
+      ),
+      this.sdk.contracts.beanstalk.queryFilter(
+        this.sdk.contracts.beanstalk.filters.PlotTransfer(null, account), // to
+        fromBlock,
+        toBlock
+      )
+    ]);
   }
 
-  async getMarketEvents(_account: string, _fromBlock?: number, _toBlock?: number) {
-    if (!_account) throw new Error("account missing");
-    const rawEvents = await this.getRawEventsByType(EventType.MARKET, _account, _fromBlock, _toBlock);
-    return this.reduceAndSort(rawEvents);
+  private simplifyAndSort(events: ethers.Event[][]) {
+    return flattenDeep<ethers.Event[]>(events) // flatten across event hashes
+      .reduce(simplifyEvent, []) // only grab what we need to save memory
+      .sort(sortEvents); // sort by blockNumber, then logIndex
   }
 
-  async getFertilizerEvents(_account: string, _fromBlock?: number, _toBlock?: number) {
-    if (!_account) throw new Error("account missing");
-    const rawEvents = await this.getRawEventsByType(EventType.FERTILIER, _account, _fromBlock, _toBlock);
-    return this.reduceAndSort(rawEvents);
-  }
-
-  async getRawEventsByType(eventType: EventType, _account: string, _fromBlock?: number, _toBlock?: number): Promise<Event[][]> {
-    const fromBlockOrGenesis = _fromBlock || Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
-    const fromBlockOrBIP10 = _fromBlock || Blocks[ChainId.MAINNET].BIP10_COMMITTED_BLOCK;
-    const fromBlockOrFertLaunch = _fromBlock || Blocks[ChainId.MAINNET].FERTILIZER_LAUNCH_BLOCK;
-    const toBlock = _toBlock || "latest";
-
-    switch (eventType) {
-      case EventType.SILO:
-        return Promise.all([
-          this.sdk.contracts.beanstalk.queryFilter(this.sdk.contracts.beanstalk.filters.AddDeposit(_account), fromBlockOrGenesis, toBlock),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.RemoveWithdrawal(_account),
-            fromBlockOrGenesis,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.RemoveWithdrawals(_account),
-            fromBlockOrGenesis,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.RemoveDeposit(_account),
-            fromBlockOrGenesis,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.RemoveDeposits(_account),
-            fromBlockOrGenesis,
-            toBlock
-          )
-        ]);
-      case EventType.FIELD:
-        return Promise.all([
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters["Sow(address,uint256,uint256,uint256)"](_account),
-            fromBlockOrGenesis,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(this.sdk.contracts.beanstalk.filters.Harvest(_account), fromBlockOrGenesis, toBlock),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PlotTransfer(_account, null), // from
-            fromBlockOrGenesis,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PlotTransfer(null, _account), // to
-            fromBlockOrGenesis,
-            toBlock
-          )
-        ]);
-      case EventType.MARKET:
-        return Promise.all([
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PodListingCreated(_account),
-            fromBlockOrBIP10,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters["PodListingCancelled(address,uint256)"](_account),
-            fromBlockOrBIP10,
-            toBlock
-          ),
-          // this account had a listing filled
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PodListingFilled(null, _account), // to
-            fromBlockOrBIP10,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PodOrderCreated(_account),
-            fromBlockOrBIP10,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PodOrderCancelled(_account),
-            fromBlockOrBIP10,
-            toBlock
-          ),
-          this.sdk.contracts.beanstalk.queryFilter(
-            this.sdk.contracts.beanstalk.filters.PodOrderFilled(null, _account), // to
-            fromBlockOrBIP10,
-            toBlock
-          )
-        ]);
-
-      case EventType.FERTILIER:
-        return Promise.all([
-          /// Send FERT
-          this.sdk.contracts.fertilizer.queryFilter(
-            this.sdk.contracts.fertilizer.filters.TransferSingle(
-              null, // operator
-              _account, // from
-              null, // to
-              null, // id
-              null // value
-            ),
-            fromBlockOrFertLaunch,
-            toBlock
-          ),
-          this.sdk.contracts.fertilizer.queryFilter(
-            this.sdk.contracts.fertilizer.filters.TransferBatch(
-              null, // operator
-              _account, // from
-              null, // to
-              null, // ids
-              null // values
-            ),
-            fromBlockOrFertLaunch,
-            toBlock
-          ),
-          /// Receive FERT
-          this.sdk.contracts.fertilizer.queryFilter(
-            this.sdk.contracts.fertilizer.filters.TransferSingle(
-              null, // operator
-              null, // from
-              _account, // to
-              null, // id
-              null // value
-            ),
-            fromBlockOrFertLaunch,
-            toBlock
-          ),
-          this.sdk.contracts.fertilizer.queryFilter(
-            this.sdk.contracts.fertilizer.filters.TransferBatch(
-              null, // operator
-              null, // from
-              _account, // to
-              null, // ids
-              null // values
-            ),
-            fromBlockOrFertLaunch,
-            toBlock
-          )
-        ]);
-
-      default:
-        throw new Error(`Cannot build event EventQuery for unknown type: ${eventType}`);
+  /**
+   * Loads the raw event data for "silo" or "field" events, then simplifies
+   * and sorts by the order they occurred on chain.
+   */
+  public get<T extends EventManager.Group>(type: T, args: QueryFilterArgs[T]): Promise<EventManager.Event[]> {
+    const [account, opts] = args;
+    switch (type) {
+      case "silo": {
+        return this.getSiloEvents(account, opts).then(this.simplifyAndSort);
+      }
+      case "field": {
+        return this.getFieldEvents(account, opts).then(this.simplifyAndSort);
+      }
+      default: {
+        throw new Error(`EventManager: Unknown event type ${type}`);
+      }
     }
   }
-
-  // : TypedEvent[]
-  private reduceAndSort(events: Event[][]) {
-    return flattenDeep<Event[]>(events).reduce(reduceEvent, []).sort(sortEvents);
-  }
 }
+
+/**
+ * To reduce memory, we only keep a few fields from the ethers Event object.
+ */
+export const simplifyEvent = (prev: EventManager.Event[], e: ethers.Event) => {
+  try {
+    prev.push({
+      event: e.event,
+      args: e.args,
+      blockNumber: e.blockNumber,
+      logIndex: e.logIndex,
+      transactionHash: e.transactionHash,
+      transactionIndex: e.transactionIndex
+    });
+  } catch (err) {
+    console.error(`Failed to parse event ${e.event} ${e.transactionHash}`, err, e);
+  }
+  return prev;
+};
+
+/**
+ * This sorts by the order the events occurred on chain, oldest first.
+ * If two events are emitted in the same block, the logIndex is used to
+ * ensure proper ordering.
+ */
+export const sortEvents = (a: EventManager.Event, b: EventManager.Event) => {
+  const diff = a.blockNumber - b.blockNumber;
+  if (diff !== 0) return diff;
+  return a.logIndex - b.logIndex;
+};

@@ -1,25 +1,29 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import BigNumber from 'bignumber.js';
+import BigNumberJS from 'bignumber.js';
+import { EventProcessor } from '@beanstalk/sdk';
 import { BEAN_TO_SEEDS, BEAN_TO_STALK, ZERO_BN } from '~/constants';
-import { BEAN, SEEDS, STALK } from '~/constants/tokens';
+import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
-import { bigNumberResult, tokenResult } from '~/util';
-import useBlocks from '~/hooks/ledger/useBlocks';
+import {
+  bigNumberResult,
+  tokenResult,
+  tokenValueToBN,
+  transform,
+} from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
-import EventProcessor from '~/lib/Beanstalk/EventProcessor';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { DepositCrate } from '.';
-import { EventCacheName } from '../events2';
-import useEvents, { GetQueryFilters } from '../events2/updater';
+import useEvents, { GetEventsFn } from '../events2/updater';
 import {
   resetFarmerSilo,
   updateFarmerSiloBalances,
   UpdateFarmerSiloBalancesPayload,
   updateFarmerSiloRewards,
 } from './actions';
+import useSdk from '~/hooks/sdk';
 
 export const useFetchFarmerSilo = () => {
   /// Helpers
@@ -27,52 +31,27 @@ export const useFetchFarmerSilo = () => {
 
   /// Contracts
   const beanstalk = useBeanstalkContract();
+  const sdk = useSdk();
 
   /// Data
   const account = useAccount();
-  const blocks = useBlocks();
   const whitelist = useWhitelist();
   const season = useSeason();
 
   /// Events
-  const getQueryFilters = useCallback<GetQueryFilters>(
-    (_account, fromBlock, toBlock) => [
-      // Silo (Generalized v2)
-      beanstalk.queryFilter(
-        beanstalk.filters.AddDeposit(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.AddWithdrawal(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveWithdrawal(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveWithdrawals(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveDeposit(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveDeposits(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-    ],
-    [beanstalk, blocks.BEANSTALK_GENESIS_BLOCK]
+  const getEvents = useCallback<GetEventsFn>(
+    async (_account, fromBlock, toBlock) =>
+      sdk.events.get('silo', [
+        _account,
+        {
+          token: undefined, // get all tokens
+          fromBlock, // let cache system choose where to start
+          toBlock, // let cache system choose where to end
+        },
+      ]),
+    [sdk.events]
   );
-
-  const [fetchSiloEvents] = useEvents(EventCacheName.SILO, getQueryFilters);
+  const [fetchSiloEvents] = useEvents('silo', getEvents);
 
   ///
   const initialized = !!(
@@ -97,23 +76,15 @@ export const useFetchFarmerSilo = () => {
         allEvents = [],
       ] = await Promise.all([
         // FIXME: multicall this section
-        /// balanceOfStalk() returns `stalk + earnedStalk`
-        beanstalk.balanceOfStalk(account).then(tokenResult(STALK)),
-        beanstalk.balanceOfGrownStalk(account).then(tokenResult(STALK)),
-        beanstalk.balanceOfSeeds(account).then(tokenResult(SEEDS)),
+        // FIXME: translate?
+        sdk.silo.getStalk(account).then(tokenValueToBN), // returns `stalk + earnedStalk`
+        sdk.silo.getGrownStalk(account).then(tokenValueToBN),
+        sdk.silo.getSeeds(account).then(tokenValueToBN),
         beanstalk.balanceOfRoots(account).then(bigNumberResult),
         beanstalk.balanceOfEarnedBeans(account).then(tokenResult(BEAN)),
         beanstalk.lastUpdate(account).then(bigNumberResult),
         fetchSiloEvents(),
       ] as const);
-
-      // console.debug('[farmer/silo/useFarmerSilo] RESULT', [
-      //   stalkBalance.toString(),
-      //   seedBalance.toString(),
-      //   rootBalance.toString(),
-      //   earnedBeanBalance.toString(),
-      //   grownStalkBalance.toString(),
-      // ]);
 
       /// stalk + earnedStalk (bundled together at the contract level)
       const activeStalkBalance = stalkBalance;
@@ -148,28 +119,38 @@ export const useFetchFarmerSilo = () => {
         })
       );
 
-      const p = new EventProcessor(account, { season, whitelist });
+      const p = new EventProcessor(sdk, account);
       const results = p.ingestAll(allEvents);
 
       dispatch(
         updateFarmerSiloBalances(
-          Object.keys(whitelist).reduce<UpdateFarmerSiloBalancesPayload>(
-            (prev, addr) => {
-              prev[addr] = {
+          [...sdk.tokens.siloWhitelist].reduce<UpdateFarmerSiloBalancesPayload>(
+            (prev, token) => {
+              const depositsOfToken = results.deposits.get(token);
+              if (!depositsOfToken) return prev;
+              const stems = Object.keys(depositsOfToken);
+
+              // Convert from map => object
+              prev[token.address] = {
                 lastUpdate: lastUpdate,
                 deposited: {
-                  ...Object.keys(results.deposits[addr]).reduce(
-                    (dep, s) => {
-                      const crate = results.deposits[addr][s];
-                      const bdv = crate.bdv;
-                      dep.amount = dep.amount.plus(crate.amount);
+                  ...stems.reduce(
+                    (dep, stem) => {
+                      const crate = depositsOfToken[stem];
+
+                      // TODO:
+                      const bdv = transform(crate.bdv, 'bnjs');
+                      const amount = transform(crate.amount, 'bnjs');
+
+                      dep.amount = dep.amount.plus(amount);
                       dep.bdv = dep.bdv.plus(bdv);
                       dep.crates.push({
-                        season: new BigNumber(s),
-                        amount: crate.amount,
-                        bdv: bdv,
-                        stalk: whitelist[addr].getStalk(bdv),
-                        seeds: whitelist[addr].getSeeds(bdv),
+                        season: new BigNumberJS(stem),
+                        amount,
+                        bdv,
+                        // FIXME: recalculate these?
+                        stalk: new BigNumberJS(0), // tokenValueToBN(token.getStalk(bdv)),
+                        seeds: new BigNumberJS(0), // token.getSeeds(bdv),
                       });
                       return dep;
                     },
@@ -180,8 +161,6 @@ export const useFetchFarmerSilo = () => {
                     }
                   ),
                 },
-                // Splits into 'withdrawn' and 'claimable'
-                ...p.parseWithdrawals(addr, season),
               };
               return prev;
             },
@@ -190,15 +169,7 @@ export const useFetchFarmerSilo = () => {
         )
       );
     }
-  }, [
-    dispatch,
-    fetchSiloEvents,
-    beanstalk,
-    season,
-    whitelist,
-    account,
-    initialized,
-  ]);
+  }, [initialized, sdk, account, beanstalk, fetchSiloEvents, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerSilo] CLEAR');
