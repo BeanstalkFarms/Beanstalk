@@ -32,7 +32,7 @@ export class Withdraw {
     const withdrawData = this.calculateWithdraw(token, amount, balance.deposits, season);
     Withdraw.sdk.debug("silo.withdraw(): withdrawData", { withdrawData });
 
-    const seasons = withdrawData.crates.map((crate) => crate.season.toString());
+    const seasons = withdrawData.crates.map((crate) => crate.stem.toString());
     const amounts = withdrawData.crates.map((crate) => crate.amount.toBlockchain());
 
     let contractCall;

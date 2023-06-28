@@ -12,7 +12,7 @@ export type ConvertDetails = {
   stalk: TokenValue;
   seeds: TokenValue;
   actions: [];
-  crates: Deposit<TokenValue>[];
+  crates: Deposit[];
 };
 
 export class Convert {
@@ -47,7 +47,7 @@ export class Convert {
     const encoding = this.calculateEncoding(fromToken, toToken, fromAmount, minAmountOut);
 
     // format parameters
-    const crates = conversion.crates.map((crate) => crate.season.toString());
+    const crates = conversion.crates.map((crate) => crate.stem.toString());
     const amounts = conversion.crates.map((crate) => crate.amount.toBlockchain());
 
     // execute
@@ -85,18 +85,18 @@ export class Convert {
     return { minAmountOut, conversion };
   }
 
-  calculateConvert(fromToken: Token, toToken: Token, fromAmount: TokenValue, crates: Deposit[], currentSeason: number): ConvertDetails {
-    if (crates.length === 0) throw new Error("No crates to withdraw from");
+  calculateConvert(fromToken: Token, toToken: Token, fromAmount: TokenValue, deposits: Deposit[], currentSeason: number): ConvertDetails {
+    if (deposits.length === 0) throw new Error("No crates to withdraw from");
     const sortedCrates = toToken.isLP
       ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
         /// on both sides of the convert, but having more seeds in older crates
         /// allows you to accrue stalk faster after convert.
         /// Note that during this convert, BDV is approx. equal after the convert.
-        sortCratesBySeason<Deposit>(crates, "asc")
+        sortCratesBySeason(deposits, "asc")
       : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
         /// Since LP deposits can have varying BDV, the best option for the Farmer
         /// is to increase the BDV of their existing lowest-BDV crates.
-        sortCratesByBDVRatio<Deposit>(crates, "asc");
+        sortCratesByBDVRatio(deposits, "asc");
 
     const pickedCrates = pickCrates(sortedCrates, fromAmount, fromToken, currentSeason);
 

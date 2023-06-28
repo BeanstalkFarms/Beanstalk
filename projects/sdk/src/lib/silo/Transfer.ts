@@ -36,7 +36,7 @@ export class Transfer {
     const transferData = await Transfer.sdk.silo.calculateWithdraw(token, amount, balance.deposits, season);
     Transfer.sdk.debug("silo.transfer(): transferData", { transferData });
 
-    const seasons = transferData.crates.map((crate) => crate.season.toString());
+    const seasons = transferData.crates.map((crate) => crate.stem.toString());
     const amounts = transferData.crates.map((crate) => crate.amount.toBlockchain());
 
     let contractCall;

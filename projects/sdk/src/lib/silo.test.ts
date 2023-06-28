@@ -92,7 +92,7 @@ describe("Silo Balance loading", () => {
       // Note that this does not verify that the stalk values themselves
       // are as expected, just that their additive properties hold.
       balance.deposits.forEach((deposit) => {
-        chaiExpect(deposit.baseStalk.add(deposit.grownStalk).eq(deposit.stalk)).to.be.true;
+        chaiExpect(deposit.stalk.base.add(deposit.stalk.grown).eq(deposit.stalk.total)).to.be.true;
       });
     });
 
@@ -100,7 +100,7 @@ describe("Silo Balance loading", () => {
       // Note that this does not verify that `getStalk()` itself is correct;
       // this is the responsibility of Tokens.test.
       balance.deposits.forEach((deposit) => {
-        chaiExpect(deposit.baseStalk.eq(sdk.tokens.BEAN.getStalk(deposit.bdv))).to.be.true;
+        chaiExpect(deposit.stalk.base.eq(sdk.tokens.BEAN.getStalk(deposit.bdv))).to.be.true;
       });
     });
   });

@@ -45,7 +45,7 @@ export class BlockchainUtils {
 
     const balance = await this.sdk.silo.getBalance(token, from, { source: DataSource.LEDGER });
     const crate = balance.deposits[balance.deposits.length - 1];
-    const season = crate.season.toString();
+    const season = crate.stem.toString();
     const amount = crate.amount.toBlockchain();
 
     logSiloBalance(from, balance);

@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { getTestUtils } from "src/utils/TestUtils/provider";
 import { Deposit } from "../silo/types";
 import { calculateGrownStalkSeeds, calculateGrownStalkStems, pickCrates } from "./utils";
@@ -102,14 +102,16 @@ describe("Silo Utils", function () {
   });
 });
 
-function makeCrate(amount: number, season: number) {
+function makeCrate(amount: number, stem: ethers.BigNumberish): Deposit {
   return {
+    stem: BigNumber.from(stem), // FIXME
     amount: sdk.tokens.BEAN.amount(amount),
-    season: BigNumber.from(season),
-    baseStalk: sdk.tokens.STALK.amount(1),
     bdv: sdk.tokens.BEAN.amount(amount),
-    grownStalk: sdk.tokens.STALK.amount(1),
-    seeds: sdk.tokens.SEEDS.amount(1),
-    stalk: sdk.tokens.STALK.amount(1)
+    stalk: {
+      total: sdk.tokens.STALK.amount(2),
+      base: sdk.tokens.STALK.amount(1),
+      grown: sdk.tokens.STALK.amount(1)
+    },
+    seeds: sdk.tokens.SEEDS.amount(1) // FIXME
   };
 }

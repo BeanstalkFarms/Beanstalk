@@ -65,11 +65,11 @@ describe("Silo Convert", function () {
     const calc1 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(850), crates, currentSeason);
     expect(calc1.crates.length).toEqual(3);
     expect(calc1.crates[0].amount.toHuman()).toEqual("500"); // takes full amount from c1
-    expect(calc1.crates[0].season.toString()).toEqual("9000"); // confirm this is c1
+    expect(calc1.crates[0].stem.toString()).toEqual("9000"); // confirm this is c1
     expect(calc1.crates[1].amount.toHuman()).toEqual("300"); // takes full amount from c2
-    expect(calc1.crates[1].season.toString()).toEqual("9001"); // confirm this is c2
+    expect(calc1.crates[1].stem.toString()).toEqual("9001"); // confirm this is c2
     expect(calc1.crates[2].amount.toHuman()).toEqual("50"); // takes 300 from c3
-    expect(calc1.crates[2].season.toString()).toEqual("9002"); // confirm this is c3
+    expect(calc1.crates[2].stem.toString()).toEqual("9002"); // confirm this is c3
     expect(calc1.seeds.toHuman()).toEqual("1700");
     expect(calc1.stalk.toHuman()).toEqual("1019.92");
 
@@ -78,7 +78,7 @@ describe("Silo Convert", function () {
     const calc2 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(400), crates, currentSeason);
     expect(calc2.crates.length).toEqual(1);
     expect(calc2.crates[0].amount.toHuman()).toEqual("400"); // takes full amount from c1
-    expect(calc1.crates[0].season.toString()).toEqual("9000"); // confirm this is c3
+    expect(calc1.crates[0].stem.toString()).toEqual("9000"); // confirm this is c3
     expect(calc2.seeds.toHuman()).toEqual("800");
     expect(calc2.stalk.toHuman()).toEqual("480");
   });
@@ -108,11 +108,11 @@ describe("Silo Convert", function () {
 
     expect(calc1.crates.length).toEqual(3);
     expect(calc1.crates[0].amount.toHuman()).toEqual("2000"); // takes full amount from c1
-    expect(calc1.crates[0].season.toString()).toEqual("10100"); // confirm this is c1
+    expect(calc1.crates[0].stem.toString()).toEqual("10100"); // confirm this is c1
     expect(calc1.crates[1].amount.toHuman()).toEqual("500"); // takes full amount from c2
-    expect(calc1.crates[1].season.toString()).toEqual("10102"); // confirm this is c2
+    expect(calc1.crates[1].stem.toString()).toEqual("10102"); // confirm this is c2
     expect(calc1.crates[2].amount.toHuman()).toEqual("500"); // takes 300 from c3
-    expect(calc1.crates[2].season.toString()).toEqual("10101"); // confirm this is c3
+    expect(calc1.crates[2].stem.toString()).toEqual("10101"); // confirm this is c3
     expect(calc1.seeds.toHuman()).toEqual("13096");
     expect(calc1.stalk.toHuman()).toEqual("3625");
 
@@ -121,7 +121,7 @@ describe("Silo Convert", function () {
     const calc2 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(2000), crates, currentSeason);
     expect(calc2.crates.length).toEqual(1);
     expect(calc2.crates[0].amount.toHuman()).toEqual("2000"); // takes full amount from c1
-    expect(calc1.crates[0].season.toString()).toEqual("10100"); // confirm this is c3
+    expect(calc1.crates[0].stem.toString()).toEqual("10100"); // confirm this is c3
     expect(calc2.seeds.toHuman()).toEqual("4246");
     expect(calc2.stalk.toHuman()).toEqual("2357.4");
   });
