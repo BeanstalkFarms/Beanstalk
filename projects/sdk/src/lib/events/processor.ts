@@ -8,7 +8,6 @@ import {
   RemoveDepositEvent,
   RemoveDepositsEvent
 } from "src/constants/generated/protocol/abi/Beanstalk";
-import { StringMap } from "../../types";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { EventManager } from "src/lib/events/EventManager";
 
@@ -48,21 +47,11 @@ export type DepositCrateRaw = {
   amount: ethers.BigNumber;
   bdv: ethers.BigNumber;
 };
-export type WithdrawalCrateRaw = {
-  amount: ethers.BigNumber;
-};
 
 export type EventProcessorData = {
-  plots: StringMap<ethers.BigNumber>;
-  deposits: Map<
-    Token,
-    {
-      [stem: string]: DepositCrateRaw;
-    }
-  >;
+  plots: Map<string, ethers.BigNumber>;
+  deposits: Map<Token, { [stem: string]: DepositCrateRaw }>;
 };
-
-//
 
 export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
@@ -93,7 +82,7 @@ export class EventProcessor {
     this.deposits = initialState?.deposits || setToMap(this.whitelist);
 
     // Field
-    this.plots = initialState?.plots || {};
+    this.plots = initialState?.plots || new Map();
   }
 
   ingest<T extends EventManager.Event>(event: T) {

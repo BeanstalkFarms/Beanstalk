@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Divider, Link, Stack, Typography } from '@mui/material';
-import BigNumber from 'bignumber.js';
-import { Event } from '@beanstalk/sdk';
+import BigNumberJS from 'bignumber.js';
+import { EventManager } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import { displayBN, toTokenUnitsBN } from '~/util';
 import { BEAN, PODS, SILO_WHITELIST } from '~/constants/tokens';
@@ -12,7 +12,7 @@ import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 
 export interface EventItemProps {
-  event: Event;
+  event: EventManager.Event;
   account: string;
 }
 
@@ -23,7 +23,7 @@ export interface EventItemProps {
  */
 const TokenDisplay: FC<{
   color?: 'green' | 'red';
-  input?: [BigNumber, Token];
+  input?: [BigNumberJS, Token];
 }> = (props) => (
   <div>
     {props.input ? (
@@ -49,7 +49,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
   const siloTokens = useTokenMap(SILO_WHITELIST);
 
   const processTokenEvent = (
-    e: Event,
+    e: EventManager.Event,
     title: string,
     showInput?: boolean,
     showOutput?: boolean
@@ -58,7 +58,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
     if (siloTokens[tokenAddr]) {
       const token = siloTokens[tokenAddr];
       const amount = toTokenUnitsBN(
-        new BigNumber(event.args?.amount.toString()),
+        new BigNumberJS(event.args?.amount.toString()),
         token.decimals
       );
       eventTitle = `${title} ${token.symbol}`;
@@ -118,7 +118,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
 
         const weather = pods
           .dividedBy(beans)
-          .minus(new BigNumber(1))
+          .minus(new BigNumberJS(1))
           .multipliedBy(100)
           .toFixed(0);
 
@@ -138,7 +138,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
     }
     case 'Harvest': {
       const beans = toTokenUnitsBN(
-        new BigNumber(event.args?.beans.toString()),
+        new BigNumberJS(event.args?.beans.toString()),
         BEAN[SupportedChainId.MAINNET].decimals
       );
 
@@ -173,7 +173,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
     }
     case 'PlotTransfer': {
       const pods = toTokenUnitsBN(
-        new BigNumber(event.args?.pods.toString()),
+        new BigNumberJS(event.args?.pods.toString()),
         BEAN[SupportedChainId.MAINNET].decimals
       );
       if (event.args?.from.toString().toLowerCase() === account) {
