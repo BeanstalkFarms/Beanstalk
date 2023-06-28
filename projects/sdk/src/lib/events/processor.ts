@@ -1,15 +1,16 @@
 import { ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import {
-  // SowEvent,
-  // HarvestEvent,
-  // PlotTransferEvent,
+  SowEvent,
+  HarvestEvent,
+  PlotTransferEvent,
   AddDepositEvent,
   RemoveDepositEvent,
   RemoveDepositsEvent
 } from "src/constants/generated/protocol/abi/Beanstalk";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { EventManager } from "src/lib/events/EventManager";
+import { ZERO_BN } from "src/constants";
 
 // ----------------------------------------
 
@@ -56,16 +57,8 @@ export type EventProcessorData = {
 export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
 
-  // ----------------------------
-  // |       PROCESSING         |
-  // ----------------------------
   account: string;
   whitelist: Set<Token>;
-
-  // ----------------------------
-  // |      DATA STORAGE        |
-  // ----------------------------
-
   plots: EventProcessorData["plots"];
   deposits: EventProcessorData["deposits"]; // token => stem => amount
 
@@ -83,6 +76,8 @@ export class EventProcessor {
 
     // Field
     this.plots = initialState?.plots || new Map();
+
+    return this;
   }
 
   ingest<T extends EventManager.Event>(event: T) {
@@ -100,7 +95,7 @@ export class EventProcessor {
     events.forEach((event) => {
       this.ingest(event);
     });
-    return this.data();
+    return this;
   }
 
   data() {
@@ -123,214 +118,234 @@ export class EventProcessor {
 
   // /// /////////////////////// FIELD //////////////////////////
 
-  // Sow(event: Simplify<SowEvent>) {
-  //   const index       = tokenBN(event.args.index, PODS).toString();
-  //   this.plots[index] = tokenBN(event.args.pods,  PODS);
-  // }
+  Sow(event: EventManager.Simplify<SowEvent>) {
+    this.plots.set(event.args.index.toString(), event.args.pods);
+  }
 
-  // Harvest(event: Simplify<HarvestEvent>) {
-  //   let beansClaimed = tokenBN(event.args.beans, Bean);
-  //   const plots = (
-  //     event.args.plots
-  //       .map((_index) => tokenBN(_index, Bean))
-  //       .sort((a, b) => a.minus(b).toNumber())
-  //   );
-  //   plots.forEach((indexBN) => {
-  //     const index = indexBN.toString();
-  //     if (beansClaimed.isLessThan(this.plots[index])) {
-  //       // ----------------------------------------
-  //       // A Plot was partially Harvested. Example:
-  //       // Event: Sow
-  //       //  index  = 10
-  //       //  amount = 10
-  //       //
-  //       // I call harvest when harvestableIndex = 14 (I harvest 10,11,12,13)
-  //       //
-  //       // Event: Harvest
-  //       //  args.beans = 4
-  //       //  args.plots = [10]
-  //       //  beansClaimed  = 4
-  //       //  partialIndex  = 4 + 10 = 14
-  //       //  partialAmount = 10 - 4 = 6
-  //       //
-  //       // Add Plot with 6 Pods at index 14
-  //       // Remove Plot at index 10.
-  //       // ----------------------------------------
-  //       const partialIndex  = beansClaimed.plus(indexBN);
-  //       const partialAmount = this.plots[index].minus(beansClaimed);
-  //       this.plots = {
-  //         ...this.plots,
-  //         [partialIndex.toString()]: partialAmount,
-  //       };
-  //     } else {
-  //       beansClaimed = beansClaimed.minus(this.plots[index]);
-  //     }
-  //     delete this.plots[index];
-  //   });
-  // }
+  Harvest(event: EventManager.Simplify<HarvestEvent>) {
+    let beansClaimed = event.args.beans;
 
-  // PlotTransfer(event: Simplify<PlotTransferEvent>) {
-  //   // Numerical "index" of the Plot. Absolute, with respect to Pod 0.
-  //   const transferIndex   = tokenBN(event.args.id, Bean);
-  //   const podsTransferred = tokenBN(event.args.pods, Bean);
+    const plots = event.args.plots.sort((a, b) => a.sub(b).toNumber());
 
-  //   if (event.args.to.toLowerCase() === this.account) {
-  //     // This account received a Plot
-  //     this.plots[transferIndex.toString()] = podsTransferred;
-  //   }
-  //   else {
-  //     // This account sent a Plot
-  //     const indexStr = transferIndex.toString();
+    plots.forEach((indexBN) => {
+      const index = indexBN.toString();
+      const plot = this.plots.get(index); // get the number of Pods stored at this index
 
-  //     // ----------------------------------------
-  //     // The PlotTransfer event doesn't contain info
-  //     // about the `start` position of a Transfer.
-  //     // Say for example I have the following plot:
-  //     //
-  //     //  0       9 10         20              END
-  //     // [---------[0123456789)-----------------]
-  //     //                 ^
-  //     // PlotTransfer   [56789)
-  //     //                 15    20
-  //     //
-  //     // PlotTransfer(from=0x, to=0x, id=15, pods=5)
-  //     // This means we send Pods: 15, 16, 17, 18, 19
-  //     //
-  //     // However this Plot doesn't exist yet in our
-  //     // cache. To find it we search for the Plot
-  //     // beginning at 10 and ending at 20, then
-  //     // split it depending on params provided in
-  //     // the PlotTransfer event.
-  //     // ----------------------------------------
-  //     if (this.plots[indexStr] !== undefined) {
-  //       // A known Plot was sent.
-  //       if (!podsTransferred.isEqualTo(this.plots[indexStr])) {
-  //         const newStartIndex = transferIndex.plus(podsTransferred);
-  //         this.plots[newStartIndex.toString()] = this.plots[indexStr].minus(podsTransferred);
-  //       }
-  //       delete this.plots[indexStr];
-  //     }
-  //     else {
-  //       // A Plot was partially sent from a non-zero
-  //       // starting index. Find the containing Plot
-  //       // in our cache.
-  //       let i = 0;
-  //       let found = false;
-  //       const plotIndices = Object.keys(this.plots);
-  //       while (found === false && i < plotIndices.length) {
-  //         // Setup the boundaries of this Plot
-  //         const startIndex = BN(plotIndices[i]);
-  //         const endIndex   = startIndex.plus(this.plots[startIndex.toString()]);
-  //         // Check if the Transfer happened within this Plot
-  //         if (startIndex.isLessThanOrEqualTo(transferIndex)
-  //            && endIndex.isGreaterThan(transferIndex)) {
-  //           // ----------------------------------------
-  //           // Slice #1. This is the part that
-  //           // the user keeps (they sent the other part).
-  //           //
-  //           // Following the above example:
-  //           //  transferIndex   = 15
-  //           //  podsTransferred = 5
-  //           //  startIndex      = 10
-  //           //  endIndex        = 20
-  //           //
-  //           // This would update the existing Plot such that:
-  //           //  this.plots[10] = (15 - 10) = 5
-  //           // containing Pods 10, 11, 12, 13, 14
-  //           // ----------------------------------------
-  //           if (transferIndex.eq(startIndex)) {
-  //             delete this.plots[startIndex.toString()];
-  //           } else {
-  //             this.plots[startIndex.toString()] = transferIndex.minus(startIndex);
-  //           }
+      if (!plot) return;
+      if (beansClaimed.lt(plot)) {
+        // ----------------------------------------
+        // A Plot was partially Harvested. Example:
+        // Event: Sow
+        //  index  = 10
+        //  amount = 10
+        //
+        // I call harvest when harvestableIndex = 14 (I harvest 10,11,12,13)
+        //
+        // Event: Harvest
+        //  args.beans = 4
+        //  args.plots = [10]
+        //  beansClaimed  = 4
+        //  partialIndex  = 4 + 10 = 14
+        //  partialAmount = 10 - 4 = 6
+        //
+        // Add Plot with 6 Pods at index 14
+        // Remove Plot at index 10.
+        // ----------------------------------------
+        const partialIndex = beansClaimed.add(indexBN); // index of new plot
+        const partialAmount = plot.sub(beansClaimed); // remaining pods in new plot
 
-  //           // ----------------------------------------
-  //           // Slice #2. Handles the below case where
-  //           // the amount sent doesn't reach the end
-  //           // of the Plot (i.e. I sent Pods in the middle.
-  //           //
-  //           //  0       9 10         20              END
-  //           // [---------[0123456789)-----------------]
-  //           //                 ^
-  //           // PlotTransfer   [567)
-  //           //                 15  18
-  //           //
-  //           //  transferIndex   = 15
-  //           //  podsTransferred = 3
-  //           //  startIndex      = 10
-  //           //  endIndex        = 20
-  //           //
-  //           // PlotTransfer(from=0x, to=0x, id=15, pods=3)
-  //           // This means we send Pods: 15, 16, 17.
-  //           // ----------------------------------------
-  //           if (!transferIndex.isEqualTo(endIndex)) {
-  //             // s2 = 15 + 3 = 18
-  //             // Requires another split since 18 != 20
-  //             const s2 = transferIndex.plus(podsTransferred);
-  //             const requiresAnotherSplit = !s2.isEqualTo(endIndex);
-  //             if (requiresAnotherSplit) {
-  //               // Create a new plot at s2=18 with 20-18 Pods.
-  //               const s2Str = s2.toString();
-  //               this.plots[s2Str] = endIndex.minus(s2);
-  //               if (this.plots[s2Str].isEqualTo(0)) {
-  //                 delete this.plots[s2Str];
-  //               }
-  //             }
-  //           }
-  //           found = true;
-  //         }
-  //         i += 1;
-  //       }
-  //     }
-  //   }
-  // }
+        this.plots.set(partialIndex.toString(), partialAmount); // add new plot (with remaining pods)
+      } else {
+        // This plot was fully harvested; it'll be deleted below
+        beansClaimed = beansClaimed.sub(plot);
+      }
 
-  // parsePlots(_harvestableIndex: BigNumber) {
-  //   return EventProcessor._parsePlots(
-  //     this.plots,
-  //     _harvestableIndex
-  //   );
-  // }
+      // Always delete the old plot
+      this.plots.delete(index);
+    });
+  }
 
-  // static _parsePlots(
-  //   plots: EventProcessorData['plots'],
-  //   index: BigNumber
-  // ) {
-  //   console.debug(`[EventProcessor] Parsing plots with index ${index.toString()}`);
+  PlotTransfer(event: EventManager.Simplify<PlotTransferEvent>) {
+    // Numerical "index" of the Plot. Absolute, with respect to Pod 0.
+    const transferIndex = event.args.id;
+    const podsTransferred = event.args.pods;
 
-  //   let pods = new BigNumber(0);
-  //   let harvestablePods = new BigNumber(0);
-  //   const unharvestablePlots  : PlotMap<BigNumber> = {};
-  //   const harvestablePlots    : PlotMap<BigNumber> = {};
+    // This account received a Plot
+    if (event.args.to.toLowerCase() === this.account) {
+      this.plots.set(transferIndex.toString(), podsTransferred);
+    }
 
-  //   Object.keys(plots).forEach((p) => {
-  //     if (plots[p].plus(p).isLessThanOrEqualTo(index)) {
-  //       harvestablePods = harvestablePods.plus(plots[p]);
-  //       harvestablePlots[p] = plots[p];
-  //     } else if (new BigNumber(p).isLessThan(index)) {
-  //       harvestablePods = harvestablePods.plus(index.minus(p));
-  //       pods = pods.plus(
-  //         plots[p].minus(index.minus(p))
-  //       );
-  //       harvestablePlots[p] = index.minus(p);
-  //       unharvestablePlots[index.minus(p).plus(p).toString()] = plots[p].minus(
-  //         index.minus(p)
-  //       );
-  //     } else {
-  //       pods = pods.plus(plots[p]);
-  //       unharvestablePlots[p] = plots[p];
-  //     }
-  //   });
+    // This account sent a Plot
+    else {
+      const indexStr = transferIndex.toString();
+      const plot = this.plots.get(indexStr);
 
-  //   // FIXME: "unharvestable pods" are just Pods,
-  //   // but we can't reuse "plots" in the same way.
-  //   return {
-  //     pods,
-  //     harvestablePods,
-  //     plots: unharvestablePlots,
-  //     harvestablePlots
-  //   };
-  // }
+      // ----------------------------------------
+      // The PlotTransfer event doesn't contain info
+      // about the `start` position of a Transfer.
+      // Say for example I have the following plot:
+      //
+      //  0       9 10         20              END
+      // [---------[0123456789)-----------------]
+      //                 ^
+      // PlotTransfer   [56789)
+      //                 15    20
+      //
+      // PlotTransfer(from=0x, to=0x, id=15, pods=5)
+      // This means we send Pods: 15, 16, 17, 18, 19
+      //
+      // However this Plot doesn't exist yet in our
+      // cache. To find it we search for the Plot
+      // beginning at 10 and ending at 20, then
+      // split it depending on params provided in
+      // the PlotTransfer event.
+      // ----------------------------------------
+
+      // A known Plot was sent (starting from the first Pod).
+      if (plot !== undefined) {
+        // A known Plot was partially sent.
+        if (!podsTransferred.eq(plot)) {
+          const partialIndex = transferIndex.add(podsTransferred); // index of new plot
+          const partialAmount = plot.sub(podsTransferred); // remaining pods in new plot
+
+          this.plots.set(partialIndex.toString(), partialAmount);
+        }
+
+        this.plots.delete(indexStr);
+      }
+
+      // Pods were partially sent from a non-zero starting index in one of the
+      // farmer's Plots. Find the parent Plot in our cache.
+      else {
+        let i = 0;
+        const plotIndices = Object.keys(this.plots);
+
+        while (i < plotIndices.length) {
+          // Setup the boundaries of this Plot
+          const startIndexStr = plotIndices[i];
+          const startIndex = ethers.BigNumber.from(startIndexStr);
+          const podsAtIndex = this.plots.get(startIndexStr)!;
+          const endIndex = startIndex.add(podsAtIndex);
+
+          // Check if the Transfer happened within this Plot
+          if (startIndex.lte(transferIndex) && endIndex.gt(transferIndex)) {
+            const transferredFromBeginning = startIndex.eq(transferIndex);
+
+            // ----------------------------------------
+            // Left slice. This is the part that
+            // the user keeps (they sent the other part).
+            //
+            // Following the above example:
+            //  transferIndex   = 15
+            //  podsTransferred = 5
+            //  startIndex      = 10
+            //  endIndex        = 20
+            //
+            // This would update the existing Plot such that:
+            //  this.plots[10] = (15 - 10) = 5
+            // containing Pods 10, 11, 12, 13, 14
+            // ----------------------------------------
+            if (transferredFromBeginning) {
+              // Started at the beginning of the plot.
+              // New plot will be created below
+              this.plots.delete(startIndexStr);
+            } else {
+              // Started in the middle of the plot.
+              // Create a slice on the left side; this would be pods 0-4
+              // in the example below
+              const leftStartIndexStr = startIndexStr;
+              const leftAmount = transferIndex.sub(startIndex);
+
+              // Override the plot at this index, we'll create one for the rest below
+              this.plots.set(leftStartIndexStr, leftAmount);
+            }
+
+            // ----------------------------------------
+            // Right slice. Handles the below case where
+            // the amount sent doesn't reach the end
+            // of the Plot (i.e. I sent Pods in the middle).
+            //
+            //  0       9 10         20              END
+            // [---------[0123456789)-----------------]
+            //                 ^
+            // PlotTransfer   [567)
+            //                 15  18
+            //
+            //  transferIndex   = 15
+            //  podsTransferred = 3
+            //  startIndex      = 10
+            //  endIndex        = 20
+            //
+            // PlotTransfer(from=0x, to=0x, id=15, pods=3)
+            // This means we send Pods: 15, 16, 17.
+            // ----------------------------------------
+            if (!transferIndex.eq(endIndex)) {
+              // s2 = 15 + 3 = 18
+              // Requires another split since 18 != 20
+              const rightStartIndex = transferIndex.add(podsTransferred);
+              const transferredToEnd = rightStartIndex.eq(endIndex);
+
+              if (!transferredToEnd) {
+                // Create a new plot at s2=18 with 20-18 = 2 Pods.
+                const rightStartIndexStr = rightStartIndex.toString();
+                const rightAmount = endIndex.sub(rightStartIndex);
+
+                // Create a new plot for the right side
+                this.plots.set(rightStartIndexStr, rightAmount);
+              }
+            }
+
+            break;
+          }
+          i += 1;
+        }
+      }
+    }
+  }
+
+  parsePlots({ harvestableIndex }: { harvestableIndex: ethers.BigNumber }) {
+    let pods = ZERO_BN;
+    let harvestablePods = ZERO_BN;
+
+    const unharvestablePlots: Map<string, ethers.BigNumber> = new Map();
+    const harvestablePlots: Map<string, ethers.BigNumber> = new Map();
+
+    this.plots.forEach((plot, startIndexStr) => {
+      const startIndex = ethers.BigNumber.from(startIndexStr);
+
+      // Fully harvestable
+      if (startIndex.add(plot).lte(harvestableIndex)) {
+        harvestablePods = harvestablePods.add(plot);
+        harvestablePlots.set(startIndexStr, plot);
+      }
+
+      // Partially harvestable
+      else if (startIndex.lt(harvestableIndex)) {
+        const partialAmount = harvestableIndex.sub(startIndex);
+
+        harvestablePods = harvestablePods.add(partialAmount);
+        pods = pods.add(plot.sub(partialAmount));
+
+        harvestablePlots.set(startIndexStr, partialAmount);
+        unharvestablePlots.set(harvestableIndex.toString(), plot.sub(partialAmount));
+      }
+
+      // Unharvestable
+      else {
+        pods = pods.add(plot);
+        unharvestablePlots.set(startIndexStr, plot);
+      }
+    });
+
+    // FIXME: "unharvestable pods" are just Pods,
+    // but we can't reuse "plots" in the same way.
+    return {
+      pods,
+      harvestablePods,
+      plots: unharvestablePlots,
+      harvestablePlots
+    };
+  }
 
   // /// /////////////////////// SILO: DEPOSIT  //////////////////////////
 
@@ -355,7 +370,7 @@ export class EventProcessor {
     // BDV scales linearly with the amount of the underlying token.
     // Ex. if we remove 60% of the `amount`, we also remove 60% of the BDV.
     // Because of this, the `RemoveDeposit` event doesn't contain the BDV to save gas.
-    //
+
     // @note order of mul/div matters here to prevent underflow
     const bdv = amount.mul(existingDeposit.bdv).div(existingDeposit.amount);
 
@@ -365,6 +380,7 @@ export class EventProcessor {
     });
 
     if (this.deposits.get(token)?.[stem]?.amount?.eq(0)) {
+      // FIXME: verify this works
       delete this.deposits.get(token)?.[stem];
     }
   }

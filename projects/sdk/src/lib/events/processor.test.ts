@@ -1,5 +1,11 @@
 import { BigNumber as EBN } from "ethers";
-import { AddDepositEvent, RemoveDepositEvent } from "src/constants/generated/protocol/abi/Beanstalk";
+import {
+  AddDepositEvent,
+  HarvestEvent,
+  PlotTransferEvent,
+  RemoveDepositEvent,
+  SowEvent
+} from "src/constants/generated/protocol/abi/Beanstalk";
 import { EventProcessor } from "./processor";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { getProvider } from "../../utils/TestUtils/provider";
@@ -48,120 +54,125 @@ describe("utilities", () => {
 
 // ------------------------------------------
 
-// describe('the Field', () => {
-//   // 1.
-//   it('adds a single Plot', () => {
-//     const p = mockProcessor();
-//     p.ingest({
-//       event: 'Sow',
-//       args: propArray({
-//         index: EBN.from(10 * 10 ** Bean.decimals),
-//         pods:  EBN.from(42 * 10 ** Bean.decimals)
-//       })
-//     } as SowEvent);
+describe("the Field", () => {
+  // 1.
+  it("adds a single Plot", () => {
+    const p = mockProcessor();
 
-//     expect(Object.keys(p.plots).length === 1);
-//     expect(p.plots['10']).toStrictEqual(EBN.from(42));
-//   });
+    p.ingest({
+      event: "Sow",
+      args: propArray({
+        index: EBN.from(10),
+        pods: EBN.from(42)
+      })
+    } as SowEvent);
 
-//   // 2.
-//   it('adds a single Plot and Harvests', () => {
-//     const p = mockProcessor();
-//     p.ingest({
-//       event: 'Sow',
-//       args: propArray({
-//         index: EBN.from(10 * 10 ** Bean.decimals),
-//         pods:  EBN.from(42 * 10 ** Bean.decimals)
-//       })
-//     } as SowEvent);
-//     p.ingest({
-//       event: 'Harvest',
-//       args: propArray({
-//         beans: EBN.from(5 * 10 ** Bean.decimals),
-//         plots: [EBN.from(10 * 10 ** Bean.decimals)]
-//       })
-//     } as HarvestEvent);
+    expect(Object.keys(p.plots).length === 1);
+    expect(p.plots.get("10")).toStrictEqual(EBN.from(42));
+  });
 
-//     expect(Object.keys(p.plots).length === 1);
-//     expect(p.plots['10']).toBeUndefined();
-//     expect(p.plots['15']).toStrictEqual(EBN.from(42 - 5));
+  // 2.
+  it("adds a single Plot and Harvests", () => {
+    const p = mockProcessor();
+    p.ingest({
+      event: "Sow",
+      args: propArray({
+        index: EBN.from(10),
+        pods: EBN.from(42)
+      })
+    } as SowEvent);
+    p.ingest({
+      event: "Harvest",
+      args: propArray({
+        beans: EBN.from(5),
+        plots: [EBN.from(10)]
+      })
+    } as HarvestEvent);
 
-//     p.ingest({
-//       event: 'Harvest',
-//       args: propArray({
-//         beans: EBN.from(37 * 10 ** Bean.decimals),
-//         plots: [EBN.from(15 * 10 ** Bean.decimals)]
-//       })
-//     } as HarvestEvent);
+    expect(Object.keys(p.plots).length === 1);
+    expect(p.plots.get("10")).toBeUndefined();
+    expect(p.plots.get("15")).toStrictEqual(EBN.from(42 - 5));
 
-//     expect(Object.keys(p.plots).length === 0);
-//     expect(p.plots['10']).toBeUndefined();
-//     expect(p.plots['15']).toBeUndefined();
-//   });
+    p.ingest({
+      event: "Harvest",
+      args: propArray({
+        beans: EBN.from(37),
+        plots: [EBN.from(15)]
+      })
+    } as HarvestEvent);
 
-//   // 3.
-//   it('sends a single Plot, full', () => {
-//     const p = mockProcessor();
-//     p.ingest({
-//       event: 'Sow',
-//       args: propArray({
-//         index: EBN.from(10 * 10 ** Bean.decimals),
-//         pods:  EBN.from(42 * 10 ** Bean.decimals)
-//       })
-//     } as SowEvent);
-//     p.ingest({
-//       event: 'PlotTransfer',
-//       args: propArray({
-//         from: '0xFARMER',
-//         to: '0xPUBLIUS',
-//         id: EBN.from(10 * 10 ** Bean.decimals),
-//         pods: EBN.from(42 * 10 ** Bean.decimals)
-//       })
-//     } as PlotTransferEvent);
+    expect(Object.keys(p.plots).length === 0);
+    expect(p.plots.get("10")).toBeUndefined();
+    expect(p.plots.get("15")).toBeUndefined();
+  });
 
-//     expect(Object.keys(p.plots).length).toBe(0);
-//   });
+  // 3.
+  it("sends a single Plot, full", () => {
+    const p = mockProcessor();
+    p.ingest({
+      event: "Sow",
+      args: propArray({
+        index: EBN.from(10),
+        pods: EBN.from(42)
+      })
+    } as SowEvent);
+    p.ingest({
+      event: "PlotTransfer",
+      args: propArray({
+        from: "0xFARMER",
+        to: "0xPUBLIUS",
+        id: EBN.from(10),
+        pods: EBN.from(42)
+      })
+    } as PlotTransferEvent);
 
-//   // 4.
-//   it('sends a single Plot, partial (indexed from the front)', () => {
-//     const p = mockProcessor();
-//     p.ingest({
-//       event: 'Sow',
-//       args: propArray({
-//         index: EBN.from(10 * 10 ** Bean.decimals),
-//         pods:  EBN.from(42 * 10 ** Bean.decimals)
-//       })
-//     } as SowEvent);
-//     p.ingest({
-//       event: 'PlotTransfer',
-//       args: propArray({
-//         from: '0xFARMER',
-//         to:   '0xPUBLIUS',
-//         id:   EBN.from(10 * 10 ** Bean.decimals), // front of the Plot
-//         pods: EBN.from(22 * 10 ** Bean.decimals)  // don't send the whole Plot
-//       })
-//     } as PlotTransferEvent);
+    expect(Object.keys(p.plots).length).toBe(0);
+  });
 
-//     // Since the Plot is sent from the front, index starts at 10 + 22 = 32.
-//     expect(Object.keys(p.plots).length).toBe(1);
-//     expect(p.plots[(10 + 22).toString()]).toStrictEqual(EBN.from(42 - 22));
-//   });
+  // 4.
+  it("sends a single Plot, partial (indexed from the front)", () => {
+    const p = mockProcessor();
 
-//   // 5.
-//   it('works with large-index plots', () => {
-//     const p = mockProcessor();
-//     p.ingest({
-//       event: 'Sow',
-//       args: propArray({
-//         index: EBN.from('737663715081254'),
-//         pods:  EBN.from('57980000'),
-//       })
-//     } as SowEvent);
+    p.ingest({
+      event: "Sow",
+      args: propArray({
+        index: EBN.from(10),
+        pods: EBN.from(42)
+      })
+    } as SowEvent);
 
-//     expect(p.plots['737663715.081254']).toBeDefined();
-//     expect(p.plots['737663715.081254'].eq(57.980000)).toBe(true);
-//   });
-// });
+    p.ingest({
+      event: "PlotTransfer",
+      args: propArray({
+        from: "0xFARMER",
+        to: "0xPUBLIUS",
+        id: EBN.from(10), // front of the Plot
+        pods: EBN.from(22) // don't send the whole Plot
+      })
+    } as PlotTransferEvent);
+
+    console.log(p.plots);
+
+    // Since the Plot is sent from the front, index starts at 10 + 22 = 32.
+    expect(p.plots.size).toBe(1);
+    expect(p.plots.get((10 + 22).toString())).toStrictEqual(EBN.from(42 - 22));
+  });
+
+  // 5.
+  it("works with large-index plots", () => {
+    const p = mockProcessor();
+    p.ingest({
+      event: "Sow",
+      args: propArray({
+        index: EBN.from("737663715081254"),
+        pods: EBN.from("57980000")
+      })
+    } as SowEvent);
+
+    expect(p.plots.get("737663715081254")).toBeDefined();
+    expect(p.plots.get("737663715081254")?.eq(57980000)).toBe(true);
+  });
+});
 
 // --------------------------------
 
@@ -290,5 +301,62 @@ describe("the Silo", () => {
     } as RemoveDepositEvent);
 
     expect(p.deposits.get(Bean)?.["6074"]).toBeUndefined();
+  });
+});
+
+describe("parsePlots", () => {
+  let p: EventProcessor;
+
+  beforeEach(() => {
+    p = mockProcessor();
+  });
+
+  it("should parse plots correctly when all are fully harvestable", () => {
+    const plots = [
+      ["1", EBN.from("5")],
+      ["2", EBN.from("10")]
+    ] as const;
+
+    p.plots = new Map(plots);
+    const harvestableIndex = EBN.from("20");
+
+    const result = p.parsePlots({ harvestableIndex });
+    expect(result.pods.toString()).toBe("0");
+    expect(result.harvestablePods.toString()).toBe("15");
+    expect(Array.from(result.plots.entries())).toEqual([]);
+    expect(Array.from(result.harvestablePlots.entries())).toEqual(plots);
+  });
+
+  it("should parse plots correctly when all are unharvestable", () => {
+    const plots = [
+      ["30", EBN.from("5")],
+      ["40", EBN.from("10")]
+    ] as const;
+
+    p.plots = new Map(plots);
+    const harvestableIndex = EBN.from("20");
+
+    const result = p.parsePlots({ harvestableIndex });
+    expect(result.pods.toString()).toBe("15");
+    expect(result.harvestablePods.toString()).toBe("0");
+    expect(Array.from(result.harvestablePlots.entries())).toEqual([]);
+    expect(Array.from(result.plots.entries())).toEqual(plots);
+  });
+
+  it("should parse plots correctly when plots are partially harvestable", () => {
+    p.plots = new Map([
+      ["10", EBN.from("15")], // 10 -> 25 = 15
+      ["30", EBN.from("5")] // 30 -> 35 = 5
+    ]);
+    const harvestableIndex = EBN.from("20");
+
+    const result = p.parsePlots({ harvestableIndex });
+    expect(result.pods.toString()).toBe("10");
+    expect(result.harvestablePods.toString()).toBe("10");
+    expect(Array.from(result.harvestablePlots.entries())).toEqual([["10", EBN.from("10")]]);
+    expect(Array.from(result.plots.entries())).toEqual([
+      ["20", EBN.from("5")],
+      ["30", EBN.from("5")]
+    ]);
   });
 });
