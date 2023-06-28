@@ -114,36 +114,36 @@ export function makeTokenSiloBalance(): TokenSiloBalance {
   };
 }
 
+export type RawDepositData = {
+  stem: ethers.BigNumberish;
+  amount: ethers.BigNumberish;
+  bdv: ethers.BigNumberish;
+};
+
 /**
- * Create a new Deposit Crate object.
+ * Create a new Deposit object.
  *
  * @param token Token contained within the crate
- * @param _season The season of deposit
- * @param _amount The amount of deposit
- * @param _bdv The bdv of deposit
- * @param currentSeason The current season, for calculation of grownStalk.
+ * @param stemTipForToken The current stem tip for this token, for calculation of grownStalk.
+ * @param data.stem The stem (identifier) of this Deposit
+ * @param data.amount The amount of deposit
+ * @param data.bdv The bdv of deposit
  * @returns DepositCrate<TokenValue>
  */
-export function makeDepositCrate(
-  token: Token,
-  _season: string | number,
-  _amount: string,
-  _bdv: string,
-  currentSeason: ethers.BigNumberish
-): Deposit<TokenValue> {
-  // Crate
-  const season = ethers.BigNumber.from(_season);
-  const amount = token.fromBlockchain(_amount);
+export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumberish, data: RawDepositData): Deposit<TokenValue> {
+  // On-chain
+  const stem = ethers.BigNumber.from(data.stem);
+  const amount = token.fromBlockchain(data.amount.toString());
+  const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString());
 
-  // Deposit-specific
-  const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(_bdv);
+  // Derived
   const seeds = token.getSeeds(bdv);
   const baseStalk = token.getStalk(bdv);
-  const grownStalk = calculateGrownStalk(currentSeason, season, seeds);
+  const grownStalk = calculateGrownStalk(stemTipForToken, stem, seeds);
   const stalk = baseStalk.add(grownStalk);
 
   return {
-    season,
+    season: stem,
     amount,
     bdv,
     stalk,
@@ -178,17 +178,8 @@ export function calculateGrownStalk(
  * TODO: refactor to accept currentStem instead of currentSeason
  * @note expects inputs to be stringified (no decimals).
  */
-export function applyDeposit(
-  balance: TokenSiloBalance,
-  token: Token,
-  stemTip: ethers.BigNumberish,
-  rawDeposit: {
-    season: string | number;
-    amount: string;
-    bdv: string;
-  }
-) {
-  const deposit = makeDepositCrate(token, rawDeposit.season, rawDeposit.amount, rawDeposit.bdv, stemTip);
+export function applyDeposit(balance: TokenSiloBalance, token: Token, stemTipForToken: ethers.BigNumberish, data: RawDepositData) {
+  const deposit = makeDepositObject(token, stemTipForToken, data);
 
   balance.amount = balance.amount.add(deposit.amount);
   balance.bdv = balance.bdv.add(deposit.bdv);

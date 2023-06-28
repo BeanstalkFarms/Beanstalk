@@ -205,9 +205,9 @@ export class Silo {
 
       for (let stem in deposits) {
         utils.applyDeposit(balance, _token, stemTip, {
-          season: stem.toString(),
-          amount: deposits[stem].amount.toString(),
-          bdv: deposits[stem].bdv.toString()
+          stem,
+          amount: deposits[stem].amount,
+          bdv: deposits[stem].bdv
         });
       }
 
@@ -217,19 +217,20 @@ export class Silo {
 
     /// SUBGRAPH
     else if (source === DataSource.SUBGRAPH) {
+      // Deposits are automatically sorted in ascending order
       const query = await Silo.sdk.queries.getSiloBalance({
         token: _token.address.toLowerCase(),
         account,
         // FIXME: remove season in favor of stem tip?
         season: currentSeason
-      }); // crates ordered in asc order
+      });
 
       if (!query.farmer) return balance;
       const { deposited } = query.farmer;
 
       deposited.forEach((deposit) =>
         utils.applyDeposit(balance, _token, stemTip, {
-          season: deposit.season,
+          stem: deposit.season, // FIXME
           amount: deposit.amount,
           bdv: deposit.bdv
         })
@@ -288,24 +289,26 @@ export class Silo {
 
         for (let stem in deposits) {
           utils.applyDeposit(balance, token, stemTip, {
-            season: stem.toString(),
-            amount: deposits[stem].amount.toString(),
-            bdv: deposits[stem].bdv.toString()
+            stem,
+            amount: deposits[stem].amount,
+            bdv: deposits[stem].bdv
           });
         }
 
         utils.sortCrates(balance);
       });
 
-      return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances); // FIXME: sorting is redundant if this is instantiated
+      // FIXME: sorting is redundant if this is instantiated
+      return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);
     }
 
     /// SUBGRAPH
     if (source === DataSource.SUBGRAPH) {
+      // Deposits are automatically sorted in ascending order
       const query = await Silo.sdk.queries.getSiloBalances({
         account,
         season: currentSeason
-      }); // crates ordered in asc order
+      });
 
       if (!query.farmer) return balances;
       const { deposited } = query.farmer;
@@ -325,13 +328,11 @@ export class Silo {
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         utils.applyDeposit(balance, token, stemTip, {
-          season: deposit.season,
+          stem: deposit.season, // FIXME
           amount: deposit.amount,
           bdv: deposit.bdv
         });
       });
-
-      // Already sorted
 
       return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);
     }

@@ -2,7 +2,7 @@ import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
 import { TokenSiloBalance } from "src/lib/silo/types";
-import { makeDepositCrate } from "src/lib/silo/utils";
+import { makeDepositObject } from "src/lib/silo/utils";
 import { TokenValue } from "src/TokenValue";
 import * as addr from "./addresses";
 import { logSiloBalance } from "./log";
@@ -289,16 +289,16 @@ export class BlockchainUtils {
     return b.toHexString();
   }
 
-  mockDepositCrate(token: ERC20Token, season: number, _amount: string, _currentSeason?: number) {
+  mockDepositCrate(token: ERC20Token, _season: number, _amount: string, _currentSeason?: number) {
     const amount = token.amount(_amount);
+    const bdv = TokenValue.fromHuman(amount.toHuman(), 6);
+    const currentSeason = _currentSeason || _season + 100;
 
-    return makeDepositCrate(
-      token,
-      season,
-      amount.toBlockchain(), // amount
-      TokenValue.fromHuman(amount.toHuman(), 6).toBlockchain(), // bdv
-      _currentSeason || season + 100
-    );
+    return makeDepositObject(token, _season, {
+      stem: currentSeason, // FIXME
+      amount: amount.toBlockchain(),
+      bdv: bdv.toBlockchain()
+    });
   }
 
   ethersError(e: any) {
