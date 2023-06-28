@@ -1,12 +1,10 @@
 import { expect as chaiExpect } from "chai";
 import { DataSource } from "src/lib/BeanstalkSDK";
-import { getTestUtils, setupConnection } from "../utils/TestUtils/provider";
+import { getTestUtils } from "../utils/TestUtils/provider";
 
-import { BeanstalkSDK } from "./BeanstalkSDK";
 import { Token } from "../classes/Token";
 import { TokenSiloBalance } from "./silo/types";
-import { calculateGrownStalk } from "./silo/utils";
-import { BigNumber, ethers } from "ethers";
+import { calculateGrownStalkSeeds } from "./silo/utils";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";
 import { Silo } from "src/lib/silo";
@@ -32,15 +30,11 @@ describe("Silo Balance loading", () => {
   describe("getBalance", function () {
     it("returns an empty object", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, { source: DataSource.SUBGRAPH });
-      chaiExpect(balance.deposited.amount.eq(0)).to.be.true;
-      chaiExpect(balance.withdrawn.amount.eq(0)).to.be.true;
-      chaiExpect(balance.claimable.amount.eq(0)).to.be.true;
+      chaiExpect(balance.amount.eq(0)).to.be.true;
     });
     it("loads an account with deposits (fuzzy)", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, BF_MULTISIG, { source: DataSource.SUBGRAPH });
-      chaiExpect(balance.deposited.amount.gt(10_000)).to.be.true; // FIXME
-      chaiExpect(balance.withdrawn.amount.eq(0)).to.be.true;
-      chaiExpect(balance.claimable.amount.eq(0)).to.be.true;
+      chaiExpect(balance.amount.gt(10_000)).to.be.true; // FIXME
     });
 
     // FIX: discrepancy in graph results
@@ -52,8 +46,8 @@ describe("Silo Balance loading", () => {
 
       // We cannot compare .deposited.bdv as the ledger results come from prod
       // and the bdv value there can differ from l
-      chaiExpect(ledger.deposited.amount).to.deep.eq(subgraph.deposited.amount);
-      chaiExpect(ledger.deposited.crates).to.deep.eq(subgraph.deposited.crates);
+      chaiExpect(ledger.amount).to.deep.eq(subgraph.amount);
+      chaiExpect(ledger.deposits).to.deep.eq(subgraph.deposits);
     });
   });
 
@@ -75,13 +69,9 @@ describe("Silo Balance loading", () => {
       for (let [token, value] of ledger.entries()) {
         chaiExpect(subgraph.has(token)).to.be.true;
         try {
-          // received              expected
-          chaiExpect(value.deposited.amount).to.deep.eq(subgraph.get(token)?.deposited.amount);
-          chaiExpect(value.deposited.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
-          chaiExpect(value.claimable.amount).to.deep.eq(subgraph.get(token)?.claimable.amount);
-          chaiExpect(value.claimable.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
-          chaiExpect(value.withdrawn.amount).to.deep.eq(subgraph.get(token)?.withdrawn.amount);
-          chaiExpect(value.withdrawn.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
+          // received                         expected
+          chaiExpect(value.amount).to.deep.eq(subgraph.get(token)?.amount);
+          chaiExpect(value.deposits).to.deep.eq(subgraph.get(token)?.deposits);
         } catch (e) {
           console.log(`Token: ${token.name}`);
           console.log(`Expected (subgraph):`, subgraph.get(token));
@@ -101,16 +91,16 @@ describe("Silo Balance loading", () => {
     it("stalk = baseStalk + grownStalk", () => {
       // Note that this does not verify that the stalk values themselves
       // are as expected, just that their additive properties hold.
-      balance.deposited.crates.forEach((crate) => {
-        chaiExpect(crate.baseStalk.add(crate.grownStalk).eq(crate.stalk)).to.be.true;
+      balance.deposits.forEach((deposit) => {
+        chaiExpect(deposit.stalk.base.add(deposit.stalk.grown).eq(deposit.stalk.total)).to.be.true;
       });
     });
 
     it("correctly instantiates baseStalk using getStalk()", () => {
       // Note that this does not verify that `getStalk()` itself is correct;
       // this is the responsibility of Tokens.test.
-      balance.deposited.crates.forEach((crate) => {
-        chaiExpect(crate.baseStalk.eq(sdk.tokens.BEAN.getStalk(crate.bdv))).to.be.true;
+      balance.deposits.forEach((deposit) => {
+        chaiExpect(deposit.stalk.base.eq(sdk.tokens.BEAN.getStalk(deposit.bdv))).to.be.true;
       });
     });
   });
@@ -129,23 +119,6 @@ describe("Silo Balance loading", () => {
       const result = await sdk.silo.getSeeds(BF_MULTISIG);
       chaiExpect(result).to.be.instanceOf(TokenValue);
       chaiExpect(result.decimals).to.eq(6);
-    });
-  });
-
-  describe("Grown Stalk calculations", () => {
-    const seeds = sdk.tokens.SEEDS.amount(1);
-    it("returns zero when deltaSeasons = 0", () => {
-      chaiExpect(calculateGrownStalk(6074, 6074, seeds).toHuman()).to.eq("0");
-    });
-    it("throws if currentSeason < depositSeason", () => {
-      chaiExpect(() => calculateGrownStalk(5000, 6074, seeds).toHuman()).to.throw();
-    });
-    it("works when deltaSeasons > 0", () => {
-      // 1 seed grows 1/10_000 STALK per Season
-      chaiExpect(calculateGrownStalk(6075, 6074, seeds).toHuman()).to.eq((1 / 10_000).toString());
-      chaiExpect(calculateGrownStalk(6075, 6074, seeds.mul(10)).toHuman()).to.eq((10 / 10_000).toString());
-      chaiExpect(calculateGrownStalk(6076, 6074, seeds).toHuman()).to.eq((2 / 10_000).toString());
-      chaiExpect(calculateGrownStalk(6076, 6074, seeds.mul(10)).toHuman()).to.eq((20 / 10_000).toString());
     });
   });
 });

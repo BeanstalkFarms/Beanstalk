@@ -2,7 +2,7 @@ import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "../BeanstalkSDK";
-import { DepositCrate } from "../silo/types";
+import { Deposit } from "../silo/types";
 import { sortCratesBySeason } from "./utils";
 import { pickCrates } from "./utils";
 import { FarmToMode } from "src/lib/farm";
@@ -20,19 +20,19 @@ export class Withdraw {
       throw new Error(`Withdraw error; token ${token.symbol} is not a whitelisted asset`);
     }
 
-    const { deposited } = await Withdraw.sdk.silo.getBalance(token);
-    Withdraw.sdk.debug("silo.withdraw(): deposited balance", { deposited });
+    const balance = await Withdraw.sdk.silo.getBalance(token);
+    Withdraw.sdk.debug("silo.withdraw(): deposited balance", { balance });
 
-    if (deposited.amount.lt(amount)) {
+    if (balance.amount.lt(amount)) {
       throw new Error("Insufficient balance");
     }
 
     const season = await Withdraw.sdk.sun.getSeason();
 
-    const withdrawData = this.calculateWithdraw(token, amount, deposited.crates, season);
+    const withdrawData = this.calculateWithdraw(token, amount, balance.deposits, season);
     Withdraw.sdk.debug("silo.withdraw(): withdrawData", { withdrawData });
 
-    const seasons = withdrawData.crates.map((crate) => crate.season.toString());
+    const seasons = withdrawData.crates.map((crate) => crate.stem.toString());
     const amounts = withdrawData.crates.map((crate) => crate.amount.toBlockchain());
 
     let contractCall;
@@ -52,7 +52,7 @@ export class Withdraw {
     return contractCall;
   }
 
-  calculateWithdraw(token: Token, amount: TokenValue, crates: DepositCrate[], season: number) {
+  calculateWithdraw(token: Token, amount: TokenValue, crates: Deposit[], season: number) {
     if (crates.length === 0) throw new Error("No crates to withdraw from");
 
     const sortedCrates = sortCratesBySeason(crates, "desc");

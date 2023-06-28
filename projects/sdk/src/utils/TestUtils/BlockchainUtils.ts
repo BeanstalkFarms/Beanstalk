@@ -2,7 +2,7 @@ import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
 import { TokenSiloBalance } from "src/lib/silo/types";
-import { makeDepositCrate } from "src/lib/silo/utils";
+import { makeDepositObject } from "src/lib/silo/utils";
 import { TokenValue } from "src/TokenValue";
 import * as addr from "./addresses";
 import { logSiloBalance } from "./log";
@@ -40,12 +40,12 @@ export class BlockchainUtils {
     to: string,
     from: string = addr.BF_MULTISIG,
     token: ERC20Token = this.sdk.tokens.BEAN
-  ): Promise<TokenSiloBalance["deposited"]["crates"][number]> {
+  ): Promise<TokenSiloBalance["deposits"][number]> {
     await this.provider.send("anvil_impersonateAccount", [from]);
 
     const balance = await this.sdk.silo.getBalance(token, from, { source: DataSource.LEDGER });
-    const crate = balance.deposited.crates[balance.deposited.crates.length - 1];
-    const season = crate.season.toString();
+    const crate = balance.deposits[balance.deposits.length - 1];
+    const season = crate.stem.toString();
     const amount = crate.amount.toBlockchain();
 
     logSiloBalance(from, balance);
@@ -289,16 +289,17 @@ export class BlockchainUtils {
     return b.toHexString();
   }
 
-  mockDepositCrate(token: ERC20Token, season: number, _amount: string, _currentSeason?: number) {
+  // FIXME: season -> stem
+  mockDepositCrate(token: ERC20Token, _season: number, _amount: string, _currentSeason?: number) {
     const amount = token.amount(_amount);
+    const bdv = TokenValue.fromHuman(amount.toHuman(), 6);
+    const currentSeason = _currentSeason || _season + 100;
 
-    return makeDepositCrate(
-      token,
-      season,
-      amount.toBlockchain(), // amount
-      TokenValue.fromHuman(amount.toHuman(), 6).toBlockchain(), // bdv
-      _currentSeason || season + 100
-    );
+    return makeDepositObject(token, ethers.BigNumber.from(_season), {
+      stem: currentSeason, // FIXME
+      amount: amount.toBlockchain(),
+      bdv: bdv.toBlockchain()
+    });
   }
 
   ethersError(e: any) {
