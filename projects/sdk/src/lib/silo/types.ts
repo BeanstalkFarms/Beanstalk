@@ -32,18 +32,16 @@ export type Deposit<T extends BigNumbers = TokenValue> = Crate<T> & {
 };
 
 /**
- * A "Silo Balance" provides all information
- * about a Farmer's ownership of a Whitelisted Silo Token.
+ * A "Silo Balance" provides all information about a Farmer's deposits of a
+ * Whitelisted Silo Token.
  */
 export type TokenSiloBalance = {
-  deposited: {
-    /** The total amount of this Token currently in the Deposited state. */
-    amount: TokenValue;
-    /** The BDV of this Token currently in the Deposited state. */
-    bdv: TokenValue;
-    /** All Deposit crates. */
-    crates: Deposit<TokenValue>[];
-  };
+  /** The total amount of this Token currently in the Deposited state. */
+  amount: TokenValue;
+  /** The BDV of this Token currently in the Deposited state. */
+  bdv: TokenValue;
+  /** All Deposit crates. */
+  deposits: Deposit<TokenValue>[];
 };
 
 export type MapValueType<A> = A extends Map<any, infer V> ? V : never;

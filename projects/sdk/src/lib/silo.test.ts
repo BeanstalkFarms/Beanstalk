@@ -32,11 +32,11 @@ describe("Silo Balance loading", () => {
   describe("getBalance", function () {
     it("returns an empty object", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, { source: DataSource.SUBGRAPH });
-      chaiExpect(balance.deposited.amount.eq(0)).to.be.true;
+      chaiExpect(balance.amount.eq(0)).to.be.true;
     });
     it("loads an account with deposits (fuzzy)", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, BF_MULTISIG, { source: DataSource.SUBGRAPH });
-      chaiExpect(balance.deposited.amount.gt(10_000)).to.be.true; // FIXME
+      chaiExpect(balance.amount.gt(10_000)).to.be.true; // FIXME
     });
 
     // FIX: discrepancy in graph results
@@ -48,8 +48,8 @@ describe("Silo Balance loading", () => {
 
       // We cannot compare .deposited.bdv as the ledger results come from prod
       // and the bdv value there can differ from l
-      chaiExpect(ledger.deposited.amount).to.deep.eq(subgraph.deposited.amount);
-      chaiExpect(ledger.deposited.crates).to.deep.eq(subgraph.deposited.crates);
+      chaiExpect(ledger.amount).to.deep.eq(subgraph.amount);
+      chaiExpect(ledger.deposits).to.deep.eq(subgraph.deposits);
     });
   });
 
@@ -71,9 +71,9 @@ describe("Silo Balance loading", () => {
       for (let [token, value] of ledger.entries()) {
         chaiExpect(subgraph.has(token)).to.be.true;
         try {
-          // received              expected
-          chaiExpect(value.deposited.amount).to.deep.eq(subgraph.get(token)?.deposited.amount);
-          chaiExpect(value.deposited.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
+          // received                         expected
+          chaiExpect(value.amount).to.deep.eq(subgraph.get(token)?.amount);
+          chaiExpect(value.deposits).to.deep.eq(subgraph.get(token)?.deposits);
         } catch (e) {
           console.log(`Token: ${token.name}`);
           console.log(`Expected (subgraph):`, subgraph.get(token));
@@ -93,16 +93,16 @@ describe("Silo Balance loading", () => {
     it("stalk = baseStalk + grownStalk", () => {
       // Note that this does not verify that the stalk values themselves
       // are as expected, just that their additive properties hold.
-      balance.deposited.crates.forEach((crate) => {
-        chaiExpect(crate.baseStalk.add(crate.grownStalk).eq(crate.stalk)).to.be.true;
+      balance.deposits.forEach((deposit) => {
+        chaiExpect(deposit.baseStalk.add(deposit.grownStalk).eq(deposit.stalk)).to.be.true;
       });
     });
 
     it("correctly instantiates baseStalk using getStalk()", () => {
       // Note that this does not verify that `getStalk()` itself is correct;
       // this is the responsibility of Tokens.test.
-      balance.deposited.crates.forEach((crate) => {
-        chaiExpect(crate.baseStalk.eq(sdk.tokens.BEAN.getStalk(crate.bdv))).to.be.true;
+      balance.deposits.forEach((deposit) => {
+        chaiExpect(deposit.baseStalk.eq(sdk.tokens.BEAN.getStalk(deposit.bdv))).to.be.true;
       });
     });
   });

@@ -5,8 +5,8 @@ import { TokenValue } from "@beanstalk/sdk-core";
 import { Crate, TokenSiloBalance, Deposit } from "./types";
 import { assert } from "src/utils";
 
-export function sortCrates(state: TokenSiloBalance["deposited"]) {
-  state.crates = state.crates.sort(
+export function sortCrates(state: TokenSiloBalance) {
+  state.deposits = state.deposits.sort(
     (a, b) => a.season.sub(b.season).toNumber() // sort by season asc
   );
 }
@@ -108,11 +108,9 @@ export function sortTokenMapByWhitelist<T extends any>(whitelist: Set<Token>, ma
 
 export function makeTokenSiloBalance(): TokenSiloBalance {
   return {
-    deposited: {
-      amount: TokenValue.ZERO,
-      bdv: TokenValue.ZERO,
-      crates: [] as Deposit[]
-    }
+    amount: TokenValue.ZERO,
+    bdv: TokenValue.ZERO,
+    deposits: [] as Deposit[]
   };
 }
 
@@ -181,7 +179,7 @@ export function calculateGrownStalk(
  * @note expects inputs to be stringified (no decimals).
  */
 export function applyDeposit(
-  state: TokenSiloBalance["deposited"],
+  balance: TokenSiloBalance,
   token: Token,
   rawCrate: {
     season: string | number;
@@ -192,9 +190,9 @@ export function applyDeposit(
 ) {
   const crate = makeDepositCrate(token, rawCrate.season, rawCrate.amount, rawCrate.bdv, currentSeason);
 
-  state.amount = state.amount.add(crate.amount);
-  state.bdv = state.bdv.add(crate.bdv);
-  state.crates.push(crate);
+  balance.amount = balance.amount.add(crate.amount);
+  balance.bdv = balance.bdv.add(crate.bdv);
+  balance.deposits.push(crate);
 
   return crate;
 }

@@ -24,16 +24,16 @@ export class Transfer {
 
     Transfer.sdk.debug("silo.transfer()", { token, amount, destinationAddress });
 
-    const { deposited } = await Transfer.sdk.silo.getBalance(token);
-    Transfer.sdk.debug("silo.transfer(): deposited balance", { deposited });
+    const balance = await Transfer.sdk.silo.getBalance(token);
+    Transfer.sdk.debug("silo.transfer(): deposited balance", { deposited: balance });
 
-    if (deposited.amount.lt(amount)) {
+    if (balance.amount.lt(amount)) {
       throw new Error("Insufficient balance");
     }
 
     const season = await Transfer.sdk.sun.getSeason();
 
-    const transferData = await Transfer.sdk.silo.calculateWithdraw(token, amount, deposited.crates, season);
+    const transferData = await Transfer.sdk.silo.calculateWithdraw(token, amount, balance.deposits, season);
     Transfer.sdk.debug("silo.transfer(): transferData", { transferData });
 
     const seasons = transferData.crates.map((crate) => crate.season.toString());

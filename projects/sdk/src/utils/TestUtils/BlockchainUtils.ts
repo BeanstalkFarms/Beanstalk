@@ -40,11 +40,11 @@ export class BlockchainUtils {
     to: string,
     from: string = addr.BF_MULTISIG,
     token: ERC20Token = this.sdk.tokens.BEAN
-  ): Promise<TokenSiloBalance["deposited"]["crates"][number]> {
+  ): Promise<TokenSiloBalance["deposits"][number]> {
     await this.provider.send("anvil_impersonateAccount", [from]);
 
     const balance = await this.sdk.silo.getBalance(token, from, { source: DataSource.LEDGER });
-    const crate = balance.deposited.crates[balance.deposited.crates.length - 1];
+    const crate = balance.deposits[balance.deposits.length - 1];
     const season = crate.season.toString();
     const amount = crate.amount.toBlockchain();
 

@@ -21,7 +21,7 @@ describe("Silo Convert", function () {
   beforeAll(async () => {
     await utils.resetFork();
     // set default state as p > 1
-    await utils.setCurveLiquidity(10_000_000, 15_000_000)
+    await utils.setCurveLiquidity(10_000_000, 15_000_000);
   });
 
   it("Validates tokens", async () => {
@@ -182,10 +182,10 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
-          const { deposited: balanceBefore } = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
+          const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
           await sdk.silo.convert(from, to, from.amount(100));
-          const { deposited: balanceAfter } = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
+          const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
         });
@@ -218,10 +218,10 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
-          const { deposited: balanceBefore } = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
+          const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
           await sdk.silo.convert(from, to, from.amount(100));
-          const { deposited: balanceAfter } = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
+          const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
         });

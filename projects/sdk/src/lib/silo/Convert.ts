@@ -63,16 +63,16 @@ export class Convert {
     Convert.sdk.debug("silo.convertEstimate()", { fromToken, toToken, fromAmount });
     await this.validateTokens(fromToken, toToken);
 
-    const { deposited } = await Convert.sdk.silo.getBalance(fromToken);
-    Convert.sdk.debug("silo.convertEstimate(): deposited balance", { deposited });
+    const balance = await Convert.sdk.silo.getBalance(fromToken);
+    Convert.sdk.debug("silo.convertEstimate(): deposited balance", { balance });
 
-    if (deposited.amount.lt(fromAmount)) {
+    if (balance.amount.lt(fromAmount)) {
       throw new Error("Insufficient balance");
     }
 
     const currentSeason = await Convert.sdk.sun.getSeason();
 
-    const conversion = this.calculateConvert(fromToken, toToken, fromAmount, deposited.crates, currentSeason);
+    const conversion = this.calculateConvert(fromToken, toToken, fromAmount, balance.deposits, currentSeason);
 
     const amountOutBN = await Convert.sdk.contracts.beanstalk.getAmountOut(
       fromToken.address,

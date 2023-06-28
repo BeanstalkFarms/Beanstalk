@@ -20,16 +20,16 @@ export class Withdraw {
       throw new Error(`Withdraw error; token ${token.symbol} is not a whitelisted asset`);
     }
 
-    const { deposited } = await Withdraw.sdk.silo.getBalance(token);
-    Withdraw.sdk.debug("silo.withdraw(): deposited balance", { deposited });
+    const balance = await Withdraw.sdk.silo.getBalance(token);
+    Withdraw.sdk.debug("silo.withdraw(): deposited balance", { balance });
 
-    if (deposited.amount.lt(amount)) {
+    if (balance.amount.lt(amount)) {
       throw new Error("Insufficient balance");
     }
 
     const season = await Withdraw.sdk.sun.getSeason();
 
-    const withdrawData = this.calculateWithdraw(token, amount, deposited.crates, season);
+    const withdrawData = this.calculateWithdraw(token, amount, balance.deposits, season);
     Withdraw.sdk.debug("silo.withdraw(): withdrawData", { withdrawData });
 
     const seasons = withdrawData.crates.map((crate) => crate.season.toString());

@@ -10,7 +10,6 @@ import { MAX_UINT256 } from "src/constants";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
 import { Withdraw } from "./silo/Withdraw";
-import { FarmToMode } from "./farm";
 import { Deposit, TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/types";
 import { Transfer } from "./silo/Transfer";
 import { Convert, ConvertDetails } from "./silo/Convert";
@@ -205,14 +204,15 @@ export class Silo {
             amount: _crates[s].amount.toString(),
             bdv: _crates[s].bdv.toString()
           };
+
           // Update the total deposited of this token
           // and return a parsed crate object
-          utils.applyDeposit(balance.deposited, _token, rawCrate, currentSeason);
+          utils.applyDeposit(balance, _token, rawCrate, currentSeason);
         }
 
         // NOTE: We don't load legacy Withdrawals from LEDGER, only from SUBGRAPH.
 
-        utils.sortCrates(balance.deposited);
+        utils.sortCrates(balance);
       }
 
       return balance;
@@ -228,7 +228,7 @@ export class Silo {
       if (!query.farmer) return balance;
 
       const { deposited /*, withdrawn, claimable*/ } = query.farmer!;
-      deposited.forEach((crate) => utils.applyDeposit(balance.deposited, _token, crate, currentSeason));
+      deposited.forEach((crate) => utils.applyDeposit(balance, _token, crate, currentSeason));
 
       return balance;
     }
@@ -241,9 +241,9 @@ export class Silo {
    *
    * ```
    * [Token] => {
-   *   deposited => { amount, bdv, crates },
-   *   withdrawn => { amount, crates },
-   *   claimable => { amount, crates }
+   *   amount,
+   *   bdv,
+   *   deposits
    * }
    * ```
    *
@@ -252,7 +252,6 @@ export class Silo {
    * @note To process a Deposit, we must know how many Stalk & Seeds
    *       are given to it. If a token is dewhitelisted and removed from
    *       `tokens` (or from the on-chain whitelist)
-   * @fixme "deposits" vs "deposited"
    */
   public async getBalances(
     _account?: string,
@@ -279,7 +278,7 @@ export class Silo {
         // a new balance object for it. (This shouldn't happen)
         if (!balances.has(token)) balances.set(token, utils.makeTokenSiloBalance());
 
-        const state = balances.get(token)!.deposited;
+        const state = balances.get(token)!;
 
         for (let stem in crates) {
           const rawCrate = {
@@ -319,7 +318,7 @@ export class Silo {
       const handleDeposit = (crate: DepositEntity) => {
         const token = prepareToken(crate.token);
         if (!token) return;
-        const state = balances.get(token)!.deposited;
+        const state = balances.get(token)!;
         utils.applyDeposit(state, token, crate, currentSeason);
       };
 
