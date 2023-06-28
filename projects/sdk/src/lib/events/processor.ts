@@ -18,20 +18,11 @@ const SupportedEvents = [
   "Sow",
   "Harvest",
   "PlotTransfer",
+
   // Silo
   "AddDeposit",
   "RemoveDeposit",
-  "RemoveDeposits",
-  "AddWithdrawal",
-  "RemoveWithdrawal",
-  "RemoveWithdrawals",
-  // Market
-  "PodListingCreated",
-  "PodListingCancelled",
-  "PodListingFilled",
-  "PodOrderCreated",
-  "PodOrderCancelled",
-  "PodOrderFilled"
+  "RemoveDeposits"
 ] as const;
 const SupportedEventsSet = new Set(SupportedEvents);
 
@@ -52,11 +43,6 @@ export const setToMap = (tokens: Set<Token>): Map<Token, any> => {
 
 // ----------------------------------------
 
-export type EventProcessingParameters = {
-  season: ethers.BigNumber;
-  whitelist: Set<Token>;
-};
-
 export type DepositCrateRaw = {
   amount: ethers.BigNumber;
   bdv: ethers.BigNumber;
@@ -70,13 +56,13 @@ export type EventProcessorData = {
   deposits: Map<
     Token,
     {
-      [season: string]: DepositCrateRaw;
+      [stem: string]: DepositCrateRaw;
     }
   >;
   withdrawals: Map<
     Token,
     {
-      [season: string]: WithdrawalCrateRaw;
+      [stem: string]: WithdrawalCrateRaw;
     }
   >;
 };
@@ -89,34 +75,33 @@ export type Event = Simplify<ethers.Event>;
 
 export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
+
   // ----------------------------
   // |       PROCESSING         |
   // ----------------------------
   account: string;
-
-  epp: EventProcessingParameters;
+  whitelist: Set<Token>;
 
   // ----------------------------
   // |      DATA STORAGE        |
   // ----------------------------
 
   plots: EventProcessorData["plots"];
-  deposits: EventProcessorData["deposits"]; // token => season => amount
-  withdrawals: EventProcessorData["withdrawals"]; // token => season => amount
+  deposits: EventProcessorData["deposits"]; // token => stem => amount
+  withdrawals: EventProcessorData["withdrawals"]; // token => stem => amount
 
   /// /////////////////////// SETUP //////////////////////////
 
-  constructor(sdk: BeanstalkSDK, account: string, epp: EventProcessingParameters, initialState?: Partial<EventProcessorData>) {
-    if (!epp.whitelist || typeof epp !== "object") throw new Error("EventProcessor: Missing whitelist.");
+  constructor(sdk: BeanstalkSDK, account: string, initialState?: Partial<EventProcessorData>) {
     this.sdk = sdk;
 
     // Setup
     this.account = account.toLowerCase();
-    this.epp = epp;
+    this.whitelist = sdk.tokens.siloWhitelist;
 
     // Silo
-    this.deposits = initialState?.deposits || setToMap(this.epp.whitelist);
-    this.withdrawals = initialState?.withdrawals || setToMap(this.epp.whitelist);
+    this.deposits = initialState?.deposits || setToMap(this.whitelist);
+    this.withdrawals = initialState?.withdrawals || setToMap(this.whitelist);
 
     // Field
     this.plots = initialState?.plots || {};
@@ -370,59 +355,6 @@ export class EventProcessor {
   //   };
   // }
 
-  // /// /////////////////////// SILO: UTILS  //////////////////////////
-
-  // parseWithdrawals(_token: Token, _season: ethers.BigNumber) {
-  //   return EventProcessor._parseWithdrawals(
-  //     this.withdrawals.get(_token)!,
-  //     _season || this.epp.season
-  //   );
-  // }
-
-  // static _parseWithdrawals(
-  //   // withdrawals: EventProcessorData['withdrawals'] extends {[season:string]: infer I} ? I : undefined,
-  //   withdrawals: MapValueType<EventProcessorData['withdrawals']>,
-  //   currentSeason: ethers.BigNumber
-  // ): {
-  //   withdrawn: TokenSiloBalance['withdrawn'];
-  //   claimable: TokenSiloBalance['claimable'];
-  // } {
-  //   let transitBalance = ethers.BigNumber.from(0);
-  //   let receivableBalance = ethers.BigNumber.from(0);
-  //   const transitWithdrawals: WithdrawalCrate[] = [];
-  //   const receivableWithdrawals: WithdrawalCrate[] = [];
-
-  //   // Split each withdrawal between `receivable` and `transit`.
-  //   Object.keys(withdrawals).forEach((season: string) => {
-  //     const v = withdrawals[season].amount;
-  //     const s = ethers.BigNumber.from(season);
-  //     if (s.lte(currentSeason)) {
-  //       receivableBalance = receivableBalance.add(v);
-  //       receivableWithdrawals.push({
-  //         amount: v,
-  //         season: s,
-  //       });
-  //     } else {
-  //       transitBalance = transitBalance.plus(v);
-  //       transitWithdrawals.push({
-  //         amount: v,
-  //         season: s,
-  //       });
-  //     }
-  //   });
-
-  //   return {
-  //     withdrawn: {
-  //       amount: transitBalance,
-  //       crates: transitWithdrawals,
-  //     },
-  //     claimable: {
-  //       amount: receivableBalance,
-  //       crates: receivableWithdrawals,
-  //     },
-  //   };
-  // }
-
   // /// /////////////////////// SILO: DEPOSIT  //////////////////////////
 
   // eslint-disable-next-line class-methods-use-this
@@ -438,10 +370,10 @@ export class EventProcessor {
         };
   }
 
-  _removeDeposit(season: string, token: Token, amount: ethers.BigNumber) {
-    if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
-    const existingDeposit = this.deposits.get(token)?.[season];
-    if (!existingDeposit) throw new Error(`Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${season}`);
+  _removeDeposit(stem: string, token: Token, amount: ethers.BigNumber) {
+    if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
+    const existingDeposit = this.deposits.get(token)?.[stem];
+    if (!existingDeposit) throw new Error(`Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${stem}`);
 
     // BDV scales linearly with the amount of the underlying token.
     // Ex. if we remove 60% of the `amount`, we also remove 60% of the BDV.
@@ -452,11 +384,11 @@ export class EventProcessor {
 
     this.deposits.set(token, {
       ...this.deposits.get(token),
-      [season]: this._upsertDeposit(existingDeposit, amount.mul(-1), bdv.mul(-1))
+      [stem]: this._upsertDeposit(existingDeposit, amount.mul(-1), bdv.mul(-1))
     });
 
-    if (this.deposits.get(token)?.[season]?.amount?.eq(0)) {
-      delete this.deposits.get(token)?.[season];
+    if (this.deposits.get(token)?.[stem]?.amount?.eq(0)) {
+      delete this.deposits.get(token)?.[stem];
     }
   }
 
@@ -464,7 +396,7 @@ export class EventProcessor {
     const token = this.getToken(event);
     const stem = event.args.stem.toString();
 
-    if (!this.epp.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
+    if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
 
     const tokDeposits = this.deposits.get(token);
     this.deposits.set(token, {
