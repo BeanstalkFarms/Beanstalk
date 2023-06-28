@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/discord"
+  to = "https://discord.gg/3QcnNe6ZBD"
+  status = 308
+
+[[redirects]]
+  from = "/*"
+  to = "index.html"
+  status = 200
