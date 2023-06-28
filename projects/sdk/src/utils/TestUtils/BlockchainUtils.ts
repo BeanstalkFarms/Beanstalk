@@ -289,12 +289,13 @@ export class BlockchainUtils {
     return b.toHexString();
   }
 
+  // FIXME: season -> stem
   mockDepositCrate(token: ERC20Token, _season: number, _amount: string, _currentSeason?: number) {
     const amount = token.amount(_amount);
     const bdv = TokenValue.fromHuman(amount.toHuman(), 6);
     const currentSeason = _currentSeason || _season + 100;
 
-    return makeDepositObject(token, _season, {
+    return makeDepositObject(token, ethers.BigNumber.from(_season), {
       stem: currentSeason, // FIXME
       amount: amount.toBlockchain(),
       bdv: bdv.toBlockchain()

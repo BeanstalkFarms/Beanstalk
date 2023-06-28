@@ -1,19 +1,13 @@
 import { BigNumber } from "ethers";
 import { getTestUtils } from "src/utils/TestUtils/provider";
 import { Deposit } from "../silo/types";
-import { pickCrates } from "./utils";
-import { Withdraw } from "./Withdraw";
+import { calculateGrownStalkSeeds, calculateGrownStalkStems, pickCrates } from "./utils";
 
 const { sdk } = getTestUtils();
 
 jest.setTimeout(30000);
 
 describe("Silo Utils", function () {
-  // const withdraw = new Withdraw(sdk);
-  // const token = sdk.tokens.BEAN;
-
-  beforeAll(async () => {});
-
   describe("pickCrates()", function () {
     // this must be sorted by seson, DESC
     const crates: Deposit[] = [makeCrate(200, 10000), makeCrate(500, 9000), makeCrate(300, 8000)];
@@ -70,6 +64,40 @@ describe("Silo Utils", function () {
       };
 
       expect(fn).toThrowError("Not enough deposits");
+    });
+  });
+
+  describe("calculateGrownStalk via stems", () => {
+    it("should call fromBlockchain with the correct arguments and return its result", () => {
+      const stemTip = BigNumber.from("20");
+      const stem = BigNumber.from("10");
+      const bdv = sdk.tokens.BEAN.fromHuman("5");
+
+      // Calculated as bdv.toBigNumber() * (stemTip - stem)
+      // = (5e6) * (20 - 10) = 50e6
+      // We typically display STALK to 10 decimals, so this is a very small amount
+      const expected = sdk.tokens.STALK.fromBlockchain((50e6).toString());
+      const result = calculateGrownStalkStems(stemTip, stem, bdv);
+
+      expect(result.toBlockchain()).toBe(expected.toBlockchain());
+    });
+  });
+
+  // @deprecated
+  describe.skip("calculateGrownStalk via seeds", () => {
+    const seeds = sdk.tokens.SEEDS.amount(1);
+    it("returns zero when deltaSeasons = 0", () => {
+      expect(calculateGrownStalkSeeds(6074, 6074, seeds).toHuman()).toBe("0");
+    });
+    it("throws if currentSeason < depositSeason", () => {
+      expect(() => calculateGrownStalkSeeds(5000, 6074, seeds).toHuman()).to.throw();
+    });
+    it("works when deltaSeasons > 0", () => {
+      // 1 seed grows 1/10_000 STALK per Season
+      expect(calculateGrownStalkSeeds(6075, 6074, seeds).toHuman()).toBe((1 / 10_000).toString());
+      expect(calculateGrownStalkSeeds(6075, 6074, seeds.mul(10)).toHuman()).toBe((10 / 10_000).toString());
+      expect(calculateGrownStalkSeeds(6076, 6074, seeds).toHuman()).toBe((2 / 10_000).toString());
+      expect(calculateGrownStalkSeeds(6076, 6074, seeds.mul(10)).toHuman()).toBe((20 / 10_000).toString());
     });
   });
 });

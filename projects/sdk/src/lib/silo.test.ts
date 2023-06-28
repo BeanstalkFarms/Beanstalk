@@ -1,12 +1,10 @@
 import { expect as chaiExpect } from "chai";
 import { DataSource } from "src/lib/BeanstalkSDK";
-import { getTestUtils, setupConnection } from "../utils/TestUtils/provider";
+import { getTestUtils } from "../utils/TestUtils/provider";
 
-import { BeanstalkSDK } from "./BeanstalkSDK";
 import { Token } from "../classes/Token";
 import { TokenSiloBalance } from "./silo/types";
-import { calculateGrownStalk } from "./silo/utils";
-import { BigNumber, ethers } from "ethers";
+import { calculateGrownStalkSeeds } from "./silo/utils";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";
 import { Silo } from "src/lib/silo";
@@ -121,23 +119,6 @@ describe("Silo Balance loading", () => {
       const result = await sdk.silo.getSeeds(BF_MULTISIG);
       chaiExpect(result).to.be.instanceOf(TokenValue);
       chaiExpect(result.decimals).to.eq(6);
-    });
-  });
-
-  describe("Grown Stalk calculations", () => {
-    const seeds = sdk.tokens.SEEDS.amount(1);
-    it("returns zero when deltaSeasons = 0", () => {
-      chaiExpect(calculateGrownStalk(6074, 6074, seeds).toHuman()).to.eq("0");
-    });
-    it("throws if currentSeason < depositSeason", () => {
-      chaiExpect(() => calculateGrownStalk(5000, 6074, seeds).toHuman()).to.throw();
-    });
-    it("works when deltaSeasons > 0", () => {
-      // 1 seed grows 1/10_000 STALK per Season
-      chaiExpect(calculateGrownStalk(6075, 6074, seeds).toHuman()).to.eq((1 / 10_000).toString());
-      chaiExpect(calculateGrownStalk(6075, 6074, seeds.mul(10)).toHuman()).to.eq((10 / 10_000).toString());
-      chaiExpect(calculateGrownStalk(6076, 6074, seeds).toHuman()).to.eq((2 / 10_000).toString());
-      chaiExpect(calculateGrownStalk(6076, 6074, seeds.mul(10)).toHuman()).to.eq((20 / 10_000).toString());
     });
   });
 });

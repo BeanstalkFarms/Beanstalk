@@ -130,16 +130,16 @@ export type RawDepositData = {
  * @param data.bdv The bdv of deposit
  * @returns DepositCrate<TokenValue>
  */
-export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumberish, data: RawDepositData): Deposit<TokenValue> {
+export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData): Deposit<TokenValue> {
   // On-chain
   const stem = ethers.BigNumber.from(data.stem);
   const amount = token.fromBlockchain(data.amount.toString());
-  const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString());
+  const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString()); // Hack
 
   // Derived
-  const seeds = token.getSeeds(bdv);
+  const seeds = token.getSeeds(bdv); // FIXME
   const baseStalk = token.getStalk(bdv);
-  const grownStalk = calculateGrownStalk(stemTipForToken, stem, seeds);
+  const grownStalk = calculateGrownStalkStems(stemTipForToken, stem, bdv);
   const stalk = baseStalk.add(grownStalk);
 
   return {
@@ -154,16 +154,11 @@ export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumbe
 }
 
 /**
- * Calculate the amount Stalk grown since `depositSeason`.
+ * @deprecated Calculate the amount Stalk grown since `depositSeason`.
  * Depends on the `currentSeason` and the `depositSeeds` awarded
  * for a particular deposit.
- *
- * @param currentSeason
- * @param depositSeason
- * @param depositSeeds
- * @returns TokenValue<STALK>
  */
-export function calculateGrownStalk(
+export function calculateGrownStalkSeeds(
   currentSeason: ethers.BigNumberish,
   depositSeason: ethers.BigNumberish,
   depositSeeds: TokenValue
@@ -174,11 +169,18 @@ export function calculateGrownStalk(
 }
 
 /**
+ * See: LibTokenSilo.grownStalkForDeposit
+ */
+export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
+  return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(stemTip.sub(stem)));
+}
+
+/**
  * Apply a Deposit to a TokenSiloBalance.
  * TODO: refactor to accept currentStem instead of currentSeason
  * @note expects inputs to be stringified (no decimals).
  */
-export function applyDeposit(balance: TokenSiloBalance, token: Token, stemTipForToken: ethers.BigNumberish, data: RawDepositData) {
+export function applyDeposit(balance: TokenSiloBalance, token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData) {
   const deposit = makeDepositObject(token, stemTipForToken, data);
 
   balance.amount = balance.amount.add(deposit.amount);
