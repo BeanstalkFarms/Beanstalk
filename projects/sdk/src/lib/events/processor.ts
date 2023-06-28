@@ -56,16 +56,8 @@ export type EventProcessorData = {
 export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
 
-  // ----------------------------
-  // |       PROCESSING         |
-  // ----------------------------
   account: string;
   whitelist: Set<Token>;
-
-  // ----------------------------
-  // |      DATA STORAGE        |
-  // ----------------------------
-
   plots: EventProcessorData["plots"];
   deposits: EventProcessorData["deposits"]; // token => stem => amount
 
@@ -170,17 +162,20 @@ export class EventProcessor {
     });
   }
 
-  PlotTransfer(event: Simplify<PlotTransferEvent>) {
+  PlotTransfer(event: EventManager.Simplify<PlotTransferEvent>) {
     // Numerical "index" of the Plot. Absolute, with respect to Pod 0.
-    const transferIndex = tokenBN(event.args.id, Bean);
-    const podsTransferred = tokenBN(event.args.pods, Bean);
+    const transferIndex = event.args.id;
+    const podsTransferred = event.args.pods;
 
+    // This account received a Plot
     if (event.args.to.toLowerCase() === this.account) {
-      // This account received a Plot
-      this.plots[transferIndex.toString()] = podsTransferred;
-    } else {
-      // This account sent a Plot
+      this.plots.set(transferIndex.toString(), podsTransferred);
+    }
+
+    // This account sent a Plot
+    else {
       const indexStr = transferIndex.toString();
+      const plot = this.plots.get(indexStr);
 
       // ----------------------------------------
       // The PlotTransfer event doesn't contain info
@@ -202,28 +197,39 @@ export class EventProcessor {
       // split it depending on params provided in
       // the PlotTransfer event.
       // ----------------------------------------
-      if (this.plots[indexStr] !== undefined) {
-        // A known Plot was sent.
-        if (!podsTransferred.isEqualTo(this.plots[indexStr])) {
-          const newStartIndex = transferIndex.plus(podsTransferred);
-          this.plots[newStartIndex.toString()] = this.plots[indexStr].minus(podsTransferred);
+
+      // A known Plot was sent (starting from the first Pod).
+      if (plot !== undefined) {
+        // A known Plot was partially sent.
+        if (!podsTransferred.eq(plot)) {
+          const partialIndex = transferIndex.add(podsTransferred); // index of new plot
+          const partialAmount = plot.sub(podsTransferred); // remaining pods in new plot
+
+          this.plots.set(partialIndex.toString(), partialAmount);
         }
-        delete this.plots[indexStr];
-      } else {
-        // A Plot was partially sent from a non-zero
-        // starting index. Find the containing Plot
-        // in our cache.
+
+        this.plots.delete(indexStr);
+      }
+
+      // Pods were partially sent from a non-zero starting index in one of the
+      // farmer's Plots. Find the parent Plot in our cache.
+      else {
         let i = 0;
-        let found = false;
         const plotIndices = Object.keys(this.plots);
-        while (found === false && i < plotIndices.length) {
+
+        while (i < plotIndices.length) {
           // Setup the boundaries of this Plot
-          const startIndex = BN(plotIndices[i]);
-          const endIndex = startIndex.plus(this.plots[startIndex.toString()]);
+          const startIndexStr = plotIndices[i];
+          const startIndex = ethers.BigNumber.from(startIndexStr);
+          const podsAtIndex = this.plots.get(startIndexStr)!;
+          const endIndex = startIndex.add(podsAtIndex);
+
           // Check if the Transfer happened within this Plot
-          if (startIndex.isLessThanOrEqualTo(transferIndex) && endIndex.isGreaterThan(transferIndex)) {
+          if (startIndex.lte(transferIndex) && endIndex.gt(transferIndex)) {
+            const transferredFromBeginning = startIndex.eq(transferIndex);
+
             // ----------------------------------------
-            // Slice #1. This is the part that
+            // Left slice. This is the part that
             // the user keeps (they sent the other part).
             //
             // Following the above example:
@@ -236,16 +242,25 @@ export class EventProcessor {
             //  this.plots[10] = (15 - 10) = 5
             // containing Pods 10, 11, 12, 13, 14
             // ----------------------------------------
-            if (transferIndex.eq(startIndex)) {
-              delete this.plots[startIndex.toString()];
+            if (transferredFromBeginning) {
+              // Started at the beginning of the plot.
+              // New plot will be created below
+              this.plots.delete(startIndexStr);
             } else {
-              this.plots[startIndex.toString()] = transferIndex.minus(startIndex);
+              // Started in the middle of the plot.
+              // Create a slice on the left side; this would be pods 0-4
+              // in the example below
+              const leftStartIndexStr = startIndexStr;
+              const leftAmount = transferIndex.sub(startIndex);
+
+              // Override the plot at this index, we'll create one for the rest below
+              this.plots.set(leftStartIndexStr, leftAmount);
             }
 
             // ----------------------------------------
-            // Slice #2. Handles the below case where
+            // Right slice. Handles the below case where
             // the amount sent doesn't reach the end
-            // of the Plot (i.e. I sent Pods in the middle.
+            // of the Plot (i.e. I sent Pods in the middle).
             //
             //  0       9 10         20              END
             // [---------[0123456789)-----------------]
@@ -261,21 +276,23 @@ export class EventProcessor {
             // PlotTransfer(from=0x, to=0x, id=15, pods=3)
             // This means we send Pods: 15, 16, 17.
             // ----------------------------------------
-            if (!transferIndex.isEqualTo(endIndex)) {
+            if (!transferIndex.eq(endIndex)) {
               // s2 = 15 + 3 = 18
               // Requires another split since 18 != 20
-              const s2 = transferIndex.plus(podsTransferred);
-              const requiresAnotherSplit = !s2.isEqualTo(endIndex);
-              if (requiresAnotherSplit) {
-                // Create a new plot at s2=18 with 20-18 Pods.
-                const s2Str = s2.toString();
-                this.plots[s2Str] = endIndex.minus(s2);
-                if (this.plots[s2Str].isEqualTo(0)) {
-                  delete this.plots[s2Str];
-                }
+              const rightStartIndex = transferIndex.add(podsTransferred);
+              const transferredToEnd = rightStartIndex.eq(endIndex);
+
+              if (!transferredToEnd) {
+                // Create a new plot at s2=18 with 20-18 = 2 Pods.
+                const rightStartIndexStr = rightStartIndex.toString();
+                const rightAmount = endIndex.sub(rightStartIndex);
+
+                // Create a new plot for the right side
+                this.plots.set(rightStartIndexStr, rightAmount);
               }
             }
-            found = true;
+
+            break;
           }
           i += 1;
         }
@@ -353,7 +370,7 @@ export class EventProcessor {
     // BDV scales linearly with the amount of the underlying token.
     // Ex. if we remove 60% of the `amount`, we also remove 60% of the BDV.
     // Because of this, the `RemoveDeposit` event doesn't contain the BDV to save gas.
-    //
+
     // @note order of mul/div matters here to prevent underflow
     const bdv = amount.mul(existingDeposit.bdv).div(existingDeposit.amount);
 
