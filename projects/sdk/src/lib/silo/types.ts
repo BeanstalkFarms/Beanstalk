@@ -1,25 +1,24 @@
 import { BigNumber } from "ethers";
 import { TokenValue } from "src/TokenValue";
-import { StringMap } from "src/types";
 import { EIP712PermitMessage } from "src/lib/permit";
 
-/**
- * A Crate is an `amount` of a token Deposited or
- * Withdrawn during a given `season`.
- */
 type BigNumbers = TokenValue;
+
+/**
+ * A Crate identifies an `amount` of a token stored within the Silo.
+ */
 export type Crate<T extends BigNumbers = TokenValue> = {
-  /** The amount of this Crate that was created, denominated in the underlying Token. */
-  amount: T;
   /** The Season that the Crate was created. */
   season: BigNumber;
+  /** The amount of this Crate that was created, denominated in the underlying Token. */
+  amount: T;
 };
 
 /**
- * A "Deposit" represents an amount of a Whitelisted Silo Token
+ * A Deposit represents an amount of a Whitelisted Silo Token
  * that has been added to the Silo.
  */
-export type DepositCrate<T extends BigNumbers = TokenValue> = Crate<T> & {
+export type Deposit<T extends BigNumbers = TokenValue> = Crate<T> & {
   /** The BDV of the Deposit, determined upon Deposit. */
   bdv: T;
   /** The total amount of Stalk granted for this Deposit. */
@@ -32,8 +31,6 @@ export type DepositCrate<T extends BigNumbers = TokenValue> = Crate<T> & {
   seeds: T;
 };
 
-export type WithdrawalCrate<T extends BigNumbers = TokenValue> = Crate<T> & {};
-
 /**
  * A "Silo Balance" provides all information
  * about a Farmer's ownership of a Whitelisted Silo Token.
@@ -45,25 +42,9 @@ export type TokenSiloBalance = {
     /** The BDV of this Token currently in the Deposited state. */
     bdv: TokenValue;
     /** All Deposit crates. */
-    crates: DepositCrate<TokenValue>[];
-  };
-  withdrawn: {
-    /** The total amount of this Token currently in the Withdrawn state. */
-    amount: TokenValue;
-    /** All Withdrawal crates. */
-    crates: WithdrawalCrate<TokenValue>[];
-  };
-  claimable: {
-    /** The total amount of this Token currently in the Claimable state. */
-    amount: TokenValue;
-    /** All Claimable crates. */
-    crates: Crate<TokenValue>[];
+    crates: Deposit<TokenValue>[];
   };
 };
-
-export type UpdateFarmerSiloBalancesPayload = StringMap<Partial<TokenSiloBalance>>;
-
-export type CrateSortFn = <T extends Crate<TokenValue>>(crates: T[]) => T[];
 
 export type MapValueType<A> = A extends Map<any, infer V> ? V : never;
 

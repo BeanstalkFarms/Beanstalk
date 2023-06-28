@@ -4,7 +4,7 @@ import { sum } from "lodash";
 import { Token } from "src/classes/Token";
 import { TokenValue } from "src/TokenValue";
 import { getTestUtils } from "src/utils/TestUtils/provider";
-import { DepositCrate } from "../silo/types";
+import { Deposit } from "../silo/types";
 import { pickCrates } from "./utils";
 import { Withdraw } from "./Withdraw";
 
@@ -20,7 +20,7 @@ describe("Silo Utils", function () {
 
   describe("pickCrates()", function () {
     // this must be sorted by seson, DESC
-    const crates: DepositCrate[] = [makeCrate(200, 10000), makeCrate(500, 9000), makeCrate(300, 8000)];
+    const crates: Deposit[] = [makeCrate(200, 10000), makeCrate(500, 9000), makeCrate(300, 8000)];
 
     it("returns one partial", async () => {
       const desiredAmount = sdk.tokens.BEAN.amount(100); // <= amount in first crate
@@ -75,7 +75,6 @@ describe("Silo Utils", function () {
 
       expect(fn).toThrowError("Not enough deposits");
     });
-
   });
 });
 

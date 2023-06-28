@@ -33,14 +33,10 @@ describe("Silo Balance loading", () => {
     it("returns an empty object", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, { source: DataSource.SUBGRAPH });
       chaiExpect(balance.deposited.amount.eq(0)).to.be.true;
-      chaiExpect(balance.withdrawn.amount.eq(0)).to.be.true;
-      chaiExpect(balance.claimable.amount.eq(0)).to.be.true;
     });
     it("loads an account with deposits (fuzzy)", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, BF_MULTISIG, { source: DataSource.SUBGRAPH });
       chaiExpect(balance.deposited.amount.gt(10_000)).to.be.true; // FIXME
-      chaiExpect(balance.withdrawn.amount.eq(0)).to.be.true;
-      chaiExpect(balance.claimable.amount.eq(0)).to.be.true;
     });
 
     // FIX: discrepancy in graph results
@@ -78,10 +74,6 @@ describe("Silo Balance loading", () => {
           // received              expected
           chaiExpect(value.deposited.amount).to.deep.eq(subgraph.get(token)?.deposited.amount);
           chaiExpect(value.deposited.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
-          chaiExpect(value.claimable.amount).to.deep.eq(subgraph.get(token)?.claimable.amount);
-          chaiExpect(value.claimable.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
-          chaiExpect(value.withdrawn.amount).to.deep.eq(subgraph.get(token)?.withdrawn.amount);
-          chaiExpect(value.withdrawn.crates).to.deep.eq(subgraph.get(token)?.deposited.crates);
         } catch (e) {
           console.log(`Token: ${token.name}`);
           console.log(`Expected (subgraph):`, subgraph.get(token));

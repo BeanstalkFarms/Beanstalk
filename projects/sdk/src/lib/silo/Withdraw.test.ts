@@ -34,13 +34,10 @@ describe("Silo Withdrawl", function () {
   it("Successfully withdraws", async () => {
     const tx = await withdraw.withdraw(token, token.amount(150));
     await tx.wait();
-    const { deposited, withdrawn } = await sdk.silo.getBalance(token);
+    const { deposited } = await sdk.silo.getBalance(token);
 
     expect(deposited.crates.length).toBe(1);
     expect(deposited.amount.eq(token.amount(350))).toBe(true);
-
-    expect(withdrawn.crates.length).toBe(1);
-    expect(withdrawn.amount.eq(token.amount(150))).toBe(true);
   });
 
   it("Fails when withdrawing too much", async () => {

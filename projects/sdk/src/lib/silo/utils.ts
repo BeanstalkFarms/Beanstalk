@@ -2,10 +2,10 @@ import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { Silo } from "../silo";
 import { TokenValue } from "@beanstalk/sdk-core";
-import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate, MapValueType } from "./types";
+import { Crate, TokenSiloBalance, Deposit } from "./types";
 import { assert } from "src/utils";
 
-export function sortCrates(state: TokenSiloBalance["deposited" | "withdrawn" | "claimable"]) {
+export function sortCrates(state: TokenSiloBalance["deposited"]) {
   state.crates = state.crates.sort(
     (a, b) => a.season.sub(b.season).toNumber() // sort by season asc
   );
@@ -22,7 +22,7 @@ export function sortCratesBySeason<T extends Crate<TokenValue>>(crates: T[], dir
 /**
  * Order crates by BDV.
  */
-export function sortCratesByBDVRatio<T extends DepositCrate<TokenValue>>(crates: T[], direction: "asc" | "desc" = "asc") {
+export function sortCratesByBDVRatio<T extends Deposit<TokenValue>>(crates: T[], direction: "asc" | "desc" = "asc") {
   const m = direction === "asc" ? -1 : 1;
   return [...crates].sort((a, b) => {
     // FIXME
@@ -35,11 +35,11 @@ export function sortCratesByBDVRatio<T extends DepositCrate<TokenValue>>(crates:
 /**
  * Selects the number of crates needed to add up to the desired `amount`.
  */
-export function pickCrates(crates: DepositCrate[], amount: TokenValue, token: Token, currentSeason: number) {
+export function pickCrates(crates: Deposit[], amount: TokenValue, token: Token, currentSeason: number) {
   let totalAmount = TokenValue.ZERO;
   let totalBDV = TokenValue.ZERO;
   let totalStalk = TokenValue.ZERO;
-  const cratesToWithdrawFrom: DepositCrate[] = [];
+  const cratesToWithdrawFrom: Deposit[] = [];
 
   crates.some((crate) => {
     const amountToRemoveFromCrate = totalAmount.add(crate.amount).lte(amount) ? crate.amount : amount.sub(totalAmount);
@@ -111,15 +111,7 @@ export function makeTokenSiloBalance(): TokenSiloBalance {
     deposited: {
       amount: TokenValue.ZERO,
       bdv: TokenValue.ZERO,
-      crates: [] as DepositCrate[]
-    },
-    withdrawn: {
-      amount: TokenValue.ZERO,
-      crates: [] as WithdrawalCrate[]
-    },
-    claimable: {
-      amount: TokenValue.ZERO,
-      crates: [] as WithdrawalCrate[]
+      crates: [] as Deposit[]
     }
   };
 }
@@ -140,7 +132,7 @@ export function makeDepositCrate(
   _amount: string,
   _bdv: string,
   currentSeason: ethers.BigNumberish
-): DepositCrate<TokenValue> {
+): Deposit<TokenValue> {
   // Crate
   const season = ethers.BigNumber.from(_season);
   const amount = token.fromBlockchain(_amount);
@@ -207,34 +199,7 @@ export function applyDeposit(
   return crate;
 }
 
-/**
- * Apply a Deposit to a TokenSiloBalance.
- *
- * @note expects inputs to be stringified (no decimals).
- */
-export function applyWithdrawal(
-  state: TokenSiloBalance["withdrawn" | "claimable"],
-  token: Token,
-  rawCrate: {
-    season: string | number;
-    amount: string;
-  }
-) {
-  const season = BigNumber.from(rawCrate.season);
-  const amount = token.amount(rawCrate.amount);
-
-  const crate: Crate<TokenValue> = {
-    season: season,
-    amount: amount
-  };
-
-  state.amount = state.amount.add(amount);
-  state.crates.push(crate);
-
-  return crate;
-}
-
-export function sumDeposits(token: ERC20Token, crates: DepositCrate[]) {
+export function sumDeposits(token: ERC20Token, crates: Deposit[]) {
   return crates.reduce(
     (prev, curr) => {
       prev.amount = prev.amount.add(curr.amount);

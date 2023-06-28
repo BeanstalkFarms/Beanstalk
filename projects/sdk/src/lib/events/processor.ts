@@ -44,14 +44,17 @@ export const setToMap = (tokens: Set<Token>): Map<Token, any> => {
 
 // ----------------------------------------
 
-export type DepositCrateRaw = {
-  amount: ethers.BigNumber;
-  bdv: ethers.BigNumber;
-};
-
 export type EventProcessorData = {
   plots: Map<string, ethers.BigNumber>;
-  deposits: Map<Token, { [stem: string]: DepositCrateRaw }>;
+  deposits: Map<
+    Token,
+    {
+      [stem: string]: {
+        amount: ethers.BigNumber;
+        bdv: ethers.BigNumber;
+      };
+    }
+  >;
 };
 
 export class EventProcessor {
@@ -350,7 +353,11 @@ export class EventProcessor {
   // /// /////////////////////// SILO: DEPOSIT  //////////////////////////
 
   // eslint-disable-next-line class-methods-use-this
-  _upsertDeposit(existing: DepositCrateRaw | undefined, amount: ethers.BigNumber, bdv: ethers.BigNumber) {
+  _upsertDeposit(
+    existing: { amount: ethers.BigNumber; bdv: ethers.BigNumber } | undefined,
+    amount: ethers.BigNumber,
+    bdv: ethers.BigNumber
+  ) {
     return existing
       ? {
           amount: existing.amount.add(amount),

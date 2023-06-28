@@ -2,7 +2,7 @@ import { ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "../BeanstalkSDK";
-import { DepositCrate } from "../silo/types";
+import { Deposit } from "../silo/types";
 import { sortCratesBySeason } from "./utils";
 import { pickCrates } from "./utils";
 import { FarmToMode } from "src/lib/farm";
@@ -52,7 +52,7 @@ export class Withdraw {
     return contractCall;
   }
 
-  calculateWithdraw(token: Token, amount: TokenValue, crates: DepositCrate[], season: number) {
+  calculateWithdraw(token: Token, amount: TokenValue, crates: Deposit[], season: number) {
     if (crates.length === 0) throw new Error("No crates to withdraw from");
 
     const sortedCrates = sortCratesBySeason(crates, "desc");
