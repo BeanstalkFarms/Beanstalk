@@ -30,6 +30,7 @@ const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
+const { bipNewSilo } = require("./scripts/bips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -46,6 +47,7 @@ function getRemappings() {
 task("buyBeans")
   .addParam("amount", "The amount of USDC to buy with")
   .setAction(async (args) => {
+    await mintEth(PUBLIUS);
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
@@ -177,6 +179,10 @@ task("bip34", async function () {
   });
 });
 
+task("silov3", async function () {
+  await bipNewSilo();
+});
+
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
 // Add a subtask that sets the action for the TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS task
@@ -208,7 +214,8 @@ module.exports = {
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
-      timeout: 100000
+      timeout: 100000,
+      accounts: "remote"
     },
     mainnet: {
       chainId: 1,
