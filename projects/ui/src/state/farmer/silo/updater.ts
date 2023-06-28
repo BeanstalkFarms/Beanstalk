@@ -3,10 +3,10 @@ import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { EventProcessor } from '@beanstalk/sdk';
 import { BEAN_TO_SEEDS, BEAN_TO_STALK, ZERO_BN } from '~/constants';
-import { BEAN, SEEDS, STALK } from '~/constants/tokens';
+import { BEAN, STALK } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
-import { bigNumberResult, tokenResult } from '~/util';
+import { bigNumberResult, tokenResult, tokenValueToBN } from '~/util';
 import useBlocks from '~/hooks/ledger/useBlocks';
 import useAccount from '~/hooks/ledger/useAccount';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
@@ -20,6 +20,7 @@ import {
   UpdateFarmerSiloBalancesPayload,
   updateFarmerSiloRewards,
 } from './actions';
+import useSdk from '~/hooks/sdk';
 
 export const useFetchFarmerSilo = () => {
   /// Helpers
@@ -72,6 +73,7 @@ export const useFetchFarmerSilo = () => {
     [beanstalk, blocks.BEANSTALK_GENESIS_BLOCK]
   );
 
+  const sdk = useSdk();
   const [fetchSiloEvents] = useEvents(EventCacheName.SILO, getQueryFilters);
 
   ///
@@ -97,23 +99,14 @@ export const useFetchFarmerSilo = () => {
         allEvents = [],
       ] = await Promise.all([
         // FIXME: multicall this section
-        /// balanceOfStalk() returns `stalk + earnedStalk`
-        beanstalk.balanceOfStalk(account).then(tokenResult(STALK)),
-        beanstalk.balanceOfGrownStalk(account).then(tokenResult(STALK)),
-        beanstalk.balanceOfSeeds(account).then(tokenResult(SEEDS)),
+        sdk.silo.beanstalk.balanceOfStalk(account).then(tokenResult(STALK)), // returns `stalk + earnedStalk`
+        sdk.silo.getGrownStalk(account).then(tokenValueToBN),
+        sdk.silo.getSeeds(account).then(tokenValueToBN),
         beanstalk.balanceOfRoots(account).then(bigNumberResult),
         beanstalk.balanceOfEarnedBeans(account).then(tokenResult(BEAN)),
         beanstalk.lastUpdate(account).then(bigNumberResult),
         fetchSiloEvents(),
       ] as const);
-
-      // console.debug('[farmer/silo/useFarmerSilo] RESULT', [
-      //   stalkBalance.toString(),
-      //   seedBalance.toString(),
-      //   rootBalance.toString(),
-      //   earnedBeanBalance.toString(),
-      //   grownStalkBalance.toString(),
-      // ]);
 
       /// stalk + earnedStalk (bundled together at the contract level)
       const activeStalkBalance = stalkBalance;
@@ -148,7 +141,7 @@ export const useFetchFarmerSilo = () => {
         })
       );
 
-      const p = new EventProcessor(account, { season, whitelist });
+      const p = new EventProcessor(sdk, account);
       const results = p.ingestAll(allEvents);
 
       dispatch(
@@ -191,13 +184,14 @@ export const useFetchFarmerSilo = () => {
       );
     }
   }, [
-    dispatch,
-    fetchSiloEvents,
-    beanstalk,
-    season,
-    whitelist,
-    account,
     initialized,
+    sdk,
+    account,
+    beanstalk,
+    fetchSiloEvents,
+    dispatch,
+    whitelist,
+    season,
   ]);
 
   const clear = useCallback(() => {

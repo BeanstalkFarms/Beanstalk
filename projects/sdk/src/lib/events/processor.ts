@@ -59,12 +59,6 @@ export type EventProcessorData = {
       [stem: string]: DepositCrateRaw;
     }
   >;
-  withdrawals: Map<
-    Token,
-    {
-      [stem: string]: WithdrawalCrateRaw;
-    }
-  >;
 };
 
 export type EventKeys = "event" | "args" | "blockNumber" | "transactionIndex" | "transactionHash" | "logIndex";
@@ -88,7 +82,6 @@ export class EventProcessor {
 
   plots: EventProcessorData["plots"];
   deposits: EventProcessorData["deposits"]; // token => stem => amount
-  withdrawals: EventProcessorData["withdrawals"]; // token => stem => amount
 
   /// /////////////////////// SETUP //////////////////////////
 
@@ -101,7 +94,6 @@ export class EventProcessor {
 
     // Silo
     this.deposits = initialState?.deposits || setToMap(this.whitelist);
-    this.withdrawals = initialState?.withdrawals || setToMap(this.whitelist);
 
     // Field
     this.plots = initialState?.plots || {};
@@ -128,8 +120,7 @@ export class EventProcessor {
   data() {
     return {
       plots: this.plots,
-      deposits: this.deposits,
-      withdrawals: this.withdrawals
+      deposits: this.deposits
     };
   }
 

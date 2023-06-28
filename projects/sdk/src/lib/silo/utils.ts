@@ -1,66 +1,9 @@
 import { BigNumber, ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
-import { EventProcessorData } from "src/lib/events/processor";
 import { Silo } from "../silo";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate, MapValueType } from "./types";
-import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { assert } from "src/utils";
-
-/**
- * Beanstalk doesn't automatically re-categorize withdrawals as "claimable".
- * "Claimable" just means that the `season` parameter stored in the withdrawal
- * event is less than or equal to the current `season()`.
- *
- * This function serves two purposes:
- * 1. Break generic withdrawals into
- *    "withdrawn" (aka transit), which cannot yet be claimed
- *    "claimable" (aka receivable), which are eligible to be claimed
- * 2. Convert each crate amount to the appropriate number of decimals.
- */
-export const parseWithdrawalCrates = (
-  token: Token,
-  withdrawals: MapValueType<EventProcessorData["withdrawals"]>,
-  currentSeason: BigNumber
-): {
-  withdrawn: TokenSiloBalance["withdrawn"];
-  claimable: TokenSiloBalance["claimable"];
-} => {
-  let withdrawnBalance = TokenValue.ZERO; // aka "transit"
-  let claimableBalance = TokenValue.ZERO; // aka "receivable"
-  const withdrawn: WithdrawalCrate[] = []; // aka "transit"
-  const claimable: WithdrawalCrate[] = []; // aka "receivable"
-
-  // Split each withdrawal between `receivable` and `transit`.
-  Object.keys(withdrawals).forEach((season) => {
-    const amt = TokenValue.fromBlockchain(withdrawals[season].amount, token.decimals);
-    const szn = BigNumber.from(season);
-    if (szn.lte(currentSeason)) {
-      claimableBalance = claimableBalance.add(amt);
-      claimable.push({
-        amount: amt,
-        season: szn
-      });
-    } else {
-      withdrawnBalance = withdrawnBalance.add(amt);
-      withdrawn.push({
-        amount: amt,
-        season: szn
-      });
-    }
-  });
-
-  return {
-    withdrawn: {
-      amount: withdrawnBalance,
-      crates: withdrawn
-    },
-    claimable: {
-      amount: claimableBalance,
-      crates: claimable
-    }
-  };
-};
 
 export function sortCrates(state: TokenSiloBalance["deposited" | "withdrawn" | "claimable"]) {
   state.crates = state.crates.sort(
@@ -242,6 +185,7 @@ export function calculateGrownStalk(
 
 /**
  * Apply a Deposit to a TokenSiloBalance.
+ * TODO: refactor to accept currentStem instead of currentSeason
  * @note expects inputs to be stringified (no decimals).
  */
 export function applyDeposit(

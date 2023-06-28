@@ -218,23 +218,15 @@ export class Silo {
     const source = Silo.sdk.deriveConfig("source", options);
     const [account, currentSeason] = await Promise.all([Silo.sdk.getAccount(_account), Silo.sdk.sun.getSeason()]);
 
-    // FIXME: doesn't work if _token is an instance of a token created by the SDK consumer
     if (!Silo.sdk.tokens.siloWhitelist.has(_token)) throw new Error(`${_token.address} is not whitelisted in the Silo`);
 
-    ///  SETUP
-    const whitelist = Silo.sdk.tokens.siloWhitelist;
+    /// SETUP
     const balance: TokenSiloBalance = utils.makeTokenSiloBalance();
 
     if (source === DataSource.LEDGER) {
-      // Fetch and process events.
-      const seasonBN = BigNumber.from(currentSeason);
       const events = await Silo.sdk.events.getSiloEvents(account, _token.address);
-      const processor = new EventProcessor(Silo.sdk, account, {
-        season: seasonBN,
-        whitelist
-      });
-
-      const { deposits, withdrawals } = processor.ingestAll(events);
+      const processor = new EventProcessor(Silo.sdk, account);
+      const { deposits } = processor.ingestAll(events);
 
       // Handle deposits
       {
@@ -251,21 +243,9 @@ export class Silo {
           utils.applyDeposit(balance.deposited, _token, rawCrate, currentSeason);
         }
 
+        // NOTE: We don't load legacy Withdrawals from LEDGER, only from SUBGRAPH.
+
         utils.sortCrates(balance.deposited);
-      }
-
-      // Handle withdrawals
-      {
-        const _crates = withdrawals.get(_token);
-        if (_crates) {
-          const { withdrawn, claimable } = utils.parseWithdrawalCrates(_token, _crates, seasonBN);
-
-          balance.withdrawn = withdrawn;
-          balance.claimable = claimable;
-
-          utils.sortCrates(balance.withdrawn);
-          utils.sortCrates(balance.claimable);
-        }
       }
 
       return balance;
@@ -282,6 +262,8 @@ export class Silo {
 
       const { deposited, withdrawn, claimable } = query.farmer!;
       deposited.forEach((crate) => utils.applyDeposit(balance.deposited, _token, crate, currentSeason));
+
+      // Handle legacy withdrawals.
       withdrawn.forEach((crate) => utils.applyWithdrawal(balance.withdrawn, _token, crate));
       claimable.forEach((crate) => utils.applyWithdrawal(balance.claimable, _token, crate));
 
@@ -323,14 +305,9 @@ export class Silo {
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
-      // Fetch and process events.
-      const seasonBN = BigNumber.from(currentSeason); // FIXME
       const events = await Silo.sdk.events.getSiloEvents(account);
-      const processor = new EventProcessor(Silo.sdk, account, {
-        season: seasonBN,
-        whitelist
-      });
-      const { deposits, withdrawals } = processor.ingestAll(events);
+      const processor = new EventProcessor(Silo.sdk, account);
+      const { deposits } = processor.ingestAll(events);
 
       // Handle deposits.
       // Attach stalk & seed counts for each crate.
@@ -355,22 +332,7 @@ export class Silo {
         utils.sortCrates(state);
       });
 
-      // Handle withdrawals.
-      // Split crates into withdrawn and claimable.
-      withdrawals.forEach((_crates, token) => {
-        if (!balances.has(token)) {
-          balances.set(token, utils.makeTokenSiloBalance());
-        }
-
-        //
-        const { withdrawn, claimable } = utils.parseWithdrawalCrates(token, _crates, seasonBN);
-        const tokenBalance = balances.get(token);
-        tokenBalance!.withdrawn = withdrawn;
-        tokenBalance!.claimable = claimable;
-
-        utils.sortCrates(tokenBalance!.withdrawn);
-        utils.sortCrates(tokenBalance!.claimable);
-      });
+      // NOTE: We don't load legacy Withdrawals from LEDGER, only from SUBGRAPH.
 
       return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances); // FIXME: sorting is redundant if this is instantiated
     }
@@ -399,7 +361,7 @@ export class Silo {
         utils.applyDeposit(state, token, crate, currentSeason);
       };
 
-      // Handle withdrawals.
+      // Handle legacy withdrawals.
       // Claimable = withdrawals from the past. The GraphQL query enforces this.
       type WithdrawalEntity = typeof withdrawn[number];
       const handleWithdrawal = (key: "withdrawn" | "claimable") => (crate: WithdrawalEntity) => {
@@ -429,6 +391,7 @@ export class Silo {
       this.getEarnedStalk(_account),
       this.getGrownStalk(_account)
     ]);
+
     // TODO: add revitalized
     return {
       active,

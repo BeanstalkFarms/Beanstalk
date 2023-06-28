@@ -1,11 +1,6 @@
 import { BigNumber as EBN } from "ethers";
-import {
-  AddDepositEvent,
-  RemoveDepositEvent,
-  RemoveWithdrawalEvent,
-  RemoveWithdrawalsEvent
-} from "src/constants/generated/protocol/abi/Beanstalk";
-import { EventProcessor, EventProcessingParameters } from "./processor";
+import { AddDepositEvent, RemoveDepositEvent } from "src/constants/generated/protocol/abi/Beanstalk";
+import { EventProcessor } from "./processor";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { getProvider } from "../../utils/TestUtils/provider";
 
@@ -18,10 +13,6 @@ const Bean = sdk.tokens.BEAN;
 const BeanCrv3 = sdk.tokens.BEAN_CRV3_LP;
 
 const account = "0xFARMER";
-const epp: EventProcessingParameters = {
-  season: EBN.from(6074),
-  whitelist: sdk.tokens.siloWhitelist
-};
 
 // ------------------------------------------
 
@@ -41,7 +32,7 @@ const propArray = (o: { [key: string]: any }) =>
     return prev;
   }, [] as (keyof typeof o)[] & typeof o);
 
-const mockProcessor = () => new EventProcessor(sdk, account, epp);
+const mockProcessor = () => new EventProcessor(sdk, account);
 
 // ------------------------------------------
 
@@ -187,7 +178,7 @@ describe("the Silo", () => {
     ).toThrow();
   });
 
-  it("runs a simple deposit sequence (three deposits, two tokens, two seasons)", () => {
+  it("runs a simple deposit sequence (three deposits, two tokens, two stems)", () => {
     const p = mockProcessor();
 
     // Deposit: 1000 Bean, Season 6074
@@ -198,7 +189,7 @@ describe("the Silo", () => {
       args: propArray({
         account,
         token: Bean.address,
-        season: EBN.from(6074),
+        stem: EBN.from(6074),
         amount: amount1, // Deposited 1,000 Bean
         bdv: bdv1
       })
@@ -217,7 +208,7 @@ describe("the Silo", () => {
       args: propArray({
         account,
         token: Bean.address,
-        season: EBN.from(6074),
+        stem: EBN.from(6074),
         amount: amount2,
         bdv: bdv2
       })
@@ -236,7 +227,7 @@ describe("the Silo", () => {
       args: propArray({
         account,
         token: BeanCrv3.address,
-        season: EBN.from(6100),
+        stem: EBN.from(6100),
         amount: amount3, // Deposited 1,000 Bean:CRV3
         bdv: bdv3
       })
@@ -259,7 +250,7 @@ describe("the Silo", () => {
       args: propArray({
         account,
         token: Bean.address,
-        season: EBN.from(6074),
+        stem: EBN.from(6074),
         amount: amount1,
         bdv: bdv1
       })
@@ -273,7 +264,7 @@ describe("the Silo", () => {
       args: propArray({
         account,
         token: Bean.address,
-        season: EBN.from(6074),
+        stem: EBN.from(6074),
         amount: amount2,
         bdv: bdv2
       })
@@ -292,31 +283,12 @@ describe("the Silo", () => {
       args: propArray({
         account,
         token: Bean.address,
-        season: EBN.from(6074),
+        stem: EBN.from(6074),
         amount: amount3,
         bdv: bdv3
       })
     } as RemoveDepositEvent);
 
     expect(p.deposits.get(Bean)?.["6074"]).toBeUndefined();
-  });
-
-  it("ignores empty RemoveWithdrawal events", () => {
-    const p = mockProcessor();
-
-    expect(() =>
-      p.ingest({
-        event: "RemoveWithdrawal",
-        args: propArray({
-          account,
-          token: Bean.address,
-          season: EBN.from(6074),
-          amount: EBN.from(0) // amount is empty is Withdrawal couldn't be processed
-        })
-      } as RemoveWithdrawalEvent)
-    ).not.toThrow();
-
-    // No deposit made in Bean
-    expect(p.withdrawals.get(Bean)).toStrictEqual({});
   });
 });
