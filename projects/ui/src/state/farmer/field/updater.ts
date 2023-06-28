@@ -5,8 +5,10 @@ import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import useEvents, { GetEventsFn } from '../events2/updater';
-import { resetFarmerField } from './actions';
+import { resetFarmerField, updateFarmerField } from './actions';
 import useSdk from '~/hooks/sdk';
+import { transform } from '~/util/BigNumber';
+import { FarmerField } from '~/state/farmer/field';
 
 export const useFetchFarmerField = () => {
   /// Helpers
@@ -41,13 +43,44 @@ export const useFetchFarmerField = () => {
       const allEvents = await fetchFieldEvents();
       if (!allEvents) return;
 
-      const p = new EventProcessor(sdk, account);
-      const results = p.ingestAll(allEvents);
+      const processor = new EventProcessor(sdk, account);
+      processor.ingestAll(allEvents);
+      const result = processor.parsePlots({
+        harvestableIndex: sdk.tokens.PODS.fromHuman(
+          harvestableIndex.toString()
+        ).toBigNumber(), // ethers.BigNumber
+      });
 
-      // TODO: fix this
-      // dispatch(updateFarmerField(p.parsePlots(harvestableIndex)));
+      // TEMP: Wrangle `result` into our internal state's existing format
+      // Tested by manual validation.
+      const plots: FarmerField['plots'] = {};
+      const harvestablePlots: FarmerField['harvestablePlots'] = {};
+      result.plots.forEach((plot, indexStr) => {
+        plots[sdk.tokens.PODS.fromBlockchain(indexStr).toHuman()] = transform(
+          plot,
+          'bnjs',
+          sdk.tokens.PODS
+        );
+      });
+      result.harvestablePlots.forEach((plot, indexStr) => {
+        harvestablePlots[sdk.tokens.PODS.fromBlockchain(indexStr).toHuman()] =
+          transform(plot, 'bnjs', sdk.tokens.PODS);
+      });
+
+      dispatch(
+        updateFarmerField({
+          pods: transform(result.pods, 'bnjs', sdk.tokens.PODS),
+          harvestablePods: transform(
+            result.harvestablePods,
+            'bnjs',
+            sdk.tokens.PODS
+          ),
+          plots,
+          harvestablePlots,
+        })
+      );
     }
-  }, [initialized, fetchFieldEvents, sdk, account]);
+  }, [initialized, fetchFieldEvents, sdk, account, dispatch, harvestableIndex]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerSilo] CLEAR');

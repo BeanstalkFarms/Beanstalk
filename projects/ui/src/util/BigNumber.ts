@@ -70,10 +70,14 @@ type OutputOptions = keyof OutputClassMap;
  * HEADS UP: TokenValue -> BignumberJS uses .toHuman(), which is the most common behavior.
  */
 export function transform<O extends OutputOptions, R = OutputClassMap[O]>(
-  value: NumberInputInstance,
+  value: string | NumberInputInstance,
   out: O,
   token?: Token
 ): R {
+  if (typeof value === 'string') {
+    value = ethers.BigNumber.from(value);
+  }
+
   if (value instanceof TokenValue) {
     if (out === 'tokenValue') return value as R;
     if (out === 'bnjs') return new BignumberJS(value.toHuman()) as R;
@@ -86,10 +90,13 @@ export function transform<O extends OutputOptions, R = OutputClassMap[O]>(
         throw new Error(
           "Can't transform BignumberJS to TokenValue without token"
         );
-      return token.amount(value.toString()) as R;
+      return token.fromHuman(value.toString()) as R;
     }
     if (out === 'bnjs') return value as R;
-    if (out === 'ethers') return ethers.BigNumber.from(value.toString()) as R;
+    if (out === 'ethers') {
+      // TODO: require a `Token` instance here?
+      return ethers.BigNumber.from(value.toString()) as R;
+    }
   }
 
   if (value instanceof ethers.BigNumber) {
@@ -98,9 +105,13 @@ export function transform<O extends OutputOptions, R = OutputClassMap[O]>(
         throw new Error(
           "Can't transform ethers.BigNumber to TokenValue without token"
         );
-      return token.amount(value.toString()) as R;
+      return token.fromBlockchain(value.toString()) as R;
     }
-    if (out === 'bnjs') return new BignumberJS(value.toString()) as R;
+    if (out === 'bnjs') {
+      return token
+        ? (new BignumberJS(token.fromBlockchain(value).toHuman()) as R)
+        : (new BignumberJS(value.toString()) as R);
+    }
     if (out === 'ethers') return value as R;
   }
 
