@@ -162,7 +162,7 @@ const BuyForm: FC<
   /// Approval Checks
   const shouldApprove = 
     values.balanceFrom === BalanceFrom.EXTERNAL || 
-    values.balanceFrom === BalanceFrom.TOTAL && values.tokens[0].amount?.gt(balances[tokenIn.address].internal);
+    values.balanceFrom === BalanceFrom.TOTAL && values.tokens[0].amount?.gt(balances[tokenIn.address]?.internal);
 
   return (
     <FormWithDrawer autoComplete="off" noValidate siblingRef={formRef}>
