@@ -159,6 +159,11 @@ const BuyForm: FC<
     return _params;
   }, [values.balanceFrom]);
 
+  /// Approval Checks
+  const shouldApprove = 
+    values.balanceFrom === BalanceFrom.EXTERNAL || 
+    values.balanceFrom === BalanceFrom.TOTAL && values.tokens[0].amount?.gt(balances[tokenIn.address]?.internal);
+
   return (
     <FormWithDrawer autoComplete="off" noValidate siblingRef={formRef}>
       <Stack gap={1} ref={formRef}>
@@ -257,7 +262,7 @@ const BuyForm: FC<
           disabled={!isValid}
           // Smart props
           contract={sdk.contracts.beanstalk}
-          tokens={values.tokens}
+          tokens={shouldApprove ? values.tokens : []}
         >
           Buy
         </SmartSubmitButton>

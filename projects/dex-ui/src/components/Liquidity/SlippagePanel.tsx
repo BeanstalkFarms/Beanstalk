@@ -13,47 +13,48 @@ type SlippagePanelProps = {
 };
 
 const SlippagePanel = ({ handleSlippageValueChange, slippageValue }: SlippagePanelProps) => {
-  
   const [modalOpen, setModalOpen] = useState(false);
   const closeModal = useCallback(() => setModalOpen(false), []);
 
-  const dontStealFocus = useCallback((e: MouseEvent) => {
+  const dontStealFocus = useCallback(
+    (e: MouseEvent) => {
       if ((e.target as HTMLElement).id === "modal") {
         closeModal();
       }
-  }, [closeModal]);
+    },
+    [closeModal]
+  );
 
   return (
     <Slippage>
-      <Icon src={gearIcon} onClick={() => setModalOpen(!modalOpen)} modalOpen={modalOpen}/>
+      <Icon src={gearIcon} onClick={() => setModalOpen(!modalOpen)} modalOpen={modalOpen} />
       {modalOpen && (
-      <>
-      <Modal onMouseDown={dontStealFocus} id="modal"/>
-      <ModalContainer data-trace="true" onMouseDown={dontStealFocus}>
-        <ModalHeader>
-          <div id="dialog-title">Adjust Slippage</div>
-          <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
-        </ModalHeader>
-        <ModalContent>
-          <InputContainer>
-            <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
-            <InputAdornment>Slippage Amount</InputAdornment>
-          </InputContainer>
-          Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that you
-          are willing to tolerate.
-          <SlippageTextBottom>
-            Your transaction will revert if the price changes by more than the percentage specified.
-          </SlippageTextBottom>
-        </ModalContent>
-      </ModalContainer>
-      </>
+        <>
+          <Modal onMouseDown={dontStealFocus} id="modal" />
+          <ModalContainer data-trace="true" onMouseDown={dontStealFocus}>
+            <ModalHeader>
+              <div id="dialog-title">Adjust Slippage</div>
+              <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
+            </ModalHeader>
+            <ModalContent>
+              <InputContainer>
+                <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
+                <InputAdornment>Slippage Amount</InputAdornment>
+              </InputContainer>
+              Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that
+              you are willing to tolerate.
+              <SlippageTextBottom>
+                Your transaction will revert if the price changes by more than the percentage specified.
+              </SlippageTextBottom>
+            </ModalContent>
+          </ModalContainer>
+        </>
       )}
     </Slippage>
   );
 };
 
-const Slippage = styled.div`
-`
+const Slippage = styled.div``;
 
 const StyledInput = styled.input`
   border: none;
@@ -71,25 +72,24 @@ const InputContainer = styled.div`
   padding-right: 12px;
   margin-bottom: 8px;
   &:focus-within {
-    border: 0.5px solid #46B955;
+    border: 0.5px solid #46b955;
   }
-`
-const InputAdornment = styled.div`  
-`
+`;
+const InputAdornment = styled.div``;
 
 type GearIconProps = {
-  modalOpen?: boolean,
-}
+  modalOpen?: boolean;
+};
 
 const Icon = styled.img<GearIconProps>`
   margin-left: 10px;
   transition: 0.1s;
   vertical-align: text-bottom;
-  rotate: ${(props) => props.modalOpen ? `30deg` : `0deg` };
+  rotate: ${(props) => (props.modalOpen ? `30deg` : `0deg`)};
   cursor: pointer;
-  filter: ${(props) => props.modalOpen ? `brightness(0%)` : `brightness(100%)`};
+  filter: ${(props) => (props.modalOpen ? `brightness(0%)` : `brightness(100%)`)};
   &:hover {
-    filter: ${(props) => props.modalOpen ? `brightness(0%)` : `brightness(50%)`};
+    filter: ${(props) => (props.modalOpen ? `brightness(0%)` : `brightness(50%)`)};
   }
 `;
 
@@ -149,9 +149,8 @@ const ModalContent = styled.div`
   max-height: calc(100vh - 64px - 48px - 96px - 72px - 48px - 48px);
   overflow-y: auto;
   overflow-x: hidden;
-  
+
   padding: 16px;
 `;
-
 
 export default SlippagePanel;

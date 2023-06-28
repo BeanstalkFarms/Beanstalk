@@ -47,7 +47,7 @@ const QuoteDetails = ({
   const sdk = useSdk();
   const [gasFeeUsd, setGasFeeUsd] = useState<string>("");
   const [tokenUSDValue, setTokenUSDValue] = useState<TokenValue>(TokenValue.ZERO);
-  const [accordionOpen, setAccordionOpen] = useState<boolean>(false)
+  const [accordionOpen, setAccordionOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const _setGasFeeUsd = async () => {
@@ -55,7 +55,8 @@ const QuoteDetails = ({
         setGasFeeUsd("0.00");
       } else {
         const usd = await getGasInUsd(sdk, quote!.estimate.toBigNumber());
-        setGasFeeUsd(`~${usd.toLocaleString("en-US", {
+        setGasFeeUsd(
+          `~${usd.toLocaleString("en-US", {
             style: "currency",
             currency: "USD"
           })}`
@@ -68,18 +69,18 @@ const QuoteDetails = ({
 
   const quoteValue = useMemo(() => {
     if (!quote || !quote.quote) {
-      return 'X.XXXX TOKEN';
+      return "X.XXXX TOKEN";
     }
 
     if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
       if (!wellTokens) {
-        return 'X.XXXX TOKEN';
+        return "X.XXXX TOKEN";
       }
     }
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
-      console.log('Here', _quoteValue, _quoteValue.toHuman(), _quoteValue.toHuman("short"));
+      console.log("Here", _quoteValue, _quoteValue.toHuman(), _quoteValue.toHuman("short"));
       return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
     }
 
@@ -114,25 +115,29 @@ const QuoteDetails = ({
     throw new Error("invalid type or removeLiquidityMode");
   }, [quote, type, wellLpToken, wellTokens, removeLiquidityMode, inputs, selectedTokenIndex]);
 
- useEffect(() => {
-    const run = async() => {
+  useEffect(() => {
+    const run = async () => {
       if (tokenPrices && tokenReserves && quote && quote.quote) {
         if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
           let totalUSDValue = TokenValue.ZERO;
-          let valueInUSD
+          let valueInUSD;
           if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
-            valueInUSD = tokenPrices![selectedTokenIndex!]!.mul(!Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO);
+            valueInUSD = tokenPrices![selectedTokenIndex!]!.mul(
+              !Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO
+            );
             totalUSDValue = totalUSDValue.add(valueInUSD);
           } else {
             for (let i = 0; i < tokenPrices.length; i++) {
-              valueInUSD = tokenPrices![i]!.mul(removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote) ? quote.quote[i] || TokenValue.ZERO : inputs![i] || TokenValue.ZERO);
+              valueInUSD = tokenPrices![i]!.mul(
+                removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote)
+                  ? quote.quote[i] || TokenValue.ZERO
+                  : inputs![i] || TokenValue.ZERO
+              );
               totalUSDValue = totalUSDValue.add(valueInUSD);
             }
           }
           setTokenUSDValue(totalUSDValue);
-
         } else if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
-
           let totalReservesUSDValue = TokenValue.ZERO;
           for (let i = 0; i < tokenPrices.length; i++) {
             const reserveValueInUSD = tokenPrices![i]!.mul(tokenReserves[i]!.add(inputs![i] || TokenValue.ZERO));
@@ -148,48 +153,47 @@ const QuoteDetails = ({
           setTokenUSDValue(finalUSDValue);
         }
       }
-    }
+    };
 
     run();
   }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex, inputs, removeLiquidityMode, wellLpToken]);
 
   const priceImpact = useMemo(() => {
-
-    if (!tokenReserves || !inputs || !tokenPrices) return TokenValue.ZERO
+    if (!tokenReserves || !inputs || !tokenPrices) return TokenValue.ZERO;
 
     function calculatePrice(prevVal: any, token: any) {
       if (token.eq(TokenValue.ZERO)) {
-        return TokenValue.ZERO
-      };
+        return TokenValue.ZERO;
+      }
       return prevVal!.div(token!);
-    };
+    }
 
-    const currentData = tokenReserves.map((token, index) =>
-      tokenReserves[index]?.mul(tokenPrices![index]!)
-        //'reservesUSD': tokenReserves[index]!.mul(tokenPrices![index]!)
+    const currentData = tokenReserves.map(
+      (token, index) => tokenReserves[index]?.mul(tokenPrices![index]!)
+      //'reservesUSD': tokenReserves[index]!.mul(tokenPrices![index]!)
     );
 
     const newData = tokenReserves.map((token, index) => {
       if (!quote) return TokenValue.ZERO;
       if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
-          return (tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!));
+          return tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!);
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && !Array.isArray(quote!.quote)) {
-          return (tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices![index]!));
+          return tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices![index]!);
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote!.quote)) {
-          return (tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices![index]!));
+          return tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices![index]!);
         } else {
-          return TokenValue.ZERO
-        };
+          return TokenValue.ZERO;
+        }
       } else {
-        return (tokenReserves[index]?.add(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!));
-      };
+        return tokenReserves[index]?.add(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!);
+      }
     });
 
-    const oldPrice = currentData.reduce(calculatePrice)
-    const newPrice = newData.reduce(calculatePrice)
+    const oldPrice = currentData.reduce(calculatePrice);
+    const newPrice = newData.reduce(calculatePrice);
 
-    let priceDiff
+    let priceDiff;
     if (!newPrice || !oldPrice) {
       return TokenValue.ZERO;
     } else if (newPrice?.eq(TokenValue.ZERO)) {
@@ -197,20 +201,31 @@ const QuoteDetails = ({
     } else if (oldPrice?.eq(TokenValue.ZERO)) {
       return TokenValue.fromHuman(100, 6);
     } else {
-      priceDiff = oldPrice.sub(newPrice).div(newPrice).mul(TokenValue.fromHuman(100, 6))
+      priceDiff = oldPrice.sub(newPrice).div(newPrice).mul(TokenValue.fromHuman(100, 6));
     }
 
-    if (priceDiff.abs().lt(TokenValue.fromHuman('0.01', 6))) return TokenValue.ZERO
-    return priceDiff
-
-  }, [tokenReserves, inputs, quote, removeLiquidityMode, selectedTokenIndex, tokenPrices, type])
+    if (priceDiff.abs().lt(TokenValue.fromHuman("0.01", 6))) return TokenValue.ZERO;
+    return priceDiff;
+  }, [tokenReserves, inputs, quote, removeLiquidityMode, selectedTokenIndex, tokenPrices, type]);
 
   return (
     <QuoteContainer>
       <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)} cursor="pointer">
-        <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>Expected Output</QuoteDetailLabel>
-        <QuoteDetailValue bold color={"black"} cursor={"pointer"}>{quoteValue}</QuoteDetailValue>
-        <ImageButton component={ChevronDown} size={8} rotate={accordionOpen ? "180" : "0"} onClick={() => setAccordionOpen(!accordionOpen)} padding="0px" margin="-2px 0px 0px 8px" alt="Click to view more information about this transaction" />
+        <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>
+          Expected Output
+        </QuoteDetailLabel>
+        <QuoteDetailValue bold color={"black"} cursor={"pointer"}>
+          {quoteValue}
+        </QuoteDetailValue>
+        <ImageButton
+          component={ChevronDown}
+          size={8}
+          rotate={accordionOpen ? "180" : "0"}
+          onClick={() => setAccordionOpen(!accordionOpen)}
+          padding="0px"
+          margin="-2px 0px 0px 8px"
+          alt="Click to view more information about this transaction"
+        />
       </QuoteDetailLine>
       <AccordionContainer open={accordionOpen}>
         <QuoteDetailLine>
@@ -221,7 +236,7 @@ const QuoteDetails = ({
           <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
           <QuoteDetailValue>{`${priceImpact.toHuman("short")}%`}</QuoteDetailValue>
           <IconContainer>
-            <Tooltip 
+            <Tooltip
               offsetX={-89}
               offsetY={320}
               arrowSize={4}
@@ -230,21 +245,19 @@ const QuoteDetails = ({
               width={283}
               content={
                 <>
-                <div>*PRICE IMPACT*</div>
-                Change in Token price on this Well caused directly by this action.
+                  <div>*PRICE IMPACT*</div>
+                  Change in Token price on this Well caused directly by this action.
                 </>
-              }>
-                <Info color={"#9CA3AF"} />
+              }
+            >
+              <Info color={"#9CA3AF"} />
             </Tooltip>
           </IconContainer>
         </QuoteDetailLine>
         <QuoteDetailLine>
           <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
           <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
-          <SlippagePanel
-            slippageValue={slippage}
-            handleSlippageValueChange={handleSlippageValueChange}
-          />
+          <SlippagePanel slippageValue={slippage} handleSlippageValueChange={handleSlippageValueChange} />
         </QuoteDetailLine>
         <QuoteDetailLine>
           <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>
@@ -265,20 +278,20 @@ type QuoteDetailProps = {
 
 type AccordionProps = {
   open?: boolean;
-}
+};
 
 const IconContainer = styled.div`
   margin-left: 10px;
   margin-top: 2px;
   margin-bottom: -2px;
   cursor: pointer;
-`
+`;
 
 const AccordionContainer = styled.div<AccordionProps>`
-  height: ${(props) => (props.open ? '94px' : '0px')};
-  overflow: ${(props) => (props.open ? 'visible' : 'hidden')};
-  transition: height 0.2s
-`
+  height: ${(props) => (props.open ? "94px" : "0px")};
+  overflow: ${(props) => (props.open ? "visible" : "hidden")};
+  transition: height 0.2s;
+`;
 
 const QuoteDetailLabel = styled.div<QuoteDetailProps>`
   align-items: flex-start;
@@ -299,7 +312,7 @@ const QuoteDetailLine = styled.div<QuoteDetailProps>`
   display: flex;
   flex-direction: row;
   width: 100%;
-  cursor: ${(props) => (props.cursor ?? "auto")};
+  cursor: ${(props) => props.cursor ?? "auto"};
 `;
 
 const QuoteContainer = styled.div`

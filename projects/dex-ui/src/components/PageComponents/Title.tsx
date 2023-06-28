@@ -48,7 +48,7 @@ const TitleContainer = styled.div<TitleContainerProps>`
 
 const TitleText = styled.div<TitleProps>`
   ${BodyL}
-  ${(props) => (props.fontweight && `font-weight: ${props.fontweight}`)};
+  ${(props) => props.fontweight && `font-weight: ${props.fontweight}`};
   text-transform: uppercase;
 `;
 const ParentText = styled(Link)`

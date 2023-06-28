@@ -236,10 +236,10 @@ const TransferForm: FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleSetBalanceFrom, account, toMode]);
 
-  /// Checks
+  /// Approval Checks
   const shouldApprove =
     fromMode === FarmFromMode.EXTERNAL ||
-    fromMode === FarmFromMode.INTERNAL_EXTERNAL;
+    fromMode === FarmFromMode.INTERNAL_EXTERNAL && amount?.gt(balances[tokenIn.address]?.internal);
 
   const amountsCheck = amount?.gt(0);
   const enoughBalanceCheck = amount

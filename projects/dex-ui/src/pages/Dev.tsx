@@ -70,7 +70,9 @@ export const Dev = () => {
       <span>Give yourself some tokens</span>
       <Container>{rows}</Container>
       <hr />
-      <Row><Button onClick={mine} label={"Mine Block"} disabled={false} loading={false} /></Row>
+      <Row>
+        <Button onClick={mine} label={"Mine Block"} disabled={false} loading={false} />
+      </Row>
     </Page>
   );
 };

@@ -14,4 +14,3 @@ export enum LIQUIDITY_OPERATION_TYPE {
   ADD,
   REMOVE
 }
-
