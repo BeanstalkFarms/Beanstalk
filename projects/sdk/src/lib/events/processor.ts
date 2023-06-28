@@ -10,6 +10,7 @@ import {
 } from "src/constants/generated/protocol/abi/Beanstalk";
 import { StringMap } from "../../types";
 import { BeanstalkSDK } from "../BeanstalkSDK";
+import { EventManager } from "src/lib/events/EventManager";
 
 // ----------------------------------------
 
@@ -61,10 +62,6 @@ export type EventProcessorData = {
   >;
 };
 
-export type EventKeys = "event" | "args" | "blockNumber" | "transactionIndex" | "transactionHash" | "logIndex";
-export type Simplify<T extends ethers.Event> = Pick<T, EventKeys> & { returnValues?: any };
-export type Event = Simplify<ethers.Event>;
-
 //
 
 export class EventProcessor {
@@ -99,7 +96,7 @@ export class EventProcessor {
     this.plots = initialState?.plots || {};
   }
 
-  ingest<T extends Event>(event: T) {
+  ingest<T extends EventManager.Event>(event: T) {
     if (!event.event) {
       return;
     }
@@ -110,7 +107,7 @@ export class EventProcessor {
     return this[event.event as typeof SupportedEvents[number]]?.(event as any);
   }
 
-  ingestAll<T extends Event>(events: T[]) {
+  ingestAll<T extends EventManager.Event>(events: T[]) {
     events.forEach((event) => {
       this.ingest(event);
     });
@@ -125,7 +122,7 @@ export class EventProcessor {
   }
 
   // Utils
-  getToken(event: Event): Token {
+  getToken(event: EventManager.Event): Token {
     const token = this.sdk.tokens.findByAddress(event?.args?.token);
     if (!token) {
       this.sdk.debug("token not found for this event", { event });
@@ -383,7 +380,7 @@ export class EventProcessor {
     }
   }
 
-  AddDeposit(event: Simplify<AddDepositEvent>) {
+  AddDeposit(event: EventManager.Simplify<AddDepositEvent>) {
     const token = this.getToken(event);
     const stem = event.args.stem.toString();
 
@@ -396,13 +393,13 @@ export class EventProcessor {
     });
   }
 
-  RemoveDeposit(event: Simplify<RemoveDepositEvent>) {
+  RemoveDeposit(event: EventManager.Simplify<RemoveDepositEvent>) {
     const token = this.getToken(event);
     const stem = event.args.stem.toString();
     this._removeDeposit(stem, token, event.args.amount);
   }
 
-  RemoveDeposits(event: Simplify<RemoveDepositsEvent>) {
+  RemoveDeposits(event: EventManager.Simplify<RemoveDepositsEvent>) {
     const token = this.getToken(event);
     event.args.stems.forEach((stem, index) => {
       this._removeDeposit(stem.toString(), token, event.args.amounts[index]);

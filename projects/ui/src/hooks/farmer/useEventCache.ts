@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux';
+import { EventManager } from '@beanstalk/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import useChainId from '~/hooks/chain/useChainId';
 import { getEventCacheId } from '~/util/State';
 import { AppState } from '~/state';
-import { EventCacheName } from '~/state/farmer/events2';
 
 // use this instead of returning {} to avoid unnecessary rerenders
 const defaultEmpty = {};
@@ -15,7 +15,7 @@ const defaultEmpty = {};
  * @returns empty object if this cache does not exist
  * @returns cache
  */
-export default function useEventCache(cacheId: EventCacheName) {
+export default function useEventCache(cacheId: EventManager.Group) {
   const chainId = useChainId();
   const account = useAccount();
   const id = account ? getEventCacheId(chainId, account, cacheId) : undefined;

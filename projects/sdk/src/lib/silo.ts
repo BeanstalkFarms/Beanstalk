@@ -224,7 +224,7 @@ export class Silo {
     const balance: TokenSiloBalance = utils.makeTokenSiloBalance();
 
     if (source === DataSource.LEDGER) {
-      const events = await Silo.sdk.events.getSiloEvents(account, _token.address);
+      const events = await Silo.sdk.events.get("silo", [account, { token: _token }]);
       const processor = new EventProcessor(Silo.sdk, account);
       const { deposits } = processor.ingestAll(events);
 
@@ -305,7 +305,7 @@ export class Silo {
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
-      const events = await Silo.sdk.events.getSiloEvents(account);
+      const events = await Silo.sdk.events.get("silo", [account]);
       const processor = new EventProcessor(Silo.sdk, account);
       const { deposits } = processor.ingestAll(events);
 

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { EventCacheName, FarmerEvents } from '~/state/farmer/events2';
+import { FarmerEvents } from '~/state/farmer/events2';
 
 /**
  * Return the key at which Farmer events should be held in localStorage.
@@ -11,7 +11,7 @@ import { EventCacheName, FarmerEvents } from '~/state/farmer/events2';
 export const getEventCacheId = (
   chainId: number,
   account: string,
-  cacheId: EventCacheName
+  cacheId: string
 ) => `${chainId}-${account.toLowerCase()}-${cacheId}`;
 
 export const clearApolloCache = () => {

@@ -7,13 +7,11 @@ import { BEAN, STALK } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
 import { bigNumberResult, tokenResult, tokenValueToBN } from '~/util';
-import useBlocks from '~/hooks/ledger/useBlocks';
 import useAccount from '~/hooks/ledger/useAccount';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { DepositCrate } from '.';
-import { EventCacheName } from '../events2';
-import useEvents, { GetQueryFilters } from '../events2/updater';
+import useEvents, { GetEventsFn } from '../events2/updater';
 import {
   resetFarmerSilo,
   updateFarmerSiloBalances,
@@ -28,53 +26,27 @@ export const useFetchFarmerSilo = () => {
 
   /// Contracts
   const beanstalk = useBeanstalkContract();
+  const sdk = useSdk();
 
   /// Data
   const account = useAccount();
-  const blocks = useBlocks();
   const whitelist = useWhitelist();
   const season = useSeason();
 
   /// Events
-  const getQueryFilters = useCallback<GetQueryFilters>(
-    (_account, fromBlock, toBlock) => [
-      // Silo (Generalized v2)
-      beanstalk.queryFilter(
-        beanstalk.filters.AddDeposit(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.AddWithdrawal(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveWithdrawal(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveWithdrawals(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveDeposit(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.RemoveDeposits(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-    ],
-    [beanstalk, blocks.BEANSTALK_GENESIS_BLOCK]
+  const getEvents = useCallback<GetEventsFn>(
+    async (_account, fromBlock, toBlock) =>
+      sdk.events.get('silo', [
+        _account,
+        {
+          token: undefined, // get all tokens
+          fromBlock, // let cache system choose where to start
+          toBlock, // let cache system choose where to end
+        },
+      ]),
+    [sdk.events]
   );
-
-  const sdk = useSdk();
-  const [fetchSiloEvents] = useEvents(EventCacheName.SILO, getQueryFilters);
+  const [fetchSiloEvents] = useEvents('silo', getEvents);
 
   ///
   const initialized = !!(

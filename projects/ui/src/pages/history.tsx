@@ -2,14 +2,13 @@ import { Container } from '@mui/system';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Card, Divider, Grid, Stack, Tab } from '@mui/material';
-import { Event } from '@beanstalk/sdk';
+import { EventManager } from '@beanstalk/sdk';
 import EventItem from '~/components/History/EventItem';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import { AppState } from '~/state';
 import useAccount from '../hooks/ledger/useAccount';
 import useChainId from '../hooks/chain/useChainId';
 import { getEventCacheId } from '../util/State';
-import { EventCacheName } from '../state/farmer/events2';
 import EmptyState from '../components/Common/ZeroState/EmptyState';
 import { Module, ModuleContent, ModuleTabs } from '~/components/Common/Module';
 
@@ -17,8 +16,8 @@ import { FC } from '~/types';
 
 const facetByTab = {
   0: undefined,
-  1: EventCacheName.SILO,
-  2: EventCacheName.FIELD,
+  1: 'silo',
+  2: 'field',
 };
 
 const TransactionHistoryPage: FC<{}> = () => {
@@ -27,7 +26,7 @@ const TransactionHistoryPage: FC<{}> = () => {
   const events = useSelector<AppState, AppState['_farmer']['events2']>(
     (state) => state._farmer.events2
   );
-  const [walletEvents, setWalletEvents] = useState<Event[]>();
+  const [walletEvents, setWalletEvents] = useState<EventManager.Event[]>();
   const chainId = useChainId();
 
   const handleSetTab = (event: React.SyntheticEvent, newValue: 0 | 1 | 2) =>
@@ -38,7 +37,7 @@ const TransactionHistoryPage: FC<{}> = () => {
       if (account) {
         if (tab === 0) {
           // ALL EVENTS
-          const allEvents = Object.keys(events).reduce<Event[]>(
+          const allEvents = Object.keys(events).reduce<EventManager.Event[]>(
             (prev, curr) => {
               const eventsByCacheId = events[curr].events;
               return prev.concat(eventsByCacheId);

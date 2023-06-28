@@ -11,7 +11,7 @@ export { Workflow } from "src/classes/Workflow";
 export { DecimalBigNumber } from "src/classes/DecimalBigNumber";
 export { SwapOperation } from "src/lib/swap/SwapOperation";
 export { EventProcessor } from "src/lib/events/processor";
-export type { Event } from "src/lib/events/processor";
+export type { EventManager } from "src/lib/events/EventManager";
 
 // Modules
 export { FarmWorkflow, FarmFromMode, FarmToMode } from "src/lib/farm";
