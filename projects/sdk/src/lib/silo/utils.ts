@@ -181,20 +181,20 @@ export function calculateGrownStalk(
 export function applyDeposit(
   balance: TokenSiloBalance,
   token: Token,
-  rawCrate: {
+  stemTip: ethers.BigNumberish,
+  rawDeposit: {
     season: string | number;
     amount: string;
     bdv: string;
-  },
-  currentSeason: ethers.BigNumberish
+  }
 ) {
-  const crate = makeDepositCrate(token, rawCrate.season, rawCrate.amount, rawCrate.bdv, currentSeason);
+  const deposit = makeDepositCrate(token, rawDeposit.season, rawDeposit.amount, rawDeposit.bdv, stemTip);
 
-  balance.amount = balance.amount.add(crate.amount);
-  balance.bdv = balance.bdv.add(crate.bdv);
-  balance.deposits.push(crate);
+  balance.amount = balance.amount.add(deposit.amount);
+  balance.bdv = balance.bdv.add(deposit.bdv);
+  balance.deposits.push(deposit);
 
-  return crate;
+  return deposit;
 }
 
 export function sumDeposits(token: ERC20Token, crates: Deposit[]) {

@@ -1,20 +1,16 @@
 import { BigNumber } from "ethers";
-import { Source } from "graphql";
-import { sum } from "lodash";
-import { Token } from "src/classes/Token";
-import { TokenValue } from "src/TokenValue";
 import { getTestUtils } from "src/utils/TestUtils/provider";
 import { Deposit } from "../silo/types";
 import { pickCrates } from "./utils";
 import { Withdraw } from "./Withdraw";
 
-const { sdk, account, utils } = getTestUtils();
+const { sdk } = getTestUtils();
 
 jest.setTimeout(30000);
 
 describe("Silo Utils", function () {
-  const withdraw = new Withdraw(sdk);
-  const token = sdk.tokens.BEAN;
+  // const withdraw = new Withdraw(sdk);
+  // const token = sdk.tokens.BEAN;
 
   beforeAll(async () => {});
 
