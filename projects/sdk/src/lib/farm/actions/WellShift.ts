@@ -20,16 +20,6 @@ export class WellShift extends StepClass<AdvancedPipePreparedResult> {
 
     const reversed = context.runMode === RunMode.EstimateReversed;
 
-    WellShift.sdk.debug(`>[${this.name}.run()]`, {
-      well: well.name,
-      wellAddress: this.wellAddress,
-      toToken: this.toToken.symbol,
-      amountInStep: _amountInStep,
-      recipient: this.recipient,
-      reversed,
-      context
-    });
-
     if (reversed) {
       throw new Error("Reverse direction is not supported by shift()");
     }

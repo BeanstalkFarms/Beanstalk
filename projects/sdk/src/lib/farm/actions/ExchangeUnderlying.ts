@@ -18,15 +18,6 @@ export class ExchangeUnderlying extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    ExchangeUnderlying.sdk.debug(`>[${this.name}.run()]`, {
-      pool: this.pool,
-      tokenIn: this.tokenIn.symbol,
-      tokenOut: this.tokenOut.symbol,
-      amountInStep: _amountInStep,
-      fromMode: this.fromMode,
-      toMode: this.toMode,
-      context
-    });
     const [tokenIn, tokenOut] = Workflow.direction(
       this.tokenIn,
       this.tokenOut,

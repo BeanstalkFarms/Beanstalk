@@ -15,11 +15,6 @@ export class WithdrawDeposit extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    WithdrawDeposit.sdk.debug(`[${this.name}.run()]`, {
-      tokenIn: this._tokenIn,
-      stem: this._stem,
-      amount: this._amount
-    });
     return {
       name: this.name,
       amountOut: _amountInStep,
