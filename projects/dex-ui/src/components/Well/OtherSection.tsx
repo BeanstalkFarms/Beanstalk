@@ -9,7 +9,6 @@ type Props = {
 };
 
 export const OtherSection: FC<Props> = ({ well }) => {
-
   return (
     <div>
       <Table width="100%">
@@ -30,18 +29,27 @@ export const OtherSection: FC<Props> = ({ well }) => {
             </Td>
             </Row>*/}
           <Row>
-            <Td><Detail>Well Address</Detail></Td>
-            <Td><Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link></Td>
+            <Td>
+              <Detail>Well Address</Detail>
+            </Td>
+            <Td>
+              <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
+            </Td>
           </Row>
-          {well.tokens!.map(function(token, index) {
-              return (
+          {well.tokens!.map(function (token, index) {
+            return (
               <Row key={token.address}>
-                <Td><Detail>{`Token ${index + 1} Address`}</Detail></Td>
-                <Td><Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>{token.address || `-`}</Link></Td>
+                <Td>
+                  <Detail>{`Token ${index + 1} Address`}</Detail>
+                </Td>
+                <Td>
+                  <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>
+                    {token.address || `-`}
+                  </Link>
+                </Td>
               </Row>
-              )
-            }
-          )}
+            );
+          })}
         </TBody>
       </Table>
     </div>
@@ -49,9 +57,9 @@ export const OtherSection: FC<Props> = ({ well }) => {
 };
 
 const Detail = styled.span`
-  color: #4B5563;
-  font-weight: 600; 
-`
+  color: #4b5563;
+  font-weight: 600;
+`;
 
 const Link = styled.a`
   font-weight: 600;
@@ -61,4 +69,4 @@ const Link = styled.a`
   :link {
     color: black;
   }
-`
+`;

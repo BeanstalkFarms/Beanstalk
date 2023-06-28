@@ -27,13 +27,13 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
     for (let i = 0; i < chartData.length; i++) {
       _liquidityData.push({
         time: Number(chartData[i].lastUpdateTimestamp),
-        value: Number(chartData[i].totalLiquidityUSD).toFixed(2),
+        value: Number(chartData[i].totalLiquidityUSD).toFixed(2)
       });
       _volumeData.push({
         time: Number(chartData[i].lastUpdateTimestamp),
-        value: Number(chartData[i].deltaVolumeUSD).toFixed(2),
+        value: Number(chartData[i].deltaVolumeUSD).toFixed(2)
       });
-    };
+    }
     setLiquidityData([..._liquidityData]);
     setVolumeData([..._volumeData]);
   }, [chartData]);
@@ -58,8 +58,8 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
       setDropdownButtonText("1 MONTH");
     } else {
       setDropdownButtonText("ALL");
-    };
-  };
+    }
+  }
 
   return (
     <Container id="chart-section">
@@ -70,19 +70,47 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
         <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} hover>
           VOLUME
         </TabButton>
-        <FilterButton onClick={() => {setShowDropdown(!showDropdown)}}>
+        <FilterButton
+          onClick={() => {
+            setShowDropdown(!showDropdown);
+          }}
+        >
           {dropdownButtonText} <ChevronDown width={6} />
           <Dropdown enabled={showDropdown}>
-            <DropdownItem stretch hover onClick={() => {setChartRange("day")}}>
+            <DropdownItem
+              stretch
+              hover
+              onClick={() => {
+                setChartRange("day");
+              }}
+            >
               1 DAY
             </DropdownItem>
-            <DropdownItem stretch hover onClick={() => {setChartRange("week")}}>
+            <DropdownItem
+              stretch
+              hover
+              onClick={() => {
+                setChartRange("week");
+              }}
+            >
               1 WEEK
             </DropdownItem>
-            <DropdownItem stretch hover onClick={() => {setChartRange("month")}}>
+            <DropdownItem
+              stretch
+              hover
+              onClick={() => {
+                setChartRange("month");
+              }}
+            >
               1 MONTH
             </DropdownItem>
-            <DropdownItem stretch hover onClick={() => {setChartRange("all")}}>
+            <DropdownItem
+              stretch
+              hover
+              onClick={() => {
+                setChartRange("all");
+              }}
+            >
               ALL
             </DropdownItem>
           </Dropdown>
@@ -99,14 +127,14 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
 const ChartLoader = styled(ChartContainer)`
   justify-content: center;
   align-items: center;
-`
+`;
 
-const Dropdown = styled.div<{enabled: boolean}>`
+const Dropdown = styled.div<{ enabled: boolean }>`
   position: absolute;
   top: 49px;
   right: 0px;
   width: 120px;
-  visibility: ${ (props) => props.enabled ? 'visible' : 'hidden' };
+  visibility: ${(props) => (props.enabled ? "visible" : "hidden")};
 `;
 
 const DropdownItem = styled(TabButton)`
@@ -120,7 +148,7 @@ const Container = styled.div`
   flex-direction: column;
   outline: 0.5px solid #9ca3af;
   outline-offset: -0.5px;
-  background-color: #F9F8F6;
+  background-color: #f9f8f6;
 `;
 
 const FilterButton = styled.div`
@@ -135,10 +163,10 @@ const FilterButton = styled.div`
   padding: 16px 16px;
   background-color: #fff;
   position: relative;
-  outline: 0.5px solid #9CA3AF;
+  outline: 0.5px solid #9ca3af;
   outline-offset: -0.5px;
   cursor: pointer;
   :hover {
     background-color: #f0fdf4;
-  };
+  }
 `;
