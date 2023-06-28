@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import {
-  // SowEvent,
-  // HarvestEvent,
-  // PlotTransferEvent,
+  SowEvent,
+  HarvestEvent,
+  PlotTransferEvent,
   AddDepositEvent,
   RemoveDepositEvent,
   RemoveDepositsEvent
@@ -123,17 +123,21 @@ export class EventProcessor {
 
   // /// /////////////////////// FIELD //////////////////////////
 
-  Sow(event: Simplify<SowEvent>) {
-    const index = tokenBN(event.args.index, PODS).toString();
-    this.plots[index] = tokenBN(event.args.pods, PODS);
+  Sow(event: EventManager.Simplify<SowEvent>) {
+    this.plots.set(event.args.index.toString(), event.args.pods);
   }
 
-  Harvest(event: Simplify<HarvestEvent>) {
-    let beansClaimed = tokenBN(event.args.beans, Bean);
-    const plots = event.args.plots.map((_index) => tokenBN(_index, Bean)).sort((a, b) => a.minus(b).toNumber());
+  Harvest(event: EventManager.Simplify<HarvestEvent>) {
+    let beansClaimed = event.args.beans;
+
+    const plots = event.args.plots.sort((a, b) => a.sub(b).toNumber());
+
     plots.forEach((indexBN) => {
       const index = indexBN.toString();
-      if (beansClaimed.isLessThan(this.plots[index])) {
+      const plot = this.plots.get(index); // get the number of Pods stored at this index
+
+      if (!plot) return;
+      if (beansClaimed.lt(plot)) {
         // ----------------------------------------
         // A Plot was partially Harvested. Example:
         // Event: Sow
@@ -152,16 +156,17 @@ export class EventProcessor {
         // Add Plot with 6 Pods at index 14
         // Remove Plot at index 10.
         // ----------------------------------------
-        const partialIndex = beansClaimed.plus(indexBN);
-        const partialAmount = this.plots[index].minus(beansClaimed);
-        this.plots = {
-          ...this.plots,
-          [partialIndex.toString()]: partialAmount
-        };
+        const partialIndex = beansClaimed.add(indexBN); // index of new plot
+        const partialAmount = plot.sub(beansClaimed); // remaining pods in new plot
+
+        this.plots.set(partialIndex.toString(), partialAmount); // add new plot (with remaining pods)
       } else {
-        beansClaimed = beansClaimed.minus(this.plots[index]);
+        // This plot was fully harvested; it'll be deleted below
+        beansClaimed = beansClaimed.sub(plot);
       }
-      delete this.plots[index];
+
+      // Always delete the old plot
+      this.plots.delete(index);
     });
   }
 
