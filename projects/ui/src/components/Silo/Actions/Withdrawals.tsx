@@ -26,10 +26,10 @@ const Withdrawals: FC<{
   const rows: RowData[] = useMemo(() => {
     const data: RowData[] = [];
     if (siloBalance) {
-      if (siloBalance.claimable.amount.gt(0)) {
+      if (siloBalance.claimable?.amount.gt(0)) {
         data.push({
           id: currentSeason,
-          amount: siloBalance.claimable.amount,
+          amount: siloBalance.claimable?.amount || ZERO_BN,
           season: currentSeason,
         });
       }
@@ -93,7 +93,7 @@ const Withdrawals: FC<{
     [token, getUSD, currentSeason]
   );
 
-  const amount = siloBalance?.withdrawn.amount;
+  const amount = siloBalance?.withdrawn?.amount;
   const state = !account
     ? 'disconnected'
     : !currentSeason
