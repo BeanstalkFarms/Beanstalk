@@ -117,7 +117,7 @@
     "eslint-plugin-storybook": "^0.6.3",
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^8.0.0",
-    "netlify-cli": "^10.5.1",
+    "netlify-cli": "^15.7.0",
     "rollup-plugin-analyzer": "^4.0.0",
     "sass": "1.63.6",
     "typechain": "^8.0.0",

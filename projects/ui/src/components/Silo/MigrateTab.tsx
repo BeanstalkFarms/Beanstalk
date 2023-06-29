@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import Row from '~/components/Common/Row';
 import Centered from '~/components/Common/ZeroState/Centered';
-import { MigratePreview } from '~/components/Silo/MigratePreview';
+import { Migrate } from '~/components/Silo/Actions/Migrate';
 import { DISCORD_LINK } from '~/constants';
 
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
@@ -41,6 +41,19 @@ export const MigrateTab: FC<{}> = () => {
         <Typography sx={{ mt: 2 }}>
           Checking your migration status...
         </Typography>
+      </Centered>
+    );
+  }
+
+  if (migrationNeeded === false) {
+    return (
+      <Centered minHeight="300px">
+        <Stack spacing={2} maxWidth={550}>
+          <Typography variant="h1" textAlign="center">
+            You&apos;re migrated!
+          </Typography>
+          <Row spacing={1}>Test</Row>
+        </Stack>
       </Centered>
     );
   }
@@ -224,7 +237,7 @@ export const MigrateTab: FC<{}> = () => {
           )}
         </Centered>
       ) : null}
-      {step === 9 && <MigratePreview />}
+      {step === 9 && <Migrate />}
     </Box>
   );
 };

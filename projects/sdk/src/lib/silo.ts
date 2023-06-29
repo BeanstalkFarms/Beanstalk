@@ -20,6 +20,7 @@ export class Silo {
   siloWithdraw: Withdraw;
   siloTransfer: Transfer;
   siloConvert: Convert;
+
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
   // FIXME
@@ -32,6 +33,9 @@ export class Silo {
     this.siloTransfer = new Transfer(sdk);
     this.siloConvert = new Convert(sdk);
   }
+
+  public calculateGrownStalk = utils.calculateGrownStalkStems;
+  public calculateGrownStalkSeeds = utils.calculateGrownStalkSeeds;
 
   /**
    * Mowing adds Grown Stalk to stalk balance

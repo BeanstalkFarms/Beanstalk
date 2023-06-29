@@ -39,3 +39,5 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 .DS_Store
+# Local Netlify folder
+.netlify

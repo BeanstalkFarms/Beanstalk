@@ -175,6 +175,10 @@ export function calculateGrownStalkSeeds(
 /**
  * Formula: `grownStalk = bdv * (stemTip - stem)`
  * See: LibTokenSilo.grownStalkForDeposit
+ *
+ * @param stemTip The current stem tip for the token that is deposited
+ * @param stem The stem of the deposit
+ * @param bdv The bdv of the deposit
  */
 export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
   const deltaStem = stemTip.sub(stem);
