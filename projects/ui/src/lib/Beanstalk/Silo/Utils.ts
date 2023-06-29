@@ -1,9 +1,9 @@
-import { Crate, DepositCrate } from '~/state/farmer/silo';
+import { LegacyCrate, LegacyDepositCrate } from '~/state/farmer/silo';
 
 /**
  * Order crates by Season.
  */
-export function sortCratesBySeason<T extends Crate>(
+export function sortCratesBySeason<T extends LegacyCrate>(
   crates: T[],
   direction: 'asc' | 'desc' = 'desc'
 ) {
@@ -14,7 +14,7 @@ export function sortCratesBySeason<T extends Crate>(
 /**
  * Order crates by BDV.
  */
-export function sortCratesByBDVRatio<T extends DepositCrate>(
+export function sortCratesByBDVRatio<T extends LegacyDepositCrate>(
   crates: T[],
   direction: 'asc' | 'desc' = 'asc'
 ) {

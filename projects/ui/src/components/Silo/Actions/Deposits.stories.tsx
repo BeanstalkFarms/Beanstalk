@@ -3,9 +3,9 @@ import { ComponentMeta, ComponentStory } from '@storybook/react';
 import BigNumber from 'bignumber.js';
 import Deposits from './Deposits';
 import {
-  DepositCrate,
+  LegacyDepositCrate,
   FarmerSiloBalance,
-  WithdrawalCrate,
+  LegacyWithdrawalCrate,
 } from '../../../state/farmer/silo';
 import { BEAN_ETH_UNIV2_LP } from '../../../constants/tokens';
 import { SupportedChainId } from '../../../constants/chains';
@@ -15,7 +15,7 @@ export default {
   args: {},
 } as ComponentMeta<typeof Deposits>;
 
-const deposit: DepositCrate = {
+const deposit: LegacyDepositCrate = {
   season: new BigNumber(100),
   amount: new BigNumber(100),
   bdv: new BigNumber(100),
@@ -23,7 +23,7 @@ const deposit: DepositCrate = {
   seeds: new BigNumber(100),
 };
 
-const deposit2: DepositCrate = {
+const deposit2: LegacyDepositCrate = {
   season: new BigNumber(345),
   amount: new BigNumber(345),
   bdv: new BigNumber(345),
@@ -31,12 +31,12 @@ const deposit2: DepositCrate = {
   seeds: new BigNumber(345),
 };
 
-const withdrawal: WithdrawalCrate = {
+const withdrawal: LegacyWithdrawalCrate = {
   season: new BigNumber(698),
   amount: new BigNumber(760),
 };
 
-const withdrawal2: WithdrawalCrate = {
+const withdrawal2: LegacyWithdrawalCrate = {
   season: new BigNumber(345),
   amount: new BigNumber(753460),
 };

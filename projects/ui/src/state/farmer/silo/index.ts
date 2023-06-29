@@ -5,7 +5,7 @@ import { TokenMap } from '~/constants';
  * A Crate is an `amount` of a token Deposited or
  * Withdrawn during a given `season`.
  */
-export type Crate = {
+export type LegacyCrate = {
   /** The amount of this Crate that was created, denominated in the underlying Token. */
   amount: BigNumberJS;
   /** The Season that the Crate was created. */
@@ -16,7 +16,7 @@ export type Crate = {
  * A "Deposit" represents an amount of a Whitelisted Silo Token
  * that has been added to the Silo.
  */
-export type DepositCrate = Crate & {
+export type LegacyDepositCrate = LegacyCrate & {
   /** The BDV of the Deposit, determined upon Deposit. */
   bdv: BigNumberJS;
   /** The amount of Stalk granted for this Deposit. */
@@ -30,7 +30,7 @@ export type DepositCrate = Crate & {
  * that was removed from the Silo. Withdrawals remain pending
  * for several seasons until they are ready to be Claimed.
  */
-export type WithdrawalCrate = Crate & {};
+export type LegacyWithdrawalCrate = LegacyCrate & {};
 
 /**
  * A "Silo Balance" provides all information
@@ -39,30 +39,33 @@ export type WithdrawalCrate = Crate & {};
 export type FarmerSiloBalance = {
   /** Season in which the farmer last updated their Silo */
   lastUpdate: BigNumberJS;
+
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
     amount: BigNumberJS;
     /** The BDV of this Token currently in the Deposited state. */
     bdv: BigNumberJS;
     /** All Deposit crates. */
-    crates: DepositCrate[];
+    crates: LegacyDepositCrate[];
   };
+
+  /** @deprecated */
   withdrawn: {
     /** The total amount of this Token currently in the Withdrawn state. */
     amount: BigNumberJS;
     /** */
     bdv: BigNumberJS;
     /** All Withdrawal crates. */
-    crates: WithdrawalCrate[];
+    crates: LegacyWithdrawalCrate[];
   };
+
+  /** @deprecated */
   claimable: {
     /** The total amount of this Token currently in the Claimable state. */
     amount: BigNumberJS;
     /** All Claimable crates. */
-    crates: Crate[];
+    crates: LegacyCrate[];
   };
-  wrapped: BigNumberJS;
-  circulating: BigNumberJS;
 };
 
 /**

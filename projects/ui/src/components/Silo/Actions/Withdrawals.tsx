@@ -4,7 +4,7 @@ import { useAccount as useWagmiAccount } from 'wagmi';
 import { Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
 import { Token } from '~/classes';
-import { FarmerSiloBalance, WithdrawalCrate } from '~/state/farmer/silo';
+import { FarmerSiloBalance, LegacyWithdrawalCrate } from '~/state/farmer/silo';
 import { displayFullBN, displayUSD } from '~/util';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { ZERO_BN } from '~/constants';
@@ -13,7 +13,7 @@ import TableCard from '../../Common/TableCard';
 
 import { FC } from '~/types';
 
-type RowData = WithdrawalCrate & { id: BigNumber };
+type RowData = LegacyWithdrawalCrate & { id: BigNumber };
 
 const Withdrawals: FC<{
   token: Token;

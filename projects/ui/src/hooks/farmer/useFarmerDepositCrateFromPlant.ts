@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import useSdk from '~/hooks/sdk';
 import useSeason from '../beanstalk/useSeason';
 import useFarmerSilo from './useFarmerSilo';
-import { DepositCrate } from '~/state/farmer/silo';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { tokenValueToBN } from '~/util';
 
 /// Returns the deposit crate which will be created via calling 'plant'
@@ -28,7 +28,7 @@ export default function useFarmerDepositCrateFromPlant() {
     const grownStalk = STALK.amount(0);
 
     // asBN => as DepositCrate from UI;
-    const asBN: DepositCrate = {
+    const asBN: LegacyDepositCrate = {
       season,
       amount: earned,
       bdv: earned,

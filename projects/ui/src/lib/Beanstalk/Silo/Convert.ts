@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { Token } from '~/classes';
-import { DepositCrate } from '~/state/farmer/silo';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { sortCratesByBDVRatio, sortCratesBySeason } from './Utils';
 import { STALK_PER_SEED_PER_SEASON } from '~/util';
 
@@ -27,13 +27,13 @@ export function selectCratesToConvert(
   fromToken: Token,
   toToken: Token,
   fromAmount: BigNumber,
-  depositedCrates: DepositCrate[],
+  depositedCrates: LegacyDepositCrate[],
   currentSeason: BigNumber
 ) {
   let totalAmountConverted = new BigNumber(0);
   let totalBDVRemoved = new BigNumber(0);
   let totalStalkRemoved = new BigNumber(0);
-  const deltaCrates: DepositCrate[] = [];
+  const deltaCrates: LegacyDepositCrate[] = [];
 
   /// TODO: handle the LP->LP case when we have two LP pools.
   const sortedCrates = toToken.isLP
@@ -41,11 +41,11 @@ export function selectCratesToConvert(
       /// on both sides of the convert, but having more seeds in older crates
       /// allows you to accrue stalk faster after convert.
       /// Note that during this convert, BDV is approx. equal after the convert.
-      sortCratesBySeason<DepositCrate>(depositedCrates, 'asc')
+      sortCratesBySeason<LegacyDepositCrate>(depositedCrates, 'asc')
     : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
       /// Since LP deposits can have varying BDV, the best option for the Farmer
       /// is to increase the BDV of their existing lowest-BDV crates.
-      sortCratesByBDVRatio<DepositCrate>(depositedCrates, 'asc');
+      sortCratesByBDVRatio<LegacyDepositCrate>(depositedCrates, 'asc');
 
   /// FIXME: symmetry with `Withdraw`
   sortedCrates.some((crate) => {
@@ -107,7 +107,7 @@ export function convert(
   fromToken: Token,
   toToken: Token,
   fromAmount: BigNumber,
-  depositedCrates: DepositCrate[],
+  depositedCrates: LegacyDepositCrate[],
   currentSeason: BigNumber
 ) {
   const { deltaAmount, deltaBDV, deltaStalk, deltaCrates } =

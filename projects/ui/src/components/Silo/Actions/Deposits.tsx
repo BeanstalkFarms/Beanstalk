@@ -5,7 +5,7 @@ import { Stack, Tooltip, Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
 import { Token } from '~/classes';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
-import type { DepositCrate } from '~/state/farmer/silo';
+import type { LegacyDepositCrate } from '~/state/farmer/silo';
 import { calculateGrownStalk, displayBN, displayFullBN } from '~/util';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { BEAN, STALK } from '~/constants/tokens';
@@ -33,7 +33,7 @@ const Deposits: FC<
   const currentSeason = useSeason();
   const account = useWagmiAccount();
 
-  const rows: (DepositCrate & { id: BigNumber })[] = useMemo(
+  const rows: (LegacyDepositCrate & { id: BigNumber })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
         id: deposit.season,

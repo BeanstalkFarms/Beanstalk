@@ -24,7 +24,7 @@ import {
   updateFarmerSiloRewards,
 } from './actions';
 import useSdk from '~/hooks/sdk';
-import { DepositCrate } from '~/state/farmer/silo';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
 
 type SiloV3StaticData = {
   deposits: {
@@ -197,7 +197,7 @@ export const useFetchFarmerSilo = () => {
                   {
                     amount: ZERO_BN,
                     bdv: ZERO_BN,
-                    crates: [] as DepositCrate[], // FIXME
+                    crates: [] as LegacyDepositCrate[], // FIXME
                   }
                 ),
               },

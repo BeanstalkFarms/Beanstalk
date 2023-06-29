@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { BEAN } from '~/constants/tokens';
-import { DepositCrate } from '~/state/farmer/silo';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { STALK_PER_SEED_PER_SEASON } from '~/util';
 import Beanstalk from '../index';
 
@@ -27,7 +27,7 @@ export const depositedCrates = [
     stalk: new BigNumber(5),
     seeds: new BigNumber(10),
   },
-] as DepositCrate[];
+] as LegacyDepositCrate[];
 
 // --------------------------------------------------------
 

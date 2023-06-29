@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import Token from '~/classes/Token';
 import { FormStateNew } from '~/components/Common/Form';
-import { DepositCrate } from '~/state/farmer/silo';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { STALK_PER_SEED_PER_SEASON } from '~/util';
 import { sortCratesBySeason } from './Utils';
 
@@ -16,14 +16,14 @@ import { sortCratesBySeason } from './Utils';
 export function selectCratesToWithdraw(
   token: Token,
   amount: BigNumber,
-  depositedCrates: DepositCrate[],
+  depositedCrates: LegacyDepositCrate[],
   currentSeason: BigNumber
 ) {
   let totalAmountRemoved = new BigNumber(0);
   let totalBDVRemoved = new BigNumber(0);
   let totalStalkRemoved = new BigNumber(0);
-  const deltaCrates: DepositCrate[] = [];
-  const sortedCrates = sortCratesBySeason<DepositCrate>(depositedCrates);
+  const deltaCrates: LegacyDepositCrate[] = [];
+  const sortedCrates = sortCratesBySeason<LegacyDepositCrate>(depositedCrates);
 
   /// FIXME: symmetry with `Convert`
   sortedCrates.some((crate) => {
@@ -82,7 +82,7 @@ export function selectCratesToWithdraw(
 export function withdraw(
   from: Token,
   tokens: FormStateNew['tokens'],
-  depositedCrates: DepositCrate[],
+  depositedCrates: LegacyDepositCrate[],
   currentSeason: BigNumber
 ) {
   if (tokens.length > 1) {

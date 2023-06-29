@@ -3,10 +3,10 @@ import Token from '~/classes/Token';
 import { TokenMap, ZERO_BN } from '~/constants';
 import { Beanstalk } from '~/generated';
 import {
-  Crate,
-  DepositCrate,
+  LegacyCrate,
+  LegacyDepositCrate,
   FarmerSiloBalance,
-  WithdrawalCrate,
+  LegacyWithdrawalCrate,
 } from '~/state/farmer/silo';
 import { SeasonMap } from '~/util';
 
@@ -41,8 +41,8 @@ export function parseWithdrawals(
 } {
   let transitBalance = ZERO_BN;
   let receivableBalance = ZERO_BN;
-  const transitWithdrawals: WithdrawalCrate[] = [];
-  const receivableWithdrawals: WithdrawalCrate[] = [];
+  const transitWithdrawals: LegacyWithdrawalCrate[] = [];
+  const receivableWithdrawals: LegacyWithdrawalCrate[] = [];
 
   /// Split each withdrawal between `receivable` and `transit`.
   Object.keys(withdrawals).forEach((season: string) => {
@@ -91,7 +91,7 @@ export const selectCratesForEnroot = (
   getBDV: (_token: Token) => BigNumber
 ) =>
   Object.keys(unripeTokens).reduce<{
-    [addr: string]: { crates: DepositCrate[]; encoded: string };
+    [addr: string]: { crates: LegacyDepositCrate[]; encoded: string };
   }>((prev, addr) => {
     const crates = siloBalances[addr]?.deposited.crates.filter((crate) =>
       /// only select crates where BDV would stay the same or increase
@@ -117,8 +117,8 @@ export const selectCratesForEnroot = (
           encoded: beanstalk.interface.encodeFunctionData('enrootDeposits', [
             addr,
             // fixme: not sure why TS doesn't pick up the type of `crates` here
-            crates.map((crate: Crate) => crate.season.toString()), // seasons
-            crates.map((crate: Crate) =>
+            crates.map((crate: LegacyCrate) => crate.season.toString()), // seasons
+            crates.map((crate: LegacyCrate) =>
               unripeTokens[addr].stringify(crate.amount)
             ), // amounts
           ]),
