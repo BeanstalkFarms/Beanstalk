@@ -69,8 +69,8 @@ export const useFetchFarmerSilo = () => {
         seedBalance,
         rootBalance,
         earnedBeanBalance,
-        lastUpdate,
         migrationNeeded,
+        // lastUpdate,
         // allEvents = [],
       ] = await Promise.all([
         // FIXME: multicall this section
@@ -80,8 +80,8 @@ export const useFetchFarmerSilo = () => {
         sdk.silo.getSeeds(account).then(tokenValueToBN),
         beanstalk.balanceOfRoots(account).then(bigNumberResult),
         beanstalk.balanceOfEarnedBeans(account).then(tokenResult(BEAN)),
-        beanstalk.lastUpdate(account).then(bigNumberResult),
         sdk.contracts.beanstalk.migrationNeeded(account),
+        // beanstalk.lastUpdate(account).then(bigNumberResult),
       ] as const);
 
       /// stalk + earnedStalk (bundled together at the contract level)
@@ -119,25 +119,25 @@ export const useFetchFarmerSilo = () => {
         })
       );
 
-      if (!migrationNeeded) {
-        const farmerSiloBalances = await sdk.silo
-          .getBalances(account, { source: DataSource.SUBGRAPH })
-          .then((balances) => {
-            const temp: UpdateFarmerSiloBalancesPayload = {};
-            console.log('balances', balances);
-            balances.forEach((balance, token) => {
-              temp[token.address] = {
-                deposited: {
-                  amount: transform(balance.amount, 'bnjs'),
-                  bdv: transform(balance.bdv, 'bnjs'),
-                  crates: [],
-                },
-              };
-            });
-            return temp;
+      // if (!migrationNeeded) {
+      const farmerSiloBalances = await sdk.silo
+        .getBalances(account, { source: DataSource.SUBGRAPH })
+        .then((balances) => {
+          const temp: UpdateFarmerSiloBalancesPayload = {};
+          console.log('balances', balances);
+          balances.forEach((balance, token) => {
+            temp[token.address] = {
+              deposited: {
+                amount: transform(balance.amount, 'bnjs'),
+                bdv: transform(balance.bdv, 'bnjs'),
+                crates: [],
+              },
+            };
           });
-        dispatch(updateFarmerSiloBalances(farmerSiloBalances));
-      }
+          return temp;
+        });
+      dispatch(updateFarmerSiloBalances(farmerSiloBalances));
+      // }
 
       // const p = new EventProcessor(sdk, account);
       // const results = p.ingestAll(allEvents);

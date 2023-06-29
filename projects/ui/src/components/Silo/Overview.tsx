@@ -157,7 +157,6 @@ const Overview: FC<{
       <Box
         sx={{
           display: tab === 0 ? 'block' : 'none',
-          px: 2,
           minHeight: '400px',
           backgroundColor: 'rgba(244, 244, 244, 0.4)',
         }}

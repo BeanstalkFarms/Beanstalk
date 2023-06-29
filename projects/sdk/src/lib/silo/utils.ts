@@ -178,7 +178,7 @@ export function calculateGrownStalkSeeds(
  */
 export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
   const deltaStem = stemTip.sub(stem);
-  assert(deltaStem.gte(0), "Silo: Cannot calculate grown stalk when `stemTip < stem`.");
+  if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
   return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(deltaStem));
 }
 
