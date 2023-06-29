@@ -1,5 +1,6 @@
 import React, { createContext, useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
+import { useProvider } from 'wagmi';
 import { useSigner } from '~/hooks/ledger/useSigner';
 
 // Ethereum Images
@@ -31,10 +32,17 @@ import unripeBeanCrv3Logo from '~/img/tokens/unripe-lp-logo-circled.svg';
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
 const useBeanstalkSdkContext = () => {
+  const provider = useProvider();
   const { data: signer } = useSigner();
 
   const sdk = useMemo(() => {
+    console.log(`Instantiating BeanstalkSDK`, {
+      provider,
+      signer,
+    });
+
     const _sdk = new BeanstalkSDK({
+      provider: provider as any,
       signer: signer ?? undefined,
       DEBUG: IS_DEVELOPMENT_ENV,
     });
@@ -62,7 +70,7 @@ const useBeanstalkSdkContext = () => {
     _sdk.tokens.LUSD.setMetadata({ logo: lusdLogo });
 
     return _sdk;
-  }, [signer]);
+  }, [provider, signer]);
 
   return sdk;
 };

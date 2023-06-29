@@ -1,8 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import BigNumberJS from 'bignumber.js';
-import { EventProcessor } from '@beanstalk/sdk';
-import { BEAN_TO_SEEDS, BEAN_TO_STALK, ZERO_BN } from '~/constants';
+import { DataSource } from '@beanstalk/sdk';
+import { BEAN_TO_SEEDS, BEAN_TO_STALK } from '~/constants';
 import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
@@ -15,12 +14,11 @@ import {
 import useAccount from '~/hooks/ledger/useAccount';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { DepositCrate } from '.';
-import useEvents, { GetEventsFn } from '../events2/updater';
 import {
   resetFarmerSilo,
   updateFarmerSiloBalances,
   UpdateFarmerSiloBalancesPayload,
+  updateFarmerMigrationStatus,
   updateFarmerSiloRewards,
 } from './actions';
 import useSdk from '~/hooks/sdk';
@@ -39,26 +37,25 @@ export const useFetchFarmerSilo = () => {
   const season = useSeason();
 
   /// Events
-  const getEvents = useCallback<GetEventsFn>(
-    async (_account, fromBlock, toBlock) =>
-      sdk.events.get('silo', [
-        _account,
-        {
-          token: undefined, // get all tokens
-          fromBlock, // let cache system choose where to start
-          toBlock, // let cache system choose where to end
-        },
-      ]),
-    [sdk.events]
-  );
-  const [fetchSiloEvents] = useEvents('silo', getEvents);
+  // const getEvents = useCallback<GetEventsFn>(
+  //   async (_account, fromBlock, toBlock) =>
+  //     sdk.events.get('silo', [
+  //       _account,
+  //       {
+  //         token: undefined, // get all tokens
+  //         fromBlock, // let cache system choose where to start
+  //         toBlock, // let cache system choose where to end
+  //       },
+  //     ]),
+  //   [sdk.events]
+  // );
+  // const [fetchSiloEvents] = useEvents('silo', getEvents);
 
   ///
   const initialized = !!(
-    beanstalk &&
-    account &&
-    fetchSiloEvents &&
-    season?.gt(0)
+    (beanstalk && account && sdk.contracts.beanstalk)
+    // season?.gt(0)
+    // fetchSiloEvents &&
   );
 
   /// Handlers
@@ -73,7 +70,8 @@ export const useFetchFarmerSilo = () => {
         rootBalance,
         earnedBeanBalance,
         lastUpdate,
-        allEvents = [],
+        migrationNeeded,
+        // allEvents = [],
       ] = await Promise.all([
         // FIXME: multicall this section
         // FIXME: translate?
@@ -83,7 +81,7 @@ export const useFetchFarmerSilo = () => {
         beanstalk.balanceOfRoots(account).then(bigNumberResult),
         beanstalk.balanceOfEarnedBeans(account).then(tokenResult(BEAN)),
         beanstalk.lastUpdate(account).then(bigNumberResult),
-        fetchSiloEvents(),
+        sdk.contracts.beanstalk.migrationNeeded(account),
       ] as const);
 
       /// stalk + earnedStalk (bundled together at the contract level)
@@ -92,6 +90,8 @@ export const useFetchFarmerSilo = () => {
       const earnedStalkBalance = earnedBeanBalance.times(BEAN_TO_STALK);
       /// earnedSeed  (aka plantable seeds)
       const earnedSeedBalance = earnedBeanBalance.times(BEAN_TO_SEEDS);
+
+      dispatch(updateFarmerMigrationStatus(migrationNeeded));
 
       // total:   active & inactive
       // active:  owned, actively earning other silo assets
@@ -119,62 +119,85 @@ export const useFetchFarmerSilo = () => {
         })
       );
 
-      const p = new EventProcessor(sdk, account);
-      const results = p.ingestAll(allEvents);
-
-      dispatch(
-        updateFarmerSiloBalances(
-          [...sdk.tokens.siloWhitelist].reduce<UpdateFarmerSiloBalancesPayload>(
-            (prev, token) => {
-              const depositsOfToken = results.deposits.get(token);
-              if (!depositsOfToken) return prev;
-              const stems = Object.keys(depositsOfToken);
-
-              // Convert from map => object
-              prev[token.address] = {
-                lastUpdate: lastUpdate,
+      if (!migrationNeeded) {
+        const farmerSiloBalances = await sdk.silo
+          .getBalances(account, { source: DataSource.SUBGRAPH })
+          .then((balances) => {
+            const temp: UpdateFarmerSiloBalancesPayload = {};
+            console.log('balances', balances);
+            balances.forEach((balance, token) => {
+              temp[token.address] = {
                 deposited: {
-                  ...stems.reduce(
-                    (dep, stem) => {
-                      const crate = depositsOfToken[stem];
-
-                      // TODO:
-                      const bdv = transform(crate.bdv, 'bnjs');
-                      const amount = transform(crate.amount, 'bnjs');
-
-                      dep.amount = dep.amount.plus(amount);
-                      dep.bdv = dep.bdv.plus(bdv);
-                      dep.crates.push({
-                        season: new BigNumberJS(stem),
-                        amount,
-                        bdv,
-                        // FIXME: recalculate these?
-                        stalk: new BigNumberJS(0), // tokenValueToBN(token.getStalk(bdv)),
-                        seeds: new BigNumberJS(0), // token.getSeeds(bdv),
-                      });
-                      return dep;
-                    },
-                    {
-                      amount: ZERO_BN,
-                      bdv: ZERO_BN,
-                      crates: [] as DepositCrate[],
-                    }
-                  ),
+                  amount: transform(balance.amount, 'bnjs'),
+                  bdv: transform(balance.bdv, 'bnjs'),
+                  crates: [],
                 },
               };
-              return prev;
-            },
-            {}
-          )
-        )
-      );
-    }
-  }, [initialized, sdk, account, beanstalk, fetchSiloEvents, dispatch]);
+            });
+            return temp;
+          });
+        dispatch(updateFarmerSiloBalances(farmerSiloBalances));
+      }
 
-  const clear = useCallback(() => {
-    console.debug('[farmer/silo/useFarmerSilo] CLEAR');
-    dispatch(resetFarmerSilo());
-  }, [dispatch]);
+      // const p = new EventProcessor(sdk, account);
+      // const results = p.ingestAll(allEvents);
+
+      // dispatch(
+      //   updateFarmerSiloBalances(
+      //     [...sdk.tokens.siloWhitelist].reduce<UpdateFarmerSiloBalancesPayload>(
+      //       (prev, token) => {
+      //         const depositsOfToken = results.deposits.get(token);
+      //         if (!depositsOfToken) return prev;
+      //         const stems = Object.keys(depositsOfToken);
+
+      //         // Convert from map => object
+      //         prev[token.address] = {
+      //           lastUpdate: lastUpdate,
+      //           deposited: {
+      //             ...stems.reduce(
+      //               (dep, stem) => {
+      //                 const crate = depositsOfToken[stem];
+
+      //                 // TODO:
+      //                 const bdv = transform(crate.bdv, 'bnjs');
+      //                 const amount = transform(crate.amount, 'bnjs');
+
+      //                 dep.amount = dep.amount.plus(amount);
+      //                 dep.bdv = dep.bdv.plus(bdv);
+      //                 dep.crates.push({
+      //                   season: new BigNumberJS(stem),
+      //                   amount,
+      //                   bdv,
+      //                   // FIXME: recalculate these?
+      //                   stalk: new BigNumberJS(0), // tokenValueToBN(token.getStalk(bdv)),
+      //                   seeds: new BigNumberJS(0), // token.getSeeds(bdv),
+      //                 });
+      //                 return dep;
+      //               },
+      //               {
+      //                 amount: ZERO_BN,
+      //                 bdv: ZERO_BN,
+      //                 crates: [] as DepositCrate[],
+      //               }
+      //             ),
+      //           },
+      //         };
+      //         return prev;
+      //       },
+      //       {}
+      //     )
+      //   )
+      // );
+    }
+  }, [initialized, sdk, account, beanstalk, dispatch]);
+
+  const clear = useCallback(
+    (_account?: string) => {
+      console.debug(`[farmer/silo/useFarmerSilo] CLEAR ${_account}`);
+      dispatch(resetFarmerSilo());
+    },
+    [dispatch]
+  );
 
   return [fetch, initialized, clear] as const;
 };
@@ -187,7 +210,11 @@ const FarmerSiloUpdater = () => {
   const chainId = useChainId();
 
   useEffect(() => {
-    clear();
+    clear(account);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account]);
+
+  useEffect(() => {
     if (account && initialized) fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, chainId, initialized]);

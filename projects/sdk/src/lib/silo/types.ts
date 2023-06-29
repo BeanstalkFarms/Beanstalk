@@ -6,39 +6,37 @@ import { EIP712PermitMessage } from "src/lib/permit";
  * A Deposit represents an amount of a Whitelisted Silo Token
  * that has been added to the Silo.
  */
-export type Deposit = {
+export type Deposit<T extends any = TokenValue> = {
   /** The Season that the Crate was created. */
   stem: ethers.BigNumber;
   /** The amount of this Crate that was created, denominated in the underlying Token. */
-  amount: TokenValue;
+  amount: T;
   /** The BDV of the Deposit, determined upon Deposit. */
-  bdv: TokenValue;
+  bdv: T;
   stalk: {
     /** The total amount of Stalk granted for this Deposit. */
-    total: TokenValue;
+    total: T;
     /** The Stalk associated with the base BDV of the Deposit. */
-    base: TokenValue;
+    base: T;
     /** The Stalk grown since the time of Deposit. */
-    grown: TokenValue;
+    grown: T;
   };
   /** The amount of Seeds granted for this Deposit. */
-  seeds: TokenValue;
+  seeds: T;
 };
 
 /**
  * A "Silo Balance" provides all information about a Farmer's deposits of a
  * Whitelisted Silo Token.
  */
-export type TokenSiloBalance = {
+export type TokenSiloBalance<T extends any = TokenValue> = {
   /** The total amount of this Token currently in the Deposited state. */
-  amount: TokenValue;
+  amount: T;
   /** The BDV of this Token currently in the Deposited state. */
-  bdv: TokenValue;
+  bdv: T;
   /** All Deposit crates. */
-  deposits: Deposit[];
+  deposits: Deposit<T>[];
 };
-
-export type MapValueType<A> = A extends Map<any, infer V> ? V : never;
 
 // FIXME: resolve with EIP712PermitMessage
 export type DepositTokenPermitMessage = EIP712PermitMessage<{

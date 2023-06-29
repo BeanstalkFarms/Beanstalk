@@ -8,6 +8,10 @@ export type UpdateFarmerSiloBalancesPayload = AddressMap<
 
 export const resetFarmerSilo = createAction('farmer/silo/reset');
 
+export const updateFarmerMigrationStatus = createAction<boolean>(
+  'farmer/silo/migration'
+);
+
 export const updateFarmerSiloRewards =
   createAction<FarmerSiloRewards>('farmer/silo/update');
 

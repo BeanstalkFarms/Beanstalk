@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import BigNumberJS from 'bignumber.js';
 import { TokenMap } from '~/constants';
 
 /**
@@ -7,9 +7,9 @@ import { TokenMap } from '~/constants';
  */
 export type Crate = {
   /** The amount of this Crate that was created, denominated in the underlying Token. */
-  amount: BigNumber;
+  amount: BigNumberJS;
   /** The Season that the Crate was created. */
-  season: BigNumber;
+  season: BigNumberJS;
 };
 
 /**
@@ -18,11 +18,11 @@ export type Crate = {
  */
 export type DepositCrate = Crate & {
   /** The BDV of the Deposit, determined upon Deposit. */
-  bdv: BigNumber;
+  bdv: BigNumberJS;
   /** The amount of Stalk granted for this Deposit. */
-  stalk: BigNumber;
+  stalk: BigNumberJS;
   /** The amount of Seeds granted for this Deposit. */
-  seeds: BigNumber;
+  seeds: BigNumberJS;
 };
 
 /**
@@ -38,31 +38,31 @@ export type WithdrawalCrate = Crate & {};
  */
 export type FarmerSiloBalance = {
   /** Season in which the farmer last updated their Silo */
-  lastUpdate: BigNumber;
+  lastUpdate: BigNumberJS;
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
-    amount: BigNumber;
+    amount: BigNumberJS;
     /** The BDV of this Token currently in the Deposited state. */
-    bdv: BigNumber;
+    bdv: BigNumberJS;
     /** All Deposit crates. */
     crates: DepositCrate[];
   };
   withdrawn: {
     /** The total amount of this Token currently in the Withdrawn state. */
-    amount: BigNumber;
+    amount: BigNumberJS;
     /** */
-    bdv: BigNumber;
+    bdv: BigNumberJS;
     /** All Withdrawal crates. */
     crates: WithdrawalCrate[];
   };
   claimable: {
     /** The total amount of this Token currently in the Claimable state. */
-    amount: BigNumber;
+    amount: BigNumberJS;
     /** All Claimable crates. */
     crates: Crate[];
   };
-  wrapped: BigNumber;
-  circulating: BigNumber;
+  wrapped: BigNumberJS;
+  circulating: BigNumberJS;
 };
 
 /**
@@ -86,7 +86,7 @@ export type FarmerSiloRewards = {
      * The amount of Beans the Farmer has earned
      * from their ownership of the Silo.
      */
-    earned: BigNumber;
+    earned: BigNumberJS;
   };
   stalk: {
     /**
@@ -94,22 +94,22 @@ export type FarmerSiloRewards = {
      *
      * `total = active + grown`
      */
-    total: BigNumber;
+    total: BigNumberJS;
     /**
      * In the case of stalk, ACTIVE includes EARNED.
      */
-    active: BigNumber;
+    active: BigNumberJS;
     /**
      * Earned Stalk are Stalk granted upon reception of earned
      * Beans (since 1 Deposited Bean = 1 Stalk).
      * Earned Stalk are also "active" because it increases
      * the Farmer's relative ownership in the Silo.
      */
-    earned: BigNumber;
+    earned: BigNumberJS;
     /**
      * Grown Stalk is Stalk granted each Season from Seeds.
      */
-    grown: BigNumber;
+    grown: BigNumberJS;
   };
   seeds: {
     /**
@@ -117,20 +117,23 @@ export type FarmerSiloRewards = {
      *
      * `total = active`.
      */
-    total: BigNumber;
+    total: BigNumberJS;
     /**
      *
      */
-    active: BigNumber;
+    active: BigNumberJS;
     /**
      * Plantable Seeds are Seeds granted upon reception of
      * earned Beans (since 1 Deposited Bean = 2 Stalk).
      */
-    earned: BigNumber;
+    earned: BigNumberJS;
   };
   roots: {
-    total: BigNumber;
+    total: BigNumberJS;
   };
 };
 
-export type FarmerSilo = FarmerSiloBalances & FarmerSiloRewards;
+export type FarmerSilo = FarmerSiloBalances &
+  FarmerSiloRewards & {
+    migrationNeeded: boolean | undefined;
+  };
