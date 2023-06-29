@@ -33,9 +33,10 @@ export const Th = styled.th`
   ${BodyCaps}
   color: #4B5563;
   text-align: ${(props) => props.align || "left"};
+  cursor: default;
 `;
 export const Td = styled.td`
-  padding: 16px;
+  padding: 16px 24px;
   text-align: ${(props) => props.align || "left"};
 `;
 
