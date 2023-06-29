@@ -14,7 +14,7 @@ export function sortCrates(state: TokenSiloBalance) {
 /**
  * Order crates by Season.
  */
-export function sortCratesBySeason(crates: Deposit[], direction: "asc" | "desc" = "desc") {
+export function sortCratesByStem(crates: Deposit[], direction: "asc" | "desc" = "desc") {
   const m = direction === "asc" ? -1 : 1;
   return [...crates].sort((a, b) => m * b.stem.sub(a.stem).toNumber());
 }
