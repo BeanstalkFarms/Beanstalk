@@ -15,6 +15,7 @@ import {
   updateSeasonResult,
   setRemainingUntilBlockUpdate,
   setMorning,
+  updateCurrentSeason,
 } from './actions';
 
 const getInitialState = () => {
@@ -62,6 +63,9 @@ export default createReducer(initialState, (builder) =>
     .addCase(resetSun, () => getInitialState())
     .addCase(updateSeasonTime, (state, { payload }) => {
       state.seasonTime = payload;
+    })
+    .addCase(updateCurrentSeason, (state, { payload }) => {
+      state.season.current = payload;
     })
     .addCase(updateSeasonResult, (state, { payload }) => {
       state.season = payload;

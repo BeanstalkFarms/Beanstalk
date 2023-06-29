@@ -83,7 +83,7 @@ export const useFetchFarmerField = () => {
   }, [initialized, fetchFieldEvents, sdk, account, dispatch, harvestableIndex]);
 
   const clear = useCallback(() => {
-    console.debug('[farmer/silo/useFarmerSilo] CLEAR');
+    console.debug('[farmer/silo/useFarmerField] CLEAR');
     dispatch(resetFarmerField());
   }, [dispatch]);
 

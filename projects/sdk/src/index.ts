@@ -16,7 +16,7 @@ export type { EventManager } from "src/lib/events/EventManager";
 // Modules
 export { FarmWorkflow, FarmFromMode, FarmToMode } from "src/lib/farm";
 export type { StepGenerator } from "src/classes/Workflow";
-export type { TokenSiloBalance } from "src/lib/silo/types";
+export type { TokenSiloBalance, Deposit } from "src/lib/silo/types";
 export type { TokenBalance } from "src/lib/tokens";
 export { AdvancedPipeWorkflow, Clipboard } from "src/lib/depot";
 export type { PipeCallStruct as PipeStruct, AdvancedPipeCallStruct as AdvancedPipeStruct } from "src/lib/depot";

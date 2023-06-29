@@ -3,8 +3,9 @@ import BigNumber from 'bignumber.js';
 import { FarmerSilo } from '.';
 import {
   resetFarmerSilo,
-  updateFarmerSiloRewards,
+  updateFarmerMigrationStatus,
   updateFarmerSiloBalances,
+  updateFarmerSiloRewards,
 } from './actions';
 
 const NEG1 = new BigNumber(-1);
@@ -28,11 +29,15 @@ export const initialFarmerSilo: FarmerSilo = {
   roots: {
     total: NEG1,
   },
+  migrationNeeded: undefined,
 };
 
 export default createReducer(initialFarmerSilo, (builder) =>
   builder
     .addCase(resetFarmerSilo, () => initialFarmerSilo)
+    .addCase(updateFarmerMigrationStatus, (state, { payload }) => {
+      state.migrationNeeded = payload;
+    })
     .addCase(updateFarmerSiloBalances, (state, { payload }) => {
       const addresses = Object.keys(payload);
       addresses.forEach((address) => {

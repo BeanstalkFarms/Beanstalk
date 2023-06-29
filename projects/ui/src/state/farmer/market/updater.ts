@@ -11,7 +11,7 @@ export const useFetchFarmerMarket = () => {
   /// Handlers
   const fetch = useCallback(async () => {}, []);
   const clear = useCallback(() => {
-    console.debug('[farmer/silo/useFarmerSilo] CLEAR');
+    console.debug('[farmer/silo/useFarmerMarket] CLEAR');
     dispatch(resetFarmerMarket());
   }, [dispatch]);
 

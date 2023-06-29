@@ -175,10 +175,14 @@ export function calculateGrownStalkSeeds(
 /**
  * Formula: `grownStalk = bdv * (stemTip - stem)`
  * See: LibTokenSilo.grownStalkForDeposit
+ *
+ * @param stemTip The current stem tip for the token that is deposited
+ * @param stem The stem of the deposit
+ * @param bdv The bdv of the deposit
  */
 export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
   const deltaStem = stemTip.sub(stem);
-  assert(deltaStem.gte(0), "Silo: Cannot calculate grown stalk when `stemTip < stem`.");
+  if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
   return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(deltaStem));
 }
 

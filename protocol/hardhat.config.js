@@ -51,7 +51,9 @@ task("buyBeans")
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const result = await txn.wait();
+    console.log("Done", result);
   });
 
 task("sellBeans")

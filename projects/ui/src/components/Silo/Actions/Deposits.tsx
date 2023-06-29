@@ -14,7 +14,7 @@ import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import COLUMNS from '~/components/Common/Table/cells';
 import Fiat from '~/components/Common/Fiat';
-import TableCard from '../../Common/TableCard';
+import TableCard, { TableCardProps } from '../../Common/TableCard';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
 /**
@@ -22,10 +22,12 @@ import StatHorizontal from '~/components/Common/StatHorizontal';
  */
 import { FC } from '~/types';
 
-const Deposits: FC<{
-  token: Token;
-  siloBalance: FarmerSiloBalance | undefined;
-}> = ({ token, siloBalance }) => {
+const Deposits: FC<
+  {
+    token: Token;
+    siloBalance: FarmerSiloBalance | undefined;
+  } & Partial<TableCardProps>
+> = ({ token, siloBalance, ...props }) => {
   const Bean = useChainConstant(BEAN);
   const getUSD = useSiloTokenToFiat();
   const currentSeason = useSeason();
@@ -152,6 +154,7 @@ const Deposits: FC<{
       value={getUSD(token, amount || ZERO_BN)}
       state={state}
       token={token}
+      {...props}
     />
   );
 };

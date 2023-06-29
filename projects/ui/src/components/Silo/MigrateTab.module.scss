@@ -1,0 +1,105 @@
+// @keyframes colorPulse {
+//   0% {
+//     color: lighten(green, 70%);
+//   }
+//   40% {
+//     color: green;
+//   }
+//   50% {
+//     color: darken(green, 5%);
+//   }
+//   100% {
+//     color: darken(green, 20%);
+//   }
+// }
+
+// .wrapper {
+//   background: black;
+//   color: darken(green, 20%);
+//   font-size: 3em;
+//   font-family: monospace;
+//   display: flex;
+//   height: 100vh;
+//   overflow: hidden;
+//   text-align: center;
+//   width: 100vw;
+// }
+
+// .column {
+//   & > * {
+//     display: block;
+//     animation: 3s infinite colorPulse;
+//     padding: 0 0.125em;
+//   }
+// }
+
+// @for $colNum from 1 through 80 {
+//   $duration: random(100) / 23 + 1;
+//   $delay:  $duration / 50;
+
+//   @for $i from 1 through 50 {
+//     .col-#{$colNum} :nth-child(#{$i}) {
+//       animation-duration: #{$duration}s;
+//       animation-delay: #{$i * $delay}s;
+//     }
+//   }
+// }
+
+$nodeStreak: #46B95544;
+$computationalFogTop: #46B955;
+$computationalFogBot: #46B955;
+$nanoVelocity: 4s;
+$visualDistortionZapper: 340px;
+
+.wrap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  margin: 0 auto;
+  perspective: $visualDistortionZapper;
+  perspective-origin: 50% 50%;  
+}
+
+.topPlane {
+  width: 200%;
+  height: 130%;
+  position: absolute;
+  bottom: -30%;
+  left: -50%;
+  background-image: -webkit-linear-gradient($nodeStreak 1px, transparent 1px), -webkit-linear-gradient(left, $nodeStreak 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px;
+  background-position: -1px -1px,-1px -1px;
+  transform: rotateX(85deg);
+  animation: planeMoveTop $nanoVelocity infinite linear;
+}
+
+.bottomPlane {
+  @extend .topPlane;
+  transform: rotateX(-85deg);
+  top: -30%;
+  animation: planeMoveBot $nanoVelocity infinite linear;
+}
+
+@keyframes planeMoveTop {
+  from {
+    background-position: 0px 0px,0px 0px;
+  }
+  to {
+    background-position: 0px 100px, 0px 0px;
+  }
+}
+
+@keyframes planeMoveBot {
+  from {
+    background-position: 0px 0px, 0px 0px;
+  }
+  to {
+    background-position: 0px -100px, 0px 0px;
+  }
+}
+
+@media (max-height: 350px) {
+  .wrap {
+    perspective: $visualDistortionZapper - 150;
+  }
+}
