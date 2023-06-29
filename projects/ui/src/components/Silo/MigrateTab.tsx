@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import Row from '~/components/Common/Row';
 import Centered from '~/components/Common/ZeroState/Centered';
@@ -31,29 +31,24 @@ const bip36 = (
 export const MigrateTab: FC<{}> = () => {
   const migrationNeeded = useMigrationNeeded();
 
-  const [step, setStep] = useState<number>(9);
+  const [step, setStep] = useState<number>(migrationNeeded ? 1 : 9);
   const nextStep = () => setStep(step + 1);
+
+  useEffect(() => {
+    if (migrationNeeded === true) {
+      setStep(1);
+    } else if (migrationNeeded === false) {
+      setStep(9);
+    }
+  }, [migrationNeeded]);
 
   if (migrationNeeded === undefined) {
     return (
-      <Centered minHeight="300px">
+      <Centered minHeight="400px">
         <BeanProgressIcon size={50} enabled variant="indeterminate" />
         <Typography sx={{ mt: 2 }}>
           Checking your migration status...
         </Typography>
-      </Centered>
-    );
-  }
-
-  if (migrationNeeded === false) {
-    return (
-      <Centered minHeight="300px">
-        <Stack spacing={2} maxWidth={550}>
-          <Typography variant="h1" textAlign="center">
-            You&apos;re migrated!
-          </Typography>
-          <Row spacing={1}>Test</Row>
-        </Stack>
       </Centered>
     );
   }
@@ -237,7 +232,25 @@ export const MigrateTab: FC<{}> = () => {
           )}
         </Centered>
       ) : null}
-      {step === 9 && <Migrate />}
+      {step === 9 &&
+        (migrationNeeded ? (
+          <Migrate />
+        ) : (
+          <Centered minHeight="400px">
+            <Stack spacing={2} maxWidth={550}>
+              <Typography variant="h1" textAlign="center">
+                You&apos;re migrated!
+              </Typography>
+              <Button
+                variant="contained"
+                size="medium"
+                onClick={() => setStep(2)}
+              >
+                Replay onboarding
+              </Button>
+            </Stack>
+          </Centered>
+        ))}
     </Box>
   );
 };

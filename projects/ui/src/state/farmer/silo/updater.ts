@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import BigNumberJS from 'bignumber.js';
+import { DataSource } from '@beanstalk/sdk';
 import { BEAN_TO_SEEDS, BEAN_TO_STALK, ZERO_BN } from '~/constants';
 import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -159,7 +160,6 @@ export const useFetchFarmerSilo = () => {
                   (dep, depositSeason) => {
                     const crate = depositsBySeason[depositSeason];
 
-                    // TODO:
                     const bdvTV = sdk.tokens.BEAN.fromBlockchain(crate.bdv);
                     const amountTV = token.fromBlockchain(crate.amount);
                     const seedsTV = token.getSeeds(bdvTV);
@@ -191,9 +191,6 @@ export const useFetchFarmerSilo = () => {
                       // FIXME: this is base stalk
                       stalk: transform(stalkTV, 'bnjs', sdk.tokens.STALK),
                       seeds: transform(seedsTV, 'bnjs'),
-                      // FIXME: recalculate these?
-                      // stalk: calculateGrownStalk() ZERO_BN, // tokenValueToBN(token.getStalk(bdv)),
-                      // seeds: ZERO_BN, // token.getSeeds(bdv),
                     });
                     return dep;
                   },
@@ -209,17 +206,32 @@ export const useFetchFarmerSilo = () => {
         );
 
         dispatch(updateFarmerSiloBalances(temp));
+      } else {
+        const balances = await sdk.silo.getBalances(account, {
+          source: DataSource.LEDGER,
+        });
+
+        const temp: UpdateFarmerSiloBalancesPayload = {};
+        balances.forEach((balance, token) => {
+          temp[token.address] = {
+            deposited: {
+              amount: transform(balance.amount, 'bnjs', token),
+              bdv: transform(balance.bdv, 'bnjs', sdk.tokens.BEAN),
+              crates: balance.deposits.map((crate) => ({
+                season: transform(crate.stem, 'bnjs'), // FIXME
+                amount: transform(crate.amount, 'bnjs', token),
+                bdv: transform(crate.bdv, 'bnjs', sdk.tokens.BEAN),
+                stalk: transform(crate.stalk.total, 'bnjs', sdk.tokens.STALK), // FIXME: base or total?
+                seeds: transform(crate.seeds, 'bnjs'),
+              })),
+            },
+          };
+        });
+
+        dispatch(updateFarmerSiloBalances(temp));
       }
     }
-  }, [
-    initialized,
-    sdk.silo,
-    sdk.contracts.beanstalk,
-    sdk.tokens,
-    account,
-    beanstalk,
-    dispatch,
-  ]);
+  }, [initialized, sdk, account, beanstalk, dispatch]);
 
   const clear = useCallback(
     (_account?: string) => {
