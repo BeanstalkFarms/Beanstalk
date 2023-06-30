@@ -1,8 +1,8 @@
 import {
   BeanstalkSDK,
+  Deposit,
   StepGenerator,
   Token,
-  TokenSiloBalance,
   TokenValue,
 } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
@@ -15,7 +15,7 @@ export class ConvertFarmStep extends FarmStep {
     _sdk: BeanstalkSDK,
     private _tokenIn: Token,
     private _season: number,
-    private _deposits: TokenSiloBalance['deposits']
+    private _deposits: Deposit[]
   ) {
     super(_sdk);
     this._sdk = _sdk;
@@ -30,7 +30,7 @@ export class ConvertFarmStep extends FarmStep {
   /// this logic exists in the SDK but won't work b/c we need to add plant
   static async _handleConversion(
     sdk: BeanstalkSDK,
-    _deposits: TokenSiloBalance['deposits'],
+    _deposits: Deposit[],
     _tokenIn: Token,
     _tokenOut: Token,
     _amountIn: TokenValue,

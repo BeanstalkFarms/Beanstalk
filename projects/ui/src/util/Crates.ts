@@ -2,11 +2,7 @@ import BigNumber from 'bignumber.js';
 import Token from '~/classes/Token';
 import { TokenMap } from '~/constants';
 import { Beanstalk } from '~/generated';
-import {
-  LegacyCrate,
-  LegacyDepositCrate,
-  FarmerSiloBalance,
-} from '~/state/farmer/silo';
+import { LegacyDepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
 
 /**
  * @deprecated TOOD: Remove this
@@ -50,10 +46,8 @@ export const selectCratesForEnroot = (
           encoded: beanstalk.interface.encodeFunctionData('enrootDeposits', [
             addr,
             // fixme: not sure why TS doesn't pick up the type of `crates` here
-            crates.map((crate: LegacyCrate) => crate.season.toString()), // seasons
-            crates.map((crate: LegacyCrate) =>
-              unripeTokens[addr].stringify(crate.amount)
-            ), // amounts
+            crates.map((crate) => crate.season.toString()), // seasons
+            crates.map((crate) => unripeTokens[addr].stringify(crate.amount)), // amounts
           ]),
         };
       }

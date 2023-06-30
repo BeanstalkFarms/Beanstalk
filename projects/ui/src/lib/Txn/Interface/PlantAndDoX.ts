@@ -65,11 +65,15 @@ export default class PlantAndDoX {
       const grownStalk = STALK.amount(0);
 
       // asTV => as DepositCrate<TokenValue> from SDK;
-      const crate: TokenSiloBalance['deposited']['crates'][number] = {
+      const crate: TokenSiloBalance['deposits'][number] = {
         season: ethers.BigNumber.from(season),
         amount: earnedBeans,
         bdv: earnedBeans,
-        stalk,
+        stalk: {
+          total: stalk.add(grownStalk),
+          base: stalk,
+          grown: grownStalk,
+        },
         baseStalk: stalk,
         grownStalk,
         seeds,
@@ -77,6 +81,7 @@ export default class PlantAndDoX {
 
       return crate;
     },
+
     // as DepositCrate from UI;
     bigNumber(
       sdk: BeanstalkSDK,
