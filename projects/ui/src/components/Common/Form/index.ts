@@ -1,11 +1,11 @@
 import BigNumber from 'bignumber.js';
 import {
+  FarmToMode,
   ERC20Token as ERC20TokenNew,
   NativeToken as NativeTokenNew,
 } from '@beanstalk/sdk';
 import { ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
 import { FormTxnBundlerInterface } from '~/lib/Txn';
@@ -58,13 +58,6 @@ export type FormTokenStateNew = {
 } & {
   quoting?: boolean;
 } & Partial<QuoteHandlerResultNew>;
-
-// /** Some `amountOut` received for inputting `amount` of this token into a function. */
-// amountOut?: BigNumber;
-// /** Amount of ETH used in the transaction; applied to the `value` override. */
-// value?:     ethers.BigNumber;
-// /** The steps needed to convert `amount` -> `amountOut`. */
-// steps?:     ChainableFunctionResult[];
 
 export type FormApprovingState = {
   /** */

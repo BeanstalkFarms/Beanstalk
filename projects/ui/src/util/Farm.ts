@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
+import { FarmFromMode } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
-import { FarmFromMode } from '~/lib/Beanstalk/Farm';
 import { Balance } from '~/state/farmer/balances';
 
 /**

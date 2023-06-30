@@ -25,7 +25,7 @@ import useFarmerListingsLedger from '~/hooks/farmer/useFarmerListingsLedger';
 import useFarmerPlots from '~/hooks/farmer/useFarmerPlots';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { FarmToMode } from '@beanstalk/sdk';
 import { useFetchFarmerMarket } from '~/state/farmer/market/updater';
 import { FC } from '~/types';
 import {

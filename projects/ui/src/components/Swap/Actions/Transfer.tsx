@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import { useConnect } from 'wagmi';
 import { Alert } from '@mui/lab';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import { IconSize } from '~/components/App/muiTheme';
 import IconWrapper from '~/components/Common/IconWrapper';
 import {
@@ -25,7 +26,6 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useAccount from '~/hooks/ledger/useAccount';
 import { toStringBaseUnitBN } from '~/util';
