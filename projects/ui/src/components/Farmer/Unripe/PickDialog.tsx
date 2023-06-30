@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
+import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import unripeBeanIcon from '~/img/tokens/unripe-bean-logo-circled.svg';
 import brownLPIcon from '~/img/tokens/unripe-lp-logo-circled.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
@@ -39,7 +40,6 @@ import { ZERO_BN } from '~/constants';
 import { displayFullBN, toTokenUnitsBN } from '~/util';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import UnripeTokenRow from './UnripeTokenRow';

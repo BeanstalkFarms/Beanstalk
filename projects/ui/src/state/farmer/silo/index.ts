@@ -1,7 +1,9 @@
+import { Deposit } from '@beanstalk/sdk';
 import BigNumberJS from 'bignumber.js';
 import { TokenMap } from '~/constants';
 
 /**
+ * @deprecated
  * A Crate is an `amount` of a token Deposited or
  * Withdrawn during a given `season`.
  */
@@ -13,17 +15,20 @@ export type LegacyCrate = {
 };
 
 /**
+ * @deprecated
  * A "Deposit" represents an amount of a Whitelisted Silo Token
  * that has been added to the Silo.
  */
-export type LegacyDepositCrate = LegacyCrate & {
-  /** The BDV of the Deposit, determined upon Deposit. */
-  bdv: BigNumberJS;
-  /** The amount of Stalk granted for this Deposit. */
-  stalk: BigNumberJS;
-  /** The amount of Seeds granted for this Deposit. */
-  seeds: BigNumberJS;
-};
+// export type LegacyDepositCrate = LegacyCrate & {
+//   /** The BDV of the Deposit, determined upon Deposit. */
+//   bdv: BigNumberJS;
+//   /** The amount of Stalk granted for this Deposit. */
+//   stalk: BigNumberJS;
+//   /** The amount of Seeds granted for this Deposit. */
+//   seeds: BigNumberJS;
+// };
+
+export type LegacyDepositCrate = Deposit<BigNumberJS>;
 
 /**
  * A "Silo Balance" provides all information

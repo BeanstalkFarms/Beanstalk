@@ -7,7 +7,7 @@ import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
 import { NEW_BN } from '~/constants';
 import { FarmerSiloRewards } from '~/state/farmer/silo';
 import RewardItem from './RewardItem';
-import { ClaimRewardsAction } from '../../lib/Beanstalk/Farm';
+import { ClaimRewardsAction } from '../../util/Farm';
 import { hoverMap } from '../../constants/silo';
 import Row from '~/components/Common/Row';
 

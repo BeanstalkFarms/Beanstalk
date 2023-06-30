@@ -8,6 +8,7 @@ import {
   ERC20Token,
   NativeToken,
   BeanstalkSDK,
+  FarmFromMode,
   FarmToMode,
 } from '@beanstalk/sdk';
 import { useSelector } from 'react-redux';
@@ -33,7 +34,6 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
-import { FarmFromMode } from '~/lib/Beanstalk/Farm';
 import {
   displayFullBN,
   getTokenIndex,

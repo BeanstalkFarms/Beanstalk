@@ -2,7 +2,14 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { BeanstalkSDK, ERC20Token, StepGenerator, Token } from '@beanstalk/sdk';
+import {
+  BeanstalkSDK,
+  ERC20Token,
+  StepGenerator,
+  Token,
+  FarmFromMode,
+  FarmToMode,
+} from '@beanstalk/sdk';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import { ActionType } from '~/util/Actions';
 import {
@@ -14,7 +21,7 @@ import {
   FormTokenStateNew,
   FormTxnsFormState,
 } from '~/components/Common/Form';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+
 import { ZERO_BN } from '~/constants';
 import { displayTokenAmount, tokenValueToBN } from '~/util';
 import FarmModeField from '~/components/Common/Form/FarmModeField';

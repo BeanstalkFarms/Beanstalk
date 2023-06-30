@@ -2,9 +2,8 @@ import { Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { ethers } from 'ethers';
-import { useProvider } from 'wagmi';
 import BigNumber from 'bignumber.js';
+import { BeanstalkSDK, FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TransactionToast from '~/components/Common/TxnToast';
 import {
@@ -31,17 +30,12 @@ import usePreferredToken, {
 } from '~/hooks/farmer/usePreferredToken';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
-import Farm, {
-  ChainableFunction,
-  FarmFromMode,
-  FarmToMode,
-} from '~/lib/Beanstalk/Farm';
 import {
   displayBN,
   displayTokenAmount,
   MinBN,
-  toStringBaseUnitBN,
   toTokenUnitsBN,
+  transform,
 } from '~/util';
 import { AppState } from '~/state';
 import { BEAN, ETH, PODS, WETH } from '~/constants/tokens';
@@ -52,6 +46,7 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
+import useAccount from '~/hooks/ledger/useAccount';
 
 export type FillListingFormValues = FormState & {
   settings: SlippageSettingsFragment;
@@ -63,7 +58,8 @@ const FillListingV2Form: FC<
     podListing: PodListing;
     contract: Beanstalk;
     handleQuote: QuoteHandler;
-    farm: Farm;
+    account?: string;
+    sdk: BeanstalkSDK;
   }
 > = ({
   // Formik
@@ -73,9 +69,9 @@ const FillListingV2Form: FC<
   podListing,
   contract,
   handleQuote,
-  farm,
+  account,
+  sdk,
 }) => {
-  const sdk = useSdk();
   /// State
   const [isTokenSelectVisible, handleOpen, hideTokenSelect] = useToggle();
 
@@ -140,11 +136,14 @@ const FillListingV2Form: FC<
   /// max amount that the user can input of `tokenIn`.
   useEffect(() => {
     (async () => {
+      if (!account) return;
+
       // Maximum BEAN precision is 6 decimals. remainingAmount * pricePerPod may
       // have more decimals, so we truncate at 6.
       const maxBeans = podListing.remainingAmount
         .times(podListing.pricePerPod)
         .dp(BEAN[1].decimals, BigNumber.ROUND_DOWN);
+
       if (maxBeans.gt(0)) {
         if (tokenIn === Bean) {
           /// 1 POD is consumed by 1 BEAN
@@ -153,14 +152,21 @@ const FillListingV2Form: FC<
           /// Estimate how many ETH it will take to buy `maxBeans` BEAN.
           /// TODO: across different forms of `tokenIn`.
           /// This (obviously) only works for Eth and Weth.
-          const estimate = await Farm.estimate(
-            farm.buyBeans(),
-            [ethers.BigNumber.from(Bean.stringify(maxBeans))],
-            false // forward = false -> run the calc backwards
-          );
+          const estimate = await sdk.swap
+            .buildSwap(
+              tokenIn === Eth ? sdk.tokens.ETH : sdk.tokens.WETH,
+              sdk.tokens.BEAN,
+              account!,
+              FarmFromMode.EXTERNAL,
+              FarmToMode.EXTERNAL
+            )
+            .estimateReversed(
+              transform(maxBeans, 'tokenValue', sdk.tokens.BEAN)
+            );
+
           setFieldValue(
             'maxAmountIn',
-            toTokenUnitsBN(estimate.amountOut.toString(), tokenIn.decimals)
+            toTokenUnitsBN(estimate.toBlockchain(), tokenIn.decimals)
           );
         } else {
           throw new Error(`Unsupported tokenIn: ${tokenIn.symbol}`);
@@ -173,11 +179,12 @@ const FillListingV2Form: FC<
     Bean,
     Eth,
     Weth,
-    farm,
+    account,
     podListing.pricePerPod,
     podListing.remainingAmount,
     setFieldValue,
     tokenIn,
+    sdk,
   ]);
 
   return (
@@ -297,13 +304,11 @@ const FillListingForm: FC<{
 
   /// Ledger
   const { data: signer } = useSigner();
-  const provider = useProvider();
   const beanstalk = useBeanstalkContract(signer);
-
-  /// Farm
-  const farm = useMemo(() => new Farm(provider), [provider]);
+  const sdk = useSdk();
 
   /// Farmer
+  const account = useAccount();
   const balances = useFarmerBalances();
   const [refetchFarmerField] = useFetchFarmerField();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
@@ -331,43 +336,23 @@ const FillListingForm: FC<{
   /// Does not execute for _tokenIn === BEAN
   const handleQuote = useCallback<QuoteHandler>(
     async (_tokenIn, _amountIn, _tokenOut) => {
-      const steps: ChainableFunction[] = [];
+      const tokenIn = _tokenIn === Eth ? sdk.tokens.ETH : sdk.tokens.WETH;
+      const from =
+        _tokenIn === Weth
+          ? optimizeFromMode(_amountIn, balances[Weth.address])
+          : FarmFromMode.EXTERNAL;
+      const amountIn = transform(_amountIn, 'tokenValue', tokenIn);
 
-      if (_tokenIn === Eth) {
-        steps.push(
-          ...[
-            farm.wrapEth(FarmToMode.INTERNAL), // wrap ETH to WETH (internal)
-            ...farm.buyBeans(FarmFromMode.INTERNAL), // buy Beans using internal WETH (exact)
-          ]
-        );
-      } else if (_tokenIn === Weth) {
-        steps.push(
-          ...farm.buyBeans(
-            /// Use INTERNAL, EXTERNAL, or INTERNAL_EXTERNAL to initiate the swap.
-            optimizeFromMode(_amountIn, balances[Weth.address])
-          )
-        );
-      } else {
-        throw new Error(
-          `Filling a Listing via ${_tokenIn.symbol} is not currently supported`
-        );
-      }
+      const swap = sdk.swap.buildSwap(tokenIn, sdk.tokens.BEAN, from);
 
-      const amountIn = ethers.BigNumber.from(
-        toStringBaseUnitBN(_amountIn, _tokenIn.decimals)
-      );
-      const estimate = await Farm.estimate(steps, [amountIn]);
+      const estimate = await swap.estimate(amountIn);
 
       return {
-        amountOut: toTokenUnitsBN(
-          estimate.amountOut.toString(),
-          _tokenOut.decimals
-        ),
-        value: estimate.value,
-        steps: estimate.steps,
+        amountOut: toTokenUnitsBN(estimate.toBlockchain(), _tokenOut.decimals),
+        value: transform(estimate.value.toString(), 'ethers'),
       };
     },
-    [Eth, Weth, balances, farm]
+    [Eth, Weth, balances, sdk]
   );
 
   const onSubmit = useCallback(
@@ -380,6 +365,7 @@ const FillListingForm: FC<{
         middleware.before();
         const formData = values.tokens[0];
         const tokenIn = formData.token;
+        const amountIn = formData.amount;
         const amountBeans =
           tokenIn === Bean ? formData.amount : formData.amountOut;
 
@@ -388,7 +374,13 @@ const FillListingForm: FC<{
         if (!signer) throw new Error('Connect a wallet');
         if (values.tokens.length > 1)
           throw new Error('Only one input token supported');
-        if (!formData.amount || !amountBeans || amountBeans.eq(0))
+        if (
+          !formData.amount ||
+          !amountBeans ||
+          amountBeans.eq(0) ||
+          !amountIn ||
+          amountIn.eq(0)
+        )
           throw new Error('No amount set');
         if (amountBeans.lt(podListing.minFillAmount))
           throw new Error(
@@ -400,6 +392,9 @@ const FillListingForm: FC<{
 
         const data: string[] = [];
         const amountPods = amountBeans.div(podListing.pricePerPod);
+
+        let farm;
+        let tokenInNew;
         let finalFromMode: FarmFromMode;
 
         txToast = new TransactionToast({
@@ -415,23 +410,30 @@ const FillListingForm: FC<{
           // No swap occurs, so we know exactly how many beans are going in.
           // We can select from INTERNAL, EXTERNAL, INTERNAL_EXTERNAL.
           finalFromMode = optimizeFromMode(amountBeans, balances[Bean.address]);
+          farm = sdk.farm.create();
+          tokenInNew = sdk.tokens.BEAN; // FIXME
         }
 
         /// Swap to BEAN and buy
         else if (tokenIn === Eth || tokenIn === Weth) {
           // Require a quote
-          if (!formData.steps || !formData.amountOut)
+          if (!formData.amountOut)
             throw new Error(`No quote available for ${formData.token.symbol}`);
 
-          const encoded = Farm.encodeStepsWithSlippage(
-            formData.steps,
-            values.settings.slippage / 100
+          tokenInNew = tokenIn === Eth ? sdk.tokens.ETH : sdk.tokens.WETH;
+
+          const swap = sdk.swap.buildSwap(
+            tokenInNew,
+            sdk.tokens.BEAN,
+            tokenIn === Weth
+              ? optimizeFromMode(formData.amountOut, balances[Weth.address])
+              : FarmFromMode.EXTERNAL
           );
-          data.push(...encoded);
 
           // At the end of the Swap step, the assets will be in our INTERNAL balance.
           // The Swap decides where to route them from (see handleQuote).
           finalFromMode = FarmFromMode.INTERNAL_TOLERANT;
+          farm = swap.getFarm();
         } else {
           throw new Error(
             `Filling a Listing via ${tokenIn.symbol} is not currently supported`
@@ -443,7 +445,7 @@ const FillListingForm: FC<{
           podListing
         );
 
-        data.push(
+        farm.add((amountInStep) =>
           beanstalk.interface.encodeFunctionData('fillPodListing', [
             {
               account: podListing.account,
@@ -457,33 +459,25 @@ const FillListingForm: FC<{
               minFillAmount: Bean.stringify(podListing.minFillAmount || 0), // minFillAmount for listings is measured in Beans
               mode: podListing.mode,
             },
-            Bean.stringify(amountBeans),
+            amountInStep, // FIXME: number type?
             finalFromMode,
           ])
         );
 
-        const overrides = { value: formData.value };
         console.debug('[FillListing] ', {
           length: data.length,
           data,
-          overrides,
         });
 
-        const txn =
-          data.length === 1
-            ? await signer.sendTransaction({
-                to: beanstalk.address,
-                data: data[0],
-                ...overrides,
-              })
-            : await beanstalk.farm(data, overrides);
-        txToast.confirming(txn);
+        const amountInTV = transform(amountIn, 'tokenValue', tokenInNew);
+        const txn = await farm.execute(amountInTV, { slippage: 0.1 });
 
+        txToast.confirming(txn);
         const receipt = await txn.wait();
+
         await Promise.all([
           refetchFarmerField(), // refresh plots; increment pods
           refetchFarmerBalances(), // decrement balance of tokenIn
-          // FIXME: refresh listings
         ]);
         txToast.success(receipt);
         formActions.resetForm();
@@ -500,16 +494,17 @@ const FillListingForm: FC<{
       }
     },
     [
+      middleware,
       Bean,
       podListing,
       signer,
       Eth,
       Weth,
-      beanstalk,
       refetchFarmerField,
       refetchFarmerBalances,
       balances,
-      middleware,
+      sdk,
+      beanstalk.interface,
     ]
   );
 
@@ -532,7 +527,8 @@ const FillListingForm: FC<{
             podListing={podListing}
             handleQuote={handleQuote}
             contract={beanstalk}
-            farm={farm}
+            account={account}
+            sdk={sdk}
             {...formikProps}
           />
         </>

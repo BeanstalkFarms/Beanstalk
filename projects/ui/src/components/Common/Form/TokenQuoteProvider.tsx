@@ -116,7 +116,6 @@ const TokenQuoteProvider: FC<TokenQuoteProviderProps> = ({
     );
     setFieldValue(`${name}.amountOut`, result?.amountOut); // calculated amountOut
     setFieldValue(`${name}.value`, result?.value); // ether value used
-    setFieldValue(`${name}.steps`, result?.steps); // steps
   }, [name, setFieldValue, result]);
   useEffect(() => {
     console.debug(`[TokenQuoteProvider] update ${name}.quoting =>`, quoting);
