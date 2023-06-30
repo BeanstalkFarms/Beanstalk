@@ -1,18 +1,19 @@
 import { Token, TokenValue } from "@beanstalk/sdk-core";
 import { Route } from "src/lib/routing";
 import { Direction, SwapStep } from "src/lib/swap/SwapStep";
-import { Depot, Depot__factory, ERC20 } from "src/constants/generated";
+import { Depot, Depot__factory, ERC20, WETH9__factory } from "src/constants/generated";
 import { addresses } from "src/constants/addresses";
 import { WellsSDK } from "src/lib/WellsSDK";
 import { TxOverrides } from "src/lib/Well";
 import { ContractTransaction } from "ethers";
 import { deadlineSecondsToBlockchain } from "src/lib/utils";
+import { WrapEthStep } from "./WrapStep";
 
 const DEFAULT_DEADLINE = 60 * 5; // in seconds
 
 export type QuotePrepareResult = {
-  doSwap: () => Promise<ContractTransaction>;
-  doApproval?: () => Promise<ContractTransaction>;
+  doSwap: (overrides?: TxOverrides) => Promise<ContractTransaction>;
+  doApproval?: (overrides?: TxOverrides) => Promise<ContractTransaction>;
 };
 
 export type QuoteResult = {
@@ -48,7 +49,17 @@ export class Quote {
     this.route = route;
     this.account = account;
 
+    const weth9 = WETH9__factory.connect(addresses.WETH9.get(this.sdk.chainId), this.sdk.providerOrSigner);
+
     for (const { from, to, well } of this.route) {
+      if (from.symbol === "ETH" && to.symbol === "WETH") {
+        this.steps.push(new WrapEthStep(sdk, weth9, from, to));
+        continue;
+      }
+      // if (from.symbol === 'WETH' && to.symbol === 'ETH') {
+      //   this.steps.push(new WrapEthStep(from, to));
+      //   continue;
+      // }
       this.steps.push(new SwapStep(well, from, to));
     }
 
@@ -128,7 +139,7 @@ export class Quote {
     const blockChainDeadline = deadlineSecondsToBlockchain(deadline);
 
     if (this.route.length === 1) {
-      return this.prepareSingle(recipient, blockChainDeadline, overrides);
+      return this.prepareSingle(recipient, blockChainDeadline);
     } else {
       return fwd
         ? this.prepareMulti(recipient, blockChainDeadline, overrides)
@@ -136,12 +147,15 @@ export class Quote {
     }
   }
 
-  private async prepareSingle(recipient: string, deadline: number, overrides?: TxOverrides) {
+  private async prepareSingle(recipient: string, deadline: number) {
     const step = this.steps[0];
     const { contract, method, parameters } = step.swapSingle(this.amountUsedForQuote, step.quoteResultWithSlippage!, recipient, deadline);
-    parameters.push(overrides ?? {});
-    // @ts-ignore
-    const doSwap = (): Promise<ContractTransaction> => contract[method](...parameters);
+
+    const doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      parameters.push(overrides ?? {});
+      // @ts-ignore
+      return contract[method](...parameters);
+    };
 
     const amountToSpend = this.direction === Direction.FORWARD ? this.amountUsedForQuote : step.quoteResultWithSlippage!;
 
@@ -172,7 +186,7 @@ export class Quote {
       const step = this.steps[i];
       const nextRecipient = this.steps[i + 1]?.well.contract.address ?? recipient;
 
-      const { contract, method, parameters } = step.shift(nextRecipient, step.quoteResultWithSlippage!);
+      const { contract, method, parameters } = step.swapMany(nextRecipient, step.quoteResultWithSlippage!);
 
       const shiftOp = {
         target: contract.address,
@@ -215,7 +229,7 @@ export class Quote {
       const amountWithSlippage = step.quoteResultWithSlippage!;
       const maxAmountOut = amountWithSlippage;
       const currentDesiredAmount = nextStep ? nextStep.quoteResultWithSlippage! : desiredAmount;
-      const { contract, method, parameters } = step.swapTo(nextRecipient, maxAmountOut, currentDesiredAmount, deadline);
+      const { contract, method, parameters } = step.swapManyReverse(nextRecipient, maxAmountOut, currentDesiredAmount, deadline);
 
       operations.push({
         target: step.fromToken.address,
@@ -223,10 +237,6 @@ export class Quote {
           .getContract()!
           .interface.encodeFunctionData("approve", [step.well.address, amountWithSlippage.toBigNumber()]),
         clipboard: "0x0000000000000000000000000000000000000000000000000000000000000000" // Clipboard.encode([])
-      });
-      console.log("Approval:", {
-        target: step.fromToken.address,
-        callData: `approve(${step.well.address}, ${amountWithSlippage.toBigNumber()})`
       });
 
       const swapToOp = {
@@ -260,12 +270,13 @@ export class Quote {
 
   async getApproval(token: Token, amount: TokenValue, spender: string, account: string) {
     if (!account) return;
+    if (token.symbol === "ETH") return;
+
     const allowance = await token.getAllowance(account, spender);
 
     if (allowance && allowance.gte(amount)) return;
 
     const doApproval = () => {
-      console.log(`${token.symbol}.approve(${spender}, ${amount.toHuman()})`);
       return token.approve(spender, amount);
     };
 

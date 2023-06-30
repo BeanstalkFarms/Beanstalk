@@ -1,27 +1,12 @@
 import { Token, TokenValue } from "@beanstalk/sdk-core";
 import { Well as WellContract } from "src/constants/generated";
 import { Well } from "../Well";
+import { Operation } from "./Types";
 
 export enum Direction {
   FORWARD,
   REVERSE
 }
-
-export type SwapFromOp = {
-  contract: WellContract;
-  method: string;
-  parameters: Parameters<WellContract["swapFrom"]>;
-};
-export type SwapToOp = {
-  contract: WellContract;
-  method: string;
-  parameters: Parameters<WellContract["swapTo"]>;
-};
-export type ShiftOp = {
-  contract: WellContract;
-  method: string;
-  parameters: Parameters<WellContract["shift"]>;
-};
 
 export class SwapStep {
   well: Well;
@@ -87,7 +72,10 @@ export class SwapStep {
     return { quote: this.quoteResult, quoteWithSlippage: this.quoteResultWithSlippage, quoteGasEstimate: this.quoteGasEstimate };
   }
 
-  swapSingle(amount: TokenValue, amountWithSlippage: TokenValue, recipient: string, deadline: number): SwapFromOp | SwapToOp {
+  /**
+   * The operation to perform when the swap consists of a single step in the route. IE, the to and from tokens are in the same well
+   */
+  swapSingle(amount: TokenValue, amountWithSlippage: TokenValue, recipient: string, deadline: number): Operation {
     if (!this.hasQuoted) throw new Error("Must do a quote before swapping");
 
     return this.direction === Direction.FORWARD
@@ -117,7 +105,11 @@ export class SwapStep {
         };
   }
 
-  shift(recipient: string, minAmountOut: TokenValue): ShiftOp | SwapToOp {
+  /**
+   * The operation to perform when the swap consists of more than one step in the route. For Wells, this means
+   * doing a shift operation through farm/pipeline
+   */
+  swapMany(recipient: string, minAmountOut: TokenValue): Operation {
     if (!this.hasQuoted) throw new Error("Must do a quote before swapping");
     if (this.direction !== Direction.FORWARD) throw new Error("swapMany() can only be called for quotes where direction was Forward");
 
@@ -132,7 +124,10 @@ export class SwapStep {
     };
   }
 
-  swapTo(recipient: string, maxAmountIn: TokenValue, desiredAmount: TokenValue, deadline: number): ShiftOp | SwapToOp {
+  /**
+   * The operation to perform when the swap consists of more than one step in the route and the direction is reversed.
+   */
+  swapManyReverse(recipient: string, maxAmountIn: TokenValue, desiredAmount: TokenValue, deadline: number): Operation {
     if (!this.hasQuoted) throw new Error("Must do a quote before swapping");
     if (this.direction !== Direction.REVERSE) throw new Error("swapMany() can only be called for quotes where direction was Reverse");
 

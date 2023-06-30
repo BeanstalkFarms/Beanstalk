@@ -3,6 +3,7 @@ import { Direction, SwapBuilder } from "@beanstalk/wells";
 import chalk from "chalk";
 import { account as _account, sdk, chain } from "../setup";
 import { BigNumber } from "ethers";
+import { getWellsFromAquifer } from "./utils";
 
 let account: string;
 let slippage: number;
@@ -19,18 +20,24 @@ async function main() {
 }
 
 async function go() {
-  const bean_weth_well = await sdk.wells.getWell("0x453FDB6f2e8E0098e5FdBcE1F179905a02a4b78e");
-  const bean_usdc_well = await sdk.wells.getWell("0x07ef4e4d451209f9b927663f1937Bc367Ba6eee2");
-  const usdc_dai_well = await sdk.wells.getWell("0x6502cF9a688db4C717ef864CF64fE0DdAB309C37");
+  // const bean_weth_well = await sdk.wells.getWell("0x453FDB6f2e8E0098e5FdBcE1F179905a02a4b78e");
+  // const bean_usdc_well = await sdk.wells.getWell("0x07ef4e4d451209f9b927663f1937Bc367Ba6eee2");
+  // const usdc_dai_well = await sdk.wells.getWell("0x6502cF9a688db4C717ef864CF64fE0DdAB309C37");
+  const wells = await getWellsFromAquifer(sdk, "0xE2b5bDE7e80f89975f7229d78aD9259b2723d11F");
   const BEAN = sdk.tokens.BEAN;
   const USDC = sdk.tokens.USDC;
   const WETH = sdk.tokens.WETH;
+  const ETH = sdk.tokens.ETH;
   const DAI = sdk.tokens.DAI;
 
   const builder = sdk.wells.swapBuilder;
-  await builder.addWell(bean_weth_well);
-  await builder.addWell(bean_usdc_well);
-  await builder.addWell(usdc_dai_well);
+  for await (const well of wells) {
+    await builder.addWell(well);
+  }
+  console.log(builder.router.getGraphCode());
+  // await builder.addWell(bean_weth_well);
+  // await builder.addWell(bean_usdc_well);
+  // await builder.addWell(usdc_dai_well);
 
   slippage = 0.1;
 
@@ -59,9 +66,10 @@ async function go() {
   // process.exit();
 
   // await swapOne(WETH, BEAN, builder);
-  // await swapOneReverse(WETH, BEAN, builder);
-  // await swapMulti(WETH, DAI, builder);
-  await swapMultiReverse(WETH, USDC, builder);
+  // await swapOne(ETH, WETH, builder);
+  // await swapOneReverse(ETH, WETH, builder);
+  await swapMulti(ETH, BEAN, builder);
+  // await swapMultiReverse(WETH, USDC, builder);
 }
 
 async function swapOne(token1: Token, token2: Token, builder: SwapBuilder) {
@@ -70,11 +78,12 @@ async function swapOne(token1: Token, token2: Token, builder: SwapBuilder) {
 
   const amount = token1.amount(1);
 
-  const quote = await quoter.quoteForward(amount, slippage);
-  // console.log(`${amount.toHuman()} ${token1.symbol} ==> ${quote.toHuman()} ${token2.symbol}`);
+  const quote = await quoter.quoteForward(amount, account, slippage);
+  console.log(`Quote: ${amount.toHuman()} ${token1.symbol} ==> ${quote.amount.toHuman()} ${token2.symbol}`);
 
-  console.log(`Setting balance of ${amount.toHuman()} ${token1.symbol}`);
-  await chain.setBalance(token1, account, amount);
+  // don't set balance if ETH
+  // console.log(`Setting balance of ${amount.toHuman()} ${token1.symbol}`);
+  // await chain.setBalance(token1, account, amount);
 
   const { doApproval, doSwap } = await quoter.prepare(account);
   if (doApproval) {
@@ -86,24 +95,31 @@ async function swapOne(token1: Token, token2: Token, builder: SwapBuilder) {
     console.log("No Approval needed");
   }
 
-  const stx = await doSwap();
+  const overrides = {};
+  if (token1.symbol === "ETH") overrides.value = amount.toBigNumber();
+
+  const stx = await doSwap(overrides);
   await stx.wait();
   console.log("Done!!!");
 }
 
 async function swapOneReverse(token1: Token, token2: Token, builder: SwapBuilder) {
-  const quote = builder.buildQuote(token1, token2, account);
-  if (!quote) throw new Error("No path found");
+  const quoter = builder.buildQuote(token1, token2, account);
+  if (!quoter) throw new Error("No path found");
+
+  console.log(quoter.route.toString());
   const targetAmount = token2.amount(1000);
 
-  const quoteAmount = await quote.quoteReverse(targetAmount, slippage);
-  console.log(`${quoteAmount.toHuman()} ${quote.fromToken.symbol} Needed to get ==> ${targetAmount.toHuman()} ${quote.toToken.symbol}`);
+  const quote = await quoter.quoteReverse(targetAmount, account, slippage);
+  console.log(`${quote.amount.toHuman()} ${quoter.fromToken.symbol} Needed to get ==> ${targetAmount.toHuman()} ${quoter.toToken.symbol}`);
 
-  console.log(`Setting balance of ${quoteAmount.toHuman()} ${token1.symbol}`);
-  // This is probably wrong, we should set the balance to quoteAmount + slippage
-  await chain.setBalance(token1, account, quoteAmount);
+  console.log(`Setting balance of ${quote.amount.toHuman()} ${token1.symbol}`);
+  // This is probably wrong, we should set the balance to quote + slippage
+  if (token1.symbol !== "ETH") {
+    await chain.setBalance(token1, account, quote.amount);
+  }
 
-  const { doApproval, doSwap } = await quote.prepare(account, 1, { gasLimit: 200_000 });
+  const { doApproval, doSwap } = await quoter.prepare(account, 1, { gasLimit: 200_000 });
   if (doApproval) {
     console.log("Approving...");
     const atx = await doApproval();
@@ -112,7 +128,11 @@ async function swapOneReverse(token1: Token, token2: Token, builder: SwapBuilder
   } else {
     console.log("NO Approval needed");
   }
-  const stx = await doSwap();
+
+  const overrides = {};
+  if (token1.symbol === "ETH") overrides.value = quote.amount.toBigNumber();
+
+  const stx = await doSwap(overrides);
 
   await stx.wait();
   console.log("Done!!!");
@@ -121,11 +141,12 @@ async function swapOneReverse(token1: Token, token2: Token, builder: SwapBuilder
 async function swapMulti(token1: Token, token2: Token, builder: SwapBuilder) {
   const quoter = builder.buildQuote(token1, token2, account);
   if (!quoter) throw new Error("No path found");
+  console.log(quoter.route.toString());
 
   const amount = token1.amount(5);
 
-  const quote = await quoter.quoteForward(5, slippage);
-  console.log(`\nFull quote: ${amount.toHuman()} ${token1.symbol} ==> ${quote.toHuman()} ${token2.symbol}`);
+  const quote = await quoter.quoteForward(5, account, slippage);
+  console.log(`\nFull quote: ${amount.toHuman()} ${token1.symbol} ==> ${quote.amount.toHuman()} ${token2.symbol}`);
 
   console.log(`Set balance: ${amount.toHuman()} ${token1.symbol}`);
   await chain.setBalance(token1, account, amount);
@@ -139,8 +160,11 @@ async function swapMulti(token1: Token, token2: Token, builder: SwapBuilder) {
   } else {
     console.log("NO Approval needed");
   }
-  const stx = await doSwap();
-  await stx.wait();
+
+  const overrides = {};
+  if (token1.symbol === "ETH") overrides.value = quote.amount.toBigNumber();
+
+  const stx = await doSwap(overrides);
   console.log("Done!!!");
 }
 
