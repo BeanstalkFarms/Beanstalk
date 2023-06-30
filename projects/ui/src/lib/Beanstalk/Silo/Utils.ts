@@ -1,6 +1,8 @@
+import { Deposit } from '@beanstalk/sdk';
 import { LegacyCrate, LegacyDepositCrate } from '~/state/farmer/silo';
 
 /**
+ * @deprecated
  * Order crates by Season.
  */
 export function sortCratesBySeason<T extends LegacyCrate>(
@@ -9,6 +11,17 @@ export function sortCratesBySeason<T extends LegacyCrate>(
 ) {
   const m = direction === 'asc' ? -1 : 1;
   return [...crates].sort((a, b) => m * b.season.minus(a.season).toNumber());
+}
+
+/**
+ * Order crates by Stem.
+ */
+export function sortCratesByStem<T extends Deposit>(
+  crates: T[],
+  direction: 'asc' | 'desc' = 'desc'
+) {
+  const m = direction === 'asc' ? -1 : 1;
+  return [...crates].sort((a, b) => m * b.stem.sub(a.stem).toNumber());
 }
 
 /**

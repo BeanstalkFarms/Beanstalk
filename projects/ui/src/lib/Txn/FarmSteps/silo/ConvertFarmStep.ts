@@ -15,11 +15,11 @@ export class ConvertFarmStep extends FarmStep {
     _sdk: BeanstalkSDK,
     private _tokenIn: Token,
     private _season: number,
-    private _crates: TokenSiloBalance['deposited']['crates']
+    private _deposits: TokenSiloBalance['deposits']
   ) {
     super(_sdk);
     this._sdk = _sdk;
-    this._crates = _crates;
+    this._deposits = _deposits;
 
     const path = ConvertFarmStep.getConversionPath(this._sdk, this._tokenIn);
 
@@ -30,7 +30,7 @@ export class ConvertFarmStep extends FarmStep {
   /// this logic exists in the SDK but won't work b/c we need to add plant
   static async _handleConversion(
     sdk: BeanstalkSDK,
-    _crates: TokenSiloBalance['deposited']['crates'],
+    _deposits: TokenSiloBalance['deposits'],
     _tokenIn: Token,
     _tokenOut: Token,
     _amountIn: TokenValue,
@@ -40,12 +40,12 @@ export class ConvertFarmStep extends FarmStep {
   ) {
     const { beanstalk } = sdk.contracts;
 
-    const crates = [..._crates];
+    const deposits = [..._deposits];
 
     let amountIn = _amountIn;
 
     if (plant?.canPrependPlant(_tokenIn)) {
-      crates.push(plant.makePlantCrate());
+      deposits.push(plant.makePlantCrate());
       amountIn = amountIn.add(plant.getAmount());
     }
 
@@ -55,7 +55,7 @@ export class ConvertFarmStep extends FarmStep {
       _tokenIn,
       _tokenOut,
       amountIn,
-      crates,
+      deposits,
       _season
     );
     console.debug('[ConvertFarmStep][conversion]: ', conversion);
@@ -78,7 +78,7 @@ export class ConvertFarmStep extends FarmStep {
           amountIn,
           minAmountOut
         ),
-        conversion.crates.map((c) => c.season.toString()),
+        conversion.crates.map((c) => c.stem.toString()),
         conversion.crates.map((c) => c.amount.abs().toBlockchain()),
       ]);
 
@@ -96,7 +96,7 @@ export class ConvertFarmStep extends FarmStep {
   ) {
     return ConvertFarmStep._handleConversion(
       this._sdk,
-      this._crates,
+      this._deposits,
       this._tokenIn,
       this._tokenOut,
       _amountIn,

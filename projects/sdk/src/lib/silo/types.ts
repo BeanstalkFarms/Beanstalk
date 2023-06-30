@@ -7,9 +7,11 @@ import { EIP712PermitMessage } from "src/lib/permit";
  * that has been added to the Silo.
  */
 export type Deposit<T extends any = TokenValue> = {
-  /** The Season that the Crate was created. */
+  /** The Stem is the ID of the deposit. */
   stem: ethers.BigNumber;
-  /** The amount of this Crate that was created, denominated in the underlying Token. */
+  /** */
+  // season: ethers.BigNumber | undefined;
+  /** The amount of this Deposit that was created, denominated in the underlying Token. */
   amount: T;
   /** The BDV of the Deposit, determined upon Deposit. */
   bdv: T;

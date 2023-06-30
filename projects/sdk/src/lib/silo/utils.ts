@@ -39,6 +39,7 @@ export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token
   let totalAmount = TokenValue.ZERO;
   let totalBDV = TokenValue.ZERO;
   let totalStalk = TokenValue.ZERO;
+
   const cratesToWithdrawFrom: Deposit[] = [];
 
   deposits.some((deposit) => {
