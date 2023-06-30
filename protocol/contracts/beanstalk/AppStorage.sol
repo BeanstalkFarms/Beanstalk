@@ -318,7 +318,6 @@ contract Storage {
         uint32 sunriseBlock; //    │ 4 (23)
         bool abovePeg; //          | 1 (24)
         uint16 stemStartSeason; // ┘ 2 (26/32)
-        uint48 lastUsdPrice;
         uint256 start;
         uint256 period;
         uint256 timestamp;
