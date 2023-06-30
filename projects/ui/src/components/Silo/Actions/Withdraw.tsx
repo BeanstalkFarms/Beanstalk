@@ -97,7 +97,7 @@ const WithdrawForm: FC<
   // Results
   const withdrawResult = useMemo(() => {
     const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
-    const crates = siloBalance?.deposited.crates || [];
+    const crates = siloBalance?.deposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
     if (isUsingPlant && plantAndDoX.getAmount().lte(0)) return null;
@@ -116,13 +116,13 @@ const WithdrawForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.deposited.crates,
+    siloBalance?.deposits,
     values.tokens,
     whitelistedToken,
   ]);
 
   /// derived
-  const depositedBalance = siloBalance?.deposited.amount;
+  const depositedBalance = siloBalance?.amount;
 
   const isReady = withdrawResult && !withdrawResult.amount.lt(0);
 
@@ -162,14 +162,18 @@ const WithdrawForm: FC<
                     </div>
                     <Divider sx={{ opacity: 0.2, my: 1 }} />
                     {withdrawResult.crates.map((_crate, i) => (
+                      // FIXME: same as convert
                       <div key={i}>
-                        Season {_crate.season.toString()}:{' '}
+                        Season {_crate.stem.toString()}:{' '}
                         {displayFullBN(
                           _crate.bdv,
                           whitelistedToken.displayDecimals
                         )}{' '}
                         BDV,{' '}
-                        {displayFullBN(_crate.stalk, STALK.displayDecimals)}{' '}
+                        {displayFullBN(
+                          _crate.stalk.total,
+                          STALK.displayDecimals
+                        )}{' '}
                         STALK,{' '}
                         {displayFullBN(_crate.seeds, SEEDS.displayDecimals)}{' '}
                         SEEDS
@@ -281,7 +285,7 @@ const WithdrawPropProvider: FC<{
       try {
         middleware.before();
         if (!account) throw new Error('Missing signer');
-        if (!farmerBalances?.deposited.crates) {
+        if (!farmerBalances?.deposits) {
           throw new Error('No balances found');
         }
 
@@ -305,7 +309,7 @@ const WithdrawPropProvider: FC<{
         }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
-          ...farmerBalances.deposited.crates,
+          ...farmerBalances.deposits,
         ]);
 
         withdrawTxn.build(
@@ -362,7 +366,7 @@ const WithdrawPropProvider: FC<{
     [
       middleware,
       account,
-      farmerBalances?.deposited.crates,
+      farmerBalances?.deposits,
       sdk,
       token,
       plantAndDoX,
