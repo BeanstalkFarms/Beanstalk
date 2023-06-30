@@ -39,6 +39,9 @@ contract InitBipNewSilo {
         // Clear the storage variable
         delete s.s.deprecated_seeds;
 
+        // set the withdrawTimer to 0: 
+        s.season.withdrawSeasons = 0;
+
         //update all silo info for current Silo-able assets
 
         uint32 currentSeason = s.season.current;
