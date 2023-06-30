@@ -6,7 +6,7 @@ import { GridColumns } from '@mui/x-data-grid';
 import { Token } from '~/classes';
 import { FarmerSiloBalance } from '~/state/farmer/silo';
 import type { LegacyDepositCrate } from '~/state/farmer/silo';
-import { calculateGrownStalk, displayBN, displayFullBN } from '~/util';
+import { displayBN, displayFullBN } from '~/util';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { BEAN, STALK } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
@@ -99,11 +99,7 @@ const Deposits: FC<
           headerAlign: 'right',
           valueFormatter: (params) => displayBN(params.value),
           renderCell: (params) => {
-            const grownStalk = calculateGrownStalk(
-              currentSeason,
-              params.row.seeds,
-              params.row.season
-            );
+            const grownStalk = ZERO_BN; // FIXME
             const totalStalk = params.value.plus(grownStalk);
             return (
               <Tooltip
@@ -116,7 +112,6 @@ const Deposits: FC<
                     <StatHorizontal label="Stalk grown since Deposit">
                       {displayFullBN(grownStalk, 2, 2)}
                     </StatHorizontal>
-                    {/* <Typography color="gray">Earning {displayBN(seedsPerSeason)} Stalk per Season</Typography> */}
                   </Stack>
                 }
               >
@@ -139,7 +134,7 @@ const Deposits: FC<
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [token.displayDecimals, Bean, currentSeason]
+    [token.displayDecimals, Bean]
   );
 
   const amount = siloBalance?.deposited.amount;
