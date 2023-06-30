@@ -16,6 +16,7 @@ import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
 import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 import Convert from './Convert';
+import Claim from '~/components/Silo/Actions/Claim';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.
@@ -75,9 +76,9 @@ const SiloActions: FC<{
             <Withdraw token={token} siloBalance={siloBalanceAsync} />
           )}
           {/* FIXME: only show if user has legacy claimable assets */}
-          {/* {hasClaimableBeans && tab === 4 && (
+          {hasClaimableBeans && tab === 4 && (
             <Claim token={token} siloBalance={props.siloBalance} />
-          )} */}
+          )}
         </ModuleContent>
       </Module>
       {/* Tables */}
