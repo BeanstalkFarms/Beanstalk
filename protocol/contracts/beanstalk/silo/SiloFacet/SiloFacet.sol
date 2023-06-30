@@ -179,7 +179,7 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
-        for (uint256 i = 0; i < amounts.length; i++) {
+        for (uint256 i = 0; i < amounts.length; ++i) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
             if (sender != msg.sender) {
                 LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amounts[i]);
@@ -248,7 +248,7 @@ contract SiloFacet is TokenSilo {
         // allowance requirements are checked in transferDeposit
         address token;
         int96 cumulativeGrownStalkPerBDV;
-        for(uint i; i < depositIds.length; i++) {
+        for(uint i; i < depositIds.length; ++i) {
             (token, cumulativeGrownStalkPerBDV) = 
                 LibBytes.unpackAddressAndStem(depositIds[i]);
             transferDeposit(
@@ -294,7 +294,7 @@ contract SiloFacet is TokenSilo {
      * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
      * the current Season.
      */
-    function plant() external payable returns (uint256 beans) {
+    function plant() external payable returns (uint256 beans, int96 stem) {
         return _plant(msg.sender);
     }
 

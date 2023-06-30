@@ -282,6 +282,15 @@ library LibSilo {
     /**
      * @notice Decrements the Stalk and Roots of `sender` and increments the Stalk
      * and Roots of `recipient` by the same amount.
+     * 
+     * If the transfer is done during the vesting period, the earned beans are still
+     * defered until after the vesting period has elapsed. 
+     * @dev There may be cases where more than the earned beans 
+     * of the current season is vested, but can be claimed after the v.e has ended.
+     * We accept this inefficency due to 
+     * 1) the short vesting period.
+     * 2) math complexity/gas costs needed to implement a correct solution.
+     * 3) security risks.
      */
     function transferStalk(
         address sender,
@@ -289,9 +298,27 @@ library LibSilo {
         uint256 stalk
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 roots = stalk == s.a[sender].s.stalk
+        uint256 roots;
+        if(inVestingPeriod()){
+            // transferring all stalk means that the earned beans is transferred.
+            // deltaRoots cannot be transferred as it is calculated on an account basis. 
+            if(stalk == s.a[sender].s.stalk){
+                s.a[sender].deltaRoots = 0;
+            } else {
+                // partial transfer
+                uint256 deltaRootsRemoved = uint256(s.a[sender].deltaRoots)
+                    .mul(stalk)
+                    .div(s.a[sender].s.stalk);
+                s.a[sender].deltaRoots = s.a[sender].deltaRoots.sub(deltaRootsRemoved.toUint128());
+            }
+            roots = stalk == s.a[sender].s.stalk
+                ? s.a[sender].roots
+                : s.s.roots.sub(1).mul(stalk).div(s.s.stalk - s.newEarnedStalk).add(1);
+        } else {
+            roots = stalk == s.a[sender].s.stalk
             ? s.a[sender].roots
             : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
+        }
 
         // Subtract Stalk and Roots from the 'sender' balance.        
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);

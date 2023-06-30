@@ -33,15 +33,16 @@ contract MetadataImage {
     }
 
     function generateImage(uint256 depositId) internal view returns (string memory) {
-        (address token,) = LibBytes.unpackAddressAndStem(depositId);
+        (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         int96 stemTip = LibTokenSilo.stemTipForToken(token);
+        int96 grownStalkPerBdv = stemTip - stem;
         return string(
             abi.encodePacked(
                 '<svg class="svgBody" width="255" height="350" viewBox="0 0 255 350" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">',
-                defs(stemTip),
+                defs(grownStalkPerBdv),
                 back(),
-                printPlots(stemTip),
-                blackBars(token),
+                printPlots(grownStalkPerBdv),
+                blackBars(token, stem),
                 '</svg>'
             )
         );
@@ -63,7 +64,6 @@ contract MetadataImage {
             emptyPlot(),
             partialLeafRow(sproutsInFinalRow),
             partialLeafPlot(stemTip),
-            bar(),
             leaf(),
             silo(),
             beanToken(),
@@ -374,16 +374,6 @@ contract MetadataImage {
         );
     }
 
-    function bar() internal pure returns (string memory) {
-        return string(
-            abi.encodePacked(
-                '<g id="bar">',
-                '<rect x="39" y="248" width="177" height="17" rx="5" fill="#8B938C" fill-opacity="0.1"/>',
-                '</g>'
-            )
-        );
-    }
-
     function leaf() internal pure returns (string memory) { 
         return string(
             abi.encodePacked(
@@ -512,14 +502,17 @@ contract MetadataImage {
 
     
 
-    function blackBars(address token) internal pure returns(string memory) {
+    function blackBars(address token, int96 stem) internal pure returns(string memory) {
         return string(
             abi.encodePacked(
-                '<rect x="0" y="0" width="255" height="20" rx="5" fill="Black"/>',
+                '<rect x="0" y="0" width="255" height="20" rx="5" fill="#242424"/>',
                 tokenName(token),
                 useAsset(getTokenName(token), 240, 4),
-                '<rect x="0" y="330" width="255" height="20" rx="5" fill="Black"/>',
-                movingTokenAddress(token)
+                '<rect x="0" y="330" width="255" height="20" rx="5" fill="#242424"/>',
+                movingTokenAddress(token),
+                '<text x="230" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
+                uint256(stem).toString(),
+                '</text>'
             )
         );
     }
