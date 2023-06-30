@@ -9,9 +9,7 @@ import BadgeTab from '~/components/Common/BadgeTab';
 import Deposit from './Deposit';
 import Withdraw from './Withdraw';
 import Transfer from './Transfer';
-import Claim from './Claim';
 import Deposits from './Deposits';
-import Withdrawals from './Withdrawals';
 import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
 
 import { FC } from '~/types';
@@ -76,18 +74,15 @@ const SiloActions: FC<{
           {tab === 3 && (
             <Withdraw token={token} siloBalance={siloBalanceAsync} />
           )}
-
-          {hasClaimableBeans && tab === 4 && (
+          {/* FIXME: only show if user has legacy claimable assets */}
+          {/* {hasClaimableBeans && tab === 4 && (
             <Claim token={token} siloBalance={props.siloBalance} />
-          )}
+          )} */}
         </ModuleContent>
       </Module>
       {/* Tables */}
-      <Box sx={{ display: tab <= 3 ? 'block' : 'none' }}>
+      <Box>
         <Deposits token={props.token} siloBalance={props.siloBalance} />
-      </Box>
-      <Box sx={{ display: tab >= 4 ? 'block' : 'none' }}>
-        <Withdrawals token={props.token} siloBalance={props.siloBalance} />
       </Box>
     </>
   );
