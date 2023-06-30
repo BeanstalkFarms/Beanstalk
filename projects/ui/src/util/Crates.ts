@@ -14,6 +14,7 @@ import {
 export const STALK_PER_SEED_PER_SEASON = 1 / 10_000;
 
 /**
+ * @deprecated TODO: Refactor this to a selector, use the SDK
  */
 export const selectCratesForEnroot = (
   beanstalk: Beanstalk,

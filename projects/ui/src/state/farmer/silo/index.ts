@@ -26,13 +26,6 @@ export type LegacyDepositCrate = LegacyCrate & {
 };
 
 /**
- * A "Withdrawal" represents an amount of a "Deposit"
- * that was removed from the Silo. Withdrawals remain pending
- * for several seasons until they are ready to be Claimed.
- */
-export type LegacyWithdrawalCrate = LegacyCrate & {};
-
-/**
  * A "Silo Balance" provides all information
  * about a Farmer's ownership of a Whitelisted Silo Token.
  */
@@ -56,7 +49,7 @@ export type FarmerSiloBalance = {
     /** */
     bdv: BigNumberJS;
     /** All Withdrawal crates. */
-    crates: LegacyWithdrawalCrate[];
+    crates: any[];
   };
 
   /** @deprecated */
