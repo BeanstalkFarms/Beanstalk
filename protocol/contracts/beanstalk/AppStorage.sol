@@ -411,7 +411,7 @@ contract Storage {
          */
         bytes1 encodeType;
 
-        /// @dev  3 bytes of additional storage space is available here.
+        /// @dev  7 bytes of additional storage space is available here.
 
     }
 
@@ -487,6 +487,7 @@ contract Storage {
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
+ * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
  */
 struct AppStorage {
     uint8 deprecated_index;
