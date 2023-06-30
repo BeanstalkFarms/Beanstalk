@@ -30,7 +30,7 @@ const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo } = require("./scripts/bips.js");
+const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -95,6 +95,11 @@ task("sunrise", async function () {
   const beanstalkAdmin = await getBeanstalkAdminControls();
   await beanstalkAdmin.forceSunrise();
 });
+
+task("getTime", async function() {
+  this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
+  console.log("Current time: ",  await this.season.time());
+})
 
 /*task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
@@ -184,6 +189,10 @@ task("bip34", async function () {
 task("silov3", async function () {
   await bipNewSilo();
 });
+
+task('beanstalkAdmin', async function () {
+  await mockBeanstalkAdmin();
+})
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
