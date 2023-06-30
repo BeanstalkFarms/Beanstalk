@@ -6,7 +6,7 @@ import {
 } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
-import { DepositCrate } from '~/state/farmer/silo';
+import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { tokenValueToBN } from '~/util';
 
 export default class PlantAndDoX {
@@ -65,11 +65,15 @@ export default class PlantAndDoX {
       const grownStalk = STALK.amount(0);
 
       // asTV => as DepositCrate<TokenValue> from SDK;
-      const crate: TokenSiloBalance['deposited']['crates'][number] = {
+      const crate: TokenSiloBalance['deposits'][number] = {
         season: ethers.BigNumber.from(season),
         amount: earnedBeans,
         bdv: earnedBeans,
-        stalk,
+        stalk: {
+          total: stalk.add(grownStalk),
+          base: stalk,
+          grown: grownStalk,
+        },
         baseStalk: stalk,
         grownStalk,
         seeds,
@@ -77,19 +81,20 @@ export default class PlantAndDoX {
 
       return crate;
     },
+
     // as DepositCrate from UI;
     bigNumber(
       sdk: BeanstalkSDK,
       earnedBeans: BigNumber,
       season: BigNumber
-    ): DepositCrate {
+    ): LegacyDepositCrate {
       const { BEAN } = sdk.tokens;
       const earnedTV = BEAN.amount(earnedBeans.toString());
 
       const stalk = BEAN.getStalk(earnedTV);
       const seeds = BEAN.getSeeds(earnedTV);
 
-      const crate: DepositCrate = {
+      const crate: LegacyDepositCrate = {
         season,
         amount: earnedBeans,
         bdv: earnedBeans,

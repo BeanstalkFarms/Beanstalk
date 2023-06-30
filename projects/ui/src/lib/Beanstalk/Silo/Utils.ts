@@ -1,9 +1,11 @@
-import { Crate, DepositCrate } from '~/state/farmer/silo';
+import { Deposit } from '@beanstalk/sdk';
+import { LegacyCrate, LegacyDepositCrate } from '~/state/farmer/silo';
 
 /**
+ * @deprecated
  * Order crates by Season.
  */
-export function sortCratesBySeason<T extends Crate>(
+export function sortCratesBySeason<T extends LegacyCrate>(
   crates: T[],
   direction: 'asc' | 'desc' = 'desc'
 ) {
@@ -12,9 +14,20 @@ export function sortCratesBySeason<T extends Crate>(
 }
 
 /**
+ * Order crates by Stem.
+ */
+export function sortCratesByStem<T extends Deposit>(
+  crates: T[],
+  direction: 'asc' | 'desc' = 'desc'
+) {
+  const m = direction === 'asc' ? -1 : 1;
+  return [...crates].sort((a, b) => m * b.stem.sub(a.stem).toNumber());
+}
+
+/**
  * Order crates by BDV.
  */
-export function sortCratesByBDVRatio<T extends DepositCrate>(
+export function sortCratesByBDVRatio<T extends LegacyDepositCrate>(
   crates: T[],
   direction: 'asc' | 'desc' = 'asc'
 ) {

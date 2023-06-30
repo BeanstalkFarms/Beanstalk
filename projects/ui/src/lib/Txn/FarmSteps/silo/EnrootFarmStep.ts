@@ -1,7 +1,7 @@
 import { BeanstalkSDK, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { EstimatesGas, FarmStep } from '~/lib/Txn/Interface';
-import { DepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
+import { LegacyDepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
 import { TokenMap } from '~/constants';
 
 enum EnrootType {
@@ -12,7 +12,7 @@ enum EnrootType {
 export class EnrootFarmStep extends FarmStep implements EstimatesGas {
   constructor(
     _sdk: BeanstalkSDK,
-    private _crates: Record<string, DepositCrate[]>
+    private _crates: Record<string, LegacyDepositCrate[]>
   ) {
     super(_sdk);
     this._crates = _crates;
@@ -135,16 +135,19 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
     balances: TokenMap<FarmerSiloBalance>,
     getBDV: (token: Token) => BigNumber
   ) {
-    return [...unripeTokens].reduce<TokenMap<DepositCrate[]>>((prev, token) => {
-      const balance = balances[token.address];
-      const depositCrates = balance?.deposited.crates;
+    return [...unripeTokens].reduce<TokenMap<LegacyDepositCrate[]>>(
+      (prev, token) => {
+        const balance = balances[token.address];
+        const depositCrates = balance?.deposited.crates;
 
-      prev[token.address] = depositCrates?.filter((crate) => {
-        const bdv = getBDV(token).times(crate.amount).toFixed(6, 1);
-        return new BigNumber(bdv).gt(crate.bdv);
-      });
+        prev[token.address] = depositCrates?.filter((crate) => {
+          const bdv = getBDV(token).times(crate.amount).toFixed(6, 1);
+          return new BigNumber(bdv).gt(crate.bdv);
+        });
 
-      return prev;
-    }, {});
+        return prev;
+      },
+      {}
+    );
   }
 }

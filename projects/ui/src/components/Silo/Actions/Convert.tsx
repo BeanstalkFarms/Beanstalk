@@ -8,6 +8,8 @@ import {
   NativeToken,
   DataSource,
   BeanstalkSDK,
+  TokenValue,
+  ConvertDetails,
 } from '@beanstalk/sdk';
 import {
   FormStateNew,
@@ -23,10 +25,9 @@ import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import { displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
 import { ZERO_BN } from '~/constants';
 import useToggle from '~/hooks/display/useToggle';
-import { tokenValueToBN, bnToTokenValue } from '~/util';
+import { tokenValueToBN, bnToTokenValue, transform } from '~/util';
 import { FarmerSilo } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { convert } from '~/lib/Beanstalk/Silo/Convert';
 import TransactionToast from '~/components/Common/TxnToast';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -37,7 +38,7 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import useAccount from '~/hooks/ledger/useAccount';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
@@ -88,6 +89,7 @@ const ConvertForm: FC<
     currentSeason: BigNumber;
     /** other */
     sdk: BeanstalkSDK;
+    conversion: ConvertDetails;
   }
 > = ({
   tokenList,
@@ -99,6 +101,7 @@ const ConvertForm: FC<
   values,
   isSubmitting,
   setFieldValue,
+  conversion,
 }) => {
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
@@ -143,55 +146,6 @@ const ConvertForm: FC<
 
   const txnActions = useFarmerFormTxnsActions();
 
-  ///
-  const [conversion, setConversion] = useState(INIT_CONVERSION);
-  const runConversion = useCallback(
-    (_amountIn: BigNumber) => {
-      if (!tokenOut) {
-        setConversion(INIT_CONVERSION);
-      } else if (tokenOut && !isQuoting) {
-        console.debug(
-          `[Convert] setting conversion. tokenOut: ${tokenOut.symbol} isQuoting: ${isQuoting}`
-        );
-        const crates = [...(siloBalance?.deposited.crates || [])]; // depositedCrates
-        // only append the plant deposit crate if SILO:BEAN is being converted
-        if (isUsingPlanted) {
-          crates.push(plantCrate.asBN);
-        }
-
-        setConversion(
-          convert(
-            getNewToOldToken(tokenIn), // from
-            getNewToOldToken(tokenOut), // to
-            _amountIn, // amount
-            crates, // depositedCrates
-            currentSeason
-          )
-        );
-      }
-    },
-    [
-      tokenOut,
-      isQuoting,
-      siloBalance?.deposited.crates,
-      isUsingPlanted,
-      tokenIn,
-      currentSeason,
-      plantCrate.asBN,
-    ]
-  );
-
-  /// FIXME: is there a better pattern for this?
-  /// we want to refresh the conversion info only
-  /// when the quoting is complete and amountOut
-  /// has been updated respectively. if runConversion
-  /// depends on amountIn it will run every time the user
-  /// types something into the input.
-  useEffect(() => {
-    runConversion(totalAmountIn || ZERO_BN);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amountOut, runConversion]);
-
   /// Change button state and prepare outputs
   if (depositedAmount.eq(0)) {
     buttonContent = 'Nothing to Convert';
@@ -210,7 +164,10 @@ const ConvertForm: FC<
     if (tokenOut && amountOut?.gt(0)) {
       isReady = true;
       bdvOut = getBDV(tokenOut).times(amountOut);
-      deltaBDV = MaxBN(bdvOut.minus(conversion.bdv.abs()), ZERO_BN);
+      deltaBDV = MaxBN(
+        bdvOut.minus(transform(conversion.bdv.abs(), 'bnjs')),
+        ZERO_BN
+      );
       deltaStalk = MaxBN(
         tokenValueToBN(tokenOut.getStalk(bnToTokenValue(tokenOut, deltaBDV))),
         ZERO_BN
@@ -247,7 +204,6 @@ const ConvertForm: FC<
   useEffect(() => {
     (async () => {
       if (tokenOut) {
-        if (!tokenOut) return;
         const maxAmount = await ConvertFarmStep.getMaxConvert(
           sdk,
           tokenIn,
@@ -494,6 +450,14 @@ const ConvertPropProvider: FC<{
   /// Form
   const middleware = useFormMiddleware();
   const { txnBundler, plantAndDoX, refetch } = useFormTxnContext();
+  const [conversion, setConversion] = useState<ConvertDetails>({
+    actions: [],
+    amount: TokenValue.ZERO,
+    bdv: TokenValue.ZERO,
+    crates: [],
+    seeds: TokenValue.ZERO,
+    stalk: TokenValue.ZERO,
+  });
 
   const initialValues: ConvertFormValues = useMemo(
     () => ({
@@ -531,13 +495,13 @@ const ConvertPropProvider: FC<{
   >(
     async (tokenIn, _amountIn, tokenOut, { slippage, isConvertingPlanted }) => {
       try {
-        if (!farmerBalances?.deposited) {
+        if (!farmerBalances?.deposits) {
           throw new Error('No balances found');
         }
 
         const result = await ConvertFarmStep._handleConversion(
           sdk,
-          farmerBalances.deposited.crates,
+          farmerBalances.deposits,
           tokenIn,
           tokenOut,
           tokenIn.amount(_amountIn.toString()),
@@ -546,13 +510,15 @@ const ConvertPropProvider: FC<{
           isConvertingPlanted ? plantAndDoX : undefined
         );
 
+        setConversion(result.conversion);
+
         return tokenValueToBN(result.minAmountOut);
       } catch (e) {
         console.debug('[Convert/handleQuote]: FAILED: ', e);
         return new BigNumber('0');
       }
     },
-    [farmerBalances?.deposited, sdk, season, plantAndDoX]
+    [farmerBalances?.deposits, sdk, season, plantAndDoX]
   );
 
   const onSubmit = useCallback(
@@ -589,7 +555,7 @@ const ConvertPropProvider: FC<{
           sdk,
           tokenIn,
           season.toNumber(),
-          farmerBalances.deposited.crates
+          farmerBalances.deposits
         );
 
         const { getEncoded, minAmountOut } = await convertTxn.handleConversion(
@@ -675,6 +641,7 @@ const ConvertPropProvider: FC<{
             siloBalances={farmerSiloBalances}
             currentSeason={season}
             sdk={sdk}
+            conversion={conversion}
             {...formikProps}
           />
         </>

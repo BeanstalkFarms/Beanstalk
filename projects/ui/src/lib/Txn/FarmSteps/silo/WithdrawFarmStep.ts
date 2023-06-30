@@ -1,13 +1,5 @@
-import {
-  BeanstalkSDK,
-  Token,
-  TokenSiloBalance,
-  TokenValue,
-} from '@beanstalk/sdk';
+import { BeanstalkSDK, Deposit, Token, TokenValue } from '@beanstalk/sdk';
 import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
-
-// @REMOVEME
-type DepositCrate = TokenSiloBalance['deposited']['crates'][number];
 
 type WithdrawResult = ReturnType<typeof WithdrawFarmStep['calculateWithdraw']>;
 
@@ -17,7 +9,7 @@ export class WithdrawFarmStep extends FarmStep {
   constructor(
     _sdk: BeanstalkSDK,
     private _token: Token,
-    private _crates: DepositCrate[]
+    private _crates: Deposit[]
   ) {
     super(_sdk);
     this._token = _token;
@@ -52,16 +44,17 @@ export class WithdrawFarmStep extends FarmStep {
       throw new Error('Nothing to Withdraw.');
     }
 
-    const seasons = result.crates.map((crate) => crate.season.toString());
+    // FIXME
+    const stems = result.crates.map((crate) => crate.stem.toString());
     const amounts = result.crates.map((crate) => crate.amount.blockchainString);
 
-    if (seasons.length === 0) {
+    if (stems.length === 0) {
       throw new Error('Malformatted crates.');
-    } else if (seasons.length === 1) {
+    } else if (stems.length === 1) {
       this.pushInput({
         input: new this._sdk.farm.actions.WithdrawDeposit(
           this._token.address,
-          seasons[0],
+          stems[0],
           amounts[0]
         ),
       });
@@ -69,7 +62,7 @@ export class WithdrawFarmStep extends FarmStep {
       this.pushInput({
         input: new this._sdk.farm.actions.WithdrawDeposits(
           this._token.address,
-          seasons,
+          stems,
           amounts
         ),
       });
@@ -83,7 +76,7 @@ export class WithdrawFarmStep extends FarmStep {
   static calculateWithdraw(
     siloWithdraw: BeanstalkSDK['silo']['siloWithdraw'],
     whitelistedToken: Token,
-    _crates: DepositCrate[],
+    _crates: Deposit[],
     _amountIn: TokenValue,
     season: number,
     plant?: PlantAndDoX

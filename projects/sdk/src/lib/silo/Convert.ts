@@ -4,7 +4,7 @@ import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { ConvertEncoder } from "./ConvertEncoder";
 import { Deposit } from "./types";
-import { pickCrates, sortCratesByBDVRatio, sortCratesBySeason } from "./utils";
+import { pickCrates, sortCratesByBDVRatio, sortCratesByStem } from "./utils";
 
 export type ConvertDetails = {
   amount: TokenValue;
@@ -92,7 +92,7 @@ export class Convert {
         /// on both sides of the convert, but having more seeds in older crates
         /// allows you to accrue stalk faster after convert.
         /// Note that during this convert, BDV is approx. equal after the convert.
-        sortCratesBySeason(deposits, "asc")
+        sortCratesByStem(deposits, "asc")
       : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
         /// Since LP deposits can have varying BDV, the best option for the Farmer
         /// is to increase the BDV of their existing lowest-BDV crates.

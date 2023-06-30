@@ -293,7 +293,7 @@ const ClaimPropProvider: FC<{
   const { txnBundler, refetch } = useFormTxnContext();
 
   /// Data
-  const claimableBalance = siloBalance?.claimable.amount;
+  const claimableBalance = siloBalance?.claimable?.amount;
   const isBean = sdk.tokens.BEAN.equals(token);
 
   // Form
