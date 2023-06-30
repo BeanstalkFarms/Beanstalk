@@ -3,6 +3,13 @@ import { FarmFromMode } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
 import { Balance } from '~/state/farmer/balances';
 
+export enum ClaimRewardsAction {
+  MOW = '0',
+  PLANT_AND_MOW = '1',
+  ENROOT_AND_MOW = '2',
+  CLAIM_ALL = '3',
+}
+
 /**
  * Apply the gas minimization strategy:
  *      if (amountIn <= internal)      return INTERNAL
