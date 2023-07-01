@@ -100,7 +100,7 @@ export class Quote {
       const { quote, quoteWithSlippage, quoteGasEstimate } = await step.quote(isMultiReverse ? prevQuoteWSlippage : prevQuote, direction, slippage);
       prevQuote = quote;
       prevQuoteWSlippage = quoteWithSlippage;
-      prevQuoteGasEstimate = prevQuoteGasEstimate.add(quoteGasEstimate)
+      prevQuoteGasEstimate = prevQuoteGasEstimate.add(quoteGasEstimate);
     }
 
     this.fullQuote = prevQuote;
