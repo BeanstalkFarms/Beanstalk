@@ -64,7 +64,7 @@ export class SwapStep {
       this.quoteResult = await this.well.swapToQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.addSlippage(slippage);
       try {
-        this.quoteGasEstimate = await this.well.swapToGasEstimate(this.fromToken, this.toToken, amount, this.quoteResultWithSlippage);
+        this.quoteGasEstimate = await this.well.swapToGasEstimate(this.fromToken, this.toToken, this.quoteResultWithSlippage, amount);
       } catch (e) {
         this.quoteGasEstimate = TokenValue.ZERO;
       }
