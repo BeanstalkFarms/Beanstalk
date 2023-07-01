@@ -37,6 +37,8 @@ export class SwapStep {
   quoteResult: TokenValue | undefined;
   // The resulting quote after slippage applied
   quoteResultWithSlippage: TokenValue | undefined;
+  // The resulting quote's gas estimate
+  quoteGasEstimate: TokenValue | undefined;
   slippage: number;
 
   constructor(well: Well, fromToken: Token, toToken: Token) {
@@ -53,14 +55,24 @@ export class SwapStep {
     if (this.direction == Direction.FORWARD) {
       this.quoteResult = await this.well.swapFromQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.subSlippage(slippage);
+      try {
+        this.quoteGasEstimate = await this.well.swapFromGasEstimate(this.fromToken, this.toToken, amount, this.quoteResultWithSlippage);
+      } catch (e) {
+        this.quoteGasEstimate = TokenValue.ZERO;
+      }
     } else {
       this.quoteResult = await this.well.swapToQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.addSlippage(slippage);
+      try {
+        this.quoteGasEstimate = await this.well.swapToGasEstimate(this.fromToken, this.toToken, amount, this.quoteResultWithSlippage);
+      } catch (e) {
+        this.quoteGasEstimate = TokenValue.ZERO;
+      }
     }
 
     this.hasQuoted = true;
 
-    return { quote: this.quoteResult, quoteWithSlippage: this.quoteResultWithSlippage };
+    return { quote: this.quoteResult, quoteWithSlippage: this.quoteResultWithSlippage, quoteGasEstimate: this.quoteGasEstimate };
   }
 
   swapSingle(amount: TokenValue, amountWithSlippage: TokenValue, recipient: string, deadline: number): SwapFromOp | SwapToOp {

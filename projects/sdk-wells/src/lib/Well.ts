@@ -456,7 +456,7 @@ export class Well {
   }
 
   /**
-   * Estimage gas for `swapTo()`
+   * Estimate gas for `swapTo()`
    * @param fromToken The token to swap from
    * @param toToken The token to swap to
    * @param maxAmountIn The maximum amount of `fromToken` to spend
@@ -465,7 +465,7 @@ export class Well {
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return Estimated gas needed
    */
-  async swapToEstimageGas(
+  async swapToGasEstimate(
     fromToken: Token,
     toToken: Token,
     maxAmountIn: TokenValue,
