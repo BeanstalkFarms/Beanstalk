@@ -154,6 +154,7 @@ export const Migrate: FC<{}> = () => {
                       maxRows={100}
                       onlyTable
                       hideFooter
+                      useLegacySeason
                     />
                   </AccordionDetails>
                 </Accordion>
