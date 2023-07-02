@@ -4,8 +4,8 @@ import { FarmerSilo } from '.';
 import {
   resetFarmerSilo,
   updateFarmerMigrationStatus,
-  updateFarmerSiloBalances,
-  updateFarmerSiloRewards,
+  updateLegacyFarmerSiloBalances,
+  updateLegacyFarmerSiloRewards,
 } from './actions';
 
 const NEG1 = new BigNumber(-1);
@@ -38,7 +38,7 @@ export default createReducer(initialFarmerSilo, (builder) =>
     .addCase(updateFarmerMigrationStatus, (state, { payload }) => {
       state.migrationNeeded = payload;
     })
-    .addCase(updateFarmerSiloBalances, (state, { payload }) => {
+    .addCase(updateLegacyFarmerSiloBalances, (state, { payload }) => {
       const addresses = Object.keys(payload);
       addresses.forEach((address) => {
         const a = address.toLowerCase();
@@ -48,7 +48,7 @@ export default createReducer(initialFarmerSilo, (builder) =>
         };
       });
     })
-    .addCase(updateFarmerSiloRewards, (state, { payload }) => {
+    .addCase(updateLegacyFarmerSiloRewards, (state, { payload }) => {
       state.beans = payload.beans;
       state.stalk = payload.stalk;
       state.seeds = payload.seeds;

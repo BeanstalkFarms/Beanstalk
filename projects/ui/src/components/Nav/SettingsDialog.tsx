@@ -98,14 +98,27 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
             curr,
             crate.amount,
             crate.bdv,
-            crate.season,
-            crate.stalk,
+            crate.stem,
+            crate.stalk.total,
+            crate.stalk.base,
+            crate.stalk.grown,
             crate.seeds,
           ])
         );
         return prev;
       },
-      [['Token', 'Amount', 'BDV', 'Season', 'Stalk', 'Seeds']] as any[]
+      [
+        [
+          'Token',
+          'Amount',
+          'BDV',
+          'Season',
+          'Total Stalk',
+          'Base Stalk',
+          'Grown Stalk',
+          'Seeds',
+        ],
+      ] as any[]
     );
     window.open(
       encodeURI(
