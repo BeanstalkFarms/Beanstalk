@@ -173,7 +173,29 @@ export const Migrate: FC<{}> = () => {
           </LoadingButton>
         </Stack>
       </Box>
-      <Box flex={2} />
+      <Box flex={2}>
+        <Stack spacing={2}>
+          <Stack spacing={1}>
+            <Typography variant="h4">
+              What happens to my Grown Stalk?
+            </Typography>
+            <Typography variant="body1">
+              All of your Grown Stalk will be claimed and applied to your Stalk
+              balance during the migration.
+            </Typography>
+          </Stack>
+          <Stack spacing={1}>
+            <Typography variant="h4">
+              I had withdrawn a deposit but didn&apos;t claim it, will I lose it
+              when migrating?
+            </Typography>
+            <Typography variant="body1">
+              No. After migrating, you can find your withdrawn deposits on the
+              Claim tab.
+            </Typography>
+          </Stack>
+        </Stack>
+      </Box>
     </Row>
   );
 };
