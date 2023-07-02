@@ -37,7 +37,6 @@ const SiloActions: FC<{
 }> = (props) => {
   const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
-  const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
 
   /// Temporary solutions. Remove these when we move the site to use the new sdk types.
   const token = useMemo(() => {
@@ -63,7 +62,7 @@ const SiloActions: FC<{
           <Tab label="Transfer" />
           <Tab label="Withdraw" />
           {hasClaimableBeans && (
-            <BadgeTab label="Claim" showBadge={hasClaimable} />
+            <BadgeTab label="Claim" showBadge={hasClaimableBeans} />
           )}
         </ModuleTabs>
         <ModuleContent>

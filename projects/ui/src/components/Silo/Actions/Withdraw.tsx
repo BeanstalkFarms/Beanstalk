@@ -329,8 +329,10 @@ const WithdrawPropProvider: FC<{
         );
 
         txToast = new TransactionToast({
-          loading: `Withdrawing ${withdrawAmtStr} ${token.name} from the Silo...`,
-          success: `Withdraw successful. Your ${token.name} will be available to Claim at the start of the next Season.`,
+          loading: `Withdrawing ${withdrawAmtStr} ${token.name} to your ${
+            destination === FarmToMode.EXTERNAL ? 'wallet' : 'Farm balance'
+          }...`,
+          success: `Withdraw successful.`,
         });
 
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
