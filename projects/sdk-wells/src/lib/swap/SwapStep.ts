@@ -48,7 +48,7 @@ export class SwapStep {
     this.contract = well.contract;
   }
 
-  async quote(amount: TokenValue, direction: Direction, slippage: number) {
+  async quote(amount: TokenValue, direction: Direction, slippage: number, recipient: string) {
     this.direction = direction;
     this.quoteInput = amount;
 
@@ -56,20 +56,20 @@ export class SwapStep {
       this.quoteResult = await this.well.swapFromQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.subSlippage(slippage);
       try {
-        this.quoteGasEstimate = await this.well.swapFromGasEstimate(this.fromToken, this.toToken, amount, this.quoteResultWithSlippage);
-      } catch (e) {
+        this.quoteGasEstimate = await this.well.swapFromGasEstimate(this.fromToken, this.toToken, amount, this.quoteResultWithSlippage, recipient);
+      } catch {
         this.quoteGasEstimate = TokenValue.ZERO;
       }
     } else {
       this.quoteResult = await this.well.swapToQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.addSlippage(slippage);
       try {
-        this.quoteGasEstimate = await this.well.swapToGasEstimate(this.fromToken, this.toToken, this.quoteResultWithSlippage, amount);
-      } catch (e) {
+        this.quoteGasEstimate = await this.well.swapToGasEstimate(this.fromToken, this.toToken, this.quoteResultWithSlippage, amount, recipient);
+      } catch {
         this.quoteGasEstimate = TokenValue.ZERO;
       }
     }
-
+    
     this.hasQuoted = true;
 
     return { quote: this.quoteResult, quoteWithSlippage: this.quoteResultWithSlippage, quoteGasEstimate: this.quoteGasEstimate };

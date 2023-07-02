@@ -97,7 +97,7 @@ export class Quote {
     let prevQuoteGasEstimate: TokenValue = TokenValue.ZERO;
     for (const step of steps) {
       // console.log("Quote Step:", step.fromToken.symbol, " -> ", step.toToken.symbol);
-      const { quote, quoteWithSlippage, quoteGasEstimate } = await step.quote(isMultiReverse ? prevQuoteWSlippage : prevQuote, direction, slippage);
+      const { quote, quoteWithSlippage, quoteGasEstimate } = await step.quote(isMultiReverse ? prevQuoteWSlippage : prevQuote, direction, slippage, recipient);
       prevQuote = quote;
       prevQuoteWSlippage = quoteWithSlippage;
       prevQuoteGasEstimate = prevQuoteGasEstimate.add(quoteGasEstimate);
