@@ -1,18 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { DataSource } from '@beanstalk/sdk';
+import { DataSource, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import { BEAN_TO_SEEDS, BEAN_TO_STALK, ZERO_BN } from '~/constants';
-import { BEAN } from '~/constants/tokens';
+import { ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
-import {
-  bigNumberResult,
-  tokenResult,
-  tokenValueToBN,
-  transform,
-} from '~/util';
+import { bigNumberResult, transform } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import {
   resetFarmerSilo,
@@ -77,9 +71,8 @@ export const useFetchFarmerSilo = () => {
       // FIXME: multicall this section
       // FIXME: translate?
       const [
-        stalkBalance,
+        activeStalkBalance,
         grownStalkBalance,
-        seedBalance,
         rootBalance,
         earnedBeanBalance,
         migrationNeeded,
@@ -87,16 +80,10 @@ export const useFetchFarmerSilo = () => {
         // allEvents = [],
       ] = await Promise.all([
         // `getStalk()` returns `stalk + earnedStalk` but NOT grown stalk
-        sdk.silo.getStalk(account).then(tokenValueToBN),
-        sdk.silo.getGrownStalk(account).then(tokenValueToBN),
-
-        // After Silo V3 migration, getSeeds() will always return zero.
-        // Seeds have to be calculated by summing up BDV across deposits
-        sdk.silo.getSeeds(account).then(tokenValueToBN),
+        sdk.silo.getStalk(account),
+        sdk.silo.getGrownStalk(account),
         sdk.contracts.beanstalk.balanceOfRoots(account).then(bigNumberResult),
-        sdk.contracts.beanstalk
-          .balanceOfEarnedBeans(account)
-          .then(tokenResult(BEAN)),
+        sdk.silo.getEarnedBeans(account),
 
         // FIXME: this only needs to get fetched once and then can probably be cached
         // in LocalStorage or at least moved to a separate updater to prevent it from
@@ -107,51 +94,26 @@ export const useFetchFarmerSilo = () => {
         // sdk.contracts.beanstalk.depositedB
       ] as const);
 
-      /// stalk + earnedStalk (bundled together at the contract level)
-      const activeStalkBalance = stalkBalance;
-      /// earnedStalk (this is already included in activeStalk)
-      const earnedStalkBalance = earnedBeanBalance.times(BEAN_TO_STALK);
-      /// earnedSeed  (aka plantable seeds)
-      const earnedSeedBalance = earnedBeanBalance.times(BEAN_TO_SEEDS);
-
       dispatch(updateFarmerMigrationStatus(migrationNeeded));
 
-      // total:   active & inactive
-      // active:  owned, actively earning other silo assets
-      // earned:  active but not yet deposited into a Season
-      // grown:   inactive
-      dispatch(
-        updateLegacyFarmerSiloRewards({
-          beans: {
-            earned: earnedBeanBalance,
-          },
-          stalk: {
-            active: activeStalkBalance,
-            earned: earnedStalkBalance,
-            grown: grownStalkBalance,
-            total: activeStalkBalance.plus(grownStalkBalance),
-          },
-          seeds: {
-            active: seedBalance,
-            earned: earnedSeedBalance,
-            total: seedBalance.plus(earnedSeedBalance),
-          },
-          roots: {
-            total: rootBalance,
-          },
-        })
-      );
+      // Transform the flatfile data into the legacy UI data structure
+      const payload: UpdateFarmerSiloBalancesPayload = {};
+
+      let activeSeedBalance: TokenValue = TokenValue.ZERO;
 
       if (migrationNeeded) {
         // After the migration block is locked in, no deposits can change in
         // Silo V2, so we use a flatfile with silo data for each account to
         // prevent the needed to support two different historical event schemas.
-        const balances = await fetchMigrationData(account);
+        const [balances, _activeSeedBalance] = await Promise.all([
+          fetchMigrationData(account),
+          sdk.silo.getSeeds(account),
+        ]);
+
+        // Pre-migration, # of seeds is calc'd from the contract getter
+        activeSeedBalance = _activeSeedBalance;
 
         // const currentSeason = TokenValue.fromBlockchain(season.toString(), 0);
-
-        // Transform the flatfile data into the legacy UI data structure
-        const temp: UpdateFarmerSiloBalancesPayload = {};
         Object.entries(balances.deposits).forEach(
           ([addr, depositsBySeason]) => {
             // All of the tokens addresses in the flatfile
@@ -159,7 +121,7 @@ export const useFetchFarmerSilo = () => {
             const token = sdk.tokens.findByAddress(addr);
             if (!token) return;
 
-            temp[token.address] = {
+            payload[token.address] = {
               deposited: {
                 // Note that deposits in the flatfile are keyed by season
                 // instead of stem
@@ -220,16 +182,18 @@ export const useFetchFarmerSilo = () => {
             };
           }
         );
-
-        dispatch(updateLegacyFarmerSiloBalances(temp));
       } else {
         const balances = await sdk.silo.getBalances(account, {
           source: DataSource.LEDGER,
         });
 
-        const temp: UpdateFarmerSiloBalancesPayload = {};
         balances.forEach((balance, token) => {
-          temp[token.address] = {
+          // Post-migration, # of active seeds is calc'd from BDV
+          activeSeedBalance = activeSeedBalance.add(
+            token.getSeeds(balance.bdv)
+          );
+
+          payload[token.address] = {
             deposited: {
               amount: transform(balance.amount, 'bnjs', token),
               bdv: transform(balance.bdv, 'bnjs', sdk.tokens.BEAN),
@@ -247,9 +211,45 @@ export const useFetchFarmerSilo = () => {
             },
           };
         });
-
-        dispatch(updateLegacyFarmerSiloBalances(temp));
       }
+
+      /// earnedStalk (this is already included in activeStalk)
+      /// earnedSeed  (aka plantable seeds)
+      /// these work because 1 BEAN = 1 BDV.
+      const earnedStalkBalance = sdk.tokens.BEAN.getStalk(earnedBeanBalance);
+      const earnedSeedBalance = sdk.tokens.BEAN.getSeeds(earnedBeanBalance);
+      const totalStalkBalance = activeStalkBalance.add(grownStalkBalance);
+      const totalSeedbalance = activeSeedBalance.add(earnedSeedBalance);
+
+      // total:   active & inactive
+      // active:  owned, actively earning other silo assets
+      // earned:  active but not yet deposited into a Season
+      // grown:   inactive
+      dispatch(
+        updateLegacyFarmerSiloRewards({
+          beans: {
+            earned: transform(earnedBeanBalance, 'bnjs', sdk.tokens.BEAN),
+          },
+          stalk: {
+            active: transform(activeStalkBalance, 'bnjs', sdk.tokens.STALK),
+            earned: transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
+            grown: transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
+            total: transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
+          },
+          seeds: {
+            active: transform(activeSeedBalance, 'bnjs', sdk.tokens.SEEDS),
+            earned: transform(earnedSeedBalance, 'bnjs', sdk.tokens.SEEDS),
+            total: transform(totalSeedbalance, 'bnjs', sdk.tokens.SEEDS),
+          },
+          roots: {
+            total: rootBalance,
+          },
+        })
+      );
+
+      // HEADS UP: this has to be called after updateLegacyFarmerSiloRewards
+      // to prevent some rendering errors. Refactor later.
+      dispatch(updateLegacyFarmerSiloBalances(payload));
     }
   }, [initialized, sdk, account, dispatch, season]);
 
