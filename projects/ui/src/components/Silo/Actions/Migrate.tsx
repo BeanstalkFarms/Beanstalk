@@ -65,15 +65,19 @@ export const Migrate: FC<{}> = () => {
       console.log(`Migrating...`, params);
 
       try {
-        await sdk.contracts.beanstalk.mowAndMigrate(
-          account,
-          params.tokens,
-          params.seasons,
-          params.amounts,
-          params.stalkDiff,
-          params.seedsDiff,
-          params.proof
-        );
+        if (params.tokens.length === 0) {
+          await sdk.contracts.beanstalk.mowAndMigrateNoDeposits(account);
+        } else {
+          await sdk.contracts.beanstalk.mowAndMigrate(
+            account,
+            params.tokens,
+            params.seasons,
+            params.amounts,
+            params.stalkDiff,
+            params.seedsDiff,
+            params.proof
+          );
+        }
       } catch (e) {
         console.error(e);
       } finally {
