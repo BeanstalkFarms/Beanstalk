@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { useSelector } from 'react-redux';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { ClaimRewardsAction } from '~/lib/Beanstalk/Farm';
+import { ClaimRewardsAction } from '~/util';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { UNRIPE_TOKENS } from '~/constants/tokens';
 import useTokenMap from '~/hooks/chain/useTokenMap';

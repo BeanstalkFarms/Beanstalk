@@ -12,7 +12,7 @@ import {
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
-import { ClaimRewardsAction } from '~/lib/Beanstalk/Farm';
+import { ClaimRewardsAction } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import DescriptionButton from '~/components/Common/DescriptionButton';
 import RewardsBar, { RewardsBarProps } from './RewardsBar';

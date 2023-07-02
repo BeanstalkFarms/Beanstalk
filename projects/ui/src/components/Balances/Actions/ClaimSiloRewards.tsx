@@ -25,7 +25,7 @@ import useToggle from '~/hooks/display/useToggle';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
-import { ClaimRewardsAction } from '~/lib/Beanstalk/Farm';
+import { ClaimRewardsAction } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import DescriptionButton from '../../Common/DescriptionButton';
 import GasTag from '../../Common/GasTag';
