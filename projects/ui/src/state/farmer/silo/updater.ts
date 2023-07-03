@@ -14,6 +14,7 @@ import {
   UpdateFarmerSiloBalancesPayload,
   updateFarmerMigrationStatus,
   updateLegacyFarmerSiloRewards,
+  updateFarmerSiloBalances,
 } from './actions';
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -187,6 +188,7 @@ export const useFetchFarmerSilo = () => {
           source: DataSource.LEDGER,
         });
 
+        // Transform for legacy farmer silo struct
         balances.forEach((balance, token) => {
           // Post-migration, # of active seeds is calc'd from BDV
           activeSeedBalance = activeSeedBalance.add(
@@ -211,6 +213,9 @@ export const useFetchFarmerSilo = () => {
             },
           };
         });
+
+        // Apply balances directly to new farmer silo struct
+        dispatch(updateFarmerSiloBalances(balances));
       }
 
       /// earnedStalk (this is already included in activeStalk)
@@ -244,12 +249,6 @@ export const useFetchFarmerSilo = () => {
           total: rootBalance,
         },
       };
-
-      // console.log("Silo Rewards", rewards, {
-      //   totalStalkBalance: totalStalkBalance.toHuman(),
-      //   grownStalkBalance: grownStalkBalance.toHuman(),
-      //   earnedBeanBalance: earnedBeanBalance.toHuman(),
-      // })
 
       dispatch(updateLegacyFarmerSiloRewards(rewards));
 

@@ -1,4 +1,5 @@
 import { createAction } from '@reduxjs/toolkit';
+import { Token, TokenSiloBalance } from '@beanstalk/sdk';
 import { AddressMap } from '~/constants';
 import { FarmerSiloRewards, FarmerSiloBalance } from '.';
 
@@ -17,5 +18,9 @@ export const updateLegacyFarmerSiloRewards =
 
 export const updateLegacyFarmerSiloBalances =
   createAction<UpdateFarmerSiloBalancesPayload>(
-    'farmer/silo/updateFarmerSiloBalances'
+    'farmer/silo/updateLegacyFarmerSiloBalances'
   );
+
+export const updateFarmerSiloBalances = createAction<
+  Map<Token, TokenSiloBalance>
+>('farmer/silo/updateFarmerSiloBalances');

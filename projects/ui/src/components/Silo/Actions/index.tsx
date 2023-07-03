@@ -14,7 +14,6 @@ import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
-import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 import Convert from './Convert';
 import Claim from '~/components/Silo/Actions/Claim';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
@@ -46,14 +45,12 @@ const SiloActions: FC<{
     return match;
   }, [props.token.symbol, sdk.tokens]);
 
-  const siloBalanceAsync = useFarmerSiloBalancesAsync(token);
-
   if (!token) {
     return null;
   }
 
   /// TODO: TEMPORARY. FIX ME
-  const hasClaimableBeans = true;
+  const hasClaimableBeans = false;
 
   return (
     <>
@@ -70,12 +67,8 @@ const SiloActions: FC<{
         <ModuleContent>
           {tab === 0 && <Deposit token={token} />}
           {tab === 1 && <Convert fromToken={token} />}
-          {tab === 2 && (
-            <Transfer token={token} siloBalance={siloBalanceAsync} />
-          )}
-          {tab === 3 && (
-            <Withdraw token={token} siloBalance={siloBalanceAsync} />
-          )}
+          {tab === 2 && <Transfer token={token} />}
+          {tab === 3 && <Withdraw token={token} />}
           {/* FIXME: only show if user has legacy claimable assets */}
           {hasClaimableBeans && tab === 4 && (
             <Claim token={token} siloBalance={props.siloBalance} />

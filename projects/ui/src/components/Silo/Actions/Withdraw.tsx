@@ -37,11 +37,11 @@ import useAccount from '~/hooks/ledger/useAccount';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggle';
-import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
+import { useFarmerSiloBalanceSDK } from '~/hooks/farmer/useFarmerSiloBalances';
 
 // -----------------------------------------------------------------------
 
@@ -233,11 +233,7 @@ const WithdrawForm: FC<
 
 // -----------------------------------------------------------------------
 
-const WithdrawPropProvider: FC<{
-  token: ERC20Token;
-  // TEMPORARY. will be remove when sdk types are moved to redux
-  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
-}> = ({ token, siloBalance }) => {
+const WithdrawPropProvider: FC<{ token: ERC20Token }> = ({ token }) => {
   const sdk = useSdk();
   const { txnBundler, plantAndDoX, refetch } = useFormTxnContext();
   const account = useAccount();
@@ -249,8 +245,8 @@ const WithdrawPropProvider: FC<{
   );
 
   /// Farmer
-  const [farmerBalances, fetchFarmerBalances] = siloBalance;
   const [refetchSilo] = useFetchBeanstalkSilo();
+  const siloBalance = useFarmerSiloBalanceSDK(token);
 
   /// Form
   const middleware = useFormMiddleware();
@@ -282,7 +278,7 @@ const WithdrawPropProvider: FC<{
       try {
         middleware.before();
         if (!account) throw new Error('Missing signer');
-        if (!farmerBalances?.deposits) {
+        if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
 
@@ -306,7 +302,7 @@ const WithdrawPropProvider: FC<{
         }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
-          ...farmerBalances.deposits,
+          ...siloBalance.deposits,
         ]);
 
         withdrawTxn.build(
@@ -347,7 +343,7 @@ const WithdrawPropProvider: FC<{
 
         await refetch(actionsPerformed, { farmerSilo: true }, [
           refetchSilo,
-          fetchFarmerBalances,
+          // fetchFarmerBalances,
         ]);
 
         txToast.success(receipt);
@@ -365,7 +361,7 @@ const WithdrawPropProvider: FC<{
     [
       middleware,
       account,
-      farmerBalances?.deposits,
+      siloBalance?.deposits,
       sdk,
       token,
       plantAndDoX,
@@ -373,7 +369,6 @@ const WithdrawPropProvider: FC<{
       txnBundler,
       refetch,
       refetchSilo,
-      fetchFarmerBalances,
     ]
   );
 
@@ -383,7 +378,7 @@ const WithdrawPropProvider: FC<{
         <WithdrawForm
           token={token}
           withdrawSeasons={withdrawSeasons}
-          siloBalance={farmerBalances}
+          siloBalance={siloBalance}
           season={season}
           sdk={sdk}
           plantAndDoX={plantAndDoX}
@@ -394,11 +389,7 @@ const WithdrawPropProvider: FC<{
   );
 };
 
-const Withdraw: React.FC<{
-  token: ERC20Token;
-  // TEMPORARY. will be remove when sdk types are moved to redux
-  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
-}> = (props) => (
+const Withdraw: React.FC<{ token: ERC20Token }> = (props) => (
   <FormTxnProvider>
     <WithdrawPropProvider {...props} />
   </FormTxnProvider>

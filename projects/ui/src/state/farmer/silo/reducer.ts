@@ -4,6 +4,7 @@ import { FarmerSilo } from '.';
 import {
   resetFarmerSilo,
   updateFarmerMigrationStatus,
+  updateFarmerSiloBalances,
   updateLegacyFarmerSiloBalances,
   updateLegacyFarmerSiloRewards,
 } from './actions';
@@ -11,6 +12,7 @@ import {
 const NEG1 = new BigNumber(-1);
 
 export const initialFarmerSilo: FarmerSilo = {
+  // Legacy balances
   balances: {},
   beans: {
     earned: NEG1,
@@ -30,6 +32,9 @@ export const initialFarmerSilo: FarmerSilo = {
     total: NEG1,
   },
   migrationNeeded: undefined,
+
+  // New balances map
+  _balances: new Map(),
 };
 
 export default createReducer(initialFarmerSilo, (builder) =>
@@ -53,5 +58,8 @@ export default createReducer(initialFarmerSilo, (builder) =>
       state.stalk = payload.stalk;
       state.seeds = payload.seeds;
       state.roots = payload.roots;
+    })
+    .addCase(updateFarmerSiloBalances, (state, { payload }) => {
+      state._balances = payload;
     })
 );
