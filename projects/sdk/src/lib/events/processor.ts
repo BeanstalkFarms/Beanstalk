@@ -371,7 +371,10 @@ export class EventProcessor {
 
   _removeDeposit(stem: string, token: Token, amount: ethers.BigNumber) {
     if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
-    const existingDeposit = this.deposits.get(token)?.[stem];
+
+    const existingDeposits = this.deposits.get(token);
+    const existingDeposit = existingDeposits?.[stem];
+
     if (!existingDeposit) throw new Error(`Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${stem}`);
 
     // BDV scales linearly with the amount of the underlying token.
@@ -381,15 +384,21 @@ export class EventProcessor {
     // @note order of mul/div matters here to prevent underflow
     const bdv = amount.mul(existingDeposit.bdv).div(existingDeposit.amount);
 
-    this.deposits.set(token, {
-      ...this.deposits.get(token),
-      [stem]: this._upsertDeposit(existingDeposit, amount.mul(-1), bdv.mul(-1))
-    });
+    const newDeposit = this._upsertDeposit(existingDeposit, amount.mul(-1), bdv.mul(-1));
+    const newDeposits = {
+      // other deposits of this same token
+      ...existingDeposits,
 
-    if (this.deposits.get(token)?.[stem]?.amount?.eq(0)) {
-      // FIXME: verify this works
-      delete this.deposits.get(token)?.[stem];
+      // override the deposit at this stem
+      [stem]: newDeposit
+    };
+
+    if (newDeposit.amount.lt(0)) throw new Error(`Deposit amount cannot be negative: ${newDeposit.amount.toString()}`);
+    if (newDeposit.amount.eq(0)) {
+      delete newDeposits[stem];
     }
+
+    this.deposits.set(token, newDeposits);
   }
 
   AddDeposit(event: EventManager.Simplify<AddDepositEvent>) {
@@ -398,10 +407,12 @@ export class EventProcessor {
 
     if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
 
-    const tokDeposits = this.deposits.get(token);
+    const existingDeposits = this.deposits.get(token);
+    const existingDeposit = existingDeposits?.[stem];
+
     this.deposits.set(token, {
-      ...tokDeposits,
-      [stem]: this._upsertDeposit(tokDeposits?.[stem], event.args.amount, event.args.bdv)
+      ...existingDeposits,
+      [stem]: this._upsertDeposit(existingDeposit, event.args.amount, event.args.bdv)
     });
   }
 
