@@ -1,8 +1,7 @@
 import BigNumber from 'bignumber.js';
-import { defaultAbiCoder } from 'ethers/lib/utils';
 import { Token } from '~/classes';
 import { DepositCrate } from '~/state/farmer/silo';
-import { sortCratesByBDVRatio, sortCratesBySeason } from './Utils';
+import { sortConvertCratesByBest, sortCratesBySeason } from './Utils';
 import { STALK_PER_SEED_PER_SEASON } from '~/util';
 
 export enum ConvertKind {
@@ -47,7 +46,7 @@ export function selectCratesToConvert(
     : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
       /// Since LP deposits can have varying BDV, the best option for the Farmer
       /// is to increase the BDV of their existing lowest-BDV crates.
-      sortCratesByBDVRatio<DepositCrate>(depositedCrates, 'asc');
+      sortConvertCratesByBest<DepositCrate>(depositedCrates);
 
   /// FIXME: symmetry with `Withdraw`
   sortedCrates.some((crate) => {
