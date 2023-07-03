@@ -51,9 +51,7 @@ const toBN = tokenValueToBN;
 
 type WithdrawFormValues = FormStateNew &
   FormTxnsFormState & {
-    settings: {
-      destination: FarmToMode;
-    };
+    destination: FarmToMode | undefined;
   };
 
 const WithdrawForm: FC<
@@ -124,7 +122,8 @@ const WithdrawForm: FC<
   /// derived
   const depositedBalance = siloBalance?.amount;
 
-  const isReady = withdrawResult && !withdrawResult.amount.lt(0);
+  const isReady =
+    withdrawResult && !withdrawResult.amount.lt(0) && values.destination;
 
   const disabledActions = useMemo(
     () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
@@ -203,10 +202,10 @@ const WithdrawForm: FC<
                       seeds: toBN(withdrawResult.seeds.mul(-1)),
                     },
                     {
-                      type: ActionType.IN_TRANSIT,
-                      amount: toBN(withdrawResult.amount),
+                      type: ActionType.RECEIVE_TOKEN,
                       token: getNewToOldToken(whitelistedToken),
-                      withdrawSeasons,
+                      amount: toBN(withdrawResult.amount),
+                      destination: values.destination,
                     },
                   ]}
                   {...txActions}
@@ -269,9 +268,7 @@ const WithdrawPropProvider: FC<{
         secondary: undefined,
         implied: [FormTxn.MOW],
       },
-      settings: {
-        destination: FarmToMode.INTERNAL,
-      },
+      destination: FarmToMode.INTERNAL,
     }),
     [sdk.tokens.BEAN, token]
   );
@@ -291,7 +288,7 @@ const WithdrawPropProvider: FC<{
 
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
-        const destination = values.settings.destination;
+        const destination = values.destination;
 
         const addPlant =
           primaryActions?.includes(FormTxn.PLANT) &&
