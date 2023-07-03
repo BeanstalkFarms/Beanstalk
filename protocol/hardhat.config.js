@@ -96,10 +96,10 @@ task("sunrise", async function () {
   await beanstalkAdmin.forceSunrise();
 });
 
-task("getTime", async function() {
+task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
-  console.log("Current time: ",  await this.season.time());
-})
+  console.log("Current time: ", await this.season.time());
+});
 
 /*task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
@@ -150,7 +150,14 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   });
 
   const names = abi.map((a) => a.name);
-  fs.writeFileSync("./abi/Beanstalk.json", JSON.stringify(abi.filter((item, pos) => names.indexOf(item.name) == pos)));
+  fs.writeFileSync(
+    "./abi/Beanstalk.json",
+    JSON.stringify(
+      abi.filter((item, pos) => names.indexOf(item.name) == pos),
+      null,
+      2
+    )
+  );
 
   console.log("ABI written to abi/Beanstalk.json");
 });
@@ -190,9 +197,9 @@ task("silov3", async function () {
   await bipNewSilo();
 });
 
-task('beanstalkAdmin', async function () {
+task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
-})
+});
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
