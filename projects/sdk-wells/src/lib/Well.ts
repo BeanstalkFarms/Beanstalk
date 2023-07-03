@@ -309,11 +309,15 @@ export class Well {
     toToken: Token,
     amountIn: TokenValue,
     minAmountOut: TokenValue,
-    recipient: string = "0x0000000000000000000000000000000000000000",
+    recipient: string,
     deadline?: number,
     overrides?: Overrides
   ): Promise<TokenValue> {
     const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    if (!recipient) {
+      return TokenValue.ZERO;
+    };
 
     const gas = await this.contract.estimateGas.swapFrom(
       fromToken.address,
@@ -383,11 +387,15 @@ export class Well {
     toToken: Token,
     amountIn: TokenValue,
     minAmountOut: TokenValue,
-    recipient: string = "0x0000000000000000000000000000000000000000",
+    recipient: string,
     deadline?: number,
     overrides?: Overrides
   ): Promise<TokenValue> {
     const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+
+    if (!recipient) {
+      return TokenValue.ZERO;
+    };
 
     const gas = await this.contract.estimateGas.swapFromFeeOnTransfer(
       fromToken.address,
@@ -456,7 +464,7 @@ export class Well {
   }
 
   /**
-   * Estimage gas for `swapTo()`
+   * Estimate gas for `swapTo()`
    * @param fromToken The token to swap from
    * @param toToken The token to swap to
    * @param maxAmountIn The maximum amount of `fromToken` to spend
@@ -465,12 +473,12 @@ export class Well {
    * @param deadline The transaction deadline in seconds (defaults to MAX_UINT256)
    * @return Estimated gas needed
    */
-  async swapToEstimageGas(
+  async swapToGasEstimate(
     fromToken: Token,
     toToken: Token,
     maxAmountIn: TokenValue,
     amountOut: TokenValue,
-    recipient: string = "0x0000000000000000000000000000000000000000",
+    recipient: string,
     deadline?: number,
     overrides?: TxOverrides
   ): Promise<TokenValue> {
@@ -478,6 +486,10 @@ export class Well {
     const to = toToken.address;
     const maxIn = maxAmountIn.toBigNumber();
     const out = amountOut.toBigNumber();
+
+    if (!recipient) {
+      return TokenValue.ZERO;
+    };
 
     const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
 
