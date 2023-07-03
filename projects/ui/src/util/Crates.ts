@@ -36,7 +36,7 @@ export const selectCratesForEnroot = (
           crates,
           encoded: beanstalk.interface.encodeFunctionData('enrootDeposit', [
             addr,
-            crates[0].season.toString(), // season
+            crates[0].stem.toString(),
             unripeTokens[addr].stringify(crates[0].amount), // amount
           ]),
         };
@@ -45,8 +45,7 @@ export const selectCratesForEnroot = (
           crates,
           encoded: beanstalk.interface.encodeFunctionData('enrootDeposits', [
             addr,
-            // fixme: not sure why TS doesn't pick up the type of `crates` here
-            crates.map((crate) => crate.season.toString()), // seasons
+            crates.map((crate) => crate.stem.toString()),
             crates.map((crate) => unripeTokens[addr].stringify(crate.amount)), // amounts
           ]),
         };

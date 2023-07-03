@@ -65,11 +65,13 @@ const Fiat: FC<{
           />
           <span>{displayValue}</span>
         </>
-      ) : (
+      ) : price?.gt(0) ? (
         <>
           <span>$</span>
           <span>{displayValue}</span>
         </>
+      ) : (
+        <span>?</span>
       )}
     </Row>
   );

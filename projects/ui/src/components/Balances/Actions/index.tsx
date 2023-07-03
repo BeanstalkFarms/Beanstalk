@@ -1,6 +1,5 @@
 import { Stack } from '@mui/material';
 import React from 'react';
-import ClaimSiloRewards from './ClaimSiloRewards';
 import QuickHarvest from './QuickHarvest';
 import QuickRinse from './QuickRinse';
 import useBanner from '~/hooks/app/useBanner';
@@ -21,7 +20,7 @@ const BalancesActions: React.FC<{}> = () => {
     >
       <QuickHarvest />
       <QuickRinse />
-      <ClaimSiloRewards />
+      {/* <ClaimSiloRewards /> */}
     </Stack>
   );
 };

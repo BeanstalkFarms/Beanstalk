@@ -129,7 +129,9 @@ const Overview: FC<{
         <StyledTab
           label={
             <ChipLabel name="Deposits">
-              {displayUSD(breakdown.states.deposited.value)}
+              {breakdown.states.deposited.value.gt(0)
+                ? displayUSD(breakdown.states.deposited.value)
+                : '?'}
             </ChipLabel>
           }
         />

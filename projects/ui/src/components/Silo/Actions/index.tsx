@@ -17,6 +17,7 @@ import useSdk from '~/hooks/sdk';
 import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 import Convert from './Convert';
 import Claim from '~/components/Silo/Actions/Claim';
+import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.
@@ -37,7 +38,7 @@ const SiloActions: FC<{
 }> = (props) => {
   const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
-  const hasClaimable = props.siloBalance?.claimable?.amount.gt(0);
+  const migrationNeeded = useMigrationNeeded();
 
   /// Temporary solutions. Remove these when we move the site to use the new sdk types.
   const token = useMemo(() => {
@@ -63,7 +64,7 @@ const SiloActions: FC<{
           <Tab label="Transfer" />
           <Tab label="Withdraw" />
           {hasClaimableBeans && (
-            <BadgeTab label="Claim" showBadge={hasClaimable} />
+            <BadgeTab label="Claim" showBadge={hasClaimableBeans} />
           )}
         </ModuleTabs>
         <ModuleContent>
@@ -83,7 +84,11 @@ const SiloActions: FC<{
       </Module>
       {/* Tables */}
       <Box>
-        <Deposits token={props.token} siloBalance={props.siloBalance} />
+        <Deposits
+          token={props.token}
+          siloBalance={props.siloBalance}
+          useLegacySeason={migrationNeeded}
+        />
       </Box>
     </>
   );

@@ -12,6 +12,8 @@ import { hoverMap } from '../../constants/silo';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import useFarmerSiloVesting from '~/hooks/farmer/useFarmerSiloVesting';
+import { displayBN } from '~/util';
 
 export type RewardsBarProps = {
   beans: FarmerSiloRewards['beans'];
@@ -50,6 +52,8 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = ({
   const selectedActionIncludes = (c: ClaimRewardsAction) =>
     action && hoverMap[action].includes(c);
 
+  const vesting = useFarmerSiloVesting();
+
   return (
     <Stack
       direction={{ lg: 'row', xs: 'column' }}
@@ -60,7 +64,13 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = ({
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
           title="Earned Beans"
-          tooltip="The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season."
+          tooltip={`The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.${
+            vesting.amount.gt(0)
+              ? ` ${displayBN(
+                  vesting.amount
+                )} Earned Beans are currently Vesting.`
+              : ``
+          }`}
           amount={beans.earned}
           icon={beanIcon}
           compact={compact}
@@ -69,6 +79,7 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = ({
             (action === ClaimRewardsAction.PLANT_AND_MOW ||
               action === ClaimRewardsAction.CLAIM_ALL)
           }
+          annotation={vesting.isVesting === true ? '*' : null}
         />
         <RewardItem
           title="Earned Stalk"

@@ -12,10 +12,10 @@ export const updateFarmerMigrationStatus = createAction<boolean>(
   'farmer/silo/migration'
 );
 
-export const updateFarmerSiloRewards =
+export const updateLegacyFarmerSiloRewards =
   createAction<FarmerSiloRewards>('farmer/silo/update');
 
-export const updateFarmerSiloBalances =
+export const updateLegacyFarmerSiloBalances =
   createAction<UpdateFarmerSiloBalancesPayload>(
     'farmer/silo/updateFarmerSiloBalances'
   );

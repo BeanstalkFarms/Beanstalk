@@ -95,6 +95,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
       [EnrootType.DEPOSITS]: [],
     };
 
+    // REFACTOR: Duplicative of logic in `selectCratesForEnroot`
     [...this._sdk.tokens.unripeTokens].forEach((urToken) => {
       const crates = this._crates[urToken.address];
       if (crates?.length === 1) {
@@ -102,7 +103,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
           'enrootDeposit',
           [
             urToken.address,
-            crates[0].season.toString(),
+            crates[0].stem.toString(),
             urToken.fromHuman(crates[0].amount.toString()).toBlockchain(),
           ]
         );
@@ -112,7 +113,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
           'enrootDeposits',
           [
             urToken.address,
-            crates.map((crate) => crate.season.toString()),
+            crates.map((crate) => crate.stem.toString()),
             crates.map((crate) =>
               urToken.fromHuman(crate.amount.toString()).toBlockchain()
             ),

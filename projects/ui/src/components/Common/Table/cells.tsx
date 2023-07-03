@@ -24,17 +24,18 @@ const COLUMNS = {
   ///
   /// Generics
   ///
-  season: {
-    field: 'season',
+  depositId: (header: string) => ({
+    // The field is always `stem`, we just change the header for legacy seasons
+    field: 'stem',
     flex: 0.8,
-    headerName: 'Season',
+    headerName: header,
     align: 'left',
     headerAlign: 'left',
     valueFormatter: (params: GridValueFormatterParams) =>
       params.value.toString(),
     renderCell: basicCell,
     sortable: false,
-  } as GridColumns[number],
+  }),
 
   ///
   /// Silo
