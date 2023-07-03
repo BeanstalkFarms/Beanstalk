@@ -343,6 +343,9 @@ const RewardsContent: React.FC<{}> = () => {
   );
 };
 
+/**
+ * FIXME: only used on the Balances page, but duplicates a ton of code
+ */
 const ClaimSiloRewards: React.FC<{}> = () => (
   <Module>
     <ModuleContent pt={1.5} px={1} pb={1}>

@@ -353,14 +353,6 @@ const ConvertForm: FC<
               </Box>
             ) : null}
 
-            <Box>
-              <WarningAlert>
-                Due to an issue with the existing Silo implementation, some
-                Stalk may be lost during this Convert. An upcoming BIP known as
-                Silo V3 fixes this issue.
-              </WarningAlert>
-            </Box>
-
             {/* Add-on transactions */}
             <AdditionalTxnsAccordion filter={disabledFormActions} />
 

@@ -78,6 +78,8 @@ export const Migrate: FC<{}> = () => {
             params.proof
           );
         }
+
+        window.location.reload();
       } catch (e) {
         console.error(e);
       } finally {
@@ -171,6 +173,11 @@ export const Migrate: FC<{}> = () => {
           >
             Migrate
           </LoadingButton>
+          {migrating && (
+            <Typography variant="body1" textAlign="left">
+              The page will refresh when migration is complete.
+            </Typography>
+          )}
         </Stack>
       </Box>
       <Box flex={2}>

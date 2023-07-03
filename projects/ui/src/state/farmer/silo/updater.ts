@@ -225,27 +225,33 @@ export const useFetchFarmerSilo = () => {
       // active:  owned, actively earning other silo assets
       // earned:  active but not yet deposited into a Season
       // grown:   inactive
-      dispatch(
-        updateLegacyFarmerSiloRewards({
-          beans: {
-            earned: transform(earnedBeanBalance, 'bnjs', sdk.tokens.BEAN),
-          },
-          stalk: {
-            active: transform(activeStalkBalance, 'bnjs', sdk.tokens.STALK),
-            earned: transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
-            grown: transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
-            total: transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
-          },
-          seeds: {
-            active: transform(activeSeedBalance, 'bnjs', sdk.tokens.SEEDS),
-            earned: transform(earnedSeedBalance, 'bnjs', sdk.tokens.SEEDS),
-            total: transform(totalSeedbalance, 'bnjs', sdk.tokens.SEEDS),
-          },
-          roots: {
-            total: rootBalance,
-          },
-        })
-      );
+      const rewards = {
+        beans: {
+          earned: transform(earnedBeanBalance, 'bnjs', sdk.tokens.BEAN),
+        },
+        stalk: {
+          active: transform(activeStalkBalance, 'bnjs', sdk.tokens.STALK),
+          earned: transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
+          grown: transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
+          total: transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
+        },
+        seeds: {
+          active: transform(activeSeedBalance, 'bnjs', sdk.tokens.SEEDS),
+          earned: transform(earnedSeedBalance, 'bnjs', sdk.tokens.SEEDS),
+          total: transform(totalSeedbalance, 'bnjs', sdk.tokens.SEEDS),
+        },
+        roots: {
+          total: rootBalance,
+        },
+      };
+
+      // console.log("Silo Rewards", rewards, {
+      //   totalStalkBalance: totalStalkBalance.toHuman(),
+      //   grownStalkBalance: grownStalkBalance.toHuman(),
+      //   earnedBeanBalance: earnedBeanBalance.toHuman(),
+      // })
+
+      dispatch(updateLegacyFarmerSiloRewards(rewards));
 
       // HEADS UP: this has to be called after updateLegacyFarmerSiloRewards
       // to prevent some rendering errors. Refactor later.

@@ -231,17 +231,7 @@ const RewardsDialog: FC<
     open: boolean;
   }
 > = ({ handleClose, open, ...rewardsBarProps }) => (
-  <Dialog
-    onClose={handleClose}
-    open={open}
-    fullWidth
-    maxWidth="md"
-    // PaperProps={{
-    //   sx: {
-    //     width: '550px'
-    //   }
-    // }}
-  >
+  <Dialog onClose={handleClose} open={open} fullWidth maxWidth="md">
     <StyledDialogTitle onClose={handleClose}>Claim Rewards</StyledDialogTitle>
     <RewardsForm>
       {(props) => <ClaimRewardsForm {...props} {...rewardsBarProps} />}

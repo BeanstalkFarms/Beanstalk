@@ -183,7 +183,9 @@ const DepositForm: FC<
   const shouldApprove =
     values.balanceFrom === BalanceFrom.EXTERNAL ||
     (values.balanceFrom === BalanceFrom.TOTAL &&
-      values.tokens[0].amount?.gt(balances[tokenIn.address].internal));
+      values.tokens[0].amount?.gt(
+        balances[tokenIn.address]?.internal || ZERO_BN
+      ));
 
   return (
     <FormWithDrawer noValidate autoComplete="off" siblingRef={siblingRef}>
