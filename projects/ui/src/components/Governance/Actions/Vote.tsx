@@ -64,6 +64,7 @@ const VoteForm: FC<
       /// Proposal specific voting power
       votingPower,
       tag,
+      type,
     },
     loading: loadingQuorum,
   } = quorum;
@@ -287,6 +288,27 @@ const VoteForm: FC<
                   ~{displayFullBN(totalForQuorum, 0)}{' '}
                   {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
                   {(quorumPct * 100).toFixed(0)}%
+                </>
+              )}
+            </StatHorizontal>
+          )}
+          {quorumPct && totalForQuorum && type === "BIP" && (
+            <StatHorizontal
+              label={
+                <>
+                  <Row display="inline-flex" alignItems="center">
+                    <span>Supermajority</span>
+                  </Row>
+                </>
+              }
+            >
+              {loadingQuorum ? (
+                <CircularProgress size={16} />
+              ) : (
+                <>
+                  ~{displayFullBN((totalOutstanding || ZERO_BN).multipliedBy(0.667), 0)}{' '}
+                  {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
+                  66.7%
                 </>
               )}
             </StatHorizontal>
