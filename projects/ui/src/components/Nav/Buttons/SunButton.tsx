@@ -25,6 +25,7 @@ import SeasonCard from '../../Sun/SeasonCard';
 import usePeg from '~/hooks/beanstalk/usePeg';
 
 import { FC } from '~/types';
+import SunButtonDev from './SunButtonDev';
 
 const castField = (data: SunButtonQuery['fields'][number]) => ({
   season: new BigNumber(data.season),
@@ -190,6 +191,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
       <Box sx={{ p: 1 }}>
         <SunriseButton />
+        <SunButtonDev />
       </Box>
     </Box>
   );
