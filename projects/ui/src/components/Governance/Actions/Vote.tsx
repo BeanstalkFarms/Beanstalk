@@ -146,7 +146,7 @@ const VoteForm: FC<
                       proposal.choices[(existingChoice as number) - 1]
                     }`
                   : 'Vote'
-                : `Need ${isNFT ? 'Stalk' : 'BeaNFTs'} to Vote`}
+                : `Need ${isNFT ? 'BeaNFTs' : 'Stalk'} to Vote`}
             </LoadingButton>
           </>
         ) : (
