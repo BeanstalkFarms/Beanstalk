@@ -10,11 +10,15 @@ import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
 import { Button } from "./Button";
 import { Log } from "src/utils/logger";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { TransactionToast } from "../TxnToast/TransactionToast";
+import QuoteDetails from "../Liquidity/QuoteDetails";
+import { getPrice } from "src/utils/price/usePrice";
+import useSdk from "src/utils/sdk/useSdk";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
+  const sdk = useSdk();
 
   const [tokenSwapParams, setTokenSwapParams] = useSearchParams();
   const fromToken = tokenSwapParams.get("fromToken");
@@ -29,13 +33,26 @@ export const SwapRoot = () => {
   const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
   const { isLoading: isAllTokenLoading } = useAllTokensBalance();
   const [quoter, setQuoter] = useState<Quote | null>(null);
+  const [isForwardQuote, setIsForwardQuote] = useState<boolean>(true);
   const [needsApproval, setNeedsApproval] = useState(false);
   const [readyToSwap, setReadyToSwap] = useState(false);
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const [txLoading, setTxLoading] = useState(false);
+  const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
 
   const [quote, setQuote] = useState<QuoteResult | undefined>();
   const builder = useSwapBuilder();
+
+  useEffect(() => {
+    const run = async () => {
+      if (!inToken || !outToken) return;
+      let inTokenPrice = await getPrice(inToken, sdk);
+      let outTokenPrice = await getPrice(outToken, sdk);
+      setPrices([inTokenPrice, outTokenPrice]);
+    };
+    run();
+  }, [sdk, inToken, outToken]);
+  
 
   // Fetch all tokens. Needed for populating the token selector dropdowns
   useEffect(() => {
@@ -66,8 +83,10 @@ export const SwapRoot = () => {
   const handleInputChange = useCallback(
     async (amount: TokenValue) => {
       setInAmount(amount);
+      setIsForwardQuote(true);
       if (amount.eq(0)) {
         setOutAmount(outToken.amount(0));
+        setQuote(undefined);
         return;
       }
 
@@ -104,8 +123,10 @@ export const SwapRoot = () => {
   const handleOutputChange = useCallback(
     async (amount: TokenValue) => {
       setOutAmount(amount);
+      setIsForwardQuote(false);
       if (amount.eq(0)) {
         setInAmount(inToken.amount(0));
+        setQuote(undefined);
         return;
       }
       try {
@@ -144,6 +165,17 @@ export const SwapRoot = () => {
     setOutToken(token);
   }, []);
 
+  const handleSlippageValueChange = useCallback(async (_slippage: string) => {
+    setSlippage(Number(_slippage));
+    if (isForwardQuote && inAmount) {
+      const quote = await quoter?.quoteForward(inAmount, account!, Number(_slippage));
+      if (quote) setQuote(quote)
+    } else if (!isForwardQuote && outAmount) {
+      const quote = await quoter?.quoteForward(outAmount, account!, Number(_slippage));
+      if (quote) setQuote(quote)
+    }
+  }, [account, quoter, inAmount, isForwardQuote, outAmount]);
+
   const approve = async () => {
     Log.module("swap").debug("Doing approval");
     if (!quote!.doApproval) throw new Error("quote.doApproval() is missing. Bad logic");
@@ -163,6 +195,17 @@ export const SwapRoot = () => {
       const receipt = await tx.wait();
       toast.success(receipt);
       setNeedsApproval(false); // TODO:
+      let newQuote
+      if (isForwardQuote && inAmount) {
+        newQuote = await quoter?.quoteForward(inAmount, account!, slippage);
+      } else if (!isForwardQuote && outAmount) {
+        newQuote = await quoter?.quoteReverse(outAmount, account!, slippage);
+      }
+      if (newQuote) {
+        setQuote(newQuote)
+      } else {
+        setQuote(undefined)
+      }
     } catch (err) {
       Log.module("swap").error("Approval Failed", err);
       toast.error(err);
@@ -227,7 +270,6 @@ export const SwapRoot = () => {
 
   return (
     <Container>
-      <Div>
         <SwapInputContainer>
           <TokenInput
             id="input-amount"
@@ -243,7 +285,6 @@ export const SwapRoot = () => {
         <ArrowContainer>
           <ArrowButton onClick={arrowHandler} />
         </ArrowContainer>
-
         <SwapInputContainer>
           <TokenInput
             id="output-amount"
@@ -257,8 +298,15 @@ export const SwapRoot = () => {
             loading={isLoadingAllBalances}
           />
         </SwapInputContainer>
-      </Div>
-      <SwapDetailsContainer>Details</SwapDetailsContainer>
+      <QuoteDetails
+        type={isForwardQuote ? "FORWARD_SWAP" : "REVERSE_SWAP"}
+        quote={{quote: quote?.amount || TokenValue.ZERO, estimate: quote?.estimate || TokenValue.ZERO, gas: quote?.gas}}
+        inputs={[inAmount || TokenValue.ZERO, outAmount || TokenValue.ZERO]}
+        handleSlippageValueChange={handleSlippageValueChange}
+        wellTokens={[inToken, outToken]}
+        slippage={slippage}
+        tokenPrices={prices}
+      />
       <SwapButtonContainer data-trace="true">
         <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
       </SwapButtonContainer>
@@ -274,12 +322,6 @@ const Container = styled.div`
   gap: 24px;
 `;
 
-const Div = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-`;
-
 const SwapInputContainer = styled.div`
   // outline: 1px dashed green;
   display: flex;
@@ -289,13 +331,6 @@ const ArrowContainer = styled.div`
   // border: 1px dashed orange;
   display: flex;
   flex-direction: row;
-  justify-content: center;
-`;
-
-const SwapDetailsContainer = styled.div`
-  // border: 1px dashed pink;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
 `;
 

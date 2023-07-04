@@ -10,12 +10,13 @@ import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
 
 type QuoteDetailsProps = {
-  type: LIQUIDITY_OPERATION_TYPE;
+  type: LIQUIDITY_OPERATION_TYPE | "FORWARD_SWAP" | "REVERSE_SWAP";
   removeLiquidityMode?: REMOVE_LIQUIDITY_MODE | undefined;
   quote:
     | {
         quote: TokenValue | TokenValue[];
         estimate: TokenValue;
+        gas?: TokenValue;
       }
     | null
     | undefined;
@@ -25,7 +26,7 @@ type QuoteDetailsProps = {
   wellLpToken?: ERC20Token | undefined;
   wellTokens?: Token[] | undefined;
   selectedTokenIndex?: number;
-  slippageSettingsClickHandler: () => void;
+  slippageSettingsClickHandler?: () => void;
   handleSlippageValueChange: (value: string) => void;
   tokenPrices?: (TokenValue | undefined | null)[];
   tokenReserves?: (TokenValue | undefined | null)[];
@@ -51,10 +52,15 @@ const QuoteDetails = ({
 
   useEffect(() => {
     const _setGasFeeUsd = async () => {
-      if (!quote || !quote.estimate) {
+      if (!quote || !quote.estimate || !quote.gas) {
         setGasFeeUsd("0.00");
       } else {
-        const usd = await getGasInUsd(sdk, quote!.estimate.toBigNumber());
+        let usd
+        if (type === "FORWARD_SWAP" || "REVERSE_SWAP") {
+          usd = await getGasInUsd(sdk, quote.gas.toBigNumber());
+        } else {
+          usd = await getGasInUsd(sdk, quote.estimate.toBigNumber());
+        }
         setGasFeeUsd(
           `~${usd.toLocaleString("en-US", {
             style: "currency",
@@ -65,11 +71,19 @@ const QuoteDetails = ({
     };
 
     _setGasFeeUsd();
-  }, [sdk.provider, sdk, quote]);
+  }, [sdk.provider, sdk, quote, type]);
 
   const quoteValue = useMemo(() => {
     if (!quote || !quote.quote) {
       return "X.XXXX TOKEN";
+    }
+
+    if (type === "FORWARD_SWAP") {
+      return `${quote.estimate.toHuman("short")} ${wellTokens![1].symbol}`;
+    }
+
+    if (type === "REVERSE_SWAP") {
+      return `${quote.estimate.toHuman("short")} ${wellTokens![0].symbol}`;
     }
 
     if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
@@ -117,7 +131,8 @@ const QuoteDetails = ({
 
   useEffect(() => {
     const run = async () => {
-      if (tokenPrices && tokenReserves && quote && quote.quote) {
+      if (!quote || !quote.quote) return;
+      if (tokenPrices && tokenReserves) {
         if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
           let totalUSDValue = TokenValue.ZERO;
           let valueInUSD;
@@ -151,9 +166,13 @@ const QuoteDetails = ({
           const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply);
           const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
-        }
+        } 
+      } else if (type === "FORWARD_SWAP") {
+        setTokenUSDValue(quote!.estimate.mul(tokenPrices![1] || TokenValue.ZERO))
+      } else if (type === "REVERSE_SWAP") {
+        setTokenUSDValue(inputs![1].mul(tokenPrices![1] || TokenValue.ZERO))
       }
-    };
+    }
 
     run();
   }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex, inputs, removeLiquidityMode, wellLpToken]);
@@ -212,7 +231,7 @@ const QuoteDetails = ({
     <QuoteContainer>
       <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)} cursor="pointer">
         <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>
-          Expected Output
+          {type === "FORWARD_SWAP" ? "Minimum Output" : type === "REVERSE_SWAP" ? "Maximum Input" : "Expected Output"}
         </QuoteDetailLabel>
         <QuoteDetailValue bold color={"black"} cursor={"pointer"}>
           {quoteValue}
@@ -227,33 +246,35 @@ const QuoteDetails = ({
           alt="Click to view more information about this transaction"
         />
       </QuoteDetailLine>
-      <AccordionContainer open={accordionOpen}>
+      <AccordionContainer open={accordionOpen} isShort={(type === "FORWARD_SWAP" || type === "REVERSE_SWAP")}>
         <QuoteDetailLine>
           <QuoteDetailLabel>USD Value</QuoteDetailLabel>
           <QuoteDetailValue>{`$${tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
         </QuoteDetailLine>
-        <QuoteDetailLine>
-          <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
-          <QuoteDetailValue>{`${priceImpact.toHuman("short")}%`}</QuoteDetailValue>
-          <IconContainer>
-            <Tooltip
-              offsetX={-89}
-              offsetY={320}
-              arrowSize={4}
-              arrowOffset={95}
-              side={"top"}
-              width={283}
-              content={
-                <>
-                  <div>*PRICE IMPACT*</div>
-                  Change in Token price on this Well caused directly by this action.
-                </>
-              }
-            >
-              <Info color={"#9CA3AF"} />
-            </Tooltip>
-          </IconContainer>
-        </QuoteDetailLine>
+        {(type !== "FORWARD_SWAP" && type !== "REVERSE_SWAP") &&
+          <QuoteDetailLine>
+            <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
+            <QuoteDetailValue>{`${priceImpact.toHuman("short")}%`}</QuoteDetailValue>
+            <IconContainer>
+              <Tooltip
+                offsetX={-89}
+                offsetY={320}
+                arrowSize={4}
+                arrowOffset={95}
+                side={"top"}
+                width={283}
+                content={
+                  <>
+                    <div>*PRICE IMPACT*</div>
+                    Change in Token price on this Well caused directly by this action.
+                  </>
+                }
+              >
+                <Info color={"#9CA3AF"} />
+              </Tooltip>
+            </IconContainer>
+          </QuoteDetailLine>
+        }
         <QuoteDetailLine>
           <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
           <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
@@ -278,6 +299,7 @@ type QuoteDetailProps = {
 
 type AccordionProps = {
   open?: boolean;
+  isShort?: boolean;
 };
 
 const IconContainer = styled.div`
@@ -288,7 +310,7 @@ const IconContainer = styled.div`
 `;
 
 const AccordionContainer = styled.div<AccordionProps>`
-  height: ${(props) => (props.open ? "94px" : "0px")};
+  height: ${(props) => (props.open ? props.isShort ? "70px" : "94px" : "0px")};
   overflow: ${(props) => (props.open ? "visible" : "hidden")};
   transition: height 0.2s;
 `;
