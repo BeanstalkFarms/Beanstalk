@@ -53,6 +53,9 @@ export const Frame: FC<{}> = ({ children }) => {
         <StyledConnectContainer>
           <BasinConnectButton />
         </StyledConnectContainer>
+        <DropdownMenu>
+          =
+        </DropdownMenu>
       </NavContainer>
       <TokenMarquee />
       <Window>
@@ -69,14 +72,18 @@ type NavLinkProps = {
 };
 
 const TokenMarquee = styled.div`
-  display: flex;
-  height: 48px;
-  min-height: 48px;
-  box-sizing: border-box;
-  border-left: 0.5px solid black;
-  border-right: 0.5px solid black;
-  border-bottom: 0.25px solid black;
-  width: 100vw;
+  display: none;
+
+  @media (min-width: 475px) {
+    display: flex;
+    height: 48px;
+    min-height: 48px;
+    box-sizing: border-box;
+    border-left: 0.5px solid black;
+    border-right: 0.5px solid black;
+    border-bottom: 0.25px solid black;
+    width: 100vw;
+  }
 `;
 
 const Container = styled.div`
@@ -95,17 +102,24 @@ const NavContainer = styled.nav`
   flex-direction: row;
   justify-content: space-between;
   width: 100vw;
-  height: 64px;
-  min-height: 64px;
+  height: 56px;
+  min-height: 56px;
   box-sizing: border-box;
   padding: 0px;
   align-items: center;
+  @media (min-width: 475px) {
+    height: 64px;
+    min-height: 64px;
+  }
 `;
 
 const NavLinks = styled.div`
-  display: flex;
-  align-self: stretch;
-  align-items: center;
+  display: none;
+  @media (min-width: 475px) {
+    display: flex;
+    align-self: stretch;
+    align-items: center;
+  }
 `;
 const NavLink = styled(Link)<NavLinkProps>`
   border-left: 0.5px solid black;
@@ -155,30 +169,37 @@ const BrandContainer = styled.div`
 const Brand = styled.div`
   display: flex;
   flex-direction: row;
-  padding-left: 48px;
+  padding-left: 16px;
+  
+    a {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      ${LinksNav}
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #0f172a;
 
-  a {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    ${LinksNav}
-    text-decoration: none;
-    text-transform: uppercase;
-    color: #0f172a;
-
-    :focus {
-      outline: none;
+      :focus {
+        outline: none;
+      }
     }
-  }
+
+    @media (min-width: 475px) {
+      padding-left: 48px;
+    }
 `;
 
 const StyledConnectContainer = styled.div`
-  display: flex;
-  direction: row;
-  flex: 1;
-  align-self: stretch;
-  align-items: center;
-  justify-content: center;
+  display: none;
+  @media (min-width: 475px) {
+    display: flex;
+    direction: row;
+    flex: 1;
+    align-self: stretch;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const StyledConnectButton = styled.button`
@@ -197,3 +218,20 @@ const StyledConnectButton = styled.button`
     background-color: #f0fdf4;
   }
 `;
+
+const DropdownMenu = styled.button`
+  cursor: pointer;
+  border: 0px;
+  color: #000;
+  background: #fff;
+  :hover {
+    background-color: #f0fdf4;
+  }
+  height: 100%;
+  padding-left: 16px;
+  padding-right: 16px;
+  font-size: 24px;
+  @media (min-width: 475px) {
+    display: none;
+  }
+`

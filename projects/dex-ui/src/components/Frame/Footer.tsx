@@ -25,9 +25,14 @@ const Container = styled.footer`
   flex-direction: row;
   box-sizing: border-box;
   border: 1px solid black;
-  min-height: 72px;
+  height: 56px;
+  min-height: 56px;
   width: 100vw;
   align-items: stretch;
+  @media (min-width: 475px) {
+    height: 72px;
+    min-height: 72px;
+  }
 `;
 
 const Box = styled.a`
