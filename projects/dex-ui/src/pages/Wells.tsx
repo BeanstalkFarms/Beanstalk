@@ -78,35 +78,47 @@ export const Wells = () => {
     });
 
     return (
-      <Row key={well.address} onClick={gotoWell}>
-        <Td>
-          <WellDetail>
-            <TokenLogos>{logos}</TokenLogos>
-            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-            {/* <Deployer>{deployer}</Deployer> */}
-          </WellDetail>
-        </Td>
-        <Td>
-          <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
-        </Td>
-        <Td align="right">
-          <TradingFee>0.00%</TradingFee>
-        </Td>
-        <Td align="right">
-          <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
-        </Td>
-        <Td align="right">
-          <Reserves>
-            {smallLogos[0]}
-            {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
-          </Reserves>
-          <Reserves>
-            {smallLogos[1]}
-            {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
-          </Reserves>
-          {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
-        </Td>
-      </Row>
+      <>
+        <DesktopTable key={well.address} onClick={gotoWell}>
+          <Td>
+            <WellDetail>
+              <TokenLogos>{logos}</TokenLogos>
+              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+              {/* <Deployer>{deployer}</Deployer> */}
+            </WellDetail>
+          </Td>
+          <Td>
+            <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
+          </Td>
+          <Td align="right">
+            <TradingFee>0.00%</TradingFee>
+          </Td>
+          <Td align="right">
+            <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
+          </Td>
+          <Td align="right">
+            <Reserves>
+              {smallLogos[0]}
+              {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
+            </Reserves>
+            <Reserves>
+              {smallLogos[1]}
+              {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
+            </Reserves>
+            {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
+          </Td>
+        </DesktopTable>
+        <MobileTable key={well.address} onClick={gotoWell}>
+          <MobileContainer>
+            <WellDetail>
+              <TokenLogos>{logos}</TokenLogos>
+              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+              {/* <Deployer>{deployer}</Deployer> */}
+            </WellDetail>
+            <Amount>${wellLiquidity[index] ? Number(wellLiquidity[index]!.toHuman()).toFixed(2) : "-.--"}</Amount>
+          </MobileContainer>
+        </MobileTable>
+      </>
     );
   }
 
@@ -123,17 +135,29 @@ export const Wells = () => {
     });
 
     return (
-      <Row key={well.address} onClick={gotoWell}>
-        <Td>
-          <WellDetail>
-            <TokenLogos>{logos}</TokenLogos>
-            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-          </WellDetail>
-        </Td>
-        <Td align="right">
-          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
-        </Td>
-      </Row>
+      <>
+        <DesktopTable key={well.address} onClick={gotoWell}>
+          <Td>
+            <WellDetail>
+              <TokenLogos>{logos}</TokenLogos>
+              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+            </WellDetail>
+          </Td>
+          <Td align="right">
+            <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+          </Td>
+        </DesktopTable>
+        <MobileTable key={well.address} onClick={gotoWell}>
+          <MobileContainer>
+              <WellDetail>
+                <TokenLogos>{logos}</TokenLogos>
+                <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+                {/* <Deployer>{deployer}</Deployer> */}
+              </WellDetail>
+              <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+            </MobileContainer>
+        </MobileTable>
+      </>
     );
   }
 
@@ -161,20 +185,26 @@ export const Wells = () => {
       <Table>
         {tab === 0 ? (
           <THead>
-            <Row>
+            <DesktopTable>
               <Th>Well</Th>
               <Th>Well Pricing Function</Th>
               <Th align="right">Trading Fees</Th>
               <Th align="right">Total Liquidity</Th>
               <Th align="right">Reserves</Th>
-            </Row>
+            </DesktopTable>
+            <MobileTable>
+              <MobileHeader>All Wells</MobileHeader>
+            </MobileTable>
           </THead>
         ) : (
           <THead>
-            <Row>
+            <DesktopTable>
               <Th>My Positions</Th>
               <Th align="right">My Liquidity</Th>
-            </Row>
+            </DesktopTable>
+            <MobileTable>
+              <MobileHeader>My Liquidity Positions</MobileHeader>
+            </MobileTable>
           </THead>
         )}
         <TBody>
@@ -191,7 +221,36 @@ export const Wells = () => {
   );
 };
 
-const WellDetail = styled.div``;
+const DesktopTable = styled(Row)`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`;
+
+const MobileTable = styled(Row)`
+  height: 66px;
+  @media (min-width: 475px) {
+    display: none;
+  }
+`;
+
+const MobileContainer = styled(Td)`
+  padding: 8px 16px;
+`
+
+const MobileHeader = styled(Th)`
+  font-size: 14px;
+  padding: 8px 16px;
+`
+
+const WellDetail = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  @media (min-width: 475px) {
+     flex-direction: column;
+  }
+`;
 
 const TokenLogos = styled.div`
   display: flex;
@@ -204,6 +263,9 @@ const TokenSymbols = styled.div`
   line-height: 24px;
   margin-top: 8px;
   color: #1c1917;
+  @media (max-width: 475px) {
+    font-size: 14px;
+  }
 `;
 
 const Amount = styled.div`
@@ -211,6 +273,11 @@ const Amount = styled.div`
   font-size: 20px;
   line-height: 24px;
   color: #1c1917;
+
+  @media (max-width: 475px) {
+    font-size: 14px;
+    font-weight: normal;
+  }
 `;
 
 const Reserves = styled.div`
@@ -253,4 +320,8 @@ const NoLPMessage = styled.div`
 const WellLPBalance = styled.div`
   font-size: 20px;
   line-height: 24px;
+  @media (max-width: 475px) {
+    font-size: 14px;
+    font-weight: normal;
+  }
 `;

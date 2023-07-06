@@ -10,6 +10,10 @@ export const Page: FC<{}> = ({ children }) => {
 const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 48px;
+  gap: 16px;
+  padding: 12px;
+  @media (min-width: 475px) {
+    gap: 24px;
+    padding: 48px;
+  }
 `;
