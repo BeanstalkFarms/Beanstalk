@@ -1327,6 +1327,8 @@ type RemoveDeposit implements SiloEvent @entity(immutable: true) {
   stem: BigInt
   " Amount of token removed "
   amount: BigInt!
+  " BDV of deposit removed "
+  bdv: BigInt
   " Block number of this event "
   blockNumber: BigInt!
   " Timestamp of this event "
@@ -1562,6 +1564,8 @@ type WhitelistToken implements SiloEvent @entity(immutable: true) {
   stalk: BigInt!
   "Seeds per BDV"
   seeds: BigInt!
+  "Stalk earned per season"
+  stalkPerSeason: BigInt
   "Selector for token"
   selector: String!
   " Block number of this event "
