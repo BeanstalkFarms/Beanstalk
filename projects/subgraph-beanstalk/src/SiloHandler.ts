@@ -11,6 +11,12 @@ import {
   WhitelistToken,
   DewhitelistToken
 } from "../generated/Silo-Replanted/Beanstalk";
+import {
+  AddDeposit as AddDeposit_V3,
+  RemoveDeposit as RemoveDeposit_V3,
+  RemoveDeposits as RemoveDeposits_V3,
+  WhitelistToken as WhitelistToken_V3
+} from "../generated/Silo-V3/Beanstalk";
 import { Beanstalk, TransferDepositCall, TransferDepositsCall } from "../generated/Silo-Calls/Beanstalk";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
@@ -28,6 +34,10 @@ import {
 } from "../generated/schema";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+
+/**
+ * SILO V2 (REPLANT) HANDLERS
+ */
 
 export function handleAddDeposit(event: AddDeposit): void {
   let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.season);
@@ -186,6 +196,174 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
     removal.token = event.params.token.toHexString();
     removal.season = event.params.seasons[i].toI32();
     removal.amount = event.params.amounts[i];
+    removal.blockNumber = event.block.number;
+    removal.createdAt = event.block.timestamp;
+    removal.save();
+  }
+}
+
+/**
+ * SILO V3 HANDLERS
+ */
+
+export function handleAddDeposit_V3(event: AddDeposit_V3): void {
+  let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.stem);
+  deposit.amount = deposit.amount.plus(event.params.amount);
+  deposit.depositedAmount = deposit.depositedAmount.plus(event.params.amount);
+  deposit.bdv = deposit.bdv.plus(event.params.bdv);
+  deposit.depositedBDV = deposit.depositedBDV.plus(event.params.bdv);
+  let depositHashes = deposit.hashes;
+  depositHashes.push(event.transaction.hash.toHexString());
+  deposit.hashes = depositHashes;
+  deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
+  deposit.updatedAt = event.block.timestamp;
+  deposit.save();
+
+  // Use the current season of beanstalk for updating silo and farmer totals
+  let beanstalk = loadBeanstalk(event.address);
+
+  // Update overall silo totals
+  addDepositToSilo(event.address, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
+  addDepositToSiloAsset(
+    event.address,
+    event.params.token,
+    beanstalk.lastSeason,
+    event.params.bdv,
+    event.params.amount,
+    event.block.timestamp,
+    event.block.number
+  );
+
+  // Ensure that a Farmer entity is set up for this account.
+  loadFarmer(event.params.account);
+
+  // Update farmer silo totals
+  addDepositToSilo(event.params.account, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
+  addDepositToSiloAsset(
+    event.params.account,
+    event.params.token,
+    beanstalk.lastSeason,
+    event.params.bdv,
+    event.params.amount,
+    event.block.timestamp,
+    event.block.number
+  );
+
+  let id = "addDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
+  let add = new AddDepositEntity(id);
+  add.hash = event.transaction.hash.toHexString();
+  add.logIndex = event.transactionLogIndex.toI32();
+  add.protocol = event.address.toHexString();
+  add.account = event.params.account.toHexString();
+  add.token = event.params.token.toHexString();
+  add.season = beanstalk.lastSeason;
+  add.stem = event.params.stem;
+  add.amount = event.params.amount;
+  add.bdv = event.params.bdv;
+  add.blockNumber = event.block.number;
+  add.createdAt = event.block.timestamp;
+  add.save();
+}
+
+export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
+  let beanstalk = loadBeanstalk(event.address); // get current season
+  let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.stem);
+
+  // Update deposit
+  deposit.withdrawnBDV = deposit.withdrawnBDV.plus(event.params.bdv);
+  deposit.bdv = deposit.bdv.minus(event.params.bdv);
+  deposit.withdrawnAmount = deposit.withdrawnAmount.plus(event.params.amount);
+  deposit.amount = deposit.amount.minus(event.params.amount);
+  deposit.save();
+
+  // Update protocol totals
+  removeDepositFromSilo(event.address, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
+  removeDepositFromSiloAsset(
+    event.address,
+    event.params.token,
+    beanstalk.lastSeason,
+    event.params.bdv,
+    event.params.amount,
+    event.block.timestamp,
+    event.block.number
+  );
+
+  // Update farmer totals
+  removeDepositFromSilo(event.params.account, beanstalk.lastSeason, event.params.bdv, event.block.timestamp, event.block.number);
+  removeDepositFromSiloAsset(
+    event.params.account,
+    event.params.token,
+    beanstalk.lastSeason,
+    event.params.bdv,
+    event.params.amount,
+    event.block.timestamp,
+    event.block.number
+  );
+
+  let id = "removeDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
+  let removal = new RemoveDepositEntity(id);
+  removal.hash = event.transaction.hash.toHexString();
+  removal.logIndex = event.transactionLogIndex.toI32();
+  removal.protocol = event.address.toHexString();
+  removal.account = event.params.account.toHexString();
+  removal.token = event.params.token.toHexString();
+  removal.season = beanstalk.lastSeason;
+  removal.stem = event.params.stem;
+  removal.amount = event.params.amount;
+  removal.bdv = event.params.bdv;
+  removal.blockNumber = event.block.number;
+  removal.createdAt = event.block.timestamp;
+  removal.save();
+}
+
+export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
+  let beanstalk = loadBeanstalk(event.address); // get current season
+
+  for (let i = 0; i < event.params.stems.length; i++) {
+    let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.stems[i]);
+
+    // Update deposit
+    deposit.withdrawnBDV = deposit.withdrawnBDV.plus(event.params.bdvs[i]);
+    deposit.bdv = deposit.bdv.minus(event.params.bdvs[i]);
+    deposit.withdrawnAmount = deposit.withdrawnAmount.plus(event.params.amounts[i]);
+    deposit.amount = deposit.amount.minus(event.params.amounts[i]);
+    deposit.save();
+
+    // Update protocol totals
+    removeDepositFromSilo(event.address, beanstalk.lastSeason, event.params.bdvs[i], event.block.timestamp, event.block.number);
+    removeDepositFromSiloAsset(
+      event.address,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdvs[i],
+      event.params.amounts[i],
+      event.block.timestamp,
+      event.block.number
+    );
+
+    // Update farmer totals
+    removeDepositFromSilo(event.params.account, beanstalk.lastSeason, event.params.bdvs[i], event.block.timestamp, event.block.number);
+    removeDepositFromSiloAsset(
+      event.params.account,
+      event.params.token,
+      beanstalk.lastSeason,
+      event.params.bdvs[i],
+      event.params.amounts[i],
+      event.block.timestamp,
+      event.block.number
+    );
+
+    let id = "removeDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString() + "-" + i.toString();
+    let removal = new RemoveDepositEntity(id);
+    removal.hash = event.transaction.hash.toHexString();
+    removal.logIndex = event.transactionLogIndex.toI32();
+    removal.protocol = event.address.toHexString();
+    removal.account = event.params.account.toHexString();
+    removal.token = event.params.token.toHexString();
+    removal.season = beanstalk.lastSeason;
+    removal.stem = event.params.stems[i];
+    removal.amount = event.params.amounts[i];
+    removal.bdv = event.params.bdvs[i];
     removal.blockNumber = event.block.number;
     removal.createdAt = event.block.timestamp;
     removal.save();
@@ -613,6 +791,33 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   rawEvent.token = event.params.token.toHexString();
   rawEvent.stalk = event.params.stalk;
   rawEvent.seeds = event.params.seeds;
+  rawEvent.selector = event.params.selector.toHexString();
+  rawEvent.blockNumber = event.block.number;
+  rawEvent.createdAt = event.block.timestamp;
+  rawEvent.save();
+}
+
+export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
+  let silo = loadSilo(event.address);
+  let currentList = silo.whitelistedTokens;
+  if (currentList.length == 0) {
+    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
+    currentList.push(UNRIPE_BEAN.toHexString());
+    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
+  }
+  currentList.push(event.params.token.toHexString());
+  silo.whitelistedTokens = currentList;
+  silo.save();
+
+  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let rawEvent = new WhitelistTokenEntity(id);
+  rawEvent.hash = event.transaction.hash.toHexString();
+  rawEvent.logIndex = event.logIndex.toI32();
+  rawEvent.protocol = event.address.toHexString();
+  rawEvent.token = event.params.token.toHexString();
+  rawEvent.stalk = event.params.stalk;
+  rawEvent.seeds = ZERO_BI;
+  rawEvent.stalkPerSeason = event.params.stalkEarnedPerSeason;
   rawEvent.selector = event.params.selector.toHexString();
   rawEvent.blockNumber = event.block.number;
   rawEvent.createdAt = event.block.timestamp;
