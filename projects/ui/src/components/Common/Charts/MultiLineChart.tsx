@@ -33,6 +33,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
     // Line Chart Props
     series,
     onCursor,
+    pegLine,
     isTWAP,
     curve: _curve,
     children,
@@ -170,7 +171,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
           height={dataRegion.yBottom - dataRegion.yTop}
         >
           {/** Add TWAP line */}
-          {isTWAP && (
+          {(isTWAP || pegLine) && (
             <Line
               from={{ x: 0, y: scales[0].yScale(1) }}
               to={{ x: width - common.yAxisWidth, y: scales[0].yScale(1) }}

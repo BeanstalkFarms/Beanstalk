@@ -62,7 +62,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
     dateKey?: 'timestamp' | 'createdAt';
     queryConfig?: Partial<QueryOptions>;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
-    LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP'>;
+    LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP' | 'pegLine'>;
     statsRowFullWidth?: boolean;
   };
 
