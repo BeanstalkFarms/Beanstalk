@@ -4848,49 +4848,6 @@
         "internalType": "address",
         "name": "account",
         "type": "address"
-      },
-      {
-        "internalType": "address[]",
-        "name": "tokens",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint32[][]",
-        "name": "seasons",
-        "type": "uint32[][]"
-      },
-      {
-        "internalType": "uint256[][]",
-        "name": "amounts",
-        "type": "uint256[][]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stalkDiff",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "seedsDiff",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "proof",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "mowAndMigrate",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
       }
     ],
     "name": "mowAndMigrateNoDeposits",
