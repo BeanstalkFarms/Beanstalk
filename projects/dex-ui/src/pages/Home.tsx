@@ -53,7 +53,7 @@ export const Home = () => {
 };
 
 const Container = styled.div`
-  height: 100%;
+  height: calc(100% - 24px);
   padding: 12px;
   @media (min-width: 475px) {
     padding: 0px;
@@ -96,6 +96,9 @@ const MevBubble = styled.div`
 `;
 
 const TitleSubtitleContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   @media (min-width: 475px) {
     display: flex;
     flex-direction: column;
@@ -123,12 +126,14 @@ const SubTitle = styled.div`
   font-size: 14px;
   line-height: 22px;
   color: #4b5563;
+  gap: 8px;
   @media (min-width: 475px) {
     flex-direction: row;
     font-size: 20px;
     line-height: 24px;
     align-items: center;
     justify-content: center;
+    gap: 0px;
   }
 `;
 
