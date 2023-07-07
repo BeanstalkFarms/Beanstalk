@@ -58,6 +58,7 @@ import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDr
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
+import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 
 // -----------------------------------------------------------------------
 
@@ -118,6 +119,7 @@ const DepositForm: FC<
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];
 
+  const migrationNeeded = useMigrationNeeded();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const { amount, bdv, stalk, seeds, actions } = getDepositSummary(
     whitelistedToken,
@@ -174,7 +176,6 @@ const DepositForm: FC<
 
   /// Derived
   const isReady = bdv.gt(0);
-
   const noAmount =
     values.tokens[0].amount === undefined &&
     values.claimableBeans.amount?.eq(0);
@@ -225,11 +226,12 @@ const DepositForm: FC<
               handleQuote={handleQuote}
               balanceFrom={values.balanceFrom}
               params={quoteProviderParams}
+              // FIXME: remove later
+              disabled={migrationNeeded}
             />
           );
         })}
-
-        <ClaimBeanDrawerToggle />
+        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle />}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -282,7 +284,7 @@ const DepositForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting || noAmount}
+          disabled={isSubmitting || noAmount || migrationNeeded === true}
           type="submit"
           variant="contained"
           color="primary"

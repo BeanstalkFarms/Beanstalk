@@ -41,6 +41,7 @@ import Row from '~/components/Common/Row';
 import { displayFullBN, selectCratesForEnrootNew, transform } from '~/util';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import Centered from '~/components/Common/ZeroState/Centered';
+import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -136,6 +137,7 @@ const RewardsBar: FC<{
     return temp;
   }, [balances, sdk, tokens]);
 
+  const migrationNeeded = useMigrationNeeded();
   const getBDV = useBDV();
   const enrootData = useMemo(() => {
     const selectedCratesByToken = selectCratesForEnrootNew(
@@ -228,6 +230,21 @@ const RewardsBar: FC<{
       ]),
     };
   }, [claimState, farmerSilo, revitalizedSeeds, revitalizedStalk, sdk]);
+
+  if (migrationNeeded === true) {
+    return (
+      <Card>
+        <Centered width="100%" textAlign="center" spacing={1} py={1}>
+          <Typography variant="h3">
+            To claim Silo rewards, migrate to Silo V3.
+          </Typography>
+          <Typography variant="body1">
+            You can view your Deposits below.
+          </Typography>
+        </Centered>
+      </Card>
+    );
+  }
 
   return (
     <Card>
