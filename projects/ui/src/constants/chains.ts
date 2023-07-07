@@ -1,3 +1,8 @@
+import {
+  ChainId as SupportedChainId,
+  TESTNET_CHAINS,
+} from '@beanstalk/sdk-core';
+
 /**
  * Guide to adding a new chain:
  * 1. Pick a chainId and add to SupportedChainId
@@ -10,30 +15,13 @@
 /**
  * List of supported chains
  */
-export enum SupportedChainId {
-  MAINNET = 1,
-  CUJO = 31337, // pre-exploit, beanstalk replanted
-  LOCALHOST = 1337,
-}
-
-/**
- * These chains use Beanstalk Replanted, which has different
- * function signatures than the Beanstalk V1.
- */
-export const REPLANTED_CHAINS = new Set([
-  SupportedChainId.MAINNET,
-  SupportedChainId.LOCALHOST,
-  SupportedChainId.CUJO,
-]);
+export { SupportedChainId };
 
 /**
  * These chains are forks of mainnet,
  * therefore they use the same token addresses as mainnet.
  */
-export const TESTNET_CHAINS = new Set([
-  SupportedChainId.LOCALHOST,
-  SupportedChainId.CUJO,
-]);
+export { TESTNET_CHAINS };
 
 // ---------------------------------
 
@@ -45,7 +33,7 @@ export enum NetworkType {
 export const L1_CHAIN_IDS = [
   SupportedChainId.MAINNET,
   SupportedChainId.LOCALHOST,
-  SupportedChainId.CUJO,
+  SupportedChainId.TESTNET,
 ] as const;
 
 export const L2_CHAIN_IDS = [] as const;
