@@ -29,6 +29,18 @@ contract Depot is DepotFacet, TokenSupportFacet {
         IBeanstalkTransfer(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
 
     /**
+     * @dev So Depot can receive Ether.
+     */
+    receive() external payable {}
+
+    /**
+     * @dev Returns the current version of Depot.
+     */
+    function version() external pure returns (string memory) {
+        return "1.0.1";
+    }
+
+    /**
      * 
      * Farm
      * 
