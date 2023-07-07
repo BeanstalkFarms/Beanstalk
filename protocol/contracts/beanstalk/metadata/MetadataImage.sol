@@ -70,6 +70,7 @@ contract MetadataImage {
             bean3CRVToken(),
             urBeanToken(),
             urBean3CRVToken(),
+            beanETHCP2WellToken(),
             fullLeafRow(),
             '</defs>'
         ));
@@ -447,6 +448,19 @@ contract MetadataImage {
         );
     } 
 
+    function beanETHCP2WellToken() internal pure returns (string memory){
+        return string(abi.encodePacked(
+            '<g id="BEAN:ETHw">',
+            '<rect width="12" height="12" rx="6" fill="#46B955"/>',
+            '<path d="M6 12A6 6 0 1 0 6 0a6 6 0 0 0 0 12Z" fill="#50AE58"/>',
+            '<path d="m7.684 1.265-3.505 9.36c.003 0-3.884-6.625 3.505-9.36Z" fill="#fff"/>',   
+            '<path d="M8.952 6.986a.063.063 0 0 1-.022.003c-.71.13-1.424.255-2.134.381-.281.052-.565.103-.846.152a.036.036 0 0 1-.026 0l2.14-5.625.004-.003c.297 1.702.59 3.394.884 5.092Zm-.187.478c-1.266.859-2.531 1.721-3.8 2.58l.781-2.054c.007.004.013 0 .023 0 .759-.132 1.514-.268 2.27-.4l.697-.126.03-.006c-.004.003 0 .006 0 .006Z" fill="#000"/>',
+            '</g>'
+            )
+        );
+    }
+
+
     function useAssetTransform(string memory assetName, int256 x, int256 y) internal pure returns (string memory) { 
         return string(abi.encodePacked(
             '<use xlink:href="#',
@@ -565,6 +579,9 @@ contract MetadataImage {
         }
         else if(token == C.UNRIPE_LP) {
             tokenString = "urBean3CRV";
+        }
+        else if(token == C.BEAN_ETH_WELL) {
+            tokenString = "BEAN:ETHw";
         } else {
             revert("token not whitelisted.");
         }
