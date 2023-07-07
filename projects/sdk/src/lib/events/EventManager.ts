@@ -58,7 +58,7 @@ export class EventManager {
     if (!account) throw new Error("EventManager: getSiloEvents requires an account");
 
     // TODO: set this to SiloV3 deployment block
-    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
+    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].SILOV3_DEPLOYMENT_BLOCK;
     const toBlock = opts.toBlock ?? "latest";
 
     return Promise.all([

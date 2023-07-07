@@ -50,7 +50,6 @@ export type PoolMap<P = Pool> = AddressMap<P>;
 // to prevent circular dependency errors.
 
 export * from './addresses';
-export * from './blocks';
 export * from './chaininfo';
 export * from './chains';
 export * from './ecosystem';
