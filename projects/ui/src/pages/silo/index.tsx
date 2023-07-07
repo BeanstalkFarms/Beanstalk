@@ -15,7 +15,6 @@ import {
 import { useSelector } from 'react-redux';
 import BigNumberJS from 'bignumber.js';
 import { Token, TokenValue } from '@beanstalk/sdk';
-import { ethers } from 'ethers';
 import Overview from '~/components/Silo/Overview';
 import RewardsSummary from '~/components/Silo/RewardsSummary';
 import Whitelist from '~/components/Silo/Whitelist';
@@ -117,26 +116,6 @@ const RewardsBar: FC<{
     enroot: false,
   });
 
-  const grownStalkByToken = useMemo(() => {
-    const temp = new Map<Token, BigNumberJS>();
-
-    tokens.forEach((token) => {
-      if (!balances[token.address]?.mowStatus) {
-        return;
-      }
-
-      const grownStalk = sdk.silo.calculateGrownStalk(
-        ethers.BigNumber.from(0),
-        balances[token.address].mowStatus.lastStem,
-        sdk.tokens.BEAN.fromBlockchain(balances[token.address].mowStatus.bdv)
-      );
-
-      temp.set(token, transform(grownStalk, 'bnjs'));
-    });
-
-    return temp;
-  }, [balances, sdk, tokens]);
-
   const migrationNeeded = useMigrationNeeded();
   const getBDV = useBDV();
   const enrootData = useMemo(() => {
@@ -203,7 +182,16 @@ const RewardsBar: FC<{
     let amountStalk = ZERO_BN;
     let amountSeeds = ZERO_BN;
 
-    claimState.mow.forEach((tokenAddress) => {});
+    tokens.forEach((token) => {
+      if (claimState.mow.has(token.address)) {
+        const grownStalk = farmerSilo.stalk.grownByToken.get(token);
+        if (grownStalk) {
+          amountStalk = amountStalk.plus(
+            transform(grownStalk, 'bnjs', sdk.tokens.STALK)
+          );
+        }
+      }
+    });
 
     if (claimState.plant) {
       amountBean = amountBean.plus(farmerSilo.beans.earned);
@@ -229,7 +217,7 @@ const RewardsBar: FC<{
         ],
       ]),
     };
-  }, [claimState, farmerSilo, revitalizedSeeds, revitalizedStalk, sdk]);
+  }, [claimState, farmerSilo, revitalizedSeeds, revitalizedStalk, sdk, tokens]);
 
   if (migrationNeeded === true) {
     return (
@@ -316,7 +304,8 @@ const RewardsBar: FC<{
                           disabled
                             ? 0
                             : displayFullBN(
-                                grownStalkByToken.get(token) || ZERO_BN,
+                                farmerSilo.stalk.grownByToken.get(token) ||
+                                  ZERO_BN,
                                 4
                               )
                         }

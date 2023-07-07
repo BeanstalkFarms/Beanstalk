@@ -1,4 +1,4 @@
-import { Deposit } from '@beanstalk/sdk';
+import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
 import BigNumberJS from 'bignumber.js';
 import { ethers } from 'ethers';
 import { TokenMap } from '~/constants';
@@ -117,6 +117,11 @@ export type FarmerSiloRewards = {
      * Grown Stalk is Stalk granted each Season from Seeds.
      */
     grown: BigNumberJS;
+
+    /**
+     *
+     */
+    grownByToken: Map<Token, TokenValue>;
   };
   seeds: {
     /**

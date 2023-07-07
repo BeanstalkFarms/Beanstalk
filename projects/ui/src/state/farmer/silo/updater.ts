@@ -72,7 +72,7 @@ export const useFetchFarmerSilo = () => {
       // FIXME: translate?
       const [
         activeStalkBalance,
-        grownStalkBalance,
+        { grownStalkBalance, grownStalkByToken },
         rootBalance,
         earnedBeanBalance,
         migrationNeeded,
@@ -80,7 +80,25 @@ export const useFetchFarmerSilo = () => {
       ] = await Promise.all([
         // `getStalk()` returns `stalk + earnedStalk` but NOT grown stalk
         sdk.silo.getStalk(account),
-        sdk.silo.getGrownStalk(account),
+
+        // Get grown stalk for each individual token
+        Promise.all(
+          [...sdk.tokens.siloWhitelist].map((token) =>
+            sdk.contracts.beanstalk
+              .balanceOfGrownStalk(account, token.address)
+              .then(
+                (result) =>
+                  [token, sdk.tokens.STALK.fromBlockchain(result)] as const
+              )
+          )
+        ).then((results) => ({
+          grownStalkBalance: results.reduce(
+            (acc, [_, result]) => acc.add(result),
+            sdk.tokens.STALK.amount(0)
+          ),
+          grownStalkByToken: new Map<Token, TokenValue>(results),
+        })),
+
         sdk.contracts.beanstalk.balanceOfRoots(account).then(bigNumberResult),
         sdk.silo.getEarnedBeans(account),
 
@@ -98,9 +116,9 @@ export const useFetchFarmerSilo = () => {
           )
         ).then(
           (statuses) =>
-            // eslint-disable-next-line
             new Map<
               Token,
+              // eslint-disable-next-line
               Awaited<ReturnType<typeof sdk.contracts.beanstalk.getMowStatus>>
             >(statuses)
         ),
@@ -252,6 +270,7 @@ export const useFetchFarmerSilo = () => {
           earned: transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
           grown: transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
           total: transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
+          grownByToken: grownStalkByToken,
         },
         seeds: {
           active: transform(activeSeedBalance, 'bnjs', sdk.tokens.SEEDS),
