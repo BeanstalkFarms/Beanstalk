@@ -4,7 +4,10 @@ import Token from '~/classes/Token';
 import { TokenMap } from '~/constants';
 import { Beanstalk } from '~/generated';
 import useBDV from '~/hooks/beanstalk/useBDV';
-import { LegacyDepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
+import {
+  LegacyDepositCrate,
+  FarmerSiloTokenBalance,
+} from '~/state/farmer/silo';
 import { transform } from '~/util';
 
 /**
@@ -18,7 +21,7 @@ export const STALK_PER_SEED_PER_SEASON = 1 / 10_000;
 export const selectCratesForEnroot = (
   beanstalk: Beanstalk,
   unripeTokens: TokenMap<Token>,
-  siloBalances: TokenMap<FarmerSiloBalance>,
+  siloBalances: TokenMap<FarmerSiloTokenBalance>,
   getBDV: (_token: Token) => BigNumber
 ) =>
   Object.keys(unripeTokens).reduce<{
@@ -62,7 +65,7 @@ export const selectCratesForEnroot = (
  */
 export const selectCratesForEnrootNew = (
   sdk: BeanstalkSDK,
-  siloBalances: TokenMap<FarmerSiloBalance>,
+  siloBalances: TokenMap<FarmerSiloTokenBalance>,
   getBDV: ReturnType<typeof useBDV>
 ) =>
   [...sdk.tokens.unripeTokens].reduce<{
@@ -100,8 +103,9 @@ export const selectCratesForEnrootNew = (
             [
               token.address,
               crates.map((crate) => crate.stem.toString()),
-              crates.map((crate) =>
-                transform(crate.amount, 'tokenValue', token).toBigNumber()
+              crates.map(
+                (crate) =>
+                  transform(crate.amount, 'tokenValue', token).toBigNumber()
                 // unripeTokens[token].stringify(crate.amount)
               ), // amounts
             ]

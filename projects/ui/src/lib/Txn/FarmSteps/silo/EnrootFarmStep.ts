@@ -1,7 +1,10 @@
 import { BeanstalkSDK, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { EstimatesGas, FarmStep } from '~/lib/Txn/Interface';
-import { LegacyDepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
+import {
+  LegacyDepositCrate,
+  FarmerSiloTokenBalance,
+} from '~/state/farmer/silo';
 import { TokenMap } from '~/constants';
 
 enum EnrootType {
@@ -133,7 +136,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
   /// static methods
   static pickUnripeCrates(
     unripeTokens: BeanstalkSDK['tokens']['unripeTokens'],
-    balances: TokenMap<FarmerSiloBalance>,
+    balances: TokenMap<FarmerSiloTokenBalance>,
     getBDV: (token: Token) => BigNumber
   ) {
     return [...unripeTokens].reduce<TokenMap<LegacyDepositCrate[]>>(

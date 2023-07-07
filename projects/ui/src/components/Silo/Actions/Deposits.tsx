@@ -4,7 +4,7 @@ import { Stack, Tooltip, Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
 import { ethers } from 'ethers';
 import { Token } from '~/classes';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import type { LegacyDepositCrate } from '~/state/farmer/silo';
 import { displayBN, displayFullBN } from '~/util';
 import { BEAN, STALK } from '~/constants/tokens';
@@ -20,7 +20,7 @@ import { FC } from '~/types';
 const Deposits: FC<
   {
     token: Token;
-    siloBalance: FarmerSiloBalance | undefined;
+    siloBalance: FarmerSiloTokenBalance | undefined;
     useLegacySeason?: boolean;
   } & Partial<TableCardProps>
 > = ({ token, siloBalance, useLegacySeason, ...props }) => {

@@ -1,5 +1,6 @@
 import { Deposit } from '@beanstalk/sdk';
 import BigNumberJS from 'bignumber.js';
+import { ethers } from 'ethers';
 import { TokenMap } from '~/constants';
 
 /**
@@ -34,9 +35,14 @@ export type LegacyDepositCrate = Deposit<BigNumberJS>;
  * A "Silo Balance" provides all information
  * about a Farmer's ownership of a Whitelisted Silo Token.
  */
-export type FarmerSiloBalance = {
+export type FarmerSiloTokenBalance = {
   /** Season in which the farmer last updated their Silo */
   lastUpdate: BigNumberJS;
+
+  mowStatus: {
+    lastStem: ethers.BigNumber;
+    bdv: ethers.BigNumber;
+  };
 
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
@@ -74,7 +80,7 @@ export type FarmerSiloBalance = {
  * FIXME: enforce that `address` is a key of whitelisted tokens?
  */
 export type FarmerSiloBalances = {
-  balances: TokenMap<FarmerSiloBalance>;
+  balances: TokenMap<FarmerSiloTokenBalance>;
 };
 
 /**

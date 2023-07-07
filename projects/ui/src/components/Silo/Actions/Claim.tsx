@@ -10,7 +10,7 @@ import {
   FarmFromMode,
   FarmToMode,
 } from '@beanstalk/sdk';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import { ActionType } from '~/util/Actions';
 import {
   TxnPreview,
@@ -291,7 +291,7 @@ const ClaimForm: FC<
 
 const ClaimPropProvider: FC<{
   token: ERC20Token;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = ({ token, siloBalance }) => {
   const sdk = useSdk();
 
@@ -435,7 +435,7 @@ const ClaimPropProvider: FC<{
 
 const Claim: FC<{
   token: ERC20Token;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = (props) => (
   <FormTxnProvider>
     <ClaimPropProvider {...props} />

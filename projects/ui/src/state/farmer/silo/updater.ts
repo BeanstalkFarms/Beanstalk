@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { DataSource, TokenValue } from '@beanstalk/sdk';
+import { DataSource, Token, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -76,8 +76,7 @@ export const useFetchFarmerSilo = () => {
         rootBalance,
         earnedBeanBalance,
         migrationNeeded,
-        // lastUpdate,
-        // allEvents = [],
+        mowStatuses,
       ] = await Promise.all([
         // `getStalk()` returns `stalk + earnedStalk` but NOT grown stalk
         sdk.silo.getStalk(account),
@@ -89,9 +88,22 @@ export const useFetchFarmerSilo = () => {
         // in LocalStorage or at least moved to a separate updater to prevent it from
         // getting called every time the farmer refreshes their Silo
         sdk.contracts.beanstalk.migrationNeeded(account),
-        // beanstalk.lastUpdate(account).then(bigNumberResult),
 
-        // sdk.contracts.beanstalk.depositedB
+        // Get the mowStatus struct for each whitelisted token
+        Promise.all(
+          [...sdk.tokens.siloWhitelist].map((token) =>
+            sdk.contracts.beanstalk
+              .getMowStatus(account, token.address)
+              .then((status) => [token, status] as const)
+          )
+        ).then(
+          (statuses) =>
+            // eslint-disable-next-line
+            new Map<
+              Token,
+              Awaited<ReturnType<typeof sdk.contracts.beanstalk.getMowStatus>>
+            >(statuses)
+        ),
       ] as const);
 
       dispatch(updateFarmerMigrationStatus(migrationNeeded));
@@ -121,7 +133,11 @@ export const useFetchFarmerSilo = () => {
             const token = sdk.tokens.findByAddress(addr);
             if (!token) return;
 
+            const mowStatus = mowStatuses.get(token);
+            if (!mowStatus) return;
+
             payload[token.address] = {
+              mowStatus,
               deposited: {
                 // Note that deposits in the flatfile are keyed by season
                 // instead of stem
@@ -183,6 +199,7 @@ export const useFetchFarmerSilo = () => {
           }
         );
       } else {
+        // FIXME: always pulls from contract events
         const balances = await sdk.silo.getBalances(account, {
           source: DataSource.LEDGER,
         });
@@ -194,6 +211,7 @@ export const useFetchFarmerSilo = () => {
           );
 
           payload[token.address] = {
+            mowStatus: mowStatuses.get(token),
             deposited: {
               amount: transform(balance.amount, 'bnjs', token),
               bdv: transform(balance.bdv, 'bnjs', sdk.tokens.BEAN),

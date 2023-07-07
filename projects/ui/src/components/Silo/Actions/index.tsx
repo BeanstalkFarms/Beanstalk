@@ -3,7 +3,7 @@ import { Box, Tab } from '@mui/material';
 import { ERC20Token } from '@beanstalk/sdk';
 import { Pool } from '~/classes';
 import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
 import Deposit from './Deposit';
@@ -34,7 +34,7 @@ const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 const SiloActions: FC<{
   pool: Pool;
   token: ERC20TokenOld;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = (props) => {
   const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
