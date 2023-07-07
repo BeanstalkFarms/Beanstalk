@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { ethers } from 'ethers';
 import { TokenMap } from '../../../constants';
 
 /**
@@ -6,6 +7,7 @@ import { TokenMap } from '../../../constants';
  * about a Farmer's ownership of a Whitelisted Silo Token.
  */
 export type BeanstalkSiloBalance = {
+  stemTip: ethers.BigNumber;
   bdvPerToken: BigNumber;
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
