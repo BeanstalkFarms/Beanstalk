@@ -1,6 +1,6 @@
-import { DEPLOYMENT_BLOCKS } from '~/constants/blocks';
+import { Blocks } from '@beanstalk/sdk';
 import useChainConstant from '../chain/useChainConstant';
 
 export default function useBlocks() {
-  return useChainConstant(DEPLOYMENT_BLOCKS);
+  return useChainConstant(Blocks);
 }

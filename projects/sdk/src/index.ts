@@ -3,6 +3,7 @@ export { BeanstalkSDK, DataSource } from "src/lib/BeanstalkSDK";
 
 // Constants
 export { ChainId } from "@beanstalk/sdk-core";
+export { Blocks } from "src/constants/blocks";
 
 // Classes
 export { Token, NativeToken, ERC20Token, BeanstalkToken } from "src/classes/Token";
