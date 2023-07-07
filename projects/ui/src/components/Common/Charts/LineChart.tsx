@@ -50,6 +50,7 @@ export type DataRegion = {
 export type LineChartProps = {
   series: BaseDataPoint[][];
   onCursor?: (ds?: BaseDataPoint[]) => void;
+  pegLine?: boolean; // used to display a line at the $1 peg
   isTWAP?: boolean; // used to indicate if we are displaying TWAP price
   curve?: CurveFactory | keyof typeof CURVES;
   children?: (
@@ -103,6 +104,7 @@ const Graph: React.FC<GraphProps> = (props) => {
     // Line Chart Props
     series: _series,
     onCursor,
+    pegLine,
     isTWAP,
     curve: _curve = 'linear',
     children,
@@ -234,7 +236,7 @@ const Graph: React.FC<GraphProps> = (props) => {
           width={width - yAxisWidth}
           height={dataRegion.yBottom - dataRegion.yTop}
         >
-          {isTWAP && (
+          {(isTWAP || pegLine) && (
             <Line
               from={{ x: 0, y: scales[0].yScale(1) }}
               to={{ x: width - yAxisWidth, y: scales[0].yScale(1) }}
