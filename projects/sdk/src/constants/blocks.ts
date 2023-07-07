@@ -1,4 +1,4 @@
-import { ChainId } from "./chains";
+import { ChainId } from "@beanstalk/sdk-core";
 
 export const Blocks = {
   [ChainId.MAINNET]: {

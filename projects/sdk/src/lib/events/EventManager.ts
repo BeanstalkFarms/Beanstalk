@@ -1,9 +1,9 @@
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { Blocks } from "src/constants/blocks";
-import { ChainId } from "src/constants";
 import flattenDeep from "lodash.flattendeep";
 import { ethers } from "ethers";
 import { Token } from "src/classes/Token";
+import { ChainId } from "@beanstalk/sdk-core";
 
 /**
  * Extracts the argument types from a function
