@@ -58,22 +58,24 @@ const SiloActions: FC<{
   return (
     <>
       <Module>
-        <Alert
-          sx={{
-            borderRadius: 0,
-            position: 'relative',
-            zIndex: 1,
-            backgroundColor: 'primary.light',
-            color: 'primary.main',
-          }}
-          icon={<></>}
-        >
-          <Box>
-            <Typography variant="h4" textAlign="center" display="block">
-              To use the Silo, migrate your account to Silo V3.
-            </Typography>
-          </Box>
-        </Alert>
+        {migrationNeeded ? (
+          <Alert
+            sx={{
+              borderRadius: 0,
+              position: 'relative',
+              zIndex: 1,
+              backgroundColor: 'primary.light',
+              color: 'primary.main',
+            }}
+            icon={<></>}
+          >
+            <Box>
+              <Typography variant="h4" textAlign="center" display="block">
+                To use the Silo, migrate your account to Silo V3.
+              </Typography>
+            </Box>
+          </Alert>
+        ) : null}
         <ModuleTabs value={tab} onChange={handleChange}>
           <Tab label="Deposit" disabled={migrationNeeded === true} />
           <Tab label="Convert" disabled={migrationNeeded === true} />

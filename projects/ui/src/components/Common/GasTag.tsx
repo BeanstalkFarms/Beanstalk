@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { DateTime } from 'luxon';
 import useGasToUSD from '~/hooks/ledger/useGasToUSD';
 import { AppState } from '~/state';
-import { displayUSD } from '~/util';
+import { displayFullBN, displayUSD } from '~/util';
 
 import { FC } from '~/types';
 import StatHorizontal from '~/components/Common/StatHorizontal';
@@ -24,13 +24,13 @@ const GasTag: FC<{
       title={
         <>
           <StatHorizontal label="Gas limit">
-            {gasLimit?.toString() || '?'}
+            {displayFullBN(gasLimit) || '?'}
           </StatHorizontal>
           <StatHorizontal label="Base fee">
-            {prices?.gas.safe || '?'} gwei
+            {prices?.gas.safe ? `${prices.gas.safe} gwei` : '?'}
           </StatHorizontal>
           <StatHorizontal label="ETH price">
-            ${prices?.ethusd || '?'}
+            {prices?.ethusd ? `$${prices.ethusd}` : '?'}
           </StatHorizontal>
           {prices?.lastRefreshed && (
             <>
@@ -46,7 +46,7 @@ const GasTag: FC<{
         </>
       }
     >
-      <Box sx={{ px: px, py: 0.5, minWidth: 80, textAlign: 'right' }}>
+      <Box sx={{ px: px, py: 0.5, textAlign: 'right' }}>
         ⛽&nbsp;{gasUSD && !gasUSD.isNaN() ? displayUSD(gasUSD) : '$-.--'}
       </Box>
     </Tooltip>

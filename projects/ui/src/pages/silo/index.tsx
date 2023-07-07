@@ -1,9 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
   Card,
   Checkbox,
+  Chip,
+  CircularProgress,
   Container,
   FormControlLabel,
   FormControlLabelProps,
@@ -15,6 +17,7 @@ import {
 import { useSelector } from 'react-redux';
 import BigNumberJS from 'bignumber.js';
 import { Token, TokenValue } from '@beanstalk/sdk';
+import { ethers } from 'ethers';
 import Overview from '~/components/Silo/Overview';
 import RewardsSummary from '~/components/Silo/RewardsSummary';
 import Whitelist from '~/components/Silo/Whitelist';
@@ -41,6 +44,10 @@ import { displayFullBN, selectCratesForEnrootNew, transform } from '~/util';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import Centered from '~/components/Common/ZeroState/Centered';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
+import useAccount from '~/hooks/ledger/useAccount';
+import useQuoteAgnostic from '~/hooks/ledger/useQuoteAgnostic';
+import useGasToUSD from '~/hooks/ledger/useGasToUSD';
+import GasTag from '~/components/Common/GasTag';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -69,7 +76,7 @@ const FormControlLabelStat: FC<
     }
   />
 );
-const Link = (
+const Connector: FC<{ top: number }> = ({ top }) => (
   <Box
     sx={{
       height: 'calc(24px)',
@@ -77,7 +84,7 @@ const Link = (
       backgroundColor: 'rgba(0,0,0, 0.25)',
       position: 'absolute',
       left: 8.5,
-      top: 29,
+      top: top,
       zIndex: 1,
     }}
   />
@@ -104,6 +111,7 @@ const RewardsBar: FC<{
   /// Local state
   const [open, show, hide] = useToggle();
 
+  const getGas = useGasToUSD();
   const sdk = useSdk();
   const tokens = useMemo(
     () => [...sdk.tokens.siloWhitelist],
@@ -116,7 +124,9 @@ const RewardsBar: FC<{
     enroot: false,
   });
 
+  const account = useAccount();
   const migrationNeeded = useMigrationNeeded();
+
   const getBDV = useBDV();
   const enrootData = useMemo(() => {
     const selectedCratesByToken = selectCratesForEnrootNew(
@@ -196,6 +206,7 @@ const RewardsBar: FC<{
     if (claimState.plant) {
       amountBean = amountBean.plus(farmerSilo.beans.earned);
       amountStalk = amountStalk.plus(farmerSilo.stalk.earned);
+      amountSeeds = amountSeeds.plus(farmerSilo.seeds.earned);
     }
 
     if (claimState.enroot) {
@@ -218,6 +229,72 @@ const RewardsBar: FC<{
       ]),
     };
   }, [claimState, farmerSilo, revitalizedSeeds, revitalizedStalk, sdk, tokens]);
+
+  const buildWorkflow = useCallback(
+    (c: typeof claimState) => {
+      if (!account) return;
+      const workflow = sdk.farm.create();
+
+      // const forcedToMow = new Set<Token>();
+      // if (c.plant) {
+      //   forcedToMow.add(sdk.tokens.BEAN);
+      // }
+
+      // if (c.enroot) {
+      //   sdk.tokens.unripeTokens.forEach((token) => {
+      //     if (enrootData[token.address]?.crates.length > 0) {
+      //       forcedToMow.add(token);
+      //     }
+      //   });
+      // }
+
+      const toMow = [...c.mow];
+
+      if (toMow.length === 1) {
+        workflow.add(() =>
+          sdk.contracts.beanstalk.interface.encodeFunctionData('mow', [
+            account,
+            toMow[0],
+          ])
+        );
+      } else if (toMow.length > 1) {
+        workflow.add(() =>
+          sdk.contracts.beanstalk.interface.encodeFunctionData('mowMultiple', [
+            account,
+            toMow,
+          ])
+        );
+      }
+
+      if (c.plant) {
+        workflow.add(() =>
+          sdk.contracts.beanstalk.interface.encodeFunctionData('plant')
+        );
+      }
+
+      if (c.enroot) {
+        Object.values(enrootData).forEach((v) => {
+          workflow.add(() => v.encoded);
+        });
+      }
+
+      return workflow;
+    },
+    [enrootData, sdk, account]
+  );
+
+  const quoteGas = useCallback(() => {
+    const _workflow = buildWorkflow(claimState);
+    if (!_workflow) throw new Error('No workflow');
+    return _workflow.estimateGas(ethers.BigNumber.from(0), { slippage: 0 });
+  }, [buildWorkflow, claimState]);
+
+  const [gas, isEstimatingGas, estimateGas] = useQuoteAgnostic(quoteGas);
+
+  useEffect(() => {
+    estimateGas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimState]);
 
   if (migrationNeeded === true) {
     return (
@@ -343,7 +420,8 @@ const RewardsBar: FC<{
                   <Typography variant="h4">Plant</Typography>
                   {/* <Typography variant="bodySmall">Claim your seignorage.</Typography> */}
                   <FormGroup sx={{ position: 'relative' }}>
-                    {Link}
+                    <Connector top={29} />
+                    <Connector top={69.5} />
                     <FormControlLabelStat
                       label="Earned Beans"
                       stat={displayFullBN(farmerSilo.beans.earned)}
@@ -358,12 +436,19 @@ const RewardsBar: FC<{
                       checked={claimState.plant}
                       onChange={onChangePlant}
                     />
+                    <FormControlLabelStat
+                      label="Plantable Seeds"
+                      stat={displayFullBN(farmerSilo.seeds.earned)}
+                      disabled={farmerSilo.seeds.earned.lte(0)}
+                      checked={claimState.plant}
+                      onChange={onChangePlant}
+                    />
                   </FormGroup>
                 </Box>
                 <Box>
                   <Typography variant="h4">Enroot</Typography>
                   <FormGroup sx={{ position: 'relative' }}>
-                    {Link}
+                    <Connector top={29} />
                     <FormControlLabelStat
                       label="Revitalized Stalk"
                       stat={displayFullBN(revitalizedStalk || ZERO_BN, 4)}
@@ -397,19 +482,16 @@ const RewardsBar: FC<{
                     label="Deposited BEAN"
                     amount={output.get(sdk.tokens.BEAN)!}
                     hideIfZero
-                    // amountSuffix={` @ ${displayBN(podLineLength)}`}
                   />
                   <TokenOutput.Row
                     token={sdk.tokens.STALK}
                     amount={output.get(sdk.tokens.STALK)!}
                     hideIfZero
-                    // amountSuffix={` @ ${displayBN(podLineLength)}`}
                   />
                   <TokenOutput.Row
                     token={sdk.tokens.SEEDS}
                     amount={output.get(sdk.tokens.SEEDS)!}
                     hideIfZero
-                    // amountSuffix={` @ ${displayBN(podLineLength)}`}
                   />
                 </TokenOutput>
                 <Button
@@ -420,6 +502,23 @@ const RewardsBar: FC<{
                 >
                   Claim Rewards
                 </Button>
+                <Row justifyContent="flex-end" spacing={0.5}>
+                  {isEstimatingGas ? (
+                    <CircularProgress thickness={3} size={16} />
+                  ) : (
+                    <div />
+                  )}
+                  <Chip
+                    variant="filled"
+                    color="secondary"
+                    label={
+                      <GasTag
+                        px={0}
+                        gasLimit={transform(gas || ZERO_BN, 'bnjs')}
+                      />
+                    }
+                  />
+                </Row>
               </Stack>
             </Grid>
           </Grid>
