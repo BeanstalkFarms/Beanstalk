@@ -1,7 +1,8 @@
-import React, { MouseEvent as ReactMouseEvent } from "react";
+import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { Spinner } from "../Spinner";
+import { BodyXS } from "../Typography";
 
 type Props = {
   label?: string;
@@ -58,5 +59,11 @@ const StyledButton = styled.button<ButtonProps>`
 
   :focus {
     outline: 2px solid #46b955;
+  }
+
+  @media (max-width: 475px) {
+    ${BodyXS}
+    font-weight: 600;
+    padding: 8px 8px;
   }
 `;

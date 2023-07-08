@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { BodyXS } from "./Typography";
 
 export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bold?: boolean; justify?: boolean; hover?: boolean }>`
   display: flex;
@@ -23,4 +24,10 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
     `:hover {
       background-color: #f0fdf4;
     };`}
+
+  @media (max-width: 475px) {
+    ${BodyXS}
+    font-weight: ${({ bold, active }) => (bold || active ? "600" : "normal")};
+    padding: 8px 8px;
+  }
 `;

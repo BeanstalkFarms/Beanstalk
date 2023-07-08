@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { BodyL } from "../Typography";
+import { BodyL, BodyXS, TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { TokenLogo } from "../TokenLogo";
@@ -19,9 +19,13 @@ export const Reserves: FC<Props> = ({ reserves }) => {
     <Item key={i} column>
       <Symbol>{r.token?.symbol}</Symbol>
       <Wrapper>
-        <TokenLogo token={r.token} size={14} />
-        <Amount>{r.amount.toHuman("short")}</Amount>
-        <Percent>{`(${r.percentage?.mul(100).toHuman("short")}%)`}</Percent>
+        <TokenLogo token={r.token} size={16} mobileSize={16}/>
+        <TextNudge amount={2}>
+          <Amount>{r.amount.toHuman("short")}</Amount>
+        </TextNudge>
+        <TextNudge amount={2}>
+          <Percent>{`(${r.percentage?.mul(100).toHuman("short")}%)`}</Percent>
+        </TextNudge>   
       </Wrapper>
     </Item>
   ));
@@ -32,6 +36,9 @@ export const Reserves: FC<Props> = ({ reserves }) => {
 const Symbol = styled.div`
   ${BodyL}
   color: #4B5563;
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;
 const Wrapper = styled.div`
   display: flex;
@@ -45,6 +52,10 @@ const Amount = styled.div`
   line-height: 24px;
   text-align: right;
   color: #000000;
+  @media (max-width: 475px) {
+    ${BodyXS}
+    font-weight: 600;
+  }
 `;
 const Percent = styled.div`
   font-weight: 400;
@@ -52,4 +63,7 @@ const Percent = styled.div`
   line-height: 24px;
   text-align: right;
   color: #9ca3af;
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;

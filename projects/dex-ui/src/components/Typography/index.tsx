@@ -12,6 +12,12 @@ export const H2 = styled.h2`
   font-size: 24px;
   line-height: 32px;
 `;
+export const BodyXS = css`
+  font-style: normal;
+  font-weight: 400;  
+  font-size: 14px;
+  line-height: 22px;
+`;
 export const BodyS = css`
   font-style: normal;
   font-weight: 400;
@@ -80,9 +86,12 @@ export const PageTitle = styled.h1`
 // Helps nudge text to work around the font's
 // messed up baseline, when we want the text
 // to be vertically centered.
-type NudgeProps = { amount: number };
+type NudgeProps = { amount: number, mobileAmount?: number };
 export const TextNudge = styled.div<NudgeProps>`
   margin-top: ${({ amount }) => amount}px;
   margin-bottom: ${({ amount }) => -1 * amount}px;
-  overflow-
+  @media (max-width: 475px) {
+    margin-top: ${(props) => props.mobileAmount || props.amount}px;
+    margin-bottom: ${(props) => -1 * (props.mobileAmount || props.amount)}px;
+  }
 `;

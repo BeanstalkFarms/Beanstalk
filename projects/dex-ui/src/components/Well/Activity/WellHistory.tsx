@@ -13,7 +13,7 @@ type WellHistoryProps = {
 };
 
 export const WellHistory = ({ well, tokenPrices }: WellHistoryProps) => {
-  const { data: events, isLoading: loading, error } = useWellHistory(well);
+  const { data: events, isLoading: loading } = useWellHistory(well);
   const [filter, setFilter] = useState<EVENT_TYPE | null>(null);
 
   const eventRows: JSX.Element[] = (events || [])
@@ -34,8 +34,8 @@ export const WellHistory = ({ well, tokenPrices }: WellHistoryProps) => {
             <THead>
               <Row>
                 <Th>Action</Th>
-                <Th align={"right"}>Value</Th>
-                <Th align={"right"}>Description</Th>
+                <DesktopOnlyTh align={"right"}>Value</DesktopOnlyTh>
+                <DesktopOnlyTh align={"right"}>Description</DesktopOnlyTh>
                 <Th align={"right"}>Time</Th>
               </Row>
             </THead>
@@ -50,3 +50,9 @@ export const WellHistory = ({ well, tokenPrices }: WellHistoryProps) => {
 const WellHistoryContainer = styled.div`
   display: flex;
 `;
+
+const DesktopOnlyTh = styled(Th)`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`

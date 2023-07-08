@@ -1,7 +1,7 @@
 import React, { Children, useCallback, useState, MouseEvent as ReactMouseEvent } from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { BodyCaps, BodyS } from "./Typography";
+import { BodyCaps, BodyS, BodyXS } from "./Typography";
 import { ImageButton } from "./ImageButton";
 import { ChevronDown } from "./Icons";
 
@@ -57,8 +57,6 @@ const Container = styled.div<Props>`
   border-left: 0.5px solid #9ca3af;
   border-right: 0.5px solid #9ca3af;
   border-bottom: ${(p) => (p.open ? "0.5px" : "0px")} solid #9caeaf;
-  width: ${(p) => p.width}px;
-  min-width: ${(p) => p.width}px;
   cursor: pointer;
   :hover {
     border-top: 0.5px solid #46b955;
@@ -66,6 +64,10 @@ const Container = styled.div<Props>`
     border-right: 0.5px solid #46b955;
     border-bottom: ${(p) => (p.open ? "0.5px" : "0px")} solid #46b955;
     outline: 0.5px solid #46b955;
+  }
+  @media (min-width: 475px) {
+    width: ${(p) => p.width}px;
+    min-width: ${(p) => p.width}px;
   }
 `;
 const Header = styled.div<Props>`
@@ -78,6 +80,10 @@ const Header = styled.div<Props>`
   align-items: center;
   :hover {
     border-bottom: 0.5px solid ${(p) => (!p.open ? "#46b955" : "#9ca3af")};
+  }
+
+  @media (max-width: 475px) {
+    padding: 8px;
   }
 `;
 const Body = styled.div`
@@ -115,7 +121,12 @@ const UserHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  ${BodyCaps}
+  ${BodyXS}
+  text-transform: uppercase;
+
+  @media (min-width: 475px) {
+    ${BodyCaps}
+  }
 `;
 
 ExpandBox.Header = UserHeader;

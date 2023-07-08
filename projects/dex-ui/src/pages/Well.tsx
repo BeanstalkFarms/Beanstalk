@@ -4,7 +4,7 @@ import { useWell } from "src/wells/useWell";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { TokenValue } from "@beanstalk/sdk";
-import { BodyL, BodyS, TextNudge } from "src/components/Typography";
+import { BodyL, BodyS, BodyXS, TextNudge } from "src/components/Typography";
 import styled from "styled-components";
 import { Title } from "src/components/PageComponents/Title";
 import { Page } from "src/components/Page";
@@ -21,6 +21,8 @@ import { ChartSection } from "src/components/Well/Chart/ChartSection";
 import { TabButton } from "src/components/TabButton";
 import { OtherSection } from "src/components/Well/OtherSection";
 import { WellHistory } from "src/components/Well/Activity/WellHistory";
+import { ChevronDown } from "src/components/Icons";
+import { ImageButton } from "src/components/ImageButton";
 
 export const Well = () => {
   const sdk = useSdk();
@@ -29,11 +31,19 @@ export const Well = () => {
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
+  
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
     setTab(i);
   }, []);
+
+  const [open, setOpen] = useState(false);
+  const toggle = useCallback(() => {
+      setOpen(!open);
+    },
+    [open]
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -54,7 +64,7 @@ export const Well = () => {
   }, [sdk, well]);
 
   const title = (well?.tokens ?? []).map((t) => t.symbol).join("/");
-  const logos: ReactNode[] = (well?.tokens || []).map((token) => <TokenLogo token={token} size={48} key={token.symbol} />);
+  const logos: ReactNode[] = (well?.tokens || []).map((token) => <TokenLogo token={token} size={48} mobileSize={24} key={token.symbol} />);
 
   const reserves = (well?.reserves ?? []).map((amount, i) => {
     const token = well!.tokens![i];
@@ -98,18 +108,18 @@ export const Well = () => {
       <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
       <ContentWrapper>
         <MainContent>
-          <Row>
+          <StyledRow>
             <Item>
               <Header>
                 <TokenLogos>{logos}</TokenLogos>
-                <TextNudge amount={10}>{title}</TextNudge>
+                <TextNudge amount={10} mobileAmount={-2}>{title}</TextNudge>
               </Header>
             </Item>
-            <Item column stretch right>
+            <StyledItem column stretch>
               <FunctionName>{wellFunctionName}</FunctionName>
               <Fee>0.00% Trading Fee</Fee>
-            </Item>
-          </Row>
+            </StyledItem>
+          </StyledRow>
           <Reserves reserves={reserves} />
           <ChartSection well={well!} />
           <Row gap={24}>
@@ -138,10 +148,34 @@ export const Well = () => {
               <Button label="Swap" onClick={goSwap} />
             </Item>
           </Row>
-          <LiquidityBox lpToken={well?.lpToken!} />
-          <LearnYield />
-          <LearnWellFunction name={wellFunctionName || "A Well Function"} />
-          <LearnPump />
+          <LiquidityBoxContainer>
+            <LiquidityBox lpToken={well?.lpToken!} />
+          </LiquidityBoxContainer>
+          <LearnMoreContainer>
+            <LearnMoreLabel onClick={toggle}>
+              <LearnMoreLine />
+              <LearnMoreText>
+                <TextNudge amount={2}>
+                  Learn more about this Well
+                </TextNudge> 
+                <ImageButton
+                  component={ChevronDown}
+                  size={10}
+                  rotate={open ? "180" : "0"}
+                  onClick={toggle}
+                  padding="0px"
+                  alt="Click to expand and learn how to earn yield"
+                  color={"#46B955"}
+                />
+              </LearnMoreText>
+              <LearnMoreLine />
+            </LearnMoreLabel>
+            <LearnMoreButtons open={open}>
+              <LearnYield />
+              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+              <LearnPump />
+            </LearnMoreButtons>
+          </LearnMoreContainer>
         </SideBar>
       </ContentWrapper>
     </Page>
@@ -154,6 +188,11 @@ const Header = styled.div`
   font-size: 32px;
   line-height: 32px;
   gap: 24px;
+
+  @media (max-width: 475px) {
+    font-size: 24px;
+    gap: 8px;
+  }
 `;
 
 const TokenLogos = styled.div`
@@ -169,16 +208,36 @@ const ContentWrapper = styled.div`
   flex-direction: row;
   justify-content: center;
   gap: 48px;
+
+  @media (max-width: 475px) {
+    flex-direction: column;
+  }
 `;
+
 const MainContent = styled.div`
   // outline: 1px solid green;
   display: flex;
   flex-direction: column;
-  width: calc(37 * 24px);
-  min-width: calc(37 * 24px);
-  gap: 24px;
+  @media (min-width: 475px) {
+    width: calc(37 * 24px);
+    min-width: calc(37 * 24px);
+    gap: 24px;
+  }
+  gap: 12px;
 `;
 
+const StyledRow = styled(Row)`
+  @media (max-width: 475px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+`
+const StyledItem = styled(Item)`
+  @media (min-width: 475px) {
+    align-items: end;
+  }
+`
 const BottomContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -190,15 +249,78 @@ const SideBar = styled.div`
   // outline: 1px solid green;
   display: flex;
   flex-direction: column;
-  width: calc(17 * 24px);
-  min-width: calc(17 * 24px);
+  @media (min-width: 475px) {
+    width: calc(17 * 24px);
+    min-width: calc(17 * 24px);
+  }
   gap: 24px;
 `;
 
 const FunctionName = styled.div`
   ${BodyL}
+  @media (max-width: 475px) {
+    ${BodyS}
+  }
 `;
 const Fee = styled.div`
   ${BodyS}
   color: #4B5563;
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;
+
+const LiquidityBoxContainer = styled.div`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`
+
+const LearnMoreContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  @media (max-width: 475px) {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+`
+const LearnMoreLabel = styled.div`
+  display: none;
+  @media (max-width: 475px) {
+    display: flex;
+    flex-direction: row;
+  }
+`
+
+const LearnMoreLine = styled.div`
+  align-self: center;
+  flex-grow: 1;
+  border-top: 1px solid #9CA3AF;
+  flex-basis: 1fr;
+`
+
+const LearnMoreText = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  width: 195px;
+  color: #46B955;
+  padding-right: 8px;
+  padding-left: 8px;
+  ${BodyXS}
+  font-weight: 600;
+`
+
+const LearnMoreButtons = styled.div<{open: boolean}>`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  @media (max-width: 475px) {
+    ${(props) => props.open ? "display: flex" : "display: none"};
+    flex-direction: column;
+    gap: 16px;
+  }
+`
