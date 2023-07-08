@@ -5,6 +5,8 @@ import useSeason from '../beanstalk/useSeason';
 import useFarmerSilo from './useFarmerSilo';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { tokenValueToBN } from '~/util';
+import { ZERO_BN } from '~/constants';
+import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
 
 /// Returns the deposit crate which will be created via calling 'plant'
 export default function useFarmerDepositCrateFromPlant() {
@@ -13,6 +15,7 @@ export default function useFarmerDepositCrateFromPlant() {
 
   /// Beanstalk
   const season = useSeason();
+  const stemTip = useStemTipForToken(sdk.tokens.BEAN);
 
   /// Farmer
   const farmerSilo = useFarmerSilo();
@@ -27,12 +30,18 @@ export default function useFarmerDepositCrateFromPlant() {
     // no stalk is grown yet as it is a new deposit from the current season
     const grownStalk = STALK.amount(0);
 
+    if (!stemTip) throw new Error('No stem tip loaded for BEAN');
+
     // asBN => as DepositCrate from UI;
     const asBN: LegacyDepositCrate = {
-      season,
+      stem: stemTip,
       amount: earned,
       bdv: earned,
-      stalk: tokenValueToBN(stalk),
+      stalk: {
+        total: tokenValueToBN(stalk),
+        base: tokenValueToBN(stalk),
+        grown: ZERO_BN,
+      },
       seeds: tokenValueToBN(seeds),
     };
 
@@ -51,7 +60,7 @@ export default function useFarmerDepositCrateFromPlant() {
       asBN,
       asTV,
     };
-  }, [farmerSilo.beans.earned, sdk.tokens, season]);
+  }, [farmerSilo.beans.earned, sdk.tokens, season, stemTip]);
 
   return {
     crate,

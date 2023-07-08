@@ -70,6 +70,9 @@ type WithdrawFormValues = FormStateNew &
     tokenOut: ERC20Token | undefined;
   };
 
+// Type 'Element | undefined' is not assignable to type 'ReactElement<any, any> | null'.
+// Type 'undefined' is not assignable to type 'ReactElement<any, any> | null'.
+// @ts-ignore
 const WithdrawForm: FC<
   FormikProps<WithdrawFormValues> & {
     token: Token;

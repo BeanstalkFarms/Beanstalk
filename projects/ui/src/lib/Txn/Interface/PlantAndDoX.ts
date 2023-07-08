@@ -16,7 +16,7 @@ export default class PlantAndDoX {
     private _season: number
   ) {
     this._earnedBeans = _earnedBeans;
-    this._season = _season;
+    this._season = 0; // FIXME
   }
 
   /// Returns whether 'plant' can be called
@@ -66,7 +66,7 @@ export default class PlantAndDoX {
 
       // asTV => as DepositCrate<TokenValue> from SDK;
       const crate: TokenSiloBalance['deposits'][number] = {
-        season: ethers.BigNumber.from(season),
+        stem: ethers.BigNumber.from(season), // FIXME
         amount: earnedBeans,
         bdv: earnedBeans,
         stalk: {
@@ -74,8 +74,6 @@ export default class PlantAndDoX {
           base: stalk,
           grown: grownStalk,
         },
-        baseStalk: stalk,
-        grownStalk,
         seeds,
       };
 
@@ -95,10 +93,14 @@ export default class PlantAndDoX {
       const seeds = BEAN.getSeeds(earnedTV);
 
       const crate: LegacyDepositCrate = {
-        season,
+        stem: ethers.BigNumber.from(season), // FIXME
         amount: earnedBeans,
         bdv: earnedBeans,
-        stalk: tokenValueToBN(stalk),
+        stalk: {
+          total: tokenValueToBN(stalk),
+          base: tokenValueToBN(stalk),
+          grown: new BigNumber(0),
+        },
         seeds: tokenValueToBN(seeds),
       };
 

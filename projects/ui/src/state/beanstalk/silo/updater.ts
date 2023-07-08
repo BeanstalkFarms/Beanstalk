@@ -34,8 +34,6 @@ export const useFetchBeanstalkSilo = () => {
       earnedBeansTotal,
       // 4
       whitelistedAssetTotals,
-      // 5
-      stemTips,
     ] = await Promise.all([
       // 0
       sdk.contracts.beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
@@ -83,9 +81,6 @@ export const useFetchBeanstalkSilo = () => {
           }))
         )
       ),
-
-      // 5
-      sdk.silo.getStemTips([...sdk.tokens.siloWhitelist]),
     ] as const);
 
     console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [
@@ -106,7 +101,7 @@ export const useFetchBeanstalkSilo = () => {
       const token = sdk.tokens.findByAddress(curr.address);
       if (!token) throw new Error(`Token not found in SDK: ${curr.address}`);
 
-      const stemTip = stemTips.get(token);
+      const stemTip = curr.stemTip;
       if (!stemTip)
         throw new Error(`Stem Tip not found in SDK: ${curr.address}`);
 
