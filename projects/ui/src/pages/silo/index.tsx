@@ -20,7 +20,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useSelector } from 'react-redux';
 import BigNumberJS from 'bignumber.js';
 import { Token, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
@@ -55,6 +54,8 @@ import useQuoteAgnostic from '~/hooks/ledger/useQuoteAgnostic';
 import GasTag from '~/components/Common/GasTag';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
+import useSilo from '~/hooks/beanstalk/useSilo';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -612,12 +613,9 @@ const SiloPage: FC<{}> = () => {
   const pools = usePools();
 
   /// State
-  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
-    (state) => state._farmer.silo
-  );
-  const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
-    (state) => state._beanstalk.silo
-  );
+  const farmerSilo = useFarmerSilo();
+  const beanstalkSilo = useSilo();
+
   const breakdown = useFarmerBalancesBreakdown();
   const season = useSeason();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
