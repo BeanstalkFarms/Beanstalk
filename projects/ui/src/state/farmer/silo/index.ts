@@ -111,6 +111,10 @@ export type FarmerSiloRewards = {
      * Grown Stalk is Stalk granted each Season from Seeds.
      */
     grown: BigNumberJS;
+    /**
+     *
+     */
+    totalPrevSeason: BigNumberJS;
   };
   seeds: {
     /**

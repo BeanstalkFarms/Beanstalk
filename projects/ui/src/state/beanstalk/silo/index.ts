@@ -35,12 +35,14 @@ export type BeanstalkSiloAssets = {
   beans: {
     earned: BigNumber;
     total: BigNumber;
+    earnedPrevSeason: BigNumber;
   };
   stalk: {
     total: BigNumber;
     active: BigNumber;
     earned: BigNumber;
     grown: BigNumber;
+    totalPrevSeason: BigNumber;
   };
   seeds: {
     total: BigNumber;

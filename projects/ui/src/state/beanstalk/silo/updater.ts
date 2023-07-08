@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumberJS from 'bignumber.js';
+import { transformTokenResult } from '~/util/BigNumber';
 import {
   BEAN_TO_SEEDS,
   BEAN_TO_STALK,
@@ -16,23 +17,32 @@ import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import { useGetChainConstant } from '~/hooks/chain/useChainConstant';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from './index';
+import { useAppSelector } from '~/state';
+import useSdk from '~/hooks/sdk';
 
 export const useFetchBeanstalkSilo = () => {
   const dispatch = useDispatch();
   const beanstalk = useBeanstalkContract();
   const WHITELIST = useWhitelist();
+  const sdk = useSdk();
 
   ///
   const getChainConstant = useGetChainConstant();
   const Bean = getChainConstant(BEAN);
 
+  const sunriseBlock = useAppSelector(
+    (s) => s._beanstalk.sun.season.sunriseBlock
+  );
+
   /// Handlers
   const fetch = useCallback(async () => {
-    if (beanstalk) {
+    if (beanstalk && sunriseBlock.gt(0)) {
       console.debug(
         '[beanstalk/silo/useBeanstalkSilo] FETCH: whitelist = ',
         WHITELIST
       );
+
+      const prevSeasonBlockTag = parseInt(sunriseBlock.minus(2).toString(), 10);
 
       const [
         // 0
@@ -44,6 +54,10 @@ export const useFetchBeanstalkSilo = () => {
         whitelistedAssetTotals,
         // 5
         withdrawSeasons,
+        // 6
+        prevSeasonTotalStalk,
+        // 7
+        prevSeasonEarnedBeans,
       ] = await Promise.all([
         // 0
         beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
@@ -83,6 +97,13 @@ export const useFetchBeanstalkSilo = () => {
         ),
         // 5
         new BigNumberJS(0),
+        // 6
+        beanstalk
+          .totalStalk({ blockTag: prevSeasonBlockTag })
+          .then(transformTokenResult(sdk.tokens.STALK)),
+        beanstalk
+          .totalEarnedBeans({ blockTag: prevSeasonBlockTag })
+          .then(transformTokenResult(sdk.tokens.BEAN)),
       ] as const);
 
       console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [
@@ -126,12 +147,14 @@ export const useFetchBeanstalkSilo = () => {
           beans: {
             earned: earnedBeansTotal,
             total: balances[Bean.address].deposited.amount,
+            earnedPrevSeason: prevSeasonEarnedBeans,
           },
           stalk: {
             active: activeStalkTotal,
             earned: earnedStalkTotal,
             grown: ZERO_BN,
             total: activeStalkTotal.plus(ZERO_BN),
+            totalPrevSeason: prevSeasonTotalStalk,
           },
           seeds: {
             active: seedsTotal,
@@ -146,7 +169,7 @@ export const useFetchBeanstalkSilo = () => {
         })
       );
     }
-  }, [beanstalk, WHITELIST, dispatch, Bean]);
+  }, [beanstalk, WHITELIST, dispatch, Bean, sdk, sunriseBlock]);
 
   const clear = useCallback(() => {
     console.debug('[beanstalk/silo/useBeanstalkSilo] CLEAR');

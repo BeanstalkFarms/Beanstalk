@@ -10,12 +10,14 @@ export const initialBeanstalkSilo: BeanstalkSilo = {
   beans: {
     total: NEW_BN,
     earned: NEW_BN,
+    earnedPrevSeason: NEW_BN,
   },
   stalk: {
     active: NEW_BN,
     earned: NEW_BN,
     grown: NEW_BN,
     total: NEW_BN,
+    totalPrevSeason: NEW_BN,
   },
   seeds: {
     active: NEW_BN,

@@ -7,6 +7,7 @@ import {
   updateLegacyFarmerSiloBalances,
   updateLegacyFarmerSiloRewards,
 } from './actions';
+import { NEW_BN } from '~/constants';
 
 const NEG1 = new BigNumber(-1);
 
@@ -20,6 +21,7 @@ export const initialFarmerSilo: FarmerSilo = {
     earned: NEG1,
     grown: NEG1,
     total: NEG1,
+    totalPrevSeason: NEW_BN,
   },
   seeds: {
     active: NEG1,

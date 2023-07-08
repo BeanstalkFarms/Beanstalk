@@ -18,6 +18,7 @@ import {
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
+import { useAppSelector } from '~/state';
 
 type SiloV3StaticData = {
   deposits: {
@@ -55,12 +56,17 @@ export const useFetchFarmerSilo = () => {
   const account = useAccount();
   const season = useSeason();
 
+  const sunriseBlock = useAppSelector(
+    (s) => s._beanstalk.sun.season.sunriseBlock
+  );
+
   ///
   const initialized = !!(
     beanstalk &&
     account &&
     sdk.contracts.beanstalk &&
-    season?.gt(0)
+    season?.gt(0) &&
+    sunriseBlock?.gt(0)
   );
 
   /// Handlers
@@ -78,6 +84,7 @@ export const useFetchFarmerSilo = () => {
         migrationNeeded,
         // lastUpdate,
         // allEvents = [],
+        prevSeasonStalkBalance,
       ] = await Promise.all([
         // `getStalk()` returns `stalk + earnedStalk` but NOT grown stalk
         sdk.silo.getStalk(account),
@@ -92,6 +99,9 @@ export const useFetchFarmerSilo = () => {
         // beanstalk.lastUpdate(account).then(bigNumberResult),
 
         // sdk.contracts.beanstalk.depositedB
+        sdk.contracts.beanstalk.balanceOfStalk(account, {
+          blockTag: parseInt(sunriseBlock.minus(1).toString(), 10),
+        }),
       ] as const);
 
       dispatch(updateFarmerMigrationStatus(migrationNeeded));
@@ -234,6 +244,16 @@ export const useFetchFarmerSilo = () => {
           earned: transform(earnedStalkBalance, 'bnjs', sdk.tokens.STALK),
           grown: transform(grownStalkBalance, 'bnjs', sdk.tokens.STALK),
           total: transform(totalStalkBalance, 'bnjs', sdk.tokens.STALK),
+          prevSeason: transform(
+            prevSeasonStalkBalance,
+            'bnjs',
+            sdk.tokens.STALK
+          ),
+          totalPrevSeason: transform(
+            prevSeasonStalkBalance,
+            'bnjs',
+            sdk.tokens.STALK
+          ),
         },
         seeds: {
           active: transform(activeSeedBalance, 'bnjs', sdk.tokens.SEEDS),
@@ -257,7 +277,7 @@ export const useFetchFarmerSilo = () => {
       // to prevent some rendering errors. Refactor later.
       dispatch(updateLegacyFarmerSiloBalances(payload));
     }
-  }, [initialized, sdk, account, dispatch, season]);
+  }, [initialized, sdk, account, dispatch, season, sunriseBlock]);
 
   const clear = useCallback(
     (_account?: string) => {

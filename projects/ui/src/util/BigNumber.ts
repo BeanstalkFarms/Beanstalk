@@ -121,3 +121,9 @@ export function transform<O extends OutputOptions, R = OutputClassMap[O]>(
 export function translate(out: OutputOptions, token?: Token) {
   return (value: NumberInputInstance) => transform(value, out, token);
 }
+
+export function transformTokenResult(token: Token) {
+  return function toBN(value: ethers.BigNumber) {
+    return transform(value, 'bnjs', token);
+  };
+}
