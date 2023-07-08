@@ -154,7 +154,7 @@ export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumbe
       grown,
       total
     },
-    seeds: Silo.sdk.tokens.SEEDS.fromHuman("0") // FIXME
+    seeds: token.getSeeds(bdv)
   };
 }
 

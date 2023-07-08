@@ -303,7 +303,7 @@ export const UNRIPE_BEAN = {
     },
     {
       stalk: 1,
-      seeds: 2,
+      seeds: 0,
     }
   ),
 };
@@ -323,7 +323,7 @@ export const UNRIPE_BEAN_CRV3 = {
     },
     {
       stalk: 1,
-      seeds: 4,
+      seeds: 0,
     }
   ),
 };
