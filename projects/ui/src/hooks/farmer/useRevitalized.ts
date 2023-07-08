@@ -49,6 +49,7 @@ export default function useRevitalized() {
   const sdk = useSdk();
 
   return useMemo(() => {
+    let revitalizedBDV = ZERO_BN;
     let revitalizedStalk = ZERO_BN;
     let revitalizedSeeds = ZERO_BN;
 
@@ -106,6 +107,8 @@ export default function useRevitalized() {
         ZERO_BN
       );
 
+      revitalizedBDV = revitalizedBDV.plus(deltaBDV);
+
       const newRevitalizedSeeds = transform(
         // how many seeds are associated with the BDV we're adding
         // formula: bdv * seedsPerBDV
@@ -138,6 +141,14 @@ export default function useRevitalized() {
       revitalizedStalk = revitalizedStalk.plus(newRevitalizedStalk);
       revitalizedSeeds = revitalizedSeeds.plus(newRevitalizedSeeds);
     });
+
+    // Since we're manually recalculating these values in BigNumberJS-land,
+    // we might get numbers smaller than the precision that BDV is measured to.
+    if (revitalizedBDV.lt(1 * 10 ** -sdk.tokens.BEAN.decimals)) {
+      revitalizedBDV = ZERO_BN;
+      revitalizedStalk = ZERO_BN;
+      revitalizedSeeds = ZERO_BN;
+    }
 
     return {
       revitalizedStalk,

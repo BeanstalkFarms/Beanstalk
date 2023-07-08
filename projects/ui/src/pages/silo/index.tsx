@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Box,
   Button,
@@ -46,8 +52,9 @@ import Centered from '~/components/Common/ZeroState/Centered';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useAccount from '~/hooks/ledger/useAccount';
 import useQuoteAgnostic from '~/hooks/ledger/useQuoteAgnostic';
-import useGasToUSD from '~/hooks/ledger/useGasToUSD';
 import GasTag from '~/components/Common/GasTag';
+import TransactionToast from '~/components/Common/TxnToast';
+import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -98,6 +105,8 @@ const RewardsBar: FC<{
 }> = ({ breakdown, farmerSilo, revitalizedStalk, revitalizedSeeds }) => {
   /// Helpers
   const getChainToken = useGetChainToken();
+  const getBDV = useBDV();
+  const sdk = useSdk();
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
@@ -108,38 +117,52 @@ const RewardsBar: FC<{
     urBean.address
   ]?.deposited.amount.plus(balances[urBeanCrv3.address]?.deposited.amount);
 
-  /// Local state
-  const [open, show, hide] = useToggle();
+  const [refetchFarmerSilo] = useFetchFarmerSilo();
+  const account = useAccount();
+  const migrationNeeded = useMigrationNeeded();
+  const enrootData = useMemo(
+    () => selectCratesForEnrootNew(sdk, balances, getBDV),
+    [balances, getBDV, sdk]
+  );
 
-  const getGas = useGasToUSD();
-  const sdk = useSdk();
+  console.log(enrootData);
+
   const tokens = useMemo(
     () => [...sdk.tokens.siloWhitelist],
     [sdk.tokens.siloWhitelist]
   );
 
-  const [claimState, setClaimState] = useState({
-    mow: new Set([...sdk.tokens.siloWhitelistAddresses]),
-    plant: false,
-    enroot: false,
-  });
+  const getInitialState = useCallback(() => {
+    // Only mow if the user has grown stalk for a given token
+    const mow = new Set<string>();
+    farmerSilo.stalk.grownByToken.forEach((grown, token) => {
+      if (grown.gt(0)) {
+        mow.add(token.address);
+      }
+    });
 
-  const account = useAccount();
-  const migrationNeeded = useMigrationNeeded();
+    // Only plant if the user has Earned Beans
+    const plant = farmerSilo.beans.earned.gt(0);
 
-  const getBDV = useBDV();
-  const enrootData = useMemo(() => {
-    const selectedCratesByToken = selectCratesForEnrootNew(
-      sdk,
-      balances,
-      getBDV
-    );
+    // Only enroot if the user has revitalized stalk/seeds
+    const enroot = revitalizedStalk?.gt(0) || revitalizedSeeds?.gt(0);
 
-    // const enrootData = Object.keys(selectedCratesByToken).map(
-    //   (key) => selectedCratesByToken[key].encoded
-    // );
-    return selectedCratesByToken;
-  }, [balances, getBDV, sdk]);
+    return {
+      mow,
+      plant,
+      enroot,
+    };
+  }, [
+    farmerSilo.beans.earned,
+    farmerSilo.stalk.grownByToken,
+    revitalizedSeeds,
+    revitalizedStalk,
+  ]);
+
+  /// Local state
+  const [open, show, hide] = useToggle();
+  const [claiming, setClaiming] = useState(false);
+  const [claimState, setClaimState] = useState(getInitialState());
 
   const onChangePlant = useCallback(
     (e: any) => {
@@ -283,10 +306,15 @@ const RewardsBar: FC<{
     [enrootData, sdk, account]
   );
 
-  const quoteGas = useCallback(() => {
-    const _workflow = buildWorkflow(claimState);
-    if (!_workflow) throw new Error('No workflow');
-    return _workflow.estimateGas(ethers.BigNumber.from(0), { slippage: 0 });
+  const quoteGas = useCallback(async () => {
+    const farm = buildWorkflow(claimState);
+    if (!farm) throw new Error('No workflow');
+
+    if (farm.length === 0) return;
+
+    await farm.estimate(ethers.BigNumber.from(0));
+
+    return farm.estimateGas(ethers.BigNumber.from(0), { slippage: 0 });
   }, [buildWorkflow, claimState]);
 
   const [gas, isEstimatingGas, estimateGas] = useQuoteAgnostic(quoteGas);
@@ -296,10 +324,55 @@ const RewardsBar: FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimState]);
 
+  const handleSubmit = useCallback(async () => {
+    let txToast;
+    try {
+      const farm = buildWorkflow(claimState);
+      if (!farm) throw new Error('No workflow');
+
+      setClaiming(true);
+
+      txToast = new TransactionToast({
+        loading: `Claiming rewards...`,
+        success: 'Claim successful.',
+      });
+
+      await farm.estimate(ethers.BigNumber.from(0));
+
+      const txn = await farm.execute(ethers.BigNumber.from(0), { slippage: 0 });
+      txToast.confirming(txn);
+
+      const receipt = await txn.wait();
+      txToast.success(receipt);
+
+      await Promise.all([refetchFarmerSilo()]);
+    } catch (err) {
+      if (txToast) {
+        txToast.error(err);
+      } else {
+        const errorToast = new TransactionToast({});
+        errorToast.error(err);
+      }
+    } finally {
+      setClaiming(false);
+    }
+
+    // Reset form
+  }, [buildWorkflow, claimState, refetchFarmerSilo]);
+
+  const mounted = useRef<true | undefined>();
+  useEffect(() => {
+    if (mounted.current === undefined) return;
+    if (claiming === false) {
+      setClaimState(getInitialState());
+    }
+    mounted.current = true;
+  }, [claiming, getInitialState]);
+
   if (migrationNeeded === true) {
     return (
       <Card>
-        <Centered width="100%" textAlign="center" spacing={1} py={1}>
+        <Centered width="100%" textAlign="center" spacing={1} py={2}>
           <Typography variant="h3">
             To claim Silo rewards, migrate to Silo V3.
           </Typography>
@@ -363,8 +436,10 @@ const RewardsBar: FC<{
               <Box>
                 <FormGroup>
                   {tokens.map((token) => {
-                    const disabled =
-                      balances[token.address].deposited.amount.lte(0);
+                    const amount =
+                      farmerSilo.stalk.grownByToken.get(token) ||
+                      sdk.tokens.STALK.amount(0);
+                    const disabled = amount.eq(0);
                     const required =
                       // Mowing BEAN is required if `plant` is checked
                       (claimState.plant &&
@@ -377,15 +452,7 @@ const RewardsBar: FC<{
                       <FormControlLabelStat
                         key={token.address}
                         label={`Grown Stalk from ${token.symbol}`}
-                        stat={
-                          disabled
-                            ? 0
-                            : displayFullBN(
-                                farmerSilo.stalk.grownByToken.get(token) ||
-                                  ZERO_BN,
-                                4
-                              )
-                        }
+                        stat={disabled ? 0 : displayFullBN(amount, 2, 0, true)}
                         disabled={disabled || required}
                         checked={
                           disabled ? false : claimState.mow.has(token.address)
@@ -424,21 +491,21 @@ const RewardsBar: FC<{
                     <Connector top={69.5} />
                     <FormControlLabelStat
                       label="Earned Beans"
-                      stat={displayFullBN(farmerSilo.beans.earned)}
+                      stat={displayFullBN(farmerSilo.beans.earned, 2, 0, true)}
                       disabled={farmerSilo.beans.earned.lte(0)}
                       checked={claimState.plant}
                       onChange={onChangePlant}
                     />
                     <FormControlLabelStat
                       label="Earned Stalk"
-                      stat={displayFullBN(farmerSilo.stalk.earned)}
+                      stat={displayFullBN(farmerSilo.stalk.earned, 2, 0, true)}
                       disabled={farmerSilo.beans.earned.lte(0)}
                       checked={claimState.plant}
                       onChange={onChangePlant}
                     />
                     <FormControlLabelStat
                       label="Plantable Seeds"
-                      stat={displayFullBN(farmerSilo.seeds.earned)}
+                      stat={displayFullBN(farmerSilo.seeds.earned, 2, 0, true)}
                       disabled={farmerSilo.seeds.earned.lte(0)}
                       checked={claimState.plant}
                       onChange={onChangePlant}
@@ -451,14 +518,24 @@ const RewardsBar: FC<{
                     <Connector top={29} />
                     <FormControlLabelStat
                       label="Revitalized Stalk"
-                      stat={displayFullBN(revitalizedStalk || ZERO_BN, 4)}
+                      stat={displayFullBN(
+                        revitalizedStalk || ZERO_BN,
+                        2,
+                        0,
+                        true
+                      )}
                       disabled={!revitalizedStalk || revitalizedStalk.lte(0)}
                       checked={claimState.enroot}
                       onChange={onChangeEnroot}
                     />
                     <FormControlLabelStat
                       label="Revitalized Seeds"
-                      stat={displayFullBN(revitalizedSeeds || ZERO_BN, 4)}
+                      stat={displayFullBN(
+                        revitalizedSeeds || ZERO_BN,
+                        2,
+                        0,
+                        true
+                      )}
                       disabled={!revitalizedSeeds || revitalizedSeeds.lte(0)}
                       checked={claimState.enroot}
                       onChange={onChangeEnroot}
@@ -499,6 +576,7 @@ const RewardsBar: FC<{
                   variant="contained"
                   fullWidth
                   size="large"
+                  onClick={handleSubmit}
                 >
                   Claim Rewards
                 </Button>

@@ -24,7 +24,7 @@ const GasTag: FC<{
       title={
         <>
           <StatHorizontal label="Gas limit">
-            {displayFullBN(gasLimit) || '?'}
+            {gasLimit ? displayFullBN(gasLimit) : '?'}
           </StatHorizontal>
           <StatHorizontal label="Base fee">
             {prices?.gas.safe ? `${prices.gas.safe} gwei` : '?'}
