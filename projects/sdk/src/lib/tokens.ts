@@ -149,7 +149,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(2)
+      seeds: this.SEEDS.amount(0)
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
@@ -167,7 +167,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN_CRV3.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4)
+      seeds: this.SEEDS.amount(0)
     };
     this.UNRIPE_BEAN_CRV3.isUnripe = true;
 
