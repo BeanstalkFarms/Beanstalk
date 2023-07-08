@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
@@ -10,8 +10,8 @@ import {
   TokenValue,
   BeanstalkSDK,
   FarmToMode,
-  FarmFromMode,
-  StepGenerator,
+  // FarmFromMode,
+  // StepGenerator,
 } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
 import {
@@ -44,13 +44,13 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import useToggle from '~/hooks/display/useToggle';
-import PillRow from '~/components/Common/Form/PillRow';
-import TokenIcon from '~/components/Common/TokenIcon';
-import TokenSelectDialogNew, {
-  TokenSelectMode,
-} from '~/components/Common/Form/TokenSelectDialogNew';
-import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+// import useToggle from '~/hooks/display/useToggle';
+// import PillRow from '~/components/Common/Form/PillRow';
+// import TokenIcon from '~/components/Common/TokenIcon';
+// import TokenSelectDialogNew, {
+//   TokenSelectMode,
+// } from '~/components/Common/Form/TokenSelectDialogNew';
+// import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 
 // -----------------------------------------------------------------------
 
@@ -143,8 +143,8 @@ const WithdrawForm: FC<
   const isReady =
     withdrawResult &&
     !withdrawResult.amount.lt(0) &&
-    values.settings.destination !==
-      undefined(whitelistedToken.isLP ? values.tokenOut !== undefined : true);
+    values.settings.destination !== undefined;
+  // && (whitelistedToken.isLP ? values.tokenOut !== undefined : true);
 
   const disabledActions = useMemo(
     () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
@@ -152,75 +152,75 @@ const WithdrawForm: FC<
   );
 
   //
-  const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
-  const pool = useMemo(
-    () => sdk.pools.getPoolByLPToken(whitelistedToken),
-    [sdk.pools, whitelistedToken]
-  );
-  const claimableTokens = useMemo(
-    () => [
-      whitelistedToken,
-      ...((whitelistedToken.isLP && pool?.tokens) || []),
-    ],
-    [pool, whitelistedToken]
-  );
+  // const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
+  // const pool = useMemo(
+  //   () => sdk.pools.getPoolByLPToken(whitelistedToken),
+  //   [sdk.pools, whitelistedToken]
+  // );
+  // const claimableTokens = useMemo(
+  //   () => [
+  //     whitelistedToken,
+  //     ...((whitelistedToken.isLP && pool?.tokens) || []),
+  //   ],
+  //   [pool, whitelistedToken]
+  // );
 
   //
-  const handleSelectTokens = useCallback(
-    (_tokens: Set<Token>) => {
-      const _token = Array.from(_tokens)[0];
-      setFieldValue('tokenOut', _token);
-    },
-    [setFieldValue]
-  );
+  // const handleSelectTokens = useCallback(
+  //   (_tokens: Set<Token>) => {
+  //     const _token = Array.from(_tokens)[0];
+  //     setFieldValue('tokenOut', _token);
+  //   },
+  //   [setFieldValue]
+  // );
 
-  const handleQuote = useCallback<
-    QuoteHandlerWithParams<QuoteHandlerWithParams>
-  >(
-    async (_tokenIn, _amountIn, _tokenOut, { toMode }) => {
-      if (_tokenIn === _tokenOut) return { amountOut: _amountIn };
-      const amountIn = _tokenIn.amount(_amountIn.toString());
+  // const handleQuote = useCallback<
+  //   QuoteHandlerWithParams<QuoteHandlerWithParams>
+  // >(
+  //   async (_tokenIn, _amountIn, _tokenOut, { toMode }) => {
+  //     if (_tokenIn === _tokenOut) return { amountOut: _amountIn };
+  //     const amountIn = _tokenIn.amount(_amountIn.toString());
 
-      const { curve } = sdk.contracts;
+  //     const { curve } = sdk.contracts;
 
-      // Require pooldata to be loaded first.
-      if (!pool || !_tokenIn.isLP) return null;
+  //     // Require pooldata to be loaded first.
+  //     if (!pool || !_tokenIn.isLP) return null;
 
-      const work = sdk.farm.create();
-      work.add(
-        new sdk.farm.actions.RemoveLiquidityOneToken(
-          pool.address,
-          curve.registries.metaFactory.address,
-          _tokenOut.address,
-          FarmFromMode.INTERNAL,
-          toMode
-        )
-      );
-      const estimate = await work.estimate(amountIn);
+  //     const work = sdk.farm.create();
+  //     work.add(
+  //       new sdk.farm.actions.RemoveLiquidityOneToken(
+  //         pool.address,
+  //         curve.registries.metaFactory.address,
+  //         _tokenOut.address,
+  //         FarmFromMode.INTERNAL,
+  //         toMode
+  //       )
+  //     );
+  //     const estimate = await work.estimate(amountIn);
 
-      return {
-        amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
-        steps: work.generators as StepGenerator[],
-      };
-    },
-    [sdk.contracts, sdk.farm, pool]
-  );
+  //     return {
+  //       amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
+  //       steps: work.generators as StepGenerator[],
+  //     };
+  //   },
+  //   [sdk.contracts, sdk.farm, pool]
+  // );
 
-  const claimableBalance = values.tokens[0].amount || ZERO_BN;
+  // const claimableBalance = values.tokens[0].amount || ZERO_BN;
 
   // This should be memoized to prevent an infinite reset loop
-  const quoteHandlerParams = useMemo(
-    () => ({
-      quoteSettings: {
-        ignoreSameToken: false,
-        onReset: () => ({ amountOut: claimableBalance }),
-      },
-      params: {
-        toMode: values.settings.destination || FarmToMode.INTERNAL,
-      },
-    }),
-    [claimableBalance, values.settings.destination]
-  );
+  // const quoteHandlerParams = useMemo(
+  //   () => ({
+  //     quoteSettings: {
+  //       ignoreSameToken: false,
+  //       onReset: () => ({ amountOut: claimableBalance }),
+  //     },
+  //     params: {
+  //       toMode: values.settings.destination || FarmToMode.INTERNAL,
+  //     },
+  //   }),
+  //   [claimableBalance, values.settings.destination]
+  // );
 
   if (!tokenOut) return;
 
@@ -261,7 +261,7 @@ const WithdrawForm: FC<
         {/** Setting: Destination  */}
         <FarmModeField name="settings.destination" />
         {/* Setting: Claim LP */}
-        <>
+        {/* <>
           {whitelistedToken.isLP ? (
             <PillRow
               isOpen={isTokenSelectVisible}
@@ -283,7 +283,7 @@ const WithdrawForm: FC<
             tokenList={claimableTokens as Token[]}
             mode={TokenSelectMode.SINGLE}
           />
-        </>
+        </> */}
         <AddPlantTxnToggle />
         {isReady ? (
           <Stack direction="column" gap={1}>
