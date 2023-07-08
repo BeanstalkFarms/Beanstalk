@@ -5316,6 +5316,30 @@
         "internalType": "address",
         "name": "account",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOfDepositedBdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "depositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
       }
     ],
     "name": "balanceOfEarnedBeans",
@@ -5596,6 +5620,66 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getLastMowedStem",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "lastStem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getMowStatus",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int96",
+            "name": "lastStem",
+            "type": "int96"
+          },
+          {
+            "internalType": "uint128",
+            "name": "bdv",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct Account.MowStatus",
+        "name": "mowStatus",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

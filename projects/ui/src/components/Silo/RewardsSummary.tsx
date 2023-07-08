@@ -35,7 +35,7 @@ export type RewardsBarProps = {
   hideRevitalized?: boolean;
 };
 
-const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = ({
+const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
   beans,
   stalk,
   seeds,
@@ -152,4 +152,4 @@ const RewardsBar: FC<RewardsBarProps & { compact?: boolean }> = ({
   );
 };
 
-export default RewardsBar;
+export default RewardsSummary;

@@ -1,9 +1,9 @@
 import { createAction } from '@reduxjs/toolkit';
 import { AddressMap } from '~/constants';
-import { FarmerSiloRewards, FarmerSiloBalance } from '.';
+import { FarmerSiloRewards, FarmerSiloTokenBalance } from '.';
 
 export type UpdateFarmerSiloBalancesPayload = AddressMap<
-  Partial<FarmerSiloBalance>
+  Partial<FarmerSiloTokenBalance>
 >;
 
 export const resetFarmerSilo = createAction('farmer/silo/reset');

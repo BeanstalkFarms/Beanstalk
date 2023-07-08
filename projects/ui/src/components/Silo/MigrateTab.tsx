@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import Row from '~/components/Common/Row';
 import Centered from '~/components/Common/ZeroState/Centered';
@@ -18,6 +18,7 @@ import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import { FC } from '~/types';
 
 import styles from './MigrateTab.module.scss';
+import useSdk from '~/hooks/sdk';
 
 const bip36 = (
   <Link
@@ -30,20 +31,25 @@ const bip36 = (
 
 export const MigrateTab: FC<{}> = () => {
   const migrationNeeded = useMigrationNeeded();
+  const sdk = useSdk();
 
-  const [step, setStep] = useState<number>(
-    // migrationNeeded ? 1 : 9
-    8
-  );
+  const [step, setStep] = useState<number>(migrationNeeded ? 1 : 9);
   const nextStep = () => setStep(step + 1);
 
-  // useEffect(() => {
-  //   if (migrationNeeded === true) {
-  //     setStep(1);
-  //   } else if (migrationNeeded === false) {
-  //     setStep(9);
-  //   }
-  // }, [migrationNeeded]);
+  useEffect(() => {
+    if (migrationNeeded === true) {
+      setStep(1);
+    } else if (migrationNeeded === false) {
+      setStep(9);
+    }
+  }, [migrationNeeded]);
+
+  const [stemStartSeason, setStemStartSeason] = useState<number>(0);
+  useEffect(() => {
+    (async () => {
+      setStemStartSeason(await sdk.contracts.beanstalk.stemStartSeason());
+    })();
+  }, [sdk.contracts.beanstalk]);
 
   if (migrationNeeded === undefined) {
     return (
@@ -162,6 +168,8 @@ export const MigrateTab: FC<{}> = () => {
                   {bip36} reduced the Seeds per BDV of Unripe BEAN and Unripe
                   BEAN:3CRV to 0 to help Beanstalk incentivize peg maintenance
                   through conversions.
+                  <br />
+                  The adjustment went into effect in Season {stemStartSeason}.
                 </Typography>
                 <Alert
                   variant="outlined"
@@ -169,9 +177,9 @@ export const MigrateTab: FC<{}> = () => {
                   icon={<></>}
                   sx={{ textAlign: 'left', background: 'white' }}
                 >
-                  <strong>For Unripe holders:</strong> you won&apos;t lose any
-                  Stalk. All the Stalk earned up until BIP-36 will remain
-                  attached to your Deposits.
+                  <strong>For Unripe holders:</strong> you haven&apos;t lost any
+                  Stalk. All the Stalk earned up to BIP-36 remains attached to
+                  your Deposits.
                 </Alert>
                 <Button variant="contained" size="medium" onClick={nextStep}>
                   Next &rarr;
@@ -187,7 +195,7 @@ export const MigrateTab: FC<{}> = () => {
                   This means they&apos;ll show up as tokens in popular wallets
                   like MetaMask, and can be used on platforms like OpenSea.
                   After you migrate, you&apos;ll be able to see your Deposits in
-                  your wallet.
+                  your wallet if it&apos;s compatible with ERC-1155.
                 </Typography>
                 <Alert
                   variant="outlined"

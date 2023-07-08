@@ -79,8 +79,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const [gas, setGas] = useState<ClaimGasResults | null>(null);
   const [calls, setCalls] = useState<ClaimCalls | null>(null);
   const estimateGas = useCallback(async () => {
-    if (!account) return;
-    if (!signer) throw new Error('No signer');
+    if (!account || !signer) return;
 
     const selectedCratesByToken = selectCratesForEnroot(
       beanstalk,

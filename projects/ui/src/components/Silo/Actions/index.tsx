@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { Box, Tab } from '@mui/material';
+import { Alert, Box, Tab, Typography } from '@mui/material';
 import { ERC20Token } from '@beanstalk/sdk';
 import { Pool } from '~/classes';
 import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
 import Deposit from './Deposit';
@@ -34,7 +34,7 @@ const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 const SiloActions: FC<{
   pool: Pool;
   token: ERC20TokenOld;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = (props) => {
   const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
@@ -58,11 +58,29 @@ const SiloActions: FC<{
   return (
     <>
       <Module>
+        {migrationNeeded ? (
+          <Alert
+            sx={{
+              borderRadius: 0,
+              position: 'relative',
+              zIndex: 1,
+              backgroundColor: 'primary.light',
+              color: 'primary.main',
+            }}
+            icon={<></>}
+          >
+            <Box>
+              <Typography variant="h4" textAlign="center" display="block">
+                To use the Silo, migrate your account to Silo V3.
+              </Typography>
+            </Box>
+          </Alert>
+        ) : null}
         <ModuleTabs value={tab} onChange={handleChange}>
-          <Tab label="Deposit" />
-          <Tab label="Convert" />
-          <Tab label="Transfer" />
-          <Tab label="Withdraw" />
+          <Tab label="Deposit" disabled={migrationNeeded === true} />
+          <Tab label="Convert" disabled={migrationNeeded === true} />
+          <Tab label="Transfer" disabled={migrationNeeded === true} />
+          <Tab label="Withdraw" disabled={migrationNeeded === true} />
           {hasClaimableBeans && (
             <BadgeTab label="Claim" showBadge={hasClaimableBeans} />
           )}
