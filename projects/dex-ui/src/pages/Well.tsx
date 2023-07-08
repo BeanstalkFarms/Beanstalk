@@ -120,9 +120,47 @@ export const Well = () => {
               <Fee>0.00% Trading Fee</Fee>
             </StyledItem>
           </StyledRow>
+          <MobileSideBar id="mobileSidebar">
+            <Row gap={8}>
+              <Item stretch>
+                <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+              </Item>
+              <Item stretch>
+                <Button label="Swap" onClick={goSwap} />
+              </Item>
+            </Row>
+            <LiquidityBoxContainer>
+              <LiquidityBox lpToken={well?.lpToken!} />
+            </LiquidityBoxContainer>
+            <LearnMoreContainer>
+              <LearnMoreLabel onClick={toggle}>
+                <LearnMoreLine />
+                <LearnMoreText>
+                  <TextNudge amount={2}>
+                    Learn more about this Well
+                  </TextNudge> 
+                  <ImageButton
+                    component={ChevronDown}
+                    size={10}
+                    rotate={open ? "180" : "0"}
+                    onClick={toggle}
+                    padding="0px"
+                    alt="Click to expand and learn how to earn yield"
+                    color={"#46B955"}
+                  />
+                </LearnMoreText>
+                <LearnMoreLine />
+              </LearnMoreLabel>
+              <LearnMoreButtons open={open}>
+                <LearnYield />
+                <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+                <LearnPump />
+              </LearnMoreButtons>
+            </LearnMoreContainer>
+          </MobileSideBar>
           <Reserves reserves={reserves} />
           <ChartSection well={well!} />
-          <Row gap={24}>
+          <Row gap={24} mobileGap={"0px"}>
             <Item stretch>
               <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
                 Activity
@@ -247,14 +285,24 @@ const BottomContainer = styled.div`
 
 const SideBar = styled.div`
   // outline: 1px solid green;
-  display: flex;
-  flex-direction: column;
+  display: none;
   @media (min-width: 475px) {
+    display: flex;
+    flex-direction: column;
     width: calc(17 * 24px);
     min-width: calc(17 * 24px);
+    gap: 24px;
   }
-  gap: 24px;
 `;
+
+const MobileSideBar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  @media (min-width: 475px) {
+    display: none;
+  }
+`
 
 const FunctionName = styled.div`
   ${BodyL}
