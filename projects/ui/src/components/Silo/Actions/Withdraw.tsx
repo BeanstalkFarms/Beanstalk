@@ -308,9 +308,12 @@ const WithdrawPropProvider: FC<{
           throw new Error("Missing 'Destination' setting.");
         }
 
-        const withdrawTxn = new WithdrawFarmStep(sdk, token, [
-          ...farmerBalances.deposits,
-        ]);
+        const withdrawTxn = new WithdrawFarmStep(
+          sdk,
+          token,
+          [...farmerBalances.deposits],
+          destination
+        );
 
         withdrawTxn.build(
           baseAmount,

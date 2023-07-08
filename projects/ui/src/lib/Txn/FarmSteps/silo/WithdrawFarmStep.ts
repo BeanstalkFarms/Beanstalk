@@ -1,4 +1,10 @@
-import { BeanstalkSDK, Deposit, Token, TokenValue } from '@beanstalk/sdk';
+import {
+  BeanstalkSDK,
+  Deposit,
+  FarmToMode,
+  Token,
+  TokenValue,
+} from '@beanstalk/sdk';
 import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
 
 type WithdrawResult = ReturnType<typeof WithdrawFarmStep['calculateWithdraw']>;
@@ -9,7 +15,8 @@ export class WithdrawFarmStep extends FarmStep {
   constructor(
     _sdk: BeanstalkSDK,
     private _token: Token,
-    private _crates: Deposit[]
+    private _crates: Deposit[],
+    private _toMode: FarmToMode
   ) {
     super(_sdk);
     this._token = _token;
@@ -55,7 +62,8 @@ export class WithdrawFarmStep extends FarmStep {
         input: new this._sdk.farm.actions.WithdrawDeposit(
           this._token.address,
           stems[0],
-          amounts[0]
+          amounts[0],
+          this._toMode
         ),
       });
     } else {
@@ -63,7 +71,8 @@ export class WithdrawFarmStep extends FarmStep {
         input: new this._sdk.farm.actions.WithdrawDeposits(
           this._token.address,
           stems,
-          amounts
+          amounts,
+          this._toMode
         ),
       });
     }
