@@ -359,6 +359,7 @@ const LearnMoreText = styled.div`
 const LearnMoreButtons = styled.div<{open: boolean}>`
   ${(props) => props.open ? "display: flex" : "display: none"};
   flex-direction: column;
+  gap: 16px;
   @media (min-width: 475px) {
     display: flex;
     gap: 24px;
