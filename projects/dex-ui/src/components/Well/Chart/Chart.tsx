@@ -46,8 +46,19 @@ export const Chart: FC<Props> = ({ legend, data }) => {
         }
       };
 
+      const handleResize = () => {
+				chart.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+			};
+
       chart.current = createChart(chartContainerRef.current, chartOptions);
       lineSeries.current = chart.current.addLineSeries({ color: "#000" });
+
+      window.addEventListener('resize', handleResize);
+
+			return () => {
+				window.removeEventListener('resize', handleResize);
+				chart.current.remove();
+			};
     }
   }, []);
 
