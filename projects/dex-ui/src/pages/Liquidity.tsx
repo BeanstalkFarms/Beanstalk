@@ -58,10 +58,10 @@ export const Liquidity = () => {
       <ContentWrapper>
         <SideBar id="sidebar">
           <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
-          <LiquidityBox lpToken={well?.lpToken!} width={384} />
-          <LearnYield width={384} />
-          <LearnWellFunction name={wellFunctionName} width={384} />
-          <LearnPump width={384} />
+          <LiquidityBox lpToken={well?.lpToken!} />
+          <LearnYield />
+          <LearnWellFunction name={wellFunctionName} />
+          <LearnPump />
         </SideBar>
         <CenterBar id="centerbar">
           <Row gap={0}>
