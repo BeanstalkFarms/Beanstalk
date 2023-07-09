@@ -107,7 +107,7 @@ export const Well = () => {
     <Page>
       <ContentWrapper>
         <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
-        <StyledRow>
+        <HeaderContainer>
           <Item>
             <Header>
               <TokenLogos>{logos}</TokenLogos>
@@ -118,8 +118,10 @@ export const Well = () => {
             <FunctionName>{wellFunctionName}</FunctionName>
             <Fee>0.00% Trading Fee</Fee>
           </StyledItem>
-        </StyledRow>
-        <StyledReserves reserves={reserves} />
+        </HeaderContainer>
+        <ReservesContainer>
+          <Reserves reserves={reserves} />
+        </ReservesContainer>
         <ChartContainer>
           <ChartSection well={well!} />
         </ChartContainer>
@@ -204,9 +206,7 @@ const ContentWrapper = styled.div`
 `;
 
 const StyledTitle = styled(Title)`
-  @media (max-width: 475px) {
-    order: -1;
-  }
+  order: -1;
 `
 
 const Header = styled.div`
@@ -229,7 +229,7 @@ const TokenLogos = styled.div`
   }
 `;
 
-const StyledRow = styled(Row)`
+const HeaderContainer = styled(Row)`
   width: ${leftColumnWidth}px;
   @media (max-width: 475px) {
     display: flex;
@@ -241,44 +241,40 @@ const StyledRow = styled(Row)`
   }
 `
 
-const StyledReserves = styled(Reserves)`
+const ReservesContainer = styled.div`
   width: 100%;
+  order: 3;
   @media (min-width: 475px) {
     width: ${leftColumnWidth}px;
-  }
-  @media (max-width: 475px) {
-    order: 1;
+    order: 0;
   }
 `
 
 const ChartContainer = styled.div`
   width: 100%;
+  order: 4;
   @media (min-width: 475px) {
     width: ${leftColumnWidth}px;
-  }
-  @media (max-width: 475px) {
-    order: 1;
+    order: 0;
   }
 `
 
 const ActivityOtherButtons = styled(Row)`
   width: 100%;
-  @media (max-width: 475px) {
-    order: 4;
-  }
+  order: 5;
   @media (min-width: 475px) {
     width: ${leftColumnWidth}px;
+    order: 0;
   }
 `
 
 const LiquiditySwapButtons = styled(Row)`
   width: 100%;
-  @media (max-width: 475px) {
-    order: 0;
-  }
+  order: 2;
   @media (min-width: 475px) {
     margin-top: 48px;
     width: ${rightColumnWidth}px;
+    order: 0;
   }
 `
 
@@ -292,11 +288,10 @@ const BottomContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   width: 100%;
+  order: 6;
   @media (min-width: 475px) {
     width: ${leftColumnWidth}px;
-  }
-  @media (max-width: 475px) {
-    order: 6;
+    order: 0;
   }
 `;
 
@@ -324,23 +319,20 @@ const LiquidityBoxContainer = styled.div`
 const LearnMoreContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  order: 1;
   width: 100%;
-  @media (max-width: 475px) {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    order: 0;
-  }
   @media (min-width: 475px) {
     width: ${rightColumnWidth}px;
+    gap: 24px;
+    order: 0;
   }
 `
 const LearnMoreLabel = styled.div`
-  display: none;
-  @media (max-width: 475px) {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
+  @media (min-width: 475px) {
+    display: none;
   }
 `
 
@@ -365,21 +357,18 @@ const LearnMoreText = styled.div`
 `
 
 const LearnMoreButtons = styled.div<{open: boolean}>`
-  display: flex;
+  ${(props) => props.open ? "display: flex" : "display: none"};
   flex-direction: column;
-  gap: 24px;
-  @media (max-width: 475px) {
-    ${(props) => props.open ? "display: flex" : "display: none"};
-    flex-direction: column;
-    gap: 16px;
+  @media (min-width: 475px) {
+    display: flex;
+    gap: 24px;
   }
 `
 
 const ColumnBreak = styled.div`
-  @media (max-width: 475px) {
-    display: none;
-  }
+  display: none;
   @media (min-width: 475px) {
+    display: block;
     flex-basis: 100%;
     width: 0px;
   }
