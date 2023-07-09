@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { FC } from "src/types";
 
 type Props = {
-  width?: number;
 };
 
 function PumpDetails() {
@@ -23,9 +22,9 @@ function PumpDetails() {
   );
 }
 
-export const LearnPump: FC<Props> = ({ width }) => {
+export const LearnPump: FC<Props> = () => {
   return (
-    <ExpandBox width={width || 408}>
+    <ExpandBox>
       <ExpandBox.Header>
         <span role="img" aria-label="glass globe emoji">
           🔮

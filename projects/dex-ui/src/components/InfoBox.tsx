@@ -13,11 +13,10 @@ interface Composition {
 }
 
 type Props = {
-  width?: number;
 };
-export const InfoBox: FC<Props> & Composition = ({ width = 432, children }) => {
+export const InfoBox: FC<Props> & Composition = ({ children }) => {
   return (
-    <Container width={width} data-trace="true">
+    <Container data-trace="true">
       {children}
     </Container>
   );
@@ -28,8 +27,6 @@ const Container = styled.div<Props>`
   flex-direction: column;
   outline: 0.5px solid #9ca3af;
   outline-offset: -0.5px;
-  width: ${(p) => p.width}px;
-  min-width: ${(p) => p.width}px;
 `;
 const Header = styled.div`
   background-color: #f9f8f6;

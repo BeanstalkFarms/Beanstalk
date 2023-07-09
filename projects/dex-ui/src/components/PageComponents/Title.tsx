@@ -34,7 +34,6 @@ type TitleContainerProps = {
 const Container = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
-  ${(props) => props.center && `justify-content: center;`}
 
   @media (max-width: 475px) {
     justify-content: start;
@@ -44,10 +43,6 @@ const Container = styled.div<TitleContainerProps>`
 const TitleContainer = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
-  ${(props) =>
-    props.center &&
-    `width: 1344px;
-   min-width: 1344px;`}
 `;
 
 const TitleText = styled.div<TitleProps>`

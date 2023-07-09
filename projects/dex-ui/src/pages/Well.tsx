@@ -105,120 +105,107 @@ export const Well = () => {
 
   return (
     <Page>
-      <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
       <ContentWrapper>
-        <MainContent>
-          <StyledRow>
-            <Item>
-              <Header>
-                <TokenLogos>{logos}</TokenLogos>
-                <TextNudge amount={10} mobileAmount={-2}>{title}</TextNudge>
-              </Header>
-            </Item>
-            <StyledItem column stretch>
-              <FunctionName>{wellFunctionName}</FunctionName>
-              <Fee>0.00% Trading Fee</Fee>
-            </StyledItem>
-          </StyledRow>
-          <MobileSideBar id="mobileSidebar">
-            <Row gap={8}>
-              <Item stretch>
-                <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
-              </Item>
-              <Item stretch>
-                <Button label="Swap" onClick={goSwap} />
-              </Item>
-            </Row>
-            <LiquidityBoxContainer>
-              <LiquidityBox lpToken={well?.lpToken!} />
-            </LiquidityBoxContainer>
-            <LearnMoreContainer>
-              <LearnMoreLabel onClick={toggle}>
-                <LearnMoreLine />
-                <LearnMoreText>
-                  <TextNudge amount={2}>
-                    Learn more about this Well
-                  </TextNudge> 
-                  <ImageButton
-                    component={ChevronDown}
-                    size={10}
-                    rotate={open ? "180" : "0"}
-                    onClick={toggle}
-                    padding="0px"
-                    alt="Click to expand and learn how to earn yield"
-                    color={"#46B955"}
-                  />
-                </LearnMoreText>
-                <LearnMoreLine />
-              </LearnMoreLabel>
-              <LearnMoreButtons open={open}>
-                <LearnYield />
-                <LearnWellFunction name={wellFunctionName || "A Well Function"} />
-                <LearnPump />
-              </LearnMoreButtons>
-            </LearnMoreContainer>
-          </MobileSideBar>
-          <Reserves reserves={reserves} />
-          <ChartSection well={well!} />
-          <Row gap={24} mobileGap={"0px"}>
-            <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
-                Activity
-              </TabButton>
-            </Item>
-            <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-                Other Details
-              </TabButton>
-            </Item>
-          </Row>
-          <BottomContainer>
-            {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
-            {tab === 1 && <OtherSection well={well!} />}
-          </BottomContainer>
-        </MainContent>
-        <SideBar id="sidebar">
-          <Row gap={24}>
-            <Item stretch>
-              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
-            </Item>
-            <Item stretch>
-              <Button label="Swap" onClick={goSwap} />
-            </Item>
-          </Row>
-          <LiquidityBoxContainer>
-            <LiquidityBox lpToken={well?.lpToken!} />
-          </LiquidityBoxContainer>
-          <LearnMoreContainer>
-            <LearnMoreLabel onClick={toggle}>
-              <LearnMoreLine />
-              <LearnMoreText>
-                <TextNudge amount={2}>
-                  Learn more about this Well
-                </TextNudge> 
-                <ImageButton
-                  component={ChevronDown}
-                  size={10}
-                  rotate={open ? "180" : "0"}
-                  onClick={toggle}
-                  padding="0px"
-                  alt="Click to expand and learn how to earn yield"
-                  color={"#46B955"}
-                />
-              </LearnMoreText>
-              <LearnMoreLine />
-            </LearnMoreLabel>
-            <LearnMoreButtons open={open}>
-              <LearnYield />
-              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
-              <LearnPump />
-            </LearnMoreButtons>
-          </LearnMoreContainer>
-        </SideBar>
+        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
+        <StyledRow>
+          <Item>
+            <Header>
+              <TokenLogos>{logos}</TokenLogos>
+              <TextNudge amount={10} mobileAmount={-2}>{title}</TextNudge>
+            </Header>
+          </Item>
+          <StyledItem column stretch>
+            <FunctionName>{wellFunctionName}</FunctionName>
+            <Fee>0.00% Trading Fee</Fee>
+          </StyledItem>
+        </StyledRow>
+        <StyledReserves reserves={reserves} />
+        <StyledChart well={well!} />
+        <ActivityOtherButtons gap={24} mobileGap={"0px"}>
+          <Item stretch>
+            <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
+              Activity
+            </TabButton>
+          </Item>
+          <Item stretch>
+            <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
+              Other Details
+            </TabButton>
+          </Item>
+        </ActivityOtherButtons>
+        <BottomContainer>
+          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
+          {tab === 1 && <OtherSection well={well!} />}
+        </BottomContainer>
+        <ColumnBreak />
+        <LiquiditySwapButtons gap={24} mobileGap={"8px"}>
+          <Item stretch>
+            <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+          </Item>
+          <Item stretch>
+            <Button label="Swap" onClick={goSwap} />
+          </Item>
+        </LiquiditySwapButtons>
+        <LiquidityBoxContainer>
+          <LiquidityBox lpToken={well?.lpToken!} />
+        </LiquidityBoxContainer>
+        <LearnMoreContainer>
+          <LearnMoreLabel onClick={toggle}>
+            <LearnMoreLine />
+            <LearnMoreText>
+              <TextNudge amount={2}>
+                Learn more about this Well
+              </TextNudge> 
+              <ImageButton
+                component={ChevronDown}
+                size={10}
+                rotate={open ? "180" : "0"}
+                onClick={toggle}
+                padding="0px"
+                alt="Click to expand and learn how to earn yield"
+                color={"#46B955"}
+              />
+            </LearnMoreText>
+            <LearnMoreLine />
+          </LearnMoreLabel>
+          <LearnMoreButtons open={open}>
+            <LearnYield />
+            <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+            <LearnPump />
+          </LearnMoreButtons>
+        </LearnMoreContainer>
       </ContentWrapper>
     </Page>
   );
 };
+
+
+const leftColumnWidth = 940
+const rightColumnWidth = 400
+
+
+
+const ContentWrapper = styled.div`
+  // outline: 1px solid red;
+  display: flex;
+  flex-flow: column wrap;
+  flex: auto;
+  justify-content: flex-start;
+  align-content: center;
+  gap: 24px;
+  @media (min-width: 475px) {
+    height: 1400px;
+  }
+  @media (max-width: 475px) {
+    flex-flow: column nowrap;
+  }
+`;
+
+const StyledTitle = styled(Title)`
+  @media (max-width: 475px) {
+    order: -1;
+  }
+`
 
 const Header = styled.div`
   display: flex;
@@ -240,37 +227,59 @@ const TokenLogos = styled.div`
   }
 `;
 
-const ContentWrapper = styled.div`
-  // outline: 1px solid red;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 48px;
-
-  @media (max-width: 475px) {
-    flex-direction: column;
-  }
-`;
-
-const MainContent = styled.div`
-  // outline: 1px solid green;
-  display: flex;
-  flex-direction: column;
-  @media (min-width: 475px) {
-    width: calc(37 * 24px);
-    min-width: calc(37 * 24px);
-    gap: 24px;
-  }
-  gap: 12px;
-`;
-
 const StyledRow = styled(Row)`
+  width: ${leftColumnWidth}px;
   @media (max-width: 475px) {
+    display: flex;
+    width: 100%;
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    order: 0;
   }
 `
+
+const StyledReserves = styled(Reserves)`
+  width: 100%;
+  @media (min-width: 475px) {
+    width: ${leftColumnWidth}px;
+  }
+  @media (max-width: 475px) {
+    order: 1;
+  }
+`
+
+const StyledChart = styled(ChartSection)`
+  width: 100%;
+  @media (min-width: 475px) {
+    width: ${leftColumnWidth}px;
+  }
+  @media (max-width: 475px) {
+    order: 1;
+  }
+`
+
+const ActivityOtherButtons = styled(Row)`
+  width: 100%;
+  @media (max-width: 475px) {
+    order: 4;
+  }
+  @media (min-width: 475px) {
+    width: ${leftColumnWidth}px;
+  }
+`
+
+const LiquiditySwapButtons = styled(Row)`
+  width: 100%;
+  @media (max-width: 475px) {
+    order: 0;
+  }
+  @media (min-width: 475px) {
+    margin-top: 48px;
+    width: ${rightColumnWidth}px;
+  }
+`
+
 const StyledItem = styled(Item)`
   @media (min-width: 475px) {
     align-items: end;
@@ -279,30 +288,15 @@ const StyledItem = styled(Item)`
 const BottomContainer = styled.div`
   display: flex;
   flex-direction: column;
-
   gap: 24px;
-`;
-
-const SideBar = styled.div`
-  // outline: 1px solid green;
-  display: none;
+  width: 100%;
   @media (min-width: 475px) {
-    display: flex;
-    flex-direction: column;
-    width: calc(17 * 24px);
-    min-width: calc(17 * 24px);
-    gap: 24px;
+    width: ${leftColumnWidth}px;
+  }
+  @media (max-width: 475px) {
+    order: 6;
   }
 `;
-
-const MobileSideBar = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  @media (min-width: 475px) {
-    display: none;
-  }
-`
 
 const FunctionName = styled.div`
   ${BodyL}
@@ -319,6 +313,7 @@ const Fee = styled.div`
 `;
 
 const LiquidityBoxContainer = styled.div`
+  width: ${rightColumnWidth}px;
   @media (max-width: 475px) {
     display: none;
   }
@@ -328,10 +323,15 @@ const LearnMoreContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
   @media (max-width: 475px) {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    order: 0;
+  }
+  @media (min-width: 475px) {
+    width: ${rightColumnWidth}px;
   }
 `
 const LearnMoreLabel = styled.div`
@@ -370,5 +370,13 @@ const LearnMoreButtons = styled.div<{open: boolean}>`
     ${(props) => props.open ? "display: flex" : "display: none"};
     flex-direction: column;
     gap: 16px;
+  }
+`
+
+const ColumnBreak = styled.div`
+  display: none;
+  @media (min-width: 475px) {
+    flex-basis: 100%;
+    width: 0px;
   }
 `

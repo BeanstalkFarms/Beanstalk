@@ -7,7 +7,6 @@ import { WellFunction } from "../Icons";
 
 type Props = {
   name: string;
-  width?: number;
 };
 
 function WellFunctionDetails(functionName: any) {
@@ -34,9 +33,9 @@ function WellFunctionDetails(functionName: any) {
   }
 }
 
-export const LearnWellFunction: FC<Props> = ({ name, width }) => {
+export const LearnWellFunction: FC<Props> = ({ name }) => {
   return (
-    <ExpandBox width={width || 408}>
+    <ExpandBox>
       <ExpandBox.Header>
         <WellFunction />
         <TextNudge amount={1}>What is {name}?</TextNudge>

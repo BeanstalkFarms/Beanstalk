@@ -18,7 +18,7 @@ type Props = {
   width?: number;
   open?: boolean;
 };
-export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) => {
+export const ExpandBox: FC<Props> & Composition = ({ children }) => {
   const [open, setOpen] = useState(false);
   const [header, body] = Children.toArray(children);
   if (!header || !body) throw new Error("ExpandBox must have two children, Header and Boxy");
@@ -32,7 +32,7 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
   );
 
   return (
-    <Container width={width} open={open} onClick={toggle} data-trace="true">
+    <Container open={open} onClick={toggle} data-trace="true">
       <Header id="header" open={open}>
         {header}
         <ImageButton
@@ -65,10 +65,6 @@ const Container = styled.div<Props>`
     border-bottom: ${(p) => (p.open ? "0.5px" : "0px")} solid #46b955;
     outline: 0.5px solid #46b955;
   }
-  @media (min-width: 475px) {
-    width: ${(p) => p.width}px;
-    min-width: ${(p) => p.width}px;
-  }
 `;
 const Header = styled.div<Props>`
   background-color: #f9f8f6;
@@ -90,7 +86,6 @@ const Body = styled.div`
   display: flex;
   flex-direction: column;
   background-color: #fff;
-  flex: 2;
   padding: 20px 16px;
   gap: 8px;
 `;

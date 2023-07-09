@@ -9,14 +9,13 @@ import { useTokenBalance } from "src/tokens/useTokenBalance";
 
 type Props = {
   lpToken: Token;
-  width?: number;
 };
 
-export const LiquidityBox: FC<Props> = ({ lpToken, width }) => {
+export const LiquidityBox: FC<Props> = ({ lpToken }) => {
   const { data: balance } = useTokenBalance(lpToken);
 
   return (
-    <InfoBox width={width || 408}>
+    <InfoBox>
       <InfoBox.Header>
         <BoxHeader>My Liquidity</BoxHeader>
         <BoxHeaderAmount>

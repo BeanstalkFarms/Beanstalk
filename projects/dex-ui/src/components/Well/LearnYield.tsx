@@ -6,7 +6,6 @@ import { FC } from "src/types";
 import { YieldSparkle } from "../Icons";
 
 type Props = {
-  width?: number;
 };
 
 function YieldDetails() {
@@ -22,9 +21,9 @@ function YieldDetails() {
   );
 }
 
-export const LearnYield: FC<Props> = ({ width }) => {
+export const LearnYield: FC<Props> = () => {
   return (
-    <ExpandBox width={width || 408}>
+    <ExpandBox>
       <ExpandBox.Header>
         <YieldSparkle />
         <TextNudge amount={1}>How can I earn yield?</TextNudge>
