@@ -120,7 +120,9 @@ export const Well = () => {
           </StyledItem>
         </StyledRow>
         <StyledReserves reserves={reserves} />
-        <StyledChart well={well!} />
+        <ChartContainer>
+          <ChartSection well={well!} />
+        </ChartContainer>
         <ActivityOtherButtons gap={24} mobileGap={"0px"}>
           <Item stretch>
             <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
@@ -249,7 +251,7 @@ const StyledReserves = styled(Reserves)`
   }
 `
 
-const StyledChart = styled(ChartSection)`
+const ChartContainer = styled.div`
   width: 100%;
   @media (min-width: 475px) {
     width: ${leftColumnWidth}px;
@@ -374,7 +376,9 @@ const LearnMoreButtons = styled.div<{open: boolean}>`
 `
 
 const ColumnBreak = styled.div`
-  display: none;
+  @media (max-width: 475px) {
+    display: none;
+  }
   @media (min-width: 475px) {
     flex-basis: 100%;
     width: 0px;
