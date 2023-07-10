@@ -21,7 +21,7 @@ export const Footer = () => (
 );
 
 const Container = styled.footer`
-  display: flex;
+  display: none;
   flex-direction: row;
   box-sizing: border-box;
   border: 1px solid black;
@@ -30,6 +30,7 @@ const Container = styled.footer`
   width: 100vw;
   align-items: stretch;
   @media (min-width: 475px) {
+    display: flex;
     height: 72px;
     min-height: 72px;
   }
