@@ -2,6 +2,7 @@ import { Well } from "../src/lib/Well";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { getTestUtils } from "./TestUtils/provider";
 import { Aquifer, WellFunction } from "../src";
+import { createWell } from "./TestUtils/setup";
 
 const { wellsSdk, utils, account } = getTestUtils();
 
@@ -11,39 +12,12 @@ beforeAll(async () => {
   await utils.resetFork();
 });
 
-const setupWell = async (wellTokens: ERC20Token[], account: string) => {
-  // Deploy test well
-  const testAquifer = await Aquifer.BuildAquifer(wellsSdk);
-  const wellFunction = await WellFunction.BuildConstantProduct(wellsSdk);
-  const testWell = await Well.DeployViaAquifer(wellsSdk, testAquifer, wellTokens, wellFunction, []);
-
-  // Set initial balances for all well tokens
-  await Promise.all(
-    wellTokens.map(async (token) => {
-      await utils.setBalance(token, account, token.amount(50000));
-    })
-  );
-
-  await utils.mine();
-
-  for await (const token of wellTokens) {
-    await token.approve(testWell.address, TokenValue.MAX_UINT256.toBigNumber());
-  }
-
-  // Add liquidity to the well
-  const liquidityAmounts = wellTokens.map((token) => token.amount(20000));
-  const quote = await testWell.addLiquidityQuote(liquidityAmounts);
-  await testWell.addLiquidity(liquidityAmounts, quote, account);
-
-  return testWell;
-};
-
 describe("Swap", () => {
   describe("BEAN WETH well (two token well)", () => {
     let testBeanWethWell: Well;
 
     beforeAll(async () => {
-      testBeanWethWell = await setupWell([wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH], account);
+      testBeanWethWell = await createWell([wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH], account);
     });
 
     describe.each([
@@ -80,7 +54,7 @@ describe("Swap", () => {
   //   let testBeanWethUsdcWell: Well;
 
   //   beforeAll(async () => {
-  //     testBeanWethUsdcWell = await setupWell([wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH, wellsSdk.tokens.USDC], account);
+  //     testBeanWethUsdcWell = await createWell([wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH, wellsSdk.tokens.USDC], account);
   //     console.log('Well address: ' + testBeanWethUsdcWell.address);
   //   });
 
@@ -137,10 +111,12 @@ async function executeFailedSwapTest(well: Well, tokenIn: Token, tokenOut: Token
 async function executeSwapFromTest(well: Well, tokenIn: Token, tokenOut: Token, account: string, amount: string) {
   const SLIPPAGE = 0.5;
 
+  const swapAmount = tokenIn.amount(amount);
+  // Give user tokens to swap
+  await utils.setBalance(tokenIn, account, swapAmount);
+
   const tokenInBalanceBefore = await getBalance(tokenIn, account);
   const tokenOutBalanceBefore = await getBalance(tokenOut, account);
-
-  const swapAmount = tokenIn.amount(amount);
   const amountWithSlippage = swapAmount.subSlippage(SLIPPAGE);
 
   // Checks there the existing balance is enough to perform the swap
@@ -173,19 +149,22 @@ async function executeSwapToTest(well: Well, tokenIn: Token, tokenOut: Token, ac
   const tokenInBalanceBefore = await getBalance(tokenIn, account);
   const tokenOutBalanceBefore = await getBalance(tokenOut, account);
 
-  const swapAmount = tokenOut.amount(amount);
-  const amountWithSlippage = swapAmount.subSlippage(SLIPPAGE);
+  const desiredAmount = tokenOut.amount(amount);
+  const amountWithSlippage = desiredAmount.subSlippage(SLIPPAGE);
 
-  // Checks there the existing balance is enough to perform the swap
-  expect(tokenInBalanceBefore.gte(swapAmount)).toBe(true);
+  // Give user tokens to swap
+  await utils.setBalance(tokenIn, account, desiredAmount);
 
   // Checks the swap is valid using swapQuote
   // otherwise it will throw an error
   // quote is the amount of tokenIn needed to get the desired amount of tokenOut
-  const quote = await well.swapToQuote(tokenIn, tokenOut, swapAmount);
+  const quote = await well.swapToQuote(tokenIn, tokenOut, desiredAmount);
   expect(quote).not.toBeNull();
 
-  const swapTxn = await well.swapTo(tokenIn, tokenOut, quote, swapAmount, account);
+  // give user the tokens to swap
+  await utils.setBalance(tokenIn, account, quote);
+
+  const swapTxn = await well.swapTo(tokenIn, tokenOut, quote, desiredAmount, account);
   const tx = await swapTxn.wait();
   expect(tx.status).toBe(1);
 
