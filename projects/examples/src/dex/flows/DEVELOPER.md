@@ -1,0 +1,1 @@
+The flows in this folder are examples of the raw, low level, calls you'd need to make for each type of swap. The Wells SDK swap logic was first developed by writing these flows manually, then generalizing them in the SDK.
