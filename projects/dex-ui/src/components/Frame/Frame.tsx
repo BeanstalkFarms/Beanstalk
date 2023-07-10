@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FC } from "src/types";
 import styled from "styled-components";
@@ -11,7 +11,7 @@ import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
-import { Logo } from "../Icons";
+import { Discord, Github, Logo, Twitter } from "../Icons";
 
 export const BasinConnectButton = () => {
   return (
@@ -25,11 +25,12 @@ export const BasinConnectButton = () => {
 
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <Container id="frame">
       <NavContainer>
-        <BrandContainer>
+        <BrandContainer onClick={() => setMobileMenuOpen(false)}>
           <Brand>
             <Link to={"/"}>
               <Logo /> <div>BASIN</div>
@@ -53,13 +54,38 @@ export const Frame: FC<{}> = ({ children }) => {
         <StyledConnectContainer>
           <BasinConnectButton />
         </StyledConnectContainer>
-        <DropdownMenu>
-          =
+        <DropdownMenu open={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <MenuLine />
+          <MenuLine />
         </DropdownMenu>
       </NavContainer>
       <TokenMarquee />
       <Window>
         <CustomToaster />
+        <BurgerMenu open={mobileMenuOpen}>
+          <MobileNavLinkContainer>
+            <MobileNavLink bold to="/swap" onClick={() => setMobileMenuOpen(false)}>Swap</MobileNavLink>
+            <MobileNavLink bold to="/wells" onClick={() => setMobileMenuOpen(false)}>Wells</MobileNavLink>
+            <MobileNavLink bold to="/build" onClick={() => setMobileMenuOpen(false)}>Build</MobileNavLink>
+            {isNotProd && <MobileNavLink bold to="/dev" onClick={() => setMobileMenuOpen(false)}>Dev</MobileNavLink>}
+            <MobileLargeNavRow onClick={() => setMobileMenuOpen(false)}>
+              <Box href="https://basin.exchange/discord" rel="noopener noreferrer" target="_blank">
+                <Discord width={20} />
+              </Box>
+              <Box href="https://twitter.com/basinexchange" rel="noopener noreferrer" target="_blank">
+                <Twitter width={20} />
+              </Box>
+              <Box href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
+                <Github width={20} />
+              </Box>
+            </MobileLargeNavRow>
+            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>Bug Bounty Program</MobileNavLink>
+            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>Documentation</MobileNavLink>
+          </MobileNavLinkContainer>
+          <MobileConnectContainer>
+            <BasinConnectButton />
+          </MobileConnectContainer>
+        </BurgerMenu>
         {children}
       </Window>
       <Footer />
@@ -97,7 +123,7 @@ const Container = styled.div`
 `;
 
 const NavContainer = styled.nav`
-  border: 0.5px solid black;
+  border-bottom: 0.5px solid black;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -219,7 +245,7 @@ const StyledConnectButton = styled.button`
   }
 `;
 
-const DropdownMenu = styled.button`
+const DropdownMenu = styled.button<{open?: boolean}>`
   cursor: pointer;
   border: 0px;
   color: #000;
@@ -231,7 +257,95 @@ const DropdownMenu = styled.button`
   padding-left: 16px;
   padding-right: 16px;
   font-size: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  @media (min-width: 475px) {
+    display: none;
+  }
+  div {
+    :first-child { 
+      transition: all 0.3s linear;
+      transform-origin: 0% 50%;
+      transform: ${({  open  }) => open ? `rotate(45deg)` : `rotate(0)`};
+    }
+    :last-child {
+      transition: all 0.3s linear;
+      transform-origin: 0% 50%;
+      transform: ${({  open  }) => open ? `rotate(-45deg)` : `rotate(0)`};
+    }
+  }
+`
+
+const MenuLine = styled.div`
+  width: 16px;
+  height: 2px;
+  background-color: black;
+`
+
+const BurgerMenu = styled.div<{open: boolean}>`
+  background-color: #FFF;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  width: 100vw;
+  justify-content: space-between;
+  position: absolute;
+  transition: transform 0.3s ease-in-out;
+  border-left: 0.5px solid black;
+  margin-left: -0.5px;
+  transform: ${(props) => props.open ? `translateX(0%)` : `translateX(100%)`};
+  z-index: 9999;
   @media (min-width: 475px) {
     display: none;
   }
 `
+
+const MobileNavLinkContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+`
+
+const MobileNavLink = styled(Link)<{bold?: boolean}>`
+  width: 100%;
+  border-bottom: 0.5px solid black;
+  padding: 16px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: black;
+  font-weight: ${(props) => props.bold ? `600` : `normal`};
+  ${(props) => props.bold && `letter-spacing: 0.96px;`}
+`
+
+const MobileLargeNavRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  border-bottom: 0.5px solid black;
+  color: black;
+`
+
+const MobileConnectContainer = styled.div`
+  display: flex;
+  direction: row;
+  padding: 16px;
+  align-self: stretch;
+  justify-content: center;
+  border-top: 0.5px solid black;
+`;
+
+const Box = styled.a`
+  display: flex;
+  flex: 1;
+  padding: 32px;
+  border-left: 0.5px solid black;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  color: black;
+  :first-child {
+    border-left: none;
+  }
+`;
