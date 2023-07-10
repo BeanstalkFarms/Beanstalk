@@ -12,7 +12,6 @@ import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchFarmerBarn } from '~/state/farmer/barn/updater';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
-import useSeason from '~/hooks/beanstalk/useSeason';
 import {
   FormTxnBundler,
   ClaimFarmStep,
@@ -21,9 +20,9 @@ import {
   MowFarmStep,
   PlantFarmStep,
   RinseFarmStep,
-  PlantAndDoX,
   FormTxn,
 } from '~/lib/Txn';
+import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 
 // -------------------------------------------------------------------------
 
@@ -68,7 +67,6 @@ const useInitFormTxnContext = () => {
   const farmerSilo = useFarmerSilo();
   const farmerField = useFarmerField();
   const farmerBarn = useFarmerFertilizer();
-  const season = useSeason();
 
   /// Refetch functions
   const [refetchFarmerSilo] = useFetchFarmerSilo();
@@ -79,16 +77,10 @@ const useInitFormTxnContext = () => {
 
   /// Helpers
   const getBDV = useBDV();
+  const plantAndDoX = usePlantAndDoX();
 
+  /// Context State
   const [txnBundler, setTxnBundler] = useState(new FormTxnBundler(sdk, {}));
-
-  const plantAndDoX = useMemo(() => {
-    const earnedBeans = sdk.tokens.BEAN.amount(
-      farmerSilo.beans.earned.toString()
-    );
-
-    return new PlantAndDoX(sdk, earnedBeans, season.toNumber());
-  }, [farmerSilo.beans.earned, sdk, season]);
 
   /// On any change, update the txn bundler
   useEffect(() => {
@@ -204,7 +196,7 @@ const useInitFormTxnContext = () => {
     txnBundler,
     plantAndDoX,
     refetch,
-  };
+  } as const;
 };
 
 export const FormTxnBuilderContext = React.createContext<
