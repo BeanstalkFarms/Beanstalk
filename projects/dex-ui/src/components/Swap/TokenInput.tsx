@@ -7,6 +7,7 @@ import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { Spinner } from "../Spinner";
+import { BodyXS } from "../Typography";
 
 type ContainerProps = {
   width: string;
@@ -106,7 +107,7 @@ export const TokenInput: FC<TokenInput> = ({
       {showBalance && (
         <BalanceRow>
           <Balance onClick={handleClickMax}>
-            Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}
+            Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman("short")}
           </Balance>
         </BalanceRow>
       )}
@@ -194,4 +195,7 @@ const Balance = styled.div`
   text-decoration: underline;
   text-decoration-thickness: 1px;
   cursor: pointer;
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;

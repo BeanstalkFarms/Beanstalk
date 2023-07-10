@@ -27,6 +27,7 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
 
   @media (max-width: 475px) {
     ${BodyXS}
+    height: 40px;
     font-weight: ${({ bold, active }) => (bold || active ? "600" : "normal")};
     padding: 8px 8px;
   }
