@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { InfoBox } from "src/components/InfoBox";
-import { BodyCaps, LinksButtonText, TextNudge } from "../Typography";
+import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "../Typography";
 import { TokenLogo } from "../TokenLogo";
 import { FC } from "src/types";
 import { Token } from "@beanstalk/sdk";
@@ -17,7 +17,7 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
   return (
     <InfoBox>
       <InfoBox.Header>
-        <BoxHeader>My Liquidity</BoxHeader>
+        <TextNudge amount={0} mobileAmount={2}><BoxHeader>My Liquidity</BoxHeader></TextNudge>
         <BoxHeaderAmount>
           <TokenLogo token={lpToken} size={16} mobileSize={16} isLP />
           <TextNudge amount={1.5}>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</TextNudge>
@@ -42,6 +42,9 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
 
 const BoxHeader = styled.div`
   ${BodyCaps}
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;
 const BoxHeaderAmount = styled.div`
   display: flex;

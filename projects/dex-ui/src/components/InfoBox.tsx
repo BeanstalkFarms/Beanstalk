@@ -1,7 +1,7 @@
 import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { BodyS } from "./Typography";
+import { BodyS, BodyXS } from "./Typography";
 
 interface Composition {
   Header: typeof Header;
@@ -35,6 +35,9 @@ const Header = styled.div`
   flex-direction: row;
   padding: 12px 16px;
   justify-content: space-between;
+  @media (max-width: 475px) {
+    padding: 8px 12px;
+  }
 `;
 const Body = styled.div`
   display: flex;
@@ -43,6 +46,10 @@ const Body = styled.div`
   flex: 2;
   padding: 20px 16px;
   gap: 8px;
+  @media (max-width: 475px) {
+    padding: 12px 12px;
+    ${BodyXS}
+  }
 `;
 const Footer = styled.div`
   display: flex;
@@ -57,6 +64,9 @@ const Row = styled.div`
   flex-direction: row;
   justify-content: space-between;
   ${BodyS}
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;
 const Key = styled.div`
   color: #4b5563;

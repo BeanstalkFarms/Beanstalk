@@ -135,6 +135,10 @@ const Dropdown = styled.div<{ enabled: boolean }>`
   right: 0px;
   width: 120px;
   visibility: ${(props) => (props.enabled ? "visible" : "hidden")};
+  z-index: 100;
+  @media (max-width: 475px) {
+    top: 41px;
+  }
 `;
 
 const DropdownItem = styled(TabButton)`
@@ -168,5 +172,8 @@ const FilterButton = styled.div`
   cursor: pointer;
   :hover {
     background-color: #f0fdf4;
+  }
+  @media (max-width: 475px) {
+    height: 40px;
   }
 `;
