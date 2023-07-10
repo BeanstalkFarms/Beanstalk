@@ -8,15 +8,17 @@ import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
 import { tokenValueToBN } from '~/util';
+import { ZERO_BN } from '~/constants';
 
 export default class PlantAndDoX {
   constructor(
     private _sdk: BeanstalkSDK,
     private _earnedBeans: TokenValue,
-    private _season: number
+    private _stem: ethers.BigNumber
   ) {
+    this._sdk = _sdk;
     this._earnedBeans = _earnedBeans;
-    this._season = _season;
+    this._stem = _stem;
   }
 
   /// Returns whether 'plant' can be called
@@ -33,7 +35,7 @@ export default class PlantAndDoX {
     return PlantAndDoX.makeCrate.tokenValue(
       this._sdk,
       this._earnedBeans,
-      this._season
+      this._stem
     );
   }
 
@@ -42,7 +44,7 @@ export default class PlantAndDoX {
     return PlantAndDoX.makeCrate.bigNumber(
       this._sdk,
       tokenValueToBN(this._earnedBeans),
-      new BigNumber(this._season)
+      this._stem
     );
   }
 
@@ -51,12 +53,8 @@ export default class PlantAndDoX {
     tokenValue(
       sdk: BeanstalkSDK,
       earnedBeans: TokenValue,
-      _season: number | BigNumber
+      stem: ethers.BigNumber
     ) {
-      const season = BigNumber.isBigNumber(_season)
-        ? _season.toNumber()
-        : _season;
-
       const { STALK, BEAN } = sdk.tokens;
 
       const stalk = BEAN.getStalk(earnedBeans);
@@ -66,7 +64,8 @@ export default class PlantAndDoX {
 
       // asTV => as DepositCrate<TokenValue> from SDK;
       const crate: TokenSiloBalance['deposits'][number] = {
-        season: ethers.BigNumber.from(season),
+        stem: stem,
+        // season: ethers.BigNumber.from(season),
         amount: earnedBeans,
         bdv: earnedBeans,
         stalk: {
@@ -74,8 +73,6 @@ export default class PlantAndDoX {
           base: stalk,
           grown: grownStalk,
         },
-        baseStalk: stalk,
-        grownStalk,
         seeds,
       };
 
@@ -86,7 +83,7 @@ export default class PlantAndDoX {
     bigNumber(
       sdk: BeanstalkSDK,
       earnedBeans: BigNumber,
-      season: BigNumber
+      stem: ethers.BigNumber
     ): LegacyDepositCrate {
       const { BEAN } = sdk.tokens;
       const earnedTV = BEAN.amount(earnedBeans.toString());
@@ -95,10 +92,14 @@ export default class PlantAndDoX {
       const seeds = BEAN.getSeeds(earnedTV);
 
       const crate: LegacyDepositCrate = {
-        season,
         amount: earnedBeans,
+        stem: stem,
         bdv: earnedBeans,
-        stalk: tokenValueToBN(stalk),
+        stalk: {
+          total: tokenValueToBN(stalk),
+          base: tokenValueToBN(stalk),
+          grown: ZERO_BN,
+        },
         seeds: tokenValueToBN(seeds),
       };
 
