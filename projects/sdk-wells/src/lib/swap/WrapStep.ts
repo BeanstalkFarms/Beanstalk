@@ -49,7 +49,7 @@ export class WrapEthStep implements SwapStep {
     return {
       contract: this.weth9,
       method: "deposit",
-      parameters: []
+      parameters: [{ value: amount.toBlockchain() }]
     };
   }
 
@@ -61,7 +61,12 @@ export class WrapEthStep implements SwapStep {
     if (!this.hasQuoted) throw new Error("Must do a quote before swapping");
     if (this.direction !== Direction.FORWARD) throw new Error("swapMany() can only be called for quotes where direction was Forward");
 
-    return this.swapSingle(minAmountOut, minAmountOut, recipient, 0);
+    // This is just a placeholder. We don't use this since we have to branch the code and build a different workflow instead
+    return {
+      contract: this.weth9,
+      method: "dummy",
+      parameters: []
+    };
   }
 
   /**
@@ -71,6 +76,11 @@ export class WrapEthStep implements SwapStep {
     if (!this.hasQuoted) throw new Error("Must do a quote before swapping");
     if (this.direction !== Direction.REVERSE) throw new Error("swapMany() can only be called for quotes where direction was Reverse");
 
-    return this.swapSingle(desiredAmount, desiredAmount, recipient, 0);
+    // This is just a placeholder. We don't use this since we have to branch the code and build a different workflow instead
+    return {
+      contract: this.weth9,
+      method: "dummy",
+      parameters: []
+    };
   }
 }

@@ -1,13 +1,14 @@
 import { Token, TokenValue } from "@beanstalk/sdk-core";
 import { Route } from "src/lib/routing";
 import { Direction, SwapStep } from "src/lib/swap/SwapStep";
-import { Depot, Depot__factory, ERC20, WETH9__factory } from "src/constants/generated";
+import { Depot, Depot__factory, ERC20, WETH9, WETH9__factory } from "src/constants/generated";
 import { addresses } from "src/constants/addresses";
 import { WellsSDK } from "src/lib/WellsSDK";
 import { TxOverrides } from "src/lib/Well";
 import { ContractTransaction } from "ethers";
 import { deadlineSecondsToBlockchain } from "src/lib/utils";
 import { WrapEthStep } from "./WrapStep";
+import { Clipboard } from "src/lib/clipboard/clipboard";
 
 const DEFAULT_DEADLINE = 60 * 5; // in seconds
 
@@ -20,8 +21,9 @@ export type QuoteResult = {
   amount: TokenValue;
   estimate: TokenValue;
   gas: TokenValue;
-  doSwap: () => Promise<ContractTransaction>;
-  doApproval?: () => Promise<ContractTransaction>;
+
+  doSwap: (overrides?: TxOverrides) => Promise<ContractTransaction>;
+  doApproval?: (overrides?: TxOverrides) => Promise<ContractTransaction>;
 };
 
 export class Quote {
@@ -39,6 +41,8 @@ export class Quote {
   // the actual slippage against this, instead of at each step (which we do anyway for quoting)
   fullQuote: TokenValue | undefined;
   slippage: number;
+  weth9: WETH9;
+  debug: boolean = false;
 
   constructor(sdk: WellsSDK, fromToken: Token, toToken: Token, route: Route, account: string) {
     if (route.length < 1) throw new Error("Cannot build Quote when there is no viable Route");
@@ -49,15 +53,16 @@ export class Quote {
     this.route = route;
     this.account = account;
 
-    const weth9 = WETH9__factory.connect(addresses.WETH9.get(this.sdk.chainId), this.sdk.providerOrSigner);
+    this.weth9 = WETH9__factory.connect(addresses.WETH9.get(this.sdk.chainId), this.sdk.providerOrSigner);
 
     for (const { from, to, well } of this.route) {
       if (from.symbol === "ETH" && to.symbol === "WETH") {
-        this.steps.push(new WrapEthStep(sdk, weth9, from, to));
+        this.steps.push(new WrapEthStep(sdk, this.weth9, from, to));
         continue;
       }
+      // TODO: add this once pipeline supports unwrapping ETH
       // if (from.symbol === 'WETH' && to.symbol === 'ETH') {
-      //   this.steps.push(new WrapEthStep(from, to));
+      //   this.steps.push(new UnWrapEthStep(from, to));
       //   continue;
       // }
       this.steps.push(new SwapStep(well, from, to));
@@ -141,9 +146,7 @@ export class Quote {
     if (this.route.length === 1) {
       return this.prepareSingle(recipient, blockChainDeadline);
     } else {
-      return fwd
-        ? this.prepareMulti(recipient, blockChainDeadline, overrides)
-        : this.prepareMultiReverse(recipient, blockChainDeadline, overrides);
+      return fwd ? this.prepareMulti(recipient) : this.prepareMultiReverse(recipient, blockChainDeadline);
     }
   }
 
@@ -152,7 +155,14 @@ export class Quote {
     const { contract, method, parameters } = step.swapSingle(this.amountUsedForQuote, step.quoteResultWithSlippage!, recipient, deadline);
 
     const doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
-      parameters.push(overrides ?? {});
+      // If starting with ETH and this is a single swap, it means we're just wrapping it
+      // so we can infer that `parameters[0]` are the overrides which include {value} returned
+      // by step.swapSingle(). We combine with user provided overrides
+      if (this.fromToken.symbol === "ETH") {
+        parameters[0] = { ...overrides, ...(parameters[0] as Object) };
+      } else {
+        parameters.push(overrides ?? {});
+      }
       // @ts-ignore
       return contract[method](...parameters);
     };
@@ -164,23 +174,20 @@ export class Quote {
     return { doApproval, doSwap };
   }
 
-  private async prepareMulti(recipient: string, deadline: number, overrides?: TxOverrides): Promise<QuotePrepareResult> {
+  private async prepareMulti(recipient: string): Promise<QuotePrepareResult> {
     const direction = Direction.FORWARD;
 
     // Should never happen but sanity check
     if (this.direction !== direction) throw new Error("Direction of last quote does not match expected direction of swap");
-
     const steps = this.steps;
 
-    const shiftOps = [];
+    // If we start with ETH, remove the first step to wrap it, that only works for a single-step flow. We will build a custom flow here
+    // to handle wrapping ETH as part of a pipeline call.
+    if (this.fromToken.symbol === "ETH") {
+      steps.shift();
+    }
 
-    const transfer = this.depot.interface.encodeFunctionData("transferToken", [
-      this.fromToken.address,
-      this.steps[0].well.address,
-      this.amountUsedForQuote.toBigNumber(),
-      0,
-      0
-    ]);
+    const shiftOps = [];
 
     for (let i = 0; i < steps.length; i++) {
       const step = this.steps[i];
@@ -195,18 +202,66 @@ export class Quote {
         clipboard: "0x0000000000000000000000000000000000000000000000000000000000000000" // Clipboard.encode([])
       };
 
+      this.log(`Well: ${step.well.name}, Method: ${method}, Params: ${parameters}, Recipient: ${nextRecipient}`);
+
       shiftOps.push(shiftOp);
     }
 
     const doApproval = await this.getApproval(this.fromToken, this.amountUsedForQuote, this.depot.address, recipient);
-    const pipe = this.depot.interface.encodeFunctionData("advancedPipe", [shiftOps, 0]);
+
+    let doSwap;
+    let pipe: string;
+
+    // Wrap ETH flow
+    if (this.fromToken.symbol === "ETH") {
+      const wrapEth = {
+        target: this.weth9.address,
+        callData: this.weth9.interface.encodeFunctionData("deposit"),
+        clipboard: Clipboard.encode([], this.amountUsedForQuote.toBigNumber())
+      };
+      const wethTransfer = {
+        target: this.weth9.address,
+        callData: this.weth9.interface.encodeFunctionData("transfer", [this.steps[0].well.address, this.amountUsedForQuote.toBigNumber()]),
+        clipboard: Clipboard.encode([])
+      };
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [
+        [wrapEth, wethTransfer, ...shiftOps],
+        this.amountUsedForQuote.toBlockchain()
+      ]);
+      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+        const overrideOptions = { ...overrides, value: this.amountUsedForQuote.toBigNumber() };
+        return this.depot.farm([pipe], overrideOptions);
+      };
+    }
+    // Unwrap ETH flow
+    else if (this.toToken.symbol === "ETH") {
+      throw new Error("Cannot swap to ETH yet");
+    }
+    // Normal flow, no ETH involved
+    else {
+      const transferToFirstWell = this.depot.interface.encodeFunctionData("transferToken", [
+        this.fromToken.address,
+        this.steps[0].well.address,
+        this.amountUsedForQuote.toBigNumber(),
+        0,
+        0
+      ]);
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [shiftOps, 0]);
+
+      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToFirstWell, pipe], overrides);
+      };
+    }
+
     return {
-      doSwap: (): Promise<ContractTransaction> => this.depot.farm([transfer, pipe]),
+      doSwap,
       doApproval
     };
   }
 
-  private async prepareMultiReverse(recipient: string, deadline: number, overrides?: TxOverrides): Promise<QuotePrepareResult> {
+  private async prepareMultiReverse(recipient: string, deadline: number): Promise<QuotePrepareResult> {
     const direction = Direction.REVERSE;
 
     // Should never happen but sanity check
@@ -215,15 +270,18 @@ export class Quote {
     const pipelineAddress = addresses.PIPELINE.get(this.sdk.chainId);
     const steps = this.steps;
 
+    // If we start with ETH, remove the first step to wrap it, that only works for a single-step flow. We will build a custom flow here
+    // to handle wrapping ETH as part of a pipeline call.
+    if (this.fromToken.symbol === "ETH") {
+      steps.shift();
+    }
+
     const desiredAmount = this.amountUsedForQuote; // Amount desired
     const operations = [];
 
     for (let i = 0; i < steps.length; i++) {
       const step = this.steps[i];
       const nextStep = this.steps[i + 1] || null;
-      // console.log("Step:", step.fromToken.symbol, " -> ", step.toToken.symbol);
-      // console.log(`quote: ${step.quoteResult?.toHuman()} ${step.fromToken.symbol} needed to buy ${step.quoteInput?.toHuman()} ${step.toToken.symbol}`);
-
       const nextRecipient = i === steps.length - 1 ? recipient : pipelineAddress;
 
       const amountWithSlippage = step.quoteResultWithSlippage!;
@@ -251,19 +309,53 @@ export class Quote {
 
     const startingAmount = steps[0].quoteResultWithSlippage!;
 
-    const transfer = this.depot.interface.encodeFunctionData("transferToken", [
-      this.fromToken.address,
-      pipelineAddress,
-      startingAmount.toBigNumber(),
-      0,
-      0
-    ]);
+    let doSwap;
+    let pipe: string;
+
+    // Wrap ETH flow
+    if (this.fromToken.symbol === "ETH") {
+      // startingAmount here is step[0], but after we did steps.shift(), so steps[0] is
+      // really the WETH to whatever step. Therefore startingAmount is demoninated in WETH, but
+      // that's okay since WETH and ETH have the same number of decimals, so we can use the same value
+      const ethAmount = startingAmount;
+      const wrapEth = {
+        target: this.weth9.address,
+        callData: this.weth9.interface.encodeFunctionData("deposit"),
+        clipboard: Clipboard.encode([], ethAmount.toBigNumber())
+      };
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[wrapEth, ...operations], ethAmount.toBigNumber()]);
+
+      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+        const overrideOptions = { ...overrides, value: ethAmount.toBigNumber() };
+        return this.depot.farm([pipe], overrideOptions);
+      };
+    }
+    // Unwrap ETH flow
+    else if (this.toToken.symbol === "ETH") {
+      throw new Error("Cannot swap to ETH yet");
+    }
+    // Normal flow, no ETH involved
+    else {
+      const transferToPipeline = this.depot.interface.encodeFunctionData("transferToken", [
+        this.fromToken.address,
+        pipelineAddress,
+        startingAmount.toBigNumber(),
+        0,
+        0
+      ]);
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [operations, 0]);
+
+      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToPipeline, pipe]);
+      };
+    }
 
     const doApproval = await this.getApproval(this.fromToken, startingAmount, this.depot.address, recipient);
 
-    const pipe = this.depot.interface.encodeFunctionData("advancedPipe", [operations, 0]);
     return {
-      doSwap: (): Promise<ContractTransaction> => this.depot.farm([transfer, pipe]),
+      doSwap,
       doApproval
     };
   }
@@ -281,5 +373,11 @@ export class Quote {
     };
 
     return doApproval;
+  }
+
+  log(...args: any[]) {
+    if (this.debug) {
+      console.log("DEBUG:", ...args);
+    }
   }
 }
