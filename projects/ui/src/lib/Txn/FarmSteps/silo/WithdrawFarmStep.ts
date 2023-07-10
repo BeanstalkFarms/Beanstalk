@@ -1,4 +1,12 @@
-import { BeanstalkSDK, Deposit, Token, TokenValue } from '@beanstalk/sdk';
+import {
+  BeanstalkSDK,
+  Deposit,
+  FarmToMode,
+  ERC20Token,
+  Token,
+  TokenValue,
+  FarmFromMode,
+} from '@beanstalk/sdk';
 import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
 
 type WithdrawResult = ReturnType<typeof WithdrawFarmStep['calculateWithdraw']>;
@@ -8,7 +16,7 @@ export class WithdrawFarmStep extends FarmStep {
 
   constructor(
     _sdk: BeanstalkSDK,
-    private _token: Token,
+    private _token: ERC20Token,
     private _crates: Deposit[]
   ) {
     super(_sdk);
@@ -24,6 +32,8 @@ export class WithdrawFarmStep extends FarmStep {
     // amountIn excluding plant amount
     _amountIn: TokenValue,
     season: number,
+    toMode: FarmToMode,
+    tokenOut?: ERC20Token,
     plant?: PlantAndDoX
   ) {
     this.clear();
@@ -43,6 +53,18 @@ export class WithdrawFarmStep extends FarmStep {
     if (!result || !result.crates.length) {
       throw new Error('Nothing to Withdraw.');
     }
+    if (!tokenOut && this._token.isLP) {
+      throw new Error('Must specify Output Token');
+    }
+
+    const removeLiquidity =
+      this._token.isLP && tokenOut && !this._token.equals(tokenOut);
+
+    const pool = removeLiquidity
+      ? this._sdk.pools.getPoolByLPToken(this._token)
+      : undefined;
+
+    const withdrawToMode = removeLiquidity ? FarmToMode.INTERNAL : toMode;
 
     // FIXME
     const stems = result.crates.map((crate) => crate.stem.toString());
@@ -55,7 +77,8 @@ export class WithdrawFarmStep extends FarmStep {
         input: new this._sdk.farm.actions.WithdrawDeposit(
           this._token.address,
           stems[0],
-          amounts[0]
+          amounts[0],
+          withdrawToMode
         ),
       });
     } else {
@@ -63,11 +86,23 @@ export class WithdrawFarmStep extends FarmStep {
         input: new this._sdk.farm.actions.WithdrawDeposits(
           this._token.address,
           stems,
-          amounts
+          amounts,
+          withdrawToMode
         ),
       });
     }
 
+    if (removeLiquidity && pool) {
+      const removeStep = new this._sdk.farm.actions.RemoveLiquidityOneToken(
+        pool.address,
+        this._sdk.contracts.curve.registries.metaFactory.address,
+        tokenOut.address,
+        FarmFromMode.INTERNAL_TOLERANT,
+        toMode
+      );
+      this.pushInput({ input: removeStep });
+      console.debug('[WithdrawFarmStep][build] removing liquidity', removeStep);
+    }
     console.debug('[WithdrawFarmStep][build]: ', this.getFarmInput());
 
     return this;
