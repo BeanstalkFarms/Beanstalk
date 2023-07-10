@@ -320,6 +320,10 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  @media (max-width: 475px) {
+    width: 100%;
+    gap: 16px;
+  }
 `;
 
 const SwapInputContainer = styled.div`

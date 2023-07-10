@@ -8,6 +8,7 @@ import SlippagePanel from "./SlippagePanel";
 import { ChevronDown, Info } from "../Icons";
 import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
+import { BodyXS } from "../Typography";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE | "FORWARD_SWAP" | "REVERSE_SWAP";
@@ -340,4 +341,7 @@ const QuoteDetailLine = styled.div<QuoteDetailProps>`
 const QuoteContainer = styled.div`
   display: flex;
   flex-direction: column;
+  @media (max-width: 475px) {
+    ${BodyXS}
+  }
 `;
