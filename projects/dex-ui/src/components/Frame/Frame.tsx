@@ -6,7 +6,7 @@ import { ConnectKitButton } from "connectkit";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
-import { CustomToaster } from "../TxnToast/CustomToaster";
+import CustomToaster from "../TxnToast/CustomToaster";
 import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";

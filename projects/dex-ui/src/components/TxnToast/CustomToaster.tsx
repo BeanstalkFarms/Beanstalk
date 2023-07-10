@@ -1,19 +1,38 @@
-import React from "react";
-import { ToastBar, Toaster, resolveValue } from "react-hot-toast";
-import { FC } from "src/types";
+import React, { useEffect, useState } from "react";
+import { ToastBar, Toaster} from "react-hot-toast";
 import { Error, Success } from "../Icons";
 
-export const CustomToaster: FC<{}> = () => (
+function useMedia(query: string) {
+  const [matches, setMatches] = useState(window.matchMedia(query).matches);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addListener(listener);
+    return () => media.removeListener(listener);
+  }, [query, matches]);
+
+  return matches;
+}
+
+export default function CustomToaster() {
+  const mobile = useMedia("(max-width: 475px)");
+
+  return (
   <Toaster
-    containerStyle={{
-      // TODO: these need to be adjusted for mobile, also this is strange
-      position: "fixed",
+    containerStyle={
+      !mobile ? 
+      {position: "fixed",
       top: 136,
-      right: 24
-    }}
+      right: 24} : 
+      {}
+    }
     toastOptions={{
       duration: 4000,
-      position: "top-right",
+      position: mobile ? "bottom-center" : "top-right",
       iconTheme: {
         primary: "white",
         secondary: "black"
@@ -41,8 +60,8 @@ export const CustomToaster: FC<{}> = () => (
         display: "flex",
         justifyContent: "flex-start",
         alignItems: "center",
-        minWidth: 300,
-        maxWidth: 300,
+        minWidth: mobile ? "calc(100% - 12px)" : 300,
+        maxWidth: mobile ? "calc(100% - 12px)" : 300,
         minHeight: 34,
         borderRadius: 0,
         outline: "0.5px solid #000",
@@ -55,4 +74,4 @@ export const CustomToaster: FC<{}> = () => (
       return <ToastBar toast={t} />;
     }}
   </Toaster>
-);
+)};
