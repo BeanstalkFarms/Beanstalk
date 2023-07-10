@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { InfoBox } from "src/components/InfoBox";
-import { BodyCaps, LinksButtonText } from "../Typography";
+import { BodyCaps, LinksButtonText, TextNudge } from "../Typography";
 import { TokenLogo } from "../TokenLogo";
 import { FC } from "src/types";
 import { Token } from "@beanstalk/sdk";
@@ -19,14 +19,14 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
       <InfoBox.Header>
         <BoxHeader>My Liquidity</BoxHeader>
         <BoxHeaderAmount>
-          <TokenLogo token={lpToken} size={16} isLP />
-          {balance ? balance[lpToken.symbol].toHuman() : "-"}
+          <TokenLogo token={lpToken} size={16} mobileSize={16} isLP />
+          <TextNudge amount={1.5}>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</TextNudge>
         </BoxHeaderAmount>
       </InfoBox.Header>
       <InfoBox.Body>
         <InfoBox.Row>
           <InfoBox.Key>In my Wallet</InfoBox.Key>
-          <InfoBox.Value>{balance ? balance[lpToken.symbol].toHuman() : "-"}</InfoBox.Value>
+          <InfoBox.Value>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
         <InfoBox.Row>
           <InfoBox.Key>Deposited in the Silo</InfoBox.Key>

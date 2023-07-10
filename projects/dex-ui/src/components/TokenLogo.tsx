@@ -5,17 +5,17 @@ import { FC } from "src/types";
 import styled from "styled-components";
 
 type Props = {
-  size?: number;
+  size: number;
   mobileSize?: number;
   token?: Token;
   isLP?: boolean;
 };
 
-export const TokenLogo: FC<Props> = ({ size = 32, mobileSize = 32, token, isLP = false }) => {
+export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) => {
   const image = images[isLP ? "LP" : token?.symbol ?? "DEFAULT"] ?? images.DEFAULT;
 
   return (
-    <Container width={size} height={size} mobileWidth={mobileSize} mobileHeight={mobileSize} >
+    <Container width={size} height={size} mobileWidth={mobileSize || size} mobileHeight={mobileSize || size} >
       <img src={image} alt={`${token?.symbol} Logo`} />
     </Container>
   );

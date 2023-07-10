@@ -13,6 +13,9 @@ import { TabButton } from "src/components/TabButton";
 import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
 import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
 import { Log } from "src/utils/logger";
+import { BodyXS, TextNudge } from "src/components/Typography";
+import { ImageButton } from "src/components/ImageButton";
+import { ChevronDown } from "src/components/Icons";
 
 export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
@@ -33,6 +36,13 @@ export const Liquidity = () => {
     setSlippage(parseFloat(value));
   };
   // /Slippage-related
+
+  const [open, setOpen] = useState(false);
+  const toggle = useCallback(() => {
+    setOpen(!open);
+  },
+  [open]
+);
 
   useEffect(() => {
     const run = async () => {
@@ -59,9 +69,31 @@ export const Liquidity = () => {
         <SideBar id="sidebar">
           <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
           <LiquidityBox lpToken={well?.lpToken!} />
-          <LearnYield />
-          <LearnWellFunction name={wellFunctionName} />
-          <LearnPump />
+          <LearnMoreContainer>
+          <LearnMoreLabel onClick={toggle}>
+            <LearnMoreLine />
+            <LearnMoreText>
+              <TextNudge amount={2}>
+                Learn more about this Well
+              </TextNudge> 
+              <ImageButton
+                component={ChevronDown}
+                size={10}
+                rotate={open ? "180" : "0"}
+                onClick={toggle}
+                padding="0px"
+                alt="Click to expand and learn how to earn yield"
+                color={"#46B955"}
+              />
+            </LearnMoreText>
+            <LearnMoreLine />
+          </LearnMoreLabel>
+          <LearnMoreButtons open={open}>
+            <LearnYield />
+            <LearnWellFunction name={wellFunctionName} />
+            <LearnPump />
+          </LearnMoreButtons>
+        </LearnMoreContainer>
         </SideBar>
         <CenterBar id="centerbar">
           <Row gap={0}>
@@ -107,6 +139,10 @@ const ContentWrapper = styled.div`
   flex-direction: row;
   justify-content: center;
   gap: 48px;
+  @media (max-width: 475px) {
+    flex-direction: column;
+    gap: 16px;
+  }
 `;
 
 const SideBar = styled.div`
@@ -116,6 +152,11 @@ const SideBar = styled.div`
   width: calc(16 * 24px);
   min-width: calc(16 * 24px);
   gap: 24px;
+  @media (max-width: 475px) {
+    width: 100%;
+    min-width: 100%;
+    gap: 16px;
+  }
 `;
 
 const CenterBar = styled.div`
@@ -125,4 +166,58 @@ const CenterBar = styled.div`
   width: calc(17 * 24px);
   min-width: calc(17 * 24px);
   gap: 24px;
+  @media (max-width: 475px) {
+    width: 100%;
+    min-width: 100%;
+    gap: 16px;
+  }
 `;
+
+const LearnMoreContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  order: 1;
+  width: 100%;
+  @media (min-width: 475px) {
+    gap: 24px;
+    order: 0;
+  }
+`
+const LearnMoreLabel = styled.div`
+  display: flex;
+  flex-direction: row;
+  @media (min-width: 475px) {
+    display: none;
+  }
+`
+
+const LearnMoreLine = styled.div`
+  align-self: center;
+  flex-grow: 1;
+  border-top: 1px solid #9CA3AF;
+  flex-basis: 1fr;
+`
+
+const LearnMoreText = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  width: 195px;
+  color: #46B955;
+  padding-right: 8px;
+  padding-left: 8px;
+  ${BodyXS}
+  font-weight: 600;
+`
+
+const LearnMoreButtons = styled.div<{open: boolean}>`
+  ${(props) => props.open ? "display: flex" : "display: none"};
+  flex-direction: column;
+  gap: 16px;
+  @media (min-width: 475px) {
+    display: flex;
+    gap: 24px;
+  }
+`
