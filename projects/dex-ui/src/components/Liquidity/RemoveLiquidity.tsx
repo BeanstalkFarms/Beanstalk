@@ -513,6 +513,9 @@ const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   align-items: center;
   padding-left: 8px;
   padding-right: 8px;
+  @media (max-width: 475px) {
+    height: 48px;
+  }
 `;
 
 const TokenContainer = styled.div`

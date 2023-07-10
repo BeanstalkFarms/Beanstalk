@@ -11,6 +11,7 @@ import { BodyXS } from "../Typography";
 
 type ContainerProps = {
   width: string;
+  showBalance?: boolean;
 };
 
 type TokenInput = {
@@ -90,7 +91,7 @@ export const TokenInput: FC<TokenInput> = ({
   if (loading) return <LoadingContainer width={width} data-trace="true" />;
 
   return (
-    <Container width={width} id="token-input" onClick={handleClick} data-trace="true">
+    <Container width={width} id="token-input" onClick={handleClick} showBalance={showBalance} data-trace="true">
       <TopRow>
         <BasicInput
           id={id}
@@ -171,6 +172,10 @@ const Container = styled.div<ContainerProps>`
   }
   :hover {
     outline: 2px solid #46b955;
+  }
+  @media (max-width: 475px) {
+    height: ${(props) => props.showBalance ? `72px` : `48px`};
+    padding: 12px;
   }
 `;
 
