@@ -433,19 +433,21 @@ const WithdrawPropProvider: FC<{
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
         const destination = values.destination;
-        const amountOut = values.tokens[0].amountOut;
-
         const tokenIn = formData.token;
         const tokenOut = values.tokenOut;
+        const amountOut =
+          tokenOut && tokenOut.equals(tokenIn)
+            ? formData.amount
+            : formData.amountOut;
 
         const { plantAction } = plantAndDoX;
 
         const addPlant =
           plantAndDoX &&
           primaryActions?.includes(FormTxn.PLANT) &&
-          sdk.tokens.BEAN.equals(token);
+          sdk.tokens.BEAN.equals(tokenIn);
 
-        const baseAmount = token.amount((formData?.amount || 0).toString());
+        const baseAmount = tokenIn.amount((formData?.amount || 0).toString());
 
         const totalAmount =
           addPlant && plantAction
@@ -463,6 +465,8 @@ const WithdrawPropProvider: FC<{
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
           ...farmerBalances.deposits,
         ]);
+
+        console.log('baseAmount: ', baseAmount);
 
         withdrawTxn.build(
           baseAmount,
@@ -495,8 +499,7 @@ const WithdrawPropProvider: FC<{
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
         const { execute } = await txnBundler.bundle(
           withdrawTxn,
-          // we can pass in 0 here b/c WithdrawFarmStep already receives it's input amount in build();
-          token.amount(0),
+          totalAmount,
           values.settings.slippage
         );
 

@@ -66,6 +66,8 @@ export class WithdrawFarmStep extends FarmStep {
 
     const withdrawToMode = removeLiquidity ? FarmToMode.INTERNAL : toMode;
 
+    console.log('removeLIquidity: ', removeLiquidity);
+
     // FIXME
     const stems = result.crates.map((crate) => crate.stem.toString());
     const amounts = result.crates.map((crate) => crate.amount.blockchainString);
@@ -92,7 +94,7 @@ export class WithdrawFarmStep extends FarmStep {
       });
     }
 
-    if (removeLiquidity && pool) {
+    if (removeLiquidity && tokenOut && pool) {
       const removeStep = new this._sdk.farm.actions.RemoveLiquidityOneToken(
         pool.address,
         this._sdk.contracts.curve.registries.metaFactory.address,
