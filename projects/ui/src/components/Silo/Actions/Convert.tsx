@@ -45,7 +45,6 @@ import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 
-import useFarmerDepositCrateFromPlant from '~/hooks/farmer/useFarmerDepositCrateFromPlant';
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useAsyncMemo from '~/hooks/display/useAsyncMemo';
@@ -53,6 +52,7 @@ import AddPlantTxnToggle from '~/components/Common/Form/FormTxn/AddPlantTxnToggl
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
+import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 
 // -----------------------------------------------------------------------
 
@@ -90,12 +90,14 @@ const ConvertForm: FC<
     /** other */
     sdk: BeanstalkSDK;
     conversion: ConvertDetails;
+    plantAndDoX: ReturnType<typeof usePlantAndDoX>;
   }
 > = ({
   tokenList,
   siloBalances,
   handleQuote,
   currentSeason,
+  plantAndDoX,
   sdk,
   // Formik
   values,
@@ -107,7 +109,7 @@ const ConvertForm: FC<
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
 
-  const { crate: plantCrate } = useFarmerDepositCrateFromPlant();
+  const plantCrate = plantAndDoX?.crate?.bn;
 
   /// Extract values from form state
   const tokenIn = values.tokens[0].token; // converting from token
@@ -129,9 +131,10 @@ const ConvertForm: FC<
       sdk.tokens.BEAN.equals(tokenIn)
   );
 
-  const totalAmountIn = isUsingPlanted
-    ? (amountIn || ZERO_BN).plus(plantCrate.asBN.amount)
-    : amountIn;
+  const totalAmountIn =
+    isUsingPlanted && plantCrate
+      ? (amountIn || ZERO_BN).plus(plantCrate.amount)
+      : amountIn;
 
   /// Derived form state
   let isReady = false;
@@ -268,7 +271,9 @@ const ConvertForm: FC<
           }
           params={quoteHandlerParams}
         />
-        {!canConvert && tokenOut && maxAmountIn ? null : <AddPlantTxnToggle />}
+        {!canConvert && tokenOut && maxAmountIn ? null : (
+          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} />
+        )}
 
         {/* User Input: destination token */}
         {depositedAmount.gt(0) ? (
@@ -490,6 +495,9 @@ const ConvertPropProvider: FC<{
         if (!farmerBalances?.deposits) {
           throw new Error('No balances found');
         }
+        const { plantAction } = plantAndDoX;
+
+        const includePlant = !!(isConvertingPlanted && plantAction);
 
         const result = await ConvertFarmStep._handleConversion(
           sdk,
@@ -499,7 +507,7 @@ const ConvertPropProvider: FC<{
           tokenIn.amount(_amountIn.toString()),
           season.toNumber(),
           slippage,
-          isConvertingPlanted ? plantAndDoX : undefined
+          includePlant ? plantAction : undefined
         );
 
         setConversion(result.conversion);
@@ -540,8 +548,11 @@ const ConvertPropProvider: FC<{
           success: 'Convert successful.',
         });
 
+        const { plantAction } = plantAndDoX;
+
         const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
-        const isPlanting = values.farmActions.primary?.includes(FormTxn.PLANT);
+        const isPlanting =
+          plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
 
         const convertTxn = new ConvertFarmStep(
           sdk,
@@ -553,7 +564,7 @@ const ConvertPropProvider: FC<{
         const { getEncoded, minAmountOut } = await convertTxn.handleConversion(
           amountIn,
           slippage,
-          isPlanting ? plantAndDoX : undefined
+          isPlanting ? plantAction : undefined
         );
 
         convertTxn.build(getEncoded, minAmountOut);
@@ -602,17 +613,17 @@ const ConvertPropProvider: FC<{
       }
     },
     [
-      middleware,
-      account,
-      farmerBalances,
       sdk,
       season,
-      plantAndDoX,
+      account,
       txnBundler,
+      middleware,
+      plantAndDoX,
+      initialValues,
+      farmerBalances,
       refetch,
       refetchPools,
       refetchFarmerBalances,
-      initialValues,
     ]
   );
 
@@ -634,6 +645,7 @@ const ConvertPropProvider: FC<{
             currentSeason={season}
             sdk={sdk}
             conversion={conversion}
+            plantAndDoX={plantAndDoX}
             {...formikProps}
           />
         </>

@@ -11,8 +11,11 @@ export default function useFarmerSiloBalancesAsync(token: Token | undefined) {
   const account = useAccount();
 
   const [farmerBalances, refetchFarmerBalances] = useAsyncMemo(async () => {
-    if (!account || !token) return undefined;
-    console.debug(`[Transfer] Fetching silo balances for SILO:${token.symbol}`);
+    if (!account || !token || !sdk.tokens.siloWhitelist.has(token))
+      return undefined;
+    console.debug(
+      `[useFarmerSiloBalancesAsync] Fetching silo balances for SILO:${token.symbol}`
+    );
     return sdk.silo.getBalance(
       token,
       account,

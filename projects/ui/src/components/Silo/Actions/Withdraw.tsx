@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Box, Divider, Stack } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
@@ -10,19 +10,22 @@ import {
   TokenValue,
   BeanstalkSDK,
   FarmToMode,
+  FarmFromMode,
+  StepGenerator,
 } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
 import {
   TxnPreview,
-  TokenInputField,
   TokenAdornment,
   TxnSeparator,
   SmartSubmitButton,
   FormStateNew,
   FormTxnsFormState,
+  SettingInput,
+  TxnSettings,
 } from '~/components/Common/Form';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { displayFullBN, tokenValueToBN } from '~/util';
+import { displayFullBN, displayTokenAmount, tokenValueToBN } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
 import { AppState } from '~/state';
 import { ActionType } from '~/util/Actions';
@@ -42,6 +45,14 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
+import useToggle from '~/hooks/display/useToggle';
+import PillRow from '~/components/Common/Form/PillRow';
+import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
+import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
+import TokenIcon from '~/components/Common/TokenIcon';
+import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
+import copy from '~/constants/copy';
 
 // -----------------------------------------------------------------------
 
@@ -49,11 +60,17 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
 const toBN = tokenValueToBN;
 
+type WithdrawQuoteHandlerParams = {
+  destination: FarmToMode | undefined;
+};
+
 type WithdrawFormValues = FormStateNew &
   FormTxnsFormState & {
     settings: {
-      destination: FarmToMode;
+      slippage: number;
     };
+    destination: FarmToMode | undefined;
+    tokenOut: ERC20Token | undefined;
   };
 
 const WithdrawForm: FC<
@@ -63,7 +80,7 @@ const WithdrawForm: FC<
     withdrawSeasons: BigNumber;
     season: BigNumber;
     sdk: BeanstalkSDK;
-    plantAndDoX: PlantAndDoX;
+    plantAndDoX: PlantAndDoX | undefined;
   }
 > = ({
   // Formik
@@ -76,8 +93,53 @@ const WithdrawForm: FC<
   season,
   sdk,
   plantAndDoX,
+  setFieldValue,
 }) => {
-  const { BEAN } = sdk.tokens;
+  const pool = useMemo(
+    () => sdk.pools.getPoolByLPToken(whitelistedToken),
+    [sdk.pools, whitelistedToken]
+  );
+
+  const claimableTokens = useMemo(
+    () => [
+      whitelistedToken,
+      ...((whitelistedToken.isLP && pool?.tokens) || []),
+    ],
+    [pool, whitelistedToken]
+  );
+
+  const handleQuote = useCallback<
+    QuoteHandlerWithParams<WithdrawQuoteHandlerParams>
+  >(
+    async (_tokenIn, _amountIn, _tokenOut, { destination }) => {
+      const amountIn = _tokenIn.amount(_amountIn.toString());
+
+      const { curve } = sdk.contracts;
+
+      if (!pool || !_tokenIn.isLP || !_tokenOut)
+        return {
+          amountOut: ZERO_BN,
+          steps: [],
+        };
+      const work = sdk.farm.create();
+      work.add(
+        new sdk.farm.actions.RemoveLiquidityOneToken(
+          pool.address,
+          curve.registries.metaFactory.address,
+          _tokenOut.address,
+          FarmFromMode.INTERNAL,
+          destination || FarmToMode.INTERNAL
+        )
+      );
+      const estimate = await work.estimate(amountIn);
+
+      return {
+        amountOut: tokenValueToBN(_tokenOut.fromBlockchain(estimate)),
+        steps: work.generators as StepGenerator[],
+      };
+    },
+    [pool, sdk.contracts, sdk.farm]
+  );
 
   // Input props
   const InputProps = useMemo(
@@ -94,13 +156,25 @@ const WithdrawForm: FC<
       sdk.tokens.BEAN.equals(whitelistedToken)
   );
 
+  const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
+
+  const handleSelectTokens = useCallback(
+    (_tokens: Set<Token>) => {
+      const _token = Array.from(_tokens)[0];
+      setFieldValue('tokenOut', _token);
+    },
+    [setFieldValue]
+  );
+
   // Results
   const withdrawResult = useMemo(() => {
-    const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
+    const amount = sdk.tokens.BEAN.amount(
+      values.tokens[0]?.amount?.toString() || '0'
+    );
     const crates = siloBalance?.deposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
-    if (isUsingPlant && plantAndDoX.getAmount().lte(0)) return null;
+    if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
 
     return WithdrawFarmStep.calculateWithdraw(
       sdk.silo.siloWithdraw,
@@ -111,7 +185,7 @@ const WithdrawForm: FC<
       isUsingPlant ? plantAndDoX : undefined
     );
   }, [
-    BEAN,
+    sdk.tokens.BEAN,
     isUsingPlant,
     plantAndDoX,
     sdk.silo.siloWithdraw,
@@ -124,29 +198,83 @@ const WithdrawForm: FC<
   /// derived
   const depositedBalance = siloBalance?.amount;
 
-  const isReady = withdrawResult && !withdrawResult.amount.lt(0);
+  const isReady =
+    withdrawResult && !withdrawResult.amount.lt(0) && values.destination;
+
+  const isLPReady = whitelistedToken.isLP
+    ? values.tokenOut !== undefined
+    : true;
+
+  const removingLiquidity =
+    whitelistedToken.isLP &&
+    values.tokenOut &&
+    !whitelistedToken.equals(values.tokenOut);
 
   const disabledActions = useMemo(
     () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
     [whitelistedToken.isUnripe]
   );
 
+  const quoteHandlerParams = useMemo(
+    () => ({
+      quoterSettings: {
+        ignoreSameToken: true,
+        onReset: () => ({ amountOut: ZERO_BN }),
+      },
+      params: {
+        destination: values.destination || FarmToMode.INTERNAL,
+      },
+    }),
+    [values.destination]
+  );
+
+  const amountOut = values.tokens[0]?.amountOut;
+
   return (
     <Form autoComplete="off" noValidate>
       {/* Form Content */}
       <Stack gap={1}>
         {/* Input Field */}
-        <TokenInputField
-          name="tokens.0.amount"
+        <TokenQuoteProviderWithParams<WithdrawQuoteHandlerParams>
+          name="tokens.0"
           token={whitelistedToken}
-          disabled={!depositedBalance || depositedBalance.eq(0)}
+          state={values.tokens[0]}
+          tokenOut={values.tokenOut || values.tokens[0].token}
+          handleQuote={handleQuote}
           balance={toBN(depositedBalance || TokenValue.ZERO) || ZERO_BN}
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
+          {...quoteHandlerParams}
         />
-        {/** Setting: Destination  */}
-        <FarmModeField name="destination" />
-        <AddPlantTxnToggle />
+        <Stack>
+          {/** Setting: Destination  */}
+          <FarmModeField name="destination" />
+          {/** Token Out (If LP) */}
+          <>
+            {whitelistedToken.isLP ? (
+              <PillRow
+                isOpen={isTokenSelectVisible}
+                label="Withdraw LP as"
+                onClick={showTokenSelect}
+              >
+                {values.tokenOut && <TokenIcon token={values.tokenOut} />}
+                <Typography variant="body1">
+                  {values.tokenOut?.symbol || 'Select Output'}
+                </Typography>
+              </PillRow>
+            ) : null}
+            <TokenSelectDialogNew
+              open={isTokenSelectVisible}
+              handleClose={hideTokenSelect}
+              handleSubmit={handleSelectTokens}
+              selected={values.tokenOut ? [values.tokenOut] : []}
+              balances={undefined} // hide balances from right side of selector
+              tokenList={claimableTokens as Token[]}
+              mode={TokenSelectMode.SINGLE}
+            />
+          </>
+        </Stack>
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -197,6 +325,15 @@ const WithdrawForm: FC<
                       amount: toBN(withdrawResult.amount),
                       token: getNewToOldToken(whitelistedToken),
                     },
+                    removingLiquidity && amountOut && values.tokenOut
+                      ? {
+                          type: ActionType.SWAP,
+                          amountIn: toBN(withdrawResult.amount),
+                          tokenIn: getNewToOldToken(whitelistedToken),
+                          amountOut: toBN(amountOut),
+                          tokenOut: getNewToOldToken(values.tokenOut),
+                        }
+                      : undefined,
                     {
                       type: ActionType.UPDATE_SILO_REWARDS,
                       stalk: toBN(withdrawResult.stalk.mul(-1)),
@@ -217,7 +354,7 @@ const WithdrawForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={!isReady || isSubmitting}
+          disabled={!isReady || !isLPReady || isSubmitting}
           type="submit"
           variant="contained"
           color="primary"
@@ -257,20 +394,24 @@ const WithdrawPropProvider: FC<{
   const middleware = useFormMiddleware();
   const initialValues: WithdrawFormValues = useMemo(
     () => ({
+      settings: {
+        slippage: 0.1,
+      },
       tokens: [
         {
           token: token,
           amount: undefined,
+          amountOut: undefined,
+          quoting: false,
         },
       ],
+      destination: undefined,
+      tokenOut: undefined,
       farmActions: {
         preset: sdk.tokens.BEAN.equals(token) ? 'plant' : 'noPrimary',
         primary: undefined,
         secondary: undefined,
         implied: [FormTxn.MOW],
-      },
-      settings: {
-        destination: FarmToMode.INTERNAL,
       },
     }),
     [sdk.tokens.BEAN, token]
@@ -291,31 +432,48 @@ const WithdrawPropProvider: FC<{
 
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
-        const destination = values.settings.destination;
+        const destination = values.destination;
+        const tokenIn = formData.token;
+        const tokenOut = values.tokenOut;
+        const amountOut =
+          tokenOut && tokenOut.equals(tokenIn)
+            ? formData.amount
+            : formData.amountOut;
+
+        const { plantAction } = plantAndDoX;
 
         const addPlant =
+          plantAndDoX &&
           primaryActions?.includes(FormTxn.PLANT) &&
-          sdk.tokens.BEAN.equals(token);
+          sdk.tokens.BEAN.equals(tokenIn);
 
-        const baseAmount = token.amount((formData?.amount || 0).toString());
+        const baseAmount = tokenIn.amount((formData?.amount || 0).toString());
 
-        const totalAmount = addPlant
-          ? baseAmount.add(plantAndDoX.getAmount())
-          : baseAmount;
+        const totalAmount =
+          addPlant && plantAction
+            ? baseAmount.add(plantAction.getAmount())
+            : baseAmount;
 
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
         if (!destination) {
           throw new Error("Missing 'Destination' setting.");
+        }
+        if (tokenIn.isLP && !tokenOut) {
+          throw new Error('Missing Output Token');
         }
 
         const withdrawTxn = new WithdrawFarmStep(sdk, token, [
           ...farmerBalances.deposits,
         ]);
 
+        console.log('baseAmount: ', baseAmount);
+
         withdrawTxn.build(
           baseAmount,
           season.toNumber(),
-          addPlant ? plantAndDoX : undefined
+          destination,
+          tokenOut,
+          addPlant ? plantAction : undefined
         );
 
         if (!withdrawTxn.withdrawResult) {
@@ -328,19 +486,21 @@ const WithdrawPropProvider: FC<{
           token.displayDecimals
         );
 
+        const messageAmount =
+          values.tokenOut && amountOut
+            ? displayTokenAmount(amountOut, values.tokenOut)
+            : displayTokenAmount(totalAmount, token);
+
         txToast = new TransactionToast({
-          loading: `Withdrawing ${withdrawAmtStr} ${token.name} to your ${
-            destination === FarmToMode.EXTERNAL ? 'wallet' : 'Farm balance'
-          }...`,
-          success: `Withdraw successful.`,
+          loading: `Withdrawing ${withdrawAmtStr} ${token.name} from the Silo...`,
+          success: `Withdraw successful. Added ${messageAmount} to your ${copy.MODES[destination]}`,
         });
 
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
         const { execute } = await txnBundler.bundle(
           withdrawTxn,
-          // we can pass in 0 here b/c WithdrawFarmStep already receives it's input amount in build();
-          token.amount(0),
-          0.1
+          totalAmount,
+          values.settings.slippage
         );
 
         const txn = await execute();
@@ -348,10 +508,11 @@ const WithdrawPropProvider: FC<{
         txToast.confirming(txn);
         const receipt = await txn.wait();
 
-        await refetch(actionsPerformed, { farmerSilo: true }, [
-          refetchSilo,
-          fetchFarmerBalances,
-        ]);
+        await refetch(
+          actionsPerformed,
+          { farmerSilo: true, farmerBalances: true },
+          [refetchSilo, fetchFarmerBalances]
+        );
 
         txToast.success(receipt);
         formActions.resetForm();
@@ -366,14 +527,14 @@ const WithdrawPropProvider: FC<{
       }
     },
     [
-      middleware,
-      account,
-      farmerBalances?.deposits,
       sdk,
       token,
-      plantAndDoX,
       season,
+      account,
+      middleware,
       txnBundler,
+      plantAndDoX,
+      farmerBalances?.deposits,
       refetch,
       refetchSilo,
       fetchFarmerBalances,
@@ -383,15 +544,26 @@ const WithdrawPropProvider: FC<{
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
       {(formikProps) => (
-        <WithdrawForm
-          token={token}
-          withdrawSeasons={withdrawSeasons}
-          siloBalance={farmerBalances}
-          season={season}
-          sdk={sdk}
-          plantAndDoX={plantAndDoX}
-          {...formikProps}
-        />
+        <>
+          {token.isLP && (
+            <TxnSettings placement="form-top-right">
+              <SettingInput
+                name="settings.slippage"
+                label="Slippage Tolerance"
+                endAdornment="%"
+              />
+            </TxnSettings>
+          )}
+          <WithdrawForm
+            token={token}
+            withdrawSeasons={withdrawSeasons}
+            siloBalance={farmerBalances}
+            season={season}
+            sdk={sdk}
+            plantAndDoX={plantAndDoX.plantAction}
+            {...formikProps}
+          />
+        </>
       )}
     </Formik>
   );
