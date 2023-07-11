@@ -29,7 +29,6 @@ const lineChartProps: Partial<LineChartProps> = {
 
 const Volume: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
   const season = useSeason();
-  console.log(SeasonalVolumeDocument);
   return (
     <SeasonPlot
       document={SeasonalVolumeDocument}
