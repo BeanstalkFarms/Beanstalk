@@ -309,7 +309,7 @@ contract SiloExit is ReentrancyGuard {
     function stemTipForToken(address token)
         public
         view
-        returns (int128 _stemTip)
+        returns (int96 _stemTip)
     {
         _stemTip = LibTokenSilo.stemTipForToken(
             token
@@ -323,7 +323,7 @@ contract SiloExit is ReentrancyGuard {
     function seasonToStem(address token, uint32 season)
         public
         view
-        returns (int128 stem)
+        returns (int96 stem)
     {
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
