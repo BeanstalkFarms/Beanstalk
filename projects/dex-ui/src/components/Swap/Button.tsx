@@ -43,8 +43,8 @@ const StyledButton = styled.button<ButtonProps>`
   }};
   height: 48px;
   border: none;
-  outline: ${({ secondary }) => (secondary ? "0.5px solid #9CA3AF" : "0px")};
-  outline-offset: ${({ secondary }) => (secondary ? "-0.5px" : "0px")};
+  outline: ${({ secondary }) => (secondary ? "0.5px solid #9CA3AF" : "0.5px solid #000")};
+  outline-offset: -0.5px;
   color: ${({ secondary }) => (secondary ? "#000" : "#FFF")};
   width: ${({ $width }) => $width};
 
@@ -65,5 +65,6 @@ const StyledButton = styled.button<ButtonProps>`
     ${BodyXS}
     font-weight: 600;
     padding: 8px 8px;
+    height: 40px;
   }
 `;

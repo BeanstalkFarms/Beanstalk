@@ -88,6 +88,32 @@ export const Well = () => {
   const goSwap = () =>
     well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null;
 
+  // Code below detects if the component with the Add/Remove Liq + Swap buttons is sticky
+  const [isSticky, setIsSticky] = useState(false);
+
+  const callbackFunction = (entries: any) => {
+    const [ entry ] = entries
+    setIsSticky(!entry.isIntersecting) // Not sure why inverting isIntersecting gives me the desired behaviour
+  }
+
+  const containerRef = useCallback((node: any) => {
+    if (node === null) return
+
+    const options = {
+      root: null,
+      rootMargin: "56px",
+      threshold:1.0
+    }
+
+    const observer = new IntersectionObserver(callbackFunction, options)
+    observer.observe(node)
+    
+    return () => {
+      observer.unobserve(node)
+    }
+  }, [])
+  // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
+
   if (loading)
     return (
       <Page>
@@ -142,7 +168,8 @@ export const Well = () => {
           {tab === 1 && <OtherSection well={well!} />}
         </BottomContainer>
         <ColumnBreak />
-        <LiquiditySwapButtons gap={24} mobileGap={"8px"}>
+        <StickyDetector ref={containerRef} />
+        <LiquiditySwapButtons gap={24} mobileGap={isSticky ? "0px" : "8px"} sticky={isSticky}>
           <Item stretch>
             <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
           </Item>
@@ -183,11 +210,8 @@ export const Well = () => {
   );
 };
 
-
 const leftColumnWidth = 940
 const rightColumnWidth = 400
-
-
 
 const ContentWrapper = styled.div`
   // outline: 1px solid red;
@@ -268,12 +292,31 @@ const ActivityOtherButtons = styled(Row)`
   }
 `
 
-const LiquiditySwapButtons = styled(Row)`
+const StickyDetector = styled.div`
   width: 100%;
+  position: sticky;
+  height: 1px;
+  background-color: transparent;
+  margin-bottom: -24px;
   order: 2;
+  @media (min-width: 475px) {
+    display: none;
+  }
+`
+
+const LiquiditySwapButtons = styled(Row)<{sticky?: boolean}>`
+  width: ${(props) => props.sticky ? '100vw' : '100%'};
+  margin-left: ${(props) => props.sticky ? '-12px' : '0px'};
+  order: 2;
+  position: sticky;
+  top: 0px;
+  z-index: 10;
+  transition: all 0.3s ease-in-out;
   @media (min-width: 475px) {
     margin-top: 48px;
     width: ${rightColumnWidth}px;
+    position: relative;
+    margin-left: 0px;
     order: 0;
   }
 `
