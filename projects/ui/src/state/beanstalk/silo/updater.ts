@@ -33,7 +33,7 @@ export const useFetchBeanstalkSilo = () => {
   /// Handlers
   const fetch = useCallback(async () => {
     const prevSeasonBlockTag = parseInt(sunriseBlock.minus(2).toString(), 10);
-  
+
     const [
       // 0
       stalkTotal,
@@ -177,7 +177,7 @@ export const useFetchBeanstalkSilo = () => {
         withdrawSeasons: ZERO_BN,
       })
     );
-  }, [sdk, dispatch, Bean.address]);
+  }, [sdk, dispatch, Bean.address, sunriseBlock]);
 
   const clear = useCallback(() => {
     console.debug('[beanstalk/silo/useBeanstalkSilo] CLEAR');
