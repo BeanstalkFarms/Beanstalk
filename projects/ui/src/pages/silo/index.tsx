@@ -307,7 +307,10 @@ const RewardsBar: FC<{
 
   const quoteGas = useCallback(async () => {
     const farm = buildWorkflow(claimState);
-    if (!farm) throw new Error('No workflow');
+    if (!farm) {
+      console.error("No workflow");
+      return;
+    }
 
     if (farm.length === 0) return;
 
