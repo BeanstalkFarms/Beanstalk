@@ -20,9 +20,8 @@ export type QuotePrepareResult = {
 
 export type QuoteResult = {
   amount: TokenValue;
-  estimate: TokenValue;
+  amountWithSlippage: TokenValue;
   gas: TokenValue;
-
   doSwap: (overrides?: TxOverrides) => Promise<ContractTransaction>;
   doApproval?: (overrides?: TxOverrides) => Promise<ContractTransaction>;
 };
@@ -114,7 +113,6 @@ export class Quote {
     let prevQuoteWSlippage: TokenValue = amount;
     let prevQuoteGasEstimate: TokenValue = TokenValue.ZERO;
     for (const step of steps) {
-      // console.log("Quote Step:", step.fromToken.symbol, " -> ", step.toToken.symbol);
       const { quote, quoteWithSlippage, quoteGasEstimate } = await step.quote(
         isMultiReverse ? prevQuoteWSlippage : prevQuote,
         direction,
@@ -131,7 +129,7 @@ export class Quote {
 
     return {
       amount: prevQuote,
-      estimate: prevQuoteWSlippage,
+      amountWithSlippage: prevQuoteWSlippage,
       gas: prevQuoteGasEstimate,
       doApproval,
       doSwap

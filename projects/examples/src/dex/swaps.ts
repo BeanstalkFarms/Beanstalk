@@ -36,15 +36,15 @@ async function go() {
 
   slippage = 0.1;
 
-  await swapOne(WETH, BEAN, builder);
-  await swapOne(ETH, WETH, builder);
-  await swapOne(WETH, ETH, builder);
-  await swapOneReverse(ETH, WETH, builder);
-  await swapOneReverse(WETH, BEAN, builder);
+  // await swapOne(WETH, BEAN, builder);
+  // await swapOne(ETH, WETH, builder);
+  // await swapOne(WETH, ETH, builder);
+  // await swapOneReverse(ETH, WETH, builder);
+  // await swapOneReverse(WETH, BEAN, builder);
   await swapMulti(WETH, USDC, builder);
-  await swapMulti(ETH, USDC, builder);
-  await swapMultiReverse(WETH, DAI, builder);
-  await swapMultiReverse(ETH, USDC, builder);
+  // await swapMulti(ETH, USDC, builder);
+  // await swapMultiReverse(WETH, DAI, builder);
+  // await swapMultiReverse(ETH, USDC, builder);
 }
 
 async function swapOne(token1: Token, token2: Token, builder: SwapBuilder) {
