@@ -154,14 +154,14 @@ export class Quote {
     const step = this.steps[0];
     const { contract, method, parameters } = step.swapSingle(this.amountUsedForQuote, step.quoteResultWithSlippage!, recipient, deadline);
 
-    const doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+    const doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
       // If starting with ETH and this is a single swap, it means we're just wrapping it
       // so we can infer that `parameters[0]` are the overrides which include {value} returned
       // by step.swapSingle(). We combine with user provided overrides
       if (this.fromToken.symbol === "ETH") {
         parameters[0] = { ...overrides, ...(parameters[0] as Object) };
       } else {
-        parameters.push(overrides ?? {});
+        parameters.push(overrides);
       }
       // @ts-ignore
       return contract[method](...parameters);
@@ -229,7 +229,7 @@ export class Quote {
         [wrapEth, wethTransfer, ...shiftOps],
         this.amountUsedForQuote.toBlockchain()
       ]);
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         const overrideOptions = { ...overrides, value: this.amountUsedForQuote.toBigNumber() };
         return this.depot.farm([pipe], overrideOptions);
       };
@@ -250,7 +250,7 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [shiftOps, 0]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         return this.depot.farm([transferToFirstWell, pipe], overrides);
       };
     }
@@ -326,7 +326,7 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[wrapEth, ...operations], ethAmount.toBigNumber()]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         const overrideOptions = { ...overrides, value: ethAmount.toBigNumber() };
         return this.depot.farm([pipe], overrideOptions);
       };
@@ -347,8 +347,8 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [operations, 0]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
-        return this.depot.farm([transferToPipeline, pipe]);
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToPipeline, pipe], overrides);
       };
     }
 

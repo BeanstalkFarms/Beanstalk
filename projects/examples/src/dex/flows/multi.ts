@@ -70,7 +70,7 @@ async function main() {
   await ax.wait();
   console.log("Approved");
 
-  const tx = await depot.farm([transfer, pipe]);
+  const tx = await depot.farm([transfer, pipe], {});
   await tx.wait();
 
   // console.log(tx);
