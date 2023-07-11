@@ -126,8 +126,6 @@ const RewardsBar: FC<{
     [balances, getBDV, sdk]
   );
 
-  console.log(enrootData);
-
   const tokens = useMemo(
     () => [...sdk.tokens.siloWhitelist],
     [sdk.tokens.siloWhitelist]

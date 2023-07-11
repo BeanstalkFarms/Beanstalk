@@ -466,8 +466,6 @@ const WithdrawPropProvider: FC<{
           ...farmerBalances.deposits,
         ]);
 
-        console.log('baseAmount: ', baseAmount);
-
         withdrawTxn.build(
           baseAmount,
           season.toNumber(),

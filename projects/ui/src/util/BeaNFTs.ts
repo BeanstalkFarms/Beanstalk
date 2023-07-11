@@ -74,7 +74,6 @@ export async function loadNFTs(account: string) {
     );
 
     const ownedNFTsJSON = await ownedNFTs.json();
-    console.log('OWNED NFTS', ownedNFTsJSON);
 
     if (ownedNFTsJSON.data.beaNFTUser) {
       if (ownedNFTsJSON.data.beaNFTUser.genesis) {
@@ -111,7 +110,7 @@ export async function loadNFTs(account: string) {
       }
     }
   } catch (e) {
-    console.log('BEANFT - ERROR FETCHING DATA FROM SUBGRAPH - ', e);
+    console.error(e)
   }
 
   return {
