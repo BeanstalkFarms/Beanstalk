@@ -1,30 +1,32 @@
 import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { BodyL, BodyXS } from "../Typography";
+import { BodyL, BodyXS, H2 } from "../Typography";
 import { Link } from "react-router-dom";
 
 type Props = {
   title: string;
-  fontweight?: string;
+  fontWeight?: string;
   parent?: {
     title: string;
     path: string;
   };
   center?: boolean;
+  largeOnMobile?: boolean;
 };
 
-export const Title: FC<Props> = ({ title, parent, fontweight, center }) => (
+export const Title: FC<Props> = ({ title, parent, fontWeight, center, largeOnMobile }) => (
   <Container center={center}>
     <TitleContainer center={center}>
       {parent && <ParentText to={parent.path}>{parent.title} &gt;&nbsp;</ParentText>}
-      <TitleText fontweight={fontweight}>{title}</TitleText>
+      <TitleText fontWeight={fontWeight} largeOnMobile={largeOnMobile}>{title}</TitleText>
     </TitleContainer>
   </Container>
 );
 
 type TitleProps = {
-  fontweight?: string;
+  fontWeight?: string;
+  largeOnMobile?: boolean;
 };
 
 type TitleContainerProps = {
@@ -47,10 +49,10 @@ const TitleContainer = styled.div<TitleContainerProps>`
 
 const TitleText = styled.div<TitleProps>`
   ${BodyL}
-  ${(props) => props.fontweight && `font-weight: ${props.fontweight}`};
+  ${(props) => props.fontWeight && `font-weight: ${props.fontWeight}`};
   text-transform: uppercase;
   @media (max-width: 475px) {
-    ${BodyXS}
+    ${({largeOnMobile}) => largeOnMobile ? `${H2}` : `${BodyXS}`}
   }
 `;
 const ParentText = styled(Link)`

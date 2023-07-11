@@ -30,5 +30,6 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
     height: 40px;
     font-weight: ${({ bold, active }) => (bold || active ? "600" : "normal")};
     padding: 8px 8px;
+    line-height: 18px;
   }
 `;

@@ -169,8 +169,8 @@ export const Wells = () => {
 
   return (
     <Page>
-      <Title fontweight={"600"} title="WELLS" />
-      <TabRow gap={24}>
+      <Title fontWeight={"600"} title="WELLS" largeOnMobile />
+      <StyledRow gap={24} mobileGap={"0px"}>
         <Item stretch>
           <TabButton onClick={() => showTab(0)} active={tab === 0} stretch bold justify hover>
             <span>View Wells</span>
@@ -181,7 +181,7 @@ export const Wells = () => {
             <span>My Liquidity Positions</span>
           </TabButton>
         </Item>
-      </TabRow>
+      </StyledRow>
       <Table>
         {tab === 0 ? (
           <THead>
@@ -238,6 +238,16 @@ const MobileTable = styled(Row)`
     display: none;
   }
 `;
+
+const StyledRow = styled(TabRow)`
+  @media (max-width: 475px) {
+    position: fixed;
+    width: 100vw;
+    margin-left: -12px;
+    margin-bottom: -2px;
+    top: calc(100% - 40px);
+  }
+`
 
 const MobileContainer = styled(Td)`
   padding: 8px 16px;
