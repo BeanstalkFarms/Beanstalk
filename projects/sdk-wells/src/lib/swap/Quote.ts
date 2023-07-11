@@ -9,6 +9,7 @@ import { ContractTransaction } from "ethers";
 import { deadlineSecondsToBlockchain } from "src/lib/utils";
 import { WrapEthStep } from "./WrapStep";
 import { Clipboard } from "src/lib/clipboard/clipboard";
+import { UnWrapEthStep } from "./UnWrapStep";
 
 const DEFAULT_DEADLINE = 60 * 5; // in seconds
 
@@ -60,11 +61,12 @@ export class Quote {
         this.steps.push(new WrapEthStep(sdk, this.weth9, from, to));
         continue;
       }
-      // TODO: add this once pipeline supports unwrapping ETH
-      // if (from.symbol === 'WETH' && to.symbol === 'ETH') {
-      //   this.steps.push(new UnWrapEthStep(from, to));
-      //   continue;
-      // }
+
+      if (from.symbol === "WETH" && to.symbol === "ETH") {
+        this.steps.push(new UnWrapEthStep(sdk, this.weth9, from, to));
+        continue;
+      }
+
       this.steps.push(new SwapStep(well, from, to));
     }
 
@@ -179,7 +181,7 @@ export class Quote {
 
     // Should never happen but sanity check
     if (this.direction !== direction) throw new Error("Direction of last quote does not match expected direction of swap");
-    const steps = this.steps;
+    const steps = [...this.steps];
 
     // If we start with ETH, remove the first step to wrap it, that only works for a single-step flow. We will build a custom flow here
     // to handle wrapping ETH as part of a pipeline call.
@@ -190,8 +192,8 @@ export class Quote {
     const shiftOps = [];
 
     for (let i = 0; i < steps.length; i++) {
-      const step = this.steps[i];
-      const nextRecipient = this.steps[i + 1]?.well.contract.address ?? recipient;
+      const step = steps[i];
+      const nextRecipient = steps[i + 1]?.well.contract.address ?? recipient;
 
       const { contract, method, parameters } = step.swapMany(nextRecipient, step.quoteResultWithSlippage!);
 
@@ -221,7 +223,7 @@ export class Quote {
       };
       const wethTransfer = {
         target: this.weth9.address,
-        callData: this.weth9.interface.encodeFunctionData("transfer", [this.steps[0].well.address, this.amountUsedForQuote.toBigNumber()]),
+        callData: this.weth9.interface.encodeFunctionData("transfer", [steps[0].well.address, this.amountUsedForQuote.toBigNumber()]),
         clipboard: Clipboard.encode([])
       };
 
@@ -242,7 +244,7 @@ export class Quote {
     else {
       const transferToFirstWell = this.depot.interface.encodeFunctionData("transferToken", [
         this.fromToken.address,
-        this.steps[0].well.address,
+        steps[0].well.address,
         this.amountUsedForQuote.toBigNumber(),
         0,
         0
@@ -268,7 +270,7 @@ export class Quote {
     if (this.direction !== direction) throw new Error("Direction of last quote does not match expected direction of swap");
 
     const pipelineAddress = addresses.PIPELINE.get(this.sdk.chainId);
-    const steps = this.steps;
+    const steps = [...this.steps];
 
     // If we start with ETH, remove the first step to wrap it, that only works for a single-step flow. We will build a custom flow here
     // to handle wrapping ETH as part of a pipeline call.
@@ -280,8 +282,8 @@ export class Quote {
     const operations = [];
 
     for (let i = 0; i < steps.length; i++) {
-      const step = this.steps[i];
-      const nextStep = this.steps[i + 1] || null;
+      const step = steps[i];
+      const nextStep = steps[i + 1] || null;
       const nextRecipient = i === steps.length - 1 ? recipient : pipelineAddress;
 
       const amountWithSlippage = step.quoteResultWithSlippage!;
