@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import { useCallback, useMemo } from 'react';
 import { ERC20Token, NativeToken } from '~/classes/Token';
 import { TokenMap, ZERO_BN } from '~/constants';
-import { CRV3_UNDERLYING, ETH } from '~/constants/tokens';
+import { ERC20_TOKENS, ETH } from '~/constants/tokens';
 import useDataFeedTokenPrices from '../beanstalk/useDataFeedTokenPrices';
 import useWhitelist from '../beanstalk/useWhitelist';
 import useTokenMap from '../chain/useTokenMap';
@@ -45,7 +45,7 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
 
   // data
   const tokenMap = useTokenMap<ERC20Token | NativeToken>([
-    ...CRV3_UNDERLYING,
+    ...ERC20_TOKENS,
     ETH,
   ]);
   const tokenList = useMemo(() => Object.values(tokenMap), [tokenMap]);
