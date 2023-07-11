@@ -4,15 +4,17 @@ import { useFormikContext } from 'formik';
 import AddIcon from '@mui/icons-material/Add';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import Row from '../../Row';
+import Row from '~/components/Common/Row';
 import SelectionAccordion from '~/components/Common/Accordion/SelectionAccordion';
-import { FormTxnsFormState } from '..';
+import { FormTxnsFormState } from '~/components/Common/Form';
 import useToggle from '~/hooks/display/useToggle';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
 
-import FormTxnOptionCard from '../FormTxnOptionCard';
+import FormTxnOptionCard from '~/components/Common/Form/FormTxnOptionCard';
 import useFarmerFormTxnSummary from '~/hooks/farmer/form-txn/useFarmerFormTxnsSummary';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
+import SiloVestingWarningAlert from '~/components/Silo/SiloVestingWarningAlert';
+
 import { FormTxn, FormTxnBundler } from '~/lib/Txn';
 
 type Props = {
@@ -174,44 +176,47 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   if (!allOptions?.length) return null;
 
   return (
-    <SelectionAccordion<FormTxn>
-      open={open}
-      onChange={open ? hide : show}
-      title={
-        <Row gap={0.5}>
-          <AddIcon fontSize="small" color="primary" />
-          <Typography color="primary.main">
-            Add additional transactions to save gas
-          </Typography>
-        </Row>
-      }
-      subtitle={
-        <Row width="100%" justifyContent="space-between">
-          <Typography color="text.secondary">Claim All</Typography>
-          <Switch
-            checked={allToggled}
-            onClick={handleOnToggleAll}
-            disabled={allOptions.length === 0}
+    <>
+      <SiloVestingWarningAlert hide={!local.has(FormTxn.PLANT)} />
+      <SelectionAccordion<FormTxn>
+        open={open}
+        onChange={open ? hide : show}
+        title={
+          <Row gap={0.5}>
+            <AddIcon fontSize="small" color="primary" />
+            <Typography color="primary.main">
+              Add additional transactions to save gas
+            </Typography>
+          </Row>
+        }
+        subtitle={
+          <Row width="100%" justifyContent="space-between">
+            <Typography color="text.secondary">Claim All</Typography>
+            <Switch
+              checked={allToggled}
+              onClick={handleOnToggleAll}
+              disabled={allOptions.length === 0}
+            />
+          </Row>
+        }
+        options={allOptions}
+        selected={local}
+        onToggle={handleOnToggle}
+        render={(item, selected) => (
+          <FormTxnOptionCard
+            key={item}
+            option={item}
+            summary={summary[item]}
+            selected={selected}
+            required={impliedOptions.has(item)}
+            gas={gasEstimates[item] || undefined}
+            isHovered={hovered.has(item)}
+            onMouseOver={() => handleMouseOver(item)}
+            onMouseLeave={handleMouseLeave}
           />
-        </Row>
-      }
-      options={allOptions}
-      selected={local}
-      onToggle={handleOnToggle}
-      render={(item, selected) => (
-        <FormTxnOptionCard
-          key={item}
-          option={item}
-          summary={summary[item]}
-          selected={selected}
-          required={impliedOptions.has(item)}
-          gas={gasEstimates[item] || undefined}
-          isHovered={hovered.has(item)}
-          onMouseOver={() => handleMouseOver(item)}
-          onMouseLeave={handleMouseLeave}
-        />
-      )}
-    />
+        )}
+      />
+    </>
   );
 };
 

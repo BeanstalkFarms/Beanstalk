@@ -1,6 +1,5 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Container, Stack } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
@@ -8,7 +7,6 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import { ERC20Token } from '~/classes/Token';
 import usePools from '~/hooks/beanstalk/usePools';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
-import { AppState } from '~/state';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
   HOW_TO_CLAIM_WITHDRAWALS,
@@ -22,6 +20,7 @@ import PagePath from '~/components/Common/PagePath';
 import { XXLWidth } from '~/components/App/muiTheme';
 
 import { FC } from '~/types';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -43,10 +42,7 @@ const TokenPage: FC<{}> = () => {
   address = address?.toLowerCase();
 
   // State
-  const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
-    (state) => state._farmer.silo
-  );
-
+  const farmerSilo = useFarmerSilo();
   // Ensure this address is a whitelisted token
   if (!address || !whitelist?.[address]) {
     return <div>Not found</div>;

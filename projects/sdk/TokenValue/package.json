@@ -1,0 +1,6 @@
+{
+  "main": "../dist/TokenValue/TokenValue.cjs.js",
+  "module": "../dist/TokenValue/TokenValue.esm.js",
+  "browser": "../dist/TokenValue/TokenValue.umd.js",
+  "typings": "../dist/types/TokenValue.d.ts"
+}

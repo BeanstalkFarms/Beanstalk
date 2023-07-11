@@ -1,60 +1,40 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import { EventProcessor } from '@beanstalk/sdk';
 import useChainId from '~/hooks/chain/useChainId';
-import useBlocks from '~/hooks/ledger/useBlocks';
 import useAccount from '~/hooks/ledger/useAccount';
-import EventProcessor from '~/lib/Beanstalk/EventProcessor';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
-import useSeason from '~/hooks/beanstalk/useSeason';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
-import { EventCacheName } from '../events2';
-import useEvents, { GetQueryFilters } from '../events2/updater';
-import { updateFarmerField, resetFarmerField } from './actions';
+import useEvents, { GetEventsFn } from '../events2/updater';
+import { resetFarmerField, updateFarmerField } from './actions';
+import useSdk from '~/hooks/sdk';
+import { transform } from '~/util/BigNumber';
+import { FarmerField } from '~/state/farmer/field';
 
 export const useFetchFarmerField = () => {
   /// Helpers
   const dispatch = useDispatch();
 
   /// Contracts
-  const beanstalk = useBeanstalkContract();
+  const sdk = useSdk();
 
   /// Data
   const account = useAccount();
-  const blocks = useBlocks();
-  const whitelist = useWhitelist();
-  const season = useSeason();
   const harvestableIndex = useHarvestableIndex();
 
   /// Events
-  const getQueryFilters = useCallback<GetQueryFilters>(
-    (_account, fromBlock, toBlock) => [
-      beanstalk.queryFilter(
-        beanstalk.filters['Sow(address,uint256,uint256,uint256)'](_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.Harvest(_account),
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.PlotTransfer(_account, null), // from
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-      beanstalk.queryFilter(
-        beanstalk.filters.PlotTransfer(null, _account), // to
-        fromBlock || blocks.BEANSTALK_GENESIS_BLOCK,
-        toBlock || 'latest'
-      ),
-    ],
-    [blocks, beanstalk]
+  const getQueryFilters = useCallback<GetEventsFn>(
+    async (_account, fromBlock, toBlock) =>
+      sdk.events.get('field', [
+        _account,
+        {
+          fromBlock, // let cache system choose where to start
+          toBlock, // let cache system choose where to end
+        },
+      ]),
+    [sdk.events]
   );
 
-  const [fetchFieldEvents] = useEvents(EventCacheName.FIELD, getQueryFilters);
-
+  const [fetchFieldEvents] = useEvents('field', getQueryFilters);
   const initialized = account && fetchFieldEvents && harvestableIndex.gt(0); // harvestedableIndex is initialized to 0
 
   /// Handlers
@@ -63,24 +43,47 @@ export const useFetchFarmerField = () => {
       const allEvents = await fetchFieldEvents();
       if (!allEvents) return;
 
-      const p = new EventProcessor(account, { season, whitelist });
-      p.ingestAll(allEvents);
+      const processor = new EventProcessor(sdk, account);
+      processor.ingestAll(allEvents);
+      const result = processor.parsePlots({
+        harvestableIndex: sdk.tokens.PODS.fromHuman(
+          harvestableIndex.toString()
+        ).toBigNumber(), // ethers.BigNumber
+      });
 
-      dispatch(updateFarmerField(p.parsePlots(harvestableIndex)));
+      // TEMP: Wrangle `result` into our internal state's existing format
+      // Tested by manual validation.
+      const plots: FarmerField['plots'] = {};
+      const harvestablePlots: FarmerField['harvestablePlots'] = {};
+      result.plots.forEach((plot, indexStr) => {
+        plots[sdk.tokens.PODS.fromBlockchain(indexStr).toHuman()] = transform(
+          plot,
+          'bnjs',
+          sdk.tokens.PODS
+        );
+      });
+      result.harvestablePlots.forEach((plot, indexStr) => {
+        harvestablePlots[sdk.tokens.PODS.fromBlockchain(indexStr).toHuman()] =
+          transform(plot, 'bnjs', sdk.tokens.PODS);
+      });
+
+      dispatch(
+        updateFarmerField({
+          pods: transform(result.pods, 'bnjs', sdk.tokens.PODS),
+          harvestablePods: transform(
+            result.harvestablePods,
+            'bnjs',
+            sdk.tokens.PODS
+          ),
+          plots,
+          harvestablePlots,
+        })
+      );
     }
-  }, [
-    dispatch,
-    fetchFieldEvents,
-    initialized,
-    // v2
-    season,
-    whitelist,
-    account,
-    harvestableIndex,
-  ]);
+  }, [initialized, fetchFieldEvents, sdk, account, dispatch, harvestableIndex]);
 
   const clear = useCallback(() => {
-    console.debug('[farmer/silo/useFarmerSilo] CLEAR');
+    console.debug('[farmer/silo/useFarmerField] CLEAR');
     dispatch(resetFarmerField());
   }, [dispatch]);
 

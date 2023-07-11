@@ -1,0 +1,92 @@
+{
+  "name": "@beanstalk/wells",
+  "version": "0.0.1",
+  "description": "A JavaScript framework for interacting with the Beanstalk Wells.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/sdk-wells"
+  },
+  "homepage": "https://bean.money",
+  "keywords": [
+    "exchange",
+    "dex",
+    "eth",
+    "ethereum",
+    "dapps",
+    "web3"
+  ],
+  "main": "./dist/sdk/sdk.cjs.js",
+  "module": "./dist/sdk/sdk.esm.js",
+  "browser": "./dist/sdk/sdk.udm.js",
+  "typings": "./dist/types/index.d.ts",
+  "licenses": [],
+  "files": [
+    "/dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "generate": "echo '\nWELLS Generate' && yarn generate-typechain",
+    "generate-typechain": "typechain --target=ethers-v5 --ts-nocheck --out-dir=./src/constants/generated/ ./src/constants/abi/**/*.json",
+    "generate-graphql": "graphql-codegen --config codegen.ts",
+    "clean-generated": "rimraf ./src/constants/generated && rimraf ./src/constants/generated-gql",
+    "clean-build": "rimraf dist",
+    "clean": "yarn clean-generated && yarn clean-build",
+    "dev": "tsc --noEmit --watch",
+    "ts": "yarn clean-build && tsc && tsc-alias -p tsconfig.json",
+    "build": "echo '\nWELLS Build' && yarn ts && rollup -c --bundleConfigAsCjs --silent && rimraf dist/js",
+    "wells:build": "yarn generate && yarn build",
+    "publish": "yarn build && yarn npm publish --access public"
+  },
+  "peerDependencies": {
+    "ethers": "^5.0.0"
+  },
+  "dependencies": {
+    "@beanstalk/sdk-core": "workspace:*",
+    "ethers": "^5.0.0",
+    "graphlib": "2.1.8",
+    "graphql": "16.6.0",
+    "graphql-request": "^4",
+    "graphql-tag": "2.12.6"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "2.13.7",
+    "@graphql-codegen/typescript": "2.7.4",
+    "@graphql-codegen/typescript-graphql-request": "^4.5.6",
+    "@graphql-codegen/typescript-operations": "^2.5.4",
+    "@graphql-codegen/typescript-resolvers": "2.7.4",
+    "@rollup/plugin-commonjs": "23.0.2",
+    "@rollup/plugin-json": "5.0.1",
+    "@rollup/plugin-multi-entry": "6.0.0",
+    "@rollup/plugin-node-resolve": "15.0.1",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@types/graphlib": "2.1.8",
+    "@types/jest": "^29.1.2",
+    "@types/rimraf": "^3",
+    "dotenv": "^16.0.3",
+    "jest": "^29.2.0",
+    "rimraf": "3.0.2",
+    "rollup": "3.2.5",
+    "rollup-plugin-alias": "2.2.0",
+    "rollup-plugin-exclude-dependencies-from-bundle": "1.1.23",
+    "rollup-plugin-sourcemaps": "0.6.3",
+    "rollup-plugin-typescript2": "0.34.1",
+    "tsc-alias": "1.7.0",
+    "tslib": "2.4.1",
+    "typechain": "^8.1.0",
+    "typescript": "4.8.4"
+  },
+  "packageManager": "yarn@3.2.3",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "module": "./dist/wells/wells.esm.js",
+      "default": "./dist/wells/wells.cjs.js",
+      "browser": "./dist/wells/wells.umd.js"
+    }
+  }
+}

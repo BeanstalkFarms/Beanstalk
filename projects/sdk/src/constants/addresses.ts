@@ -13,7 +13,7 @@ export const addresses = {
   BEANSTALK_PRICE: Address.make("0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f000082fD56C10f449d4f8497682494da84D"),
-  PIPELINE: Address.make("0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa"),
+  PIPELINE: Address.make("0xb1be0000bfdcddc92a8290202830c4ef689dceaa"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
 
   // ----------------------------------------
@@ -50,6 +50,11 @@ export const addresses = {
     //    - 3CRV (the 3pool LP Token) = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490
     //    - 3pool Contract            = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7
     Address.make("0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49"),
+
+  // ----------------------------------------
+  // Wells Contracts
+  // ----------------------------------------
+  BEANWETH_WELL: Address.make("0xb468647b04bf657c9ee2de65252037d781eabafd"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens

@@ -14,7 +14,7 @@ import { ethers } from 'ethers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useConnect } from 'wagmi';
 import BigNumber from 'bignumber.js';
-import { SwapOperation } from '@beanstalk/sdk';
+import { SwapOperation, FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import {
   FormApprovingState,
   FormTokenState,
@@ -37,7 +37,7 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useQuote, { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useAccount from '~/hooks/ledger/useAccount';

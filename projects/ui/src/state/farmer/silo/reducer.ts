@@ -3,8 +3,9 @@ import BigNumber from 'bignumber.js';
 import { FarmerSilo } from '.';
 import {
   resetFarmerSilo,
-  updateFarmerSiloRewards,
-  updateFarmerSiloBalances,
+  updateFarmerMigrationStatus,
+  updateLegacyFarmerSiloBalances,
+  updateLegacyFarmerSiloRewards,
 } from './actions';
 
 const NEG1 = new BigNumber(-1);
@@ -19,6 +20,7 @@ export const initialFarmerSilo: FarmerSilo = {
     earned: NEG1,
     grown: NEG1,
     total: NEG1,
+    grownByToken: new Map(),
   },
   seeds: {
     active: NEG1,
@@ -28,12 +30,16 @@ export const initialFarmerSilo: FarmerSilo = {
   roots: {
     total: NEG1,
   },
+  migrationNeeded: undefined,
 };
 
 export default createReducer(initialFarmerSilo, (builder) =>
   builder
     .addCase(resetFarmerSilo, () => initialFarmerSilo)
-    .addCase(updateFarmerSiloBalances, (state, { payload }) => {
+    .addCase(updateFarmerMigrationStatus, (state, { payload }) => {
+      state.migrationNeeded = payload;
+    })
+    .addCase(updateLegacyFarmerSiloBalances, (state, { payload }) => {
       const addresses = Object.keys(payload);
       addresses.forEach((address) => {
         const a = address.toLowerCase();
@@ -43,7 +49,7 @@ export default createReducer(initialFarmerSilo, (builder) =>
         };
       });
     })
-    .addCase(updateFarmerSiloRewards, (state, { payload }) => {
+    .addCase(updateLegacyFarmerSiloRewards, (state, { payload }) => {
       state.beans = payload.beans;
       state.stalk = payload.stalk;
       state.seeds = payload.seeds;

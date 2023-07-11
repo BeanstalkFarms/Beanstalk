@@ -1,3 +1,7 @@
+const path = require("path");
+const fs = require("fs");
+const glob = require("glob");
+
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-contract-sizer");
@@ -8,7 +12,6 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("hardhat-contract-sizer");
 
-const fs = require("fs");
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
@@ -27,6 +30,7 @@ const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
+const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -43,10 +47,13 @@ function getRemappings() {
 task("buyBeans")
   .addParam("amount", "The amount of USDC to buy with")
   .setAction(async (args) => {
+    await mintEth(PUBLIUS);
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const result = await txn.wait();
+    console.log("Done", result);
   });
 
 task("sellBeans")
@@ -100,45 +107,47 @@ task("getTime", async function () {
 })*/
 
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
-  const basePath = "/contracts/beanstalk/";
+  // The path (relative to the root of `protocol` directory) where all modules sit.
+  const modulesDir = path.join("contracts", "beanstalk");
+
+  // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
   const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun"];
+
+  // The glob returns the full file path like this:
+  // contracts/beanstalk/barn/UnripeFacet.sol
+  // We want the "UnripeFacet" part.
+  const getFacetName = (file) => {
+    return file.split("/").pop().split(".")[0];
+  };
 
   // Load files across all modules
   const paths = [];
-  modules.forEach((m) => {
-    const filesInModule = fs.readdirSync(`.${basePath}${m}`);
-    paths.push(...filesInModule.map((f) => [m, f]));
+  modules.forEach((module) => {
+    const filesInModule = fs.readdirSync(path.join(".", modulesDir, module));
+    paths.push(...filesInModule.map((f) => [module, f]));
   });
 
   // Build ABI
   let abi = [];
-  for (var [module, file] of paths) {
-    // We're only interested in facets
-    if (file.includes("Facet")) {
-      let jsonFile;
+  modules.forEach((module) => {
+    const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
+    const files = glob.sync(pattern);
 
-      // A Facet can be packaged in two formats:
-      //  1. XYZFacet.sol
-      //  2. XYZFacet/XYZFacet.sol
-      // By convention, a folder ending with "Facet" will also contain a .sol file with the same name.
-      if (!file.includes(".sol")) {
-        // This is a directory
-        jsonFile = `${file}.json`;
-        file = `${file}/${file}.sol`;
-      } else {
-        // This is a file
-        jsonFile = file.replace("sol", "json");
-      }
+    files.forEach((file) => {
+      const facetName = getFacetName(file);
+      const jsonFileName = `${facetName}.json`;
+      const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
 
-      const loc = `./artifacts${basePath}${module}/${file}/${jsonFile}`;
-      console.log(`ADD:  `, module, file, "=>", loc);
+      const json = JSON.parse(fs.readFileSync(jsonFileLoc));
 
-      const json = JSON.parse(fs.readFileSync(loc));
+      // Log what's being included
+      console.log(`${module}:`.padEnd(10), file);
+      json.abi.forEach((item) => console.log(``.padEnd(10), item.type, item.name));
+      console.log("");
+
       abi.push(...json.abi);
-    } else {
-      console.log(`SKIP: `, module, file);
-    }
-  }
+    });
+  });
 
   const names = abi.map((a) => a.name);
   fs.writeFileSync(
@@ -223,7 +232,8 @@ module.exports = {
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
-      timeout: 100000
+      timeout: 100000,
+      accounts: "remote"
     },
     mainnet: {
       chainId: 1,
@@ -233,6 +243,11 @@ module.exports = {
     custom: {
       chainId: 133137,
       url: "<CUSTOM_URL>",
+      timeout: 100000
+    },
+    testSiloV3: {
+      chainId: 31337,
+      url: "https://rpc.vnet.tenderly.co/devnet/silo-v3/3ed19e82-a81c-45e5-9b16-5e385aa74587",
       timeout: 100000
     }
   },

@@ -19,6 +19,8 @@ async function main() {
 
   // await deposit(sdk.tokens.BEAN, sdk.tokens.BEAN, 2000, account, sdk);
   await deposit(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP, 1000, account, sdk);
+  await deposit(sdk.tokens.ETH, sdk.tokens.BEAN, 0.1, account, sdk);
+  // await deposit(sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_CRV3_LP, 2000, account, sdk);
   // await deposit(sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN, 2000, account, sdk);
   // await deposit(sdk.tokens.UNRIPE_BEAN_CRV3, sdk.tokens.UNRIPE_BEAN_CRV3, 2000, account, sdk);
 
@@ -29,7 +31,8 @@ async function deposit(input: Token, target: Token, _amount: number, account: st
   console.log(`Depositing ${_amount} ${input.symbol} to ${target.symbol} silo`);
   const amount = input.amount(_amount);
 
-  chain[`set${input.symbol}Balance`](account, amount);
+  if (input.symbol === "ETH") _amount += 0.1; // add extra eth so we can pay for the tx
+  chain.setBalance(input, account, _amount);
 
   await input.approveBeanstalk(amount);
 

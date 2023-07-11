@@ -27,6 +27,6 @@ function display(_data: string) {
   ]);
 }
 
-display(Clipboard.encode([]));
+// display(Clipboard.encode([1, 1, 1]));
 // ['bytes2', 'uint256'] + ['0x0001', ethers.utils.parseEther('1').toString()]
 display(Clipboard.encode([], ethers.utils.parseEther("1")));

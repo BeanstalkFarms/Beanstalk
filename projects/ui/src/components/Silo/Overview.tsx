@@ -26,6 +26,8 @@ import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
+import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
+import { MigrateTab } from '~/components/Silo/MigrateTab';
 
 const depositStats = (s: BigNumber, v: BigNumber[], d: string) => (
   <Stat
@@ -62,7 +64,7 @@ const seedsStats = (s: BigNumber, v: BigNumber[], d: string) => (
   />
 );
 
-const SLUGS = ['deposits', 'stalk', 'seeds'];
+const SLUGS = ['migrate', 'deposits', 'stalk', 'seeds'];
 
 const Overview: FC<{
   farmerSilo: AppState['_farmer']['silo'];
@@ -81,6 +83,7 @@ const Overview: FC<{
     farmerSilo.stalk.active?.gt(0) && beanstalkSilo.stalk.total?.gt(0)
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
+
   const stalkStats = useCallback(
     (s: BigNumber, v: BigNumber[], d: string) => (
       <>
@@ -117,13 +120,18 @@ const Overview: FC<{
     [farmerSilo, ownership]
   );
 
+  const migrationNeeded = useMigrationNeeded();
+
   return (
     <Module>
       <ModuleTabs value={tab} onChange={handleChange} sx={{ minHeight: 0 }}>
+        <StyledTab label={<ChipLabel name="Silo V3">Migrate</ChipLabel>} />
         <StyledTab
           label={
             <ChipLabel name="Deposits">
-              {displayUSD(breakdown.states.deposited.value)}
+              {breakdown.states.deposited.value.gt(0)
+                ? displayUSD(breakdown.states.deposited.value)
+                : '?'}
             </ChipLabel>
           }
         />
@@ -148,7 +156,16 @@ const Overview: FC<{
           }
         />
       </ModuleTabs>
-      <Box sx={{ display: tab === 0 ? 'block' : 'none' }}>
+      <Box
+        sx={{
+          display: tab === 0 ? 'block' : 'none',
+          minHeight: '400px',
+          backgroundColor: 'rgba(244, 244, 244, 0.4)',
+        }}
+      >
+        <MigrateTab />
+      </Box>
+      <Box sx={{ display: tab === 1 ? 'block' : 'none' }}>
         <OverviewPlot
           label="Silo Deposits"
           account={account}
@@ -170,7 +187,7 @@ const Overview: FC<{
           empty={breakdown.states.deposited.value.eq(0)}
         />
       </Box>
-      <Box sx={{ display: tab === 1 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab === 2 ? 'block' : 'none' }}>
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
@@ -200,7 +217,7 @@ const Overview: FC<{
           empty={farmerSilo.stalk.total.lte(0)}
         />
       </Box>
-      <Box sx={{ display: tab === 2 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab === 3 ? 'block' : 'none' }}>
         <OverviewPlot
           label="Seeds Ownership"
           account={account}

@@ -3,6 +3,7 @@ import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { useNavigate } from 'react-router-dom';
+import { FarmToMode } from '@beanstalk/sdk';
 import PlotInputField from '~/components/Common/Form/PlotInputField';
 import TransactionToast from '~/components/Common/TxnToast';
 import {
@@ -18,7 +19,6 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { PlotMap } from '~/util';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { BEAN, PODS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';

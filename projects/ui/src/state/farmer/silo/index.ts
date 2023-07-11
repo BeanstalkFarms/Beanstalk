@@ -1,68 +1,75 @@
-import BigNumber from 'bignumber.js';
+import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
+import BigNumberJS from 'bignumber.js';
+import { ethers } from 'ethers';
 import { TokenMap } from '~/constants';
 
 /**
+ * @deprecated
  * A Crate is an `amount` of a token Deposited or
  * Withdrawn during a given `season`.
  */
-export type Crate = {
+export type LegacyCrate = {
   /** The amount of this Crate that was created, denominated in the underlying Token. */
-  amount: BigNumber;
+  amount: BigNumberJS;
   /** The Season that the Crate was created. */
-  season: BigNumber;
+  season: BigNumberJS;
 };
 
 /**
+ * @deprecated
  * A "Deposit" represents an amount of a Whitelisted Silo Token
  * that has been added to the Silo.
  */
-export type DepositCrate = Crate & {
-  /** The BDV of the Deposit, determined upon Deposit. */
-  bdv: BigNumber;
-  /** The amount of Stalk granted for this Deposit. */
-  stalk: BigNumber;
-  /** The amount of Seeds granted for this Deposit. */
-  seeds: BigNumber;
-};
+// export type LegacyDepositCrate = LegacyCrate & {
+//   /** The BDV of the Deposit, determined upon Deposit. */
+//   bdv: BigNumberJS;
+//   /** The amount of Stalk granted for this Deposit. */
+//   stalk: BigNumberJS;
+//   /** The amount of Seeds granted for this Deposit. */
+//   seeds: BigNumberJS;
+// };
 
-/**
- * A "Withdrawal" represents an amount of a "Deposit"
- * that was removed from the Silo. Withdrawals remain pending
- * for several seasons until they are ready to be Claimed.
- */
-export type WithdrawalCrate = Crate & {};
+export type LegacyDepositCrate = Deposit<BigNumberJS>;
 
 /**
  * A "Silo Balance" provides all information
  * about a Farmer's ownership of a Whitelisted Silo Token.
  */
-export type FarmerSiloBalance = {
+export type FarmerSiloTokenBalance = {
   /** Season in which the farmer last updated their Silo */
-  lastUpdate: BigNumber;
+  lastUpdate: BigNumberJS;
+
+  mowStatus: {
+    lastStem: ethers.BigNumber;
+    bdv: ethers.BigNumber;
+  };
+
   deposited: {
     /** The total amount of this Token currently in the Deposited state. */
-    amount: BigNumber;
+    amount: BigNumberJS;
     /** The BDV of this Token currently in the Deposited state. */
-    bdv: BigNumber;
+    bdv: BigNumberJS;
     /** All Deposit crates. */
-    crates: DepositCrate[];
+    crates: LegacyDepositCrate[];
   };
+
+  /** @deprecated */
   withdrawn: {
     /** The total amount of this Token currently in the Withdrawn state. */
-    amount: BigNumber;
+    amount: BigNumberJS;
     /** */
-    bdv: BigNumber;
+    bdv: BigNumberJS;
     /** All Withdrawal crates. */
-    crates: WithdrawalCrate[];
+    crates: any[];
   };
+
+  /** @deprecated */
   claimable: {
     /** The total amount of this Token currently in the Claimable state. */
-    amount: BigNumber;
+    amount: BigNumberJS;
     /** All Claimable crates. */
-    crates: Crate[];
+    crates: LegacyCrate[];
   };
-  wrapped: BigNumber;
-  circulating: BigNumber;
 };
 
 /**
@@ -73,7 +80,7 @@ export type FarmerSiloBalance = {
  * FIXME: enforce that `address` is a key of whitelisted tokens?
  */
 export type FarmerSiloBalances = {
-  balances: TokenMap<FarmerSiloBalance>;
+  balances: TokenMap<FarmerSiloTokenBalance>;
 };
 
 /**
@@ -86,7 +93,7 @@ export type FarmerSiloRewards = {
      * The amount of Beans the Farmer has earned
      * from their ownership of the Silo.
      */
-    earned: BigNumber;
+    earned: BigNumberJS;
   };
   stalk: {
     /**
@@ -94,22 +101,27 @@ export type FarmerSiloRewards = {
      *
      * `total = active + grown`
      */
-    total: BigNumber;
+    total: BigNumberJS;
     /**
      * In the case of stalk, ACTIVE includes EARNED.
      */
-    active: BigNumber;
+    active: BigNumberJS;
     /**
      * Earned Stalk are Stalk granted upon reception of earned
      * Beans (since 1 Deposited Bean = 1 Stalk).
      * Earned Stalk are also "active" because it increases
      * the Farmer's relative ownership in the Silo.
      */
-    earned: BigNumber;
+    earned: BigNumberJS;
     /**
      * Grown Stalk is Stalk granted each Season from Seeds.
      */
-    grown: BigNumber;
+    grown: BigNumberJS;
+
+    /**
+     *
+     */
+    grownByToken: Map<Token, TokenValue>;
   };
   seeds: {
     /**
@@ -117,20 +129,23 @@ export type FarmerSiloRewards = {
      *
      * `total = active`.
      */
-    total: BigNumber;
+    total: BigNumberJS;
     /**
      *
      */
-    active: BigNumber;
+    active: BigNumberJS;
     /**
      * Plantable Seeds are Seeds granted upon reception of
      * earned Beans (since 1 Deposited Bean = 2 Stalk).
      */
-    earned: BigNumber;
+    earned: BigNumberJS;
   };
   roots: {
-    total: BigNumber;
+    total: BigNumberJS;
   };
 };
 
-export type FarmerSilo = FarmerSiloBalances & FarmerSiloRewards;
+export type FarmerSilo = FarmerSiloBalances &
+  FarmerSiloRewards & {
+    migrationNeeded: boolean | undefined;
+  };

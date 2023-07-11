@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import { useConnect } from 'wagmi';
 import { Alert } from '@mui/lab';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import { IconSize } from '~/components/App/muiTheme';
 import IconWrapper from '~/components/Common/IconWrapper';
 import {
@@ -25,7 +26,6 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useAccount from '~/hooks/ledger/useAccount';
 import { toStringBaseUnitBN } from '~/util';
@@ -236,10 +236,11 @@ const TransferForm: FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleSetBalanceFrom, account, toMode]);
 
-  /// Checks
+  /// Approval Checks
   const shouldApprove =
     fromMode === FarmFromMode.EXTERNAL ||
-    fromMode === FarmFromMode.INTERNAL_EXTERNAL;
+    (fromMode === FarmFromMode.INTERNAL_EXTERNAL &&
+      amount?.gt(balances[tokenIn.address]?.internal));
 
   const amountsCheck = amount?.gt(0);
   const enoughBalanceCheck = amount

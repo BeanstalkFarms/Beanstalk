@@ -1,0 +1,40 @@
+$nodeStreak: #46B95522;
+$nanoVelocity: 6s;
+$visualDistortionZapper: 330px;
+
+.wrap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  margin: 0 auto;
+  perspective: $visualDistortionZapper;
+  perspective-origin: 50% 50%;  
+}
+
+.topPlane {
+  width: 200%;
+  height: 130%;
+  position: absolute;
+  bottom: -30%;
+  left: -50%;
+  background-image: -webkit-linear-gradient($nodeStreak 2px, transparent 2px), -webkit-linear-gradient(left, $nodeStreak 2px, transparent 2px);
+  background-size: 100px 100px, 100px 100px;
+  background-position: -1px -1px,-1px -1px;
+  transform: rotateX(60deg);
+  animation: planeMoveTop $nanoVelocity infinite linear;
+}
+
+@keyframes planeMoveTop {
+  from {
+    background-position: 0px 0px,0px 0px;
+  }
+  to {
+    background-position: 0px 100px, 0px 0px;
+  }
+}
+
+@media (max-height: 350px) {
+  .wrap {
+    perspective: $visualDistortionZapper - 150;
+  }
+}

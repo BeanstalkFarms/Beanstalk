@@ -18,6 +18,7 @@ export type RewardItemProps = {
   // eslint-disable-next-line
   compact?: boolean;
   titleColor?: string;
+  annotation?: any;
 };
 
 const RewardItem: FC<RewardItemProps> = ({
@@ -27,6 +28,7 @@ const RewardItem: FC<RewardItemProps> = ({
   icon,
   isClaimable,
   titleColor,
+  annotation,
 }) => {
   const Amount = () => (
     <Row gap={0.4}>
@@ -36,6 +38,7 @@ const RewardItem: FC<RewardItemProps> = ({
           {amount.lt(0) ? '-' : displayFullBN(amount, 2)}
         </Typography>
       )}
+      {annotation}
     </Row>
   );
 

@@ -112,6 +112,7 @@ export const BeanstalkPalette = {
   darkBlue: '#1F78B4',
   nightBlue: '#162B49',
   skyBlue: '#DBEDFD',
+
   // Other
   grey: '#657265',
   realGrey: '#808080',
@@ -122,6 +123,7 @@ export const BeanstalkPalette = {
   white: '#fff',
   offWhite: '#FCFCFC',
   black: '#333',
+
   // Reds
   // #FBE6E0
   washedRed: '#c35f42',
