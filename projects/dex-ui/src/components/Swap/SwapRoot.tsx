@@ -300,7 +300,7 @@ export const SwapRoot = () => {
         </SwapInputContainer>
       <QuoteDetails
         type={isForwardQuote ? "FORWARD_SWAP" : "REVERSE_SWAP"}
-        quote={{quote: quote?.amount || TokenValue.ZERO, estimate: quote?.estimate || TokenValue.ZERO, gas: quote?.gas}}
+        quote={{quote: quote?.amount || TokenValue.ZERO, estimate: quote?.amountWithSlippage || TokenValue.ZERO, gas: quote?.gas}}
         inputs={[inAmount || TokenValue.ZERO, outAmount || TokenValue.ZERO]}
         handleSlippageValueChange={handleSlippageValueChange}
         wellTokens={[inToken, outToken]}

@@ -13,3 +13,6 @@ export { SwapBuilder } from "./lib/swap/SwapBuilder";
 export { Quote } from "./lib/swap/Quote";
 
 export type { QuoteResult } from "./lib/swap/Quote";
+
+export type { WETH9 } from "src/constants/generated";
+export { WETH9__factory } from "src/constants/generated";

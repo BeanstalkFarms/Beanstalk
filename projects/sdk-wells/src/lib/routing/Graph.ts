@@ -20,7 +20,7 @@ export class Graph {
     this.tokens.add(token);
   }
 
-  addEdge(tokenA: Token, tokenB: Token, well: Well) {
+  addEdge(tokenA: Token, tokenB: Token, well?: Well) {
     this.graph.setEdge(tokenA.symbol, tokenB.symbol, {
       well,
       from: tokenA,
