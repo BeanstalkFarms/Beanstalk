@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
 
 import { Bean } from "~/tokens/Bean.sol";
 import { Utils } from "test/foundry/utils/Utils.sol";

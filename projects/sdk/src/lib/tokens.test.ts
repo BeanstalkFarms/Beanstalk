@@ -55,7 +55,6 @@ describe("Token Library", function () {
   });
 });
 
-
 describe("Utilities", function () {
   it("creates a correct TokenBalance struct", () => {
     // @ts-ignore testing private method

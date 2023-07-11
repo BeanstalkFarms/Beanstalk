@@ -5,8 +5,11 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "~/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
+import "contracts/libraries/LibBytes.sol";
 
 /**
  * @author Publius
@@ -19,6 +22,7 @@ interface ResetPool {
 }
 
 contract MockSeasonFacet is SeasonFacet {
+
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -36,6 +40,7 @@ contract MockSeasonFacet is SeasonFacet {
     function siloSunrise(uint256 amount) public {
         require(!paused(), "Season: Paused.");
         s.season.current += 1;
+        s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
     }
@@ -151,45 +156,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastSowTime = number;
     }
 
-    // function setLastSoilPercentE(uint96 number) public {
-    //     s.w.lastSoilPercent = number;
-    // }
-
     function setSoilE(uint256 amount) public {
         setSoil(amount);
-    }
-
-    function resetAccount(address account) public {
-        uint32 _s = season();
-        for (uint32 j; j <= _s; ++j) {
-            if (s.a[account].field.plots[j] > 0) s.a[account].field.plots[j];
-            if (s.a[account].bean.deposits[j] > 0) delete s.a[account].bean.deposits[j];
-            if (s.a[account].lp.deposits[j] > 0) delete s.a[account].lp.deposits[j];
-            if (s.a[account].lp.depositSeeds[j] > 0) delete s.a[account].lp.depositSeeds[j];
-            if (s.a[account].bean.withdrawals[j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].bean.withdrawals[j+s.season.withdrawSeasons];
-            }
-            if (s.a[account].lp.withdrawals[j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].lp.withdrawals[j+s.season.withdrawSeasons];
-            }
-        }
-        for (uint32 i; i < s.g.bipIndex; ++i) {
-            s.g.voted[i][account] = false;
-        }
-        delete s.a[account];
-
-        resetAccountToken(account, C.CURVE_BEAN_METAPOOL);
-    }
-
-    function resetAccountToken(address account, address token) public {
-        uint32 _s = season();
-        for (uint32 j; j <= _s; ++j) {
-            if (s.a[account].deposits[token][j].amount > 0) delete s.a[account].deposits[token][j];
-            if (s.a[account].withdrawals[token][j + s.season.withdrawSeasons] > 0) {
-                delete s.a[account].withdrawals[token][j+s.season.withdrawSeasons];
-            }
-        }
-        delete s.siloBalances[token];
     }
 
     function resetState() public {
@@ -215,7 +183,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.season.start = block.timestamp;
         s.season.timestamp = uint32(block.timestamp % 2 ** 32);
         s.s.stalk = 0;
-        s.s.seeds = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
         s.paused = false;
@@ -285,6 +252,58 @@ contract MockSeasonFacet is SeasonFacet {
         rewardToFertilizer(amount * 3);
         C.bean().mint(address(this), amount);
     }
+
+    function setSunriseBlock(uint256 _block) external {
+        s.season.sunriseBlock = uint32(_block);
+    }
+    
+    function getSunriseBlock() external view returns (uint256) {
+        return uint256(s.season.sunriseBlock);
+    }
+
+    //fake the grown stalk per bdv deployment, does same as InitBipNewSilo
+    function deployStemsUpgrade() external {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+
+        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
+
+        uint32 currentSeason = s.season.current;
+
+        // Clear the storage variable
+        delete s.s.deprecated_seeds;
+
+        s.ss[C.BEAN].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.ss[C.BEAN].milestoneSeason = currentSeason;
+        s.ss[C.BEAN].milestoneStem = 0;
+
+
+        s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason = 4*1e6;
+        s.ss[C.CURVE_BEAN_METAPOOL].stalkIssuedPerBdv = 10000;
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneSeason = currentSeason;
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 0;
+
+
+        s.ss[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2*1e6;
+        s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.ss[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
+        s.ss[C.UNRIPE_BEAN].milestoneStem = 0;
+
+
+        s.ss[address(C.unripeLP())].stalkEarnedPerSeason = 2*1e6;
+        s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
+        s.ss[address(C.unripeLP())].milestoneStem = 0;
+
+        //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
+        // emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);
+
+
+        s.season.stemStartSeason = uint16(s.season.current);
+    }
+
+    //constants for old seeds values
+    
 
     function getEthPrice() external view returns (uint256 price) {
         return LibIncentive.getEthUsdcPrice();

@@ -402,21 +402,11 @@
     "absolutePath": "src/Auger.sol",
     "id": 31997,
     "exportedSymbols": {
-      "Auger": [
-        31996
-      ],
-      "Call": [
-        34069
-      ],
-      "IAuger": [
-        34028
-      ],
-      "IERC20": [
-        26231
-      ],
-      "Well": [
-        33630
-      ]
+      "Auger": [31996],
+      "Call": [34069],
+      "IAuger": [34028],
+      "IERC20": [26231],
+      "Well": [33630]
     },
     "nodeType": "SourceUnit",
     "src": "33:632:43",
@@ -426,12 +416,7 @@
         "nodeType": "PragmaDirective",
         "src": "33:24:43",
         "nodes": [],
-        "literals": [
-          "solidity",
-          "^",
-          "0.8",
-          ".17"
-        ]
+        "literals": ["solidity", "^", "0.8", ".17"]
       },
       {
         "id": 31947,
@@ -685,9 +670,7 @@
                               "pathNode": {
                                 "id": 31982,
                                 "name": "Well",
-                                "nameLocations": [
-                                  "607:4:43"
-                                ],
+                                "nameLocations": ["607:4:43"],
                                 "nodeType": "IdentifierPath",
                                 "referencedDeclaration": 33630,
                                 "src": "607:4:43"
@@ -771,9 +754,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              34027
-            ],
+            "baseFunctions": [34027],
             "documentation": {
               "id": 31959,
               "nodeType": "StructuredDocumentation",
@@ -866,9 +847,7 @@
                       "pathNode": {
                         "id": 31964,
                         "name": "IERC20",
-                        "nameLocations": [
-                          "440:6:43"
-                        ],
+                        "nameLocations": ["440:6:43"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 26231,
                         "src": "440:6:43"
@@ -911,9 +890,7 @@
                     "pathNode": {
                       "id": 31968,
                       "name": "Call",
-                      "nameLocations": [
-                        "474:4:43"
-                      ],
+                      "nameLocations": ["474:4:43"],
                       "nodeType": "IdentifierPath",
                       "referencedDeclaration": 34069,
                       "src": "474:4:43"
@@ -949,9 +926,7 @@
                       "pathNode": {
                         "id": 31971,
                         "name": "Call",
-                        "nameLocations": [
-                          "510:4:43"
-                        ],
+                        "nameLocations": ["510:4:43"],
                         "nodeType": "IdentifierPath",
                         "referencedDeclaration": 34069,
                         "src": "510:4:43"
@@ -1023,9 +998,7 @@
             "baseName": {
               "id": 31953,
               "name": "IAuger",
-              "nameLocations": [
-                "289:6:43"
-              ],
+              "nameLocations": ["289:6:43"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 34028,
               "src": "289:6:43"
@@ -1036,9 +1009,7 @@
           }
         ],
         "canonicalName": "Auger",
-        "contractDependencies": [
-          33630
-        ],
+        "contractDependencies": [33630],
         "contractKind": "contract",
         "documentation": {
           "id": 31952,
@@ -1047,10 +1018,7 @@
           "text": " @title Auger\n @author Publius, Silo Chad, Brean\n @notice Auger is a permissionless Well factory."
         },
         "fullyImplemented": true,
-        "linearizedBaseContracts": [
-          31996,
-          34028
-        ],
+        "linearizedBaseContracts": [31996, 34028],
         "name": "Auger",
         "nameLocation": "280:5:43",
         "scope": 31997,

@@ -2,25 +2,33 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity ^0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import "./TokenSilo.sol";
-import "~/beanstalk/ReentrancyGuard.sol";
-import "~/libraries/Token/LibTransfer.sol";
-import "~/libraries/Silo/LibSiloPermit.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/Silo/LibSiloPermit.sol";
 
-/*
- * @author Publius
- * @title SiloFacet handles depositing, withdrawing and claiming whitelisted Silo tokens.
+/**
+ * @title SiloFacet
+ * @author Publius, Brean, Pizzaman1337
+ * @notice SiloFacet is the entry point for all Silo functionality.
+ * 
+ * SiloFacet           public functions for modifying an account's Silo.
+ * ↖ TokenSilo         accounting & storage for Deposits, Withdrawals, allowances
+ * ↖ Silo              accounting & storage for Stalk, and Roots.
+ * ↖ SiloExit          public view funcs for total balances, account balances 
+ *                     & other account state.
+ * ↖ ReentrancyGuard   provides reentrancy guard modifier and access to {C}.
+ *
+ * 
  */
 contract SiloFacet is TokenSilo {
+
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    /*
-     * Deposit
-     */
+    //////////////////////// DEPOSIT ////////////////////////
 
     /** 
      * @notice Deposits an ERC20 into the Silo.
@@ -28,392 +36,273 @@ contract SiloFacet is TokenSilo {
      * @param token address of ERC20
      * @param amount tokens to be transfered
      * @param mode source of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * @dev Depositing should:
+     * 
+     *  1. Transfer `amount` of `token` from `account` to Beanstalk.
+     *  2. Calculate the current Bean Denominated Value (BDV) for `amount` of `token`.
+     *  3. Create or update a Deposit entry for `account` in the current Season.
+     *  4. Mint Stalk to `account`.
+     *  5. Emit an `AddDeposit` event.
+     * 
      */
     function deposit(
         address token,
-        uint256 amount,
+        uint256 _amount,
         LibTransfer.From mode
-    ) external payable nonReentrant updateSilo {
+    ) 
+        external
+        payable 
+        nonReentrant 
+        mowSender(token) 
+        returns (uint256 amount, uint256 bdv, int96 stem)
+    {
         amount = LibTransfer.receiveToken(
             IERC20(token),
-            amount,
+            _amount,
             msg.sender,
             mode
         );
-        _deposit(msg.sender, token, amount);
+        (bdv, stem) = _deposit(msg.sender, token, amount);
     }
 
-    /*
-     * Withdraw
-     */
+    //////////////////////// WITHDRAW ////////////////////////
 
     /** 
      * @notice Withdraws an ERC20 Deposit from the Silo.
-     * @dev 
-     *  season determines how much Stalk and Seeds are removed from the Farmer.
-     *  typically the user wants to withdraw from the latest season, as it has the lowest stalk allocation.
-     *  we rely on the subgraph in order to query farmer deposits
-     * @param token address of ERC20
-     * @param season season the farmer wants to withdraw
-     * @param amount tokens to be withdrawn
+     * @param token Address of the whitelisted ERC20 token to Withdraw.
+     * @param stem The stem to Withdraw from.
+     * @param amount Amount of `token` to Withdraw.
+     *
+     * @dev When Withdrawing a Deposit, the user must burn all of the Stalk
+     * associated with it, including:
+     *
+     * - base Stalk, received based on the BDV of the Deposit.
+     * - Grown Stalk, grown from BDV and stalkEarnedPerSeason while the deposit was held in the Silo.
+     *
+     * Note that the Grown Stalk associated with a Deposit is a function of the 
+     * delta between the current Season and the Season in which a Deposit was made.
+     * 
+     * Typically, a Farmer wants to withdraw more recent Deposits first, since
+     * these require less Stalk to be burned. This functionality is the default
+     * provided by the Beanstalk SDK, but is NOT provided at the contract level.
+     * 
      */
     function withdrawDeposit(
         address token,
-        uint32 season,
-        uint256 amount
-    ) external payable updateSilo {
-        _withdrawDeposit(msg.sender, token, season, amount);
-    }
-
-    /** 
-     * @notice Withdraws multiple ERC20 Deposits from the Silo.
-     * @dev
-     *  factor in gas costs when withdrawing from multiple deposits to ensure greater UX
-     *  for example, if a user wants to withdraw X beans, its better to withdraw from 1 earlier deposit
-     *  rather than multiple smaller recent deposits, if the season difference is minimal.
-     * @param token address of ERC20
-     * @param seasons array of seasons to withdraw from
-     * @param amounts array of amounts corresponding to each season to withdraw from
-     */
-    function withdrawDeposits(
-        address token,
-        uint32[] calldata seasons,
-        uint256[] calldata amounts
-    ) external payable updateSilo {
-        _withdrawDeposits(msg.sender, token, seasons, amounts);
-    }
-
-    /*
-     * Claim
-     */
-
-    /** 
-     * @notice Claims ERC20s from a Withdrawal.
-     * @param token address of ERC20
-     * @param season season to claim
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
-     */
-    function claimWithdrawal(
-        address token,
-        uint32 season,
+        int96 stem,
+        uint256 amount,
         LibTransfer.To mode
-    ) external payable nonReentrant {
-        uint256 amount = _claimWithdrawal(msg.sender, token, season);
+    ) external payable mowSender(token) nonReentrant {
+        _withdrawDeposit(msg.sender, token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
     /** 
      * @notice Claims ERC20s from multiple Withdrawals.
-     * @param token address of ERC20
-     * @param seasons array of seasons to claim
-     * @param mode destination of funds (INTERNAL, EXTERNAL, EXTERNAL_INTERNAL, INTERNAL_TOLERANT)
+     * @param token Address of the whitelisted ERC20 token to Withdraw.
+     * @param stems stems to Withdraw from.
+     * @param amounts Amounts of `token` to Withdraw from corresponding `stems`.
+     * 
+     * deposits.
+     * @dev Clients should factor in gas costs when withdrawing from multiple
+     * 
+     * For example, if a user wants to withdraw X Beans, it may be preferable to
+     * withdraw from 1 older Deposit, rather than from multiple recent Deposits,
+     * if the difference in stems is minimal to save on gas.
      */
-    function claimWithdrawals(
+
+    function withdrawDeposits(
         address token,
-        uint32[] calldata seasons,
+        int96[] calldata stems,
+        uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable nonReentrant {
-        uint256 amount = _claimWithdrawals(msg.sender, token, seasons);
+    ) external payable mowSender(token) nonReentrant {
+        uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
 
-    /*
-     * Transfer
-     */
+
+    //////////////////////// TRANSFER ////////////////////////
 
     /** 
-     * @notice Transfers a single Deposit.
-     * @param sender source of deposit
-     * @param recipient destination of deposit
-     * @param token address of ERC20
-     * @param season season of deposit to transfer
-     * @param amount tokens to transfer
-     * @return bdv Bean Denominated Value of transfer
+     * @notice Transfer a single Deposit.
+     * @param sender Current owner of Deposit.
+     * @param recipient Destination account of Deposit.
+     * @param token Address of the whitelisted ERC20 token to Transfer.
+     * @param stem stem of Deposit from which to Transfer.
+     * @param amount Amount of `token` to Transfer.
+     * @return bdv The BDV included in this transfer, now owned by `recipient`.
+     *
+     * @dev An allowance is required if `sender !== msg.sender`
+     * 
+     * The {mowSender} modifier is not used here because _both_ the `sender` and
+     * `recipient` need their Silo updated, since both accounts experience a
+     * change in deposited BDV. See {Silo-_mow}.
      */
     function transferDeposit(
         address sender,
         address recipient,
         address token,
-        uint32 season,
+        int96 stem,
         uint256 amount
-    ) external payable nonReentrant returns (uint256 bdv) {
+    ) public payable nonReentrant returns (uint256 bdv) {
         if (sender != msg.sender) {
-            _spendDepositAllowance(sender, msg.sender, token, amount);
+            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amount);
         }
-        _update(sender);
+        LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
-        _update(recipient);
-        bdv = _transferDeposit(sender, recipient, token, season, amount);
+        LibSilo._mow(recipient, token);
+        bdv = _transferDeposit(sender, recipient, token, stem, amount);
     }
 
     /** 
-     * @notice Transfers multiple Deposits of a single ERC20 token.
-     * @param sender source of deposit
-     * @param recipient destination of deposit
-     * @param token address of ERC20
-     * @param seasons array of seasons to withdraw from
-     * @param amounts array of amounts corresponding to each season to withdraw from
-     * @return bdvs array of Bean Denominated Value of transfer corresponding from each season
+     * @notice Transfers multiple Deposits.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param token Address of the whitelisted ERC20 token to Transfer.
+     * @param stem stem of Deposit to Transfer. 
+     * @param amounts Amounts of `token` to Transfer from corresponding `stem`.
+     * @return bdvs Array of BDV transferred from each Season, now owned by `recipient`.
+     *
+     * @dev An allowance is required if `sender !== msg.sender`. There must be enough allowance
+     * to transfer all of the requested Deposits, otherwise the transaction should revert.
+     * 
+     * The {mowSender} modifier is not used here because _both_ the `sender` and
+     * `recipient` need their Silo updated, since both accounts experience a
+     * change in Seeds. See {Silo-_mow}.
      */
     function transferDeposits(
         address sender,
         address recipient,
         address token,
-        uint32[] calldata seasons,
+        int96[] calldata stem,
         uint256[] calldata amounts
-    ) external payable nonReentrant returns (uint256[] memory bdvs) {
+    ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
-        for (uint256 i = 0; i < amounts.length; i++) {
+        for (uint256 i = 0; i < amounts.length; ++i) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
             if (sender != msg.sender) {
-                _spendDepositAllowance(sender, msg.sender, token, amounts[i]);
+                LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amounts[i]);
             }
         }
        
-        _update(sender);
+        LibSilo._mow(sender, token);
         // Need to update the recipient's Silo as well.
-        _update(recipient);
-        bdvs = _transferDeposits(sender, recipient, token, seasons, amounts);
+        LibSilo._mow(recipient, token);
+        bdvs = _transferDeposits(sender, recipient, token, stem, amounts);
     }
 
-    /*
-     * Approval
-     */
-
-    /** 
-     * @notice Approves an address to transfer a farmer's Deposits of a specified ERC20 token.
-     * @param spender address to be given approval
-     * @param token address of ERC20
-     * @param amount amount to be approved
-     */
-    function approveDeposit(
-        address spender,
-        address token,
-        uint256 amount
-    ) external payable nonReentrant {
-        require(spender != address(0), "approve from the zero address");
-        require(token != address(0), "approve to the zero address");
-        _approveDeposit(msg.sender, spender, token, amount);
-    }
-
-    /** 
-     * @notice Increases allowance of Deposits of a specified ERC20 token.
-     * @param spender address to increase approval
-     * @param token address of ERC20
-     * @param addedValue additional amount to approve
-     * @return bool success
-     */
-    function increaseDepositAllowance(address spender, address token, uint256 addedValue) public virtual nonReentrant returns (bool) {
-        _approveDeposit(msg.sender, spender, token, depositAllowance(msg.sender, spender, token).add(addedValue));
-        return true;
-    }
-
-    /** 
-     * @notice Decreases allowance of Deposits of a specified ERC20 token.
-     * @param spender address to decrease approval
-     * @param token address of ERC20
-     * @param subtractedValue amount to revoke approval
-     * @return bool success
-     */
-    function decreaseDepositAllowance(address spender, address token, uint256 subtractedValue) public virtual nonReentrant returns (bool) {
-        uint256 currentAllowance = depositAllowance(msg.sender, spender, token);
-        require(currentAllowance >= subtractedValue, "Silo: decreased allowance below zero");
-        _approveDeposit(msg.sender, spender, token, currentAllowance.sub(subtractedValue));
-        return true;
-    }
-
-    /*
-     * Permits
-     * Farm balances and silo deposits support EIP-2612 permits, 
-     * which allows Farmers to delegate use of their Farm balances 
-     * through permits without the need for a separate transaction.
-     * https://eips.ethereum.org/EIPS/eip-2612 
-     */
     
-    /** 
-     * @notice Executes a signed EIP-712 deposit permit for multiple tokens.
-     * @param owner address to give permit
-     * @param spender address to permit
-     * @param tokens array of ERC20s to permit
-     * @param values array of amount (corresponding to tokens) to permit
-     * @param deadline expiration of signature (unix time) 
-     * @param v recovery id
-     * @param r ECDSA signature output
-     * @param s ECDSA signature output
+
+    /**
+     * @notice Transfer a single Deposit, conforming to the ERC1155 standard.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param depositId ID of Deposit to Transfer.
+     * @param amount Amount of `token` to Transfer.
+     * 
+     * @dev the depositID is the token address and stem of a deposit, 
+     * concatinated into a single uint256.
+     * 
      */
-    function permitDeposits(
-        address owner,
-        address spender,
-        address[] calldata tokens,
-        uint256[] calldata values,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable nonReentrant {
-        LibSiloPermit.permits(owner, spender, tokens, values, deadline, v, r, s);
-        for (uint256 i; i < tokens.length; ++i) {
-            _approveDeposit(owner, spender, tokens[i], values[i]);
+    function safeTransferFrom(
+        address sender, 
+        address recipient, 
+        uint256 depositId, 
+        uint256 amount,
+        bytes calldata
+    ) external {
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
+        // allowance requirements are checked in transferDeposit
+        (address token, int96 cumulativeGrownStalkPerBDV) = 
+            LibBytes.unpackAddressAndStem(depositId);
+        transferDeposit(
+            sender, 
+            recipient,
+            token, 
+            cumulativeGrownStalkPerBDV, 
+            amount
+        );
+    }
+
+    /**
+     * @notice Transfer a multiple Deposits, conforming to the ERC1155 standard.
+     * @param sender Source of Deposit.
+     * @param recipient Destination of Deposit.
+     * @param depositIds list of ID of deposits to Transfer.
+     * @param amounts list of amounts of `token` to Transfer.
+     * 
+     * @dev {transferDeposits} can be used to transfer multiple deposits, but only 
+     * if they are all of the same token. Since the ERC1155 standard requires the abilty
+     * to transfer any set of depositIDs, the {transferDeposits} function cannot be used here.
+     */
+    function safeBatchTransferFrom(
+        address sender, 
+        address recipient, 
+        uint256[] calldata depositIds, 
+        uint256[] calldata amounts, 
+        bytes calldata
+    ) external {
+        require(depositIds.length == amounts.length, "Silo: depositIDs and amounts arrays must be the same length");
+        require(recipient != address(0), "ERC1155: transfer to the zero address");
+        // allowance requirements are checked in transferDeposit
+        address token;
+        int96 cumulativeGrownStalkPerBDV;
+        for(uint i; i < depositIds.length; ++i) {
+            (token, cumulativeGrownStalkPerBDV) = 
+                LibBytes.unpackAddressAndStem(depositIds[i]);
+            transferDeposit(
+                sender, 
+                recipient,
+                token, 
+                cumulativeGrownStalkPerBDV, 
+                amounts[i]
+            );
         }
     }
 
-    /** 
-     * @notice Executes a signed EIP-712 Deposit permit for a single token.
-     * @param owner address to give permit
-     * @param spender address to permit
-     * @param token ERC20 to permit
-     * @param value amount to permit
-     * @param deadline expiration of signature (unix time) 
-     * @param v recovery id
-     * @param r ECDSA signature output
-     * @param s ECDSA signature output
+    //////////////////////// YIELD DISTRUBUTION ////////////////////////
+
+    /**
+     * @notice Claim Grown Stalk for `account`.
+     * @dev See {Silo-_mow}.
      */
-    function permitDeposit(
-        address owner,
-        address spender,
-        address token,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable nonReentrant {
-        LibSiloPermit.permit(owner, spender, token, value, deadline, v, r, s);
-        _approveDeposit(owner, spender, token, value);
+    function mow(address account, address token) external payable {
+        LibSilo._mow(account, token);
     }
 
-    /** 
-     * @notice Returns nonce of deposit permits.
-     */ 
-    function depositPermitNonces(address owner) public view virtual returns (uint256) {
-        return LibSiloPermit.nonces(owner);
+    //function to mow multiple tokens given an address
+    function mowMultiple(address account, address[] calldata tokens) external payable {
+        for (uint256 i; i < tokens.length; ++i) {
+            LibSilo._mow(account, tokens[i]);
+        }
     }
 
-     /**
-     * @dev See {IERC20Permit-DOMAIN_SEPARATOR}.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function depositPermitDomainSeparator() external view returns (bytes32) {
-        return LibSiloPermit._domainSeparatorV4();
-    }
-
-    /*
-     * Yield Distributon
-     */
 
     /** 
-     * @notice Activates a farmer's Grown Stalk and processes any new Seasons of Plentys.
-     * @param account address to update
+     * @notice Claim Earned Beans and their associated Stalk and Plantable Seeds for
+     * `msg.sender`.
+     *
+     * The Stalk associated with Earned Beans is commonly called "Earned Stalk".
+     * Earned Stalk DOES contribute towards the Farmer's Stalk when earned beans is issued.
+     * 
+     * The Seeds associated with Earned Beans are commonly called "Plantable
+     * Seeds". The word "Plantable" is used to highlight that these Seeds aren't 
+     * yet earning the Farmer new Stalk. In other words, Seeds do NOT automatically
+     * compound; they must first be Planted with {plant}.
+     * 
+     * In practice, when Seeds are Planted, all Earned Beans are Deposited in 
+     * the current Season.
      */
-    function update(address account) external payable {
-        _update(account);
-    }
-
-    /** 
-     * @notice Deposits Earned Beans in the current Season and activates Earned Seeds.
-     * @dev 
-     *   planting is not required to activate Earned Stalk (It is already active)
-     *   a Farmer can only plant their own Earned Beans to prevent griefing
-     * @return beans amount of earned beans given
-     */
-    function plant() external payable returns (uint256 beans) {
+    function plant() external payable returns (uint256 beans, int96 stem) {
         return _plant(msg.sender);
     }
 
     /** 
-     * @notice Claims outstanding 3CRV rewards from Season Of Plentys (SOP).
+     * @notice Claim rewards from a Flood (Was Season of Plenty)
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
     }
 
-    /*
-     * Update Unripe Deposits
-     */
-
-    /** 
-     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of specified Unripe Deposits.
-     * @param token address of Whitelisted Unripe ERC20
-     * @param seasons array of seasons to enroot
-     * @param amounts array of amount (corresponding to seasons) to enroot
-     */
-    function enrootDeposits(
-        address token,
-        uint32[] calldata seasons,
-        uint256[] calldata amounts
-    ) external payable nonReentrant updateSilo {
-        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
-
-        // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
-        AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
-        AssetsAdded memory aa;
-        // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
-        aa.bdvAdded = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-
-        // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
-        for (uint256 i; i < seasons.length; ++i) {
-            uint256 bdv = amounts[i].mul(aa.bdvAdded).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
-            LibTokenSilo.addDeposit(
-                msg.sender,
-                token,
-                seasons[i],
-                amounts[i],
-                bdv
-            );
-            aa.stalkAdded = aa.stalkAdded.add(
-                bdv.mul(s.ss[token].stalk).add(
-                    LibSilo.stalkReward(
-                        bdv.mul(s.ss[token].seeds),
-                        season() - seasons[i]
-                    )
-                )
-            );
-            // Count BDV to prevent a rounding error. Do multiplication later to save gas.
-            aa.seedsAdded = aa.seedsAdded.add(bdv);
-        }
-
-        aa.seedsAdded = aa.seedsAdded.mul(s.ss[token].seeds);
-
-        // Add new Stalk
-        LibSilo.depositSiloAssets(
-            msg.sender,
-            aa.seedsAdded.sub(ar.seedsRemoved),
-            aa.stalkAdded.sub(ar.stalkRemoved)
-        );
-    }
-
-    /** 
-     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of a single Unripe Deposit.
-     * @param token address of Whitelisted Unripe ERC20
-     * @param _season season to enroot
-     * @param amount amount to enroot
-     */
-    function enrootDeposit(
-        address token,
-        uint32 _season,
-        uint256 amount
-    ) external payable nonReentrant updateSilo {
-        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
-        
-        // First, remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDeposit(
-            msg.sender,
-            token,
-            _season,
-            amount
-        );
-        emit RemoveDeposit(msg.sender, token, _season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _season, amount, newBDV);
-
-        // Calculate the different in BDV. Will fail if BDV is lower.
-        uint256 deltaBDV = newBDV.sub(ogBDV);
-
-        // Calculate the new Stalk/Seeds associated with BDV and increment Stalk/Seed balances
-        uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
-            LibSilo.stalkReward(deltaSeeds, season() - _season)
-        );
-        LibSilo.depositSiloAssets(msg.sender, deltaSeeds, deltaStalk);
-    }
 }

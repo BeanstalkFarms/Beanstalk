@@ -90,7 +90,7 @@ export class Root {
    * @param deposits
    * @param isDeposit
    */
-  async estimateRoots(token: ERC20Token, deposits: TokenSiloBalance["deposited"]["crates"], isDeposit: boolean) {
+  async estimateRoots(token: ERC20Token, deposits: TokenSiloBalance["deposits"], isDeposit: boolean) {
     // @dev note that sdk.tokens.ROOT.getContract() == sdk.contracts.root.
     const [rootTotalSupply, rootUnderlyingBdvBefore, rootAllStalk, rootSeedsBefore] = await Promise.all([
       Root.sdk.tokens.ROOT.getTotalSupply(), // automaticaly pulls as TokenValue

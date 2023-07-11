@@ -2,8 +2,6 @@ import { Box, Dialog, Stack, Tooltip, useMediaQuery } from '@mui/material';
 import { Field, FieldProps, FormikProps } from 'formik';
 import React, { useCallback, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { ethers } from 'ethers';
-import BigNumber from 'bignumber.js';
 import { useTheme } from '@mui/material/styles';
 
 import GasTag from '~/components/Common/GasTag';
@@ -12,16 +10,16 @@ import {
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
-import { ClaimRewardsAction } from '~/lib/Beanstalk/Farm';
+import { ClaimRewardsAction } from '~/util';
 import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import DescriptionButton from '~/components/Common/DescriptionButton';
-import RewardsBar, { RewardsBarProps } from './RewardsBar';
+import RewardsSummary, { RewardsBarProps } from './RewardsSummary';
 import { hoverMap } from '~/constants/silo';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { FC } from '~/types';
-import RewardsForm from './RewardsForm';
+import RewardsForm, { ClaimCalls, ClaimGasResults } from './RewardsForm';
 
 export type SendFormValues = {
   to?: string;
@@ -58,17 +56,6 @@ const options = [
     hideIfNoUnripe: true,
   },
 ];
-
-type ClaimCalls = {
-  [key in ClaimRewardsAction]: {
-    estimateGas: () => Promise<ethers.BigNumber>;
-    execute: () => Promise<ethers.ContractTransaction>;
-    enabled: boolean;
-  };
-};
-type ClaimGasResults = {
-  [key in ClaimRewardsAction]?: BigNumber;
-};
 
 // ------------------------------------------
 
@@ -133,7 +120,7 @@ const ClaimRewardsForm: FC<
       <StyledDialogContent sx={{ pb: 0 }}>
         <Stack gap={1.5}>
           <Box px={1} py={0.5}>
-            <RewardsBar
+            <RewardsSummary
               compact
               action={action}
               hideRevitalized={unripeDepositedBalance.eq(0)}
@@ -231,17 +218,7 @@ const RewardsDialog: FC<
     open: boolean;
   }
 > = ({ handleClose, open, ...rewardsBarProps }) => (
-  <Dialog
-    onClose={handleClose}
-    open={open}
-    fullWidth
-    maxWidth="md"
-    // PaperProps={{
-    //   sx: {
-    //     width: '550px'
-    //   }
-    // }}
-  >
+  <Dialog onClose={handleClose} open={open} fullWidth maxWidth="md">
     <StyledDialogTitle onClose={handleClose}>Claim Rewards</StyledDialogTitle>
     <RewardsForm>
       {(props) => <ClaimRewardsForm {...props} {...rewardsBarProps} />}

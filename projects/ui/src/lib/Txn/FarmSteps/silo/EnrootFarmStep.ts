@@ -1,7 +1,10 @@
 import { BeanstalkSDK, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { EstimatesGas, FarmStep } from '~/lib/Txn/Interface';
-import { DepositCrate, FarmerSiloBalance } from '~/state/farmer/silo';
+import {
+  LegacyDepositCrate,
+  FarmerSiloTokenBalance,
+} from '~/state/farmer/silo';
 import { TokenMap } from '~/constants';
 
 enum EnrootType {
@@ -12,7 +15,7 @@ enum EnrootType {
 export class EnrootFarmStep extends FarmStep implements EstimatesGas {
   constructor(
     _sdk: BeanstalkSDK,
-    private _crates: Record<string, DepositCrate[]>
+    private _crates: Record<string, LegacyDepositCrate[]>
   ) {
     super(_sdk);
     this._crates = _crates;
@@ -95,6 +98,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
       [EnrootType.DEPOSITS]: [],
     };
 
+    // REFACTOR: Duplicative of logic in `selectCratesForEnroot`
     [...this._sdk.tokens.unripeTokens].forEach((urToken) => {
       const crates = this._crates[urToken.address];
       if (crates?.length === 1) {
@@ -102,7 +106,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
           'enrootDeposit',
           [
             urToken.address,
-            crates[0].season.toString(),
+            crates[0].stem.toString(),
             urToken.fromHuman(crates[0].amount.toString()).toBlockchain(),
           ]
         );
@@ -112,7 +116,7 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
           'enrootDeposits',
           [
             urToken.address,
-            crates.map((crate) => crate.season.toString()),
+            crates.map((crate) => crate.stem.toString()),
             crates.map((crate) =>
               urToken.fromHuman(crate.amount.toString()).toBlockchain()
             ),
@@ -132,19 +136,22 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
   /// static methods
   static pickUnripeCrates(
     unripeTokens: BeanstalkSDK['tokens']['unripeTokens'],
-    balances: TokenMap<FarmerSiloBalance>,
+    balances: TokenMap<FarmerSiloTokenBalance>,
     getBDV: (token: Token) => BigNumber
   ) {
-    return [...unripeTokens].reduce<TokenMap<DepositCrate[]>>((prev, token) => {
-      const balance = balances[token.address];
-      const depositCrates = balance?.deposited.crates;
+    return [...unripeTokens].reduce<TokenMap<LegacyDepositCrate[]>>(
+      (prev, token) => {
+        const balance = balances[token.address];
+        const depositCrates = balance?.deposited.crates;
 
-      prev[token.address] = depositCrates?.filter((crate) => {
-        const bdv = getBDV(token).times(crate.amount).toFixed(6, 1);
-        return new BigNumber(bdv).gt(crate.bdv);
-      });
+        prev[token.address] = depositCrates?.filter((crate) => {
+          const bdv = getBDV(token).times(crate.amount).toFixed(6, 1);
+          return new BigNumber(bdv).gt(crate.bdv);
+        });
 
-      return prev;
-    }, {});
+        return prev;
+      },
+      {}
+    );
   }
 }

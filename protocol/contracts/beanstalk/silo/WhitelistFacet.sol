@@ -5,8 +5,8 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibDiamond} from "~/libraries/LibDiamond.sol";
-import {LibWhitelist} from "~/libraries/Silo/LibWhitelist.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 
 /**
@@ -17,8 +17,14 @@ contract WhitelistFacet {
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
-        uint256 seeds,
+        uint32 stalkEarnedPerSeason,
         uint256 stalk
+    );
+    
+    event UpdatedStalkPerBdvPerSeason(
+        address indexed token,
+        uint32 stalkEarnedPerSeason,
+        uint32 season
     );
 
     event DewhitelistToken(address indexed token);
@@ -32,14 +38,25 @@ contract WhitelistFacet {
         address token,
         bytes4 selector,
         uint32 stalk,
-        uint32 seeds
+        uint32 stalkEarnedPerSeason
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
             selector,
             stalk,
-            seeds
+            stalkEarnedPerSeason
+        );
+    }
+
+    function updateStalkPerBdvPerSeasonForToken(
+        address token,
+        uint32 stalkEarnedPerSeason
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+            token,
+            stalkEarnedPerSeason
         );
     }
 }

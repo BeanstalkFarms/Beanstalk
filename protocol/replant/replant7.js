@@ -86,10 +86,10 @@ function getStalkSeedsRow(token, seasons, bdvs) {
 }
 
 function getStalkSeeds(seedsPerBdv, season, bdv) {
-  const stalkPerBdv = toBN('10000')
+  const stalkIssuedPerBdv = toBN('10000')
   bdv = toBN(bdv).mul(toBN(prune_)).div(ethers.utils.parseEther('1'))
   return [
-    bdv.mul(stalkPerBdv.add(seedsPerBdv.mul(toBN(REPLANT_SEASON).sub(toBN(season))))),
+    bdv.mul(stalkIssuedPerBdv.add(seedsPerBdv.mul(toBN(REPLANT_SEASON).sub(toBN(season))))),
     bdv.mul(seedsPerBdv)
   ]
 }

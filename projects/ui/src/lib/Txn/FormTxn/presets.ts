@@ -7,32 +7,20 @@ export const FormTxnBundlerPresets: {
   };
 } = {
   claim: {
-    primary: [FormTxn.RINSE, FormTxn.HARVEST, FormTxn.CLAIM],
+    primary: [FormTxn.RINSE, FormTxn.HARVEST],
     secondary: [FormTxn.MOW, FormTxn.PLANT, FormTxn.ENROOT],
   },
   enroot: {
     primary: [FormTxn.ENROOT],
-    secondary: [
-      FormTxn.MOW,
-      FormTxn.PLANT,
-      FormTxn.RINSE,
-      FormTxn.HARVEST,
-      FormTxn.CLAIM,
-    ],
+    secondary: [FormTxn.MOW, FormTxn.PLANT, FormTxn.RINSE, FormTxn.HARVEST],
   },
   rinseHarvest: {
     primary: [FormTxn.RINSE, FormTxn.HARVEST],
-    secondary: [FormTxn.MOW, FormTxn.PLANT, FormTxn.ENROOT, FormTxn.CLAIM],
+    secondary: [FormTxn.MOW, FormTxn.PLANT, FormTxn.ENROOT],
   },
   plant: {
     primary: [FormTxn.PLANT],
-    secondary: [
-      FormTxn.MOW,
-      FormTxn.ENROOT,
-      FormTxn.RINSE,
-      FormTxn.HARVEST,
-      FormTxn.CLAIM,
-    ],
+    secondary: [FormTxn.MOW, FormTxn.ENROOT, FormTxn.RINSE, FormTxn.HARVEST],
   },
   noPrimary: {
     primary: [],
@@ -42,7 +30,6 @@ export const FormTxnBundlerPresets: {
       FormTxn.ENROOT,
       FormTxn.RINSE,
       FormTxn.HARVEST,
-      FormTxn.CLAIM,
     ],
   },
 };

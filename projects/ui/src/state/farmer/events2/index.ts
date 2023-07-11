@@ -1,11 +1,4 @@
-import { Event } from '~/lib/Beanstalk/EventProcessor';
-
-export enum EventCacheName {
-  SILO = 'silo',
-  FIELD = 'field',
-  FERTILIZER = 'fert',
-  MARKET = 'market',
-}
+import { EventManager } from '@beanstalk/sdk';
 
 export type FarmerEvents = {
   [id: string]: {
@@ -19,6 +12,6 @@ export type FarmerEvents = {
     /** When this cache was last updated. */
     updatedAt: number;
     /** All events stored in this cache. */
-    events: Event[];
+    events: EventManager.Event[];
   };
 };

@@ -28,7 +28,7 @@ export const setupConnection = (provider: ethers.providers.JsonRpcProvider = get
 export const getTestUtils = () => {
   const { signer, account } = setupConnection();
   const wellsSdk = new WellsSDK({
-    signer,
+    signer
   });
 
   const utils = new BlockchainUtils(wellsSdk);

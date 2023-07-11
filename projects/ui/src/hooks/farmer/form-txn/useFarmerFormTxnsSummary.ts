@@ -132,7 +132,7 @@ export default function useFarmerFormTxnsSummary() {
     const harvestablePods = normalizeBN(farmerField.harvestablePods);
     const rinsableSprouts = normalizeBN(farmerBarn.fertilizedSprouts);
     const claimableBeans = normalizeBN(
-      farmerSilo.balances[BEAN.address]?.claimable.amount
+      farmerSilo.balances[BEAN.address]?.claimable?.amount
     );
 
     return {

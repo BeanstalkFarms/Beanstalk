@@ -569,36 +569,16 @@
     "absolutePath": "src/Aquifer.sol",
     "id": 38636,
     "exportedSymbols": {
-      "Aquifer": [
-        38635
-      ],
-      "Call": [
-        41359
-      ],
-      "IAquifer": [
-        41350
-      ],
-      "IERC20": [
-        29366
-      ],
-      "IWell": [
-        41711
-      ],
-      "IWellFunction": [
-        41754
-      ],
-      "LibClone": [
-        50262
-      ],
-      "ReentrancyGuard": [
-        28701
-      ],
-      "SafeCast": [
-        33446
-      ],
-      "Well": [
-        41035
-      ]
+      "Aquifer": [38635],
+      "Call": [41359],
+      "IAquifer": [41350],
+      "IERC20": [29366],
+      "IWell": [41711],
+      "IWellFunction": [41754],
+      "LibClone": [50262],
+      "ReentrancyGuard": [28701],
+      "SafeCast": [33446],
+      "Well": [41035]
     },
     "nodeType": "SourceUnit",
     "src": "33:2776:62",
@@ -608,12 +588,7 @@
         "nodeType": "PragmaDirective",
         "src": "33:24:62",
         "nodes": [],
-        "literals": [
-          "solidity",
-          "^",
-          "0.8",
-          ".17"
-        ]
+        "literals": ["solidity", "^", "0.8", ".17"]
       },
       {
         "id": 38441,
@@ -821,9 +796,7 @@
             "libraryName": {
               "id": 38460,
               "name": "SafeCast",
-              "nameLocations": [
-                "673:8:62"
-              ],
+              "nameLocations": ["673:8:62"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 33446,
               "src": "673:8:62"
@@ -848,9 +821,7 @@
             "libraryName": {
               "id": 38463,
               "name": "LibClone",
-              "nameLocations": [
-                "702:8:62"
-              ],
+              "nameLocations": ["702:8:62"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 50262,
               "src": "702:8:62"
@@ -937,9 +908,7 @@
                 "modifierName": {
                   "id": 38471,
                   "name": "ReentrancyGuard",
-                  "nameLocations": [
-                    "910:15:62"
-                  ],
+                  "nameLocations": ["910:15:62"],
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 28701,
                   "src": "910:15:62"
@@ -1731,10 +1700,7 @@
                     "src": "1813:501:62",
                     "statements": [
                       {
-                        "assignments": [
-                          38549,
-                          38551
-                        ],
+                        "assignments": [38549, 38551],
                         "declarations": [
                           {
                             "constant": false,
@@ -1990,10 +1956,7 @@
                                     "id": 38563,
                                     "name": "revert",
                                     "nodeType": "Identifier",
-                                    "overloadedDeclarations": [
-                                      -19,
-                                      -19
-                                    ],
+                                    "overloadedDeclarations": [-19, -19],
                                     "referencedDeclaration": -19,
                                     "src": "2058:6:62",
                                     "typeDescriptions": {
@@ -2302,10 +2265,7 @@
                                   "id": 38569,
                                   "name": "revert",
                                   "nodeType": "Identifier",
-                                  "overloadedDeclarations": [
-                                    -19,
-                                    -19
-                                  ],
+                                  "overloadedDeclarations": [-19, -19],
                                   "referencedDeclaration": -19,
                                   "src": "2205:6:62",
                                   "typeDescriptions": {
@@ -2831,9 +2791,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              41341
-            ],
+            "baseFunctions": [41341],
             "documentation": {
               "id": 38476,
               "nodeType": "StructuredDocumentation",
@@ -2850,9 +2808,7 @@
                 "modifierName": {
                   "id": 38486,
                   "name": "nonReentrant",
-                  "nameLocations": [
-                    "1270:12:62"
-                  ],
+                  "nameLocations": ["1270:12:62"],
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 28677,
                   "src": "1270:12:62"
@@ -3075,9 +3031,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              41349
-            ],
+            "baseFunctions": [41349],
             "documentation": {
               "id": 38622,
               "nodeType": "StructuredDocumentation",
@@ -3172,9 +3126,7 @@
             "baseName": {
               "id": 38456,
               "name": "IAquifer",
-              "nameLocations": [
-                "635:8:62"
-              ],
+              "nameLocations": ["635:8:62"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 41350,
               "src": "635:8:62"
@@ -3187,9 +3139,7 @@
             "baseName": {
               "id": 38458,
               "name": "ReentrancyGuard",
-              "nameLocations": [
-                "645:15:62"
-              ],
+              "nameLocations": ["645:15:62"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 28701,
               "src": "645:15:62"
@@ -3209,11 +3159,7 @@
           "text": " @title Aquifer\n @author Publius, Silo Chad, Brean\n @notice Aquifer is a permissionless Well registry and factory.\n @dev Aquifer deploys Wells by cloning any pre-deployed Well implementations."
         },
         "fullyImplemented": true,
-        "linearizedBaseContracts": [
-          38635,
-          28701,
-          41350
-        ],
+        "linearizedBaseContracts": [38635, 28701, 41350],
         "name": "Aquifer",
         "nameLocation": "624:7:62",
         "scope": 38636,

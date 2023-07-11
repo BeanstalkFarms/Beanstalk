@@ -5,13 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/C.sol";
-import "~/libraries/Curve/LibBeanMetaCurve.sol";
-import "~/libraries/LibUnripe.sol";
+import "contracts/C.sol";
+import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import "contracts/libraries/LibUnripe.sol";
 
-/*
+/**
+ * @title BDVFacet
  * @author Publius
- * @title BDVFacet holds the Curve MetaPool BDV function.
+ * @notice Calculates BDV for whitelisted Silo tokens.
  */
 contract BDVFacet {
     using SafeMath for uint256;

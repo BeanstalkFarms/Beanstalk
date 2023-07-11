@@ -10,6 +10,7 @@ import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { FarmToMode } from '@beanstalk/sdk';
 import {
   FormState,
   SmartSubmitButton,
@@ -35,7 +36,6 @@ import useAccount from '~/hooks/ledger/useAccount';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { ActionType } from '~/util/Actions';
 import {
   displayBN,

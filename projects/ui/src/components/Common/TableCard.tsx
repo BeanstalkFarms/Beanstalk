@@ -11,16 +11,9 @@ import ArrowPagination from './ArrowPagination';
 import Fiat from './Fiat';
 import Row from '~/components/Common/Row';
 
-/**
- * Displays a <DataGrid /> with data about Crates. Attaches
- * a header with title, aggregate amount, and aggregate value.
- * Used to display deposits/withdrawals within the Silo.
- */
 import { FC } from '~/types';
 
-const MAX_ROWS = 5;
-
-const TableCard: FC<{
+export type TableCardProps = {
   /** Card title */
   title: string;
   /** Column setup */
@@ -42,7 +35,16 @@ const TableCard: FC<{
   /** additional table styles */
   tableCss?: any;
   /** disable border */
-}> = ({
+  maxRows?: number;
+  hideFooter?: true | undefined;
+};
+
+/**
+ * Displays a <DataGrid /> with data about Crates. Attaches
+ * a header with title, aggregate amount, and aggregate value.
+ * Used to display deposits/withdrawals within the Silo.
+ */
+const TableCard: FC<TableCardProps> = ({
   title,
   columns,
   rows,
@@ -53,13 +55,21 @@ const TableCard: FC<{
   token,
   onlyTable = false,
   tableCss,
+  maxRows = 5,
+  hideFooter = false,
 }) => {
   const tableHeight = useMemo(() => {
     if (!rows || rows.length === 0) return '250px';
-    return 60.5 + 6 + 39 - 5 + Math.min(rows.length, MAX_ROWS) * 36;
-  }, [rows]);
+    return 60.5 + (hideFooter ? 0 : 36) + Math.min(rows.length, maxRows) * 36;
+  }, [hideFooter, maxRows, rows]);
+
   return (
-    <Card sx={{ border: onlyTable ? '0px solid' : undefined }}>
+    <Card
+      sx={{
+        border: onlyTable ? '0px solid' : undefined,
+        backgroundColor: onlyTable ? 'transparent' : undefined,
+      }}
+    >
       {!onlyTable && (
         <Row
           p={2}
@@ -93,7 +103,6 @@ const TableCard: FC<{
           ) : null}
         </Row>
       )}
-      {/* <Divider sx={{ borderColor: 'divider' }} /> */}
       <Box
         sx={{
           pt: 0.5,
@@ -107,10 +116,11 @@ const TableCard: FC<{
         <DataGrid
           columns={columns}
           rows={rows}
-          pageSize={MAX_ROWS}
+          pageSize={maxRows}
           disableSelectionOnClick
           disableColumnMenu
           density="compact"
+          hideFooter={hideFooter}
           components={{
             NoRowsOverlay() {
               return (

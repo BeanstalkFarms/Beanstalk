@@ -20,6 +20,7 @@ export let getAccount = (account: string) => account.toLowerCase();
  */
 export const IMPERSONATED_ACCOUNT = import.meta.env
   .VITE_OVERRIDE_FARMER_ACCOUNT;
+
 if (import.meta.env.DEV && IMPERSONATED_ACCOUNT) {
   console.warn(`Using overridden Farmer account: ${IMPERSONATED_ACCOUNT}`);
   getAccount = () => (IMPERSONATED_ACCOUNT as string).toLowerCase();

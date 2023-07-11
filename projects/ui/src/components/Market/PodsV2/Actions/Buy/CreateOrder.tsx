@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useProvider } from 'wagmi';
+import { ERC20Token, FarmFromMode, NativeToken, Token } from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -17,7 +17,6 @@ import {
   TxnSeparator,
   TxnSettings,
 } from '~/components/Common/Form';
-import { ERC20Token, FarmFromMode, NativeToken, Token } from '@beanstalk/sdk';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -28,13 +27,14 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchFarmerMarket } from '~/state/farmer/market/updater';
 import { ActionType } from '~/util/Actions';
-import Farm from '~/lib/Beanstalk/Farm';
 import { optimizeFromMode } from '~/util/Farm';
 import {
   displayFullBN,
   toStringBaseUnitBN,
   displayTokenAmount,
   displayBN,
+  bnToTokenValue,
+  tokenValueToBN,
 } from '~/util';
 import { AppState } from '~/state';
 import { BEAN, ETH, PODS } from '~/constants/tokens';
@@ -45,16 +45,15 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
-import useSdk from '~/hooks/sdk';
-import { bnToTokenValue } from '~/util';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+
 import { BuyPlotsFarmStep } from '~/lib/Txn/FarmSteps/market/BuyPlotsFarmStep';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useAccount from '~/hooks/ledger/useAccount';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import { getNewToOldToken } from '~/hooks/sdk';
-import { tokenValueToBN } from '~/util';
+
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 
@@ -221,7 +220,7 @@ const CreateOrderV2Form: FC<
                 tokenOut={Bean}
                 balance={
                   state.token.address === ''
-                    ? balances['eth']
+                    ? balances.eth
                     : balances[state.token.address] || ZERO_BN
                 }
                 state={state}
@@ -334,11 +333,7 @@ const CreateOrderProvider: FC<{}> = () => {
 
   /// Ledger
   const { data: signer } = useSigner();
-  const provider = useProvider();
   const beanstalk = useBeanstalkContract(signer);
-
-  /// Farm
-  const farm = useMemo(() => new Farm(provider), [provider]);
 
   /// Beanstalk
   const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
@@ -372,7 +367,7 @@ const CreateOrderProvider: FC<{}> = () => {
         slippage: 0.1,
       },
     }),
-    [Eth]
+    [baseToken]
   );
 
   /// Handlers
@@ -392,7 +387,7 @@ const CreateOrderProvider: FC<{}> = () => {
         tokenValue: amountOut,
       };
     },
-    [Weth, farm]
+    [account, sdk]
   );
 
   const onSubmit = useCallback(
@@ -503,7 +498,10 @@ const CreateOrderProvider: FC<{}> = () => {
       fetchFarmerMarketItems,
       beanstalk,
       balances,
-      Eth,
+      handleQuote,
+      sdk,
+      account,
+      txnBundler,
     ]
   );
 

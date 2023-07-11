@@ -18,7 +18,7 @@ main()
 async function main() {
   sdk = new WellsSDK({ signer });
   forkUtils = new TestUtils.BlockchainUtils(bsdk);
-  
+
   const addresses = WELL_ADDRESSES.split(",");
   for (const a of addresses) {
     await unloadWell(sdk, a);

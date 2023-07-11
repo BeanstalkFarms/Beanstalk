@@ -15,14 +15,6 @@ export class TransferToken extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    TransferToken.sdk.debug(`[${this.name}.run()]`, {
-      tokenIn: this._tokenIn,
-      recipient: this._recipient,
-      amountInStep: _amountInStep,
-      fromMode: this._fromMode,
-      toMode: this._toMode
-    });
-    
     return {
       name: this.name,
       amountOut: _amountInStep, // transfer exact amount

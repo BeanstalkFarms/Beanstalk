@@ -7,9 +7,6 @@
 [discord-badge]: https://img.shields.io/discord/880413392916054098?label=Beanstalk
 [discord-url]: https://discord.gg/beanstalk
 
-
-
 ### Subgraphs
 
-All subgraphs are currently in development in the anticipation of the Wells release. 
-
+All subgraphs are currently in development in the anticipation of the Wells release.

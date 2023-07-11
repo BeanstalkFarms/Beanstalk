@@ -35,9 +35,10 @@ describe("Silo Enroot", function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getAltBeanstalk(this.diamond.address);
-    this.season = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);
-    this.silo = await ethers.getContractAt("MockSiloFacet", this.diamond.address);
-    this.unripe = await ethers.getContractAt("MockUnripeFacet", this.diamond.address);
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
+    this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
 
     this.threeCurve = await ethers.getContractAt("MockToken", THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt("IMockCurvePool", BEAN_3_CURVE);
@@ -94,25 +95,30 @@ describe("Silo Enroot", function () {
 
   describe("Unripe Bean Removal", async function () {
     describe("All but 1", async function () {
-      beforeEach(async function () {
-        // 158328 * 0.185564685220298701 ~= 29380.085
-        // 158327 * 0.185564685220298701 ~= 29379.899
-        // floor(29380.085) - floor(29379.899) = 1
-        await this.silo.connect(user).mockUnripeBeanDeposit(season, "158328");
-        await this.beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, season, "158327");
-      });
-      it("should remove most of the deposit", async function () {
-        const deposit = await this.beanstalk.connect(user).getDeposit(userAddress, UNRIPE_BEAN, season);
-        expect(deposit[0]).to.equal("1");
-        expect(deposit[1]).to.equal("1");
-      });
+        beforeEach(async function () {
+            // 158328 * 0.185564685220298701 ~= 29380.085
+            // 158327 * 0.185564685220298701 ~= 29379.899
+            // floor(29380.085) - floor(29379.899) = 1
+            await this.silo.connect(user).mockUnripeBeanDeposit(season, '158328')
 
-      it("removes all stalk and seeds", async function () {
-        const stalk = await this.beanstalk.balanceOfStalk(userAddress);
-        const seeds = await this.beanstalk.balanceOfSeeds(userAddress);
-        expect(stalk).to.equal("10000");
-        expect(seeds).to.equal("2");
-      });
-    });
-  });
+            this.season.deployStemsUpgrade();
+            
+            this.stem = await this.silo.seasonToStem(UNRIPE_BEAN, season);
+            await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[season]], [[158328]], 0, 0, []);
+
+            await this.beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, '158327', EXTERNAL);
+        })
+        it("should remove most of the deposit", async function () {
+            const deposit = await this.beanstalk.connect(user).getDeposit(userAddress, UNRIPE_BEAN, this.stem)
+            expect(deposit[0]).to.equal('1')
+            expect(deposit[1]).to.equal('1')
+        });
+
+        it("removes all stalk", async function () {
+            const stalk = await this.beanstalk.balanceOfStalk(userAddress)
+            expect(stalk).to.equal('10000')
+        })
+
+    })
+  })
 });

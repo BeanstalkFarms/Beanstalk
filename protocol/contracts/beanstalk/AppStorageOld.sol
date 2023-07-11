@@ -42,6 +42,7 @@ contract AccountOld {
         uint32 lastUpdate;
         uint32 lastSupplyIncrease;
         SeasonOfPlenty sop;
+        uint256 roots; // Total amount of Roots.
     }
 }
 
@@ -145,6 +146,7 @@ contract StorageOld {
     struct Silo {
         uint256 stalk;
         uint256 seeds;
+        uint256 roots; // Total amount of Roots.
     }
 
     struct Oracle {

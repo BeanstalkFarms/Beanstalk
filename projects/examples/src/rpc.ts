@@ -12,7 +12,7 @@ async function main() {
   // const { sdk, stop } = await impersonate(account);
 
   const nonce = await sdk.provider.getTransactionCount(account);
-  console.log('Nonce is ', nonce);
+  console.log("Nonce is ", nonce);
 
   // await stop();
 }

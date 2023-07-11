@@ -31,6 +31,22 @@ library LibBytes {
     * @notice From Solidity Bytes Arrays Utils
     * @author Gonçalo Sá <goncalo.sa@consensys.net>
     */
+    function toUint32(bytes memory _bytes, uint256 _start) internal pure returns (uint32) {
+        require(_start + 4 >= _start, "toUint32_overflow");
+        require(_bytes.length >= _start + 4, "toUint32_outOfBounds");
+        uint32 tempUint;
+
+        assembly {
+            tempUint := mload(add(add(_bytes, 0x4), _start))
+        }
+
+        return tempUint;
+    }
+
+    /*
+    * @notice From Solidity Bytes Arrays Utils
+    * @author Gonçalo Sá <goncalo.sa@consensys.net>
+    */
     function toUint256(bytes memory _bytes, uint256 _start) internal pure returns (uint256) {
         require(_start + 32 >= _start, "toUint256_overflow");
         require(_bytes.length >= _start + 32, "toUint256_outOfBounds");
@@ -56,5 +72,14 @@ library LibBytes {
         }
         return memBytes;
     }
+
+    function packAddressAndStem(address _address, int96 stem) internal pure returns (uint256) {
+        return uint256(_address) << 96 | uint96(stem);
+    }
+
+    function unpackAddressAndStem(uint256 data) internal pure returns(address, int96) {
+        return (address(uint160(data >> 96)), int96(int256(data)));
+    }
+
 
 }

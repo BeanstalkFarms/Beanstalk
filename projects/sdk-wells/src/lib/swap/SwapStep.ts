@@ -56,7 +56,13 @@ export class SwapStep {
       this.quoteResult = await this.well.swapFromQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.subSlippage(slippage);
       try {
-        this.quoteGasEstimate = await this.well.swapFromGasEstimate(this.fromToken, this.toToken, amount, this.quoteResultWithSlippage, recipient);
+        this.quoteGasEstimate = await this.well.swapFromGasEstimate(
+          this.fromToken,
+          this.toToken,
+          amount,
+          this.quoteResultWithSlippage,
+          recipient
+        );
       } catch {
         this.quoteGasEstimate = TokenValue.ZERO;
       }
@@ -64,12 +70,18 @@ export class SwapStep {
       this.quoteResult = await this.well.swapToQuote(this.fromToken, this.toToken, amount);
       this.quoteResultWithSlippage = this.quoteResult.addSlippage(slippage);
       try {
-        this.quoteGasEstimate = await this.well.swapToGasEstimate(this.fromToken, this.toToken, this.quoteResultWithSlippage, amount, recipient);
+        this.quoteGasEstimate = await this.well.swapToGasEstimate(
+          this.fromToken,
+          this.toToken,
+          this.quoteResultWithSlippage,
+          amount,
+          recipient
+        );
       } catch {
         this.quoteGasEstimate = TokenValue.ZERO;
       }
     }
-    
+
     this.hasQuoted = true;
 
     return { quote: this.quoteResult, quoteWithSlippage: this.quoteResultWithSlippage, quoteGasEstimate: this.quoteGasEstimate };

@@ -1,5 +1,6 @@
 import { Stack, Typography } from '@mui/material';
 import React from 'react';
+import { FarmToMode } from '@beanstalk/sdk';
 import { IconSize } from '~/components/App/muiTheme';
 import AddressIcon from '~/components/Common/AddressIcon';
 import DescriptionButton from '~/components/Common/DescriptionButton';
@@ -8,7 +9,6 @@ import {
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 
 /* FIXME: extracted from DestinationField */
 const OPTIONS = [

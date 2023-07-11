@@ -11,9 +11,7 @@ import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn } from '~/lib/Txn';
 
 const isClaimingBeansAction = (action: FormTxn) =>
-  action === FormTxn.CLAIM ||
-  action === FormTxn.HARVEST ||
-  action === FormTxn.RINSE;
+  action === FormTxn.HARVEST || action === FormTxn.RINSE;
 
 export default function useFarmerFormTxnsActions(options?: {
   showGraphicOnClaim?: boolean | undefined;

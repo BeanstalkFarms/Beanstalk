@@ -33,21 +33,21 @@ describe("Silo Transfer", function () {
       });
 
       it("Validate starting state", async () => {
-        const { deposited } = await sdk.silo.getBalance(siloToken);
-        expect(deposited.crates.length).toBe(1);
-        expect(deposited.amount.eq(siloToken.amount(500))).toBe(true);
+        const balance = await sdk.silo.getBalance(siloToken);
+        expect(balance.deposits.length).toBe(1);
+        expect(balance.amount.eq(siloToken.amount(500))).toBe(true);
       });
 
       it("Successfully transfers", async () => {
         const tx = await transfer.transfer(siloToken, siloToken.amount(100), testDestination);
         await tx.wait();
-        const { deposited } = await sdk.silo.getBalance(siloToken);
+        const balance = await sdk.silo.getBalance(siloToken);
 
-        expect(deposited.crates.length).toBe(1);
-        expect(deposited.amount.eq(siloToken.amount(400))).toBe(true);
+        expect(balance.deposits.length).toBe(1);
+        expect(balance.amount.eq(siloToken.amount(400))).toBe(true);
 
-        const { deposited: destinationBalance } = await sdk.silo.getBalance(siloToken, testDestination);
-        expect(destinationBalance.crates.length).toBe(1);
+        const destinationBalance = await sdk.silo.getBalance(siloToken, testDestination);
+        expect(destinationBalance.deposits.length).toBe(1);
         expect(destinationBalance.amount.eq(siloToken.amount(100))).toBe(true);
       });
 

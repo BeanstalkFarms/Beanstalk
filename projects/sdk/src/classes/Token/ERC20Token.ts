@@ -14,5 +14,5 @@ CoreERC20Token.prototype.approveBeanstalk = function (amount: TokenValue | BigNu
   return this.approve(beanstalkAddress, amount);
 };
 
-export type ERC20Token = InstanceType<typeof CoreERC20Token>
+export type ERC20Token = InstanceType<typeof CoreERC20Token>;
 export const ERC20Token = CoreERC20Token;

@@ -719,7 +719,7 @@ describe('Marketplace', function () {
           await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 500, EXTERNAL)).to.be.revertedWith('Marketplace: Listing has expired.');
         })
 
-      it('Fill Listing not enough pods in plot', async function () {
+        it('Fill Listing not enough pods in plot', async function () {
           await expect(this.marketplace.connect(user2).fillPodListing(this.listing, 501, EXTERNAL)).to.be.revertedWith('Marketplace: Not enough pods in Listing.');
         })
 

@@ -292,7 +292,7 @@ const VoteForm: FC<
               )}
             </StatHorizontal>
           )}
-          {quorumPct && totalForQuorum && type === "BIP" && (
+          {quorumPct && totalForQuorum && type === 'BIP' && (
             <StatHorizontal
               label={
                 <>
@@ -306,9 +306,12 @@ const VoteForm: FC<
                 <CircularProgress size={16} />
               ) : (
                 <>
-                  ~{displayFullBN((totalOutstanding || ZERO_BN).multipliedBy(0.667), 0)}{' '}
-                  {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
-                  66.7%
+                  ~
+                  {displayFullBN(
+                    (totalOutstanding || ZERO_BN).multipliedBy(0.667),
+                    0
+                  )}{' '}
+                  {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp; 66.7%
                 </>
               )}
             </StatHorizontal>

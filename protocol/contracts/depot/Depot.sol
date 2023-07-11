@@ -88,11 +88,11 @@ contract Depot is DepotFacet, TokenSupportFacet {
         address sender,
         address recipient,
         address token,
-        uint32 season,
+        int96 stem,
         uint256 amount
     ) external payable returns (uint256 bdv) {
         require(sender == msg.sender, "invalid sender");
-        bdv = beanstalk.transferDeposit(msg.sender, recipient, token, season, amount);
+        bdv = beanstalk.transferDeposit(msg.sender, recipient, token, stem, amount);
     }
 
     /**
@@ -103,11 +103,11 @@ contract Depot is DepotFacet, TokenSupportFacet {
         address sender,
         address recipient,
         address token,
-        uint32[] calldata seasons,
+        int96[] calldata stems,
         uint256[] calldata amounts
     ) external payable returns (uint256[] memory bdvs) {
         require(sender == msg.sender, "invalid sender");
-        bdvs = beanstalk.transferDeposits(msg.sender, recipient, token, seasons, amounts);
+        bdvs = beanstalk.transferDeposits(msg.sender, recipient, token, stems, amounts);
     }
 
     /**

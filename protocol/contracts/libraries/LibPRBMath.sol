@@ -1,7 +1,5 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
- 
+// SPDX-License-Identifier: MIT
+
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
@@ -29,7 +27,7 @@ library LibPRBMath {
     // uint256 internal constant SCALE_INVERSE =
     //     78156646155174841979727994598816262306175212592076161876661_508869554232690281;
 
-    
+
     /// @dev How many trailing decimals can be represented.
     uint256 internal constant SCALE = 1e18;
 

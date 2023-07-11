@@ -3,11 +3,13 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Decimal.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/LibFertilizer.sol";
-import "~/libraries/LibPRBMath.sol";
-import "~/C.sol";
+import "@openzeppelin/contracts/utils/SafeCast.sol";
+import "contracts/libraries/Decimal.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibFertilizer.sol";
+import "contracts/libraries/LibSafeMath128.sol";
+import "contracts/libraries/LibPRBMath.sol";
+import "contracts/C.sol";
 import "./Oracle.sol";
 
 /**
@@ -16,9 +18,11 @@ import "./Oracle.sol";
  * @notice Sun controls the minting of new Beans to Fertilizer, the Field, and the Silo.
  */
 contract Sun is Oracle {
+    using SafeCast for uint256;
     using SafeMath for uint256;
     using LibPRBMath for uint256;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
     using Decimal for Decimal.D256;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.
@@ -132,7 +136,7 @@ contract Sun is Oracle {
 
             // If there is no more fertilizer, end
             if (!LibFertilizer.pop()) {
-                s.bpf = uint128(firstEndBpf);
+                s.bpf = uint128(firstEndBpf); // SafeCast unnecessary here.
                 s.fertilizedIndex = s.fertilizedIndex.add(newFertilized);
                 require(s.fertilizedIndex == s.unfertilizedIndex, "Paid != owed");
                 return newFertilized;
@@ -172,12 +176,39 @@ contract Sun is Oracle {
      * Farmers can claim them through {SiloFacet.plant}.
      */
     function rewardToSilo(uint256 amount) internal {
-        s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
-        s.earnedBeans = s.earnedBeans.add(amount);
+        // NOTE that the Beans have already been minted (see {rewardBeans}).
+        //
+        // `s.earnedBeans` is an accounting mechanism that tracks the total number
+        // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
+        // it is decremented. See {Silo.sol:_plant} for more details.
+        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
+        s.earnedBeans = s.earnedBeans.add(uint128(amount));
+
+        // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
+        //
+        // Stalk is created here, rather than in {rewardBeans}, because only
+        // Beans that are allocated to the Silo will receive Stalk.
+        // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
+        // for gas savings.
+        uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
+        s.s.stalk = s.s.stalk.add(seasonStalk);
+        // `s.newEarnedStalk` is an accounting mechanism that tracks the  number
+        // of Earned stalk that is allocated during the season. 
+        // This is used in _balanceOfEarnedBeans() to linearly distrubute 
+        // beans over the course of the season.
+        s.newEarnedStalk = seasonStalk.toUint128();
+        s.vestingPeriodRoots = 0;
+
+        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].deposited = s
             .siloBalances[C.BEAN]
             .deposited
-            .add(amount);
+            .add(uint128(amount));
+
+        s.siloBalances[C.BEAN].depositedBdv = s
+            .siloBalances[C.BEAN]
+            .depositedBdv
+            .add(uint128(amount));
     }
 
     //////////////////// SET SOIL ////////////////////
@@ -204,7 +235,7 @@ contract Sun is Oracle {
 
     
     function setSoil(uint256 amount) internal {
-        s.f.soil = uint128(amount);
-        emit Soil(s.season.current, amount);
+        s.f.soil = amount.toUint128();
+        emit Soil(s.season.current, amount.toUint128());
     }
 }

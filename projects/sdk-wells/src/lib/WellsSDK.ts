@@ -62,7 +62,7 @@ export class WellsSDK {
     return well;
   }
 
-   debug(...args: any[]) {
+  debug(...args: any[]) {
     if (!this.DEBUG) return;
     console.debug(...args);
   }

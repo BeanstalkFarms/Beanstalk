@@ -40,7 +40,7 @@ interface IBeanstalkTransfer {
         address sender,
         address recipient,
         address token,
-        uint32 season,
+        int96 stem,
         uint256 amount
     ) external payable returns (uint256 bdv);
 
@@ -48,7 +48,7 @@ interface IBeanstalkTransfer {
         address sender,
         address recipient,
         address token,
-        uint32[] calldata seasons,
+        int96[] calldata stems,
         uint256[] calldata amounts
     ) external payable returns (uint256[] memory bdvs);
 

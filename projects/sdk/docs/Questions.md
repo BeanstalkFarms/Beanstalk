@@ -1,6 +1,6 @@
 ## Open Questions
 
-- Should we allow users to define/use chainids beyond the ones used by Beanstalk (MAINNET, CUJO, LOCALHOST)?
+- Should we allow users to define/use chainids beyond the ones used by Beanstalk?
 
 - Token class should have utilities for handling values, amounts, conversions, formatting and display. Discussion needed.
   4 formats:

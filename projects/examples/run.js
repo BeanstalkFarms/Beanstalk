@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('dotenv').config()
+require("dotenv").config();
 
 // This script can be used for quick cli development without compilation steps.
 process.env.MM_DEV = 1;

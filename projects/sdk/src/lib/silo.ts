@@ -1,7 +1,7 @@
 import { BigNumber, ContractTransaction } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "./BeanstalkSDK";
-import EventProcessor from "src/lib/events/processor";
+import { EventProcessor } from "src/lib/events/processor";
 import { EIP712TypedData } from "./permit";
 import * as utils from "./silo/utils";
 import * as permitUtils from "./silo/utils.permit";
@@ -10,9 +10,7 @@ import { MAX_UINT256 } from "src/constants";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
 import { Withdraw } from "./silo/Withdraw";
-import { Claim } from "./silo/Claim";
-import { FarmToMode } from "./farm";
-import { DepositCrate, TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/types";
+import { Deposit, TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/types";
 import { Transfer } from "./silo/Transfer";
 import { Convert, ConvertDetails } from "./silo/Convert";
 
@@ -20,9 +18,9 @@ export class Silo {
   static sdk: BeanstalkSDK;
   private depositBuilder: DepositBuilder;
   siloWithdraw: Withdraw;
-  siloClaim: Claim;
   siloTransfer: Transfer;
   siloConvert: Convert;
+
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
   // FIXME
@@ -32,18 +30,47 @@ export class Silo {
     Silo.sdk = sdk;
     this.depositBuilder = new DepositBuilder(sdk);
     this.siloWithdraw = new Withdraw(sdk);
-    this.siloClaim = new Claim(sdk);
     this.siloTransfer = new Transfer(sdk);
     this.siloConvert = new Convert(sdk);
   }
+
+  public calculateGrownStalk = utils.calculateGrownStalkStems;
+  public calculateGrownStalkSeeds = utils.calculateGrownStalkSeeds;
 
   /**
    * Mowing adds Grown Stalk to stalk balance
    * @param _account
    */
-  async mow(_account?: string): Promise<ContractTransaction> {
-    const account = _account ? _account : await Silo.sdk.getAccount();
-    return Silo.sdk.contracts.beanstalk.update(account);
+  async mow(_account?: string, _token?: Token): Promise<ContractTransaction> {
+    const account = _account ?? (await Silo.sdk.getAccount());
+    const token = _token ?? Silo.sdk.tokens.BEAN;
+
+    return Silo.sdk.contracts.beanstalk.mow(account, token.address);
+  }
+
+  /**
+   * TODO: prevent duplicate tokens from being passed.
+   */
+  async mowMultiple(_account?: string, _tokens?: Token[]): Promise<ContractTransaction> {
+    const account = _account ?? (await Silo.sdk.getAccount());
+
+    let addrs: string[];
+    if (_tokens) {
+      if (_tokens.length === 0) throw new Error("No tokens provided");
+      if (_tokens.length === 1) {
+        console.warn("Optimization: use `mow()` instead of `mowMultiple()` for a single token");
+      }
+
+      const notWhitelisted = _tokens.find((token) => Silo.sdk.tokens.isWhitelisted(token) === false);
+      if (notWhitelisted) throw new Error(`${notWhitelisted.symbol} is not whitelisted`);
+
+      addrs = _tokens.map((t) => t.address);
+    } else {
+      // Default: all whitelisted tokens
+      addrs = Silo.sdk.tokens.siloWhitelistAddresses;
+    }
+
+    return Silo.sdk.contracts.beanstalk.mowMultiple(account, addrs);
   }
 
   /**
@@ -118,42 +145,12 @@ export class Silo {
    * in order to reach the desired amount. It returns extra information that may be useful
    * in a UI to show the user how much stalk and seed they will forfeit as a result of the withdraw
    */
-  async calculateWithdraw(token: Token, amount: TokenValue, crates: DepositCrate[], season: number) {
+  async calculateWithdraw(token: Token, amount: TokenValue, crates: Deposit[], season: number) {
     return this.siloWithdraw.calculateWithdraw(token, amount, crates, season);
   }
 
   /**
-   * Returns the claimable amount for the given whitelisted token, and the underlying crates
-   * @param token Which Silo token to withdraw. Must be a whitelisted token
-   * @param dataSource Dictates where to lookup the available claimable amount, subgraph vs onchain
-   */
-  async getClaimableAmount(token: Token, dataSource?: DataSource) {
-    return this.siloClaim.getClaimableAmount(token, dataSource);
-  }
-
-  /**
-   * Claims all claimable amount of the given whitelisted token
-   * @param token Which Silo token to withdraw. Must be a whitelisted token
-   * @param dataSource Dictates where to lookup the available claimable amount, subgraph vs onchain
-   * @param toMode Where to send the output tokens (circulating or farm balance)
-   */
-  async claim(token: Token, dataSource?: DataSource, toMode: FarmToMode = FarmToMode.EXTERNAL) {
-    return this.siloClaim.claim(token, dataSource, toMode);
-  }
-
-  /**
-   * Claims specific seasons from Silo claimable amount.
-   * @param token Which Silo token to withdraw. Must be a whitelisted token
-   * @param seasons Which seasons to claim, from the available claimable list. List of seasons
-   * can be retrieved with .getClaimableAmount()
-   * @param toMode Where to send the output tokens (circulating or farm balance)
-   */
-  async claimSeasons(token: Token, seasons: string[], toMode: FarmToMode = FarmToMode.EXTERNAL) {
-    return this.siloClaim.claimSeasons(token, seasons, toMode);
-  }
-
-  /**
-   * Convert from one Silo whitelisted token to another. 
+   * Convert from one Silo whitelisted token to another.
    * @param fromToken Token to convert from
    * @param toToken  Token to cnvert to
    * @param fromAmount Amount to convert
@@ -164,10 +161,10 @@ export class Silo {
   }
 
   /**
-   * Estimate a Silo convert() operation. 
-   * @param fromToken 
-   * @param toToken 
-   * @param fromAmount 
+   * Estimate a Silo convert() operation.
+   * @param fromToken
+   * @param toToken
+   * @param fromAmount
    * @returns An object containing minAmountOut, which is the estimated convert amount
    * and conversion, which contains details of the convert operation. conversion property
    * would be useful in a UI
@@ -189,74 +186,59 @@ export class Silo {
     options?: { source: DataSource.LEDGER } | { source: DataSource.SUBGRAPH }
   ): Promise<TokenSiloBalance> {
     const source = Silo.sdk.deriveConfig("source", options);
-    const [account, currentSeason] = await Promise.all([Silo.sdk.getAccount(_account), Silo.sdk.sun.getSeason()]);
+    const [account, currentSeason, stemTip] = await Promise.all([
+      Silo.sdk.getAccount(_account),
+      Silo.sdk.sun.getSeason(),
+      this.getStemTip(_token)
+    ]);
 
-    // FIXME: doesn't work if _token is an instance of a token created by the SDK consumer
     if (!Silo.sdk.tokens.siloWhitelist.has(_token)) throw new Error(`${_token.address} is not whitelisted in the Silo`);
 
-    ///  SETUP
-    const whitelist = Silo.sdk.tokens.siloWhitelist;
+    /// SETUP
     const balance: TokenSiloBalance = utils.makeTokenSiloBalance();
 
+    /// LEDGER
     if (source === DataSource.LEDGER) {
-      // Fetch and process events.
-      const seasonBN = BigNumber.from(currentSeason);
-      const events = await Silo.sdk.events.getSiloEvents(account, _token.address);
-      const processor = new EventProcessor(Silo.sdk, account, {
-        season: seasonBN,
-        whitelist
-      });
+      const events = await Silo.sdk.events.get("silo", [account, { token: _token }]);
+      const processor = new EventProcessor(Silo.sdk, account);
+      const { deposits: depositsByToken } = processor.ingestAll(events);
 
-      const { deposits, withdrawals } = processor.ingestAll(events);
+      // The processor's return schema assumes we might have wanted to grab
+      // multiple tokens, so we have to grab the one we want
+      const deposits = depositsByToken.get(_token);
 
-      // Handle deposits
-      {
-        const _crates = deposits.get(_token);
-
-        for (let s in _crates) {
-          const rawCrate = {
-            season: s.toString(),
-            amount: _crates[s].amount.toString(),
-            bdv: _crates[s].bdv.toString()
-          };
-          // Update the total deposited of this token
-          // and return a parsed crate object
-          utils.applyDeposit(balance.deposited, _token, rawCrate, currentSeason);
-        }
-
-        utils.sortCrates(balance.deposited);
+      for (let stem in deposits) {
+        utils.applyDeposit(balance, _token, stemTip, {
+          stem,
+          amount: deposits[stem].amount,
+          bdv: deposits[stem].bdv
+        });
       }
 
-      // Handle withdrawals
-      {
-        const _crates = withdrawals.get(_token);
-        if (_crates) {
-          const { withdrawn, claimable } = utils.parseWithdrawalCrates(_token, _crates, seasonBN);
-
-          balance.withdrawn = withdrawn;
-          balance.claimable = claimable;
-
-          utils.sortCrates(balance.withdrawn);
-          utils.sortCrates(balance.claimable);
-        }
-      }
-
+      utils.sortCrates(balance);
       return balance;
     }
 
     /// SUBGRAPH
     else if (source === DataSource.SUBGRAPH) {
+      // Deposits are automatically sorted in ascending order
       const query = await Silo.sdk.queries.getSiloBalance({
         token: _token.address.toLowerCase(),
         account,
+        // FIXME: remove season in favor of stem tip?
         season: currentSeason
-      }); // crates ordered in asc order
-      if (!query.farmer) return balance;
+      });
 
-      const { deposited, withdrawn, claimable } = query.farmer!;
-      deposited.forEach((crate) => utils.applyDeposit(balance.deposited, _token, crate, currentSeason));
-      withdrawn.forEach((crate) => utils.applyWithdrawal(balance.withdrawn, _token, crate));
-      claimable.forEach((crate) => utils.applyWithdrawal(balance.claimable, _token, crate));
+      if (!query.farmer) return balance;
+      const { deposited } = query.farmer;
+
+      deposited.forEach((deposit) =>
+        utils.applyDeposit(balance, _token, stemTip, {
+          stem: deposit.season, // FIXME
+          amount: deposit.amount,
+          bdv: deposit.bdv
+        })
+      );
 
       return balance;
     }
@@ -269,25 +251,22 @@ export class Silo {
    *
    * ```
    * [Token] => {
-   *   deposited => { amount, bdv, crates },
-   *   withdrawn => { amount, crates },
-   *   claimable => { amount, crates }
+   *   amount,
+   *   bdv,
+   *   deposits
    * }
    * ```
-   *
-   * @note EventProcessor requires a known whitelist and returns
-   *       an object (possibly empty) for every whitelisted token.
-   * @note To process a Deposit, we must know how many Stalk & Seeds
-   *       are given to it. If a token is dewhitelisted and removed from
-   *       `tokens` (or from the on-chain whitelist)
-   * @fixme "deposits" vs "deposited"
    */
   public async getBalances(
     _account?: string,
     options?: { source: DataSource.LEDGER } | { source: DataSource.SUBGRAPH }
   ): Promise<Map<Token, TokenSiloBalance>> {
     const source = Silo.sdk.deriveConfig("source", options);
-    const [account, currentSeason] = await Promise.all([Silo.sdk.getAccount(_account), Silo.sdk.sun.getSeason()]);
+    const [account, currentSeason, stemTips] = await Promise.all([
+      Silo.sdk.getAccount(_account),
+      Silo.sdk.sun.getSeason(),
+      this.getStemTips([...Silo.sdk.tokens.siloWhitelist])
+    ]);
 
     /// SETUP
     const whitelist = Silo.sdk.tokens.siloWhitelist;
@@ -296,95 +275,68 @@ export class Silo {
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
-      // Fetch and process events.
-      const seasonBN = BigNumber.from(currentSeason); // FIXME
-      const events = await Silo.sdk.events.getSiloEvents(account);
-      const processor = new EventProcessor(Silo.sdk, account, {
-        season: seasonBN,
-        whitelist
-      });
-      const { deposits, withdrawals } = processor.ingestAll(events);
+      const events = await Silo.sdk.events.get("silo", [account]);
+      const processor = new EventProcessor(Silo.sdk, account);
+      const { deposits: depositsByToken } = processor.ingestAll(events);
 
       // Handle deposits.
       // Attach stalk & seed counts for each crate.
-      deposits.forEach((_crates, token) => {
-        if (!balances.has(token)) {
-          balances.set(token, utils.makeTokenSiloBalance());
+      depositsByToken.forEach((deposits, token) => {
+        // If we receive a token that wasn't on the SDK's known whitelist, create
+        // a new balance object for it. (This shouldn't happen)
+        if (!balances.has(token)) balances.set(token, utils.makeTokenSiloBalance());
+        const balance = balances.get(token)!;
+
+        // Load stem tip, used to calculate the amount of grown stalk
+        const stemTip = stemTips.get(token);
+        if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
+
+        for (let stem in deposits) {
+          utils.applyDeposit(balance, token, stemTip, {
+            stem,
+            amount: deposits[stem].amount,
+            bdv: deposits[stem].bdv
+          });
         }
-        const state = balances.get(token)!.deposited;
 
-        for (let s in _crates) {
-          const rawCrate = {
-            season: s.toString(),
-            amount: _crates[s].amount.toString(),
-            bdv: _crates[s].bdv.toString()
-          };
-
-          // Update the total deposited of this token
-          // and return a parsed crate object
-          utils.applyDeposit(state, token, rawCrate, currentSeason);
-        }
-
-        utils.sortCrates(state);
+        utils.sortCrates(balance);
       });
 
-      // Handle withdrawals.
-      // Split crates into withdrawn and claimable.
-      withdrawals.forEach((_crates, token) => {
-        if (!balances.has(token)) {
-          balances.set(token, utils.makeTokenSiloBalance());
-        }
-
-        //
-        const { withdrawn, claimable } = utils.parseWithdrawalCrates(token, _crates, seasonBN);
-        const tokenBalance = balances.get(token);
-        tokenBalance!.withdrawn = withdrawn;
-        tokenBalance!.claimable = claimable;
-
-        utils.sortCrates(tokenBalance!.withdrawn);
-        utils.sortCrates(tokenBalance!.claimable);
-      });
-
-      return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances); // FIXME: sorting is redundant if this is instantiated
+      // FIXME: sorting is redundant if this is instantiated
+      return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);
     }
 
     /// SUBGRAPH
     if (source === DataSource.SUBGRAPH) {
-      const query = await Silo.sdk.queries.getSiloBalances({ account, season: currentSeason }); // crates ordered in asc order
-      if (!query.farmer) return balances;
-      const { deposited, withdrawn, claimable } = query.farmer!;
+      // Deposits are automatically sorted in ascending order
+      const query = await Silo.sdk.queries.getSiloBalances({
+        account,
+        season: currentSeason
+      });
 
-      // Lookup token by address and create a TokenSiloBalance entity.
-      // @fixme private member of Silo?
-      const prepareToken = (address: string) => {
-        const token = Silo.sdk.tokens.findByAddress(address);
-        if (!token) return; // FIXME: unknown token handling
-        if (!balances.has(token)) balances.set(token, utils.makeTokenSiloBalance());
-        return token;
-      };
+      if (!query.farmer) return balances;
+      const { deposited } = query.farmer;
 
       // Handle deposits.
-      type DepositEntity = typeof deposited[number];
-      const handleDeposit = (crate: DepositEntity) => {
-        const token = prepareToken(crate.token);
-        if (!token) return;
-        const state = balances.get(token)!.deposited;
-        utils.applyDeposit(state, token, crate, currentSeason);
-      };
+      deposited.forEach((deposit: typeof deposited[number]) => {
+        const token = Silo.sdk.tokens.findByAddress(deposit.token);
+        if (!token) return; // FIXME: unknown token handling
 
-      // Handle withdrawals.
-      // Claimable = withdrawals from the past. The GraphQL query enforces this.
-      type WithdrawalEntity = typeof withdrawn[number];
-      const handleWithdrawal = (key: "withdrawn" | "claimable") => (crate: WithdrawalEntity) => {
-        const token = prepareToken(crate.token);
-        if (!token) return;
-        const state = balances.get(token)![key];
-        utils.applyWithdrawal(state, token, crate);
-      };
+        // If we receive a token that wasn't on the SDK's known whitelist, create
+        // a new balance object for it. (This shouldn't happen)
+        if (!balances.has(token)) balances.set(token, utils.makeTokenSiloBalance());
+        const balance = balances.get(token)!;
 
-      deposited.forEach(handleDeposit);
-      withdrawn.forEach(handleWithdrawal("withdrawn"));
-      claimable.forEach(handleWithdrawal("claimable"));
+        // Load stem tip, used to calculate the amount of grown stalk
+        const stemTip = stemTips.get(token);
+        if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
+
+        utils.applyDeposit(balance, token, stemTip, {
+          stem: deposit.season, // FIXME
+          amount: deposit.amount,
+          bdv: deposit.bdv
+        });
+      });
 
       return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);
     }
@@ -402,6 +354,7 @@ export class Silo {
       this.getEarnedStalk(_account),
       this.getGrownStalk(_account)
     ]);
+
     // TODO: add revitalized
     return {
       active,
@@ -427,7 +380,7 @@ export class Silo {
    */
   async getSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfSeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    return Silo.sdk.contracts.beanstalk.balanceOfLegacySeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
   }
 
   /**
@@ -456,18 +409,45 @@ export class Silo {
    */
   async getPlantableSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    // TODO: this is wrong
-    return Silo.sdk.contracts.beanstalk.balanceOfEarnedSeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    throw new Error("Not implemented");
   }
 
   /**
-   * Get a Farmer's Grown Stalk since last Mow.
-   * @param _account
-   * @returns
+   * Get a Farmer's Grown Stalk since last Mow. Aggregates Grown Stalk across
+   * all whitelisted tokens.
    */
   async getGrownStalk(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfGrownStalk(account).then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
+
+    const results = await Promise.all(
+      Silo.sdk.tokens.siloWhitelistAddresses.map((address) => {
+        return Silo.sdk.contracts.beanstalk.balanceOfGrownStalk(account, address);
+      })
+    );
+
+    return Silo.sdk.tokens.STALK.fromBlockchain(
+      results.reduce((a, b) => a.add(b), BigNumber.from(0)) // TODO: sum function?
+    );
+  }
+
+  /**
+   * TODO: Cache stemStartSeason and calculate tip using Season?
+   * TODO: TokenValue?
+   * TODO: Check if whitelisted?
+   */
+  async getStemTip(token: Token): Promise<BigNumber> {
+    return Silo.sdk.contracts.beanstalk.stemTipForToken(token.address);
+  }
+
+  /**
+   * TODO: Cache stemStartSeason and calculate tip using Season?
+   * TODO: multicall?
+   * TODO: Check if whitelisted?
+   */
+  async getStemTips(tokens: Token[]) {
+    return Promise.all(tokens.map((token) => this.getStemTip(token).then((tip) => [token, tip] as const))).then(
+      (tips) => new Map<Token, BigNumber>(tips)
+    );
   }
 
   /**

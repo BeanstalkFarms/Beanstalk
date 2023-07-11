@@ -96,10 +96,16 @@ library C {
         return ROOTS_BASE;
     }
 
+    /**
+     * @dev The pre-exploit BEAN:3CRV Curve metapool address.
+     */
     function unripeLPPool1() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_METAPOOL;
     }
 
+    /**
+     * @dev The pre-exploit BEAN:LUSD Curve plain pool address.
+     */
     function unripeLPPool2() internal pure returns (address) {
         return UNRIPE_CURVE_BEAN_LUSD_POOL;
     }

@@ -34,10 +34,12 @@ export class Tokens {
 
   public unripeTokens: Set<Token>;
   public unripeUnderlyingTokens: Set<Token>;
-  public siloWhitelist: Set<Token>;
   public erc20Tokens: Set<Token>;
   public balanceTokens: Set<Token>;
   public crv3Underlying: Set<Token>;
+
+  public siloWhitelist: Set<Token>;
+  public siloWhitelistAddresses: string[];
 
   private map: Map<string, Token>;
 
@@ -147,7 +149,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(2)
+      seeds: this.SEEDS.amount(0)
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
@@ -165,7 +167,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN_CRV3.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4)
+      seeds: this.SEEDS.amount(0)
     };
     this.UNRIPE_BEAN_CRV3.isUnripe = true;
 
@@ -319,16 +321,19 @@ export class Tokens {
 
     ////////// Groups //////////
 
+    const siloWhitelist = [this.BEAN, this.BEAN_CRV3_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3];
+    this.siloWhitelist = new Set(siloWhitelist);
+    this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
+
     this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3]);
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.BEAN_CRV3_LP]);
-    this.siloWhitelist = new Set([this.BEAN, this.BEAN_CRV3_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3]);
     this.erc20Tokens = new Set([...this.siloWhitelist, this.WETH, this.CRV3, this.DAI, this.USDC, this.USDT]);
     this.balanceTokens = new Set([this.ETH, ...this.erc20Tokens]);
     this.crv3Underlying = new Set([this.DAI, this.USDC, this.USDT]);
   }
 
-  isWhitelisted(token: Token){
-    return this.siloWhitelist.has(token)
+  isWhitelisted(token: Token) {
+    return this.siloWhitelist.has(token);
   }
 
   // TODO: why do we need this?

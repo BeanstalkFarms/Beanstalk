@@ -295,15 +295,9 @@
     "absolutePath": "src/functions/ConstantProduct2.sol",
     "id": 41345,
     "exportedSymbols": {
-      "ConstantProduct2": [
-        41344
-      ],
-      "IWellFunction": [
-        41847
-      ],
-      "LibMath": [
-        50868
-      ]
+      "ConstantProduct2": [41344],
+      "IWellFunction": [41847],
+      "LibMath": [50868]
     },
     "nodeType": "SourceUnit",
     "src": "33:1442:65",
@@ -313,12 +307,7 @@
         "nodeType": "PragmaDirective",
         "src": "33:24:65",
         "nodes": [],
-        "literals": [
-          "solidity",
-          "^",
-          "0.8",
-          ".17"
-        ]
+        "literals": ["solidity", "^", "0.8", ".17"]
       },
       {
         "id": 41246,
@@ -386,9 +375,7 @@
             "libraryName": {
               "id": 41252,
               "name": "LibMath",
-              "nameLocations": [
-                "508:7:65"
-              ],
+              "nameLocations": ["508:7:65"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 50868,
               "src": "508:7:65"
@@ -673,9 +660,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              41834
-            ],
+            "baseFunctions": [41834],
             "documentation": {
               "id": 41258,
               "nodeType": "StructuredDocumentation",
@@ -1139,9 +1124,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              41823
-            ],
+            "baseFunctions": [41823],
             "documentation": {
               "id": 41286,
               "nodeType": "StructuredDocumentation",
@@ -1358,9 +1341,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              41840
-            ],
+            "baseFunctions": [41840],
             "functionSelector": "06fdde03",
             "implemented": true,
             "kind": "function",
@@ -1453,9 +1434,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              41846
-            ],
+            "baseFunctions": [41846],
             "functionSelector": "95d89b41",
             "implemented": true,
             "kind": "function",
@@ -1520,9 +1499,7 @@
             "baseName": {
               "id": 41250,
               "name": "IWellFunction",
-              "nameLocations": [
-                "482:13:65"
-              ],
+              "nameLocations": ["482:13:65"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 41847,
               "src": "482:13:65"
@@ -1542,10 +1519,7 @@
           "text": " @author Publius\n @title Gas efficient Constant Product pricing function for Wells with 2 tokens.\n Constant Product Wells with 2 tokens use the formula:\n  `b_0 * b_1 = s^2`\n Where:\n  `s` is the supply of LP tokens\n  `b_i` is the reserve at index `i`"
         },
         "fullyImplemented": true,
-        "linearizedBaseContracts": [
-          41344,
-          41847
-        ],
+        "linearizedBaseContracts": [41344, 41847],
         "name": "ConstantProduct2",
         "nameLocation": "462:16:65",
         "scope": 41345,

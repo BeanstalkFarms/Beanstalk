@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Typography, TypographyProps } from '@mui/material';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import copy from '~/constants/copy';
 import AddressIcon from '../AddressIcon';
 import PillSelectField, { PillSelectFieldProps } from './PillSelectField';

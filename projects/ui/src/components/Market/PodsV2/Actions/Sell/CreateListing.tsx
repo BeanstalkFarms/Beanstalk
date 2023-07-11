@@ -3,6 +3,7 @@ import { Alert, Box, InputAdornment, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { FarmToMode } from '@beanstalk/sdk';
 import {
   PlotFragment,
   PlotSettingsFragment,
@@ -29,7 +30,6 @@ import {
   displayBN,
   displayFullBN,
 } from '~/util';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 
 import { BEAN, PODS } from '~/constants/tokens';
 import { ONE_BN, ZERO_BN, POD_MARKET_TOOLTIPS } from '~/constants';

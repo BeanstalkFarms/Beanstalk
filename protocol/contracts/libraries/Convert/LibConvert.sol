@@ -8,7 +8,7 @@ import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
 import {LibConvertData} from "./LibConvertData.sol";
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title LibConvert
@@ -83,7 +83,7 @@ library LibConvert {
     }
 
     function getAmountOut(address tokenIn, address tokenOut, uint256 amountIn)
-        internal 
+        internal
         view
         returns (uint256)
     {

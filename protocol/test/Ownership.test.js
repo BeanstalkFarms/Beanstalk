@@ -60,6 +60,7 @@ describe('Ownership', function () {
       it('claims ownership', async function () {
         await this.ownership.connect(owner).transferOwnership(user2Address)
         this.result = this.ownership.connect(user2).claimOwnership()
+
         expect(await this.ownership.ownerCandidate()).to.be.equal(ZERO_ADDRESS)
         expect(await this.ownership.owner()).to.be.equal(user2Address)
         await expect(this.result).to.emit(this.ownership, 'OwnershipTransferred').withArgs(ownerAddress, user2Address)
@@ -84,13 +85,71 @@ describe('Ownership', function () {
         '10000',
         '1')
       const settings = await this.silo.tokenSettings(this.siloToken.address)
+
+
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
+
       expect(settings[1]).to.equal(1)
+
       expect(settings[2]).to.equal(10000)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-        10000,
-        1)
+        1,
+        10000)
+    })
+
+    it('reverts on whitelisting same token again', async function () {
+      this.resultFirst = await this.whitelist.connect(owner).whitelistToken(
+        this.siloToken.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        '10000',
+        '1')
+      
+      await expect(this.whitelist.connect(owner).whitelistToken(
+          this.siloToken.address, 
+          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+          '10000',
+          '1')).to.be.revertedWith("Token already whitelisted");
+    })
+
+    it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
+      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith("Token not whitelisted");
+    });
+
+    it('reverts on whitelisting token with bad selector', async function () {
+      await expect(this.whitelist.connect(owner).whitelistToken(
+        this.siloToken.address,
+        '0x00000000',
+        '10000',
+        '1')).to.be.revertedWith("Invalid selector");
+    });
+
+    it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
+      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith("Token not whitelisted");
+    });
+  })
+
+  describe('update stalk per bdv per season for token', async function () {
+    it('reverts if not owner', async function () {
+      await expect(this.whitelist.connect(user2).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith('LibDiamond: Must be contract or owner')
+    })
+
+    it('updates stalk per bdv per season', async function () {
+      //do initial whitelist so there's something to update
+      this.whitelist.connect(owner).whitelistToken(
+        this.siloToken.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        '10000',
+        '1')
+      this.result = this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(
+        this.siloToken.address, 
+        '50000'
+      )
+      const settings = await this.silo.tokenSettings(this.siloToken.address)
+
+      expect(settings[1]).to.equal(50000)
+      const currentSeason = await this.season.season()
+      await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 50000, currentSeason)
     })
   })
 
