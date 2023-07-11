@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const Table = styled.table`
-  border: 0.5px solid #9CA3AF;
+  border: 0.5px solid #9ca3af;
   border-collapse: collapse;
   table-layout: fixed;
   overflow: hidden;
@@ -11,7 +11,7 @@ export const Table = styled.table`
 export const Row = styled.tr`
   background-color: #fff;
   height: 120px;
-  border-bottom: 0.5px solid #9CA3AF;
+  border-bottom: 0.5px solid #9ca3af;
 
   :hover {
     cursor: pointer;
@@ -36,7 +36,7 @@ export const THead = styled.thead`
   ${Row} {
     height: 48px;
     background-color: #f9f9f9;
-    border-bottom: 0.5px solid #9CA3AF;
+    border-bottom: 0.5px solid #9ca3af;
   }
 `;
 export const TBody = styled.tbody``;

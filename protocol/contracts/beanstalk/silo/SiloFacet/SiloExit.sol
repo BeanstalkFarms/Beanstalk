@@ -222,6 +222,30 @@ contract SiloExit is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.STALK_PER_BEAN);
     }
 
+    function balanceOfDepositedBdv(address account, address token)
+        external
+        view
+        returns (uint256 depositedBdv)
+    {
+        depositedBdv = s.a[account].mowStatuses[token].bdv;
+    }
+
+    function getLastMowedStem(address account, address token)
+        external
+        view
+        returns (int96 lastStem)
+    {
+        lastStem = s.a[account].mowStatuses[token].lastStem;
+    }
+
+    function getMowStatus(address account, address token)
+        external
+        view
+        returns (Account.MowStatus memory mowStatus)
+    {
+        mowStatus = s.a[account].mowStatuses[token];
+    }
+
     //////////////////////// SEASON OF PLENTY ////////////////////////
 
     /**
@@ -285,7 +309,7 @@ contract SiloExit is ReentrancyGuard {
     function stemTipForToken(address token)
         public
         view
-        returns (int128 _stemTip)
+        returns (int96 _stemTip)
     {
         _stemTip = LibTokenSilo.stemTipForToken(
             token
@@ -299,7 +323,7 @@ contract SiloExit is ReentrancyGuard {
     function seasonToStem(address token, uint32 season)
         public
         view
-        returns (int128 stem)
+        returns (int96 stem)
     {
         uint256 seedsPerBdv = getSeedsPerToken(address(token));
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);

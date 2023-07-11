@@ -28,7 +28,7 @@ export const Well = () => {
   const { address: wellAddress } = useParams<"address">();
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
-  const [wellFunctionName, setWellFunctionName] = useState<string | undefined>('-')
+  const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -42,12 +42,12 @@ export const Well = () => {
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);
-      };
+      }
 
       if (well.wellFunction) {
-        const _wellName = await well.wellFunction.contract.name()
-        setWellFunctionName(_wellName)
-      };
+        const _wellName = await well.wellFunction.contract.name();
+        setWellFunctionName(_wellName);
+      }
     };
 
     run();
@@ -69,13 +69,14 @@ export const Well = () => {
   });
   const totalUSD = reserves.reduce((total, r) => total.add(r.dollarAmount ?? TokenValue.ZERO), TokenValue.ZERO);
 
-  reserves.forEach(reserve => {
+  reserves.forEach((reserve) => {
     reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
-  })
+  });
 
-  const goLiquidity = () => navigate(`./liquidity`)
+  const goLiquidity = () => navigate(`./liquidity`);
 
-  const goSwap = () => (well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null)
+  const goSwap = () =>
+    well && well.tokens ? navigate(`../swap?fromToken=${well.tokens[0].symbol}&toToken=${well.tokens[1].symbol}`) : null;
 
   if (loading)
     return (
@@ -94,7 +95,7 @@ export const Well = () => {
 
   return (
     <Page>
-      <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} />
+      <Title title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
       <ContentWrapper>
         <MainContent>
           <Row>
@@ -106,26 +107,26 @@ export const Well = () => {
             </Item>
             <Item column stretch right>
               <FunctionName>{wellFunctionName}</FunctionName>
-              <Fee>4.20% Tradading Fee</Fee>
+              <Fee>0.00% Trading Fee</Fee>
             </Item>
           </Row>
           <Reserves reserves={reserves} />
           <ChartSection well={well!} />
           <Row gap={24}>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch>
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
                 Activity
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch>
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
                 Other Details
               </TabButton>
             </Item>
           </Row>
           <BottomContainer>
-            {tab === 0 && <WellHistory well={well!} />}
-            {tab === 1 && <OtherSection />}
+            {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
+            {tab === 1 && <OtherSection well={well!} />}
           </BottomContainer>
         </MainContent>
         <SideBar id="sidebar">
@@ -166,6 +167,7 @@ const ContentWrapper = styled.div`
   // outline: 1px solid red;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   gap: 48px;
 `;
 const MainContent = styled.div`

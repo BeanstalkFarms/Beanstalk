@@ -21,6 +21,7 @@ export const initialFarmerSilo: FarmerSilo = {
     earned: NEG1,
     grown: NEG1,
     total: NEG1,
+    grownByToken: new Map(),
     totalPrevSeason: NEW_BN,
   },
   seeds: {

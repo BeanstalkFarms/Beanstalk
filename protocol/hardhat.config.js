@@ -244,6 +244,11 @@ module.exports = {
       chainId: 133137,
       url: "<CUSTOM_URL>",
       timeout: 100000
+    },
+    testSiloV3: {
+      chainId: 31337,
+      url: "https://rpc.vnet.tenderly.co/devnet/silo-v3/3ed19e82-a81c-45e5-9b16-5e385aa74587",
+      timeout: 100000
     }
   },
   etherscan: {

@@ -4,7 +4,9 @@ import { Discord, Github, Twitter } from "../Icons";
 
 export const Footer = () => (
   <Container>
-    <Box href="https://github.com/BeanstalkFarms/Beanstalk/tree/dex-prod/projects/dex-ui" rel="noopener noreferrer" target="_blank">We are open source. Contribute to this site →</Box>
+    <Box href="https://github.com/BeanstalkFarms/Beanstalk/tree/dex-prod/projects/dex-ui" rel="noopener noreferrer" target="_blank">
+      We are open source. Contribute to this site →
+    </Box>
     <Box>Join the discussion</Box>
     <SmallBox href="https://basin.exchange/discord" rel="noopener noreferrer" target="_blank">
       <Discord width={20} />

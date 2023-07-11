@@ -89,12 +89,7 @@ export const TokenInput: FC<TokenInput> = ({
   if (loading) return <LoadingContainer width={width} data-trace="true" />;
 
   return (
-    <Container
-      width={width}
-      id="token-input"
-      onClick={handleClick}
-      data-trace="true"
-    >
+    <Container width={width} id="token-input" onClick={handleClick} data-trace="true">
       <TopRow>
         <BasicInput
           id={id}
@@ -172,10 +167,10 @@ const Container = styled.div<ContainerProps>`
   cursor: text;
   :focus-within {
     outline: 0.5px solid #46b955;
-  };
+  }
   :hover {
     outline: 2px solid #46b955;
-  };
+  }
 `;
 
 const TopRow = styled.div`

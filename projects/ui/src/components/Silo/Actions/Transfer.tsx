@@ -65,7 +65,7 @@ const TransferForm: FC<
     token: Token;
     siloBalance: TokenSiloBalance | undefined;
     season: BigNumber;
-    plantAndDoX: PlantAndDoX;
+    plantAndDoX: PlantAndDoX | undefined;
   }
 > = ({
   // Formik
@@ -84,7 +84,8 @@ const TransferForm: FC<
   const txnActions = useFarmerFormTxnsActions();
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
-      BEAN.equals(whitelistedToken)
+      BEAN.equals(whitelistedToken) &&
+      plantAndDoX
   );
 
   // Results
@@ -93,7 +94,7 @@ const TransferForm: FC<
     const deposits = siloBalance?.deposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !deposits.length)) return null;
-    if (isUsingPlant && plantAndDoX.getAmount().lte(0)) return null;
+    if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
 
     // FIXME: stems
     return WithdrawFarmStep.calculateWithdraw(
@@ -187,7 +188,7 @@ const TransferForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
-        <AddPlantTxnToggle />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
@@ -343,15 +344,19 @@ const TransferPropProvider: FC<{
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
 
+        const { plantAction } = plantAndDoX;
+
         const isPlanting =
+          plantAndDoX &&
           primaryActions?.includes(FormTxn.PLANT) &&
           sdk.tokens.BEAN.equals(token);
 
         const baseAmount = token.amount((formData?.amount || 0).toString());
 
-        const totalAmount = isPlanting
-          ? baseAmount.add(plantAndDoX.getAmount())
-          : baseAmount;
+        const totalAmount =
+          isPlanting && plantAction
+            ? baseAmount.add(plantAction.getAmount())
+            : baseAmount;
 
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
 
@@ -363,7 +368,7 @@ const TransferPropProvider: FC<{
           values.to,
           baseAmount,
           season.toNumber(),
-          isPlanting ? plantAndDoX : undefined
+          isPlanting ? plantAction : undefined
         );
 
         if (!transferTxn.withdrawResult) {
@@ -435,7 +440,7 @@ const TransferPropProvider: FC<{
           token={token}
           siloBalance={farmerBalances}
           season={season}
-          plantAndDoX={plantAndDoX}
+          plantAndDoX={plantAndDoX.plantAction}
           {...formikProps}
         />
       )}

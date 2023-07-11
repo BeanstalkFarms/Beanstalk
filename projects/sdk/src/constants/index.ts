@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 
 export * from "./addresses";
-export * from "./chains";
 
 /* Diamonds */
 export const NEW_BN = ethers.constants.NegativeOne;

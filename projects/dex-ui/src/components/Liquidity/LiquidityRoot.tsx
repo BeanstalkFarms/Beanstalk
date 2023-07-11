@@ -29,27 +29,39 @@ export const LiquidityRoot = ({ well, txnCompleteCallback }: LiquidityRootProps)
 
   return (
     <Container>
-        <>
-          <Tabs>
-            <Tab>
-              <TabButton selected={!showRemove} onClick={() => setShowRemove(false)}>
-                Add Liquidity
-              </TabButton>
-            </Tab>
-            <Tab>
-              <TabButton selected={showRemove} onClick={() => setShowRemove(true)}>
-                Remove Liquidity
-              </TabButton>
-            </Tab>
-          </Tabs>
-          <div>
-            {showRemove ? (
-              <RemoveLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler}  handleSlippageValueChange={handleSlippageValueChange}/>
-            ) : (
-              <AddLiquidity well={well!} txnCompleteCallback={() => console.log("complete")} slippage={slippage} slippageSettingsClickHandler={slippageSettingsClickHandler} handleSlippageValueChange={handleSlippageValueChange}/>
-            )}
-          </div>
-        </>
+      <>
+        <Tabs>
+          <Tab>
+            <TabButton selected={!showRemove} onClick={() => setShowRemove(false)}>
+              Add Liquidity
+            </TabButton>
+          </Tab>
+          <Tab>
+            <TabButton selected={showRemove} onClick={() => setShowRemove(true)}>
+              Remove Liquidity
+            </TabButton>
+          </Tab>
+        </Tabs>
+        <div>
+          {showRemove ? (
+            <RemoveLiquidity
+              well={well!}
+              txnCompleteCallback={() => console.log("complete")}
+              slippage={slippage}
+              slippageSettingsClickHandler={slippageSettingsClickHandler}
+              handleSlippageValueChange={handleSlippageValueChange}
+            />
+          ) : (
+            <AddLiquidity
+              well={well!}
+              txnCompleteCallback={() => console.log("complete")}
+              slippage={slippage}
+              slippageSettingsClickHandler={slippageSettingsClickHandler}
+              handleSlippageValueChange={handleSlippageValueChange}
+            />
+          )}
+        </div>
+      </>
     </Container>
   );
 };

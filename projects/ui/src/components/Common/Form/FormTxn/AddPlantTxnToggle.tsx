@@ -24,7 +24,7 @@ import useFarmerFormTxnsSummary from '~/hooks/farmer/form-txn/useFarmerFormTxnsS
 import MergeIcon from '~/img/misc/merge-icon.svg';
 
 import { FormTxnsFormState } from '~/components/Common/Form';
-import { FormTxn } from '~/lib/Txn';
+import { FormTxn, PlantAndDoX } from '~/lib/Txn';
 import SiloVestingWarningAlert from '~/components/Silo/SiloVestingWarningAlert';
 
 const sx = {
@@ -51,7 +51,9 @@ const sx = {
  *
  * NOTE: Used within Formik Context
  */
-const AddPlantTxnToggle: React.FC<{}> = () => {
+const AddPlantTxnToggle: React.FC<{
+  plantAndDoX: PlantAndDoX | undefined;
+}> = ({ plantAndDoX }) => {
   /// Local State
   const [open, show, hide] = useToggle();
 
@@ -95,7 +97,7 @@ const AddPlantTxnToggle: React.FC<{}> = () => {
   }, [open, isPlant, isPlanting, show, hide]);
 
   /// If there is nothing to plant or if the preset isn't plant, return nothing
-  if (!isPlant || !plantEnabled) return null;
+  if (!isPlant || !plantEnabled || !plantAndDoX) return null;
 
   return (
     <>

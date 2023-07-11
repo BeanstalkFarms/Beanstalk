@@ -11,26 +11,44 @@ type Props = {
     title: string;
     path: string;
   };
+  center?: boolean;
 };
 
-export const Title: FC<Props> = ({ title, parent, fontweight }) => (
-  <Container>
-    {parent && <ParentText to={parent.path}>{parent.title} &gt;&nbsp;</ParentText>}
-    <TitleText fontweight={fontweight}>{title}</TitleText>
+export const Title: FC<Props> = ({ title, parent, fontweight, center }) => (
+  <Container center={center}>
+    <TitleContainer center={center}>
+      {parent && <ParentText to={parent.path}>{parent.title} &gt;&nbsp;</ParentText>}
+      <TitleText fontweight={fontweight}>{title}</TitleText>
+    </TitleContainer>
   </Container>
 );
 
 type TitleProps = {
   fontweight?: string;
-}
+};
 
-const Container = styled.div`
+type TitleContainerProps = {
+  center?: boolean;
+};
+
+const Container = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
+  ${(props) => props.center && `justify-content: center;`}
 `;
+
+const TitleContainer = styled.div<TitleContainerProps>`
+  display: flex;
+  flex-direction: row;
+  ${(props) =>
+    props.center &&
+    `width: 1344px;
+   min-width: 1344px;`}
+`;
+
 const TitleText = styled.div<TitleProps>`
   ${BodyL}
-  ${(props) => (props.fontweight && `font-weight: ${props.fontweight}`)};
+  ${(props) => props.fontweight && `font-weight: ${props.fontweight}`};
   text-transform: uppercase;
 `;
 const ParentText = styled(Link)`

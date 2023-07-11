@@ -19,3 +19,14 @@ export const getWellsFromAquifer = async (sdk: BeanstalkSDK, address: string): P
 
   return wells;
 };
+
+export const getWell = async (token1, token2, wells) => {
+  for await (const well of wells) {
+    const tokens = wells.tokens || (await well.getTokens());
+    const symbols = tokens.map((t) => t.symbol);
+
+    if (symbols.includes(token1.symbol) && symbols.includes(token2.symbol)) {
+      return well;
+    }
+  }
+};

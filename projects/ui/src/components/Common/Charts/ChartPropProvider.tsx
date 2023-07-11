@@ -105,6 +105,7 @@ type UtilProps = {
     width: number,
     keys: string[],
     stackedArea?: boolean,
+    pegLine?: boolean,
     isTWAP?: boolean
   ) => Scales[];
   getPointerValue: (
@@ -136,6 +137,7 @@ export type BaseChartProps = {
   keys: string[];
   curve?: CurveFactory | keyof typeof CURVES;
   scale?: keyof typeof SCALES;
+  pegLine?: boolean;
   isTWAP?: boolean;
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
@@ -389,6 +391,7 @@ const generateScale = (
   width: number,
   keys: string[],
   isStackedArea?: boolean,
+  pegLine?: boolean,
   isTWAP?: boolean
 ) =>
   seriesData.map((data) => {

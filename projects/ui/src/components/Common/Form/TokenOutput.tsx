@@ -53,6 +53,7 @@ type TokenOutputRowProps = {
   delta?: BigNumber | TokenValue | string;
   deltaSuffix?: string;
   size?: 'small' | 'medium';
+  hideIfZero?: boolean;
 };
 
 const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
@@ -77,6 +78,7 @@ function TokenOutputRow({
   delta,
   deltaSuffix,
   size = 'medium',
+  hideIfZero = false,
 }: TokenOutputRowProps) {
   const isMedium = size === 'medium';
   const boxSize = isMedium ? IconSize.medium : IconSize.small;
@@ -92,6 +94,8 @@ function TokenOutputRow({
     lineHeight: isMedium ? FontSize.sm : FontSize.xs,
     fontWeight: isMedium ? FontWeight.medium : FontWeight.normal,
   };
+
+  if (hideIfZero && amount.eq(0)) return null;
 
   return (
     <Stack width="100%" gap={0}>

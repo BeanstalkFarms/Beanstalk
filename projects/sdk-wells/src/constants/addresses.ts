@@ -10,5 +10,6 @@ export const addresses = {
 
   // Contracts
   DEPOT: Address.make("0xdeb0f000082fd56c10f449d4f8497682494da84d"),
-  PIPELINE: Address.make("0xb1be0000bfdcddc92a8290202830c4ef689dceaa")
+  PIPELINE: Address.make("0xb1be0000bfdcddc92a8290202830c4ef689dceaa"),
+  WETH9: Address.make("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
 };

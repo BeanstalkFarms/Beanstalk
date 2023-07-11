@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
-import { Box, Tab } from '@mui/material';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Alert, Box, Button, Tab } from '@mui/material';
 import { ERC20Token } from '@beanstalk/sdk';
+import { Link } from 'react-router-dom';
+import BigNumberJS from 'bignumber.js';
 import { Pool } from '~/classes';
 import { ERC20Token as ERC20TokenOld } from '~/classes/Token';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import useTabs from '~/hooks/display/useTabs';
 import BadgeTab from '~/components/Common/BadgeTab';
 import Deposit from './Deposit';
@@ -16,8 +18,14 @@ import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
 import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 import Convert from './Convert';
-import Claim from '~/components/Silo/Actions/Claim';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
+import { useFarmerLegacyWithdrawalsLazyQuery } from '~/generated/graphql';
+import useAccount from '~/hooks/ledger/useAccount';
+import useCastApolloQuery from '~/hooks/app/useCastApolloQuery';
+import LegacyClaim, {
+  LegacyWithdrawalSubgraph,
+} from '~/components/Silo/Actions/LegacyClaim';
+import { transform } from '~/util';
 
 /**
  * Show the three primary Silo actions: Deposit, Withdraw, Claim.
@@ -34,11 +42,12 @@ const SLUGS = ['deposit', 'convert', 'transfer', 'withdraw', 'claim'];
 const SiloActions: FC<{
   pool: Pool;
   token: ERC20TokenOld;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = (props) => {
   const sdk = useSdk();
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const migrationNeeded = useMigrationNeeded();
+  const account = useAccount();
 
   /// Temporary solutions. Remove these when we move the site to use the new sdk types.
   const token = useMemo(() => {
@@ -48,23 +57,70 @@ const SiloActions: FC<{
 
   const siloBalanceAsync = useFarmerSiloBalancesAsync(token);
 
-  if (!token) {
-    return null;
-  }
+  const [fetchLegacyWithdrawals, withdrawalsQuery] =
+    useFarmerLegacyWithdrawalsLazyQuery({
+      fetchPolicy: 'network-only',
+      notifyOnNetworkStatusChange: true,
+    });
 
-  /// TODO: TEMPORARY. FIX ME
-  const hasClaimableBeans = true;
+  useEffect(() => {
+    if (!account || !token.address) return;
+    fetchLegacyWithdrawals({
+      variables: {
+        account: account?.toLowerCase() || '',
+        token: token.address,
+      },
+    });
+  }, [account, fetchLegacyWithdrawals, token.address]);
+
+  const withdrawalItems = useCastApolloQuery<LegacyWithdrawalSubgraph>(
+    withdrawalsQuery,
+    'siloWithdraws',
+    useCallback(
+      (w) => ({
+        season: new BigNumberJS(w.season),
+        amount: transform(token.fromBlockchain(w.amount), 'bnjs', token),
+      }),
+      [token]
+    )
+  );
+
+  const hasClaimableBeans = withdrawalItems
+    ? withdrawalItems.length > 0
+    : false;
 
   return (
     <>
       <Module>
+        {migrationNeeded ? (
+          <Alert
+            sx={{
+              borderRadius: 0,
+              position: 'relative',
+              zIndex: 1,
+              backgroundColor: 'primary.light',
+              color: 'primary.main',
+            }}
+            icon={<></>}
+          >
+            <Link to="/silo?tab=migrate">
+              <Button variant="text">
+                To use the Silo, migrate your account to Silo V3 &rarr;
+              </Button>
+            </Link>
+          </Alert>
+        ) : null}
         <ModuleTabs value={tab} onChange={handleChange}>
-          <Tab label="Deposit" />
-          <Tab label="Convert" />
-          <Tab label="Transfer" />
-          <Tab label="Withdraw" />
+          <Tab label="Deposit" disabled={migrationNeeded === true} />
+          <Tab label="Convert" disabled={migrationNeeded === true} />
+          <Tab label="Transfer" disabled={migrationNeeded === true} />
+          <Tab label="Withdraw" disabled={migrationNeeded === true} />
           {hasClaimableBeans && (
-            <BadgeTab label="Claim" showBadge={hasClaimableBeans} />
+            <BadgeTab
+              label="Claim"
+              showBadge
+              disabled={migrationNeeded === true}
+            />
           )}
         </ModuleTabs>
         <ModuleContent>
@@ -76,9 +132,8 @@ const SiloActions: FC<{
           {tab === 3 && (
             <Withdraw token={token} siloBalance={siloBalanceAsync} />
           )}
-          {/* FIXME: only show if user has legacy claimable assets */}
-          {hasClaimableBeans && tab === 4 && (
-            <Claim token={token} siloBalance={props.siloBalance} />
+          {tab === 4 && hasClaimableBeans && withdrawalItems && (
+            <LegacyClaim token={token} legacyWithdrawals={withdrawalItems} />
           )}
         </ModuleContent>
       </Module>

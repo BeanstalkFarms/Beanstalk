@@ -1,9 +1,9 @@
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { Blocks } from "src/constants/blocks";
-import { ChainId } from "src/constants";
 import flattenDeep from "lodash.flattendeep";
 import { ethers } from "ethers";
 import { Token } from "src/classes/Token";
+import { ChainId } from "@beanstalk/sdk-core";
 
 /**
  * Extracts the argument types from a function
@@ -58,7 +58,7 @@ export class EventManager {
     if (!account) throw new Error("EventManager: getSiloEvents requires an account");
 
     // TODO: set this to SiloV3 deployment block
-    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
+    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].SILOV3_DEPLOYMENT_BLOCK;
     const toBlock = opts.toBlock ?? "latest";
 
     return Promise.all([

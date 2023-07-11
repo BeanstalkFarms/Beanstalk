@@ -1,4 +1,4 @@
-import { ChainId, TESTNET_CHAINS } from "src/constants/chains";
+import { ChainId, TESTNET_CHAINS } from "@beanstalk/sdk-core";
 
 export type AddressDefinition = {
   [id: number]: string;
@@ -7,7 +7,7 @@ export type AddressDefinition = {
 export class Address {
   private addresses: AddressDefinition;
   public MAINNET: string;
-  public CUJO: string;
+  public TESTNET: string;
   public LOCALHOST: string;
 
   static make<T extends string | AddressDefinition>(input: T): Address {
@@ -30,7 +30,7 @@ export class Address {
   constructor(addresses: AddressDefinition) {
     this.addresses = addresses;
     this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.CUJO = this.addresses[ChainId.CUJO];
+    this.TESTNET = this.addresses[ChainId.TESTNET];
     this.LOCALHOST = this.addresses[ChainId.LOCALHOST];
   }
 

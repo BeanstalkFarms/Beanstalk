@@ -20,13 +20,20 @@ export class Router {
     const tokens = await well.getTokens();
     this.wells.add(well);
 
+    let WETH;
+
     /**
      * Add the "nodes"
      * */
     for (const token of tokens) {
       token.setSignerOrProvider(this.sdk.providerOrSigner);
       this.graph.addNode(token);
+      if (token.symbol === "WETH") WETH = token;
     }
+    // Add ETH
+    const ETH = this.sdk.tokens.ETH;
+    ETH.setSignerOrProvider(this.sdk.providerOrSigner);
+    this.graph.addNode(ETH);
 
     /**
      * Add the "edges"
@@ -39,6 +46,12 @@ export class Router {
         this.graph.addEdge(token2, token1, well);
       })
     );
+
+    // Add ETH <> WETH edges
+    if (WETH) {
+      this.graph.addEdge(ETH, WETH);
+      this.graph.addEdge(WETH, ETH);
+    }
   }
 
   getRoute(fromToken: Token, toToken: Token) {
