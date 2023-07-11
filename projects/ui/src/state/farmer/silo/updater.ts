@@ -141,6 +141,8 @@ export const useFetchFarmerSilo = () => {
           sdk.silo.getSeeds(account),
         ]);
 
+        console.log("Fetched migration data", balances)
+
         // Pre-migration, # of seeds is calc'd from the contract getter
         activeSeedBalance = _activeSeedBalance;
 
@@ -152,11 +154,11 @@ export const useFetchFarmerSilo = () => {
             const token = sdk.tokens.findByAddress(addr);
             if (!token) return;
 
-            const mowStatus = mowStatuses.get(token);
-            if (!mowStatus) return;
+            // const mowStatus = mowStatuses.get(token);
+            // if (!mowStatus) return;
 
             payload[token.address] = {
-              mowStatus,
+              mowStatus: undefined,
               deposited: {
                 // Note that deposits in the flatfile are keyed by season
                 // instead of stem
