@@ -109,11 +109,12 @@ export const useFetchFarmerSilo = () => {
 
         // Get the mowStatus struct for each whitelisted token
         Promise.all(
-          [...sdk.tokens.siloWhitelist].map((token) =>
-            sdk.contracts.beanstalk
-              .getMowStatus(account, token.address)
-              .then((status) => [token, status] as const)
-          )
+          []
+          // [...sdk.tokens.siloWhitelist].map((token) =>
+          //   sdk.contracts.beanstalk
+          //     .getMowStatus(account, token.address)
+          //     .then((status) => [token, status] as const)
+          // )
         ).then(
           (statuses) =>
             new Map<
