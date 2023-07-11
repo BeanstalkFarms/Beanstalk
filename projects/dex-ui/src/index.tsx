@@ -12,8 +12,8 @@ basin();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
-    <Wrapper>
-      <App />
-    </Wrapper>
+  <Wrapper>
+    <App />
+  </Wrapper>
   // </React.StrictMode>
 );

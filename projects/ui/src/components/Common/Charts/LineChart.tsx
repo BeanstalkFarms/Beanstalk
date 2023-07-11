@@ -15,7 +15,6 @@ import { useTooltip, useTooltipInPortal } from '@visx/tooltip';
 
 import { CurveFactory } from 'd3-shape';
 import { Group } from '@visx/group';
-import { NumberValue } from 'd3-scale';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import ChartPropProvider, {
   BaseDataPoint,
@@ -50,6 +49,7 @@ export type DataRegion = {
 export type LineChartProps = {
   series: BaseDataPoint[][];
   onCursor?: (ds?: BaseDataPoint[]) => void;
+  pegLine?: boolean; // used to display a line at the $1 peg
   isTWAP?: boolean; // used to indicate if we are displaying TWAP price
   curve?: CurveFactory | keyof typeof CURVES;
   children?: (
@@ -103,6 +103,7 @@ const Graph: React.FC<GraphProps> = (props) => {
     // Line Chart Props
     series: _series,
     onCursor,
+    pegLine,
     isTWAP,
     curve: _curve = 'linear',
     children,
@@ -175,7 +176,9 @@ const Graph: React.FC<GraphProps> = (props) => {
   // const yTickNum = height > 180 ? undefined : 5;
   const xTickNum = width > 700 ? undefined : Math.floor(width / 70);
   const [tickSeasons, tickDates] = useMemo(() => {
-    const interval = Math.ceil(series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9));
+    const interval = Math.ceil(
+      series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9)
+    );
     const shift = Math.ceil(interval / 3); // slight shift on tick labels
     return series[0].reduce<[number[], string[]]>(
       (prev, curr, i) => {
@@ -187,7 +190,7 @@ const Graph: React.FC<GraphProps> = (props) => {
       },
       [[], []]
     );
-  }, [series, scales]);
+  }, [series, width]);
 
   const xTickFormat = useCallback(
     (_: any, i: number) => tickDates[i],
@@ -234,7 +237,7 @@ const Graph: React.FC<GraphProps> = (props) => {
           width={width - yAxisWidth}
           height={dataRegion.yBottom - dataRegion.yTop}
         >
-          {isTWAP && (
+          {(isTWAP || pegLine) && (
             <Line
               from={{ x: 0, y: scales[0].yScale(1) }}
               to={{ x: width - yAxisWidth, y: scales[0].yScale(1) }}

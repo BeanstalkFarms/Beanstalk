@@ -20,18 +20,20 @@ export const Wells = () => {
   const sdk = useSdk();
   const { address } = useAccount();
   const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
-  const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([])
-  const [wellLpBalances, setWellLpBalances] = useState<(TokenValue | undefined)[]>([])
-  const [tab, showTab] = useState<number>(0)
-  
+  const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([]);
+  const [wellLpBalances, setWellLpBalances] = useState<(TokenValue | undefined)[]>([]);
+  const [tab, showTab] = useState<number>(0);
+
   useMemo(() => {
-    const run = async() => {
+    const run = async () => {
       if (!wells || !wells.length) return;
       let _wellsLiquidityUSD = [];
       for (let i = 0; i < wells.length; i++) {
         if (!wells[i].tokens) return;
         const _tokenPrices = await Promise.all(wells[i].tokens!.map((token) => getPrice(token, sdk)));
-        const _reserveValues = wells[i].reserves?.map((tokenReserve, index) => tokenReserve.mul(_tokenPrices[index] as TokenValue || TokenValue.ZERO));
+        const _reserveValues = wells[i].reserves?.map((tokenReserve, index) =>
+          tokenReserve.mul((_tokenPrices[index] as TokenValue) || TokenValue.ZERO)
+        );
         let initialValue = TokenValue.ZERO;
         const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue);
         _wellsLiquidityUSD[i] = _totalWellLiquidity;
@@ -53,7 +55,7 @@ export const Wells = () => {
         _wellsLpBalances[i] = _lpBalance;
       }
       setWellLpBalances(_wellsLpBalances);
-    }
+    };
 
     run();
   }, [sdk, wells, address]);
@@ -94,15 +96,19 @@ export const Wells = () => {
           <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
         </Td>
         <Td align="right">
-          <Reserves>{smallLogos[0]}{well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}</Reserves>
-          <Reserves>{smallLogos[1]}{well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}</Reserves>
-          {well.reserves && well.reserves.length > 2 ? 
-          <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves>
-          : null }
+          <Reserves>
+            {smallLogos[0]}
+            {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
+          </Reserves>
+          <Reserves>
+            {smallLogos[1]}
+            {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
+          </Reserves>
+          {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
         </Td>
       </Row>
-    )
-  };
+    );
+  }
 
   function MyLPsRow(well: any, index: any) {
     if (!well || !wellLpBalances || !wellLpBalances[index] || wellLpBalances[index]!.eq(TokenValue.ZERO)) return;
@@ -128,12 +134,14 @@ export const Wells = () => {
           <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
         </Td>
       </Row>
-    )
-  };
+    );
+  }
 
-  const rows = wells?.map((well, index) => { return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index) })
+  const rows = wells?.map((well, index) => {
+    return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index);
+  });
 
-  const anyLpPositions = !rows.every((row) => row === undefined)
+  const anyLpPositions = !rows.every((row) => row === undefined);
 
   return (
     <Page>
@@ -151,38 +159,39 @@ export const Wells = () => {
         </Item>
       </TabRow>
       <Table>
-        {tab === 0 ?
-        <THead>
-          <Row>
-            <Th>Well</Th>
-            <Th>Well Pricing Function</Th>
-            <Th align="right">Trading Fees</Th>
-            <Th align="right">Total Liquidity</Th>
-            <Th align="right">Reserves</Th>
-          </Row>
-        </THead>
-        : 
-        <THead>
-          <Row>
-            <Th>My Positions</Th>
-            <Th align="right">My Liquidity</Th>
-          </Row>
-        </THead>
-        }
+        {tab === 0 ? (
+          <THead>
+            <Row>
+              <Th>Well</Th>
+              <Th>Well Pricing Function</Th>
+              <Th align="right">Trading Fees</Th>
+              <Th align="right">Total Liquidity</Th>
+              <Th align="right">Reserves</Th>
+            </Row>
+          </THead>
+        ) : (
+          <THead>
+            <Row>
+              <Th>My Positions</Th>
+              <Th align="right">My Liquidity</Th>
+            </Row>
+          </THead>
+        )}
         <TBody>
-          {anyLpPositions === false && tab === 1 ? 
-            <NoLPRow colSpan={2}><NoLPMessage>Liquidity Positions will appear here.</NoLPMessage></NoLPRow>
-            :
+          {anyLpPositions === false && tab === 1 ? (
+            <NoLPRow colSpan={2}>
+              <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
+            </NoLPRow>
+          ) : (
             rows
-          }
+          )}
         </TBody>
       </Table>
     </Page>
   );
 };
 
-const WellDetail = styled.div`
-`;
+const WellDetail = styled.div``;
 
 const TokenLogos = styled.div`
   display: flex;
@@ -213,13 +222,13 @@ const Reserves = styled.div`
 `;
 
 const MoreReserves = styled.div`
-  color: #9CA3AF;
+  color: #9ca3af;
 `;
 
 const TradingFee = styled.div`
   font-size: 20px;
   line-height: 24px;
-  color: #4B5563;
+  color: #4b5563;
   text-transform: uppercase;
 `;
 
@@ -232,16 +241,16 @@ const WellPricing = styled.div`
 const NoLPRow = styled.td`
   background-color: #fff;
   height: 120px;
-  border-bottom: 0.5px solid #9CA3AF;
+  border-bottom: 0.5px solid #9ca3af;
 `;
 
 const NoLPMessage = styled.div`
   display: flex;
   justify-content: center;
-  color: #4B5563;
+  color: #4b5563;
 `;
 
 const WellLPBalance = styled.div`
   font-size: 20px;
   line-height: 24px;
-`
+`;

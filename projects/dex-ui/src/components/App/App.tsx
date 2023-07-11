@@ -12,8 +12,8 @@ import { Settings } from "src/settings";
 import { Liquidity } from "src/pages/Liquidity";
 
 export const App = ({}) => {
-  const isNotProd = !Settings.PRODUCTION
-  
+  const isNotProd = !Settings.PRODUCTION;
+
   return (
     <Frame>
       <Routes>

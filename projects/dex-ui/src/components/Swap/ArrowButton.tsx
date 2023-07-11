@@ -8,7 +8,7 @@ type ArrowButtonType = {
 };
 
 export const ArrowButton: FC<ArrowButtonType> = ({ onClick }) => (
-  <Container data-trace="true" >
+  <Container data-trace="true">
     <Button onClick={onClick}>
       <svg width={14} height={20} fill="none" xmlns="http://www.w3.org/2000/svg" strokeWidth={1.5}>
         <path
@@ -44,7 +44,7 @@ const Button = styled.button`
     outline: 2px solid #46b955;
     cursor: pointer;
   }
-  
+
   :focus {
     outline: 0.5px solid #46b955;
     outline-offset: -0.5px;

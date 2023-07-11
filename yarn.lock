@@ -19262,6 +19262,7 @@ __metadata:
     eslint-plugin-react-hooks: 4.2.0
     ethers: ^5
     graphql-request: 5.2.0
+    lightweight-charts: 4.0.1
     loadash: 1.0.0
     prettier: 2.7.1
     react: ^18.2.0
@@ -21662,6 +21663,13 @@ __metadata:
   version: 0.1.8
   resolution: "eyes@npm:0.1.8"
   checksum: c31703a92bf36ba75ee8d379ee7985c24ee6149f3a6175f44cec7a05b178c38bce9836d3ca48c9acb0329a960ac2c4b2ead4e60cdd4fe6e8c92cad7cd6913687
+  languageName: node
+  linkType: hard
+
+"fancy-canvas@npm:2.1.0":
+  version: 2.1.0
+  resolution: "fancy-canvas@npm:2.1.0"
+  checksum: 2463ca8a9254fb4cc69bbe33a2996b2a0ba8f725721d51464d9e87b4f3c3e8759e2289b0d592f56265501d5cff0b363bb7c72bb9c38212c19114dbd006ec8959
   languageName: node
   linkType: hard
 
@@ -28338,6 +28346,15 @@ __metadata:
     process-warning: ^2.0.0
     set-cookie-parser: ^2.4.1
   checksum: 50450afd155c8a8800435d568b118ea24b0367d36defaf0467fc49f5e7591c3f8c90b97641f67792d3f25190d53c988c6bc03dd389dfec9dcdfd1907f01ff36f
+  languageName: node
+  linkType: hard
+
+"lightweight-charts@npm:4.0.1":
+  version: 4.0.1
+  resolution: "lightweight-charts@npm:4.0.1"
+  dependencies:
+    fancy-canvas: 2.1.0
+  checksum: 772183cb4d334ba9baf7459fdaf58420f4846f9d0908af4f0a9592bda6c03ae09898f8b08c4095ba6f45667b3545febe4e6860decf827e6f8a5d198c40e91f3a
   languageName: node
   linkType: hard
 
