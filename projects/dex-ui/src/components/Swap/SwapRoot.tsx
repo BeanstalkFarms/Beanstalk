@@ -176,12 +176,30 @@ export const SwapRoot = () => {
     [account, checkBalance, inToken, quoter, slippage]
   );
 
-  const handleInputTokenChange = useCallback((token: Token) => {
-    setInToken(token);
+  const resetForm = useCallback(() => {
+    setInAmount(undefined);
+    setOutAmount(undefined);
+    setNeedsApproval(true);
+    setReadyToSwap(false);
+    setQuote(undefined);
+    setHasEnoughBalance(false);
   }, []);
-  const handleOutputTokenChange = useCallback((token: Token) => {
-    setOutToken(token);
-  }, []);
+
+  const handleInputTokenChange = useCallback(
+    (token: Token) => {
+      setInToken(token);
+      resetForm();
+    },
+    [resetForm]
+  );
+
+  const handleOutputTokenChange = useCallback(
+    (token: Token) => {
+      setOutToken(token);
+      resetForm();
+    },
+    [resetForm]
+  );
 
   const handleSlippageValueChange = useCallback(
     async (_slippage: string) => {
