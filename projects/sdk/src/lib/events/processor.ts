@@ -128,7 +128,7 @@ export class EventProcessor {
   Harvest(event: EventManager.Simplify<HarvestEvent>) {
     let beansClaimed = event.args.beans;
 
-    const plots = event.args.plots.sort((a, b) => a.sub(b).toNumber());
+    const plots = [...event.args.plots].sort((a, b) => a.sub(b).toNumber());
 
     plots.forEach((indexBN) => {
       const index = indexBN.toString();
