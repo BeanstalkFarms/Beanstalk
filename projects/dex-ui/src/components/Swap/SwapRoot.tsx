@@ -39,6 +39,7 @@ export const SwapRoot = () => {
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const [txLoading, setTxLoading] = useState(false);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
+  const [hasEnoughBalance, setHasEnoughBalance] = useState<boolean>(false);
 
   const [quote, setQuote] = useState<QuoteResult | undefined>();
   const builder = useSwapBuilder();
@@ -52,7 +53,6 @@ export const SwapRoot = () => {
     };
     run();
   }, [sdk, inToken, outToken]);
-  
 
   // Fetch all tokens. Needed for populating the token selector dropdowns
   useEffect(() => {
@@ -67,8 +67,8 @@ export const SwapRoot = () => {
   }, [inToken, outToken, builder, account]);
 
   useEffect(() => {
-    readyToSwap && !!account ? setButtonEnabled(true) : setButtonEnabled(false);
-  }, [readyToSwap, account]);
+    readyToSwap && hasEnoughBalance && !!account ? setButtonEnabled(true) : setButtonEnabled(false);
+  }, [readyToSwap, account, hasEnoughBalance]);
 
   const arrowHandler = () => {
     const prevInToken = inToken;
@@ -79,6 +79,21 @@ export const SwapRoot = () => {
     setOutToken(prevInToken);
     setOutAmount(prevInAmount);
   };
+
+  const checkBalance = useCallback(
+    async (token: Token, amount: TokenValue): Promise<boolean> => {
+      // return true here to support doing quotes without having an account connected.
+      // Other checks will make sure the swap button is disabled
+      if (!account) return true;
+
+      const balance = await token.getBalance(account);
+      const enough = balance.gte(amount);
+      Log.module("swap").debug(`Has enough ${token.symbol}? `, enough);
+
+      return enough;
+    },
+    [account]
+  );
 
   const handleInputChange = useCallback(
     async (amount: TokenValue) => {
@@ -101,14 +116,16 @@ export const SwapRoot = () => {
 
           return;
         }
+
         setReadyToSwap(true);
         setOutAmount(quote?.amount);
-        if (quote?.doApproval) {
+        if (quote.doApproval) {
           setNeedsApproval(true);
         } else {
           setNeedsApproval(false);
         }
         setQuote(quote);
+        setHasEnoughBalance(await checkBalance(quoter!.fromToken, amount));
       } catch (err: unknown) {
         Log.module("swap").error("Error during quote: ", (err as Error).message);
         setOutAmount(undefined);
@@ -117,7 +134,7 @@ export const SwapRoot = () => {
         setReadyToSwap(false);
       }
     },
-    [account, outToken, quoter, slippage]
+    [account, checkBalance, outToken, quoter, slippage]
   );
 
   const handleOutputChange = useCallback(
@@ -149,13 +166,14 @@ export const SwapRoot = () => {
           setNeedsApproval(false);
         }
         setQuote(quote);
+        setHasEnoughBalance(await checkBalance(quoter!.fromToken, quote.amountWithSlippage));
       } catch (err: unknown) {
         Log.module("swap").error("Error during quote: ", (err as Error).message);
         setInAmount(undefined);
         setReadyToSwap(false);
       }
     },
-    [account, inToken, quoter, slippage]
+    [account, checkBalance, inToken, quoter, slippage]
   );
 
   const handleInputTokenChange = useCallback((token: Token) => {
@@ -165,16 +183,25 @@ export const SwapRoot = () => {
     setOutToken(token);
   }, []);
 
-  const handleSlippageValueChange = useCallback(async (_slippage: string) => {
-    setSlippage(Number(_slippage));
-    if (isForwardQuote && inAmount) {
-      const quote = await quoter?.quoteForward(inAmount, account!, Number(_slippage));
-      if (quote) setQuote(quote)
-    } else if (!isForwardQuote && outAmount) {
-      const quote = await quoter?.quoteForward(outAmount, account!, Number(_slippage));
-      if (quote) setQuote(quote)
-    }
-  }, [account, quoter, inAmount, isForwardQuote, outAmount]);
+  const handleSlippageValueChange = useCallback(
+    async (_slippage: string) => {
+      setSlippage(Number(_slippage));
+      if (isForwardQuote && inAmount) {
+        const quote = await quoter?.quoteForward(inAmount, account!, Number(_slippage));
+        if (quote) {
+          setQuote(quote);
+          setHasEnoughBalance(await checkBalance(quoter!.fromToken, quote.amountWithSlippage));
+        }
+      } else if (!isForwardQuote && outAmount) {
+        const quote = await quoter?.quoteForward(outAmount, account!, Number(_slippage));
+        if (quote) {
+          setQuote(quote);
+          setHasEnoughBalance(await checkBalance(quoter!.fromToken, quote.amountWithSlippage));
+        }
+      }
+    },
+    [isForwardQuote, inAmount, quoter, account, checkBalance, outAmount]
+  );
 
   const approve = async () => {
     Log.module("swap").debug("Doing approval");
@@ -193,18 +220,21 @@ export const SwapRoot = () => {
       toast.confirming(tx);
 
       const receipt = await tx.wait();
-      toast.success(receipt);
-      setNeedsApproval(false); // TODO:
-      let newQuote
-      if (isForwardQuote && inAmount) {
-        newQuote = await quoter?.quoteForward(inAmount, account!, slippage);
-      } else if (!isForwardQuote && outAmount) {
-        newQuote = await quoter?.quoteReverse(outAmount, account!, slippage);
-      }
-      if (newQuote) {
-        setQuote(newQuote)
+
+      let newQuote;
+      if (isForwardQuote) {
+        newQuote = await quoter?.quoteForward(inAmount!, account!, slippage);
       } else {
-        setQuote(undefined)
+        newQuote = await quoter?.quoteReverse(outAmount!, account!, slippage);
+      }
+
+      setQuote(newQuote);
+      if (!!newQuote?.doApproval) {
+        setNeedsApproval(true);
+        toast.error(new Error("Approval was not enough"));
+      } else {
+        toast.success(receipt);
+        setNeedsApproval(false);
       }
     } catch (err) {
       Log.module("swap").error("Approval Failed", err);
@@ -260,47 +290,49 @@ export const SwapRoot = () => {
   const getLabel = useCallback(() => {
     if (!account) return "Connect Wallet";
     if (!inAmount && !outAmount) return "Enter Amount";
+    if (inAmount?.eq(TokenValue.ZERO) && outAmount?.eq(TokenValue.ZERO)) return "Enter Amount";
+    if (!hasEnoughBalance) return "Insufficient Balance";
     if (needsApproval) return "Approve";
 
     return "Swap";
-  }, [account, inAmount, needsApproval, outAmount]);
+  }, [account, hasEnoughBalance, inAmount, needsApproval, outAmount]);
 
   if (Object.keys(tokens).length === 0)
     return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
 
   return (
     <Container>
-        <SwapInputContainer>
-          <TokenInput
-            id="input-amount"
-            label={`Input amount in ${inToken.symbol}`}
-            token={inToken}
-            amount={inAmount}
-            onAmountChange={handleInputChange}
-            onTokenChange={handleInputTokenChange}
-            canChangeToken={true}
-            loading={isLoadingAllBalances}
-          />
-        </SwapInputContainer>
-        <ArrowContainer>
-          <ArrowButton onClick={arrowHandler} />
-        </ArrowContainer>
-        <SwapInputContainer>
-          <TokenInput
-            id="output-amount"
-            label={`Output amount in ${inToken.symbol}`}
-            token={outToken}
-            amount={outAmount}
-            onAmountChange={handleOutputChange}
-            onTokenChange={handleOutputTokenChange}
-            canChangeToken={true}
-            showBalance={true}
-            loading={isLoadingAllBalances}
-          />
-        </SwapInputContainer>
+      <SwapInputContainer>
+        <TokenInput
+          id="input-amount"
+          label={`Input amount in ${inToken.symbol}`}
+          token={inToken}
+          amount={inAmount}
+          onAmountChange={handleInputChange}
+          onTokenChange={handleInputTokenChange}
+          canChangeToken={true}
+          loading={isLoadingAllBalances}
+        />
+      </SwapInputContainer>
+      <ArrowContainer>
+        <ArrowButton onClick={arrowHandler} />
+      </ArrowContainer>
+      <SwapInputContainer>
+        <TokenInput
+          id="output-amount"
+          label={`Output amount in ${inToken.symbol}`}
+          token={outToken}
+          amount={outAmount}
+          onAmountChange={handleOutputChange}
+          onTokenChange={handleOutputTokenChange}
+          canChangeToken={true}
+          showBalance={true}
+          loading={isLoadingAllBalances}
+        />
+      </SwapInputContainer>
       <QuoteDetails
         type={isForwardQuote ? "FORWARD_SWAP" : "REVERSE_SWAP"}
-        quote={{quote: quote?.amount || TokenValue.ZERO, estimate: quote?.amountWithSlippage || TokenValue.ZERO, gas: quote?.gas}}
+        quote={{ quote: quote?.amount || TokenValue.ZERO, estimate: quote?.amountWithSlippage || TokenValue.ZERO, gas: quote?.gas }}
         inputs={[inAmount || TokenValue.ZERO, outAmount || TokenValue.ZERO]}
         handleSlippageValueChange={handleSlippageValueChange}
         wellTokens={[inToken, outToken]}
