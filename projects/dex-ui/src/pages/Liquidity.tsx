@@ -22,6 +22,19 @@ export const Liquidity = () => {
   const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
   const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
+  const [isMobile, setIsMobile] = useState(
+    window.matchMedia("(max-width: 475px)").matches
+  )
+  const [tab, setTab] = useState(isMobile ? null : 0);
+
+  // Media query
+  useEffect(() => {
+    window.matchMedia("(max-width: 475px)").addEventListener('change', event => setIsMobile(event.matches));
+
+    return () => {
+      window.matchMedia("(max-width: 475px)").removeEventListener('change', event => setIsMobile(event.matches));
+    }
+  }, []);
 
   // Slippage-related
   const [showSlippageSettings, setShowSlippageSettings] = useState<boolean>(false);
@@ -54,12 +67,6 @@ export const Liquidity = () => {
     run();
   }, [well]);
 
-  const [tab, setTab] = useState(0);
-  const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
-    (e.target as HTMLElement).blur();
-    setTab(i);
-  }, []);
-
   if (loading) return <div>loading...</div>;
   if (error) return <div>{error.message}</div>;
 
@@ -67,47 +74,51 @@ export const Liquidity = () => {
     <Page>
       <ContentWrapper>
         <SideBar id="sidebar">
-          <Button secondary label="← Back To Well Details" onClick={() => navigate(`../wells/${wellAddress}`)} />
-          <LiquidityBox lpToken={well?.lpToken!} />
-          <LearnMoreContainer>
-          <LearnMoreLabel onClick={toggle}>
-            <LearnMoreLine />
-            <LearnMoreText>
-              <TextNudge amount={2}>
-                Learn more about this Well
-              </TextNudge> 
-              <ImageButton
-                component={ChevronDown}
-                size={10}
-                rotate={open ? "180" : "0"}
-                onClick={toggle}
-                padding="0px"
-                alt="Click to expand and learn how to earn yield"
-                color={"#46B955"}
-              />
-            </LearnMoreText>
-            <LearnMoreLine />
-          </LearnMoreLabel>
-          <LearnMoreButtons open={open}>
-            <LearnYield />
-            <LearnWellFunction name={wellFunctionName} />
-            <LearnPump />
-          </LearnMoreButtons>
-        </LearnMoreContainer>
+          <Button secondary label="← Back To Well Details" width={isMobile ? '100vw' : '100%'} margin={isMobile ? '-12px -11px 0px -12px' : '0'} onClick={() => navigate(`../wells/${wellAddress}`)} />
+          {((tab === null && isMobile) || !isMobile) ?
+          <>
+            <LiquidityBox lpToken={well?.lpToken!} />
+            <LearnMoreContainer>
+              <LearnMoreLabel onClick={toggle}>
+                <LearnMoreLine />
+                <LearnMoreText>
+                  <TextNudge amount={2}>
+                    Learn more about this Well
+                  </TextNudge> 
+                  <ImageButton
+                    component={ChevronDown}
+                    size={10}
+                    rotate={open ? "180" : "0"}
+                    onClick={toggle}
+                    padding="0px"
+                    alt="Click to expand and learn how to earn yield"
+                    color={"#46B955"}
+                  />
+                </LearnMoreText>
+                <LearnMoreLine />
+              </LearnMoreLabel>
+              <LearnMoreButtons open={open}>
+                <LearnYield />
+                <LearnWellFunction name={wellFunctionName} />
+                <LearnPump />
+              </LearnMoreButtons>
+            </LearnMoreContainer>
+          </>
+          : null}
         </SideBar>
         <CenterBar id="centerbar">
-          <Row gap={0}>
+          <AddRemoveLiquidityRow gap={0} tabSelected={tab === 0 || tab === 1}>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch bold justify hover>
+              <TabButton onClick={() => setTab(isMobile && (tab === 0) ? null : 0)} active={tab === 0} stretch bold justify hover>
                 <span>Add Liquidity</span>
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch bold justify hover>
+              <TabButton onClick={() => setTab(isMobile && (tab === 1) ? null : 1)} active={tab === 1} stretch bold justify hover>
                 <span>Remove Liquidity</span>
               </TabButton>
             </Item>
-          </Row>
+          </AddRemoveLiquidityRow>
           {tab === 0 && (
             <AddLiquidity
               well={well!}
@@ -173,6 +184,18 @@ const CenterBar = styled.div`
   }
 `;
 
+const AddRemoveLiquidityRow = styled(Row)<{tabSelected: boolean}>`
+  @media (max-width: 475px) {
+    ${({tabSelected}) => !tabSelected && 
+    `
+    position: fixed; 
+    bottom: 12px;
+    width: calc(100% - 24px); 
+    `
+    }
+  }
+`
+ 
 const LearnMoreContainer = styled.div`
   display: flex;
   flex-direction: column;

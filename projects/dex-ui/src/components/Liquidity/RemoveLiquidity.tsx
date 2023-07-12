@@ -424,6 +424,9 @@ const LargeGapContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  @media (max-width: 475px) {
+    margin-bottom: 40px;
+  }
 `;
 
 const MediumGapContainer = styled.div`
@@ -456,6 +459,12 @@ const ButtonWrapper = styled.div`
   margin-bottom: 10px;
   :last-of-type {
     margin-bottom: 0;
+  }
+  @media (max-width: 475px) {
+    position: fixed;
+    width: calc(100% - 24px);
+    margin-bottom: 0;
+    bottom: 12px;
   }
 `;
 

@@ -10,6 +10,7 @@ type Props = {
   loading?: boolean;
   onClick?: () => void;
   width?: string;
+  margin?: string;
   secondary?: boolean;
 };
 
@@ -19,10 +20,11 @@ export const Button: FC<Props> = ({
   loading = false,
   onClick = () => {},
   width = "100%",
+  margin = "0",
   secondary = false
 }) => {
   return (
-    <StyledButton onClick={onClick} disabled={disabled} $loading={loading} $width={width} secondary={secondary}>
+    <StyledButton onClick={onClick} disabled={disabled} $loading={loading} $width={width} margin={margin} secondary={secondary}>
       {loading ? <Spinner size={18} /> : label}
     </StyledButton>
   );
@@ -33,6 +35,7 @@ type ButtonProps = {
   $loading: boolean;
   $width: string;
   secondary: boolean;
+  margin: string;
 };
 
 const StyledButton = styled.button<ButtonProps>`
@@ -43,10 +46,11 @@ const StyledButton = styled.button<ButtonProps>`
   }};
   height: 48px;
   border: none;
-  outline: ${({ secondary }) => (secondary ? "0.5px solid #9CA3AF" : "0.5px solid #000")};
+  outline: ${({ secondary, disabled }) => (secondary ? "0.5px solid #9CA3AF" : disabled ? "0.5px solid #D1D5DB" : "0.5px solid #000")};
   outline-offset: -0.5px;
   color: ${({ secondary }) => (secondary ? "#000" : "#FFF")};
   width: ${({ $width }) => $width};
+  margin: ${({ margin }) => margin};
 
   font-weight: 600;
   font-size: 16px;
@@ -54,7 +58,7 @@ const StyledButton = styled.button<ButtonProps>`
   cursor: pointer;
 
   :hover {
-    outline: ${({ disabled }) => (disabled ? "none" : "2px solid #46b955")};
+    outline: ${({ disabled }) => (disabled ? "0.5px solid #D1D5DB" : "2px solid #46b955")};
   }
 
   :focus {
