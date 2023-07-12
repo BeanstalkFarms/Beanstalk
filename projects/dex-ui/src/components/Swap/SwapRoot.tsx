@@ -211,7 +211,7 @@ export const SwapRoot = () => {
           setHasEnoughBalance(await checkBalance(quoter!.fromToken, quote.amountWithSlippage));
         }
       } else if (!isForwardQuote && outAmount) {
-        const quote = await quoter?.quoteForward(outAmount, account!, Number(_slippage));
+        const quote = await quoter?.quoteReverse(outAmount, account!, Number(_slippage));
         if (quote) {
           setQuote(quote);
           setHasEnoughBalance(await checkBalance(quoter!.fromToken, quote.amountWithSlippage));
