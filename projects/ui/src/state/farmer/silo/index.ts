@@ -1,4 +1,4 @@
-import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
+import { Deposit, Token, TokenSiloBalance, TokenValue } from '@beanstalk/sdk';
 import BigNumberJS from 'bignumber.js';
 import { ethers } from 'ethers';
 import { TokenMap } from '~/constants';
@@ -148,4 +148,5 @@ export type FarmerSiloRewards = {
 export type FarmerSilo = FarmerSiloBalances &
   FarmerSiloRewards & {
     migrationNeeded: boolean | undefined;
+    balancesSdk: Map<Token, TokenSiloBalance>;
   };
