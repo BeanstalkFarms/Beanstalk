@@ -251,7 +251,10 @@ const DropdownMenu = styled.button<{open?: boolean}>`
   color: #000;
   background: #fff;
   :hover {
-    background-color: #f0fdf4;
+    background: #FFF;
+  }
+  :focus {
+    outline: #FFF;
   }
   height: 100%;
   padding-left: 16px;
