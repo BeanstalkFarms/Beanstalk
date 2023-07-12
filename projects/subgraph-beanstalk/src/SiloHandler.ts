@@ -22,7 +22,7 @@ import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadSilo, loadSiloDailySnapshot, loadSiloHourlySnapshot } from "./utils/Silo";
 import { loadSiloAsset as loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
-import { loadSiloDeposit } from "./utils/SiloDeposit";
+import { loadSiloDeposit, loadSiloDepositV3 } from "./utils/SiloDeposit";
 import { loadSiloWithdraw } from "./utils/SiloWithdraw";
 import {
   AddDeposit as AddDepositEntity,
@@ -207,7 +207,7 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
  */
 
 export function handleAddDeposit_V3(event: AddDeposit_V3): void {
-  let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.stem);
+  let deposit = loadSiloDepositV3(event.params.account, event.params.token, event.params.stem);
   deposit.amount = deposit.amount.plus(event.params.amount);
   deposit.depositedAmount = deposit.depositedAmount.plus(event.params.amount);
   deposit.bdv = deposit.bdv.plus(event.params.bdv);
@@ -267,7 +267,7 @@ export function handleAddDeposit_V3(event: AddDeposit_V3): void {
 
 export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
   let beanstalk = loadBeanstalk(event.address); // get current season
-  let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.stem);
+  let deposit = loadSiloDepositV3(event.params.account, event.params.token, event.params.stem);
 
   // Update deposit
   deposit.withdrawnBDV = deposit.withdrawnBDV.plus(event.params.bdv);
@@ -320,7 +320,7 @@ export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
   let beanstalk = loadBeanstalk(event.address); // get current season
 
   for (let i = 0; i < event.params.stems.length; i++) {
-    let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.stems[i]);
+    let deposit = loadSiloDepositV3(event.params.account, event.params.token, event.params.stems[i]);
 
     // Update deposit
     deposit.withdrawnBDV = deposit.withdrawnBDV.plus(event.params.bdvs[i]);
