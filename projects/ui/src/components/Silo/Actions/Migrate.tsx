@@ -21,6 +21,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import { BeanstalkPalette, IconSize } from '~/components/App/muiTheme';
 import { displayFullBN } from '~/util';
 import { fetchMigrationData } from '~/state/farmer/silo/updater';
+import TransactionToast from '~/components/Common/TxnToast';
 
 const getMigrationParams = async (account: string) => {
   const data = await fetchMigrationData(account);
@@ -65,10 +66,15 @@ export const Migrate: FC<{}> = () => {
       console.log(`Migrating...`, params);
 
       try {
+        let txn;
+        const txToast = new TransactionToast({
+          loading: 'Migrating...',
+        });
+
         if (params.tokens.length === 0) {
-          await sdk.contracts.beanstalk.mowAndMigrateNoDeposits(account);
+          txn = await sdk.contracts.beanstalk.mowAndMigrateNoDeposits(account);
         } else {
-          await sdk.contracts.beanstalk.mowAndMigrate(
+          txn = await sdk.contracts.beanstalk.mowAndMigrate(
             account,
             params.tokens,
             params.seasons,
@@ -79,6 +85,8 @@ export const Migrate: FC<{}> = () => {
           );
         }
 
+        txToast.confirming(txn);
+        await txn.wait();
         window.location.reload();
       } catch (e) {
         console.error(e);

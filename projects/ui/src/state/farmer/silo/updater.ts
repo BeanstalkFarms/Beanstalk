@@ -14,6 +14,7 @@ import {
   UpdateFarmerSiloBalancesPayload,
   updateFarmerMigrationStatus,
   updateLegacyFarmerSiloRewards,
+  updateFarmerSiloBalanceSdk,
 } from './actions';
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -141,7 +142,7 @@ export const useFetchFarmerSilo = () => {
           sdk.silo.getSeeds(account),
         ]);
 
-        console.log("Fetched migration data", balances)
+        console.log('Fetched migration data', balances);
 
         // Pre-migration, # of seeds is calc'd from the contract getter
         activeSeedBalance = _activeSeedBalance;
@@ -250,6 +251,8 @@ export const useFetchFarmerSilo = () => {
             },
           };
         });
+
+        dispatch(updateFarmerSiloBalanceSdk(balances));
       }
 
       /// earnedStalk (this is already included in activeStalk)

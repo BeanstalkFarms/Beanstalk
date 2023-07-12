@@ -49,7 +49,7 @@ import {
   TransferFarmStep,
   WithdrawFarmStep,
 } from '~/lib/Txn';
-import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
+import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -288,9 +288,7 @@ const TransferForm: FC<
 
 const TransferPropProvider: FC<{
   token: ERC20Token;
-  /// temporary. will be remove when sdk types are moved to redux
-  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
-}> = ({ token, siloBalance }) => {
+}> = ({ token }) => {
   const sdk = useSdk();
   const account = useAccount();
 
@@ -299,7 +297,7 @@ const TransferPropProvider: FC<{
 
   /// Farmer
   const [refetchSilo] = useFetchBeanstalkSilo();
-  const [farmerBalances, refetchFarmerBalances] = siloBalance;
+  const siloBalance = useFarmerSiloBalanceSdk(token);
 
   /// Form
   const middleware = useFormMiddleware();
@@ -337,7 +335,7 @@ const TransferPropProvider: FC<{
           throw new Error('Please enter a valid recipient address.');
         }
 
-        if (!farmerBalances?.deposits) {
+        if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
 
@@ -361,7 +359,7 @@ const TransferPropProvider: FC<{
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
 
         const transferTxn = new TransferFarmStep(sdk, token, account, [
-          ...farmerBalances.deposits,
+          ...siloBalance.deposits,
         ]);
 
         transferTxn.build(
@@ -400,10 +398,7 @@ const TransferPropProvider: FC<{
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await refetch(actionsPerformed, { farmerSilo: true }, [
-          refetchSilo,
-          refetchFarmerBalances,
-        ]);
+        await refetch(actionsPerformed, { farmerSilo: true }, [refetchSilo]);
 
         txToast.success(receipt);
 
@@ -421,7 +416,7 @@ const TransferPropProvider: FC<{
     [
       middleware,
       account,
-      farmerBalances?.deposits,
+      siloBalance?.deposits,
       token,
       sdk,
       season,
@@ -429,7 +424,6 @@ const TransferPropProvider: FC<{
       txnBundler,
       refetch,
       refetchSilo,
-      refetchFarmerBalances,
     ]
   );
 
@@ -438,7 +432,7 @@ const TransferPropProvider: FC<{
       {(formikProps: FormikProps<TransferFormValues>) => (
         <TransferForm
           token={token}
-          siloBalance={farmerBalances}
+          siloBalance={siloBalance}
           season={season}
           plantAndDoX={plantAndDoX.plantAction}
           {...formikProps}
@@ -450,8 +444,6 @@ const TransferPropProvider: FC<{
 
 const Transfer: React.FC<{
   token: ERC20Token;
-  /// temporary. will be remove when sdk types are moved to redux
-  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
 }> = (props) => (
   <FormTxnProvider>
     <TransferPropProvider {...props} />

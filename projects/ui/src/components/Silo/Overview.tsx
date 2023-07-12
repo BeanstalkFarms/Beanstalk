@@ -26,7 +26,6 @@ import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
-import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import { MigrateTab } from '~/components/Silo/MigrateTab';
 
 const depositStats = (s: BigNumber, v: BigNumber[], d: string) => (
@@ -119,8 +118,6 @@ const Overview: FC<{
     ),
     [farmerSilo, ownership]
   );
-
-  const migrationNeeded = useMigrationNeeded();
 
   return (
     <Module>

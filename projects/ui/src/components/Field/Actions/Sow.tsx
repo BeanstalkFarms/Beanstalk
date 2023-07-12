@@ -153,7 +153,7 @@ const SowForm: FC<
   const shouldApprove =
     values.balanceFrom === BalanceFrom.EXTERNAL ||
     (values.balanceFrom === BalanceFrom.TOTAL &&
-      values.tokens[0].amount?.gt(balances[tokenIn.address].internal));
+      values.tokens[0].amount?.gt(balances[tokenIn.address]?.internal));
 
   const handleSetBalanceFrom = useCallback(
     (_balanceFrom: BalanceFrom) => {

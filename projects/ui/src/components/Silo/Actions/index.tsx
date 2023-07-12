@@ -16,7 +16,6 @@ import { Module, ModuleTabs, ModuleContent } from '~/components/Common/Module';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
-import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
 import Convert from './Convert';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import { useFarmerLegacyWithdrawalsLazyQuery } from '~/generated/graphql';
@@ -49,13 +48,10 @@ const SiloActions: FC<{
   const migrationNeeded = useMigrationNeeded();
   const account = useAccount();
 
-  /// Temporary solutions. Remove these when we move the site to use the new sdk types.
   const token = useMemo(() => {
     const match = sdk.tokens.findBySymbol(props.token.symbol) as ERC20Token;
     return match;
   }, [props.token.symbol, sdk.tokens]);
-
-  const siloBalanceAsync = useFarmerSiloBalancesAsync(token);
 
   const [fetchLegacyWithdrawals, withdrawalsQuery] =
     useFarmerLegacyWithdrawalsLazyQuery({
@@ -126,12 +122,8 @@ const SiloActions: FC<{
         <ModuleContent>
           {tab === 0 && <Deposit token={token} />}
           {tab === 1 && <Convert fromToken={token} />}
-          {tab === 2 && (
-            <Transfer token={token} siloBalance={siloBalanceAsync} />
-          )}
-          {tab === 3 && (
-            <Withdraw token={token} siloBalance={siloBalanceAsync} />
-          )}
+          {tab === 2 && <Transfer token={token} />}
+          {tab === 3 && <Withdraw token={token} />}
           {tab === 4 && hasClaimableBeans && withdrawalItems && (
             <LegacyClaim token={token} legacyWithdrawals={withdrawalItems} />
           )}
