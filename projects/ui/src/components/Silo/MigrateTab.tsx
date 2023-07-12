@@ -19,6 +19,7 @@ import { FC } from '~/types';
 
 import styles from './MigrateTab.module.scss';
 import useSdk from '~/hooks/sdk';
+import useAccount from '~/hooks/ledger/useAccount';
 
 const bip36 = (
   <Link
@@ -30,8 +31,9 @@ const bip36 = (
 );
 
 export const MigrateTab: FC<{}> = () => {
-  const migrationNeeded = useMigrationNeeded();
   const sdk = useSdk();
+  const account = useAccount();
+  const migrationNeeded = useMigrationNeeded();
 
   const [step, setStep] = useState<number>(migrationNeeded ? 1 : 9);
   const nextStep = () => setStep(step + 1);
@@ -44,14 +46,17 @@ export const MigrateTab: FC<{}> = () => {
     }
   }, [migrationNeeded]);
 
-  const [stemStartSeason, setStemStartSeason] = useState<number>(0);
-  useEffect(() => {
-    (async () => {
-      setStemStartSeason(await sdk.contracts.beanstalk.stemStartSeason());
-    })();
-  }, [sdk.contracts.beanstalk]);
+  if (!account) {
+    return (
+      <Centered minHeight="400px">
+        <Typography variant="body1" textAlign="center">
+          Connect your wallet to check migration status
+        </Typography>
+      </Centered>
+    );
+  }
 
-  if (migrationNeeded === undefined) {
+  if (account && migrationNeeded === undefined) {
     return (
       <Centered minHeight="400px">
         <BeanProgressIcon size={50} enabled variant="indeterminate" />
@@ -169,7 +174,7 @@ export const MigrateTab: FC<{}> = () => {
                   BEAN:3CRV to 0 to help Beanstalk incentivize peg maintenance
                   through conversions.
                   <br />
-                  The adjustment went into effect in Season {stemStartSeason}.
+                  The adjustment went into effect in Season 14210.
                 </Typography>
                 <Alert
                   variant="outlined"
