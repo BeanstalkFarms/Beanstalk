@@ -308,7 +308,7 @@ const RewardsBar: FC<{
   const quoteGas = useCallback(async () => {
     const farm = buildWorkflow(claimState);
     if (!farm) {
-      console.error("No workflow");
+      console.error('No workflow');
       return;
     }
 
@@ -322,15 +322,17 @@ const RewardsBar: FC<{
   const [gas, isEstimatingGas, estimateGas] = useQuoteAgnostic(quoteGas);
 
   useEffect(() => {
-    estimateGas();
+    if (open && migrationNeeded === false) {
+      estimateGas();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claimState]);
+  }, [claimState, migrationNeeded, open]);
 
   const handleSubmit = useCallback(async () => {
     let txToast;
     try {
       const farm = buildWorkflow(claimState);
-      if (!farm) throw new Error('No workflow');
+      if (!farm) return;
 
       setClaiming(true);
 
