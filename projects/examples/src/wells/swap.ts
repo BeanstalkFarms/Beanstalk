@@ -26,7 +26,6 @@ async function main() {
   const wethLiquidityAmount = WETH.amount(10000);
   const usdcLiquidityAmount = USDC.amount(10000);
 
-
   // get Well object
   const well = await sdk.getWell(WELL_ADDRESS);
 
@@ -48,7 +47,6 @@ async function main() {
   console.log(alQuote);
   await well.addLiquidity([beanLiquidityAmount, wethLiquidityAmount, usdcLiquidityAmount], alQuote, account);
 
-
   const from = BEAN;
   const swapAmount = from.amount(1000);
   const to = USDC;
@@ -59,10 +57,10 @@ async function main() {
   const tx = await well.swapFrom(from, to, swapAmount, quoteFrom.subSlippage(0.1), account);
   const receipt = await tx.wait();
   console.log(receipt);
-  console.log('Done');
+  console.log("Done");
 
-  console.log((await (to.getBalance(account))).toHuman());
-  
+  console.log((await to.getBalance(account)).toHuman());
+
   // // Swap To : A => B
   // const quoteTo = await well.swapToQuote(A, B, amountB);
   // console.log(`Quote: Need to spend ${quoteTo.toHuman()} ${A.symbol} to receive ${amountB.toHuman()} ${B.symbol}`);

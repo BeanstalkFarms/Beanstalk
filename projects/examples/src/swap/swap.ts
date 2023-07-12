@@ -57,7 +57,6 @@ async function estimate(
   const amountRev = toToken.fromHuman(_amount);
   const account = await sdk.getAccount();
   const op = sdk.swap.buildSwap(fromToken, toToken, account, fromMode, toMode);
-  
 
   // const est = await op.estimate(amount);
   // console.log(`Estimated: ${est.toHuman()}`);

@@ -1,0 +1,3402 @@
+{
+  "0x00427C81629Cd592Aa068B0290425261cbB8Eba2": {
+      "stalk": "434360",
+      "seed": "74"
+  },
+  "0x0086e622aC7afa3e5502dc895Fd0EAB8B3A78D97": {
+      "stalk": "42160",
+      "seed": "8"
+  },
+  "0x0127F5b0e559D1C8C054d83f8F187CDFDc80B608": {
+      "stalk": "70428",
+      "seed": "12"
+  },
+  "0x01914D6E47657d6A7893F84Fc84660dc5aec08b6": {
+      "stalk": "12512",
+      "seed": "2"
+  },
+  "0x027DA06f9247832D294b3004F1565C8E97382A1F": {
+      "stalk": "165040",
+      "seed": "28"
+  },
+  "0x028afa72DADB6311107c382cF87504F37F11D482": {
+      "stalk": "685140",
+      "seed": "136"
+  },
+  "0x02df7e960FFda6Db4030003D1784A7639947d200": {
+      "stalk": "1497432",
+      "seed": "264"
+  },
+  "0x031B8ece36b2C1f14C870421A1989AEbe3d7bcFa": {
+      "stalk": "36306",
+      "seed": "6"
+  },
+  "0x0562695929503E930DE265F944B899dEBF93Df7c": {
+      "stalk": "12538",
+      "seed": "2"
+  },
+  "0x056590F16D5b314a132BbCFb1283fEc5D5C6E670": {
+      "stalk": "476168",
+      "seed": "108"
+  },
+  "0x05Dc8E95a479dDA8C8Fc5a27Eb825f5042048937": {
+      "stalk": "47456",
+      "seed": "8"
+  },
+  "0x05cD14412ccd74F05379199181aA1847ed4802fd": {
+      "stalk": "24234",
+      "seed": "6"
+  },
+  "0x066E9372fF4D618ba8f9b1E366463A18DD711e5E": {
+      "stalk": "24204",
+      "seed": "4"
+  },
+  "0x0679bE304b60cd6ff0c254a16Ceef02Cb19ca1B8": {
+      "stalk": "78638",
+      "seed": "14"
+  },
+  "0x069e85D4F1010DD961897dC8C095FBB5FF297434": {
+      "stalk": "137812",
+      "seed": "22"
+  },
+  "0x072Fa8a20fA621665B94745A8075073ceAdFE1DC": {
+      "stalk": "175458",
+      "seed": "44"
+  },
+  "0x083aA7FF9AE00099471902178bf2fda4e6aC14Bf": {
+      "stalk": "3992",
+      "seed": "2"
+  },
+  "0x0872FcfE9C10993c0e55bb0d0c61c327933D6549": {
+      "stalk": "22056",
+      "seed": "8"
+  },
+  "0x0898512055826732026aC02242E7D7B66fccC2B0": {
+      "stalk": "38720",
+      "seed": "8"
+  },
+  "0x093037BA3A1e350f549F0Ff8Ff17C86B1FfA2B4b": {
+      "stalk": "60720",
+      "seed": "10"
+  },
+  "0x0933F554312C7bcB86dF896c46A44AC2381383D1": {
+      "stalk": "374376",
+      "seed": "104"
+  },
+  "0x09Bc3c127ED4c491880c2A250d6d034696cb5fC1": {
+      "stalk": "9060",
+      "seed": "2"
+  },
+  "0x0E9a7280741E9B018beb5Fe409e6e21689F3B8EF": {
+      "stalk": "20680",
+      "seed": "4"
+  },
+  "0x0F101CcDd4673316933339C8fba5Fc3b262cf4Cb": {
+      "stalk": "160796",
+      "seed": "36"
+  },
+  "0x0a1f1d3E71E981156EEF5538e7B3Ed40729684FF": {
+      "stalk": "35316",
+      "seed": "4"
+  },
+  "0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c": {
+      "stalk": "255182",
+      "seed": "42"
+  },
+  "0x0be9A9100A95075270e47De519D53c5fc8F7C936": {
+      "stalk": "124646",
+      "seed": "24"
+  },
+  "0x0ccBCaA60D8b59bDf751B70Ee623d58c609170ac": {
+      "stalk": "9110",
+      "seed": "2"
+  },
+  "0x0d07708d0E155865D9baEe9963E16ddd46F5dECF": {
+      "stalk": "226506",
+      "seed": "42"
+  },
+  "0x0e109847630A42fc85E1D47040ACAd1803078DCc": {
+      "stalk": "25710",
+      "seed": "6"
+  },
+  "0x0e40Cf5c020ADa54351699a004fAEbE5e709a3A2": {
+      "stalk": "267490",
+      "seed": "42"
+  },
+  "0x0eF8249cDF160C30d9ad1C46aa845Fd097EF498c": {
+      "stalk": "817266",
+      "seed": "184"
+  },
+  "0x0f5F4b5b7ca352cf4F5f2fc1Ac8A9889DECc4fCB": {
+      "stalk": "164866",
+      "seed": "54"
+  },
+  "0x1083D7254E01beCd64C3230612BF20E14010d646": {
+      "stalk": "399888",
+      "seed": "96"
+  },
+  "0x10bf1Dcb5ab7860baB1C3320163C6dddf8DCC0e4": {
+      "stalk": "143400",
+      "seed": "24"
+  },
+  "0x116E7Dbd690D6624FEeF080b9e8EbD6f967Fe315": {
+      "stalk": "233328",
+      "seed": "42"
+  },
+  "0x11D86e9F9C2a1cF597b974E50C660316c92215AA": {
+      "stalk": "40224",
+      "seed": "8"
+  },
+  "0x11b197e2C61c2959Ae84bC7f9db8E3fEFe511043": {
+      "stalk": "383932",
+      "seed": "72"
+  },
+  "0x11e2497AA81E45E824a4A4Ea8FD941a1059eD333": {
+      "stalk": "49040",
+      "seed": "8"
+  },
+  "0x1202fBA35cc425c07202BAA4b17fA9a37D2dBeBb": {
+      "stalk": "75052",
+      "seed": "12"
+  },
+  "0x127c224bF830b74B823dc3e360A9aFf22A517E00": {
+      "stalk": "252358",
+      "seed": "54"
+  },
+  "0x12C5EAcf06d71E7a13127E98CCb515b6B3c5f186": {
+      "stalk": "11068",
+      "seed": "2"
+  },
+  "0x12Ed7C9007Cf0CB79b37E33D0244aD90c2a65C0B": {
+      "stalk": "66946",
+      "seed": "18"
+  },
+  "0x12b1c89124aF9B720C1e3E8e31492d66662bf040": {
+      "stalk": "262980",
+      "seed": "42"
+  },
+  "0x13EBB0A690b0c7EBa90893F7ec300A099A32C322": {
+      "stalk": "51716",
+      "seed": "12"
+  },
+  "0x13b07BE0C25E54309412870456db923e8970b724": {
+      "stalk": "55924",
+      "seed": "22"
+  },
+  "0x14019DBae34219EFC2305b0C1dB260Fce8520DbF": {
+      "stalk": "123970",
+      "seed": "20"
+  },
+  "0x1416C1FEd9c635ae1673118131c0880fCf71e3f3": {
+      "stalk": "333400",
+      "seed": "56"
+  },
+  "0x141B5A59B40EFCFE77D411cAd4812813F44A7254": {
+      "stalk": "37434",
+      "seed": "6"
+  },
+  "0x144E8fe2e2052b7b6556790a06f001B56Ba033b3": {
+      "stalk": "24946",
+      "seed": "4"
+  },
+  "0x14F78BdCcCD12c4f963bd0457212B3517f974b2b": {
+      "stalk": "728086",
+      "seed": "134"
+  },
+  "0x1584B668643617D18321a0BEc6EF3786F4b8Eb7B": {
+      "stalk": "274214",
+      "seed": "42"
+  },
+  "0x15884aBb6c5a8908294f25eDf22B723bAB36934F": {
+      "stalk": "3437016",
+      "seed": "678"
+  },
+  "0x15AD9ef623b0D635F2eEBf20e0548121CBaFc719": {
+      "stalk": "72660",
+      "seed": "12"
+  },
+  "0x15D6D330f374A796210EFc1445F1F3eA07A0b1EF": {
+      "stalk": "36348",
+      "seed": "8"
+  },
+  "0x15e6e23b97D513ac117807bb88366f00fE6d6e17": {
+      "stalk": "98264",
+      "seed": "16"
+  },
+  "0x166bFBb7ECF7f70454950AE18f02a149d8d4B7cE": {
+      "stalk": "357872",
+      "seed": "72"
+  },
+  "0x17757B0252c84341E243Ff49EEf8729eFa32f5De": {
+      "stalk": "238352",
+      "seed": "40"
+  },
+  "0x177f44eCDEa293f7124C3071D9C54E59fcfD16f9": {
+      "stalk": "22950",
+      "seed": "6"
+  },
+  "0x182D4B08462CD5B79080d77C2B149F04d330D24b": {
+      "stalk": "34992",
+      "seed": "6"
+  },
+  "0x184CbD89E91039E6B1EF94753B3fD41c55e40888": {
+      "stalk": "254700",
+      "seed": "46"
+  },
+  "0x18E50551445F051970202E2b37Ac1F0cF7dD6ADD": {
+      "stalk": "37560",
+      "seed": "6"
+  },
+  "0x19831b174e9deAbF9E4B355AadFD157F09E2af1F": {
+      "stalk": "1340814",
+      "seed": "344"
+  },
+  "0x19A4FE7D0C76490ccA77b45580846CDB38B9A406": {
+      "stalk": "47742",
+      "seed": "6"
+  },
+  "0x19c5baD4354e9a78A1CA0235Af29b9EAcF54fF2b": {
+      "stalk": "49944",
+      "seed": "8"
+  },
+  "0x1A2d5fb134f5F2a9696dd9F47D2a8c735cDB490d": {
+      "stalk": "130602",
+      "seed": "32"
+  },
+  "0x1B15ED3612CD3077ba4437a1e2B924C33d4de0F9": {
+      "stalk": "435764",
+      "seed": "74"
+  },
+  "0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7": {
+      "stalk": "1826296",
+      "seed": "416"
+  },
+  "0x1C4E440e9f9069427d11bB1bD73e57458eeA9577": {
+      "stalk": "262802",
+      "seed": "62"
+  },
+  "0x1D4D853870734161BCb46dAb0012739C21693d98": {
+      "stalk": "37284",
+      "seed": "6"
+  },
+  "0x1D58E9c7B65b4F07afB58c72D49979D2F2c7A3F7": {
+      "stalk": "426856",
+      "seed": "84"
+  },
+  "0x1Dc2Dc7110F8ee61650864ad6680fE8144b7d6F9": {
+      "stalk": "474192",
+      "seed": "76"
+  },
+  "0x1aD66517368179738f521AF62E1acFe8816c22a4": {
+      "stalk": "47496",
+      "seed": "8"
+  },
+  "0x1b17E6045234237f86c9acDeA0b637a561DeFf2E": {
+      "stalk": "21090",
+      "seed": "6"
+  },
+  "0x1dd6Ac8E77d4C4A959bed5d2Ae624d274C46E8Bd": {
+      "stalk": "451672",
+      "seed": "82"
+  },
+  "0x1f3236F64Cb6878F164e3A281c2a9393e19A6D00": {
+      "stalk": "25092",
+      "seed": "4"
+  },
+  "0x1fC84Da8c1DFD00a7F6D0970ed779cEc0BBf9CA4": {
+      "stalk": "738372",
+      "seed": "136"
+  },
+  "0x202eCa424A8Db90924a4DaA3e6BCECd9311F668e": {
+      "stalk": "82196",
+      "seed": "16"
+  },
+  "0x20798Fd64a342d1EE640348E42C14181fDC842d8": {
+      "stalk": "23280",
+      "seed": "4"
+  },
+  "0x21145738198e34A7aF32866913855ce1968006Ef": {
+      "stalk": "3988",
+      "seed": "2"
+  },
+  "0x21C455c2a53e4bbDF21AB805E1E6CC687E3029Aa": {
+      "stalk": "12518",
+      "seed": "2"
+  },
+  "0x21DC07AFeeCF13394067E31eE32059a026449C41": {
+      "stalk": "60408",
+      "seed": "12"
+  },
+  "0x21fA512Af0cF5ab3057c7D6Fc3b9520Baa71833D": {
+      "stalk": "75212",
+      "seed": "12"
+  },
+  "0x223D168d318E0598d365aA1aAc78Dfa2eCA16dcf": {
+      "stalk": "23328",
+      "seed": "12"
+  },
+  "0x2251A7db3B3159422cED07e3bA65494D78A66A22": {
+      "stalk": "84936",
+      "seed": "16"
+  },
+  "0x225C3D9CDC1F3c9EC7902216D3d315c9428AE025": {
+      "stalk": "24944",
+      "seed": "4"
+  },
+  "0x22618bCFaCD8eDc20DdB4CC561728f0A56e28dc1": {
+      "stalk": "36738",
+      "seed": "6"
+  },
+  "0x22aA1F4173b826451763EbfCE22cf54A0603163c": {
+      "stalk": "33592",
+      "seed": "8"
+  },
+  "0x22f5413C075Ccd56D575A54763831C4c27A37Bdb": {
+      "stalk": "75000",
+      "seed": "12"
+  },
+  "0x2329d6d67Dc1D4dA1858e2fe839C20E7f5456081": {
+      "stalk": "73692",
+      "seed": "12"
+  },
+  "0x234831d4CFF3B7027E0424e23F019657005635e1": {
+      "stalk": "10988",
+      "seed": "2"
+  },
+  "0x23807719299c9bA3C6d60d4097146259c7A16da3": {
+      "stalk": "119314",
+      "seed": "22"
+  },
+  "0x239EeC9EC218f71cEf5CC14D88b142ed4fF44110": {
+      "stalk": "30868",
+      "seed": "6"
+  },
+  "0x241b2Fb0b7517c784Dd0c3e20a1f655985CFaa07": {
+      "stalk": "116922",
+      "seed": "18"
+  },
+  "0x250192A4809194B5F5Bd4724270A7DE3376d0Bb2": {
+      "stalk": "49608",
+      "seed": "18"
+  },
+  "0x250997F21bbcA2fc3d4F42f23d190C0f9c4cBFDd": {
+      "stalk": "5670",
+      "seed": "2"
+  },
+  "0x263bFD6746489929B2F08d728FFC33D697538a92": {
+      "stalk": "23456",
+      "seed": "4"
+  },
+  "0x26acaa8Fa20c86875149d70Df29B01fd1061E0bb": {
+      "stalk": "60952",
+      "seed": "14"
+  },
+  "0x274C44d5aEcA4744eB6eF42Fede80cbee3cf2Ec5": {
+      "stalk": "75112",
+      "seed": "12"
+  },
+  "0x28570D9d66627e0733dFE4FCa79B8fD5b8128636": {
+      "stalk": "75084",
+      "seed": "12"
+  },
+  "0x2894457502751d0F92ed1e740e2c8935F879E8AE": {
+      "stalk": "158794",
+      "seed": "28"
+  },
+  "0x28c095d163107c5e9Ca83b932Ea14863B224D2B3": {
+      "stalk": "50280",
+      "seed": "10"
+  },
+  "0x2908A0379cBaFe2E8e523F735717447579Fc3c37": {
+      "stalk": "125016",
+      "seed": "20"
+  },
+  "0x2936227dB7a813aDdeB329e8AD034c66A82e7dDE": {
+      "stalk": "119400",
+      "seed": "20"
+  },
+  "0x295EFA47F527b30B45e51E6F5b4f4b88CF77cA17": {
+      "stalk": "331734",
+      "seed": "54"
+  },
+  "0x2972bf9B54aC5100d747150Dfd684899c0aBEc5E": {
+      "stalk": "959804",
+      "seed": "212"
+  },
+  "0x2991e5C0aF1877C6AB782154f0dCF3c15e3dbEC3": {
+      "stalk": "50024",
+      "seed": "8"
+  },
+  "0x2A1A1D4E4257DbbA1136992577FF1b5EfDa1bB34": {
+      "stalk": "209036",
+      "seed": "54"
+  },
+  "0x2A5c5E614AC54969790c8e383487289CBAA0aF82": {
+      "stalk": "10836",
+      "seed": "2"
+  },
+  "0x2A8e0ebDA46A075D77d197D21292e38D37a20AB3": {
+      "stalk": "22626",
+      "seed": "2"
+  },
+  "0x2A8eAc696c57a38aC79ae6168e8310306B4D7E9c": {
+      "stalk": "154430",
+      "seed": "30"
+  },
+  "0x2B83aC024B0a4Ba3f93776Cacb61D98310614aFE": {
+      "stalk": "5500",
+      "seed": "2"
+  },
+  "0x2BFB526403f27751d2333a866b1De0ac8D1b58e8": {
+      "stalk": "24308",
+      "seed": "4"
+  },
+  "0x2Be2273452ce4C80c0f9e9180D3f0d6eEDfa7923": {
+      "stalk": "10878",
+      "seed": "6"
+  },
+  "0x2DF6A706Ee101556D68d7e52CE4d066Fb4C9B16e": {
+      "stalk": "91920",
+      "seed": "16"
+  },
+  "0x2E9af3a1f42435354846Bff3681771b5E3551121": {
+      "stalk": "137110",
+      "seed": "28"
+  },
+  "0x2F0441f249BDb0146223a2e3b60c146badd667A4": {
+      "stalk": "22638",
+      "seed": "6"
+  },
+  "0x2F8C6f2DaE4b1Fb3f357c63256Fe0543b0bD42Fb": {
+      "stalk": "14888",
+      "seed": "8"
+  },
+  "0x2a40AAf3e076187B67CcCE82E20da5Ce27Caa2A7": {
+      "stalk": "107378",
+      "seed": "18"
+  },
+  "0x2bE9518cc2a9fc2aA15b78b92D96E0727a07DF7C": {
+      "stalk": "11648",
+      "seed": "2"
+  },
+  "0x2bF046A052942B53Ca6746de4D3295d8f10d4562": {
+      "stalk": "224578",
+      "seed": "38"
+  },
+  "0x2cD896e533983C61B0f72e6f4BbF809711AcC5CE": {
+      "stalk": "641340",
+      "seed": "124"
+  },
+  "0x2d4710a99D8DCBCDDf407c672c233c9B1b2F8bfb": {
+      "stalk": "200650",
+      "seed": "34"
+  },
+  "0x2e5Ae37154e3F0684a02CC1324359b56592Ee1a8": {
+      "stalk": "215094",
+      "seed": "54"
+  },
+  "0x2e676e0f071376e12eD9e12a031D01B9B87F5878": {
+      "stalk": "291784",
+      "seed": "48"
+  },
+  "0x2e6cbcFA99C5c164B0AF573Bc5B07c8beD18c872": {
+      "stalk": "42642",
+      "seed": "10"
+  },
+  "0x2e95A39eF19c5620887C0d9822916c0406E4E75e": {
+      "stalk": "169280",
+      "seed": "32"
+  },
+  "0x305C5E928370941BE39b76DeB770d9Be299A5fF3": {
+      "stalk": "963920",
+      "seed": "186"
+  },
+  "0x305b0eCf72634825f7231058444c65D885E1f327": {
+      "stalk": "228508",
+      "seed": "52"
+  },
+  "0x30709180d8747E5BC0bD6E1BFf51baEdAB31328D": {
+      "stalk": "273612",
+      "seed": "44"
+  },
+  "0x30A1fbFc214D2Af0A68f6652A1d18a1b71Dfa9eA": {
+      "stalk": "527922",
+      "seed": "90"
+  },
+  "0x31188536865De4593040fAfC4e175E190518e4Ef": {
+      "stalk": "22608",
+      "seed": "2"
+  },
+  "0x31DEae0DDc9f0D0207D13fc56927f067F493d324": {
+      "stalk": "59624",
+      "seed": "12"
+  },
+  "0x3213977900A71e183818472e795c76aF8cbC3a3E": {
+      "stalk": "20668",
+      "seed": "4"
+  },
+  "0x32a0d4eb7F312916473ea9bAFb8Db6b6f1b4C32e": {
+      "stalk": "307616",
+      "seed": "58"
+  },
+  "0x32a59b87352e980dD6aB1bAF462696D28e63525D": {
+      "stalk": "125244",
+      "seed": "24"
+  },
+  "0x33314cF610C14460d3c184a55363f51d609aa076": {
+      "stalk": "25076",
+      "seed": "4"
+  },
+  "0x333ad4bd869b12Fb3B1C883Cf2F1C89b685E018c": {
+      "stalk": "22850",
+      "seed": "2"
+  },
+  "0x334bdeAA1A66E199CE2067A205506Bf72de14593": {
+      "stalk": "8630",
+      "seed": "2"
+  },
+  "0x334f12F269213371fb59b328BB6e182C875e04B2": {
+      "stalk": "434176",
+      "seed": "88"
+  },
+  "0x340bc7511E4E6C1cDD9dCd8f02827fd08EDC6Fb2": {
+      "stalk": "972024",
+      "seed": "200"
+  },
+  "0x343EE80f82440A498E48Ae186e066809750A055B": {
+      "stalk": "3008",
+      "seed": "16"
+  },
+  "0x347a5732541d3A8D935BeFC6553b7355b3e9C5ad": {
+      "stalk": "24204",
+      "seed": "4"
+  },
+  "0x34a649fde43cE36882091A010aAe2805A9FcFf0d": {
+      "stalk": "469226",
+      "seed": "88"
+  },
+  "0x350B75652059725c6E01F16198Da61BBeC33eD5f": {
+      "stalk": "8780",
+      "seed": "4"
+  },
+  "0x3635364e89EF6e842DD16a4028Df0A7124CA7A4A": {
+      "stalk": "1710",
+      "seed": "2"
+  },
+  "0x36998Db3F9d958F0Ebaef7b0B6Bf11F3441b216F": {
+      "stalk": "1923560",
+      "seed": "356"
+  },
+  "0x36B9aB68D5999F060fE8db71e35c8b5201313178": {
+      "stalk": "1442444",
+      "seed": "272"
+  },
+  "0x36e5E80E7Fc5CE35A4e645B9A304109f684B5f4B": {
+      "stalk": "3992",
+      "seed": "2"
+  },
+  "0x372c757349a5A81d8CF805f4d9cc88e8778228e6": {
+      "stalk": "133632",
+      "seed": "24"
+  },
+  "0x374E518f85aB75c116905Fc69f7e0dC9f0E2350C": {
+      "stalk": "112602",
+      "seed": "18"
+  },
+  "0x37f8E3b0Dfc2A980Ec9CD2C233a054eAa99E9d8A": {
+      "stalk": "61120",
+      "seed": "12"
+  },
+  "0x3800645f556ee583E20D6491c3a60E9c32744376": {
+      "stalk": "111280",
+      "seed": "20"
+  },
+  "0x3849a135D541232af220Bb839Ee1cE7e2165ed7D": {
+      "stalk": "50072",
+      "seed": "8"
+  },
+  "0x388Bb4D6B0C8e09AFaaF84cDae8123778fadf28c": {
+      "stalk": "37470",
+      "seed": "6"
+  },
+  "0x38AE800E603F61a43f3B02f5E429b44E32e01D84": {
+      "stalk": "74868",
+      "seed": "12"
+  },
+  "0x394c357DB3177E33Bde63F259F0EB2c04A46827c": {
+      "stalk": "2271916",
+      "seed": "396"
+  },
+  "0x394fEAe00CdF5eCB59728421DD7052b7654833A3": {
+      "stalk": "24040",
+      "seed": "4"
+  },
+  "0x3A628c8Ff76fEDDCB377B94a794A4d9fA785E1a4": {
+      "stalk": "67992",
+      "seed": "12"
+  },
+  "0x3Bbb4F4eAfd32689DaA395d77c423438938C40bd": {
+      "stalk": "20314",
+      "seed": "4"
+  },
+  "0x3C087171AEBC50BE76A7C47cBB296928C32f5788": {
+      "stalk": "281376",
+      "seed": "76"
+  },
+  "0x3C4d21243F55f0Ee12F9ddDe1296d08529503311": {
+      "stalk": "3180",
+      "seed": "6"
+  },
+  "0x3C7560edEeE5B60e4a6c7abEbaa971065B2242b4": {
+      "stalk": "81082",
+      "seed": "14"
+  },
+  "0x3CBC3bEd185B837D79Ba18d36A3859EcbcFC3Dc8": {
+      "stalk": "99504",
+      "seed": "16"
+  },
+  "0x3CC6Cc687870C972127E073E05b956A1eE270164": {
+      "stalk": "61024",
+      "seed": "10"
+  },
+  "0x3D138E67dFaC9a7AF69d2694470b0B6D37721B06": {
+      "stalk": "369126",
+      "seed": "78"
+  },
+  "0x3D156580d650cceDBA0157B1Fc13BB35e7a48542": {
+      "stalk": "24048",
+      "seed": "4"
+  },
+  "0x3D4FCd5E5FCB60Fca9dd4c5144aa970865325803": {
+      "stalk": "378034",
+      "seed": "74"
+  },
+  "0x3Df83869B8367602E762FC42Baae3E81aA1f2a20": {
+      "stalk": "75114",
+      "seed": "12"
+  },
+  "0x3E0fdEAB81bE617892472c457C3f69b846Fbf4C5": {
+      "stalk": "49728",
+      "seed": "8"
+  },
+  "0x3E4D97C22571C5Ff22f0DAaBDa2d3835E67738EB": {
+      "stalk": "78560",
+      "seed": "20"
+  },
+  "0x3F6BaBbF1a9DFB3039Dc932986D4A9658234fe21": {
+      "stalk": "96052",
+      "seed": "20"
+  },
+  "0x3FDbEeDCBfd67Cbc00FC169FCF557F77ea4ad4Ed": {
+      "stalk": "464670",
+      "seed": "80"
+  },
+  "0x3a472FD2bab732329Ea490440e8015e126a4FDB7": {
+      "stalk": "387288",
+      "seed": "68"
+  },
+  "0x3a7268413227Aed893057a8eB21299b36ec3477e": {
+      "stalk": "366700",
+      "seed": "60"
+  },
+  "0x3aB1a190713Efdc091450aF618B8c1398281373E": {
+      "stalk": "165810",
+      "seed": "40"
+  },
+  "0x3bD12E6C72B92C43BD1D2ACD65F8De2E0E335133": {
+      "stalk": "842896",
+      "seed": "176"
+  },
+  "0x3c5Aac016EF2F178e8699D6208796A2D67557fe2": {
+      "stalk": "126036",
+      "seed": "24"
+  },
+  "0x3d7cdE7EA3da7fDd724482f11174CbC0b389BD8b": {
+      "stalk": "902024",
+      "seed": "144"
+  },
+  "0x3dD413Fd4D03b1d8fD2C9Ed34553F7DeC3B26F5C": {
+      "stalk": "21256",
+      "seed": "4"
+  },
+  "0x3dc9c874fa91AB41DfA7A6b80aa02676E931aa9F": {
+      "stalk": "1997784",
+      "seed": "338"
+  },
+  "0x3efcb1c1B64E2ddd3ff1CAB28aD4E5BA9CC90C1c": {
+      "stalk": "786024",
+      "seed": "138"
+  },
+  "0x3f75F2AE3aE7dA0Fb7fF0571a99172926C3Bdac2": {
+      "stalk": "121860",
+      "seed": "24"
+  },
+  "0x3f9d48594FB58700cd6bF82BD010e25f61C7d8C9": {
+      "stalk": "311266",
+      "seed": "50"
+  },
+  "0x4062Ec809b341660262CE22dAB11E4Bc5cECd622": {
+      "stalk": "1067476",
+      "seed": "180"
+  },
+  "0x40C5A7b9dAD9463CCf0cbaFEa05CEdA768962947": {
+      "stalk": "319284",
+      "seed": "56"
+  },
+  "0x40E652fE0EC7329DC80282a6dB8f03253046eFde": {
+      "stalk": "172680",
+      "seed": "36"
+  },
+  "0x4135DEb17102AeeDa09F5748186a1aa5060b3bbb": {
+      "stalk": "120636",
+      "seed": "22"
+  },
+  "0x4179FB53E818c228803cF30d88Bc0597189F141C": {
+      "stalk": "517402",
+      "seed": "98"
+  },
+  "0x4180c6aFeEd0290E87cE848FC48451027798958C": {
+      "stalk": "100192",
+      "seed": "16"
+  },
+  "0x41BF3C5167494cbCa4C08122237C1620A78267Ab": {
+      "stalk": "546962",
+      "seed": "100"
+  },
+  "0x41CC24B4E568715f33fE803a6C3419708205304d": {
+      "stalk": "102998",
+      "seed": "22"
+  },
+  "0x41DD131e460E18befD262cF4Fe2e2b2F43F6Fb7B": {
+      "stalk": "6263792",
+      "seed": "1260"
+  },
+  "0x41EfF4e547090fBD310099Fe13d18069C65dfe61": {
+      "stalk": "17376",
+      "seed": "4"
+  },
+  "0x433b1b3bc573FcD6fDDDCf9A72CE377dB7A38bb5": {
+      "stalk": "301858",
+      "seed": "54"
+  },
+  "0x434252f52cE25DA0e64f0C38EBC65258AABB2844": {
+      "stalk": "308116",
+      "seed": "50"
+  },
+  "0x4389338CEaA410098b6bb9aD2cdd5E5e8687fBF7": {
+      "stalk": "89156",
+      "seed": "20"
+  },
+  "0x43b79f1E529330F1568e8741F1C04107db25EB28": {
+      "stalk": "13340",
+      "seed": "6"
+  },
+  "0x4432e64624F4c64633466655de3D5132ad407343": {
+      "stalk": "259686",
+      "seed": "50"
+  },
+  "0x4438767155537c3eD7696aeea2C758f9cF1DA82d": {
+      "stalk": "99632",
+      "seed": "16"
+  },
+  "0x4465c4474703BB199c6ed15C97b6E32BD211Cf9d": {
+      "stalk": "40708",
+      "seed": "8"
+  },
+  "0x44db0002349036164dD46A04327201Eb7698A53e": {
+      "stalk": "13920",
+      "seed": "4"
+  },
+  "0x4515957DAF1c5a1Cd2E24D000E909A0Ff6bE1975": {
+      "stalk": "53900",
+      "seed": "10"
+  },
+  "0x468325e9Ed9bbEF9e0B61F15BFfa3A349bf11719": {
+      "stalk": "1090308",
+      "seed": "220"
+  },
+  "0x47217E48daAf7fe61486b265f701D449a8660A94": {
+      "stalk": "93716",
+      "seed": "20"
+  },
+  "0x4779c6a1cB190221Fc152AF4B6adB2eA5c5DBd88": {
+      "stalk": "25056",
+      "seed": "4"
+  },
+  "0x483CDC51a29Df38adeC82e1bb3f0AE197142a351": {
+      "stalk": "1019192",
+      "seed": "164"
+  },
+  "0x48493Cf5D4f5bbfe2a6a5498E1Da6aB1B00C7D39": {
+      "stalk": "136364",
+      "seed": "26"
+  },
+  "0x486d28706bcef411CBFe8fE357c287496A518DEA": {
+      "stalk": "35792",
+      "seed": "4"
+  },
+  "0x48A2bC5DC9e3c5c0421E0483bF0648AaEE87daca": {
+      "stalk": "295772",
+      "seed": "64"
+  },
+  "0x48A5A6a01bA89cDdF97D2D552923d5a11401Ed19": {
+      "stalk": "174554",
+      "seed": "34"
+  },
+  "0x49072cd3Bf4153DA87d5eB30719bb32bdA60884B": {
+      "stalk": "47032",
+      "seed": "8"
+  },
+  "0x4949D9db8Af71A063971a60F918e3C63C30663d7": {
+      "stalk": "22170",
+      "seed": "4"
+  },
+  "0x4950215d3cd07A71114F2dDDAFA1F845C2cD5360": {
+      "stalk": "70344",
+      "seed": "12"
+  },
+  "0x4962664aB3bE8f478e59F4A1A629a32F5A4C79b2": {
+      "stalk": "212976",
+      "seed": "34"
+  },
+  "0x4A337d1dF22d0D3077CaEFd083A1b70AA168d087": {
+      "stalk": "486256",
+      "seed": "108"
+  },
+  "0x4A5867445A1Fa5F394268A521720D1d4E5609413": {
+      "stalk": "117552",
+      "seed": "32"
+  },
+  "0x4A6A6573393485cC410b20a021381Fb39362B9D1": {
+      "stalk": "75280",
+      "seed": "14"
+  },
+  "0x4AAE8E210F814916778259840d635AA3e73A4783": {
+      "stalk": "24298",
+      "seed": "2"
+  },
+  "0x4Ca3E5bDf3823fEBbE18F9664cdEd14b7243971C": {
+      "stalk": "519240",
+      "seed": "84"
+  },
+  "0x4E2572d9161Fc58743A4622046Ca30a1fB538670": {
+      "stalk": "5656",
+      "seed": "2"
+  },
+  "0x4E3E7d5183e42Fa4C5C4E223534A5307B5dAD6e9": {
+      "stalk": "137864",
+      "seed": "22"
+  },
+  "0x4E51f0a242bf6E98bE03Eb769CC5944831DcE87a": {
+      "stalk": "121668",
+      "seed": "18"
+  },
+  "0x4F70FFDdAb3c60Ad12487b2906E3E46d8bC72970": {
+      "stalk": "23568",
+      "seed": "4"
+  },
+  "0x4F8D7711d18344F86A5F27863051964D333798E2": {
+      "stalk": "2400480",
+      "seed": "428"
+  },
+  "0x4FF37892B9c7411Fd9d189533D3D4a2bf87f2EC6": {
+      "stalk": "21048",
+      "seed": "4"
+  },
+  "0x4a2D3C5B9b6dd06541cAE017F9957b0515CD65e2": {
+      "stalk": "177984",
+      "seed": "32"
+  },
+  "0x4ab746092Fb040DBd02a41DEEb2D6933057eEF13": {
+      "stalk": "50056",
+      "seed": "8"
+  },
+  "0x4ac9a97b3edb3f11b5ca91d8dE9468CF4882A7af": {
+      "stalk": "157552",
+      "seed": "30"
+  },
+  "0x4ba91dD5D555EcED4589e70dd1B9962773709406": {
+      "stalk": "36900",
+      "seed": "6"
+  },
+  "0x4bf44E0c856d096B755D54CA1e9CFdc0115ED2e6": {
+      "stalk": "242220",
+      "seed": "52"
+  },
+  "0x4c180462A051ab67D8237EdE2c987590DF2FbbE6": {
+      "stalk": "5020420",
+      "seed": "1192"
+  },
+  "0x4ceB640Af5c94eE784eeFae244245e34b48ec4f6": {
+      "stalk": "99296",
+      "seed": "16"
+  },
+  "0x4d2010DFC88A89DD8479EEAb8e5f95B4cFfCDE45": {
+      "stalk": "73314",
+      "seed": "14"
+  },
+  "0x4e2A5a06934c35c83F7066bCa8Bc30f5F1685466": {
+      "stalk": "22314",
+      "seed": "6"
+  },
+  "0x4fCD42eb2557E49C0201Fb3283CfF62c1BaF0Fb4": {
+      "stalk": "125084",
+      "seed": "22"
+  },
+  "0x515755b2c5A209976CF0de869c30f45aC7495a60": {
+      "stalk": "86924",
+      "seed": "14"
+  },
+  "0x51Cf86829ed08BE4Ab9ebE48630F4d2Ed9f54F56": {
+      "stalk": "21096",
+      "seed": "6"
+  },
+  "0x51E7b8564F50ec4ad91877e39274bdA7E6eb880A": {
+      "stalk": "44872",
+      "seed": "8"
+  },
+  "0x521415eEc0f5bec71704Aaaf9aE0aFe70323FfAB": {
+      "stalk": "22672",
+      "seed": "2"
+  },
+  "0x5270B883D12e6402a20675467e84364A2Eb542bF": {
+      "stalk": "100128",
+      "seed": "16"
+  },
+  "0x52EAa3345a9b68d3b5d52DA2fD47EbFc5ed11d4e": {
+      "stalk": "537836",
+      "seed": "152"
+  },
+  "0x52c9A7E7D265A09Db125b7369BC7487c589a7604": {
+      "stalk": "25032",
+      "seed": "4"
+  },
+  "0x52ccFf5c85314bbe4D9C019EE57E5B45Ad08B0Db": {
+      "stalk": "193236",
+      "seed": "40"
+  },
+  "0x52d3aBa582A24eeB9c1210D83EC312487815f405": {
+      "stalk": "1374308",
+      "seed": "264"
+  },
+  "0x5338035c008EA8c4b850052bc8Dad6A33dc2206c": {
+      "stalk": "50092",
+      "seed": "8"
+  },
+  "0x533af56B4E0F3B278841748E48F61566E6C763D6": {
+      "stalk": "533616",
+      "seed": "92"
+  },
+  "0x53dC93b33d63094770A623406277f3B83a265588": {
+      "stalk": "212022",
+      "seed": "44"
+  },
+  "0x540dC960E3e10304723bEC44D20F682258e705fC": {
+      "stalk": "24168",
+      "seed": "6"
+  },
+  "0x55493d2bf0860B23a6789E9BEfF8D03CE03911cd": {
+      "stalk": "477088",
+      "seed": "80"
+  },
+  "0x558B202d7D87B290bDB7B82DFEd9dD82D4BB1ecF": {
+      "stalk": "37374",
+      "seed": "6"
+  },
+  "0x558C4aFf233f17Ac0d25335410fAEa0453328da8": {
+      "stalk": "11060",
+      "seed": "2"
+  },
+  "0x561Cbb53ba4d7912Dbf9969759725BD79D920e2C": {
+      "stalk": "112672",
+      "seed": "32"
+  },
+  "0x562f223a5847DaAe5Faa56a0883eD4d5e8EE0EE0": {
+      "stalk": "23768",
+      "seed": "4"
+  },
+  "0x563F036896c19C6f4287fbE69c10bb63FAC717D6": {
+      "stalk": "244012",
+      "seed": "86"
+  },
+  "0x575C9606CfcCF6F93D2E5a0C37d2C7696BCab132": {
+      "stalk": "74184",
+      "seed": "12"
+  },
+  "0x575E1701fCa9D40c4534576fCec320CFe22Bc561": {
+      "stalk": "207314",
+      "seed": "38"
+  },
+  "0x5767795b4eFbF06A40cb36181ac08f47CDB0fcEc": {
+      "stalk": "624632",
+      "seed": "100"
+  },
+  "0x576A4d006543d7Ba103933d6DBd1e3Cdf86E22d3": {
+      "stalk": "20842",
+      "seed": "4"
+  },
+  "0x57B649E1E06FB90F4b3F04549A74619d6F56802e": {
+      "stalk": "112668",
+      "seed": "18"
+  },
+  "0x57a4342ED31c8f53e164EF28B0182620d20290A5": {
+      "stalk": "36750",
+      "seed": "6"
+  },
+  "0x58024B6C1005dE40eAC2D4c06bC947ebf2a302Af": {
+      "stalk": "56206",
+      "seed": "12"
+  },
+  "0x582500328b34CdC66d6c07fA1cf4720e65524fEc": {
+      "stalk": "75152",
+      "seed": "12"
+  },
+  "0x584145Be171F646cd2a3979bA3edAE978b635465": {
+      "stalk": "7734",
+      "seed": "2"
+  },
+  "0x58737A9B0A8A5c8a2559C457fCC9e923F9d99FB7": {
+      "stalk": "46204",
+      "seed": "8"
+  },
+  "0x589b9549Dd7158f75BA43D8fCD25eFebb55F823F": {
+      "stalk": "2090904",
+      "seed": "370"
+  },
+  "0x597D01CdfDC7ad72c19B562A18b2e31E41B67991": {
+      "stalk": "168902",
+      "seed": "42"
+  },
+  "0x59D2324CFE0718Bac3842809173136Ea2d5912Ef": {
+      "stalk": "572248",
+      "seed": "104"
+  },
+  "0x5A2B016c641742FB97a75C0d4c22B2A637Ddf4B6": {
+      "stalk": "6956",
+      "seed": "2"
+  },
+  "0x5A7F487D4A9894583DE2Dbf3114F46695DD0b7F1": {
+      "stalk": "222060",
+      "seed": "42"
+  },
+  "0x5AcB8339D7b364dafa46746C1DB2e13BafCEAa87": {
+      "stalk": "22712",
+      "seed": "2"
+  },
+  "0x5C6D32CbcB99722e6295C3f1fb942F99e98394E8": {
+      "stalk": "48116",
+      "seed": "10"
+  },
+  "0x5CE307dc1722Ac07d2F1D98D408c7cAf9ea76A16": {
+      "stalk": "49856",
+      "seed": "8"
+  },
+  "0x5FA8F6284E7d85C7fB21418a47De42580924F24d": {
+      "stalk": "574",
+      "seed": "2"
+  },
+  "0x5a2c17CEbE721e6Abd167FD0EDF9d3CE4b176A5D": {
+      "stalk": "34458",
+      "seed": "6"
+  },
+  "0x5a57711B103c6039eaddC160B94c932d499c6736": {
+      "stalk": "36606",
+      "seed": "6"
+  },
+  "0x5ab404ab63831bFcf824F53B4ac3737b9d155d90": {
+      "stalk": "493580",
+      "seed": "82"
+  },
+  "0x5b38C0fFd431500EBa7c8a7932FF4892F7edA64e": {
+      "stalk": "87476",
+      "seed": "16"
+  },
+  "0x5b45b0A5C1e3D570282bDdfe01B0465c1b332430": {
+      "stalk": "815820",
+      "seed": "152"
+  },
+  "0x5b9A2267a9e9B81FbF01ba10026fCB7B2F7304d3": {
+      "stalk": "208488",
+      "seed": "36"
+  },
+  "0x5c62FaB7897Ec68EcE66A64D7faDf5F0E139B1E7": {
+      "stalk": "21236",
+      "seed": "4"
+  },
+  "0x5c9d09716404556646B0B4567Cb4621C18581f94": {
+      "stalk": "147048",
+      "seed": "24"
+  },
+  "0x5d48f06eDE8715E7bD69414B97F97fF0706D6c71": {
+      "stalk": "188040",
+      "seed": "36"
+  },
+  "0x5dd28BD033C86e96365c2EC6d382d857751D8e00": {
+      "stalk": "37560",
+      "seed": "6"
+  },
+  "0x5dfbB2344727462039eb18845a911C3396d91cf2": {
+      "stalk": "79420",
+      "seed": "20"
+  },
+  "0x5eC5e26D5304EF62310b5bC46A150d15E144e122": {
+      "stalk": "976168",
+      "seed": "204"
+  },
+  "0x5eE72CD125e21b67ABFf81bBe2aCE39C831ce433": {
+      "stalk": "16544",
+      "seed": "4"
+  },
+  "0x5ea7ea516720a8F59C9d245E2E98bCA0B6DF7441": {
+      "stalk": "230748",
+      "seed": "42"
+  },
+  "0x5ec6bC92395bFE4dFb8F45cb129AC0c2F290F23d": {
+      "stalk": "37536",
+      "seed": "6"
+  },
+  "0x5f37479c76F16d94Afcc394b18Cf0727631d8F91": {
+      "stalk": "111016",
+      "seed": "24"
+  },
+  "0x60e8b62C7Da32ff62fcd4Ab934B75d2d28FE7501": {
+      "stalk": "222204",
+      "seed": "56"
+  },
+  "0x614D1D40e3b2b1601625E739bfe8Bdf85133B459": {
+      "stalk": "69252",
+      "seed": "12"
+  },
+  "0x61e413DE4a40B8d03ca2f18026980e885ae2b345": {
+      "stalk": "7910",
+      "seed": "2"
+  },
+  "0x62F96Bcc36Dccf97e1E6c4D2654d864c95d76335": {
+      "stalk": "12518",
+      "seed": "2"
+  },
+  "0x6301Add4fb128de9778B8651a2a9278B86761423": {
+      "stalk": "34302",
+      "seed": "6"
+  },
+  "0x6343B307C288432BB9AD9003B4230B08B56b3b82": {
+      "stalk": "148992",
+      "seed": "24"
+  },
+  "0x6363F3dA9D28C1310C2EaBdD8e57593269F03fF8": {
+      "stalk": "901148",
+      "seed": "168"
+  },
+  "0x63B98C09120E4eF75b4C122d79b39875F28A6fCc": {
+      "stalk": "25028",
+      "seed": "4"
+  },
+  "0x64298A72F4E3e23387EFc409fc424a3f17356fC4": {
+      "stalk": "475964",
+      "seed": "76"
+  },
+  "0x642c9e3d3f649f9fcCB9f28707A0260Ba1E156B1": {
+      "stalk": "686924",
+      "seed": "168"
+  },
+  "0x648fA93EA7f1820EF9291c3879B2E3C503e1AA61": {
+      "stalk": "123816",
+      "seed": "24"
+  },
+  "0x65F992c16CB989B734A1d3CCAf13713391afa6d3": {
+      "stalk": "173056",
+      "seed": "26"
+  },
+  "0x65cd9979bEecad572A6081FB3EC9fa47Fca2427a": {
+      "stalk": "149184",
+      "seed": "24"
+  },
+  "0x6609DFA1cb75d74f4fF39c8a5057bD111FBA5B22": {
+      "stalk": "2720",
+      "seed": "2"
+  },
+  "0x66435387dcE9f113Be44d5e730eb1C068B328E93": {
+      "stalk": "188672",
+      "seed": "32"
+  },
+  "0x6661b9b527F4Dad25a97ca4Fc9B29F90f0760cFF": {
+      "stalk": "7996",
+      "seed": "2"
+  },
+  "0x6691fB80b87b89e3Ea3E7C9a4b19FDB2d75c6aaD": {
+      "stalk": "106722",
+      "seed": "22"
+  },
+  "0x66B0115e839B954A6f6d8371DEe89dE90111C232": {
+      "stalk": "659584",
+      "seed": "130"
+  },
+  "0x66F6Ac1E4c4c8aE7D84231451126f613bFE61D98": {
+      "stalk": "232128",
+      "seed": "40"
+  },
+  "0x66b19A1241FD54fE74dD8E40B7df8C419492e423": {
+      "stalk": "53054",
+      "seed": "14"
+  },
+  "0x66e4c7e22667A6D80F0C726a160E5DeE9A37223C": {
+      "stalk": "17026",
+      "seed": "4"
+  },
+  "0x676E288Fb3eB22376727Ddca3F01E96d9084D8F6": {
+      "stalk": "914858",
+      "seed": "208"
+  },
+  "0x679B4172E1698579d562D1d8b4774968305b80b2": {
+      "stalk": "305332",
+      "seed": "52"
+  },
+  "0x68572eAcf9E64e6dCD6bB19f992Bdc4Eff465fd0": {
+      "stalk": "24808",
+      "seed": "4"
+  },
+  "0x6887b5852847dD89d4C86dFAefaB5B0B236DCD8a": {
+      "stalk": "61598",
+      "seed": "10"
+  },
+  "0x69B971A22dbf469f94B34Bdbad9cd863bdd222a2": {
+      "stalk": "37190",
+      "seed": "10"
+  },
+  "0x69b03bFC650B8174f5887B2320338b6c29150bCE": {
+      "stalk": "96944",
+      "seed": "16"
+  },
+  "0x69e02D001146A86d4E2995F9eCf906265aA77d85": {
+      "stalk": "35440",
+      "seed": "8"
+  },
+  "0x6A6d11cE4cCf2d43e61B7Db1918768c5FDC14559": {
+      "stalk": "233936",
+      "seed": "42"
+  },
+  "0x6CD83315e4c4bFdf95D4A8442927C018F328C9fe": {
+      "stalk": "35108",
+      "seed": "8"
+  },
+  "0x6D42977A60aEF0de154Dc255DE03070A690cF041": {
+      "stalk": "121510",
+      "seed": "18"
+  },
+  "0x6D5194ECE4C937B58EE00c4238eF61E6b98eaCE8": {
+      "stalk": "36390",
+      "seed": "6"
+  },
+  "0x6ECa54EE3DA212773A05a3CDd07ff4B33aD54c2b": {
+      "stalk": "379742",
+      "seed": "76"
+  },
+  "0x6F11CE836E5aD2117D69Aaa9295f172F554EA4C9": {
+      "stalk": "37548",
+      "seed": "6"
+  },
+  "0x6F9ceE855cB1F362F31256C65e1709222E0f2037": {
+      "stalk": "686936",
+      "seed": "184"
+  },
+  "0x6a3e09694bDF65dA8F6bF6bfaD147811100f4C40": {
+      "stalk": "12452",
+      "seed": "2"
+  },
+  "0x6a78E13f5d20cb584Be28Fc31EAdB66dE499a60b": {
+      "stalk": "31284",
+      "seed": "6"
+  },
+  "0x6a93946254899A34FdcB7fBf92dfd2e4eC1399e7": {
+      "stalk": "316332",
+      "seed": "52"
+  },
+  "0x6b434f8e80E8B85A63A9f4fF0A14eB9568a827c8": {
+      "stalk": "143216",
+      "seed": "26"
+  },
+  "0x6c3E007377eFfd74afE237ce3B0Aeef969b63C91": {
+      "stalk": "771576",
+      "seed": "124"
+  },
+  "0x6c76EDcD9B067F6867aea819b0B4103fF93779Fd": {
+      "stalk": "24404",
+      "seed": "4"
+  },
+  "0x6eec856e1661Fd6B2345380843c3603Dd7A6A94C": {
+      "stalk": "27300",
+      "seed": "6"
+  },
+  "0x6f77E3A2C7819C5DcF0b1f0d53264B65C4Cb7C5A": {
+      "stalk": "116274",
+      "seed": "18"
+  },
+  "0x6fa54cbFDc9D70829Ac9F110BB2B16D8c64fA91C": {
+      "stalk": "5502",
+      "seed": "2"
+  },
+  "0x706cf4Cc963e13fF6aDD75d3475dA00A27C8a565": {
+      "stalk": "158052",
+      "seed": "28"
+  },
+  "0x708E5804D0e930Fac266d8B3F3e13EdbA35ac86E": {
+      "stalk": "523324",
+      "seed": "116"
+  },
+  "0x70C61c13CcEF8c8a7E74933DfB037aae0C2bEa31": {
+      "stalk": "498280",
+      "seed": "104"
+  },
+  "0x70a9c497536E98F2DbB7C66911700fe2b2550900": {
+      "stalk": "17344",
+      "seed": "4"
+  },
+  "0x70c65accB3806917e0965C08A4a7D6c72F17651A": {
+      "stalk": "40472",
+      "seed": "8"
+  },
+  "0x7197225aDAD17EeCb4946480D4BA014f3C106EF8": {
+      "stalk": "442552",
+      "seed": "72"
+  },
+  "0x71F9CCd68bf1f5F9b571f509E0765A04ca4fFad2": {
+      "stalk": "224424",
+      "seed": "44"
+  },
+  "0x71ed04D8ee385CB1A9a20d6664d6FBcE6D6d3537": {
+      "stalk": "270328",
+      "seed": "56"
+  },
+  "0x7211EEaD6c7DB1D1Ebd70F5CbCd8833935A04126": {
+      "stalk": "1202336",
+      "seed": "256"
+  },
+  "0x721f5D24c041d02f9316245D96DAc0094429Ce53": {
+      "stalk": "170784",
+      "seed": "36"
+  },
+  "0x73C91af57C657DfD05a31DAcA7Bff1aEb5754629": {
+      "stalk": "171088",
+      "seed": "26"
+  },
+  "0x73Cbc02516f5F4945cE2F2fACf002b2c6aA359e7": {
+      "stalk": "57852",
+      "seed": "10"
+  },
+  "0x74231623D8058Afc0a62f919742e15Af0fb299e5": {
+      "stalk": "49948",
+      "seed": "8"
+  },
+  "0x7428eC5B1FAD2FFAdF855d0d2960b5D666d8e347": {
+      "stalk": "88272",
+      "seed": "16"
+  },
+  "0x7568614a27117EeEB6E06022D74540c3C5749B84": {
+      "stalk": "64090",
+      "seed": "10"
+  },
+  "0x75e6E04eB9BB5e4C1E8A57F3C6Eb89D7BfF63a14": {
+      "stalk": "135000",
+      "seed": "24"
+  },
+  "0x761B20137B4cE315AB9ea5fdbB82c3634c3F7515": {
+      "stalk": "44424",
+      "seed": "8"
+  },
+  "0x764Bd4Feb72cB6962E8446e9798AceC8A3ac1658": {
+      "stalk": "417360",
+      "seed": "92"
+  },
+  "0x76a014267b1D9e375D4A84554504E366C7De1167": {
+      "stalk": "499170",
+      "seed": "90"
+  },
+  "0x77029090e07F7D144538C74cD3B7EcF674d82f62": {
+      "stalk": "22344",
+      "seed": "4"
+  },
+  "0x77BD7d6D8E6cB76032FF6a96921D81a98Baf3637": {
+      "stalk": "250488",
+      "seed": "46"
+  },
+  "0x78320e6082f9E831DD3057272F553e143dFe5b9c": {
+      "stalk": "23536",
+      "seed": "4"
+  },
+  "0x78861Fb7F1BA64b2b295Cf5e69DC480cFb929B0E": {
+      "stalk": "19040",
+      "seed": "8"
+  },
+  "0x7893b13e58310cDAC183E5bA95774405CE373f83": {
+      "stalk": "1075684",
+      "seed": "192"
+  },
+  "0x78a09C8B4FF4e5A73E3B7bf628BD30E6D67B0E50": {
+      "stalk": "102666",
+      "seed": "18"
+  },
+  "0x79441586C6C860a62492467b9D44D2649651633F": {
+      "stalk": "47738",
+      "seed": "8"
+  },
+  "0x7AAEE144a14Ec3ba0E468C9Dcf4a89Fdb62C5AA6": {
+      "stalk": "171322",
+      "seed": "34"
+  },
+  "0x7Ace5390CAa52Ea0c0D1aB408eE2D27DCE3f2711": {
+      "stalk": "12436",
+      "seed": "2"
+  },
+  "0x7B2d2934868077d5E938EfE238De65E0830Cf186": {
+      "stalk": "16542",
+      "seed": "6"
+  },
+  "0x7CDFc314b89a851054A9acC324171bF8a31593E9": {
+      "stalk": "4846800",
+      "seed": "1080"
+  },
+  "0x7Cc8880e3d74611e301fAaA5C8a05d3D8FCB3F18": {
+      "stalk": "246936",
+      "seed": "28"
+  },
+  "0x7D23f93e0E7722D40EaDa37d5AfB8BD9C6F57677": {
+      "stalk": "339640",
+      "seed": "60"
+  },
+  "0x7D31bf47ddA62C185A057b4002f1235FC3c8ae82": {
+      "stalk": "41856",
+      "seed": "8"
+  },
+  "0x7F594CF111DADb003812729054050239101B4621": {
+      "stalk": "22326",
+      "seed": "6"
+  },
+  "0x7F81D5AF291481AFC4A9b5744286e7f49d20AFfF": {
+      "stalk": "24568",
+      "seed": "4"
+  },
+  "0x7F82e84C2021a311131e894ceFf475047deD4673": {
+      "stalk": "87886",
+      "seed": "14"
+  },
+  "0x7F91212b8403ae7A7eaBe88C8eAf98002f0A3bD3": {
+      "stalk": "113278",
+      "seed": "22"
+  },
+  "0x7aA55D3965455d50f779991783fD54178aBCa185": {
+      "stalk": "44096",
+      "seed": "8"
+  },
+  "0x7b2366996A64effE1aF089fA64e9cf4361FddC6e": {
+      "stalk": "1011892",
+      "seed": "260"
+  },
+  "0x7bB955249d6f57345726569EA7131E2910CA9C0D": {
+      "stalk": "187212",
+      "seed": "32"
+  },
+  "0x7bd5d9279414A7d5c3B17916A916F0C7Fd2c593B": {
+      "stalk": "96692",
+      "seed": "14"
+  },
+  "0x7c5534E88F8A7b3F81290a4372D85dbD4b9B2ae2": {
+      "stalk": "733708",
+      "seed": "118"
+  },
+  "0x7cC0ec6e5b074fB42114750C9748463C4ac6CD16": {
+      "stalk": "11098",
+      "seed": "2"
+  },
+  "0x7cd222530d4D10E175c939F55c5dC394d51AaDaA": {
+      "stalk": "47934",
+      "seed": "12"
+  },
+  "0x7cd5F8291eeB36D2998c703E7db2f94997fCB1F9": {
+      "stalk": "160300",
+      "seed": "28"
+  },
+  "0x7d50bfeAD43d4FDD47a8A61f32305b2dE21068Bd": {
+      "stalk": "405722",
+      "seed": "80"
+  },
+  "0x7dE837cAff6A19898e507F644939939cB9341209": {
+      "stalk": "66236",
+      "seed": "14"
+  },
+  "0x7eaF877B409740afa24226D4A448c980896Be795": {
+      "stalk": "35814",
+      "seed": "6"
+  },
+  "0x80077CB3B35A6c30DC354469f63e0743eeff32D4": {
+      "stalk": "72684",
+      "seed": "24"
+  },
+  "0x804Be57907807794D4982Bf60F8b86e9010A1639": {
+      "stalk": "37428",
+      "seed": "12"
+  },
+  "0x808995E68A45b4D5a1ba61429882b47011E96c79": {
+      "stalk": "116332",
+      "seed": "22"
+  },
+  "0x80Fd357cAC78f7f70BDba65548e3b62982Eb31A7": {
+      "stalk": "7428",
+      "seed": "2"
+  },
+  "0x8191A2e4721CA4f2f4533c3c12B628f141fF2c19": {
+      "stalk": "666926",
+      "seed": "182"
+  },
+  "0x81F45F896D8854007fd6E7C892A894804F8aD3cb": {
+      "stalk": "149340",
+      "seed": "28"
+  },
+  "0x820A2943762236e27A3a2C6ea1024117518895a5": {
+      "stalk": "1369018",
+      "seed": "304"
+  },
+  "0x82353d5D94ef75145D57C5109e8aD54D00Ff2459": {
+      "stalk": "12264",
+      "seed": "2"
+  },
+  "0x82610F2bbA3fC9b3207805b46E79F7db27C6af68": {
+      "stalk": "9860",
+      "seed": "4"
+  },
+  "0x82F402847051BDdAAb0f5D4b481417281837c424": {
+      "stalk": "56736",
+      "seed": "12"
+  },
+  "0x8366bc75C14C481c93AaC21a11183807E1DE0630": {
+      "stalk": "48348",
+      "seed": "8"
+  },
+  "0x8368545412A7D32df7DAEB85399Fe1CC0284CF17": {
+      "stalk": "36460",
+      "seed": "4"
+  },
+  "0x83C9EC651027e061BcC39485c1Fb369297bD428c": {
+      "stalk": "1984786",
+      "seed": "432"
+  },
+  "0x8421D4871C9d29cbf533ccbE569D8F94531d8C70": {
+      "stalk": "12526",
+      "seed": "2"
+  },
+  "0x8450E3092b2c1C4AafD37cB6965cFCe03cd5fB6D": {
+      "stalk": "43866",
+      "seed": "8"
+  },
+  "0x848aB321B59da42521D10c07c2453870b9850c8A": {
+      "stalk": "217600",
+      "seed": "38"
+  },
+  "0x853AebEc29B1DABA31de05aD58738Ed1507D3b82": {
+      "stalk": "25028",
+      "seed": "4"
+  },
+  "0x85bBE859d13c5311520167AAD51482672EEa654b": {
+      "stalk": "733758",
+      "seed": "170"
+  },
+  "0x867fE13b4dE1dCeA131e9cdE6a6b4848a13Ec469": {
+      "stalk": "60684",
+      "seed": "12"
+  },
+  "0x86d6facD0C3BD88C0e1e88b4802a8006ec46997b": {
+      "stalk": "110490",
+      "seed": "18"
+  },
+  "0x87061D42aE66a7A7c181b8664EA53780146fd0e7": {
+      "stalk": "24852",
+      "seed": "4"
+  },
+  "0x87376f16268A0b93055A6FbcBe94f093cb589B81": {
+      "stalk": "157290",
+      "seed": "30"
+  },
+  "0x877cEA592fd83Dcc76243636dedC31CA7ce46cE1": {
+      "stalk": "37416",
+      "seed": "6"
+  },
+  "0x87872F0514Dd26F88c775D975C6C6Cf0f0A95FE1": {
+      "stalk": "32970",
+      "seed": "6"
+  },
+  "0x8798C5Add2c42cE8E773a3104d23CA36b10c8C15": {
+      "stalk": "202444",
+      "seed": "36"
+  },
+  "0x87C9E571ae1657b19030EEe27506c5D7e66ac29e": {
+      "stalk": "2010354",
+      "seed": "340"
+  },
+  "0x87a62b0B5f0dcd16A3D92Fb19B188C9ff9F067C2": {
+      "stalk": "9532",
+      "seed": "2"
+  },
+  "0x88673cb5439fE3Ea7eaA633C2E02fb07284e0765": {
+      "stalk": "150268",
+      "seed": "24"
+  },
+  "0x88F667664E61221160ddc0414868eF2f40e83324": {
+      "stalk": "123678",
+      "seed": "20"
+  },
+  "0x88cE2D4fB3cC542F0989d61A1c152fa137486d81": {
+      "stalk": "376264",
+      "seed": "98"
+  },
+  "0x8967362138b31874F4b0b4754ab0555563A94849": {
+      "stalk": "98952",
+      "seed": "22"
+  },
+  "0x898ab6605409028c42399a6dc9C8ca8Ee164fE44": {
+      "stalk": "82944",
+      "seed": "20"
+  },
+  "0x898fF4Bab886E4E96F3F56B86692dD0DB204aC27": {
+      "stalk": "49824",
+      "seed": "8"
+  },
+  "0x8A30D3bb32291DBbB5F88F905433E499638387b7": {
+      "stalk": "122736",
+      "seed": "18"
+  },
+  "0x8A3fA37b0f64CE9abb61936Dbc05bf2cCBA7a5a9": {
+      "stalk": "62900",
+      "seed": "10"
+  },
+  "0x8A8b65aF44aDf126faF6e98ca02174DfF2d452DF": {
+      "stalk": "373476",
+      "seed": "68"
+  },
+  "0x8B5A4f93c883680Ee4f2C595D54A073c22dF6c72": {
+      "stalk": "16704",
+      "seed": "4"
+  },
+  "0x8B79D14316cf2317C61b4Ab66448d0529E5Fc024": {
+      "stalk": "2534",
+      "seed": "2"
+  },
+  "0x8BB07e694B421433c9545C0F3d75d99cc763d74A": {
+      "stalk": "893070",
+      "seed": "154"
+  },
+  "0x8C39f76b8A25563d84D8bbad76443b0E9CbB3D01": {
+      "stalk": "64274",
+      "seed": "14"
+  },
+  "0x8D06Ffb1500343975571cC0240152C413d803778": {
+      "stalk": "69972",
+      "seed": "12"
+  },
+  "0x8E22B0945051f9ca957923490FffC42732A602bb": {
+      "stalk": "195446",
+      "seed": "54"
+  },
+  "0x8E32736429d2F0a39179214C826DeeF5B8A37861": {
+      "stalk": "18490",
+      "seed": "10"
+  },
+  "0x8E8A5fb89F6Ab165F982fA4869b7d3aCD3E4eBfE": {
+      "stalk": "45068",
+      "seed": "14"
+  },
+  "0x8F21151D98052eC4250f41632798716695Fb6F52": {
+      "stalk": "66132",
+      "seed": "12"
+  },
+  "0x8FdD0CF22012a5FEcDbF77eF30d9e9834DC1bf0A": {
+      "stalk": "72954",
+      "seed": "14"
+  },
+  "0x8a7C6a1027566e217ab28D8cAA9c8Eddf1Feb02B": {
+      "stalk": "22688",
+      "seed": "2"
+  },
+  "0x8aC9DB9c51e0d077a2FA432868EaFd02d9142d53": {
+      "stalk": "141780",
+      "seed": "24"
+  },
+  "0x8afcd552709BAC70a470EC1d137D535BFa4FAdEE": {
+      "stalk": "61760",
+      "seed": "12"
+  },
+  "0x8ba536EF6b8cC79362C2Bcb2fc922eB1b367c612": {
+      "stalk": "52572",
+      "seed": "12"
+  },
+  "0x8c1c2349a8FBF0Fb8f04600a27c88aA0129dbAaE": {
+      "stalk": "8938",
+      "seed": "2"
+  },
+  "0x8c919F4128c9e7a1D82ee94A1916D12A9C073bb4": {
+      "stalk": "75132",
+      "seed": "12"
+  },
+  "0x8d1c3018d6EC8Dc3BFb8c85250787f0b4F745e43": {
+      "stalk": "38980",
+      "seed": "10"
+  },
+  "0x8eD2B62f6bC83BfbC3380E5Fa1271E95F38837E3": {
+      "stalk": "43112",
+      "seed": "8"
+  },
+  "0x8f3426398C39c82218901623acA10E4924710f12": {
+      "stalk": "80592",
+      "seed": "14"
+  },
+  "0x8fE7261B58A691e40F7A21D38D27965E2d3AFd6E": {
+      "stalk": "37242",
+      "seed": "6"
+  },
+  "0x8fE8686b254E6685d38eaBdC88235d74bF0cbeaD": {
+      "stalk": "1178592",
+      "seed": "368"
+  },
+  "0x90111E5EfF22fFE04c137C2ceb03bCD28A959b60": {
+      "stalk": "12534",
+      "seed": "2"
+  },
+  "0x90F15E09B8Fb5BC080B968170C638920Db3A3446": {
+      "stalk": "117408",
+      "seed": "20"
+  },
+  "0x90Fe1AD4F312DCCE621389fc73A06dCcfD923211": {
+      "stalk": "25012",
+      "seed": "4"
+  },
+  "0x90a69b1a180f60c0059f149577919c778cE2b9e1": {
+      "stalk": "93116",
+      "seed": "16"
+  },
+  "0x9129D3AeC25F8c7E74b8ce3e1f1d755329A2792F": {
+      "stalk": "224500",
+      "seed": "36"
+  },
+  "0x91953b70d0861309f7D3A429A1CF82C8353132Be": {
+      "stalk": "89442",
+      "seed": "14"
+  },
+  "0x91d60813323A8795e098b127c8ec9b2aD0F70dA1": {
+      "stalk": "33022",
+      "seed": "6"
+  },
+  "0x923CC3D985cE69a254458001097012cb33FAb601": {
+      "stalk": "159440",
+      "seed": "28"
+  },
+  "0x9241089cf848cB30c6020EE25Cd6a2b28c626744": {
+      "stalk": "118386",
+      "seed": "26"
+  },
+  "0x925753106FCdB6D2f30C3db295328a0A1c5fD1D1": {
+      "stalk": "152896",
+      "seed": "28"
+  },
+  "0x9260ae742F44b7a2e9472f5C299aa0432B3502FA": {
+      "stalk": "65968",
+      "seed": "20"
+  },
+  "0x92D29e49e9fD72AB2A620885Cc3f160274fA2B8b": {
+      "stalk": "65788",
+      "seed": "12"
+  },
+  "0x930836bA4242071FEa039732ff8bf18B8401403E": {
+      "stalk": "62724",
+      "seed": "22"
+  },
+  "0x935A937903d18f98A705803DC3c5F07277fAb1B6": {
+      "stalk": "12580",
+      "seed": "2"
+  },
+  "0x9392e42722ACDa954984590b243eB358582991aA": {
+      "stalk": "79306",
+      "seed": "14"
+  },
+  "0x94F335a00F00d79b26336Fa1c77bAb6ae96F08c5": {
+      "stalk": "37740",
+      "seed": "6"
+  },
+  "0x94d29Be06f423738f96A5E67A2627B4876098Cdc": {
+      "stalk": "83408",
+      "seed": "14"
+  },
+  "0x94fDfEA0f8E66f245D242796b735B6070D52F6dD": {
+      "stalk": "137412",
+      "seed": "22"
+  },
+  "0x95603220F8245535385037C3Cd9819ebCf818866": {
+      "stalk": "238828",
+      "seed": "44"
+  },
+  "0x956BE972E8D16709D321b8C57Bce7E5f021fBE9E": {
+      "stalk": "45900",
+      "seed": "10"
+  },
+  "0x9599BF29Df5B7491C8cf7602b8C05157DbB784bF": {
+      "stalk": "36072",
+      "seed": "6"
+  },
+  "0x95D1C6ecb2951e3111333C987f8A0d939A9b7b09": {
+      "stalk": "168510",
+      "seed": "46"
+  },
+  "0x9664ca3827D81694aaf1b4C93891dE770A9340cf": {
+      "stalk": "282428",
+      "seed": "60"
+  },
+  "0x968E24C15a30d6Ff1B67f590c1c3A7fCeCb5C3fd": {
+      "stalk": "124212",
+      "seed": "20"
+  },
+  "0x96CF76Eaa90A79f8a69893de24f1cB7DD02d07fb": {
+      "stalk": "67586",
+      "seed": "10"
+  },
+  "0x9832eE476D66B58d185b7bD46D05CBCbE4e543e1": {
+      "stalk": "194786",
+      "seed": "48"
+  },
+  "0x988fB2064B42a13eb556DF79077e23AA4924aF20": {
+      "stalk": "36810",
+      "seed": "6"
+  },
+  "0x995D1e4e2807Ef2A8d7614B607A89be096313916": {
+      "stalk": "148240",
+      "seed": "22"
+  },
+  "0x99cAEE05b2293264cf8476b7B8ad5e14B9818a3b": {
+      "stalk": "29220",
+      "seed": "2"
+  },
+  "0x9A00BEFfa3fc064104b71f6B7EA93bAbDC44D9dA": {
+      "stalk": "384900",
+      "seed": "58"
+  },
+  "0x9A428d7491ec6A669C7fE93E1E331fe881e9746f": {
+      "stalk": "1211412",
+      "seed": "200"
+  },
+  "0x9A9f7885a9a0b9EFD48D1eAFA17e2E633f89E609": {
+      "stalk": "70862",
+      "seed": "10"
+  },
+  "0x9ADA95Ce2a188C51824Ef76Dd49850330AF7545F": {
+      "stalk": "199558",
+      "seed": "32"
+  },
+  "0x9BB4B2b03d3cD045a4C693E8a4cF131f9C923Acb": {
+      "stalk": "24960",
+      "seed": "4"
+  },
+  "0x9F1F4714d07859DD4C8D1312881A0700Ed1C2A7e": {
+      "stalk": "12536",
+      "seed": "2"
+  },
+  "0x9F791Ae2160f4Ec6D9c8986c40Da9b99c3A5F2FE": {
+      "stalk": "1440344",
+      "seed": "232"
+  },
+  "0x9a37d222322e75e40D90EC8127fB85dd4E63949B": {
+      "stalk": "29294",
+      "seed": "6"
+  },
+  "0x9b54ede44B624e057aA948308e0C10D91BFD59E6": {
+      "stalk": "359004",
+      "seed": "58"
+  },
+  "0x9b69b0e48832479B970bF65F73F9CcD125E09d0F": {
+      "stalk": "35072",
+      "seed": "16"
+  },
+  "0x9bA956e1C9417cA7223DE8684619414D5dFFD9e2": {
+      "stalk": "24680",
+      "seed": "4"
+  },
+  "0x9c52dC78bd84007bF63987806f0aeEece0ef14a6": {
+      "stalk": "64404",
+      "seed": "20"
+  },
+  "0x9c88cD7743FBb32d07ED6DD064aC71c6C4E70753": {
+      "stalk": "25044",
+      "seed": "4"
+  },
+  "0x9d6019484f10D28e6A9E9C2304B9B0eDcb9ac698": {
+      "stalk": "85554",
+      "seed": "14"
+  },
+  "0x9e16025a87B5431AE1371dE2Da7DcA4047C64196": {
+      "stalk": "37080",
+      "seed": "20"
+  },
+  "0x9e8Caff2218E77befdc62Ea6D18ABd1493F96B9a": {
+      "stalk": "22676",
+      "seed": "2"
+  },
+  "0x9fA7fbA664a08E5b07231d2cB8E3d7D1E5f4641c": {
+      "stalk": "40710",
+      "seed": "10"
+  },
+  "0x9fbB12Ea7DC6dE6503b35dA4389DB3aecf8E4282": {
+      "stalk": "686726",
+      "seed": "126"
+  },
+  "0xA09DEa781E503b6717BC28fA1254de768c6e1C4e": {
+      "stalk": "319880",
+      "seed": "60"
+  },
+  "0xA14EDe51540df9d540CE6A9B5327bFDAfB2150e9": {
+      "stalk": "12564",
+      "seed": "2"
+  },
+  "0xA160ddd847200C5A0b86A2D4107dba56A6E3053b": {
+      "stalk": "580970",
+      "seed": "106"
+  },
+  "0xA1c83E4f6975646E6a7bFE486a1193e2Fe736655": {
+      "stalk": "176432",
+      "seed": "32"
+  },
+  "0xA256Aa181aF9046995aF92506498E31E620C747a": {
+      "stalk": "48960",
+      "seed": "12"
+  },
+  "0xA33be425a086dB8899c33a357d5aD53Ca3a6046e": {
+      "stalk": "268162",
+      "seed": "46"
+  },
+  "0xA3e1b60002a24f6cFf3f74E2AA260b8C17bbdF7D": {
+      "stalk": "24528",
+      "seed": "4"
+  },
+  "0xA40633dF77e6065C7545cd4fcD79F0Ce2fa42cF1": {
+      "stalk": "30430",
+      "seed": "24"
+  },
+  "0xA419489219dC5fA1ECeC3749dB45767Aa9F8e912": {
+      "stalk": "160140",
+      "seed": "28"
+  },
+  "0xA5Cc7F3c81681429b8e4Fc074847083446CfDb99": {
+      "stalk": "75012",
+      "seed": "12"
+  },
+  "0xA7e3feD558E81dAb40Cd87F334D68b0BF0AB3fD6": {
+      "stalk": "383586",
+      "seed": "66"
+  },
+  "0xA813f78E3A60129218A0C0aBCA0fB6320C6c0D4F": {
+      "stalk": "50072",
+      "seed": "8"
+  },
+  "0xA970FEEBCFbCCf89f9a15323e4feBb4D7cf20e34": {
+      "stalk": "163088",
+      "seed": "38"
+  },
+  "0xAA790Bd825503b2007Ad11FAFF05978645A92a2C": {
+      "stalk": "1180198",
+      "seed": "198"
+  },
+  "0xAB9497dE5d2D768Ca9D65C4eFb19b538927F6732": {
+      "stalk": "50064",
+      "seed": "8"
+  },
+  "0xABC508DdA7517F195e416d77C822A4861961947a": {
+      "stalk": "136092",
+      "seed": "24"
+  },
+  "0xAD503B72FC36A699BF849bB2ed4c3dB1967A73da": {
+      "stalk": "826728",
+      "seed": "138"
+  },
+  "0xAD7bBd9E7fbCdbf80199e940d0A8a6f2D690457d": {
+      "stalk": "171406",
+      "seed": "32"
+  },
+  "0xAf0aF5A4A7B3e26359696ebC3D40cDb98f832376": {
+      "stalk": "22604",
+      "seed": "4"
+  },
+  "0xAf812E8BABab3173EdCE179fE6Fc6c2B1c482E39": {
+      "stalk": "8912574",
+      "seed": "1456"
+  },
+  "0xB06fF7d5560f213937fC723CC65366415B7821bd": {
+      "stalk": "73554",
+      "seed": "12"
+  },
+  "0xB2dd7f7a0c94364067aDE38aB28Ad18d124bB329": {
+      "stalk": "35292",
+      "seed": "8"
+  },
+  "0xB345720Ab089A6748CCec3b59caF642583e308Bf": {
+      "stalk": "58170",
+      "seed": "10"
+  },
+  "0xB4D12acf58C79C23Af491f2eF0039f1c57ABE277": {
+      "stalk": "387782",
+      "seed": "86"
+  },
+  "0xB58A0c101dd4dD9c29B965F944191023949A6fd0": {
+      "stalk": "129182",
+      "seed": "38"
+  },
+  "0xB64F17d47aDf05fE3691EbbDfcecdF0AA5dE98D6": {
+      "stalk": "22804",
+      "seed": "2"
+  },
+  "0xB70e3a9573AE3De81f15257b1d5a0f20847De138": {
+      "stalk": "103416",
+      "seed": "18"
+  },
+  "0xB73a795F4b55dC779658E11037e373d66b3094c7": {
+      "stalk": "45972",
+      "seed": "12"
+  },
+  "0xB81D739df194fA589e244C7FF5a15E5C04978D0D": {
+      "stalk": "202878",
+      "seed": "42"
+  },
+  "0xBAe7A9B7Df36365Cb17004FD2372405773273a68": {
+      "stalk": "23910",
+      "seed": "6"
+  },
+  "0xBB8FB8fE5198f25D117C0e7B1b9C8260CB19C3C0": {
+      "stalk": "11928",
+      "seed": "2"
+  },
+  "0xBBD189593331b2538e9160D28720D4e3E20812FB": {
+      "stalk": "25012",
+      "seed": "4"
+  },
+  "0xBb02C110452Ae7aB8eb369b77Ad65bB6C18B4361": {
+      "stalk": "272706",
+      "seed": "42"
+  },
+  "0xBbD2f625F2ecf6B55dc9de8EC7B538e30C799Ac6": {
+      "stalk": "619268",
+      "seed": "100"
+  },
+  "0xBd03118971755fC60e769C05067061ebf97064ba": {
+      "stalk": "15028",
+      "seed": "4"
+  },
+  "0xBd80cee1D9EBe79a2005Fc338c9a49b2764cfc36": {
+      "stalk": "72744",
+      "seed": "12"
+  },
+  "0xBf4Aa57563dB2A8185148EC874EA96dff82CeB13": {
+      "stalk": "47344",
+      "seed": "6"
+  },
+  "0xBf68f1CE39Ed3BD9B20944260AA678bB934D164b": {
+      "stalk": "447930",
+      "seed": "88"
+  },
+  "0xC02a0918E0c47b36c06BE0d1A93737B37582DaBb": {
+      "stalk": "27944",
+      "seed": "14"
+  },
+  "0xC09dc9d451D051d63DDef9A4f4365fBfAC65a22B": {
+      "stalk": "342716",
+      "seed": "72"
+  },
+  "0xC0eB311C2f846BD359ed8eAA9a766D5E4736846A": {
+      "stalk": "75120",
+      "seed": "12"
+  },
+  "0xC0eC0e2a7f526b2eBF5a7e199Ff776a019f012c8": {
+      "stalk": "213202",
+      "seed": "34"
+  },
+  "0xC19cF05F28BD4fd58E427a60EC9416d73B6d6c57": {
+      "stalk": "250704",
+      "seed": "52"
+  },
+  "0xC1CeDc9707cAA9869Dca060FCF90054eA8571E42": {
+      "stalk": "44712",
+      "seed": "8"
+  },
+  "0xC1E03E7f928083AcaC4FEd410cB0963bA61c8E0d": {
+      "stalk": "93300",
+      "seed": "18"
+  },
+  "0xC1e607B7730C43C8D15562ffa1ad27B4463DC4c4": {
+      "stalk": "50140",
+      "seed": "8"
+  },
+  "0xC2820F702Ef0fBd8842c5CE8A4FCAC5315593732": {
+      "stalk": "4284700",
+      "seed": "944"
+  },
+  "0xC327F2f6C5Df87673E6E12e674bA26654A25a7B5": {
+      "stalk": "100184",
+      "seed": "16"
+  },
+  "0xC3853C3A8fC9c454f59c9aeD2Fc6cfa1a41eB20E": {
+      "stalk": "406650",
+      "seed": "90"
+  },
+  "0xC51feFB9eF83f2D300448b22Db6fac032F96DF3F": {
+      "stalk": "175064",
+      "seed": "28"
+  },
+  "0xC52A0B002ac4E62bE0d269A948e55D126a48C767": {
+      "stalk": "39810",
+      "seed": "10"
+  },
+  "0xC5581F1aE61E34391824779D505Ca127a4566737": {
+      "stalk": "522884",
+      "seed": "136"
+  },
+  "0xC56725DE9274E17847db0E45c1DA36E46A7e197F": {
+      "stalk": "198700",
+      "seed": "32"
+  },
+  "0xC64d472Cc19c2A9Fae649eC2DcDcff87ca94F7De": {
+      "stalk": "88098",
+      "seed": "18"
+  },
+  "0xC65F06b01E114414Aac120d54a2E56d2B75b1F85": {
+      "stalk": "160960",
+      "seed": "28"
+  },
+  "0xC6AC7c7aCabc3585cfE16478fd4D22C1E8dC3c57": {
+      "stalk": "45894",
+      "seed": "12"
+  },
+  "0xC725c98A214a3b79C0454Ef2151c73b248ce329c": {
+      "stalk": "70648",
+      "seed": "14"
+  },
+  "0xC76d7eb6B13a8aDC5E93da2bD1ae4309806757c6": {
+      "stalk": "108702",
+      "seed": "18"
+  },
+  "0xC7c5a25141dfBB4eb586c58fE0f12efd5f999A2B": {
+      "stalk": "97682",
+      "seed": "14"
+  },
+  "0xC89A6f24b352d35e783ae7C330462A3f44242E89": {
+      "stalk": "47428",
+      "seed": "6"
+  },
+  "0xC95186f04B68cfec0D9F585D08C3b5697C858fe0": {
+      "stalk": "52284",
+      "seed": "6"
+  },
+  "0xCA754d7Fc19e0c3cD56375c584aB9E61443a276d": {
+      "stalk": "10234",
+      "seed": "2"
+  },
+  "0xCCF00d42bdEA5Fff0b46DD18a5e23FC8ac85a4AA": {
+      "stalk": "424158",
+      "seed": "78"
+  },
+  "0xCba1A275e2D858EcffaF7a87F606f74B719a8A93": {
+      "stalk": "1764310",
+      "seed": "310"
+  },
+  "0xCf2d231881E16365961281ec9D8b7B51A4044ABb": {
+      "stalk": "24958",
+      "seed": "4"
+  },
+  "0xCfCdCdE4D1c654eD980B4B3f6ff782194b3Aa666": {
+      "stalk": "75024",
+      "seed": "16"
+  },
+  "0xCfff6932D4ada56F6f1AEdAa61F6947cec95D90a": {
+      "stalk": "172768",
+      "seed": "26"
+  },
+  "0xD00fB8efFeE21177df7871F285B379Bb03d8A8b5": {
+      "stalk": "68922",
+      "seed": "14"
+  },
+  "0xD0988045f54BAf8466a2EA9f097b22eEca8F7A00": {
+      "stalk": "199248",
+      "seed": "40"
+  },
+  "0xD14f924DE730Bb2F0C6E5B45b21b37468950a2fF": {
+      "stalk": "45782",
+      "seed": "6"
+  },
+  "0xD1720E80f9820a1e980E5F5F1B644cDe257B6bf0": {
+      "stalk": "133482",
+      "seed": "24"
+  },
+  "0xD2F1BBfbC68c79F9D931C1fAD62933044F8f72c8": {
+      "stalk": "77936",
+      "seed": "16"
+  },
+  "0xD2d038f866Ef6441e598E0f685f885693ef59917": {
+      "stalk": "50304",
+      "seed": "8"
+  },
+  "0xD360EcB91406717Ad13C4fae757b69B417E2Af6b": {
+      "stalk": "148840",
+      "seed": "24"
+  },
+  "0xD379e6E98099A6C8EE68eaBe356a5BB8E0Df6AC7": {
+      "stalk": "12438",
+      "seed": "2"
+  },
+  "0xD441C97eF1458d847271f91714799007081494eF": {
+      "stalk": "1104252",
+      "seed": "192"
+  },
+  "0xD4B5541B7d82C6284e54910aB6068dC218Da1D1C": {
+      "stalk": "7976",
+      "seed": "4"
+  },
+  "0xD4ccCdedAAA75E15FdEdDd6D01B2af0a91D42562": {
+      "stalk": "30488",
+      "seed": "8"
+  },
+  "0xD54fDf2c1a19bB5Abe5Bd4C32623f0dDD1752709": {
+      "stalk": "198084",
+      "seed": "44"
+  },
+  "0xD5Fe199029ee4626478D47caE4F6F68CEa142c4C": {
+      "stalk": "34296",
+      "seed": "12"
+  },
+  "0xD6278E5EeA2981B1D4Ad89f3d6C44670caD6E427": {
+      "stalk": "152500",
+      "seed": "30"
+  },
+  "0xD6626eA482D804DDd83C6824284766f73A45D734": {
+      "stalk": "35834",
+      "seed": "6"
+  },
+  "0xD66DcFf7D207Dd5C5D7323d99CC57d00Fa92D4ea": {
+      "stalk": "8742",
+      "seed": "2"
+  },
+  "0xD71dB81bE94cbA42A39ad7171B36dB67b9B464c6": {
+      "stalk": "196282",
+      "seed": "34"
+  },
+  "0xD7Fca6b7F0dD2C18E85a77b18a5e7aa6E1EBB445": {
+      "stalk": "54246",
+      "seed": "12"
+  },
+  "0xD8c84eaC995150662CC052E6ac76Ec184fcF1122": {
+      "stalk": "1065392",
+      "seed": "180"
+  },
+  "0xD93cA8A20fE736C1a258134840b47526686D7307": {
+      "stalk": "23586",
+      "seed": "6"
+  },
+  "0xDA7Ece710c262a825b4d255e50f139FA17Fd401F": {
+      "stalk": "12016",
+      "seed": "2"
+  },
+  "0xDB23905E09bc6934204991f02729392a11eEd8F8": {
+      "stalk": "24184",
+      "seed": "4"
+  },
+  "0xDD11460317C683e4057E115eB14e1C9F7Ca41E12": {
+      "stalk": "75036",
+      "seed": "12"
+  },
+  "0xDE3E4d173f754704a763D39e1Dcf0a90c37ec7F0": {
+      "stalk": "4558392",
+      "seed": "1360"
+  },
+  "0xDFc6b16343F92c1347B6E9700aA6c5d9E34794A1": {
+      "stalk": "415064",
+      "seed": "82"
+  },
+  "0xDaA95A36D6CbD4E58A89253d3A19E26b067960C7": {
+      "stalk": "155498",
+      "seed": "26"
+  },
+  "0xE146313a9D6D6cCdd733CC15af3Cf11d47E96F25": {
+      "stalk": "1289732",
+      "seed": "328"
+  },
+  "0xE203096D7583E30888902b2608652c720D6C38da": {
+      "stalk": "172878",
+      "seed": "26"
+  },
+  "0xE2CDf066eEe46b2C424Dd1894b8aE33f153F533C": {
+      "stalk": "184806",
+      "seed": "44"
+  },
+  "0xE2bDaE527f99a68724B9D5C271438437FC2A4695": {
+      "stalk": "375700",
+      "seed": "68"
+  },
+  "0xE3b2fC5a80B80C8F668484171D7395e3fDE76670": {
+      "stalk": "116294",
+      "seed": "22"
+  },
+  "0xE4452Cb39ad3Faa39434b9D768677B34Dc90D5dc": {
+      "stalk": "20632",
+      "seed": "4"
+  },
+  "0xE45D85B382EFd7833Da1B8CAB53B203D22340b1a": {
+      "stalk": "121796",
+      "seed": "30"
+  },
+  "0xE46523509280267d4785cFcF89eba8F3cbD96267": {
+      "stalk": "12174",
+      "seed": "2"
+  },
+  "0xE6F00dDe5F7622298C16A9e39b471D1c1c2De250": {
+      "stalk": "137924",
+      "seed": "22"
+  },
+  "0xE874946c5876E5e6a9Fbc1e17DB759e06E3B3ffe": {
+      "stalk": "149888",
+      "seed": "24"
+  },
+  "0xE9691477a468cC9084B690920B845C20dc54Ae04": {
+      "stalk": "370006",
+      "seed": "64"
+  },
+  "0xE9B05bC1FA8684EE3e01460aac2e64C678b9dA5d": {
+      "stalk": "2633916",
+      "seed": "484"
+  },
+  "0xE9ecBb281297D9BD50CF166ab1280312F9fA9e7C": {
+      "stalk": "135856",
+      "seed": "32"
+  },
+  "0xEAa4F3773F57af1D4c7130e07CDE48050245511B": {
+      "stalk": "274856",
+      "seed": "50"
+  },
+  "0xEaFc0e4AcF147e53398A4c9AE5F15950332Cce06": {
+      "stalk": "459368",
+      "seed": "76"
+  },
+  "0xEf49FFe2C1A6f64cfE18A26b3EfE7d87830838C8": {
+      "stalk": "301576",
+      "seed": "64"
+  },
+  "0xF05980BF83005362fdcBCB8F7A453fE40B669D96": {
+      "stalk": "16152",
+      "seed": "8"
+  },
+  "0xF1cCFA46B1356589EC6361468f3520Aff95B21c3": {
+      "stalk": "12538",
+      "seed": "2"
+  },
+  "0xF269a21A2440224DD5B9dACB4e0759eCAC1E7eF5": {
+      "stalk": "177206",
+      "seed": "32"
+  },
+  "0xF2cB7617c7cbcBCc1F3A51bfc6D71aE749df5d60": {
+      "stalk": "25156",
+      "seed": "4"
+  },
+  "0xF38762504B458dC12E404Ac42B5ab618A7c4c78A": {
+      "stalk": "47508",
+      "seed": "12"
+  },
+  "0xF3A45Ee798fc560CE080d143D12312185f84aa72": {
+      "stalk": "28350",
+      "seed": "10"
+  },
+  "0xF56DD30d6Ab0eBDAe3A2892597eC5C8EE03Df099": {
+      "stalk": "24040",
+      "seed": "4"
+  },
+  "0xF6aaadA76eA7f044ffA028565b028740Dce5389F": {
+      "stalk": "127568",
+      "seed": "28"
+  },
+  "0xF6f6d531ed0f7fa18cae2C73b21aa853c765c4d8": {
+      "stalk": "737512",
+      "seed": "118"
+  },
+  "0xF808adAAb2B3A2dfa1d658cB9E187fF3b74CC0aC": {
+      "stalk": "213824",
+      "seed": "54"
+  },
+  "0xF840AA35b73EE0Bbf488D81d684706729Aba0a15": {
+      "stalk": "186970",
+      "seed": "32"
+  },
+  "0xF9790906affda8aA80fFf67deD5063d1221a5F1d": {
+      "stalk": "136516",
+      "seed": "26"
+  },
+  "0xF9D183AF486A973b7921ceb5FdC9908D12AAb440": {
+      "stalk": "523736",
+      "seed": "92"
+  },
+  "0xFA97e9B029D3CB15A6566CB52211B022dc67EFFB": {
+      "stalk": "22712",
+      "seed": "2"
+  },
+  "0xFAe73E896f6e35Bf60a52C4F7275381e8d0F6344": {
+      "stalk": "16594",
+      "seed": "4"
+  },
+  "0xFB8A7286FAbA378a15F321Cd82425B6B5E855B27": {
+      "stalk": "813296",
+      "seed": "144"
+  },
+  "0xFE09f953E10f3e6A9d22710cb6f743e4142321bd": {
+      "stalk": "11976",
+      "seed": "6"
+  },
+  "0xFaE9C276d513E6dC5060BB9bE5111c3124C4376c": {
+      "stalk": "6716",
+      "seed": "2"
+  },
+  "0xFb00Fab6af5a0aCD8718557D34B52828Ae128D34": {
+      "stalk": "435524",
+      "seed": "72"
+  },
+  "0xFc64410a03b205b995a9101f99a55026D8F1f1da": {
+      "stalk": "463668",
+      "seed": "86"
+  },
+  "0xFc748762F301229bCeA219B584Fdf8423D8060A1": {
+      "stalk": "2424932",
+      "seed": "424"
+  },
+  "0xFf4A6b6F1016695551355737d4F1236141ec018D": {
+      "stalk": "164208",
+      "seed": "28"
+  },
+  "0xa2321c2a5fAa8336b09519FB8fA5a19077da7794": {
+      "stalk": "56780",
+      "seed": "10"
+  },
+  "0xa31CFf6aA0af969b6d9137690CF1557908df861B": {
+      "stalk": "725720",
+      "seed": "116"
+  },
+  "0xa36B48545904789EbB6B898467F9506A54E9F052": {
+      "stalk": "97680",
+      "seed": "16"
+  },
+  "0xa3d63491abf28803116569058A263B1A407e66Fb": {
+      "stalk": "74936",
+      "seed": "12"
+  },
+  "0xa4f1b0889354b88CaAcC8142Ee0601D8920AE776": {
+      "stalk": "91500",
+      "seed": "16"
+  },
+  "0xa69eb732230F041E62640Da3571F414a01413DB3": {
+      "stalk": "146726",
+      "seed": "34"
+  },
+  "0xa752EeA12f7ecAA7674363255e5e7F0B083a515C": {
+      "stalk": "908498",
+      "seed": "162"
+  },
+  "0xa75b7833c78EBA62F1C5389f811ef3A7364D44DE": {
+      "stalk": "13512",
+      "seed": "4"
+  },
+  "0xa77056BeeD4FAad617724A813cf9120D35308B7C": {
+      "stalk": "41000",
+      "seed": "8"
+  },
+  "0xa82240Bb0291A8Ef6e46a4f6B8ABF4737B0b5257": {
+      "stalk": "5141768",
+      "seed": "894"
+  },
+  "0xa8DC7990450Cf6A9D40371Ef71B6fa132EeABB0E": {
+      "stalk": "4542",
+      "seed": "2"
+  },
+  "0xa8eE3e3c264d6034147fA1F21d691BaC393c7D94": {
+      "stalk": "169536",
+      "seed": "30"
+  },
+  "0xa9a01Cf812DA74e3100E1fb9B28224902D403ed7": {
+      "stalk": "243138",
+      "seed": "50"
+  },
+  "0xaBA9DC3A7B4F06158dD8C0c447E55bf200426208": {
+      "stalk": "24636",
+      "seed": "4"
+  },
+  "0xaBe78350f850924bAfF4B7139c17932d4c0560C5": {
+      "stalk": "667500",
+      "seed": "160"
+  },
+  "0xaCc53F19851ce116d52B730aeE8772F7Bd568821": {
+      "stalk": "974566",
+      "seed": "184"
+  },
+  "0xaa44cAc4777DcB5019160A96Fbf05a39b41edD15": {
+      "stalk": "211884",
+      "seed": "44"
+  },
+  "0xaa75c70b7ce3A00cdFa1Bf401756bdf5C70889Cc": {
+      "stalk": "137662",
+      "seed": "22"
+  },
+  "0xab557f77Ef6d758A18DF60AcfaCB1d5feE4C09c2": {
+      "stalk": "49432",
+      "seed": "6"
+  },
+  "0xaef29B25E1235E52D592a50d1FF05e60792C9552": {
+      "stalk": "472372",
+      "seed": "82"
+  },
+  "0xafaAa25675447563a093BFae2d3Db5662ADf9593": {
+      "stalk": "22860",
+      "seed": "6"
+  },
+  "0xb02f6c30bcf0d42E64712C28B007b85c199Db43f": {
+      "stalk": "226354",
+      "seed": "40"
+  },
+  "0xb077cBD6a097D65835a7F78FDd93f0F4325B5C40": {
+      "stalk": "11736",
+      "seed": "2"
+  },
+  "0xb1821263a27069c37AD6c042950c7BA59A7c8eC2": {
+      "stalk": "75108",
+      "seed": "12"
+  },
+  "0xb1D47D39c3BB868E5E4Be068b7057D4CAaD0b31C": {
+      "stalk": "1167332",
+      "seed": "220"
+  },
+  "0xb3F3658bF332ba6c9c0Cc5bc1201cABA7ada819B": {
+      "stalk": "361920",
+      "seed": "80"
+  },
+  "0xb3b454c4b4a73ccdd5c79c8e0E4e703B478E872D": {
+      "stalk": "60388",
+      "seed": "12"
+  },
+  "0xb440e219660775342186620768eC03cF304c2c4d": {
+      "stalk": "243648",
+      "seed": "44"
+  },
+  "0xb54f4f12c886277eeF6E34B7e1c12C4647b820B2": {
+      "stalk": "4090",
+      "seed": "2"
+  },
+  "0xb57Fd427c7a816853b280D8c445184e95Fe8f61A": {
+      "stalk": "254700",
+      "seed": "42"
+  },
+  "0xb74e5e06f50fa9e4eF645eFDAD9d996D33cc2d9D": {
+      "stalk": "79016",
+      "seed": "16"
+  },
+  "0xb78003FCB54444E289969154A27Ca3106B3f41f6": {
+      "stalk": "87570",
+      "seed": "14"
+  },
+  "0xb95A01D3B437c57631231bF995ca65678764b2E8": {
+      "stalk": "47648",
+      "seed": "6"
+  },
+  "0xbC4de0a59D8aF0Af3e66e08e488400Aa6F8bB0FB": {
+      "stalk": "299556",
+      "seed": "52"
+  },
+  "0xbCC44956d70536bed17C146a4D9E66261BB701DD": {
+      "stalk": "266260",
+      "seed": "44"
+  },
+  "0xbD50a98a99438325067302D987ccebA3C7a8a296": {
+      "stalk": "44108",
+      "seed": "8"
+  },
+  "0xbEc5c7E83Ea5D1995eA81491f71f317Eb1Affd7A": {
+      "stalk": "8972",
+      "seed": "2"
+  },
+  "0xbFE4ec1b5906d4be89C3F6942d1C6B04b19DE79e": {
+      "stalk": "63740",
+      "seed": "12"
+  },
+  "0xba121d80C8Cac15fc960BdEe1B0Af7Eea9084526": {
+      "stalk": "61380",
+      "seed": "10"
+  },
+  "0xbaeC6eD4A9c3b333E1cB20C3e729D7100c85D8F1": {
+      "stalk": "248492",
+      "seed": "44"
+  },
+  "0xbb2C53B8C42A5E3831E1ca5f97F0834Bf8aE7D77": {
+      "stalk": "16320",
+      "seed": "4"
+  },
+  "0xbf8A064c575093bf91674C5045E144A347EEe02E": {
+      "stalk": "33990",
+      "seed": "10"
+  },
+  "0xc06320d9028F851c6cE46e43F04aFF0A426F446c": {
+      "stalk": "75102",
+      "seed": "12"
+  },
+  "0xc0985b8b744C63e23e4923264eFfaC7535E44f21": {
+      "stalk": "44856",
+      "seed": "8"
+  },
+  "0xc0e2324817EaefD075aF9f9fAF52FFaef45d0c04": {
+      "stalk": "273528",
+      "seed": "52"
+  },
+  "0xc0fCfD732d6eD4aD1aFb182A080F31e74Fc0f28D": {
+      "stalk": "199116",
+      "seed": "32"
+  },
+  "0xc16Aa2E25F2868fea5C33E6A0b276dcE7EE1eE47": {
+      "stalk": "49744",
+      "seed": "8"
+  },
+  "0xc18BAB9f644187505F391E394768949793e9894f": {
+      "stalk": "26208",
+      "seed": "6"
+  },
+  "0xc1d1f253E40d2796Fb652f9494F2Cee8255A0a4F": {
+      "stalk": "167416",
+      "seed": "34"
+  },
+  "0xc207Ceb0709E1D2B6Ff32E17989d4a4D87C91F37": {
+      "stalk": "248416",
+      "seed": "48"
+  },
+  "0xc2352B1bb2115074B4C13a529B2C221E118D9817": {
+      "stalk": "7488",
+      "seed": "8"
+  },
+  "0xc240D9f8d38F2bE93900C5e5D1Acc10D2CC7AbAc": {
+      "stalk": "6474",
+      "seed": "2"
+  },
+  "0xc31eD6608Afb1F7ABd8a4EE524793F60876b5b66": {
+      "stalk": "51282",
+      "seed": "12"
+  },
+  "0xc5FB51E68d2753Fd484b7f99a13C8E746720C6aC": {
+      "stalk": "87542",
+      "seed": "14"
+  },
+  "0xc6DDfC6733a8874882FDE1D217d69BA522208B52": {
+      "stalk": "34914",
+      "seed": "6"
+  },
+  "0xc73E258784A41D10eE5823C12e97806551bc8eeC": {
+      "stalk": "55390",
+      "seed": "10"
+  },
+  "0xc83746C2da00F42bA46a8800812Cd0FdD483d24A": {
+      "stalk": "170670",
+      "seed": "50"
+  },
+  "0xc84C19Bbf07d0CB7CC430fC3C51173c4ACD5dD9D": {
+      "stalk": "128350",
+      "seed": "34"
+  },
+  "0xcA210D9D38247495886a99034DdFF2d3312DA4e3": {
+      "stalk": "1032100",
+      "seed": "166"
+  },
+  "0xcB1667B6F0Cd39C9A38eDadcfA743dE95cB65368": {
+      "stalk": "495904",
+      "seed": "116"
+  },
+  "0xcBF3d4AB955d0bE844DbAed50d3A6e94Ada97E8b": {
+      "stalk": "29800",
+      "seed": "6"
+  },
+  "0xcCbc56e1D30DBAaB70B013872Dbc7d773A9E54fB": {
+      "stalk": "12124",
+      "seed": "2"
+  },
+  "0xca71e1c8c80654c872fdD2b8BC65233e9468c802": {
+      "stalk": "64272",
+      "seed": "12"
+  },
+  "0xcb26ea9b520c6D300939A9D5B94308CD77484A6f": {
+      "stalk": "12492",
+      "seed": "2"
+  },
+  "0xccbfB8e76153b8FEA7EB7BBD66f1AAaAE314D65F": {
+      "stalk": "12516",
+      "seed": "2"
+  },
+  "0xcd5561b1be55C1Fa4BbA4749919A03219497B6eF": {
+      "stalk": "36100",
+      "seed": "6"
+  },
+  "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0": {
+      "stalk": "337676",
+      "seed": "54"
+  },
+  "0xcfd9c9Ac52b4B6Fe30537803CaEb327daDD411bB": {
+      "stalk": "47984",
+      "seed": "8"
+  },
+  "0xd2D533b30Af2c22c5Af822035046d951B2D0bd57": {
+      "stalk": "174644",
+      "seed": "30"
+  },
+  "0xd2F2f6b0F48e7a12496D8C9f7A2C18e6b76e49e0": {
+      "stalk": "100188",
+      "seed": "16"
+  },
+  "0xd2aa924591B370a78e022763B82ddcC711D4f2f7": {
+      "stalk": "48176",
+      "seed": "8"
+  },
+  "0xd30eB4f27aCac4d903a92A12a29f3fe758A6849c": {
+      "stalk": "212930",
+      "seed": "34"
+  },
+  "0xd368266f4e53b9e00147c758deD2eE063591F9A8": {
+      "stalk": "9460",
+      "seed": "2"
+  },
+  "0xd3F0862E4AcEf9A0c2D7FC4EAc9AB02c80D7b16c": {
+      "stalk": "38172",
+      "seed": "8"
+  },
+  "0xd3FeeDc8E702A9F191737c0482b685b74Be48CFa": {
+      "stalk": "145840",
+      "seed": "24"
+  },
+  "0xd3c1E750b5664170f4aF828145295B678BAFD460": {
+      "stalk": "1276116",
+      "seed": "204"
+  },
+  "0xd3e0Ef0eBB7bC536405918d4D8dBDF981185d435": {
+      "stalk": "365804",
+      "seed": "64"
+  },
+  "0xd43324eB6f31F86e361B48185797b339242f95f4": {
+      "stalk": "236570",
+      "seed": "44"
+  },
+  "0xd5aE1639e5EF6Ecf241389894a289a7C0c398241": {
+      "stalk": "276522",
+      "seed": "48"
+  },
+  "0xd5d37cb5d2Fb53C998b645bcDA99B00d36643a7A": {
+      "stalk": "75132",
+      "seed": "12"
+  },
+  "0xd653971FA19ef68BC80BECb7720675307Bfb3EE6": {
+      "stalk": "31892",
+      "seed": "6"
+  },
+  "0xd67acdDB195E31AD9E09F2cBc8d7F7891A6d44BF": {
+      "stalk": "88948",
+      "seed": "14"
+  },
+  "0xd6F2bEA66FCba0B9F426E185f3c98F6585c746D3": {
+      "stalk": "227774",
+      "seed": "42"
+  },
+  "0xd722B7b165bb87c77207a4e0e690596234Cf1aB6": {
+      "stalk": "76498",
+      "seed": "16"
+  },
+  "0xd72C0Bc5250c8F82E48BE46aD5f65bB5891483a0": {
+      "stalk": "54420",
+      "seed": "10"
+  },
+  "0xd8fC2eC57805817AaEe62FF23f4f07C16AF730E5": {
+      "stalk": "309216",
+      "seed": "54"
+  },
+  "0xd9A859A420ddf413FbfCBC10bB7e16d773839004": {
+      "stalk": "115730",
+      "seed": "20"
+  },
+  "0xdB4fBc231F1D2b3B4c3d9e1602C895806fb06278": {
+      "stalk": "4385112",
+      "seed": "788"
+  },
+  "0xdBab0B75921E3008Fd0bB621A8248D969d2d2F0d": {
+      "stalk": "7716",
+      "seed": "2"
+  },
+  "0xdDF06174511F1467811Aa55cD6Eb4efe0DfFc2E8": {
+      "stalk": "74088",
+      "seed": "14"
+  },
+  "0xdFD6475eea9D67942ceb6c6ea09Cd500D4BE36b0": {
+      "stalk": "81080",
+      "seed": "20"
+  },
+  "0xdb4f969Eb7904A6ddf5528AE8d0E85F857991CFd": {
+      "stalk": "249660",
+      "seed": "40"
+  },
+  "0xdb59f54F833Ee542Ab4f99Cb3Cdd66CD1Aa7b318": {
+      "stalk": "11812",
+      "seed": "2"
+  },
+  "0xdb97D72f8EA5Fb3a351EA2a7C6201b932d131661": {
+      "stalk": "1307966",
+      "seed": "238"
+  },
+  "0xdbB311A1A4f1c02989593Ca70BA6e75300F9F12D": {
+      "stalk": "453734",
+      "seed": "76"
+  },
+  "0xdbe95598aAf4ab9A68378FFB64b24e3126F346A6": {
+      "stalk": "7624",
+      "seed": "2"
+  },
+  "0xdff24806405f62637E0b44cc2903F1DfC7c111Cd": {
+      "stalk": "22580",
+      "seed": "2"
+  },
+  "0xe031B10E874FaE6989359cdE6f55fcBCF2bA2ffd": {
+      "stalk": "122632",
+      "seed": "20"
+  },
+  "0xe1D86a7088d05398A2B9bA566bE0b3C5ffa5D9aF": {
+      "stalk": "395000",
+      "seed": "70"
+  },
+  "0xe1d045be479CE7127186896A0149aaC7137b455E": {
+      "stalk": "71664",
+      "seed": "12"
+  },
+  "0xe249d1bE97f4A716CDE0D7C5B6b682F491621C41": {
+      "stalk": "22544",
+      "seed": "4"
+  },
+  "0xe3cd19FAbC17bA4b3D11341Aa06b6f245DE3f9A6": {
+      "stalk": "22048",
+      "seed": "8"
+  },
+  "0xe43e06794069FeF7A93c1Ab5ef918CfC65e86E00": {
+      "stalk": "37488",
+      "seed": "6"
+  },
+  "0xe4BF6E1967D7bc0Bd5E2C767c3A2CCAdf23446df": {
+      "stalk": "121508",
+      "seed": "24"
+  },
+  "0xe5D36124DE24481daC81cc06b2Cd0bbE81701D14": {
+      "stalk": "145470",
+      "seed": "22"
+  },
+  "0xe5eB46c6fdDb202CE7c1aa4CF3951F09F6ad00F3": {
+      "stalk": "36804",
+      "seed": "6"
+  },
+  "0xe693eB739c0bE8c2bDD978C550B5D8b8022A8adA": {
+      "stalk": "145426",
+      "seed": "26"
+  },
+  "0xe846880530689a4f03dBd4B34F0CDbb405609de1": {
+      "stalk": "191628",
+      "seed": "36"
+  },
+  "0xe86a6C1D778F22D50056a0fED8486127387741e2": {
+      "stalk": "174496",
+      "seed": "32"
+  },
+  "0xe88a280b0434f0523c99455D2d6FB0E2E5BE088C": {
+      "stalk": "514040",
+      "seed": "82"
+  },
+  "0xe8F65bFf630a1102e45C53D89183040a2Da27D36": {
+      "stalk": "102340",
+      "seed": "28"
+  },
+  "0xe9F55fF0Ce2c086a02154E18d10696026aFC0E63": {
+      "stalk": "181290",
+      "seed": "30"
+  },
+  "0xeDC36b2972542c0813a7aBd2aE1bBb7750391907": {
+      "stalk": "25044",
+      "seed": "4"
+  },
+  "0xeE55F7F410487965aCDC4543DDcE241E299032A4": {
+      "stalk": "72474",
+      "seed": "10"
+  },
+  "0xeE7840DAC7C3ec2cCDe49517fd3952e349997aB5": {
+      "stalk": "2197648",
+      "seed": "496"
+  },
+  "0xea3154098a58eEbfA89d705F563E6C5Ac924959e": {
+      "stalk": "439380",
+      "seed": "72"
+  },
+  "0xef764BAC8a438E7E498c2E5fcCf0f174c3E3F8dB": {
+      "stalk": "2141824",
+      "seed": "400"
+  },
+  "0xefaA5fE183b7CBe2772fE4AC88831b7Aa6C37422": {
+      "stalk": "141600",
+      "seed": "48"
+  },
+  "0xf1FCeD5B0475a935b49B95786aDBDA2d40794D2d": {
+      "stalk": "669304",
+      "seed": "108"
+  },
+  "0xf1db5C88Ac2b757e8B33F2E58E19CC55b3039898": {
+      "stalk": "134856",
+      "seed": "32"
+  },
+  "0xf286E07ED6889658A3285C05C4f736963cF41456": {
+      "stalk": "97616",
+      "seed": "20"
+  },
+  "0xf2d67343cB0599317127591bcef979feaF32fF76": {
+      "stalk": "77168",
+      "seed": "28"
+  },
+  "0xf324D236fbB7d642BDE863b4a65C3DB1DdbEC22e": {
+      "stalk": "23874",
+      "seed": "6"
+  },
+  "0xf3e9848D5accE2f83b8078ee21f458e59ec4289A": {
+      "stalk": "831860",
+      "seed": "148"
+  },
+  "0xf4C586A2DCD0Afb8718F830C31de0c3C5c91b90C": {
+      "stalk": "101452",
+      "seed": "20"
+  },
+  "0xf581e462DcA3Ea12fea1488E62D562deFd06e7C3": {
+      "stalk": "125368",
+      "seed": "24"
+  },
+  "0xf5aA301b1122B525Ab7d6bc5F224B15Bac59e1f2": {
+      "stalk": "47748",
+      "seed": "12"
+  },
+  "0xf6FbDeCb1193f6b15659cE747bfC561E06f1214a": {
+      "stalk": "261940",
+      "seed": "44"
+  },
+  "0xf78da0B8Ae888C318e1A19415d593729A61Ac0c3": {
+      "stalk": "24356",
+      "seed": "4"
+  },
+  "0xf7acc9E4E4F82300b9A92Bc4D539C7928c23233B": {
+      "stalk": "64366",
+      "seed": "14"
+  },
+  "0xf80cDe9FBB874500E8932de19B374Ab473E7d207": {
+      "stalk": "74928",
+      "seed": "12"
+  },
+  "0xf84F39554247723C757066b8fd7789462aC25894": {
+      "stalk": "18828",
+      "seed": "12"
+  },
+  "0xf8aA30A3aCFaD49efbB6837f8fEa8225D66E993b": {
+      "stalk": "81280",
+      "seed": "16"
+  },
+  "0xf95ecba30184289D15926Eb61337839E973a97df": {
+      "stalk": "152840",
+      "seed": "40"
+  },
+  "0xfA60a22626D1DcE794514afb9B90e1cD3626cd8d": {
+      "stalk": "603302",
+      "seed": "130"
+  },
+  "0xfB464Fcd5342D2997A43C6B7bcA7615d0fbDEeD9": {
+      "stalk": "37554",
+      "seed": "6"
+  },
+  "0xfD459E98FaCCB98838440dB466F01690322A721C": {
+      "stalk": "573160",
+      "seed": "134"
+  },
+  "0xfD96Fc073abC3357b52C0467F45f95c67c4d22fc": {
+      "stalk": "32934",
+      "seed": "6"
+  },
+  "0xfE5c7e0f6282Ef213F334a7C4c8EC0bFa8C2884e": {
+      "stalk": "100204",
+      "seed": "16"
+  },
+  "0xfa1F34aB261c88BbD8c19389Ec9383015c3F27e4": {
+      "stalk": "49976",
+      "seed": "8"
+  },
+  "0xfaAe91b5d3C0378eE245E120952b21736F382c59": {
+      "stalk": "1124",
+      "seed": "4"
+  },
+  "0xfb4570E63a5B87Fd415ec6F855373902CAe7A1f7": {
+      "stalk": "2613068",
+      "seed": "474"
+  },
+  "0xfc22875F01ffeD27d6477983626E369844ff954C": {
+      "stalk": "98814",
+      "seed": "20"
+  },
+  "0xfdF8146c2dbAf678A84797AdecD62D0f3A51D365": {
+      "stalk": "243700",
+      "seed": "44"
+  },
+  "0xffE8e5d3401C48Dfa05f6C6ee3b5cbBD2cb83F30": {
+      "stalk": "16186",
+      "seed": "4"
+  },
+  "0x02009370Ff755704E9acbD96042C1ab832D6067e": {
+      "stalk": "191440",
+      "seed": "36"
+  },
+  "0x0F3A1E840F030617B7496194dC96Bf9BE1e54D59": {
+      "stalk": "185664",
+      "seed": "32"
+  },
+  "0x10e03eB5950bEA08bb882e3FF01286665f209F97": {
+      "stalk": "95840",
+      "seed": "16"
+  },
+  "0x12f1412fECBf2767D10031f01D772d618594Ea28": {
+      "stalk": "125132",
+      "seed": "20"
+  },
+  "0x1A81dB156AFd3Cd93545b823fD2Ac6DCDf3B0725": {
+      "stalk": "65384",
+      "seed": "12"
+  },
+  "0x1D7603B4173D52188b37f493107870bC9b4Ce746": {
+      "stalk": "196848",
+      "seed": "32"
+  },
+  "0x1aE02022a49b122a21bEBE24A1B1845113C37931": {
+      "stalk": "114440",
+      "seed": "20"
+  },
+  "0x1d264de8264a506Ed0E88E5E092131915913Ed17": {
+      "stalk": "24376",
+      "seed": "4"
+  },
+  "0x2303fD39E04cf4D6471dF5ee945bD0E2CFb6C7a2": {
+      "stalk": "388244",
+      "seed": "64"
+  },
+  "0x297751960DAD09c6d38b73538C1cce45457d796d": {
+      "stalk": "627412",
+      "seed": "104"
+  },
+  "0x2f62960f4da8f18ff4875d6F0365d7Dbc3900B8C": {
+      "stalk": "70812",
+      "seed": "16"
+  },
+  "0x31ca06f88438Decf247dd25695D53CBE2ac539f4": {
+      "stalk": "67036",
+      "seed": "12"
+  },
+  "0x387dfB7Fca2606AcaacD769Fb59803F6539C8269": {
+      "stalk": "39528",
+      "seed": "8"
+  },
+  "0x3C43674dfa916d791614827a50353fe65227B7f3": {
+      "stalk": "79284",
+      "seed": "16"
+  },
+  "0x3bf5FFF3Db120385AEefa86Ba00A27314a685d33": {
+      "stalk": "24920",
+      "seed": "4"
+  },
+  "0x3c5a438a2c19D024a3E53c27d45FAfAC9A45B4f7": {
+      "stalk": "75136",
+      "seed": "12"
+  },
+  "0x431e52E4993C4b7B23f587Cf96bc2Fe510037bE4": {
+      "stalk": "75092",
+      "seed": "12"
+  },
+  "0x4CC19A7A359F2Ff54FF087F03B6887F436F08C11": {
+      "stalk": "194224",
+      "seed": "32"
+  },
+  "0x4d7D2D9aDd39776Bba47A8F6473A6257dd897702": {
+      "stalk": "50064",
+      "seed": "8"
+  },
+  "0x4d7fE683e9fd9891D856b7b528656DCb493f8242": {
+      "stalk": "25028",
+      "seed": "4"
+  },
+  "0x53c9AccDD1C2162B416899edB87Eb69C58aFFacf": {
+      "stalk": "492300",
+      "seed": "96"
+  },
+  "0x569fa8c1E62feaB5b93a6252DDb8c0fD29423C50": {
+      "stalk": "221260",
+      "seed": "36"
+  },
+  "0x56A201b872B50bBdEe0021ed4D1bb36359D291ED": {
+      "stalk": "2252084",
+      "seed": "532"
+  },
+  "0x578BD31b74941eED1A0c924130FEf47181766a42": {
+      "stalk": "92576",
+      "seed": "16"
+  },
+  "0x5Ed417274E1acd3A1Fd2c9d9B37eFD5c076954E4": {
+      "stalk": "144584",
+      "seed": "24"
+  },
+  "0x5fBA3e7EeEB50A4Dc3328e2f974e0D608b38913e": {
+      "stalk": "44868",
+      "seed": "8"
+  },
+  "0x648457FC44EAAf5B1FeB75974c826F1ca44745b7": {
+      "stalk": "70804",
+      "seed": "12"
+  },
+  "0x664D448A984DAe1e829BF71e837faCd7b657EE10": {
+      "stalk": "37956",
+      "seed": "4"
+  },
+  "0x6Afbf03Fe3Bea05640da67Ae9F0B136c783e315d": {
+      "stalk": "25028",
+      "seed": "4"
+  },
+  "0x758917f2c8D3192FC9f109fE1EE0556808248CC0": {
+      "stalk": "123672",
+      "seed": "20"
+  },
+  "0x7dA66C591BFC8d99291385b8221c69aB9b3e0f0E": {
+      "stalk": "1050564",
+      "seed": "184"
+  },
+  "0x7fFadA80929a732f93D648D92cc4E052e2b9C4Aa": {
+      "stalk": "25012",
+      "seed": "4"
+  },
+  "0x80b9Aa22ccDA52f40be998EEb19db4D08fafEC3e": {
+      "stalk": "39398",
+      "seed": "8"
+  },
+  "0x8242Cb3B1A95b20fF8c55ba280ECC6534e56Cdfd": {
+      "stalk": "12420",
+      "seed": "2"
+  },
+  "0x843f2C19bc6df9E32B482E2F9ad6C078001088b1": {
+      "stalk": "48664",
+      "seed": "8"
+  },
+  "0x85Eada0D605d905262687Ad74314bc95837dB4F9": {
+      "stalk": "341780",
+      "seed": "68"
+  },
+  "0x8b8Bd62E0729692B7400137B6bBC815c2cE07bcF": {
+      "stalk": "25068",
+      "seed": "4"
+  },
+  "0x8e653fFf3466368A47879C2775F78070B30226ad": {
+      "stalk": "88372",
+      "seed": "16"
+  },
+  "0x91e795eB6a2307eDe1A0eeDe84e6F0914f60a9C3": {
+      "stalk": "40312",
+      "seed": "8"
+  },
+  "0x989252fE804c3C1b15908C364AA5cDa791030067": {
+      "stalk": "24988",
+      "seed": "4"
+  },
+  "0x9C3Da668A27f58A60d937447E0A539b48321F04d": {
+      "stalk": "25048",
+      "seed": "4"
+  },
+  "0xB1fe6937a51870ea66B863BE76d668Fc98694f25": {
+      "stalk": "262660",
+      "seed": "48"
+  },
+  "0xB2d818649dB5D5fD462cEc1F063dd1B8B8b7E106": {
+      "stalk": "466060",
+      "seed": "76"
+  },
+  "0xBB8772b75E93204dE7462f19100F7e17C43b263d": {
+      "stalk": "25068",
+      "seed": "4"
+  },
+  "0xC6e76A8CA58b58A72116d73256990F6B54EDC096": {
+      "stalk": "48436",
+      "seed": "8"
+  },
+  "0xC7B42F99c63126B22858f4eEd636f805CFe82c91": {
+      "stalk": "1864724",
+      "seed": "360"
+  },
+  "0xDa8C9D1B00D12DdF67F2aa6aF582fD6A38209b39": {
+      "stalk": "481016",
+      "seed": "80"
+  },
+  "0xDb599dAA6D9AFB1f911a29bBfcCEdbB8E51c9b0c": {
+      "stalk": "24912",
+      "seed": "4"
+  },
+  "0xDdFE74f671F6546F49A6D20909999cFE5F09Ad78": {
+      "stalk": "1047912",
+      "seed": "204"
+  },
+  "0xE463d56e80da7292A90faF77bA3F7524F0a0dCCd": {
+      "stalk": "65452",
+      "seed": "12"
+  },
+  "0xE7003d4f740D6bBc2Bb0f057D41Df36085d8CbA8": {
+      "stalk": "712868",
+      "seed": "124"
+  },
+  "0xEC5b22756D0191fBbB4AFffDd5ae2A660538D196": {
+      "stalk": "24984",
+      "seed": "4"
+  },
+  "0xEf1335914A41F20805bF3b74C7B597aFc4dAFbee": {
+      "stalk": "145956",
+      "seed": "44"
+  },
+  "0xF87AEDfbB53d7DB34c730a50B480F5717860d0Bf": {
+      "stalk": "23496",
+      "seed": "4"
+  },
+  "0xFda1215797D29414E588B2e62fC390Ee2949aaAA": {
+      "stalk": "21764",
+      "seed": "4"
+  },
+  "0xa720e16e2B197831805b3b3b0581220e943E9334": {
+      "stalk": "25028",
+      "seed": "4"
+  },
+  "0xa9b13316697dEb755cd86585dE872ea09894EF0f": {
+      "stalk": "3503612",
+      "seed": "652"
+  },
+  "0xaFB19e242b8dD9C3991323293Ef9f9f91F2c6365": {
+      "stalk": "23892",
+      "seed": "8"
+  },
+  "0xc08F967ED52dCFfD5687b56485eE6497502ef91d": {
+      "stalk": "23076",
+      "seed": "4"
+  },
+  "0xc1F80163cC753f460A190643d8FCbb7755a48409": {
+      "stalk": "146168",
+      "seed": "28"
+  },
+  "0xc7f1916b741A7966Bd65144cb2B0Ba9eD1B29984": {
+      "stalk": "74308",
+      "seed": "16"
+  },
+  "0xd3765592d1bbFC7ec04E9011861D75B07a3c935b": {
+      "stalk": "24000",
+      "seed": "4"
+  },
+  "0xd45aCCF4512AF9cEAC4c3ab0e770F54212CDF9Ac": {
+      "stalk": "122848",
+      "seed": "28"
+  },
+  "0xe495d8c21Bb0C4ab9a627627A4016DF40C6Daa74": {
+      "stalk": "779356",
+      "seed": "228"
+  },
+  "0xe58000ce4dd92a478959a24392d43D4c100C85Fd": {
+      "stalk": "24888",
+      "seed": "4"
+  },
+  "0xeF6c4192C8530A2502e153bDc2256dD72AB445e4": {
+      "stalk": "929932",
+      "seed": "156"
+  },
+  "0xfD446abDE36c9dc02bB872303965484330EdA047": {
+      "stalk": "119552",
+      "seed": "20"
+  },
+  "0xA9Ce5196181c0e1Eb196029FF27d61A45a0C0B2c": {
+      "stalk": "28172",
+      "seed": "8"
+  },
+  "0xe3a08ccE7E0167373A965B7B0D0dc57B6A2142f7": {
+      "stalk": "71428",
+      "seed": "12"
+  },
+  "0xef5939492958abb8488ce5A5C68D61Ac29C07732": {
+      "stalk": "159780",
+      "seed": "28"
+  },
+  "0xFE7A7F227967104299E2ED9c47ca28eADc3a7C5f": {
+      "stalk": "149208",
+      "seed": "24"
+  },
+  "0x7e04231a59C9589D17bcF2B0614bC86aD5Df7C11": {
+      "stalk": "766528",
+      "seed": "136"
+  },
+  "0x4A24E54A090b0Fa060f7faAF561510775d314e84": {
+      "stalk": "717860",
+      "seed": "118"
+  },
+  "0xAFA2137602A8FA29Ae81D2F9d1357F1358c3E758": {
+      "stalk": "81872",
+      "seed": "20"
+  },
+  "0xd03c52B3256b5e102ce4BF6bB53d4Be9d9963838": {
+      "stalk": "532188",
+      "seed": "132"
+  },
+  "0x00aaEa7B4dC89E4a4fACDa32da496ba5D8E1216d": {
+      "stalk": "300560",
+      "seed": "48"
+  },
+  "0xa80383f17A92B110921C07Fb5261798f3A99377f": {
+      "stalk": "125288",
+      "seed": "20"
+  },
+  "0xF9383a2d0D81Ee4046F83CE1B5D8580834333470": {
+      "stalk": "440104",
+      "seed": "96"
+  },
+  "0xFa41E0dafbb231fc8974c02a597BE61299ddd10C": {
+      "stalk": "106032",
+      "seed": "20"
+  },
+  "0xf05b641229bB2aA63b205Ad8B423a390F7Ef05A7": {
+      "stalk": "4083284",
+      "seed": "1548"
+  },
+  "0x8d9261369E3BFba715F63303236C324D2E3C44eC": {
+      "stalk": "138986",
+      "seed": "72"
+  },
+  "0xF1A621FE077e4E9ac2c0CEfd9B69551dB9c3f657": {
+      "stalk": "219444",
+      "seed": "52"
+  },
+  "0xEC5a0Dff55be882FAFe863895ef144b78aaEF097": {
+      "stalk": "30408",
+      "seed": "8"
+  },
+  "0x7E7a61a329f0F117e7D7a171675fdE87e6Eb31d2": {
+      "stalk": "444012",
+      "seed": "140"
+  },
+  "0xAa24a2AB55b4F1B6af343261d71c98376084BA73": {
+      "stalk": "50976",
+      "seed": "20"
+  },
+  "0xCF0dCc80F6e15604E258138cca455A040ecb4605": {
+      "stalk": "90658",
+      "seed": "26"
+  },
+  "0x877bDc0E7Aaa8775c1dBf7025Cf309FE30C3F3fA": {
+      "stalk": "7330",
+      "seed": "2"
+  },
+  "0xbA208F8Ba2fa377dfa9baE58A561D503C3F4d96C": {
+      "stalk": "10736",
+      "seed": "8"
+  }
+}

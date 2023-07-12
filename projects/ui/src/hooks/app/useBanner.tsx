@@ -6,12 +6,23 @@ import { BANNER_HEIGHT } from '~/hooks/app/usePageDimensions';
 import { AppState } from '~/state';
 import { ActiveProposal } from '~/state/beanstalk/governance';
 import snapshotLogo from '~/img/ecosystem/snapshot-logo.svg';
+import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 
 const useBanner = () => {
+  const migrationNeeded = useMigrationNeeded();
   const activeProposals = useSelector<AppState, ActiveProposal[]>(
     (state) => state._beanstalk.governance.activeProposals
   );
+
   return useMemo(() => {
+    if (migrationNeeded === true) {
+      return (
+        <Banner height={BANNER_HEIGHT} to="/silo?view=migrate">
+          Silo V3 is here.&nbsp;&nbsp;
+          <strong>Migrate now &rarr;</strong>
+        </Banner>
+      );
+    }
     if (activeProposals.length > 1) {
       return (
         <Banner height={BANNER_HEIGHT} to="/governance">
@@ -50,7 +61,7 @@ const useBanner = () => {
       );
     }
     return null;
-  }, [activeProposals]);
+  }, [activeProposals, migrationNeeded]);
 };
 
 export default useBanner;

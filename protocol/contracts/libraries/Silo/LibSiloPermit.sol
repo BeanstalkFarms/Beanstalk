@@ -11,9 +11,19 @@ import "../../C.sol";
 import "../LibAppStorage.sol";
 
 /**
+ * @title LibSiloPermit
  * @author Publius
- * @title Lib Silo Permit
- **/
+ * @notice Contains functions to read and update Silo Deposit allowances with
+ * permits.
+ * @dev Permits must be signed off-chain.
+ *
+ * See here for details on signing Silo Deposit permits:
+ * https://github.com/BeanstalkFarms/Beanstalk/blob/d2a9a232f50e1d474d976a2e29488b70c8d19461/protocol/utils/permit.js
+ * 
+ * The Beanstalk SDK also provides Javascript wrappers for permit functionality:
+ * `permit`: https://github.com/BeanstalkFarms/Beanstalk-SDK/blob/df2684aee67241acdb89379d4d0c19322339436c/packages/sdk/src/lib/silo.ts#L657
+ * `permits`: https://github.com/BeanstalkFarms/Beanstalk-SDK/blob/df2684aee67241acdb89379d4d0c19322339436c/packages/sdk/src/lib/silo.ts#L698
+ */
 library LibSiloPermit {
 
     bytes32 private constant DEPOSIT_PERMIT_HASHED_NAME = keccak256(bytes("SiloDeposit"));
@@ -22,6 +32,28 @@ library LibSiloPermit {
     bytes32 private constant DEPOSIT_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address token,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
 
+
+    /**
+     */
+    event DepositApproval(
+        address indexed owner,
+        address indexed spender,
+        address token,
+        uint256 amount
+    );
+
+    /**
+     * @dev Verifies the integrity of a Silo Deposit permit. 
+     *
+     * Only permits signed using the current nonce returned by {nonces}
+     * will be approved.
+     *
+     * Should revert if:
+     * - The permit has expired (deadline has passed)
+     * - The signer recovered from the permit signature does not match the owner
+     * 
+     * See {LibSiloPermit} for a description of how to sign a permit.
+     */
     function permit(
         address owner,
         address spender,
@@ -33,12 +65,31 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(DEPOSIT_PERMIT_TYPEHASH, owner, spender, token, value, _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSIT_PERMIT_TYPEHASH,
+                owner,
+                spender,
+                token,
+                value,
+                _useNonce(owner),
+                deadline
+            )
+        );
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
     }
 
+    /**
+     * @dev Verifies the integrity of a Silo Deposits (multiple tokens & values)
+     * permit. 
+     *
+     * Only permits signed using the current nonce returned by {nonces}
+     * will be approved.
+     * 
+     * See {LibSiloPermit} for a description of how to sign a multi-token permit.
+     */
     function permits(
         address owner,
         address spender,
@@ -50,17 +101,35 @@ library LibSiloPermit {
         bytes32 s
     ) internal {
         require(block.timestamp <= deadline, "Silo: permit expired deadline");
-        bytes32 structHash = keccak256(abi.encode(DEPOSITS_PERMIT_TYPEHASH, owner, spender, keccak256(abi.encodePacked(tokens)), keccak256(abi.encodePacked(values)), _useNonce(owner), deadline));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                DEPOSITS_PERMIT_TYPEHASH,
+                owner,
+                spender,
+                keccak256(abi.encodePacked(tokens)),
+                keccak256(abi.encodePacked(values)),
+                _useNonce(owner),
+                deadline
+            )
+        );
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Silo: permit invalid signature");
     }
 
+    /**
+     * @dev Returns the current `nonce` for `owner`.
+     * 
+     * Use the current nonce to sign permits.
+     */
     function nonces(address owner) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[owner].depositPermitNonces;
     }
 
+    /**
+     * @dev Returns and increments the current `nonce` for `owner`.
+     */
     function _useNonce(address owner) internal returns (uint256 current) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         current = s.a[owner].depositPermitNonces;
@@ -71,10 +140,21 @@ library LibSiloPermit {
      * @dev Returns the domain separator for the current chain.
      */
     function _domainSeparatorV4() internal view returns (bytes32) {
-        return _buildDomainSeparator(DEPOSIT_PERMIT_EIP712_TYPE_HASH, DEPOSIT_PERMIT_HASHED_NAME, DEPOSIT_PERMIT_HASHED_VERSION);
+        return _buildDomainSeparator(
+            DEPOSIT_PERMIT_EIP712_TYPE_HASH,
+            DEPOSIT_PERMIT_HASHED_NAME,
+            DEPOSIT_PERMIT_HASHED_VERSION
+        );
     }
 
-    function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 version) internal view returns (bytes32) {
+    /**
+     * @dev See {_domainSeparatorV4}.
+     */
+    function _buildDomainSeparator(
+        bytes32 typeHash,
+        bytes32 name,
+        bytes32 version
+    ) internal view returns (bytes32) {
         return keccak256(
             abi.encode(
                 typeHash,
@@ -87,10 +167,12 @@ library LibSiloPermit {
     }
 
     /**
-     * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed struct], this
-     * function returns the hash of the fully encoded EIP712 message for this domain.
+     * @dev Given an already hashed struct, this function returns the hash of
+     * the fully encoded EIP712 message for this domain.
+     * https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct
      *
-     * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For example:
+     * This hash can be used together with {ECDSA-recover} to obtain the signer
+     * of a message. For example:
      *
      * ```solidity
      * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
@@ -103,5 +185,36 @@ library LibSiloPermit {
      */
     function _hashTypedDataV4(bytes32 structHash) internal view returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), structHash));
+    }
+
+
+    function _approveDeposit(address account, address spender, address token, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.a[account].depositAllowances[spender][token] = amount;
+        emit DepositApproval(account, spender, token, amount);
+    }
+
+    //////////////////////// APPROVE ////////////////////////
+
+    function _spendDepositAllowance(
+        address owner,
+        address spender,
+        address token,
+        uint256 amount
+    ) internal {
+        uint256 currentAllowance = depositAllowance(owner, spender, token);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Silo: insufficient allowance");
+            _approveDeposit(owner, spender, token, currentAllowance - amount);
+        }
+    }
+    
+    function depositAllowance(
+        address owner,
+        address spender,
+        address token
+    ) public view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.a[owner].depositAllowances[spender][token];
     }
 }

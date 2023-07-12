@@ -295,15 +295,9 @@
     "absolutePath": "src/functions/ConstantProduct.sol",
     "id": 48679,
     "exportedSymbols": {
-      "ConstantProduct": [
-        48678
-      ],
-      "IWellFunction": [
-        49168
-      ],
-      "LibMath": [
-        58239
-      ]
+      "ConstantProduct": [48678],
+      "IWellFunction": [49168],
+      "LibMath": [58239]
     },
     "nodeType": "SourceUnit",
     "src": "33:1707:64",
@@ -313,12 +307,7 @@
         "nodeType": "PragmaDirective",
         "src": "33:24:64",
         "nodes": [],
-        "literals": [
-          "solidity",
-          "^",
-          "0.8",
-          ".17"
-        ]
+        "literals": ["solidity", "^", "0.8", ".17"]
       },
       {
         "id": 48527,
@@ -386,9 +375,7 @@
             "libraryName": {
               "id": 48533,
               "name": "LibMath",
-              "nameLocations": [
-                "526:7:64"
-              ],
+              "nameLocations": ["526:7:64"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 58239,
               "src": "526:7:64"
@@ -610,9 +597,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              49155
-            ],
+            "baseFunctions": [49155],
             "documentation": {
               "id": 48536,
               "nodeType": "StructuredDocumentation",
@@ -752,9 +737,7 @@
               "nodes": [],
               "statements": [
                 {
-                  "assignments": [
-                    48578
-                  ],
+                  "assignments": [48578],
                   "declarations": [
                     {
                       "constant": false,
@@ -1176,9 +1159,7 @@
                   },
                   "id": 48616,
                   "initializationExpression": {
-                    "assignments": [
-                      48595
-                    ],
+                    "assignments": [48595],
                     "declarations": [
                       {
                         "constant": false,
@@ -1249,9 +1230,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              49144
-            ],
+            "baseFunctions": [49144],
             "documentation": {
               "id": 48562,
               "nodeType": "StructuredDocumentation",
@@ -1468,9 +1447,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              49161
-            ],
+            "baseFunctions": [49161],
             "functionSelector": "06fdde03",
             "implemented": true,
             "kind": "function",
@@ -1563,9 +1540,7 @@
                 }
               ]
             },
-            "baseFunctions": [
-              49167
-            ],
+            "baseFunctions": [49167],
             "functionSelector": "95d89b41",
             "implemented": true,
             "kind": "function",
@@ -1707,9 +1682,7 @@
                   "src": "1604:10:64"
                 },
                 {
-                  "assignments": [
-                    48652
-                  ],
+                  "assignments": [48652],
                   "declarations": [
                     {
                       "constant": false,
@@ -1920,9 +1893,7 @@
                   },
                   "id": 48675,
                   "initializationExpression": {
-                    "assignments": [
-                      48657
-                    ],
+                    "assignments": [48657],
                     "declarations": [
                       {
                         "constant": false,
@@ -2109,9 +2080,7 @@
             "baseName": {
               "id": 48531,
               "name": "IWellFunction",
-              "nameLocations": [
-                "500:13:64"
-              ],
+              "nameLocations": ["500:13:64"],
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 49168,
               "src": "500:13:64"
@@ -2131,10 +2100,7 @@
           "text": " @author Publius\n @title Constant Product pricing function for Wells with 2 tokens\n Constant Product Wells use the formula:\n  `π(b_i) = (s / n)^n`\n Where:\n  `s` is the supply of LP tokens\n  `b_i` is the reserve at index `i`\n  `n` is the number of tokens in the Well"
         },
         "fullyImplemented": true,
-        "linearizedBaseContracts": [
-          48678,
-          49168
-        ],
+        "linearizedBaseContracts": [48678, 49168],
         "name": "ConstantProduct",
         "nameLocation": "481:15:64",
         "scope": 48679,

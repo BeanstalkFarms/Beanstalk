@@ -1,41 +1,54 @@
-import { AddLiquidity } from "./AddLiquidity";
 import { ApproveERC20 } from "./ApproveERC20";
-import { ClaimWithdrawals } from "./ClaimWithdrawals";
-import { Deposit } from "./Deposit";
-import { DevDebug } from "./_DevDebug";
-import { Exchange } from "./Exchange";
-import { ExchangeUnderlying } from "./ExchangeUnderlying";
 import { PermitERC20 } from "./PermitERC20";
-import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
-import { TransferToken } from "./TransferToken";
+import { WrapEth } from "./WrapEth";
 import { UnwrapEth } from "./UnwrapEth";
-import { WellSwap } from "./WellSwap";
-import { WellShift } from "./WellShift";
+import { TransferToken } from "./TransferToken";
+import { Deposit } from "./Deposit";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
+import { ClaimWithdrawals } from "./ClaimWithdrawals";
 import { ClaimWithdrawal } from "./ClaimWithdrawal";
 import { TransferDeposits } from "./TransferDeposits";
 import { TransferDeposit } from "./TransferDeposit";
-import { WrapEth } from "./WrapEth";
+import { AddLiquidity } from "./AddLiquidity";
+import { Exchange } from "./Exchange";
+import { ExchangeUnderlying } from "./ExchangeUnderlying";
+import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
+import { WellSwap } from "./WellSwap";
+import { WellShift } from "./WellShift";
+import { DevDebug } from "./_DevDebug";
 
 export {
-  AddLiquidity,
+  // Approvals
   ApproveERC20,
-  ClaimWithdrawals,
-  Deposit,
-  DevDebug,
-  Exchange,
-  ExchangeUnderlying,
   PermitERC20,
-  RemoveLiquidityOneToken,
-  TransferToken,
+
+  // Wrappers
+  WrapEth,
   UnwrapEth,
-  WellSwap,
-  WellShift,
+
+  // Beanstalk: Internal balances
+  TransferToken,
+
+  // Beanstalk: Silo
+  Deposit,
   WithdrawDeposits,
   WithdrawDeposit,
+  ClaimWithdrawals,
   ClaimWithdrawal,
   TransferDeposits,
   TransferDeposit,
-  WrapEth
+
+  // DEX: Curve
+  AddLiquidity,
+  Exchange,
+  ExchangeUnderlying,
+  RemoveLiquidityOneToken,
+
+  // DEX: Wells
+  WellSwap,
+  WellShift,
+
+  // Developers
+  DevDebug
 };

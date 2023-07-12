@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { FarmToMode } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
 import { BEAN, PODS } from '~/constants/tokens';
 import {
@@ -6,7 +7,6 @@ import {
   PodListingFragment,
   PodOrderFragment,
 } from '~/generated/graphql';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
 import { toTokenUnitsBN } from '~/util';
 
 export enum PricingType {

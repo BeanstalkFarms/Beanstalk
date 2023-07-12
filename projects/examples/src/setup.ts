@@ -2,7 +2,7 @@ import { BeanstalkSDK, DataSource, TestUtils } from "@beanstalk/sdk";
 import { Provider } from "@beanstalk/sdk/dist/types/lib/BeanstalkSDK";
 import { ethers } from "ethers";
 
-const RPC_URL = "http://127.0.0.1:8545"
+const RPC_URL = "http://127.0.0.1:8545";
 // const RPC_URL = "https://anvil1.bean.money:443"
 export const provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
 export const { signer, account } = TestUtils.setupConnection(provider);

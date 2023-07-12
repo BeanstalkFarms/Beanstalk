@@ -5,13 +5,16 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/C.sol";
-import "~/libraries/Silo/LibSilo.sol";
-import "~/libraries/Silo/LibTokenSilo.sol";
-import "~/libraries/LibSafeMath32.sol";
-import "~/libraries/Convert/LibConvert.sol";
-import "~/libraries/LibInternal.sol";
-import "../ReentrancyGuard.sol";
+import {C} from "contracts/C.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
+import {ReentrancyGuard} from "../ReentrancyGuard.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
@@ -19,6 +22,7 @@ import "../ReentrancyGuard.sol";
  **/
 contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
+    using SafeCast for uint256;
     using LibSafeMath32 for uint32;
 
     event Convert(
@@ -29,12 +33,21 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 toAmount
     );
 
+    event RemoveDeposit(
+        address indexed account,
+        address indexed token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
+    );
+
     event RemoveDeposits(
         address indexed account,
         address indexed token,
-        uint32[] seasons,
+        int96[] stems,
         uint256[] amounts,
-        uint256 amount
+        uint256 amount,
+        uint256[] bdvs
     );
 
     struct AssetsRemoved {
@@ -43,26 +56,41 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 bdvRemoved;
     }
 
+    /**
+     * @notice convert allows a user to convert a deposit to another deposit,
+     * given that the conversion is supported by the ConvertFacet.
+     * For example, a user can convert LP into Bean, only when beanstalk is below peg, 
+     * or convert beans into LP, only when beanstalk is above peg.
+     * @param convertData  input parameters to determine the conversion type.
+     * @param stems the stems of the deposits to convert 
+     * @param amounts the amounts within each deposit to convert
+     * @return toStem the new stems of the converted deposit
+     * @return fromAmount the amount of tokens converted from
+     * @return toAmount the amount of tokens converted to
+     * @return fromBdv the bdv of the deposits converted from
+     * @return toBdv the bdv of the deposit converted to
+     */
     function convert(
         bytes calldata convertData,
-        uint32[] memory crates,
+        int96[] memory stems,
         uint256[] memory amounts
     )
         external
         payable
         nonReentrant
-        returns (uint32 toSeason, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+        returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        LibInternal.updateSilo(msg.sender);
-
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
             convertData
         );
 
+        LibSilo._mow(msg.sender, fromToken);
+        LibSilo._mow(msg.sender, toToken);
+
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
-            crates,
+            stems,
             amounts,
             fromAmount
         );
@@ -70,92 +98,280 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
-        toSeason = _depositTokens(toToken, toAmount, toBdv, grownStalk);
+        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
 
+    //////////////////////// UPDATE UNRIPE DEPOSITS ////////////////////////
+
+    /**
+     * @notice Update the BDV of an Unripe Deposit. Allows the user to claim
+     * Stalk as the BDV of Unripe tokens increases during the Barn
+     * Raise. This was introduced as a part of the Replant.
+     *
+     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
+     * Enroot operation.
+     *
+     * Gas optimization: We neglect to check if `token` is whitelisted. If a
+     * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
+     * 
+     * {LibTokenSilo-removeDepositFromAccount} should revert if there isn't
+     * enough balance of `token` to remove.
+     * Because the amount and the stem of an Deposit does not change, 
+     * an ERC1155 event does not need to be emitted.
+     */
+    function enrootDeposit(
+        address token,
+        int96 stem,
+        uint256 amount
+    ) external payable nonReentrant mowSender(token) {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+        // First, remove Deposit and Redeposit with new BDV
+        uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
+            msg.sender,
+            token,
+            stem,
+            amount
+        );
+        emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); // Remove Deposit does not emit an event, while Add Deposit does.
+
+        // Calculate the current BDV for `amount` of `token` and add a Deposit.
+        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+
+        LibTokenSilo.addDepositToAccount(
+            msg.sender, 
+            token, 
+            stem, 
+            amount, 
+            newBDV,
+            LibTokenSilo.Transfer.noEmitTransferSingle
+        ); // emits AddDeposit event
+
+        // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
+        uint256 deltaBDV = newBDV.sub(ogBDV);
+        LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
+
+        // Mint Stalk associated with the new BDV.
+        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
+            LibSilo.stalkReward(stem,
+                                LibTokenSilo.stemTipForToken(token),
+                                uint128(deltaBDV))
+        );
+
+        LibSilo.mintStalk(msg.sender, deltaStalk);
+    }
+
+    modifier mowSender(address token) {
+       LibSilo._mow(msg.sender, token);
+        _;
+    }
+
+    /** 
+     * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk
+     * as the BDV of Unripe tokens increases during the Barn Raise.
+     * This was introduced as a part of the Replant.
+     *
+     * @dev Should revert if `ogBDV > newBDV`. A user cannot lose BDV during an
+     * Enroot operation.
+     *
+     * Gas optimization: We neglect to check if `token` is whitelisted. If a
+     * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
+     * {removeDepositsFromAccount} should revert if there isn't enough balance of `token`
+     * to remove.
+     */
+    function enrootDeposits(
+        address token,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) external payable nonReentrant mowSender(token) {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+        // First, remove Deposits because every deposit is in a different season,
+        // we need to get the total Stalk, not just BDV.
+        LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
+
+        // Get new BDV
+        uint256 newTotalBdv = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+        uint256 stalkAdded; uint256 bdvAdded;
+
+        //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
+        int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
+        uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
+
+        uint256 depositBdv;
+
+        // Iterate through all stems, redeposit the tokens with new BDV and
+        // summate new Stalk.
+        for (uint256 i; i < stems.length; ++i) {
+            if (i+1 == stems.length) {
+                // Ensure that a rounding error does not occur by using the 
+                // remainder BDV for the last Deposit.
+                depositBdv = newTotalBdv.sub(bdvAdded);
+            } else {
+                // depositBdv is a proportional amount of the total bdv.
+                // Cheaper than calling the BDV function multiple times.
+                depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
+            }
+            LibTokenSilo.addDepositToAccount(
+                msg.sender,
+                token,
+                stems[i],
+                amounts[i],
+                depositBdv,
+                LibTokenSilo.Transfer.noEmitTransferSingle
+            );
+            
+            stalkAdded = stalkAdded.add(
+                depositBdv.mul(_stalkPerBdv).add(
+                    LibSilo.stalkReward(
+                        stems[i],
+                        _lastStem,
+                        uint128(depositBdv)
+                    )
+                )
+            );
+
+            bdvAdded = bdvAdded.add(depositBdv);
+        }
+
+        LibTokenSilo.incrementTotalDepositedBdv(token, bdvAdded.sub(ar.bdvRemoved));
+
+        // Mint Stalk associated with the delta BDV.
+        LibSilo.mintStalk(
+            msg.sender,
+            stalkAdded.sub(ar.stalkRemoved)
+        );
+    }
+
     function _withdrawTokens(
         address token,
-        uint32[] memory seasons,
+        int96[] memory stems,
         uint256[] memory amounts,
         uint256 maxTokens
     ) internal returns (uint256, uint256) {
         require(
-            seasons.length == amounts.length,
-            "Convert: seasons, amounts are diff lengths."
+            stems.length == amounts.length,
+            "Convert: stems, amounts are diff lengths."
         );
-        AssetsRemoved memory a;
+        LibSilo.AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
-        while ((i < seasons.length) && (a.tokensRemoved < maxTokens)) {
-            if (a.tokensRemoved.add(amounts[i]) < maxTokens)
-                depositBDV = LibTokenSilo.removeDeposit(
-                    msg.sender,
+        // a bracket is included here to avoid the "stack too deep" error.
+        {
+            uint256[] memory bdvsRemoved = new uint256[](stems.length);
+            uint256[] memory depositIds = new uint256[](stems.length);
+            while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
+                if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
+                    //keeping track of stalk removed must happen before we actually remove the deposit
+                    //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
+                    depositBDV = LibTokenSilo.removeDepositFromAccount(
+                        msg.sender,
+                        token,
+                        stems[i],
+                        amounts[i]
+                    );
+                    bdvsRemoved[i] = depositBDV;
+                    a.stalkRemoved = a.stalkRemoved.add(
+                        LibSilo.stalkReward(
+                            stems[i],
+                            LibTokenSilo.stemTipForToken(token),
+                            depositBDV.toUint128()
+                        )
+                    );
+                    
+                } else {
+                    amounts[i] = maxTokens.sub(a.tokensRemoved);
+                    
+                    depositBDV = LibTokenSilo.removeDepositFromAccount(
+                        msg.sender,
+                        token,
+                        stems[i],
+                        amounts[i]
+                    );
+
+                    bdvsRemoved[i] = depositBDV;
+                    a.stalkRemoved = a.stalkRemoved.add(
+                        LibSilo.stalkReward(
+                            stems[i],
+                        LibTokenSilo.stemTipForToken(token),
+                            depositBDV.toUint128()
+                        )
+                    );
+                    
+                }
+                
+                a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
+                a.bdvRemoved = a.bdvRemoved.add(depositBDV);
+                
+                depositIds[i] = uint256(LibBytes.packAddressAndStem(
                     token,
-                    seasons[i],
-                    amounts[i]
-                );
-            else {
-                amounts[i] = maxTokens.sub(a.tokensRemoved);
-                depositBDV = LibTokenSilo.removeDeposit(
-                    msg.sender,
-                    token,
-                    seasons[i],
-                    amounts[i]
-                );
+                    stems[i]
+                ));
+                i++;
             }
-            a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
-            a.bdvRemoved = a.bdvRemoved.add(depositBDV);
-            a.stalkRemoved = a.stalkRemoved.add(
-                depositBDV.mul(s.season.current - seasons[i])
+            for (i; i < stems.length; ++i) amounts[i] = 0;
+            
+            emit RemoveDeposits(
+                msg.sender,
+                token,
+                stems,
+                amounts,
+                a.tokensRemoved,
+                bdvsRemoved
             );
-            i++;
+
+            emit LibSilo.TransferBatch(
+                msg.sender, 
+                msg.sender,
+                address(0), 
+                depositIds, 
+                amounts
+            );
         }
-        for (i; i < seasons.length; ++i) amounts[i] = 0;
-        emit RemoveDeposits(
-            msg.sender,
-            token,
-            seasons,
-            amounts,
-            a.tokensRemoved
-        );
 
         require(
             a.tokensRemoved == maxTokens,
             "Convert: Not enough tokens removed."
         );
-        a.stalkRemoved = a.stalkRemoved.mul(s.ss[token].seeds);
-        LibTokenSilo.decrementDepositedToken(token, a.tokensRemoved);
-        LibSilo.withdrawSiloAssets(
+        LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
+        LibSilo.burnStalk(
             msg.sender,
-            a.bdvRemoved.mul(s.ss[token].seeds),
-            a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalk))
+            a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.stalkRemoved, a.bdvRemoved);
     }
 
-    function _depositTokens(
+    //this is only used internal to the convert facet
+    function _depositTokensForConvert(
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk
-    ) internal returns (uint32 _s) {
+        uint256 grownStalk // stalk grown previously by this deposit
+    ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        uint256 seeds = bdv.mul(LibTokenSilo.seeds(token));
-        if (grownStalk > 0) {
-            _s = uint32(grownStalk.div(seeds));
-            uint32 __s = s.season.current;
-            if (_s >= __s) _s = __s - 1;
-            grownStalk = uint256(_s).mul(seeds);
-            _s = __s - _s;
-        } else _s = s.season.current;
-        uint256 stalk = bdv.mul(LibTokenSilo.stalk(token)).add(grownStalk);
-        LibSilo.depositSiloAssets(msg.sender, seeds, stalk);
+        //calculate stem index we need to deposit at from grownStalk and bdv
+        //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
+        //then in affect we lose that partial season's worth of stalk when we deposit
+        //so here we need to update grownStalk to be the amount you'd have with the above deposit
+        
+        /// @dev the two functions were combined into one function to save gas.
+        // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
+        // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
 
-        LibTokenSilo.incrementDepositedToken(token, amount);
-        LibTokenSilo.addDeposit(msg.sender, token, _s, amount, bdv);
+        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
+
+        LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
+
+        LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
+        LibTokenSilo.addDepositToAccount(
+            msg.sender, 
+            token, 
+            stem, 
+            amount, 
+            bdv,
+            LibTokenSilo.Transfer.emitTransferSingle
+        );
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut)

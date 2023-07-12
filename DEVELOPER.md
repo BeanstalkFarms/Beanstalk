@@ -2,10 +2,51 @@
 
 Development happens locally against a local forked version of the blockchain. We do not use testnets.
 
-### Repo Setup
+# Getting Started
 
-1. Clone the repo
-2. `yarn bootstrap`
+## Prerequistes
+
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+  - You'll know you did it right if you can run `git --version` and you see a response like `git version x.x.x`
+- [Nodejs](https://nodejs.org/en/)
+  - You'll know you've installed nodejs right if you can run `node --version`and get an ouput like: `vx.x.x`
+- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
+  - You'll know you've installed yarn right if you can run `yarn --version` And get an output like: `x.x.x`
+
+## Installation
+
+1. Clone the repo & install dependencies
+
+```bash
+git clone https://github.com/BeanstalkFarms/Beanstalk
+cd Beanstalk
+yarn
+```
+
+2. Install [pre-commit git hooks](https://typicode.github.io/husky/) and setup your [workspace](https://classic.yarnpkg.com/lang/en/docs/workspaces/)
+
+```bash
+yarn bootstrap
+```
+
+## Quickstart
+
+There are cross-project dependencies you may need to be aware of. For ex, the UI uses the SDK, which uses the SDK-Core. The dependencies need to be built before they can be used by the parent project. When you ran `yarn bootstrap`, this built everything for you, but there may be times when you need to do this manually.
+
+Easiest way to ensure everything is built:
+
+```
+cd {REPO_ROOT}
+yarn
+```
+
+This will start building all the dependencies in reverse order. See below to work with different projects.
+
+### Protocol / Contracts
+
+If you're not working on the contracts, you don't need to do anything with the protocol. If you're using anvil ([see here](#anvil-forking-mainnet-locally)), it will use a copy of mainnet, including all the deployed contracts.
+
+If you are developing contracts, see the `README.md` in `/protocol` for more details getting set up.
 
 ### Anvil: Forking Mainnet Locally
 
@@ -53,12 +94,6 @@ Some examples of what you can do with the bean cli:
 
 By combining these commands, you should be able to put a beanstalk account in pretty much any state desired.
 
-### Protocol
-
-If you're not working on the contracts, you don't need to do anything with the protocol. Since you're using Anvil in a fork mode, it will use a copy of mainnet, including all the deployed contracts.
-
-If you are developing contracts, see `/protocol` for more details
-
 ### Subgraphs
 
 You don't need to run the subgraphs locally unless you're working on those components. If you are using Anvil with the local subgraph node, include the `--disable-block-gas-limit` option when starting Anvil to avoid issues when indexing.
@@ -66,16 +101,3 @@ You don't need to run the subgraphs locally unless you're working on those compo
 ### UI
 
 Start the UI with `yarn ui:start`
-
-### Building and Generating
-
-There are cross-project dependencies you may need to be aware of. For ex, the UI uses the SDK, which uses the SDK-Core. The dependencies need to be built before they can be used by the parent project. When you ran `yarn bootstrap`, this built everything for you, but there may be times when you need to do this manually.
-
-Easiest way to ensure everything is built:
-
-```
-cd {REPO_ROOT}
-yarn build
-```
-
-This will start building all the dependencies in reverse order.

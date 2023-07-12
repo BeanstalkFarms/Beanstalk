@@ -317,7 +317,7 @@ export class Well {
 
     if (!recipient) {
       return TokenValue.ZERO;
-    };
+    }
 
     const gas = await this.contract.estimateGas.swapFrom(
       fromToken.address,
@@ -395,7 +395,7 @@ export class Well {
 
     if (!recipient) {
       return TokenValue.ZERO;
-    };
+    }
 
     const gas = await this.contract.estimateGas.swapFromFeeOnTransfer(
       fromToken.address,
@@ -489,7 +489,7 @@ export class Well {
 
     if (!recipient) {
       return TokenValue.ZERO;
-    };
+    }
 
     const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
 
@@ -580,7 +580,7 @@ export class Well {
     overrides?: TxOverrides
   ): Promise<ContractTransaction> {
     // TODO: validate at least one (or all?) is fee-on-transfer
-    validateAtleastOneNonZeroAmount(tokenAmountsIn)
+    validateAtleastOneNonZeroAmount(tokenAmountsIn);
     validateAmount(minLpAmountOut, "minLpAmountOut");
     validateAddress(recipient, "recipient");
     validateDeadline(deadline);

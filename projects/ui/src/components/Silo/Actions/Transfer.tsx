@@ -49,7 +49,7 @@ import {
   TransferFarmStep,
   WithdrawFarmStep,
 } from '~/lib/Txn';
-import useFarmerSiloBalancesAsync from '~/hooks/farmer/useFarmerSiloBalancesAsync';
+import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -65,7 +65,7 @@ const TransferForm: FC<
     token: Token;
     siloBalance: TokenSiloBalance | undefined;
     season: BigNumber;
-    plantAndDoX: PlantAndDoX;
+    plantAndDoX: PlantAndDoX | undefined;
   }
 > = ({
   // Formik
@@ -84,21 +84,23 @@ const TransferForm: FC<
   const txnActions = useFarmerFormTxnsActions();
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
-      BEAN.equals(whitelistedToken)
+      BEAN.equals(whitelistedToken) &&
+      plantAndDoX
   );
 
   // Results
   const withdrawResult = useMemo(() => {
     const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
-    const crates = siloBalance?.deposited.crates || [];
+    const deposits = siloBalance?.deposits || [];
 
-    if (!isUsingPlant && (amount.lte(0) || !crates.length)) return null;
-    if (isUsingPlant && plantAndDoX.getAmount().lte(0)) return null;
+    if (!isUsingPlant && (amount.lte(0) || !deposits.length)) return null;
+    if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
 
+    // FIXME: stems
     return WithdrawFarmStep.calculateWithdraw(
       sdk.silo.siloWithdraw,
       whitelistedToken,
-      crates,
+      deposits,
       amount,
       season.toNumber()
     );
@@ -108,7 +110,7 @@ const TransferForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.deposited.crates,
+    siloBalance?.deposits,
     values.tokens,
     whitelistedToken,
   ]);
@@ -119,7 +121,7 @@ const TransferForm: FC<
   );
 
   // derived
-  const depositedBalance = siloBalance?.deposited.amount;
+  const depositedBalance = siloBalance?.amount;
   const isReady = withdrawResult && !withdrawResult.amount.lt(0);
 
   // Input props
@@ -158,9 +160,10 @@ const TransferForm: FC<
               <Divider sx={{ opacity: 0.2, my: 1 }} />
               {withdrawResult.crates.map((_crate, i) => (
                 <div key={i}>
-                  Season {_crate.season.toString()}:{' '}
+                  Season {_crate.stem.toString()}:{' '}
                   {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)}{' '}
-                  BDV, {displayFullBN(_crate.stalk, STALK.displayDecimals)}{' '}
+                  BDV,{' '}
+                  {displayFullBN(_crate.stalk.total, STALK.displayDecimals)}{' '}
                   STALK, {displayFullBN(_crate.seeds, SEEDS.displayDecimals)}{' '}
                   SEEDS
                 </div>
@@ -185,7 +188,7 @@ const TransferForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
-        <AddPlantTxnToggle />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
@@ -237,8 +240,8 @@ const TransferForm: FC<
                                       crate.amount,
                                       whitelistedToken
                                     )}{' '}
-                                    from Deposits in Season{' '}
-                                    {crate.season.toString()}
+                                    from Deposits at Stem{' '}
+                                    {crate.stem.toString()}
                                   </li>
                                 ))}
                               </ul>
@@ -285,9 +288,7 @@ const TransferForm: FC<
 
 const TransferPropProvider: FC<{
   token: ERC20Token;
-  /// temporary. will be remove when sdk types are moved to redux
-  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
-}> = ({ token, siloBalance }) => {
+}> = ({ token }) => {
   const sdk = useSdk();
   const account = useAccount();
 
@@ -296,7 +297,7 @@ const TransferPropProvider: FC<{
 
   /// Farmer
   const [refetchSilo] = useFetchBeanstalkSilo();
-  const [farmerBalances, refetchFarmerBalances] = siloBalance;
+  const siloBalance = useFarmerSiloBalanceSdk(token);
 
   /// Form
   const middleware = useFormMiddleware();
@@ -334,34 +335,38 @@ const TransferPropProvider: FC<{
           throw new Error('Please enter a valid recipient address.');
         }
 
-        if (!farmerBalances?.deposited.crates) {
+        if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
 
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
 
+        const { plantAction } = plantAndDoX;
+
         const isPlanting =
+          plantAndDoX &&
           primaryActions?.includes(FormTxn.PLANT) &&
           sdk.tokens.BEAN.equals(token);
 
         const baseAmount = token.amount((formData?.amount || 0).toString());
 
-        const totalAmount = isPlanting
-          ? baseAmount.add(plantAndDoX.getAmount())
-          : baseAmount;
+        const totalAmount =
+          isPlanting && plantAction
+            ? baseAmount.add(plantAction.getAmount())
+            : baseAmount;
 
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
 
         const transferTxn = new TransferFarmStep(sdk, token, account, [
-          ...farmerBalances.deposited.crates,
+          ...siloBalance.deposits,
         ]);
 
         transferTxn.build(
           values.to,
           baseAmount,
           season.toNumber(),
-          isPlanting ? plantAndDoX : undefined
+          isPlanting ? plantAction : undefined
         );
 
         if (!transferTxn.withdrawResult) {
@@ -393,10 +398,7 @@ const TransferPropProvider: FC<{
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await refetch(actionsPerformed, { farmerSilo: true }, [
-          refetchSilo,
-          refetchFarmerBalances,
-        ]);
+        await refetch(actionsPerformed, { farmerSilo: true }, [refetchSilo]);
 
         txToast.success(receipt);
 
@@ -414,7 +416,7 @@ const TransferPropProvider: FC<{
     [
       middleware,
       account,
-      farmerBalances?.deposited.crates,
+      siloBalance?.deposits,
       token,
       sdk,
       season,
@@ -422,7 +424,6 @@ const TransferPropProvider: FC<{
       txnBundler,
       refetch,
       refetchSilo,
-      refetchFarmerBalances,
     ]
   );
 
@@ -431,9 +432,9 @@ const TransferPropProvider: FC<{
       {(formikProps: FormikProps<TransferFormValues>) => (
         <TransferForm
           token={token}
-          siloBalance={farmerBalances}
+          siloBalance={siloBalance}
           season={season}
-          plantAndDoX={plantAndDoX}
+          plantAndDoX={plantAndDoX.plantAction}
           {...formikProps}
         />
       )}
@@ -443,8 +444,6 @@ const TransferPropProvider: FC<{
 
 const Transfer: React.FC<{
   token: ERC20Token;
-  /// temporary. will be remove when sdk types are moved to redux
-  siloBalance: ReturnType<typeof useFarmerSiloBalancesAsync>;
 }> = (props) => (
   <FormTxnProvider>
     <TransferPropProvider {...props} />

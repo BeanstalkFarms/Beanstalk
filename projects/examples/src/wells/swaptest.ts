@@ -35,8 +35,7 @@ async function main() {
   console.log(`Quote: ${amountA.toHuman()} ${A.symbol} returns ${quoteFrom.toHuman()} ${B.symbol}`);
   // const tx = await well.swapFrom(A, B, amountA, quoteFrom.subSlippage(0.1), account, 300, {});
   // await tx.wait();
-  
-  
+
   // const p = [
   //   A.address,
   //   B.address,

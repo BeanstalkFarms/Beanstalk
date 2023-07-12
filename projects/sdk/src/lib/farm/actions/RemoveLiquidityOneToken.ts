@@ -17,16 +17,6 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    RemoveLiquidityOneToken.sdk.debug(`[${this.name}.run()]`, {
-      pool: this._pool,
-      registry: this._registry,
-      tokenOut: this._tokenOut,
-      amountInStep: _amountInStep,
-      fromMode: this._fromMode,
-      toMode: this._toMode,
-      context
-    });
-
     if (context.runMode === RunMode.EstimateReversed) {
       throw new Error("Reverse estimation is not yet supported for this action");
     }

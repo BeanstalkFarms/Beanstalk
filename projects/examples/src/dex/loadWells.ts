@@ -4,7 +4,6 @@ import { signer, provider, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { getWellsFromAquifer } from "./utils";
 
-
 let sdk;
 let forkUtils;
 
@@ -20,7 +19,7 @@ async function main() {
   // sdk = new WellsSDK({ signer });
   forkUtils = new TestUtils.BlockchainUtils(bsdk);
 
-  const wells = await getWellsFromAquifer(bsdk, process.env.AQUIFER_ADDRESS || '0x0');
+  const wells = await getWellsFromAquifer(bsdk, process.env.AQUIFER_ADDRESS || "0x0");
   for await (const well of wells) {
     console.log(`=== Processing ${well.name} ===`);
     await unloadWell(bsdk.wells, well.address);

@@ -11,6 +11,10 @@ export const updateSeasonResult = createAction<Sun['season']>(
   'beanstalk/sun/updateSunSeason'
 );
 
+export const updateCurrentSeason = createAction<Sun['season']['current']>(
+  'beanstalk/sun/updateSunCurrentSeason'
+);
+
 export const setNextSunrise = createAction<Sun['sunrise']['next']>(
   'beanstalk/sun/setNextSunrise'
 );

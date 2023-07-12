@@ -6,7 +6,7 @@ import json from "@rollup/plugin-json";
 import multi from "@rollup/plugin-multi-entry";
 import excludeDeps from "rollup-plugin-exclude-dependencies-from-bundle";
 import alias from "rollup-plugin-alias";
-import sourcemaps from 'rollup-plugin-sourcemaps';
+import sourcemaps from "rollup-plugin-sourcemaps";
 
 const pkg = require("./package.json");
 delete pkg.exports;
@@ -25,7 +25,7 @@ const config = [
   makeEntry("dist/js/DecimalBigNumber.js", "DecimalBigNumber"),
   makeEntry("dist/js/TokenValue.js", "TokenValue"),
   makeEntry("dist/js/Token.js", "Token"),
-  makeEntry("dist/js/Address.js", "Address"),
+  makeEntry("dist/js/Address.js", "Address")
 ];
 
 export default config;

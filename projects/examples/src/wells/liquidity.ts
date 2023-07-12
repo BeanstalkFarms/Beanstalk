@@ -42,8 +42,8 @@ async function main() {
   // console.log("\nLP Balance: ", lpbal.toHuman());
 
   // Get Reserves
-  const reserves = await well.getReserves()
-  console.log('Reserves: ', reserves);
+  const reserves = await well.getReserves();
+  console.log("Reserves: ", reserves);
 
   // // RemoveLiquidityOne - BEAN
   // console.log('\nRemoveLiquidityOne... BEAN');
@@ -80,7 +80,7 @@ async function main() {
   // const tx8 = await well.skim(account);
 
   // RemoveLiquidity
-  console.log('\nRemoveLiquidity...');
+  console.log("\nRemoveLiquidity...");
   const bal = await well.lpToken!.getBalance(account);
   const quoteRm = await well.removeLiquidityQuote(bal);
   console.log("Remove Quote", quoteRm.map((t) => t.toHuman()).join(", "));

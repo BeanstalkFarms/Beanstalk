@@ -51,12 +51,13 @@ contract Replant7 {
             uint256 earnedBeans = earned[i].earnedBeans;
             address account = earned[i].account;
             s.a[account].lastUpdate = s.season.current;
-            LibTokenSilo.addDeposit(
+            LibTokenSilo.addDepositToAccount(
                 account,
                 C.UNRIPE_BEAN,
                 REPLANT_SEASON,
                 earned[i].earnedBeans,
-                earnedBeans.mul(C.initialRecap()).div(1e18)
+                earnedBeans.mul(C.initialRecap()).div(1e18),
+                LibTokenSilo.Transfer.noEmitTransferSingle 
             );
 
             prune(earned[i]);
@@ -82,7 +83,7 @@ contract Replant7 {
 
     function init2(uint256 stalk, uint256 seeds) external {
         s.earnedBeans = 0;
-        s.s.seeds = seeds;
+        s.s.deprecated_seeds = seeds; // Was s.s.seeds
         s.s.stalk = stalk;
         s.s.roots = stalk.mul(ROOTS_PADDING);
     }

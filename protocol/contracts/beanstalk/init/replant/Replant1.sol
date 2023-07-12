@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../../libraries/Silo/LibTokenSilo.sol";
 // import "../../../libraries/Silo/LibBeanSilo.sol";
+import "../../AppStorageOld.sol";
 import "../../../C.sol";
 
 /**
@@ -54,7 +55,7 @@ import "../../../C.sol";
  **/
 contract Replant1 {
     using SafeMath for uint256;
-    AppStorage internal s;
+    AppStorageOld internal s;
 
     event BeanRemove(
         address indexed account,
@@ -82,7 +83,7 @@ contract Replant1 {
 
     function init() external {
         // 1. Remove Deposits
-        LibTokenSilo.removeDeposit(
+        LibTokenSilo.removeDepositFromAccount(
             EXPLOITER,
             EXPLOITER_TOKEN_1,
             EXPLOITER_SEASON,
@@ -95,7 +96,7 @@ contract Replant1 {
             EXPLOITER_AMOUNT_1
         );
 
-        LibTokenSilo.removeDeposit(
+        LibTokenSilo.removeDepositFromAccount(
             EXPLOITER,
             EXPLOITER_TOKEN_2,
             EXPLOITER_SEASON,
@@ -116,8 +117,8 @@ contract Replant1 {
         // emit BeanRemove(PROPOSER, seasons, amounts, PROPOSER_AMOUNT);
 
         // 2. Decrement Total Deposited for each token
-        LibTokenSilo.decrementDepositedToken(EXPLOITER_TOKEN_1, EXPLOITER_AMOUNT_1);
-        LibTokenSilo.decrementDepositedToken(EXPLOITER_TOKEN_2, EXPLOITER_AMOUNT_2);
+        LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_1, EXPLOITER_AMOUNT_1, 0);
+        LibTokenSilo.decrementTotalDeposited(EXPLOITER_TOKEN_2, EXPLOITER_AMOUNT_2, 0);
         // LibBeanSilo.decrementDepositedBeans(PROPOSER_AMOUNT);
 
         // 3. Decrement total Stalk, Seeds, Roots 

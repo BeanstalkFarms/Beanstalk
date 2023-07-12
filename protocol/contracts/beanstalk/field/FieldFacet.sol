@@ -5,14 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import {LibTransfer} from "~/libraries/Token/LibTransfer.sol";
-import {LibDibbler} from "~/libraries/LibDibbler.sol";
-import {LibPRBMath} from "~/libraries/LibPRBMath.sol";
-import {LibSafeMath32} from "~/libraries/LibSafeMath32.sol";
-import {LibSafeMath128} from "~/libraries/LibSafeMath128.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
+import {LibPRBMath} from "contracts/libraries/LibPRBMath.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 
 /**
@@ -74,10 +74,6 @@ contract FieldFacet is ReentrancyGuard {
      * If someone sends a Sow transaction at the end of a Season, it could be 
      * executed early in the following Season, at which time the temperature may be
      * significantly lower due to Morning Auction functionality.
-     * 
-     * FIXME Migration notes:
-     * - Added `minTemperature` as second parameter
-     * - `minTemperature` is uint256 measured to 1e6 instead of uint32
      */
     function sow(
         uint256 beans,

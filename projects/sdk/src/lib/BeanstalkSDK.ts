@@ -1,7 +1,7 @@
 import { GraphQLClient } from "graphql-request";
 import { ethers } from "ethers";
 import { enumFromValue } from "src/utils";
-import { addresses, ChainId } from "src/constants";
+import { addresses } from "src/constants";
 import { Tokens } from "./tokens";
 import { Contracts } from "./contracts";
 import { EventManager } from "./events/EventManager";
@@ -16,6 +16,7 @@ import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
 import { WellsSDK } from "@beanstalk/wells";
+import { ChainId } from "@beanstalk/sdk-core";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;

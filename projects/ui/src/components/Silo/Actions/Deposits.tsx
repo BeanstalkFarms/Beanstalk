@@ -1,40 +1,37 @@
 import React, { useMemo } from 'react';
-import BigNumber from 'bignumber.js';
 import { useAccount as useWagmiAccount } from 'wagmi';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
+import { ethers } from 'ethers';
 import { Token } from '~/classes';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
-import type { DepositCrate } from '~/state/farmer/silo';
-import { calculateGrownStalk, displayBN, displayFullBN } from '~/util';
-import useSeason from '~/hooks/beanstalk/useSeason';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
+import type { LegacyDepositCrate } from '~/state/farmer/silo';
+import { displayBN, displayFullBN } from '~/util';
 import { BEAN, STALK } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import COLUMNS from '~/components/Common/Table/cells';
 import Fiat from '~/components/Common/Fiat';
-import TableCard from '../../Common/TableCard';
+import TableCard, { TableCardProps } from '../../Common/TableCard';
 import StatHorizontal from '~/components/Common/StatHorizontal';
-
-/**
- * Prep data to loading to a CratesCard.
- */
 import { FC } from '~/types';
 
-const Deposits: FC<{
-  token: Token;
-  siloBalance: FarmerSiloBalance | undefined;
-}> = ({ token, siloBalance }) => {
+const Deposits: FC<
+  {
+    token: Token;
+    siloBalance: FarmerSiloTokenBalance | undefined;
+    useLegacySeason?: boolean;
+  } & Partial<TableCardProps>
+> = ({ token, siloBalance, useLegacySeason, ...props }) => {
   const Bean = useChainConstant(BEAN);
   const getUSD = useSiloTokenToFiat();
-  const currentSeason = useSeason();
   const account = useWagmiAccount();
 
-  const rows: (DepositCrate & { id: BigNumber })[] = useMemo(
+  const rows: (LegacyDepositCrate & { id: ethers.BigNumber })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
-        id: deposit.season,
+        id: deposit.stem,
         ...deposit,
       })) || [],
     [siloBalance?.deposited.crates]
@@ -43,7 +40,7 @@ const Deposits: FC<{
   const columns = useMemo(
     () =>
       [
-        COLUMNS.season,
+        COLUMNS.depositId(useLegacySeason ? 'Season' : 'Stem'),
         {
           field: 'amount',
           flex: 1,
@@ -95,49 +92,40 @@ const Deposits: FC<{
           headerName: 'Stalk',
           align: 'right',
           headerAlign: 'right',
-          valueFormatter: (params) => displayBN(params.value),
-          renderCell: (params) => {
-            const grownStalk = calculateGrownStalk(
-              currentSeason,
-              params.row.seeds,
-              params.row.season
-            );
-            const totalStalk = params.value.plus(grownStalk);
-            return (
-              <Tooltip
-                placement="bottom"
-                title={
-                  <Stack gap={0.5}>
-                    <StatHorizontal label="Stalk at Deposit">
-                      {displayFullBN(params.row.stalk, 2, 2)}
-                    </StatHorizontal>
-                    <StatHorizontal label="Stalk grown since Deposit">
-                      {displayFullBN(grownStalk, 2, 2)}
-                    </StatHorizontal>
-                    {/* <Typography color="gray">Earning {displayBN(seedsPerSeason)} Stalk per Season</Typography> */}
-                  </Stack>
-                }
-              >
-                <span>
-                  <Typography display={{ xs: 'none', md: 'block' }}>
-                    {displayFullBN(
-                      totalStalk,
-                      STALK.displayDecimals,
-                      STALK.displayDecimals
-                    )}
-                  </Typography>
-                  <Typography display={{ xs: 'block', md: 'none' }}>
-                    {displayBN(totalStalk)}
-                  </Typography>
-                </span>
-              </Tooltip>
-            );
-          },
+          valueFormatter: (params) => displayBN(params.value.total),
+          renderCell: (params) => (
+            <Tooltip
+              placement="bottom"
+              title={
+                <Stack gap={0.5}>
+                  <StatHorizontal label="Stalk at Deposit">
+                    {displayFullBN(params.row.stalk.base, 2, 2)}
+                  </StatHorizontal>
+                  <StatHorizontal label="Stalk grown since Deposit">
+                    {displayFullBN(params.row.stalk.grown, 2, 2)}
+                  </StatHorizontal>
+                </Stack>
+              }
+            >
+              <span>
+                <Typography display={{ xs: 'none', md: 'block' }}>
+                  {displayFullBN(
+                    params.row.stalk.total,
+                    STALK.displayDecimals,
+                    STALK.displayDecimals
+                  )}
+                </Typography>
+                <Typography display={{ xs: 'block', md: 'none' }}>
+                  {displayBN(params.row.stalk.total)}
+                </Typography>
+              </span>
+            </Tooltip>
+          ),
           sortable: false,
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [token.displayDecimals, Bean, currentSeason]
+    [useLegacySeason, token.displayDecimals, Bean]
   );
 
   const amount = siloBalance?.deposited.amount;
@@ -152,6 +140,7 @@ const Deposits: FC<{
       value={getUSD(token, amount || ZERO_BN)}
       state={state}
       token={token}
+      {...props}
     />
   );
 };

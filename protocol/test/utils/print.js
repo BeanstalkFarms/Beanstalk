@@ -64,7 +64,7 @@ async function printAccount(account, silo) {
   console.log('---------------------------------------------')
   console.log(`Account: ${account}`)
   console.log(`Stalk: ${await silo.balanceOfStalk(account)}`)
-  console.log(`Seeds: ${await silo.balanceOfSeeds(account)}`)
+  // console.log(`Seeds: ${await silo.balanceOfSeeds(account)}`)
   console.log(`Plenty: ${await silo.balanceOfPlentyBase(account)}`)
   console.log(`Roots: ${await silo.balanceOfRoots(account)}`)
   console.log(`Last Update: ${await silo.lastUpdate(account)}`)

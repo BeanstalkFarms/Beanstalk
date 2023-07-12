@@ -51,6 +51,7 @@ const oldTokenMap = {
   [BEAN_ETH_UNIV2_LP[1].symbol]: BEAN_ETH_UNIV2_LP[1],
   [BEAN_LUSD_LP[1].symbol]: BEAN_LUSD_LP[1],
 };
+
 export function getNewToOldToken(_token: Token) {
   const token = oldTokenMap[_token.symbol];
   if (!token) {

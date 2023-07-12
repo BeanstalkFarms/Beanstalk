@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import groupBy from 'lodash/groupBy';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
+import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { FERTILIZER_ICONS } from '~/components/Barn/FertilizerImage';
 import siloIcon from '~/img/beanstalk/silo-icon.svg';
@@ -19,7 +20,6 @@ import {
 } from '~/util/Actions';
 import { SupportedChainId } from '~/constants/chains';
 import { BEAN, PODS, SEEDS, SPROUTS, STALK, USDC } from '~/constants/tokens';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
 import AddressIcon from '~/components/Common/AddressIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';

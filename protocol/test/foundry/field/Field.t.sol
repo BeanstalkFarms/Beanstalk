@@ -53,7 +53,7 @@ contract FieldTest is FieldFacet, TestHelper {
      * beans is greater than the soil in the field..
      */
     function testCannotSowBelowMinSoil(uint256 beanSown) public {
-        beanSown = bound(beanSown, 1, 2 ** 256 - 1);
+        beanSown = bound(beanSown, 1, 2 ** 128 - 1);
         season.setSoilE(beanSown);
         vm.expectRevert("Field: Soil Slippage");
         field.sowWithMin(beanSown - 1, 1e6, beanSown, LibTransfer.From.EXTERNAL);

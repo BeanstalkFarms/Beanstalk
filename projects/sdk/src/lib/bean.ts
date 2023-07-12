@@ -18,14 +18,14 @@ export class Bean {
     return TokenValue.fromBlockchain(price, 6);
   }
 
-    /**
+  /**
    * Returns the deltaB
    */
-    async getDeltaB() {
-      const [price, totalSupply, deltaB] = await Bean.sdk.contracts.beanstalkPrice.price();
-  
-      return TokenValue.fromBlockchain(deltaB, 6);
-    }
+  async getDeltaB() {
+    const [price, totalSupply, deltaB] = await Bean.sdk.contracts.beanstalkPrice.price();
+
+    return TokenValue.fromBlockchain(deltaB, 6);
+  }
 
   /**
    * Get the chop rate for an Unripe asset.

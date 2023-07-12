@@ -48,12 +48,7 @@ async function getWorkflow(from: Token, to: Token) {
   const workflow = sdk.farm.create("Swap");
 
   // Transfer from user to Well
-  const transfer = new sdk.farm.actions.TransferToken(
-    from.address,
-    WELL_ADDRESS,
-    FarmFromMode.EXTERNAL,
-    FarmToMode.EXTERNAL
-  );
+  const transfer = new sdk.farm.actions.TransferToken(from.address, WELL_ADDRESS, FarmFromMode.EXTERNAL, FarmToMode.EXTERNAL);
 
   const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline Well Swap");
   const swap = new sdk.farm.actions.WellShift(WELL_ADDRESS, to, account);

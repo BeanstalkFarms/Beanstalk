@@ -24,7 +24,8 @@ export const useAllTokensBalance = () => {
   const { address } = useAccount();
   const queryClient = useQueryClient();
 
-  const tokensToLoad = Object.values(tokens);
+  // Remove ETH from this list, manually get the balance below
+  const tokensToLoad = Object.values(tokens).filter((t) => t.symbol !== "ETH");
   if (tokensToLoad.length > 20) throw new Error("Too many tokens to load balances. Fix me");
 
   const calls = useMemo(() => {
@@ -43,17 +44,8 @@ export const useAllTokensBalance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- doing just tokensToLoad doesn't work and causes multiple calls
   }, [address, tokensToLoad.map((t) => t.symbol).join()]);
 
-  /**
-   * The query here is either [token, balance, all] or [token, balance, {SYMBOL}]
-   * depending on weather or not this hooks is called with a specific token.
-   * If no token is passed to the hook, that means we want to fetch balance for ALL
-   * tokens. When doing so, we will also create a cache for the individual tokens
-   * so if later queries for the token happen, they will be retrieved from the cache
-   */
-  const key = ["token", "balance"];
-
   const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
-    key,
+    ["token", "balance"],
     async () => {
       if (!address) return {};
       const res = (await multicall({
@@ -69,6 +61,14 @@ export const useAllTokensBalance = () => {
 
         // set the balance in the query cache too
         queryClient.setQueryData(["token", "balance", token.symbol], { [token.symbol]: balances[token.symbol] });
+      }
+
+      const ETH = tokens.ETH;
+      if (ETH) {
+        const ethBalance = await ETH.getBalance(address);
+        Log.module("app").debug(`ETH balance: `, ethBalance.toHuman());
+        queryClient.setQueryData(["token", "balance", "ETH"], { ETH: ethBalance });
+        balances.ETH = ethBalance;
       }
 
       return balances;

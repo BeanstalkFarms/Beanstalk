@@ -139,14 +139,12 @@ export class LibraryPresets {
     this.bean2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDT, fromMode, toMode);
 
-
     ///////// USDC <> BEAN ///////////
     this.usdc2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.USDC, sdk.tokens.BEAN, fromMode, toMode);
-    
+
     this.bean2usdc = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDC, fromMode, toMode);
-
 
     ///////// DAI <> BEAN ///////////
     this.dai2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
@@ -155,14 +153,12 @@ export class LibraryPresets {
     this.bean2dai = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.DAI, fromMode, toMode);
 
-
-
     //////// WETH <> BEAN
     this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
-    
+
     this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
@@ -180,20 +176,10 @@ export class LibraryPresets {
 
       // Transfer input token to PIPELINE (via Beanstalk, so a beanstalk approval will be required, but
       // that is a separate transaction, not part of this workflow)
-      const transfer = new sdk.farm.actions.TransferToken(
-        fromToken.address,
-        sdk.contracts.pipeline.address,
-        from,
-        FarmToMode.EXTERNAL
-      );
+      const transfer = new sdk.farm.actions.TransferToken(fromToken.address, sdk.contracts.pipeline.address, from, FarmToMode.EXTERNAL);
 
       // This transfers the output token back to Beanstalk, from PIPELINE. Used when transferBack == true
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(
-        toToken.address,
-        account,
-        FarmFromMode.EXTERNAL,
-        FarmToMode.INTERNAL
-      );
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL);
 
       // This approves the transferToBeanstalk operation. Used when transferBack == true
       const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address);

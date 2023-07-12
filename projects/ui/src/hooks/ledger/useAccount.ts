@@ -1,7 +1,14 @@
+import { useMemo } from 'react';
 import { useAccount as useWagmiAccount } from 'wagmi';
 import { getAccount } from '~/util';
 
 export default function useAccount() {
   const account = useWagmiAccount();
-  return account?.address && getAccount(account.address);
+
+  return useMemo(() => {
+    if (account?.address) {
+      return getAccount(account.address);
+    }
+    return undefined;
+  }, [account?.address]);
 }

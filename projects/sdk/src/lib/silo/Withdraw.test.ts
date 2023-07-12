@@ -26,21 +26,18 @@ describe("Silo Withdrawl", function () {
   });
 
   it("Validate starting state", async () => {
-    const { deposited } = await sdk.silo.getBalance(token);
-    expect(deposited.crates.length).toBe(1);
-    expect(deposited.amount.eq(token.amount(500))).toBe(true);
+    const balance = await sdk.silo.getBalance(token);
+    expect(balance.deposits.length).toBe(1);
+    expect(balance.amount.eq(token.amount(500))).toBe(true);
   });
 
   it("Successfully withdraws", async () => {
     const tx = await withdraw.withdraw(token, token.amount(150));
     await tx.wait();
-    const { deposited, withdrawn } = await sdk.silo.getBalance(token);
+    const balance = await sdk.silo.getBalance(token);
 
-    expect(deposited.crates.length).toBe(1);
-    expect(deposited.amount.eq(token.amount(350))).toBe(true);
-
-    expect(withdrawn.crates.length).toBe(1);
-    expect(withdrawn.amount.eq(token.amount(150))).toBe(true);
+    expect(balance.deposits.length).toBe(1);
+    expect(balance.amount.eq(token.amount(350))).toBe(true);
   });
 
   it("Fails when withdrawing too much", async () => {
@@ -62,18 +59,18 @@ describe("Silo Withdrawl", function () {
     const calc1 = withdraw.calculateWithdraw(token, token.amount(1000), crates, currentSeason);
     expect(calc1.crates.length).toEqual(3);
     expect(calc1.crates[0].amount.toHuman()).toEqual("200"); // takes full amount from c1
-    expect(calc1.crates[0].season.toString()).toEqual("900"); // confirm this is c1
+    expect(calc1.crates[0].stem.toString()).toEqual("900"); // confirm this is c1
     expect(calc1.crates[1].amount.toHuman()).toEqual("500"); // takes full amount from c2
-    expect(calc1.crates[1].season.toString()).toEqual("800"); // confirm this is c2
+    expect(calc1.crates[1].stem.toString()).toEqual("800"); // confirm this is c2
     expect(calc1.crates[2].amount.toHuman()).toEqual("300"); // takes 300 from c3
-    expect(calc1.crates[2].season.toString()).toEqual("700"); // confirm this is c3
+    expect(calc1.crates[2].stem.toString()).toEqual("700"); // confirm this is c3
     expect(calc1.seeds.toHuman()).toEqual("2000");
     expect(calc1.stalk.toHuman()).toEqual("2842");
 
     const calc2 = withdraw.calculateWithdraw(token, token.amount(120), crates, currentSeason);
     expect(calc2.crates.length).toEqual(1);
     expect(calc2.crates[0].amount.toHuman()).toEqual("120"); // takes full amount from c1
-    expect(calc1.crates[0].season.toString()).toEqual("900"); // confirm this is c3
+    expect(calc1.crates[0].stem.toString()).toEqual("900"); // confirm this is c3
     expect(calc2.seeds.toHuman()).toEqual("240");
     expect(calc2.stalk.toHuman()).toEqual("338.4");
   });

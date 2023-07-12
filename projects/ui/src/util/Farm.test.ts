@@ -1,4 +1,4 @@
-import { FarmFromMode } from '~/lib/Beanstalk/Farm';
+import { FarmFromMode } from '@beanstalk/sdk';
 import { BN } from './BigNumber';
 import { combineBalances, optimizeFromMode } from './Farm';
 

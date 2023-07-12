@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { BlockchainUtils } from "./BlockchainUtils";
-import { WellsSDK } from "../../src";
+import { WellsSDK } from "../../src/lib/WellsSDK";
 
 // private key + account mapping
 // these keys are provided by hardhat/anvil
@@ -28,7 +28,7 @@ export const setupConnection = (provider: ethers.providers.JsonRpcProvider = get
 export const getTestUtils = () => {
   const { signer, account } = setupConnection();
   const wellsSdk = new WellsSDK({
-    signer,
+    signer
   });
 
   const utils = new BlockchainUtils(wellsSdk);

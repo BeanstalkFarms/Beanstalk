@@ -5,7 +5,6 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 
-import "forge-std/console.sol";
 import "forge-std/Test.sol";
 import "./Strings.sol";
 
@@ -49,11 +48,11 @@ import {MockFertilizerFacet} from "~/mocks/mockFacets/MockFertilizerFacet.sol";
 import {MockToken} from "~/mocks/MockToken.sol";
 import {MockUnripeFacet} from "~/mocks/mockFacets/MockUnripeFacet.sol";
 import {Mock3Curve} from "~/mocks/curve/Mock3Curve.sol";
-import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
-import {MockUniswapV3Factory} from "~/mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockCurveFactory} from "~/mocks/curve/MockCurveFactory.sol";
 import {MockCurveZap} from "~/mocks/curve/MockCurveZap.sol";
 import {MockMeta3Curve} from "~/mocks/curve/MockMeta3Curve.sol";
+import {MockUniswapV3Pool} from "~/mocks/uniswap/MockUniswapV3Pool.sol";
+import {MockUniswapV3Factory} from "~/mocks/uniswap/MockUniswapV3Factory.sol";
 import {MockWETH} from "~/mocks/MockWETH.sol";
 
 import "~/beanstalk/AppStorage.sol";
@@ -63,9 +62,7 @@ import "~/libraries/Token/LibTransfer.sol";
 
 import "~/C.sol";
 
-// FIXME: 
-// currently with all tests, we deploy every facet, even if its unused
-// 
+// We deploy every facet, even if a facet is unused
 abstract contract TestHelper is Test {
     using strings for *;
     
@@ -153,7 +150,7 @@ abstract contract TestHelper is Test {
     }
 
     function deployMockTokens() public {
-        //impersonate tokens and utilities
+        // impersonate tokens and utilities
         _mockToken("Bean", address(C.bean()));
         MockToken(address(C.bean())).setDecimals(6);
         _mockToken("USDC", address(C.usdc()));
@@ -162,8 +159,8 @@ abstract contract TestHelper is Test {
         _mockUniswap();
         _mockUnripe();
         _mockWeth(); // only if "reset"
-        //_mockCurveMetapool();
-        //_mockFertilizer();
+        // _mockCurveMetapool();
+        // _mockFertilizer();
     }
 
     ///////////////////////// Utilities /////////////////////////
@@ -286,10 +283,7 @@ abstract contract TestHelper is Test {
         selectors = abi.decode(res, (bytes4[]));
     }
 
-    /**
-     * gets bytecode at specific address (cant use address.code as we're in 0.7.6)
-     * code solution from: https://ethereum.stackexchange.com/a/109393
-     */
+    //gets bytecode at specific address (cant use address.code as we're in 0.7.6)
     function at(address _addr) public view returns (bytes memory o_code) {
         assembly {
             // retrieve the size of the code
@@ -305,6 +299,82 @@ abstract contract TestHelper is Test {
             extcodecopy(_addr, add(o_code, 0x20), 0, size)
         }
     }
+
+
+
+    // function initUser() internal {
+    //     users = new Users();
+    //     address[] memory _user = new address[](2);
+    //     _user = users.createUsers(2);
+    //     user = _user[0];
+    //     user2 = _user[1];
+    // }
+
+    // /// @dev deploy `n` mock ERC20 tokens and sort by address
+    // function deployMockTokens(uint n) internal {
+    //     IERC20[] memory _tokens = new IERC20[](n);
+    //     for (uint i = 0; i < n; i++) {
+    //         IERC20 temp = IERC20(
+    //             new MockToken(
+    //                 string.concat("Token ", i.toString()), // name
+    //                 string.concat("TOKEN", i.toString()), // symbol
+    //                 18 // decimals
+    //             )
+    //         );
+    //         // Insertion sort
+    //         uint j;
+    //         if (i > 0) {
+    //             for (j = i; j >= 1 && temp < _tokens[j - 1]; j--)
+    //                 _tokens[j] = _tokens[j - 1];
+    //             _tokens[j] = temp;
+    //         } else _tokens[0] = temp;
+    //     }
+    //     for (uint i = 0; i < n; i++) tokens.push(_tokens[i]);
+    // }
+
+    // /// @dev mint mock tokens to each recipient
+    // function mintTokens(address recipient, uint amount) internal {
+    //     for (uint i = 0; i < tokens.length; i++)
+    //         MockToken(address(tokens[i])).mint(recipient, amount);
+    // }
+
+    // /// @dev approve `spender` to use `owner` tokens
+    // function approveMaxTokens(address owner, address spender) prank(owner) internal {
+    //     for (uint i = 0; i < tokens.length; i++)
+    //         tokens[i].approve(spender, type(uint).max);
+    // }
+
+    // /// @dev add the same `amount` of liquidity for all underlying tokens
+    // function addLiquidityEqualAmount(address from, uint amount) prank(from) internal {
+    //     uint[] memory amounts = new uint[](tokens.length);
+    //     for (uint i = 0; i < tokens.length; i++) amounts[i] = amount;
+    //     well.addLiquidity(amounts, 0, from);
+    // }
+
+    // /// @dev gets the first `n` mock tokens
+    // function getTokens(uint n)
+    //     internal
+    //     view
+    //     returns (IERC20[] memory _tokens)
+    // {
+    //     _tokens = new IERC20[](n);
+    //     for (uint i; i < n; ++i) {
+    //         _tokens[i] = tokens[i];
+    //     }
+    // }
+
+    // /// @dev get `account` balance of each token, lp token, total lp token supply
+    // function getBalances(address account) internal view returns (Balances memory balances) {
+    //     uint[] memory tokenBalances = new uint[](tokens.length);
+    //     for (uint i = 0; i < tokenBalances.length; ++i) {
+    //         tokenBalances[i] = tokens[i].balanceOf(account);
+    //     }
+    //     balances = Balances(
+    //         tokenBalances,
+    //         well.balanceOf(account),
+    //         well.totalSupply()
+    //     );
+    // }
 
     /// @dev impersonate `from`
     modifier prank(address from) {

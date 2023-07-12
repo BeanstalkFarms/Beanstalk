@@ -5,9 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import {AppStorage} from "../AppStorage.sol";
-import {IBean} from "../../interfaces/IBean.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @author Publius

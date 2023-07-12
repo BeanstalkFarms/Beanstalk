@@ -8,7 +8,7 @@ import {LibConvertData} from "./LibConvertData.sol";
 import {LibBeanMetaCurve} from "../Curve/LibBeanMetaCurve.sol";
 import {LibCurve} from "../Curve/LibCurve.sol";
 import {LibAppStorage} from "../LibAppStorage.sol";
-import {C} from "~/C.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title LibMetaCurveConvert

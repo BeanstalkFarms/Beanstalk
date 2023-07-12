@@ -150,9 +150,10 @@ const SowForm: FC<
   });
 
   /// Approval Checks
-  const shouldApprove = 
-    values.balanceFrom === BalanceFrom.EXTERNAL || 
-    values.balanceFrom === BalanceFrom.TOTAL && values.tokens[0].amount?.gt(balances[tokenIn.address]?.internal);
+  const shouldApprove =
+    values.balanceFrom === BalanceFrom.EXTERNAL ||
+    (values.balanceFrom === BalanceFrom.TOTAL &&
+      values.tokens[0].amount?.gt(balances[tokenIn.address]?.internal));
 
   const handleSetBalanceFrom = useCallback(
     (_balanceFrom: BalanceFrom) => {

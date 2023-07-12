@@ -92,7 +92,7 @@ const makeTestnet = (_chainId: number, name: string): Chain => ({
 
 const baseChains = [chain.mainnet];
 if (import.meta.env.VITE_SHOW_DEV_CHAINS) {
-  baseChains.push(makeTestnet(SupportedChainId.CUJO, 'Cujo'));
+  baseChains.push(makeTestnet(SupportedChainId.TESTNET, 'Testnet'));
   baseChains.push(chain.localhost);
 }
 

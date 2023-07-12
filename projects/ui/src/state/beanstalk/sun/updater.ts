@@ -13,6 +13,7 @@ import {
   setMorning,
   setNextSunrise,
   setRemainingUntilSunrise,
+  updateCurrentSeason,
   updateSeasonResult,
   updateSeasonTime,
 } from './actions';
@@ -27,23 +28,35 @@ export const useSun = () => {
         console.debug(
           `[beanstalk/sun/useSun] FETCH (contract = ${beanstalk.address})`
         );
-        const [seasonTime, season] = await Promise.all([
+        const [seasonTime, season, currentSeason] = await Promise.all([
           beanstalk.seasonTime().then(bigNumberResult), /// the season that it could be if sunrise was called
-          beanstalk.time().then((r) => parseSeasonResult(r)), /// SeasonStruct
+          beanstalk
+            .time()
+            .then((r) => parseSeasonResult(r))
+            .catch((e) => {
+              console.error(e);
+              return undefined;
+            }), /// SeasonStruct
+          beanstalk.season().then(bigNumberResult),
         ] as const);
 
         console.debug(`[beanstalk/sun/useSun] time RESULT: = ${season}`);
         console.debug(
-          `[beanstalk/sun/useSun] season = ${season.current}, seasonTime = ${seasonTime}`
+          `[beanstalk/sun/useSun] season = ${currentSeason.toString()}, seasonTime = ${seasonTime}`
         );
-        const morningResult = getMorningResult({
-          blockNumber: season.sunriseBlock,
-          timestamp: season.timestamp,
-        });
 
-        dispatch(updateSeasonResult(season));
+        if (season) {
+          const morningResult = getMorningResult({
+            blockNumber: season.sunriseBlock,
+            timestamp: season.timestamp,
+          });
+
+          dispatch(updateSeasonResult(season));
+          dispatch(setMorning(morningResult));
+        } else {
+          dispatch(updateCurrentSeason(currentSeason));
+        }
         dispatch(updateSeasonTime(seasonTime));
-        dispatch(setMorning(morningResult));
 
         return [season, seasonTime] as const;
       }

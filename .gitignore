@@ -23,6 +23,8 @@ diamondCut-*.json
 cache/
 out/
 coverage_data/
+.openzeppelin
+protocol/lib/prb-math
 protocol/remappings.txt
 .gas-snapshot
 
@@ -37,3 +39,5 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 .DS_Store
+# Local Netlify folder
+.netlify

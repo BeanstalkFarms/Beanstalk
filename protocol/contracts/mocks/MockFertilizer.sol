@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/tokens/Fertilizer/Fertilizer.sol";
+import "contracts/tokens/Fertilizer/Fertilizer.sol";
 
 /**
  * @author Publius
