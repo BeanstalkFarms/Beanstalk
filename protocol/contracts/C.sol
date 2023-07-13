@@ -22,6 +22,7 @@ library C {
 
     uint256 internal constant PRECISION = 1e18;
     uint256 private constant CHAIN_ID = 1;
+    bytes constant BYTES_ZERO = new bytes(0);
 
     /// @dev The block time for the chain in seconds.
     uint256 internal constant BLOCK_LENGTH_SECONDS = 12;
@@ -66,11 +67,19 @@ library C {
     address private constant UNRIPE_CURVE_BEAN_METAPOOL = 0x3a70DfA7d2262988064A2D051dd47521E43c9BdD;
 
     address internal constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address internal constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
+    address internal constant UNIV3_ETH_USDC_POOL = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8; // 0.3% pool
+    address internal constant UNIV3_ETH_USDT_POOL = 0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36; // 0.3% pool
 
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
+
+    //////////////////// Well ////////////////////
+
+    uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
+    address constant internal BEANSTALK_PUMP = 0xc4AD29ba4B3c580e6D59105FFf484999997675Ff;
+    address constant BEAN_ETH_WELL = 0x9bAaB117304f7D6517048e371025dB8f89a8DbE5;
 
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;

@@ -253,7 +253,7 @@ contract Storage {
     /**
      * @notice System-level Silo state variables.
      * @param stalk The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
-     * @param deprecated_seeds // The total amount of active Seeds (excluding Earned Seeds). 
+     * @param deprecated_seeds DEPRECATED: The total amount of active Seeds (excluding Earned Seeds).
      * @dev seeds are no longer used internally. Balance is wiped to 0 from the mayflower update. see {mowAndMigrate}.
      * @param roots The total amount of Roots.
      */
@@ -264,14 +264,14 @@ contract Storage {
     }
 
     /**
-     * @notice System-level Oracle state variables.
+     * @notice System-level Curve Metapool Oracle state variables.
      * @param initialized True if the Oracle has been initialzed. It needs to be initialized on Deployment and re-initialized each Unpause.
      * @param startSeason The Season the Oracle started minting. Used to ramp up delta b when oracle is first added.
      * @param balances The cumulative reserve balances of the pool at the start of the Season (used for computing time weighted average delta b).
-     * @param timestamp The timestamp of the start of the current Season.
+     * @param timestamp DEPRECATED: The timestamp of the start of the current Season. `LibCurveMinting` now uses `s.season.timestamp` instead of storing its own for gas efficiency purposes.
      * @dev Currently refers to the time weighted average deltaB calculated from the BEAN:3CRV pool.
      */
-    struct Oracle {
+    struct CurveMetapoolOracle {
         bool initialized; // ────┐ 1
         uint32 startSeason; // ──┘ 4 (5/32)
         uint256[2] balances;
@@ -404,7 +404,14 @@ contract Storage {
          * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
          */
 		int96 milestoneStem;
+
+        /*
+         @dev 1 byte of space is used for different encoding types.
+         */
+        bytes1 encodeType;
+
         /// @dev  7 bytes of additional storage space is available here.
+
     }
 
     /**
@@ -443,7 +450,7 @@ contract Storage {
  * @param c Storage.Contracts
  * @param f Storage.Field
  * @param g Storage.Governance
- * @param co Storage.Oracle
+ * @param co Storage.CurveMetapoolOracle
  * @param r Storage.Rain
  * @param s Storage.Silo
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
@@ -478,6 +485,8 @@ contract Storage {
  * @param recapitalized The nubmer of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
+ * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
+ * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -488,7 +497,7 @@ struct AppStorage {
     Storage.Contracts c;
     Storage.Field f;
     Storage.Governance g;
-    Storage.Oracle co;
+    Storage.CurveMetapoolOracle co;
     Storage.Rain r;
     Storage.Silo s;
     uint256 reentrantStatus;
@@ -534,4 +543,8 @@ struct AppStorage {
 
     // Ownership
     address ownerCandidate;
+
+    // Well
+    mapping(address => bytes) wellOracleSnapshots;
+    uint256 beanEthPrice;
 }

@@ -282,15 +282,15 @@ library LibTokenSilo {
         returns (uint256 bdv)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // BDV functions accept one argument: `uint256 amount`
-        bytes memory callData = abi.encodeWithSelector(
-            s.ss[token].selector,
-            amount
-        );
+        require(s.ss[token].selector != bytes4(0), "Silo: Token not whitelisted");
 
         (bool success, bytes memory data) = address(this).staticcall(
-            callData
+            encodeBdvFunction(
+                token,
+                s.ss[token].encodeType,
+                s.ss[token].selector,
+                amount
+            )
         );
 
         if (!success) {
@@ -302,6 +302,32 @@ library LibTokenSilo {
 
         assembly {
             bdv := mload(add(data, add(0x20, 0)))
+        }
+    }
+
+    function encodeBdvFunction(
+        address token,
+        bytes1 encodeType,
+        bytes4 selector,
+        uint256 amount
+    )
+        internal
+        pure
+        returns (bytes memory callData)
+    {
+        if (encodeType == 0x00) {
+            callData = abi.encodeWithSelector(
+                selector,
+                amount
+            );
+        } else if (encodeType == 0x01) {
+            callData = abi.encodeWithSelector(
+                selector,
+                token,
+                amount
+            );
+        } else {
+            revert("Silo: Invalid encodeType");
         }
     }
 

@@ -54,11 +54,11 @@ contract SeasonFacet is Weather {
         require(seasonTime() > season(), "Season: Still current Season.");
 
         stepSeason();
-        (int256 deltaB, uint256[2] memory balances) = stepOracle();
+        int256 deltaB = stepOracle();
         uint256 caseId = stepWeather(deltaB);
         stepSun(deltaB, caseId);
 
-        return incentivize(account, initialGasLeft, balances, mode);
+        return incentivize(account, initialGasLeft, mode);
     }
 
     //////////////////// SEASON GETTERS ////////////////////
@@ -114,7 +114,6 @@ contract SeasonFacet is Weather {
      * @dev Moves the Season forward by 1.
      */
     function stepSeason() private {
-        s.season.timestamp = block.timestamp;
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season());
@@ -124,14 +123,12 @@ contract SeasonFacet is Weather {
      * @param account The address to which the reward beans are sent, may or may not
      * be the same as the caller of `sunrise()`
      * @param initialGasLeft The amount of gas left at the start of the transaction
-     * @param balances The current balances of the BEAN:3CRV pool returned by {stepOracle}
      * @param mode Send reward beans to Internal or Circulating balance
      * @dev Mints Beans to `account` as a reward for calling {sunrise()}.
      */
     function incentivize(
         address account,
         uint256 initialGasLeft,
-        uint256[2] memory balances,
         LibTransfer.To mode
     ) private returns (uint256) {
         // Number of blocks the sunrise is late by
@@ -141,7 +138,7 @@ contract SeasonFacet is Weather {
         )
         .div(C.BLOCK_LENGTH_SECONDS);
         
-        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, balances, blocksLate);
+        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
         

@@ -11,9 +11,10 @@ import {LibMetaCurveConvert} from "./LibMetaCurveConvert.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @title LibCurveConvert
- * @author Publius
- */
+ * @title Curve Convert Library
+ * @notice Contains Functions to convert from/to Curve LP tokens to/from Beans
+ * in the direction of the Peg.
+ **/
 library LibCurveConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
@@ -81,7 +82,7 @@ library LibCurveConvert {
     {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
-        (amountOut, amountIn) = curveRemoveLPAndBuyToPeg(lp, minBeans, pool);
+        (amountOut, amountIn) = curveRemoveLPTowardsPeg(lp, minBeans, pool);
         tokenOut = C.BEAN;
         tokenIn = pool;
     }
@@ -101,7 +102,7 @@ library LibCurveConvert {
     {
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
-        (amountOut, amountIn) = curveSellToPegAndAddLiquidity(
+        (amountOut, amountIn) = curveAddLiquidityTowardsPeg(
             beans,
             minLP,
             pool
@@ -119,7 +120,7 @@ library LibCurveConvert {
      * @param minLP The minimum amount of Curve LP to receive
      * @param pool The address of the Curve pool to add to
      */
-    function curveSellToPegAndAddLiquidity(
+    function curveAddLiquidityTowardsPeg(
         uint256 beans,
         uint256 minLP,
         address pool
@@ -137,7 +138,7 @@ library LibCurveConvert {
      * @param minBeans The minimum amount of Beans to receive
      * @param pool The address of the Curve pool to remove from
      */
-    function curveRemoveLPAndBuyToPeg(
+    function curveRemoveLPTowardsPeg(
         uint256 lp,
         uint256 minBeans,
         address pool

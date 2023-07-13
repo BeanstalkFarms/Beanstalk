@@ -10,7 +10,9 @@ const {
   impersonateFertilizer,
   impersonatePrice,
   impersonateBlockBasefee,
-  impersonateEthUsdcUniswap
+  impersonateEthUsdcUniswap,
+  impersonateEthUsdtUniswap,
+  impersonateEthUsdChainlinkAggregator
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -106,6 +108,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     migrationFacet,
     approvalFacet,
     convertFacet,
+    enrootFacet,
     farmFacet,
     fieldFacet,
     fundraiserFacet,
@@ -129,6 +132,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MigrationFacet',
       'ApprovalFacet',
       'MockConvertFacet',
+      'EnrootFacet',
       'FarmFacet',
       'MockFieldFacet',
       'MockFundraiserFacet',
@@ -153,6 +157,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MigrationFacet',
       'ApprovalFacet',
       'ConvertFacet',
+      'EnrootFacet',
       'FarmFacet',
       'FieldFacet',
       'FundraiserFacet',
@@ -180,12 +185,14 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     if (reset) {
       await impersonateCurve()
       await impersonateWeth()
+      await impersonateEthUsdcUniswap()
+      await impersonateEthUsdtUniswap()
     }
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
     await impersonateBlockBasefee();
-    await impersonateEthUsdcUniswap()
+    await impersonateEthUsdChainlinkAggregator()
   }
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
@@ -197,6 +204,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['MigrationFacet', migrationFacet],
       ['ApprovalFacet', approvalFacet],
       ['ConvertFacet', convertFacet],
+      ['EnrootFacet', enrootFacet],
       ['FarmFacet', farmFacet],
       ['FieldFacet', fieldFacet],
       ['FundraiserFacet', fundraiserFacet],
@@ -242,6 +250,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     diamondLoupeFacet: diamondLoupeFacet,
     bdvFacet,
     convertFacet,
+    enrootFacet,
     migrationFacet,
     approvalFacet,
     farmFacet,

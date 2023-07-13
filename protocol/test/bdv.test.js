@@ -7,26 +7,7 @@ let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
-let lastTimestamp = 1700000000;
-let timestamp;
 let snapshotId;
-
-async function resetTime() {
-  timestamp = lastTimestamp + 100000000
-  lastTimestamp = timestamp
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
-
-async function advanceTime(time) {
-  timestamp += time
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
 
 describe('BDV', function () {
   before(async function () {
@@ -41,7 +22,6 @@ describe('BDV', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
-    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
     this.siloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await this.siloToken.deploy("Silo", "SILO")
@@ -96,7 +76,7 @@ describe('BDV', function () {
 
   describe("Bean BDV", async function () {
     it("properly checks bdv", async function () {
-      expect(await this.bdv.bdv(BEAN, to6('200'))).to.equal(to6('200'));
+      expect(await this.silo.bdv(BEAN, to6('200'))).to.equal(to6('200'));
     })
   })
 
@@ -117,18 +97,18 @@ describe('BDV', function () {
     });
 
     it("properly checks bdv", async function () {
-      expect(await this.bdv.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
+      expect(await this.silo.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
     })
 
     it("properly checks bdv", async function () {
       await this.threePool.set_virtual_price(to18('1.02'));
-      expect(await this.bdv.bdv(BEAN_3_CURVE, to18('2'))).to.equal('1998191');
+      expect(await this.silo.bdv(BEAN_3_CURVE, to18('2'))).to.equal('1998191');
     })
   })
 
   describe("Unripe Bean BDV", async function () {
     it("properly checks bdv", async function () {
-      expect(await this.bdv.bdv(UNRIPE_BEAN, to6('200'))).to.equal(to6('20'));
+      expect(await this.silo.bdv(UNRIPE_BEAN, to6('200'))).to.equal(to6('20'));
     })
   })
 
@@ -151,17 +131,16 @@ describe('BDV', function () {
     });
 
     it("properly checks bdv", async function () {
-      expect(await this.bdv.bdv(UNRIPE_LP, to18('2000'))).to.equal(to6('200'));
+      expect(await this.silo.bdv(UNRIPE_LP, to18('2000'))).to.equal(to6('200'));
     })
 
     it("properly checks bdv", async function () {
       await this.threePool.set_virtual_price(to18('1.02'));
-      expect(await this.bdv.bdv(UNRIPE_LP, to18('20'))).to.equal('1998191');
+      expect(await this.silo.bdv(UNRIPE_LP, to18('20'))).to.equal('1998191');
     })
   })
 
   it("reverts if not correct", async function () {
-    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
-    await expect(this.bdv.bdv(ZERO_ADDRESS, to18('2000'))).to.be.revertedWith('BDV: Token not whitelisted')
+    await expect(this.silo.bdv(ZERO_ADDRESS, to18('2000'))).to.be.revertedWith('Silo: Token not whitelisted')
   })
 });

@@ -1,10 +1,11 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
-const { signERC2612Permit } = require("eth-permit");
-const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, PIPELINE, BEANSTALK, ETH_USDC_UNISWAP_V3 } = require('./utils/constants.js');
+const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
+const { BEAN_3_CURVE, ETH_USDC_UNISWAP_V3 } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { deployMockWell } = require('../utils/well.js');
+const { advanceTime } = require('../utils/helpers.js');
 
 let user, user2, owner;
 
@@ -19,12 +20,15 @@ describe('Season', function () {
         [owner, user, user2] = await ethers.getSigners();
         const contracts = await deploy("Test", false, true);
         beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
-        bean = await getBean()
-        await setToSecondsAfterHour(0)
-        await owner.sendTransaction({to: user.address, value: 0})
+        bean = await getBean();
 
-        this.ethUsdcUniswapPool = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
-        await this.ethUsdcUniswapPool.setOraclePrice(1000e6,18);
+        [this.well, this.wellFunction, this.pump] = await deployMockWell()
+        await this.well.setReserves([to6('1000000'), to18('1000')])
+        await advanceTime(3600)
+        await owner.sendTransaction({to: user.address, value: 0});
+        await setToSecondsAfterHour(0)
+        await owner.sendTransaction({to: user.address, value: 0});
+        await beanstalk.connect(user).sunrise();
     })
 
     beforeEach(async function () {
@@ -36,6 +40,10 @@ describe('Season', function () {
     });
 
     describe("previous balance = 0", async function () {
+        beforeEach(async function () {
+            await this.well.setReserves([to6('0'), to18('0')])
+            await advanceTime(3600)
+        })
         it('season incentive', async function () {
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
@@ -69,10 +77,9 @@ describe('Season', function () {
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
 
-            console.log(await this.beanMetapool.get_previous_balances())
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.equal('7370588')
+            expect(await bean.balanceOf(owner.address)).to.be.within('10700000', '10800000')
         })
     })
 
@@ -84,12 +91,11 @@ describe('Season', function () {
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
             await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
 
-            console.log(await this.beanMetapool.get_previous_balances())
             await setToSecondsAfterHour(0)
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)  
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.equal('7972364')
+            expect(await bean.balanceOf(owner.address)).to.be.within('10400000', '10500000')
         })
     })
 })
