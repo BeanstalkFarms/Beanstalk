@@ -11,7 +11,7 @@ import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
-import { Discord, Github, Logo, Twitter } from "../Icons";
+import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X } from "../Icons";
 
 export const BasinConnectButton = () => {
   return (
@@ -55,8 +55,9 @@ export const Frame: FC<{}> = ({ children }) => {
           <BasinConnectButton />
         </StyledConnectContainer>
         <DropdownMenu open={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          <MenuLine />
-          <MenuLine />
+          {mobileMenuOpen ?
+            <X />
+          : <BurgerMenuIcon />}
         </DropdownMenu>
       </NavContainer>
       <TokenMarquee />
@@ -293,12 +294,6 @@ const DropdownMenu = styled.button<{ open?: boolean }>`
       transform: ${({ open }) => (open ? `rotate(-45deg)` : `rotate(0)`)};
     }
   }
-`;
-
-const MenuLine = styled.div`
-  width: 16px;
-  height: 2px;
-  background-color: black;
 `;
 
 const BurgerMenu = styled.div<{ open: boolean }>`

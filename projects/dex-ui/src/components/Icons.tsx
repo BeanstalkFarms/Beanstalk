@@ -208,3 +208,10 @@ export const RightArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps
     <path stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5M14 17l5-5M14 7l5 5" />
   </svg>
 );
+
+export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24}: SVGProps) => (
+  <svg width={width}height={height} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="4" y1="7" x2="20" y2="7" stroke={color} strokeWidth="2"/>
+    <line x1="4" y1="15" x2="20" y2="15" stroke={color} strokeWidth="2"/>
+  </svg>
+);
