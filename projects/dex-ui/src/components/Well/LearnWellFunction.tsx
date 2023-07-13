@@ -35,7 +35,7 @@ function WellFunctionDetails(functionName: any) {
 
 export const LearnWellFunction: FC<Props> = ({ name }) => {
   return (
-    <ExpandBox>
+    <ExpandBox drawerHeaderText={`What is ${name}?`}>
       <ExpandBox.Header>
         <WellFunction />
         <TextNudge amount={1}>What is {name}?</TextNudge>

@@ -23,7 +23,7 @@ function YieldDetails() {
 
 export const LearnYield: FC<Props> = () => {
   return (
-    <ExpandBox>
+    <ExpandBox drawerHeaderText="How can I earn yield?">
       <ExpandBox.Header>
         <YieldSparkle />
         <TextNudge amount={1}>How can I earn yield?</TextNudge>

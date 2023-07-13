@@ -24,7 +24,7 @@ function PumpDetails() {
 
 export const LearnPump: FC<Props> = () => {
   return (
-    <ExpandBox>
+    <ExpandBox drawerHeaderText="🔮 What’s a pump?">
       <ExpandBox.Header>
         <span role="img" aria-label="glass globe emoji">
           🔮

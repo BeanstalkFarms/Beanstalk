@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { BodyCaps, BodyS, BodyXS } from "./Typography";
 import { ImageButton } from "./ImageButton";
 import { ChevronDown } from "./Icons";
+import { BottomDrawer } from "./BottomDrawer";
 
 interface Composition {
   Header: typeof Header;
@@ -17,8 +18,9 @@ interface Composition {
 type Props = {
   width?: number;
   open?: boolean;
+  drawerHeaderText?: string;
 };
-export const ExpandBox: FC<Props> & Composition = ({ children }) => {
+export const ExpandBox: FC<Props> & Composition = ({ children, drawerHeaderText }) => {
   const [open, setOpen] = useState(false);
   const [header, body] = Children.toArray(children);
   if (!header || !body) throw new Error("ExpandBox must have two children, Header and Boxy");
@@ -33,6 +35,9 @@ export const ExpandBox: FC<Props> & Composition = ({ children }) => {
 
   return (
     <Container open={open} onClick={toggle} data-trace="true">
+      <BottomDrawer showDrawer={open} headerText={drawerHeaderText || header} toggleDrawer={setOpen}>
+        {body}
+      </BottomDrawer>
       <Header id="header" open={open}>
         {header}
         <ImageButton
@@ -44,8 +49,7 @@ export const ExpandBox: FC<Props> & Composition = ({ children }) => {
           alt="Click to expand this box and learn how to earn yield"
         />
       </Header>
-
-      {open && body}
+      {open && <BodyContainer>{body}</BodyContainer>}
     </Container>
   );
 };
@@ -89,6 +93,12 @@ const Body = styled.div`
   padding: 20px 16px;
   gap: 8px;
 `;
+
+const BodyContainer = styled.div`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`
 const Footer = styled.div`
   display: flex;
   flex-direction: row;

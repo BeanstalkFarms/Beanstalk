@@ -5,6 +5,7 @@ import styled from "styled-components";
 import gearIcon from "/src/assets/images/gear.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
+import { BottomDrawer } from "../BottomDrawer";
 
 type SlippagePanelProps = {
   slippageValue: number;
@@ -29,7 +30,7 @@ const SlippagePanel = ({ handleSlippageValueChange, slippageValue }: SlippagePan
     <Slippage>
       <Icon src={gearIcon} onClick={() => setModalOpen(!modalOpen)} modalOpen={modalOpen} />
       {modalOpen && (
-        <>
+        <DesktopModal>
           <Modal onMouseDown={dontStealFocus} id="modal" />
           <ModalContainer data-trace="true" onMouseDown={dontStealFocus}>
             <ModalHeader>
@@ -48,8 +49,23 @@ const SlippagePanel = ({ handleSlippageValueChange, slippageValue }: SlippagePan
               </SlippageTextBottom>
             </ModalContent>
           </ModalContainer>
-        </>
+        </DesktopModal>
       )}
+      <MobileDrawer>
+        <BottomDrawer showDrawer={modalOpen} headerText={"Adjust Slippage"} toggleDrawer={setModalOpen}>
+          <ModalContent>
+            <InputContainer>
+              <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
+              <InputAdornment>Slippage</InputAdornment>
+            </InputContainer>
+            Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that
+            you are willing to tolerate.
+            <SlippageTextBottom>
+              Your transaction will revert if the price changes by more than the percentage specified.
+            </SlippageTextBottom>
+          </ModalContent>
+        </BottomDrawer>
+      </MobileDrawer>
     </Slippage>
   );
 };
@@ -108,6 +124,18 @@ const Modal = styled.div`
   display: flex;
   z-index: 900;
 `;
+
+const DesktopModal = styled.div`
+@media (max-width: 475px) {
+  display: none;
+}
+`
+
+const MobileDrawer = styled.div`
+  @media (min-width: 475px) {
+    display: none;
+  }
+`
 
 const ModalContainer = styled.div`
   display: flex;
