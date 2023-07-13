@@ -79,24 +79,24 @@ export const Wells = () => {
 
     return (
       <>
-        <DesktopTable key={well.address} onClick={gotoWell}>
-          <Td>
+        <TableRow key={well.address} onClick={gotoWell}>
+          <DesktopContainer>
             <WellDetail>
               <TokenLogos>{logos}</TokenLogos>
               <TokenSymbols>{symbols.join("/")}</TokenSymbols>
               {/* <Deployer>{deployer}</Deployer> */}
             </WellDetail>
-          </Td>
-          <Td>
+          </DesktopContainer>
+          <DesktopContainer>
             <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
-          </Td>
-          <Td align="right">
+          </DesktopContainer>
+          <DesktopContainer align="right">
             <TradingFee>0.00%</TradingFee>
-          </Td>
-          <Td align="right">
+          </DesktopContainer>
+          <DesktopContainer align="right">
             <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
-          </Td>
-          <Td align="right">
+          </DesktopContainer>
+          <DesktopContainer align="right">
             <Reserves>
               {smallLogos[0]}
               {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
@@ -106,9 +106,7 @@ export const Wells = () => {
               {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
             </Reserves>
             {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
-          </Td>
-        </DesktopTable>
-        <MobileTable key={well.address} onClick={gotoWell}>
+          </DesktopContainer>
           <MobileContainer>
             <WellDetail>
               <TokenLogos>{logos}</TokenLogos>
@@ -117,7 +115,7 @@ export const Wells = () => {
             </WellDetail>
             <Amount>${wellLiquidity[index] ? Number(wellLiquidity[index]!.toHuman()).toFixed(2) : "-.--"}</Amount>
           </MobileContainer>
-        </MobileTable>
+        </TableRow>
       </>
     );
   }
@@ -136,18 +134,16 @@ export const Wells = () => {
 
     return (
       <>
-        <DesktopTable key={well.address} onClick={gotoWell}>
-          <Td>
+        <TableRow key={well.address} onClick={gotoWell}>
+          <DesktopContainer>
             <WellDetail>
               <TokenLogos>{logos}</TokenLogos>
               <TokenSymbols>{symbols.join("/")}</TokenSymbols>
             </WellDetail>
-          </Td>
-          <Td align="right">
+          </DesktopContainer>
+          <DesktopContainer align="right">
             <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
-          </Td>
-        </DesktopTable>
-        <MobileTable key={well.address} onClick={gotoWell}>
+          </DesktopContainer>
           <MobileContainer>
             <WellDetail>
               <TokenLogos>{logos}</TokenLogos>
@@ -156,7 +152,7 @@ export const Wells = () => {
             </WellDetail>
             <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
           </MobileContainer>
-        </MobileTable>
+        </TableRow>
       </>
     );
   }
@@ -185,26 +181,22 @@ export const Wells = () => {
       <Table>
         {tab === 0 ? (
           <THead>
-            <DesktopTable>
-              <Th>Well</Th>
-              <Th>Well Pricing Function</Th>
-              <Th align="right">Trading Fees</Th>
-              <Th align="right">Total Liquidity</Th>
-              <Th align="right">Reserves</Th>
-            </DesktopTable>
-            <MobileTable>
+            <TableRow>
+              <DesktopHeader>Well</DesktopHeader>
+              <DesktopHeader>Well Pricing Function</DesktopHeader>
+              <DesktopHeader align="right">Trading Fees</DesktopHeader>
+              <DesktopHeader align="right">Total Liquidity</DesktopHeader>
+              <DesktopHeader align="right">Reserves</DesktopHeader>
               <MobileHeader>All Wells</MobileHeader>
-            </MobileTable>
+            </TableRow>
           </THead>
         ) : (
           <THead>
-            <DesktopTable>
-              <Th>My Positions</Th>
-              <Th align="right">My Liquidity</Th>
-            </DesktopTable>
-            <MobileTable>
+            <TableRow>
+              <DesktopHeader>My Positions</DesktopHeader>
+              <DesktopHeader align="right">My Liquidity</DesktopHeader>
               <MobileHeader>My Liquidity Positions</MobileHeader>
-            </MobileTable>
+            </TableRow>
           </THead>
         )}
         <TBody>
@@ -226,16 +218,9 @@ export const Wells = () => {
   );
 };
 
-const DesktopTable = styled(Row)`
+const TableRow = styled(Row)`
   @media (max-width: 475px) {
-    display: none;
-  }
-`;
-
-const MobileTable = styled(Row)`
-  height: 66px;
-  @media (min-width: 475px) {
-    display: none;
+    height: 66px;
   }
 `;
 
@@ -249,14 +234,32 @@ const StyledRow = styled(TabRow)`
   }
 `;
 
+const DesktopContainer = styled(Td)`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`
+
 const MobileContainer = styled(Td)`
   padding: 8px 16px;
+  @media (min-width: 475px) {
+    display: none;
+  }
 `;
 
 const MobileHeader = styled(Th)`
   font-size: 14px;
   padding: 8px 16px;
+  @media (min-width: 475px) {
+    display: none;
+  }
 `;
+
+const DesktopHeader = styled(Th)`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`
 
 const WellDetail = styled.div`
   display: flex;
