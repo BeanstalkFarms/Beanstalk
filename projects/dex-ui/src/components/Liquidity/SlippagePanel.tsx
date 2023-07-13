@@ -126,16 +126,16 @@ const Modal = styled.div`
 `;
 
 const DesktopModal = styled.div`
-@media (max-width: 475px) {
-  display: none;
-}
-`
+  @media (max-width: 475px) {
+    display: none;
+  }
+`;
 
 const MobileDrawer = styled.div`
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const ModalContainer = styled.div`
   display: flex;

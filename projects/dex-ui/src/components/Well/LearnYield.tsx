@@ -5,8 +5,7 @@ import { TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { YieldSparkle } from "../Icons";
 
-type Props = {
-};
+type Props = {};
 
 function YieldDetails() {
   return (

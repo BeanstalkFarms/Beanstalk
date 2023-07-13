@@ -104,7 +104,7 @@ const TitleSubtitleContainer = styled.div`
     flex-direction: column;
     gap: 48px;
   }
-`
+`;
 
 const Title = styled.div`
   font-size: 32px;

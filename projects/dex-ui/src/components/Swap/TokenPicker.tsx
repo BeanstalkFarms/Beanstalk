@@ -107,24 +107,24 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
           )}
         </DesktopModal>
       )}
-        <MobileDrawer>
-          <BottomDrawer showDrawer={modalOpen} headerText={"Select a token"} toggleDrawer={setModalOpen}>
-            <ModalContent>
-              <Ol>
-                {list.map((token: Token) => (
-                  <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
-                    <TokenLogo token={token} size={25} />
-                    <Details>
-                      <Symbol>{token.symbol}</Symbol>
-                      <Name>{token.displayName}</Name>
-                    </Details>
-                    {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
-                  </TokenRow>
-                ))}
-              </Ol>
-            </ModalContent>
-          </BottomDrawer>
-        </MobileDrawer>
+      <MobileDrawer>
+        <BottomDrawer showDrawer={modalOpen} headerText={"Select a token"} toggleDrawer={setModalOpen}>
+          <ModalContent>
+            <Ol>
+              {list.map((token: Token) => (
+                <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
+                  <TokenLogo token={token} size={25} />
+                  <Details>
+                    <Symbol>{token.symbol}</Symbol>
+                    <Name>{token.displayName}</Name>
+                  </Details>
+                  {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
+                </TokenRow>
+              ))}
+            </Ol>
+          </ModalContent>
+        </BottomDrawer>
+      </MobileDrawer>
     </>
   );
 };
@@ -206,7 +206,7 @@ const MobileDrawer = styled.div`
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const DesktopModal = styled.div`
   position: fixed;

@@ -22,18 +22,16 @@ export const Liquidity = () => {
   const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
   const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
-  const [isMobile, setIsMobile] = useState(
-    window.matchMedia("(max-width: 475px)").matches
-  )
+  const [isMobile, setIsMobile] = useState(window.matchMedia("(max-width: 475px)").matches);
   const [tab, setTab] = useState(isMobile ? null : 0);
 
   // Media query
   useEffect(() => {
-    window.matchMedia("(max-width: 475px)").addEventListener('change', event => setIsMobile(event.matches));
+    window.matchMedia("(max-width: 475px)").addEventListener("change", (event) => setIsMobile(event.matches));
 
     return () => {
-      window.matchMedia("(max-width: 475px)").removeEventListener('change', event => setIsMobile(event.matches));
-    }
+      window.matchMedia("(max-width: 475px)").removeEventListener("change", (event) => setIsMobile(event.matches));
+    };
   }, []);
 
   // Slippage-related
@@ -53,9 +51,7 @@ export const Liquidity = () => {
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => {
     setOpen(!open);
-  },
-  [open]
-);
+  }, [open]);
 
   useEffect(() => {
     const run = async () => {
@@ -74,47 +70,51 @@ export const Liquidity = () => {
     <Page>
       <ContentWrapper>
         <SideBar id="sidebar">
-          <Button secondary label="← Back To Well Details" width={isMobile ? '100vw' : '100%'} margin={isMobile ? '-12px -11px 0px -12px' : '0'} onClick={() => navigate(`../wells/${wellAddress}`)} />
-          {((tab === null && isMobile) || !isMobile) ?
-          <>
-            <LiquidityBox lpToken={well?.lpToken!} />
-            <LearnMoreContainer>
-              <LearnMoreLabel onClick={toggle}>
-                <LearnMoreLine />
-                <LearnMoreText>
-                  <TextNudge amount={2}>
-                    Learn more about this Well
-                  </TextNudge> 
-                  <ImageButton
-                    component={ChevronDown}
-                    size={10}
-                    rotate={open ? "180" : "0"}
-                    onClick={toggle}
-                    padding="0px"
-                    alt="Click to expand and learn how to earn yield"
-                    color={"#46B955"}
-                  />
-                </LearnMoreText>
-                <LearnMoreLine />
-              </LearnMoreLabel>
-              <LearnMoreButtons open={open}>
-                <LearnYield />
-                <LearnWellFunction name={wellFunctionName} />
-                <LearnPump />
-              </LearnMoreButtons>
-            </LearnMoreContainer>
-          </>
-          : null}
+          <Button
+            secondary
+            label="← Back To Well Details"
+            width={isMobile ? "100vw" : "100%"}
+            margin={isMobile ? "-12px -11px 0px -12px" : "0"}
+            onClick={() => navigate(`../wells/${wellAddress}`)}
+          />
+          {(tab === null && isMobile) || !isMobile ? (
+            <>
+              <LiquidityBox lpToken={well?.lpToken!} />
+              <LearnMoreContainer>
+                <LearnMoreLabel onClick={toggle}>
+                  <LearnMoreLine />
+                  <LearnMoreText>
+                    <TextNudge amount={2}>Learn more about this Well</TextNudge>
+                    <ImageButton
+                      component={ChevronDown}
+                      size={10}
+                      rotate={open ? "180" : "0"}
+                      onClick={toggle}
+                      padding="0px"
+                      alt="Click to expand and learn how to earn yield"
+                      color={"#46B955"}
+                    />
+                  </LearnMoreText>
+                  <LearnMoreLine />
+                </LearnMoreLabel>
+                <LearnMoreButtons open={open}>
+                  <LearnYield />
+                  <LearnWellFunction name={wellFunctionName} />
+                  <LearnPump />
+                </LearnMoreButtons>
+              </LearnMoreContainer>
+            </>
+          ) : null}
         </SideBar>
         <CenterBar id="centerbar">
           <AddRemoveLiquidityRow gap={0} tabSelected={tab === 0 || tab === 1}>
             <Item stretch>
-              <TabButton onClick={() => setTab(isMobile && (tab === 0) ? null : 0)} active={tab === 0} stretch bold justify hover>
+              <TabButton onClick={() => setTab(isMobile && tab === 0 ? null : 0)} active={tab === 0} stretch bold justify hover>
                 <span>Add Liquidity</span>
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={() => setTab(isMobile && (tab === 1) ? null : 1)} active={tab === 1} stretch bold justify hover>
+              <TabButton onClick={() => setTab(isMobile && tab === 1 ? null : 1)} active={tab === 1} stretch bold justify hover>
                 <span>Remove Liquidity</span>
               </TabButton>
             </Item>
@@ -184,18 +184,18 @@ const CenterBar = styled.div`
   }
 `;
 
-const AddRemoveLiquidityRow = styled(Row)<{tabSelected: boolean}>`
+const AddRemoveLiquidityRow = styled(Row)<{ tabSelected: boolean }>`
   @media (max-width: 475px) {
-    ${({tabSelected}) => !tabSelected && 
-    `
+    ${({ tabSelected }) =>
+      !tabSelected &&
+      `
     position: fixed; 
     bottom: 12px;
     width: calc(100% - 24px); 
-    `
-    }
+    `}
   }
-`
- 
+`;
+
 const LearnMoreContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -206,21 +206,21 @@ const LearnMoreContainer = styled.div`
     gap: 24px;
     order: 0;
   }
-`
+`;
 const LearnMoreLabel = styled.div`
   display: flex;
   flex-direction: row;
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const LearnMoreLine = styled.div`
   align-self: center;
   flex-grow: 1;
-  border-top: 1px solid #9CA3AF;
+  border-top: 1px solid #9ca3af;
   flex-basis: 1fr;
-`
+`;
 
 const LearnMoreText = styled.div`
   display: flex;
@@ -228,19 +228,19 @@ const LearnMoreText = styled.div`
   gap: 8px;
   align-items: center;
   width: 195px;
-  color: #46B955;
+  color: #46b955;
   padding-right: 8px;
   padding-left: 8px;
   ${BodyXS}
   font-weight: 600;
-`
+`;
 
-const LearnMoreButtons = styled.div<{open: boolean}>`
-  ${(props) => props.open ? "display: flex" : "display: none"};
+const LearnMoreButtons = styled.div<{ open: boolean }>`
+  ${(props) => (props.open ? "display: flex" : "display: none")};
   flex-direction: column;
   gap: 16px;
   @media (min-width: 475px) {
     display: flex;
     gap: 24px;
   }
-`
+`;

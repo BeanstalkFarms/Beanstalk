@@ -7,13 +7,13 @@ export const Item = styled.div<{ stretch?: boolean; right?: boolean; column?: bo
   ${({ right, column }) => right && (column ? "align-items: end;" : "justify-content: right;")}
 `;
 
-export const Row = styled.div<{ gap?: number, mobileGap?: string }>`
+export const Row = styled.div<{ gap?: number; mobileGap?: string }>`
   display: flex;
   flex-direction: row;
   align-items: center;
   ${({ gap }) => gap && `gap: ${gap}px;`}
 
   @media (max-width: 475px) {
-    ${({ gap, mobileGap }) => mobileGap ? `gap: ${mobileGap};` : `gap: ${gap}px;`}
+    ${({ gap, mobileGap }) => (mobileGap ? `gap: ${mobileGap};` : `gap: ${gap}px;`)}
   }
 `;

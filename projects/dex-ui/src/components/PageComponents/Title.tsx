@@ -19,7 +19,9 @@ export const Title: FC<Props> = ({ title, parent, fontWeight, center, largeOnMob
   <Container center={center}>
     <TitleContainer center={center}>
       {parent && <ParentText to={parent.path}>{parent.title} &gt;&nbsp;</ParentText>}
-      <TitleText fontWeight={fontWeight} largeOnMobile={largeOnMobile}>{title}</TitleText>
+      <TitleText fontWeight={fontWeight} largeOnMobile={largeOnMobile}>
+        {title}
+      </TitleText>
     </TitleContainer>
   </Container>
 );
@@ -52,7 +54,7 @@ const TitleText = styled.div<TitleProps>`
   ${(props) => props.fontWeight && `font-weight: ${props.fontWeight}`};
   text-transform: uppercase;
   @media (max-width: 475px) {
-    ${({largeOnMobile}) => largeOnMobile ? `${H2}` : `${BodyXS}`}
+    ${({ largeOnMobile }) => (largeOnMobile ? `${H2}` : `${BodyXS}`)}
   }
 `;
 const ParentText = styled(Link)`

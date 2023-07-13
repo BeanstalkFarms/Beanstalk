@@ -169,7 +169,7 @@ const Container = styled.div<ContainerProps>`
     outline: 2px solid #46b955;
   }
   @media (max-width: 475px) {
-    height: ${(props) => props.showBalance ? `72px` : `48px`};
+    height: ${(props) => (props.showBalance ? `72px` : `48px`)};
     padding: 12px;
   }
 `;

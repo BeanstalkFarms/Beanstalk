@@ -64,10 +64,20 @@ export const Frame: FC<{}> = ({ children }) => {
         <CustomToaster />
         <BurgerMenu open={mobileMenuOpen}>
           <MobileNavLinkContainer>
-            <MobileNavLink bold to="/swap" onClick={() => setMobileMenuOpen(false)}>Swap</MobileNavLink>
-            <MobileNavLink bold to="/wells" onClick={() => setMobileMenuOpen(false)}>Wells</MobileNavLink>
-            <MobileNavLink bold to="/build" onClick={() => setMobileMenuOpen(false)}>Build</MobileNavLink>
-            {isNotProd && <MobileNavLink bold to="/dev" onClick={() => setMobileMenuOpen(false)}>Dev</MobileNavLink>}
+            <MobileNavLink bold to="/swap" onClick={() => setMobileMenuOpen(false)}>
+              Swap
+            </MobileNavLink>
+            <MobileNavLink bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
+              Wells
+            </MobileNavLink>
+            <MobileNavLink bold to="/build" onClick={() => setMobileMenuOpen(false)}>
+              Build
+            </MobileNavLink>
+            {isNotProd && (
+              <MobileNavLink bold to="/dev" onClick={() => setMobileMenuOpen(false)}>
+                Dev
+              </MobileNavLink>
+            )}
             <MobileLargeNavRow onClick={() => setMobileMenuOpen(false)}>
               <Box href="https://basin.exchange/discord" rel="noopener noreferrer" target="_blank">
                 <Discord width={20} />
@@ -79,8 +89,12 @@ export const Frame: FC<{}> = ({ children }) => {
                 <Github width={20} />
               </Box>
             </MobileLargeNavRow>
-            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>Bug Bounty Program</MobileNavLink>
-            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>Documentation</MobileNavLink>
+            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>
+              Bug Bounty Program
+            </MobileNavLink>
+            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>
+              Documentation
+            </MobileNavLink>
           </MobileNavLinkContainer>
           <MobileConnectContainer>
             <BasinConnectButton />
@@ -196,24 +210,24 @@ const Brand = styled.div`
   display: flex;
   flex-direction: row;
   padding-left: 16px;
-  
-    a {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      ${LinksNav}
-      text-decoration: none;
-      text-transform: uppercase;
-      color: #0f172a;
 
-      :focus {
-        outline: none;
-      }
-    }
+  a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    ${LinksNav}
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #0f172a;
 
-    @media (min-width: 475px) {
-      padding-left: 48px;
+    :focus {
+      outline: none;
     }
+  }
+
+  @media (min-width: 475px) {
+    padding-left: 48px;
+  }
 `;
 
 const StyledConnectContainer = styled.div`
@@ -245,16 +259,16 @@ const StyledConnectButton = styled.button`
   }
 `;
 
-const DropdownMenu = styled.button<{open?: boolean}>`
+const DropdownMenu = styled.button<{ open?: boolean }>`
   cursor: pointer;
   border: 0px;
   color: #000;
   background: #fff;
   :hover {
-    background: #FFF;
+    background: #fff;
   }
   :focus {
-    outline: #FFF;
+    outline: #fff;
   }
   height: 100%;
   padding-left: 16px;
@@ -268,27 +282,27 @@ const DropdownMenu = styled.button<{open?: boolean}>`
     display: none;
   }
   div {
-    :first-child { 
+    :first-child {
       transition: all 0.3s linear;
       transform-origin: 0% 50%;
-      transform: ${({  open  }) => open ? `rotate(45deg)` : `rotate(0)`};
+      transform: ${({ open }) => (open ? `rotate(45deg)` : `rotate(0)`)};
     }
     :last-child {
       transition: all 0.3s linear;
       transform-origin: 0% 50%;
-      transform: ${({  open  }) => open ? `rotate(-45deg)` : `rotate(0)`};
+      transform: ${({ open }) => (open ? `rotate(-45deg)` : `rotate(0)`)};
     }
   }
-`
+`;
 
 const MenuLine = styled.div`
   width: 16px;
   height: 2px;
   background-color: black;
-`
+`;
 
-const BurgerMenu = styled.div<{open: boolean}>`
-  background-color: #FFF;
+const BurgerMenu = styled.div<{ open: boolean }>`
+  background-color: #fff;
   display: flex;
   flex-direction: column;
   height: calc(100vh - 56px);
@@ -298,29 +312,29 @@ const BurgerMenu = styled.div<{open: boolean}>`
   transition: transform 0.3s ease-in-out;
   border-left: 0.5px solid black;
   margin-left: -0.5px;
-  transform: ${(props) => props.open ? `translateX(0%)` : `translateX(100%)`};
+  transform: ${(props) => (props.open ? `translateX(0%)` : `translateX(100%)`)};
   z-index: 9999;
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const MobileNavLinkContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-`
+`;
 
-const MobileNavLink = styled(Link)<{bold?: boolean}>`
+const MobileNavLink = styled(Link)<{ bold?: boolean }>`
   width: 100%;
   border-bottom: 0.5px solid black;
   padding: 16px;
   text-transform: uppercase;
   text-decoration: none;
   color: black;
-  font-weight: ${(props) => props.bold ? `600` : `normal`};
+  font-weight: ${(props) => (props.bold ? `600` : `normal`)};
   ${(props) => props.bold && `letter-spacing: 0.96px;`}
-`
+`;
 
 const MobileLargeNavRow = styled.div`
   display: flex;
@@ -328,7 +342,7 @@ const MobileLargeNavRow = styled.div`
   width: 100%;
   border-bottom: 0.5px solid black;
   color: black;
-`
+`;
 
 const MobileConnectContainer = styled.div`
   display: flex;

@@ -12,41 +12,46 @@ interface Composition {
   Row: typeof Row;
   Key: typeof Key;
   Value: typeof Value;
-};
+}
 
 type Props = {
   showDrawer: boolean;
-  headerText?: string | number | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal;
+  headerText?:
+    | string
+    | number
+    | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+    | React.ReactFragment
+    | React.ReactPortal;
   toggleDrawer?: (isDrawerOpen: boolean) => void;
 };
 
 export const BottomDrawer: FC<Props> & Composition = ({ children, showDrawer, headerText, toggleDrawer }) => {
   return (
     <>
-        <Container showDrawer={showDrawer} data-trace="true">
-            <Header>
-                {headerText}
-                <ImageButton src={x} alt="Close drawer" size={10} onClick={() => toggleDrawer!(false)} />
-            </Header>
-            {children}
-        </Container>
-        <Background showDrawer={showDrawer} onClick={() => toggleDrawer!(false)}/>
+      <Container showDrawer={showDrawer} data-trace="true">
+        <Header>
+          {headerText}
+          <ImageButton src={x} alt="Close drawer" size={10} onClick={() => toggleDrawer!(false)} />
+        </Header>
+        {children}
+      </Container>
+      <Background showDrawer={showDrawer} onClick={() => toggleDrawer!(false)} />
     </>
   );
 };
 
 const Background = styled.div<Props>`
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.65);
-    z-index: 9995;
-    transition: all 0.3s ease-in-out;
-    opacity: ${({showDrawer}) => showDrawer ? '1' : '0'};
-    display: ${({showDrawer}) => showDrawer ? 'flex' : 'none'};
-`
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  z-index: 9995;
+  transition: all 0.3s ease-in-out;
+  opacity: ${({ showDrawer }) => (showDrawer ? "1" : "0")};
+  display: ${({ showDrawer }) => (showDrawer ? "flex" : "none")};
+`;
 
 const Container = styled.div<Props>`
   display: flex;
@@ -55,7 +60,7 @@ const Container = styled.div<Props>`
   width: 100vw;
   left: 0;
   transition: all 0.3s ease-in-out;
-  bottom: ${({showDrawer}) => showDrawer ? '0' : '-100%'};
+  bottom: ${({ showDrawer }) => (showDrawer ? "0" : "-100%")};
   outline: 0.5px solid #9ca3af;
   outline-offset: -0.5px;
   z-index: 9996;

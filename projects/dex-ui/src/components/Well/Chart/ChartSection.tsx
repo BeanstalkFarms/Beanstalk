@@ -121,21 +121,55 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
         </FilterButton>
       </DesktopRow>
       <MobileRow>
-        <TabButton onClick={() => setChartTypeDrawerOpen(true)}>
-          {tab === 0 ? "LIQUIDITY" : "VOLUME"}
-        </TabButton>
+        <TabButton onClick={() => setChartTypeDrawerOpen(true)}>{tab === 0 ? "LIQUIDITY" : "VOLUME"}</TabButton>
         <BottomDrawer showDrawer={isChartTypeDrawerOpen} headerText={"View Chart"} toggleDrawer={setChartTypeDrawerOpen}>
-          <DrawerRow onClick={() => {setTab(0), setChartTypeDrawerOpen(false)}}>LIQUIDITY</DrawerRow>
-          <DrawerRow onClick={() => {setTab(1), setChartTypeDrawerOpen(false)}}>VOLUME</DrawerRow>
+          <DrawerRow
+            onClick={() => {
+              setTab(0), setChartTypeDrawerOpen(false);
+            }}
+          >
+            LIQUIDITY
+          </DrawerRow>
+          <DrawerRow
+            onClick={() => {
+              setTab(1), setChartTypeDrawerOpen(false);
+            }}
+          >
+            VOLUME
+          </DrawerRow>
         </BottomDrawer>
         <FilterButton onClick={() => setChartRangeDrawerOpen(true)}>
-        {dropdownButtonText} <ChevronDown width={6} />
+          {dropdownButtonText} <ChevronDown width={6} />
         </FilterButton>
         <BottomDrawer showDrawer={isChartRangeDrawerOpen} headerText={"Time Period"} toggleDrawer={setChartRangeDrawerOpen}>
-          <DrawerRow onClick={() => {setChartRange("day"), setChartRangeDrawerOpen(false)}}>DAY</DrawerRow>
-          <DrawerRow onClick={() => {setChartRange("week"), setChartRangeDrawerOpen(false)}}>WEEK</DrawerRow>
-          <DrawerRow onClick={() => {setChartRange("month"), setChartRangeDrawerOpen(false)}}>MONTH</DrawerRow>
-          <DrawerRow onClick={() => {setChartRange("all"), setChartRangeDrawerOpen(false)}}>ALL</DrawerRow>
+          <DrawerRow
+            onClick={() => {
+              setChartRange("day"), setChartRangeDrawerOpen(false);
+            }}
+          >
+            DAY
+          </DrawerRow>
+          <DrawerRow
+            onClick={() => {
+              setChartRange("week"), setChartRangeDrawerOpen(false);
+            }}
+          >
+            WEEK
+          </DrawerRow>
+          <DrawerRow
+            onClick={() => {
+              setChartRange("month"), setChartRangeDrawerOpen(false);
+            }}
+          >
+            MONTH
+          </DrawerRow>
+          <DrawerRow
+            onClick={() => {
+              setChartRange("all"), setChartRangeDrawerOpen(false);
+            }}
+          >
+            ALL
+          </DrawerRow>
         </BottomDrawer>
       </MobileRow>
       {error !== null && <ChartLoader>{`Error Loading Chart Data :(`}</ChartLoader>}
@@ -155,22 +189,22 @@ const DesktopRow = styled(Row)`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;
 
 const MobileRow = styled(Row)`
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const DrawerRow = styled(Row)`
-  background-color: #FFF;
+  background-color: #fff;
   padding: 16px;
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.32px;
-  border-bottom: 0.5px solid #9CA3AF;
-`
+  border-bottom: 0.5px solid #9ca3af;
+`;
 
 const Dropdown = styled.div<{ enabled: boolean }>`
   position: absolute;

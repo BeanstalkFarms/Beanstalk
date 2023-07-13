@@ -55,4 +55,4 @@ const DesktopOnlyTh = styled(Th)`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;

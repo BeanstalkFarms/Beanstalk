@@ -31,7 +31,7 @@ export const Well = () => {
   const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
-  
+
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
     (e.target as HTMLElement).blur();
@@ -40,10 +40,8 @@ export const Well = () => {
 
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => {
-      setOpen(!open);
-    },
-    [open]
-  );
+    setOpen(!open);
+  }, [open]);
 
   useEffect(() => {
     const run = async () => {
@@ -92,26 +90,26 @@ export const Well = () => {
   const [isSticky, setIsSticky] = useState(false);
 
   const callbackFunction = (entries: any) => {
-    const [ entry ] = entries
-    setIsSticky(!entry.isIntersecting) // Not sure why inverting isIntersecting gives me the desired behaviour
-  }
+    const [entry] = entries;
+    setIsSticky(!entry.isIntersecting); // Not sure why inverting isIntersecting gives me the desired behaviour
+  };
 
   const containerRef = useCallback((node: any) => {
-    if (node === null) return
+    if (node === null) return;
 
     const options = {
       root: null,
       rootMargin: "56px",
-      threshold:1.0
-    }
+      threshold: 1.0
+    };
 
-    const observer = new IntersectionObserver(callbackFunction, options)
-    observer.observe(node)
-    
+    const observer = new IntersectionObserver(callbackFunction, options);
+    observer.observe(node);
+
     return () => {
-      observer.unobserve(node)
-    }
-  }, [])
+      observer.unobserve(node);
+    };
+  }, []);
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
   if (loading)
@@ -137,7 +135,9 @@ export const Well = () => {
           <Item>
             <Header>
               <TokenLogos>{logos}</TokenLogos>
-              <TextNudge amount={10} mobileAmount={-2}>{title}</TextNudge>
+              <TextNudge amount={10} mobileAmount={-2}>
+                {title}
+              </TextNudge>
             </Header>
           </Item>
           <StyledItem column stretch>
@@ -184,9 +184,7 @@ export const Well = () => {
           <LearnMoreLabel onClick={toggle}>
             <LearnMoreLine />
             <LearnMoreText>
-              <TextNudge amount={2}>
-                Learn more about this Well
-              </TextNudge> 
+              <TextNudge amount={2}>Learn more about this Well</TextNudge>
               <ImageButton
                 component={ChevronDown}
                 size={10}
@@ -210,8 +208,8 @@ export const Well = () => {
   );
 };
 
-const leftColumnWidth = 940
-const rightColumnWidth = 400
+const leftColumnWidth = 940;
+const rightColumnWidth = 400;
 
 const ContentWrapper = styled.div`
   // outline: 1px solid red;
@@ -231,7 +229,7 @@ const ContentWrapper = styled.div`
 
 const StyledTitle = styled(Title)`
   order: -1;
-`
+`;
 
 const Header = styled.div`
   display: flex;
@@ -263,7 +261,7 @@ const HeaderContainer = styled(Row)`
     gap: 8px;
     order: 0;
   }
-`
+`;
 
 const ReservesContainer = styled.div`
   width: 100%;
@@ -272,7 +270,7 @@ const ReservesContainer = styled.div`
     width: ${leftColumnWidth}px;
     order: 0;
   }
-`
+`;
 
 const ChartContainer = styled.div`
   width: 100%;
@@ -281,7 +279,7 @@ const ChartContainer = styled.div`
     width: ${leftColumnWidth}px;
     order: 0;
   }
-`
+`;
 
 const ActivityOtherButtons = styled(Row)`
   width: 100%;
@@ -290,7 +288,7 @@ const ActivityOtherButtons = styled(Row)`
     width: ${leftColumnWidth}px;
     order: 0;
   }
-`
+`;
 
 const StickyDetector = styled.div`
   width: 100%;
@@ -302,11 +300,11 @@ const StickyDetector = styled.div`
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
-const LiquiditySwapButtons = styled(Row)<{sticky?: boolean}>`
-  width: ${(props) => props.sticky ? '100vw' : '100%'};
-  margin-left: ${(props) => props.sticky ? '-12px' : '0px'};
+const LiquiditySwapButtons = styled(Row)<{ sticky?: boolean }>`
+  width: ${(props) => (props.sticky ? "100vw" : "100%")};
+  margin-left: ${(props) => (props.sticky ? "-12px" : "0px")};
   order: 2;
   position: sticky;
   top: 0px;
@@ -319,13 +317,13 @@ const LiquiditySwapButtons = styled(Row)<{sticky?: boolean}>`
     margin-left: 0px;
     order: 0;
   }
-`
+`;
 
 const StyledItem = styled(Item)`
   @media (min-width: 475px) {
     align-items: end;
   }
-`
+`;
 const BottomContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -357,7 +355,7 @@ const LiquidityBoxContainer = styled.div`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;
 
 const LearnMoreContainer = styled.div`
   display: flex;
@@ -370,21 +368,21 @@ const LearnMoreContainer = styled.div`
     gap: 24px;
     order: 0;
   }
-`
+`;
 const LearnMoreLabel = styled.div`
   display: flex;
   flex-direction: row;
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const LearnMoreLine = styled.div`
   align-self: center;
   flex-grow: 1;
-  border-top: 1px solid #9CA3AF;
+  border-top: 1px solid #9ca3af;
   flex-basis: 1fr;
-`
+`;
 
 const LearnMoreText = styled.div`
   display: flex;
@@ -392,22 +390,22 @@ const LearnMoreText = styled.div`
   gap: 8px;
   align-items: center;
   width: 195px;
-  color: #46B955;
+  color: #46b955;
   padding-right: 8px;
   padding-left: 8px;
   ${BodyXS}
   font-weight: 600;
-`
+`;
 
-const LearnMoreButtons = styled.div<{open: boolean}>`
-  ${(props) => props.open ? "display: flex" : "display: none"};
+const LearnMoreButtons = styled.div<{ open: boolean }>`
+  ${(props) => (props.open ? "display: flex" : "display: none")};
   flex-direction: column;
   gap: 16px;
   @media (min-width: 475px) {
     display: flex;
     gap: 24px;
   }
-`
+`;
 
 const ColumnBreak = styled.div`
   display: none;
@@ -416,4 +414,4 @@ const ColumnBreak = styled.div`
     flex-basis: 100%;
     width: 0px;
   }
-`
+`;

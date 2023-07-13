@@ -3,8 +3,7 @@ import { ExpandBox } from "src/components/ExpandBox";
 import styled from "styled-components";
 import { FC } from "src/types";
 
-type Props = {
-};
+type Props = {};
 
 function PumpDetails() {
   return (

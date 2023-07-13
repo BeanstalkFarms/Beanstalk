@@ -12,14 +12,9 @@ interface Composition {
   Value: typeof Value;
 }
 
-type Props = {
-};
+type Props = {};
 export const InfoBox: FC<Props> & Composition = ({ children }) => {
-  return (
-    <Container data-trace="true">
-      {children}
-    </Container>
-  );
+  return <Container data-trace="true">{children}</Container>;
 };
 
 const Container = styled.div<Props>`

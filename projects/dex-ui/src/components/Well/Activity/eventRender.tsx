@@ -74,7 +74,7 @@ const DesktopOnlyTd = styled(Td)`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;
 
 const formatTime = (timestamp?: number) => {
   if (!timestamp) return null;

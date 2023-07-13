@@ -15,18 +15,18 @@ export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) 
   const image = images[isLP ? "LP" : token?.symbol ?? "DEFAULT"] ?? images.DEFAULT;
 
   return (
-    <Container width={size} height={size} mobileWidth={mobileSize || size} mobileHeight={mobileSize || size} >
+    <Container width={size} height={size} mobileWidth={mobileSize || size} mobileHeight={mobileSize || size}>
       <img src={image} alt={`${token?.symbol} Logo`} />
     </Container>
   );
 };
 
 type ContainerProps = {
-  width: number,
-  height: number,
-  mobileWidth: number,
-  mobileHeight: number,
-}
+  width: number;
+  height: number;
+  mobileWidth: number;
+  mobileHeight: number;
+};
 
 const Container = styled.div<ContainerProps>`
   display: flex;

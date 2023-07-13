@@ -149,13 +149,13 @@ export const Wells = () => {
         </DesktopTable>
         <MobileTable key={well.address} onClick={gotoWell}>
           <MobileContainer>
-              <WellDetail>
-                <TokenLogos>{logos}</TokenLogos>
-                <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-                {/* <Deployer>{deployer}</Deployer> */}
-              </WellDetail>
-              <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
-            </MobileContainer>
+            <WellDetail>
+              <TokenLogos>{logos}</TokenLogos>
+              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+              {/* <Deployer>{deployer}</Deployer> */}
+            </WellDetail>
+            <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+          </MobileContainer>
         </MobileTable>
       </>
     );
@@ -247,23 +247,23 @@ const StyledRow = styled(TabRow)`
     margin-bottom: -2px;
     top: calc(100% - 40px);
   }
-`
+`;
 
 const MobileContainer = styled(Td)`
   padding: 8px 16px;
-`
+`;
 
 const MobileHeader = styled(Th)`
   font-size: 14px;
   padding: 8px 16px;
-`
+`;
 
 const WellDetail = styled.div`
   display: flex;
   flex-direction: row;
   gap: 8px;
   @media (min-width: 475px) {
-     flex-direction: column;
+    flex-direction: column;
   }
 `;
 

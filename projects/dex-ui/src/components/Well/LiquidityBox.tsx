@@ -17,7 +17,9 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
   return (
     <InfoBox>
       <InfoBox.Header>
-        <TextNudge amount={0} mobileAmount={2}><BoxHeader>My Liquidity</BoxHeader></TextNudge>
+        <TextNudge amount={0} mobileAmount={2}>
+          <BoxHeader>My Liquidity</BoxHeader>
+        </TextNudge>
         <BoxHeaderAmount>
           <TokenLogo token={lpToken} size={16} mobileSize={16} isLP />
           <TextNudge amount={1.5}>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</TextNudge>

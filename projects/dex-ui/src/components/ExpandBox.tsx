@@ -98,7 +98,7 @@ const BodyContainer = styled.div`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;
 const Footer = styled.div`
   display: flex;
   flex-direction: row;

@@ -37,7 +37,9 @@ export const OtherSection: FC<Props> = ({ well }) => {
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
-              <Link href={`https://etherscan.io/address/${well.address}`}>{well.address.substr(0, 5)+'...'+well.address.substr(well.address.length - 5)}</Link>
+              <Link href={`https://etherscan.io/address/${well.address}`}>
+                {well.address.substr(0, 5) + "..." + well.address.substr(well.address.length - 5)}
+              </Link>
             </MobileTd>
           </Row>
           {well.tokens!.map(function (token, index) {
@@ -53,7 +55,7 @@ export const OtherSection: FC<Props> = ({ well }) => {
                 </DesktopTd>
                 <MobileTd align={"right"}>
                   <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>
-                    {token.address.substr(0, 5)+'...'+token.address.substr(token.address.length - 5) || `-`}
+                    {token.address.substr(0, 5) + "..." + token.address.substr(token.address.length - 5) || `-`}
                   </Link>
                 </MobileTd>
               </Row>
@@ -84,22 +86,22 @@ const DesktopTd = styled(Td)`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;
 
 const MobileTd = styled(Td)`
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;
 
 const DesktopTh = styled(Th)`
   @media (max-width: 475px) {
     display: none;
   }
-`
+`;
 
 const MobileTh = styled(Th)`
   @media (min-width: 475px) {
     display: none;
   }
-`
+`;

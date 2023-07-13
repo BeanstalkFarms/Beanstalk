@@ -19,13 +19,13 @@ export const Reserves: FC<Props> = ({ reserves }) => {
     <Item key={i} column>
       <Symbol>{r.token?.symbol}</Symbol>
       <Wrapper>
-        <TokenLogo token={r.token} size={16} mobileSize={16}/>
+        <TokenLogo token={r.token} size={16} mobileSize={16} />
         <TextNudge amount={2}>
           <Amount>{r.amount.toHuman("short")}</Amount>
         </TextNudge>
         <TextNudge amount={2}>
           <Percent>{`(${r.percentage?.mul(100).toHuman("short")}%)`}</Percent>
-        </TextNudge>   
+        </TextNudge>
       </Wrapper>
     </Item>
   ));

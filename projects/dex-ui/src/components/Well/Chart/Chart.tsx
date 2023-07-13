@@ -25,7 +25,7 @@ export const Chart: FC<Props> = ({ legend, data }) => {
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
-    
+
     const chartOptions = {
       layout: {
         fontFamily: "PPMori, sans-serif"
@@ -54,10 +54,10 @@ export const Chart: FC<Props> = ({ legend, data }) => {
     chart.current = createChart(chartContainerRef.current, chartOptions);
     lineSeries.current = chart.current.addLineSeries({ color: "#000" });
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       chart.current.remove();
     };
   }, []);

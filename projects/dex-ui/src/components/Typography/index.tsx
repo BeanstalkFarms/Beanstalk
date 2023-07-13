@@ -14,7 +14,7 @@ export const H2 = styled.h2`
 `;
 export const BodyXS = css`
   font-style: normal;
-  font-weight: 400;  
+  font-weight: 400;
   font-size: 14px;
   line-height: 22px;
 `;
@@ -86,7 +86,7 @@ export const PageTitle = styled.h1`
 // Helps nudge text to work around the font's
 // messed up baseline, when we want the text
 // to be vertically centered.
-type NudgeProps = { amount: number, mobileAmount?: number };
+type NudgeProps = { amount: number; mobileAmount?: number };
 export const TextNudge = styled.div<NudgeProps>`
   margin-top: ${({ amount }) => amount}px;
   margin-bottom: ${({ amount }) => -1 * amount}px;
