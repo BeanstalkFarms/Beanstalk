@@ -171,7 +171,17 @@ export const useFetchFarmerSilo = () => {
                     const bdvTV = sdk.tokens.BEAN.fromBlockchain(crate.bdv);
                     const amountTV = token.fromBlockchain(crate.amount);
                     const baseStalkTV = token.getStalk(bdvTV);
-                    const seedsTV = token.getSeeds(bdvTV);
+
+                    // HACK: since we set the seeds value to zero, need to
+                    // use the old value here
+                    let seedsTV;
+                    if (token === sdk.tokens.UNRIPE_BEAN) {
+                      seedsTV = sdk.tokens.SEEDS.amount(2).mul(bdvTV);
+                    } else if (token === sdk.tokens.UNRIPE_BEAN_CRV3) {
+                      seedsTV = sdk.tokens.SEEDS.amount(4).mul(bdvTV);
+                    } else {
+                      seedsTV = token.getSeeds(bdvTV);
+                    }
 
                     // Legacy grown stalk calculation
                     const grownStalkTV = sdk.silo.calculateGrownStalkSeeds(
