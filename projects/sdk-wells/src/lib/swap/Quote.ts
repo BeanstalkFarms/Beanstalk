@@ -12,6 +12,7 @@ import { Clipboard } from "src/lib/clipboard/clipboard";
 import { UnWrapEthStep } from "./UnWrapStep";
 
 const DEFAULT_DEADLINE = 60 * 5; // in seconds
+const PIPELINE_ADDRESS = addresses.PIPELINE.get(1);
 
 export type QuotePrepareResult = {
   doSwap: (overrides?: TxOverrides) => Promise<ContractTransaction>;
@@ -191,7 +192,10 @@ export class Quote {
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      const nextRecipient = steps[i + 1]?.well.contract.address ?? recipient;
+      let nextRecipient = steps[i + 1]?.well.contract.address ?? recipient;
+
+      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to pipeline
+      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = PIPELINE_ADDRESS;
 
       const { contract, method, parameters } = step.swapMany(nextRecipient, step.quoteResultWithSlippage!);
 
@@ -236,7 +240,38 @@ export class Quote {
     }
     // Unwrap ETH flow
     else if (this.toToken.symbol === "ETH") {
-      throw new Error("Cannot swap to ETH yet");
+      // Last step should be to swap to WETH
+      const wethStep = steps[steps.length - 1];
+      if (wethStep.toToken.symbol !== "WETH")
+        throw new Error("Last step of multi-swap should have been a swap to WETH if the overall swap is for ETH.");
+
+      const ethAmount = wethStep.quoteResultWithSlippage!;
+
+      const transferToFirstWell = this.depot.interface.encodeFunctionData("transferToken", [
+        this.fromToken.address,
+        steps[0].well.address,
+        this.amountUsedForQuote.toBigNumber(),
+        0,
+        0
+      ]);
+
+      const unwrapWeth = {
+        target: this.weth9.address,
+        callData: this.weth9.interface.encodeFunctionData("withdraw", [ethAmount.toBigNumber()]),
+        clipboard: Clipboard.encode([])
+      };
+
+      const sendEth = {
+        target: recipient,
+        callData: "0x0",
+        clipboard: Clipboard.encode([], ethAmount.toBigNumber())
+      };
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...shiftOps, unwrapWeth, sendEth], 0]);
+
+      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToFirstWell, pipe], overrides);
+      };
     }
     // Normal flow, no ETH involved
     else {
