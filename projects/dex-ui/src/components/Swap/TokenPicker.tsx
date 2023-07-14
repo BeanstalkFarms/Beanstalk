@@ -4,8 +4,6 @@ import { FC } from "src/types";
 import { useTokens } from "src/tokens/TokenProvider";
 import styled, { keyframes } from "styled-components";
 import { TokenLogo } from "src/components/TokenLogo";
-import { Image } from "../Image";
-import chevDown from "src/assets/images/chevron-down.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
