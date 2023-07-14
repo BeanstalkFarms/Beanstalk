@@ -12,6 +12,7 @@ import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { Spinner } from "../Spinner";
 import { ChevronDown } from "../Icons";
 import { BottomDrawer } from "../BottomDrawer";
+import { BodyS } from "../Typography";
 
 type Props = {
   token: Token;
@@ -118,7 +119,7 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
                     <Symbol>{token.symbol}</Symbol>
                     <Name>{token.displayName}</Name>
                   </Details>
-                  {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
+                  {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman("short")}</Balance>}
                 </TokenRow>
               ))}
             </Ol>
@@ -186,12 +187,18 @@ const Symbol = styled.div`
   font-weight: 400;
   font-size: 16px;
   line-height: 20px;
+  @media (max-width: 475px) {
+    line-height: 16px;   
+  }
 `;
 const Name = styled.div`
   ont-weight: 400;
   font-size: 14px;
   line-height: 20px;
   color: #9e9e9e;
+  @media (max-width: 475px) {
+    line-height: 14px;   
+  }
 `;
 const Balance = styled.div`
   font-weight: 500;
@@ -200,6 +207,9 @@ const Balance = styled.div`
   max-width: 175px;
   text-overflow: ellipsis;
   overflow: hidden;
+  @media (max-width: 475px) {
+    ${BodyS}
+  }
 `;
 
 const MobileDrawer = styled.div`
@@ -263,6 +273,11 @@ const ModalContent = styled.div`
   max-height: calc(100vh - 64px - 48px - 96px - 72px - 48px - 48px);
   overflow-y: auto;
   overflow-x: hidden;
+
+  @media (max-width: 475px) {
+    max-height: calc(100vh - 56px);
+    border-width: 0px 0px 0.5px 0px;
+  }
 `;
 
 const Ol = styled.ol`
