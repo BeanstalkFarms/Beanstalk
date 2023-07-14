@@ -276,7 +276,7 @@ export const AddLiquidity = ({
               well.tokens!.map((token: Token, index: number) => {
                 if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false) {
                   return (
-                    <ButtonWrapper key={`approvebuttonwrapper${index}`}>
+                    <ButtonWrapper key={`approvebuttonwrapper${index}`} heightIndex={index + 1}>
                       <ApproveTokenButton
                         key={`approvebutton${index}`}
                         disabled={amounts && amounts[index].lte(0)}
@@ -319,7 +319,7 @@ const MediumGapContainer = styled.div`
   gap: 12px;
 `;
 
-const ButtonWrapper = styled.div`
+const ButtonWrapper = styled.div<{ heightIndex?: number }>`
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -327,7 +327,7 @@ const ButtonWrapper = styled.div`
     position: fixed;
     width: calc(100% - 24px);
     margin-bottom: 0;
-    bottom: 12px;
+    bottom: ${({heightIndex}) => heightIndex ? `calc(12px + (48px * ${heightIndex}))`: "12px"};
   }
 `;
 
