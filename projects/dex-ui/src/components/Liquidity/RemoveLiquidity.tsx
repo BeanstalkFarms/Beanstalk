@@ -19,6 +19,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { getPrice } from "src/utils/price/usePrice";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
+import { size } from "src/breakpoints";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -424,7 +425,7 @@ const LargeGapContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     margin-bottom: 40px;
   }
 `;
@@ -460,7 +461,7 @@ const ButtonWrapper = styled.div`
   :last-of-type {
     margin-bottom: 0;
   }
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     position: fixed;
     width: calc(100% - 24px);
     margin-bottom: 0;
@@ -522,7 +523,7 @@ const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   align-items: center;
   padding-left: 8px;
   padding-right: 8px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     height: 48px;
   }
 `;

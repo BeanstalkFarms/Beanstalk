@@ -6,6 +6,7 @@ import { TokenLogo } from "../TokenLogo";
 import { FC } from "src/types";
 import { Token } from "@beanstalk/sdk";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { size } from "src/breakpoints";
 
 type Props = {
   lpToken: Token;
@@ -44,7 +45,7 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
 
 const BoxHeader = styled.div`
   ${BodyCaps}
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;

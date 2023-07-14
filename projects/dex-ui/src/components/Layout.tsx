@@ -1,3 +1,4 @@
+import { size } from "src/breakpoints";
 import styled from "styled-components";
 
 export const Item = styled.div<{ stretch?: boolean; right?: boolean; column?: boolean }>`
@@ -13,7 +14,7 @@ export const Row = styled.div<{ gap?: number; mobileGap?: string }>`
   align-items: center;
   ${({ gap }) => gap && `gap: ${gap}px;`}
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${({ gap, mobileGap }) => (mobileGap ? `gap: ${mobileGap};` : `gap: ${gap}px;`)}
   }
 `;

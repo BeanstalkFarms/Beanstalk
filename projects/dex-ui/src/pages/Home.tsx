@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React from "react";
+import { size } from "src/breakpoints";
 import { RightArrow, RightArrowCircle } from "src/components/Icons";
 import styled from "styled-components";
 
@@ -55,7 +56,7 @@ export const Home = () => {
 const Container = styled.div`
   height: calc(100% - 24px);
   padding: 12px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     padding: 0px;
     height: 100%;
     width: 100%;
@@ -69,7 +70,7 @@ const Content = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     gap: 48px;
     justify-content: center;
     align-items: center;
@@ -78,7 +79,7 @@ const Content = styled.div`
 
 const MevBubble = styled.div`
   display: none;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     box-sizing: border-box;
     flex-direction: row;
@@ -99,7 +100,7 @@ const TitleSubtitleContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     flex-direction: column;
     gap: 48px;
@@ -110,7 +111,7 @@ const Title = styled.div`
   font-size: 32px;
   font-weight: 600;
   line-height: 40px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     font-style: normal;
     font-size: 72px;
     line-height: 100%;
@@ -127,7 +128,7 @@ const SubTitle = styled.div`
   line-height: 22px;
   color: #4b5563;
   gap: 8px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     flex-direction: row;
     font-size: 20px;
     line-height: 24px;
@@ -154,7 +155,7 @@ const WhitepaperLink = styled.a`
   display: flex;
   align-items: center;
 
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     font-size: 20px;
     line-height: 24px;
   }
@@ -166,7 +167,7 @@ const Boxes = styled.div`
   flex-direction: column;
   gap: 12px;
   justify-content: space-around;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     flex-direction: row;
     gap: 48px;
     padding: 0 48px;
@@ -188,7 +189,7 @@ const Box = styled.div`
   line-height: 22px;
   padding: 12px;
 
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     padding: 0px;
     font-size: 24px;
     line-height: 32px;

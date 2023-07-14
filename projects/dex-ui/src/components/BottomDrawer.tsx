@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { BodyXS } from "./Typography";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "./ImageButton";
+import { size } from "src/breakpoints";
 
 interface Composition {
   Header: typeof Header;
@@ -64,7 +65,7 @@ const Container = styled.div<Props>`
   outline: 0.5px solid #9ca3af;
   outline-offset: -0.5px;
   z-index: 9996;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;

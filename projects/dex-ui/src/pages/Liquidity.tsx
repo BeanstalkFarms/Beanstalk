@@ -16,21 +16,22 @@ import { Log } from "src/utils/logger";
 import { BodyXS, TextNudge } from "src/components/Typography";
 import { ImageButton } from "src/components/ImageButton";
 import { ChevronDown } from "src/components/Icons";
+import { size } from "src/breakpoints";
 
 export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
   const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
   const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
-  const [isMobile, setIsMobile] = useState(window.matchMedia("(max-width: 475px)").matches);
+  const [isMobile, setIsMobile] = useState(window.matchMedia(`(max-width: ${size.mobile})`).matches);
   const [tab, setTab] = useState(isMobile ? null : 0);
 
   // Media query
   useEffect(() => {
-    window.matchMedia("(max-width: 475px)").addEventListener("change", (event) => setIsMobile(event.matches));
+    window.matchMedia(`(max-width: ${size.mobile})`).addEventListener("change", (event) => setIsMobile(event.matches));
 
     return () => {
-      window.matchMedia("(max-width: 475px)").removeEventListener("change", (event) => setIsMobile(event.matches));
+      window.matchMedia(`(max-width: ${size.mobile})`).removeEventListener("change", (event) => setIsMobile(event.matches));
     };
   }, []);
 
@@ -150,7 +151,7 @@ const ContentWrapper = styled.div`
   flex-direction: row;
   justify-content: center;
   gap: 48px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     flex-direction: column;
     gap: 16px;
   }
@@ -163,7 +164,7 @@ const SideBar = styled.div`
   width: calc(16 * 24px);
   min-width: calc(16 * 24px);
   gap: 24px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     width: 100%;
     min-width: 100%;
     gap: 16px;
@@ -177,7 +178,7 @@ const CenterBar = styled.div`
   width: calc(17 * 24px);
   min-width: calc(17 * 24px);
   gap: 24px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     width: 100%;
     min-width: 100%;
     gap: 16px;
@@ -185,7 +186,7 @@ const CenterBar = styled.div`
 `;
 
 const AddRemoveLiquidityRow = styled(Row)<{ tabSelected: boolean }>`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${({ tabSelected }) =>
       !tabSelected &&
       `
@@ -202,7 +203,7 @@ const LearnMoreContainer = styled.div`
   gap: 16px;
   order: 1;
   width: 100%;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     gap: 24px;
     order: 0;
   }
@@ -210,7 +211,7 @@ const LearnMoreContainer = styled.div`
 const LearnMoreLabel = styled.div`
   display: flex;
   flex-direction: row;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -239,7 +240,7 @@ const LearnMoreButtons = styled.div<{ open: boolean }>`
   ${(props) => (props.open ? "display: flex" : "display: none")};
   flex-direction: column;
   gap: 16px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     gap: 24px;
   }

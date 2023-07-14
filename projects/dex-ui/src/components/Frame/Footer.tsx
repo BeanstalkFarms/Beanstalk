@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Discord, Github, Twitter } from "../Icons";
+import { size } from "src/breakpoints";
 
 export const Footer = () => (
   <Container>
@@ -29,7 +30,7 @@ const Container = styled.footer`
   min-height: 56px;
   width: 100vw;
   align-items: stretch;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     height: 72px;
     min-height: 72px;

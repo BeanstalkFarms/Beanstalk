@@ -5,6 +5,7 @@ import { FC } from "src/types";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { TokenLogo } from "../TokenLogo";
 import { Item, Row } from "../Layout";
+import { size } from "src/breakpoints";
 
 type Props = {
   reserves: {
@@ -36,7 +37,7 @@ export const Reserves: FC<Props> = ({ reserves }) => {
 const Symbol = styled.div`
   ${BodyL}
   color: #4B5563;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;
@@ -52,7 +53,7 @@ const Amount = styled.div`
   line-height: 24px;
   text-align: right;
   color: #000000;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
     font-weight: 600;
   }
@@ -63,7 +64,7 @@ const Percent = styled.div`
   line-height: 24px;
   text-align: right;
   color: #9ca3af;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;

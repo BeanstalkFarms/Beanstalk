@@ -12,6 +12,7 @@ import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
 import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X } from "../Icons";
+import { size } from "src/breakpoints";
 
 export const BasinConnectButton = () => {
   return (
@@ -115,7 +116,7 @@ type NavLinkProps = {
 const TokenMarquee = styled.div`
   display: none;
 
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     height: 48px;
     min-height: 48px;
@@ -148,7 +149,7 @@ const NavContainer = styled.nav`
   box-sizing: border-box;
   padding: 0px;
   align-items: center;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     height: 64px;
     min-height: 64px;
   }
@@ -156,7 +157,7 @@ const NavContainer = styled.nav`
 
 const NavLinks = styled.div`
   display: none;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     align-self: stretch;
     align-items: center;
@@ -226,14 +227,14 @@ const Brand = styled.div`
     }
   }
 
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     padding-left: 48px;
   }
 `;
 
 const StyledConnectContainer = styled.div`
   display: none;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     direction: row;
     flex: 1;
@@ -279,7 +280,7 @@ const DropdownMenu = styled.button<{ open?: boolean }>`
   flex-direction: column;
   justify-content: center;
   gap: 9px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
   div {
@@ -309,7 +310,7 @@ const BurgerMenu = styled.div<{ open: boolean }>`
   margin-left: -0.5px;
   transform: ${(props) => (props.open ? `translateX(0%)` : `translateX(100%)`)};
   z-index: 9999;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;

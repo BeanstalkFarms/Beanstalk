@@ -6,6 +6,7 @@ import gearIcon from "/src/assets/images/gear.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
 import { BottomDrawer } from "../BottomDrawer";
+import { size } from "src/breakpoints";
 
 type SlippagePanelProps = {
   slippageValue: number;
@@ -126,13 +127,13 @@ const Modal = styled.div`
 `;
 
 const DesktopModal = styled.div`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const MobileDrawer = styled.div`
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;

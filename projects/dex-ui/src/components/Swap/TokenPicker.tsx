@@ -11,6 +11,7 @@ import { Spinner } from "../Spinner";
 import { ChevronDown } from "../Icons";
 import { BottomDrawer } from "../BottomDrawer";
 import { BodyS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type Props = {
   token: Token;
@@ -185,7 +186,7 @@ const Symbol = styled.div`
   font-weight: 400;
   font-size: 16px;
   line-height: 20px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     line-height: 16px;   
   }
 `;
@@ -194,7 +195,7 @@ const Name = styled.div`
   font-size: 14px;
   line-height: 20px;
   color: #9e9e9e;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     line-height: 14px;   
   }
 `;
@@ -205,13 +206,13 @@ const Balance = styled.div`
   max-width: 175px;
   text-overflow: ellipsis;
   overflow: hidden;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyS}
   }
 `;
 
 const MobileDrawer = styled.div`
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -226,7 +227,7 @@ const DesktopModal = styled.div`
   cursor: auto;
   display: flex;
   z-index: 1024;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -272,7 +273,7 @@ const ModalContent = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     max-height: calc(100vh - 56px);
     border-width: 0px 0px 0.5px 0px;
   }

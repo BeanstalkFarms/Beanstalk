@@ -7,6 +7,7 @@ import { renderEvent } from "./eventRender";
 import { Row, TBody, THead, Table, Td, Th } from "src/components/Well/Table";
 import { TokenValue } from "@beanstalk/sdk";
 import { TabButton } from "src/components/TabButton";
+import { size } from "src/breakpoints";
 
 type WellHistoryProps = {
   well: Well;
@@ -79,21 +80,21 @@ const WellHistoryContainer = styled.div`
 `;
 
 const DesktopOnlyTh = styled(Th)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const MobilePageSelector = styled(Row)`
   height: 40px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const DesktopPageSelector = styled(Row)`
   height: 48px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;

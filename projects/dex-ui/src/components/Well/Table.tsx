@@ -4,6 +4,7 @@
  */
 import styled from "styled-components";
 import { BodyCaps, BodyS, BodyXS } from "../Typography";
+import { size } from "src/breakpoints";
 
 export const Table = styled.table`
   border: 0.5px solid #000;
@@ -26,7 +27,7 @@ export const THead = styled.thead`
     background-color: #f9f8f6;
     border-bottom: 0.5px solid #000;
 
-    @media (max-width: 475px) {
+    @media (max-width: ${size.mobile}) {
       height: 40px;
     }
   }
@@ -39,7 +40,7 @@ export const Th = styled.th`
   text-align: ${(props) => props.align || "left"};
   cursor: default;
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
     padding: 8px 8px;
   }
@@ -48,7 +49,7 @@ export const Td = styled.td`
   padding: 16px 24px;
   text-align: ${(props) => props.align || "left"};
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
     padding: 8px 8px;
   }

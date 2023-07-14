@@ -3,6 +3,7 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { Spinner } from "../Spinner";
 import { BodyXS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type Props = {
   label?: string;
@@ -65,7 +66,7 @@ const StyledButton = styled.button<ButtonProps>`
     outline: 2px solid #46b955;
   }
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
     font-weight: 600;
     padding: 8px 8px;

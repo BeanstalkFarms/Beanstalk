@@ -3,6 +3,7 @@ import { FC } from "src/types";
 import { Row, TBody, THead, Table, Th, Td } from "./Table";
 import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
+import { size } from "src/breakpoints";
 
 type Props = {
   well: Well;
@@ -83,25 +84,25 @@ const Link = styled.a`
 `;
 
 const DesktopTd = styled(Td)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const MobileTd = styled(Td)`
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const DesktopTh = styled(Th)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const MobileTh = styled(Th)`
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;

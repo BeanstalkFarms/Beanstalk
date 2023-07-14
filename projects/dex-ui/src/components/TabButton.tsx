@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { BodyXS } from "./Typography";
+import { size } from "src/breakpoints";
 
 export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bold?: boolean; justify?: boolean; hover?: boolean }>`
   display: flex;
@@ -25,7 +26,7 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
       background-color: #f0fdf4;
     };`}
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
     height: 40px;
     font-weight: ${({ bold, active }) => (bold || active ? "600" : "normal")};

@@ -5,6 +5,7 @@ import { BodyCaps, BodyS, BodyXS } from "./Typography";
 import { ImageButton } from "./ImageButton";
 import { ChevronDown } from "./Icons";
 import { BottomDrawer } from "./BottomDrawer";
+import { size } from "src/breakpoints";
 
 interface Composition {
   Header: typeof Header;
@@ -82,7 +83,7 @@ const Header = styled.div<Props>`
     border-bottom: 0.5px solid ${(p) => (!p.open ? "#46b955" : "#9ca3af")};
   }
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     padding: 8px;
   }
 `;
@@ -95,7 +96,7 @@ const Body = styled.div`
 `;
 
 const BodyContainer = styled.div`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -129,7 +130,7 @@ const UserHeader = styled.div`
   ${BodyXS}
   text-transform: uppercase;
 
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     ${BodyCaps}
   }
 `;

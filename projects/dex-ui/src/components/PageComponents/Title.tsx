@@ -3,6 +3,7 @@ import { FC } from "src/types";
 import styled from "styled-components";
 import { BodyL, BodyXS, H2 } from "../Typography";
 import { Link } from "react-router-dom";
+import { size } from "src/breakpoints";
 
 type Props = {
   title: string;
@@ -39,7 +40,7 @@ const Container = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     justify-content: start;
   }
 `;
@@ -53,7 +54,7 @@ const TitleText = styled.div<TitleProps>`
   ${BodyL}
   ${(props) => props.fontWeight && `font-weight: ${props.fontWeight}`};
   text-transform: uppercase;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${({ largeOnMobile }) => (largeOnMobile ? `${H2}` : `${BodyXS}`)}
   }
 `;
@@ -62,7 +63,7 @@ const ParentText = styled(Link)`
   color: #9CA3AF;
   text-decoration: none;
   text-transform: uppercase;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;

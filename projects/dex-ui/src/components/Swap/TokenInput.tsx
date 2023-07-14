@@ -8,6 +8,7 @@ import { TokenPicker } from "./TokenPicker";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { Spinner } from "../Spinner";
 import { BodyXS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type ContainerProps = {
   width: string;
@@ -168,7 +169,7 @@ const Container = styled.div<ContainerProps>`
   :hover {
     outline: 2px solid #46b955;
   }
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     height: ${(props) => (props.showBalance ? `72px` : `48px`)};
     padding: 12px;
   }
@@ -195,7 +196,7 @@ const Balance = styled.div`
   text-decoration: underline;
   text-decoration-thickness: 1px;
   cursor: pointer;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;

@@ -1,6 +1,7 @@
 import { Token } from "@beanstalk/sdk";
 import React from "react";
 import { images } from "src/assets/images/tokens";
+import { size } from "src/breakpoints";
 import { FC } from "src/types";
 import styled from "styled-components";
 
@@ -40,7 +41,7 @@ const Container = styled.div<ContainerProps>`
     height: ${(props) => props.height}px;
   }
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     width: ${(props) => props.mobileWidth}px;
     height: ${(props) => props.mobileHeight}px;
     img {

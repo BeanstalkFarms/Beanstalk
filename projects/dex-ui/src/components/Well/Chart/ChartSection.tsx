@@ -9,6 +9,7 @@ import { TabButton } from "src/components/TabButton";
 import useWellChartData from "src/wells/useWellChartData";
 import { ChartContainer } from "./ChartStyles";
 import { BottomDrawer } from "src/components/BottomDrawer";
+import { size } from "src/breakpoints";
 
 export const ChartSection: FC<{ well: Well }> = ({ well }) => {
   const [tab, setTab] = useState(0);
@@ -186,13 +187,13 @@ const ChartLoader = styled(ChartContainer)`
 `;
 
 const DesktopRow = styled(Row)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const MobileRow = styled(Row)`
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -213,7 +214,7 @@ const Dropdown = styled.div<{ enabled: boolean }>`
   width: 120px;
   visibility: ${(props) => (props.enabled ? "visible" : "hidden")};
   z-index: 100;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     top: 41px;
   }
 `;
@@ -250,7 +251,7 @@ const FilterButton = styled.div`
   :hover {
     background-color: #f0fdf4;
   }
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     height: 40px;
   }
 `;

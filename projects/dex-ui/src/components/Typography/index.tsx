@@ -1,3 +1,4 @@
+import { size } from "src/breakpoints";
 import styled, { css } from "styled-components";
 
 export const H1 = styled.h1`
@@ -90,7 +91,7 @@ type NudgeProps = { amount: number; mobileAmount?: number };
 export const TextNudge = styled.div<NudgeProps>`
   margin-top: ${({ amount }) => amount}px;
   margin-bottom: ${({ amount }) => -1 * amount}px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     margin-top: ${(props) => props.mobileAmount || props.amount}px;
     margin-bottom: ${(props) => -1 * (props.mobileAmount || props.amount)}px;
   }

@@ -23,6 +23,7 @@ import { OtherSection } from "src/components/Well/OtherSection";
 import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
+import { size } from "src/breakpoints";
 
 export const Well = () => {
   const sdk = useSdk();
@@ -219,10 +220,10 @@ const ContentWrapper = styled.div`
   justify-content: flex-start;
   align-content: center;
   gap: 24px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     height: 1400px;
   }
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     flex-flow: column nowrap;
   }
 `;
@@ -238,7 +239,7 @@ const Header = styled.div`
   line-height: 32px;
   gap: 24px;
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     font-size: 24px;
     gap: 8px;
   }
@@ -253,7 +254,7 @@ const TokenLogos = styled.div`
 
 const HeaderContainer = styled(Row)`
   width: ${leftColumnWidth}px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: flex;
     width: 100%;
     flex-direction: column;
@@ -266,7 +267,7 @@ const HeaderContainer = styled(Row)`
 const ReservesContainer = styled.div`
   width: 100%;
   order: 3;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     width: ${leftColumnWidth}px;
     order: 0;
   }
@@ -275,7 +276,7 @@ const ReservesContainer = styled.div`
 const ChartContainer = styled.div`
   width: 100%;
   order: 4;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     width: ${leftColumnWidth}px;
     order: 0;
   }
@@ -284,7 +285,7 @@ const ChartContainer = styled.div`
 const ActivityOtherButtons = styled(Row)`
   width: 100%;
   order: 5;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     width: ${leftColumnWidth}px;
     order: 0;
   }
@@ -297,7 +298,7 @@ const StickyDetector = styled.div`
   background-color: transparent;
   margin-bottom: -24px;
   order: 2;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -310,7 +311,7 @@ const LiquiditySwapButtons = styled(Row)<{ sticky?: boolean }>`
   top: 0px;
   z-index: 10;
   transition: all 0.3s ease-in-out;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     margin-top: 48px;
     width: ${rightColumnWidth}px;
     position: relative;
@@ -320,7 +321,7 @@ const LiquiditySwapButtons = styled(Row)<{ sticky?: boolean }>`
 `;
 
 const StyledItem = styled(Item)`
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     align-items: end;
   }
 `;
@@ -330,7 +331,7 @@ const BottomContainer = styled.div`
   gap: 24px;
   width: 100%;
   order: 6;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     width: ${leftColumnWidth}px;
     order: 0;
   }
@@ -338,21 +339,21 @@ const BottomContainer = styled.div`
 
 const FunctionName = styled.div`
   ${BodyL}
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyS}
   }
 `;
 const Fee = styled.div`
   ${BodyS}
   color: #4B5563;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;
 
 const LiquidityBoxContainer = styled.div`
   width: ${rightColumnWidth}px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -363,7 +364,7 @@ const LearnMoreContainer = styled.div`
   gap: 16px;
   order: 1;
   width: 100%;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     width: ${rightColumnWidth}px;
     gap: 24px;
     order: 0;
@@ -372,7 +373,7 @@ const LearnMoreContainer = styled.div`
 const LearnMoreLabel = styled.div`
   display: flex;
   flex-direction: row;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -401,7 +402,7 @@ const LearnMoreButtons = styled.div<{ open: boolean }>`
   ${(props) => (props.open ? "display: flex" : "display: none")};
   flex-direction: column;
   gap: 16px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: flex;
     gap: 24px;
   }
@@ -409,7 +410,7 @@ const LearnMoreButtons = styled.div<{ open: boolean }>`
 
 const ColumnBreak = styled.div`
   display: none;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: block;
     flex-basis: 100%;
     width: 0px;

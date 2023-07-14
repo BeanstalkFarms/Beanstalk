@@ -2,6 +2,7 @@ import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { BodyS, BodyXS } from "./Typography";
+import { size } from "src/breakpoints";
 
 interface Composition {
   Header: typeof Header;
@@ -30,7 +31,7 @@ const Header = styled.div`
   flex-direction: row;
   padding: 12px 16px;
   justify-content: space-between;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     padding: 8px 12px;
   }
 `;
@@ -41,7 +42,7 @@ const Body = styled.div`
   flex: 2;
   padding: 20px 16px;
   gap: 8px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     padding: 12px 12px;
     ${BodyXS}
   }
@@ -59,7 +60,7 @@ const Row = styled.div`
   flex-direction: row;
   justify-content: space-between;
   ${BodyS}
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
 `;

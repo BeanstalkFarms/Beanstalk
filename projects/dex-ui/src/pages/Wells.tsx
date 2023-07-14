@@ -13,6 +13,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
+import { size } from "src/breakpoints";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -219,13 +220,13 @@ export const Wells = () => {
 };
 
 const TableRow = styled(Row)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     height: 66px;
   }
 `;
 
 const StyledRow = styled(TabRow)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     position: fixed;
     width: 100vw;
     margin-left: -12px;
@@ -235,14 +236,14 @@ const StyledRow = styled(TabRow)`
 `;
 
 const DesktopContainer = styled(Td)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `
 
 const MobileContainer = styled(Td)`
   padding: 8px 16px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -250,13 +251,13 @@ const MobileContainer = styled(Td)`
 const MobileHeader = styled(Th)`
   font-size: 14px;
   padding: 8px 16px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
 
 const DesktopHeader = styled(Th)`
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `
@@ -265,7 +266,7 @@ const WellDetail = styled.div`
   display: flex;
   flex-direction: row;
   gap: 8px;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     flex-direction: column;
   }
 `;
@@ -281,7 +282,7 @@ const TokenSymbols = styled.div`
   line-height: 24px;
   margin-top: 8px;
   color: #1c1917;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     font-size: 14px;
   }
 `;
@@ -292,7 +293,7 @@ const Amount = styled.div`
   line-height: 24px;
   color: #1c1917;
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     font-size: 14px;
     font-weight: normal;
   }
@@ -327,7 +328,7 @@ const NoLPRow = styled.td`
   background-color: #fff;
   height: 120px;
   border-bottom: 0.5px solid #9ca3af;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -336,7 +337,7 @@ const NoLPRowMobile = styled.td`
   background-color: #fff;
   height: 120px;
   border-bottom: 0.5px solid #9ca3af;
-  @media (min-width: 475px) {
+  @media (min-width: ${size.mobile}) {
     display: none;
   }
 `;
@@ -346,7 +347,7 @@ const NoLPMessage = styled.div`
   justify-content: center;
   color: #4b5563;
 
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     font-size: 14px;
   }
 `;
@@ -354,7 +355,7 @@ const NoLPMessage = styled.div`
 const WellLPBalance = styled.div`
   font-size: 20px;
   line-height: 24px;
-  @media (max-width: 475px) {
+  @media (max-width: ${size.mobile}) {
     font-size: 14px;
     font-weight: normal;
   }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ToastBar, Toaster } from "react-hot-toast";
 import { Error, Success } from "../Icons";
+import { size } from "src/breakpoints";
 
 function useMedia(query: string) {
   const [matches, setMatches] = useState(window.matchMedia(query).matches);
@@ -19,7 +20,7 @@ function useMedia(query: string) {
 }
 
 export default function CustomToaster() {
-  const mobile = useMedia("(max-width: 475px)");
+  const mobile = useMedia(`(max-width: ${size.mobile})`);
 
   return (
     <Toaster

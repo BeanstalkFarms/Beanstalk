@@ -1,3 +1,4 @@
+import { size } from "src/breakpoints";
 import styled from "styled-components";
 
 export const Table = styled.table`
@@ -38,7 +39,7 @@ export const THead = styled.thead`
     background-color: #f9f9f9;
     border-bottom: 0.5px solid #9ca3af;
 
-    @media (max-width: 475px) {
+    @media (max-width: ${size.mobile}) {
       height: 34px;
     }
   }
