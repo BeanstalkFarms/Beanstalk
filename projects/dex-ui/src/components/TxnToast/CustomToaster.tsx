@@ -56,6 +56,7 @@ export default function CustomToaster() {
           alignItems: "center",
           minWidth: mobile ? "calc(100% - 12px)" : 300,
           maxWidth: mobile ? "calc(100% - 12px)" : 300,
+          marginBottom: mobile ? 48 : 0,
           minHeight: 34,
           borderRadius: 0,
           outline: "0.5px solid #000",
