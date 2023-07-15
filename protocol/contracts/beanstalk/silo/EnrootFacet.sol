@@ -22,7 +22,7 @@ contract EnrootFacet is ReentrancyGuard {
     event RemoveDeposit(
         address indexed account,
         address indexed token,
-        int128 stem,
+        int96 stem,
         uint256 amount,
         uint256 bdv
     );

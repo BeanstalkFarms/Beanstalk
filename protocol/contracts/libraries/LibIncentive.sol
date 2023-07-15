@@ -56,11 +56,6 @@ library LibIncentive {
      * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
-     *
-     * Price calculation:
-     * `X := BEAN / USD`
-     * `Y := ETH / USDC`
-     * `Y / X := (ETH/USDC)/(BEAN/USD) := ETH / BEAN` (assuming 1 USD == 1 USDC)
      */
     function determineReward(uint256 initialGasLeft, uint256 blocksLate)
         internal
