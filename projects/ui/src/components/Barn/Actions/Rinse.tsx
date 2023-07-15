@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import { Token, TokenValue } from '@beanstalk/sdk';
+import { Token, TokenValue, FarmToMode } from '@beanstalk/sdk';
 import {
   FormTxnsFormState,
   SmartSubmitButton,
@@ -15,7 +15,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import TransactionToast from '~/components/Common/TxnToast';
 import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
+
 import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { ActionType } from '~/util/Actions';

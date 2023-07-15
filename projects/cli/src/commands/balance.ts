@@ -30,7 +30,8 @@ async function getBal(sdk, symbol: string, account: string) {
       chalk.green(bal.external.toHuman()),
       chalk.greenBright(bal.total.toHuman())
     ];
-  } catch (e) {
+  } catch (e: any) {
+    console.log(e.message);
     return [chalk.red(token.symbol), " -- ", " -- ", " -- "];
   }
 }

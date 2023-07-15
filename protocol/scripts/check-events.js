@@ -1,7 +1,7 @@
 /**
  * check-events.js
  * ---------------
- * 
+ *
  * Throughout Beanstalk, events are often copied between facets and libraries.
  * This script checks that events are consistent across all individual ABIs.
  */
@@ -19,10 +19,10 @@ const getFacetName = (file) => {
 
 const pattern = path.join(".", "contracts", "beanstalk", "**", "*Facet.sol");
 const files = glob.sync(pattern);
-const eventNameToItem  = new Map();
+const eventNameToItem = new Map();
 const eventNameToFiles = new Map();
 
-console.log("Searching: ", pattern, files.length)
+console.log("Searching: ", pattern, files.length);
 
 files.forEach((file) => {
   const facetName = getFacetName(file);
@@ -32,28 +32,29 @@ files.forEach((file) => {
   const json = JSON.parse(fs.readFileSync(jsonFileLoc));
   const abi = json.abi;
 
-  abi.filter((item) => item.type == "event").forEach((item) => {
-    // If event already exists, compare new version to previous version
-    const existingEvent = eventNameToItem.get(item.name);
-    if (existingEvent) {
-      // Compare inputs, the order and length of the arrays should match
-      item.inputs.forEach((input, index) => {
-        if (input.name !== existingEvent.inputs[index].name || input.type !== existingEvent.inputs[index].type) {
-          console.error("Event mismatch", {
-            new: input,
-            existing: existingEvent.inputs[index]
-          })
-          throw new Error("Event mismatch")
-        }
-      })
+  abi
+    .filter((item) => item.type == "event")
+    .forEach((item) => {
+      // If event already exists, compare new version to previous version
+      const existingEvent = eventNameToItem.get(item.name);
+      if (existingEvent) {
+        // Compare inputs, the order and length of the arrays should match
+        item.inputs.forEach((input, index) => {
+          if (input.name !== existingEvent.inputs[index].name || input.type !== existingEvent.inputs[index].type) {
+            console.error("Event mismatch", {
+              new: input,
+              existing: existingEvent.inputs[index]
+            });
+            throw new Error("Event mismatch");
+          }
+        });
 
-      eventNameToFiles.set(item.name, [...eventNameToFiles.get(item.name), file])
-    } else {
-      eventNameToItem.set(item.name, item);
-      eventNameToFiles.set(item.name, [file]);
-    }
-  });
-  
+        eventNameToFiles.set(item.name, [...eventNameToFiles.get(item.name), file]);
+      } else {
+        eventNameToItem.set(item.name, item);
+        eventNameToFiles.set(item.name, [file]);
+      }
+    });
 });
 
-console.log(eventNameToFiles)
+console.log(eventNameToFiles);

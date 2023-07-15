@@ -1,19 +1,19 @@
-import BigNumber from 'bignumber.js';
+import BigNumberJS from 'bignumber.js';
 
 export type BeanstalkField = {
   /**
    * The number of Pods that have become Harvestable.
    */
-  harvestableIndex: BigNumber;
+  harvestableIndex: BigNumberJS;
   /**
    * The total number of Pods ever minted.
    */
-  podIndex: BigNumber;
+  podIndex: BigNumberJS;
   /**
    * The current length of the Pod Line.
    * podLine = podIndex - harvestableIndex.
    */
-  podLine: BigNumber;
+  podLine: BigNumberJS;
   /**
    * The total number of Pods ever minted.
    * `totalPods = podIndex + harvestableIndex`
@@ -22,7 +22,7 @@ export type BeanstalkField = {
   /**
    * The amount of available Soil.
    */
-  soil: BigNumber;
+  soil: BigNumberJS;
   /**
    * Facets of the Weather.
    * The commonly-addressed numerical value for "Weather" is
@@ -30,15 +30,15 @@ export type BeanstalkField = {
    * change in the Weather yield and available Soil over time.
    */
   weather: {
-    lastDSoil: BigNumber;
-    lastSowTime: BigNumber;
-    thisSowTime: BigNumber;
+    lastDSoil: BigNumberJS;
+    lastSowTime: BigNumberJS;
+    thisSowTime: BigNumberJS;
   };
 
   temperature: {
     /** The max temperature for this season. */
-    max: BigNumber;
+    max: BigNumberJS;
     /** adjusted temperature for this season */
-    scaled: BigNumber;
+    scaled: BigNumberJS;
   };
 };

@@ -5,11 +5,32 @@ const jestConfig: JestConfigWithTsJest = {
     {
       // @ts-ignore
       preset: "ts-jest",
+      displayName: "sdk-wells",
+      rootDir: "projects/sdk-wells",
+      testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)", "<rootDir>/test/**/?(*.)+(spec|test).[jt]s?(x)"],
+      moduleNameMapper: {
+        "@beanstalk/wells/(.*)$": "<rootDir>/src/$1",
+        "^src/(.*)$": "<rootDir>/src/$1"
+      }
+    },
+    {
+      // @ts-ignore
+      preset: "ts-jest",
       displayName: "sdk",
       rootDir: "projects/sdk",
-      testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)"],
+      testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)", "<rootDir>/test/**/?(*.)+(spec|test).[jt]s?(x)"],
       moduleNameMapper: {
         "@sdk/(.*)$": "<rootDir>/src/$1",
+        "^src/(.*)$": "<rootDir>/src/$1"
+      }
+    },
+    {
+      // @ts-ignore
+      preset: "ts-jest",
+      displayName: "sdk-core",
+      rootDir: "projects/sdk-core",
+      testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)"],
+      moduleNameMapper: {
         "^src/(.*)$": "<rootDir>/src/$1"
       }
     },

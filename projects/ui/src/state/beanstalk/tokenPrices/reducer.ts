@@ -7,7 +7,6 @@ const initialState: TokenPrices = {};
 export default createReducer(initialState, (builder) =>
   builder
     .addCase(updateTokenPrices, (state, { payload }) => {
-      console.log('updating token prices...');
       return { ...payload };
     })
     .addCase(resetTokenPrices, () => ({ ...initialState }))

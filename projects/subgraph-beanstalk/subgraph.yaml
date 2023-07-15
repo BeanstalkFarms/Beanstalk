@@ -17,11 +17,11 @@ dataSources:
         - Silo-Replanted
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: AddDeposit(indexed address,indexed address,uint32,uint256,uint256)
           handler: handleAddDeposit
@@ -62,13 +62,13 @@ dataSources:
         - Field
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: WeatherChange(indexed uint256,uint256,int8)
           handler: handleWeatherChange
@@ -102,11 +102,11 @@ dataSources:
         - Season
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
@@ -130,11 +130,11 @@ dataSources:
         - Season
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,bool)
           handler: handlePodListingCreated
@@ -164,11 +164,11 @@ dataSources:
         - Marketplace-Replanted
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-Replanted.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint8)
           handler: handlePodListingCreated_v1_1
@@ -188,7 +188,7 @@ dataSources:
         - Diamond
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
           handler: handleDiamondCut
@@ -208,9 +208,9 @@ dataSources:
         - Bean
       abis:
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: Beanstalk
-          file: ./abis/Beanstalk.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleLegacyTransfer
@@ -230,9 +230,9 @@ dataSources:
         - Bean
       abis:
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: Beanstalk
-          file: ./abis/Beanstalk.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -252,11 +252,11 @@ dataSources:
         - Replant
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: Chop(indexed address,indexed address,uint256,uint256)
           handler: handleChop
@@ -276,13 +276,13 @@ dataSources:
         - Season-Replanted
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Reward(indexed uint32,uint256,uint256,uint256)
           handler: handleReward
@@ -306,9 +306,9 @@ dataSources:
         - Fertilizer
       abis:
         - name: Fertilizer
-          file: ./abis/Fertilizer.json
+          file: ../subgraph-core/abis/Fertilizer.json
         - name: Beanstalk
-          file: ./abis/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
       eventHandlers:
         - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
           handler: handleTransferBatch
@@ -330,9 +330,9 @@ dataSources:
         - Farm
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: InternalBalanceChanged(indexed address,indexed address,int256)
           handler: handleInternalBalanceChanged
@@ -352,9 +352,9 @@ dataSources:
         - Silo
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-Replanted.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       callHandlers:
         - function: transferDeposit(address,address,uint32,uint256)
           handler: handleTransferDepositCall
@@ -376,11 +376,11 @@ dataSources:
         - PodMarketplaceV2
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint256,bytes,uint8,uint8)
           handler: handlePodListingCreated_v2

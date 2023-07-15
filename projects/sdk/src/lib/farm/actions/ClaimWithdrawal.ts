@@ -1,7 +1,15 @@
-import { BasicPreparedResult, RunContext, Step, StepClass } from "src/classes/Workflow";
+import { BasicPreparedResult, RunContext, StepClass } from "src/classes/Workflow";
 import { ethers } from "ethers";
 import { FarmToMode } from "../types";
 
+/**
+ * @deprecated The `claimWithdrawal` contract function was removed from regular
+ * usage in the Silo V3 upgrade to Beanstalk. The function remains on a legacy
+ * facet for backwards compatibility, but it's only use is to claim withdrawals
+ * that were initiated before the upgrade.
+ *
+ * See: contracts/beanstalk/silo/SiloFacet/LegacyClaimWithdrawalFacet.sol
+ */
 export class ClaimWithdrawal extends StepClass<BasicPreparedResult> {
   public name: string = "claimWithdrawal";
 
@@ -10,11 +18,6 @@ export class ClaimWithdrawal extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    ClaimWithdrawal.sdk.debug(`[${this.name}.run()]`, {
-      tokenIn: this._tokenIn,
-      seasons: this._season,
-      to: this._to
-    });
     return {
       name: this.name,
       amountOut: _amountInStep,

@@ -1,5 +1,5 @@
-import { Token } from "./Token";
-import { TokenValue } from "src/classes/TokenValue";
+import { Token } from "@beanstalk/sdk-core";
+import { TokenValue } from "@beanstalk/sdk-core";
 
 export class BeanstalkToken extends Token {
   public getContract() {

@@ -1,16 +1,13 @@
-import { ethers } from 'ethers';
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useProvider } from 'wagmi';
-import flattenDeep from 'lodash/flattenDeep';
+import type { EventManager } from '@beanstalk/sdk';
 import useChainId from '~/hooks/chain/useChainId';
-import { Event } from '~/lib/Beanstalk/EventProcessor';
 import useEventCache from '~/hooks/farmer/useEventCache';
 import useAccount from '~/hooks/ledger/useAccount';
-import { EventCacheName } from '.';
 import { ingestEvents } from './actions';
 
-export type GetQueryFilters = (
+export type GetEventsFn = (
   /**
    * The Farmer account which we're querying against.
    */
@@ -27,33 +24,7 @@ export type GetQueryFilters = (
    * placed block or block tag (likely 'latest').
    */
   toBlock?: number | undefined
-) => Promise<ethers.Event[]>[];
-
-export const reduceEvent = (prev: Event[], e: ethers.Event) => {
-  try {
-    prev.push({
-      event: e.event,
-      args: e.args,
-      blockNumber: e.blockNumber,
-      logIndex: e.logIndex,
-      transactionHash: e.transactionHash,
-      transactionIndex: e.transactionIndex,
-    });
-  } catch (err) {
-    console.error(
-      `Failed to parse event ${e.event} ${e.transactionHash}`,
-      err,
-      e
-    );
-  }
-  return prev;
-};
-
-export const sortEvents = (a: Event, b: Event) => {
-  const diff = a.blockNumber - b.blockNumber;
-  if (diff !== 0) return diff;
-  return a.logIndex - b.logIndex;
-};
+) => Promise<EventManager.Event[]>;
 
 /**
  * Design notes (Silo Chad)
@@ -118,10 +89,9 @@ export const sortEvents = (a: Event, b: Event) => {
  *  - The data source that last worked
  *    - Even if there are events loaded, we should know whether the visible data came from events or subgraph
  */
-
 export default function useEvents(
-  cacheName: EventCacheName,
-  getQueryFilters: GetQueryFilters
+  cacheName: EventManager.Group,
+  getEvents: GetEventsFn
 ) {
   const dispatch = useDispatch();
   const chainId = useChainId();
@@ -150,28 +120,20 @@ export default function useEvents(
       if (startBlockNumber && startBlockNumber > endBlockNumber)
         return existingEvents;
 
-      /// if a starting block isn't provided, getQueryFilters will
-      /// fall back to the most efficient block for a given query.
-      const filters = getQueryFilters(
-        account,
-        startBlockNumber,
-        endBlockNumber
-      );
-
-      ///
       console.debug(`[useEvents] ${cacheName}: fetching events`, {
         cacheId: cacheName,
         startBlockNumber,
         endBlockNumber,
-        filterCount: filters.length,
         cacheEndBlockNumber: cache?.endBlockNumber,
       });
 
-      /// Flatten into single-layer events array.
-      const results = await Promise.all(filters); // [[0,1,2],[0,1],...]
-      const newEvents = flattenDeep<ethers.Event>(results)
-        .reduce<Event[]>(reduceEvent, [])
-        .sort(sortEvents); // [0,0,1,1,2]
+      /// if a starting block isn't provided, getQueryFilters will
+      /// fall back to the most efficient block for a given query.
+      const newEvents = await getEvents(
+        account,
+        startBlockNumber,
+        endBlockNumber
+      );
 
       console.debug(
         `[useEvents] ${cacheName}: fetched ${newEvents.length} new events`
@@ -201,7 +163,7 @@ export default function useEvents(
       cache?.events,
       cacheName,
       chainId,
-      getQueryFilters,
+      getEvents,
       provider,
     ]
   );

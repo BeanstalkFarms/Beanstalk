@@ -10,7 +10,6 @@ export class UnwrapEth extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    UnwrapEth.sdk.debug(`[${this.name}.run()]`, { fromMode: this.fromMode, _amountInStep, context });
     return {
       name: this.name,
       amountOut: _amountInStep, // amountInStep should be an amount of ETH.

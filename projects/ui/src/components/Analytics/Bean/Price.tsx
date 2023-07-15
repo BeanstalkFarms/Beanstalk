@@ -19,7 +19,7 @@ const statProps = {
   gap: 0.25,
 };
 const lineChartProps: Partial<LineChartProps> = {
-  isTWAP: true,
+  pegLine: true,
   yTickFormat: tickFormatBeanPrice,
 };
 

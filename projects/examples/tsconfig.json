@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
-    // "moduleResolution": "node16",
+    // "moduleResolution": "node16",  // this may be needed to import package exports
+    "inlineSourceMap": true,
     "noImplicitAny": false,
     "lib": ["dom"]
   },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Chip, Link, Tooltip, Typography } from '@mui/material';
+import { Chip, Tooltip, Typography } from '@mui/material';
 import {
   GridColumns,
   GridRenderCellParams,
@@ -7,15 +7,13 @@ import {
 } from '@mui/x-data-grid';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import BigNumber from 'bignumber.js';
-import { displayBN, displayFullBN, MaxBN, trimAddress } from '~/util';
+import { displayBN, displayFullBN, MaxBN } from '~/util';
 import { BEAN, PODS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { PodListing, PodOrder } from '~/state/farmer/market';
 import TokenIcon from '../TokenIcon';
 import AddressIcon from '../AddressIcon';
 import Row from '~/components/Common/Row';
-import { WellActivityData } from '~/components/Market/Wells/Tables';
-import { Token } from '~/classes';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 const basicCell = (params: GridRenderCellParams) => (
@@ -26,17 +24,18 @@ const COLUMNS = {
   ///
   /// Generics
   ///
-  season: {
-    field: 'season',
+  depositId: (header: string) => ({
+    // The field is always `stem`, we just change the header for legacy seasons
+    field: 'stem',
     flex: 0.8,
-    headerName: 'Season',
+    headerName: header,
     align: 'left',
     headerAlign: 'left',
     valueFormatter: (params: GridValueFormatterParams) =>
       params.value.toString(),
     renderCell: basicCell,
     sortable: false,
-  } as GridColumns[number],
+  }),
 
   ///
   /// Silo
@@ -249,79 +248,6 @@ const COLUMNS = {
             )}
           </Typography>
         </Tooltip>
-      ),
-    } as GridColumns[number]),
-
-  ///
-  /// DEX
-  ///
-  ///
-  label: (flex: number, tabs: any) =>
-    ({
-      field: 'label',
-      headerName: 'Type',
-      renderHeader: () => tabs,
-      flex: flex,
-      align: 'left',
-      headerAlign: 'left',
-      sortable: false,
-      renderCell: (params: GridRenderCellParams<any, WellActivityData>) => (
-        <Link
-          href={`https://etherscan.io/tx/${params.row.hash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Typography>{params.row.label}</Typography>
-        </Link>
-      ),
-    } as GridColumns[number]),
-  tokenAmount: (column: string, token: Token, flex: number) =>
-    ({
-      field: column,
-      headerName: 'Token Amount',
-      flex: flex,
-      align: 'left',
-      headerAlign: 'left',
-      renderCell: (params: GridRenderCellParams<any, WellActivityData>) => (
-        <Typography>
-          {displayBN(params.row.tokenAmount0)} {token.symbol}
-        </Typography>
-      ),
-    } as GridColumns[number]),
-  totalValue: (flex: number) =>
-    ({
-      field: 'totalValue',
-      headerName: 'Total Value',
-      flex: flex,
-      align: 'left',
-      headerAlign: 'left',
-      renderCell: (params: GridRenderCellParams<any, WellActivityData>) => (
-        <Typography>{displayBN(params.row.totalValue)}</Typography>
-      ),
-    } as GridColumns[number]),
-  account: (flex: number) =>
-    ({
-      field: 'account',
-      headerName: 'Account',
-      flex: flex,
-      align: 'right',
-      headerAlign: 'right',
-      renderCell: (params: GridRenderCellParams<any, WellActivityData>) => (
-        <Link>
-          <Typography>{trimAddress(params.row.account)}</Typography>
-        </Link>
-      ),
-    } as GridColumns[number]),
-
-  time: (flex: number) =>
-    ({
-      field: 'time',
-      headerName: 'Time',
-      flex: flex,
-      align: 'right',
-      headerAlign: 'right',
-      renderCell: (params: GridRenderCellParams<any, WellActivityData>) => (
-        <Typography>{params.row.time}</Typography>
       ),
     } as GridColumns[number]),
 

@@ -151,24 +151,24 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     });
   }
 
-    /**
+  /**
    * Setup edges to removeLiquidityOneToken to Curve 3pool.
    *
    * 3CRV => USDT
    */
-    {
-      const from = sdk.tokens.CRV3
-      const targetToken = sdk.tokens.USDT;
-      const pool = sdk.contracts.curve.pools.pool3;
-      const registry = sdk.contracts.curve.registries.poolRegistry.address;
-      graph.setEdge(from.symbol, targetToken.symbol, {
-          build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-            new sdk.farm.actions.RemoveLiquidityOneToken(pool.address, registry, targetToken.address, fromMode, toMode),
-          from: from.symbol,
-          to: targetToken.symbol,
-          label: "removeLiquidityOneToken"
-        });
-     }
+  {
+    const from = sdk.tokens.CRV3;
+    const targetToken = sdk.tokens.USDT;
+    const pool = sdk.contracts.curve.pools.pool3;
+    const registry = sdk.contracts.curve.registries.poolRegistry.address;
+    graph.setEdge(from.symbol, targetToken.symbol, {
+      build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        new sdk.farm.actions.RemoveLiquidityOneToken(pool.address, registry, targetToken.address, fromMode, toMode),
+      from: from.symbol,
+      to: targetToken.symbol,
+      label: "removeLiquidityOneToken"
+    });
+  }
 
   /**
    * Handle WETH / ETH
@@ -210,8 +210,29 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       from: "DAI",
       to: "BEAN"
     });
-
   }
+
+  /**
+   * DO NOT TURN THIS ON YET. Doing so will FORCE all ETH<>BEAN trades
+   * through the Well, and it may not be ready/have enough liquidity/etc...
+   */
+  // /**
+  //  * Well Swap: WETH => BEAN
+  //  */
+  // {
+  //   graph.setEdge("WETH", "BEAN", {
+  //     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //       sdk.farm.presets.wellWethBean(sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+  //     from: "WETH",
+  //     to: "BEAN"
+  //   });
+  //   graph.setEdge("BEAN", "WETH", {
+  //     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //       sdk.farm.presets.wellWethBean(sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+  //     from: "BEAN",
+  //     to: "WETH"
+  //   });
+  // }
 
   return graph;
 };

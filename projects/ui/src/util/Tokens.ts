@@ -71,14 +71,21 @@ export function TrimBN(
 export function displayFullBN(
   _bn: BigNumber | TokenValue,
   maxDecimals: number = 18,
-  minDecimals: number = 0
+  minDecimals: number = 0,
+  tildeNearZero: boolean = false
 ) {
   const bn = BigNumber.isBigNumber(_bn) ? _bn : tokenValueToBN(_bn);
 
-  return bn.toNumber().toLocaleString('en-US', {
+  const amt = bn.toNumber().toLocaleString('en-US', {
     minimumFractionDigits: minDecimals,
     maximumFractionDigits: maxDecimals,
   });
+
+  if (bn.gt(0) && amt === '0' && tildeNearZero) {
+    return '~0';
+  }
+
+  return amt;
 }
 
 /**

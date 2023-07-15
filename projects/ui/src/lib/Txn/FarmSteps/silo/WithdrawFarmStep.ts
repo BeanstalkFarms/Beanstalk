@@ -1,13 +1,13 @@
 import {
   BeanstalkSDK,
+  Deposit,
+  FarmToMode,
+  ERC20Token,
   Token,
-  TokenSiloBalance,
   TokenValue,
+  FarmFromMode,
 } from '@beanstalk/sdk';
 import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
-
-// @REMOVEME
-type DepositCrate = TokenSiloBalance['deposited']['crates'][number];
 
 type WithdrawResult = ReturnType<typeof WithdrawFarmStep['calculateWithdraw']>;
 
@@ -16,8 +16,8 @@ export class WithdrawFarmStep extends FarmStep {
 
   constructor(
     _sdk: BeanstalkSDK,
-    private _token: Token,
-    private _crates: DepositCrate[]
+    private _token: ERC20Token,
+    private _crates: Deposit[]
   ) {
     super(_sdk);
     this._token = _token;
@@ -32,6 +32,8 @@ export class WithdrawFarmStep extends FarmStep {
     // amountIn excluding plant amount
     _amountIn: TokenValue,
     season: number,
+    toMode: FarmToMode,
+    tokenOut?: ERC20Token,
     plant?: PlantAndDoX
   ) {
     this.clear();
@@ -51,30 +53,58 @@ export class WithdrawFarmStep extends FarmStep {
     if (!result || !result.crates.length) {
       throw new Error('Nothing to Withdraw.');
     }
+    if (!tokenOut && this._token.isLP) {
+      throw new Error('Must specify Output Token');
+    }
 
-    const seasons = result.crates.map((crate) => crate.season.toString());
+    const removeLiquidity =
+      this._token.isLP && tokenOut && !this._token.equals(tokenOut);
+
+    const pool = removeLiquidity
+      ? this._sdk.pools.getPoolByLPToken(this._token)
+      : undefined;
+
+    const withdrawToMode = removeLiquidity ? FarmToMode.INTERNAL : toMode;
+
+    console.log('removeLIquidity: ', removeLiquidity);
+
+    // FIXME
+    const stems = result.crates.map((crate) => crate.stem.toString());
     const amounts = result.crates.map((crate) => crate.amount.blockchainString);
 
-    if (seasons.length === 0) {
+    if (stems.length === 0) {
       throw new Error('Malformatted crates.');
-    } else if (seasons.length === 1) {
+    } else if (stems.length === 1) {
       this.pushInput({
         input: new this._sdk.farm.actions.WithdrawDeposit(
           this._token.address,
-          seasons[0],
-          amounts[0]
+          stems[0],
+          amounts[0],
+          withdrawToMode
         ),
       });
     } else {
       this.pushInput({
         input: new this._sdk.farm.actions.WithdrawDeposits(
           this._token.address,
-          seasons,
-          amounts
+          stems,
+          amounts,
+          withdrawToMode
         ),
       });
     }
 
+    if (removeLiquidity && tokenOut && pool) {
+      const removeStep = new this._sdk.farm.actions.RemoveLiquidityOneToken(
+        pool.address,
+        this._sdk.contracts.curve.registries.metaFactory.address,
+        tokenOut.address,
+        FarmFromMode.INTERNAL_TOLERANT,
+        toMode
+      );
+      this.pushInput({ input: removeStep });
+      console.debug('[WithdrawFarmStep][build] removing liquidity', removeStep);
+    }
     console.debug('[WithdrawFarmStep][build]: ', this.getFarmInput());
 
     return this;
@@ -83,7 +113,7 @@ export class WithdrawFarmStep extends FarmStep {
   static calculateWithdraw(
     siloWithdraw: BeanstalkSDK['silo']['siloWithdraw'],
     whitelistedToken: Token,
-    _crates: DepositCrate[],
+    _crates: Deposit[],
     _amountIn: TokenValue,
     season: number,
     plant?: PlantAndDoX

@@ -1,7 +1,7 @@
 import { GraphQLClient } from "graphql-request";
 import { ethers } from "ethers";
 import { enumFromValue } from "src/utils";
-import { addresses, ChainId } from "src/constants";
+import { addresses } from "src/constants";
 import { Tokens } from "./tokens";
 import { Contracts } from "./contracts";
 import { EventManager } from "./events/EventManager";
@@ -12,10 +12,11 @@ import { Permit } from "./permit";
 import { Root } from "./root";
 import { Sdk as Queries, getSdk as getQueries } from "../constants/generated-gql/graphql";
 import { Swap } from "src/lib/swap/Swap";
-import { TokenValue } from "src/classes/TokenValue";
 import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
+import { WellsSDK } from "@beanstalk/wells";
+import { ChainId } from "@beanstalk/sdk-core";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -45,7 +46,6 @@ export class BeanstalkSDK {
   public subgraphUrl: string;
 
   public readonly chainId: ChainId;
-
   public readonly addresses: typeof addresses;
   public readonly contracts: Contracts;
   public readonly tokens: Tokens;
@@ -61,6 +61,7 @@ export class BeanstalkSDK {
   public readonly root: Root;
   public readonly swap: Swap;
   public readonly bean: Bean;
+  public readonly wells: WellsSDK;
 
   constructor(config?: BeanstalkConfig) {
     this.handleConfig(config);
@@ -91,6 +92,9 @@ export class BeanstalkSDK {
     // Ecosystem
     this.root = new Root(this);
     this.swap = new Swap(this);
+
+    // Wells
+    this.wells = new WellsSDK(config);
   }
 
   debug(...args: any[]) {
@@ -148,5 +152,32 @@ export class BeanstalkSDK {
     const account = await this.signer.getAddress();
     if (!account) throw new Error("Failed to get account from signer");
     return account.toLowerCase();
+  }
+
+  /**
+   * This methods helps serialize the SDK object. When used in a react
+   * dependency array, the signer and provider objects have circular references
+   * which cause errors. This overrides the result and allows using the sdk
+   * in dependency arrays (which use .toJSON under the hood)
+   * @returns
+   */
+  toJSON() {
+    return {
+      chainId: this.chainId,
+      provider: {
+        url: this.provider?.connection?.url,
+        network: this.provider?._network
+      },
+      signer: this.signer
+        ? {
+            provider: {
+              // @ts-ignore
+              network: this.signer?.provider?._network
+            },
+            // @ts-ignore
+            address: this.signer?._address
+          }
+        : undefined
+    };
   }
 }

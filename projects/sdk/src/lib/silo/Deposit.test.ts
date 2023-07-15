@@ -16,12 +16,12 @@ describe("Silo Deposit", function () {
   const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist);
   const bean3CrvDepositable = [
     sdk.tokens.ETH,
+    sdk.tokens.WETH,
     sdk.tokens.BEAN,
     sdk.tokens.CRV3,
     sdk.tokens.DAI,
     sdk.tokens.USDC,
-    sdk.tokens.USDT,
-    sdk.tokens.WETH
+    sdk.tokens.USDT
   ];
 
   beforeAll(async () => {
@@ -100,5 +100,5 @@ async function testDeposit(op: DepositOperation, source: Token, dest: Token) {
   await op.execute(amount, 0.5).then((r) => r.wait());
   const balanceAfter = await sdk.silo.getBalance(dest, account, { source: DataSource.LEDGER });
 
-  expect(balanceAfter.deposited.amount.gt(balanceBefore.deposited.amount)).toBe(true);
+  expect(balanceAfter.amount.gt(balanceBefore.amount)).toBe(true);
 }

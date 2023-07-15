@@ -1,18 +1,37 @@
 #!/usr/bin/env node
+require("dotenv").config();
+const { register } = require("@swc-node/register/register");
 
 // This script can be used for quick cli development without compilation steps.
-
 process.env.MM_DEV = 1;
-require("@swc/register")({
+// require("@swc-node/register")({
+//   jsc: {
+//     parser: {
+//       syntax: "typescript"
+//     },
+//     paths: {
+//       "~sdk/*": ["../sdk/src/*"],
+//       "~sdk-core/*": ["../sdk-core/src/*"]
+//     },
+//     baseUrl: "."
+//   },
+//   sourceMaps: "inline",
+//   module: {
+//     type: "commonjs"
+//   }
+// });
+register({
   jsc: {
     parser: {
       syntax: "typescript"
     },
     paths: {
-      "@sdk/*": ["../sdk/src/*"]
+      "~sdk/*": ["../sdk/src/*"],
+      "~sdk-core/*": ["../sdk-core/src/*"]
     },
     baseUrl: "."
   },
+  sourceMaps: "inline",
   module: {
     type: "commonjs"
   }

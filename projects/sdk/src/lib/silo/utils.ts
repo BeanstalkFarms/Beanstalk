@@ -1,111 +1,56 @@
-import { BigNumber, ethers } from "ethers";
+import { ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
-import { EventProcessorData } from "src/lib/events/processor";
 import { Silo } from "../silo";
-import { TokenValue } from "src/classes/TokenValue";
-import { Crate, TokenSiloBalance, WithdrawalCrate, DepositCrate, MapValueType } from "./types";
-import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
+import { TokenValue } from "@beanstalk/sdk-core";
+import { TokenSiloBalance, Deposit } from "./types";
 import { assert } from "src/utils";
 
-/**
- * Beanstalk doesn't automatically re-categorize withdrawals as "claimable".
- * "Claimable" just means that the `season` parameter stored in the withdrawal
- * event is less than or equal to the current `season()`.
- *
- * This function serves two purposes:
- * 1. Break generic withdrawals into
- *    "withdrawn" (aka transit), which cannot yet be claimed
- *    "claimable" (aka receivable), which are eligible to be claimed
- * 2. Convert each crate amount to the appropriate number of decimals.
- */
-export const parseWithdrawalCrates = (
-  token: Token,
-  withdrawals: MapValueType<EventProcessorData["withdrawals"]>,
-  currentSeason: BigNumber
-): {
-  withdrawn: TokenSiloBalance["withdrawn"];
-  claimable: TokenSiloBalance["claimable"];
-} => {
-  let withdrawnBalance = TokenValue.ZERO; // aka "transit"
-  let claimableBalance = TokenValue.ZERO; // aka "receivable"
-  const withdrawn: WithdrawalCrate[] = []; // aka "transit"
-  const claimable: WithdrawalCrate[] = []; // aka "receivable"
-
-  // Split each withdrawal between `receivable` and `transit`.
-  Object.keys(withdrawals).forEach((season) => {
-    const amt = TokenValue.fromBlockchain(withdrawals[season].amount, token.decimals);
-    const szn = BigNumber.from(season);
-    if (szn.lte(currentSeason)) {
-      claimableBalance = claimableBalance.add(amt);
-      claimable.push({
-        amount: amt,
-        season: szn
-      });
-    } else {
-      withdrawnBalance = withdrawnBalance.add(amt);
-      withdrawn.push({
-        amount: amt,
-        season: szn
-      });
-    }
-  });
-
-  return {
-    withdrawn: {
-      amount: withdrawnBalance,
-      crates: withdrawn
-    },
-    claimable: {
-      amount: claimableBalance,
-      crates: claimable
-    }
-  };
-};
-
-export function sortCrates(state: TokenSiloBalance["deposited" | "withdrawn" | "claimable"]) {
-  state.crates = state.crates.sort(
-    (a, b) => a.season.sub(b.season).toNumber() // sort by season asc
+export function sortCrates(state: TokenSiloBalance) {
+  state.deposits = state.deposits.sort(
+    (a, b) => a.stem.sub(b.stem).toNumber() // sort by season asc
   );
 }
 
 /**
  * Order crates by Season.
  */
-export function sortCratesBySeason<T extends Crate<TokenValue>>(crates: T[], direction: "asc" | "desc" = "desc") {
+export function sortCratesByStem(crates: Deposit[], direction: "asc" | "desc" = "desc") {
   const m = direction === "asc" ? -1 : 1;
-  return [...crates].sort((a, b) => m * b.season.sub(a.season).toNumber());
+  return [...crates].sort((a, b) => m * b.stem.sub(a.stem).toNumber());
 }
 
 /**
  * Order crates by BDV.
  */
-export function sortCratesByBDVRatio<T extends DepositCrate<TokenValue>>(crates: T[], direction: "asc" | "desc" = "asc") {
+export function sortCratesByBDVRatio(crates: Deposit[], direction: "asc" | "desc" = "asc") {
   const m = direction === "asc" ? -1 : 1;
   return [...crates].sort((a, b) => {
     // FIXME
-    const _a:TokenValue = a.bdv.div(a.amount);
-    const _b:TokenValue = b.bdv.div(b.amount);
-    return parseFloat(_b.sub(_a).mul(m).toHuman())
+    const _a: TokenValue = a.bdv.div(a.amount);
+    const _b: TokenValue = b.bdv.div(b.amount);
+    return parseFloat(_b.sub(_a).mul(m).toHuman());
   });
 }
 
 /**
  * Selects the number of crates needed to add up to the desired `amount`.
  */
-export function pickCrates(crates: DepositCrate[], amount: TokenValue, token: Token, currentSeason: number) {
+export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token, currentSeason: number) {
   let totalAmount = TokenValue.ZERO;
   let totalBDV = TokenValue.ZERO;
   let totalStalk = TokenValue.ZERO;
-  const cratesToWithdrawFrom: DepositCrate[] = [];
 
-  crates.some((crate) => {
-    const amountToRemoveFromCrate = totalAmount.add(crate.amount).lte(amount) ? crate.amount : amount.sub(totalAmount);
-    const elapsedSeasons = currentSeason - crate.season.toNumber();
-    const cratePct = amountToRemoveFromCrate.div(crate.amount);
-    const crateBDV = cratePct.mul(crate.bdv);
-    const crateSeeds = cratePct.mul(crate.seeds);
+  const cratesToWithdrawFrom: Deposit[] = [];
+
+  deposits.some((deposit) => {
+    const amountToRemoveFromCrate = totalAmount.add(deposit.amount).lte(amount) ? deposit.amount : amount.sub(totalAmount);
+    const elapsedSeasons = currentSeason - deposit.stem.toNumber();
+    const cratePct = amountToRemoveFromCrate.div(deposit.amount);
+    const crateBDV = cratePct.mul(deposit.bdv);
+    const crateSeeds = cratePct.mul(deposit.seeds);
+
     const baseStalk = token.getStalk(crateBDV);
-    const grownStalk = crateSeeds.mul(elapsedSeasons).mul(Silo.STALK_PER_SEED_PER_SEASON);
+    const grownStalk = crateSeeds.mul(elapsedSeasons).mul(Silo.STALK_PER_SEED_PER_SEASON); // FIXME
     const crateStalk = baseStalk.add(grownStalk);
 
     totalAmount = totalAmount.add(amountToRemoveFromCrate);
@@ -113,12 +58,14 @@ export function pickCrates(crates: DepositCrate[], amount: TokenValue, token: To
     totalStalk = totalStalk.add(crateStalk);
 
     cratesToWithdrawFrom.push({
-      season: crate.season,
+      stem: deposit.stem,
       amount: amountToRemoveFromCrate,
       bdv: crateBDV,
-      stalk: crateStalk,
-      baseStalk: baseStalk,
-      grownStalk: grownStalk,
+      stalk: {
+        total: crateStalk,
+        base: baseStalk,
+        grown: grownStalk
+      },
       seeds: crateSeeds
     });
 
@@ -165,72 +112,58 @@ export function sortTokenMapByWhitelist<T extends any>(whitelist: Set<Token>, ma
 
 export function makeTokenSiloBalance(): TokenSiloBalance {
   return {
-    deposited: {
-      amount: TokenValue.ZERO,
-      bdv: TokenValue.ZERO,
-      crates: [] as DepositCrate[]
-    },
-    withdrawn: {
-      amount: TokenValue.ZERO,
-      crates: [] as WithdrawalCrate[]
-    },
-    claimable: {
-      amount: TokenValue.ZERO,
-      crates: [] as WithdrawalCrate[]
-    }
+    amount: TokenValue.ZERO,
+    bdv: TokenValue.ZERO,
+    deposits: [] as Deposit[]
   };
 }
 
+export type RawDepositData = {
+  stem: ethers.BigNumberish;
+  amount: ethers.BigNumberish;
+  bdv: ethers.BigNumberish;
+};
+
 /**
- * Create a new Deposit Crate object.
+ * Create a new Deposit object.
  *
  * @param token Token contained within the crate
- * @param _season The season of deposit
- * @param _amount The amount of deposit
- * @param _bdv The bdv of deposit
- * @param currentSeason The current season, for calculation of grownStalk.
+ * @param stemTipForToken The current stem tip for this token, for calculation of grownStalk.
+ * @param data.stem The stem (identifier) of this Deposit
+ * @param data.amount The amount of deposit
+ * @param data.bdv The bdv of deposit
  * @returns DepositCrate<TokenValue>
  */
-export function makeDepositCrate(
-  token: Token,
-  _season: string | number,
-  _amount: string,
-  _bdv: string,
-  currentSeason: ethers.BigNumberish
-): DepositCrate<TokenValue> {
-  // Crate
-  const season = ethers.BigNumber.from(_season);
-  const amount = token.fromBlockchain(_amount);
+export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData): Deposit {
+  // On-chain
+  const stem = ethers.BigNumber.from(data.stem);
+  const amount = token.fromBlockchain(data.amount.toString());
+  const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString()); // Hack
 
-  // Deposit-specific
-  const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(_bdv);
-  const seeds = token.getSeeds(bdv);
-  const baseStalk = token.getStalk(bdv);
-  const grownStalk = calculateGrownStalk(currentSeason, season, seeds);
-  const stalk = baseStalk.add(grownStalk);
+  // Stalk
+  const base = token.getStalk(bdv);
+  const grown = calculateGrownStalkStems(stemTipForToken, stem, bdv);
+  const total = base.add(grown);
 
   return {
-    season,
+    stem,
     amount,
     bdv,
-    stalk,
-    baseStalk,
-    grownStalk,
-    seeds
+    stalk: {
+      base,
+      grown,
+      total
+    },
+    seeds: token.getSeeds(bdv)
   };
 }
 
 /**
- * Calculate the amount Stalk grown since `depositSeason`.
+ * @deprecated Calculate the amount Stalk grown since `depositSeason`.
  * Depends on the `currentSeason` and the `depositSeeds` awarded
  * for a particular deposit.
- *
- * @param currentSeason
- * @param depositSeason
- * @param depositSeeds
- * @returns TokenValue<STALK>
  */
-export function calculateGrownStalk(
+export function calculateGrownStalkSeeds(
   currentSeason: ethers.BigNumberish,
   depositSeason: ethers.BigNumberish,
   depositSeeds: TokenValue
@@ -241,60 +174,39 @@ export function calculateGrownStalk(
 }
 
 /**
- * Apply a Deposit to a TokenSiloBalance.
- * @note expects inputs to be stringified (no decimals).
+ * Formula: `grownStalk = bdv * (stemTip - stem)`
+ * See: LibTokenSilo.grownStalkForDeposit
+ *
+ * @param stemTip The current stem tip for the token that is deposited
+ * @param stem The stem of the deposit
+ * @param bdv The bdv of the deposit
  */
-export function applyDeposit(
-  state: TokenSiloBalance["deposited"],
-  token: Token,
-  rawCrate: {
-    season: string | number;
-    amount: string;
-    bdv: string;
-  },
-  currentSeason: ethers.BigNumberish
-) {
-  const crate = makeDepositCrate(token, rawCrate.season, rawCrate.amount, rawCrate.bdv, currentSeason);
-
-  state.amount = state.amount.add(crate.amount);
-  state.bdv = state.bdv.add(crate.bdv);
-  state.crates.push(crate);
-
-  return crate;
+export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
+  const deltaStem = stemTip.sub(stem);
+  if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
+  return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(deltaStem));
 }
 
 /**
  * Apply a Deposit to a TokenSiloBalance.
- *
+ * TODO: refactor to accept currentStem instead of currentSeason
  * @note expects inputs to be stringified (no decimals).
  */
-export function applyWithdrawal(
-  state: TokenSiloBalance["withdrawn" | "claimable"],
-  token: Token,
-  rawCrate: {
-    season: string | number;
-    amount: string;
-  }
-) {
-  const season = BigNumber.from(rawCrate.season);
-  const amount = token.amount(rawCrate.amount);
+export function applyDeposit(balance: TokenSiloBalance, token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData) {
+  const deposit = makeDepositObject(token, stemTipForToken, data);
 
-  const crate: Crate<TokenValue> = {
-    season: season,
-    amount: amount
-  };
+  balance.amount = balance.amount.add(deposit.amount);
+  balance.bdv = balance.bdv.add(deposit.bdv);
+  balance.deposits.push(deposit);
 
-  state.amount = state.amount.add(amount);
-  state.crates.push(crate);
-
-  return crate;
+  return deposit;
 }
 
-export function sumDeposits(token: ERC20Token, crates: DepositCrate[]) {
+export function sumDeposits(token: ERC20Token, crates: Deposit[]) {
   return crates.reduce(
     (prev, curr) => {
       prev.amount = prev.amount.add(curr.amount);
-      prev.stalk = prev.stalk.add(curr.stalk);
+      prev.stalk = prev.stalk.add(curr.stalk.total);
       prev.seeds = prev.seeds.add(curr.seeds);
       prev.bdv = prev.bdv.add(curr.bdv);
       return prev;

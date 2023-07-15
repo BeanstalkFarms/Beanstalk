@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FarmToMode } from '~/lib/Beanstalk/Farm';
+import { FarmToMode } from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useBeanstalkContract } from '../../ledger/useContract';

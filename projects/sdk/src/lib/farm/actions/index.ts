@@ -1,35 +1,54 @@
-import { Exchange } from "./Exchange";
-import { ExchangeUnderlying } from "./ExchangeUnderlying";
+import { ApproveERC20 } from "./ApproveERC20";
+import { PermitERC20 } from "./PermitERC20";
 import { WrapEth } from "./WrapEth";
 import { UnwrapEth } from "./UnwrapEth";
-import { AddLiquidity } from "./AddLiquidity";
-import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
 import { TransferToken } from "./TransferToken";
+import { Deposit } from "./Deposit";
 import { WithdrawDeposits } from "./WithdrawDeposits";
 import { WithdrawDeposit } from "./WithdrawDeposit";
 import { ClaimWithdrawals } from "./ClaimWithdrawals";
 import { ClaimWithdrawal } from "./ClaimWithdrawal";
-import { PermitERC20 } from "./PermitERC20";
-import { Deposit } from "./Deposit";
-import { DevDebug } from "./_DevDebug";
 import { TransferDeposits } from "./TransferDeposits";
 import { TransferDeposit } from "./TransferDeposit";
+import { AddLiquidity } from "./AddLiquidity";
+import { Exchange } from "./Exchange";
+import { ExchangeUnderlying } from "./ExchangeUnderlying";
+import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
+import { WellSwap } from "./WellSwap";
+import { WellShift } from "./WellShift";
+import { DevDebug } from "./_DevDebug";
 
 export {
-  Exchange,
-  ExchangeUnderlying,
+  // Approvals
+  ApproveERC20,
+  PermitERC20,
+
+  // Wrappers
   WrapEth,
   UnwrapEth,
-  AddLiquidity,
-  RemoveLiquidityOneToken,
+
+  // Beanstalk: Internal balances
   TransferToken,
-  PermitERC20,
+
+  // Beanstalk: Silo
+  Deposit,
   WithdrawDeposits,
   WithdrawDeposit,
   ClaimWithdrawals,
   ClaimWithdrawal,
-  Deposit,
-  DevDebug,
   TransferDeposits,
-  TransferDeposit
+  TransferDeposit,
+
+  // DEX: Curve
+  AddLiquidity,
+  Exchange,
+  ExchangeUnderlying,
+  RemoveLiquidityOneToken,
+
+  // DEX: Wells
+  WellSwap,
+  WellShift,
+
+  // Developers
+  DevDebug
 };

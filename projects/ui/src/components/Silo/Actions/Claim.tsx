@@ -2,8 +2,15 @@ import React, { useCallback, useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import { BeanstalkSDK, ERC20Token, StepGenerator, Token } from '@beanstalk/sdk';
-import { FarmerSiloBalance } from '~/state/farmer/silo';
+import {
+  BeanstalkSDK,
+  ERC20Token,
+  StepGenerator,
+  Token,
+  FarmFromMode,
+  FarmToMode,
+} from '@beanstalk/sdk';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import { ActionType } from '~/util/Actions';
 import {
   TxnPreview,
@@ -14,7 +21,7 @@ import {
   FormTokenStateNew,
   FormTxnsFormState,
 } from '~/components/Common/Form';
-import { FarmFromMode, FarmToMode } from '~/lib/Beanstalk/Farm';
+
 import { ZERO_BN } from '~/constants';
 import { displayTokenAmount, tokenValueToBN } from '~/util';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
@@ -284,7 +291,7 @@ const ClaimForm: FC<
 
 const ClaimPropProvider: FC<{
   token: ERC20Token;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = ({ token, siloBalance }) => {
   const sdk = useSdk();
 
@@ -293,7 +300,7 @@ const ClaimPropProvider: FC<{
   const { txnBundler, refetch } = useFormTxnContext();
 
   /// Data
-  const claimableBalance = siloBalance?.claimable.amount;
+  const claimableBalance = siloBalance?.claimable?.amount;
   const isBean = sdk.tokens.BEAN.equals(token);
 
   // Form
@@ -428,7 +435,7 @@ const ClaimPropProvider: FC<{
 
 const Claim: FC<{
   token: ERC20Token;
-  siloBalance: FarmerSiloBalance;
+  siloBalance: FarmerSiloTokenBalance;
 }> = (props) => (
   <FormTxnProvider>
     <ClaimPropProvider {...props} />
