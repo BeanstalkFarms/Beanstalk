@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 import {C} from "contracts/C.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {Silo} from "./SiloFacet/Silo.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
@@ -32,6 +31,14 @@ contract ConvertFacet is ReentrancyGuard {
         address toToken,
         uint256 fromAmount,
         uint256 toAmount
+    );
+
+    event RemoveDeposit(
+        address indexed account,
+        address indexed token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
     );
 
     event RemoveDeposits(

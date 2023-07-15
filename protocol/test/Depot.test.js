@@ -97,6 +97,34 @@ describe('Depot', function () {
         await revertToSnapshot(snapshotId);
     });
 
+    describe("Version", async function () {
+        it('Depot', async function () {
+            expect(await this.depot.version()).to.be.equal('1.0.1')
+        })
+
+        it('Pipeline', async function () {
+            expect(await pipeline.version()).to.be.equal('1.0.1')
+        })
+    })
+
+    describe("Receives Ether", async function () {
+        it('Depot', async function () {
+            await user.sendTransaction({
+                to: this.depot.address,
+                value: to18('1')
+            })
+            expect(await ethers.provider.getBalance(this.depot.address)).to.be.equal(to18('1'))
+        })
+
+        it('Pipeline', async function () {
+            await user.sendTransaction({
+                to: pipeline.address,
+                value: to18('1')
+            })
+            expect(await ethers.provider.getBalance(pipeline.address)).to.be.equal(to18('1'))
+        })
+    })
+
     describe("Normal Pipe", async function () {
         describe("1 Pipe", async function () {
             beforeEach(async function () {
