@@ -259,7 +259,7 @@ export const MigrateTab: FC<{}> = () => {
             <Centered minHeight="400px">
               <Stack spacing={2} maxWidth={550}>
                 <Typography variant="h1" textAlign="center">
-                  You&apos;re migrated!
+                  You&apos;ve migrated!
                 </Typography>
                 <Button
                   variant="contained"
