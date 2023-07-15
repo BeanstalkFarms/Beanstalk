@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+//  import { Link as RouterLink } from 'react-router-dom';
 import {
   useDisconnect,
   useNetwork,
@@ -22,7 +22,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { IMPERSONATED_ACCOUNT, trimAddress } from '~/util';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import gearIcon from '~/img/beanstalk/interface/nav/gear.svg';
-import historyIcon from '~/img/beanstalk/interface/nav/history.svg';
+//  import historyIcon from '~/img/beanstalk/interface/nav/history.svg';
 import etherscanIcon from '~/img/beanstalk/interface/nav/etherscan.svg';
 import disconnectIcon from '~/img/beanstalk/interface/nav/disconnect.svg';
 import useAnchor from '~/hooks/display/useAnchor';
@@ -120,14 +120,14 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
           </Row>
         </ListItemText>
       </MenuItem>
-      <MenuItem component={RouterLink} to="/history" onClick={toggleMenuAnchor}>
+      {/* <MenuItem component={RouterLink} to="/history" onClick={toggleMenuAnchor}>
         <Row gap={1}>
           <img src={historyIcon} alt="History" width={20} />
           <Typography variant="body1" color="text.primary">
             History
           </Typography>
         </Row>
-      </MenuItem>
+      </MenuItem> */}
       <MenuItem
         component="a"
         href={`${chain.explorer}/address/${account}`}
