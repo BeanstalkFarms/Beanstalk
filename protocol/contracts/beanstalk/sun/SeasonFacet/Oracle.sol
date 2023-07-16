@@ -20,7 +20,10 @@ contract Oracle is ReentrancyGuard {
     //////////////////// ORACLE GETTERS ////////////////////
 
     /**
-     * @notice Returns the current Delta B in the Curve liquidity pool.
+     * @notice Returns the total Delta B across all whitelisted minting liquidity pools.
+     * @dev The whitelisted pools are:
+     * - the Bean:3Crv Metapool
+     * - the Bean:ETH Well
      */
     function totalDeltaB() external view returns (int256 deltaB) {
         deltaB = LibCurveMinting.check().add(
