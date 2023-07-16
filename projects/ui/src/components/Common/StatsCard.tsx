@@ -27,7 +27,7 @@ const StatsCard: FC<
   } & CardProps
 > = ({ stats }, props) => (
   <Card sx={{ p: 1, borderColor: BeanstalkPalette.lightestGrey }} {...props}>
-    <Grid container spacing={1} rowSpacing={3}>
+    <Grid container sx={{ justifyContent: "space-between" }} spacing={1} rowSpacing={3}>
       {stats.map((stat, index) => (
         <Grid key={index} item xs={12} md={3}>
           <Stat

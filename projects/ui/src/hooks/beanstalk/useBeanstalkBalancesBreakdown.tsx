@@ -31,10 +31,10 @@ export const STATE_CONFIG = {
     (name: string) => `${name} that are Deposited in the Silo.`,
   ],
   withdrawn: [
-    'Withdrawn & Claimable',
+    'Claimable',
     colors.chart.yellowLight,
     (name: string) =>
-      `${name} being Withdrawn from the Silo. At the end of the current Season, Withdrawn ${name} become Claimable.`,
+      `Legacy Claimable ${name} Withdrawals from pre-Silo V3.`,
   ],
   farmable: [
     'Farm & Circulating',
