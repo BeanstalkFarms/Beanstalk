@@ -101,7 +101,7 @@ export const Migrate: FC<{}> = () => {
       <Box flex={3}>
         <Stack spacing={1}>
           <Typography variant="h3" textAlign="left">
-            Preview migration
+            Preview Migration
           </Typography>
           <Box
             sx={{
