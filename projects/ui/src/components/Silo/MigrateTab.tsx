@@ -50,7 +50,7 @@ export const MigrateTab: FC<{}> = () => {
     return (
       <Centered minHeight="400px">
         <Typography variant="body1" textAlign="center">
-          Connect your wallet to check migration status
+          Connect your wallet to check Migration status
         </Typography>
       </Centered>
     );
@@ -61,7 +61,7 @@ export const MigrateTab: FC<{}> = () => {
       <Centered minHeight="400px">
         <BeanProgressIcon size={50} enabled variant="indeterminate" />
         <Typography sx={{ mt: 2 }}>
-          Checking your migration status...
+          Checking your Migration status...
         </Typography>
       </Centered>
     );
@@ -82,8 +82,8 @@ export const MigrateTab: FC<{}> = () => {
                 </Typography>
                 <Row spacing={1}>
                   {[
-                    'Instant withdrawals',
-                    'Dynamic rewards for deposits',
+                    'Instant Withdrawals',
+                    'Dynamic Grown Stalk for Deposits',
                     'ERC-1155 tokens',
                   ].map((feature, i) => (
                     <Chip
@@ -103,7 +103,7 @@ export const MigrateTab: FC<{}> = () => {
             {step === 2 && (
               <Stack textAlign="center" spacing={2} maxWidth={400}>
                 <Typography variant="h1">
-                  To use the Silo, you need to migrate.
+                  To use the Silo, you need to Migrate.
                 </Typography>
                 <Typography variant="body1">
                   Migrating allows you to use the latest Silo features.
@@ -226,7 +226,7 @@ export const MigrateTab: FC<{}> = () => {
                 </Typography>
                 <Stack spacing={0.5}>
                   <Button variant="contained" size="medium" onClick={nextStep}>
-                    Preview migration &rarr;
+                    Preview Migration &rarr;
                   </Button>
                   <Button
                     variant="outlined-secondary"
@@ -249,7 +249,7 @@ export const MigrateTab: FC<{}> = () => {
             <Centered minHeight="400px">
               <Stack spacing={2} maxWidth={550}>
                 <Typography variant="h1" textAlign="center">
-                  You&apos;ve migrated!
+                  You&apos;ve Migrated!
                 </Typography>
                 <Button
                   variant="contained"
