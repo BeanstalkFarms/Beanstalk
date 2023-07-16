@@ -183,7 +183,7 @@ export const Migrate: FC<{}> = () => {
           </LoadingButton>
           {migrating && (
             <Typography variant="body1" textAlign="left">
-              The page will refresh when migration is complete.
+              The page will refresh when Migration is complete.
             </Typography>
           )}
         </Stack>
@@ -196,7 +196,7 @@ export const Migrate: FC<{}> = () => {
             </Typography>
             <Typography variant="body1">
               All of your Grown Stalk will be Mown and added to your 
-              Stalk balance during the migration.
+              Stalk balance during the Migration.
             </Typography>
           </Stack>
           <Stack spacing={1}>

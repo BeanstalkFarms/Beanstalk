@@ -50,7 +50,7 @@ export const MigrateTab: FC<{}> = () => {
     return (
       <Centered minHeight="400px">
         <Typography variant="body1" textAlign="center">
-          Connect your wallet to check migration status
+          Connect your wallet to check Migration status
         </Typography>
       </Centered>
     );
@@ -61,7 +61,7 @@ export const MigrateTab: FC<{}> = () => {
       <Centered minHeight="400px">
         <BeanProgressIcon size={50} enabled variant="indeterminate" />
         <Typography sx={{ mt: 2 }}>
-          Checking your migration status...
+          Checking your Migration status...
         </Typography>
       </Centered>
     );
