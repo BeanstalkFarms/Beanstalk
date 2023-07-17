@@ -1,7 +1,7 @@
 import { Clipboard, FarmFromMode, FarmToMode, TokenValue } from "@beanstalk/sdk";
 import chalk from "chalk";
 import { BigNumber } from "ethers";
-import { WETH9__factory } from "@beanstalk/wells";
+import { WETH9__factory } from "@beanstalk/sdk-wells";
 import { account as _account, impersonate, chain } from "../../setup";
 import { getWell, getWellsFromAquifer } from "../utils";
 

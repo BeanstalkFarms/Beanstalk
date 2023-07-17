@@ -1,5 +1,5 @@
 import { provider } from "../setup";
-import { WellsSDK, Well } from "@beanstalk/wells";
+import { WellsSDK, Well } from "@beanstalk/sdk-wells";
 
 const WELL_ADDRESS = process.env.WELL_ADDRESS!;
 

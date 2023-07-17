@@ -1,5 +1,5 @@
 {
-  "name": "@beanstalk/wells",
+  "name": "@beanstalk/sdk-wells",
   "version": "0.0.1",
   "description": "A JavaScript framework for interacting with the Beanstalk Wells.",
   "license": "MIT",

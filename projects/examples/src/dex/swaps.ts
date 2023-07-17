@@ -1,5 +1,5 @@
 import { BeanstalkSDK, Clipboard, Token, TokenValue } from "@beanstalk/sdk";
-import { Direction, SwapBuilder } from "@beanstalk/wells";
+import { Direction, SwapBuilder } from "@beanstalk/sdk-wells";
 import chalk from "chalk";
 import { account as _account, sdk, chain } from "../setup";
 import { BigNumber } from "ethers";

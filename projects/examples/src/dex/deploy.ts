@@ -1,4 +1,4 @@
-import { Aquifer, WellFunction, WellsSDK, Well } from "@beanstalk/wells";
+import { Aquifer, WellFunction, WellsSDK, Well } from "@beanstalk/sdk-wells";
 import { BeanstalkSDK, TestUtils } from "@beanstalk/sdk";
 import { signer, provider, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";

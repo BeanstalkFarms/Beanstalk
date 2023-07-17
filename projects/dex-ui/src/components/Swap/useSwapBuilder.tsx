@@ -1,4 +1,4 @@
-import { SwapBuilder } from "@beanstalk/wells";
+import { SwapBuilder } from "@beanstalk/sdk-wells";
 import { useEffect, useState } from "react";
 import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
