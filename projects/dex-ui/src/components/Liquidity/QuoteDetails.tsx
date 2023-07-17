@@ -8,6 +8,8 @@ import SlippagePanel from "./SlippagePanel";
 import { ChevronDown, Info } from "../Icons";
 import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
+import { BodyXS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE | "FORWARD_SWAP" | "REVERSE_SWAP";
@@ -55,7 +57,7 @@ const QuoteDetails = ({
       if (!quote || !quote.estimate || !quote.gas) {
         setGasFeeUsd("0.00");
       } else {
-        let usd
+        let usd;
         if (type === "FORWARD_SWAP" || "REVERSE_SWAP") {
           usd = await getGasInUsd(sdk, quote.gas.toBigNumber());
         } else {
@@ -166,13 +168,13 @@ const QuoteDetails = ({
           const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply);
           const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
-        } 
+        }
       } else if (type === "FORWARD_SWAP") {
-        setTokenUSDValue(quote!.estimate.mul(tokenPrices![1] || TokenValue.ZERO))
+        setTokenUSDValue(quote!.estimate.mul(tokenPrices![1] || TokenValue.ZERO));
       } else if (type === "REVERSE_SWAP") {
-        setTokenUSDValue(inputs![1].mul(tokenPrices![1] || TokenValue.ZERO))
+        setTokenUSDValue(inputs![1].mul(tokenPrices![1] || TokenValue.ZERO));
       }
-    }
+    };
 
     run();
   }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex, inputs, removeLiquidityMode, wellLpToken]);
@@ -246,12 +248,12 @@ const QuoteDetails = ({
           alt="Click to view more information about this transaction"
         />
       </QuoteDetailLine>
-      <AccordionContainer open={accordionOpen} isShort={(type === "FORWARD_SWAP" || type === "REVERSE_SWAP")}>
+      <AccordionContainer open={accordionOpen} isShort={type === "FORWARD_SWAP" || type === "REVERSE_SWAP"}>
         <QuoteDetailLine>
           <QuoteDetailLabel>USD Value</QuoteDetailLabel>
           <QuoteDetailValue>{`$${tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
         </QuoteDetailLine>
-        {(type !== "FORWARD_SWAP" && type !== "REVERSE_SWAP") &&
+        {type !== "FORWARD_SWAP" && type !== "REVERSE_SWAP" && (
           <QuoteDetailLine>
             <QuoteDetailLabel>Price Impact</QuoteDetailLabel>
             <QuoteDetailValue>{`${priceImpact.toHuman("short")}%`}</QuoteDetailValue>
@@ -274,7 +276,7 @@ const QuoteDetails = ({
               </Tooltip>
             </IconContainer>
           </QuoteDetailLine>
-        }
+        )}
         <QuoteDetailLine>
           <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
           <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
@@ -310,7 +312,7 @@ const IconContainer = styled.div`
 `;
 
 const AccordionContainer = styled.div<AccordionProps>`
-  height: ${(props) => (props.open ? props.isShort ? "70px" : "94px" : "0px")};
+  height: ${(props) => (props.open ? (props.isShort ? "70px" : "94px") : "0px")};
   overflow: ${(props) => (props.open ? "visible" : "hidden")};
   transition: height 0.2s;
 `;
@@ -340,4 +342,7 @@ const QuoteDetailLine = styled.div<QuoteDetailProps>`
 const QuoteContainer = styled.div`
   display: flex;
   flex-direction: column;
+  @media (max-width: ${size.mobile}) {
+    ${BodyXS}
+  }
 `;

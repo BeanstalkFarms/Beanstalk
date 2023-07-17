@@ -15,6 +15,7 @@ import { TransactionToast } from "../TxnToast/TransactionToast";
 import QuoteDetails from "../Liquidity/QuoteDetails";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
+import { size } from "src/breakpoints";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
@@ -370,6 +371,10 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  @media (max-width: ${size.mobile}) {
+    width: 100%;
+    gap: 16px;
+  }
 `;
 
 const SwapInputContainer = styled.div`
@@ -389,4 +394,10 @@ const SwapButtonContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
+  @media (max-width: ${size.mobile}) {
+    position: fixed;
+    width: calc(100% - 24px);
+    margin-bottom: 0;
+    bottom: 12px;
+  }
 `;

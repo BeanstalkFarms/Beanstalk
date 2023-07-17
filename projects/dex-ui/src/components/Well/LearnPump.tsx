@@ -3,9 +3,7 @@ import { ExpandBox } from "src/components/ExpandBox";
 import styled from "styled-components";
 import { FC } from "src/types";
 
-type Props = {
-  width?: number;
-};
+type Props = {};
 
 function PumpDetails() {
   return (
@@ -23,9 +21,9 @@ function PumpDetails() {
   );
 }
 
-export const LearnPump: FC<Props> = ({ width }) => {
+export const LearnPump: FC<Props> = () => {
   return (
-    <ExpandBox width={width || 408}>
+    <ExpandBox drawerHeaderText="🔮 What’s a pump?">
       <ExpandBox.Header>
         <span role="img" aria-label="glass globe emoji">
           🔮

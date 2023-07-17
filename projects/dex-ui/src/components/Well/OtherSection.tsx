@@ -3,6 +3,7 @@ import { FC } from "src/types";
 import { Row, TBody, THead, Table, Th, Td } from "./Table";
 import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
+import { size } from "src/breakpoints";
 
 type Props = {
   well: Well;
@@ -15,7 +16,8 @@ export const OtherSection: FC<Props> = ({ well }) => {
         <THead>
           <Row>
             <Th>Detail</Th>
-            <Th>Value</Th>
+            <DesktopTh>Value</DesktopTh>
+            <MobileTh align={"right"}>Value</MobileTh>
           </Row>
         </THead>
         <TBody>
@@ -32,9 +34,14 @@ export const OtherSection: FC<Props> = ({ well }) => {
             <Td>
               <Detail>Well Address</Detail>
             </Td>
-            <Td>
+            <DesktopTd>
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
-            </Td>
+            </DesktopTd>
+            <MobileTd align={"right"}>
+              <Link href={`https://etherscan.io/address/${well.address}`}>
+                {well.address.substr(0, 5) + "..." + well.address.substr(well.address.length - 5)}
+              </Link>
+            </MobileTd>
           </Row>
           {well.tokens!.map(function (token, index) {
             return (
@@ -42,11 +49,16 @@ export const OtherSection: FC<Props> = ({ well }) => {
                 <Td>
                   <Detail>{`Token ${index + 1} Address`}</Detail>
                 </Td>
-                <Td>
+                <DesktopTd>
                   <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>
                     {token.address || `-`}
                   </Link>
-                </Td>
+                </DesktopTd>
+                <MobileTd align={"right"}>
+                  <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>
+                    {token.address.substr(0, 5) + "..." + token.address.substr(token.address.length - 5) || `-`}
+                  </Link>
+                </MobileTd>
               </Row>
             );
           })}
@@ -68,5 +80,29 @@ const Link = styled.a`
 
   :link {
     color: black;
+  }
+`;
+
+const DesktopTd = styled(Td)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const MobileTd = styled(Td)`
+  @media (min-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const DesktopTh = styled(Th)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const MobileTh = styled(Th)`
+  @media (min-width: ${size.mobile}) {
+    display: none;
   }
 `;

@@ -15,6 +15,7 @@ import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
+import { size } from "src/breakpoints";
 
 type AddLiquidityProps = {
   well: Well;
@@ -276,7 +277,7 @@ export const AddLiquidity = ({
               well.tokens!.map((token: Token, index: number) => {
                 if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false) {
                   return (
-                    <ButtonWrapper key={`approvebuttonwrapper${index}`}>
+                    <ButtonWrapper key={`approvebuttonwrapper${index}`} heightIndex={index + 1}>
                       <ApproveTokenButton
                         key={`approvebutton${index}`}
                         disabled={amounts && amounts[index].lte(0)}
@@ -308,6 +309,9 @@ const LargeGapContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  @media (max-width: ${size.mobile}) {
+    margin-bottom: 40px;
+  }
 `;
 
 const MediumGapContainer = styled.div`
@@ -316,10 +320,16 @@ const MediumGapContainer = styled.div`
   gap: 12px;
 `;
 
-const ButtonWrapper = styled.div`
+const ButtonWrapper = styled.div<{ heightIndex?: number }>`
   display: flex;
   flex-direction: column;
   width: 100%;
+  @media (max-width: ${size.mobile}) {
+    position: fixed;
+    width: calc(100% - 24px);
+    margin-bottom: 0;
+    bottom: ${({heightIndex}) => heightIndex ? `calc(12px + (48px * ${heightIndex}))`: "12px"};
+  }
 `;
 
 const ApproveTokenButton = styled(Button)`

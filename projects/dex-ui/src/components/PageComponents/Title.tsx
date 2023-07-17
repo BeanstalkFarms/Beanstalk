@@ -1,30 +1,35 @@
 import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { BodyL } from "../Typography";
+import { BodyL, BodyXS, H2 } from "../Typography";
 import { Link } from "react-router-dom";
+import { size } from "src/breakpoints";
 
 type Props = {
   title: string;
-  fontweight?: string;
+  fontWeight?: string;
   parent?: {
     title: string;
     path: string;
   };
   center?: boolean;
+  largeOnMobile?: boolean;
 };
 
-export const Title: FC<Props> = ({ title, parent, fontweight, center }) => (
+export const Title: FC<Props> = ({ title, parent, fontWeight, center, largeOnMobile }) => (
   <Container center={center}>
     <TitleContainer center={center}>
       {parent && <ParentText to={parent.path}>{parent.title} &gt;&nbsp;</ParentText>}
-      <TitleText fontweight={fontweight}>{title}</TitleText>
+      <TitleText fontWeight={fontWeight} largeOnMobile={largeOnMobile}>
+        {title}
+      </TitleText>
     </TitleContainer>
   </Container>
 );
 
 type TitleProps = {
-  fontweight?: string;
+  fontWeight?: string;
+  largeOnMobile?: boolean;
 };
 
 type TitleContainerProps = {
@@ -34,26 +39,31 @@ type TitleContainerProps = {
 const Container = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
-  ${(props) => props.center && `justify-content: center;`}
+
+  @media (max-width: ${size.mobile}) {
+    justify-content: start;
+  }
 `;
 
 const TitleContainer = styled.div<TitleContainerProps>`
   display: flex;
   flex-direction: row;
-  ${(props) =>
-    props.center &&
-    `width: 1344px;
-   min-width: 1344px;`}
 `;
 
 const TitleText = styled.div<TitleProps>`
   ${BodyL}
-  ${(props) => props.fontweight && `font-weight: ${props.fontweight}`};
+  ${(props) => props.fontWeight && `font-weight: ${props.fontWeight}`};
   text-transform: uppercase;
+  @media (max-width: ${size.mobile}) {
+    ${({ largeOnMobile }) => (largeOnMobile ? `${H2}` : `${BodyXS}`)}
+  }
 `;
 const ParentText = styled(Link)`
   ${BodyL}
   color: #9CA3AF;
   text-decoration: none;
   text-transform: uppercase;
+  @media (max-width: ${size.mobile}) {
+    ${BodyXS}
+  }
 `;

@@ -33,7 +33,7 @@ export const useWellTokens = () => {
         }
       }
       const ETH = sdk.tokens.ETH;
-      tokens.push(ETH)
+      tokens.push(ETH);
 
       return tokens;
     },
