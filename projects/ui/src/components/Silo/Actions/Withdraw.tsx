@@ -343,6 +343,7 @@ const WithdrawForm: FC<
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
                       token: getNewToOldToken(whitelistedToken),
+                      destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
                   ]}

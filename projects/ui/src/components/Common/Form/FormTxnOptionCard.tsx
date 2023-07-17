@@ -94,7 +94,7 @@ const FormTxnOptionCard: React.FC<Props> = ({
           cursor: required ? 'default' : 'pointer',
         }}
       >
-        <Stack gap={0.5}>
+        <Stack gap={0.5} flexGrow={1}>
           {summary.summary.map(({ token, description, amount, tooltip }, i) => (
             <Row justifyContent="space-between" key={description + i.toString}>
               <Row gap={0.5}>
