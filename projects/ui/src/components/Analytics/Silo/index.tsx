@@ -22,7 +22,7 @@ const SLUGS = [
   'deposited_urbean',
   'deposited_urlp',
   'stalk',
-  'seeds',
+  // 'seeds',
   'bean_vAPY',
   'lp_vAPY',
 ];
@@ -41,7 +41,7 @@ const SiloAnalytics: FC<{}> = () => {
         <Tab label="Deposited urBEAN" />
         <Tab label="Deposited urBEAN3CRV" />
         <Tab label="Stalk" />
-        <Tab label="Seeds" />
+        {/* <Tab label="Seeds" /> */}
         <Tab label="Bean vAPY" />
         <Tab label="LP vAPY" />
       </Tabs>
@@ -74,9 +74,9 @@ const SiloAnalytics: FC<{}> = () => {
         />
       )}
       {tab === 4 && <Stalk height={300} />}
-      {tab === 5 && <Seeds height={300} />}
-      {tab === 6 && <APY height={300} metric="Bean" />}
-      {tab === 7 && <APY height={300} metric="LP" />}
+      {/* {tab === 5 && <Seeds height={300} />} */}
+      {tab === 5 && <APY height={300} metric="Bean" />}
+      {tab === 6 && <APY height={300} metric="LP" />}
     </Card>
   );
 };

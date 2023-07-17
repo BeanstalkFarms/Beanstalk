@@ -349,7 +349,7 @@ const FillListingForm: FC<{
 
       return {
         amountOut: toTokenUnitsBN(estimate.toBlockchain(), _tokenOut.decimals),
-        value: transform(estimate.value.toString(), 'ethers'),
+        value: transform(estimate, 'ethers'),
       };
     },
     [Eth, Weth, balances, sdk]

@@ -12,10 +12,12 @@ import { Clipboard } from "src/lib/clipboard/clipboard";
 import { UnWrapEthStep } from "./UnWrapStep";
 
 const DEFAULT_DEADLINE = 60 * 5; // in seconds
+const PIPELINE_ADDRESS = addresses.PIPELINE.get(1);
 
 export type QuotePrepareResult = {
   doSwap: (overrides?: TxOverrides) => Promise<ContractTransaction>;
   doApproval?: (overrides?: TxOverrides) => Promise<ContractTransaction>;
+  doGasEstimate: (overrides?: TxOverrides) => Promise<TokenValue>;
 };
 
 export type QuoteResult = {
@@ -111,9 +113,8 @@ export class Quote {
 
     let prevQuote: TokenValue = amount;
     let prevQuoteWSlippage: TokenValue = amount;
-    let prevQuoteGasEstimate: TokenValue = TokenValue.ZERO;
     for (const step of steps) {
-      const { quote, quoteWithSlippage, quoteGasEstimate } = await step.quote(
+      const { quote, quoteWithSlippage } = await step.quote(
         isMultiReverse ? prevQuoteWSlippage : prevQuote,
         direction,
         slippage,
@@ -121,16 +122,21 @@ export class Quote {
       );
       prevQuote = quote;
       prevQuoteWSlippage = quoteWithSlippage;
-      prevQuoteGasEstimate = prevQuoteGasEstimate.add(quoteGasEstimate);
     }
 
     this.fullQuote = prevQuote;
-    const { doApproval, doSwap } = await this.prepare(recipient); // TODO: Add deadline
+    const { doApproval, doSwap, doGasEstimate } = await this.prepare(recipient); // TODO: Add deadline
 
+    let gas = TokenValue.ZERO;
+    try {
+      gas = await doGasEstimate();
+    } catch (err) {
+      // Ignored. This will fail in most cases when doing a gas estimate and the user has not done approvals yet or has insufficient balance
+    }
     return {
       amount: prevQuote,
       amountWithSlippage: prevQuoteWSlippage,
-      gas: prevQuoteGasEstimate,
+      gas,
       doApproval,
       doSwap
     };
@@ -154,24 +160,33 @@ export class Quote {
     const step = this.steps[0];
     const { contract, method, parameters } = step.swapSingle(this.amountUsedForQuote, step.quoteResultWithSlippage!, recipient, deadline);
 
-    const doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+    const getParameters = (overrides: TxOverrides = {}) => {
       // If starting with ETH and this is a single swap, it means we're just wrapping it
       // so we can infer that `parameters[0]` are the overrides which include {value} returned
       // by step.swapSingle(). We combine with user provided overrides
+      const paramCopy = [...parameters];
       if (this.fromToken.symbol === "ETH") {
-        parameters[0] = { ...overrides, ...(parameters[0] as Object) };
+        paramCopy[0] = { ...overrides, ...(paramCopy[0] as Object) };
       } else {
-        parameters.push(overrides ?? {});
+        paramCopy.push(overrides);
       }
+
+      return paramCopy;
+    };
+
+    // @ts-ignore
+    const doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => contract[method](...getParameters(overrides));
+    const doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
       // @ts-ignore
-      return contract[method](...parameters);
+      const gas = await contract.estimateGas[method](...getParameters(overrides));
+      return TokenValue.fromBlockchain(gas, 0);
     };
 
     const amountToSpend = this.direction === Direction.FORWARD ? this.amountUsedForQuote : step.quoteResultWithSlippage!;
 
     const doApproval = await this.getApproval(step.fromToken, amountToSpend, contract.address, recipient);
 
-    return { doApproval, doSwap };
+    return { doApproval, doSwap, doGasEstimate };
   }
 
   private async prepareMulti(recipient: string): Promise<QuotePrepareResult> {
@@ -183,15 +198,22 @@ export class Quote {
 
     // If we start with ETH, remove the first step to wrap it, that only works for a single-step flow. We will build a custom flow here
     // to handle wrapping ETH as part of a pipeline call.
+    // Similarly if it ends in ETH, remove it.
     if (this.fromToken.symbol === "ETH") {
       steps.shift();
+    }
+    if (this.toToken.symbol === "ETH") {
+      steps.pop();
     }
 
     const shiftOps = [];
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      const nextRecipient = steps[i + 1]?.well.contract.address ?? recipient;
+      let nextRecipient = steps[i + 1]?.well.contract.address ?? recipient;
+
+      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to pipeline
+      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = PIPELINE_ADDRESS;
 
       const { contract, method, parameters } = step.swapMany(nextRecipient, step.quoteResultWithSlippage!);
 
@@ -210,6 +232,7 @@ export class Quote {
     const doApproval = await this.getApproval(this.fromToken, this.amountUsedForQuote, this.depot.address, recipient);
 
     let doSwap;
+    let doGasEstimate;
     let pipe: string;
 
     // Wrap ETH flow
@@ -229,14 +252,57 @@ export class Quote {
         [wrapEth, wethTransfer, ...shiftOps],
         this.amountUsedForQuote.toBlockchain()
       ]);
+
       doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
         const overrideOptions = { ...overrides, value: this.amountUsedForQuote.toBigNumber() };
         return this.depot.farm([pipe], overrideOptions);
       };
+
+      doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
+        const overrideOptions = { ...overrides, value: this.amountUsedForQuote.toBigNumber() };
+        const gas = await this.depot.estimateGas.farm([pipe], overrideOptions);
+        return TokenValue.fromBlockchain(gas, 0);
+      };
     }
     // Unwrap ETH flow
     else if (this.toToken.symbol === "ETH") {
-      throw new Error("Cannot swap to ETH yet");
+      // Last step should be to swap to WETH
+      const wethStep = steps[steps.length - 1];
+      if (wethStep.toToken.symbol !== "WETH")
+        throw new Error("Last step of multi-swap should have been a swap to WETH if the overall swap is for ETH.");
+
+      const ethAmount = wethStep.quoteResultWithSlippage!;
+
+      const transferToFirstWell = this.depot.interface.encodeFunctionData("transferToken", [
+        this.fromToken.address,
+        steps[0].well.address,
+        this.amountUsedForQuote.toBigNumber(),
+        0,
+        0
+      ]);
+
+      const unwrapWeth = {
+        target: this.weth9.address,
+        callData: this.weth9.interface.encodeFunctionData("withdraw", [ethAmount.toBigNumber()]),
+        clipboard: Clipboard.encode([])
+      };
+
+      const sendEth = {
+        target: recipient,
+        callData: "0x",
+        clipboard: Clipboard.encode([], ethAmount.toBigNumber())
+      };
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...shiftOps, unwrapWeth, sendEth], 0]);
+
+      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToFirstWell, pipe], overrides);
+      };
+
+      doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
+        const gas = await this.depot.estimateGas.farm([transferToFirstWell, pipe], overrides);
+        return TokenValue.fromBlockchain(gas, 0);
+      };
     }
     // Normal flow, no ETH involved
     else {
@@ -253,11 +319,17 @@ export class Quote {
       doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
         return this.depot.farm([transferToFirstWell, pipe], overrides);
       };
+
+      doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
+        const gas = await this.depot.estimateGas.farm([transferToFirstWell, pipe], overrides);
+        return TokenValue.fromBlockchain(gas, 0);
+      };
     }
 
     return {
       doSwap,
-      doApproval
+      doApproval,
+      doGasEstimate
     };
   }
 
@@ -275,6 +347,9 @@ export class Quote {
     if (this.fromToken.symbol === "ETH") {
       steps.shift();
     }
+    if (this.toToken.symbol === "ETH") {
+      steps.pop();
+    }
 
     const desiredAmount = this.amountUsedForQuote; // Amount desired
     const operations = [];
@@ -282,7 +357,10 @@ export class Quote {
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       const nextStep = steps[i + 1] || null;
-      const nextRecipient = i === steps.length - 1 ? recipient : pipelineAddress;
+      let nextRecipient = i === steps.length - 1 ? recipient : pipelineAddress;
+
+      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to pipeline
+      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = PIPELINE_ADDRESS;
 
       const amountWithSlippage = step.quoteResultWithSlippage!;
       const maxAmountOut = amountWithSlippage;
@@ -310,6 +388,7 @@ export class Quote {
     const startingAmount = steps[0].quoteResultWithSlippage!;
 
     let doSwap;
+    let doGasEstimate;
     let pipe: string;
 
     // Wrap ETH flow
@@ -326,14 +405,56 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[wrapEth, ...operations], ethAmount.toBigNumber()]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         const overrideOptions = { ...overrides, value: ethAmount.toBigNumber() };
         return this.depot.farm([pipe], overrideOptions);
+      };
+
+      doGasEstimate = async (overrides: TxOverrides = {}): Promise<TokenValue> => {
+        const overrideOptions = { ...overrides, value: ethAmount.toBigNumber() };
+        const gas = await this.depot.estimateGas.farm([pipe], overrideOptions);
+        return TokenValue.fromBlockchain(gas, 0);
       };
     }
     // Unwrap ETH flow
     else if (this.toToken.symbol === "ETH") {
-      throw new Error("Cannot swap to ETH yet");
+      // Last step should be to swap to WETH
+      const wethStep = steps[steps.length - 1];
+      if (wethStep.toToken.symbol !== "WETH")
+        throw new Error("Last step of multi-swap should have been a swap to WETH if the overall swap is for ETH.");
+
+      const ethAmount = wethStep.quoteInput!;
+
+      const transferToPipeline = this.depot.interface.encodeFunctionData("transferToken", [
+        this.fromToken.address,
+        pipelineAddress,
+        startingAmount.toBigNumber(),
+        0,
+        0
+      ]);
+
+      const unwrapWeth = {
+        target: this.weth9.address,
+        callData: this.weth9.interface.encodeFunctionData("withdraw", [ethAmount.toBigNumber()]),
+        clipboard: Clipboard.encode([])
+      };
+
+      const sendEth = {
+        target: recipient,
+        callData: "0x",
+        clipboard: Clipboard.encode([], ethAmount.toBigNumber())
+      };
+
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...operations, unwrapWeth, sendEth], 0]);
+
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToPipeline, pipe], overrides);
+      };
+
+      doGasEstimate = async (overrides: TxOverrides = {}): Promise<TokenValue> => {
+        const gas = await this.depot.estimateGas.farm([transferToPipeline, pipe], overrides);
+        return TokenValue.fromBlockchain(gas, 0);
+      };
     }
     // Normal flow, no ETH involved
     else {
@@ -347,8 +468,13 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [operations, 0]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
-        return this.depot.farm([transferToPipeline, pipe]);
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
+        return this.depot.farm([transferToPipeline, pipe], overrides);
+      };
+
+      doGasEstimate = async (overrides: TxOverrides = {}): Promise<TokenValue> => {
+        const gas = await this.depot.estimateGas.farm([transferToPipeline, pipe], overrides);
+        return TokenValue.fromBlockchain(gas, 0);
       };
     }
 
@@ -356,7 +482,8 @@ export class Quote {
 
     return {
       doSwap,
-      doApproval
+      doApproval,
+      doGasEstimate
     };
   }
 

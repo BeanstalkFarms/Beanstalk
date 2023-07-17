@@ -33,7 +33,14 @@ const COLUMNS = {
     headerAlign: 'left',
     valueFormatter: (params: GridValueFormatterParams) =>
       params.value.toString(),
-    renderCell: basicCell,
+    renderCell: (params: GridRenderCellParams) => (
+      <Tooltip
+        placement="bottom"
+        title={(params.formattedValue <= 0) && "Stems represent the Stalk Grown per BDV of Deposited value. This value starts at 0 at the time of Stem deployment (the Silo V3 BIP), or when a new token is added to the Deposit Whitelist."}
+      >
+        <Typography>{params.formattedValue}</Typography>
+      </Tooltip>
+    ),
     sortable: false,
   }),
 

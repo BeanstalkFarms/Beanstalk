@@ -149,7 +149,7 @@ const AddPlantTxnToggle: React.FC<{
           >
             <Stack gap={1} p={1}>
               <Typography variant="body1" color="text.tertiary">
-                You will Plant to claim these silo rewards
+                You will Plant to claim these Silo rewards
               </Typography>
               <Grid container spacing={1} direction="row">
                 {items.map((item, i) => (

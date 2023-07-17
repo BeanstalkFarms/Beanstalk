@@ -101,7 +101,7 @@ const SiloActions: FC<{
           >
             <Link to="/silo?tab=migrate">
               <Button variant="text">
-                To use the Silo, migrate your account to Silo V3 &rarr;
+                To use the Silo, Migrate your account to Silo V3 &rarr;
               </Button>
             </Link>
           </Alert>
