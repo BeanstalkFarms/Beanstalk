@@ -36,10 +36,10 @@ type Beanstalk @entity {
 
   " Timestamp of the latest DiamondCut call "
   lastUpgrade: BigInt!
-  
+
   " Season specific data "
   seasons: [Season!]! @derivedFrom(field: "beanstalk")
-  
+
   " Silo level data "
   silo: Silo! @derivedFrom(field: "beanstalk")
 
@@ -58,9 +58,9 @@ type Beanstalk @entity {
 
 # An entity that holds season level data
 type Season @entity {
-  " Season Number" 
+  " Season Number"
   id: ID!
-  
+
   " Beanstalk Contract Address "
   beanstalk: Beanstalk!
 
@@ -69,7 +69,7 @@ type Season @entity {
 
   " Block timestamp when sunrise was called "
   createdAt: BigInt!
-  
+
   " Price of BEAN during sunrise "
   price: BigDecimal!
 
@@ -470,14 +470,22 @@ type Farmer @entity {
 }
 
 type SiloDeposit @entity {
-  "Account - Token Address - Season"
-  id: ID! 
+  """
+  Pre Silo V3:
+  Account - Token Address - Season
+
+  Post Silo-V3:
+  Account - Token Address - Stem
+  """
+  id: ID!
   "Farmer address"
   farmer: Farmer!
   "Token Address"
   token: String!
   "Season of deposit"
   season: Int!
+  "Stem of deposit - Introduced in Silo V3"
+  stem: BigInt
   "Current token amount deposited"
   amount: BigInt!
   "Original token amount deposited"
@@ -521,7 +529,7 @@ type SiloWithdraw @entity {
 
 type Plot @entity {
   "Plot index"
-  id: ID! 
+  id: ID!
   "Field to which this plot belongs"
   field: Field!
   "Farmer who owns this plot"
@@ -729,10 +737,10 @@ type PodListing @entity {
 
   """
   The absolute index of the listed Plot in the Pod Line.
- 
+
   Measured from the front, so the Listing contains all Pods between
   (index) and (index + totalAmount).
- 
+
   An example where the podLine is 50,000 but the index is 150,000:
      0         the first Pod issued
      100,000   harvestableIndex
@@ -770,7 +778,7 @@ type PodListing @entity {
   1    = V2 DYNAMIC = use `pricingFunction`
   """
   pricingType: Int
-  
+
   """
   [V1] The FIXED price per Pod denominated in Beans.
 
@@ -791,7 +799,7 @@ type PodListing @entity {
 
   """
   The original index from the first emission of PodListingCreated in a chain.
-  
+
   If `originalIndex !== index`, then this PodListing was created when a parent
   PodListing was partially filled.
   """
@@ -804,13 +812,13 @@ type PodListing @entity {
 
   """
   The amount of Pods Filled since the initial PodListing was Created.
-  
+
   `0 <= filled <= originalAmount`
   """
   filled: BigInt!
 
   ######################## Amounts [Relative to Child] ########################
-  
+
   """
   The maximum amount of Pods remaining to be sold by *this* PodListing.
 
@@ -852,7 +860,7 @@ type PodListing @entity {
 
   "Current market status of listing"
   status: MarketStatus!
-  
+
   "Timestamp of PodListing creation."
   createdAt: BigInt!
 
@@ -936,7 +944,7 @@ type PodOrder @entity {
 
   If pricingType = FIXED:
     Set to the number of Pods which can be purchased by the Order.
-    If FIXED (V1): `amount` field emitted in PodOrderCreated. 
+    If FIXED (V1): `amount` field emitted in PodOrderCreated.
     If FIXED (V2): `amount / pricePerPod` fields emitted in PodOrderCreated.
 
   If pricingType = DYNAMIC:
@@ -970,7 +978,7 @@ type PodOrder @entity {
 
   """
   The current number of Beans spent to acquire Pods.
-  
+
   Increases during each subsequent Fill:
   `0 <= beanAmountFilled <= beanAmount`
 
@@ -1010,7 +1018,7 @@ type PodFill @entity {
   "Associated order, if any"
   order: PodOrder
   "Account fulfilling the order"
-  from: String!      # These are already referenced via the listing and order entities.
+  from: String! # These are already referenced via the listing and order entities.
   "Account filling the order"
   to: Farmer!
   "Number of pods filled"
@@ -1020,7 +1028,7 @@ type PodFill @entity {
   "Start of plot transferred"
   start: BigInt!
   "Total beans used to fill listing/order"
-  costInBeans: BigInt 
+  costInBeans: BigInt
 }
 
 ##################################
@@ -1096,7 +1104,6 @@ the deposit and withdraw functions in Yearn do not emit any events. In our subgr
 store them as events, although they are not technically Ethereum events emitted by smart
 contracts.
 """
-
 interface SiloEvent {
   " { Event type }-{ Transaction hash }-{ Log index } "
   id: ID!
@@ -1184,10 +1191,9 @@ type Harvest implements FieldEvent @entity(immutable: true) {
   blockNumber: BigInt!
   " Timestamp of this event "
   createdAt: BigInt!
-  
 }
 
-type Chop implements SiloEvent @entity(immutable: true){
+type Chop implements SiloEvent @entity(immutable: true) {
   "chop-{ Transaction hash }-{ Log index }"
   id: ID!
   " Transaction hash of the transaction that emitted this event "
@@ -1284,13 +1290,15 @@ type AddDeposit implements SiloEvent @entity(immutable: true) {
   logIndex: Int!
   " The protocol this transaction belongs to "
   protocol: Beanstalk!
-  " Account removing deposit"
+  " Account adding deposit"
   account: String!
-  " Token removed"
+  " Token added"
   token: String!
-  " Season of deposit removed "
+  " Season of deposit added "
   season: Int!
-  " Amount of token removed "
+  " Stem of deposit added "
+  stem: BigInt
+  " Amount of token added "
   amount: BigInt!
   " BDV of the deposit "
   bdv: BigInt!
@@ -1315,8 +1323,12 @@ type RemoveDeposit implements SiloEvent @entity(immutable: true) {
   token: String!
   " Season of deposit removed "
   season: Int!
+  " Stem of deposit removed "
+  stem: BigInt
   " Amount of token removed "
   amount: BigInt!
+  " BDV of deposit removed "
+  bdv: BigInt
   " Block number of this event "
   blockNumber: BigInt!
   " Timestamp of this event "
@@ -1552,6 +1564,8 @@ type WhitelistToken implements SiloEvent @entity(immutable: true) {
   stalk: BigInt!
   "Seeds per BDV"
   seeds: BigInt!
+  "Stalk earned per season"
+  stalkPerSeason: BigInt
   "Selector for token"
   selector: String!
   " Block number of this event "

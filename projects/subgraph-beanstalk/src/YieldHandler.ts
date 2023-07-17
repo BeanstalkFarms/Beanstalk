@@ -6,6 +6,7 @@ import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot } from "./utils/Silo";
 import { loadSiloYield } from "./utils/SiloYield";
+import { HISTORIC_VAPY } from "./utils/HistoricYield";
 
 const MAX_WINDOW = 720;
 
@@ -47,12 +48,24 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
   // This iterates through 8760 times to calculate the silo APY
   let silo = loadSilo(BEANSTALK);
 
-  let twoSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("2"), silo.stalk, silo.seeds);
-  siloYield.twoSeedBeanAPY = twoSeedAPY[0];
-  siloYield.twoSeedStalkAPY = twoSeedAPY[1];
-  let fourSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("4"), silo.stalk, silo.seeds);
-  siloYield.fourSeedBeanAPY = fourSeedAPY[0];
-  siloYield.fourSeedStalkAPY = fourSeedAPY[1];
+  // Pull from historically calculated values prior to season 14280 rather than iterating
+  if (t <= 14280) {
+    for (let i = 0; i < HISTORIC_VAPY.length; i++) {
+      if (t.toString() == HISTORIC_VAPY[i][0]) {
+        siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][1]);
+        siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[i][2]);
+        siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][3]);
+        siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[i][4]);
+      }
+    }
+  } else {
+    let twoSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("2"), silo.stalk, silo.seeds);
+    siloYield.twoSeedBeanAPY = twoSeedAPY[0];
+    siloYield.twoSeedStalkAPY = twoSeedAPY[1];
+    let fourSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("4"), silo.stalk, silo.seeds);
+    siloYield.fourSeedBeanAPY = fourSeedAPY[0];
+    siloYield.fourSeedStalkAPY = fourSeedAPY[1];
+  }
   siloYield.save();
 
   updateFertAPY(t, timestamp);
