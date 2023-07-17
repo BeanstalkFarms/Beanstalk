@@ -1,6 +1,8 @@
 import { FC } from "src/types";
 import React from "react";
 import styled from "styled-components";
+import { BodyXS } from "./Typography";
+import { size } from "src/breakpoints";
 
 type Props = {
   label?: string;
@@ -62,6 +64,10 @@ const StyledCheckboxContainer = styled.div<CheckboxProps>`
   position: ${(props) => (props.mode === "checkOnly" ? "relative" : "absolute")};
   top: ${(props) => (props.mode === "checkOnly" ? "0px" : "2px")};
   cursor: pointer;
+  @media (max-width: ${size.mobile}) {
+    width: 14px;
+    height: 14px;
+  }
 `;
 
 const Checkmark = styled.div<CheckboxProps>`
@@ -77,6 +83,10 @@ const Checkmark = styled.div<CheckboxProps>`
   filter: ${(props) => (props.checkboxColor ? "brightness(100%);" : "brightness(0%);")}
   opacity: ${(props) => (props.checked ? "1" : "0")};
   z-index: 2;
+  @media (max-width: ${size.mobile}) {
+    width: 7px;
+    height: 7px;
+  }
 `;
 
 const HoverCheckmark = styled.div<CheckboxProps>`
@@ -95,6 +105,10 @@ const HoverCheckmark = styled.div<CheckboxProps>`
     filter: brightness(50%);
   }
   z-index: 1;
+  @media (max-width: ${size.mobile}) {
+    width: 7px;
+    height: 7px;
+  }
 `;
 
 const CheckboxText = styled.div<CheckboxProps>`
@@ -108,4 +122,7 @@ const CheckboxText = styled.div<CheckboxProps>`
     font-weight: 600;
   }
   user-select: none;
+  @media (max-width: ${size.mobile}) {
+    ${BodyXS}
+  }
 `;

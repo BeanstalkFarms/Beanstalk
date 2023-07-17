@@ -1,7 +1,9 @@
-import React, { MouseEvent as ReactMouseEvent } from "react";
+import React from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
 import { Spinner } from "../Spinner";
+import { BodyXS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type Props = {
   label?: string;
@@ -9,6 +11,7 @@ type Props = {
   loading?: boolean;
   onClick?: () => void;
   width?: string;
+  margin?: string;
   secondary?: boolean;
 };
 
@@ -18,10 +21,11 @@ export const Button: FC<Props> = ({
   loading = false,
   onClick = () => {},
   width = "100%",
+  margin = "0",
   secondary = false
 }) => {
   return (
-    <StyledButton onClick={onClick} disabled={disabled} $loading={loading} $width={width} secondary={secondary}>
+    <StyledButton onClick={onClick} disabled={disabled} $loading={loading} $width={width} margin={margin} secondary={secondary}>
       {loading ? <Spinner size={18} /> : label}
     </StyledButton>
   );
@@ -32,6 +36,7 @@ type ButtonProps = {
   $loading: boolean;
   $width: string;
   secondary: boolean;
+  margin: string;
 };
 
 const StyledButton = styled.button<ButtonProps>`
@@ -42,10 +47,11 @@ const StyledButton = styled.button<ButtonProps>`
   }};
   height: 48px;
   border: none;
-  outline: ${({ secondary }) => (secondary ? "0.5px solid #9CA3AF" : "0px")};
-  outline-offset: ${({ secondary }) => (secondary ? "-0.5px" : "0px")};
+  outline: ${({ secondary, disabled }) => (secondary ? "0.5px solid #9CA3AF" : disabled ? "0.5px solid #D1D5DB" : "0.5px solid #000")};
+  outline-offset: -0.5px;
   color: ${({ secondary }) => (secondary ? "#000" : "#FFF")};
   width: ${({ $width }) => $width};
+  margin: ${({ margin }) => margin};
 
   font-weight: 600;
   font-size: 16px;
@@ -53,10 +59,17 @@ const StyledButton = styled.button<ButtonProps>`
   cursor: pointer;
 
   :hover {
-    outline: ${({ disabled }) => (disabled ? "none" : "2px solid #46b955")};
+    outline: ${({ disabled }) => (disabled ? "0.5px solid #D1D5DB" : "2px solid #46b955")};
   }
 
   :focus {
     outline: 2px solid #46b955;
+  }
+
+  @media (max-width: ${size.mobile}) {
+    ${BodyXS}
+    font-weight: 600;
+    padding: 8px 8px;
+    height: 40px;
   }
 `;

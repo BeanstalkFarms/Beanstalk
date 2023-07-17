@@ -5,9 +5,7 @@ import { TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { YieldSparkle } from "../Icons";
 
-type Props = {
-  width?: number;
-};
+type Props = {};
 
 function YieldDetails() {
   return (
@@ -22,9 +20,9 @@ function YieldDetails() {
   );
 }
 
-export const LearnYield: FC<Props> = ({ width }) => {
+export const LearnYield: FC<Props> = () => {
   return (
-    <ExpandBox width={width || 408}>
+    <ExpandBox drawerHeaderText="How can I earn yield?">
       <ExpandBox.Header>
         <YieldSparkle />
         <TextNudge amount={1}>How can I earn yield?</TextNudge>

@@ -2,6 +2,38 @@ specVersion: 0.0.4
 schema:
   file: ./schema.graphql
 dataSources:
+  # Silo V3
+  - kind: ethereum/contract
+    name: Silo-V3
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 17636279 # Placeholder
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo-V3
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP36.json
+        - name: UniswapV2Pair
+          file: ../subgraph-core/abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: AddDeposit(indexed address,indexed address,int96,uint256,uint256)
+          handler: handleAddDeposit_V3
+        - event: RemoveDeposit(indexed address,indexed address,int96,uint256,uint256)
+          handler: handleRemoveDeposit_V3
+        - event: RemoveDeposits(indexed address,indexed address,int96[],uint256[],uint256,uint256[])
+          handler: handleRemoveDeposits_V3
+        - event: WhitelistToken(indexed address,bytes4,uint32,uint256)
+          handler: handleWhitelistToken_V3
+      file: ./src/SiloHandler.ts
+  # Silo V2 / Replanted
   - kind: ethereum/contract
     name: Silo-Replanted
     network: mainnet

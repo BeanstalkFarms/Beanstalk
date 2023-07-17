@@ -9,6 +9,7 @@ type Props = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   rotate?: string;
   margin?: string;
+  color?: string;
 } & ({ src: string; component?: never } | { src?: never; component?: JSXElementConstructor<any> });
 
 type StyleProps = {
@@ -21,11 +22,11 @@ type StyleProps = {
 // -- as a string url via `src`
 // -- as an SVG component via `component`. See src/components/Icons.tsx
 // for acceptable components
-export const ImageButton: FC<Props> = ({ size = 32, src, component, alt = "Image", onClick, padding, rotate, margin }) => {
+export const ImageButton: FC<Props> = ({ size = 32, src, component, alt = "Image", onClick, padding, rotate, margin, color }) => {
   return (
     <Button onClick={onClick} padding={padding} rotate={rotate} margin={margin}>
       {src && <img src={src} alt={alt} width={size} />}
-      {component && React.createElement(component, { width: size, height: size, color: "#000" })}
+      {component && React.createElement(component, { width: size, height: size, color: color || "#000" })}
     </Button>
   );
 };

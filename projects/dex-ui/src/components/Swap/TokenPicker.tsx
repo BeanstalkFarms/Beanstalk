@@ -4,13 +4,14 @@ import { FC } from "src/types";
 import { useTokens } from "src/tokens/TokenProvider";
 import styled, { keyframes } from "styled-components";
 import { TokenLogo } from "src/components/TokenLogo";
-import { Image } from "../Image";
-import chevDown from "src/assets/images/chevron-down.svg";
 import x from "src/assets/images/x.svg";
 import { ImageButton } from "../ImageButton";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { Spinner } from "../Spinner";
 import { ChevronDown } from "../Icons";
+import { BottomDrawer } from "../BottomDrawer";
+import { BodyS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type Props = {
   token: Token;
@@ -65,49 +66,65 @@ export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, o
         {editable && <ChevronDown width={8} color="#adadad" />}
       </Button>
       {modalOpen && (
-        <>
-          <Modal id="modal-background" onClick={closeModal} role="dialog" aria-labelledby="dialog-title">
-            <ModalContainer id="modal" data-trace="true">
-              <ModalHeader>
-                <div id="dialog-title">Select a token</div>
-                <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
-              </ModalHeader>
-              <ModalContent>
-                <Ol>
-                  {list.map((token: Token) => (
-                    <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
-                      <TokenLogo token={token} size={25} />
-                      <Details>
-                        <Symbol>{token.symbol}</Symbol>
-                        <Name>{token.displayName}</Name>
-                      </Details>
-                      {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
-                    </TokenRow>
-                  ))}
-                </Ol>
-              </ModalContent>
-            </ModalContainer>
-            {connectorFor === "input-amount" && (
-              <InConnector>
-                <svg xmlns="http://www.w3.org/2000/svg" width={48} height={6} fill="none">
-                  <path id="line" stroke="#46B955" d="M0 3h47.5" />
-                  <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-                  <path fill="#F9F8F6" stroke="#46B955" d="M0 .55a2.5 2.5 0 0 1 0 4.9V.55Z" />
-                </svg>
-              </InConnector>
-            )}
-            {connectorFor === "output-amount" && (
-              <OutConnector>
-                <svg xmlns="http://www.w3.org/2000/svg" width={48} height={184} fill="none">
-                  <path id="line" stroke="#46B955" d="M-1 171H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
-                  <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
-                  <path fill="#F9F8F6" stroke="#46B955" d="M0 167.55a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
-                </svg>
-              </OutConnector>
-            )}
-          </Modal>
-        </>
+        <DesktopModal id="modal-background" onClick={closeModal} role="dialog" aria-labelledby="dialog-title">
+          <ModalContainer id="modal" data-trace="true">
+            <ModalHeader>
+              <div id="dialog-title">Select a token</div>
+              <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
+            </ModalHeader>
+            <ModalContent>
+              <Ol>
+                {list.map((token: Token) => (
+                  <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
+                    <TokenLogo token={token} size={25} />
+                    <Details>
+                      <Symbol>{token.symbol}</Symbol>
+                      <Name>{token.displayName}</Name>
+                    </Details>
+                    {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman()}</Balance>}
+                  </TokenRow>
+                ))}
+              </Ol>
+            </ModalContent>
+          </ModalContainer>
+          {connectorFor === "input-amount" && (
+            <InConnector>
+              <svg xmlns="http://www.w3.org/2000/svg" width={48} height={6} fill="none">
+                <path id="line" stroke="#46B955" d="M0 3h47.5" />
+                <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
+                <path fill="#F9F8F6" stroke="#46B955" d="M0 .55a2.5 2.5 0 0 1 0 4.9V.55Z" />
+              </svg>
+            </InConnector>
+          )}
+          {connectorFor === "output-amount" && (
+            <OutConnector>
+              <svg xmlns="http://www.w3.org/2000/svg" width={48} height={184} fill="none">
+                <path id="line" stroke="#46B955" d="M-1 171H21a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3h20.5" />
+                <path fill="#F9F8F6" stroke="#3E404B" d="M48.5 5.45a2.5 2.5 0 0 1 0-4.9v4.9Z" />
+                <path fill="#F9F8F6" stroke="#46B955" d="M0 167.55a2.502 2.502 0 0 1 0 4.9v-4.9Z" />
+              </svg>
+            </OutConnector>
+          )}
+        </DesktopModal>
       )}
+      <MobileDrawer>
+        <BottomDrawer showDrawer={modalOpen} headerText={"Select a token"} toggleDrawer={setModalOpen}>
+          <ModalContent>
+            <Ol>
+              {list.map((token: Token) => (
+                <TokenRow key={token.symbol} onClick={() => selectToken(token)}>
+                  <TokenLogo token={token} size={25} />
+                  <Details>
+                    <Symbol>{token.symbol}</Symbol>
+                    <Name>{token.displayName}</Name>
+                  </Details>
+                  {balancesLoading || isFetching ? <Spinner size={14} /> : <Balance>{balances?.[token.symbol]?.toHuman("short")}</Balance>}
+                </TokenRow>
+              ))}
+            </Ol>
+          </ModalContent>
+        </BottomDrawer>
+      </MobileDrawer>
     </>
   );
 };
@@ -169,12 +186,18 @@ const Symbol = styled.div`
   font-weight: 400;
   font-size: 16px;
   line-height: 20px;
+  @media (max-width: ${size.mobile}) {
+    line-height: 16px;   
+  }
 `;
 const Name = styled.div`
   ont-weight: 400;
   font-size: 14px;
   line-height: 20px;
   color: #9e9e9e;
+  @media (max-width: ${size.mobile}) {
+    line-height: 14px;   
+  }
 `;
 const Balance = styled.div`
   font-weight: 500;
@@ -183,9 +206,18 @@ const Balance = styled.div`
   max-width: 175px;
   text-overflow: ellipsis;
   overflow: hidden;
+  @media (max-width: ${size.mobile}) {
+    ${BodyS}
+  }
 `;
 
-const Modal = styled.div`
+const MobileDrawer = styled.div`
+  @media (min-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const DesktopModal = styled.div`
   position: fixed;
   top: 112px;
   left: 0px;
@@ -195,6 +227,9 @@ const Modal = styled.div`
   cursor: auto;
   display: flex;
   z-index: 1024;
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
 `;
 const ModalContainer = styled.div`
   display: flex;
@@ -237,6 +272,11 @@ const ModalContent = styled.div`
   max-height: calc(100vh - 64px - 48px - 96px - 72px - 48px - 48px);
   overflow-y: auto;
   overflow-x: hidden;
+
+  @media (max-width: ${size.mobile}) {
+    max-height: calc(100vh - 56px);
+    border-width: 0px 0px 0.5px 0px;
+  }
 `;
 
 const Ol = styled.ol`
