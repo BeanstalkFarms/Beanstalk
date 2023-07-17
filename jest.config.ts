@@ -9,7 +9,7 @@ const jestConfig: JestConfigWithTsJest = {
       rootDir: "projects/sdk-wells",
       testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)", "<rootDir>/test/**/?(*.)+(spec|test).[jt]s?(x)"],
       moduleNameMapper: {
-        "@beanstalk/wells/(.*)$": "<rootDir>/src/$1",
+        "@beanstalk/sdk-wells/(.*)$": "<rootDir>/src/$1",
         "^src/(.*)$": "<rootDir>/src/$1"
       }
     },
