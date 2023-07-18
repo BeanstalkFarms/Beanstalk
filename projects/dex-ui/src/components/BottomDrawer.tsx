@@ -52,6 +52,9 @@ const Background = styled.div<Props>`
   transition: all 0.3s ease-in-out;
   opacity: ${({ showDrawer }) => (showDrawer ? "1" : "0")};
   display: ${({ showDrawer }) => (showDrawer ? "flex" : "none")};
+  @media (min-width: ${size.mobile}) {
+    display: none;
+  }
 `;
 
 const Container = styled.div<Props>`
