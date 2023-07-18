@@ -29,8 +29,8 @@ export const useWellTokens = () => {
       if (tokens.length === 0) {
         if (wellsError) {
           Log.module("useWellTokens").log(`No tokens in wells`);
-          return [];
         }
+        return [];
       }
       const ETH = sdk.tokens.ETH;
       tokens.push(ETH);
