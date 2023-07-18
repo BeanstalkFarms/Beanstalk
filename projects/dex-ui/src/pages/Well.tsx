@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
 import { getPrice } from "src/utils/price/usePrice";
@@ -95,6 +95,7 @@ export const Well = () => {
     setIsSticky(!entry.isIntersecting); // Not sure why inverting isIntersecting gives me the desired behaviour
   };
 
+  const observer = useRef<IntersectionObserver | null>();
   const containerRef = useCallback((node: any) => {
     if (node === null) return;
 
@@ -104,13 +105,17 @@ export const Well = () => {
       threshold: 1.0
     };
 
-    const observer = new IntersectionObserver(callbackFunction, options);
-    observer.observe(node);
+    if (!observer.current) {
+      observer.current = new IntersectionObserver(callbackFunction, options);
+    }
 
-    return () => {
-      observer.unobserve(node);
-    };
+    observer.current.observe(node);
+
   }, []);
+
+  useEffect(() => () => {
+    if (observer.current) observer.current.disconnect();
+  }, [])
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
   if (loading)
