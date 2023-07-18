@@ -82,9 +82,10 @@ const BalancesHeader: React.FC<{}> = () => {
         width="100%"
         justifyContent="space-between"
       >
-        {/* STALK */}
-        <HeaderItem {...tokensProps.stalk} alignItems="flex-start" />
         <Row width="100%" justifyContent="space-evenly">
+          {/* STALK */}
+          <HeaderItem {...tokensProps.stalk} alignItems="flex-start" />
+          <VerticalDivider />
           {/* SEEDS */}
           <HeaderItem {...tokensProps.seeds} />
           <VerticalDivider />
