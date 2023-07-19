@@ -6,6 +6,7 @@ export type ActiveProposal = {
   title: string;
   start: number;
   end: number;
+  space: any;
 };
 
 export type BeanstalkGovernance = {

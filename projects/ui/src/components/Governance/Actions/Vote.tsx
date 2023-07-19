@@ -292,7 +292,7 @@ const VoteForm: FC<
               )}
             </StatHorizontal>
           )}
-          {quorumPct && totalForQuorum && type === 'BIP' && (
+          {quorumPct && totalForQuorum && type === 'BIP' && proposal.space.name === 'beanstalkdao.eth' && (
             <StatHorizontal
               label={
                 <>

@@ -55,6 +55,7 @@ export const useFetchBeanstalkGovernance = () => {
                 title: p!.title,
                 start: p!.start,
                 end: p!.end,
+                space: p!.space,
               }))
           )
         );
