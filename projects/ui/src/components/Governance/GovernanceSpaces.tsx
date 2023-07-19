@@ -32,8 +32,13 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const filterBySpace = useCallback(
     (t: number) => {
       if (!loading && data?.proposals) {
+        console.log("dataproposals: ", data.proposals)
         return data.proposals.filter(
-          (p) => p !== null && p?.space?.id === SNAPSHOT_SPACES[t] && p.id !== "0xe82ac170f7e17ea136c06e69241c5cdf7942011234aed231b53ff566644f29d8"
+          (p) => p !== null && p?.space?.id === SNAPSHOT_SPACES[t] && (
+            (p.title.startsWith("BIP") || p.title.startsWith("BOP")) && p.space.id === "beanstalkdao.eth" || 
+            (p.title.startsWith("Temp-Check") || p.title.startsWith("BFCP")) && p.space.id === "beanstalkfarms.eth" || 
+            p.title.startsWith("BSP") && p.space.id === "wearebeansprout.eth" || 
+            p.title.startsWith("BNP") && p.space.id === "beanft.eth")
         ) as Proposal[];
       }
       return [];
