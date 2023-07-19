@@ -49,7 +49,7 @@ export const useFetchBeanstalkGovernance = () => {
               /// array can have `null` elements. I believe this shouldn't
               /// be allowed, but to fix we check for null values and manually
               /// assert existence of `p`.
-              .filter((p) => p !== null)
+              .filter((p) => p !== null && p.id !== "0xe82ac170f7e17ea136c06e69241c5cdf7942011234aed231b53ff566644f29d8")
               .map((p) => ({
                 id: p!.id,
                 title: p!.title,
