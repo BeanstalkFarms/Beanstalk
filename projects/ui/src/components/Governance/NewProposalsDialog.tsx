@@ -47,7 +47,12 @@ const NewProposalsDialog: FC<{}> = () => {
 
   useEffect(() => {
     const lastSeen = getLastSeen();
-    const _unseenProposals = activeProposals.filter((p) => p.start > lastSeen);
+    const _unseenProposals = activeProposals.filter((p) => 
+      p.start > lastSeen && 
+      ((p.space.id === ("beanstalkfarms.eth") && p.title.startsWith("BFCP")) || 
+      (p.space.id === ("wearebeansprout.eth") && p.title.startsWith("BSP")))
+    );
+
     if (_unseenProposals.length > 0) {
       setUnseenProposals(_unseenProposals);
       showModal(true);
