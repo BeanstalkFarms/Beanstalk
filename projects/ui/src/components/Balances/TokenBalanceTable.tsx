@@ -95,7 +95,13 @@ const TokenBalanceTable: React.FC<{
           </>
         </Stack>
       ) : (
-        <Stack height="100%" alignItems="center" justifyContent="center" pb={2}>
+        <Stack
+          height="100%"
+          alignItems="center"
+          justifyContent="center"
+          pb={2}
+          px={2}
+        >
           <Typography color="text.tertiary">
             {`You don't have any tokens in your ${pageName} Balance`}
           </Typography>
