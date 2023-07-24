@@ -79,45 +79,41 @@ export const Wells = () => {
     });
 
     return (
-      <>
-        <TableRow key={well.address} onClick={gotoWell}>
-          <DesktopContainer>
-            <WellDetail>
-              <TokenLogos>{logos}</TokenLogos>
-              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-              {/* <Deployer>{deployer}</Deployer> */}
-            </WellDetail>
-          </DesktopContainer>
-          <DesktopContainer>
-            <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
-          </DesktopContainer>
-          <DesktopContainer align="right">
-            <TradingFee>0.00%</TradingFee>
-          </DesktopContainer>
-          <DesktopContainer align="right">
-            <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
-          </DesktopContainer>
-          <DesktopContainer align="right">
-            <Reserves>
-              {smallLogos[0]}
-              {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
-            </Reserves>
-            <Reserves>
-              {smallLogos[1]}
-              {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
-            </Reserves>
-            {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
-          </DesktopContainer>
-          <MobileContainer>
-            <WellDetail>
-              <TokenLogos>{logos}</TokenLogos>
-              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-              {/* <Deployer>{deployer}</Deployer> */}
-            </WellDetail>
-            <Amount>${wellLiquidity[index] ? Number(wellLiquidity[index]!.toHuman()).toFixed(2) : "-.--"}</Amount>
-          </MobileContainer>
-        </TableRow>
-      </>
+      <TableRow key={well.address} onClick={gotoWell}>
+        <DesktopContainer>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          </WellDetail>
+        </DesktopContainer>
+        <DesktopContainer>
+          <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
+        </DesktopContainer>
+        <DesktopContainer align="right">
+          <TradingFee>0.00%</TradingFee>
+        </DesktopContainer>
+        <DesktopContainer align="right">
+          <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
+        </DesktopContainer>
+        <DesktopContainer align="right">
+          <Reserves>
+            {smallLogos[0]}
+            {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
+          </Reserves>
+          <Reserves>
+            {smallLogos[1]}
+            {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
+          </Reserves>
+          {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
+        </DesktopContainer>
+        <MobileContainer>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          </WellDetail>
+          <Amount>${wellLiquidity[index] ? Number(wellLiquidity[index]!.toHuman()).toFixed(2) : "-.--"}</Amount>
+        </MobileContainer>
+      </TableRow>
     );
   }
 
@@ -134,27 +130,25 @@ export const Wells = () => {
     });
 
     return (
-      <>
-        <TableRow key={well.address} onClick={gotoWell}>
-          <DesktopContainer>
-            <WellDetail>
-              <TokenLogos>{logos}</TokenLogos>
-              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-            </WellDetail>
-          </DesktopContainer>
-          <DesktopContainer align="right">
-            <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
-          </DesktopContainer>
-          <MobileContainer>
-            <WellDetail>
-              <TokenLogos>{logos}</TokenLogos>
-              <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-              {/* <Deployer>{deployer}</Deployer> */}
-            </WellDetail>
-            <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
-          </MobileContainer>
-        </TableRow>
-      </>
+      <TableRow key={well.address} onClick={gotoWell}>
+        <DesktopContainer>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          </WellDetail>
+        </DesktopContainer>
+        <DesktopContainer align="right">
+          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+        </DesktopContainer>
+        <MobileContainer>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+            {/* <Deployer>{deployer}</Deployer> */}
+          </WellDetail>
+          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+        </MobileContainer>
+      </TableRow>
     );
   }
 
@@ -239,7 +233,7 @@ const DesktopContainer = styled(Td)`
   @media (max-width: ${size.mobile}) {
     display: none;
   }
-`
+`;
 
 const MobileContainer = styled(Td)`
   padding: 8px 16px;
@@ -260,7 +254,7 @@ const DesktopHeader = styled(Th)`
   @media (max-width: ${size.mobile}) {
     display: none;
   }
-`
+`;
 
 const WellDetail = styled.div`
   display: flex;

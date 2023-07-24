@@ -50,7 +50,7 @@ export const findWells = memoize(
           return res;
         })
         .catch((err) => {
-          Log.module("wells").error("Error loading wells from subgraph: ", err);
+          Log.module("wells").warn("Error loading wells from subgraph: ", err);
           throw err;
         })
     ]);

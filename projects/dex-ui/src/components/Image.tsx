@@ -5,14 +5,16 @@ import styled from "styled-components";
 type Props = {
   src: string;
   size?: number;
+  width?: number;
+  height?: number;
   alt: string;
   onClick?: () => void;
 };
 
-export const Image: FC<Props> = ({ size = 32, src, alt = "Image", onClick }) => {
+export const Image: FC<Props> = ({ width, height, src, alt = "Image", onClick }) => {
   return (
     <Container onClick={onClick}>
-      <img src={src} alt={alt} width={size} />
+      <img src={src} alt={alt} width={width} height={height} />
     </Container>
   );
 };

@@ -7,12 +7,15 @@ import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
 import CustomToaster from "../TxnToast/CustomToaster";
-import buildIcon from "src/assets/images/navbar/build.svg";
+// import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
 import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X } from "../Icons";
 import { size } from "src/breakpoints";
+import { useNetwork } from "wagmi";
+import { Title } from "../PageComponents/Title";
+import { TokenMarquee } from "./TokenMarquee";
 
 export const BasinConnectButton = () => {
   return (
@@ -27,6 +30,7 @@ export const BasinConnectButton = () => {
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { chain } = useNetwork();
 
   return (
     <Container id="frame">
@@ -43,9 +47,9 @@ export const Frame: FC<{}> = ({ children }) => {
             <NavLink to="/wells" hovericon={wellsIcon}>
               Liquidity
             </NavLink>
-            <NavLink to="/build" hovericon={buildIcon}>
+            {/* <NavLink to="/build" hovericon={buildIcon}>
               Build
-            </NavLink>
+            </NavLink> */}
             <NavLink to="/swap" hovericon={swapIcon}>
               Swap
             </NavLink>
@@ -56,9 +60,7 @@ export const Frame: FC<{}> = ({ children }) => {
           <BasinConnectButton />
         </StyledConnectContainer>
         <DropdownMenu open={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ?
-            <X />
-          : <BurgerMenuIcon />}
+          {mobileMenuOpen ? <X /> : <BurgerMenuIcon />}
         </DropdownMenu>
       </NavContainer>
       <TokenMarquee />
@@ -66,17 +68,17 @@ export const Frame: FC<{}> = ({ children }) => {
         <CustomToaster />
         <BurgerMenu open={mobileMenuOpen}>
           <MobileNavLinkContainer>
-            <MobileNavLink bold to="/swap" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavLink $bold to="/swap" onClick={() => setMobileMenuOpen(false)}>
               Swap
             </MobileNavLink>
-            <MobileNavLink bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavLink $bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
               Wells
             </MobileNavLink>
-            <MobileNavLink bold to="/build" onClick={() => setMobileMenuOpen(false)}>
+            {/* <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>
               Build
-            </MobileNavLink>
+            </MobileNavLink> */}
             {isNotProd && (
-              <MobileNavLink bold to="/dev" onClick={() => setMobileMenuOpen(false)}>
+              <MobileNavLink $bold to="/dev" onClick={() => setMobileMenuOpen(false)}>
                 Dev
               </MobileNavLink>
             )}
@@ -102,7 +104,7 @@ export const Frame: FC<{}> = ({ children }) => {
             <BasinConnectButton />
           </MobileConnectContainer>
         </BurgerMenu>
-        {children}
+        {chain?.unsupported ? <Title title="Unsupported Chain"/> : children}
       </Window>
       <Footer />
     </Container>
@@ -112,21 +114,6 @@ export const Frame: FC<{}> = ({ children }) => {
 type NavLinkProps = {
   hovericon?: string;
 };
-
-const TokenMarquee = styled.div`
-  display: none;
-
-  @media (min-width: ${size.mobile}) {
-    display: flex;
-    height: 48px;
-    min-height: 48px;
-    box-sizing: border-box;
-    border-left: 0.5px solid black;
-    border-right: 0.5px solid black;
-    border-bottom: 0.25px solid black;
-    width: 100vw;
-  }
-`;
 
 const Container = styled.div`
   // border: 1px solid red;
@@ -237,7 +224,7 @@ const StyledConnectContainer = styled.div`
   @media (min-width: ${size.mobile}) {
     display: flex;
     direction: row;
-    flex: 1;
+    width: 192px;
     align-self: stretch;
     align-items: center;
     justify-content: center;
@@ -321,15 +308,15 @@ const MobileNavLinkContainer = styled.div`
   justify-content: flex-start;
 `;
 
-const MobileNavLink = styled(Link)<{ bold?: boolean }>`
+const MobileNavLink = styled(Link)<{ $bold?: boolean }>`
   width: 100%;
   border-bottom: 0.5px solid black;
   padding: 16px;
   text-transform: uppercase;
   text-decoration: none;
   color: black;
-  font-weight: ${(props) => (props.bold ? `600` : `normal`)};
-  ${(props) => props.bold && `letter-spacing: 0.96px;`}
+  font-weight: ${(props) => (props.$bold ? `600` : `normal`)};
+  ${(props) => props.$bold && `letter-spacing: 0.96px;`}
 `;
 
 const MobileLargeNavRow = styled.div`
