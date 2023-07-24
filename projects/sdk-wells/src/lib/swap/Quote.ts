@@ -253,12 +253,12 @@ export class Quote {
         this.amountUsedForQuote.toBlockchain()
       ]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         const overrideOptions = { ...overrides, value: this.amountUsedForQuote.toBigNumber() };
         return this.depot.farm([pipe], overrideOptions);
       };
 
-      doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
+      doGasEstimate = async (overrides: TxOverrides = {}): Promise<TokenValue> => {
         const overrideOptions = { ...overrides, value: this.amountUsedForQuote.toBigNumber() };
         const gas = await this.depot.estimateGas.farm([pipe], overrideOptions);
         return TokenValue.fromBlockchain(gas, 0);
@@ -295,11 +295,11 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...shiftOps, unwrapWeth, sendEth], 0]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         return this.depot.farm([transferToFirstWell, pipe], overrides);
       };
 
-      doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
+      doGasEstimate = async (overrides: TxOverrides = {}): Promise<TokenValue> => {
         const gas = await this.depot.estimateGas.farm([transferToFirstWell, pipe], overrides);
         return TokenValue.fromBlockchain(gas, 0);
       };
@@ -316,11 +316,11 @@ export class Quote {
 
       pipe = this.depot.interface.encodeFunctionData("advancedPipe", [shiftOps, 0]);
 
-      doSwap = (overrides?: TxOverrides): Promise<ContractTransaction> => {
+      doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         return this.depot.farm([transferToFirstWell, pipe], overrides);
       };
 
-      doGasEstimate = async (overrides?: TxOverrides): Promise<TokenValue> => {
+      doGasEstimate = async (overrides: TxOverrides = {}): Promise<TokenValue> => {
         const gas = await this.depot.estimateGas.farm([transferToFirstWell, pipe], overrides);
         return TokenValue.fromBlockchain(gas, 0);
       };
