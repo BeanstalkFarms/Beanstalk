@@ -14,7 +14,7 @@ function PumpDetails() {
         the Pump, which can be used as a token price feed.
       </div>
       <div>
-        Check out this <StyledLink href="https://app.bean.money/">multi-block MEV manipulation resistant Pump</StyledLink> developed by
+        Check out this <StyledLink href="https://basin.exchange/multi-flow-pump.pdf" target="_blank" rel="noopener">multi-block MEV manipulation resistant Pump</StyledLink> developed by
         Beanstalk Farms!
       </div>
     </TextContainer>
