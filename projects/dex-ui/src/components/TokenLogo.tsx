@@ -13,7 +13,11 @@ type Props = {
 };
 
 export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) => {
-  const image = images[isLP ? "LP" : token?.symbol ?? "DEFAULT"] ?? images.DEFAULT;
+  const symbol = token?.symbol ? token?.symbol : isLP ? "LP" : "DEFAULT";
+  let image = images[symbol];
+  if (!image) {
+    image = isLP ? images.LP : images.DEFAULT;
+  }
 
   return (
     <Container width={size} height={size} mobileWidth={mobileSize || size} mobileHeight={mobileSize || size}>

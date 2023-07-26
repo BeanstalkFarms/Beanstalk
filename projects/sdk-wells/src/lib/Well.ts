@@ -121,6 +121,7 @@ export class Well {
     if (!this.lpToken) {
       const token = new ERC20Token(this.sdk.chainId, this.address, undefined, undefined, undefined, this.sdk.providerOrSigner);
       await token.loadFromChain();
+      token.isLP = true;
       setReadOnly(this, "lpToken", token, true);
     }
 
