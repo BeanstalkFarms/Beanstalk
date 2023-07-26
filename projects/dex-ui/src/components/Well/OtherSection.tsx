@@ -43,19 +43,32 @@ export const OtherSection: FC<Props> = ({ well }) => {
               </Link>
             </MobileTd>
           </Row>
+          <Row>
+            <Td>
+              <Detail>Well LP Token - {well.lpToken?.symbol}</Detail>
+            </Td>
+            <DesktopTd>
+              <Link href={`https://etherscan.io/address/${well.lpToken?.address}`}>{well.lpToken?.address}</Link>
+            </DesktopTd>
+            <MobileTd align={"right"}>
+              <Link href={`https://etherscan.io/address/${well.lpToken?.address}`}>
+                {well.lpToken?.address.substr(0, 5) + "..." + well.lpToken?.address.substr(well.lpToken?.address.length - 5)}
+              </Link>
+            </MobileTd>
+          </Row>
           {well.tokens!.map(function (token, index) {
             return (
               <Row key={token.address}>
                 <Td>
-                  <Detail>{`Token ${index + 1} Address`}</Detail>
+                  <Detail>{`Token ${index + 1} - ${token.symbol}`}</Detail>
                 </Td>
                 <DesktopTd>
-                  <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>
+                  <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`} target="_blank" rel="noopener noreferrer">
                     {token.address || `-`}
                   </Link>
                 </DesktopTd>
                 <MobileTd align={"right"}>
-                  <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`}>
+                  <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`} target="_blank" rel="noopener noreferrer">
                     {token.address.substr(0, 5) + "..." + token.address.substr(token.address.length - 5) || `-`}
                   </Link>
                 </MobileTd>
