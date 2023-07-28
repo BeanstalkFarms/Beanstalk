@@ -129,7 +129,7 @@ contract EnrootFacet is ReentrancyGuard {
 
         //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
         int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
-        uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
+        uint16 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
 
         uint256 depositBdv;
 

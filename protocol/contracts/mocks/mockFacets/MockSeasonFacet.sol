@@ -281,7 +281,7 @@ contract MockSeasonFacet is SeasonFacet {
 
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
-        uint32 currentSeason = s.season.current;
+        uint24 currentSeason = uint24(s.season.current);
 
         // Clear the storage variable
         delete s.s.deprecated_seeds;

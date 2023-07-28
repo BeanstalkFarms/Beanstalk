@@ -33,8 +33,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.CURVE_BEAN_METAPOOL,
             BDVFacet.curveToBDV.selector,
-            BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS * 1e6 //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
+            uint16(BEAN_3CRV_STALK),
+            uint24(BEAN_3CRV_SEEDS * 1e6) //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
         );
     }
 
@@ -42,8 +42,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.BEAN,
             BDVFacet.beanToBDV.selector,
-            BEAN_STALK,
-            BEAN_SEEDS * 1e6
+            uint16(BEAN_STALK),
+            uint24(BEAN_SEEDS * 1e6)
         );
     }
 
@@ -51,8 +51,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.UNRIPE_BEAN,
             BDVFacet.unripeBeanToBDV.selector,
-            BEAN_STALK,
-            BEAN_SEEDS * 1e6
+            uint16(BEAN_STALK),
+            uint24(BEAN_SEEDS * 1e6)
         );
     }
 
@@ -60,8 +60,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.UNRIPE_LP,
             BDVFacet.unripeLPToBDV.selector,
-            BEAN_3CRV_STALK,
-            BEAN_3CRV_SEEDS * 1e6
+            uint16(BEAN_3CRV_STALK),
+            uint24(BEAN_3CRV_SEEDS * 1e6)
         );
     }
 }

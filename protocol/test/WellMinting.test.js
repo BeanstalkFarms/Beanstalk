@@ -23,15 +23,11 @@ describe('Well Minting', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.bean = await getBean()
     await this.bean.mint(userAddress, to18('1'));
-
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
-
     await setEthUsdPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
-
     await whitelistWell(this.well.address, '10000', to6('4'))
-
     await this.season.captureWellE(this.well.address)
   
   });

@@ -374,9 +374,10 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
+     * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token. 
+     * Does not truncate the value, i.e. divide by 1e6
      */
-    function stemTipForToken(address token)
+    function stemTipForTokenUntruncated(address token)
         internal
         view
         returns (int96 _stemTipForToken)
@@ -387,7 +388,18 @@ library LibTokenSilo {
         _stemTipForToken = s.ss[token].milestoneStem +
         int96(s.ss[token].stalkEarnedPerSeason).mul(
             int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
-        ).div(1e6); //round here 
+        );
+    }
+
+    /**
+     * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
+     */
+    function stemTipForToken(address token)
+        internal
+        view
+        returns (int96 _stemTipForToken)
+    {
+        return stemTipForTokenUntruncated(token).div(1e6);
     }
 
     /**

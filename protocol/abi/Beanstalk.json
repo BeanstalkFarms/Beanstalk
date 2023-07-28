@@ -4159,9 +4159,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint24",
         "name": "stalkEarnedPerSeason",
-        "type": "uint32"
+        "type": "uint24"
       }
     ],
     "name": "updateStalkPerBdvPerSeasonForToken",
@@ -4182,14 +4182,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint16",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint16"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint24",
         "name": "stalkEarnedPerSeason",
-        "type": "uint32"
+        "type": "uint24"
       }
     ],
     "name": "whitelistToken",
@@ -4210,14 +4210,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint16",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint16"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint24",
         "name": "stalkEarnedPerSeason",
-        "type": "uint32"
+        "type": "uint24"
       },
       {
         "internalType": "bytes1",
@@ -4375,9 +4375,9 @@
       },
       {
         "indexed": false,
-        "internalType": "int128",
+        "internalType": "int96",
         "name": "stem",
-        "type": "int128"
+        "type": "int96"
       },
       {
         "indexed": false,
@@ -5692,7 +5692,7 @@
         "type": "address"
       }
     ],
-    "name": "getLastStem",
+    "name": "getLastMowedStem",
     "outputs": [
       {
         "internalType": "int96",
@@ -6025,9 +6025,9 @@
     "name": "seasonToStem",
     "outputs": [
       {
-        "internalType": "int128",
+        "internalType": "int96",
         "name": "stem",
-        "type": "int128"
+        "type": "int96"
       }
     ],
     "stateMutability": "view",
@@ -6057,9 +6057,9 @@
     "name": "stemTipForToken",
     "outputs": [
       {
-        "internalType": "int128",
+        "internalType": "int96",
         "name": "_stemTip",
-        "type": "int128"
+        "type": "int96"
       }
     ],
     "stateMutability": "view",
@@ -6083,19 +6083,19 @@
             "type": "bytes4"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint24",
             "name": "stalkEarnedPerSeason",
-            "type": "uint32"
+            "type": "uint24"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint16",
             "name": "stalkIssuedPerBdv",
-            "type": "uint32"
+            "type": "uint16"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint24",
             "name": "milestoneSeason",
-            "type": "uint32"
+            "type": "uint24"
           },
           {
             "internalType": "int96",
@@ -6106,6 +6106,16 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "uint24",
+            "name": "lpGaugePoints",
+            "type": "uint24"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "GPSelector",
+            "type": "bytes4"
           }
         ],
         "internalType": "struct Storage.SiloSettings",
