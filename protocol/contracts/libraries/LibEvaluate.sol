@@ -35,10 +35,12 @@ library LibEvaluate {
     using LibSafeMath32 for uint32;
 
 
+    // Pod rate bounds
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
     uint256 private constant POD_RATE_OPTIMAL = 0.15e18; // 15%
     uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
     
+    // Change in soil demand bounds
     uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
     uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
 
@@ -46,6 +48,10 @@ library LibEvaluate {
     uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
 
     uint32 private constant SOW_TIME_STEADY = 60; // seconds
+
+    uint256 private constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.75e18; // 75%
+    uint256 private constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.5e18; // 50%
+    uint256 private constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.25e18; // 25%
 
     /**
      * @notice evaluates the pod rate and returns the caseId
@@ -97,9 +103,22 @@ library LibEvaluate {
      * @param lpToSupplyRatio the ratio of liquidity to supply.
      */
     function evalLpToSupplyRatio(
-        uint256 lpToSupplyRatio
+        Decimal.D256 memory lpToSupplyRatio
     ) internal pure returns (uint256 caseId) {
-       return 0;
+        // Extremely High
+        if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
+        caseId += 96;
+        // Reasonsably High
+        } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
+            caseId += 64;
+            // Reasonsably Low
+        } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())) {
+            caseId += 32;
+        }
+	    // Extremely Low -> Add 0
+
+        // for now, set caseId addition to 0
+        caseId = 0;
     }
 
     function calcDeltaPodDemand(
@@ -163,7 +182,7 @@ library LibEvaluate {
         int256 deltaB,
         Decimal.D256 memory podRate,
         Decimal.D256 memory deltaPodDemand,
-        uint256 lpToSupplyRatio
+        Decimal.D256 memory lpToSupplyRatio
     ) internal pure returns (uint256 caseId) {
         // Calculate Weather Case
         caseId = 0;

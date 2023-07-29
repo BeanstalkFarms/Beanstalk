@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/libraries/Decimal.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibEvaluate.sol";
+import "contracts/libraries/LibCases.sol";
 import "./Sun.sol";
 
 /**
@@ -16,7 +17,6 @@ import "./Sun.sol";
 contract Weather is Sun {
     using SafeMath for uint256;
     using DecimalExtended for uint256;
-    using LibSafeMath32 for uint32;
     using Decimal for Decimal.D256;
     
     /**
@@ -193,13 +193,10 @@ contract Weather is Sun {
             s.season.rainStart = s.season.current;
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
-        } else if (
-            s.season.current >= s.season.rainStart.add(s.season.withdrawSeasons - 1)
-        ) {
             if (s.r.roots > 0) {
                 sop();
             }
-        }
+        } 
     }
 
     /**
@@ -250,7 +247,18 @@ contract Weather is Sun {
     /**
      * @notice returns the MEV resistant liquidity to supply ratio.
      */
-    function getLpToSupplyRatio() private pure returns (uint256 lpToSupplyRatio) {
-        return 1;
+    function getLpToSupplyRatio() private pure returns (Decimal.D256 memory lpToSupplyRatio) {
+        return Decimal.D256(1);
+    }
+
+    function decodeCaseData(uint256 caseId) 
+    external pure returns (
+        bytes8 caseData,
+        uint24 mT, 
+        uint8 bT, 
+        uint24 mL, 
+        uint8 bL 
+    ) {
+        (caseData, mT, bT, mL, bL) = LibCases.decodeCaseData(caseId);
     }
 }
