@@ -643,15 +643,15 @@ library LibCases {
     function decodeCaseData(uint256 caseId) 
     internal pure returns (
         uint24 mT,
-        uint8 bT,
+        int8 bT,
         uint24 mL,
-        uint8 bL
+        int8 bL
     ) {
         bytes8 _caseData = getDataFromCase(caseId);
         mT = uint24(bytes3(_caseData));
-        bT = uint8(bytes1(_caseData << 24));
+        bT = int8(bytes1(_caseData << 24));
         mL = uint24(bytes3(_caseData << 32));
-        bL = uint8(bytes1(_caseData << 56));
+        bL = int8(bytes1(_caseData << 56));
     }
     
 }
