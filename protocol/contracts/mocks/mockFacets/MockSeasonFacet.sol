@@ -200,17 +200,17 @@ contract MockSeasonFacet is SeasonFacet {
         C.bean().burn(C.bean().balanceOf(address(this)));
     }
 
-    function stepWeatherE(int256 deltaB, uint128 endSoil) external {
+    function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
         s.f.soil = endSoil;
         s.f.beanSown = endSoil;
-        stepWeather(deltaB);
+        calcCaseId(deltaB);
     }
 
     function setCurrentSeasonE(uint32 season) public {
         s.season.current = season;
     }
 
-    function stepWeatherWithParams(
+    function calcCaseIdWithParams(
         uint256 pods,
         uint256 _lastDSoil,
         uint128 beanSown,
@@ -226,7 +226,7 @@ contract MockSeasonFacet is SeasonFacet {
         // s.w.startSoil = startSoil;
         s.f.beanSown = beanSown;
         s.f.soil = endSoil;
-        stepWeather(deltaB);
+        calcCaseId(deltaB);
     }
 
     function resetSeasonStart(uint256 amount) public {

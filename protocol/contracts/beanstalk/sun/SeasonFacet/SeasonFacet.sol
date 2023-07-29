@@ -55,7 +55,7 @@ contract SeasonFacet is Weather {
 
         stepSeason();
         int256 deltaB = stepOracle();
-        uint256 caseId = stepWeather(deltaB);
+        uint256 caseId = calcCaseId(deltaB);
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);

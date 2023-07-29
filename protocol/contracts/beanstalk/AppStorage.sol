@@ -179,7 +179,7 @@ contract Storage {
     /**
      * @notice System-level Field state variables.
      * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
-     * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.stepWeather}.
+     * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
      * @param pods The pod index; the total number of Pods ever minted.
      * @param harvested The harvested index; the total number of Pods that have ever been Harvested.
      * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.

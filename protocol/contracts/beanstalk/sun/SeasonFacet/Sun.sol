@@ -65,7 +65,7 @@ contract Sun is Oracle {
     
     /**
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     * @param caseId Pre-calculated Weather case from {Weather.stepWeather}.
+     * @param caseId Pre-calculated Weather case from {Weather.calcCaseId}.
      */
     function stepSun(int256 deltaB, uint256 caseId) internal {
         // Above peg
