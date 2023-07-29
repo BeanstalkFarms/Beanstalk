@@ -49,7 +49,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function siloSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
@@ -62,14 +62,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function rainSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(4);
     }
 
     function rainSunrises(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
             handleRain(4);
@@ -78,14 +78,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function droughtSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(3);
     }
 
     function rainSiloSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(4);
@@ -93,7 +93,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function droughtSiloSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(3);
@@ -101,14 +101,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function sunSunrise(int256 deltaB, uint256 caseId) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.w.t = t;
         s.season.sunriseBlock = uint32(block.number);
@@ -116,7 +116,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function lightSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
     }
@@ -132,14 +132,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function farmSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
     }
 
     function farmSunrises(uint256 number) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;

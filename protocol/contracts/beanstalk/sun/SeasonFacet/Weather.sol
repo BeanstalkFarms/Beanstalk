@@ -47,30 +47,6 @@ contract Weather is Sun {
         uint256 toField
     );
 
-
-    //////////////////// WEATHER GETTERS ////////////////////
-
-    /**
-     * @notice Returns the current Weather struct. See {AppStorage:Storage.Weather}.
-     */
-    function weather() public view returns (Storage.Weather memory) {
-        return s.w;
-    }
-
-    /**
-     * @notice Returns the current Rain struct. See {AppStorage:Storage.Rain}.
-     */
-    function rain() public view returns (Storage.Rain memory) {
-        return s.r;
-    }
-
-    /**
-     * @notice Returns the Plenty per Root for `season`.
-     */
-    function plentyPerRoot(uint32 season) external view returns (uint256) {
-        return s.sops[season];
-    }
-
     //////////////////// WEATHER INTERNAL ////////////////////
 
     /**
@@ -97,11 +73,15 @@ contract Weather is Sun {
         // note try to find gas optimization where s.w.thisSowTime doesn't need to be set again if its already at max
         (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = LibEvaluate.calcDeltaPodDemand(dsoil);
         
+        // Calculate Lp To Supply Ratio
+        Decimal.D256 memory lpToSupplyRatio;
+        // TODO
+
         caseId = LibEvaluate.evaluateBeanstalk(
             deltaB, // deltaB
             Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply), // Pod Rate
             deltaPodDemand, // change in soil demand
-            getLpToSupplyRatio() // lp to Supply Ratio
+            lpToSupplyRatio // lp to Supply Ratio
         );
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
@@ -109,37 +89,6 @@ contract Weather is Sun {
         changeTemperature(caseId);
         changeGrownStalkPerBDVPerSeason(caseId);
         handleRain(caseId);
-    }
-
-    /**
-     * @notice view function of {calcCaseId}, outputs the expected caseId based on 
-     * deltaB, podrate, change in soil demand, and lp to supply ratio.
-     * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     */
-    function getCaseId(int256 deltaB) internal view returns (uint256 caseId) {
-        uint256 beanSupply = C.bean().totalSupply();
-
-        // Prevent infinite pod rate
-        if (beanSupply == 0) {
-            return 8; // Reasonably low
-        }
-
-        // Calculate Pod Rate
-        Decimal.D256 memory podRate = Decimal.ratio(
-            s.f.pods.sub(s.f.harvestable), // same as totalUnharvestable()
-            beanSupply
-        );
-
-        // Calculate Delta Soil Demand
-        Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
-
-        caseId = LibEvaluate.evaluateBeanstalk(
-            deltaB, 
-            podRate,
-            deltaPodDemand, 
-            getLpToSupplyRatio()
-        );
     }
 
     /**
@@ -196,7 +145,7 @@ contract Weather is Sun {
             if (s.r.roots > 0) {
                 sop();
             }
-        } 
+        }  
     }
 
     /**
@@ -244,15 +193,8 @@ contract Weather is Sun {
         s.season.lastSopSeason = s.season.current;
     }
 
-    /**
-     * @notice returns the MEV resistant liquidity to supply ratio.
-     */
-    function getLpToSupplyRatio() private pure returns (Decimal.D256 memory lpToSupplyRatio) {
-        return Decimal.D256(1);
-    }
-
     function decodeCaseData(uint256 caseId) 
-    external pure returns (
+    internal pure returns (
         bytes8 caseData,
         uint24 mT, 
         uint8 bT, 
