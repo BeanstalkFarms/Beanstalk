@@ -162,7 +162,7 @@ library LibCases {
     bytes8 private constant CASE126 = 0xffffffffffffffff;
     // bytes8 private constant CASE127 = 0xffffffffffffffff;
 
-    function getDataFromCase(uint256 caseId) internal pure returns (bytes8 caseData){
+    function getDataFromCase(uint256 caseId) private pure returns (bytes8 caseData){
         if(caseId < 64){
             if(caseId < 32) {
                 if(caseId < 16) {
@@ -641,17 +641,16 @@ library LibCases {
 
     function decodeCaseData(uint256 caseId) 
     internal pure returns (
-        bytes8 caseData,
-        uint24 mT, 
-        uint8 bT, 
-        uint24 mL, 
-        uint8 bL 
+        uint24 mT,
+        uint8 bT,
+        uint24 mL,
+        uint8 bL
     ) {
-        caseData = getDataFromCase(caseId);
-        mT = uint24(bytes3(caseData));
-        bT = uint8(bytes1(caseData << 24));
-        mL = uint24(bytes3(caseData << 32));
-        bL = uint8(bytes1(caseData << 56));
+        bytes8 _caseData = getDataFromCase(caseId);
+        mT = uint24(bytes3(_caseData));
+        bT = uint8(bytes1(_caseData << 24));
+        mL = uint24(bytes3(_caseData << 32));
+        bL = uint8(bytes1(_caseData << 56));
     }
     
 }

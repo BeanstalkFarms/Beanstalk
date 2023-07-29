@@ -85,7 +85,8 @@ contract Weather is Sun {
         );
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
-        
+        (uint24 mT, uint8 bT, uint24 mL, uint8 bL) = LibCases.decodeCaseData(caseId);
+        // TODO change to new vars
         changeTemperature(caseId);
         changeGrownStalkPerBDVPerSeason(caseId);
         handleRain(caseId);
@@ -129,6 +130,7 @@ contract Weather is Sun {
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
     function handleRain(uint256 caseId) internal {
+        // TODO: update cases
         // cases 4-7 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId < 4 || caseId > 7) {
             if (s.season.raining) {
@@ -191,16 +193,5 @@ contract Weather is Sun {
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
-    }
-
-    function decodeCaseData(uint256 caseId) 
-    internal pure returns (
-        bytes8 caseData,
-        uint24 mT, 
-        uint8 bT, 
-        uint24 mL, 
-        uint8 bL 
-    ) {
-        (caseData, mT, bT, mL, bL) = LibCases.decodeCaseData(caseId);
     }
 }
