@@ -116,8 +116,30 @@ async function bip34(mock = true, account = undefined) {
   });
 }
 
+async function bipSeedGauge(mock = true, account = undefined) {
+    if (account == undefined) {
+      account = await impersonateBeanstalkOwner();
+      await mintEth(account.address);
+    }
+  
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: [
+        "SeasonFacet", // Add Seed Gauge system
+      ],
+      initFacetName: "InitBipSeedGauge",
+      selectorsToRemove: [],
+      bip: false,
+      object: !mock,
+      verbose: true,
+      account: account,
+      verify: false
+    });
+  }
+
 exports.bip29 = bip29
 exports.bip30 = bip30
 exports.bip34 = bip34
 exports.bipNewSilo = bipNewSilo
+exports.bipSeedGauge = bipSeedGauge
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin

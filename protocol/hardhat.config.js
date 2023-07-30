@@ -30,7 +30,7 @@ const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
+const { bipNewSilo, bipSeedGauge, mockBeanstalkAdmin } = require("./scripts/bips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -195,6 +195,10 @@ task("bip34", async function () {
 
 task("silov3", async function () {
   await bipNewSilo();
+});
+
+task("seedGauge", async function () {
+  await bipSeedGauge();
 });
 
 task("beanstalkAdmin", async function () {
