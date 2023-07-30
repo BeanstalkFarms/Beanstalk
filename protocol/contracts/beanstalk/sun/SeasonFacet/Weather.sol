@@ -89,7 +89,8 @@ contract Weather is Sun {
         (uint24 mT, int8 bT, uint24 mL, int8 bL) = LibCases.decodeCaseData(caseId);
         // TODO change to new vars
         changeTemperature(mT, bT, caseId);
-        changeGrownStalkPerBDVPerSeason(mL, bL, caseId);
+        changeGrownStalkPerBDVPerSeason(mL, bL);
+
         handleRain(caseId);
     }
 
@@ -120,8 +121,15 @@ contract Weather is Sun {
     /**
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
-    function changeGrownStalkPerBDVPerSeason(uint24 mL, int8 bL, uint256 caseId) private {
-
+    function changeGrownStalkPerBDVPerSeason(uint24 mL, int8 bL) private {
+        if(bL < 0){
+            s.seedGauge.percentOfNewGrownStalkToLP = 
+                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) - uint32(-bL);
+        } else {
+            s.seedGauge.percentOfNewGrownStalkToLP = 
+                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) + uint32(bL);
+        }
+       
     }
 
     /**

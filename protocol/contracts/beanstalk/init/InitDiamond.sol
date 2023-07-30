@@ -64,6 +64,8 @@ contract InitDiamond {
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
         s.beanEthPrice = 1;
+        s.seedGauge.percentOfNewGrownStalkToLP = 0.5e6;
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = 1e6;
         
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);

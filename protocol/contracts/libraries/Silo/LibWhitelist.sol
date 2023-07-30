@@ -80,8 +80,8 @@ library LibWhitelist {
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
 
         s.ss[token].encodeType = encodeType;
 

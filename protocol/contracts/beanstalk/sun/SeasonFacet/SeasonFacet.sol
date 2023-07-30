@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/LibIncentive.sol";
 import "./Weather.sol";
+import "contracts/libraries/Silo/LibWhitelist.sol";
 
 /**
  * @title SeasonFacet
@@ -15,6 +16,7 @@ import "./Weather.sol";
 contract SeasonFacet is Weather {
     using SafeMath for uint256;
 
+    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
     /**
      * @notice Emitted when the Season changes.
      * @param season The new Season number
@@ -56,6 +58,8 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseId(deltaB);
+        updateLPGaugeSystem(caseId);
+        updateGrownStalkEarnedPerSeason();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
@@ -108,4 +112,56 @@ contract SeasonFacet is Weather {
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
+
+    //////////////////// SEED GAUGE INTERNAL ////////////////////
+
+    /**
+     * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
+     * @dev Called at the end of each Season.
+     */
+    function updateGrownStalkEarnedPerSeason() internal {
+        // Assume percentOfSeedsToLP has 6 decimal precision
+        uint256 newGrownStalk = s.seedGauge.averageGrownStalkPerBdvPerSeason * s.seedGauge.totalBdv;
+        uint256 newGrownStalkToLP = newGrownStalk * s.seedGauge.percentOfNewGrownStalkToLP / 1e6;
+        uint256 newGrownStalkToBean = newGrownStalk - newGrownStalkToLP;
+
+        // update stalkPerBDVPerSeason for bean
+        if(getDepositedBdvForToken(C.BEAN) > 0){
+            LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+                C.BEAN,
+                uint24(newGrownStalkToBean.div(getDepositedBdvForToken(C.BEAN)))
+            );
+        }
+
+        // update stalkPerBdvPerSeason for LP 
+        // for 1 LP pool, no need for seed LP distrubution (BEAN:ETH)
+        if(getDepositedBdvForToken(C.BEAN_ETH_WELL) > 0){
+            LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+                C.BEAN_ETH_WELL,
+                uint24(newGrownStalkToLP.div(getDepositedBdvForToken(C.BEAN_ETH_WELL)))
+            );
+        }
+    }
+
+    function updateLPGaugeSystem(uint256 caseId) internal {
+        //TODO
+    }
+
+    /**
+     * @notice Returns the amount of BDV deposited for a given token.
+     * @param token The address of the token.
+     * @return The amount of BDV deposited for the token.
+     */
+    function getDepositedBdvForToken(address token) internal view returns (uint256){
+        return s.siloBalances[token].depositedBdv;
+    }
+
+    /**
+     * @notice updates the averageGrownStaklPerBdvPerSeason 
+     */
+    function updateAverageGrownStalkPerBdv() external {
+        uint256 averageGrownStalkPerBdv = s.s.stalk / s.seedGauge.totalBdv - 10000; // TODO: Check constant
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint96(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
+    }
+
 }
