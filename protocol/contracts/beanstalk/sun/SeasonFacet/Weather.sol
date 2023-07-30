@@ -16,6 +16,7 @@ import "./Sun.sol";
  */
 contract Weather is Sun {
     using SafeMath for uint256;
+    using LibSafeMath32 for uint32;
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
     
@@ -85,18 +86,18 @@ contract Weather is Sun {
         );
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
-        (uint24 mT, uint8 bT, uint24 mL, uint8 bL) = LibCases.decodeCaseData(caseId);
+        (uint24 mT, int8 bT, uint24 mL, int8 bL) = LibCases.decodeCaseData(caseId);
         // TODO change to new vars
-        changeTemperature(caseId);
-        changeGrownStalkPerBDVPerSeason(caseId);
+        changeTemperature(mT, bT, caseId);
+        changeGrownStalkPerBDVPerSeason(mL, bL, caseId);
         handleRain(caseId);
     }
 
     /**
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
-    function changeTemperature(uint256 caseId) private {
-        int8 change = s.cases[caseId];
+    function changeTemperature(uint24 mT, int8 bT, uint256 caseId) private {
+        int8 change = bT;
         uint32 t = s.w.t;
 
         if (change < 0) {
@@ -107,10 +108,10 @@ contract Weather is Sun {
                 change = 1 - int8(t);
                 s.w.t = 1;
             } else {
-                s.w.t = t - (uint32(-change));
+                s.w.t = t.mul(mT).div(1e6) - (uint32(-change));
             }
         } else {
-            s.w.t = t + (uint32(change));
+            s.w.t = t.mul(mT).div(1e6) + (uint32(change));
         }
 
         emit WeatherChange(s.season.current, caseId, change);
@@ -119,7 +120,7 @@ contract Weather is Sun {
     /**
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
-    function changeGrownStalkPerBDVPerSeason(uint256 caseId) private {
+    function changeGrownStalkPerBDVPerSeason(uint24 mL, int8 bL, uint256 caseId) private {
 
     }
 
@@ -144,6 +145,9 @@ contract Weather is Sun {
             s.season.rainStart = s.season.current;
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
+        } else if (
+            s.season.current >= s.season.rainStart.add(s.season.withdrawSeasons - 1)
+        ){
             if (s.r.roots > 0) {
                 sop();
             }

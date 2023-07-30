@@ -34,37 +34,37 @@ import "contracts/libraries/LibSafeMath32.sol";
 
 library LibCases {
     // TODO update cases to reflect current cases
-    bytes8 private constant CASE0 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE1 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE2 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE0 = 0x0f4240030f424000;
+    bytes8 private constant CASE1 = 0x0f4240010f424000;
+    bytes8 private constant CASE2 = 0x0f4240000f424000;
     // bytes8 private constant CASE3 = 0x0f4240ff0f424000;
     bytes8 private constant CASE4 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE5 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE6 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE5 = 0x0f4240fd0f424000;
+    bytes8 private constant CASE6 = 0x0f4240fd0f424000;
     // bytes8 private constant CASE7 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE8 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE9 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE10 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE8 = 0x0f4240030f424000;
+    bytes8 private constant CASE9 = 0x0f4240010f424000;
+    bytes8 private constant CASE10 = 0x0f4240000f424000;
     // bytes8 private constant CASE11 = 0x0f4240ff0f424000;
     bytes8 private constant CASE12 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE13 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE14 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE13 = 0x0f4240fd0f424000;
+    bytes8 private constant CASE14 = 0x0f4240fd0f424000;
     // bytes8 private constant CASE15 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE16 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE17 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE18 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE16 = 0x0f4240030f424000;
+    bytes8 private constant CASE17 = 0x0f4240030f424000;
+    bytes8 private constant CASE18 = 0x0f4240010f424000;
     // bytes8 private constant CASE19 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE20 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE20 = 0x0f4240000f424000;
     bytes8 private constant CASE21 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE22 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE22 = 0x0f4240fd0f424000;
     // bytes8 private constant CASE23 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE24 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE25 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE26 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE24 = 0x0f4240030f424000;
+    bytes8 private constant CASE25 = 0x0f4240030f424000;
+    bytes8 private constant CASE26 = 0x0f4240010f424000;
     // bytes8 private constant CASE27 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE28 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE28 = 0x0f4240000f424000;
     bytes8 private constant CASE29 = 0x0f4240ff0f424000;
-    bytes8 private constant CASE30 = 0x0f4240ff0f424000;
+    bytes8 private constant CASE30 = 0x0f4240fd0f424000;
     // bytes8 private constant CASE31 = 0x0f4240ff0f424000;
     bytes8 private constant CASE32 = 0x0f4240ff0f424000;
     bytes8 private constant CASE33 = 0x0f4240ff0f424000;
@@ -176,8 +176,12 @@ library LibCases {
                                     return CASE0;
                                 }
                             } else {
-                                // return CASE3;
-                                return 0;
+                                if(caseId == 3){
+                                    return 0;
+                                    // return CASE3;
+                                } else {
+                                    return CASE2;
+                                }
                             }
                         }
                         if(caseId < 6){

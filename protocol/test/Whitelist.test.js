@@ -33,7 +33,7 @@ describe('Whitelist', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
-    this.season = await ethers.getContractAt('SeasonFacet', this.diamond.address);;
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);;
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
