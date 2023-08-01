@@ -4,9 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IWell} from "../../interfaces/basin/IWell.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
+import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";
+import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
+import {LibWell} from "../../libraries/Well/LibWell.sol";
+import {C} from "../../C.sol";
 
 interface IERC20D {
     function decimals() external view returns (uint8);
@@ -36,16 +39,27 @@ contract WellPrice {
     function getConstantProductWell(address wellAddress) public view returns (P.Pool memory pool) {
         IWell well = IWell(wellAddress);
         pool.pool = wellAddress;
+
         IERC20[] memory wellTokens = well.tokens();
         pool.tokens = [address(wellTokens[0]), address(wellTokens[1])];
-        uint256[] memory wellBalances = well.getReserves();
-        pool.balances = [wellBalances[0],wellBalances[1]];
 
-        pool.price = 0;
-        pool.liquidity = 0;
-        pool.deltaB = 0;
-        pool.lpUsd = 0;
-        pool.lpBdv = 0;
+        uint256[] memory wellBalances = well.getReserves();
+        pool.balances = [wellBalances[0], wellBalances[1]];
+
+        uint256 beanIndex = LibWell.getBeanIndex(wellTokens);
+
+
+        // swap 1 bean of the opposite asset to get the price
+        uint256 amtOut = well.getSwapOut(wellTokens[beanIndex], wellTokens[beanIndex == 0 ? 1 : 0], 1e6); 
+       
+        // get price of other token to price pool
+        uint256 tknUsdPrice = LibUsdOracle.getUsdPrice(address(wellTokens[beanIndex == 0 ? 1 : 0]));
+        pool.price = amtOut.mul(tknUsdPrice).div(1e12);
+
+        pool.liquidity = pool.balances[beanIndex] + pool.balances[beanIndex == 0 ? 1 : 0] * tknUsdPrice;
+        pool.deltaB = LibWellMinting.check(wellAddress);
+        pool.lpUsd = pool.liquidity.mul(pool.price).div(1e6);
+        pool.lpBdv = pool.liquidity;
     }
 
 }

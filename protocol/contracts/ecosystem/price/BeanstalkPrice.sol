@@ -3,8 +3,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./CurvePrice.sol";
-import {WellPrice} from "./WellPrice.sol";
-import "../../C.sol";
+import {WellPrice, C} from "./WellPrice.sol";
 
 contract BeanstalkPrice is CurvePrice, WellPrice {
     
