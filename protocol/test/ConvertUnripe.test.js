@@ -21,6 +21,7 @@ describe('Unripe Convert', function () {
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
+    this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
@@ -79,32 +80,32 @@ describe('Unripe Convert', function () {
   describe('calclates beans to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(UNRIPE_BEAN, UNRIPE_LP)).to.be.equal(to6('2000'));
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_BEAN, UNRIPE_LP)).to.be.equal(to6('2000'));
     });
 
     it('p = 1', async function () {
-      expect(await this.convert.getMaxAmountIn(UNRIPE_BEAN, UNRIPE_LP)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_BEAN, UNRIPE_LP)).to.be.equal('0');
     });
 
     it('p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(UNRIPE_BEAN, UNRIPE_LP)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_BEAN, UNRIPE_LP)).to.be.equal('0');
     });
   });
 
   describe('calclates lp to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user2).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.within(to6('1990'), to6('2000'));
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.within(to6('1990'), to6('2000'));
     });
 
     it('p = 1', async function () {
-      expect(await this.convert.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal('0');
     });
 
     it('p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal('0');
     });
   })
 

@@ -87,6 +87,7 @@ async function bipBasinIntegration(mock = true, account = undefined) {
           'DepotFacet',
           'BDVFacet',
           'ConvertFacet',
+          'ConvertGettersFacet',
           'SiloFacet',
           'EnrootFacet',
           'WhitelistFacet',

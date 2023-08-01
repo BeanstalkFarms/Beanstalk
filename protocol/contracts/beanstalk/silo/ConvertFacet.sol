@@ -18,7 +18,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @author Publius
- * @title Silo handles depositing and withdrawing Beans and LP, and updating the Silo.
+ * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
 contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
@@ -226,21 +226,5 @@ contract ConvertFacet is ReentrancyGuard {
             bdv,
             LibTokenSilo.Transfer.emitTransferSingle
         );
-    }
-
-    function getMaxAmountIn(address tokenIn, address tokenOut)
-        external
-        view
-        returns (uint256 amountIn)
-    {
-        return LibConvert.getMaxAmountIn(tokenIn, tokenOut);
-    }
-
-    function getAmountOut(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn
-    ) external view returns (uint256 amountOut) {
-        return LibConvert.getAmountOut(tokenIn, tokenOut, amountIn);
     }
 }
