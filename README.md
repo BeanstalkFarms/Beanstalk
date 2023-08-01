@@ -15,8 +15,8 @@
 
 [![Discord][discord-badge]][discord-url]
 
-Code Version: `2.4.1` <br>
-Whitepaper Version: `2.4.0`
+Code Version: `2.5.0` <br>
+Whitepaper Version: `2.5.0`
 
 ## About
 
