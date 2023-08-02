@@ -36,7 +36,7 @@ const WalletDialog: FC<{
   );
   return (
     <Dialog
-      sx={{ zIndex: 80 }}
+      sx={{ zIndex: 85 }}
       onClose={handleClose}
       open={open}
       fullScreen={fullScreen}
