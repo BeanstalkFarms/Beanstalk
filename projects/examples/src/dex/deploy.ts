@@ -1,4 +1,4 @@
-import { Aquifer, WellFunction, WellsSDK, Well } from "@beanstalk/sdk-wells";
+import { Aquifer, WellFunction, WellsSDK, Well, Pump } from "@beanstalk/sdk-wells";
 import { BeanstalkSDK, TestUtils } from "@beanstalk/sdk";
 import { signer, provider, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";
@@ -40,20 +40,22 @@ async function deploy(bsdk: BeanstalkSDK) {
   const aquifer = await Aquifer.BuildAquifer(sdk);
   const { address } = await Well.DeployContract(sdk);
   const constantProduct = await WellFunction.BuildConstantProduct(sdk);
+  const pump = await Pump.BuildMultiFlowPump(sdk);
+  console.log(`Deployed Pump: ${pump.address}`);
 
   await forkUtils.mine();
 
-  const well1 = await aquifer.boreWell(address, [BEAN, WETH], constantProduct, []);
+  const well1 = await aquifer.boreWell(address, [BEAN, WETH], constantProduct, [pump]);
   await well1.loadWell();
-  console.log(`Deployed: ${well1.name}`);
+  console.log(`Deployed: ${well1.name}, ${well1.address}`);
 
-  const well2 = await aquifer.boreWell(address, [BEAN, USDC], constantProduct, []);
+  const well2 = await aquifer.boreWell(address, [BEAN, USDC], constantProduct, [pump]);
   await well2.loadWell();
-  console.log(`Deployed: ${well2.name}`);
+  console.log(`Deployed: ${well2.name}, ${well2.address}`);
 
-  const well3 = await aquifer.boreWell(address, [USDC, DAI], constantProduct, []);
+  const well3 = await aquifer.boreWell(address, [USDC, DAI], constantProduct, [pump]);
   await well3.loadWell();
-  console.log(`Deployed: ${well3.name}`);
+  console.log(`Deployed: ${well3.name}, ${well3.address}`);
 
   return { aquifer, wells: [well1, well2, well3] };
 }
