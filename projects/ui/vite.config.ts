@@ -36,10 +36,11 @@ const CSP = buildCSP({
     'wss://*.walletconnect.org',
     'wss://*.bridge.walletconnect.org',
     'registry.walletconnect.com',
+    'relay.walletconnect.com',
     'wss://*.walletlink.org',
     '*.coinbase.com', // Wallet: Coinbase
     '*.google-analytics.com',
-    '*.doubleclick.net'
+    '*.doubleclick.net',
   ],
   'style-src': [
     '\'self\'',
