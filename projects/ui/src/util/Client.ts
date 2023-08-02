@@ -1,13 +1,12 @@
 import {
   createClient as createWagmiClient,
   configureChains,
-  chain,
   Chain,
 } from 'wagmi';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 import { providers } from 'ethers';
-// import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
+import { mainnet, localhost } from 'wagmi/chains';
 
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
 import { InjectedConnector } from 'wagmi/connectors/injected';
@@ -44,7 +43,7 @@ export function jsonRpcBatchProvider({
         ..._chain,
         rpcUrls: {
           ..._chain.rpcUrls,
-          default: rpcConfig.http,
+          default: { http: [rpcConfig.http] },
         },
       },
       provider: () => {
@@ -80,7 +79,8 @@ const makeTestnet = (_chainId: number, name: string): Chain => ({
     symbol: 'ETH',
   },
   rpcUrls: {
-    default: TESTNET_RPC_ADDRESSES[_chainId],
+    default: { http: [TESTNET_RPC_ADDRESSES[_chainId]] },
+    public: { http: [TESTNET_RPC_ADDRESSES[_chainId]] },
   },
   blockExplorers: {
     default: { name: 'Etherscan', url: 'https://etherscan.io' },
@@ -90,10 +90,10 @@ const makeTestnet = (_chainId: number, name: string): Chain => ({
 
 // ------------------------------------------------------------
 
-const baseChains = [chain.mainnet];
+const baseChains: Chain[] = [mainnet];
 if (import.meta.env.VITE_SHOW_DEV_CHAINS) {
   baseChains.push(makeTestnet(SupportedChainId.TESTNET, 'Testnet'));
-  baseChains.push(chain.localhost);
+  baseChains.push(localhost);
 }
 
 const { chains, provider } = configureChains(baseChains, [
@@ -116,6 +116,11 @@ const { chains, provider } = configureChains(baseChains, [
   }),
 ]);
 
+const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+if (!WALLETCONNECT_PROJECT_ID) {
+  throw new Error('Missing WALLETCONNECT_PROJECT_ID');
+}
+
 const client = createWagmiClient({
   autoConnect: true,
   provider,
@@ -133,7 +138,8 @@ const client = createWagmiClient({
     new WalletConnectConnector({
       chains,
       options: {
-        qrcode: true,
+        projectId: WALLETCONNECT_PROJECT_ID,
+        showQrModal: true,
       },
     }),
     new CoinbaseWalletConnector({

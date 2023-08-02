@@ -35,7 +35,12 @@ const WalletDialog: FC<{
     [connect]
   );
   return (
-    <Dialog onClose={handleClose} open={open} fullScreen={fullScreen}>
+    <Dialog
+      sx={{ zIndex: 80 }}
+      onClose={handleClose}
+      open={open}
+      fullScreen={fullScreen}
+    >
       <StyledDialogTitle onClose={handleClose}>
         Connect a wallet
       </StyledDialogTitle>
