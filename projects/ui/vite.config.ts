@@ -36,7 +36,7 @@ const CSP = buildCSP({
     'wss://*.walletconnect.org',
     'wss://*.bridge.walletconnect.org',
     'registry.walletconnect.com',
-    'relay.walletconnect.com',
+    'wss://relay.walletconnect.com', // WalletConnect v2
     'wss://*.walletlink.org',
     '*.coinbase.com', // Wallet: Coinbase
     '*.google-analytics.com',
