@@ -35,8 +35,8 @@ const CSP = buildCSP({
     'https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot', // Snapshot Labs GraphQL API
     'wss://*.walletconnect.org',
     'wss://*.bridge.walletconnect.org',
-    'registry.walletconnect.com',
     'wss://relay.walletconnect.com', // WalletConnect v2
+    '*.walletconnect.com', // WalletConnect v2
     'wss://*.walletlink.org',
     '*.coinbase.com', // Wallet: Coinbase
     '*.google-analytics.com',
