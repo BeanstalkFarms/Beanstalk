@@ -28,6 +28,7 @@ const CSP = buildCSP({
   'connect-src': [
     '\'self\'',
     '*.alchemyapi.io', // Alchemy RPC
+    '*.alchemyapi.com', // Alchemy RPC
     'https://cloudflare-eth.com', // Cloudflare RPC
     '*.infura.io', // Infura RPC
     '*.bean.money', // Beanstalk APIs

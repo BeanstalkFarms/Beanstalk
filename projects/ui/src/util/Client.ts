@@ -120,6 +120,7 @@ const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 if (!WALLETCONNECT_PROJECT_ID) {
   throw new Error('Missing WALLETCONNECT_PROJECT_ID');
 }
+console.log('WALLETCONNECT_PROJECT_ID', WALLETCONNECT_PROJECT_ID);
 
 const client = createWagmiClient({
   autoConnect: true,
