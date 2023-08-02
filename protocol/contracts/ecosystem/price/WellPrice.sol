@@ -11,19 +11,23 @@ import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "../../libraries/Well/LibWell.sol";
 import {C} from "../../C.sol";
 
-interface IERC20D {
-    function decimals() external view returns (uint8);
+interface IBEANSTALK {
+    function bdv(address token, uint256 amount) external view returns (uint256);
+
+    function poolDeltaB(address pool) external view returns (int256);
 }
 
-interface IBDV {
-    function bdv(address token, uint256 amount) external view returns (uint256);
+interface dec{
+    function decimals() external view returns (uint256);
 }
 
 contract WellPrice {
 
     using SafeMath for uint256;
 
-    address[2] private tokens = [0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab, 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490];
+    address private constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
+    uint256 private constant WELL_DECIMALS = 1e18;
+    uint256 private constant PRICE_PRECISION = 1e6;
 
     struct Pool {
         address pool;
@@ -39,27 +43,38 @@ contract WellPrice {
     function getConstantProductWell(address wellAddress) public view returns (P.Pool memory pool) {
         IWell well = IWell(wellAddress);
         pool.pool = wellAddress;
-
+        
         IERC20[] memory wellTokens = well.tokens();
         pool.tokens = [address(wellTokens[0]), address(wellTokens[1])];
 
-        uint256[] memory wellBalances = well.getReserves();
-        pool.balances = [wellBalances[0], wellBalances[1]];
+        {
+            uint256[] memory wellBalances = well.getReserves();
+            pool.balances = [wellBalances[0], wellBalances[1]];
+        }
 
         uint256 beanIndex = LibWell.getBeanIndex(wellTokens);
+        uint256 tknIndex = beanIndex == 0 ? 1 : 0;
 
+        // swap 1 bean of the opposite asset to get the usd price 
+        // price = amtOut/tknOutPrice
+        pool.price = 
+            well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6) // 1e18
+            .mul(PRICE_PRECISION) // 1e6 
+            .div(LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]))); // 1e18
 
-        // swap 1 bean of the opposite asset to get the price
-        uint256 amtOut = well.getSwapOut(wellTokens[beanIndex], wellTokens[beanIndex == 0 ? 1 : 0], 1e6); 
-       
-        // get price of other token to price pool
-        uint256 tknUsdPrice = LibUsdOracle.getUsdPrice(address(wellTokens[beanIndex == 0 ? 1 : 0]));
-        pool.price = amtOut.mul(tknUsdPrice).div(1e12);
+        // liquidity is calculated by beanAmt * beanPrice * 2
+        pool.liquidity = 
+            pool.balances[beanIndex] // 1e6
+            .mul(pool.price) // 1e6
+            .div(PRICE_PRECISION)
+            .mul(2);
 
-        pool.liquidity = pool.balances[beanIndex] + pool.balances[beanIndex == 0 ? 1 : 0] * tknUsdPrice;
-        pool.deltaB = LibWellMinting.check(wellAddress);
-        pool.lpUsd = pool.liquidity.mul(pool.price).div(1e6);
-        pool.lpBdv = pool.liquidity;
+        pool.deltaB = IBEANSTALK(BEANSTALK).poolDeltaB(wellAddress);
+
+        pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
+
+        pool.lpBdv = IBEANSTALK(BEANSTALK).bdv(wellAddress, WELL_DECIMALS);
+
     }
 
 }

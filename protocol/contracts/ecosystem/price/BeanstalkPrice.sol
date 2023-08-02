@@ -20,6 +20,7 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
         p.ps[0] = getCurve();
         p.ps[1] = getConstantProductWell(C.BEAN_ETH_WELL);
 
+        // assumes that liquidity and prices on all pools uses the same precision.
         for (uint256 i = 0; i < p.ps.length; i++) {
             p.price += p.ps[i].price.mul(p.ps[i].liquidity);
             p.liquidity += p.ps[i].liquidity;
