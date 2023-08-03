@@ -1,11 +1,9 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { to18, to6, toStalk, advanceTime } = require('./utils/helpers.js')
+const { EXTERNAL } = require('./utils/balances.js')
+const { to18, to6, advanceTime } = require('./utils/helpers.js')
 const { BEAN, BEANSTALK, BEAN_3_CURVE, THREE_CURVE, THREE_POOL, WETH, STABLE_FACTORY, BEAN_ETH_WELL } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
-const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { deployWell, setReserves, whitelistWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const { getBeanstalk } = require('../utils/contracts.js');
@@ -22,8 +20,6 @@ describe('BeanstalkPrice', function () {
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     userAddress = user.address;
-
-
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
@@ -112,23 +108,22 @@ describe('BeanstalkPrice', function () {
       // price is within +/- 1 due to curve rounding
       expect(p.price).to.equal('999999');
       expect(p.liquidity).to.equal('3999997000000');
-      // 
-      expect(p.deltaB).to.be.lt(to6('1'));
+      expect(p.deltaB).to.be.eq('0');
     })
 
     it('deltaB > 0, curve only', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
-        [to6('0'), to18('1000')],
+        [to6('0'), to18('100000')],
         to18('0'),
         EXTERNAL,
         EXTERNAL
       )
       const p = await this.beanstalkPrice.price()
-      expect(p.price).to.equal('1000044');
-      expect(p.liquidity).to.equal('4001088000000');
-      expect(p.deltaB).to.equal('499988642');
+      expect(p.price).to.equal('1004479');
+      expect(p.liquidity).to.equal('4108727000000');
+      expect(p.deltaB).to.equal('49891561002');
     })
 
     it('deltaB > 0, wells only', async function () {
@@ -154,7 +149,7 @@ describe('BeanstalkPrice', function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
-        [to6('0'), to18('1000')],
+        [to6('0'), to18('100000')],
         to18('0'),
         EXTERNAL,
         EXTERNAL
@@ -172,16 +167,16 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      expect(p.price).to.equal('1499906');
-      expect(p.liquidity).to.equal('4001086000000');
-      expect(p.deltaB).to.equal('134151772934');
+      expect(p.price).to.equal('1491246');
+      expect(p.liquidity).to.equal('4108725000000');
+      expect(p.deltaB).to.equal('183543345294');
     })
 
     it('deltaB < 0, curve only', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
-        [to6('1000'), to18('0')],
+        [to6('100000'), to18('0')],
         to18('0'),
         EXTERNAL,
         EXTERNAL
@@ -189,9 +184,9 @@ describe('BeanstalkPrice', function () {
       
       // ~500 beans need be to be bought to get back to peg
       const p = await this.beanstalkPrice.price()
-      expect(p.price).to.equal('999953');
-      expect(p.liquidity).to.equal('4000906909000');
-      expect(p.deltaB).to.equal('-500011358');
+      expect(p.price).to.equal('995576');
+      expect(p.liquidity).to.equal('4090478600000');
+      expect(p.deltaB).to.equal('-50108438998');
     })
 
     it('deltaB < 0, wells only', async function () {
@@ -217,7 +212,7 @@ describe('BeanstalkPrice', function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
-        [to6('1000'), to18('0')],
+        [to6('100000'), to18('0')],
         to18('0'),
         EXTERNAL,
         EXTERNAL
@@ -235,16 +230,16 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      expect(p.price).to.equal('750011');
-      expect(p.liquidity).to.equal('4000904909000');
-      expect(p.deltaB).to.equal('-225034006822');
+      expect(p.price).to.equal('751106');
+      expect(p.liquidity).to.equal('4090476600000');
+      expect(p.deltaB).to.equal('-274563881303');
     })
 
     it('well deltaB > 0, curve deltaB < 0', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
-        [to6('10000'), to18('0')],
+        [to6('100000'), to18('0')],
         to18('0'),
         EXTERNAL,
         EXTERNAL
@@ -262,16 +257,16 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      expect(p.price).to.equal('1498410');
-      expect(p.liquidity).to.equal('4009081950000');
-      expect(p.deltaB).to.equal('128623115719');
+      expect(p.price).to.equal('1484514');
+      expect(p.liquidity).to.equal('4090476600000');
+      expect(p.deltaB).to.equal('83515807456');
     })
 
     it('well deltaB < 0, curve deltaB > 0', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
-        [to6('0'), to18('10000')],
+        [to6('0'), to18('100000')],
         to18('0'),
         EXTERNAL,
         EXTERNAL
@@ -289,9 +284,9 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      expect(p.price).to.equal('751133');
-      expect(p.liquidity).to.equal('4010901000000');
-      expect(p.deltaB).to.equal('-219456573040');
+      expect(p.price).to.equal('761095');
+      expect(p.liquidity).to.equal('4108725000000');
+      expect(p.deltaB).to.equal('-174485381948');
     })
 
   });
