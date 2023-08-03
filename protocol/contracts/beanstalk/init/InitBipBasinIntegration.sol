@@ -8,6 +8,8 @@ pragma experimental ABIEncoderV2;
 import {AppStorage} from "../AppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+
 
 
 /**
@@ -34,6 +36,8 @@ contract InitBipBasinIntegration {
     
     
     function init() external {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(C.BEAN, NEW_BEAN_SEEDS_PER_BDV);
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(C.CURVE_BEAN_METAPOOL, NEW_BEAN_3CRV_SEEDS_PER_BDV);
         LibWhitelist.whitelistToken(
