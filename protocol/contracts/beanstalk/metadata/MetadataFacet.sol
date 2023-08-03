@@ -19,6 +19,10 @@ import "./MetadataImage.sol";
  */
 contract MetadataFacet is MetadataImage {
     using LibStrings for uint256;
+    using LibStrings for int256;
+
+
+    event URI(string _uri, uint256 indexed _id);
 
     /**
      * @notice Returns the URI for a given depositId.
@@ -34,7 +38,7 @@ contract MetadataFacet is MetadataImage {
             '\n\nToken Symbol: ', getTokenName(token),
             '\nToken Address: ', LibStrings.toHexString(uint256(token), 20),
             '\nId: ', depositId.toHexString(32),
-            '\nDeposit stem: ', uint256(stem).toString(),
+            '\nDeposit stem: ', int256(stem).toString(),
             '\nDeposit inital stalk per BDV: ', uint256(LibTokenSilo.stalkIssuedPerBdv(token)).toString(),
             '\nDeposit grown stalk per BDV": ', uint256(LibTokenSilo.stemTipForToken(token) - stem).toString(),
             '\nDeposit seeds per BDV": ', uint256(LibLegacyTokenSilo.getSeedsPerToken(token)).toString(),
@@ -48,5 +52,13 @@ contract MetadataFacet is MetadataImage {
                 '}'
             ))
         ));
+    }
+
+    function name() external pure returns (string memory){
+        return "Beanstalk Deposit";
+    }
+
+    function symbol() external pure returns (string memory){
+        return "BS-DEP";
     }
 }

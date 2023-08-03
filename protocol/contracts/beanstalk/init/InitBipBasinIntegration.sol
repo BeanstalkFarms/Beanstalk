@@ -49,5 +49,8 @@ contract InitBipBasinIntegration {
         );
 
         s.beanEthPrice = 1;
+
+        // adds ERC1155MetadataURI for ERC165 Interface ID
+        ds.supportedInterfaces[0x0e89341c] = true;
     }
 }

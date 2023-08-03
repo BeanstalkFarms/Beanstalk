@@ -21,6 +21,7 @@ contract MetadataImage {
     AppStorage internal s;
 
     using LibStrings for uint256;
+    using LibStrings for int256;
     using SafeMath for uint256;
 
     string constant LEAF_COLOR_0 = '#A8C83A';
@@ -524,11 +525,91 @@ contract MetadataImage {
                 useAsset(getTokenName(token), 240, 4),
                 '<rect x="0" y="330" width="255" height="20" rx="5" fill="#242424"/>',
                 movingTokenAddress(token),
-                '<text x="230" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
-                uint256(stem).toString(),
+                '<text x="235" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
+                SciNotation(stem),
                 '</text>'
             )
         );
+    }
+
+    function SciNotation(int96 stem) internal pure returns (string memory) {
+        if(stem >= 0){
+            // if stem is greater than 1e7, use scientific notation
+            if(stem > 100_000){
+                return powerOfTen(uint256(stem));
+            } else {
+                return uint256(stem).toString();
+            }
+        } else {
+            // if stem is greater than 1e7, use scientific notation
+            if(-stem > 100_000){
+                return string(abi.encodePacked("-", powerOfTen(uint256(-stem))));
+            } else {
+                return int256(stem).toString();
+            }
+        }
+    }
+
+    function powerOfTen(uint256 stem) internal pure returns (string memory) {
+        // if else ladder to determine how many digits to show
+        if(stem < 1e6){
+            return stemDecimals(stem, 5);
+        } else if(stem < 1e7) {
+            return stemDecimals(stem, 6);
+        } else if(stem < 1e8) {
+            return stemDecimals(stem, 7);
+        } else if(stem < 1e9) {
+            return stemDecimals(stem, 8);
+        } else if(stem < 1e10) {
+            return stemDecimals(stem, 9);
+        } else if(stem < 1e11) {
+            return stemDecimals(stem, 10);
+        } else if(stem < 1e12) {
+            return stemDecimals(stem, 11);
+        } else if(stem < 1e13) {
+            return stemDecimals(stem, 12);
+        } else if(stem < 1e14) {
+            return stemDecimals(stem, 13);
+        } else if(stem < 1e15) {
+            return stemDecimals(stem, 14);
+        } else if(stem < 1e16) {
+            return stemDecimals(stem, 15);
+        } else if(stem < 1e17) {
+            return stemDecimals(stem, 16);
+        } else if(stem < 1e18) {
+            return stemDecimals(stem, 17);
+        } else if(stem < 1e19) {
+            return stemDecimals(stem, 18);
+        } else if(stem < 1e20) {
+            return stemDecimals(stem, 19);
+        } else if(stem < 1e21) {
+            return stemDecimals(stem, 20);
+        } else if(stem < 1e22) {
+            return stemDecimals(stem, 21);
+        } else if(stem < 1e23) {
+            return stemDecimals(stem, 22);
+        } else if(stem < 1e24) {
+            return stemDecimals(stem, 23);
+        } else if(stem < 1e25) {
+            return stemDecimals(stem, 24);
+        } else if(stem < 1e26) {
+            return stemDecimals(stem, 25);
+        } else if(stem < 1e27) {
+            return stemDecimals(stem, 26);
+        } else if(stem < 1e28) {
+            return stemDecimals(stem, 27);
+        } else {
+            return stemDecimals(stem, 28);
+        }
+    }
+    function stemDecimals(uint256 stem, uint256 exponent) internal pure returns (string memory) {
+        return string(abi.encodePacked(
+            stem.div(10 ** exponent).toString(),
+            '.',
+            stem.div(10 ** exponent.sub(5)).mod(1e5).toString(),
+            'e',
+            exponent.toString()
+        ));
     }
 
     function tokenName(address token) internal pure returns (string memory) {
