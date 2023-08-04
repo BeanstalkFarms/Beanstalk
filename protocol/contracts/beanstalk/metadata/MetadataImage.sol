@@ -2,12 +2,10 @@
 
 pragma solidity ^0.7.6;
 import "../AppStorage.sol";
-import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
-import {C} from "../../C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {C} from "../../C.sol";
 
 
 /**
@@ -21,6 +19,7 @@ contract MetadataImage {
     AppStorage internal s;
 
     using LibStrings for uint256;
+    using LibStrings for int256;
     using SafeMath for uint256;
 
     string constant LEAF_COLOR_0 = '#A8C83A';
@@ -28,13 +27,16 @@ contract MetadataImage {
     uint256 constant NUM_PLOTS = 21;
     uint256 constant STALK_GROWTH = 2e2;
 
-    function imageURI(uint256 depositId) public view returns (string memory){
-        return string(abi.encodePacked("data:image/svg+xml;base64,", LibBytes64.encode(bytes(generateImage(depositId)))));
+    function imageURI(address token, int96 stem, int96 stemTip) public view returns (string memory){
+        return string(
+            abi.encodePacked(
+                "data:image/svg+xml;base64,", 
+                LibBytes64.encode(bytes(generateImage(token, stem, stemTip)))
+            )
+        );
     }
 
-    function generateImage(uint256 depositId) internal view returns (string memory) {
-        (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
-        int96 stemTip = LibTokenSilo.stemTipForToken(token);
+    function generateImage(address token, int96 stem, int96 stemTip) internal view returns (string memory) {
         int96 grownStalkPerBdv = stemTip - stem;
         return string(
             abi.encodePacked(
@@ -524,11 +526,91 @@ contract MetadataImage {
                 useAsset(getTokenName(token), 240, 4),
                 '<rect x="0" y="330" width="255" height="20" rx="5" fill="#242424"/>',
                 movingTokenAddress(token),
-                '<text x="230" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
-                uint256(stem).toString(),
+                '<text x="235" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
+                SciNotation(stem),
                 '</text>'
             )
         );
+    }
+
+    function SciNotation(int96 stem) internal pure returns (string memory) {
+        if(stem >= 0){
+            // if stem is greater than 1e7, use scientific notation
+            if(stem > 100_000){
+                return powerOfTen(uint256(stem));
+            } else {
+                return uint256(stem).toString();
+            }
+        } else {
+            // if stem is greater than 1e7, use scientific notation
+            if(-stem > 100_000){
+                return string(abi.encodePacked("-", powerOfTen(uint256(-stem))));
+            } else {
+                return int256(stem).toString();
+            }
+        }
+    }
+
+    function powerOfTen(uint256 stem) internal pure returns (string memory) {
+        // if else ladder to determine how many digits to show
+        if(stem < 1e6){
+            return stemDecimals(stem, 5);
+        } else if(stem < 1e7) {
+            return stemDecimals(stem, 6);
+        } else if(stem < 1e8) {
+            return stemDecimals(stem, 7);
+        } else if(stem < 1e9) {
+            return stemDecimals(stem, 8);
+        } else if(stem < 1e10) {
+            return stemDecimals(stem, 9);
+        } else if(stem < 1e11) {
+            return stemDecimals(stem, 10);
+        } else if(stem < 1e12) {
+            return stemDecimals(stem, 11);
+        } else if(stem < 1e13) {
+            return stemDecimals(stem, 12);
+        } else if(stem < 1e14) {
+            return stemDecimals(stem, 13);
+        } else if(stem < 1e15) {
+            return stemDecimals(stem, 14);
+        } else if(stem < 1e16) {
+            return stemDecimals(stem, 15);
+        } else if(stem < 1e17) {
+            return stemDecimals(stem, 16);
+        } else if(stem < 1e18) {
+            return stemDecimals(stem, 17);
+        } else if(stem < 1e19) {
+            return stemDecimals(stem, 18);
+        } else if(stem < 1e20) {
+            return stemDecimals(stem, 19);
+        } else if(stem < 1e21) {
+            return stemDecimals(stem, 20);
+        } else if(stem < 1e22) {
+            return stemDecimals(stem, 21);
+        } else if(stem < 1e23) {
+            return stemDecimals(stem, 22);
+        } else if(stem < 1e24) {
+            return stemDecimals(stem, 23);
+        } else if(stem < 1e25) {
+            return stemDecimals(stem, 24);
+        } else if(stem < 1e26) {
+            return stemDecimals(stem, 25);
+        } else if(stem < 1e27) {
+            return stemDecimals(stem, 26);
+        } else if(stem < 1e28) {
+            return stemDecimals(stem, 27);
+        } else {
+            return stemDecimals(stem, 28);
+        }
+    }
+    function stemDecimals(uint256 stem, uint256 exponent) internal pure returns (string memory) {
+        return string(abi.encodePacked(
+            stem.div(10 ** exponent).toString(),
+            '.',
+            stem.div(10 ** exponent.sub(5)).mod(1e5).toString(),
+            'e',
+            exponent.toString()
+        ));
     }
 
     function tokenName(address token) internal pure returns (string memory) {
@@ -547,14 +629,14 @@ contract MetadataImage {
                 '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                 '<tspan><animate attributeName="x" from="375" to="50" dur="10s" repeatCount="indefinite" />',
                 LibStrings.toHexString(token),
-                '</tspan></text>'
+                '</tspan></text>',
                 '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                 '<tspan><animate attributeName="x" from="50" to="-275" dur="10s" repeatCount="indefinite" />',
                 LibStrings.toHexString(token),
                 '</tspan></text>'
             )
         );
-    }   
+    }
 
     function intToStr(int256 x) internal pure returns (string memory) {
         if(x < 0){
