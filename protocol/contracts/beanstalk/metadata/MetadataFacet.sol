@@ -55,10 +55,10 @@ contract MetadataFacet is MetadataImage {
     }
 
     function name() external pure returns (string memory){
-        return "Beanstalk Deposit";
+        return "Beanstalk Silo Deposits";
     }
 
     function symbol() external pure returns (string memory){
-        return "BS-DEP";
+        return "DEPOSIT";
     }
 }
