@@ -2,12 +2,10 @@
 
 pragma solidity ^0.7.6;
 import "../AppStorage.sol";
-import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
-import {C} from "../../C.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {C} from "../../C.sol";
 
 
 /**
@@ -29,13 +27,16 @@ contract MetadataImage {
     uint256 constant NUM_PLOTS = 21;
     uint256 constant STALK_GROWTH = 2e2;
 
-    function imageURI(uint256 depositId) public view returns (string memory){
-        return string(abi.encodePacked("data:image/svg+xml;base64,", LibBytes64.encode(bytes(generateImage(depositId)))));
+    function imageURI(address token, int96 stem, int96 stemTip) public view returns (string memory){
+        return string(
+            abi.encodePacked(
+                "data:image/svg+xml;base64,", 
+                LibBytes64.encode(bytes(generateImage(token, stem, stemTip)))
+            )
+        );
     }
 
-    function generateImage(uint256 depositId) internal view returns (string memory) {
-        (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
-        int96 stemTip = LibTokenSilo.stemTipForToken(token);
+    function generateImage(address token, int96 stem, int96 stemTip) internal view returns (string memory) {
         int96 grownStalkPerBdv = stemTip - stem;
         return string(
             abi.encodePacked(
@@ -628,14 +629,14 @@ contract MetadataImage {
                 '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                 '<tspan><animate attributeName="x" from="375" to="50" dur="10s" repeatCount="indefinite" />',
                 LibStrings.toHexString(token),
-                '</tspan></text>'
+                '</tspan></text>',
                 '<text x="127" y="343" font-size="10" fill="White" text-anchor="middle" font-family="futura">',
                 '<tspan><animate attributeName="x" from="50" to="-275" dur="10s" repeatCount="indefinite" />',
                 LibStrings.toHexString(token),
                 '</tspan></text>'
             )
         );
-    }   
+    }
 
     function intToStr(int256 x) internal pure returns (string memory) {
         if(x < 0){
