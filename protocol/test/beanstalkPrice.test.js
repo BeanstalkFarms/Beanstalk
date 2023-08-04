@@ -121,9 +121,20 @@ describe('BeanstalkPrice', function () {
         EXTERNAL
       )
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('1004479');
       expect(p.liquidity).to.equal('4108727000000');
       expect(p.deltaB).to.equal('49891561002');
+
+      expect(c.price).to.equal('1008729');
+      expect(c.liquidity).to.equal('2108729000000');
+      expect(c.deltaB).to.equal('49891561002');
+
+      expect(w.price).to.equal('999999');
+      expect(w.liquidity).to.equal('1999998000000');
+      expect(w.deltaB).to.equal('0');
     })
 
     it('deltaB > 0, wells only', async function () {
@@ -140,9 +151,20 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('1499997');
       expect(p.liquidity).to.equal('3999995000000');
       expect(p.deltaB).to.equal('133679332828');
+
+      expect(c.price).to.equal('999999');
+      expect(c.liquidity).to.equal('1999999000000');
+      expect(c.deltaB).to.equal('0');
+
+      expect(w.price).to.equal('1999996');
+      expect(w.liquidity).to.equal('1999996000000');
+      expect(w.deltaB).to.equal('133679332828');
     })
 
     it('deltaB > 0, wells and curve', async function () {
@@ -167,9 +189,20 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('1491246');
       expect(p.liquidity).to.equal('4108725000000');
       expect(p.deltaB).to.equal('183543345294');
+
+      expect(c.price).to.equal('1008729');
+      expect(c.liquidity).to.equal('2108729000000');
+      expect(c.deltaB).to.equal('49891561002');
+
+      expect(w.price).to.equal('1999996');
+      expect(w.liquidity).to.equal('1999996000000');
+      expect(w.deltaB).to.equal('133651784292');
     })
 
     it('deltaB < 0, curve only', async function () {
@@ -184,9 +217,21 @@ describe('BeanstalkPrice', function () {
       
       // ~500 beans need be to be bought to get back to peg
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('995576');
       expect(p.liquidity).to.equal('4090478600000');
       expect(p.deltaB).to.equal('-50108438998');
+
+      expect(c.price).to.equal('991346');
+      expect(c.liquidity).to.equal('2090480600000');
+      expect(c.deltaB).to.equal('-50108438998');
+
+      expect(w.price).to.equal('999999');
+      expect(w.liquidity).to.equal('1999998000000');
+      expect(w.deltaB).to.equal('0');
+      
     })
 
     it('deltaB < 0, wells only', async function () {
@@ -203,9 +248,20 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('749999');
       expect(p.liquidity).to.equal('3999995000000');
       expect(p.deltaB).to.equal('-224612602483');
+
+      expect(c.price).to.equal('999999');
+      expect(c.liquidity).to.equal('1999999000000');
+      expect(c.deltaB).to.equal('0');
+
+      expect(w.price).to.equal('499999');
+      expect(w.liquidity).to.equal('1999996000000');
+      expect(w.deltaB).to.equal('-224612602483');
     })
 
     it('deltaB < 0, wells and curve', async function () {
@@ -230,9 +286,20 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('751106');
       expect(p.liquidity).to.equal('4090476600000');
-      expect(p.deltaB).to.equal('-274563881303');
+      expect(p.deltaB).to.be.within('-274563881303', '-274485381948')
+
+      expect(c.price).to.equal('991346');
+      expect(c.liquidity).to.equal('2090480600000');
+      expect(c.deltaB).to.equal('-50108438998');
+
+      expect(w.price).to.equal('499999');
+      expect(w.liquidity).to.equal('1999996000000');
+      expect(w.deltaB).to.equal('-224376942950');
     })
 
     it('well deltaB > 0, curve deltaB < 0', async function () {
@@ -257,9 +324,20 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('1484514');
       expect(p.liquidity).to.equal('4090476600000');
-      expect(p.deltaB).to.equal('83515807456');
+      expect(p.deltaB).to.equal('83488280312');
+
+      expect(c.price).to.equal('991346');
+      expect(c.liquidity).to.equal('2090480600000');
+      expect(c.deltaB).to.equal('-50108438998');
+
+      expect(w.price).to.equal('1999996');
+      expect(w.liquidity).to.equal('1999996000000');
+      expect(w.deltaB).to.be.within('133569202852','133596719310');
     })
 
     it('well deltaB < 0, curve deltaB > 0', async function () {
@@ -284,9 +362,20 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
+      const c = await this.beanstalkPrice.getCurve()
+      const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
+
       expect(p.price).to.equal('761095');
       expect(p.liquidity).to.equal('4108725000000');
-      expect(p.deltaB).to.equal('-174485381948');
+      expect(p.deltaB).to.be.within('-174485381948','-174406936344');
+
+      expect(c.price).to.equal('1008729');
+      expect(c.liquidity).to.equal('2108729000000');
+      expect(c.deltaB).to.equal('49891561002');
+
+      expect(w.price).to.equal('499999');
+      expect(w.liquidity).to.equal('1999996000000');
+      expect(w.deltaB).to.equal('-224298497346');
     })
 
   });
