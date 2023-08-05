@@ -249,7 +249,12 @@ module.exports = {
       chainId: 31337,
       url: "https://rpc.vnet.tenderly.co/devnet/silo-v3/3ed19e82-a81c-45e5-9b16-5e385aa74587",
       timeout: 100000
-    }
+    },
+    goerli: {
+      chainId: 5,
+      url: process.env.GOERLI_RPC || "",
+      timeout: 100000
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_KEY
