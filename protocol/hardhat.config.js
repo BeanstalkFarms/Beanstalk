@@ -253,7 +253,6 @@ module.exports = {
     goerli: {
       chainId: 5,
       url: process.env.GOERLI_RPC || "",
-      accounts: [process.env.GOERLI_PRIVATE_KEY],
       timeout: 100000
     },
   },
