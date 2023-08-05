@@ -66,8 +66,8 @@ contract WellPrice {
         pool.liquidity = 
             pool.balances[beanIndex] // 1e6
             .mul(pool.price) // 1e6
-            .div(PRICE_PRECISION)
-            .mul(2);
+            .mul(2)
+            .div(PRICE_PRECISION);
 
         pool.deltaB = IBEANSTALK(BEANSTALK).poolDeltaB(wellAddress);
 
