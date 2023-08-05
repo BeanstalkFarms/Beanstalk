@@ -22,7 +22,6 @@ contract MetadataFacet is MetadataImage {
     using LibStrings for uint256;
     using LibStrings for int256;
 
-
     event URI(string _uri, uint256 indexed _id);
 
     /**

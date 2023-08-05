@@ -27,7 +27,7 @@ contract MetadataImage {
     uint256 constant NUM_PLOTS = 21;
     uint256 constant STALK_GROWTH = 2e2;
 
-    function imageURI(address token, int96 stem, int96 stemTip) public view returns (string memory){
+    function imageURI(address token, int96 stem, int96 stemTip) public view returns (string memory) {
         return string(
             abi.encodePacked(
                 "data:image/svg+xml;base64,", 
@@ -49,14 +49,14 @@ contract MetadataImage {
             )
         );
     }
-    function back() internal pure returns(string memory){
+    function back() internal pure returns(string memory) {
         return string(abi.encodePacked(
             '<rect width="255" height="350" rx="10" fill="',
             '#253326',
             '"/>'
         ));
     }
-    function defs(int96 stemTip) internal pure returns(string memory){
+    function defs(int96 stemTip) internal pure returns(string memory) {
         (uint256 sprouts,) = getNumStemsAndPlots(stemTip);
         uint256 sproutsInFinalRow = sprouts.mod(4);
         return string(abi.encodePacked(
@@ -90,7 +90,7 @@ contract MetadataImage {
         return '<rect x="8" y="8" width="240" height="335" rx="6" stroke="#9BCAA0" stroke-width="2" fill="none"/>';
     }
 
-    function fullLeafRow() internal pure returns (string memory){
+    function fullLeafRow() internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<g id="leafRow">',
             '<use xlink:href="#leaf" x="0" y="0"/>',
@@ -101,21 +101,21 @@ contract MetadataImage {
         ));
     }
 
-    function partialLeafRow(uint256 n) internal pure returns (string memory){
-        if(n == 0){ 
+    function partialLeafRow(uint256 n) internal pure returns (string memory) {
+        if (n == 0) { 
             return string(abi.encodePacked(
                 '<g id="partialLeafRow">',
                 '</g>'
             ));
         }
-        if(n == 1) { 
+        if (n == 1) { 
             return string(abi.encodePacked(
                 '<g id="partialLeafRow">',
                 '<use xlink:href="#leaf" x="0" y="0"/>',
                 '</g>'
             ));
         }
-        if(n == 2){ 
+        if (n == 2) { 
             return string(abi.encodePacked(
                 '<g id="partialLeafRow">',
                 '<use xlink:href="#leaf" x="0" y="0"/>',
@@ -123,7 +123,7 @@ contract MetadataImage {
                 '</g>'
             ));
         }
-        if(n == 3) { 
+        if (n == 3) { 
             return string(abi.encodePacked(
                 '<g id="partialLeafRow">',
                 '<use xlink:href="#leaf" x="0" y="0"/>',
@@ -169,8 +169,8 @@ contract MetadataImage {
         uint256 totalSprouts = uint256(stalkPerBDV).div(STALK_GROWTH).add(16);
         uint256 numRows = uint256(totalSprouts).div(4).mod(4);
         uint256 numSprouts = uint256(totalSprouts).mod(4);
-        if(numRows == 0){
-            if(numSprouts > 0){
+        if (numRows == 0) {
+            if (numSprouts > 0) {
                 _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     useAssetTransform('plot',-35,0),
@@ -186,8 +186,8 @@ contract MetadataImage {
                 ));
             }
         }
-        if(numRows == 1){
-            if(numSprouts > 0){
+        if (numRows == 1) {
+            if (numSprouts > 0) {
                 _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     oneLeafRow(),
@@ -202,8 +202,8 @@ contract MetadataImage {
                 ));
             }
         }
-        if(numRows == 2){
-            if(numSprouts > 0) {
+        if (numRows == 2) {
+            if (numSprouts > 0) {
                 _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     twoLeafRows(),
@@ -219,8 +219,8 @@ contract MetadataImage {
             }
             
         }
-        if(numRows == 3){
-            if(numSprouts > 0){
+        if (numRows == 3) {
+            if (numSprouts > 0) {
                 _plot = string(abi.encodePacked(
                     '<g id="partialLeafPlot">',
                     threeLeafRows(),
@@ -290,7 +290,7 @@ contract MetadataImage {
         // first plot should always be planted fully, and every 2% stalk adds a sprout to the next plot.
         for(uint256 i = 0; i < NUM_PLOTS; ++i) {
             uint256 plotNo = order[i];
-            if(plotNo < numPlotsToFill){
+            if (plotNo < numPlotsToFill) {
                 _plot = abi.encodePacked(
                     _plot,
                     useAsset(
@@ -300,7 +300,7 @@ contract MetadataImage {
                     )
                 );
             } else if (plotNo == numPlotsToFill) {
-                if(numPlotsToFill == 1){
+                if (numPlotsToFill == 1) {
                     _plot = abi.encodePacked(
                     _plot,
                     useAsset(
@@ -329,7 +329,7 @@ contract MetadataImage {
                     )
                 );
             }
-            if(i == 11){
+            if (i == 11) {
                 _plot= abi.encodePacked(
                     _plot,
                     '<use xlink:href="#silo" x="47" y="55" transform="scale(1.7)"/>'
@@ -405,23 +405,23 @@ contract MetadataImage {
         );
     }
 
-    function beanToken() internal pure returns (string memory){
+    function beanToken() internal pure returns (string memory) {
         return beanTemplateToken(false);
     }
 
-    function bean3CRVToken() internal pure returns (string memory){
+    function bean3CRVToken() internal pure returns (string memory) {
         return beanLPTemplateToken(false);
     }
 
-    function urBeanToken() internal pure returns (string memory){
+    function urBeanToken() internal pure returns (string memory) {
         return beanTemplateToken(true);
     }
 
-    function urBean3CRVToken() internal pure returns (string memory){
+    function urBean3CRVToken() internal pure returns (string memory) {
         return beanLPTemplateToken(true);
     }
 
-    function beanTemplateToken(bool ripe) internal pure returns (string memory){
+    function beanTemplateToken(bool ripe) internal pure returns (string memory) {
         return string(abi.encodePacked( 
             '<g id="',
             ripe ? 'urBean' : 'Bean',
@@ -433,7 +433,7 @@ contract MetadataImage {
         );
     }
 
-    function beanLPTemplateToken(bool ripe) internal pure returns (string memory){
+    function beanLPTemplateToken(bool ripe) internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<g id="',
             ripe ? 'urBean3CRV' : 'Bean3CRV',
@@ -450,7 +450,7 @@ contract MetadataImage {
         );
     } 
 
-    function beanETHCP2WellToken() internal pure returns (string memory){
+    function beanETHCP2WellToken() internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<g id="BEAN:ETHw">',
             '<rect width="12" height="12" rx="6" fill="#46B955"/>',
@@ -527,23 +527,23 @@ contract MetadataImage {
                 '<rect x="0" y="330" width="255" height="20" rx="5" fill="#242424"/>',
                 movingTokenAddress(token),
                 '<text x="235" y="14.5" font-size="12" fill="White" text-anchor="end" font-family="futura">Stem: ',
-                SciNotation(stem),
+                sciNotation(stem),
                 '</text>'
             )
         );
     }
 
-    function SciNotation(int96 stem) internal pure returns (string memory) {
-        if(stem >= 0){
+    function sciNotation(int96 stem) internal pure returns (string memory) {
+        if (stem >= 0) {
             // if stem is greater than 1e7, use scientific notation
-            if(stem > 100_000){
+            if (stem > 100_000) {
                 return powerOfTen(uint256(stem));
             } else {
                 return uint256(stem).toString();
             }
         } else {
             // if stem is greater than 1e7, use scientific notation
-            if(-stem > 100_000){
+            if (-stem > 100_000) {
                 return string(abi.encodePacked("-", powerOfTen(uint256(-stem))));
             } else {
                 return int256(stem).toString();
@@ -553,56 +553,57 @@ contract MetadataImage {
 
     function powerOfTen(uint256 stem) internal pure returns (string memory) {
         // if else ladder to determine how many digits to show
-        if(stem < 1e6){
+        if (stem < 1e6) {
             return stemDecimals(stem, 5);
-        } else if(stem < 1e7) {
+        } else if (stem < 1e7) {
             return stemDecimals(stem, 6);
-        } else if(stem < 1e8) {
+        } else if (stem < 1e8) {
             return stemDecimals(stem, 7);
-        } else if(stem < 1e9) {
+        } else if (stem < 1e9) {
             return stemDecimals(stem, 8);
-        } else if(stem < 1e10) {
+        } else if (stem < 1e10) {
             return stemDecimals(stem, 9);
-        } else if(stem < 1e11) {
+        } else if (stem < 1e11) {
             return stemDecimals(stem, 10);
-        } else if(stem < 1e12) {
+        } else if (stem < 1e12) {
             return stemDecimals(stem, 11);
-        } else if(stem < 1e13) {
+        } else if (stem < 1e13) {
             return stemDecimals(stem, 12);
-        } else if(stem < 1e14) {
+        } else if (stem < 1e14) {
             return stemDecimals(stem, 13);
-        } else if(stem < 1e15) {
+        } else if (stem < 1e15) {
             return stemDecimals(stem, 14);
-        } else if(stem < 1e16) {
+        } else if (stem < 1e16) {
             return stemDecimals(stem, 15);
-        } else if(stem < 1e17) {
+        } else if (stem < 1e17) {
             return stemDecimals(stem, 16);
-        } else if(stem < 1e18) {
+        } else if (stem < 1e18) {
             return stemDecimals(stem, 17);
-        } else if(stem < 1e19) {
+        } else if (stem < 1e19) {
             return stemDecimals(stem, 18);
-        } else if(stem < 1e20) {
+        } else if (stem < 1e20) {
             return stemDecimals(stem, 19);
-        } else if(stem < 1e21) {
+        } else if (stem < 1e21) {
             return stemDecimals(stem, 20);
-        } else if(stem < 1e22) {
+        } else if (stem < 1e22) {
             return stemDecimals(stem, 21);
-        } else if(stem < 1e23) {
+        } else if (stem < 1e23) {
             return stemDecimals(stem, 22);
-        } else if(stem < 1e24) {
+        } else if (stem < 1e24) {
             return stemDecimals(stem, 23);
-        } else if(stem < 1e25) {
+        } else if (stem < 1e25) {
             return stemDecimals(stem, 24);
-        } else if(stem < 1e26) {
+        } else if (stem < 1e26) {
             return stemDecimals(stem, 25);
-        } else if(stem < 1e27) {
+        } else if (stem < 1e27) {
             return stemDecimals(stem, 26);
-        } else if(stem < 1e28) {
+        } else if (stem < 1e28) {
             return stemDecimals(stem, 27);
         } else {
             return stemDecimals(stem, 28);
         }
     }
+    
     function stemDecimals(uint256 stem, uint256 exponent) internal pure returns (string memory) {
         return string(abi.encodePacked(
             stem.div(10 ** exponent).toString(),
@@ -639,7 +640,7 @@ contract MetadataImage {
     }
 
     function intToStr(int256 x) internal pure returns (string memory) {
-        if(x < 0){
+        if (x < 0) {
             return string(abi.encodePacked(
                 '-',
                 uint256(-x).toString()
@@ -650,19 +651,19 @@ contract MetadataImage {
     }
 
     function getTokenName(address token) internal pure returns (string memory tokenString) {
-        if(token == C.BEAN) {
+        if (token == C.BEAN) {
             tokenString = "Bean";
         }
-        else if(token == C.CURVE_BEAN_METAPOOL) {
+        else if (token == C.CURVE_BEAN_METAPOOL) {
             tokenString = "Bean3CRV";
         }
-        else if(token == C.UNRIPE_BEAN) {
+        else if (token == C.UNRIPE_BEAN) {
             tokenString = "urBean";
         }
-        else if(token == C.UNRIPE_LP) {
+        else if (token == C.UNRIPE_LP) {
             tokenString = "urBean3CRV";
         }
-        else if(token == C.BEAN_ETH_WELL) {
+        else if (token == C.BEAN_ETH_WELL) {
             tokenString = "BEAN:ETHw";
         } else {
             revert("token not whitelisted.");
@@ -677,6 +678,6 @@ contract MetadataImage {
         // 1 sprout on the image is equal to 0.02 stalk
         numStems = uint256(grownStalkPerBDV).div(STALK_GROWTH);
         plots = numStems.div(16).add(1);
-        if(numStems.mod(16) > 0) plots = plots.add(1);
+        if (numStems.mod(16) > 0) plots = plots.add(1);
     }
 }
