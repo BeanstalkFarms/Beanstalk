@@ -552,7 +552,7 @@ contract MetadataImage {
     }
 
     function powerOfTen(uint256 stem) internal pure returns (string memory) {
-        // if else ladder to determine how many digits to show
+        // if else ladder to determine how many digits to show.
         if (stem < 1e6) {
             return stemDecimals(stem, 5);
         } else if (stem < 1e7) {

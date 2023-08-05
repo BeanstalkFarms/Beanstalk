@@ -361,7 +361,7 @@ describe('Silo', function () {
 
     it("properly gives an URI", async function () {
       await this.season.farmSunrises(1000); 
-      
+
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
