@@ -62,7 +62,8 @@ contract WellPrice {
                 .mul(PRICE_PRECISION) // 1e6 
                 .div(LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]))); // 1e18
         } else {
-            revert("WellPrice: price is 0");
+            // cannnot determine a price for bean if the other asset that bean is trading against is 0.
+            pool.price = 0; 
         }
         
 
