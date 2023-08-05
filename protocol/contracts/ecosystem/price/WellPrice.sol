@@ -40,7 +40,7 @@ contract WellPrice {
         uint256 lpBdv;
     }
 
-    function getConstantProductWell(address wellAddress) external view returns (P.Pool memory pool) {
+    function getConstantProductWell(address wellAddress) public view returns (P.Pool memory pool) {
         IWell well = IWell(wellAddress);
         pool.pool = wellAddress;
         
