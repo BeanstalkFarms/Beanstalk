@@ -55,10 +55,16 @@ contract WellPrice {
 
         // swap 1 bean of the opposite asset to get the usd price 
         // price = amtOut/tknOutPrice
-        pool.price = 
+        uint256 assetPrice = LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]));
+        if(assetPrice > 0) {
+            pool.price = 
             well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6) // 1e18
-            .mul(PRICE_PRECISION) // 1e6 
-            .div(LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]))); // 1e18
+                .mul(PRICE_PRECISION) // 1e6 
+                .div(LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]))); // 1e18
+        } else {
+            revert("WellPrice: price is 0");
+        }
+        
 
         // liquidity is calculated by beanAmt * beanPrice * 2
         pool.liquidity = 
