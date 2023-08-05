@@ -42,16 +42,6 @@ function toX(amount, x) {
   return ethers.utils.parseUnits(amount,x);
 }
 
-async function advanceTime(time) {
-  let timestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  timestamp += time
-  await hre.network.provider.request({
-    method: "evm_setNextBlockTimestamp",
-    params: [timestamp],
-  });
-}
-
-
 exports.toBean = toBean
 exports.toStalk = toStalk
 exports.toEther = toEther
@@ -60,5 +50,4 @@ exports.to6 = to6
 exports.parseJson = parseJson
 exports.getEthSpentOnGas = getEthSpentOnGas
 exports.incrementTime = incrementTime
-exports.advanceTime = advanceTime
 exports.toX = toX

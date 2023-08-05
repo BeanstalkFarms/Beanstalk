@@ -4375,9 +4375,9 @@
       },
       {
         "indexed": false,
-        "internalType": "int96",
+        "internalType": "int128",
         "name": "stem",
-        "type": "int96"
+        "type": "int128"
       },
       {
         "indexed": false,
@@ -5692,7 +5692,7 @@
         "type": "address"
       }
     ],
-    "name": "getLastMowedStem",
+    "name": "getLastStem",
     "outputs": [
       {
         "internalType": "int96",
@@ -6025,9 +6025,9 @@
     "name": "seasonToStem",
     "outputs": [
       {
-        "internalType": "int96",
+        "internalType": "int128",
         "name": "stem",
-        "type": "int96"
+        "type": "int128"
       }
     ],
     "stateMutability": "view",
@@ -6057,9 +6057,9 @@
     "name": "stemTipForToken",
     "outputs": [
       {
-        "internalType": "int96",
+        "internalType": "int128",
         "name": "_stemTip",
-        "type": "int96"
+        "type": "int128"
       }
     ],
     "stateMutability": "view",

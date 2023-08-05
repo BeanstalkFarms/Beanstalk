@@ -9,6 +9,8 @@ const { upgradeWithNewFacets } = require("../scripts/diamond");
 
 describe("Legacy Claim", async function () {
   before(async function () {
+    console.log("startup stuff");
+
     try {
       await network.provider.request({
         method: "hardhat_reset",
@@ -45,6 +47,7 @@ describe("Legacy Claim", async function () {
 
 
     this.diamond = BEANSTALK;
+    console.log("this.diamond: ", this.diamond);
 
     // this.season = await ethers.getContractAt("MockSeasonFacet", this.diamond);
 
