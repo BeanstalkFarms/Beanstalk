@@ -280,8 +280,6 @@ contract MockSeasonFacet is SeasonFacet {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
-        ds.supportedInterfaces[0x0e89341c] = true;
-
 
         uint32 currentSeason = s.season.current;
 
