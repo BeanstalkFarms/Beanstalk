@@ -6,7 +6,6 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./MetadataImage.sol";
-import "contracts/mocks/MockERC1155.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
@@ -23,7 +22,6 @@ contract MetadataFacet is MetadataImage {
     using LibStrings for uint256;
     using LibStrings for int256;
 
-
     event URI(string _uri, uint256 indexed _id);
 
     /**
@@ -33,7 +31,7 @@ contract MetadataFacet is MetadataImage {
      * Deposits are stored as a mapping of a uint256 to a Deposit struct.
      * ERC20 deposits are represented by the concatination of the token address and the stem. (20 + 12 bytes).
      */
-    function uri(uint256 depositId) public view returns (string memory) {
+    function uri(uint256 depositId) external view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         int96 stemTip = LibTokenSilo.stemTipForToken(token);
         require(token != address(0), "Silo: metadata does not exist");
