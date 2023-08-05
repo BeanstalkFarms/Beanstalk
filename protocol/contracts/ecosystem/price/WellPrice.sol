@@ -60,7 +60,7 @@ contract WellPrice {
             pool.price = 
             well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6) // 1e18
                 .mul(PRICE_PRECISION) // 1e6 
-                .div(LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]))); // 1e18
+                .div(assetPrice); // 1e18
         } else {
             // cannnot determine a price for bean if the other asset that bean is trading against is 0.
             pool.price = 0; 
