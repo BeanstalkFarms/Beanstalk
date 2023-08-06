@@ -100,7 +100,7 @@ async function deployWell(tokens, verbose = false, salt = ethers.constants.HashZ
     if (verbose) console.log("Deployed Aquifer", aquifer.address);
     const wellFunction = await deployWellContract('ConstantProduct2');
     if (verbose) console.log("Deployed Well Function", wellFunction.address);
-    const pump = await deployGeoEmaAndCumSmaPump()
+    const pump = await deployMultiFlowPump()
     if (verbose) console.log("Deployed Pump", pump.address);
 
     const immutableData = await encodeWellImmutableData(
@@ -205,8 +205,8 @@ async function deployMockPump() {
     return await ethers.getContractAt('MockPump', BEANSTALK_PUMP)
 }
 
-async function deployGeoEmaAndCumSmaPump() {
-    pump = await (await getWellContractFactory('GeoEmaAndCumSmaPump')).deploy(
+async function deployMultiFlowPump() {
+    pump = await (await getWellContractFactory('MultiFlowPump')).deploy(
       '0x3ffe0000000000000000000000000000', // 0.5
       '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
       12,
@@ -218,7 +218,7 @@ async function deployGeoEmaAndCumSmaPump() {
       BEANSTALK_PUMP,
       await ethers.provider.getCode(pump.address),
     ]);
-    return await getWellContractAt('GeoEmaAndCumSmaPump', BEANSTALK_PUMP)
+    return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
 
 async function deployMockWell() {
@@ -229,7 +229,7 @@ async function deployMockWell() {
     let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
 
-    pump = await deployGeoEmaAndCumSmaPump()
+    pump = await deployMultiFlowPump()
 
     await well.setPumps([[pump.address, '0x']])
     await well.setWellFunction([wellFunction.address, '0x'])
