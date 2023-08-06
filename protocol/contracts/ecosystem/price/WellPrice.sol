@@ -11,7 +11,7 @@ import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "../../libraries/Well/LibWell.sol";
 import {C} from "../../C.sol";
 
-interface IBEANSTALK {
+interface IBeanstalk {
     function bdv(address token, uint256 amount) external view returns (uint256);
 
     function poolDeltaB(address pool) external view returns (int256);
@@ -25,7 +25,7 @@ contract WellPrice {
 
     using SafeMath for uint256;
 
-    address private constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
+    IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
     uint256 private constant WELL_DECIMALS = 1e18;
     uint256 private constant PRICE_PRECISION = 1e6;
 
@@ -55,7 +55,7 @@ contract WellPrice {
 
         // swap 1 bean of the opposite asset to get the usd price 
         // price = amtOut/tknOutPrice
-        uint256 assetPrice = LibUsdOracle.getUsdPrice(address(wellTokens[tknIndex]));
+        uint256 assetPrice = LibUsdOracle.getUsdPrice(pool.tokens[tknIndex]);
         if(assetPrice > 0) {
             pool.price = 
             well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6) // 1e18
@@ -65,21 +65,18 @@ contract WellPrice {
             // cannnot determine a price for bean if the other asset that bean is trading against is 0.
             pool.price = 0; 
         }
-        
 
-        // liquidity is calculated by beanAmt * beanPrice * 2
+        // liquidity is calculated by getting the usd value of the bean portion of the pool, 
+        // and multiplying by 2 to get the total liquidity of the pool.
         pool.liquidity = 
             pool.balances[beanIndex] // 1e6
             .mul(pool.price) // 1e6
             .mul(2)
             .div(PRICE_PRECISION);
-
-        pool.deltaB = IBEANSTALK(BEANSTALK).poolDeltaB(wellAddress);
-
+            
+        pool.deltaB = BEANSTALK.poolDeltaB(wellAddress);
         pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
-
-        pool.lpBdv = IBEANSTALK(BEANSTALK).bdv(wellAddress, WELL_DECIMALS);
-
+        pool.lpBdv = BEANSTALK.bdv(wellAddress, WELL_DECIMALS);
     }
 
 }
