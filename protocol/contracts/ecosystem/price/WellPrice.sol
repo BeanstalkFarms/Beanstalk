@@ -58,9 +58,9 @@ contract WellPrice {
         uint256 assetPrice = LibUsdOracle.getUsdPrice(pool.tokens[tknIndex]);
         if(assetPrice > 0) {
             pool.price = 
-            well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6) // 1e18
-                .mul(PRICE_PRECISION) // 1e6 
-                .div(assetPrice); // 1e18
+            well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
+                .mul(PRICE_PRECISION)
+                .div(assetPrice);
         } else {
             // cannnot determine a price for bean if the other asset that bean is trading against is 0.
             pool.price = 0; 
@@ -69,11 +69,11 @@ contract WellPrice {
         // liquidity is calculated by getting the usd value of the bean portion of the pool, 
         // and multiplying by 2 to get the total liquidity of the pool.
         pool.liquidity = 
-            pool.balances[beanIndex] // 1e6
-            .mul(pool.price) // 1e6
+            pool.balances[beanIndex]
+            .mul(pool.price)
             .mul(2)
             .div(PRICE_PRECISION);
-            
+
         pool.deltaB = BEANSTALK.poolDeltaB(wellAddress);
         pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
         pool.lpBdv = BEANSTALK.bdv(wellAddress, WELL_DECIMALS);
