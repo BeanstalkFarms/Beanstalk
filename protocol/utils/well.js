@@ -4,15 +4,16 @@ const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
 const { mintEth } = require('./mint');
 const { impersonateBeanstalkOwner } = require('./signer');
+const { increaseToNonce } = require('../scripts/contracts');
 
 const BASE_STRING = './node_modules/@beanstalk/wells/out';
 
-async function getWellContractFactory(name) {
+async function getWellContractFactory(name, account = undefined) {
     const contractJson = JSON.parse(await fs.readFileSync(`${BASE_STRING}/${name}.sol/${name}.json`))
     return await ethers.getContractFactory(
         contractJson.abi,
         contractJson.bytecode.object,
-        await getWellDeployer()
+        (account == undefined) ? await getWellDeployer() : account
     );
 }
 
@@ -24,10 +25,16 @@ async function getWellContractAt(name, address) {
     );
 }
 
-async function deployWellContract(name, arguments = []) {
-    const Contract = await getWellContractFactory(name);
+async function deployWellContractAtNonce(name, nonce, arguments = [], account = undefined, verbose = false) {
+    await increaseToNonce(account, nonce)
+    return await deployWellContract(name, arguments, account, verbose)
+}
+
+async function deployWellContract(name, arguments = [], account = undefined, verbose = false) {
+    const Contract = await getWellContractFactory(name, account);
     const contract = await Contract.deploy(...arguments);
     await contract.deployed();
+    if (verbose) console.log(`${name} deployed at ${contract.address}`)
     return contract;
 }
 
@@ -245,3 +252,6 @@ exports.whitelistWell = whitelistWell;
 exports.getWellContractAt = getWellContractAt
 exports.deployMockWell = deployMockWell
 exports.deployMockPump = deployMockPump
+exports.deployWellContract = deployWellContract
+exports.deployWellContractAtNonce = deployWellContractAtNonce
+exports.encodeWellImmutableData = encodeWellImmutableData
