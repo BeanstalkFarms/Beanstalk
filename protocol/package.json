@@ -43,7 +43,7 @@
     "solidity-coverage": "^0.8.2"
   },
   "dependencies": {
-    "@beanstalk/wells": "0.3.5",
+    "@beanstalk/wells": "0.4.0",
     "@ethereum-waffle/chai": "4.0.10",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@openzeppelin/contracts": "^3.4.0",
