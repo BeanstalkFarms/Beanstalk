@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IWell, IERC20} from "../../interfaces/basin/IWell.sol";
+import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "../../libraries/Minting/LibWellMinting.sol";
@@ -74,9 +74,25 @@ contract WellPrice {
             .mul(2)
             .div(PRICE_PRECISION);
 
-        pool.deltaB = BEANSTALK.poolDeltaB(wellAddress);
+        pool.deltaB = getDeltaB(wellAddress, wellTokens, wellBalances);
         pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
         pool.lpBdv = BEANSTALK.bdv(wellAddress, WELL_DECIMALS);
+    }
+
+    function getDeltaB(address well, IERC20[] memory tokens, uint256[] memory reserves) internal view returns (int256 deltaB) {
+        Call memory wellFunction = IWell(well).wellFunction();
+        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
+        // If the USD Oracle oracle call fails, we can't compute deltaB
+        if(!success) return 0;
+
+        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
+            reserves,
+            beanIndex,
+            ratios,
+            wellFunction.data
+        );
+
+        deltaB = int256(beansAtPeg) - int256(reserves[beanIndex]);
     }
 
 }
