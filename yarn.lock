@@ -2378,13 +2378,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@beanstalk/wells@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@beanstalk/wells@npm:0.4.0"
-  checksum: 5919fb2fd048079be9e69159dc091fdbbda4d9021d5c42e94ff16b1d2c4e977272f57530d88aaa58cfaec56813d3ea012acc21a55273fdd28380c4904619ccb4
-  languageName: node
-  linkType: hard
-
 "@beanstalk/sdk@workspace:*, @beanstalk/sdk@workspace:projects/sdk":
   version: 0.0.0-use.local
   resolution: "@beanstalk/sdk@workspace:projects/sdk"
@@ -2437,6 +2430,13 @@ __metadata:
     ethers: 5.6.8
   languageName: unknown
   linkType: soft
+
+"@beanstalk/wells@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@beanstalk/wells@npm:0.4.0"
+  checksum: 5919fb2fd048079be9e69159dc091fdbbda4d9021d5c42e94ff16b1d2c4e977272f57530d88aaa58cfaec56813d3ea012acc21a55273fdd28380c4904619ccb4
+  languageName: node
+  linkType: hard
 
 "@bugsnag/browser@npm:^7.18.0":
   version: 7.18.0
