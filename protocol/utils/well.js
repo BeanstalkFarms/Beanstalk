@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { BEAN, WETH, BEANSTALK_PUMP } = require('../test/utils/constants');
+const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL } = require('../test/utils/constants');
 const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
 const { mintEth } = require('./mint');
@@ -228,6 +228,12 @@ async function deployMockWell() {
 
     let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
+    await network.provider.send("hardhat_setCode", [
+        BEAN_ETH_WELL,
+        await ethers.provider.getCode(well.address),
+      ]);
+    well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
+    await well.init()
 
     pump = await deployMultiFlowPump()
 
