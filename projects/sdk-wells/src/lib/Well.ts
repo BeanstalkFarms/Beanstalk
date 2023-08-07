@@ -2,8 +2,6 @@ import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk-core";
 import { BigNumber, CallOverrides, constants, ContractFactory, ContractTransaction, Overrides } from "ethers";
 import { Well__factory } from "src/constants/generated";
 import { Well as WellContract } from "src/constants/generated";
-import fs from "fs";
-import path from "path";
 
 import { Aquifer } from "./Aquifer";
 import { Pump } from "./Pump";
@@ -224,7 +222,7 @@ export class Well {
   }
 
   private setPumps(pumpData: CallStruct[]) {
-    let pumps = (pumpData ?? []).map((p) => new Pump(p.target, p.data));
+    let pumps = (pumpData ?? []).map((p) => new Pump(this.sdk, p.target));
     Object.freeze(pumps);
     setReadOnly(this, "pumps", pumps, true);
   }
@@ -832,10 +830,13 @@ export class Well {
   ////// Other
 
   /**
-   * Syncs the reserves of the Well with the Well's balances of underlying tokens.
+   * Shifts excess tokens held by the Well into liquidity and delivers to `recipient` `minAmountOut` LP tokens.
    */
-  async sync(overrides?: CallOverrides): Promise<ContractTransaction> {
-    return this.contract.sync(overrides ?? {});
+  async sync(minAmountOut: TokenValue, recipient: string, overrides?: CallOverrides): Promise<ContractTransaction> {
+    validateAmount(minAmountOut, "minAmountOut");
+    validateAddress(recipient, "recipient");
+
+    return this.contract.sync(recipient, minAmountOut.toBigNumber(), overrides ?? {});
   }
 
   /**
