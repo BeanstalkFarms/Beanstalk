@@ -59,6 +59,7 @@ contract InitDiamond {
         s.season.withdrawSeasons = 25;
         s.season.period = C.getSeasonPeriod();
         s.season.timestamp = block.timestamp;
+        s.season.stemStartSeason = 0;
         s.season.start = s.season.period > 0 ?
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;

@@ -24,8 +24,10 @@ const {
   ETH_USDC_UNISWAP_V3,
   ETH_USDT_UNISWAP_V3,
   USDT,
-  ETH_USD_CHAINLINK_AGGREGATOR
+  ETH_USD_CHAINLINK_AGGREGATOR,
+  BEAN_ETH_WELL
 } = require('../test/utils/constants');
+const { deployWell } = require('../utils/well.js');
 const { impersonateSigner, mintEth } = require('../utils');
 
 const { getSigner } = '../utils'
@@ -95,6 +97,8 @@ async function weth() {
       WETH,
       JSON.parse(tokenJson).deployedBytecode,
   ]);
+  const weth = await ethers.getContractAt("MockToken", WETH);
+  await weth.setDecimals(18);
 }
 
 async function router() {
@@ -268,6 +272,15 @@ async function ethUsdtUniswap() {
   ]);
 }
 
+async function beanEthWell() {
+  const well = await deployWell([BEAN, WETH]);
+  const bytecode = await ethers.provider.getCode(well.address)
+  await network.provider.send("hardhat_setCode", [
+    BEAN_ETH_WELL,
+    bytecode,
+  ]);
+}
+
 async function ethUsdChainlinkAggregator() {
   let chainlinkAggregatorJson = fs.readFileSync(`./artifacts/contracts/mocks/chainlink/MockChainlinkAggregator.sol/MockChainlinkAggregator.json`);
 
@@ -278,6 +291,8 @@ async function ethUsdChainlinkAggregator() {
   const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
   await ethUsdChainlinkAggregator.setDecimals(6)
 }
+
+
 
 exports.impersonateRouter = router
 exports.impersonateBean = bean
@@ -295,3 +310,4 @@ exports.impersonateEthUsdcUniswap = ethUsdcUniswap
 exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
 exports.impersonateEthUsdChainlinkAggregator = ethUsdChainlinkAggregator
+exports.impersonateBeanEthWell = beanEthWell

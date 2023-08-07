@@ -4375,9 +4375,9 @@
       },
       {
         "indexed": false,
-        "internalType": "int128",
+        "internalType": "int96",
         "name": "stem",
-        "type": "int128"
+        "type": "int96"
       },
       {
         "indexed": false,
@@ -4485,6 +4485,59 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAmountOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      }
+    ],
+    "name": "getMaxAmountIn",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -4568,59 +4621,6 @@
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenIn",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenOut",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      }
-    ],
-    "name": "getAmountOut",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountOut",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenIn",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenOut",
-        "type": "address"
-      }
-    ],
-    "name": "getMaxAmountIn",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -5692,7 +5692,7 @@
         "type": "address"
       }
     ],
-    "name": "getLastStem",
+    "name": "getLastMowedStem",
     "outputs": [
       {
         "internalType": "int96",
@@ -6025,9 +6025,9 @@
     "name": "seasonToStem",
     "outputs": [
       {
-        "internalType": "int128",
+        "internalType": "int96",
         "name": "stem",
-        "type": "int128"
+        "type": "int96"
       }
     ],
     "stateMutability": "view",
@@ -6057,9 +6057,9 @@
     "name": "stemTipForToken",
     "outputs": [
       {
-        "internalType": "int128",
+        "internalType": "int96",
         "name": "_stemTip",
-        "type": "int128"
+        "type": "int96"
       }
     ],
     "stateMutability": "view",

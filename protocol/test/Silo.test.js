@@ -382,9 +382,10 @@ describe('Silo', function () {
       depositID4 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFF000000000000000000111';
       expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
 
-      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
-      depositID5 = '0x9bAaB117304f7D6517048e371025dB8f89a8DbE5FFFFFFFFFFFFF00000000002';
-      expect(await this.metadata.uri(depositID5)).to.eq(depositmetadata);
+      // TODO: reimplement once basin addresses are deployed.
+      // depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
+      // depositID5 = '0x9bAaB117304f7D6517048e371025dB8f89a8DbE5FFFFFFFFFFFFF00000000002';
+      // expect(await this.metadata.uri(depositID5)).to.eq(depositmetadata);
 
     });
 
