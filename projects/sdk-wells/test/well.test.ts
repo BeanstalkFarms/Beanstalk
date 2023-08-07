@@ -175,7 +175,9 @@ describe("Well", function () {
 
         expect((await deployedWell.getWellFunction()).address).toEqual(wellFunction.address);
 
-        expect(await deployedWell.getPumps()).toEqual([mockPump]);
+        const wellPumps = await deployedWell.getPumps();
+        expect(JSON.stringify(wellPumps)).toEqual(JSON.stringify([mockPump]));
+
         expect((await deployedWell.getAquifer()).address).toEqual(aquifer.address);
 
         expect(deployedWell).toHaveProperty("tokens");
