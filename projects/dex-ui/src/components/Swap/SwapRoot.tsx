@@ -15,16 +15,21 @@ import { TransactionToast } from "../TxnToast/TransactionToast";
 import QuoteDetails from "../Liquidity/QuoteDetails";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
+import { size } from "src/breakpoints";
+
+const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export const SwapRoot = () => {
   const { address: account } = useAccount();
   const sdk = useSdk();
 
-  const [tokenSwapParams, setTokenSwapParams] = useSearchParams();
+  const [tokenSwapParams] = useSearchParams();
   const fromToken = tokenSwapParams.get("fromToken");
   const toToken = tokenSwapParams.get("toToken");
 
   const tokens = useTokens();
+  // We need _some_ address in order to make quotes work when there's no account connected.
+  const [recipient, setRecipient] = useState<string>(NULL_ADDRESS);
   const [inAmount, setInAmount] = useState<TokenValue>();
   const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["WETH"]) : tokens["WETH"]);
   const [outToken, setOutToken] = useState<Token>(toToken ? (tokens[toToken] ? tokens[toToken] : tokens["BEAN"]) : tokens["BEAN"]);
@@ -43,6 +48,10 @@ export const SwapRoot = () => {
 
   const [quote, setQuote] = useState<QuoteResult | undefined>();
   const builder = useSwapBuilder();
+
+  useEffect(() => {
+    setRecipient(account || NULL_ADDRESS);
+  }, [account]);
 
   useEffect(() => {
     const run = async () => {
@@ -106,7 +115,7 @@ export const SwapRoot = () => {
       }
 
       try {
-        const quote = await quoter?.quoteForward(amount, account!, slippage);
+        const quote = await quoter?.quoteForward(amount, recipient, slippage);
         Log.module("swap").debug("Forward quote", quote);
         if (!quote) {
           setOutAmount(undefined);
@@ -134,7 +143,7 @@ export const SwapRoot = () => {
         setReadyToSwap(false);
       }
     },
-    [account, checkBalance, outToken, quoter, slippage]
+    [recipient, checkBalance, outToken, quoter, slippage]
   );
 
   const handleOutputChange = useCallback(
@@ -147,7 +156,7 @@ export const SwapRoot = () => {
         return;
       }
       try {
-        const quote = await quoter?.quoteReverse(amount, account!, slippage);
+        const quote = await quoter?.quoteReverse(amount, recipient!, slippage);
         Log.module("swap").debug("Reverse quote", quote);
         if (!quote) {
           setInAmount(undefined);
@@ -173,7 +182,7 @@ export const SwapRoot = () => {
         setReadyToSwap(false);
       }
     },
-    [account, checkBalance, inToken, quoter, slippage]
+    [recipient, checkBalance, inToken, quoter, slippage]
   );
 
   const resetForm = useCallback(() => {
@@ -273,6 +282,9 @@ export const SwapRoot = () => {
     });
 
     try {
+      // sanity check
+      if (recipient === NULL_ADDRESS) throw new Error("FATAL: recipient is the NULL_ADDRESS!");
+
       const tx = await quote!.doSwap();
       toast.confirming(tx);
 
@@ -370,6 +382,10 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  @media (max-width: ${size.mobile}) {
+    width: 100%;
+    gap: 16px;
+  }
 `;
 
 const SwapInputContainer = styled.div`
@@ -389,4 +405,10 @@ const SwapButtonContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
+  @media (max-width: ${size.mobile}) {
+    position: fixed;
+    width: calc(100% - 24px);
+    margin-bottom: 0;
+    bottom: 12px;
+  }
 `;

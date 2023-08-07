@@ -4,6 +4,7 @@ import { AddEvent, EVENT_TYPE, RemoveEvent, SwapEvent, WellEvent } from "src/wel
 import { Row, Td } from "../Table";
 import { TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
+import { size } from "src/breakpoints";
 
 export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenValue | null)[]) => {
   let action;
@@ -56,8 +57,8 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
       <Td>
         <Action>{action}</Action>
       </Td>
-      <Td align={"right"}>{valueUSD}</Td>
-      <Td align={"right"}>{description}</Td>
+      <DesktopOnlyTd align={"right"}>{valueUSD}</DesktopOnlyTd>
+      <DesktopOnlyTd align={"right"}>{description}</DesktopOnlyTd>
       <Td align={"right"}>{time || event.block}</Td>
     </Row>
   );
@@ -68,6 +69,12 @@ const Action = styled.div`
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
+`;
+
+const DesktopOnlyTd = styled(Td)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
 `;
 
 const formatTime = (timestamp?: number) => {

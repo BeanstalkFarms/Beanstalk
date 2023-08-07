@@ -1,9 +1,11 @@
 import React, { Children, useCallback, useState, MouseEvent as ReactMouseEvent } from "react";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { BodyCaps, BodyS } from "./Typography";
+import { BodyCaps, BodyS, BodyXS } from "./Typography";
 import { ImageButton } from "./ImageButton";
 import { ChevronDown } from "./Icons";
+import { BottomDrawer } from "./BottomDrawer";
+import { size } from "src/breakpoints";
 
 interface Composition {
   Header: typeof Header;
@@ -17,8 +19,9 @@ interface Composition {
 type Props = {
   width?: number;
   open?: boolean;
+  drawerHeaderText?: string;
 };
-export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) => {
+export const ExpandBox: FC<Props> & Composition = ({ children, drawerHeaderText }) => {
   const [open, setOpen] = useState(false);
   const [header, body] = Children.toArray(children);
   if (!header || !body) throw new Error("ExpandBox must have two children, Header and Boxy");
@@ -32,7 +35,10 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
   );
 
   return (
-    <Container width={width} open={open} onClick={toggle} data-trace="true">
+    <Container open={open} onClick={toggle} data-trace="true">
+      <BottomDrawer showDrawer={open} headerText={drawerHeaderText || header} toggleDrawer={setOpen}>
+        {body}
+      </BottomDrawer>
       <Header id="header" open={open}>
         {header}
         <ImageButton
@@ -44,8 +50,7 @@ export const ExpandBox: FC<Props> & Composition = ({ width = 432, children }) =>
           alt="Click to expand this box and learn how to earn yield"
         />
       </Header>
-
-      {open && body}
+      {open && <BodyContainer>{body}</BodyContainer>}
     </Container>
   );
 };
@@ -57,8 +62,6 @@ const Container = styled.div<Props>`
   border-left: 0.5px solid #9ca3af;
   border-right: 0.5px solid #9ca3af;
   border-bottom: ${(p) => (p.open ? "0.5px" : "0px")} solid #9caeaf;
-  width: ${(p) => p.width}px;
-  min-width: ${(p) => p.width}px;
   cursor: pointer;
   :hover {
     border-top: 0.5px solid #46b955;
@@ -79,14 +82,23 @@ const Header = styled.div<Props>`
   :hover {
     border-bottom: 0.5px solid ${(p) => (!p.open ? "#46b955" : "#9ca3af")};
   }
+
+  @media (max-width: ${size.mobile}) {
+    padding: 8px;
+  }
 `;
 const Body = styled.div`
   display: flex;
   flex-direction: column;
   background-color: #fff;
-  flex: 2;
   padding: 20px 16px;
   gap: 8px;
+`;
+
+const BodyContainer = styled.div`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
 `;
 const Footer = styled.div`
   display: flex;
@@ -115,7 +127,12 @@ const UserHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  ${BodyCaps}
+  ${BodyXS}
+  text-transform: uppercase;
+
+  @media (min-width: ${size.mobile}) {
+    ${BodyCaps}
+  }
 `;
 
 ExpandBox.Header = UserHeader;

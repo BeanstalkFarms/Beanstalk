@@ -69,7 +69,7 @@ const TxnSettings: FC<{
         <Popper
           anchorEl={anchorEl}
           open={menuVisible}
-          sx={{ zIndex: 999 }}
+          sx={{ zIndex: 79 }}
           placement="bottom-end"
           // Align the menu to the bottom
           // right side of the anchor button.

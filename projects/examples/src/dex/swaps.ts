@@ -1,5 +1,5 @@
 import { BeanstalkSDK, Clipboard, Token, TokenValue } from "@beanstalk/sdk";
-import { Direction, SwapBuilder } from "@beanstalk/wells";
+import { Direction, SwapBuilder } from "@beanstalk/sdk-wells";
 import chalk from "chalk";
 import { account as _account, sdk, chain } from "../setup";
 import { BigNumber } from "ethers";
@@ -39,12 +39,19 @@ async function go() {
   await swapOne(WETH, BEAN, builder);
   await swapOne(ETH, WETH, builder);
   await swapOne(WETH, ETH, builder);
+
   await swapOneReverse(ETH, WETH, builder);
+  await swapOneReverse(WETH, ETH, builder);
   await swapOneReverse(WETH, BEAN, builder);
+
+  await swapMulti(USDC, WETH, builder);
   await swapMulti(WETH, USDC, builder);
   await swapMulti(ETH, USDC, builder);
+  await swapMulti(USDC, ETH, builder);
+
   await swapMultiReverse(WETH, DAI, builder);
   await swapMultiReverse(ETH, USDC, builder);
+  await swapMultiReverse(USDC, ETH, builder);
 }
 
 async function swapOne(token1: Token, token2: Token, builder: SwapBuilder) {
@@ -55,6 +62,7 @@ async function swapOne(token1: Token, token2: Token, builder: SwapBuilder) {
 
   const quote = await quoter.quoteForward(amount, account, slippage);
   console.log(`Quote: ${amount.toHuman()} ${token1.symbol} ==> ${quote.amount.toHuman()} ${token2.symbol}`);
+  console.log(`Gas Est: ${quote.gas.toHuman()}`);
 
   if (token1.symbol !== "ETH") {
     console.log(`Setting balance of ${amount.toHuman()} ${token1.symbol}`);
@@ -118,9 +126,9 @@ async function swapMulti(token1: Token, token2: Token, builder: SwapBuilder) {
   if (!quoter) throw new Error("No path found");
   console.log(quoter.route.toString());
 
-  const amountIn = token1.amount(5);
+  const amountIn = token1.amount(1000);
 
-  const { amount, doApproval, doSwap } = await quoter.quoteForward(5, account, slippage);
+  const { amount, doApproval, doSwap } = await quoter.quoteForward(amountIn, account, slippage);
   console.log(`\nFull quote: ${amountIn.toHuman()} ${token1.symbol} ==> ${amount.toHuman()} ${token2.symbol}`);
 
   if (token1.symbol !== "ETH") {
@@ -140,7 +148,7 @@ async function swapMulti(token1: Token, token2: Token, builder: SwapBuilder) {
   const overrides = {};
   // if (token1.symbol === "ETH") overrides.value = quote.amount.toBigNumber();
 
-  const stx = await doSwap();
+  const stx = await doSwap({ gasLimit: 500_000 });
   await stx.wait();
   console.log("Done!!!");
 }
@@ -150,14 +158,14 @@ async function swapMultiReverse(token1: Token, token2: Token, builder: SwapBuild
   if (!quoter) throw new Error("No path found");
 
   const targetAmount = token2.amount(100);
-  console.log(`Swap: x ETH for ${targetAmount.toHuman()} ${token2.symbol}`);
+  console.log(`Swap: x ${token1.symbol} for ${targetAmount.toHuman()} ${token2.symbol}`);
 
   const { amount, doSwap, doApproval } = await quoter.quoteReverse(targetAmount, account, slippage);
   const quoteWithSlippage = amount.addSlippage(slippage);
   console.log(
     `\nOverall Quote: ${amount.toHuman()} ${quoter.fromToken.symbol} Needed to get ==> ${targetAmount.toHuman()} ${quoter.toToken.symbol}`
   );
-  process.exit();
+
   if (token1.symbol !== "ETH") {
     console.log(`Set balance: ${quoteWithSlippage.toHuman()} ${token1.symbol}`);
     await chain.setBalance(token1, account, quoteWithSlippage);

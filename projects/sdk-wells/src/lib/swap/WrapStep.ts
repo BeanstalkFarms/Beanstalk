@@ -28,7 +28,7 @@ export class WrapEthStep implements SwapStep {
   // The resulting quote after slippage applied
   quoteResultWithSlippage: TokenValue | undefined;
   // The resulting quote's gas estimate
-  quoteGasEstimate: TokenValue | undefined;
+  // quoteGasEstimate: TokenValue | undefined;
   slippage: number;
 
   constructor(sdk: WellsSDK, weth9: WETH9, fromToken: Token, toToken: Token) {
@@ -42,10 +42,10 @@ export class WrapEthStep implements SwapStep {
     this.direction = direction;
     this.quoteInput = amount;
     this.hasQuoted = true;
-    const gasEst = await this.weth9.estimateGas.deposit({ value: amount.toBlockchain() });
-    this.quoteGasEstimate = TokenValue.fromBlockchain(gasEst, 0);
+    this.quoteResult = amount;
+    this.quoteResultWithSlippage = amount;
 
-    return { quote: amount, quoteWithSlippage: amount, quoteGasEstimate: this.quoteGasEstimate };
+    return { quote: amount, quoteWithSlippage: amount };
   }
 
   swapSingle(amount: TokenValue, amountWithSlippage: TokenValue, recipient: string, deadline: number): Operation {

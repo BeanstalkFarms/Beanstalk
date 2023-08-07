@@ -378,7 +378,7 @@ const RewardsBar: FC<{
       <Card>
         <Centered width="100%" textAlign="center" spacing={1} py={2}>
           <Typography variant="h3">
-            To claim Silo rewards, migrate to Silo V3.
+            To claim Silo rewards, Migrate to Silo V3.
           </Typography>
           <Typography variant="body1">
             You can view your Deposits below.

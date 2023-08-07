@@ -135,7 +135,7 @@ export function handleHarvest(event: Harvest): void {
         ZERO_BI,
         ZERO_BI,
         ZERO_BI,
-        ZERO_BI.minus(plot.pods),
+        ZERO_BI,
         plot.pods,
         event.block.timestamp,
         event.block.number
@@ -147,7 +147,7 @@ export function handleHarvest(event: Harvest): void {
         ZERO_BI,
         ZERO_BI,
         ZERO_BI,
-        ZERO_BI.minus(plot.pods),
+        ZERO_BI,
         plot.pods,
         event.block.timestamp,
         event.block.number
@@ -166,7 +166,7 @@ export function handleHarvest(event: Harvest): void {
         ZERO_BI,
         ZERO_BI,
         ZERO_BI,
-        ZERO_BI.minus(harvestablePods),
+        ZERO_BI,
         harvestablePods,
         event.block.timestamp,
         event.block.number
@@ -178,7 +178,7 @@ export function handleHarvest(event: Harvest): void {
         ZERO_BI,
         ZERO_BI,
         ZERO_BI,
-        ZERO_BI.minus(harvestablePods),
+        ZERO_BI,
         harvestablePods,
         event.block.timestamp,
         event.block.number

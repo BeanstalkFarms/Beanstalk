@@ -13,6 +13,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
+import { size } from "src/breakpoints";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -78,24 +79,23 @@ export const Wells = () => {
     });
 
     return (
-      <Row key={well.address} onClick={gotoWell}>
-        <Td>
+      <TableRow key={well.address} onClick={gotoWell}>
+        <DesktopContainer>
           <WellDetail>
             <TokenLogos>{logos}</TokenLogos>
             <TokenSymbols>{symbols.join("/")}</TokenSymbols>
-            {/* <Deployer>{deployer}</Deployer> */}
           </WellDetail>
-        </Td>
-        <Td>
+        </DesktopContainer>
+        <DesktopContainer>
           <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
-        </Td>
-        <Td align="right">
+        </DesktopContainer>
+        <DesktopContainer align="right">
           <TradingFee>0.00%</TradingFee>
-        </Td>
-        <Td align="right">
+        </DesktopContainer>
+        <DesktopContainer align="right">
           <Amount>${wellLiquidity[index] ? wellLiquidity[index]!.toHuman("short") : "-.--"}</Amount>
-        </Td>
-        <Td align="right">
+        </DesktopContainer>
+        <DesktopContainer align="right">
           <Reserves>
             {smallLogos[0]}
             {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
@@ -105,8 +105,15 @@ export const Wells = () => {
             {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
           </Reserves>
           {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
-        </Td>
-      </Row>
+        </DesktopContainer>
+        <MobileContainer>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          </WellDetail>
+          <Amount>${wellLiquidity[index] ? Number(wellLiquidity[index]!.toHuman()).toFixed(2) : "-.--"}</Amount>
+        </MobileContainer>
+      </TableRow>
     );
   }
 
@@ -123,17 +130,25 @@ export const Wells = () => {
     });
 
     return (
-      <Row key={well.address} onClick={gotoWell}>
-        <Td>
+      <TableRow key={well.address} onClick={gotoWell}>
+        <DesktopContainer>
           <WellDetail>
             <TokenLogos>{logos}</TokenLogos>
             <TokenSymbols>{symbols.join("/")}</TokenSymbols>
           </WellDetail>
-        </Td>
-        <Td align="right">
+        </DesktopContainer>
+        <DesktopContainer align="right">
           <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
-        </Td>
-      </Row>
+        </DesktopContainer>
+        <MobileContainer>
+          <WellDetail>
+            <TokenLogos>{logos}</TokenLogos>
+            <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+            {/* <Deployer>{deployer}</Deployer> */}
+          </WellDetail>
+          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+        </MobileContainer>
+      </TableRow>
     );
   }
 
@@ -145,8 +160,8 @@ export const Wells = () => {
 
   return (
     <Page>
-      <Title fontweight={"600"} title="WELLS" />
-      <TabRow gap={24}>
+      <Title fontWeight={"600"} title="WELLS" largeOnMobile />
+      <StyledRow gap={24} mobileGap={"0px"}>
         <Item stretch>
           <TabButton onClick={() => showTab(0)} active={tab === 0} stretch bold justify hover>
             <span>View Wells</span>
@@ -157,31 +172,38 @@ export const Wells = () => {
             <span>My Liquidity Positions</span>
           </TabButton>
         </Item>
-      </TabRow>
+      </StyledRow>
       <Table>
         {tab === 0 ? (
           <THead>
-            <Row>
-              <Th>Well</Th>
-              <Th>Well Pricing Function</Th>
-              <Th align="right">Trading Fees</Th>
-              <Th align="right">Total Liquidity</Th>
-              <Th align="right">Reserves</Th>
-            </Row>
+            <TableRow>
+              <DesktopHeader>Well</DesktopHeader>
+              <DesktopHeader>Well Pricing Function</DesktopHeader>
+              <DesktopHeader align="right">Trading Fees</DesktopHeader>
+              <DesktopHeader align="right">Total Liquidity</DesktopHeader>
+              <DesktopHeader align="right">Reserves</DesktopHeader>
+              <MobileHeader>All Wells</MobileHeader>
+            </TableRow>
           </THead>
         ) : (
           <THead>
-            <Row>
-              <Th>My Positions</Th>
-              <Th align="right">My Liquidity</Th>
-            </Row>
+            <TableRow>
+              <DesktopHeader>My Positions</DesktopHeader>
+              <DesktopHeader align="right">My Liquidity</DesktopHeader>
+              <MobileHeader>My Liquidity Positions</MobileHeader>
+            </TableRow>
           </THead>
         )}
         <TBody>
           {anyLpPositions === false && tab === 1 ? (
-            <NoLPRow colSpan={2}>
-              <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
-            </NoLPRow>
+            <>
+              <NoLPRow colSpan={2}>
+                <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
+              </NoLPRow>
+              <NoLPRowMobile>
+                <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
+              </NoLPRowMobile>
+            </>
           ) : (
             rows
           )}
@@ -191,7 +213,57 @@ export const Wells = () => {
   );
 };
 
-const WellDetail = styled.div``;
+const TableRow = styled(Row)`
+  @media (max-width: ${size.mobile}) {
+    height: 66px;
+  }
+`;
+
+const StyledRow = styled(TabRow)`
+  @media (max-width: ${size.mobile}) {
+    position: fixed;
+    width: 100vw;
+    margin-left: -12px;
+    margin-bottom: -2px;
+    top: calc(100% - 40px);
+  }
+`;
+
+const DesktopContainer = styled(Td)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const MobileContainer = styled(Td)`
+  padding: 8px 16px;
+  @media (min-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const MobileHeader = styled(Th)`
+  font-size: 14px;
+  padding: 8px 16px;
+  @media (min-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const DesktopHeader = styled(Th)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const WellDetail = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  @media (min-width: ${size.mobile}) {
+    flex-direction: column;
+  }
+`;
 
 const TokenLogos = styled.div`
   display: flex;
@@ -204,6 +276,9 @@ const TokenSymbols = styled.div`
   line-height: 24px;
   margin-top: 8px;
   color: #1c1917;
+  @media (max-width: ${size.mobile}) {
+    font-size: 14px;
+  }
 `;
 
 const Amount = styled.div`
@@ -211,6 +286,11 @@ const Amount = styled.div`
   font-size: 20px;
   line-height: 24px;
   color: #1c1917;
+
+  @media (max-width: ${size.mobile}) {
+    font-size: 14px;
+    font-weight: normal;
+  }
 `;
 
 const Reserves = styled.div`
@@ -242,15 +322,35 @@ const NoLPRow = styled.td`
   background-color: #fff;
   height: 120px;
   border-bottom: 0.5px solid #9ca3af;
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
+`;
+
+const NoLPRowMobile = styled.td`
+  background-color: #fff;
+  height: 120px;
+  border-bottom: 0.5px solid #9ca3af;
+  @media (min-width: ${size.mobile}) {
+    display: none;
+  }
 `;
 
 const NoLPMessage = styled.div`
   display: flex;
   justify-content: center;
   color: #4b5563;
+
+  @media (max-width: ${size.mobile}) {
+    font-size: 14px;
+  }
 `;
 
 const WellLPBalance = styled.div`
   font-size: 20px;
   line-height: 24px;
+  @media (max-width: ${size.mobile}) {
+    font-size: 14px;
+    font-weight: normal;
+  }
 `;

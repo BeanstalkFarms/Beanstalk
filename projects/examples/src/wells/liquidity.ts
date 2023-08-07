@@ -1,4 +1,4 @@
-import { WellsSDK } from "@beanstalk/wells";
+import { WellsSDK } from "@beanstalk/sdk-wells";
 import { BeanstalkSDK, TestUtils } from "@beanstalk/sdk";
 import { signer, provider, account, sdk as bsdk } from "../setup";
 import { TokenValue } from "@beanstalk/sdk-core";

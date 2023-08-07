@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import Stat from '../Common/Stat';
 import { displayFullBN } from '../../util';
 import StatsCard, { StatItem } from '~/components/Common/StatsCard';
-import { SEEDS, SPROUTS, STALK, PODS } from '~/constants/tokens';
+import { /* SEEDS , */ SPROUTS, STALK, PODS } from '~/constants/tokens';
 import { AppState } from '~/state';
 import BeanstalkBalances from '~/components/Common/Balances/BeanstalkBalances';
 import useBeanstalkSiloBreakdown from '~/hooks/beanstalk/useBeanstalkBalancesBreakdown';
@@ -37,13 +37,13 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
       token: STALK,
       amount: beanstalkSilo.stalk.total,
     },
-    {
+   /* {
       title: 'Seeds',
       tooltip:
         'This is the total Seed supply. Each Seed yields 1/10000 Grown Stalk each Season.',
       token: SEEDS,
       amount: beanstalkSilo.seeds.total,
-    },
+    }, */
     {
       title: 'Pods',
       tooltip:

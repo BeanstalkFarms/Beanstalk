@@ -111,6 +111,7 @@ export type SiloWithdrawAction = SiloAction & {
 
 export type SiloTransitAction = SiloAction & {
   type: ActionType.IN_TRANSIT;
+  destination: FarmToMode;
   withdrawSeasons: BigNumber;
 };
 
@@ -317,10 +318,7 @@ export const parseActionMessage = (a: Action) => {
         a.token
       )} from the Silo.`;
     case ActionType.IN_TRANSIT:
-      return `Receive ${displayTokenAmount(a.amount.abs(), a.token, {
-        modifier: 'Claimable',
-        showName: true,
-      })} at the start of the next Season.`;
+      return `Receive ${displayTokenAmount(a.amount.abs(), a.token)} to your ${copy.MODES[a.destination]}.`;
     case ActionType.UPDATE_SILO_REWARDS: // FIXME: don't like "update" here
       return `${a.stalk.lt(0) ? 'Burn' : 'Receive'} ${displayFullBN(
         a.stalk.abs(),
