@@ -67,13 +67,13 @@ library LibEthUsdOracle {
             if (usdtChainlinkPercentDiff < MAX_DIFFERENCE) {
                 return chainlinkPrice.add(usdtPrice).div(2);
             }
-            return 0;
+            return chainlinkPrice;
         } else {
             // Check whether the USDC price is too far from the Chainlink price.
             if (usdcChainlinkPercentDiff < MAX_DIFFERENCE) {
                 return chainlinkPrice.add(usdcPrice).div(2);
             }
-            return 0;
+            return chainlinkPrice;
         }
     }
 
