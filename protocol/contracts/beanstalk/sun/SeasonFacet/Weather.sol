@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/libraries/Decimal.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibEvaluate.sol";
-import "contracts/libraries/LibCases.sol";
+import "contracts/libraries/Cases/LibCases.sol";
 import "./Sun.sol";
 
 /**
