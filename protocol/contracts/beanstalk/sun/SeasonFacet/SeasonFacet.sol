@@ -7,6 +7,7 @@ import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/LibIncentive.sol";
 import "./Weather.sol";
 import "contracts/libraries/Silo/LibWhitelist.sol";
+import "contracts/libraries/Silo/LibWhitelistedAssets.sol";
 
 /**
  * @title SeasonFacet
@@ -17,6 +18,8 @@ contract SeasonFacet is Weather {
     using SafeMath for uint256;
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
+    uint256 private constant PRECISION = 1e6;
+
     /**
      * @notice Emitted when the Season changes.
      * @param season The new Season number
@@ -121,9 +124,9 @@ contract SeasonFacet is Weather {
      */
     function updateGrownStalkEarnedPerSeason() internal {
         // Assume percentOfSeedsToLP has 6 decimal precision
-        uint256 newGrownStalk = s.seedGauge.averageGrownStalkPerBdvPerSeason * s.seedGauge.totalBdv;
-        uint256 newGrownStalkToLP = newGrownStalk * s.seedGauge.percentOfNewGrownStalkToLP / 1e6;
-        uint256 newGrownStalkToBean = newGrownStalk - newGrownStalkToLP;
+        uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(s.seedGauge.totalBdv);
+        uint256 newGrownStalkToLP = newGrownStalk.mul(s.seedGauge.percentOfNewGrownStalkToLP).div(PRECISION);
+        uint256 newGrownStalkToBean = newGrownStalk - newGrownStalkToLP; // safeMath not needed
 
         // update stalkPerBDVPerSeason for bean
         if(getDepositedBdvForToken(C.BEAN) > 0){
@@ -144,7 +147,44 @@ contract SeasonFacet is Weather {
     }
 
     function updateLPGaugeSystem(uint256 caseId) internal {
-        //TODO
+        address[] memory whitelistedLPSiloTokens = LibWhitelistedAssets.getWhitelistedLPAssets();
+        uint24 totalGaugePoints;
+
+        // Assume that s.ss[whitelistedLPSiloTokens[0]].gaugePoints = 100e6
+        // if there is only bean:eth and urBean:eth, then no need to update gauge points
+        if (whitelistedLPSiloTokens.length == 2) return; 
+    
+        for (uint256 i; i < whitelistedLPSiloTokens.length; ++i) {
+            Storage.SiloSettings storage ss = s.ss[whitelistedLPSiloTokens[i]];
+            uint256 percentOfDepositedBdv = uint256(s.siloBalances[whitelistedLPSiloTokens[i]].depositedBdv).mul(PRECISION).div(s.seedGauge.totalBdv);
+            bytes memory callData = abi.encodeWithSelector(
+                ss.GPSelector,
+                ss.lpGaugePoints,
+                percentOfDepositedBdv,
+                caseId
+                );
+            (bool success, bytes memory data) = address(this).staticcall(callData);
+
+            if (!success) {
+                if (data.length == 0) revert();
+                assembly {
+                    revert(add(32, data), mload(data))
+                }
+            }
+            uint24 newGaugePoints;
+
+            assembly {
+                newGaugePoints := mload(add(data, add(0x20, 0)))
+            }
+                totalGaugePoints += newGaugePoints;
+                ss.lpGaugePoints = newGaugePoints;
+            }
+
+        // Normalize gauge points
+        for (uint256 i; i < whitelistedLPSiloTokens.length; ++i) {
+            Storage.SiloSettings storage ss = s.ss[whitelistedLPSiloTokens[i]];
+            ss.lpGaugePoints = uint24(uint32(ss.lpGaugePoints) * 100e6 / totalGaugePoints);
+        }
     }
 
     /**
