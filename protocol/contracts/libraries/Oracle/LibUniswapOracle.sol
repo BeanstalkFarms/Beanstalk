@@ -12,8 +12,8 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
  * @title Uniswap Oracle Library
  * @notice Contains functionalty to read prices from Uniswap V3 pools.
  * @dev currently supports:
- * - ETH:USDC price from the ETH:USDC 0.3% pool
- * - ETH:USDT price from the ETH:USDT 0.3% pool
+ * - ETH:USDC price from the ETH:USDC 0.05% pool
+ * - ETH:USDT price from the ETH:USDT 0.05% pool
  **/
 library LibUniswapOracle {
 
