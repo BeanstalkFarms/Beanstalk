@@ -25,6 +25,7 @@ contract SeasonGetterFacet {
 
     AppStorage internal s;
 
+    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
 
     //////////////////// SEASON GETTERS ////////////////////
 
@@ -161,4 +162,13 @@ contract SeasonGetterFacet {
         co = s.co;
         co.timestamp = s.season.timestamp; // use season timestamp for oracle
     }
+
+    /**
+     * @notice updates the averageGrownStaklPerBdvPerSeason 
+     */
+    function updateAverageGrownStalkPerBdv() external {
+        uint256 averageGrownStalkPerBdv = s.s.stalk / s.seedGauge.totalBdv - 10000; // TODO: Check constant
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint96(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
+    }
+
 }

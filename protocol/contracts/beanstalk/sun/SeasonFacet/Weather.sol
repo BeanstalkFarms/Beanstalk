@@ -37,6 +37,22 @@ contract Weather is Sun {
     );
 
     /**
+     * @notice Emitted when the GrownStalkToLp (fka "Weather") changes.
+     * @param season The current Season
+     * @param caseId The Weather case, which determines how much the Temperature is adjusted.
+     * @param change The change in Temperature as a delta from the previous value
+     * @dev The name {WeatherChange} is kept for backwards compatibility, 
+     * however the state variable included as `change` is now called Temperature.
+     * 
+     * `change` is emitted as a delta for gas efficiency.
+     */
+    event GrownStalkToLPChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 change
+    );
+
+    /**
      * @notice Emitted when Beans are minted during the Season of Plenty.
      * @param season The Season in which Beans were minted for distribution.
      * @param amount The amount of 3CRV which was received for swapping Beans.
@@ -87,10 +103,8 @@ contract Weather is Sun {
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
         (uint24 mT, int8 bT, uint24 mL, int8 bL) = LibCases.decodeCaseData(caseId);
-        // TODO change to new vars
         changeTemperature(mT, bT, caseId);
-        changeGrownStalkPerBDVPerSeason(mL, bL);
-
+        changeNewGrownStalkPerBDVtoLP(mL, bL, caseId);
         handleRain(caseId);
     }
 
@@ -115,13 +129,14 @@ contract Weather is Sun {
             s.w.t = t.mul(mT).div(1e6) + (uint32(change));
         }
 
+        // TODO: change weather event to include slope
         emit WeatherChange(s.season.current, caseId, change);
     }
 
     /**
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
-    function changeGrownStalkPerBDVPerSeason(uint24 mL, int8 bL) private {
+    function changeNewGrownStalkPerBDVtoLP(uint24 mL, int8 bL, uint256 caseId) private {
         if(bL < 0){
             s.seedGauge.percentOfNewGrownStalkToLP = 
                 s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) - uint32(-bL);
@@ -129,7 +144,10 @@ contract Weather is Sun {
             s.seedGauge.percentOfNewGrownStalkToLP = 
                 s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) + uint32(bL);
         }
-       
+
+        // TODO: change LP event to include slope
+
+        emit GrownStalkToLPChange(s.season.current, caseId, bL);
     }
 
     /**

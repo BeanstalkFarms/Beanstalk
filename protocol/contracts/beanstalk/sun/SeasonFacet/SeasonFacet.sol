@@ -17,7 +17,6 @@ import "contracts/libraries/Silo/LibWhitelistedAssets.sol";
 contract SeasonFacet is Weather {
     using SafeMath for uint256;
 
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
     uint256 private constant PRECISION = 1e6;
 
     /**
@@ -126,13 +125,12 @@ contract SeasonFacet is Weather {
         // Assume percentOfSeedsToLP has 6 decimal precision
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(s.seedGauge.totalBdv);
         uint256 newGrownStalkToLP = newGrownStalk.mul(s.seedGauge.percentOfNewGrownStalkToLP).div(PRECISION);
-        uint256 newGrownStalkToBean = newGrownStalk - newGrownStalkToLP; // safeMath not needed
 
         // update stalkPerBDVPerSeason for bean
         if(getDepositedBdvForToken(C.BEAN) > 0){
             LibWhitelist.updateStalkPerBdvPerSeasonForToken(
                 C.BEAN,
-                uint24(newGrownStalkToBean.div(getDepositedBdvForToken(C.BEAN)))
+                uint24((newGrownStalk - newGrownStalkToLP).div(getDepositedBdvForToken(C.BEAN)))
             );
         }
 
@@ -162,7 +160,7 @@ contract SeasonFacet is Weather {
                 ss.lpGaugePoints,
                 percentOfDepositedBdv,
                 caseId
-                );
+            );
             (bool success, bytes memory data) = address(this).staticcall(callData);
 
             if (!success) {
@@ -196,12 +194,5 @@ contract SeasonFacet is Weather {
         return s.siloBalances[token].depositedBdv;
     }
 
-    /**
-     * @notice updates the averageGrownStaklPerBdvPerSeason 
-     */
-    function updateAverageGrownStalkPerBdv() external {
-        uint256 averageGrownStalkPerBdv = s.s.stalk / s.seedGauge.totalBdv - 10000; // TODO: Check constant
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint96(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
-    }
-
+    
 }
