@@ -170,14 +170,14 @@ describe('USD Oracle', function () {
         })
     })
 
-    describe("Oracle Failure", async function () {
-        it ('suceeds when Eth USDC fails', async function () {
+    describe("Handles Uniswap Oracle Failure", async function () {
+        it ('succeeds when ETH/USDT call fails', async function () {
             await ethUsdtUniswapPool.setOracleFailure(true)
             await setEthUsdcPrice('10100')
             await checkPriceWithError('10050')
         })
 
-        it ('suceeds when Eth USDC fails', async function () {
+        it ('succeeds when ETH/USDC call fails', async function () {
             await ethUsdcUniswapPool.setOracleFailure(true)
             await checkPriceWithError('10000')
         })
