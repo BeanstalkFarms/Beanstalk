@@ -103,7 +103,7 @@ describe('USD Oracle', function () {
         it("it gets the USD price when Chainlink << USDC & << USDT", async function () {
             await setEthUsdcPrice('10500')
             await setEthUsdtPrice('10500')
-            await checkPriceWithError('0', error = '0')
+            await checkPriceWithError('10000', error = '0')
         })
     })
 
@@ -133,7 +133,7 @@ describe('USD Oracle', function () {
         it("it gets the USD price when Chainlink >> USDC & >> USDT", async function () {
             await setEthUsdcPrice('9500')
             await setEthUsdtPrice('9500')
-            await checkPriceWithError('0', error = '0')
+            await checkPriceWithError('10000', error = '0')
         })
     })
 
@@ -165,8 +165,20 @@ describe('USD Oracle', function () {
         it("it gets the USD price when Chainlink << USDC & >> USDT", async function () {
             await setEthUsdcPrice('10500')
             await setEthUsdtPrice('9500')
-            expect(await season.getUsdPrice(WETH)).to.be.equal('0')
-            expect(await season.getEthUsdPrice()).to.be.equal('0')
+            await checkPriceWithError('10000', error = '0')
+        })
+    })
+
+    describe("Handles Uniswap Oracle Failure", async function () {
+        it ('succeeds when ETH/USDT call fails', async function () {
+            await ethUsdtUniswapPool.setOracleFailure(true)
+            await setEthUsdcPrice('10100')
+            await checkPriceWithError('10050')
+        })
+
+        it ('succeeds when ETH/USDC call fails', async function () {
+            await ethUsdcUniswapPool.setOracleFailure(true)
+            await checkPriceWithError('10000')
         })
     })
 })

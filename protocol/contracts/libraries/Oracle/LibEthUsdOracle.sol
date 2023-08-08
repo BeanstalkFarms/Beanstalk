@@ -67,18 +67,19 @@ library LibEthUsdOracle {
             if (usdtChainlinkPercentDiff < MAX_DIFFERENCE) {
                 return chainlinkPrice.add(usdtPrice).div(2);
             }
-            return 0;
+            return chainlinkPrice;
         } else {
             // Check whether the USDC price is too far from the Chainlink price.
             if (usdcChainlinkPercentDiff < MAX_DIFFERENCE) {
                 return chainlinkPrice.add(usdcPrice).div(2);
             }
-            return 0;
+            return chainlinkPrice;
         }
     }
 
     /**
      * Gets the percent difference between two values with 18 decimal precision.
+     * @dev If x == 0 (Such as in the case of Uniswap Oracle failure), then the percent difference is calculated as 100%.
      */
     function getPercentDifference(uint x, uint y) internal pure returns (uint256 percentDifference) {
         percentDifference = x.mul(ONE).div(y);
