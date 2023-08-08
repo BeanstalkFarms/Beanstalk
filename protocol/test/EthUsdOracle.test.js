@@ -169,4 +169,17 @@ describe('USD Oracle', function () {
             expect(await season.getEthUsdPrice()).to.be.equal('0')
         })
     })
+
+    describe("Oracle Failure", async function () {
+        it ('suceeds when Eth USDC fails', async function () {
+            await ethUsdtUniswapPool.setOracleFailure(true)
+            await setEthUsdcPrice('10100')
+            await checkPriceWithError('10050')
+        })
+
+        it ('suceeds when Eth USDC fails', async function () {
+            await ethUsdcUniswapPool.setOracleFailure(true)
+            await checkPriceWithError('10000')
+        })
+    })
 })

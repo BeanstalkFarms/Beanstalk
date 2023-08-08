@@ -79,6 +79,7 @@ library LibEthUsdOracle {
 
     /**
      * Gets the percent difference between two values with 18 decimal precision.
+     * @dev If x == 0 (Such as in the case of Uniswap Oracle failure), then the percent difference is calculated as 100%.
      */
     function getPercentDifference(uint x, uint y) internal pure returns (uint256 percentDifference) {
         percentDifference = x.mul(ONE).div(y);
