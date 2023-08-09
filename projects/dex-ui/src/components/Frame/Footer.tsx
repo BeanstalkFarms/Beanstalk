@@ -5,7 +5,7 @@ import { size } from "src/breakpoints";
 
 export const Footer = () => (
   <Container>
-    <Box href="https://github.com/BeanstalkFarms/Beanstalk/tree/dex-prod/projects/dex-ui" rel="noopener noreferrer" target="_blank">
+    <Box href="https://github.com/BeanstalkFarms/Beanstalk/tree/master/projects/dex-ui" rel="noopener noreferrer" target="_blank">
       We are open source. Contribute to this site →
     </Box>
     <Box>Join the discussion</Box>
