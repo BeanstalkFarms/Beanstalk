@@ -98,6 +98,7 @@ async function bipBasinIntegration(mock = true, account = undefined) {
         bip: false,
         object: !mock, //if this is true, something would get spit out in the diamond cuts folder with all the data (due to gnosis safe deployment flow)
         verbose: true,
+        selectorsToRemove: [ '0x8f742d16' ],
         account: account
     })
 }

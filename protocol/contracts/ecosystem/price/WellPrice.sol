@@ -76,7 +76,9 @@ contract WellPrice {
 
         pool.deltaB = getDeltaB(wellAddress, wellTokens, wellBalances);
         pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
-        pool.lpBdv = BEANSTALK.bdv(wellAddress, WELL_DECIMALS);
+        try BEANSTALK.bdv(wellAddress, WELL_DECIMALS) returns (uint256 bdv) {
+            pool.lpBdv = bdv;
+        } catch {}
     }
 
     function getDeltaB(address well, IERC20[] memory tokens, uint256[] memory reserves) internal view returns (int256 deltaB) {
