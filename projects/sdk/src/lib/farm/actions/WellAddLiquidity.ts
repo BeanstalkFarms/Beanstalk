@@ -10,7 +10,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "wellAddLiquidity";
   private transactionDeadline: BigNumberish;
 
-  constructor(public _well: BasinWell, public tokenIndex: number, public tokenIn: Token, public recipient: string, deadline?: number) {
+  constructor(public _well: BasinWell, public tokenIn: Token, public recipient: string, deadline?: number) {
     super();
     if (deadline !== null && deadline !== undefined && deadline <= 0) {
         throw new Error("Deadline must be greater than 0");
@@ -20,6 +20,12 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext): Promise<Step<AdvancedPipePreparedResult>> {
     const well = await WellAddLiquidity.sdk.wells.getWell(this._well.address, {});
+
+    const tokenIndex = this._well.tokens.findIndex((token) => token.address.toLowerCase() === this.tokenIn.address.toLowerCase());
+
+    if (!tokenIndex || tokenIndex === -1) {
+      throw new Error("Could not find token in well");
+    }
 
     try {
       await well.getName();
@@ -33,7 +39,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
 
     let amounts: TokenValue[] = []
     for (let i = 0; i < (well.tokens?.length || 2); i++) {
-      if (i === this.tokenIndex) {
+      if (i === tokenIndex) {
         amounts[i] = this.tokenIn.fromBlockchain(_amountInStep);
       } else {
         amounts[i] = TokenValue.ZERO;
@@ -64,7 +70,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
             well: well.name,
             amounts: amounts,
             quoteAmountLessSlippage: minLP,
-            index: this.tokenIndex,
+            index: tokenIndex,
             tokenIn: this.tokenIn,
             recipient: this.recipient,
             method: "addLiquidity",

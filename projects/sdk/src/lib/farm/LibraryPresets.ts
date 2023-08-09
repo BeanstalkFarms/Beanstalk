@@ -213,7 +213,7 @@ export class LibraryPresets {
       return result;
     };
 
-    this.wellAddLiquidity = (well: BasinWell, tokenIndex: number, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
+    this.wellAddLiquidity = (well: BasinWell, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       
       const result = [];
       const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
@@ -228,7 +228,7 @@ export class LibraryPresets {
       const approve = new sdk.farm.actions.ApproveERC20(tokenIn, well.address);
 
       // Add liquidity to WELL, by PIPELINE
-      const addLiquidity = new sdk.farm.actions.WellAddLiquidity(well, tokenIndex, tokenIn, recipient);
+      const addLiquidity = new sdk.farm.actions.WellAddLiquidity(well, tokenIn, recipient);
 
       // This approves the transferToBeanstalk operation.
       const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address);

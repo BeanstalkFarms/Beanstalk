@@ -134,17 +134,16 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    * [ BEAN, WETH ] => BEAN_ETH_LP
    */
   {
+    const from = sdk.tokens.WETH;
     const targetToken = sdk.tokens.BEAN_ETH_WELL_LP;
     const well = sdk.pools.BEAN_ETH_WELL;
     if (!well) throw new Error(`Pool not found for LP token: ${targetToken.symbol}`);
-    [sdk.tokens.BEAN, sdk.tokens.WETH].forEach((from: Token, index: number) => {
       graph.setEdge(from.symbol, targetToken.symbol, {
         build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
-          sdk.farm.presets.wellAddLiquidity(well, index, well.tokens[index], account, fromMode, toMode),
+          sdk.farm.presets.wellAddLiquidity(well, from, account, fromMode, toMode),
         from: from.symbol,
         to: targetToken.symbol,
       });
-    });
   }
 
   /**
@@ -232,6 +231,26 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       to: "BEAN"
     });
   }
+
+  /**
+   * WETH <=> BEAN routes through Curve pool
+   */
+   {
+     graph.setEdge("WETH", "BEAN", {
+       build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+         sdk.farm.presets.weth2bean(from, to),
+       from: "WETH",
+       to: "BEAN"
+     });
+     graph.setEdge("BEAN", "WETH", {
+       build: (_: string, from: FarmFromMode, to: FarmToMode) =>
+         sdk.farm.presets.bean2weth(from, to),
+       from: "BEAN",
+       to: "WETH"
+     });
+   }
+
+
 
   /**
    * DO NOT TURN THIS ON YET. Doing so will FORCE all ETH<>BEAN trades
