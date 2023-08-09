@@ -6,13 +6,14 @@ pragma experimental ABIEncoderV2;
 import "contracts/libraries/Decimal.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibEvaluate.sol";
-import "contracts/libraries/Cases/LibCases.sol";
+// import "./CaseFacet.sol";
+import "contracts/libraries/LibCases.sol";
 import "./Sun.sol";
 
 /**
  * @title Weather
  * @author Publius
- * @notice Weather controls the Temperature on the Farm.
+ * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {
     using SafeMath for uint256;
@@ -91,8 +92,8 @@ contract Weather is Sun {
         (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = LibEvaluate.calcDeltaPodDemand(dsoil);
         
         // Calculate Lp To Supply Ratio
-        Decimal.D256 memory lpToSupplyRatio;
-        // TODO
+        Decimal.D256 memory lpToSupplyRatio = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        
 
         caseId = LibEvaluate.evaluateBeanstalk(
             deltaB, // deltaB

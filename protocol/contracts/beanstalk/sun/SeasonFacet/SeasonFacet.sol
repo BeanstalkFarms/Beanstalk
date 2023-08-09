@@ -127,19 +127,21 @@ contract SeasonFacet is Weather {
         uint256 newGrownStalkToLP = newGrownStalk.mul(s.seedGauge.percentOfNewGrownStalkToLP).div(PRECISION);
 
         // update stalkPerBDVPerSeason for bean
-        if(getDepositedBdvForToken(C.BEAN) > 0){
-            LibWhitelist.updateStalkPerBdvPerSeasonForToken(
-                C.BEAN,
-                uint24((newGrownStalk - newGrownStalkToLP).div(getDepositedBdvForToken(C.BEAN)))
-            );
-        }
+        issueGrownStalkPerBDV(C.BEAN, newGrownStalk - newGrownStalkToLP);
 
         // update stalkPerBdvPerSeason for LP 
         // for 1 LP pool, no need for seed LP distrubution (BEAN:ETH)
-        if(getDepositedBdvForToken(C.BEAN_ETH_WELL) > 0){
+        if(LibWhitelistedAssets.getWhitelistedLPAssets().length == 2) return;
+
+        issueGrownStalkPerBDV(C.BEAN_ETH_WELL, newGrownStalkToLP);
+    }
+
+    function issueGrownStalkPerBDV(address token, uint256 newGrownStalk) private {
+        uint256 depositedBdv = s.siloBalances[token].depositedBdv;
+        if(depositedBdv > 0){
             LibWhitelist.updateStalkPerBdvPerSeasonForToken(
-                C.BEAN_ETH_WELL,
-                uint24(newGrownStalkToLP.div(getDepositedBdvForToken(C.BEAN_ETH_WELL)))
+                token,
+                uint24(newGrownStalk.div(depositedBdv))
             );
         }
     }
@@ -184,15 +186,5 @@ contract SeasonFacet is Weather {
             ss.lpGaugePoints = uint24(uint32(ss.lpGaugePoints) * 100e6 / totalGaugePoints);
         }
     }
-
-    /**
-     * @notice Returns the amount of BDV deposited for a given token.
-     * @param token The address of the token.
-     * @return The amount of BDV deposited for the token.
-     */
-    function getDepositedBdvForToken(address token) internal view returns (uint256){
-        return s.siloBalances[token].depositedBdv;
-    }
-
     
 }

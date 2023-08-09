@@ -171,6 +171,16 @@ library LibEvaluate {
         }
     }
 
+    function calcLPToSupplyRatio(uint256 beanSupply) internal returns (Decimal.D256 memory lpToSupplyRatio) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (lpSupply == 0) {
+            lpToSupplyRatio = Decimal.from(1e18);
+        } else {
+            lpToSupplyRatio = Decimal.ratio(lpSupply, beanSupply);
+        }
+    }
+
     /**
      * @notice evaluates beanstalk based on deltaB, podRate, and deltaPodDemand,
      * and returns the assoicated caseId.
