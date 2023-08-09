@@ -19,6 +19,7 @@ import podsLogo from '~/img/beanstalk/pod-icon-winter.svg';
 import sproutLogo from '~/img/beanstalk/sprout-icon-winter.svg';
 import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogo from '~/img/tokens/bean-eth-lp-logo.svg';
+import beanEthWellLpLogo from '~/img/tokens/bean-eth-well-lp-logo.svg';
 
 // ERC-20 Token Images
 import crv3Logo from '~/img/tokens/crv3-logo.png';
@@ -52,6 +53,7 @@ const useBeanstalkSdkContext = () => {
 
     _sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
     _sdk.tokens.BEAN_CRV3_LP.setMetadata({ logo: beanCrv3LpLogo });
+    _sdk.tokens.BEAN_ETH_WELL_LP.setMetadata({ logo: beanEthWellLpLogo });
     _sdk.tokens.UNRIPE_BEAN.setMetadata({ logo: unripeBeanLogo });
     _sdk.tokens.UNRIPE_BEAN_CRV3.setMetadata({ logo: unripeBeanCrv3Logo });
 

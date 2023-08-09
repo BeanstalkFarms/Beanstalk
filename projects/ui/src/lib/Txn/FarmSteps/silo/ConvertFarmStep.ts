@@ -148,16 +148,25 @@ export class ConvertFarmStep extends FarmStep {
     const siloConvert = sdk.silo.siloConvert;
     const pathMatrix = [
       [siloConvert.Bean, siloConvert.BeanCrv3],
+      [siloConvert.Bean, siloConvert.BeanEth],
+      [siloConvert.Bean, siloConvert.BeanCrv3, siloConvert.BeanEth],
       [siloConvert.urBean, siloConvert.urBeanCrv3],
     ];
 
     /// b/c siloConvert uses it's own token instances
     const sdkTokenPathMatrix = [
       [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP],
+      [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP],
+      [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_ETH_WELL_LP],
       [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_CRV3],
     ];
 
-    const index = tokenIn.isUnripe ? 1 : 0;
+    const index = tokenIn === sdk.tokens.BEAN_CRV3_LP ? 0
+      : tokenIn === sdk.tokens.BEAN_ETH_WELL_LP ? 1
+      : tokenIn === sdk.tokens.BEAN ? 2
+      : 3
+    ;
+
     const path = pathMatrix[index];
 
     const tokenInIndex = path.findIndex((t) => t.equals(tokenIn));

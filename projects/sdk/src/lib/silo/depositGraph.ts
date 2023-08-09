@@ -1,6 +1,7 @@
 import { Graph } from "graphlib";
 import { Token } from "src/classes/Token";
 import { CurveMetaPool } from "src/classes/Pool/CurveMetaPool";
+import { BasinWell } from "src/classes/Pool/BasinWell";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
 
@@ -31,6 +32,7 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
    * graph.setNode("BEAN3CRV");
    * graph.setNode("urBEAN");
    * graph.setNode("urBEAN3CRV");
+   * graph.setNode("BEANETH");
    */
 
   for (const token of sdk.tokens.siloWhitelist) {
@@ -122,6 +124,25 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
         from: from.symbol,
         to: targetToken.symbol,
         label: "addLiquidity"
+      });
+    });
+  }
+
+  /**
+   * Setup edges to addLiquidity to BEAN:ETH Well.
+   *
+   * [ BEAN, WETH ] => BEAN_ETH_LP
+   */
+  {
+    const targetToken = sdk.tokens.BEAN_ETH_WELL_LP;
+    const well = sdk.pools.BEAN_ETH_WELL;
+    if (!well) throw new Error(`Pool not found for LP token: ${targetToken.symbol}`);
+    [sdk.tokens.BEAN, sdk.tokens.WETH].forEach((from: Token, index: number) => {
+      graph.setEdge(from.symbol, targetToken.symbol, {
+        build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+          sdk.farm.presets.wellAddLiquidity(well, index, well.tokens[index], account, fromMode, toMode),
+        from: from.symbol,
+        to: targetToken.symbol,
       });
     });
   }

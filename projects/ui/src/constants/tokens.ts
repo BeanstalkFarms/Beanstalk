@@ -14,6 +14,7 @@ import podsLogo from '~/img/beanstalk/pod-icon-winter.svg';
 import sproutLogo from '~/img/beanstalk/sprout-icon-winter.svg';
 import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogoUrl from '~/img/tokens/bean-eth-lp-logo.svg';
+import beanEthWellLpLogoUrl from '~/img/tokens/bean-eth-well-lp-logo.svg';
 import beanLusdLogoUrl from '~/img/tokens/bean-lusd-logo.svg';
 
 // ERC-20 Token Images
@@ -39,6 +40,7 @@ import {
   UNRIPE_BEAN_ADDRESSES,
   UNRIPE_BEAN_CRV3_ADDRESSES,
   BEAN_ADDRESSES,
+  BEAN_ETH_WELL_ADDRESSES,
 } from './addresses';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
@@ -146,7 +148,7 @@ export const BEAN = {
     },
     {
       stalk: 1,
-      seeds: 2,
+      seeds: 3,
     }
   ),
 };
@@ -279,7 +281,26 @@ export const BEAN_CRV3_LP = {
     },
     {
       stalk: 1,
-      seeds: 4,
+      seeds: 3.25,
+    }
+  ),
+};
+
+export const BEAN_ETH_WELL_LP = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    BEAN_ETH_WELL_ADDRESSES,
+    18,
+    {
+      name: 'BEAN:ETH Well LP',
+      symbol: 'BEANETH',
+      logo: beanEthWellLpLogoUrl,
+      isLP: true,
+      color: '#DFB385',
+    },
+    {
+      stalk: 1,
+      seeds: 4.5,
     }
   ),
 };
@@ -345,6 +366,7 @@ export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
   BEAN_CRV3_LP,
+  BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_CRV3,
 ];

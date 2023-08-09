@@ -101,11 +101,12 @@ const WithdrawForm: FC<
   );
 
   const claimableTokens = useMemo(
+    // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code
     () => [
       whitelistedToken,
-      ...((whitelistedToken.isLP && pool?.tokens) || []),
+      ...(((whitelistedToken.isLP && whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP) && pool?.tokens) || []),
     ],
-    [pool, whitelistedToken]
+    [pool, sdk.tokens, whitelistedToken]
   );
 
   const handleQuote = useCallback<

@@ -20,6 +20,7 @@ import {
   BEAN_LUSD_LP,
   BEAN_ETH_UNIV2_LP,
   RINSABLE_SPROUTS,
+  BEAN_ETH_WELL_LP,
 } from '~/constants/tokens';
 import { Token as TokenOld } from '~/classes';
 
@@ -35,6 +36,7 @@ const oldTokenMap = {
   [ETH[1].symbol]: ETH[1],
   [BEAN[1].symbol]: BEAN[1],
   [BEAN_CRV3_LP[1].symbol]: BEAN_CRV3_LP[1],
+  [BEAN_ETH_WELL_LP[1].symbol]: BEAN_ETH_WELL_LP[1],
   [UNRIPE_BEAN[1].symbol]: UNRIPE_BEAN[1],
   [UNRIPE_BEAN_CRV3[1].symbol]: UNRIPE_BEAN_CRV3[1],
   [WETH[1].symbol]: WETH[1],
