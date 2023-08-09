@@ -8,6 +8,8 @@ import {LibCurveConvert} from "./LibCurveConvert.sol";
 import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
 import {LibConvertData} from "./LibConvertData.sol";
+import {LibWellConvert} from "./LibWellConvert.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -17,6 +19,7 @@ import {C} from "contracts/C.sol";
 library LibConvert {
     using SafeMath for uint256;
     using LibConvertData for bytes;
+    using LibWell for address;
 
     /**
      * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
@@ -49,6 +52,12 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibLambdaConvert
                 .convert(convertData);
+        } else if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
+                .convertBeansToLP(convertData);
+        } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
+                .convertLPToBeans(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
@@ -79,6 +88,14 @@ library LibConvert {
         if (tokenIn == tokenOut) 
             return type(uint256).max;
 
+        // Bean -> Well LP Token
+        if (tokenIn == C.BEAN && tokenOut.isWell())
+            return LibWellConvert.beansToPeg(tokenOut);
+
+        // Well LP Token -> Bean
+        if (tokenIn.isWell() && tokenOut == C.BEAN)
+            return LibWellConvert.lpToPeg(tokenIn);
+
         revert("Convert: Tokens not supported");
     }
 
@@ -106,6 +123,14 @@ library LibConvert {
         // Lambda -> Lambda
         if (tokenIn == tokenOut)
             return amountIn;
+
+        // Bean -> Well LP Token
+        if (tokenIn == C.BEAN && tokenOut.isWell())
+            return LibWellConvert.getLPAmountOut(tokenOut, amountIn);
+
+        // Well LP Token -> Bean
+        if (tokenIn.isWell() && tokenOut == C.BEAN)
+            return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
     }

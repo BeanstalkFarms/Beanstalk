@@ -2,8 +2,8 @@ const fs = require('fs');
 const beanstalkABI = require("../abi/Beanstalk.json");
 const { BEANSTALK, BEAN, BEAN_3_CURVE, USDC, FERTILIZER, PRICE } = require('../test/utils/constants');
 
-async function getBeanstalk() {
-    return await ethers.getContractAt(beanstalkABI, BEANSTALK);
+async function getBeanstalk(contract = BEANSTALK) {
+    return await ethers.getContractAt(beanstalkABI, contract);
 }
 
 async function getBeanstalkAdminControls() {

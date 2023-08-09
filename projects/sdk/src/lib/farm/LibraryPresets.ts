@@ -5,6 +5,7 @@ import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "../farm/types";
 import { EIP2612PermitMessage, SignedPermit } from "../permit";
 import { Exchange, ExchangeUnderlying } from "./actions/index";
+import { BasinWell } from "src/classes/Pool/BasinWell";
 
 export type ActionBuilder = (
   fromMode?: FarmFromMode,
@@ -22,6 +23,7 @@ export class LibraryPresets {
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
   public readonly wellWethBean;
+  public readonly wellAddLiquidity;
 
   public readonly usdc2bean: ActionBuilder;
   public readonly bean2usdc: ActionBuilder;
@@ -200,6 +202,42 @@ export class LibraryPresets {
       // Compose the steps
       advancedPipe.add(approve);
       advancedPipe.add(swap, { tag: "swap" });
+      if (transferBack) {
+        advancedPipe.add(approveBack);
+        advancedPipe.add(transferToBeanstalk);
+      }
+
+      result.push(transfer);
+      result.push(advancedPipe);
+
+      return result;
+    };
+
+    this.wellAddLiquidity = (well: BasinWell, tokenIndex: number, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
+      
+      const result = [];
+      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+
+      const transferBack = to === FarmToMode.INTERNAL;
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
+
+      // Transfer input token to PIPELINE
+      const transfer = new sdk.farm.actions.TransferToken(tokenIn.address, sdk.contracts.pipeline.address, from, FarmToMode.EXTERNAL);
+
+      // Approve WELL to spend PIPELINE's input token
+      const approve = new sdk.farm.actions.ApproveERC20(tokenIn, well.address);
+
+      // Add liquidity to WELL, by PIPELINE
+      const addLiquidity = new sdk.farm.actions.WellAddLiquidity(well, tokenIndex, tokenIn, recipient);
+
+      // This approves the transferToBeanstalk operation.
+      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address);
+
+      // Transfers the output token back to Beanstalk, from PIPELINE.
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL);
+
+      advancedPipe.add(approve);
+      advancedPipe.add(addLiquidity, { tag: "addLiquidity" });
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);

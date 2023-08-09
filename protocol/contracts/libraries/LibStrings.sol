@@ -51,4 +51,15 @@ library LibStrings {
     function toHexString(address addr) internal pure returns (string memory) {
         return toHexString(uint256(uint160(addr)), _ADDRESS_LENGTH);
     }
+
+    /**
+     * @dev Converts a `int256` to its ASCII `string` representation.
+     */
+    function toString(int256 value) internal pure returns(string memory){
+        if(value > 0){
+            return toString(uint256(value));
+        } else {
+            return string(abi.encodePacked("-", toString(uint256(-value))));
+        }
+    }
 }

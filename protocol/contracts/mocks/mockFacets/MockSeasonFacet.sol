@@ -10,12 +10,23 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
 import "contracts/libraries/LibBytes.sol";
+import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import "contracts/libraries/LibBytes.sol";
 
 /**
  * @author Publius
  * @title Mock Season Facet
  *
  */
+
+struct MockCurveMetapoolOracle {
+    bool initialized; // ────┐ 1
+    uint32 startSeason; // ──┘ 4 (5/32)
+    uint256[2] balances;
+    uint256 deprecated_timestamp;
+}
 
 interface ResetPool {
     function reset_cumulative() external;
@@ -181,7 +192,7 @@ contract MockSeasonFacet is SeasonFacet {
         delete s.season;
         delete s.fundraiserIndex;
         s.season.start = block.timestamp;
-        s.season.timestamp = uint32(block.timestamp % 2 ** 32);
+        s.season.timestamp = block.timestamp;
         s.s.stalk = 0;
         s.season.withdrawSeasons = 25;
         s.season.current = 1;
@@ -228,18 +239,21 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function captureCurveE() external returns (int256 deltaB) {
-        (deltaB,) = LibCurveOracle.capture();
+        deltaB = LibCurveMinting.capture();
+        s.season.timestamp = block.timestamp;
+        emit DeltaB(deltaB);
+    }
+
+    function captureWellE(address well) external returns (int256 deltaB) {
+        deltaB = LibWellMinting.capture(well);
+        s.season.timestamp = block.timestamp;
         emit DeltaB(deltaB);
     }
 
     function updateTWAPCurveE() external returns (uint256[2] memory balances) {
-        (balances, s.co.balances) = LibCurveOracle.twap();
-        s.co.timestamp = block.timestamp;
+        (balances, s.co.balances) = LibCurveMinting.twaBalances();
+        s.season.timestamp = block.timestamp;
         emit UpdateTWAPs(balances);
-    }
-
-    function curveOracle() external view returns (Storage.Oracle memory) {
-        return s.co;
     }
 
     function resetPools(address[] calldata pools) external {
@@ -266,6 +280,8 @@ contract MockSeasonFacet is SeasonFacet {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
+        ds.supportedInterfaces[0x0e89341c] = true;
+
 
         uint32 currentSeason = s.season.current;
 
@@ -303,11 +319,6 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     //constants for old seeds values
-    
-
-    function getEthPrice() external view returns (uint256 price) {
-        return LibIncentive.getEthUsdcPrice();
-    }
 
     function lastDSoil() external view returns (uint256) {
         return uint256(s.w.lastDSoil);
@@ -323,5 +334,25 @@ contract MockSeasonFacet is SeasonFacet {
 
     function getT() external view returns (uint256) {
         return uint256(s.w.t);
+    }
+
+    function getUsdPrice(address token) external view returns (uint256) {
+        return LibUsdOracle.getUsdPrice(token);
+    }
+
+    function getEthUsdPrice() external view returns (uint256) {
+        return LibEthUsdOracle.getEthUsdPrice();
+    }
+
+    function getEthUsdcPrice() external view returns (uint256) {
+        return LibUniswapOracle.getEthUsdcPrice();
+    }
+
+    function getEthUsdtPrice() external view returns (uint256) {
+        return LibUniswapOracle.getEthUsdtPrice();
+    }
+
+    function getChainlinkEthUsdPrice() external view returns (uint256) {
+        return LibChainlinkOracle.getEthUsdPrice();
     }
 }

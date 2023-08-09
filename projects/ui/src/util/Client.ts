@@ -93,6 +93,7 @@ const makeTestnet = (_chainId: number, name: string): Chain => ({
 const baseChains: Chain[] = [mainnet];
 if (import.meta.env.VITE_SHOW_DEV_CHAINS) {
   baseChains.push(makeTestnet(SupportedChainId.TESTNET, 'Testnet'));
+  baseChains.push(makeTestnet(SupportedChainId.ANVIL1, 'Basin Testnet'));
   baseChains.push(localhost);
 }
 

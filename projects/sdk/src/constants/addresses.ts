@@ -10,7 +10,7 @@ export const addresses = {
   // ----------------------------------------
   // Ecosystem Contracts
   // ----------------------------------------
-  BEANSTALK_PRICE: Address.make("0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530"),
+  BEANSTALK_PRICE: Address.make("0x54F8b968eE75390e6ee6E3315E1EfAB3E8f63332"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
@@ -54,7 +54,7 @@ export const addresses = {
   // ----------------------------------------
   // Wells Contracts
   // ----------------------------------------
-  BEANWETH_WELL: Address.make("0xb468647b04bf657c9ee2de65252037d781eabafd"),
+  BEANWETH_WELL: Address.make("0x23ba274B6Bc6505bca604940B13325D4E3f869b8"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens

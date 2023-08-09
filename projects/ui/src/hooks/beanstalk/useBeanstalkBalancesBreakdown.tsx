@@ -8,7 +8,7 @@ import useWhitelist from './useWhitelist';
 import { BeanstalkSiloBalance } from '~/state/beanstalk/silo';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { BEAN, BEAN_CRV3_LP } from '~/constants/tokens';
+import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP } from '~/constants/tokens';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import { UnripeToken } from '~/state/bean/unripe';
 
@@ -158,6 +158,7 @@ export default function useBeanstalkSiloBreakdown() {
   const getChainToken = useGetChainToken();
   const Bean = getChainToken(BEAN);
   const Bean3CRV = getChainToken(BEAN_CRV3_LP);
+  const BeanETH = getChainToken(BEAN_ETH_WELL_LP);
   const unripeToRipe = useUnripeUnderlyingMap('unripe');
   const ripeToUnripe = useUnripeUnderlyingMap('ripe');
 
@@ -233,7 +234,7 @@ export default function useBeanstalkSiloBreakdown() {
 
             const amountByState = {
               deposited: siloBalance.deposited?.amount,
-              withdrawn: siloBalance.withdrawn?.amount,
+              withdrawn: TOKEN === BeanETH ? undefined : siloBalance.withdrawn?.amount,
               pooled: pooled,
               ripePooled: ripePooled,
               ripe: ripe,
@@ -242,7 +243,7 @@ export default function useBeanstalkSiloBreakdown() {
             };
             const usdValueByState = {
               deposited: getUSD(TOKEN, siloBalance.deposited.amount),
-              withdrawn: getUSD(TOKEN, siloBalance.withdrawn.amount),
+              withdrawn: TOKEN === BeanETH ? undefined : getUSD(TOKEN, siloBalance.withdrawn.amount),
               pooled: pooled ? getUSD(TOKEN, pooled) : undefined,
               ripePooled: ripePooled ? getUSD(TOKEN, ripePooled) : undefined,
               ripe: ripe ? getUSD(TOKEN, ripe) : undefined,
@@ -301,6 +302,7 @@ export default function useBeanstalkSiloBreakdown() {
       unripeToRipe,
       Bean,
       Bean3CRV,
+      BeanETH,
       poolState,
       getUSD,
       unripeTokenState,

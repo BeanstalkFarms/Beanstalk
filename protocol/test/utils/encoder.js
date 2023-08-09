@@ -5,7 +5,9 @@ const ConvertKind = {
   CURVE_LP_TO_BEANS: 1,
   UNRIPE_BEANS_TO_LP: 2,
   UNRIPE_LP_TO_BEANS: 3,
-  LAMBDA_LAMBDA: 4
+  LAMBDA_LAMBDA: 4,
+  BEANS_TO_WELL_LP: 5,
+  WELL_LP_TO_BEANS: 6
 }
 
 class ConvertEncoder {
@@ -57,6 +59,18 @@ class ConvertEncoder {
       ['uint256', 'uint256', 'address'],
       [ConvertKind.LAMBDA_LAMBDA, amount, token]
     );
+
+  static convertWellLPToBeans = (lp, minBeans, address) =>
+  defaultAbiCoder.encode(
+    ['uint256', 'uint256', 'uint256', 'address'],
+    [ConvertKind.WELL_LP_TO_BEANS, lp, minBeans, address]
+  );
+
+  static convertBeansToWellLP = (beans, minLP, address) =>
+    defaultAbiCoder.encode(
+    ['uint256', 'uint256', 'uint256', 'address'],
+    [ConvertKind.BEANS_TO_WELL_LP, beans, minLP, address]
+  );
 }
 
 exports.ConvertEncoder = ConvertEncoder

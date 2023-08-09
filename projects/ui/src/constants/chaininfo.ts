@@ -39,4 +39,11 @@ export const CHAIN_INFO: ChainInfoMap = {
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Tenderly Ether', symbol: 'tETH', decimals: 18 },
   },
+  [SupportedChainId.ANVIL1]: {
+    networkType: NetworkType.L1,
+    explorer: 'https://etherscan.io',
+    label: 'Basin Integration Test',
+    logoUrl: ethereumLogoUrl,
+    nativeCurrency: { name: 'Basin Test Ether', symbol: 'btETH', decimals: 18 },
+  },
 };

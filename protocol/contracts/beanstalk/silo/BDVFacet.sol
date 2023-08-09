@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/C.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibUnripe.sol";
+import "contracts/libraries/Well/LibWellBdv.sol";
 
 /**
  * @title BDVFacet
@@ -17,33 +18,47 @@ import "contracts/libraries/LibUnripe.sol";
 contract BDVFacet {
     using SafeMath for uint256;
 
+    /**
+     * @dev Returns the BDV of a given `amount` of Bean:3Crv LP tokens.
+     */
     function curveToBDV(uint256 amount) public view returns (uint256) {
         return LibBeanMetaCurve.bdv(amount);
     }
 
+    /**
+     * @dev Returns the BDV of a given `amount` of Beans.
+     */
     function beanToBDV(uint256 amount) public pure returns (uint256) {
         return amount;
     }
 
+    /**
+     * @dev Returns the BDV of a given `amount` of Unripe Bean:3Crv LP Tokens.
+     */
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
         amount = LibUnripe.unripeToUnderlying(C.UNRIPE_LP, amount);
         amount = LibBeanMetaCurve.bdv(amount);
         return amount;
     }
 
+    /**
+     * @dev Returns the BDV of a given `amount` of Unripe Beans.
+     */
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
         return LibUnripe.unripeToUnderlying(C.UNRIPE_BEAN, amount);
     }
 
-    function bdv(address token, uint256 amount)
+    /**
+     * @dev Returns the BDV of a given `amount` of Well LP Tokens given a Well `token`.
+     * A Well's `token` address is the same as the Well address.
+     * Any Well `token` that uses the `wellBdv` function as its BDV function must have 
+     `encodeType = 1` in {Storage.SiloSettings}.
+     */
+    function wellBdv(address token, uint256 amount)
         external
         view
         returns (uint256)
     {
-        if (token == C.BEAN) return beanToBDV(amount);
-        else if (token == C.CURVE_BEAN_METAPOOL) return curveToBDV(amount);
-        else if (token == C.UNRIPE_BEAN) return unripeBeanToBDV(amount);
-        else if (token == C.UNRIPE_LP) return unripeLPToBDV(amount);
-        revert("BDV: Token not whitelisted");
+        return LibWellBdv.bdv(token, amount);
     }
 }

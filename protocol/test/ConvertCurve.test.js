@@ -20,6 +20,7 @@ describe('Curve Convert', function () {
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
+    this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
@@ -58,32 +59,32 @@ describe('Curve Convert', function () {
   describe('calculates beans to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
+      expect(await this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
     });
 
     it('p = 1', async function () {
-      expect(await this.convert.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal('0');
     });
 
     it('p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal('0');
     });
   });
 
   describe('calculates lp to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user2).add_liquidity([toBean('200'), to18('0')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('199185758314813528598');
+      expect(await this.convertGet.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('199185758314813528598');
     });
 
     it('p = 1', async function () {
-      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('0');
     });
 
     it('p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-      expect(await this.convert.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('0');
+      expect(await this.convertGet.getMaxAmountIn(this.beanMetapool.address, this.bean.address)).to.be.equal('0');
     });
   })
 
@@ -105,7 +106,7 @@ describe('Curve Convert', function () {
 
     });
 
-    describe('below max', async function () {
+  describe('below max', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(12);
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
@@ -113,7 +114,7 @@ describe('Curve Convert', function () {
       });
 
       it('it gets amount out', async function () {
-        expect(await this.convert.getAmountOut(
+        expect(await this.convertGet.getAmountOut(
           BEAN,
           BEAN_3_CURVE,
           toBean('100')
@@ -182,7 +183,7 @@ describe('Curve Convert', function () {
       });
 
       it('it gets amount out', async function () {
-        expect(await this.convert.getAmountOut(
+        expect(await this.convertGet.getAmountOut(
           BEAN,
           BEAN_3_CURVE,
           toBean('200')
@@ -419,7 +420,7 @@ describe('Curve Convert', function () {
 
 
       it('it gets amount out', async function () {
-        expect(await this.convert.getAmountOut(
+        expect(await this.convertGet.getAmountOut(
           BEAN_3_CURVE,
           BEAN,
           to18('100')
@@ -477,7 +478,7 @@ describe('Curve Convert', function () {
 
 
       it('it gets amount out', async function () {
-        expect(await this.convert.getAmountOut(
+        expect(await this.convertGet.getAmountOut(
           BEAN_3_CURVE,
           BEAN,
           '199185758314813528598',

@@ -236,9 +236,7 @@ contract Weather is Sun {
             s.season.rainStart = s.season.current;
             s.r.pods = s.f.pods;
             s.r.roots = s.s.roots;
-        } else if (
-            s.season.current >= s.season.rainStart.add(s.season.withdrawSeasons - 1)
-        ) {
+        } else {
             if (s.r.roots > 0) {
                 sop();
             }

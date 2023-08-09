@@ -19,6 +19,7 @@ export class Convert {
   static sdk: BeanstalkSDK;
   Bean: Token;
   BeanCrv3: Token;
+  BeanEth: Token;
   urBean: Token;
   urBeanCrv3: Token;
   paths: Map<Token, Token>;
@@ -26,13 +27,16 @@ export class Convert {
   constructor(sdk: BeanstalkSDK) {
     Convert.sdk = sdk;
     this.Bean = Convert.sdk.tokens.BEAN;
-    this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP;
+    this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP; 
+    this.BeanEth = Convert.sdk.tokens.BEAN_ETH_WELL_LP;
     this.urBean = Convert.sdk.tokens.UNRIPE_BEAN;
     this.urBeanCrv3 = Convert.sdk.tokens.UNRIPE_BEAN_CRV3;
 
     this.paths = new Map<Token, Token>();
     this.paths.set(this.Bean, this.BeanCrv3);
     this.paths.set(this.BeanCrv3, this.Bean);
+    this.paths.set(this.Bean, this.BeanEth);
+    this.paths.set(this.BeanEth, this.Bean);
     this.paths.set(this.urBean, this.urBeanCrv3);
     this.paths.set(this.urBeanCrv3, this.urBean);
   }
@@ -135,6 +139,18 @@ export class Convert {
         minAmountOut.toBlockchain(), // minBeans
         fromToken.address // output token address = pool address
       );
+    } else if (fromToken.address === this.Bean.address && toToken.address === this.BeanEth.address) {
+      encoding = ConvertEncoder.beansToWellLP(
+        amountIn.toBlockchain(), // amountBeans
+        minAmountOut.toBlockchain(), // minLP
+        toToken.address // output token address = pool address
+      );
+    } else if (fromToken.address === this.BeanEth.address && toToken.address === this.Bean.address) {
+      encoding = ConvertEncoder.wellLPToBeans(
+        amountIn.toBlockchain(), // amountLP
+        minAmountOut.toBlockchain(), // minBeans
+        fromToken.address // output token address = pool address
+      );
     } else {
       throw new Error("SDK: Unknown conversion pathway");
     }
@@ -162,7 +178,7 @@ export class Convert {
     const deltaB = await Convert.sdk.bean.getDeltaB();
 
     if (deltaB.gte(TokenValue.ZERO)) {
-      if (fromToken.equals(this.BeanCrv3) || fromToken.equals(this.urBeanCrv3)) {
+      if (fromToken.equals(this.BeanCrv3) || fromToken.equals(this.urBeanCrv3) || fromToken.equals(this.BeanEth)) {
         throw new Error("Cannot convert this token when deltaB is >= 0");
       }
     } else if (deltaB.lt(TokenValue.ZERO)) {

@@ -114,7 +114,7 @@ describe('Sop', function () {
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrise();
       await this.silo.mow(user2Address, this.bean.address);
-      await this.season.rainSunrises(24);
+      await this.season.rainSunrise();
     })
 
     it('sops p > 1', async function () {
@@ -169,10 +169,10 @@ describe('Sop', function () {
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
       await this.season.rainSunrise();
       await this.silo.mow(user2Address, this.bean.address);
-      await this.season.rainSunrises(24);
+      await this.season.rainSunrise();
       await this.season.droughtSunrise();
       await this.beanMetapool.connect(user).add_liquidity([to6('0'), to18('200')], to18('50'))
-      await this.season.rainSunrises(25);
+      await this.season.rainSunrises(2);
     })
 
     it('sops p > 1', async function () {
@@ -192,8 +192,8 @@ describe('Sop', function () {
     it('tracks user plenty after update', async function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
       const userSop = await this.silo.balanceOfSop(userAddress);
-      expect(userSop.lastRain).to.be.equal(29)
-      expect(userSop.lastSop).to.be.equal(29)
+      expect(userSop.lastRain).to.be.equal(6)
+      expect(userSop.lastSop).to.be.equal(6)
       expect(userSop.roots).to.be.equal('10000000000000000000000000')
       expect(userSop.plenty).to.be.equal('100393700583386272030')
       expect(userSop.plentyPerRoot).to.be.equal('10039370058338627203')
@@ -207,8 +207,8 @@ describe('Sop', function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.mow(user2Address, this.bean.address);
       const userSop = await this.silo.balanceOfSop(user2Address);
-      expect(userSop.lastRain).to.be.equal(29)
-      expect(userSop.lastSop).to.be.equal(29)
+      expect(userSop.lastRain).to.be.equal(6)
+      expect(userSop.lastSop).to.be.equal(6)
       expect(userSop.roots).to.be.equal('10002000000000000000000000')
       expect(userSop.plenty).to.be.equal('100403737702033678721')
       expect(userSop.plentyPerRoot).to.be.equal('10039370058338627203')

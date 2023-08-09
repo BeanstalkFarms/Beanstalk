@@ -61,20 +61,29 @@ library LibWhitelist {
         address token,
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
+        uint32 stalkEarnedPerSeason,
+        bytes1 encodeType
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         //verify you passed in a callable selector
-        bytes memory data = abi.encodeWithSelector(selector,0);
-        (bool success,) = address(this).staticcall(data);
-        require(success, "Invalid selector");
+        (bool success,) = address(this).staticcall(
+            LibTokenSilo.encodeBdvFunction(
+                token,
+                encodeType,
+                selector,
+                0
+            )
+        );
+        require(success, "Whitelist: Invalid selector");
 
-        require(s.ss[token].milestoneSeason == 0, "Token already whitelisted");
+        require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+
+        s.ss[token].encodeType = encodeType;
 
         s.ss[token].milestoneSeason = s.season.current;
 

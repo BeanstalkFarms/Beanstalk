@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ButtonProps, Stack, Typography, useMediaQuery } from '@mui/material';
+import { ButtonProps, Stack, Typography, useMediaQuery, Box } from '@mui/material';
 import throttle from 'lodash/throttle';
 import { useTheme } from '@mui/material/styles';
 import { useSelector } from 'react-redux';
@@ -26,12 +26,15 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
     (state) => state._bean.pools
   );
+  // const beanTokenData = useSelector<AppState, AppState['_bean']['token']>(
+  //  (state) => state._bean.token
+  // );
   const [_refetchPools] = useFetchPools();
   const refetchPools = useMemo(
     () => throttle(_refetchPools, 10_000),
     [_refetchPools]
   ); // max refetch = 10s
-
+  
   // Theme
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
@@ -42,20 +45,30 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const startIcon = isTiny ? undefined : (
     <BeanProgressIcon size={25} enabled={isLoading} variant="indeterminate" />
   );
-  const poolsContent = Object.values(pools).map((pool, index) => (
-    <PoolCard
-      key={`${pool.address}-${index}`}
-      pool={pool}
-      poolState={beanPools[pool.address]}
-      ButtonProps={{
-        // FIXME: change link when more pools are added
-        href: CURVE_LINK,
-        // href: `https://etherscan.io/address/${pool.address}`,
-        target: '_blank',
-        rel: 'noreferrer',
-      }}
-    />
-  ));
+
+  const combinedDeltaB = Object.values(beanPools).reduce((accumulator, pool) => pool.deltaB.plus(accumulator), ZERO_BN);
+  
+  const poolsContent = 
+  <>
+    {Object.values(pools).map((pool, index) => (
+      <PoolCard
+        key={`${pool.address}-${index}`}
+        pool={pool}
+        poolState={beanPools[pool.address]}
+        ButtonProps={{
+          href: index === 0 ? CURVE_LINK : `https://etherscan.io/address/${pool.address}`,
+          target: '_blank',
+          rel: 'noreferrer',
+        }}
+      />
+    ))}
+    <div>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div>Combined deltaB:</div>
+        <div>{combinedDeltaB.gte(0) && '+'}{displayBN(combinedDeltaB, true)}</div>
+      </Box>
+    </div>
+  </>
 
   return (
     <FolderMenu
