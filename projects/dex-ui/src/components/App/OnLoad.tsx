@@ -7,7 +7,6 @@ import { watchNetwork } from "@wagmi/core";
 export const OnLoad: FC<{}> = ({ children }) => {
   const { address } = useAccount();
   const { chain } = useNetwork();
-  
   // this call effectively acts as a 'prefetch' for the "get all token balances" query.
   // we also refetch it when network or account changes
   const { refetch } = useAllTokensBalance();
@@ -18,7 +17,9 @@ export const OnLoad: FC<{}> = ({ children }) => {
 
   useEffect(() => {
     const unwatch = watchNetwork((_network) => {
-      location.reload();
+      if (_network?.chain?.id !== chain?.id) {
+        location.reload();
+      }
     });
 
     return unwatch;
