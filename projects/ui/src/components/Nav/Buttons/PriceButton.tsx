@@ -56,7 +56,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         pool={pool}
         poolState={beanPools[pool.address]}
         ButtonProps={{
-          href: index === 0 ? CURVE_LINK : `https://etherscan.io/address/${pool.address}`,
+          href: index === 0 ? CURVE_LINK : `https://basin.exchange/#/wells/${pool.address}`,
           target: '_blank',
           rel: 'noreferrer',
         }}
