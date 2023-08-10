@@ -79,14 +79,14 @@ async function deployBasin(mock = true, accounts = undefined) {
         )
     );
 
-    const txn = await aquifer.connect(account).boreWell(
+    const wellTxn = await aquifer.connect(account).boreWell(
         wellImplementation.address,
         immutableData,
         initData,
         WELL_DEPLOY_SALT
     );
 
-    await txn.wait();
+    await wellTxn.wait();
 
     console.log("Bean:Eth Well Deployed at:", well.address);
 
