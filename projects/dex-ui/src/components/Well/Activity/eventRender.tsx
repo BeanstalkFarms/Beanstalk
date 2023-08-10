@@ -6,19 +6,25 @@ import { TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { size } from "src/breakpoints";
 
-export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenValue | null)[]) => {
+export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | null)[]) => {
   let action;
   let description;
   let valueUSD;
   let time = formatTime(event.timestamp);
   var accumulator = TokenValue.ZERO;
+
+  const tokenPrices: Record<string, TokenValue | null> = {};
+  well.tokens!.forEach((token, index) => {
+    tokenPrices[token.symbol] = prices[index];
+  });
+
   switch (event.type) {
     case EVENT_TYPE.SWAP:
       event = event as SwapEvent;
       action = "Swap";
       valueUSD = `$${event.fromAmount
-        .mul(tokenPrices[0] || 0)
-        .add(event.toAmount.mul(tokenPrices[1] || 0))
+        .mul(tokenPrices[event.fromToken.symbol] || 0)
+        .add(event.toAmount.mul(tokenPrices[event.toToken.symbol] || 0))
         .toHuman("short")}`;
       description = `${event.fromAmount.toHuman("short")} ${event.fromToken.symbol} for ${event.toAmount.toHuman("short")} ${
         event.toToken.symbol
@@ -29,7 +35,7 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
       event = event as AddEvent;
       action = "Add Liquidity";
       event.tokenAmounts.forEach(function (amount, i) {
-        accumulator = accumulator.add(amount.mul(tokenPrices[i] || 0));
+        accumulator = accumulator.add(amount.mul(prices[i] || 0));
       });
       valueUSD = `$${accumulator.toHuman("short")}`;
       description = event.tokenAmounts
@@ -42,7 +48,7 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
       event = event as RemoveEvent;
       action = "Remove Liquidity";
       event.tokenAmounts.forEach(function (amount, i) {
-        accumulator = accumulator.add(amount.mul(tokenPrices[i] || 0));
+        accumulator = accumulator.add(amount.mul(prices[i] || 0));
       });
       valueUSD = `$${accumulator.toHuman("short")}`;
       description = event.tokenAmounts

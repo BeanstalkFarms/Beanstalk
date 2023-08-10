@@ -47,6 +47,8 @@ export const AddLiquidity = ({
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
 
+  const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
+
   const sdk = useSdk();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
 
@@ -72,6 +74,32 @@ export const AddLiquidity = ({
 
     return nonZeroValues !== 0;
   }, [amounts, well.tokens]);
+
+  useEffect(() => {
+    const checkBalances = async () => {
+      if (!address || !well.tokens) {
+        setHasEnoughBalance(false);
+        return;
+      }
+
+      let insufficientBalances = false;
+
+      for await (const [index, amount] of Object.entries(amounts)) {
+        const token = well.tokens[Number(index)];
+        if (amount.eq(TokenValue.ZERO)) {
+          continue;
+        }
+        const balance = await token.getBalance(address);
+        if (amount.gt(balance)) {
+          insufficientBalances = true;
+          break;
+        }
+      }
+      setHasEnoughBalance(!insufficientBalances);
+    };
+
+    checkBalances();
+  }, [address, amounts, well.tokens]);
 
   const checkMinAllowanceForAllTokens = useCallback(async () => {
     if (!address) {
@@ -150,7 +178,7 @@ export const AddLiquidity = ({
     if (quote && address) {
       const toast = new TransactionToast({
         loading: "Adding liquidity...",
-        error: "Approval failed",
+        error: "Adding liquidity failed",
         success: "Liquidity added"
       });
       try {
@@ -215,8 +243,8 @@ export const AddLiquidity = ({
   }, [well.tokens, address, atLeastOneAmountNonZero, amounts, checkMinAllowanceForAllTokens]);
 
   const addLiquidityButtonEnabled = useMemo(
-    () => address && atLeastOneAmountNonZero && allTokensHaveMinAllowance,
-    [address, atLeastOneAmountNonZero, allTokensHaveMinAllowance]
+    () => address && atLeastOneAmountNonZero && allTokensHaveMinAllowance && hasEnoughBalance,
+    [address, atLeastOneAmountNonZero, allTokensHaveMinAllowance, hasEnoughBalance]
   );
 
   const approveTokenButtonClickHandler = useCallback(
@@ -238,7 +266,7 @@ export const AddLiquidity = ({
     [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
   );
 
-  const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Input Tokens" : "Add Liquidity"), [atLeastOneAmountNonZero]);
+const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" : !hasEnoughBalance ? 'Insufficient Balance' : "Add Liquidity"), [atLeastOneAmountNonZero, hasEnoughBalance]);
 
   return (
     <div>
@@ -328,7 +356,7 @@ const ButtonWrapper = styled.div<{ heightIndex?: number }>`
     position: fixed;
     width: calc(100% - 24px);
     margin-bottom: 0;
-    bottom: ${({heightIndex}) => heightIndex ? `calc(12px + (48px * ${heightIndex}))`: "12px"};
+    bottom: ${({ heightIndex }) => (heightIndex ? `calc(12px + (48px * ${heightIndex}))` : "12px")};
   }
 `;
 
