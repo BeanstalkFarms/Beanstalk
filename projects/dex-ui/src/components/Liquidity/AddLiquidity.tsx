@@ -178,7 +178,7 @@ export const AddLiquidity = ({
     if (quote && address) {
       const toast = new TransactionToast({
         loading: "Adding liquidity...",
-        error: "Approval failed",
+        error: "Adding liquidity failed",
         success: "Liquidity added"
       });
       try {
