@@ -46,16 +46,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
       }
     }
 
-    const quote = await well.addLiquidityQuote(amounts)
-
-    // FIXME: addLiquidityGasEstimate fails when using ETH for some reason, testnet-only issue? Must investigate further
-    let estimate: TokenValue
-    try {
-      estimate = await well.addLiquidityGasEstimate(amounts, quote, this.recipient, 60 * 5)
-    } catch (e) {
-      WellAddLiquidity.sdk.debug(`>[${this.name}.addLiquidityGasEstimate()] failed to estimate gas, switching to manual gas limit...`);
-      estimate = TokenValue.fromBlockchain(500000, 0)
-    }
+    const quote = await well.addLiquidityQuote(amounts);
 
     return {
       name: this.name,
@@ -63,7 +54,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
       value: ethers.BigNumber.from(0),
       prepare: () => {
 
-        const minLP = estimate.subSlippage(context.data.slippage || 0.1)
+        const minLP = quote.subSlippage(context.data.slippage || 0.1);
         const amountsIn = amounts.map((tv) => tv.toBlockchain());
 
         WellAddLiquidity.sdk.debug(`>[${this.name}.prepare()]`, {
