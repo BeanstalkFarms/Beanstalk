@@ -20,11 +20,11 @@ const CONSTANT_PRODUCT_2_DEPLOY_NONCE = 5; // TODO: Set
 const MULTI_FLOW_PUMP_DEPLOYER = '0x350dc53714D1741a86A781A48c8E3ef1664803Dc'; // TODO: Set
 const MULTI_FLOW_PUMP_DEPLOY_NONCE = 5; // TODO: Set
 
-const WELL_IMPLEMENTATION_DEPLOYER = '0x15e6e03ddb9682F3ea6458886c7ceA0e07bbb6d9'; // TODO: Set
-const WELL_IMPLEMENTATION_DEPLOY_NONCE = 2; // TODO: Set
+const WELL_IMPLEMENTATION_DEPLOYER = '0x9c789Db7BAc3524eb89739DeD1Ec0b8Bd49e02Bc'; // TODO: Set
+const WELL_IMPLEMENTATION_DEPLOY_NONCE = 8; // TODO: Set
 
 const WELL_DEPLOYER = '0x7eaE23DD0f0d8289d38653BCE11b92F7807eFB64'; // TODO: Set
-const WELL_DEPLOY_SALT = '0x0000000000000000000000000000000000000000000000000000000000000001'; // TODO: Set
+const WELL_DEPLOY_SALT = '0x8c5a1440b12f0eca90b905ed8a1d6ff0595c4192e23963e595e223f4780d10af'; // TODO: Set
 const WELL_NAME = 'BEAN:WETH Constant Product 2 Well'
 const WELL_SYMBOL = 'BEANWETHCP2w'
 
@@ -71,7 +71,7 @@ async function deployBasin(mock = true, accounts = undefined) {
 
     const well = await getWellContractAt(
         'Well',
-        await aquifer.callStatic.boreWell(
+        await aquifer.connect(account).callStatic.boreWell(
             wellImplementation.address,
             immutableData,
             initData,
@@ -79,12 +79,14 @@ async function deployBasin(mock = true, accounts = undefined) {
         )
     );
 
-    await aquifer.boreWell(
+    const wellTxn = await aquifer.connect(account).boreWell(
         wellImplementation.address,
         immutableData,
         initData,
         WELL_DEPLOY_SALT
     );
+
+    await wellTxn.wait();
 
     console.log("Bean:Eth Well Deployed at:", well.address);
 
