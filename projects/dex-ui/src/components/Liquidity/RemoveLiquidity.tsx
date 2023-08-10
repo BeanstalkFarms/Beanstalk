@@ -44,6 +44,8 @@ export const RemoveLiquidity = ({
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
+  const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
+  const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
 
   const sdk = useSdk();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
@@ -78,6 +80,28 @@ export const RemoveLiquidity = ({
       setWellLpToken(lpTokenWithMetadata);
     }
   }, [well.lpToken]);
+
+  useEffect(() => {
+    const checkBalances = async () => {
+      if (!address || !wellLpToken || !lpTokenAmount) {
+        setHasEnoughBalance(false);
+        return;
+      }
+
+      let insufficientBalances = false;
+
+      if (lpTokenAmount.gt(TokenValue.ZERO)) {
+        const balance = await wellLpToken.getBalance(address);
+        if (lpTokenAmount.gt(balance)) {
+          insufficientBalances = true;
+        }
+      }
+
+      setHasEnoughBalance(!insufficientBalances);
+    };
+
+    checkBalances();
+  }, [address, lpTokenAmount, wellLpToken]);
 
   useEffect(() => {
     if (customRatioQuote) {
@@ -200,11 +224,15 @@ export const RemoveLiquidity = ({
 
   const lpTokenAmountNonZero = useMemo(() => lpTokenAmount && lpTokenAmount.gt(0), [lpTokenAmount]);
 
-  const removeLiquidityButtonEnabled = useMemo(() => address && lpTokenAmountNonZero, [address, lpTokenAmountNonZero]);
+  const removeLiquidityButtonEnabled = useMemo(
+    () => address && tokenAllowance && lpTokenAmountNonZero && hasEnoughBalance,
+    [address, hasEnoughBalance, lpTokenAmountNonZero, tokenAllowance]
+  );
 
-  const buttonLabel = useMemo(() => (lpTokenAmountNonZero ? "Remove Liquidity" : "Input Token Amount"), [lpTokenAmountNonZero]);
-
-  const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
+  const buttonLabel = useMemo(
+    () => (lpTokenAmountNonZero ? (hasEnoughBalance ? "Remove Liquidity →" : "Insufficient Balance") : "Input Token Amount"),
+    [hasEnoughBalance, lpTokenAmountNonZero]
+  );
 
   const checkMinAllowanceForLpToken = useCallback(async () => {
     if (!address || !wellLpToken) {
@@ -392,7 +420,8 @@ export const RemoveLiquidity = ({
               tokenReserves={wellReserves}
             />
           )}
-          {!tokenAllowance ? (
+
+          {!tokenAllowance && (
             <ButtonWrapper>
               <ApproveTokenButton
                 disabled={approveButtonDisabled}
@@ -401,16 +430,16 @@ export const RemoveLiquidity = ({
                 onClick={approveTokenButtonClickHandler}
               />
             </ButtonWrapper>
-          ) : (
-            <ButtonWrapper>
-              <Button
-                disabled={!removeLiquidityButtonEnabled}
-                label={buttonLabel}
-                onClick={removeLiquidityButtonClickHandler}
-                loading={false}
-              />
-            </ButtonWrapper>
           )}
+
+          <ButtonWrapper>
+            <Button
+              disabled={!removeLiquidityButtonEnabled}
+              label={buttonLabel}
+              onClick={removeLiquidityButtonClickHandler}
+              loading={false}
+            />
+          </ButtonWrapper>
         </LargeGapContainer>
       )}
     </div>
