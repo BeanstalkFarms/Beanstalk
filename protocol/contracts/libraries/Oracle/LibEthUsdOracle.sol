@@ -32,10 +32,10 @@ library LibEthUsdOracle {
     using SafeMath for uint256;
 
     // The maximum percent different such that it is acceptable to use the greedy approach.
-    uint256 constant MAX_GREEDY_DIFFERENCE = 0.005e18; // 0.5%
+    uint256 constant MAX_GREEDY_DIFFERENCE = 0.003e18; // 0.3%
 
     // The maximum percent difference such that the oracle assumes no manipulation is occuring.
-    uint256 constant MAX_DIFFERENCE = 0.02e18; // 2%
+    uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%
     uint256 constant ONE = 1e18;
 
     /**
