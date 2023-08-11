@@ -123,7 +123,6 @@ export const Liquidity = () => {
           {tab === 0 && (
             <AddLiquidity
               well={well!}
-              txnCompleteCallback={() => console.log("complete")}
               slippage={slippage}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}
@@ -132,7 +131,6 @@ export const Liquidity = () => {
           {tab === 1 && (
             <RemoveLiquidity
               well={well!}
-              txnCompleteCallback={() => console.log("complete")}
               slippage={slippage}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}

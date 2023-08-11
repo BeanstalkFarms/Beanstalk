@@ -96,7 +96,6 @@ const QuoteDetails = ({
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
-      console.log("Here", _quoteValue, _quoteValue.toHuman(), _quoteValue.toHuman("short"));
       return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
     }
 

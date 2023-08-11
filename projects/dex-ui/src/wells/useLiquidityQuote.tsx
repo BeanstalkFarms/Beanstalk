@@ -61,57 +61,73 @@ export const useLiquidityQuote = (
     data: oneTokenQuote,
     isLoading: loadingOneTokenQuote,
     isError: oneTokenQuoteError
-  } = useQuery(["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, lpTokenAmount, singleTokenIndex], async () => {
-    if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken) {
-      return null;
-    }
+  } = useQuery(
+    ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, lpTokenAmount, singleTokenIndex],
+    async () => {
+      if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken) {
+        return null;
+      }
 
-    if (!lpTokenAmount || lpTokenAmount.eq(TokenValue.ZERO) || !address) {
-      return null;
-    }
+      if (!lpTokenAmount || lpTokenAmount.eq(TokenValue.ZERO) || !address) {
+        return null;
+      }
 
-    try {
-      const quote = await well.removeLiquidityOneTokenQuote(lpTokenAmount, wellTokens![singleTokenIndex]);
-      const estimate = await well.removeLiquidityOneTokenGasEstimate(lpTokenAmount, wellTokens![singleTokenIndex], quote, address);
-      return {
-        quote,
-        estimate
-      };
-    } catch (error: any) {
-      Log.module("useliquidityquote").error("Error during quote: ", (error as Error).message);
-      return null;
+      try {
+        const quote = await well.removeLiquidityOneTokenQuote(lpTokenAmount, wellTokens![singleTokenIndex]);
+        const estimate = await well.removeLiquidityOneTokenGasEstimate(lpTokenAmount, wellTokens![singleTokenIndex], quote, address);
+        return {
+          quote,
+          estimate
+        };
+      } catch (error: any) {
+        Log.module("useliquidityquote").error("Error during quote: ", (error as Error).message);
+        return null;
+      }
+    },
+    {
+      staleTime: 1000 * 10,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false
     }
-  });
+  );
 
   const {
     data: customRatioQuote,
     isLoading: loadingCustomRatioQuote,
     isError: customRatioQuoteError
-  } = useQuery(["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, amounts], async () => {
-    if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom) {
-      return null;
-    }
-
-    if (!amounts || !oneAmountNonZero || !address) {
-      return null;
-    }
-
-    try {
-      let _amountsFilled = [];
-      for (let i = 0; i < wellTokens.length; i++) {
-        _amountsFilled[i] = !amounts[i] ? TokenValue.ZERO : amounts[i];
+  } = useQuery(
+    ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, amounts],
+    async () => {
+      if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom) {
+        return null;
       }
-      const quote = await well.removeLiquidityImbalancedQuote(_amountsFilled);
-      const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, _amountsFilled, address);
-      return {
-        quote,
-        estimate
-      };
-    } catch (error: any) {
-      Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
-      return null;
+
+      if (!amounts || !oneAmountNonZero || !address) {
+        return null;
+      }
+
+      try {
+        let _amountsFilled = [];
+        for (let i = 0; i < wellTokens.length; i++) {
+          _amountsFilled[i] = !amounts[i] ? TokenValue.ZERO : amounts[i];
+        }
+        const quote = await well.removeLiquidityImbalancedQuote(_amountsFilled);
+        const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, _amountsFilled, address);
+        return {
+          quote,
+          estimate
+        };
+      } catch (error: any) {
+        Log.module("removeliquidity").error("Error during quote: ", (error as Error).message);
+        return null;
+      }
+    },
+    {
+      staleTime: 1000 * 10,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false
     }
-  });
+  );
 
   return {
     balanced: {

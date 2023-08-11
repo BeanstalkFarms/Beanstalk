@@ -284,8 +284,8 @@ export const SwapRoot = () => {
     try {
       // sanity check
       if (recipient === NULL_ADDRESS) throw new Error("FATAL: recipient is the NULL_ADDRESS!");
-
-      const tx = await quote!.doSwap();
+      const gasEstimate = quote?.gas;
+      const tx = await quote!.doSwap({ gasLimit: gasEstimate?.mul(1.2).toBigNumber() }); 
       toast.confirming(tx);
 
       const receipt = await tx.wait();

@@ -19,7 +19,6 @@ import { size } from "src/breakpoints";
 
 type AddLiquidityProps = {
   well: Well;
-  txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
@@ -34,7 +33,6 @@ export type AddLiquidityQuote = {
 
 export const AddLiquidity = ({
   well,
-  txnCompleteCallback,
   slippage,
   slippageSettingsClickHandler,
   handleSlippageValueChange
@@ -183,20 +181,21 @@ export const AddLiquidity = ({
       });
       try {
         const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
-        const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
+        const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address, undefined, {
+          gasLimit: quote.estimate.mul(1.2).toBigNumber()
+        });
         toast.confirming(addLiquidityTxn);
         const receipt = await addLiquidityTxn.wait();
         toast.success(receipt);
         resetAmounts();
         checkMinAllowanceForAllTokens();
         refetchWellReserves();
-        txnCompleteCallback();
       } catch (error) {
         Log.module("AddLiquidity").error("Error adding liquidity: ", (error as Error).message);
         toast.error(error);
       }
     }
-  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback, refetchWellReserves]);
+  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, refetchWellReserves]);
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
@@ -266,7 +265,10 @@ export const AddLiquidity = ({
     [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
   );
 
-const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" : !hasEnoughBalance ? 'Insufficient Balance' : "Add Liquidity"), [atLeastOneAmountNonZero, hasEnoughBalance]);
+  const buttonLabel = useMemo(
+    () => (!atLeastOneAmountNonZero ? "Enter Amount(s)" : !hasEnoughBalance ? "Insufficient Balance" : "Add Liquidity"),
+    [atLeastOneAmountNonZero, hasEnoughBalance]
+  );
 
   return (
     <div>
@@ -301,7 +303,7 @@ const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" 
             />
           )}
           <MediumGapContainer>
-            {well.tokens!.length > 0 &&
+            {well.tokens!.length > 0 && hasEnoughBalance &&
               well.tokens!.map((token: Token, index: number) => {
                 if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false) {
                   return (
