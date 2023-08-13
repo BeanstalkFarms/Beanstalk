@@ -17,9 +17,9 @@ dataSources:
         - Bean
       abis:
         - name: Bean
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -39,9 +39,9 @@ dataSources:
         - Bean
       abis:
         - name: Bean
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -61,9 +61,9 @@ dataSources:
         - Bean3CRV
       abis:
         - name: Bean3CRV
-          file: ./abis/Bean3CRV.json
+          file: ../subgraph-core/abis/Bean3CRV.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -93,7 +93,7 @@ dataSources:
         - Beanstalk
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-Replanted.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
@@ -118,9 +118,9 @@ dataSources:
         - Transfer
       abis:
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         # - event: Burn(indexed address,uint256,uint256,indexed address)
         #   handler: handleBurn
@@ -146,11 +146,11 @@ dataSources:
         - Bean3CRV
       abis:
         - name: Bean3CRV
-          file: ./abis/Bean3CRV.json
+          file: ../subgraph-core/abis/Bean3CRV.json
         - name: CalculationsCurve
-          file: ./abis/CalculationsCurve.json
+          file: ../subgraph-core/abis/CalculationsCurve.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -180,11 +180,11 @@ dataSources:
         - Bean3CRV
       abis:
         - name: Bean3CRV
-          file: ./abis/Bean3CRV.json
+          file: ../subgraph-core/abis/Bean3CRV.json
         - name: CalculationsCurve
-          file: ./abis/CalculationsCurve.json
+          file: ../subgraph-core/abis/CalculationsCurve.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
