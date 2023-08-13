@@ -62,6 +62,8 @@ dataSources:
       abis:
         - name: Bean3CRV
           file: ../subgraph-core/abis/Bean3CRV.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:

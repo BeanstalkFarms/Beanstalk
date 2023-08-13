@@ -9,9 +9,10 @@ import {
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
@@ -71,7 +72,13 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOne): void {
   handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, event.params.coin_amount, ZERO_BI);
 }
 
-function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: BigInt, token0Amount: BigInt, token1Amount: BigInt): void {
+function handleLiquidityChange(
+  poolAddress: string,
+  timestamp: BigInt,
+  blockNumber: BigInt,
+  token0Amount: BigInt,
+  token1Amount: BigInt
+): void {
   // Get Curve Price Details
   let curvePrice = CurvePrice.bind(CURVE_PRICE);
   let curve = curvePrice.try_getCurve();
@@ -80,10 +87,21 @@ function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: Big
     return;
   }
 
+  let beanPrice = toDecimal(curve.value.price);
+
+  if (blockNumber > BigInt.fromString("17200000")) {
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let combinedPrice = beanstalkPrice.try_price();
+    if (!combinedPrice.reverted) {
+      beanPrice = toDecimal(combinedPrice.value.price);
+    }
+  }
+
   let bean = loadBean(BEAN_ERC20.toHexString());
+  let pool = loadOrCreatePool(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
-  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.liquidityUSD);
+  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(pool.liquidityUSD);
 
   let volumeUSD =
     deltaLiquidityUSD < ZERO_BD
@@ -96,17 +114,17 @@ function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: Big
     volumeBean = ZERO_BI;
   }
 
-  setPoolReserves(pool, curve.value.balances, blockNumber);
+  setPoolReserves(poolAddress, curve.value.balances, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
-  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, toDecimal(curve.value.price), ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
-  updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
-  updatePoolPrice(pool, timestamp, blockNumber, newPrice);
+  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 }
 
 function handleSwap(
-  pool: string,
+  poolAddress: string,
   sold_id: BigInt,
   tokens_sold: BigInt,
   bought_id: BigInt,
@@ -122,7 +140,18 @@ function handleSwap(
     return;
   }
 
+  let beanPrice = toDecimal(curve.value.price);
+
+  if (blockNumber > BigInt.fromString("17200000")) {
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let combinedPrice = beanstalkPrice.try_price();
+    if (!combinedPrice.reverted) {
+      beanPrice = toDecimal(combinedPrice.value.price);
+    }
+  }
+
   let bean = loadBean(BEAN_ERC20.toHexString());
+  let pool = loadOrCreatePool(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
   let volumeBean = ZERO_BI;
@@ -133,13 +162,13 @@ function handleSwap(
     volumeBean = tokens_bought;
   }
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
-  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.liquidityUSD);
+  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(pool.liquidityUSD);
 
-  setPoolReserves(pool, curve.value.balances, blockNumber);
+  setPoolReserves(poolAddress, curve.value.balances, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
-  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, toDecimal(curve.value.price), ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
-  updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
-  updatePoolPrice(pool, timestamp, blockNumber, newPrice);
+  updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
 }
