@@ -89,12 +89,11 @@ function handleLiquidityChange(
 
   let beanPrice = toDecimal(curve.value.price);
 
-  if (blockNumber > BigInt.fromString("17200000")) {
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let combinedPrice = beanstalkPrice.try_price();
-    if (!combinedPrice.reverted) {
-      beanPrice = toDecimal(combinedPrice.value.price);
-    }
+  // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
+  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+  let beanstalkQuery = beanstalkPrice.try_price();
+  if (!beanstalkQuery.reverted) {
+    beanPrice = toDecimal(beanstalkQuery.value.price);
   }
 
   let bean = loadBean(BEAN_ERC20.toHexString());
@@ -142,12 +141,11 @@ function handleSwap(
 
   let beanPrice = toDecimal(curve.value.price);
 
-  if (blockNumber > BigInt.fromString("17200000")) {
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let combinedPrice = beanstalkPrice.try_price();
-    if (!combinedPrice.reverted) {
-      beanPrice = toDecimal(combinedPrice.value.price);
-    }
+  // Attempt to pull from Beanstalk Price contract first for the overall Bean price update
+  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+  let beanstalkQuery = beanstalkPrice.try_price();
+  if (!beanstalkQuery.reverted) {
+    beanPrice = toDecimal(beanstalkQuery.value.price);
   }
 
   let bean = loadBean(BEAN_ERC20.toHexString());
