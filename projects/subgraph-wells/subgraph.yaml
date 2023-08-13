@@ -6,9 +6,9 @@ dataSources:
     name: Aquifer
     network: mainnet
     source:
-      address: "0x74ef2B06A1D2035C33244A4a263FF00B84504865"
+      address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
       abi: Aquifer
-      startBlock: 16650000
+      startBlock: 17859167
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -30,7 +30,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Beanstalk
-      startBlock: 16650000
+      startBlock: 17859167
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -74,6 +74,10 @@ templates:
           handler: handleRemoveLiquidityOneToken
         - event: Swap(address,address,uint256,uint256,address)
           handler: handleSwap
+        - event: Shift(uint256[],address,uint256,address)
+          handler: handleShift
+        - event: Sync(uint256[],uint256,address)
+          handler: handleSync
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: ./src/WellHandler.ts
