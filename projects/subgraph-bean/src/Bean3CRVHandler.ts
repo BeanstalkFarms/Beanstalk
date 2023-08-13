@@ -11,7 +11,7 @@ import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
 
 export function handleTokenExchange(event: TokenExchange): void {
@@ -97,10 +97,10 @@ function handleLiquidityChange(
   }
 
   let bean = loadBean(BEAN_ERC20.toHexString());
-  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
-  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(pool.liquidityUSD);
+  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(startingLiquidity);
 
   let volumeUSD =
     deltaLiquidityUSD < ZERO_BD
@@ -149,7 +149,7 @@ function handleSwap(
   }
 
   let bean = loadBean(BEAN_ERC20.toHexString());
-  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
   let volumeBean = ZERO_BI;
@@ -160,7 +160,7 @@ function handleSwap(
     volumeBean = tokens_bought;
   }
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
-  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(pool.liquidityUSD);
+  let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(startingLiquidity);
 
   setPoolReserves(poolAddress, curve.value.balances, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);

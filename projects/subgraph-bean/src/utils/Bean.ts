@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema";
+import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
 import { BEAN_3CRV, BEAN_ERC20_V1, BEAN_ERC20, BEAN_WETH_V1, BEAN_WETH_CP2_WELL } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -34,7 +34,7 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
     let bean = loadBean(token);
     snapshot = new BeanHourlySnapshot(id);
     snapshot.bean = bean.id;
-    snapshot.supply = ZERO_BI;
+    snapshot.supply = bean.supply;
     snapshot.marketCap = bean.marketCap;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
     snapshot.volume = bean.volume;
@@ -62,7 +62,7 @@ export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt):
     let bean = loadBean(token);
     snapshot = new BeanDailySnapshot(day);
     snapshot.bean = bean.id;
-    snapshot.supply = ZERO_BI;
+    snapshot.supply = bean.supply;
     snapshot.marketCap = bean.marketCap;
     snapshot.supplyInPegLP = bean.supplyInPegLP;
     snapshot.volume = bean.volume;
@@ -161,9 +161,9 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
 
     pegSupply = pegSupply.plus(pool.reserves[0]);
 
-    // Add in Well beans post deploy
-    if (blockNumber > BigInt.fromString("17200000")) {
-      let well = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), blockNumber);
+    // Check if the Well has been deployed
+    let well = Pool.load(BEAN_WETH_CP2_WELL.toHexString());
+    if (well != null) {
       pegSupply = pegSupply.plus(well.reserves[0]);
     }
 

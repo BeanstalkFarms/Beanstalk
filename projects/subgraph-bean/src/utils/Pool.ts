@@ -199,3 +199,8 @@ export function setPoolReserves(poolAddress: string, reserves: BigInt[], blockNu
   pool.reserves = reserves;
   pool.save();
 }
+
+export function getPoolLiquidityUSD(poolAddress: string, blockNumber: BigInt): BigDecimal {
+  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  return pool.liquidityUSD;
+}

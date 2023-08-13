@@ -4,7 +4,7 @@ import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-co
 import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
 import { updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
+import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   handleLiquidityChange(
@@ -86,10 +86,10 @@ function handleLiquidityChange(
     return;
   }
 
-  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(wellPrice.value.price);
-  let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(pool.liquidityUSD);
+  let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(startingLiquidity);
 
   let volumeUSD =
     deltaLiquidityUSD < ZERO_BD
@@ -136,13 +136,13 @@ function handleSwapEvent(
     return;
   }
 
-  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(wellPrice.value.price);
   let volumeBean = toToken == BEAN_ERC20 ? amountOut : amountIn;
 
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
-  let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(pool.liquidityUSD);
+  let deltaLiquidityUSD = toDecimal(wellPrice.value.liquidity).minus(startingLiquidity);
 
   setPoolReserves(poolAddress, wellPrice.value.balances, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
