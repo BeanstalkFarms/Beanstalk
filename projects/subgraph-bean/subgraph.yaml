@@ -96,6 +96,10 @@ dataSources:
       abis:
         - name: Beanstalk
           file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
