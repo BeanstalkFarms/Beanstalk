@@ -156,11 +156,20 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
     bean.supplyInPegLP = toDecimal(pool.reserves[1]).div(toDecimal(bean.supply));
     bean.save();
   } else {
+    let pegSupply = ZERO_BI;
     let pool = loadOrCreatePool(BEAN_3CRV.toHexString(), blockNumber);
+
+    pegSupply = pegSupply.plus(pool.reserves[0]);
+
+    // Add in Well beans post deploy
+    if (blockNumber > BigInt.fromString("17200000")) {
+      let well = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), blockNumber);
+      pegSupply = pegSupply.plus(well.reserves[0]);
+    }
 
     let bean = loadBean(BEAN_ERC20.toHexString());
 
-    bean.supplyInPegLP = toDecimal(pool.reserves[0]).div(toDecimal(bean.supply));
+    bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply));
     bean.save();
   }
 }

@@ -14,9 +14,11 @@ export const WETH = Address.fromString("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756C
 
 // Protocol Addresses
 export const BEANSTALK = Address.fromString("0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5");
-export const CURVE_PRICE = Address.fromString("0xA57289161FF18D67A68841922264B317170b0b81");
 export const FERTILIZER = Address.fromString("0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6");
 export const AQUIFER = Address.fromString("0xF6a8aD553b265405526030c2102fda2bDcdDC177");
+
+export const CURVE_PRICE = Address.fromString("0xA57289161FF18D67A68841922264B317170b0b81");
+export const BEANSTALK_PRICE = Address.fromString("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A");
 
 // LP Addresses
 export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");

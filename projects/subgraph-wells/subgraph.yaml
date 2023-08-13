@@ -66,8 +66,6 @@ templates:
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256,address)
           handler: handleAddLiquidity
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
         - event: RemoveLiquidity(uint256,uint256[],address)
           handler: handleRemoveLiquidity
         - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
@@ -78,6 +76,4 @@ templates:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
       file: ./src/WellHandler.ts
