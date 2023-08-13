@@ -6,7 +6,7 @@ import { Incentive } from "../generated/schema";
 import { updateHarvestablePlots } from "./FieldHandler";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity } from "../generated/schema";
-import { BEANSTALK, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK, BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import { expirePodListing, loadPodListing } from "./utils/PodListing";
@@ -16,6 +16,7 @@ import { loadSilo, loadSiloDailySnapshot, loadSiloHourlySnapshot } from "./utils
 import { addDepositToSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
 import { loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
+import { BeanstalkPrice } from "../generated/Season-Replanted/BeanstalkPrice";
 
 export function handleSunrise(event: Sunrise): void {
   let currentSeason = event.params.season.toI32();
@@ -167,9 +168,16 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
   oracle.createdAt = event.block.timestamp;
   oracle.save();
 
-  let curvePrice = CurvePrice.bind(CURVE_PRICE);
   let season = loadSeason(event.address, event.params.season);
-  season.price = toDecimal(curvePrice.getCurve().price, 6);
+  // Attempt to pull from Beanstalk Price contract first
+  let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+  let beanstalkQuery = beanstalkPrice.try_price();
+  if (beanstalkQuery.reverted) {
+    let curvePrice = CurvePrice.bind(CURVE_PRICE);
+    season.price = toDecimal(curvePrice.getCurve().price);
+  } else {
+    season.price = toDecimal(beanstalkQuery.value.price);
+  }
   season.deltaB = event.params.deltaB;
   season.save();
 }
