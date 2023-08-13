@@ -299,6 +299,8 @@ type SiloYield @entity {
   "Bean EMA for season"
   beansPerSeasonEMA: BigDecimal!
   "Bean APY for two seeds per BDV"
+  zeroSeedBeanAPY: BigDecimal!
+  "Bean APY for two seeds per BDV"
   twoSeedBeanAPY: BigDecimal!
   "Stalk APY for two seeds per BDV"
   twoSeedStalkAPY: BigDecimal!

@@ -66,6 +66,8 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     siloYield.fourSeedBeanAPY = fourSeedAPY[0];
     siloYield.fourSeedStalkAPY = fourSeedAPY[1];
   }
+  let zeroSeedAPY = calculateAPY(currentEMA, ZERO_BD, silo.stalk, silo.seeds);
+  siloYield.zeroSeedBeanAPY = zeroSeedAPY[0];
   siloYield.save();
 
   updateFertAPY(t, timestamp);

@@ -9,6 +9,7 @@ export function loadSiloYield(season: i32): SiloYield {
     siloYield.beta = ZERO_BD;
     siloYield.u = 0;
     siloYield.beansPerSeasonEMA = ZERO_BD;
+    siloYield.zeroSeedBeanAPY = ZERO_BD;
     siloYield.twoSeedBeanAPY = ZERO_BD;
     siloYield.twoSeedStalkAPY = ZERO_BD;
     siloYield.fourSeedBeanAPY = ZERO_BD;
