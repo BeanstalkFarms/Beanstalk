@@ -1,0 +1,195 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wellAddress",
+        "type": "address"
+      }
+    ],
+    "name": "getConstantProductWell",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "pool",
+            "type": "address"
+          },
+          {
+            "internalType": "address[2]",
+            "name": "tokens",
+            "type": "address[2]"
+          },
+          {
+            "internalType": "uint256[2]",
+            "name": "balances",
+            "type": "uint256[2]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "liquidity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpBdv",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct P.Pool",
+        "name": "pool",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCurve",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "pool",
+            "type": "address"
+          },
+          {
+            "internalType": "address[2]",
+            "name": "tokens",
+            "type": "address[2]"
+          },
+          {
+            "internalType": "uint256[2]",
+            "name": "balances",
+            "type": "uint256[2]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "liquidity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpBdv",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct P.Pool",
+        "name": "pool",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "price",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "liquidity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "deltaB",
+            "type": "int256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "pool",
+                "type": "address"
+              },
+              {
+                "internalType": "address[2]",
+                "name": "tokens",
+                "type": "address[2]"
+              },
+              {
+                "internalType": "uint256[2]",
+                "name": "balances",
+                "type": "uint256[2]"
+              },
+              {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "liquidity",
+                "type": "uint256"
+              },
+              {
+                "internalType": "int256",
+                "name": "deltaB",
+                "type": "int256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "lpUsd",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "lpBdv",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct P.Pool[]",
+            "name": "ps",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct BeanstalkPrice.Prices",
+        "name": "p",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

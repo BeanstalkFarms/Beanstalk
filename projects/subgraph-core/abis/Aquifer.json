@@ -21,6 +21,16 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "InvalidSalt",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WellNotInitialized",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -125,7 +135,36 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "immutableData",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      }
+    ],
+    "name": "predictWellAddress",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "well",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
         "type": "address"
       }
     ],
@@ -133,7 +172,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "implementation",
+        "name": "",
         "type": "address"
       }
     ],
