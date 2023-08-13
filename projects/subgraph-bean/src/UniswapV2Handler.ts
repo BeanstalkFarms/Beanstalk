@@ -1,8 +1,8 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
 import { updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "./utils/Constants";
-import { toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
+import { toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 

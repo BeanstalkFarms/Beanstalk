@@ -1,8 +1,8 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema";
-import { BEAN_3CRV, BEAN_ERC20_V1, BEAN_ERC20_V2, BEAN_WETH_V1 } from "./Constants";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { toDecimal, ZERO_BD, ZERO_BI } from "./Decimals";
+import { BEAN_3CRV, BEAN_ERC20_V1, BEAN_ERC20, BEAN_WETH_V1, BEAN_WETH_CP2_WELL } from "../../../subgraph-core/utils/Constants";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getV1Crosses } from "./Cross";
 import { loadOrCreatePool } from "./Pool";
 
@@ -17,9 +17,9 @@ export function loadBean(token: string): Bean {
     bean.volumeUSD = ZERO_BD;
     bean.liquidityUSD = ZERO_BD;
     bean.price = BigDecimal.fromString("1.072");
-    bean.crosses = token == BEAN_ERC20_V2.toHexString() ? getV1Crosses() : 0; // starting point for v2 is where v1 left off
+    bean.crosses = token == BEAN_ERC20.toHexString() ? getV1Crosses() : 0; // starting point for v2 is where v1 left off
     bean.lastCross = ZERO_BI;
-    bean.lastSeason = token == BEAN_ERC20_V2.toHexString() ? 6074 : 0;
+    bean.lastSeason = token == BEAN_ERC20.toHexString() ? 6074 : 0;
     bean.pools = [];
     bean.save();
   }
@@ -56,7 +56,7 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
 }
 
 export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt): BeanDailySnapshot {
-  let day = dayFromTimestamp(timestamp);
+  let day = dayFromTimestamp(timestamp).toString();
   let snapshot = BeanDailySnapshot.load(day);
   if (snapshot == null) {
     let bean = loadBean(token);
@@ -145,7 +145,7 @@ export function updateBeanSeason(token: string, timestamp: BigInt, season: i32):
 }
 
 export function getBeanTokenAddress(blockNumber: BigInt): string {
-  return blockNumber < BigInt.fromString("15278082") ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20_V2.toHexString();
+  return blockNumber < BigInt.fromString("15278082") ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20.toHexString();
 }
 
 export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
@@ -157,7 +157,8 @@ export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
     bean.save();
   } else {
     let pool = loadOrCreatePool(BEAN_3CRV.toHexString(), blockNumber);
-    let bean = loadBean(BEAN_ERC20_V2.toHexString());
+
+    let bean = loadBean(BEAN_ERC20.toHexString());
 
     bean.supplyInPegLP = toDecimal(pool.reserves[0]).div(toDecimal(bean.supply));
     bean.save();

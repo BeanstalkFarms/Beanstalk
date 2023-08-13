@@ -1,7 +1,7 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "./Decimals";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
+import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getBeanTokenAddress, loadBean } from "./Bean";
 import { checkCrossAndUpdate } from "./Cross";
 
@@ -33,7 +33,7 @@ export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool
 }
 
 export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, blockNumber: BigInt): PoolHourlySnapshot {
-  let hour = hourFromTimestamp(timestamp);
+  let hour = hourFromTimestamp(timestamp).toString();
   let id = pool + "-" + hour;
   let snapshot = PoolHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -62,7 +62,7 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
 }
 
 export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, blockNumber: BigInt): PoolDailySnapshot {
-  let day = dayFromTimestamp(timestamp);
+  let day = dayFromTimestamp(timestamp).toString();
 
   let id = pool + "-" + day;
   let snapshot = PoolDailySnapshot.load(id);

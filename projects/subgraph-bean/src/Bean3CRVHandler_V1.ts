@@ -8,8 +8,15 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_3CRV_V1, BEAN_ERC20_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD_3POOL } from "./utils/Constants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import {
+  BEAN_3CRV_V1,
+  BEAN_ERC20_V1,
+  BEAN_LUSD_V1,
+  CALCULATIONS_CURVE,
+  CRV3_POOL_V1,
+  LUSD_3POOL
+} from "../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { CalculationsCurve } from "../generated/Bean3CRV-V1/CalculationsCurve";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";

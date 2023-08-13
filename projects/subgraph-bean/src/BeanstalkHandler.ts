@@ -1,7 +1,5 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
 import { Sunrise } from "../generated/Beanstalk/Beanstalk";
 import { getBeanTokenAddress, loadBean, updateBeanSeason } from "./utils/Bean";
-import { BEAN_ERC20_V1, BEAN_ERC20_V2 } from "./utils/Constants";
 import { updatePoolSeason } from "./utils/Pool";
 
 export function handleSunrise(event: Sunrise): void {

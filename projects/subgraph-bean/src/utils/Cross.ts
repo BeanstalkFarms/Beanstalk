@@ -1,16 +1,16 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Cross } from "../../generated/schema";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "./Bean";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { ONE_BD, ZERO_BD, ZERO_BI } from "./Decimals";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
+import { ONE_BD, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { incrementPoolCross, loadOrCreatePool } from "./Pool";
-import { BEAN_ERC20_V1 } from "./Constants";
+import { BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
 
 export function loadOrCreateCross(id: i32, pool: string, timestamp: BigInt): Cross {
   let cross = Cross.load(id.toString());
   if (cross == null) {
-    let hour = hourFromTimestamp(timestamp);
-    let day = dayFromTimestamp(timestamp);
+    let hour = hourFromTimestamp(timestamp).toString();
+    let day = dayFromTimestamp(timestamp).toString();
     cross = new Cross(id.toString());
     cross.pool = pool;
     cross.price = ZERO_BD;

@@ -9,8 +9,8 @@ import {
 } from "../generated/Bean3CRV/Bean3CRV";
 import { CurvePrice } from "../generated/Bean3CRV/CurvePrice";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V2, CURVE_PRICE } from "./utils/Constants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import { BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleTokenExchange(event: TokenExchange): void {
@@ -80,7 +80,7 @@ function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: Big
     return;
   }
 
-  let bean = loadBean(BEAN_ERC20_V2.toHexString());
+  let bean = loadBean(BEAN_ERC20.toHexString());
 
   let newPrice = toDecimal(curve.value.price);
   let deltaLiquidityUSD = toDecimal(curve.value.liquidity).minus(bean.liquidityUSD);
@@ -99,7 +99,7 @@ function handleLiquidityChange(pool: string, timestamp: BigInt, blockNumber: Big
   setPoolReserves(pool, curve.value.balances, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
-  updateBeanValues(BEAN_ERC20_V2.toHexString(), timestamp, toDecimal(curve.value.price), ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, toDecimal(curve.value.price), ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
   updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(pool, timestamp, blockNumber, newPrice);
@@ -122,7 +122,7 @@ function handleSwap(
     return;
   }
 
-  let bean = loadBean(BEAN_ERC20_V2.toHexString());
+  let bean = loadBean(BEAN_ERC20.toHexString());
 
   let newPrice = toDecimal(curve.value.price);
   let volumeBean = ZERO_BI;
@@ -138,7 +138,7 @@ function handleSwap(
   setPoolReserves(pool, curve.value.balances, blockNumber);
   updateBeanSupplyPegPercent(blockNumber);
 
-  updateBeanValues(BEAN_ERC20_V2.toHexString(), timestamp, toDecimal(curve.value.price), ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
+  updateBeanValues(BEAN_ERC20.toHexString(), timestamp, toDecimal(curve.value.price), ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
   updatePoolValues(pool, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
   updatePoolPrice(pool, timestamp, blockNumber, newPrice);
