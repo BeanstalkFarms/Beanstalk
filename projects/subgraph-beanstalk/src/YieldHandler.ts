@@ -49,13 +49,14 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
   let silo = loadSilo(BEANSTALK);
 
   // Pull from historically calculated values prior to season 14280 rather than iterating
-  if (t <= 14280) {
+  if (t <= 15026) {
     for (let i = 0; i < HISTORIC_VAPY.length; i++) {
       if (t.toString() == HISTORIC_VAPY[i][0]) {
         siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][1]);
         siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[i][2]);
         siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][3]);
         siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[i][4]);
+        siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][5]);
       }
     }
   } else {
@@ -65,9 +66,9 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     let fourSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("4"), silo.stalk, silo.seeds);
     siloYield.fourSeedBeanAPY = fourSeedAPY[0];
     siloYield.fourSeedStalkAPY = fourSeedAPY[1];
+    let zeroSeedAPY = calculateAPY(currentEMA, ZERO_BD, silo.stalk, silo.seeds);
+    siloYield.zeroSeedBeanAPY = zeroSeedAPY[0];
   }
-  let zeroSeedAPY = calculateAPY(currentEMA, ZERO_BD, silo.stalk, silo.seeds);
-  siloYield.zeroSeedBeanAPY = zeroSeedAPY[0];
   siloYield.save();
 
   updateFertAPY(t, timestamp);
