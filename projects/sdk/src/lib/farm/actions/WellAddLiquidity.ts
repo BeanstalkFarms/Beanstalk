@@ -38,7 +38,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
     }
 
     let amounts: TokenValue[] = []
-    for (let i = 0; i < (well.tokens?.length || 2); i++) {
+    for (let i = 0; i < this._well.tokens.length; i++) {
       if (i === tokenIndex) {
         amounts[i] = this.tokenIn.fromBlockchain(_amountInStep);
       } else {
