@@ -5,7 +5,7 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./MetadataImage.sol";
+import {MetadataImage, LibStrings, LibBytes64, C} from "./MetadataImage.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
@@ -55,11 +55,28 @@ contract MetadataFacet is MetadataImage {
         ));
     }
 
+    /**
+     * @notice Returns the name of the ERC1155.
+     */
     function name() external pure returns (string memory){
         return "Beanstalk Silo Deposits";
     }
 
+    /**
+     * @notice Returns the symbol of the ERC1155.
+     */
     function symbol() external pure returns (string memory){
         return "DEPOSIT";
+    }
+
+    /**
+     * @notice Returns the owner of the ERC1155.
+     * @dev The owner is the Beanstalk Community Multisig.
+     * This uses a constant as changing owners would require a BIP to be passed.
+     * The owner cannot change the ERC1155 functionality, but NFT marketplaces
+     * may use this to give permission to update details on their website (e.g. OpenSea)
+     */
+    function owner() external pure returns (address){
+        return C.BEANSTALK_COMMUNITY_MULTISIG;
     }
 }

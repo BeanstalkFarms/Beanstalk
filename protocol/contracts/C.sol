@@ -75,6 +75,8 @@ library C {
     // Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
 
+    address internal constant BEANSTALK_COMMUNITY_MULTISIG = 0xa9bA2C40b263843C04d344727b954A545c81D043;
+
     //////////////////// Well ////////////////////
 
     uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
