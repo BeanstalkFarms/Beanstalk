@@ -13,7 +13,6 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 import useFarmerSiloVesting from '~/hooks/farmer/useFarmerSiloVesting';
-import { displayBN } from '~/util';
 
 export type RewardsBarProps = {
   beans: FarmerSiloRewards['beans'];
@@ -69,7 +68,8 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
             minted to the Silo, they are Vesting until they become Earned Beans 2 minutes later. 
             ${vesting.amount
                 ? vesting.amount.gt(0) && vesting.isVesting
-                  ? `You have ${displayBN(vesting.amount)} Vesting Beans.`
+                  // TODO: Needs 'Beans in Vesting Period' function
+                  ? ``// `You have ${displayBN(vesting.amount)} Vesting Beans.`
                   : ``
                 : vesting.isVesting
                   ? `It is currently the Vesting Period.`
