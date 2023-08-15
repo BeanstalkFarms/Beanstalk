@@ -103,7 +103,7 @@ export const LUSD_ADDRESSES = {
 
 export const BEAN_CRV3_ADDRESSES = {
   // --------------------------------------------------
-  // "Curve.fi Factory USD Metapool: Bean (BEAN3CRV-f)"
+  // "BEAN:3CRV Curve LP Token (BEAN3CRV-f)"
   // [Implements: ERC20 & Metapool]
   // --------------------------------------------------
   // coins[0] = 0xBEA0003eA948Db32082Fc6F4EC0729D258a0444c (BEAN)

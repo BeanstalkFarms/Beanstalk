@@ -124,7 +124,7 @@ export class Tokens {
       18,
       "BEAN3CRV",
       {
-        name: "Curve.fi Factory USD Metapool: Bean", // see .name()
+        name: "BEAN:3CRV Curve LP Token", // see .name()
         displayName: "BEAN:3CRV LP",
         isLP: true,
         color: "#DFB385"
@@ -142,7 +142,7 @@ export class Tokens {
       18,
       "BEANETH",
       {
-        name: "Basin Bean:ETH Well", // see .name()
+        name: "BEAN:WETH Well LP Token", // see .name()
         displayName: "BEAN:ETH LP",
         isLP: true,
         color: "#DFB385"
