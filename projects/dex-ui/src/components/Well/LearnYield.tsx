@@ -13,8 +13,14 @@ function YieldDetails() {
       <div>
         The BEAN:WETH Well has <strong>zero</strong> trading fees!
       </div>
-      <div>If <span><StyledLink href="https://app.bean.money/#/governance">BIP-37</StyledLink></span> passes, Beanstalk will issue Stalk and Seeds to users who Deposit LP tokens in the Silo.</div>
-      <div>Stalkholders receive Bean seigniorage. Check out the <span><StyledLink href="https://docs.bean.money/almanac/farm/silo">Beanstalk docs.</StyledLink></span></div>
+      <div>
+        If <span><StyledLink href="https://app.bean.money/#/governance">BIP-37</StyledLink></span> passes, Beanstalk will 
+        issue Stalk and Seeds to users who Deposit LP tokens in the Silo.
+      </div>
+      <div>
+        Stalkholders receive Bean seigniorage. Check out 
+        the <span><StyledLink href="https://docs.bean.money/almanac/farm/silo">Beanstalk docs.</StyledLink></span>
+      </div>
     </TextContainer>
   );
 }

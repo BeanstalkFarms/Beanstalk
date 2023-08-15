@@ -13,7 +13,10 @@ function WellFunctionDetails(functionName: any) {
   if (functionName.functionName === "Constant Product") {
     return (
       <TextContainer>
-        <div>A Well Function is a pricing function for determining how many tokens users receive for swaps, how many LP tokens a user receives for adding liquidity, etc.</div>
+        <div>
+          A Well Function is a pricing function for determining how many tokens users receive for swaps, how 
+          many LP tokens a user receives for adding liquidity, etc.
+        </div>
         <div>
           <FunctionNameStyled>Constant Product</FunctionNameStyled> is a reusable pricing function which prices tokens using:
         </div>
@@ -26,8 +29,14 @@ function WellFunctionDetails(functionName: any) {
   } else if (functionName.functionName === "Constant Product 2") {
     return (
       <TextContainer>
-        <div>A Well Function is a pricing function for determining how many tokens users receive for swaps, how many LP tokens a user receives for adding liquidity, etc.</div>
-        <div>The BEAN:WETH Well uses the Constant Product 2 Well Function, which is a gas-efficient pricing function for Wells with 2 tokens.</div>
+        <div>
+          A Well Function is a pricing function for determining how many tokens users receive for swaps, how 
+          many LP tokens a user receives for adding liquidity, etc.
+        </div>
+        <div>
+          The BEAN:WETH Well uses the Constant Product 2 Well Function, which is a gas-efficient pricing function 
+          for Wells with 2 tokens.
+        </div>
       </TextContainer>
     );
   } else {
