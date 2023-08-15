@@ -70,7 +70,7 @@ export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | 
   );
 };
 
-const Action = styled.div`
+const Action = styled.a`
   color: #4b5563;
   font-weight: 600;
   text-decoration: underline;
