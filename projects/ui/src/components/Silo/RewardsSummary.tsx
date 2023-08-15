@@ -64,13 +64,18 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
           title="Earned Beans"
-          tooltip={`The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.${
-            vesting.amount.gt(0)
-              ? ` ${displayBN(
-                  vesting.amount
-                )} Earned Beans are currently Vesting.`
-              : ``
-          }`}
+          tooltip={
+            `The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. When Beans are 
+            minted to the Silo, they are Vesting until they become Earned Beans 2 minutes later. 
+            ${vesting.amount
+                ? vesting.amount.gt(0) 
+                  ? `You have ${displayBN(vesting.amount)} Vesting Beans.`
+                  : ``
+                : vesting.isVesting
+                  ? `It is currently the Vesting Period.`
+                  : ``
+            }
+          `}
           amount={beans.earned}
           icon={beanIcon}
           compact={compact}
