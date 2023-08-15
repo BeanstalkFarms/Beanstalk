@@ -165,7 +165,7 @@ export const Well = () => {
           </Item>
           <Item stretch>
             <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-              Other Details
+              Contract Addresses
             </TabButton>
           </Item>
         </ActivityOtherButtons>

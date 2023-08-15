@@ -10,29 +10,28 @@ type Props = {
 };
 
 export const OtherSection: FC<Props> = ({ well }) => {
+
+  const tableItems = [
+    {name: "Multi Flow Pump", address: "0xBA510f10E3095B83a0F33aa9ad2544E22570a87C"},
+    {name: "Constant Product 2", address: "0xBA510C20FD2c52E4cb0d23CFC3cCD092F9165a6E"},
+    {name: "Well Implementation", address: "0xBA510e11eEb387fad877812108a3406CA3f43a4B"},
+    {name: "Aquifer", address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"}
+  ];
+
   return (
     <div>
       <Table width="100%">
         <THead>
           <Row>
-            <Th>Detail</Th>
-            <DesktopTh>Value</DesktopTh>
-            <MobileTh align={"right"}>Value</MobileTh>
+            <Th>Name</Th>
+            <DesktopTh>Address</DesktopTh>
+            <MobileTh align={"right"}>Address</MobileTh>
           </Row>
         </THead>
         <TBody>
-          {/*<Row>
-            <Td>Pump</Td>
-            <Td>
-              <span role="img" aria-label="glass globe emoji">
-                🔮
-              </span>{" "}
-              GeoEMAandCumSMAPump
-            </Td>
-            </Row>*/}
           <Row>
             <Td>
-              <Detail>Well Address</Detail>
+              <Detail>BEAN:WETH Well</Detail>
             </Td>
             <DesktopTd>
               <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
@@ -48,11 +47,11 @@ export const OtherSection: FC<Props> = ({ well }) => {
               <Detail>Well LP Token - {well.lpToken?.symbol}</Detail>
             </Td>
             <DesktopTd>
-              <Link href={`https://etherscan.io/address/${well.lpToken?.address}`}>{well.lpToken?.address}</Link>
+              <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
-              <Link href={`https://etherscan.io/address/${well.lpToken?.address}`}>
-                {well.lpToken?.address.substr(0, 5) + "..." + well.lpToken?.address.substr(well.lpToken?.address.length - 5)}
+              <Link href={`https://etherscan.io/address/${well.address}`}>
+                {well.address.substr(0, 5) + "..." + well.address.substr(well.address.length - 5)}
               </Link>
             </MobileTd>
           </Row>
@@ -70,6 +69,23 @@ export const OtherSection: FC<Props> = ({ well }) => {
                 <MobileTd align={"right"}>
                   <Link href={token ? `https://etherscan.io/address/${token.address}` : `https://etherscan.io/`} target="_blank" rel="noopener noreferrer">
                     {token.address.substr(0, 5) + "..." + token.address.substr(token.address.length - 5) || `-`}
+                  </Link>
+                </MobileTd>
+              </Row>
+            );
+          })}
+          {tableItems.map(function (tableItem, index) {
+            return (
+              <Row key={`${tableItem.address}-${index}}`}>
+                <Td>
+                  <Detail>{tableItem.name}</Detail>
+                </Td>
+                <DesktopTd>
+                  <Link href={`https://etherscan.io/address/${tableItem.address}`}>{tableItem.address}</Link>
+                </DesktopTd>
+                <MobileTd align={"right"}>
+                  <Link href={`https://etherscan.io/address/${tableItem.address}`}>
+                    {tableItem.address.substr(0, 5) + "..." + tableItem.address.substr(tableItem.address.length - 5)}
                   </Link>
                 </MobileTd>
               </Row>
