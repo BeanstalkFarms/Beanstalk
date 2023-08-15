@@ -55,7 +55,7 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
   return (
     <Row key={event.tx}>
       <Td>
-        <Action>{action}</Action>
+        <Action href={`https://etherscan.io/tx/${event.tx}`} target="_blank" rel="noopener noreferrer">{action}</Action>
       </Td>
       <DesktopOnlyTd align={"right"}>{valueUSD}</DesktopOnlyTd>
       <DesktopOnlyTd align={"right"}>{description}</DesktopOnlyTd>
@@ -64,7 +64,7 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
   );
 };
 
-const Action = styled.div`
+const Action = styled.a`
   color: #4b5563;
   font-weight: 600;
   text-decoration: underline;
