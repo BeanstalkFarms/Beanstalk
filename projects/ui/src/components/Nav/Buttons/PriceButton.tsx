@@ -17,6 +17,7 @@ import FolderMenu from '../FolderMenu';
 // ------------------------------------------------------------
 
 import { FC } from '~/types';
+import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   // Data
@@ -26,9 +27,10 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
     (state) => state._bean.pools
   );
-  // const beanTokenData = useSelector<AppState, AppState['_bean']['token']>(
-  //  (state) => state._bean.token
-  // );
+  const beanTokenData = useSelector<AppState, AppState['_bean']['token']>(
+    (state) => state._bean.token
+  );
+  const tokenPrices = useDataFeedTokenPrices();
   const [_refetchPools] = useFetchPools();
   const refetchPools = useMemo(
     () => throttle(_refetchPools, 10_000),
@@ -63,9 +65,19 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       />
     ))}
     <div>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div>Combined deltaB:</div>
-        <div>{combinedDeltaB.gte(0) && '+'}{displayBN(combinedDeltaB, true)}</div>
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>Cumulative Instantaneous deltaB:</div>
+          <div>{combinedDeltaB.gte(0) && '+'}{displayBN(combinedDeltaB, true)}</div>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>Cumulative Time-Weighted deltaB:</div>
+          <div>{beanTokenData.deltaB.gte(0) && '+'}{displayBN(beanTokenData.deltaB, true)}</div>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>ETH Price:</div>
+          <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
+        </Box>
       </Box>
     </div>
   </>
