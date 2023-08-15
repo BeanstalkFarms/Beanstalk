@@ -554,9 +554,14 @@ const ConvertPropProvider: FC<{
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
 
+        const lpConversion = 
+          tokenOut.equals(sdk.tokens.BEAN_ETH_WELL_LP) 
+          || tokenIn.address.toLowerCase() === sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase();
+
         const convertTxn = new ConvertFarmStep(
           sdk,
           tokenIn,
+          tokenOut,
           season.toNumber(),
           farmerBalances.deposits
         );
@@ -573,7 +578,8 @@ const ConvertPropProvider: FC<{
         const { execute } = await txnBundler.bundle(
           convertTxn,
           amountIn,
-          slippage
+          slippage,
+          lpConversion ? 1.2 : undefined
         );
 
         const txn = await execute();
