@@ -68,7 +68,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
             `The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. When Beans are 
             minted to the Silo, they are Vesting until they become Earned Beans 2 minutes later. 
             ${vesting.amount
-                ? vesting.amount.gt(0) 
+                ? vesting.amount.gt(0) && vesting.isVesting
                   ? `You have ${displayBN(vesting.amount)} Vesting Beans.`
                   : ``
                 : vesting.isVesting
