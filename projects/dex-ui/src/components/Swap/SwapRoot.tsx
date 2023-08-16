@@ -76,8 +76,8 @@ export const SwapRoot = () => {
   }, [inToken, outToken, builder, account]);
 
   useEffect(() => {
-    readyToSwap && hasEnoughBalance && !!account ? setButtonEnabled(true) : setButtonEnabled(false);
-  }, [readyToSwap, account, hasEnoughBalance]);
+    readyToSwap && hasEnoughBalance && !!account && inAmount?.gt(TokenValue.ZERO) && outAmount?.gt(TokenValue.ZERO) ? setButtonEnabled(true) : setButtonEnabled(false);
+  }, [readyToSwap, account, inAmount, outAmount, hasEnoughBalance]);
 
   const arrowHandler = () => {
     const prevInToken = inToken;
