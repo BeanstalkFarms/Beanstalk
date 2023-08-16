@@ -201,6 +201,13 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       label: "exchange"
     });
 
+    graph.setEdge("USDT", "WETH", {
+      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2weth(from, to),
+      from: "USDT",
+      to: "WETH",
+      label: "exchange"
+    });
+
     graph.setEdge("ETH", "WETH", {
       build: (_: string, _2: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.WrapEth(to),
       from: "ETH",
