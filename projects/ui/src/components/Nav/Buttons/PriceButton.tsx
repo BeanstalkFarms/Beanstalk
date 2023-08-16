@@ -9,7 +9,7 @@ import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import { displayBeanPrice, displayBN } from '~/util/Tokens';
-import { CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
+import { BASIN_WELL_LINK, CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
 import FolderMenu from '../FolderMenu';
@@ -58,7 +58,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         pool={pool}
         poolState={beanPools[pool.address]}
         ButtonProps={{
-          href: index === 0 ? CURVE_LINK : `https://basin.exchange/#/wells/${pool.address}`,
+          href: index === 0 ? CURVE_LINK : `${BASIN_WELL_LINK}${pool.address}`,
           target: '_blank',
           rel: 'noreferrer',
         }}
