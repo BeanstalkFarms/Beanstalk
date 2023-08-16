@@ -201,6 +201,18 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       label: "exchange"
     });
 
+    graph.setEdge("ETH", "WETH", {
+      build: (_: string, _2: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.WrapEth(to),
+      from: "ETH",
+      to: "WETH",
+      label: "wrapEth"
+    });
+  }
+
+  /**
+   * [ USDT, USDC, DAI ] => WETH
+   */
+  {
     graph.setEdge("USDT", "WETH", {
       build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2weth(from, to),
       from: "USDT",
@@ -208,11 +220,18 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       label: "exchange"
     });
 
-    graph.setEdge("ETH", "WETH", {
-      build: (_: string, _2: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.WrapEth(to),
-      from: "ETH",
+    graph.setEdge("USDC", "WETH", {
+      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdc2weth(from, to),
+      from: "USDC",
       to: "WETH",
-      label: "wrapEth"
+      label: "exchange"
+    });
+
+    graph.setEdge("DAI", "WETH", {
+      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.dai2weth(from, to),
+      from: "DAI",
+      to: "WETH",
+      label: "exchange"
     });
   }
 

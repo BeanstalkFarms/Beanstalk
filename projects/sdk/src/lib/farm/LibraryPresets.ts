@@ -31,6 +31,12 @@ export class LibraryPresets {
   public readonly dai2bean: ActionBuilder;
   public readonly bean2dai: ActionBuilder;
 
+  public readonly dai2usdt: ActionBuilder;
+  public readonly usdc2usdt: ActionBuilder;
+
+  public readonly dai2weth: ActionBuilder;
+  public readonly usdc2weth: ActionBuilder;
+
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
    * @param _permit provide a permit directly, or provide a function to extract it from `context`.
@@ -163,6 +169,40 @@ export class LibraryPresets {
 
     this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    ];
+
+    ///////// DAI -> USDT ///////////
+    this.dai2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.DAI,
+        sdk.tokens.USDT,
+        fromMode,
+        toMode
+      );
+
+    ///////// USDC -> USDT ///////////
+    this.usdc2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.USDC,
+        sdk.tokens.USDT,
+        fromMode,
+        toMode
+      );
+    
+    ///////// DAI -> WETH ///////////
+    this.dai2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.dai2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    ];
+
+    ///////// USDC -> WETH ///////////
+    this.usdc2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.usdc2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
 
