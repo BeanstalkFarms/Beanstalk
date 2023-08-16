@@ -342,6 +342,7 @@ const DepositPropProvider: FC<{
     return [
       tokens.BEAN,
       tokens.ETH,
+      tokens.WETH,
       whitelistedToken,
       tokens.CRV3,
       tokens.DAI,
