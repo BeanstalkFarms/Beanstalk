@@ -50,6 +50,8 @@ export const AddLiquidity = ({
   const sdk = useSdk();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     const run = async () => {
       if (!well?.tokens) return;
@@ -170,6 +172,8 @@ export const AddLiquidity = ({
       Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
       return null;
     }
+  },{
+    enabled: !isSubmitting
   });
 
   const addLiquidityButtonClickHandler = useCallback(async () => {
@@ -180,6 +184,7 @@ export const AddLiquidity = ({
         success: "Liquidity added"
       });
       try {
+        setIsSubmitting(true);
         const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
         const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address, undefined, {
           gasLimit: quote.estimate.mul(1.2).toBigNumber()
@@ -190,9 +195,11 @@ export const AddLiquidity = ({
         resetAmounts();
         checkMinAllowanceForAllTokens();
         refetchWellReserves();
+        setIsSubmitting(false);
       } catch (error) {
         Log.module("AddLiquidity").error("Error adding liquidity: ", (error as Error).message);
         toast.error(error);
+        setIsSubmitting(false);
       }
     }
   }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, refetchWellReserves]);
