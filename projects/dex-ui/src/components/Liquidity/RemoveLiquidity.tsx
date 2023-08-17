@@ -189,7 +189,6 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
     if (currentMode && _newMode) {
       setRemoveLiquidityMode(newMode);
     } else {
-      setLpTokenAmount(TokenValue.ZERO);
       setRemoveLiquidityMode(newMode);
     }
   };
