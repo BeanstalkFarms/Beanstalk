@@ -23,7 +23,7 @@ export class WellAddLiquidity extends StepClass<AdvancedPipePreparedResult> {
 
     const tokenIndex = this._well.tokens.findIndex((token) => token.address.toLowerCase() === this.tokenIn.address.toLowerCase());
 
-    if (!tokenIndex || tokenIndex === -1) {
+    if (tokenIndex === -1) {
       throw new Error("Could not find token in well");
     }
 

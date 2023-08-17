@@ -1,5 +1,5 @@
 import { Graph } from "graphlib";
-import { Token } from "src/classes/Token";
+import { ERC20Token, Token } from "src/classes/Token";
 import { CurveMetaPool } from "src/classes/Pool/CurveMetaPool";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
@@ -131,19 +131,50 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
   /**
    * Setup edges to addLiquidity to BEAN:ETH Well.
    *
-   * [ BEAN, WETH ] => BEAN_ETH_LP
+   * Custom routes to avoid swaps to-from Bean
+   * 
+   * BEAN / ETH / USDC / USDT / DAI => BEAN_ETH_LP
    */
   {
-    const from = sdk.tokens.WETH;
     const targetToken = sdk.tokens.BEAN_ETH_WELL_LP;
     const well = sdk.pools.BEAN_ETH_WELL;
+
     if (!well) throw new Error(`Pool not found for LP token: ${targetToken.symbol}`);
+
+    // BEAN / ETH => BEAN_ETH_LP
+    [sdk.tokens.BEAN, sdk.tokens.WETH].forEach((from: ERC20Token) => {
       graph.setEdge(from.symbol, targetToken.symbol, {
         build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
           sdk.farm.presets.wellAddLiquidity(well, from, account, fromMode, toMode),
         from: from.symbol,
         to: targetToken.symbol,
       });
+    });
+
+    // USDC => BEAN_ETH_LP
+    graph.setEdge(sdk.tokens.USDC.symbol, targetToken.symbol, {
+      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        sdk.farm.presets.usdc2beaneth(well, account, fromMode, toMode),
+      from: sdk.tokens.USDC.symbol,
+      to: targetToken.symbol,
+    });
+
+    // USDT => BEAN_ETH_LP
+    graph.setEdge(sdk.tokens.USDT.symbol, targetToken.symbol, {
+      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        sdk.farm.presets.usdt2beaneth(well, account, fromMode, toMode),
+      from: sdk.tokens.USDT.symbol,
+      to: targetToken.symbol,
+    });
+
+    // DAI => BEAN_ETH_LP
+    graph.setEdge(sdk.tokens.DAI.symbol, targetToken.symbol, {
+      build: (account: string, fromMode: FarmFromMode, toMode: FarmToMode) =>
+        sdk.farm.presets.dai2beaneth(well, account, fromMode, toMode),
+      from: sdk.tokens.DAI.symbol,
+      to: targetToken.symbol,
+    });
+
   }
 
   /**

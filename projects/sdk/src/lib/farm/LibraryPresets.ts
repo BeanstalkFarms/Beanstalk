@@ -37,6 +37,10 @@ export class LibraryPresets {
   public readonly dai2weth: ActionBuilder;
   public readonly usdc2weth: ActionBuilder;
 
+  public readonly usdc2beaneth;
+  public readonly usdt2beaneth;
+  public readonly dai2beaneth;
+
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
    * @param _permit provide a permit directly, or provide a function to extract it from `context`.
@@ -204,6 +208,23 @@ export class LibraryPresets {
     this.usdc2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.usdc2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    ];
+
+
+    ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
+    this.usdc2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.usdc2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
+    ];
+
+    this.usdt2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.usdt2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
+    ];
+
+    this.dai2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.dai2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
     ];
 
     this.wellWethBean = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
