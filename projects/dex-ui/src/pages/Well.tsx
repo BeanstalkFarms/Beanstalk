@@ -170,7 +170,7 @@ export const Well = () => {
           </Item>
         </ActivityOtherButtons>
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
+          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} />}
           {tab === 1 && <OtherSection well={well!} />}
         </BottomContainer>
         <ColumnBreak />

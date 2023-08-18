@@ -8,7 +8,8 @@ import { Well } from "@beanstalk/sdk/Wells";
 export enum EVENT_TYPE {
   SWAP,
   ADD_LIQUIDITY,
-  REMOVE_LIQUIDITY
+  REMOVE_LIQUIDITY,
+  SYNC
 }
 
 export type BaseEvent = {
