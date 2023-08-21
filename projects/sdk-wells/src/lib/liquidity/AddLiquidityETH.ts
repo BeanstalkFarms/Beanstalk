@@ -72,7 +72,7 @@ export class AddLiquidityETH {
 
   async doGasEstimate(well: Well, amounts: TokenValue[], quote: TokenValue, account?: string, overrides: TxOverrides = {}): Promise<TokenValue> {
     const { steps, ethAmount } = this.generateSteps(well, amounts, quote, account || this.ZERO_ADDRESS);
-    const overrideOptions = { ...overrides, value: ethAmount.toBigNumber(), gasLimit: 5000000 };
+    const overrideOptions = { ...overrides, value: ethAmount.toBigNumber() };
     const gas = await this.depot.estimateGas.farm(steps, overrideOptions);
     return TokenValue.fromBlockchain(gas, 0);
   };
