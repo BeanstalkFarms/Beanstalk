@@ -16,3 +16,6 @@ export type { QuoteResult } from "./lib/swap/Quote";
 
 export type { WETH9 } from "src/constants/generated";
 export { WETH9__factory } from "src/constants/generated";
+
+// Add Liquidity
+export { AddLiquidityETH } from "./lib/liquidity/AddLiquidityETH";
