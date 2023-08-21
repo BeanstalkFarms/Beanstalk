@@ -79,7 +79,7 @@ export class AddLiquidityETH {
 
   async addLiquidity(well: Well, amounts: TokenValue[], quote: TokenValue, account: string, gasEstimate: TokenValue, overrides: TxOverrides = {}): Promise<ContractTransaction> {
     const { steps, ethAmount } = this.generateSteps(well, amounts, quote, account);
-    const overrideOptions = { ...overrides, value: ethAmount.toBigNumber(), gasLimit: gasEstimate.toBlockchain() };
+    const overrideOptions = { ...overrides, value: ethAmount.toBigNumber(), gasLimit: gasEstimate.toBlockchain() || 500000 };
     return this.depot.farm(steps, overrideOptions);
   };
 };

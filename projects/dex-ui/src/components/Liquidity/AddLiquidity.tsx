@@ -193,6 +193,7 @@ export const AddLiquidity = ({
     try {
       let quote;
       let estimate;
+      let gas;
       quote = await well.addLiquidityQuote(inputs);
       if (allTokensHaveMinAllowance && tokenAllowance.length) {
         if (useNativeETH) {
@@ -205,8 +206,10 @@ export const AddLiquidity = ({
         estimate = TokenValue.ZERO;
       }
       setShowQuoteDetails(true);
+      gas = estimate;
       return {
         quote,
+        gas,
         estimate
       };
     } catch (error: any) {
