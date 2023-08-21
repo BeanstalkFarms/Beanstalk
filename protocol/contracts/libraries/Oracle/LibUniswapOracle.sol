@@ -19,7 +19,7 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 library LibUniswapOracle {
 
     // The lookback in seconds for which to calculate the SMA in a Uniswap V3 pool.
-    // TODO: Finalize. Currently set to 15 minutes
+    // Set to 15 minutes
     uint32 constant PERIOD = 900;
 
     uint128 constant ONE_WETH = 1e18;
