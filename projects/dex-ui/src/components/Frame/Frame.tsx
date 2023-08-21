@@ -93,12 +93,12 @@ export const Frame: FC<{}> = ({ children }) => {
                 <Github width={20} />
               </Box>
             </MobileLargeNavRow>
-            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavRow href="https://immunefi.com/bounty/beanstalk/" rel="noopener noreferrer" target="_blank" onClick={() => setMobileMenuOpen(false)}>
               Bug Bounty Program
-            </MobileNavLink>
-            <MobileNavLink to="/build" onClick={() => setMobileMenuOpen(false)}>
+            </MobileNavRow>
+            <MobileNavRow href="https://docs.basin.exchange/" rel="noopener noreferrer" target="_blank" onClick={() => setMobileMenuOpen(false)}>
               Documentation
-            </MobileNavLink>
+            </MobileNavRow>
           </MobileNavLinkContainer>
           <MobileConnectContainer>
             <BasinConnectButton />
@@ -309,6 +309,17 @@ const MobileNavLinkContainer = styled.div`
 `;
 
 const MobileNavLink = styled(Link)<{ $bold?: boolean }>`
+  width: 100%;
+  border-bottom: 0.5px solid black;
+  padding: 16px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: black;
+  font-weight: ${(props) => (props.$bold ? `600` : `normal`)};
+  ${(props) => props.$bold && `letter-spacing: 0.96px;`}
+`;
+
+const MobileNavRow = styled.a<{ $bold?: boolean }>`
   width: 100%;
   border-bottom: 0.5px solid black;
   padding: 16px;

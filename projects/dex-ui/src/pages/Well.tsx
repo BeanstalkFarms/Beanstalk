@@ -165,12 +165,12 @@ export const Well = () => {
           </Item>
           <Item stretch>
             <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-              Other Details
+              Contract Addresses
             </TabButton>
           </Item>
         </ActivityOtherButtons>
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
+          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} />}
           {tab === 1 && <OtherSection well={well!} />}
         </BottomContainer>
         <ColumnBreak />

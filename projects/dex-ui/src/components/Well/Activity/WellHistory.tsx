@@ -8,13 +8,15 @@ import { Row, TBody, THead, Table, Td, Th } from "src/components/Well/Table";
 import { TokenValue } from "@beanstalk/sdk";
 import { TabButton } from "src/components/TabButton";
 import { size } from "src/breakpoints";
+import { useTokenSupply } from "src/tokens/useTokenSupply";
 
 type WellHistoryProps = {
   well: Well;
   tokenPrices: (TokenValue | null)[];
+  reservesUSD: TokenValue;
 };
 
-export const WellHistory = ({ well, tokenPrices }: WellHistoryProps) => {
+export const WellHistory = ({ well, tokenPrices, reservesUSD }: WellHistoryProps) => {
   const { data: events, isLoading: loading } = useWellHistory(well);
   const [filter, setFilter] = useState<EVENT_TYPE | null>(null);
   const eventsPerPage = 10;
@@ -23,10 +25,13 @@ export const WellHistory = ({ well, tokenPrices }: WellHistoryProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const newestEventOnPage = (eventsPerPage * currentPage) - eventsPerPage;
   const oldestEventOnPage = (eventsPerPage * currentPage) - 1;
+  
+  const lpTokenSupply = useTokenSupply(well.lpToken!);
+  const lpTokenPrice = lpTokenSupply.totalSupply ? reservesUSD.div(lpTokenSupply.totalSupply) : TokenValue.ZERO;
 
   const eventRows: JSX.Element[] = (events || [])
     .filter((e: WellEvent) => filter === null || e.type == filter)
-    .map<ReactElement>((e, index): any => (index >= newestEventOnPage && index <= oldestEventOnPage) && renderEvent(e, well, tokenPrices));
+    .map<ReactElement>((e, index): any => (index >= newestEventOnPage && index <= oldestEventOnPage) && renderEvent(e, well, tokenPrices, lpTokenPrice));
 
   return (
     <WellHistoryContainer>
