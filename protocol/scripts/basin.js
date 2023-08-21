@@ -6,10 +6,11 @@ const { bipBasinIntegration } = require("./bips");
 const { deployContract } = require("./contracts");
 const { deployPriceContract } = require("./price");
 
-const MULTI_FLOW_PUMP_MAX_PERCENT_INCREASE = '0x3ffb9999999999999999999999999999'; // TODO: Set
-const MULTI_FLOW_PUMP_MAX_PERCENT_DECREASE = '0x3ffb745d1745cfdaf20b87765b895188'; // TODO: Set
-const MULTI_FLOW_PUMP_CAP_INTERVAL = 12;
-const MULTI_FLOW_PUMP_ALPHA = '0x3ffecccccccccccccccccccccccccccc'; // TODO: Set
+
+const MULTI_FLOW_PUMP_MAX_PERCENT_INCREASE = '0x3ff50624dd2f1a9fbe76c8b439581062'; // 0.001
+const MULTI_FLOW_PUMP_MAX_PERCENT_DECREASE = '0x3ff505e1d27a3ee9bffd7f3dd1a32671'; // 1 - 1 / (1 + .001)
+const MULTI_FLOW_PUMP_CAP_INTERVAL = 12; // 12 seconds
+const MULTI_FLOW_PUMP_ALPHA = '0x3ffeef368eb04325c526c2246eec3e55'; // 0.967213114754098360 = 1 - 2 / (1 + blocks) where blocks = 60
 
 const AQUIFER_DEPLOYER = '0xc5890Cc9Db6CEb7c5039337582b3b921863C5CD1'; // TODO: Set
 const AQUIFER_DEPLOY_NONCE = 9; // TODO: Set
