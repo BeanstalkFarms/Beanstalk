@@ -1,0 +1,33 @@
+{
+  "name": "subgraph-basin",
+  "license": "MIT",
+  "description": "A subgraph for indexing events emitted by Basin.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BeanstalkFarms/Beanstalk.git",
+    "directory": "projects/subgraph-basin"
+  },
+  "scripts": {
+    "codegen": "rm -rf ./generated && graph codegen",
+    "build": "yarn codegen && graph build",
+    "test": "graph test",
+    "deploy": "yarn codegen && graph deploy --node https://api.studio.thegraph.com/deploy/ basin",
+    "create-local": "graph create --node http://127.0.0.1:8020/ basin",
+    "deploy-local": "yarn codegen && graph deploy --node http://127.0.0.1:8020/ --ipfs http://127.0.0.1:5001 basin",
+    "create-hosted": "graph create --node http://graph.node.bean.money:8020/ basin",
+    "remove-hosted": "graph remove --node http://graph.node.bean.money:8020/ basin",
+    "deploy-hosted": "yarn codegen && graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 basin",
+    "create-hosted-staging": "graph create --node http://graph.node.bean.money:8020/ basin-staging",
+    "remove-hosted-staging": "graph remove --node http://graph.node.bean.money:8020/ basin-staging",
+    "deploy-hosted-staging": "yarn codegen && graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 basin-staging",
+    "create-hosted-dev": "graph create --node http://graph.node.bean.money:8020/ basin-dev",
+    "remove-hosted-dev": "graph remove --node http://graph.node.bean.money:8020/ basin-dev",
+    "deploy-hosted-dev": "yarn codegen && graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 basin-dev"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.30.4",
+    "@graphprotocol/graph-ts": "^0.27.0",
+    "matchstick-as": "^0.5.0"
+  },
+  "private": true
+}
