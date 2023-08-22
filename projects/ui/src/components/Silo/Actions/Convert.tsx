@@ -288,7 +288,7 @@ const ConvertForm: FC<
         ) : null}
 
         {/* Warning Alert */}
-        {!canConvert && tokenOut && maxAmountIn ? (
+        {!canConvert && tokenOut && maxAmountIn && depositedAmount.gt(0) ? (
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
               {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when
