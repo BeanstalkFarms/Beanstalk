@@ -292,7 +292,7 @@ const ConvertForm: FC<
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
               {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when
-              deltaB in the pool is{' '}
+              deltaB in the {tokenIn.isLP ? tokenIn.symbol : tokenOut.symbol} pool is{' '}
               {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? 'lower' : 'greater'} than 0.
               <br />
             </WarningAlert>
