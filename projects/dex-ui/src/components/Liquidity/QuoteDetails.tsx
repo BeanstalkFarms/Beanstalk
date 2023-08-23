@@ -164,7 +164,7 @@ const QuoteDetails = ({
             setTokenUSDValue(totalReservesUSDValue);
             return;
           }
-          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply);
+          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply.add(quote?.quote as TokenValue));
           const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
         }
