@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
       abi: Aquifer
-      startBlock: 17960000
+      startBlock: 17977922
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -30,7 +30,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Beanstalk
-      startBlock: 17960000
+      startBlock: 17977922
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -61,6 +61,8 @@ templates:
           file: ../subgraph-core/abis/Well.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
