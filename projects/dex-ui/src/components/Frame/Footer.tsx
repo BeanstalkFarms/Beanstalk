@@ -50,6 +50,9 @@ const Box = styled.a`
   text-decoration: none;
   color: black;
   gap: 16px;
+  :hover {
+    background-color: #f0fdf4;
+  }
   :first-child {
     border-left: none;
   }
@@ -60,6 +63,9 @@ const SmallBox = styled.a`
   width: 64px;
   border-left: 1px solid black;
   justify-content: center;
+  :hover {
+    background-color: #f0fdf4;
+  }
 `;
 
 const StyledLink = styled.span`

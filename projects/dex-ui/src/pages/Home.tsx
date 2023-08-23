@@ -2,7 +2,7 @@
 import React from "react";
 import { size } from "src/breakpoints";
 import { Link } from "react-router-dom";
-import { RightArrow, RightArrowCircle } from "src/components/Icons";
+import { RightArrowCircle } from "src/components/Icons";
 import styled from "styled-components";
 
 export const Home = () => {
@@ -24,8 +24,7 @@ export const Home = () => {
           <SubTitle>
             Customizable liquidity pools with shared components. &nbsp;
             <WhitepaperLink href={"/basin.pdf"} target="_blank">
-              Read the whitepaper
-              <RightArrow color="#46B955" />
+              Read the whitepaper →
             </WhitepaperLink>
           </SubTitle>
         </TitleSubtitleContainer>
@@ -144,6 +143,9 @@ const OracleWP = styled.a`
   text-decoration: none;
   display: flex;
   align-items: center;
+  :hover {
+    text-decoration: underline;
+  }
 `;
 
 const WhitepaperLink = styled.a`
@@ -155,6 +157,10 @@ const WhitepaperLink = styled.a`
   text-decoration: none;
   display: flex;
   align-items: center;
+
+  :hover {
+    text-decoration: underline;
+  }
 
   @media (min-width: ${size.mobile}) {
     font-size: 20px;
@@ -197,6 +203,10 @@ const Box = styled(Link)`
 
   text-decoration: none;
   color: black;
+
+  :hover {
+    background-color: #f0fdf4;
+  }
 
   @media (min-width: ${size.mobile}) {
     padding: 0px;
