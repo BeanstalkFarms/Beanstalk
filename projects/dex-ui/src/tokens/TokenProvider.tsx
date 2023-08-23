@@ -12,7 +12,6 @@ const TokenContext = createContext(tokenMap);
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: tokens, isLoading, error } = useWellTokens();
 
-  if (isLoading) return <div>loading...</div>;
   if (error) {
     Log.module("TokenProvider").error(`useWellTokens(): ${error.message}`);
   }
