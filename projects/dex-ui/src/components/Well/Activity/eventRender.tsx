@@ -1,6 +1,6 @@
 import { Well } from "@beanstalk/sdk/Wells";
 import React from "react";
-import { AddEvent, EVENT_TYPE, RemoveEvent, SwapEvent, WellEvent } from "src/wells/useWellHistory";
+import { AddEvent, EVENT_TYPE, RemoveEvent, ShiftEvent, SwapEvent, WellEvent } from "src/wells/useWellHistory";
 import { Row, Td } from "../Table";
 import { TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
@@ -20,15 +20,23 @@ export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | 
 
   switch (event.type) {
     case EVENT_TYPE.SWAP:
-      event = event as SwapEvent;
+      // typescript bug if we leave this as event, it will cast it as "SwapEvent | ShiftEvent" for some reason
+      const tempEvent = event as SwapEvent;
       action = "Swap";
-      valueUSD = `$${event.fromAmount
-        .mul(tokenPrices[event.fromToken.symbol] || 0)
-        .add(event.toAmount.mul(tokenPrices[event.toToken.symbol] || 0))
+      valueUSD = `$${tempEvent.fromAmount
+        .mul(tokenPrices[tempEvent.fromToken.symbol] || 0)
+        // .add(tempEvent.toAmount.mul(tokenPrices[tempEvent.toToken.symbol] || 0))
         .toHuman("short")}`;
-      description = `${event.fromAmount.toHuman("short")} ${event.fromToken.symbol} for ${event.toAmount.toHuman("short")} ${
-        event.toToken.symbol
+      description = `${tempEvent.fromAmount.toHuman("short")} ${tempEvent.fromToken.symbol} for ${tempEvent.toAmount.toHuman("short")} ${
+        tempEvent.toToken.symbol
       }`;
+
+      break;
+    case EVENT_TYPE.SHIFT:
+      event = event as ShiftEvent;
+      action = "Shift";
+      valueUSD = `$${event.toAmount.mul(tokenPrices[event.toToken.symbol] || 0).toHuman("short")}`;
+      description = `Swaped to ${event.toAmount.toHuman("short")} ${event.toToken.symbol}`;
 
       break;
     case EVENT_TYPE.ADD_LIQUIDITY:
@@ -60,14 +68,16 @@ export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | 
     case EVENT_TYPE.SYNC:
       event = event as AddEvent;
       action = "Add Liquidity";
-      valueUSD = `$${(event.lpAmount).mul(lpTokenPrice).toHuman("short")}`;
+      valueUSD = `$${event.lpAmount.mul(lpTokenPrice).toHuman("short")}`;
       description = "Sync";
       break;
   }
   return (
     <Row key={event.tx}>
       <Td>
-        <Action href={`https://etherscan.io/tx/${event.tx}`} target="_blank" rel="noopener noreferrer">{action}</Action>
+        <Action href={`https://etherscan.io/tx/${event.tx}`} target="_blank" rel="noopener noreferrer">
+          {action}
+        </Action>
       </Td>
       <DesktopOnlyTd align={"right"}>{valueUSD}</DesktopOnlyTd>
       <DesktopOnlyTd align={"right"}>{description}</DesktopOnlyTd>
