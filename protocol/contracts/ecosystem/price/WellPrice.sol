@@ -87,7 +87,7 @@ contract WellPrice {
         // If the USD Oracle oracle call fails, we can't compute deltaB
         if(!success) return 0;
 
-        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioLiquidity(
+        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
             reserves,
             beanIndex,
             ratios,
