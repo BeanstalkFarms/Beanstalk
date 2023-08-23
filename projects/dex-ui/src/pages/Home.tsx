@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React from "react";
 import { size } from "src/breakpoints";
+import { Link } from "react-router-dom";
 import { RightArrow, RightArrowCircle } from "src/components/Icons";
 import styled from "styled-components";
 
@@ -29,19 +30,19 @@ export const Home = () => {
           </SubTitle>
         </TitleSubtitleContainer>
         <Boxes>
-          <Box>
+          <Box to="/">
             <Emoji role="img" aria-label="crystal ball">
               🔮
             </Emoji>{" "}
             Build using components
           </Box>
-          <Box>
+          <Box to="/wells">
             <Emoji role="img" aria-label="lightning">
               ⚡️
             </Emoji>{" "}
             Deploy flexible liquidity
           </Box>
-          <Box>
+          <Box to="/swap">
             <Emoji role="img" aria-label="heart">
               ❤️
             </Emoji>{" "}
@@ -175,7 +176,7 @@ const Boxes = styled.div`
   }
 `;
 
-const Box = styled.div`
+const Box = styled(Link)`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -188,6 +189,9 @@ const Box = styled.div`
   font-size: 14px;
   line-height: 22px;
   padding: 12px;
+
+  text-decoration: none;
+  color: black;
 
   @media (min-width: ${size.mobile}) {
     padding: 0px;
