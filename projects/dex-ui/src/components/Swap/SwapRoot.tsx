@@ -31,7 +31,7 @@ export const SwapRoot = () => {
   // We need _some_ address in order to make quotes work when there's no account connected.
   const [recipient, setRecipient] = useState<string>(NULL_ADDRESS);
   const [inAmount, setInAmount] = useState<TokenValue>();
-  const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["WETH"]) : tokens["WETH"]);
+  const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["ETH"]) : tokens["ETH"]);
   const [outToken, setOutToken] = useState<Token>(toToken ? (tokens[toToken] ? tokens[toToken] : tokens["BEAN"]) : tokens["BEAN"]);
   const [outAmount, setOutAmount] = useState<TokenValue>();
   const [slippage, setSlippage] = useState<number>(0.1);
