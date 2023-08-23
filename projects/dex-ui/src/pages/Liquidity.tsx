@@ -64,8 +64,9 @@ export const Liquidity = () => {
     run();
   }, [well]);
 
-  if (loading) return <div>loading...</div>;
-  if (error) return <div>{error.message}</div>;
+  if (error) {
+    Log.module("Liquidity").error(`useWell(): ${error.message}`);
+  }
 
   return (
     <Page>

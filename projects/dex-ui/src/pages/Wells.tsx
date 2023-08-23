@@ -14,6 +14,7 @@ import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
+import { Log } from "src/utils/logger";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -61,8 +62,9 @@ export const Wells = () => {
     run();
   }, [sdk, wells, address]);
 
-  if (isLoading) return <div>loading...</div>;
-  if (error) return <div>{error.message}</div>;
+  if (error) {
+    Log.module("Wells").error(`useWells(): ${error.message}`);
+  }
 
   function WellRow(well: any, index: any) {
     if (!well) return;
@@ -156,7 +158,7 @@ export const Wells = () => {
     return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index);
   });
 
-  const anyLpPositions = !rows.every((row) => row === undefined);
+  const anyLpPositions = rows ? !rows.every((row) => row === undefined) : false;
 
   return (
     <Page>
