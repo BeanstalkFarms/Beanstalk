@@ -168,8 +168,13 @@ const Boxes = styled.div`
   flex-direction: column;
   gap: 12px;
   justify-content: space-around;
+  position: fixed;
+  bottom: 12px;
+  width: calc(100vw - 24px);
   @media (min-width: ${size.mobile}) {
     flex-direction: row;
+    position: relative;
+    bottom: 0px;
     gap: 48px;
     padding: 0 48px;
     width: 100vw;
