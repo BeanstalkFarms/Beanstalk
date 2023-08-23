@@ -65,7 +65,7 @@ export const Liquidity = () => {
     run();
   }, [well]);
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading spinnerOnly />;
 
   if (error) {
     Log.module("Liquidity").error(`useWell(): ${error.message}`);

@@ -4,14 +4,18 @@ import { Frame } from "src/components/Frame/Frame";
 import { Spinner2 } from "src/components/Spinner2";
 import styled from "styled-components";
 
-export const Loading = () => {
+type LoadingProps = {
+  spinnerOnly?: boolean;
+}
+
+export const Loading = ({spinnerOnly}: LoadingProps) => {
   return (
     <>
-      <Frame />
+      {!spinnerOnly && <Frame />}
       <SpinnerContainer>
         <Spinner2 size={72}/>
       </SpinnerContainer>
-      <Footer />
+      {!spinnerOnly && <Footer />}
     </>
   );
 };

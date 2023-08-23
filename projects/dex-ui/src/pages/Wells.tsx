@@ -64,7 +64,7 @@ export const Wells = () => {
   }, [sdk, wells, address]);
 
   if (isLoading) {
-    return <Loading />
+    return <Loading spinnerOnly />
   }
 
   if (error) {
