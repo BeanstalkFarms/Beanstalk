@@ -17,7 +17,7 @@ import { BodyXS, TextNudge } from "src/components/Typography";
 import { ImageButton } from "src/components/ImageButton";
 import { ChevronDown } from "src/components/Icons";
 import { size } from "src/breakpoints";
-import { Loading } from "./Loading";
+import { Loading } from "../components/Loading";
 
 export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();

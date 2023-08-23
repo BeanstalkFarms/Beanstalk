@@ -5,7 +5,7 @@ import { useWellTokens } from "src/tokens/useWellTokens";
 import { images } from "src/assets/images/tokens";
 import { useAccount, useDisconnect } from "wagmi";
 import { Log } from "src/utils/logger";
-import { Loading } from "src/pages/Loading";
+import { Loading } from "src/components/Loading";
 
 const tokenMap: Record<string, Token> = {};
 const TokenContext = createContext(tokenMap);

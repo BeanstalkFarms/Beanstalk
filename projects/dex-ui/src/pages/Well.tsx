@@ -11,7 +11,6 @@ import { Page } from "src/components/Page";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Reserves } from "src/components/Well/Reserves";
 import { LiquidityBox } from "src/components/Well/LiquidityBox";
-import { Spinner2 } from "src/components/Spinner2";
 import { Button } from "src/components/Swap/Button";
 import { LearnYield } from "src/components/Well/LearnYield";
 import { Item, Row } from "src/components/Layout";
@@ -24,6 +23,7 @@ import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
 import { size } from "src/breakpoints";
+import { Loading } from "src/components/Loading";
 
 export const Well = () => {
   const sdk = useSdk();
@@ -120,9 +120,7 @@ export const Well = () => {
 
   if (loading)
     return (
-      <Page>
-        <Spinner2 size={72} />
-      </Page>
+      <Loading spinnerOnly />
     );
 
   // TODO: ERROR

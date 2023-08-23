@@ -15,7 +15,7 @@ import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
 import { Log } from "src/utils/logger";
-import { Loading } from "./Loading";
+import { Loading } from "../components/Loading";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
