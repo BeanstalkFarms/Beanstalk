@@ -156,7 +156,7 @@ describe('BeanstalkPrice', function () {
 
       expect(p.price).to.equal('1499997');
       expect(p.liquidity).to.equal('3999995000000');
-      expect(p.deltaB).to.equal('500000000000');
+      expect(p.deltaB).to.equal('207106781186');
 
       expect(c.price).to.equal('999999');
       expect(c.liquidity).to.equal('1999999000000');
@@ -164,7 +164,7 @@ describe('BeanstalkPrice', function () {
 
       expect(w.price).to.equal('1999996');
       expect(w.liquidity).to.equal('1999996000000');
-      expect(w.deltaB).to.equal('500000000000');
+      expect(w.deltaB).to.equal('207106781186');
     })
 
     it('deltaB > 0, wells and curve', async function () {
@@ -194,7 +194,7 @@ describe('BeanstalkPrice', function () {
 
       expect(p.price).to.equal('1491246');
       expect(p.liquidity).to.equal('4108725000000');
-      expect(p.deltaB).to.equal('549891561002');
+      expect(p.deltaB).to.equal('256998342188');
 
       expect(c.price).to.equal('1008729');
       expect(c.liquidity).to.equal('2108729000000');
@@ -202,7 +202,7 @@ describe('BeanstalkPrice', function () {
 
       expect(w.price).to.equal('1999996');
       expect(w.liquidity).to.equal('1999996000000');
-      expect(w.deltaB).to.equal('500000000000');
+      expect(w.deltaB).to.equal('207106781186');
     })
 
     it('deltaB < 0, curve only', async function () {
@@ -253,7 +253,7 @@ describe('BeanstalkPrice', function () {
 
       expect(p.price).to.equal('749999');
       expect(p.liquidity).to.equal('3999995000000');
-      expect(p.deltaB).to.equal('-1000000000000');
+      expect(p.deltaB).to.equal('-585786437627');
 
       expect(c.price).to.equal('999999');
       expect(c.liquidity).to.equal('1999999000000');
@@ -261,7 +261,7 @@ describe('BeanstalkPrice', function () {
 
       expect(w.price).to.equal('499999');
       expect(w.liquidity).to.equal('1999996000000');
-      expect(w.deltaB).to.equal('-1000000000000');
+      expect(w.deltaB).to.equal('-585786437627');
     })
 
     it('deltaB < 0, wells and curve', async function () {
@@ -291,7 +291,7 @@ describe('BeanstalkPrice', function () {
 
       expect(p.price).to.equal('751106');
       expect(p.liquidity).to.equal('4090476600000');
-      expect(p.deltaB).to.be.eq('-1050108438998')
+      expect(p.deltaB).to.be.eq('-635894876625')
 
       expect(c.price).to.equal('991346');
       expect(c.liquidity).to.equal('2090480600000');
@@ -299,7 +299,7 @@ describe('BeanstalkPrice', function () {
 
       expect(w.price).to.equal('499999');
       expect(w.liquidity).to.equal('1999996000000');
-      expect(w.deltaB).to.equal('-1000000000000');
+      expect(w.deltaB).to.equal('-585786437627');
     })
 
     it('well deltaB > 0, curve deltaB < 0', async function () {
@@ -329,7 +329,7 @@ describe('BeanstalkPrice', function () {
 
       expect(p.price).to.equal('1484514');
       expect(p.liquidity).to.equal('4090476600000');
-      expect(p.deltaB).to.equal('449891561002');
+      expect(p.deltaB).to.equal('156998342188');
 
       expect(c.price).to.equal('991346');
       expect(c.liquidity).to.equal('2090480600000');
@@ -337,7 +337,7 @@ describe('BeanstalkPrice', function () {
 
       expect(w.price).to.equal('1999996');
       expect(w.liquidity).to.equal('1999996000000');
-      expect(w.deltaB).to.be.eq('500000000000');
+      expect(w.deltaB).to.be.eq('207106781186');
     })
 
     it('well deltaB < 0, curve deltaB > 0', async function () {
@@ -367,7 +367,7 @@ describe('BeanstalkPrice', function () {
 
       expect(p.price).to.equal('761095');
       expect(p.liquidity).to.equal('4108725000000');
-      expect(p.deltaB).to.be.eq('-950108438998');
+      expect(p.deltaB).to.be.eq('-535894876625');
 
       expect(c.price).to.equal('1008729');
       expect(c.liquidity).to.equal('2108729000000');
@@ -375,7 +375,7 @@ describe('BeanstalkPrice', function () {
 
       expect(w.price).to.equal('499999');
       expect(w.liquidity).to.equal('1999996000000');
-      expect(w.deltaB).to.equal('-1000000000000');
+      expect(w.deltaB).to.equal('-585786437627');
     })
 
   });
