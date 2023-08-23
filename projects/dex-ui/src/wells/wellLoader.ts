@@ -8,6 +8,8 @@ import { GetWellAddressesDocument } from "src/generated/graph/graphql";
 
 type WellAddresses = string[];
 
+const WELL_BLACKLIST = ["0x875b1da8dcba757398db2bc35043a72b4b62195d"];
+
 const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
   const aquifer = new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
   const contract = aquifer.contract;
@@ -17,10 +19,12 @@ const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
   const toBlock = "latest";
   const events = await contract.queryFilter(eventFilter, fromBlock, toBlock);
 
-  const addresses = events.map((e) => {
-    const data = e.decode?.(e.data);
-    return data.well;
-  });
+  const addresses = events
+    .map((e) => {
+      const data = e.decode?.(e.data);
+      return data.well;
+    })
+    .filter((addr) => !WELL_BLACKLIST.includes(addr.toLowerCase()));
 
   return addresses;
 };
@@ -29,7 +33,7 @@ const loadFromGraph = async (): Promise<WellAddresses> => {
   const data = await fetchFromSubgraphRequest(GetWellAddressesDocument, undefined);
   const results = await data();
 
-  return results.wells.map((w) => w.id);
+  return results.wells.map((w) => w.id).filter((addr) => !WELL_BLACKLIST.includes(addr.toLowerCase()));
 };
 
 export const findWells = memoize(
