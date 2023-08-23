@@ -15,6 +15,7 @@ import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
 import { Log } from "src/utils/logger";
+import { Loading } from "./Loading";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -61,6 +62,10 @@ export const Wells = () => {
 
     run();
   }, [sdk, wells, address]);
+
+  if (isLoading) {
+    return <Loading />
+  }
 
   if (error) {
     Log.module("Wells").error(`useWells(): ${error.message}`);

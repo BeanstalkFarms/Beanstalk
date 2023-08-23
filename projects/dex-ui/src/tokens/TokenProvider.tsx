@@ -5,12 +5,17 @@ import { useWellTokens } from "src/tokens/useWellTokens";
 import { images } from "src/assets/images/tokens";
 import { useAccount, useDisconnect } from "wagmi";
 import { Log } from "src/utils/logger";
+import { Loading } from "src/pages/Loading";
 
 const tokenMap: Record<string, Token> = {};
 const TokenContext = createContext(tokenMap);
 
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: tokens, isLoading, error } = useWellTokens();
+
+  if (isLoading) {
+    return <Loading />
+  }
 
   if (error) {
     Log.module("TokenProvider").error(`useWellTokens(): ${error.message}`);
