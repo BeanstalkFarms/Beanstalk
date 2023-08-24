@@ -1,7 +1,6 @@
 import React from "react";
 import { Footer } from "src/components/Frame/Footer";
 import { Frame } from "src/components/Frame/Frame";
-import { Button } from "src/components/Swap/Button";
 import styled from "styled-components";
 
 type ErrorProps = {
@@ -23,7 +22,6 @@ export const Error = ({ message, errorOnly }: ErrorProps) => {
             <ErrorBox>
                 {message}
             </ErrorBox>
-            <Button label="Copy to Clipboard" onClick={() => {navigator.clipboard.writeText(message)}}/>
         </ErrorContainer>
       {!errorOnly && <Footer />}
     </>
@@ -51,11 +49,6 @@ const SmallText = styled.div`
 `
 
 const ErrorBox = styled.div`
-  border-style: solid;
-  border-width: 0.5px;
-  background-color: white;
-  padding: 8px;
-  width: 300px;
-  max-height: 150px;
-  overflow: auto;
+  width: 95vw;
+  text-align: center;
 `
