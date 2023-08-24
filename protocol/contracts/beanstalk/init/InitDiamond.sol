@@ -35,7 +35,9 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
+        ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
+        ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
+
 
         C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
@@ -58,6 +60,7 @@ contract InitDiamond {
         s.season.withdrawSeasons = 25;
         s.season.period = C.getSeasonPeriod();
         s.season.timestamp = block.timestamp;
+        s.season.stemStartSeason = 0;
         s.season.start = s.season.period > 0 ?
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;

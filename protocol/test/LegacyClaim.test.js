@@ -48,7 +48,6 @@ describe.skip("Legacy Claim", async function () {
 
 
     this.diamond = BEANSTALK;
-    console.log("this.diamond: ", this.diamond);
 
     // this.season = await ethers.getContractAt("MockSeasonFacet", this.diamond);
 

@@ -1,18 +1,19 @@
 const fs = require('fs');
-const { BEAN, WETH, BEANSTALK_PUMP } = require('../test/utils/constants');
+const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL } = require('../test/utils/constants');
 const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
 const { mintEth } = require('./mint');
 const { impersonateBeanstalkOwner } = require('./signer');
+const { increaseToNonce } = require('../scripts/contracts');
 
 const BASE_STRING = './node_modules/@beanstalk/wells/out';
 
-async function getWellContractFactory(name) {
+async function getWellContractFactory(name, account = undefined) {
     const contractJson = JSON.parse(await fs.readFileSync(`${BASE_STRING}/${name}.sol/${name}.json`))
     return await ethers.getContractFactory(
         contractJson.abi,
         contractJson.bytecode.object,
-        await getWellDeployer()
+        (account == undefined) ? await getWellDeployer() : account
     );
 }
 
@@ -24,10 +25,16 @@ async function getWellContractAt(name, address) {
     );
 }
 
-async function deployWellContract(name, arguments = []) {
-    const Contract = await getWellContractFactory(name);
+async function deployWellContractAtNonce(name, nonce, arguments = [], account = undefined, verbose = false) {
+    await increaseToNonce(account, nonce)
+    return await deployWellContract(name, arguments, account, verbose)
+}
+
+async function deployWellContract(name, arguments = [], account = undefined, verbose = false) {
+    const Contract = await getWellContractFactory(name, account);
     const contract = await Contract.deploy(...arguments);
     await contract.deployed();
+    if (verbose) console.log(`${name} deployed at ${contract.address}`)
     return contract;
 }
 
@@ -93,7 +100,7 @@ async function deployWell(tokens, verbose = false, salt = ethers.constants.HashZ
     if (verbose) console.log("Deployed Aquifer", aquifer.address);
     const wellFunction = await deployWellContract('ConstantProduct2');
     if (verbose) console.log("Deployed Well Function", wellFunction.address);
-    const pump = await deployGeoEmaAndCumSmaPump()
+    const pump = await deployMultiFlowPump()
     if (verbose) console.log("Deployed Pump", pump.address);
 
     const immutableData = await encodeWellImmutableData(
@@ -198,8 +205,8 @@ async function deployMockPump() {
     return await ethers.getContractAt('MockPump', BEANSTALK_PUMP)
 }
 
-async function deployGeoEmaAndCumSmaPump() {
-    pump = await (await getWellContractFactory('GeoEmaAndCumSmaPump')).deploy(
+async function deployMultiFlowPump() {
+    pump = await (await getWellContractFactory('MultiFlowPump')).deploy(
       '0x3ffe0000000000000000000000000000', // 0.5
       '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
       12,
@@ -211,7 +218,7 @@ async function deployGeoEmaAndCumSmaPump() {
       BEANSTALK_PUMP,
       await ethers.provider.getCode(pump.address),
     ]);
-    return await getWellContractAt('GeoEmaAndCumSmaPump', BEANSTALK_PUMP)
+    return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
 
 async function deployMockWell() {
@@ -221,8 +228,14 @@ async function deployMockWell() {
 
     let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
+    await network.provider.send("hardhat_setCode", [
+        BEAN_ETH_WELL,
+        await ethers.provider.getCode(well.address),
+      ]);
+    well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
+    await well.init()
 
-    pump = await deployGeoEmaAndCumSmaPump()
+    pump = await deployMultiFlowPump()
 
     await well.setPumps([[pump.address, '0x']])
     await well.setWellFunction([wellFunction.address, '0x'])
@@ -245,3 +258,6 @@ exports.whitelistWell = whitelistWell;
 exports.getWellContractAt = getWellContractAt
 exports.deployMockWell = deployMockWell
 exports.deployMockPump = deployMockPump
+exports.deployWellContract = deployWellContract
+exports.deployWellContractAtNonce = deployWellContractAtNonce
+exports.encodeWellImmutableData = encodeWellImmutableData

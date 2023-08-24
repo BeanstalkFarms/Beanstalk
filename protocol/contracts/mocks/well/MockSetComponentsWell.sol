@@ -21,6 +21,10 @@ contract MockSetComponentsWell is MockToken {
         _reserves = new uint256[](2);
     }
 
+    function init() external {
+        _reserves = new uint256[](2);
+    }
+
     Call[] public _pumps;
     Call public _wellFunction;
 
