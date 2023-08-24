@@ -28,11 +28,11 @@ contract InitBipBasinIntegration {
 
     AppStorage internal s;
 
-    uint32 constant private NEW_BEAN_SEEDS_PER_BDV = 3e6;
-    uint32 constant private NEW_BEAN_3CRV_SEEDS_PER_BDV = 3.25e6;
-    uint32 constant private BEAN_ETH_SEEDS_PER_BDV = 4.5e6;
+    uint24 constant private NEW_BEAN_SEEDS_PER_BDV = 3e6;
+    uint24 constant private NEW_BEAN_3CRV_SEEDS_PER_BDV = 3.25e6;
+    uint24 constant private BEAN_ETH_SEEDS_PER_BDV = 4.5e6;
 
-    uint32 constant private STALK_ISSUED_PER_BDV = 10000;
+    uint16 constant private STALK_ISSUED_PER_BDV = 10000;
     
     
     function init() external {

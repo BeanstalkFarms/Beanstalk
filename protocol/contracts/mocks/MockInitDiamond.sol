@@ -9,7 +9,6 @@ import "../interfaces/IBean.sol";
 import "../interfaces/IWETH.sol";
 import "../mocks/MockToken.sol";
 import {AppStorage} from "../beanstalk/AppStorage.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../C.sol";
 import "contracts/beanstalk/init/InitWhitelist.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
@@ -31,7 +30,9 @@ contract MockInitDiamond is InitWhitelist {
         C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
-        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
+        ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
+        ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
+
 
 
         s.cases = s.cases = [
