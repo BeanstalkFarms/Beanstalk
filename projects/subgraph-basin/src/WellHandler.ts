@@ -67,6 +67,8 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
   // Pre-process amount out into an indexed array for the well's input tokens.
 
   let well = loadWell(event.address);
+  let fromTokenIndex = well.tokens.indexOf(event.params.tokenOut) == 0 ? 1 : 0;
+
   let indexedBalances = emptyBigIntArray(well.tokens.length);
 
   indexedBalances[well.tokens.indexOf(event.params.tokenOut)] = indexedBalances[well.tokens.indexOf(event.params.tokenOut)].plus(
@@ -81,6 +83,16 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
   for (let i = 0; i < indexedBalances.length; i++) indexedBalances[i] = ZERO_BI.minus(indexedBalances[i]);
 
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
+
+  updateWellVolumes(
+    event.address,
+    Address.fromBytes(well.tokens[fromTokenIndex]),
+    indexedBalances[fromTokenIndex],
+    event.params.tokenOut,
+    event.params.tokenAmountOut,
+    event.block.timestamp,
+    event.block.number
+  );
 
   updateWellTokenBalances(event.address, indexedBalances, event.block.timestamp, event.block.number);
 
@@ -116,6 +128,7 @@ export function handleSwap(event: Swap): void {
 export function handleShift(event: Shift): void {
   loadOrCreateAccount(event.transaction.from);
   checkForSnapshot(event.address, event.block.timestamp, event.block.number);
+
   // Since the token in was already transferred before this event was emitted, we need to find the difference to record as the amountIn
   let well = loadWell(event.address);
 
