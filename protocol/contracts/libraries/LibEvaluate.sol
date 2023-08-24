@@ -173,7 +173,7 @@ library LibEvaluate {
 
     function calcLPToSupplyRatio(uint256 beanSupply) internal returns (Decimal.D256 memory lpToSupplyRatio) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
+        uint256 lpSupply = 0;
         if (lpSupply == 0) {
             lpToSupplyRatio = Decimal.from(1e18);
         } else {

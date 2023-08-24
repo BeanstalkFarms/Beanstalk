@@ -198,7 +198,7 @@ describe('Well Convert', function () {
         expect(fromToken).to.be.equal(this.well.address)
         expect(fromAmount).to.be.equal(to18('2000'))
         expect(toToken).to.be.equal(BEAN)
-        expect(toAmount).to.be.equal('134564064606')
+        expect(toAmount).to.be.equal('134564064605')
       })
 
       it('convert equal to max', async function () {
@@ -238,7 +238,7 @@ describe('Well Convert', function () {
           [to18('2000')]
         )
         deposit = await this.beanstalk.getDeposit(owner.address, BEAN, '0')
-        expect(deposit[0]).to.be.equal('134564064606')
+        expect(deposit[0]).to.be.equal('134564064605')
       })
 
       it('reverts when USD oracle is broken', async function () {

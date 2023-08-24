@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "../AppStorage.sol";
 import {IERC165} from "../../interfaces/IERC165.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
@@ -34,6 +35,7 @@ contract InitDiamond {
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
 
         C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);

@@ -27,7 +27,7 @@ library LibWhitelistedAssets {
 
     function getWhitelistedLPAssets() internal pure returns (address[] memory assets) {
         assets = new address[](2);
-        assets[1] = C.BEAN_ETH_WELL;
-        assets[3] = C.UNRIPE_LP;
+        assets[0] = C.BEAN_ETH_WELL;
+        assets[1] = C.UNRIPE_LP;
     }
 }

@@ -311,11 +311,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
         s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.ss[address(C.unripeLP())].milestoneStem = 0;
-
-        //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
-        // emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);
-
-
+        
         s.season.stemStartSeason = uint16(s.season.current);
     }
 
