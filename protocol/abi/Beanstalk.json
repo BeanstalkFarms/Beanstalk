@@ -6643,6 +6643,13 @@
   },
   {
     "inputs": [],
+    "name": "updateAverageGrownStalkPerBdv",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "weather",
     "outputs": [
       {
@@ -6699,6 +6706,31 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "season",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "caseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int8",
+        "name": "change",
+        "type": "int8"
+      }
+    ],
+    "name": "GrownStalkToLPChange",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -6880,13 +6912,6 @@
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "updateAverageGrownStalkPerBdv",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
