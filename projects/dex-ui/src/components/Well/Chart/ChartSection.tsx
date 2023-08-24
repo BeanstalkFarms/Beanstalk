@@ -181,7 +181,7 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
       {error !== null && <ChartLoader>{`Error Loading Chart Data :(`}</ChartLoader>}
       {isLoading && <ChartLoader>Loading Chart Data...</ChartLoader>}
       {tab === 0 && !error && !isLoading && <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} />}
-      {tab === 1 && !error && !isLoading && <Chart data={volumeData} legend={"DAILY VOLUME"} />}
+      {tab === 1 && !error && !isLoading && <Chart data={volumeData} legend={"HOURLY VOLUME"} />}
     </Container>
   );
 };
