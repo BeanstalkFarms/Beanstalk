@@ -24,6 +24,7 @@ import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
 import { size } from "src/breakpoints";
 import { Loading } from "src/components/Loading";
+import { Error } from "../components/Error";
 
 export const Well = () => {
   const sdk = useSdk();
@@ -123,12 +124,9 @@ export const Well = () => {
       <Loading spinnerOnly />
     );
 
-  // TODO: ERROR
   if (error)
     return (
-      <Page>
-        <div>ERROR: {error?.message}</div>
-      </Page>
+      <Error message={error?.message} errorOnly />
     );
 
   return (

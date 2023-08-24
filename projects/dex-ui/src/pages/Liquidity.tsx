@@ -18,6 +18,7 @@ import { ImageButton } from "src/components/ImageButton";
 import { ChevronDown } from "src/components/Icons";
 import { size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
+import { Error } from "../components/Error";
 
 export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
@@ -68,7 +69,7 @@ export const Liquidity = () => {
   if (loading) return <Loading spinnerOnly />;
 
   if (error) {
-    Log.module("Liquidity").error(`useWell(): ${error.message}`);
+    return <Error message={error?.message} errorOnly />
   }
 
   return (

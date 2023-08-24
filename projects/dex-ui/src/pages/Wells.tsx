@@ -14,8 +14,8 @@ import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
-import { Log } from "src/utils/logger";
 import { Loading } from "../components/Loading";
+import { Error } from "../components/Error";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -68,7 +68,7 @@ export const Wells = () => {
   }
 
   if (error) {
-    Log.module("Wells").error(`useWells(): ${error.message}`);
+    return <Error message={error?.message} errorOnly />
   }
 
   function WellRow(well: any, index: any) {
