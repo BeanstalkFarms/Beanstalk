@@ -1,17 +1,12 @@
-import {
-  GenericWellFunction,
-  ConstantProduct2__factory,
-  ConstantProduct__factory,
-  GenericWellFunction__factory
-} from "src/constants/generated";
+import { ConstantProduct__factory, ConstantProduct2__factory, IWellFunction, IWellFunction__factory } from "src/constants/generated";
 import { WellsSDK } from "./WellsSDK";
 
 export class WellFunction {
-  contract: GenericWellFunction;
+  contract: IWellFunction;
 
   constructor(public readonly sdk: WellsSDK, public readonly address: string, public readonly data: string) {
     this.sdk = sdk;
-    this.contract = GenericWellFunction__factory.connect(address, sdk.providerOrSigner);
+    this.contract = IWellFunction__factory.connect(address, sdk.providerOrSigner);
   }
 
   // TODO: provide these as multicalls

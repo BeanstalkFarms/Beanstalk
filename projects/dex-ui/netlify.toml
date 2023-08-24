@@ -4,6 +4,16 @@
   status = 308
 
 [[redirects]]
+  from = "/06-16-23-cyfrin-report"
+  to = "https://arweave.net/usT3ClfjHwpX32OXnh5De1aH79csX1PMoXJCghXBaps"
+  status = 200
+
+[[redirects]]
+  from = "/06-16-23-halborn-report"
+  to = "https://arweave.net/1IKi4iqRvu3qu_GdcLY4f3u9PgvOMvuRltU7AIXAEyA"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "index.html"
   status = 200

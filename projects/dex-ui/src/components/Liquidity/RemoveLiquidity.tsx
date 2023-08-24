@@ -19,22 +19,16 @@ import useSdk from "src/utils/sdk/useSdk";
 import { getPrice } from "src/utils/price/usePrice";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
+import { size } from "src/breakpoints";
 
 type RemoveLiquidityProps = {
   well: Well;
-  txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
 };
 
-export const RemoveLiquidity = ({
-  well,
-  txnCompleteCallback,
-  slippage,
-  slippageSettingsClickHandler,
-  handleSlippageValueChange
-}: RemoveLiquidityProps) => {
+export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
@@ -43,6 +37,8 @@ export const RemoveLiquidity = ({
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
+  const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
+  const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
 
   const sdk = useSdk();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
@@ -79,6 +75,28 @@ export const RemoveLiquidity = ({
   }, [well.lpToken]);
 
   useEffect(() => {
+    const checkBalances = async () => {
+      if (!address || !wellLpToken || !lpTokenAmount) {
+        setHasEnoughBalance(false);
+        return;
+      }
+
+      let insufficientBalances = false;
+
+      if (lpTokenAmount.gt(TokenValue.ZERO)) {
+        const balance = await wellLpToken.getBalance(address);
+        if (lpTokenAmount.gt(balance)) {
+          insufficientBalances = true;
+        }
+      }
+
+      setHasEnoughBalance(!insufficientBalances);
+    };
+
+    checkBalances();
+  }, [address, lpTokenAmount, wellLpToken]);
+
+  useEffect(() => {
     if (customRatioQuote) {
       setLpTokenAmount(customRatioQuote.quote);
     }
@@ -107,6 +125,7 @@ export const RemoveLiquidity = ({
       });
       let removeLiquidityTxn;
       try {
+        
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
           if (!oneTokenQuote) {
             return;
@@ -116,7 +135,9 @@ export const RemoveLiquidity = ({
             lpTokenAmount,
             well.tokens![singleTokenIndex],
             quoteAmountLessSlippage,
-            address
+            address,
+            undefined,
+            { gasLimit: oneTokenQuote.estimate.mul(1.2).toBigNumber() }
           );
           toast.confirming(removeLiquidityTxn);
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
@@ -124,21 +145,24 @@ export const RemoveLiquidity = ({
             return;
           }
           const quoteAmountLessSlippage = balancedQuote.quote.map((q) => q.subSlippage(slippage));
-          removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address);
+          removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address, undefined, {
+            gasLimit: balancedQuote.estimate.mul(1.2).toBigNumber()
+          });
           toast.confirming(removeLiquidityTxn);
         } else {
           if (!customRatioQuote) {
             return;
           }
           const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
-          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, amounts, address);
+          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, amounts, address, undefined, {
+            gasLimit: customRatioQuote.estimate.mul(1.2).toBigNumber()
+          });
           toast.confirming(removeLiquidityTxn);
         }
         const receipt = await removeLiquidityTxn.wait();
         toast.success(receipt);
         resetState();
         refetchWellReserves();
-        txnCompleteCallback();
       } catch (error) {
         Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
         toast.error(error);
@@ -154,7 +178,6 @@ export const RemoveLiquidity = ({
     customRatioQuote,
     balancedQuote,
     address,
-    txnCompleteCallback,
     resetState,
     slippage,
     refetchWellReserves
@@ -166,7 +189,6 @@ export const RemoveLiquidity = ({
     if (currentMode && _newMode) {
       setRemoveLiquidityMode(newMode);
     } else {
-      setLpTokenAmount(TokenValue.ZERO);
       setRemoveLiquidityMode(newMode);
     }
   };
@@ -199,11 +221,15 @@ export const RemoveLiquidity = ({
 
   const lpTokenAmountNonZero = useMemo(() => lpTokenAmount && lpTokenAmount.gt(0), [lpTokenAmount]);
 
-  const removeLiquidityButtonEnabled = useMemo(() => address && lpTokenAmountNonZero, [address, lpTokenAmountNonZero]);
+  const removeLiquidityButtonEnabled = useMemo(
+    () => address && tokenAllowance && lpTokenAmountNonZero && hasEnoughBalance,
+    [address, hasEnoughBalance, lpTokenAmountNonZero, tokenAllowance]
+  );
 
-  const buttonLabel = useMemo(() => (lpTokenAmountNonZero ? "Remove Liquidity" : "Input Token Amount"), [lpTokenAmountNonZero]);
-
-  const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
+  const buttonLabel = useMemo(
+    () => (lpTokenAmountNonZero ? (hasEnoughBalance ? "Remove Liquidity →" : "Insufficient Balance") : "Input Token Amount"),
+    [hasEnoughBalance, lpTokenAmountNonZero]
+  );
 
   const checkMinAllowanceForLpToken = useCallback(async () => {
     if (!address || !wellLpToken) {
@@ -391,7 +417,8 @@ export const RemoveLiquidity = ({
               tokenReserves={wellReserves}
             />
           )}
-          {!tokenAllowance ? (
+
+          {!tokenAllowance && hasEnoughBalance && (
             <ButtonWrapper>
               <ApproveTokenButton
                 disabled={approveButtonDisabled}
@@ -400,16 +427,16 @@ export const RemoveLiquidity = ({
                 onClick={approveTokenButtonClickHandler}
               />
             </ButtonWrapper>
-          ) : (
-            <ButtonWrapper>
-              <Button
-                disabled={!removeLiquidityButtonEnabled}
-                label={buttonLabel}
-                onClick={removeLiquidityButtonClickHandler}
-                loading={false}
-              />
-            </ButtonWrapper>
           )}
+
+          <ButtonWrapper>
+            <Button
+              disabled={!removeLiquidityButtonEnabled}
+              label={buttonLabel}
+              onClick={removeLiquidityButtonClickHandler}
+              loading={false}
+            />
+          </ButtonWrapper>
         </LargeGapContainer>
       )}
     </div>
@@ -424,6 +451,9 @@ const LargeGapContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  @media (max-width: ${size.mobile}) {
+    margin-bottom: 40px;
+  }
 `;
 
 const MediumGapContainer = styled.div`
@@ -457,36 +487,12 @@ const ButtonWrapper = styled.div`
   :last-of-type {
     margin-bottom: 0;
   }
-`;
-
-const TabRadio = styled.input`
-  // TODO: Somehow the default input styled
-  // Are not showing the radio buttons
-  margin-right: 10px;
-  width: 1em;
-  height: 1em;
-  outline: none;
-  border: none;
-  background-color: #f9f8f6;
-  &:checked {
-    background-color: white;
+  @media (max-width: ${size.mobile}) {
+    position: fixed;
+    width: calc(100% - 24px);
+    margin-bottom: 0;
+    bottom: 12px;
   }
-  cursor: pointer;
-`;
-
-const Radio = styled.input`
-  // TODO: Somehow the default input styled
-  // Are not showing the radio buttons
-  margin-right: 10px;
-  width: 1.4em;
-  height: 1.4em;
-  outline: none;
-  border: none;
-  background-color: #f9f8f6;
-  &:checked {
-    background-color: white;
-  }
-  cursor: pointer;
 `;
 
 const TokenAmount = styled.div`
@@ -513,6 +519,9 @@ const ReadOnlyTokenValueRow = styled.div<ReadOnlyRowProps>`
   align-items: center;
   padding-left: 8px;
   padding-right: 8px;
+  @media (max-width: ${size.mobile}) {
+    height: 48px;
+  }
 `;
 
 const TokenContainer = styled.div`

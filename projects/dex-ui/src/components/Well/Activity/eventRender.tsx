@@ -4,20 +4,27 @@ import { AddEvent, EVENT_TYPE, RemoveEvent, SwapEvent, WellEvent } from "src/wel
 import { Row, Td } from "../Table";
 import { TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
+import { size } from "src/breakpoints";
 
-export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenValue | null)[]) => {
+export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | null)[], lpTokenPrice: TokenValue) => {
   let action;
   let description;
   let valueUSD;
   let time = formatTime(event.timestamp);
   var accumulator = TokenValue.ZERO;
+
+  const tokenPrices: Record<string, TokenValue | null> = {};
+  well.tokens!.forEach((token, index) => {
+    tokenPrices[token.symbol] = prices[index];
+  });
+
   switch (event.type) {
     case EVENT_TYPE.SWAP:
       event = event as SwapEvent;
       action = "Swap";
       valueUSD = `$${event.fromAmount
-        .mul(tokenPrices[0] || 0)
-        .add(event.toAmount.mul(tokenPrices[1] || 0))
+        .mul(tokenPrices[event.fromToken.symbol] || 0)
+        .add(event.toAmount.mul(tokenPrices[event.toToken.symbol] || 0))
         .toHuman("short")}`;
       description = `${event.fromAmount.toHuman("short")} ${event.fromToken.symbol} for ${event.toAmount.toHuman("short")} ${
         event.toToken.symbol
@@ -28,7 +35,7 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
       event = event as AddEvent;
       action = "Add Liquidity";
       event.tokenAmounts.forEach(function (amount, i) {
-        accumulator = accumulator.add(amount.mul(tokenPrices[i] || 0));
+        accumulator = accumulator.add(amount.mul(prices[i] || 0));
       });
       valueUSD = `$${accumulator.toHuman("short")}`;
       description = event.tokenAmounts
@@ -41,7 +48,7 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
       event = event as RemoveEvent;
       action = "Remove Liquidity";
       event.tokenAmounts.forEach(function (amount, i) {
-        accumulator = accumulator.add(amount.mul(tokenPrices[i] || 0));
+        accumulator = accumulator.add(amount.mul(prices[i] || 0));
       });
       valueUSD = `$${accumulator.toHuman("short")}`;
       description = event.tokenAmounts
@@ -50,24 +57,36 @@ export const renderEvent = (event: WellEvent, well: Well, tokenPrices: (TokenVal
         })
         .join(" and ");
       break;
+    case EVENT_TYPE.SYNC:
+      event = event as AddEvent;
+      action = "Add Liquidity";
+      valueUSD = `$${(event.lpAmount).mul(lpTokenPrice).toHuman("short")}`;
+      description = "Sync";
+      break;
   }
   return (
     <Row key={event.tx}>
       <Td>
-        <Action>{action}</Action>
+        <Action href={`https://etherscan.io/tx/${event.tx}`} target="_blank" rel="noopener noreferrer">{action}</Action>
       </Td>
-      <Td align={"right"}>{valueUSD}</Td>
-      <Td align={"right"}>{description}</Td>
+      <DesktopOnlyTd align={"right"}>{valueUSD}</DesktopOnlyTd>
+      <DesktopOnlyTd align={"right"}>{description}</DesktopOnlyTd>
       <Td align={"right"}>{time || event.block}</Td>
     </Row>
   );
 };
 
-const Action = styled.div`
+const Action = styled.a`
   color: #4b5563;
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
+`;
+
+const DesktopOnlyTd = styled(Td)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
 `;
 
 const formatTime = (timestamp?: number) => {

@@ -39,6 +39,10 @@ class Logger {
     this.prefix() ? console.log(this.prefix(), ...args) : console.log(...args);
   }
 
+  warn(...args: any[]) {
+    this.prefix() ? console.warn(this.prefix(), ...args) : console.error(...args);
+  }
+
   error(...args: any[]) {
     this.prefix() ? console.error(this.prefix(), ...args) : console.error(...args);
   }

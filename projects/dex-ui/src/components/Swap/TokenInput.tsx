@@ -7,9 +7,12 @@ import { BasicInput } from "./BasicInput";
 import { TokenPicker } from "./TokenPicker";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { Spinner } from "../Spinner";
+import { BodyXS } from "../Typography";
+import { size } from "src/breakpoints";
 
 type ContainerProps = {
   width: string;
+  showBalance?: boolean;
 };
 
 type TokenInput = {
@@ -84,7 +87,7 @@ export const TokenInput: FC<TokenInput> = ({
   if (loading) return <LoadingContainer width={width} data-trace="true" />;
 
   return (
-    <Container width={width} id="token-input" onClick={handleClick} data-trace="true">
+    <Container width={width} id="token-input" onClick={handleClick} showBalance={showBalance} data-trace="true">
       <TopRow>
         <BasicInput
           id={id}
@@ -101,7 +104,7 @@ export const TokenInput: FC<TokenInput> = ({
       {showBalance && (
         <BalanceRow>
           <Balance onClick={handleClickMax}>
-            Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman()}
+            Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman("short")}
           </Balance>
         </BalanceRow>
       )}
@@ -166,6 +169,10 @@ const Container = styled.div<ContainerProps>`
   :hover {
     outline: 2px solid #46b955;
   }
+  @media (max-width: ${size.mobile}) {
+    height: ${(props) => (props.showBalance ? `72px` : `48px`)};
+    padding: 12px;
+  }
 `;
 
 const TopRow = styled.div`
@@ -189,4 +196,7 @@ const Balance = styled.div`
   text-decoration: underline;
   text-decoration-thickness: 1px;
   cursor: pointer;
+  @media (max-width: ${size.mobile}) {
+    ${BodyXS}
+  }
 `;

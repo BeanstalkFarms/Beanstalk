@@ -24,31 +24,42 @@ export const Chart: FC<Props> = ({ legend, data }) => {
   const [dataPointValue, setDataPointValue] = useState<any>();
 
   useEffect(() => {
-    if (chartContainerRef.current) {
-      const chartOptions = {
-        layout: {
-          fontFamily: "PPMori, sans-serif"
-        },
-        localization: {
-          priceFormatter: formatToUSD
-        },
-        crosshair: {
-          vertLine: {
-            labelBackgroundColor: "#000"
-          },
-          horzLine: {
-            labelBackgroundColor: "#000"
-          }
-        },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: false
-        }
-      };
+    if (!chartContainerRef.current) return;
 
-      chart.current = createChart(chartContainerRef.current, chartOptions);
-      lineSeries.current = chart.current.addLineSeries({ color: "#000" });
-    }
+    const chartOptions = {
+      layout: {
+        fontFamily: "PPMori, sans-serif"
+      },
+      localization: {
+        priceFormatter: formatToUSD
+      },
+      crosshair: {
+        vertLine: {
+          labelBackgroundColor: "#000"
+        },
+        horzLine: {
+          labelBackgroundColor: "#000"
+        }
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false
+      }
+    };
+
+    const handleResize = () => {
+      chart.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+    };
+
+    chart.current = createChart(chartContainerRef.current, chartOptions);
+    lineSeries.current = chart.current.addLineSeries({ color: "#000" });
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.current.remove();
+    };
   }, []);
 
   useEffect(() => {

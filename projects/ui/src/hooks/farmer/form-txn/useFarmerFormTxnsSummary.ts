@@ -22,7 +22,7 @@ const tooltips = {
   rinse: 'Redeem debt paid back by Beanstalk for purchasing fertilizer',
   claim: 'Claim Beans that have been withdrawn from the silo',
   grownStalk:
-    'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk is Mown at the beginning of any Silo interaction.',
+    'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk for a particular whitelisted asset is Mown at the beginning of any Silo interaction.',
   earnedBeans:
     'The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.',
   earnedStalk:
@@ -143,7 +143,7 @@ export default function useFarmerFormTxnsSummary() {
         summary: [
           {
             description: 'Grown Stalk',
-            tooltip: 'tooltip',
+            tooltip: tooltips.grownStalk,
             token: STALK,
             amount: grownStalk,
           },

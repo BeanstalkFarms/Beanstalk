@@ -1,33 +1,35 @@
 import React from "react";
 import styled from "styled-components";
 import { InfoBox } from "src/components/InfoBox";
-import { BodyCaps, LinksButtonText } from "../Typography";
+import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "../Typography";
 import { TokenLogo } from "../TokenLogo";
 import { FC } from "src/types";
 import { Token } from "@beanstalk/sdk";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { size } from "src/breakpoints";
 
 type Props = {
   lpToken: Token;
-  width?: number;
 };
 
-export const LiquidityBox: FC<Props> = ({ lpToken, width }) => {
+export const LiquidityBox: FC<Props> = ({ lpToken }) => {
   const { data: balance } = useTokenBalance(lpToken);
 
   return (
-    <InfoBox width={width || 408}>
+    <InfoBox>
       <InfoBox.Header>
-        <BoxHeader>My Liquidity</BoxHeader>
+        <TextNudge amount={0} mobileAmount={2}>
+          <BoxHeader>My Liquidity</BoxHeader>
+        </TextNudge>
         <BoxHeaderAmount>
-          <TokenLogo token={lpToken} size={16} isLP />
-          {balance ? balance[lpToken.symbol].toHuman() : "-"}
+          <TokenLogo token={lpToken} size={16} mobileSize={16} isLP />
+          <TextNudge amount={1.5}>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</TextNudge>
         </BoxHeaderAmount>
       </InfoBox.Header>
       <InfoBox.Body>
         <InfoBox.Row>
           <InfoBox.Key>In my Wallet</InfoBox.Key>
-          <InfoBox.Value>{balance ? balance[lpToken.symbol].toHuman() : "-"}</InfoBox.Value>
+          <InfoBox.Value>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
         <InfoBox.Row>
           <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
@@ -43,6 +45,9 @@ export const LiquidityBox: FC<Props> = ({ lpToken, width }) => {
 
 const BoxHeader = styled.div`
   ${BodyCaps}
+  @media (max-width: ${size.mobile}) {
+    ${BodyXS}
+  }
 `;
 const BoxHeaderAmount = styled.div`
   display: flex;

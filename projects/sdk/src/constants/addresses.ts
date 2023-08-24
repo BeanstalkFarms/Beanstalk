@@ -12,8 +12,8 @@ export const addresses = {
   // ----------------------------------------
   BEANSTALK_PRICE: Address.make("0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
-  DEPOT: Address.make("0xDEb0f000082fD56C10f449d4f8497682494da84D"),
-  PIPELINE: Address.make("0xb1be0000bfdcddc92a8290202830c4ef689dceaa"),
+  DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
+  PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
 
   // ----------------------------------------

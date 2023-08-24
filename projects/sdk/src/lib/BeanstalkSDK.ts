@@ -15,7 +15,7 @@ import { Swap } from "src/lib/swap/Swap";
 import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
-import { WellsSDK } from "@beanstalk/wells";
+import { WellsSDK } from "@beanstalk/sdk-wells";
 import { ChainId } from "@beanstalk/sdk-core";
 
 export type Provider = ethers.providers.JsonRpcProvider;

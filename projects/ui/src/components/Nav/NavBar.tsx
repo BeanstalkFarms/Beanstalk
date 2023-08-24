@@ -29,6 +29,7 @@ const NavBar: FC<{}> = ({ children }) => {
         position: 'sticky',
         bgcolor: 'background.default',
         borderBottom: `${NAV_BORDER_HEIGHT}px solid ${PAGE_BORDER_COLOR}`,
+        zIndex: 80,
       }}
     >
       {children}
