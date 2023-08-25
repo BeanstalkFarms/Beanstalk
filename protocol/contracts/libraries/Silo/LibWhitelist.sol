@@ -36,6 +36,13 @@ library LibWhitelist {
         uint256 stalkIssuedPerBdv
     );
 
+    event WhitelistTokenToGauge(
+        address indexed token, 
+        bytes4 selector, 
+        uint24 lpGaugePoints
+    );
+
+
     /**
      * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
      * @param token ERC-20 token being updated in the Silo Whitelist.
@@ -88,6 +95,34 @@ library LibWhitelist {
         s.ss[token].milestoneSeason = uint24(s.season.current);
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
+    }
+
+    /**
+     * @notice Add an ERC-20 token to the Seed Gauge Whitelist.
+     * @dev LibWhitelistedTokens.sol must be updated to include the new token.
+     */
+    function whitelistTokenToGauge(
+        address token,
+        bytes4 selector,
+        uint16 lpGaugePoints
+    ) internal {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        //verify you passed in a callable selector
+        (bool success,) = address(this).staticcall(
+            abi.encodeWithSelector(
+                selector,
+                0,
+                0
+            )
+        );
+        require(success, "Whitelist: Invalid selector");
+
+        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
+
+        ss.GPSelector = selector;
+        ss.lpGaugePoints = lpGaugePoints;
+
+        emit WhitelistTokenToGauge(token, selector, lpGaugePoints);
     }
     
     /**

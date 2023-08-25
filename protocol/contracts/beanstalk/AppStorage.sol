@@ -360,7 +360,7 @@ contract Storage {
      * @param selector The encoded BDV function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature:
      * ```
-     * function tokenToBdv(uint256 amount) public view returns (uint256);
+     * function tokenToBdv(uint256 amount) external view returns (uint256);
      * ```
      * It is called by `LibTokenSilo` through the use of `delegatecall`
      * to calculate a token's BDV at the time of Deposit.
@@ -375,8 +375,14 @@ contract Storage {
      * a encodeType of 0x00 means the selector takes an input amount.
      * 0x01 means the selector takes an input amount and a token.
      * @param lpGaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
-     * @param GPSelector the selector beanstalk calls to update the gauge points of the token. 
-     * 
+     * @param GPSelector The encoded gaugePoint function selector for the token that pertains to 
+     * an external view Beanstalk function with the following signature:
+     * ```
+     * function gaugePoints(
+     *  uint256 currentGaugePoints,
+     *  uint256 percentOfDepositedBdv
+     *  ) external view returns (uint256);
+     * ```
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
      */
     struct SiloSettings {
