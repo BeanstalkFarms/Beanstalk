@@ -3,11 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibIncentive.sol";
 import "./Weather.sol";
+import "contracts/libraries/LibGauge.sol";
+import "contracts/libraries/LibIncentive.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibWhitelist.sol";
-import "contracts/libraries/Silo/LibWhitelistedAssets.sol";
+import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title SeasonFacet
@@ -60,8 +61,7 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseId(deltaB);
-        updateLPGaugeSystem(caseId);
-        updateGrownStalkEarnedPerSeason();
+        LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
@@ -114,77 +114,4 @@ contract SeasonFacet is Weather {
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
-
-    //////////////////// SEED GAUGE INTERNAL ////////////////////
-
-    /**
-     * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
-     * @dev Called at the end of each Season.
-     */
-    function updateGrownStalkEarnedPerSeason() internal {
-        // Assume percentOfSeedsToLP has 6 decimal precision
-        uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(s.seedGauge.totalBdv);
-        uint256 newGrownStalkToLP = newGrownStalk.mul(s.seedGauge.percentOfNewGrownStalkToLP).div(PRECISION);
-
-        // update stalkPerBDVPerSeason for bean
-        issueGrownStalkPerBDV(C.BEAN, newGrownStalk - newGrownStalkToLP);
-
-        // update stalkPerBdvPerSeason for LP 
-        // for 1 LP pool, no need for seed LP distrubution (BEAN:ETH)
-        if(LibWhitelistedAssets.getWhitelistedLPAssets().length == 2) return;
-
-        issueGrownStalkPerBDV(C.BEAN_ETH_WELL, newGrownStalkToLP);
-    }
-
-    function issueGrownStalkPerBDV(address token, uint256 newGrownStalk) private {
-        uint256 depositedBdv = s.siloBalances[token].depositedBdv;
-        if(depositedBdv > 0){
-            LibWhitelist.updateStalkPerBdvPerSeasonForToken(
-                token,
-                uint24(newGrownStalk.div(depositedBdv))
-            );
-        }
-    }
-
-    function updateLPGaugeSystem(uint256 caseId) internal {
-        address[] memory whitelistedLPSiloTokens = LibWhitelistedAssets.getWhitelistedLPAssets();
-        uint24 totalGaugePoints;
-
-        // Assume that s.ss[whitelistedLPSiloTokens[0]].gaugePoints = 100e6
-        // if there is only bean:eth and urBean:eth, then no need to update gauge points
-        if (whitelistedLPSiloTokens.length == 2) return; 
-    
-        for (uint256 i; i < whitelistedLPSiloTokens.length; ++i) {
-            Storage.SiloSettings storage ss = s.ss[whitelistedLPSiloTokens[i]];
-            uint256 percentOfDepositedBdv = uint256(s.siloBalances[whitelistedLPSiloTokens[i]].depositedBdv).mul(PRECISION).div(s.seedGauge.totalBdv);
-            bytes memory callData = abi.encodeWithSelector(
-                ss.GPSelector,
-                ss.lpGaugePoints,
-                percentOfDepositedBdv,
-                caseId
-            );
-            (bool success, bytes memory data) = address(this).staticcall(callData);
-
-            if (!success) {
-                if (data.length == 0) revert();
-                assembly {
-                    revert(add(32, data), mload(data))
-                }
-            }
-            uint24 newGaugePoints;
-
-            assembly {
-                newGaugePoints := mload(add(data, add(0x20, 0)))
-            }
-                totalGaugePoints += newGaugePoints;
-                ss.lpGaugePoints = newGaugePoints;
-            }
-
-        // Normalize gauge points
-        for (uint256 i; i < whitelistedLPSiloTokens.length; ++i) {
-            Storage.SiloSettings storage ss = s.ss[whitelistedLPSiloTokens[i]];
-            ss.lpGaugePoints = uint24(uint32(ss.lpGaugePoints) * 100e6 / totalGaugePoints);
-        }
-    }
-    
 }

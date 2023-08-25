@@ -162,8 +162,8 @@ contract MockSeasonFacet is SeasonFacet  {
         s.w.lastDSoil = number;
     }
 
-    function setNextSowTimeE(uint32 time) public {
-        s.w.thisSowTime = time;
+    function setNextSowTimeE(uint32 _time) public {
+        s.w.thisSowTime = _time;
     }
 
     function setLastSowTimeE(uint32 number) public {
@@ -209,8 +209,8 @@ contract MockSeasonFacet is SeasonFacet  {
         calcCaseId(deltaB);
     }
 
-    function setCurrentSeasonE(uint32 season) public {
-        s.season.current = season;
+    function setCurrentSeasonE(uint32 _season) public {
+        s.season.current = _season;
     }
 
     function calcCaseIdWithParams(

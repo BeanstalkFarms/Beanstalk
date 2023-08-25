@@ -4,7 +4,9 @@ pragma solidity =0.7.6;
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import "contracts/libraries/LibSafeMath32.sol";
-
+import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import "contracts/libraries/Well/LibWell.sol";
+import "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @author Brean
@@ -33,7 +35,6 @@ library LibEvaluate {
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
     using LibSafeMath32 for uint32;
-
 
     // Pod rate bounds
     uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
@@ -72,7 +73,7 @@ library LibEvaluate {
      * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
      * @param podRate the length of the podline (debt), divided by the bean supply.
      */
-    function evalPrice( 
+    function evalPrice(
         int256 deltaB, 
         Decimal.D256 memory podRate
     ) internal pure returns (uint256 caseId) {
@@ -123,7 +124,7 @@ library LibEvaluate {
 
     function calcDeltaPodDemand(
         uint256 dsoil
-    )  internal view returns (
+    ) internal view returns (
         Decimal.D256 memory deltaPodDemand,
         uint32 lastSowTime,
         uint32 thisSowTime
@@ -171,19 +172,35 @@ library LibEvaluate {
         }
     }
 
-    function calcLPToSupplyRatio(uint256 beanSupply) internal returns (Decimal.D256 memory lpToSupplyRatio) {
+    /**
+     * @notice calculates the liquidity to supply ratio, where liquidity is measured in USD. 
+     * @param beanSupply the total supply of beans.
+     */
+    function calcLPToSupplyRatio(
+        uint256 beanSupply
+    ) internal returns (
+        Decimal.D256 memory lpToSupplyRatio
+    ) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lpSupply = 0;
-        if (lpSupply == 0) {
-            lpToSupplyRatio = Decimal.from(1e18);
-        } else {
-            lpToSupplyRatio = Decimal.ratio(lpSupply, beanSupply);
+        address[] memory assets = LibWhitelistedTokens.getSiloLPTokens();
+        uint256 usdLiquidity;
+        for(uint256 i = 0; i < assets.length; i++){
+            // get amount of LP token
+            uint256 amount = s.siloBalances[assets[i]].deposited;
+            // get LP amount in USD
+            if(LibWell.isWell(assets[i])){
+                usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(assets[i], amount));
+            } else {
+                // curve pool
+                // TODO
+            }
         }
+        lpToSupplyRatio = Decimal.ratio(usdLiquidity, beanSupply);
     }
 
     /**
      * @notice evaluates beanstalk based on deltaB, podRate, and deltaPodDemand,
-     * and returns the assoicated caseId.
+     * and returns the associated caseId.
      * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
      * @param podRate the length of the podline (debt), divided by the bean supply.
      * @param deltaPodDemand the change in soil demand from the previous season.
@@ -193,11 +210,8 @@ library LibEvaluate {
         Decimal.D256 memory podRate,
         Decimal.D256 memory deltaPodDemand,
         Decimal.D256 memory lpToSupplyRatio
-    ) internal pure returns (uint256 caseId) {
-        // Calculate Weather Case
-        caseId = 0;
-        // Evaluate Pod Rate
-        caseId = evalPodRate(podRate)
+    ) internal pure returns (uint256 caseId) {       
+        caseId = evalPodRate(podRate)  // Evaluate Pod Rate
             .add(evalPrice(deltaB, podRate)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand
             .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate LP to Supply Ratio
