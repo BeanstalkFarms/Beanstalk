@@ -26,6 +26,7 @@ pragma solidity =0.7.6;
  * 
  * In total, there are 96 cases (4 * 2 * 3 * 4)
  * In practice, the cases range from 0-127. 
+ * TODO: may need to update such that same cases use the same internal constant in order to fit
  */
 
 

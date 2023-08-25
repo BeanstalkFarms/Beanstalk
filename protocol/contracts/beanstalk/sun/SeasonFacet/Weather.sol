@@ -50,6 +50,7 @@ contract Weather is Sun {
     event GrownStalkToLPChange(
         uint256 indexed season,
         uint256 caseId,
+        uint256 slope,
         int8 change
     );
 
@@ -69,7 +70,7 @@ contract Weather is Sun {
 
     /**
      * @notice from deltaB, podRate, change in soil demand, and liquidity to supply ratio,
-     * calculate the caseId
+     * calculate the caseId, and update the temperature and grownStalkPerBDVToLP. 
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
      * @dev A detailed explanation of the Weather mechanism can be found in the
      * Beanstalk whitepaper. An explanation of state variables can be found in {AppStorage}.
@@ -147,8 +148,10 @@ contract Weather is Sun {
         }
 
         // TODO: change LP event to include slope
+        // emit GrownStalkToLPChange(s.season.current, caseId, bL);
 
-        emit GrownStalkToLPChange(s.season.current, caseId, bL);
+        // TODO: check whether event is good:
+        emit GrownStalkToLPChange(s.season.current, caseId, mL, bL);
     }
 
     /**
@@ -158,9 +161,9 @@ contract Weather is Sun {
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
     function handleRain(uint256 caseId) internal {
-        // TODO: update cases
+        // TODO: update cases, assumes we flood irregardless of LoSR
         // cases 4-7 represent the case where the pod rate is less than 5% and P > 1.
-        if (caseId < 4 || caseId > 7) {
+        if (caseId.mod(32) < 4 || caseId.mod(32) > 7) {
             if (s.season.raining) {
                 s.season.raining = false;
             }

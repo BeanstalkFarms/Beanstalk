@@ -25,7 +25,7 @@ library LibGauge {
      * @notice Updates the seed gauge system.
      */
     function stepGauge() internal {
-        updateLPGaugeSystem();
+        updateGaugePoints();
         updateGrownStalkEarnedPerSeason();
     }
     /**
@@ -74,10 +74,10 @@ library LibGauge {
     }
 
     /**
-     * @notice updates the LP gauge system. 
+     * @notice re-evaluate the gauge points of each LP asset, then normalize.
      * @dev Gauge points are normalized to 100e6.
      */
-    function updateLPGaugeSystem() internal {
+    function updateGaugePoints() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         address[] memory whitelistedLPSiloTokens = LibWhitelistedTokens.getSiloLPTokens();
