@@ -66,8 +66,18 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     let fourSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("4"), silo.stalk, silo.seeds);
     siloYield.fourSeedBeanAPY = fourSeedAPY[0];
     siloYield.fourSeedStalkAPY = fourSeedAPY[1];
-    let zeroSeedAPY = calculateAPY(currentEMA, ZERO_BD, silo.stalk, silo.seeds);
-    siloYield.zeroSeedBeanAPY = zeroSeedAPY[0];
+    siloYield.zeroSeedBeanAPY = calculateAPY(currentEMA, ZERO_BD, silo.stalk, silo.seeds)[0];
+
+    // BIP-37 Seed changes
+    let threeSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("3"), silo.stalk, silo.seeds);
+    siloYield.threeSeedBeanAPY = threeSeedAPY[0];
+    siloYield.threeSeedStalkAPY = threeSeedAPY[1];
+    let threePointTwoFiveSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("3.25"), silo.stalk, silo.seeds);
+    siloYield.threePointTwoFiveSeedBeanAPY = threePointTwoFiveSeedAPY[0];
+    siloYield.threePointTwoFiveSeedStalkAPY = threePointTwoFiveSeedAPY[1];
+    let fourPointFiveSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("4.5"), silo.stalk, silo.seeds);
+    siloYield.fourPointFiveSeedBeanAPY = fourPointFiveSeedAPY[0];
+    siloYield.fourPointFiveSeedStalkAPY = fourPointFiveSeedAPY[1];
   }
   siloYield.save();
 
@@ -86,7 +96,7 @@ export function calculateAPY(n: BigDecimal, seedsPerBDV: BigDecimal, stalk: BigI
   // Initialize sequence
   let C = toDecimal(seeds); // Init: Total Seeds
   let K = toDecimal(stalk, 10); // Init: Total Stalk
-  let b = seedsPerBDV.div(BigDecimal.fromString("2")); // Init: User BDV
+  let b = seedsPerBDV.div(BigDecimal.fromString("3")); // Init: User BDV
   let k = BigDecimal.fromString("1"); // Init: User Stalk
 
   // Farmer initial values
@@ -101,15 +111,15 @@ export function calculateAPY(n: BigDecimal, seedsPerBDV: BigDecimal, stalk: BigI
 
   // Stalk and Seeds per Deposited Bean.
   let STALK_PER_SEED = BigDecimal.fromString("0.0001"); // 1/10,000 Stalk per Seed
-  let STALK_PER_BEAN = BigDecimal.fromString("0.0002"); // 2 Seeds per Bean * 1/10,000 Stalk per Seed
+  let STALK_PER_BEAN = BigDecimal.fromString("0.0003"); // 3 Seeds per Bean * 1/10,000 Stalk per Seed
 
   for (let i = 0; i < 8760; i++) {
     // Each Season, Farmer's ownership = `current Stalk / total Stalk`
     let ownership = k.div(K);
     let newBDV = n.times(ownership);
 
-    // Total Seeds: each seignorage Bean => 2 Seeds
-    C_i = C.plus(n.times(BigDecimal.fromString("2")));
+    // Total Seeds: each seignorage Bean => 3 Seeds
+    C_i = C.plus(n.times(BigDecimal.fromString("3")));
     // Total Stalk: each seignorage Bean => 1 Stalk, each outstanding Bean => 1/10_000 Stalk
     K_i = K.plus(n).plus(STALK_PER_SEED.times(C));
     // Farmer BDV: each seignorage Bean => 1 BDV
