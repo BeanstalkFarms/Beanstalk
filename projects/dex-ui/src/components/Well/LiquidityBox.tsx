@@ -31,10 +31,10 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
           <InfoBox.Key>In my Wallet</InfoBox.Key>
           <InfoBox.Value>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
-        <InfoBox.Row>
+        {/* <InfoBox.Row>
           <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
           <InfoBox.Value>-</InfoBox.Value>
-        </InfoBox.Row>
+        </InfoBox.Row> */}
       </InfoBox.Body>
       {/* <InfoBox.Footer>
         <FooterAmount>USD Total: $69,420</FooterAmount>
