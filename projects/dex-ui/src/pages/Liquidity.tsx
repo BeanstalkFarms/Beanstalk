@@ -17,6 +17,8 @@ import { BodyXS, TextNudge } from "src/components/Typography";
 import { ImageButton } from "src/components/ImageButton";
 import { ChevronDown } from "src/components/Icons";
 import { size } from "src/breakpoints";
+import { Loading } from "../components/Loading";
+import { Error } from "../components/Error";
 
 export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
@@ -64,8 +66,11 @@ export const Liquidity = () => {
     run();
   }, [well]);
 
-  if (loading) return <div>loading...</div>;
-  if (error) return <div>{error.message}</div>;
+  if (loading) return <Loading spinnerOnly />;
+
+  if (error) {
+    return <Error message={error?.message} errorOnly />
+  }
 
   return (
     <Page>
@@ -123,7 +128,6 @@ export const Liquidity = () => {
           {tab === 0 && (
             <AddLiquidity
               well={well!}
-              txnCompleteCallback={() => console.log("complete")}
               slippage={slippage}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}
@@ -132,7 +136,6 @@ export const Liquidity = () => {
           {tab === 1 && (
             <RemoveLiquidity
               well={well!}
-              txnCompleteCallback={() => console.log("complete")}
               slippage={slippage}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}

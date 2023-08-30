@@ -17,18 +17,20 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
   const addFilter = contract.filters.AddLiquidity();
   const removeFilter = contract.filters.RemoveLiquidity();
   const swapFilter = contract.filters.Swap();
+  const syncFilter = contract.filters.Sync();
 
   if (!well.lpToken) await well.getLPToken();
 
   const combinedFilter = {
     address: contract.address,
-    topics: [[swapFilter?.topics?.[0] as string, addFilter?.topics?.[0] as string, removeFilter?.topics?.[0] as string]]
+    topics: [[swapFilter?.topics?.[0] as string, addFilter?.topics?.[0] as string, removeFilter?.topics?.[0] as string, syncFilter?.topics?.[0] as string]]
   };
 
   const getEventType = (topics: string[]) => {
     if (isEqual(addFilter.topics, topics)) return EVENT_TYPE.ADD_LIQUIDITY;
     if (isEqual(removeFilter.topics, topics)) return EVENT_TYPE.REMOVE_LIQUIDITY;
     if (isEqual(swapFilter.topics, topics)) return EVENT_TYPE.SWAP;
+    if (isEqual(syncFilter.topics, topics)) return EVENT_TYPE.SYNC;
 
     throw new Error("Unknown topics found: " + topics);
   };
@@ -75,6 +77,15 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
         ...base,
         lpAmount: well.lpToken!.fromBlockchain(data.lpAmountIn),
         tokenAmounts: data.tokenAmountsOut.map((bn: BigNumber, i: number) => well.tokens![i].fromBlockchain(bn))
+      };
+      return event;
+    }
+    if (type === EVENT_TYPE.SYNC) {
+      const data = contract.interface.decodeEventLog("Sync", e.data, e.topics);
+      const event: AddEvent = {
+        ...base,
+        lpAmount: well.lpToken!.fromBlockchain(data.lpAmountOut),
+        tokenAmounts: data.reserves.map((bn: BigNumber, i: number) => well.tokens![i].fromBlockchain(bn))
       };
       return event;
     }

@@ -31,7 +31,7 @@ export const SwapRoot = () => {
   // We need _some_ address in order to make quotes work when there's no account connected.
   const [recipient, setRecipient] = useState<string>(NULL_ADDRESS);
   const [inAmount, setInAmount] = useState<TokenValue>();
-  const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["WETH"]) : tokens["WETH"]);
+  const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["ETH"]) : tokens["ETH"]);
   const [outToken, setOutToken] = useState<Token>(toToken ? (tokens[toToken] ? tokens[toToken] : tokens["BEAN"]) : tokens["BEAN"]);
   const [outAmount, setOutAmount] = useState<TokenValue>();
   const [slippage, setSlippage] = useState<number>(0.1);
@@ -76,8 +76,8 @@ export const SwapRoot = () => {
   }, [inToken, outToken, builder, account]);
 
   useEffect(() => {
-    readyToSwap && hasEnoughBalance && !!account ? setButtonEnabled(true) : setButtonEnabled(false);
-  }, [readyToSwap, account, hasEnoughBalance]);
+    readyToSwap && hasEnoughBalance && !!account && inAmount?.gt(TokenValue.ZERO) && outAmount?.gt(TokenValue.ZERO) ? setButtonEnabled(true) : setButtonEnabled(false);
+  }, [readyToSwap, account, inAmount, outAmount, hasEnoughBalance]);
 
   const arrowHandler = () => {
     const prevInToken = inToken;
@@ -284,8 +284,8 @@ export const SwapRoot = () => {
     try {
       // sanity check
       if (recipient === NULL_ADDRESS) throw new Error("FATAL: recipient is the NULL_ADDRESS!");
-
-      const tx = await quote!.doSwap();
+      const gasEstimate = quote?.gas;
+      const tx = await quote!.doSwap({ gasLimit: gasEstimate?.mul(1.2).toBigNumber() }); 
       toast.confirming(tx);
 
       const receipt = await tx.wait();

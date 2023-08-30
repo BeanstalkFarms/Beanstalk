@@ -23,19 +23,12 @@ import { size } from "src/breakpoints";
 
 type RemoveLiquidityProps = {
   well: Well;
-  txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
 };
 
-export const RemoveLiquidity = ({
-  well,
-  txnCompleteCallback,
-  slippage,
-  slippageSettingsClickHandler,
-  handleSlippageValueChange
-}: RemoveLiquidityProps) => {
+export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
@@ -132,6 +125,7 @@ export const RemoveLiquidity = ({
       });
       let removeLiquidityTxn;
       try {
+        
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
           if (!oneTokenQuote) {
             return;
@@ -141,7 +135,9 @@ export const RemoveLiquidity = ({
             lpTokenAmount,
             well.tokens![singleTokenIndex],
             quoteAmountLessSlippage,
-            address
+            address,
+            undefined,
+            { gasLimit: oneTokenQuote.estimate.mul(1.2).toBigNumber() }
           );
           toast.confirming(removeLiquidityTxn);
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
@@ -149,21 +145,24 @@ export const RemoveLiquidity = ({
             return;
           }
           const quoteAmountLessSlippage = balancedQuote.quote.map((q) => q.subSlippage(slippage));
-          removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address);
+          removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address, undefined, {
+            gasLimit: balancedQuote.estimate.mul(1.2).toBigNumber()
+          });
           toast.confirming(removeLiquidityTxn);
         } else {
           if (!customRatioQuote) {
             return;
           }
           const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
-          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, amounts, address);
+          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, amounts, address, undefined, {
+            gasLimit: customRatioQuote.estimate.mul(1.2).toBigNumber()
+          });
           toast.confirming(removeLiquidityTxn);
         }
         const receipt = await removeLiquidityTxn.wait();
         toast.success(receipt);
         resetState();
         refetchWellReserves();
-        txnCompleteCallback();
       } catch (error) {
         Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
         toast.error(error);
@@ -179,7 +178,6 @@ export const RemoveLiquidity = ({
     customRatioQuote,
     balancedQuote,
     address,
-    txnCompleteCallback,
     resetState,
     slippage,
     refetchWellReserves
@@ -191,7 +189,6 @@ export const RemoveLiquidity = ({
     if (currentMode && _newMode) {
       setRemoveLiquidityMode(newMode);
     } else {
-      setLpTokenAmount(TokenValue.ZERO);
       setRemoveLiquidityMode(newMode);
     }
   };
@@ -421,7 +418,7 @@ export const RemoveLiquidity = ({
             />
           )}
 
-          {!tokenAllowance && (
+          {!tokenAllowance && hasEnoughBalance && (
             <ButtonWrapper>
               <ApproveTokenButton
                 disabled={approveButtonDisabled}
@@ -496,36 +493,6 @@ const ButtonWrapper = styled.div`
     margin-bottom: 0;
     bottom: 12px;
   }
-`;
-
-const TabRadio = styled.input`
-  // TODO: Somehow the default input styled
-  // Are not showing the radio buttons
-  margin-right: 10px;
-  width: 1em;
-  height: 1em;
-  outline: none;
-  border: none;
-  background-color: #f9f8f6;
-  &:checked {
-    background-color: white;
-  }
-  cursor: pointer;
-`;
-
-const Radio = styled.input`
-  // TODO: Somehow the default input styled
-  // Are not showing the radio buttons
-  margin-right: 10px;
-  width: 1.4em;
-  height: 1.4em;
-  outline: none;
-  border: none;
-  background-color: #f9f8f6;
-  &:checked {
-    background-color: white;
-  }
-  cursor: pointer;
 `;
 
 const TokenAmount = styled.div`

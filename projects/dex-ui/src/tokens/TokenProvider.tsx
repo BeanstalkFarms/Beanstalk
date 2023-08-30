@@ -3,8 +3,8 @@ import React, { createContext, useContext } from "react";
 
 import { useWellTokens } from "src/tokens/useWellTokens";
 import { images } from "src/assets/images/tokens";
-import { useAccount, useDisconnect } from "wagmi";
-import { Log } from "src/utils/logger";
+import { Loading } from "src/components/Loading";
+import { Error } from "src/components/Error";
 
 const tokenMap: Record<string, Token> = {};
 const TokenContext = createContext(tokenMap);
@@ -12,9 +12,12 @@ const TokenContext = createContext(tokenMap);
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: tokens, isLoading, error } = useWellTokens();
 
-  if (isLoading) return <div>loading...</div>;
+  if (isLoading) {
+    return <Loading />
+  }
+
   if (error) {
-    Log.module("TokenProvider").error(`useWellTokens(): ${error.message}`);
+    return <Error message={error?.message} />
   }
 
   const add = (token: Token) => (tokenMap[token.symbol] = token);

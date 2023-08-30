@@ -96,7 +96,6 @@ const QuoteDetails = ({
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
-      console.log("Here", _quoteValue, _quoteValue.toHuman(), _quoteValue.toHuman("short"));
       return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
     }
 
@@ -165,7 +164,7 @@ const QuoteDetails = ({
             setTokenUSDValue(totalReservesUSDValue);
             return;
           }
-          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply);
+          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply.add(quote?.quote as TokenValue));
           const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
         }

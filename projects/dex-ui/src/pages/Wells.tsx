@@ -14,6 +14,8 @@ import { useWells } from "src/wells/useWells";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
+import { Loading } from "../components/Loading";
+import { Error } from "../components/Error";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -61,8 +63,13 @@ export const Wells = () => {
     run();
   }, [sdk, wells, address]);
 
-  if (isLoading) return <div>loading...</div>;
-  if (error) return <div>{error.message}</div>;
+  if (isLoading) {
+    return <Loading spinnerOnly />
+  }
+
+  if (error) {
+    return <Error message={error?.message} errorOnly />
+  }
 
   function WellRow(well: any, index: any) {
     if (!well) return;
@@ -156,7 +163,7 @@ export const Wells = () => {
     return tab === 0 ? WellRow(well, index) : MyLPsRow(well, index);
   });
 
-  const anyLpPositions = !rows.every((row) => row === undefined);
+  const anyLpPositions = rows ? !rows.every((row) => row === undefined) : false;
 
   return (
     <Page>
@@ -178,7 +185,7 @@ export const Wells = () => {
           <THead>
             <TableRow>
               <DesktopHeader>Well</DesktopHeader>
-              <DesktopHeader>Well Pricing Function</DesktopHeader>
+              <DesktopHeader>Well Function</DesktopHeader>
               <DesktopHeader align="right">Trading Fees</DesktopHeader>
               <DesktopHeader align="right">Total Liquidity</DesktopHeader>
               <DesktopHeader align="right">Reserves</DesktopHeader>
