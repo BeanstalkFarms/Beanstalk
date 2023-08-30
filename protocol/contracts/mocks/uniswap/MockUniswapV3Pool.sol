@@ -104,6 +104,7 @@ contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     /// @inheritdoc IUniswapV3PoolState
     Oracle.Observation[65535] public override observations;
 
+    bool public fail_oracle_call;
     int24 public manual_ticks;
     uint256 public manual_sqrtPriceX96;
     /// @dev Mutually exclusive reentrancy protection into the pool to/from a method. This method also prevents entrance
@@ -248,6 +249,7 @@ contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
         noDelegateCall
         returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s)
     {   
+        require(!fail_oracle_call, "Oracle call failed");
         tickCumulatives = new int56[](secondsAgos.length);
         secondsPerLiquidityCumulativeX128s = new uint160[](secondsAgos.length); // not needed
         for (uint256 i = 0; i < secondsAgos.length; i++) {
@@ -882,6 +884,10 @@ contract MockUniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     function setOraclePrice(uint256 price,uint8 decimals) external { 
         manual_sqrtPriceX96 = sqrt((uint256(1<<192))*(10**decimals)/(price));
         manual_ticks = TickMath.getTickAtSqrtRatio(uint160(manual_sqrtPriceX96));
+    }
+
+    function setOracleFailure(bool fail) external {
+        fail_oracle_call = fail;
     }
 
     //quick helper

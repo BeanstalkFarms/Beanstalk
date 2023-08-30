@@ -4131,7 +4131,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "stalk",
+        "name": "stalkIssuedPerBdv",
         "type": "uint256"
       }
     ],
@@ -4183,7 +4183,7 @@
       },
       {
         "internalType": "uint32",
-        "name": "stalk",
+        "name": "stalkIssuedPerBdv",
         "type": "uint32"
       },
       {
@@ -4193,6 +4193,39 @@
       }
     ],
     "name": "whitelistToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkIssuedPerBdv",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes1",
+        "name": "encodeType",
+        "type": "bytes1"
+      }
+    ],
+    "name": "whitelistTokenWithEncodeType",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -4335,43 +4368,6 @@
         "type": "address"
       },
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "fromToken",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "toToken",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "fromAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "Convert",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
         "indexed": true,
         "internalType": "address",
         "name": "token",
@@ -4441,55 +4437,6 @@
     ],
     "name": "RemoveDeposits",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "convertData",
-        "type": "bytes"
-      },
-      {
-        "internalType": "int96[]",
-        "name": "stems",
-        "type": "int96[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "convert",
-    "outputs": [
-      {
-        "internalType": "int96",
-        "name": "toStem",
-        "type": "int96"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fromAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "toAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fromBdv",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "toBdv",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
   },
   {
     "inputs": [
@@ -4591,27 +4538,89 @@
     "type": "function"
   },
   {
+    "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
         "internalType": "address",
-        "name": "token",
+        "name": "account",
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "fromToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "toToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "amount",
+        "name": "fromAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "toAmount",
         "type": "uint256"
       }
     ],
-    "name": "bdv",
+    "name": "Convert",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "convertData",
+        "type": "bytes"
+      },
+      {
+        "internalType": "int96[]",
+        "name": "stems",
+        "type": "int96[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "convert",
     "outputs": [
       {
+        "internalType": "int96",
+        "name": "toStem",
+        "type": "int96"
+      },
+      {
         "internalType": "uint256",
-        "name": "",
+        "name": "fromAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "toAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fromBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "toBdv",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -4680,6 +4689,30 @@
       }
     ],
     "name": "unripeLPToBDV",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "wellBdv",
     "outputs": [
       {
         "internalType": "uint256",
@@ -5519,6 +5552,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "bdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "_bdv",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "claimPlenty",
     "outputs": [],
@@ -5552,7 +5609,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "bdv",
+        "name": "_bdv",
         "type": "uint256"
       },
       {
@@ -6044,6 +6101,11 @@
             "internalType": "int96",
             "name": "milestoneStem",
             "type": "int96"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
           }
         ],
         "internalType": "struct Storage.SiloSettings",
@@ -6125,7 +6187,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "bdv",
+        "name": "_bdv",
         "type": "uint256"
       }
     ],
@@ -6467,6 +6529,41 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "curveOracle",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "initialized",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint32",
+            "name": "startSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256[2]",
+            "name": "balances",
+            "type": "uint256[2]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Storage.CurveMetapoolOracle",
+        "name": "co",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -6751,6 +6848,25 @@
         "internalType": "struct Storage.Weather",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "wellOracleSnapshot",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "snapshot",
+        "type": "bytes"
       }
     ],
     "stateMutability": "view",

@@ -6,6 +6,7 @@ const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE,
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
+const { whitelistWell, deployMockWell } = require('../utils/well.js');
 const fs = require('fs');
 
 let user, user2, owner;
@@ -26,7 +27,6 @@ describe('Silo', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
 
     await this.season.teleportSunrise(10);
-
     this.season.deployStemsUpgrade();
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
@@ -35,8 +35,12 @@ describe('Silo', function () {
     this.approval = await ethers.getContractAt('ApprovalFacet', this.diamond.address);
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
-    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES)
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
+    [this.well, this.wellFunction, this.pump] = await deployMockWell()
+    await whitelistWell(this.well.address, '10000', to6('4'))
+    await this.season.captureWellE(this.well.address)
     
 
     this.bean = await ethers.getContractAt('Bean', BEAN);
@@ -59,6 +63,7 @@ describe('Silo', function () {
 
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
+
   });
 
   beforeEach(async function () {
@@ -356,6 +361,7 @@ describe('Silo', function () {
 
     it("properly gives an URI", async function () {
       await this.season.farmSunrises(1000); 
+
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
@@ -365,18 +371,26 @@ describe('Silo', function () {
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
-      depositID2 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
-      expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+      depositID3 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
+      expect(await this.metadata.uri(depositID3)).to.eq(depositmetadata);
 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean3Crv.txt', 'utf-8');
-      depositID2 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D000000000000000000000684';
-      expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+      depositID4 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFFFFFFFFFFFFFFFFFFFF97C';
+      expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
 
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean3Crv2.txt', 'utf-8');
+      depositID4 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFF000000000000000000111';
+      expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
+
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
+      depositID5 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF00000000002';
+      expect(await this.metadata.uri(depositID5)).to.eq(depositmetadata);
 
     });
 
     it("properly gives the correct ERC-165 identifier", async function () {
       expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(true);
+      expect(await this.diamondLoupe.supportsInterface("0x0e89341c")).to.eq(true);
     });
   });
 

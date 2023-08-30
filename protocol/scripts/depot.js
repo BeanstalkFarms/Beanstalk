@@ -8,7 +8,7 @@ async function deploy(account=undefined) {
     account = await impersonateSigner(DEPOT_DEPLOYER)
     await mintEth(account.address)
   }
-  return await deployAtNonce('Depot', account, n = 7)
+  return await deployAtNonce('Depot', account, n = 5)
 }
 async function impersonate() {
   let json = fs.readFileSync(`./artifacts/contracts/depot/Depot.sol/Depot.json`);

@@ -74,6 +74,35 @@ async function bipNewSilo(mock = true, account = undefined) {
     })
 }
 
+//BIP to integration Basin into Beanstalk
+async function bipBasinIntegration(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+    await upgradeWithNewFacets({
+        diamondAddress: BEANSTALK,
+        facetNames: [
+          'DepotFacet',
+          'BDVFacet',
+          'ConvertFacet',
+          'ConvertGettersFacet',
+          'SiloFacet',
+          'EnrootFacet',
+          'WhitelistFacet',
+          'SeasonFacet',
+          'MetadataFacet'
+        ],
+        initFacetName: 'InitBipBasinIntegration',
+        bip: false,
+        object: !mock, //if this is true, something would get spit out in the diamond cuts folder with all the data (due to gnosis safe deployment flow)
+        verbose: true,
+        selectorsToRemove: [ '0x8f742d16' ],
+        account: account
+    })
+}
+
 async function mockBeanstalkAdmin(mock = true, account = undefined) {
     if (account == undefined) {
         account = await impersonateBeanstalkOwner()
@@ -120,4 +149,5 @@ exports.bip29 = bip29
 exports.bip30 = bip30
 exports.bip34 = bip34
 exports.bipNewSilo = bipNewSilo
+exports.bipBasinIntegration = bipBasinIntegration
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin

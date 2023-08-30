@@ -5,6 +5,7 @@ const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
 const { USDC, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
+const { deployMockWell } = require('../utils/well.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -42,7 +43,9 @@ describe('Sun', function () {
     await this.bean.mint(owner.address, to6('10000'))
     await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-    await this.unripeLP.mint(owner.address, to6('10000'))
+    await this.unripeLP.mint(owner.address, to6('10000'));
+
+    [this.well, this.wellFunction, this.pump] = await deployMockWell()
 
     await this.season.siloSunrise(0)
   })
@@ -223,14 +226,15 @@ describe('Sun', function () {
   it("sunrise reward", async function() {
 
     const VERBOSE = false;
-    // [[pool balances], eth price, base fee, secondsLate, toMode]
+    // [[pool balances], base fee, secondsLate, toMode]
+
     const mockedValues = [
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('10000'), to18('50000')], 3000 * Math.pow(10, 6), 30 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('50000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('10000'), to18('10000')], 3000 * Math.pow(10, 6), 90 * Math.pow(10, 9), 0, INTERNAL],
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 24, INTERNAL],
-      [[toBean('10000'), to18('10000')], 1500 * Math.pow(10, 6), 50 * Math.pow(10, 9), 500, INTERNAL]
+      [[toBean('10000'), to18('6.666666')], 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('4.51949333333335')], 30 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('50000'), to18('24.5848333333334')], 50 * Math.pow(10, 9), 0, EXTERNAL],
+      [[toBean('10000'), to18('3.33333')], 90 * Math.pow(10, 9), 0, INTERNAL],
+      [[toBean('10000'), to18('6.66666')], 50 * Math.pow(10, 9), 24, INTERNAL],
+      [[toBean('10000'), to18('6.666666')], 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
     let START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
     await timeSkip(START_TIME + 60*60*3);
@@ -246,19 +250,19 @@ describe('Sun', function () {
 
       snapshotId = await takeSnapshot();
 
-      await this.beanThreeCurve.set_balances(mockVal[0]);
+      await this.well.setReserves(mockVal[0]);
+      await this.well.setReserves(mockVal[0]);
       // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
       await timeSkip(START_TIME + 60*60);
 
-      await this.uniswapV3EthUsdc.setOraclePrice(mockVal[1], 18);
-      await this.basefee.setAnswer(mockVal[2]);
+      await this.basefee.setAnswer(mockVal[1]);
 
-      const secondsLate = mockVal[3];
+      const secondsLate = mockVal[2];
       const effectiveSecondsLate = Math.min(secondsLate, 300);
       await this.season.resetSeasonStart(secondsLate);
 
       // SUNRISE
-      this.result = await this.season.gm(owner.address, mockVal[4]);
+      this.result = await this.season.gm(owner.address, mockVal[3]);
       
       // Verify that sunrise was profitable assuming a 50% average success rate
       
@@ -276,7 +280,7 @@ describe('Sun', function () {
       const ethPrice = mockVal[1] / Math.pow(10, 6);
       const beanPrice = (await this.beanThreeCurve.get_bean_price()).toNumber() / Math.pow(10, 6);
       // How many beans are required to purchase 1 eth
-      const beanEthPrice = ethPrice / beanPrice;
+      const beanEthPrice = mockVal[0][0] * 1e12 / mockVal[0][1];
 
       // Bean equivalent of the cost to execute sunrise
       const GasCostBean = GasCostInETH * beanEthPrice;

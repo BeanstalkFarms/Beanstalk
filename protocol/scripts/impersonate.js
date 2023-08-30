@@ -21,8 +21,13 @@ const {
   PRICE_DEPLOYER,
   BEANSTALK,
   BASE_FEE_CONTRACT,
-  ETH_USDC_UNISWAP_V3
+  ETH_USDC_UNISWAP_V3,
+  ETH_USDT_UNISWAP_V3,
+  USDT,
+  ETH_USD_CHAINLINK_AGGREGATOR,
+  BEAN_ETH_WELL
 } = require('../test/utils/constants');
+const { deployWell } = require('../utils/well.js');
 const { impersonateSigner, mintEth } = require('../utils');
 
 const { getSigner } = '../utils'
@@ -92,6 +97,8 @@ async function weth() {
       WETH,
       JSON.parse(tokenJson).deployedBytecode,
   ]);
+  const weth = await ethers.getContractAt("MockToken", WETH);
+  await weth.setDecimals(18);
 }
 
 async function router() {
@@ -150,29 +157,31 @@ async function curveLUSD() {
 }
 
 async function bean() {
-  let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
-
-  await network.provider.send("hardhat_setCode", [
-    BEAN,
-    JSON.parse(tokenJson).deployedBytecode,
-  ]);
-
+  await token(BEAN, 6)
   const bean = await ethers.getContractAt("MockToken", BEAN);
-  await bean.setDecimals(6);
   await bean.setSymbol("BEAN");
   await bean.setName("Bean");
   return BEAN;
 }
 
 async function usdc() {
+  await token(USDC, 6)
+}
+
+async function usdt() {
+  await token(USDT, 6)
+}
+
+async function token(address, decimals) {
   let tokenJson = fs.readFileSync(`./artifacts/contracts/mocks/MockToken.sol/MockToken.json`);
   await network.provider.send("hardhat_setCode", [
-    USDC,
+    address,
     JSON.parse(tokenJson).deployedBytecode,
   ]);
 
-  const usdc = await ethers.getContractAt("MockToken", USDC);
-  await usdc.setDecimals(6);
+  const token = await ethers.getContractAt("MockToken", address);
+  await token.setDecimals(decimals);
+
 }
 
 async function fertilizer() {
@@ -249,6 +258,42 @@ async function ethUsdcUniswap() {
   ]);
 }
 
+async function ethUsdtUniswap() {
+  await usdt()
+  const MockUniswapV3Factory = await ethers.getContractFactory('MockUniswapV3Factory')
+  const mockUniswapV3Factory = await MockUniswapV3Factory.deploy()
+  await mockUniswapV3Factory.deployed()
+  const ethUdstPool = await mockUniswapV3Factory.callStatic.createPool(WETH, USDT, 3000)
+  await mockUniswapV3Factory.createPool(WETH, USDT, 3000)
+  const bytecode = await ethers.provider.getCode(ethUdstPool)
+  await network.provider.send("hardhat_setCode", [
+    ETH_USDT_UNISWAP_V3,
+    bytecode,
+  ]);
+}
+
+async function beanEthWell() {
+  const well = await deployWell([BEAN, WETH]);
+  const bytecode = await ethers.provider.getCode(well.address)
+  await network.provider.send("hardhat_setCode", [
+    BEAN_ETH_WELL,
+    bytecode,
+  ]);
+}
+
+async function ethUsdChainlinkAggregator() {
+  let chainlinkAggregatorJson = fs.readFileSync(`./artifacts/contracts/mocks/chainlink/MockChainlinkAggregator.sol/MockChainlinkAggregator.json`);
+
+  await network.provider.send("hardhat_setCode", [
+    ETH_USD_CHAINLINK_AGGREGATOR,
+    JSON.parse(chainlinkAggregatorJson).deployedBytecode,
+  ]);
+  const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+  await ethUsdChainlinkAggregator.setDecimals(6)
+}
+
+
+
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
@@ -262,4 +307,7 @@ exports.impersonateUsdc = usdc
 exports.impersonatePrice = price
 exports.impersonateBlockBasefee = blockBasefee;
 exports.impersonateEthUsdcUniswap = ethUsdcUniswap
+exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
+exports.impersonateEthUsdChainlinkAggregator = ethUsdChainlinkAggregator
+exports.impersonateBeanEthWell = beanEthWell

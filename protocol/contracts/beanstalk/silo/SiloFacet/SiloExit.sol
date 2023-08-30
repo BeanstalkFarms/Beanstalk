@@ -222,6 +222,9 @@ contract SiloExit is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.STALK_PER_BEAN);
     }
 
+    /**
+     * @notice Return the balance of Deposited BDV of `token` for a given `account`.
+     */
     function balanceOfDepositedBdv(address account, address token)
         external
         view
@@ -230,6 +233,9 @@ contract SiloExit is ReentrancyGuard {
         depositedBdv = s.a[account].mowStatuses[token].bdv;
     }
 
+    /**
+     * @notice Return the Stem at the time that `account` last mowed `token`.
+     */
     function getLastMowedStem(address account, address token)
         external
         view
@@ -238,6 +244,11 @@ contract SiloExit is ReentrancyGuard {
         lastStem = s.a[account].mowStatuses[token].lastStem;
     }
 
+    /**
+     * @notice Return the Mow Status of `token` for a given `account`.
+     * Mow Status includes the Stem at the time that `account` last mowed `token`
+     * and the balance of Deposited BDV of `token` for `account`.
+     */
     function getMowStatus(address account, address token)
         external
         view

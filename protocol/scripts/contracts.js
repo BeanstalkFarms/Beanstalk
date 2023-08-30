@@ -26,6 +26,7 @@ async function increaseNonce(account, n = 1) {
     }
 }
 
+exports.increaseToNonce = increaseToNonce
 exports.increaseNonce = increaseNonce
 
 exports.deployContract = deploy

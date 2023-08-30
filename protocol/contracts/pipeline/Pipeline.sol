@@ -17,6 +17,19 @@ import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
  **/
 
 contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
+
+    /**
+     * @dev So Pipeline can receive Ether.
+     */
+    receive() external payable {}
+
+    /**
+     * @dev Returns the current version of Pipeline.
+     */
+    function version() external pure returns (string memory) {
+        return "1.0.1";
+    }
+
     /**
      * @notice Execute a single PipeCall.
      * Supports sending Ether through msg.value
