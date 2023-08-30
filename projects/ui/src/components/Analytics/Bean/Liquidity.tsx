@@ -19,7 +19,7 @@ const formatValue = (value: number) =>
 const statProps = {
   title: 'Liquidity',
   titleTooltip:
-    'The USD value of the tokens in the BEAN:3CRV pool at the end of every Season.',
+    'The USD value of the tokens in the BEAN:3CRV and BEAN:ETH pools at the end of every Season.',
   gap: 0.25,
 };
 const queryConfig = {

@@ -5,6 +5,7 @@ import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "../farm/types";
 import { EIP2612PermitMessage, SignedPermit } from "../permit";
 import { Exchange, ExchangeUnderlying } from "./actions/index";
+import { BasinWell } from "src/classes/Pool/BasinWell";
 
 export type ActionBuilder = (
   fromMode?: FarmFromMode,
@@ -22,12 +23,23 @@ export class LibraryPresets {
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
   public readonly wellWethBean;
+  public readonly wellAddLiquidity;
 
   public readonly usdc2bean: ActionBuilder;
   public readonly bean2usdc: ActionBuilder;
 
   public readonly dai2bean: ActionBuilder;
   public readonly bean2dai: ActionBuilder;
+
+  public readonly dai2usdt: ActionBuilder;
+  public readonly usdc2usdt: ActionBuilder;
+
+  public readonly dai2weth: ActionBuilder;
+  public readonly usdc2weth: ActionBuilder;
+
+  public readonly usdc2beaneth;
+  public readonly usdt2beaneth;
+  public readonly dai2beaneth;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -164,6 +176,57 @@ export class LibraryPresets {
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
 
+    ///////// DAI -> USDT ///////////
+    this.dai2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.DAI,
+        sdk.tokens.USDT,
+        fromMode,
+        toMode
+      );
+
+    ///////// USDC -> USDT ///////////
+    this.usdc2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+      new Exchange(
+        sdk.contracts.curve.pools.pool3.address,
+        sdk.contracts.curve.registries.poolRegistry.address,
+        sdk.tokens.USDC,
+        sdk.tokens.USDT,
+        fromMode,
+        toMode
+      );
+    
+    ///////// DAI -> WETH ///////////
+    this.dai2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.dai2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    ];
+
+    ///////// USDC -> WETH ///////////
+    this.usdc2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.usdc2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
+    ];
+
+
+    ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
+    this.usdc2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.usdc2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
+    ];
+
+    this.usdt2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.usdt2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
+    ];
+
+    this.dai2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.dai2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
+    ];
+
     this.wellWethBean = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       const WELL_ADDRESS = sdk.addresses.BEANWETH_WELL.get(sdk.chainId);
       const result = [];
@@ -206,6 +269,39 @@ export class LibraryPresets {
       }
 
       result.push(transfer);
+      result.push(advancedPipe);
+
+      return result;
+    };
+
+    this.wellAddLiquidity = (well: BasinWell, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
+      
+      const result = [];
+      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+
+      const transferBack = to === FarmToMode.INTERNAL;
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
+
+      // Transfer input token to WELL
+      const transfer = new sdk.farm.actions.TransferToken(tokenIn.address, well.address, from, FarmToMode.EXTERNAL);
+
+      // Call sync on WELL
+      const addLiquidity = new sdk.farm.actions.WellSync(well, tokenIn, recipient);
+
+      // This approves the transferToBeanstalk operation.
+      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address);
+
+      // Transfers the output token back to Beanstalk, from PIPELINE.
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL);
+
+
+      result.push(transfer);
+      advancedPipe.add(addLiquidity, { tag: "wellSync" });
+      if (transferBack) {
+        advancedPipe.add(approveBack);
+        advancedPipe.add(transferToBeanstalk);
+      }
+      
       result.push(advancedPipe);
 
       return result;

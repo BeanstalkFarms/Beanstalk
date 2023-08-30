@@ -3,11 +3,11 @@ import React from 'react';
 import CallMadeIcon from '@mui/icons-material/CallMade';
 import { Link, Stack, Typography } from '@mui/material';
 
-import { SEEDS, STALK } from '~/constants/tokens';
+import { SEEDS, STALK, BEAN_ETH_WELL_LP } from '~/constants/tokens';
 import { FontSize } from '../App/muiTheme';
 import Stat from '../Common/Stat';
 import TokenIcon from '../Common/TokenIcon';
-import { BEANSTALK_ADDRESSES, CURVE_LINK } from '~/constants';
+import { BASIN_WELL_LINK, BEANSTALK_ADDRESSES, CURVE_LINK } from '~/constants';
 import DepositedAsset from '../Analytics/Silo/DepositedAsset';
 
 import SiloCarousel from './SiloCarousel';
@@ -47,8 +47,10 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
   const whitelist = useWhitelist();
 
   const isRipeAndIsLP = token.isLP && !token.isUnripe;
+  const isWell = token.equals(BEAN_ETH_WELL_LP[1]);
   const tokenTVD = tvdByToken[token.address];
   const tokenPctTVD = tokenTVD.div(total).times(100);
+
 
   return (
     <Module>
@@ -57,7 +59,7 @@ const SiloAssetOverviewCard: FC<{ token: ERC20Token }> = ({ token }) => {
           <Typography variant="h4">{token.name} Overview</Typography>
           {isRipeAndIsLP ? (
             <Link
-              href={CURVE_LINK}
+              href={isWell ? `${BASIN_WELL_LINK}${token.address}` : CURVE_LINK}
               target="_blank"
               rel="noreferrer"
               underline="none"

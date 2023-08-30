@@ -44,7 +44,7 @@ const useCardContentWithToken = (token: ERC20Token) => [
           ? token.symbol
           : token.symbol === 'BEAN'
           ? 'BEAN or ETH'
-          : 'BEAN, ETH, 3CRV, DAI, USDC, or USDT'
+          : 'BEAN, ETH, WETH, 3CRV, DAI, USDC, or USDT'
       } from your wallet or Farm balance to Deposit ${
         token.symbol
       } into the Silo.${
