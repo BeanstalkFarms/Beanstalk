@@ -39,7 +39,9 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
 
   const seeds = token.getSeeds();
   const apys = latestYield
-    ? seeds.eq(3)
+    ? seeds.eq(0)
+      ? latestYield.bySeeds['0']
+      : seeds.eq(3)
       ? latestYield.bySeeds['3']
       : seeds.eq(3.25)
       ? latestYield.bySeeds['3.25']
