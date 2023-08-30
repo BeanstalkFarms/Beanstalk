@@ -7,6 +7,7 @@ import { FC } from "src/types";
 import { Token } from "@beanstalk/sdk";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { size } from "src/breakpoints";
+import { useSiloBalance } from "src/tokens/useSiloBalance";
 
 type Props = {
   lpToken: Token;
@@ -14,6 +15,7 @@ type Props = {
 
 export const LiquidityBox: FC<Props> = ({ lpToken }) => {
   const { data: balance } = useTokenBalance(lpToken);
+  const { data: siloBalance } = useSiloBalance(lpToken);
 
   return (
     <InfoBox>
@@ -33,12 +35,9 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
         </InfoBox.Row>
         <InfoBox.Row>
           <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
-          <InfoBox.Value>-</InfoBox.Value>
+          <InfoBox.Value>{siloBalance ? siloBalance.toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
       </InfoBox.Body>
-      {/* <InfoBox.Footer>
-        <FooterAmount>USD Total: $69,420</FooterAmount>
-      </InfoBox.Footer> */}
     </InfoBox>
   );
 };
