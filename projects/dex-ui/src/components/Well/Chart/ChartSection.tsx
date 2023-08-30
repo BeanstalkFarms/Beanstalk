@@ -11,6 +11,11 @@ import { ChartContainer } from "./ChartStyles";
 import { BottomDrawer } from "src/components/BottomDrawer";
 import { size } from "src/breakpoints";
 
+function timeToLocal(originalTime: number) {
+  const d = new Date(originalTime * 1000);
+  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()) / 1000;
+}
+
 export const ChartSection: FC<{ well: Well }> = ({ well }) => {
   const [tab, setTab] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -31,11 +36,11 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
     let _volumeData: any = [];
     for (let i = 0; i < chartData.length; i++) {
       _liquidityData.push({
-        time: Number(chartData[i].lastUpdateTimestamp),
+        time: timeToLocal(Number(chartData[i].lastUpdateTimestamp)),
         value: Number(chartData[i].totalLiquidityUSD).toFixed(2)
       });
       _volumeData.push({
-        time: Number(chartData[i].lastUpdateTimestamp),
+        time: timeToLocal(Number(chartData[i].lastUpdateTimestamp)),
         value: Number(chartData[i].deltaVolumeUSD).toFixed(2)
       });
     }
@@ -176,7 +181,7 @@ export const ChartSection: FC<{ well: Well }> = ({ well }) => {
       {error !== null && <ChartLoader>{`Error Loading Chart Data :(`}</ChartLoader>}
       {isLoading && <ChartLoader>Loading Chart Data...</ChartLoader>}
       {tab === 0 && !error && !isLoading && <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} />}
-      {tab === 1 && !error && !isLoading && <Chart data={volumeData} legend={"DAILY VOLUME"} />}
+      {tab === 1 && !error && !isLoading && <Chart data={volumeData} legend={"HOURLY VOLUME"} />}
     </Container>
   );
 };

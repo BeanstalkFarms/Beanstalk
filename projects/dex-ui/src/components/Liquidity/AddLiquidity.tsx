@@ -3,7 +3,7 @@ import { TokenInput } from "../../components/Swap/TokenInput";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { Well } from "@beanstalk/sdk/Wells";
+import { AddLiquidityETH, Well } from "@beanstalk/sdk/Wells";
 import { useQuery } from "@tanstack/react-query";
 import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
 import { Button } from "../Swap/Button";
@@ -19,7 +19,6 @@ import { size } from "src/breakpoints";
 
 type AddLiquidityProps = {
   well: Well;
-  txnCompleteCallback: () => void;
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
@@ -34,15 +33,15 @@ export type AddLiquidityQuote = {
 
 export const AddLiquidity = ({
   well,
-  txnCompleteCallback,
   slippage,
   slippageSettingsClickHandler,
   handleSlippageValueChange
 }: AddLiquidityProps) => {
   const { address } = useAccount();
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
-  const [balancedMode, setBalancedMode] = useState(true);
+  const inputs = Object.values(amounts);
 
+  const [balancedMode, setBalancedMode] = useState(true);
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
@@ -52,6 +51,10 @@ export const AddLiquidity = ({
   const sdk = useSdk();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [useWETH, setUseWETH] = useState(false);
+  
   useEffect(() => {
     const run = async () => {
       if (!well?.tokens) return;
@@ -62,18 +65,37 @@ export const AddLiquidity = ({
   }, [sdk, well?.tokens]);
 
   const atLeastOneAmountNonZero = useMemo(() => {
-    if (!well.tokens) {
-      return false;
-    }
+    if (!well.tokens || well.tokens.length === 0) return false;
 
-    if (well.tokens.length === 0) {
-      return false;
-    }
-
-    const nonZeroValues = Object.values(amounts).filter((amount) => amount.value.gt("0")).length;
-
+    const nonZeroValues = inputs.filter((amount) => amount.value.gt("0")).length;
     return nonZeroValues !== 0;
-  }, [amounts, well.tokens]);
+  }, [inputs, well.tokens]);
+
+  const hasWETH = useMemo(() => {
+    if (!well.tokens || well.tokens.length === 0) return false;
+
+    let isWETHPair = false;
+    for (let i = 0; i < well.tokens.length; i++) {
+      if (well.tokens[i].symbol === "WETH") {
+        isWETHPair = true;
+      }
+    }
+    return isWETHPair;
+  }, [well.tokens]);
+
+  const indexWETH = useMemo(() => {
+    if (!hasWETH || !well.tokens || well.tokens.length === 0) return null;
+    
+    let index = null;
+    for (let i = 0; i < well.tokens.length; i++) {
+      if (well.tokens[i].symbol === "WETH") {
+        return i;
+      }
+    }
+    return index;
+  }, [hasWETH, well.tokens])
+
+  const useNativeETH = !useWETH && indexWETH && inputs[indexWETH] && inputs[indexWETH].gt(TokenValue.ZERO);
 
   useEffect(() => {
     const checkBalances = async () => {
@@ -89,7 +111,12 @@ export const AddLiquidity = ({
         if (amount.eq(TokenValue.ZERO)) {
           continue;
         }
-        const balance = await token.getBalance(address);
+        let balance;
+        if (token.symbol === "WETH" && !useWETH) {
+          balance = await sdk.tokens.ETH.getBalance(address);
+        } else {
+          balance = await token.getBalance(address);
+        }
         if (amount.gt(balance)) {
           insufficientBalances = true;
           break;
@@ -99,7 +126,7 @@ export const AddLiquidity = ({
     };
 
     checkBalances();
-  }, [address, amounts, well.tokens]);
+  }, [address, amounts, sdk.tokens.ETH, useWETH, well.tokens]);
 
   const checkMinAllowanceForAllTokens = useCallback(async () => {
     if (!address) {
@@ -108,18 +135,26 @@ export const AddLiquidity = ({
 
     const _tokenAllowance = [];
     for (let [index, token] of well.tokens!.entries()) {
+      const targetAddress = useNativeETH ? sdk.addresses.DEPOT.MAINNET : well.address;
       if (amounts[index]) {
-        const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, token, amounts[index]);
+        const tokenHasMinAllowance = await hasMinimumAllowance(address, targetAddress, token, amounts[index]);
         Log.module("AddLiquidity").debug(
           `Token ${token.symbol} with amount ${amounts[index].toHuman()} has approval ${tokenHasMinAllowance}`
         );
-        _tokenAllowance.push(tokenHasMinAllowance);
+        if (token.symbol === "WETH" && !useWETH && hasWETH) {
+          Log.module("AddLiquidity").debug(
+            `Using Native ETH, no approval needed!`
+          );
+          _tokenAllowance.push(true);
+        } else {
+          _tokenAllowance.push(tokenHasMinAllowance);
+        }
       } else {
         _tokenAllowance.push(false);
       }
     }
     setTokenAllowance(_tokenAllowance);
-  }, [address, amounts, well.address, well.tokens]);
+  }, [address, amounts, useNativeETH, well.address, sdk.addresses.DEPOT.MAINNET, hasWETH, useWETH, well.tokens]);
 
   // Once we have our first quote, we show the details.
   // Subsequent quote invocations shows a spinner in the Expected Output row
@@ -156,22 +191,33 @@ export const AddLiquidity = ({
     }
 
     try {
-      const quote = await well.addLiquidityQuote(Object.values(amounts));
+      let quote;
       let estimate;
-      if (allTokensHaveMinAllowance) {
-        estimate = await well.addLiquidityGasEstimate(Object.values(amounts), quote, address);
+      let gas;
+      quote = await well.addLiquidityQuote(inputs);
+      if (allTokensHaveMinAllowance && tokenAllowance.length) {
+        if (useNativeETH) {
+          const addLiq = new AddLiquidityETH(sdk.wells);
+          estimate = await addLiq.doGasEstimate(well, inputs, quote, address);
+        } else {
+          estimate = await well.addLiquidityGasEstimate(inputs, quote, address);
+        }
       } else {
         estimate = TokenValue.ZERO;
       }
       setShowQuoteDetails(true);
+      gas = estimate;
       return {
         quote,
+        gas,
         estimate
       };
     } catch (error: any) {
       Log.module("addliquidity").error("Error during quote: ", (error as Error).message);
       return null;
     }
+  },{
+    enabled: !isSubmitting
   });
 
   const addLiquidityButtonClickHandler = useCallback(async () => {
@@ -182,21 +228,31 @@ export const AddLiquidity = ({
         success: "Liquidity added"
       });
       try {
+        setIsSubmitting(true);
         const quoteAmountLessSlippage = quote.quote.subSlippage(slippage);
-        const addLiquidityTxn = await well.addLiquidity(Object.values(amounts), quoteAmountLessSlippage, address);
+        let addLiquidityTxn;
+        if (useNativeETH) {
+          const addLiquidityNativeETH = new AddLiquidityETH(sdk.wells);
+          addLiquidityTxn = await addLiquidityNativeETH.addLiquidity(well, inputs, quoteAmountLessSlippage, address, quote.estimate.mul(1.2));
+        } else {
+          addLiquidityTxn = await well.addLiquidity(inputs, quoteAmountLessSlippage, address, undefined, {
+            gasLimit: quote.estimate.mul(1.2).toBigNumber()
+          });
+        }
         toast.confirming(addLiquidityTxn);
         const receipt = await addLiquidityTxn.wait();
         toast.success(receipt);
         resetAmounts();
         checkMinAllowanceForAllTokens();
         refetchWellReserves();
-        txnCompleteCallback();
+        setIsSubmitting(false);
       } catch (error) {
         Log.module("AddLiquidity").error("Error adding liquidity: ", (error as Error).message);
         toast.error(error);
+        setIsSubmitting(false);
       }
     }
-  }, [quote, address, slippage, well, amounts, resetAmounts, checkMinAllowanceForAllTokens, txnCompleteCallback, refetchWellReserves]);
+  }, [quote, address, slippage, well, sdk.wells, inputs, useNativeETH, resetAmounts, checkMinAllowanceForAllTokens, refetchWellReserves]);
 
   const handleImbalancedInputChange = useCallback(
     (index: number) => (a: TokenValue) => {
@@ -249,24 +305,19 @@ export const AddLiquidity = ({
 
   const approveTokenButtonClickHandler = useCallback(
     (tokenIndex: number) => async () => {
-      if (!address) {
-        return;
-      }
+      if (!address || !well.tokens || !amounts) return;
 
-      if (!well.tokens) {
-        return;
-      }
-
-      if (!amounts) {
-        return;
-      }
-      await ensureAllowance(address, well.address, well.tokens[tokenIndex], amounts[tokenIndex]);
+      const targetAddress = useNativeETH ? sdk.addresses.DEPOT.MAINNET : well.address;
+      await ensureAllowance(address, targetAddress, well.tokens[tokenIndex], amounts[tokenIndex]);
       checkMinAllowanceForAllTokens();
     },
-    [address, well.tokens, well.address, amounts, checkMinAllowanceForAllTokens]
+    [address, well.tokens, amounts, useNativeETH, well.address, sdk.addresses.DEPOT.MAINNET, checkMinAllowanceForAllTokens]
   );
 
-const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" : !hasEnoughBalance ? 'Insufficient Balance' : "Add Liquidity"), [atLeastOneAmountNonZero, hasEnoughBalance]);
+  const buttonLabel = useMemo(
+    () => (!atLeastOneAmountNonZero ? "Enter Amount(s)" : !hasEnoughBalance ? "Insufficient Balance" : "Add Liquidity"),
+    [atLeastOneAmountNonZero, hasEnoughBalance]
+  );
 
   return (
     <div>
@@ -278,7 +329,7 @@ const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" 
                 key={`input${index}`}
                 id={`input${index}`}
                 label={`Input amount in ${token.symbol}`}
-                token={well.tokens![index]}
+                token={hasWETH && !useWETH && well.tokens![index].symbol === "WETH" ? sdk.tokens.ETH : well.tokens![index]}
                 amount={amounts[index]}
                 onAmountChange={balancedMode ? handleBalancedInputChange(index) : handleImbalancedInputChange(index)}
                 canChangeToken={false}
@@ -286,12 +337,17 @@ const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" 
               />
             ))}
           </TokenListContainer>
-          <Checkbox label={"Add tokens in balanced proportion"} checked={balancedMode} onClick={() => setBalancedMode(!balancedMode)} />
+          <div>
+            <Checkbox label={"Add tokens in balanced proportion"} checked={balancedMode} onClick={() => setBalancedMode(!balancedMode)} />
+            {hasWETH && (
+              <Checkbox label={"Use Wrapped ETH"} checked={useWETH} onClick={() => setUseWETH(!useWETH)} />
+            )}
+          </div>
           {showQuoteDetails && (
             <QuoteDetails
               type={LIQUIDITY_OPERATION_TYPE.ADD}
               quote={quote}
-              inputs={Object.values(amounts)}
+              inputs={inputs}
               wellLpToken={well.lpToken}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}
@@ -301,7 +357,7 @@ const buttonLabel = useMemo(() => (!atLeastOneAmountNonZero ? "Enter Amount(s)" 
             />
           )}
           <MediumGapContainer>
-            {well.tokens!.length > 0 &&
+            {well.tokens!.length > 0 && hasEnoughBalance &&
               well.tokens!.map((token: Token, index: number) => {
                 if (amounts[index] && amounts[index].gt(TokenValue.ZERO) && tokenAllowance[index] === false) {
                   return (

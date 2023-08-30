@@ -6,7 +6,7 @@ import { TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { size } from "src/breakpoints";
 
-export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | null)[]) => {
+export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | null)[], lpTokenPrice: TokenValue) => {
   let action;
   let description;
   let valueUSD;
@@ -56,6 +56,12 @@ export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | 
           return `${amount.toHuman("short")} ${well.tokens![i].symbol}`;
         })
         .join(" and ");
+      break;
+    case EVENT_TYPE.SYNC:
+      event = event as AddEvent;
+      action = "Add Liquidity";
+      valueUSD = `$${(event.lpAmount).mul(lpTokenPrice).toHuman("short")}`;
+      description = "Sync";
       break;
   }
   return (

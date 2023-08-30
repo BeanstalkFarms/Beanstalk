@@ -11,7 +11,6 @@ import { Page } from "src/components/Page";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Reserves } from "src/components/Well/Reserves";
 import { LiquidityBox } from "src/components/Well/LiquidityBox";
-import { Spinner2 } from "src/components/Spinner2";
 import { Button } from "src/components/Swap/Button";
 import { LearnYield } from "src/components/Well/LearnYield";
 import { Item, Row } from "src/components/Layout";
@@ -24,6 +23,8 @@ import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
 import { size } from "src/breakpoints";
+import { Loading } from "src/components/Loading";
+import { Error } from "../components/Error";
 
 export const Well = () => {
   const sdk = useSdk();
@@ -120,17 +121,12 @@ export const Well = () => {
 
   if (loading)
     return (
-      <Page>
-        <Spinner2 size={72} />
-      </Page>
+      <Loading spinnerOnly />
     );
 
-  // TODO: ERROR
   if (error)
     return (
-      <Page>
-        <div>ERROR: {error?.message}</div>
-      </Page>
+      <Error message={error?.message} errorOnly />
     );
 
   return (
@@ -165,12 +161,12 @@ export const Well = () => {
           </Item>
           <Item stretch>
             <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-              Other Details
+              Contract Addresses
             </TabButton>
           </Item>
         </ActivityOtherButtons>
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} />}
+          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} />}
           {tab === 1 && <OtherSection well={well!} />}
         </BottomContainer>
         <ColumnBreak />

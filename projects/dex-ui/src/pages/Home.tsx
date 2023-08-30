@@ -1,7 +1,8 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React from "react";
 import { size } from "src/breakpoints";
-import { RightArrow, RightArrowCircle } from "src/components/Icons";
+import { Link } from "react-router-dom";
+import { RightArrowCircle } from "src/components/Icons";
 import styled from "styled-components";
 
 export const Home = () => {
@@ -23,25 +24,24 @@ export const Home = () => {
           <SubTitle>
             Customizable liquidity pools with shared components. &nbsp;
             <WhitepaperLink href={"/basin.pdf"} target="_blank">
-              Read the whitepaper
-              <RightArrow color="#46B955" />
+              Read the whitepaper →
             </WhitepaperLink>
           </SubTitle>
         </TitleSubtitleContainer>
         <Boxes>
-          <Box>
+          <Box to="/">
             <Emoji role="img" aria-label="crystal ball">
               🔮
             </Emoji>{" "}
             Build using components
           </Box>
-          <Box>
+          <Box to="/wells">
             <Emoji role="img" aria-label="lightning">
               ⚡️
             </Emoji>{" "}
             Deploy flexible liquidity
           </Box>
-          <Box>
+          <Box to="/swap">
             <Emoji role="img" aria-label="heart">
               ❤️
             </Emoji>{" "}
@@ -143,6 +143,9 @@ const OracleWP = styled.a`
   text-decoration: none;
   display: flex;
   align-items: center;
+  :hover {
+    text-decoration: underline;
+  }
 `;
 
 const WhitepaperLink = styled.a`
@@ -154,6 +157,10 @@ const WhitepaperLink = styled.a`
   text-decoration: none;
   display: flex;
   align-items: center;
+
+  :hover {
+    text-decoration: underline;
+  }
 
   @media (min-width: ${size.mobile}) {
     font-size: 20px;
@@ -167,15 +174,20 @@ const Boxes = styled.div`
   flex-direction: column;
   gap: 12px;
   justify-content: space-around;
+  position: fixed;
+  bottom: 12px;
+  width: calc(100vw - 24px);
   @media (min-width: ${size.mobile}) {
     flex-direction: row;
+    position: relative;
+    bottom: 0px;
     gap: 48px;
     padding: 0 48px;
     width: 100vw;
   }
 `;
 
-const Box = styled.div`
+const Box = styled(Link)`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -188,6 +200,13 @@ const Box = styled.div`
   font-size: 14px;
   line-height: 22px;
   padding: 12px;
+
+  text-decoration: none;
+  color: black;
+
+  :hover {
+    background-color: #f0fdf4;
+  }
 
   @media (min-width: ${size.mobile}) {
     padding: 0px;
