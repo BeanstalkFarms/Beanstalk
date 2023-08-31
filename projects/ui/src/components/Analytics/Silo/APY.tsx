@@ -20,9 +20,17 @@ const lineChartProps: Partial<LineChartProps> = {
   yTickFormat: tickFormatPercentage,
 };
 const metricToKey = {
-  Bean: 'twoSeedBeanAPY',
-  LP: 'fourSeedBeanAPY',
-  Stalk: 'twoSeedStalkAPY',
+  ZeroSeeds: 'zeroSeedBeanAPY',
+  ThreeSeeds: 'threeSeedBeanAPY',
+  ThreePointTwoFiveSeeds: 'threePointTwoFiveSeedBeanAPY',
+  FourPointFiveSeeds: 'fourPointFiveSeedBeanAPY',
+};
+
+const metricTitles = {
+  ZeroSeeds: '0 Seeds Bean vAPY',
+  ThreeSeeds: '3 Seeds Bean vAPY',
+  ThreePointTwoFiveSeeds: '3.25 Seeds Bean vAPY',
+  FourPointFiveSeeds: '4.5 Seeds Bean vAPY',
 };
 
 const APY: FC<{
@@ -42,7 +50,7 @@ const APY: FC<{
     formatValue={formatValue}
     StatProps={useMemo(
       () => ({
-        title: `Bean vAPY for Deposited ${metric}`,
+        title: metricTitles[metric],
         // FIXME: identical to SiloAssetApyChip
         titleTooltip:
           'The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.',
