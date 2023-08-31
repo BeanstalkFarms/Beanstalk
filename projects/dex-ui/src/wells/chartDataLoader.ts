@@ -36,7 +36,9 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well, timePeriod: string) 
       } else {
         goToNextPage = false;
       }
-    } 
+    } else {
+      goToNextPage = false;
+    }
   }
 
   while (goToNextPage === true);
