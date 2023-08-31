@@ -19,8 +19,8 @@ function timeToLocal(originalTime: number) {
 export const ChartSection: FC<{ well: Well }> = ({ well }) => {
   const [tab, setTab] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [timePeriod, setTimePeriod] = useState("all");
-  const [dropdownButtonText, setDropdownButtonText] = useState("ALL");
+  const [timePeriod, setTimePeriod] = useState("week");
+  const [dropdownButtonText, setDropdownButtonText] = useState("1 WEEK");
 
   const { data: chartData, refetch, error, isLoading } = useWellChartData(well, timePeriod);
 
