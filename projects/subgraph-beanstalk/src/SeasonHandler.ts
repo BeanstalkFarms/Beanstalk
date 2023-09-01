@@ -1,11 +1,11 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { MetapoolOracle, Reward, Soil, Incentivization } from "../generated/Season-Replanted/Beanstalk";
+import { MetapoolOracle, Reward, Soil, Incentivization, WellOracle } from "../generated/Season-Replanted/Beanstalk";
 import { CurvePrice } from "../generated/Season-Replanted/CurvePrice";
 import { SeasonSnapshot, Sunrise, Beanstalk } from "../generated/Season/Beanstalk";
 import { Incentive } from "../generated/schema";
 import { updateHarvestablePlots } from "./FieldHandler";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity } from "../generated/schema";
+import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity, WellOracle as WellOracleEntity } from "../generated/schema";
 import { BEANSTALK, BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
@@ -179,6 +179,24 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
     season.price = toDecimal(beanstalkQuery.value.price);
   }
   season.deltaB = event.params.deltaB;
+  season.save();
+}
+
+export function handleWellOracle(event: WellOracle): void {
+  let id = "wellOracle-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
+  let oracle = new WellOracleEntity(id);
+  oracle.hash = event.transaction.hash.toHexString();
+  oracle.logIndex = event.transactionLogIndex.toI32();
+  oracle.protocol = event.address.toHexString();
+  oracle.season = event.params.season.toI32();
+  oracle.deltaB = event.params.deltaB;
+  oracle.cumulativeReserves = event.params.cumulativeReserves;
+  oracle.blockNumber = event.block.number;
+  oracle.createdAt = event.block.timestamp;
+  oracle.save();
+
+  let season = loadSeason(event.address, event.params.season);
+  season.deltaB = season.deltaB.plus(event.params.deltaB);
   season.save();
 }
 

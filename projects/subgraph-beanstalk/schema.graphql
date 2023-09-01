@@ -1295,6 +1295,27 @@ type MetapoolOracle implements SiloEvent @entity(immutable: true) {
   createdAt: BigInt!
 }
 
+type WellOracle implements SiloEvent @entity(immutable: true) {
+  "wellOracle-{ Transaction hash }-{ Log index }"
+  id: ID!
+  " Transaction hash of the transaction that emitted this event "
+  hash: String!
+  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  logIndex: Int!
+  " The protocol this transaction belongs to "
+  protocol: Beanstalk!
+  " Season of oracle "
+  season: Int!
+  " DeltaB for season"
+  deltaB: BigInt!
+  " Time weighted cumulative reserves "
+  cumulativeReserves: Bytes!
+  " Block number of this event "
+  blockNumber: BigInt!
+  " Timestamp of this event "
+  createdAt: BigInt!
+}
+
 type AddDeposit implements SiloEvent @entity(immutable: true) {
   "addDeposit-{ Transaction hash }-{ Log index }"
   id: ID!
