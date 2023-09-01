@@ -48,17 +48,22 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
   // This iterates through 8760 times to calculate the silo APY
   let silo = loadSilo(BEANSTALK);
 
-  // Pull from historically calculated values prior to season 14280 rather than iterating
-  if (t <= 15026) {
-    for (let i = 0; i < HISTORIC_VAPY.length; i++) {
-      if (t.toString() == HISTORIC_VAPY[i][0]) {
-        siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][1]);
-        siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[i][2]);
-        siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][3]);
-        siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[i][4]);
-        siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[i][5]);
-      }
-    }
+  // Pull from historically calculated values prior to season 15457 rather than iterating
+
+  if (t <= 15457) {
+    let cacheIndex = t - 6075;
+
+    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][1]);
+    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][2]);
+    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][3]);
+    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][4]);
+    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][5]);
+    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][6]);
+    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][7]);
+    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][8]);
+    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][9]);
+    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][10]);
+    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][11]);
   } else {
     let twoSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("2"), silo.stalk, silo.seeds);
     siloYield.twoSeedBeanAPY = twoSeedAPY[0];
