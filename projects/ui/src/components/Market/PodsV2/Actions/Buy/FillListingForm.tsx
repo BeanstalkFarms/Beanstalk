@@ -412,10 +412,7 @@ const FillListingForm: FC<{
           finalFromMode = optimizeFromMode(amountBeans, balances[Bean.address]);
           farm = sdk.farm.create();
           tokenInNew = sdk.tokens.BEAN; // FIXME
-        }
-
-        /// Swap to BEAN and buy
-        else if (tokenIn === Eth || tokenIn === Weth) {
+        } else { /// Swap to BEAN and buy
           // Require a quote
           if (!formData.amountOut)
             throw new Error(`No quote available for ${formData.token.symbol}`);
@@ -425,25 +422,30 @@ const FillListingForm: FC<{
           const swap = sdk.swap.buildSwap(
             tokenInNew,
             sdk.tokens.BEAN,
-            tokenIn === Weth
-              ? optimizeFromMode(formData.amountOut, balances[Weth.address])
-              : FarmFromMode.EXTERNAL
+            optimizeFromMode(formData.amount, balances[tokenIn.address])
           );
 
           // At the end of the Swap step, the assets will be in our INTERNAL balance.
           // The Swap decides where to route them from (see handleQuote).
           finalFromMode = FarmFromMode.INTERNAL_TOLERANT;
           farm = swap.getFarm();
-        } else {
-          throw new Error(
-            `Filling a Listing via ${tokenIn.symbol} is not currently supported`
-          );
         }
 
         console.debug(
           `[FillListing] using FarmFromMode = ${finalFromMode}`,
           podListing
         );
+
+        // If not using Bean, add Bean approval step after conversion
+        if (tokenIn !== Bean) {
+          farm.add((amountInStep) => 
+            beanstalk.interface.encodeFunctionData('approveToken', [
+              beanstalk.address,
+              Bean.address,
+              amountInStep
+            ])
+          );
+        }
 
         farm.add((amountInStep) =>
           beanstalk.interface.encodeFunctionData('fillPodListing', [
@@ -499,12 +501,12 @@ const FillListingForm: FC<{
       podListing,
       signer,
       Eth,
-      Weth,
       refetchFarmerField,
       refetchFarmerBalances,
       balances,
       sdk,
       beanstalk.interface,
+      beanstalk.address
     ]
   );
 
