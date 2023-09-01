@@ -1,13 +1,23 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
-const { parseJson } = require('./utils/helpers.js')
-const { MAX_UINT32 } = require('./utils/constants.js')
+const { parseJson, to6, to18 } = require('./utils/helpers.js')
+const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP} = require('./utils/constants.js')
+const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { BEAN } = require('./utils/constants')
+const { deployMockWell } = require('../utils/well.js');
+const { advanceTime } = require('../utils/helpers.js');
+const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 // // Set the test data
 const [columns, tests] = parseJson('./coverage_data/weather.json')
 var numberTests = tests.length
 var startTest = 0
+
+async function setToSecondsAfterHour(seconds = 0) {
+    const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+    const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600 + seconds
+    await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+}
 
 describe('Complex Weather', function () {
 
@@ -21,6 +31,29 @@ describe('Complex Weather', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
+    beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address);
+
+    // add unripe
+    this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+    this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
+    this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
+    this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+    await this.unripeLP.mint(user.address, to6('1000'))
+    await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))
+    await this.unripeBean.mint(user.address, to6('1000'))
+    await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
+    await this.fertilizer.setFertilizerE(true, to6('10000'))
+    await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
+
+    // wells
+    [this.well, this.wellFunction, this.pump] = await deployMockWell()
+    await this.well.setReserves([to6('1000000'), to18('1000')])
+    await advanceTime(3600)
+    await owner.sendTransaction({to: user.address, value: 0});
+    await setToSecondsAfterHour(0)
+    await owner.sendTransaction({to: user.address, value: 0});
+    await beanstalk.connect(user).sunrise();
 
   });
 

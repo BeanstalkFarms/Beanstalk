@@ -6394,6 +6394,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "currentGaugePoints",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentOfDepositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "beanEthGaugePoints",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "abovePeg",
     "outputs": [
@@ -6720,6 +6744,12 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "caseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "slope",
         "type": "uint256"
       },
       {

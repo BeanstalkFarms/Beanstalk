@@ -15,6 +15,7 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/C.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
+import "contracts/libraries/LibUnripe.sol";
 
 /// @author ZrowGz, Publius
 /// @title VestingFacet
@@ -107,17 +108,7 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
-        return _getUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
-    }
-
-    function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
-        private
-        view
-        returns (uint256 redeem)
-    {
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
-            supply
-        );
+        return LibUnripe._getUnderlying(unripeToken, amount, IERC20(unripeToken).totalSupply());
     }
 
     function getPenalty(address unripeToken)
@@ -141,13 +132,11 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
-        require(isUnripe(unripeToken), "not vesting");
-        uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
-        redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
+        return LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
     }
 
-    function isUnripe(address unripeToken) public view returns (bool unripe) {
-        unripe = s.u[unripeToken].underlyingToken != address(0);
+    function isUnripe(address unripeToken) external view returns (bool unripe) {
+        return LibUnripe.isUnripe(unripeToken);
     }
 
     function balanceOfUnderlying(address unripeToken, address account)
@@ -189,19 +178,11 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 penalty)
     {
-        return getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
+        return LibUnripe.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
     }
 
     function getRecapPaidPercent() external view returns (uint256 penalty) {
-        penalty = getRecapPaidPercentAmount(DECIMALS);
-    }
-
-    function getRecapPaidPercentAmount(uint256 amount)
-        private
-        view
-        returns (uint256 penalty)
-    {
-        return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
+        penalty = LibUnripe.getRecapPaidPercentAmount(DECIMALS);
     }
 
     function getUnderlyingPerUnripeToken(address unripeToken)

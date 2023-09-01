@@ -96,7 +96,7 @@ library LibWell {
     }
 
     /**
-     * @dev gets the liquidity of a well in usd. 
+     * @dev gets the liquidity of a well in us dollars. 
      */
     function getUsdLiquidity(
         address well, 

@@ -10,6 +10,7 @@ import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibWhitelist.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
+
 /**
  * @title SeasonFacet
  * @author Publius, Chaikitty
@@ -61,7 +62,7 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseId(deltaB);
-        LibGauge.stepGauge();
+        // LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);

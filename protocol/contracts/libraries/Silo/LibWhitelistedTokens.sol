@@ -27,11 +27,21 @@ library LibWhitelistedTokens {
 
     /**
      * @notice Returns the current whitelisted LP assets.
-     * TODO: check whether we want unripe assets to be included in the LP whitelist.s
+     * TODO: check whether we want unripe assets to be included in the LP whitelist.
      */
     function getSiloLPTokens() internal pure returns (address[] memory assets) {
-        assets = new address[](1);
+        assets = new address[](2);
         assets[0] = C.BEAN_ETH_WELL;
+        assets[1] = C.CURVE_BEAN_METAPOOL;
         // assets[1] = C.UNRIPE_LP;
+    }
+
+     /**
+     * @notice Returns the unripe whitelisted tokens.
+     */
+    function getUnripeSiloTokens() internal pure returns (address[] memory assets) {
+        assets = new address[](2);
+        assets[0] = C.UNRIPE_BEAN;
+        assets[1] = C.UNRIPE_LP;
     }
 }

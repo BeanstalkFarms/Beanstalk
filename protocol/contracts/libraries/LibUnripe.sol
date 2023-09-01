@@ -3,10 +3,13 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {C} from "../C.sol";
+
+//TODO: write Natspec.
 
 /**
  * @title LibUnripe
@@ -93,5 +96,68 @@ library LibUnripe {
             s.recapitalized = s.recapitalized.sub(recapped);
         }
         decrementUnderlying(token, underlying);
+    }
+
+    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
+        internal
+        view
+        returns (uint256 redeem)
+    {
+        require(isUnripe(unripeToken), "not vesting");
+        uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
+        redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
+    }
+
+    /** 
+     * @notice calculates the total underlying token with penalty deduction.
+     */
+    function _getTotalPenalizedUnderlying(address unripeToken, uint256 supply)
+        internal
+        view
+        returns (uint256 redeem)
+    {
+        require(isUnripe(unripeToken), "not vesting");
+        redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
+    }
+
+    /** 
+     * @notice calculates the total underlying token that would be forfeited, 
+     * if all unripe tokens were chopped.
+     */
+    function getTotalUnderlyingForfeited(address unripeToken)
+        internal
+        view
+        returns (uint256 redeem)
+    {
+        require(isUnripe(unripeToken), "not vesting1");
+        uint256 supply = IERC20(unripeToken).totalSupply();
+        redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
+    }
+
+
+
+    function getRecapPaidPercentAmount(uint256 amount)
+        internal
+        view
+        returns (uint256 penalty)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
+    }
+
+    function isUnripe(address unripeToken) internal view returns (bool unripe) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        unripe = s.u[unripeToken].underlyingToken != address(0);
+    }
+
+    function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
+        internal
+        view
+        returns (uint256 redeem)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
+            supply
+        );
     }
 }

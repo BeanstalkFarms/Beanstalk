@@ -7,6 +7,11 @@ import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/Oracle/LibUsdOracle.sol";
+import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import "contracts/libraries/LibUnripe.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 
 /**
  * @author Brean
@@ -190,11 +195,23 @@ library LibEvaluate {
             // get LP amount in USD
             if(LibWell.isWell(assets[i])){
                 usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(assets[i], amount));
-            } else {
+            } else if(assets[i] == C.CURVE_BEAN_METAPOOL) {
                 // curve pool
-                // TODO
+                usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             }
         }
+
+        uint256 beanIndex = LibWell.getBeanIndexFromWell(C.BEAN_ETH_WELL);
+        uint256 lockedBeanInUrBean = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
+        // uint256 lockedBeanInUrBean = 0;
+        uint256 lockedBeanInUrEth = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_LP)
+        .mul(IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(C.BEAN_ETH_WELL, C.BYTES_ZERO)[beanIndex])
+        .div(IERC20(C.BEAN_ETH_WELL).totalSupply());
+        // uint256 lockedBeanInUrEth = 0;
+
+        beanSupply = beanSupply
+            .sub(lockedBeanInUrBean)
+            .sub(lockedBeanInUrEth);
         lpToSupplyRatio = Decimal.ratio(usdLiquidity, beanSupply);
     }
 
@@ -210,7 +227,7 @@ library LibEvaluate {
         Decimal.D256 memory podRate,
         Decimal.D256 memory deltaPodDemand,
         Decimal.D256 memory lpToSupplyRatio
-    ) internal pure returns (uint256 caseId) {       
+    ) internal pure returns (uint256 caseId) {
         caseId = evalPodRate(podRate)  // Evaluate Pod Rate
             .add(evalPrice(deltaB, podRate)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand

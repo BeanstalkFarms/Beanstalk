@@ -44,6 +44,27 @@ library LibBeanMetaCurve {
         return beanValue.add(curveValue);
     }
 
+    /**
+     * @dev calculates the total USD liquidity in the BEAN:3CRV
+     * Metapool. NOTE: assumes that `balances[0]` is BEAN.
+     * TODO: discuss with brendan
+     */
+    function totalLiquidityUsd() internal view returns (uint256) {
+        // By using previous balances and the virtual price, we protect against flash loan
+        uint256[2] memory balances = IMeta3Curve(C.CURVE_BEAN_METAPOOL).get_previous_balances();
+        uint256 virtualPrice = C.curveMetapool().get_virtual_price();
+        uint256[2] memory xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
+
+        uint256 a = C.curveMetapool().A_precise();
+        uint256 D = LibCurve.getD(xp, a);
+        uint256 price = LibCurve.getPrice(xp, a, D, RATE_MULTIPLIER);
+        uint256 totalSupply = (D * PRECISION) / virtualPrice;
+        uint256 beanValue = balances[0].mul(price).div(RATE_MULTIPLIER);
+        uint256 curveValue = xp[1];
+        
+        return beanValue.add(curveValue);
+    }
+
     function getDeltaB() internal view returns (int256 deltaB) {
         uint256[2] memory balances = C.curveMetapool().get_balances();
         uint256 d = getDFroms(balances);
