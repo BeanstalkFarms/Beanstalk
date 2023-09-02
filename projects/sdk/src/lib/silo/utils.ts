@@ -44,14 +44,14 @@ export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token
 
   deposits.some((deposit) => {
     const amountToRemoveFromCrate = totalAmount.add(deposit.amount).lte(amount) ? deposit.amount : amount.sub(totalAmount);
-    const elapsedSeasons = currentSeason - deposit.stem.toNumber();
+    //const elapsedSeasons = currentSeason - deposit.stem.toNumber();
     const cratePct = amountToRemoveFromCrate.div(deposit.amount);
     const crateBDV = cratePct.mul(deposit.bdv);
     const crateSeeds = cratePct.mul(deposit.seeds);
 
-    const baseStalk = token.getStalk(crateBDV);
-    const grownStalk = crateSeeds.mul(elapsedSeasons).mul(Silo.STALK_PER_SEED_PER_SEASON); // FIXME
-    const crateStalk = baseStalk.add(grownStalk);
+    const baseStalk = cratePct.mul(deposit.stalk.base); //token.getStalk(crateBDV);
+    const grownStalk = cratePct.mul(deposit.stalk.grown); //crateSeeds.mul(elapsedSeasons).mul(Silo.STALK_PER_SEED_PER_SEASON); // FIXME
+    const crateStalk = cratePct.mul(deposit.stalk.total); //baseStalk.add(grownStalk);
 
     totalAmount = totalAmount.add(amountToRemoveFromCrate);
     totalBDV = totalBDV.add(crateBDV);
