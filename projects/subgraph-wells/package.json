@@ -25,7 +25,7 @@
     "deploy-hosted-dev": "yarn codegen && graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanstalk-wells-dev"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.30.4",
+    "@graphprotocol/graph-cli": "0.56.0",
     "@graphprotocol/graph-ts": "^0.27.0",
     "matchstick-as": "^0.5.0"
   },
