@@ -6,7 +6,14 @@ import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
 import { loadSilo, loadSiloHourlySnapshot } from "./utils/Silo";
 import { loadSiloYield } from "./utils/SiloYield";
-import { HISTORIC_VAPY } from "./utils/HistoricYield";
+import {
+  HISTORIC_VAPY_8_000,
+  HISTORIC_VAPY_10_000,
+  HISTORIC_VAPY_12_000,
+  HISTORIC_VAPY_14_000,
+  HISTORIC_VAPY_16_000
+} from "./utils/HistoricYield";
+// import { HISTORIC_VAPY } from "./utils/HistoricYield";
 
 const MAX_WINDOW = 720;
 
@@ -50,20 +57,77 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
 
   // Pull from historically calculated values prior to season 15457 rather than iterating
 
-  if (t <= 15457) {
-    let cacheIndex = t - 6075;
+  let cacheIndex = -1;
+  if (t <= 8000) {
+    cacheIndex = t - 6075;
 
-    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][1]);
-    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][2]);
-    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][3]);
-    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][4]);
-    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][5]);
-    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][6]);
-    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][7]);
-    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][8]);
-    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][9]);
-    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][10]);
-    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY[cacheIndex][11]);
+    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][1]);
+    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][2]);
+    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][3]);
+    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][4]);
+    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][5]);
+    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][6]);
+    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][7]);
+    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][8]);
+    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][9]);
+    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][10]);
+    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_8_000[cacheIndex][11]);
+  } else if (t <= 10000) {
+    cacheIndex = t - 8001;
+
+    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][1]);
+    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][2]);
+    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][3]);
+    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][4]);
+    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][5]);
+    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][6]);
+    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][7]);
+    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][8]);
+    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][9]);
+    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][10]);
+    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_10_000[cacheIndex][11]);
+  } else if (t <= 12000) {
+    cacheIndex = t - 10001;
+
+    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][1]);
+    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][2]);
+    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][3]);
+    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][4]);
+    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][5]);
+    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][6]);
+    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][7]);
+    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][8]);
+    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][9]);
+    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][10]);
+    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_12_000[cacheIndex][11]);
+  } else if (t <= 14000) {
+    cacheIndex = t - 12001;
+
+    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][1]);
+    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][2]);
+    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][3]);
+    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][4]);
+    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][5]);
+    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][6]);
+    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][7]);
+    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][8]);
+    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][9]);
+    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][10]);
+    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_14_000[cacheIndex][11]);
+  } else if (t <= 15457) {
+    cacheIndex = t - 14001;
+
+    siloYield.twoSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][1]);
+    siloYield.twoSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][2]);
+    siloYield.threeSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][3]);
+    siloYield.threeSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][4]);
+    siloYield.threePointTwoFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][5]);
+    siloYield.threePointTwoFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][6]);
+    siloYield.fourSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][7]);
+    siloYield.fourSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][8]);
+    siloYield.fourPointFiveSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][9]);
+    siloYield.fourPointFiveSeedStalkAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][10]);
+    siloYield.zeroSeedBeanAPY = BigDecimal.fromString(HISTORIC_VAPY_16_000[cacheIndex][11]);
   } else {
     let twoSeedAPY = calculateAPY(currentEMA, BigDecimal.fromString("2"), silo.stalk, silo.seeds);
     siloYield.twoSeedBeanAPY = twoSeedAPY[0];
