@@ -241,6 +241,7 @@ contract Storage {
      * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
      * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
      * 
+     * 
      * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
      * but not yet Claimed. This will be removed in a future BIP.
      */

@@ -3,15 +3,17 @@
 pragma solidity =0.7.6;
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
-import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/Oracle/LibUsdOracle.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibUnripe.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/Well/LibWell.sol";
+import "contracts/libraries/LibUnripe.sol";
 
 /**
  * @author Brean
@@ -58,6 +60,11 @@ library LibEvaluate {
     uint256 private constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.75e18; // 75%
     uint256 private constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.5e18; // 50%
     uint256 private constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.25e18; // 25%
+
+    uint256 private constant BEAN_INDEX = 0;
+
+    // TODO: put into constant.sol later
+    uint256 private constant chopRate = 1;
 
     /**
      * @notice evaluates the pod rate and returns the caseId
@@ -180,18 +187,23 @@ library LibEvaluate {
     /**
      * @notice calculates the liquidity to supply ratio, where liquidity is measured in USD. 
      * @param beanSupply the total supply of beans.
+     * @dev no support for non-well AMMs.
      */
     function calcLPToSupplyRatio(
         uint256 beanSupply
-    ) internal returns (
+    ) internal view returns (
         Decimal.D256 memory lpToSupplyRatio
     ) {
+        // bean supply needs to be reduced by the amount of beans that are locked in the well,
+        // to get the circulating beans
+        
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory assets = LibWhitelistedTokens.getSiloLPTokens();
         uint256 usdLiquidity;
         for(uint256 i = 0; i < assets.length; i++){
             // get amount of LP token
             uint256 amount = s.siloBalances[assets[i]].deposited;
+
             // get LP amount in USD
             if(LibWell.isWell(assets[i])){
                 usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(assets[i], amount));
@@ -203,11 +215,9 @@ library LibEvaluate {
 
         uint256 beanIndex = LibWell.getBeanIndexFromWell(C.BEAN_ETH_WELL);
         uint256 lockedBeanInUrBean = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
-        // uint256 lockedBeanInUrBean = 0;
         uint256 lockedBeanInUrEth = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_LP)
         .mul(IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(C.BEAN_ETH_WELL, C.BYTES_ZERO)[beanIndex])
         .div(IERC20(C.BEAN_ETH_WELL).totalSupply());
-        // uint256 lockedBeanInUrEth = 0;
 
         beanSupply = beanSupply
             .sub(lockedBeanInUrBean)
