@@ -3,7 +3,7 @@ import { BEANSTALK_PRICE, BEAN_ERC20 } from "../../subgraph-core/utils/Constants
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice } from "../generated/BeanWETHCP2w/BeanstalkPrice";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
-import { updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
@@ -86,6 +86,9 @@ function handleLiquidityChange(
     return;
   }
 
+  let bean = loadBean(BEAN_ERC20.toHexString());
+  let oldBeanPrice = bean.price;
+
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(wellPrice.value.price);
@@ -116,7 +119,7 @@ function handleLiquidityChange(
   );
 
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, wellPrice.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, toDecimal(beanPrice.value.price));
 }
 
 function handleSwapEvent(
@@ -135,6 +138,9 @@ function handleSwapEvent(
   if (wellPrice.reverted || beanPrice.reverted) {
     return;
   }
+
+  let bean = loadBean(BEAN_ERC20.toHexString());
+  let oldBeanPrice = bean.price;
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
@@ -158,5 +164,5 @@ function handleSwapEvent(
   );
 
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, wellPrice.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, toDecimal(beanPrice.value.price));
 }

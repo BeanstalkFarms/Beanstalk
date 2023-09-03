@@ -15,6 +15,7 @@ export function handleSunrise(event: Sunrise): void {
   updateBeanSeason(beanToken, event.block.timestamp, event.params.season.toI32());
 
   let bean = loadBean(beanToken);
+  let oldBeanPrice = bean.price;
   for (let i = 0; i < bean.pools.length; i++) {
     updatePoolSeason(bean.pools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
   }
@@ -28,24 +29,24 @@ export function handleSunrise(event: Sunrise): void {
       // We can use the Beanstalk Price contract to update overall price, and call the updates for Curve and Well price updates
       // We also know that the additional calls should not revert at this point
 
+      let beanPrice = toDecimal(beanstalkQuery.value.price);
       // Overall Bean update
-      updateBeanValues(
-        BEAN_ERC20.toHexString(),
-        event.block.timestamp,
-        toDecimal(beanstalkQuery.value.price),
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BD,
-        ZERO_BD
-      );
+      updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, beanPrice, ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
 
       // Curve pool update
       let curvePrice = beanstalkPrice.getCurve().price;
-      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curvePrice));
+      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curvePrice), oldBeanPrice, beanPrice);
 
       // Curve pool update
       let wellPrice = beanstalkPrice.getConstantProductWell(BEAN_WETH_CP2_WELL).price;
-      updatePoolPrice(BEAN_WETH_CP2_WELL.toHexString(), event.block.timestamp, event.block.number, toDecimal(wellPrice));
+      updatePoolPrice(
+        BEAN_WETH_CP2_WELL.toHexString(),
+        event.block.timestamp,
+        event.block.number,
+        toDecimal(wellPrice),
+        oldBeanPrice,
+        beanPrice
+      );
     } else {
       // Pre Basin deployment - Use original Curve price contract to update on each season.
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
@@ -53,7 +54,14 @@ export function handleSunrise(event: Sunrise): void {
 
       if (!curve.reverted) {
         updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, toDecimal(curve.value.price), ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
-        updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curve.value.price));
+        updatePoolPrice(
+          BEAN_3CRV.toHexString(),
+          event.block.timestamp,
+          event.block.number,
+          toDecimal(curve.value.price),
+          oldBeanPrice,
+          toDecimal(curve.value.price)
+        );
       }
     }
   }

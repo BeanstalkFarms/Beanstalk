@@ -97,6 +97,7 @@ function handleLiquidityChange(
   }
 
   let bean = loadBean(BEAN_ERC20.toHexString());
+  let oldBeanPrice = bean.price;
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
@@ -119,7 +120,7 @@ function handleLiquidityChange(
   updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, beanPrice);
 }
 
 function handleSwap(
@@ -149,6 +150,7 @@ function handleSwap(
   }
 
   let bean = loadBean(BEAN_ERC20.toHexString());
+  let oldBeanPrice = bean.price;
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
   let newPrice = toDecimal(curve.value.price);
@@ -168,5 +170,5 @@ function handleSwap(
   updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, beanPrice);
 }
