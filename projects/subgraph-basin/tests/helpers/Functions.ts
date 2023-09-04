@@ -1,6 +1,6 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as";
-import { BEAN_ERC20, CURVE_PRICE, WETH } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK_PRICE, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE, WETH } from "../../../subgraph-core/utils/Constants";
 import { BEAN_USD_PRICE, WELL } from "./Constants";
 
 export function createContractCallMocks(): void {
@@ -22,9 +22,28 @@ export function createContractCallMocks(): void {
   priceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("969328")));
   priceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("1032515")));
 
+  let wellPriceReturn = new ethereum.Tuple();
+
+  wellPriceReturn.push(ethereum.Value.fromAddress(BEAN_WETH_CP2_WELL));
+  wellPriceReturn.push(ethereum.Value.fromArray([ethereum.Value.fromAddress(BEAN_ERC20), ethereum.Value.fromAddress(WETH)]));
+  wellPriceReturn.push(ethereum.Value.fromUnsignedBigIntArray([BigInt.fromString("2000000000"), BigInt.fromString("1500000000000000000")]));
+  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BEAN_USD_PRICE));
+  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("26025239751318")));
+  wellPriceReturn.push(ethereum.Value.fromSignedBigInt(BigInt.fromString("-866349934591")));
+  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("969328")));
+  wellPriceReturn.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromString("1032515")));
+
   createMockedFunction(CURVE_PRICE, "getCurve", "getCurve():((address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256))")
     .withArgs([])
     .returns([ethereum.Value.fromTuple(priceReturn)]);
+
+  createMockedFunction(
+    BEANSTALK_PRICE,
+    "getConstantProductWell",
+    "getConstantProductWell(address):((address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256))"
+  )
+    .withArgs([ethereum.Value.fromAddress(BEAN_WETH_CP2_WELL)])
+    .returns([ethereum.Value.fromTuple(wellPriceReturn)]);
 
   createMockedFunction(BEAN_ERC20, "name", "name():(string)")
     .withArgs([])

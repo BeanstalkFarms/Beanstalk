@@ -1,7 +1,7 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
-import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "./Decimals";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
+import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getBeanTokenAddress, loadBean } from "./Bean";
 import { checkCrossAndUpdate } from "./Cross";
 
@@ -33,7 +33,7 @@ export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool
 }
 
 export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, blockNumber: BigInt): PoolHourlySnapshot {
-  let hour = hourFromTimestamp(timestamp);
+  let hour = hourFromTimestamp(timestamp).toString();
   let id = pool + "-" + hour;
   let snapshot = PoolHourlySnapshot.load(id);
   if (snapshot == null) {
@@ -62,7 +62,7 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, timestamp: BigInt, 
 }
 
 export function loadOrCreatePoolDailySnapshot(pool: string, timestamp: BigInt, blockNumber: BigInt): PoolDailySnapshot {
-  let day = dayFromTimestamp(timestamp);
+  let day = dayFromTimestamp(timestamp).toString();
 
   let id = pool + "-" + day;
   let snapshot = PoolDailySnapshot.load(id);
@@ -165,7 +165,14 @@ export function updatePoolSeason(poolAddress: string, timestamp: BigInt, blockNu
   poolDaily.save();
 }
 
-export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNumber: BigInt, price: BigDecimal): void {
+export function updatePoolPrice(
+  poolAddress: string,
+  timestamp: BigInt,
+  blockNumber: BigInt,
+  price: BigDecimal,
+  oldBeanPrice: BigDecimal,
+  newBeanPrice: BigDecimal
+): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
@@ -181,7 +188,7 @@ export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNum
   poolDaily.lastPrice = price;
   poolDaily.save();
 
-  checkCrossAndUpdate(poolAddress, timestamp, blockNumber, oldPrice, price);
+  checkCrossAndUpdate(poolAddress, timestamp, blockNumber, oldPrice, price, oldBeanPrice, newBeanPrice);
 }
 
 export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, deltaAmount1: BigInt, blockNumber: BigInt): void {
@@ -198,4 +205,9 @@ export function setPoolReserves(poolAddress: string, reserves: BigInt[], blockNu
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   pool.reserves = reserves;
   pool.save();
+}
+
+export function getPoolLiquidityUSD(poolAddress: string, blockNumber: BigInt): BigDecimal {
+  let pool = loadOrCreatePool(poolAddress, blockNumber);
+  return pool.liquidityUSD;
 }

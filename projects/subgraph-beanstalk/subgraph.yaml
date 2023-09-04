@@ -101,6 +101,8 @@ dataSources:
           file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
         - event: WeatherChange(indexed uint256,uint256,int8)
           handler: handleWeatherChange
@@ -308,18 +310,22 @@ dataSources:
         - Season-Replanted
       abis:
         - name: Beanstalk
-          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
         - name: UniswapV2Pair
           file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
           file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
           file: ../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
         - event: Reward(indexed uint32,uint256,uint256,uint256)
           handler: handleReward
         - event: MetapoolOracle(indexed uint32,int256,uint256[2])
           handler: handleMetapoolOracle
+        - event: WellOracle(indexed uint32,address,int256,bytes)
+          handler: handleWellOracle
         - event: Soil(indexed uint32,uint256)
           handler: handleSoil
       file: ./src/SeasonHandler.ts

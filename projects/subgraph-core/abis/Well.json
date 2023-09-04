@@ -1,6 +1,22 @@
 [
   {
     "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "DuplicateTokens",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "Expired",
     "type": "error"
   },
@@ -98,6 +114,12 @@
   },
   {
     "anonymous": false,
+    "inputs": [],
+    "name": "EIP712DomainChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [
       {
         "indexed": false,
@@ -183,7 +205,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "minAmountOut",
+        "name": "amountOut",
         "type": "uint256"
       },
       {
@@ -241,6 +263,18 @@
         "internalType": "uint256[]",
         "name": "reserves",
         "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "lpAmountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       }
     ],
     "name": "Sync",
@@ -471,6 +505,49 @@
   },
   {
     "inputs": [],
+    "name": "eip712Domain",
+    "outputs": [
+      {
+        "internalType": "bytes1",
+        "name": "fields",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "verifyingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "extensions",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "firstPump",
     "outputs": [
       {
@@ -666,6 +743,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getSyncOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "lpAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -693,18 +783,31 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "name",
+        "name": "_name",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "symbol",
+        "name": "_symbol",
         "type": "string"
       }
     ],
     "name": "init",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isInitialized",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1134,9 +1237,26 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLpAmountOut",
+        "type": "uint256"
+      }
+    ],
     "name": "sync",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "lpAmountOut",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1146,7 +1266,7 @@
     "outputs": [
       {
         "internalType": "contract IERC20[]",
-        "name": "ts",
+        "name": "_tokens",
         "type": "address[]"
       }
     ],

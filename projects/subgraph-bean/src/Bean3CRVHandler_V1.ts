@@ -8,8 +8,15 @@ import {
   TokenExchangeUnderlying
 } from "../generated/Bean3CRV/Bean3CRV";
 import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_3CRV_V1, BEAN_ERC20_V1, BEAN_LUSD_V1, CALCULATIONS_CURVE, CRV3_POOL_V1, LUSD_3POOL } from "./utils/Constants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import {
+  BEAN_3CRV_V1,
+  BEAN_ERC20_V1,
+  BEAN_LUSD_V1,
+  CALCULATIONS_CURVE,
+  CRV3_POOL_V1,
+  LUSD_3POOL
+} from "../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { CalculationsCurve } from "../generated/Bean3CRV-V1/CalculationsCurve";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
@@ -133,6 +140,7 @@ function handleLiquidityChange(
   log.info("LiquidityChange: Bean USD price: {}", [newPrice.toString()]);
 
   let bean = loadBean(BEAN_ERC20_V1.toHexString());
+  let oldBeanPrice = bean.price;
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
   let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
@@ -172,7 +180,7 @@ function handleLiquidityChange(
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, newPrice);
 }
 
 function handleSwap(
@@ -217,6 +225,7 @@ function handleSwap(
   log.info("LiquidityChange: Bean USD price: {}", [newPrice.toString()]);
 
   let bean = loadBean(BEAN_ERC20_V1.toHexString());
+  let oldBeanPrice = bean.price;
 
   let beanContract = ERC20.bind(BEAN_ERC20_V1);
   let crv3PoolContract = ERC20.bind(CRV3_POOL_V1);
@@ -253,5 +262,5 @@ function handleSwap(
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, newPrice);
 }
