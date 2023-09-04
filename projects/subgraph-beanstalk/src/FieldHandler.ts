@@ -11,7 +11,7 @@ import {
 } from "../generated/Field/Beanstalk";
 import { CurvePrice } from "../generated/Field/CurvePrice";
 import { Harvest as HarvestEntity } from "../generated/schema";
-import { BEANSTALK, BEANSTALK_FARMS, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK, BEANSTALK_FARMS, BEANSTALK_PRICE, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
@@ -19,6 +19,7 @@ import { loadPlot } from "./utils/Plot";
 import { savePodTransfer } from "./utils/PodTransfer";
 import { loadSeason } from "./utils/Season";
 import { loadBeanstalk } from "./utils/Beanstalk";
+import { BeanstalkPrice } from "../generated/Field/BeanstalkPrice";
 
 export function handleWeatherChange(event: WeatherChange): void {
   let field = loadField(event.address);
@@ -32,8 +33,21 @@ export function handleWeatherChange(event: WeatherChange): void {
   // Real Rate of Return
 
   let season = loadSeason(event.address, event.params.season);
-  let curvePrice = CurvePrice.bind(CURVE_PRICE);
-  let currentPrice = season.price == ZERO_BD ? toDecimal(curvePrice.getCurve().price, 6) : season.price;
+
+  let currentPrice = ZERO_BD;
+  if (season.price != ZERO_BD) {
+    currentPrice = season.price;
+  } else {
+    // Attempt to pull from Beanstalk Price contract first
+    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkQuery = beanstalkPrice.try_price();
+    if (beanstalkQuery.reverted) {
+      let curvePrice = CurvePrice.bind(CURVE_PRICE);
+      currentPrice = toDecimal(curvePrice.getCurve().price);
+    } else {
+      currentPrice = toDecimal(beanstalkQuery.value.price);
+    }
+  }
 
   field.realRateOfReturn = ONE_BD.plus(BigDecimal.fromString((field.temperature / 100).toString())).div(currentPrice);
   fieldHourly.realRateOfReturn = field.realRateOfReturn;
