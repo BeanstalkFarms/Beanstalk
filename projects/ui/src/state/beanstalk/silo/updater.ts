@@ -106,7 +106,7 @@ export const useFetchBeanstalkSilo = () => {
       const token = sdk.tokens.findByAddress(curr.address);
       if (!token) throw new Error(`Token not found in SDK: ${curr.address}`);
 
-      const stemTip = stemTips.get(token);
+      const stemTip = stemTips.get(token.address);
       if (!stemTip)
         throw new Error(`Stem Tip not found in SDK: ${curr.address}`);
 
