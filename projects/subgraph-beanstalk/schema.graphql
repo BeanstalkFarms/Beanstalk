@@ -298,14 +298,28 @@ type SiloYield @entity {
   u: Int!
   "Bean EMA for season"
   beansPerSeasonEMA: BigDecimal!
-  "Bean APY for two seeds per BDV"
+  "Bean APY for 0 seeds per BDV"
+  zeroSeedBeanAPY: BigDecimal!
+  "Bean APY for 2 seeds per BDV"
   twoSeedBeanAPY: BigDecimal!
-  "Stalk APY for two seeds per BDV"
+  "Stalk APY for 2 seeds per BDV"
   twoSeedStalkAPY: BigDecimal!
-  "Bean APY for four seeds per BDV"
+  "Bean APY for 3 seeds per BDV"
+  threeSeedBeanAPY: BigDecimal!
+  "Stalk APY for 3 seeds per BDV"
+  threeSeedStalkAPY: BigDecimal!
+  "Bean APY for 3.25 seeds per BDV"
+  threePointTwoFiveSeedBeanAPY: BigDecimal!
+  "Stalk APY for 3.25 seeds per BDV"
+  threePointTwoFiveSeedStalkAPY: BigDecimal!
+  "Bean APY for 4 seeds per BDV"
   fourSeedBeanAPY: BigDecimal!
-  "Stalk APY for four seeds per BDV"
+  "Stalk APY for 4 seeds per BDV"
   fourSeedStalkAPY: BigDecimal!
+  "Bean APY for 4.5 seeds per BDV"
+  fourPointFiveSeedBeanAPY: BigDecimal!
+  "Stalk APY for 4.5 seeds per BDV"
+  fourPointFiveSeedStalkAPY: BigDecimal!
   "Unix timestamp of update"
   createdAt: BigInt!
 }
@@ -1275,6 +1289,27 @@ type MetapoolOracle implements SiloEvent @entity(immutable: true) {
   balanceA: BigInt!
   " Cumulative balance B"
   balanceB: BigInt!
+  " Block number of this event "
+  blockNumber: BigInt!
+  " Timestamp of this event "
+  createdAt: BigInt!
+}
+
+type WellOracle implements SiloEvent @entity(immutable: true) {
+  "wellOracle-{ Transaction hash }-{ Log index }"
+  id: ID!
+  " Transaction hash of the transaction that emitted this event "
+  hash: String!
+  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  logIndex: Int!
+  " The protocol this transaction belongs to "
+  protocol: Beanstalk!
+  " Season of oracle "
+  season: Int!
+  " DeltaB for season"
+  deltaB: BigInt!
+  " Time weighted cumulative reserves "
+  cumulativeReserves: Bytes!
   " Block number of this event "
   blockNumber: BigInt!
   " Timestamp of this event "

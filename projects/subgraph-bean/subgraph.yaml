@@ -17,9 +17,9 @@ dataSources:
         - Bean
       abis:
         - name: Bean
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -39,9 +39,9 @@ dataSources:
         - Bean
       abis:
         - name: Bean
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -61,9 +61,11 @@ dataSources:
         - Bean3CRV
       abis:
         - name: Bean3CRV
-          file: ./abis/Bean3CRV.json
+          file: ../subgraph-core/abis/Bean3CRV.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
-          file: ./abis/CurvePrice.json
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -93,7 +95,11 @@ dataSources:
         - Beanstalk
       abis:
         - name: Beanstalk
-          file: ./abis/Beanstalk-Replanted.json
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../subgraph-core/abis/CurvePrice.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
@@ -118,9 +124,9 @@ dataSources:
         - Transfer
       abis:
         - name: UniswapV2Pair
-          file: ./abis/UniswapV2Pair.json
+          file: ../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         # - event: Burn(indexed address,uint256,uint256,indexed address)
         #   handler: handleBurn
@@ -146,11 +152,11 @@ dataSources:
         - Bean3CRV
       abis:
         - name: Bean3CRV
-          file: ./abis/Bean3CRV.json
+          file: ../subgraph-core/abis/Bean3CRV.json
         - name: CalculationsCurve
-          file: ./abis/CalculationsCurve.json
+          file: ../subgraph-core/abis/CalculationsCurve.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -180,11 +186,11 @@ dataSources:
         - Bean3CRV
       abis:
         - name: Bean3CRV
-          file: ./abis/Bean3CRV.json
+          file: ../subgraph-core/abis/Bean3CRV.json
         - name: CalculationsCurve
-          file: ./abis/CalculationsCurve.json
+          file: ../subgraph-core/abis/CalculationsCurve.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: ../subgraph-core/abis/ERC20.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -199,3 +205,37 @@ dataSources:
         - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
           handler: handleRemoveLiquidityOne
       file: ./src/Bean3CRVHandler_V1.ts
+  - kind: ethereum/contract
+    name: BeanWETHCP2w
+    network: mainnet
+    source:
+      address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"
+      abi: Well
+      startBlock: 17859167
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean3CRV
+      abis:
+        - name: Well
+          file: ../subgraph-core/abis/Well.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
+        - name: ERC20
+          file: ../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: AddLiquidity(uint256[],uint256,address)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(uint256,uint256[],address)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
+          handler: handleRemoveLiquidityOneToken
+        - event: Swap(address,address,uint256,uint256,address)
+          handler: handleSwap
+        - event: Shift(uint256[],address,uint256,address)
+          handler: handleShift
+        - event: Sync(uint256[],uint256,address)
+          handler: handleSync
+      file: ./src/BeanWellHandler.ts

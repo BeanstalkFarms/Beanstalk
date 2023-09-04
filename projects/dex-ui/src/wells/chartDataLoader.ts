@@ -13,15 +13,37 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well, timePeriod: string) 
   const HISTORY_DAYS_AGO_BLOCK_TIMESTAMP =
     HISTORY_DAYS === 0 ? 0 : Math.floor(new Date(Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000).getTime() / 1000);
 
-  const data = await fetchFromSubgraphRequest(GetWellChartDataDocument, {
-    id: well.address,
-    lastUpdateTimestamp_gte: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP
-  });
+  let results: any[] = [];
+  let goToNextPage: boolean = false;
+  let nextPage: number = 0;
+  let skipAmount: number = 0;
 
-  const results = await data();
+  do {
+    const data = fetchFromSubgraphRequest(GetWellChartDataDocument, {
+      id: well.address,
+      lastUpdateTimestamp_gte: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP,
+      resultsToSkip: skipAmount
+    });
 
-  if (!results.well) return [];
-  return results.well.hourlySnapshots;
+    const fetchedData = await data();
+
+    if (fetchedData.well) {
+      results = results.concat(fetchedData.well.hourlySnapshots)
+      if (fetchedData.well.hourlySnapshots.length === 1000) {
+        goToNextPage = true;
+        nextPage++;
+        skipAmount = nextPage * 1000;
+      } else {
+        goToNextPage = false;
+      }
+    } else {
+      goToNextPage = false;
+    }
+  }
+
+  while (goToNextPage === true);
+
+  return results;
 };
 
 export const loadChartData = async (sdk: BeanstalkSDK, well: Well, timePeriod: string): Promise<any> => {

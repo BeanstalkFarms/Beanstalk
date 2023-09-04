@@ -3,6 +3,20 @@
 # Version: 3.0.3
 # See https://github.com/messari/subgraphs/blob/master/docs/Schema.md for details
 
+enum LiquidityEvent {
+  # Additions
+  ADD_LIQUIDITY
+  SYNC
+  # Removals
+  REMOVE_LIQUIDITY
+  REMOVE_LIQUIDITY_ONE_TOKEN
+}
+
+enum SwapEvent {
+  SWAP
+  SHIFT
+}
+
 type Token @entity {
   " Smart contract address of the token "
   id: Bytes!
@@ -137,7 +151,7 @@ type Well @entity {
   " Liquidity well hourly snapshots "
   hourlySnapshots: [WellHourlySnapshot!]! @derivedFrom(field: "well")
 
-  # ##### Events #####
+  ##### Events #####
 
   " All deposit (add liquidity) events occurred in this well "
   deposits: [Deposit!]! @derivedFrom(field: "well")
@@ -296,7 +310,7 @@ type Account @entity {
 
 ##### EVENT LEVEL ENTITIES #####
 
-" This maps to the AddLiquidity event "
+" This maps to the AddLiquidity and Sync events "
 type Deposit @entity(immutable: true) {
   " { Transaction hash }-{ Log index } "
   id: ID!
@@ -318,6 +332,9 @@ type Deposit @entity(immutable: true) {
 
   " Gas price of the transaction that emitted this event "
   gasPrice: BigInt
+
+  " Event type that was emitted "
+  eventType: LiquidityEvent!
 
   " Account that emitted this event "
   account: Account!
@@ -367,6 +384,9 @@ type Withdraw @entity(immutable: true) {
   " Gas price of the transaction that emitted this event "
   gasPrice: BigInt
 
+  " Event type that was emitted "
+  eventType: LiquidityEvent!
+
   " Account that emitted this event "
   account: Account!
 
@@ -413,6 +433,9 @@ type Swap @entity(immutable: true) {
 
   " Gas price for the transaction "
   gasPrice: BigInt
+
+  " Event type that was emitted "
+  eventType: SwapEvent!
 
   " Address that sent the transaction "
   account: Account!

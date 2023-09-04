@@ -143,6 +143,7 @@ type Cross @entity {
   timestamp: BigInt!
   timeSinceLastCross: BigInt!
   above: Boolean!
+  overall: Boolean!
   hourlySnapshot: BeanHourlySnapshot!
   dailySnapshot: BeanDailySnapshot!
   poolHourlySnapshot: PoolHourlySnapshot!

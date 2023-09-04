@@ -36,7 +36,7 @@ export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | 
       event = event as ShiftEvent;
       action = "Shift";
       valueUSD = `$${event.toAmount.mul(tokenPrices[event.toToken.symbol] || 0).toHuman("short")}`;
-      description = `Swaped to ${event.toAmount.toHuman("short")} ${event.toToken.symbol}`;
+      description = `Swapped to ${event.toAmount.toHuman("short")} ${event.toToken.symbol}`;
 
       break;
     case EVENT_TYPE.ADD_LIQUIDITY:
