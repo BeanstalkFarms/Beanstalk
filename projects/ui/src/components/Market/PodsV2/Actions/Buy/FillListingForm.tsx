@@ -371,7 +371,7 @@ const FillListingForm: FC<{
 
         // Checks
         if (!podListing) throw new Error('No Pod Listing found');
-        if (!signer) throw new Error('Connect a wallet');
+        if (!signer || !account) throw new Error('Connect a wallet');
         if (values.tokens.length > 1)
           throw new Error('Only one input token supported');
         if (
@@ -422,12 +422,14 @@ const FillListingForm: FC<{
           const swap = sdk.swap.buildSwap(
             tokenInNew,
             sdk.tokens.BEAN,
-            optimizeFromMode(formData.amount, balances[tokenIn.address])
+            account,
+            optimizeFromMode(formData.amount, balances[tokenIn.address]),
+            FarmToMode.INTERNAL
           );
 
           // At the end of the Swap step, the assets will be in our INTERNAL balance.
           // The Swap decides where to route them from (see handleQuote).
-          finalFromMode = FarmFromMode.INTERNAL_TOLERANT;
+          finalFromMode = FarmFromMode.INTERNAL;
           farm = swap.getFarm();
         }
 
@@ -435,17 +437,6 @@ const FillListingForm: FC<{
           `[FillListing] using FarmFromMode = ${finalFromMode}`,
           podListing
         );
-
-        // If not using Bean, add Bean approval step after conversion
-        if (tokenIn !== Bean) {
-          farm.add((amountInStep) => 
-            beanstalk.interface.encodeFunctionData('approveToken', [
-              beanstalk.address,
-              Bean.address,
-              amountInStep
-            ])
-          );
-        }
 
         farm.add((amountInStep) =>
           beanstalk.interface.encodeFunctionData('fillPodListing', [
@@ -506,7 +497,7 @@ const FillListingForm: FC<{
       balances,
       sdk,
       beanstalk.interface,
-      beanstalk.address
+      account
     ]
   );
 
