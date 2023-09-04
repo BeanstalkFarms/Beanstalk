@@ -371,7 +371,7 @@ const FillListingForm: FC<{
 
         // Checks
         if (!podListing) throw new Error('No Pod Listing found');
-        if (!signer) throw new Error('Connect a wallet');
+        if (!signer || !account) throw new Error('Connect a wallet');
         if (values.tokens.length > 1)
           throw new Error('Only one input token supported');
         if (
@@ -412,10 +412,7 @@ const FillListingForm: FC<{
           finalFromMode = optimizeFromMode(amountBeans, balances[Bean.address]);
           farm = sdk.farm.create();
           tokenInNew = sdk.tokens.BEAN; // FIXME
-        }
-
-        /// Swap to BEAN and buy
-        else if (tokenIn === Eth || tokenIn === Weth) {
+        } else { /// Swap to BEAN and buy
           // Require a quote
           if (!formData.amountOut)
             throw new Error(`No quote available for ${formData.token.symbol}`);
@@ -425,19 +422,15 @@ const FillListingForm: FC<{
           const swap = sdk.swap.buildSwap(
             tokenInNew,
             sdk.tokens.BEAN,
-            tokenIn === Weth
-              ? optimizeFromMode(formData.amountOut, balances[Weth.address])
-              : FarmFromMode.EXTERNAL
+            account,
+            optimizeFromMode(formData.amount, balances[tokenIn.address]),
+            FarmToMode.INTERNAL
           );
 
           // At the end of the Swap step, the assets will be in our INTERNAL balance.
           // The Swap decides where to route them from (see handleQuote).
-          finalFromMode = FarmFromMode.INTERNAL_TOLERANT;
+          finalFromMode = FarmFromMode.INTERNAL;
           farm = swap.getFarm();
-        } else {
-          throw new Error(
-            `Filling a Listing via ${tokenIn.symbol} is not currently supported`
-          );
         }
 
         console.debug(
@@ -499,12 +492,12 @@ const FillListingForm: FC<{
       podListing,
       signer,
       Eth,
-      Weth,
       refetchFarmerField,
       refetchFarmerBalances,
       balances,
       sdk,
       beanstalk.interface,
+      account
     ]
   );
 
