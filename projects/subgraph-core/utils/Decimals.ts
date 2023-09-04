@@ -33,6 +33,11 @@ export function toDecimal(value: BigInt, decimals: number = DEFAULT_DECIMALS): B
   return value.divDecimal(precision);
 }
 
+export function toBigInt(value: BigDecimal, decimals: number = DEFAULT_DECIMALS): BigInt {
+  let precision = 10 * decimals;
+  return BigInt.fromString(value.times(BigDecimal.fromString(precision.toString())).truncate(0).toString());
+}
+
 export function emptyBigIntArray(length: i32): BigInt[] {
   let array = [ZERO_BI, ZERO_BI];
   for (let i = 2; i < length; i++) array.push(ZERO_BI);

@@ -1,8 +1,8 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Swap, Sync, UniswapV2Pair } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
-import { updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
-import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "./utils/Constants";
-import { toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "./utils/Decimals";
+import { loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
+import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/Constants";
+import { toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
 
@@ -65,6 +65,9 @@ export function handleSync(event: Sync): void {
   // Do not index post-exploit data
   if (event.block.number >= BigInt.fromI32(14602790)) return;
 
+  let bean = loadBean(BEAN_ERC20_V1.toHexString());
+  let oldBeanPrice = bean.price;
+
   let pair = UniswapV2Pair.bind(event.address);
 
   let reserves = pair.try_getReserves();
@@ -90,7 +93,7 @@ export function handleSync(event: Sync): void {
 
   let currentBeanPrice = wethBalance.times(weth.lastPriceUSD).div(beanBalance);
 
-  updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
+  updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice, oldBeanPrice, currentBeanPrice);
 
   setPoolReserves(event.address.toHexString(), [reserves.value.value0, reserves.value.value1], event.block.number);
 

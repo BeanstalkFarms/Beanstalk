@@ -25,8 +25,8 @@
     "deploy-hosted-test": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanstalk-testing"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.30.4",
-    "@graphprotocol/graph-ts": "^0.27.0",
+    "@graphprotocol/graph-cli": "0.56.0",
+    "@graphprotocol/graph-ts": "0.31.0",
     "matchstick-as": "^0.5.0"
   },
   "private": true
