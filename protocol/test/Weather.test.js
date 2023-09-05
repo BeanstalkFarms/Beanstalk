@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson, to6, to18 } = require('./utils/helpers.js')
-const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP} = require('./utils/constants.js')
+const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL} = require('./utils/constants.js')
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { BEAN } = require('./utils/constants')
 const { deployMockWell } = require('../utils/well.js');
@@ -44,7 +44,7 @@ describe('Complex Weather', function () {
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.fertilizer.setFertilizerE(true, to6('10000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
-    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     // wells
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
@@ -53,6 +53,7 @@ describe('Complex Weather', function () {
     await owner.sendTransaction({to: user.address, value: 0});
     await setToSecondsAfterHour(0)
     await owner.sendTransaction({to: user.address, value: 0});
+    await this.well.connect(user).mint(user.address, to18('1000'))
     await beanstalk.connect(user).sunrise();
 
   });

@@ -10,6 +10,8 @@ import "contracts/libraries/LibEvaluate.sol";
 import "contracts/libraries/LibCases.sol";
 import "./Sun.sol";
 
+// import "hardhat/console.sol";
+
 /**
  * @title Weather
  * @author Publius
@@ -77,7 +79,6 @@ contract Weather is Sun {
      */
     function calcCaseId(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
-
         // Prevent infinite pod rate
         if (beanSupply == 0) {
             s.w.t = 1;
@@ -87,14 +88,13 @@ contract Weather is Sun {
         // Calculate Delta Soil Demand
         uint256 dsoil = s.f.beanSown;
         s.f.beanSown = 0;
-    
+
         Decimal.D256 memory deltaPodDemand;
         // note try to find gas optimization where s.w.thisSowTime doesn't need to be set again if its already at max
         (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = LibEvaluate.calcDeltaPodDemand(dsoil);
-        
+
         // Calculate Lp To Supply Ratio
         Decimal.D256 memory lpToSupplyRatio = LibEvaluate.calcLPToSupplyRatio(beanSupply);
-        
 
         caseId = LibEvaluate.evaluateBeanstalk(
             deltaB, // deltaB

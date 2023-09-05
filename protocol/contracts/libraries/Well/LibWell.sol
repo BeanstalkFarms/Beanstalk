@@ -97,6 +97,7 @@ library LibWell {
 
     /**
      * @dev gets the liquidity of a well in us dollars. 
+     * assumes a CP2 well function. 
      */
     function getUsdLiquidity(
         address well, 

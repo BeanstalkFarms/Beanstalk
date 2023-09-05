@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
-const { BEAN_3_CURVE, ETH_USDC_UNISWAP_V3, BEAN, UNRIPE_BEAN, UNRIPE_LP } = require('./utils/constants.js');
+const { BEAN_3_CURVE, ETH_USDC_UNISWAP_V3, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, MAX_UINT256 } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployMockWell } = require('../utils/well.js');
@@ -28,13 +28,14 @@ describe('Season', function () {
         this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
         this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
         this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+        bean = await ethers.getContractAt('MockToken', BEAN)
         await this.unripeLP.mint(user.address, to6('1000'))
         await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))
         await this.unripeBean.mint(user.address, to6('1000'))
         await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
         await this.fertilizer.setFertilizerE(true, to6('10000'))
         await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
-        await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
+        await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
 
         // add wells
@@ -45,6 +46,7 @@ describe('Season', function () {
         await setToSecondsAfterHour(0)
         await owner.sendTransaction({to: user.address, value: 0});
         await beanstalk.connect(user).sunrise();
+        await this.well.connect(user).mint(user.address, to18('1000'))
     })
 
     beforeEach(async function () {
@@ -62,8 +64,6 @@ describe('Season', function () {
         })
         it('season incentive', async function () {
             await setToSecondsAfterHour(0)
-            console.log("unripe:", await this.unripe.isUnripe(UNRIPE_BEAN));
-            console.log("unripe:", await this.unripe.isUnripe(UNRIPE_LP));
             await beanstalk.connect(owner).sunrise();
             expect(await bean.balanceOf(owner.address)).to.be.equal(to6('100'))
         })
@@ -97,7 +97,7 @@ describe('Season', function () {
 
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('10700000', '15000000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('14000000', '15000000')
         })
     })
 
@@ -113,7 +113,7 @@ describe('Season', function () {
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)  
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('10400000', '11500000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('14000000', '15000000')
         })
     })
 })

@@ -11,6 +11,8 @@ import "./LibSafeMath128.sol";
 import "../C.sol";
 import "./LibUnripe.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @author Publius
  * @title Fertilizer
@@ -72,6 +74,7 @@ library LibFertilizer {
         uint256 percentToFill = amount.mul(C.precision()).div(
             remainingRecapitalization()
         );
+
         uint256 newDepositedBeans;
         if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(

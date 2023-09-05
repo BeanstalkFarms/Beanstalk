@@ -14,7 +14,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/LibUnripe.sol";
-
+import "hardhat/console.sol";
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of beanstalk.
@@ -194,8 +194,6 @@ library LibEvaluate {
     ) internal view returns (
         Decimal.D256 memory lpToSupplyRatio
     ) {
-        // bean supply needs to be reduced by the amount of beans that are locked in the well,
-        // to get the circulating beans
         
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory assets = LibWhitelistedTokens.getSiloLPTokens();
@@ -203,7 +201,6 @@ library LibEvaluate {
         for(uint256 i = 0; i < assets.length; i++){
             // get amount of LP token
             uint256 amount = s.siloBalances[assets[i]].deposited;
-
             // get LP amount in USD
             if(LibWell.isWell(assets[i])){
                 usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(assets[i], amount));
@@ -212,16 +209,11 @@ library LibEvaluate {
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             }
         }
+        // scale down bean supply by the locked beans, if there is fertilizer to be paid off.
+        if(s.season.fertilizing == true){
+            beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
+        }
 
-        uint256 beanIndex = LibWell.getBeanIndexFromWell(C.BEAN_ETH_WELL);
-        uint256 lockedBeanInUrBean = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
-        uint256 lockedBeanInUrEth = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_LP)
-        .mul(IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(C.BEAN_ETH_WELL, C.BYTES_ZERO)[beanIndex])
-        .div(IERC20(C.BEAN_ETH_WELL).totalSupply());
-
-        beanSupply = beanSupply
-            .sub(lockedBeanInUrBean)
-            .sub(lockedBeanInUrEth);
         lpToSupplyRatio = Decimal.ratio(usdLiquidity, beanSupply);
     }
 

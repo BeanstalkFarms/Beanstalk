@@ -8,6 +8,8 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {C} from "../C.sol";
+import {LibWell} from "./Well/LibWell.sol";
+import {IInstantaneousPump} from "../interfaces/basin/pumps/IInstantaneousPump.sol";
 
 //TODO: write Natspec.
 
@@ -120,6 +122,24 @@ library LibUnripe {
         redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
     }
 
+    /**
+     * @notice gets the amount of beans that are locked in the unripe token.
+     * @dev locked beans are the beans that are forfeitted if the unripe token is chopped.
+     */
+    function getLockedBeans() internal view returns (uint256 lockedAmount){
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 beanIndex = LibWell.getBeanIndexFromWell(C.BEAN_ETH_WELL);
+        lockedAmount = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
+        lockedAmount = lockedAmount.add(LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_LP)
+            .mul(
+                IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(
+                    s.u[C.UNRIPE_LP].underlyingToken, 
+                    C.BYTES_ZERO
+                )[beanIndex]
+            )
+        .div(IERC20(s.u[C.UNRIPE_LP].underlyingToken).totalSupply()));
+    }
+    
     /** 
      * @notice calculates the total underlying token that would be forfeited, 
      * if all unripe tokens were chopped.
@@ -133,7 +153,6 @@ library LibUnripe {
         uint256 supply = IERC20(unripeToken).totalSupply();
         redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
     }
-
 
 
     function getRecapPaidPercentAmount(uint256 amount)

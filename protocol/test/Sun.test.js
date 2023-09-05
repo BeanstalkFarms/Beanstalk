@@ -2,13 +2,21 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
+const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell } = require('../utils/well.js');
+const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
+
+async function setToSecondsAfterHour(seconds = 0) {
+  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600 + seconds
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+}
 
 describe('Sun', function () {
   before(async function () {
@@ -23,6 +31,7 @@ describe('Sun', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('MockToken', USDC);
+    this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
   
     // These are needed for sunrise incentive test
     this.basefee = await ethers.getContractAt('MockBlockBasefee', BASE_FEE_CONTRACT);
@@ -41,12 +50,25 @@ describe('Sun', function () {
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
-    await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
+    await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'));
+
+    // add unripe
+    this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-    await this.unripeLP.mint(owner.address, to6('10000'));
+    await this.unripeLP.mint(userAddress, to6('1000'))
+    await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))
+    await this.unripeBean.mint(userAddress, to6('1000'))
+    await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
+    await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
+    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
-
+    await this.well.setReserves([to6('1000000'), to18('1000')])
+    await advanceTime(3600)
+    await owner.sendTransaction({to: user.address, value: 0});
+    await setToSecondsAfterHour(0)
+    await owner.sendTransaction({to: user.address, value: 0});
+    await this.well.connect(user).mint(user.address, to18('1000'))
     await this.season.siloSunrise(0)
   })
 

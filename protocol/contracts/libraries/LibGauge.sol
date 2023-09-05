@@ -79,7 +79,7 @@ library LibGauge {
      */
     function updateGaugePoints() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
+        
         address[] memory whitelistedLPSiloTokens = LibWhitelistedTokens.getSiloLPTokens();
         
         // if there is only one pool, there is no need to update the gauge points.
