@@ -5,10 +5,16 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {AppStorage} from "../AppStorage.sol";
-import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibFertilizer.sol";
-import "contracts/C.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 /**
@@ -18,6 +24,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 contract FertilizerFacet {
     using SafeMath for uint256;
+    using SafeCast for uint256;
     using LibSafeMath128 for uint128;
 
     event SetFertilizer(uint128 id, uint128 bpf);
@@ -37,39 +44,79 @@ contract FertilizerFacet {
         LibTransfer.sendToken(C.bean(), amount, msg.sender, mode);
     }
 
+    /**
+     * @dev Returns the amount of Fertilize that can be purchased with `wethAmountIn` WETH.
+     * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`
+     */
+    function getMintFertilizerOut(
+        uint128 wethAmountIn
+    ) external view returns (uint256 fertilizerAmountOut) {
+        fertilizerAmountOut = amount.mul(
+            LibEthUsdOracle.getEthUsdPrice()
+        ).div(1e24);
+    }
+
+    /**
+     * @notice Purchase Fertilizer from the Barn Raise with WETH.
+     * @param wethAmountIn Amount of WETH to buy Fertilizer with 18 decimal precision.
+     * @param minFertilizerOut The minimum amount of Fertilizer to purchase.
+     * @param minLP The minimum amount of LP to receive after.
+     * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
+     * @dev The # of Fertilizer minted is equal to the value of the Ether paid in USD.
+     */
     function mintFertilizer(
-        uint128 amount,
+        uint256 wethAmountIn,
+        uint256 minFertilizerOut,
         uint256 minLP,
         LibTransfer.From mode
-    ) external payable {
-        uint128 remaining = uint128(LibFertilizer.remainingRecapitalization().div(1e6)); // remaining <= 77_000_000 so downcasting is safe.
-        if (amount > remaining) amount = remaining;
-        amount = uint128(LibTransfer.receiveToken(
-            C.usdc(),
-            uint256(amount).mul(1e6),
+    ) external payable returns (uint256 fertilizerAmountOut) {
+
+        amount = LibTransfer.receiveToken(
+            IERC20(C.WETH),
+            uint256(amount),
             msg.sender,
             mode
-        ).div(1e6)); // return value <= amount, so downcasting is safe.
+        ); // return value <= amount, so downcasting is safe.
+
+        // Convert from Ether amount with 18 decimals to USD amount with 0 decimals.
+        fertilizerAmountOut = amount.mul(
+            LibEthUsdOracle.getEthUsdPrice()
+        ).div(1e24);
+
+        require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer Not enough bought.");
+
+        uint128 remaining = uint128(LibFertilizer.remainingRecapitalization().div(1e6)); // remaining <= 77_000_000 so downcasting is safe.
+        require(fertilizerAmountOut <= remaining, "Fertilizer: Not enough remaining.");
+
         uint128 id = LibFertilizer.addFertilizer(
             uint128(s.season.current),
             amount,
+            fertilizerAmountOut,
             minLP
         );
-        C.fertilizer().beanstalkMint(msg.sender, uint256(id), amount, s.bpf);
+        C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 
+    /**
+     * @notice Contributes to Barn Raise on behalf of existing fertilizer holders.
+     */
     function addFertilizerOwner(
         uint128 id,
         uint128 amount,
         uint256 minLP
     ) external payable {
         LibDiamond.enforceIsContractOwner();
-        C.usdc().transferFrom(
+        IERC20(C.WETH).transferFrom(
             msg.sender,
             address(this),
-            uint256(amount).mul(1e6)
+            uint256(amount)
         );
-        LibFertilizer.addFertilizer(id, amount, minLP);
+
+        uint256 fertilizerAmount = uint256(amount).mul(
+            LibEthUsdOracle.getEthUsdPrice()
+        ).div(1e24);
+
+        LibFertilizer.addFertilizer(id, amount, fertilizerAmount, minLP);
     }
 
     function payFertilizer(address account, uint256 amount) external payable {
