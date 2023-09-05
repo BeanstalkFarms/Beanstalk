@@ -54,6 +54,7 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
+
         uint256 unripeSupply = IERC20(unripeToken).totalSupply();
 
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
@@ -241,5 +242,17 @@ contract UnripeFacet is ReentrancyGuard {
         returns (address underlyingToken)
     {
         return s.u[unripeToken].underlyingToken;
+    }
+
+    /////////////// UNDERLYING TOKEN MIGRATION //////////////////
+
+    function addMigratedUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
+        LibDiamond.enforceIsContractOwner();
+        IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        LibUnripe.incrementUnderlying(unripeToken, amount);
     }
 }
