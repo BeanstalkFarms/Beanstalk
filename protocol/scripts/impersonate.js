@@ -281,6 +281,17 @@ async function beanEthWell() {
   ]);
 }
 
+async function impersonateContract(contractName, deployAddress) {
+  contract = await (await ethers.getContractFactory(contractName)).deploy()
+  await contract.deployed()
+  const bytecode = await ethers.provider.getCode(contract.address)
+  await network.provider.send("hardhat_setCode", [
+    deployAddress,
+    bytecode,
+  ]);
+  return await ethers.getContractAt(contractName, deployAddress)
+}
+
 async function ethUsdChainlinkAggregator() {
   let chainlinkAggregatorJson = fs.readFileSync(`./artifacts/contracts/mocks/chainlink/MockChainlinkAggregator.sol/MockChainlinkAggregator.json`);
 
@@ -291,8 +302,6 @@ async function ethUsdChainlinkAggregator() {
   const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
   await ethUsdChainlinkAggregator.setDecimals(6)
 }
-
-
 
 exports.impersonateRouter = router
 exports.impersonateBean = bean
@@ -311,3 +320,4 @@ exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
 exports.impersonateEthUsdChainlinkAggregator = ethUsdChainlinkAggregator
 exports.impersonateBeanEthWell = beanEthWell
+exports.impersonateContract = impersonateContract

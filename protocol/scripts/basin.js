@@ -37,15 +37,15 @@ async function deployBasinAndIntegrationBip(mock, bipAccount = undefined, basinA
     await bipBasinIntegration(mock, bipAccount);
 }
 
-async function deployBasin(mock = true, accounts = undefined) {
+async function deployBasin(mock = true, accounts = undefined, verbose = true, justDeploy = false) {
 
-    console.log("Deploying Basin...")
+    if (verbose) console.log("Deploying Basin...")
 
     let account = await getAccount(accounts, 'aquifer', AQUIFER_DEPLOYER);
-    const aquifer = await deployWellContractAtNonce('Aquifer', AQUIFER_DEPLOY_NONCE, [], account, true);
+    const aquifer = await deployWellContractAtNonce('Aquifer', AQUIFER_DEPLOY_NONCE, [], account, verbose);
 
     account = await getAccount(accounts, 'constantProduct2', CONSTANT_PRODUCT_2_DEPLOYER);
-    const constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, true);
+    const constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, verbose);
 
     account = await getAccount(accounts, 'multiFlowPump', MULTI_FLOW_PUMP_DEPLOYER);
     let multiFlowPump = await deployWellContractAtNonce('MultiFlowPump', MULTI_FLOW_PUMP_DEPLOY_NONCE, [
@@ -53,11 +53,11 @@ async function deployBasin(mock = true, accounts = undefined) {
         MULTI_FLOW_PUMP_MAX_PERCENT_DECREASE,
         MULTI_FLOW_PUMP_CAP_INTERVAL,
         MULTI_FLOW_PUMP_ALPHA
-    ], account, true);
+    ], account, verbose);
 
     account = await getAccount(accounts, 'wellImplementation', WELL_IMPLEMENTATION_DEPLOYER);
     const wellImplementation = await deployWellContractAtNonce('Well', WELL_IMPLEMENTATION_DEPLOY_NONCE, [], account, false);
-    console.log("Well Implementation Deployed at", wellImplementation.address);
+    if (verbose) console.log("Well Implementation Deployed at", wellImplementation.address);
 
     account = await getAccount(accounts, 'well', WELL_DEPLOYER);
     const immutableData = encodeWellImmutableData(
@@ -88,11 +88,13 @@ async function deployBasin(mock = true, accounts = undefined) {
 
     await wellTxn.wait();
 
-    console.log("Bean:Eth Well Deployed at:", well.address);
+    if (justDeploy) return well;
 
-    console.log("");
+    if (verbose) console.log("Bean:Eth Well Deployed at:", well.address);
 
-    console.log("Adding Liquidity to Well...")
+    if (verbose) console.log("");
+
+    if (verbose) console.log("Adding Liquidity to Well...")
 
     account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
 
@@ -102,51 +104,51 @@ async function deployBasin(mock = true, accounts = undefined) {
     const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     const beanEthPrice = (await ethUsdChainlinkAggregator.latestRoundData()).answer;
 
-    console.log("Bean:Eth Price:", beanEthPrice.toString());
+    if (verbose) console.log("Bean:Eth Price:", beanEthPrice.toString());
 
     const amounts = [
         toBN(INITIAL_BEAN_LIQUIDITY),
         toBN(INITIAL_BEAN_LIQUIDITY).mul(toX('1', 20)).div(beanEthPrice)
     ]
 
-    console.log("Bean Amount:", amounts[0].toString());
-    console.log("Eth Amount:", amounts[1].toString());
+    if (verbose) console.log("Bean Amount:", amounts[0].toString());
+    if (verbose) console.log("Eth Amount:", amounts[1].toString());
 
-    console.log(account.address)
+    if (verbose) console.log(account.address)
 
-    console.log("Approving..");
+    if (verbose) onsole.log("Approving..");
     await bean.connect(account).approve(well.address, amounts[0]);
     await weth.connect(account).approve(well.address, amounts[1]);
 
-    console.log("Wrapping Eth..");
+    if (verbose) console.log("Wrapping Eth..");
     await weth.connect(account).deposit({ value: amounts[1] });
 
-    console.log('Adding Liquidity..')
+    if (verbose) console.log('Adding Liquidity..')
     const lpAmountOut = well.getAddLiquidityOut(amounts);
     let txn = await well.connect(account).addLiquidity(amounts, lpAmountOut, account.address, ethers.constants.MaxUint256);
     await txn.wait();
     txn = await well.connect(account).addLiquidity([toBN('0'), toBN('0')], '0', account.address, ethers.constants.MaxUint256);
     await txn.wait();
 
-    console.log('')
+    if (verbose) console.log('')
 
     const reserves = await well.getReserves();
-    console.log("Well Statistics:")
-    console.log("Bean Reserve:", reserves[0].toString());
-    console.log("Eth Reserve:", reserves[1].toString());
-    console.log("LP Token Total Supply:", (await well.totalSupply()).toString());
+    if (verbose) console.log("Well Statistics:")
+    if (verbose) console.log("Bean Reserve:", reserves[0].toString());
+    if (verbose) console.log("Eth Reserve:", reserves[1].toString());
+    if (verbose) console.log("LP Token Total Supply:", (await well.totalSupply()).toString());
 
-    console.log('')
+    if (verbose) console.log('')
 
-    console.log("Pump Statistics:")
+    if (verbose) console.log("Pump Statistics:")
     const instantaneousReserves = await multiFlowPump.readInstantaneousReserves(
         well.address,
         "0x"
     );
-    console.log("Instantaneous Bean Reserve:", instantaneousReserves[0].toString());
-    console.log("Instantaneous WETH Reserve:", instantaneousReserves[1].toString());
+    if (verbose) console.log("Instantaneous Bean Reserve:", instantaneousReserves[0].toString());
+    if (verbose) console.log("Instantaneous WETH Reserve:", instantaneousReserves[1].toString());
 
-    console.log('')
+    if (verbose) console.log('')
 }
 
 async function getAccount(accounts, key, mockAddress) {
