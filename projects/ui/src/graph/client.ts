@@ -177,6 +177,9 @@ try {
 export let sgEnvKey = SGEnvironments.BF_PROD;
 export let sgEnv = SUBGRAPH_ENVIRONMENTS[sgEnvKey];
 
+const SNAPSHOT_API_KEY = import.meta.env.VITE_SNAPSHOT_API_KEY;
+if (!SNAPSHOT_API_KEY) throw new Error('Missing SNAPSHOT_API_KEY');
+
 try {
   const sgEnvInState = store.getState().app.settings.subgraphEnv;
   // Verify that this version is still supported.
@@ -198,6 +201,9 @@ const beanLink = new HttpLink({
 
 const snapshotLink = new HttpLink({
   uri: 'https://hub.snapshot.org/graphql',
+  headers: {
+    'x-api-key': SNAPSHOT_API_KEY,
+  },
 });
 
 const snapshotLabsLink = new HttpLink({

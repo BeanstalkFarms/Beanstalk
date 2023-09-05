@@ -29,6 +29,9 @@ import StatHorizontal from '~/components/Common/StatHorizontal';
 import { GovSpace } from '~/lib/Beanstalk/Governance';
 import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
 
+const SNAPSHOT_API_KEY = import.meta.env.VITE_SNAPSHOT_API_KEY;
+if (!SNAPSHOT_API_KEY) throw new Error('Missing SNAPSHOT_API_KEY');
+
 type VoteFormValues = {
   /** For 'single-choice' proposals */
   choice: number | undefined;
@@ -292,30 +295,33 @@ const VoteForm: FC<
               )}
             </StatHorizontal>
           )}
-          {quorumPct && totalForQuorum && type === 'BIP' && proposal.space.id === 'beanstalkdao.eth' && (
-            <StatHorizontal
-              label={
-                <>
-                  <Row display="inline-flex" alignItems="center">
-                    <span>Supermajority</span>
-                  </Row>
-                </>
-              }
-            >
-              {loadingQuorum ? (
-                <CircularProgress size={16} />
-              ) : (
-                <>
-                  ~
-                  {displayFullBN(
-                    (totalOutstanding || ZERO_BN).multipliedBy(0.667),
-                    0
-                  )}{' '}
-                  {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp; 66.7%
-                </>
-              )}
-            </StatHorizontal>
-          )}
+          {quorumPct &&
+            totalForQuorum &&
+            type === 'BIP' &&
+            proposal.space.id === 'beanstalkdao.eth' && (
+              <StatHorizontal
+                label={
+                  <>
+                    <Row display="inline-flex" alignItems="center">
+                      <span>Supermajority</span>
+                    </Row>
+                  </>
+                }
+              >
+                {loadingQuorum ? (
+                  <CircularProgress size={16} />
+                ) : (
+                  <>
+                    ~
+                    {displayFullBN(
+                      (totalOutstanding || ZERO_BN).multipliedBy(0.667),
+                      0
+                    )}{' '}
+                    {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp; 66.7%
+                  </>
+                )}
+              </StatHorizontal>
+            )}
           <Divider />
           {proposal.choices.map((choice: string, index: number) => (
             <Stack gap={0.5} key={choice}>
@@ -434,7 +440,7 @@ const Vote: FC<{
             'Vote successful. It may take some time for your vote to appear on the Beanstalk UI. Check Snapshot for the latest results.',
         });
 
-        const hub = 'https://hub.snapshot.org';
+        const hub = `https://hub.snapshot.org/?apiKey=${SNAPSHOT_API_KEY}`;
         const client = new snapshot.Client712(hub);
 
         const message = {
