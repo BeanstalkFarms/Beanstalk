@@ -37,7 +37,7 @@ contract BDVFacet {
      */
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
         amount = LibUnripe.unripeToUnderlying(C.UNRIPE_LP, amount);
-        amount = LibBeanMetaCurve.bdv(amount);
+        amount = LibWellBdv.bdv(C.BEAN_ETH_WELL, amount);
         return amount;
     }
 
