@@ -49,9 +49,9 @@ contract FertilizerFacet {
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`
      */
     function getMintFertilizerOut(
-        uint128 wethAmountIn
+        uint256 wethAmountIn
     ) external view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = amount.mul(
+        fertilizerAmountOut = wethAmountIn.mul(
             LibEthUsdOracle.getEthUsdPrice()
         ).div(1e24);
     }
@@ -71,15 +71,15 @@ contract FertilizerFacet {
         LibTransfer.From mode
     ) external payable returns (uint256 fertilizerAmountOut) {
 
-        amount = LibTransfer.receiveToken(
+        wethAmountIn = LibTransfer.receiveToken(
             IERC20(C.WETH),
-            uint256(amount),
+            uint256(wethAmountIn),
             msg.sender,
             mode
         ); // return value <= amount, so downcasting is safe.
 
         // Convert from Ether amount with 18 decimals to USD amount with 0 decimals.
-        fertilizerAmountOut = amount.mul(
+        fertilizerAmountOut = wethAmountIn.mul(
             LibEthUsdOracle.getEthUsdPrice()
         ).div(1e24);
 
@@ -90,7 +90,7 @@ contract FertilizerFacet {
 
         uint128 id = LibFertilizer.addFertilizer(
             uint128(s.season.current),
-            amount,
+            wethAmountIn,
             fertilizerAmountOut,
             minLP
         );
