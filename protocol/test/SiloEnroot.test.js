@@ -1,11 +1,11 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
-const { readPrune, toBN, signSiloDepositTokenPermit, signSiloDepositTokensPermit, getBean } = require("../utils");
-const { getAltBeanstalk } = require("../utils/contracts.js");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE } = require("./utils/constants");
-const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
+const { readPrune, toBN, } = require("../utils");
+const { EXTERNAL } = require("./utils/balances.js");
+const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH } = require("./utils/constants");
+const { to18, to6, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { impersonateMockWell } = require("../utils/well.js");
 const ZERO_BYTES = ethers.utils.formatBytes32String("0x0");
 
 let user, user2, owner;
@@ -47,13 +47,8 @@ describe("Silo Enroot", function () {
 
     await this.season.teleportSunrise(ENROOT_FIX_SEASON)
 
-    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
-    this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
-    await this.beanMetapool.set_supply(ethers.utils.parseUnits('2000000', 6));
-    await this.beanMetapool.set_balances([
-      ethers.utils.parseUnits('1000000',6),
-      ethers.utils.parseEther('1000000')
-    ]);
+    const [well, pump, wellFunction] = await impersonateMockWell(pumpBalances = [to6('10000'), to18('10')]);
+    this.well = well; this.pump = pump; this.wellFunction = wellFunction;
 
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO");
@@ -265,12 +260,12 @@ describe("Silo Enroot", function () {
   
       it('properly updates the total balances', async function () {
         expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120352584'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('3.7120352584'));
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
