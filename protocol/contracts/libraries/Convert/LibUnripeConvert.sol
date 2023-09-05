@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
-import {LibCurveConvert} from "./LibCurveConvert.sol";
+import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibUnripe} from "../LibUnripe.sol";
 import {LibConvertData} from "./LibConvertData.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -39,10 +39,10 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert.curveRemoveLPTowardsPeg(
+        ) = LibWellConvert._wellRemoveLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp),
                 minAmountOut,
-                C.CURVE_BEAN_METAPOOL
+                C.BEAN_ETH_WELL
             );
 
         amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
@@ -78,10 +78,10 @@ library LibUnripeConvert {
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
-        ) = LibCurveConvert.curveAddLiquidityTowardsPeg(
+        ) = LibWellConvert._wellAddLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, beans),
                 minAmountOut,
-                C.CURVE_BEAN_METAPOOL
+                C.BEAN_ETH_WELL
             );
 
         amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
@@ -97,8 +97,8 @@ library LibUnripeConvert {
     }
 
     function beansToPeg() internal view returns (uint256 beans) {
-        uint256 underlyingBeans = LibCurveConvert.beansToPeg(
-            C.CURVE_BEAN_METAPOOL
+        uint256 underlyingBeans = LibWellConvert.beansToPeg(
+            C.BEAN_ETH_WELL
         );
         beans = LibUnripe.underlyingToUnripe(
             C.UNRIPE_BEAN,
@@ -107,8 +107,8 @@ library LibUnripeConvert {
     }
 
     function lpToPeg() internal view returns (uint256 lp) {
-        uint256 underlyingLP = LibCurveConvert.lpToPeg(
-            C.CURVE_BEAN_METAPOOL
+        uint256 underlyingLP = LibWellConvert.lpToPeg(
+            C.BEAN_ETH_WELL
         );
         lp = LibUnripe.underlyingToUnripe(C.UNRIPE_LP, underlyingLP);
     }
@@ -122,7 +122,7 @@ library LibUnripeConvert {
             C.UNRIPE_BEAN,
             amountIn
         );
-        lp = LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, beans);
+        lp = LibWellConvert.getLPAmountOut(C.BEAN_ETH_WELL, beans);
         lp = LibUnripe
             .underlyingToUnripe(C.UNRIPE_LP, lp)
             .mul(LibUnripe.percentLPRecapped())
@@ -138,7 +138,7 @@ library LibUnripeConvert {
             C.UNRIPE_LP,
             amountIn
         );
-        bean = LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, lp);
+        bean = LibWellConvert.getBeanAmountOut(C.BEAN_ETH_WELL, lp);
         bean = LibUnripe
             .underlyingToUnripe(C.UNRIPE_BEAN, bean)
             .mul(LibUnripe.percentBeansRecapped())
