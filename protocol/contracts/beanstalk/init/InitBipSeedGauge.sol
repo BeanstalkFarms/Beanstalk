@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 import "contracts/beanstalk/AppStorage.sol";
 import "../../C.sol";
+import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 /**
  * @author Publius, Brean
  * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct 
@@ -13,8 +14,6 @@ import "../../C.sol";
 
 contract InitBipSeedGauge{    
     AppStorage internal s;
-    
-    address constant UNRIPE_ETH_BEAN_WELL = address(0xDEADBEEF);
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;    
     
@@ -48,7 +47,7 @@ contract InitBipSeedGauge{
         Storage.SiloSettings memory newSiloSettings;
 
         uint128 totalBdv;
-        address[3] memory siloTokens = [C.BEAN, C.BEAN_ETH_WELL, UNRIPE_ETH_BEAN_WELL];
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for(uint i = 0; i < siloTokens.length; i++) {
             Storage.SiloSettings storage ss = s.ss[siloTokens[i]];
             assembly {
@@ -70,7 +69,6 @@ contract InitBipSeedGauge{
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
         }
         // initalize seed gauge. 
-        s.seedGauge.totalBdv = totalBdv;
         s.seedGauge.percentOfNewGrownStalkToLP = 0.5e6; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
 

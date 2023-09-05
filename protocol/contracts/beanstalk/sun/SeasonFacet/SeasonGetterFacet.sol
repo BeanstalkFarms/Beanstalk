@@ -12,6 +12,7 @@ import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 
 /**
@@ -155,7 +156,7 @@ contract SeasonGetterFacet {
     }
 
     /**
-     * @notice Returns the last Curve Oracle data snapahost for the Bean:3Crv Pool.
+     * @notice Returns the last Curve Oracle data snapshot for the Bean:3Crv Pool.
      * @return co The last Curve Oracle data snapshot.
      */
     function curveOracle() external view returns (Storage.CurveMetapoolOracle memory co) {
@@ -164,11 +165,19 @@ contract SeasonGetterFacet {
     }
 
     /**
-     * @notice updates the averageGrownStaklPerBdvPerSeason 
+     * @notice updates the averageGrownStalkPerBdvPerSeason 
      */
     function updateAverageGrownStalkPerBdv() external {
-        uint256 averageGrownStalkPerBdv = s.s.stalk / s.seedGauge.totalBdv - 10000; // TODO: Check constant
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint96(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
+        uint256 averageGrownStalkPerBdv = s.s.stalk / getTotalBdv() - 10000; // TODO: Check constant
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint96(averageGrownStalkPerBdv.div(TARGET_SEASONS_TO_CATCHUP));
+    }
+
+    function getTotalBdv() internal view returns (uint256 totalBdv) {
+        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
+        // TODO: implment the decrement deposited BDV thing for unripe
+        for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
+            totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
+        }
     }
 
 }

@@ -14,7 +14,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/LibUnripe.sol";
-import "hardhat/console.sol";
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of beanstalk.
@@ -61,10 +60,6 @@ library LibEvaluate {
     uint256 private constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.5e18; // 50%
     uint256 private constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.25e18; // 25%
 
-    uint256 private constant BEAN_INDEX = 0;
-
-    // TODO: put into constant.sol later
-    uint256 private constant chopRate = 1;
 
     /**
      * @notice evaluates the pod rate and returns the caseId
@@ -121,10 +116,10 @@ library LibEvaluate {
         // Extremely High
         if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
         caseId += 96;
-        // Reasonsably High
+        // Reasonably High
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
             caseId += 64;
-            // Reasonsably Low
+        // Reasonably Low
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())) {
             caseId += 32;
         }
@@ -134,6 +129,10 @@ library LibEvaluate {
         caseId = 0;
     }
 
+    /**
+     * @notice calculates the change in soil demand from the previous season.
+     * @param dsoil the amount of soil sown this season.
+     */
     function calcDeltaPodDemand(
         uint256 dsoil
     ) internal view returns (
@@ -163,9 +162,7 @@ library LibEvaluate {
             } else { 
                 deltaPodDemand = Decimal.zero();
             }
-
             lastSowTime = s.w.thisSowTime;  // Overwrite last Season
-            thisSowTime = type(uint32).max; // Reset for next Season
         } else {  // Soil didn't sell out
             uint256 lastDSoil = s.w.lastDSoil;
 
@@ -180,8 +177,8 @@ library LibEvaluate {
             if (s.w.lastSowTime != type(uint32).max) {
                 lastSowTime = type(uint32).max;
             }
-            thisSowTime = type(uint32).max;
         }
+        thisSowTime = type(uint32).max; // Reset for next Season
     }
 
     /**

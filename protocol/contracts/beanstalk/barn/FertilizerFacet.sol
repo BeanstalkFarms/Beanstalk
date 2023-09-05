@@ -11,7 +11,6 @@ import "contracts/libraries/LibFertilizer.sol";
 import "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
-import "hardhat/console.sol";
 
 /**
  * @author Publius

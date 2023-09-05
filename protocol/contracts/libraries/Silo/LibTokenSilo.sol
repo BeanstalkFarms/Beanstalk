@@ -82,9 +82,6 @@ library LibTokenSilo {
         s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
             bdv.toUint128()
         );
-        s.seedGauge.totalBdv = s.seedGauge.totalBdv.add(
-            bdv.toUint128()
-        );
     }
 
     /**
@@ -98,9 +95,6 @@ library LibTokenSilo {
         s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.sub(
             bdv.toUint128()
         );
-        s.seedGauge.totalBdv = s.seedGauge.totalBdv.sub(
-            bdv.toUint128()
-        );
     }
 
     /**
@@ -109,9 +103,6 @@ library LibTokenSilo {
     function incrementTotalDepositedBdv(address token, uint256 bdv) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
-            bdv.toUint128()
-        );
-        s.seedGauge.totalBdv = s.seedGauge.totalBdv.add(
             bdv.toUint128()
         );
     }

@@ -11,6 +11,7 @@ import "contracts/libraries/Silo/LibWhitelist.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 
+
 /**
  * @title SeasonFacet
  * @author Publius, Chaikitty
@@ -58,11 +59,10 @@ contract SeasonFacet is Weather {
 
         require(!s.paused, "Season: Paused.");
         require(seasonTime() > s.season.current, "Season: Still current Season.");
-
         stepSeason();
         int256 deltaB = stepOracle();
-        uint256 caseId = calcCaseId(deltaB);
-        // LibGauge.stepGauge();
+        uint256 caseId = calcCaseIdandUpdate(deltaB);
+        LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
@@ -114,5 +114,5 @@ contract SeasonFacet is Weather {
         
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
-    }
+    } 
 }

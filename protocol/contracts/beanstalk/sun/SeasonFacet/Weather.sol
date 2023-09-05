@@ -10,8 +10,7 @@ import "contracts/libraries/LibEvaluate.sol";
 import "contracts/libraries/LibCases.sol";
 import "./Sun.sol";
 
-// import "hardhat/console.sol";
-
+// 
 /**
  * @title Weather
  * @author Publius
@@ -27,33 +26,34 @@ contract Weather is Sun {
      * @notice Emitted when the Temperature (fka "Weather") changes.
      * @param season The current Season
      * @param caseId The Weather case, which determines how much the Temperature is adjusted.
-     * @param change The change in Temperature as a delta from the previous value
-     * @dev The name {WeatherChange} is kept for backwards compatibility, 
-     * however the state variable included as `change` is now called Temperature.
+     * @param relChange The relative change in Temperature.
+     * @param absChange The absolute change in Temperature.
      * 
-     * `change` is emitted as a delta for gas efficiency.
+     * @dev the relative change is applied before the absolute change. 
+     * T_n = mT * T_n-1 + bT
      */
-    event WeatherChange(
+    event TemperatureChange(
         uint256 indexed season,
         uint256 caseId,
-        int8 change
+        uint256 relChange,
+        int8 absChange
     );
 
     /**
-     * @notice Emitted when the GrownStalkToLp (fka "Weather") changes.
+     * @notice Emitted when the grownStalkToLP changes.
      * @param season The current Season
      * @param caseId The Weather case, which determines how much the Temperature is adjusted.
-     * @param change The change in Temperature as a delta from the previous value
-     * @dev The name {WeatherChange} is kept for backwards compatibility, 
-     * however the state variable included as `change` is now called Temperature.
+     * @param relChange The relative change in Temperature.
+     * @param absChange The absolute change in Temperature.
      * 
-     * `change` is emitted as a delta for gas efficiency.
+     * @dev the relative change is applied before the absolute change. 
+     * L_n = mL * L_n-1 + bL
      */
     event GrownStalkToLPChange(
         uint256 indexed season,
         uint256 caseId,
-        uint256 slope,
-        int8 change
+        uint256 relChange,
+        int8 absChange
     );
 
     /**
@@ -74,10 +74,11 @@ contract Weather is Sun {
      * @notice from deltaB, podRate, change in soil demand, and liquidity to supply ratio,
      * calculate the caseId, and update the temperature and grownStalkPerBDVToLP. 
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     * @dev A detailed explanation of the Weather mechanism can be found in the
-     * Beanstalk whitepaper. An explanation of state variables can be found in {AppStorage}.
+     * @dev A detailed explanation of the temperature and grownStalkPerBDVToLP
+     * mechanism can be found in the Beanstalk whitepaper. 
+     * An explanation of state variables can be found in {AppStorage}.
      */
-    function calcCaseId(int256 deltaB) internal returns (uint256 caseId) {
+    function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
         // Prevent infinite pod rate
         if (beanSupply == 0) {
@@ -90,7 +91,6 @@ contract Weather is Sun {
         s.f.beanSown = 0;
 
         Decimal.D256 memory deltaPodDemand;
-        // note try to find gas optimization where s.w.thisSowTime doesn't need to be set again if its already at max
         (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = LibEvaluate.calcDeltaPodDemand(dsoil);
 
         // Calculate Lp To Supply Ratio
@@ -117,22 +117,22 @@ contract Weather is Sun {
         int8 change = bT;
         uint32 t = s.w.t;
 
-        if (change < 0) {
-            if (t <= (uint32(-change))) {
+        if (bT < 0) {
+            if (t <= (uint32(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int8).max because change is an int8.
                 // Thus, downcasting t to an int8 will not cause overflow.
                 change = 1 - int8(t);
                 s.w.t = 1;
             } else {
-                s.w.t = t.mul(mT).div(1e6) - (uint32(-change));
+                s.w.t = t.mul(mT).div(1e6) - (uint32(-bT));
             }
         } else {
-            s.w.t = t.mul(mT).div(1e6) + (uint32(change));
+            s.w.t = t.mul(mT).div(1e6) + (uint32(bT));
         }
 
         // TODO: change weather event to include slope
-        emit WeatherChange(s.season.current, caseId, change);
+        emit TemperatureChange(s.season.current, caseId, mT, bT);
     }
 
     /**
@@ -146,9 +146,6 @@ contract Weather is Sun {
             s.seedGauge.percentOfNewGrownStalkToLP = 
                 s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) + uint32(bL);
         }
-
-        // TODO: change LP event to include slope
-        // emit GrownStalkToLPChange(s.season.current, caseId, bL);
 
         // TODO: check whether event is good:
         emit GrownStalkToLPChange(s.season.current, caseId, mL, bL);

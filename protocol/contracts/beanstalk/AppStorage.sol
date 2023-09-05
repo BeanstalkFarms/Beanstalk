@@ -423,13 +423,12 @@ contract Storage {
     /**
      * @notice System level variables used in the seed Gauge System.
      * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV that beanstalk issues each season.
-     * @param totalBdv The total BDV deposited in beanstalk.
      * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precisions
      */
     struct SeedGauge {
         uint96 averageGrownStalkPerBdvPerSeason;
-        uint128 totalBdv;
         uint32 percentOfNewGrownStalkToLP;
+        // 16 bytes are free to ultilize in the future.
     }
 }
 
@@ -482,6 +481,7 @@ contract Storage {
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param casesV2 Stores the 96 Weather and seedGauge cases (array has 128 items, but caseId = 3 (mod 4) are not cases)
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -545,4 +545,5 @@ struct AppStorage {
 
     // Seed Gauge
     Storage.SeedGauge seedGauge;
+    bytes8[128] casesV2; 
 }

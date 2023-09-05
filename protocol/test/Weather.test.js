@@ -80,7 +80,7 @@ describe('Complex Weather', function () {
         expect(await this.season.getT()).to.eq(this.testData.newWeather)
       })
       it('Emits The Correct Case Weather', async function () {
-        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'WeatherChange').withArgs(await this.season.season(), this.testData.Code, this.testData.newWeather-this.testData.startingWeather)
+        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'TemperatureChange').withArgs(await this.season.season(), this.testData.Code, '1000000', this.testData.newWeather-this.testData.startingWeather)
       })
     })
   })

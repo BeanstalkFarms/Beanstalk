@@ -18,11 +18,12 @@ library LibWhitelistedTokens {
      * @notice Returns the current whitelisted assets.
      */
     function getSiloTokens() internal pure returns (address[] memory assets) {
-        assets = new address[](2);
+        assets = new address[](5);
         assets[0] = C.BEAN;
         assets[1] = C.BEAN_ETH_WELL;
-        // assets[2] = C.UNRIPE_BEAN;
-        // assets[3] = C.UNRIPE_LP;
+        assets[2] = C.CURVE_BEAN_METAPOOL;
+        assets[3] = C.UNRIPE_BEAN;
+        assets[4] = C.UNRIPE_LP;
     }
 
     /**

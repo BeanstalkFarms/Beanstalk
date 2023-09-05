@@ -206,7 +206,7 @@ contract MockSeasonFacet is SeasonFacet  {
     function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
         s.f.soil = endSoil;
         s.f.beanSown = endSoil;
-        calcCaseId(deltaB);
+        calcCaseIdandUpdate(deltaB);
     }
 
     function setCurrentSeasonE(uint32 _season) public {
@@ -226,10 +226,9 @@ contract MockSeasonFacet is SeasonFacet  {
         s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
         s.w.lastDSoil = uint128(_lastDSoil);
-        // s.w.startSoil = startSoil;
         s.f.beanSown = beanSown;
         s.f.soil = endSoil;
-        calcCaseId(deltaB);
+        calcCaseIdandUpdate(deltaB);
     }
 
     function resetSeasonStart(uint256 amount) public {
