@@ -24,10 +24,8 @@ const {
   ETH_USDC_UNISWAP_V3,
   ETH_USDT_UNISWAP_V3,
   USDT,
-  ETH_USD_CHAINLINK_AGGREGATOR,
-  BEAN_ETH_WELL
+  ETH_USD_CHAINLINK_AGGREGATOR
 } = require('../test/utils/constants');
-const { deployWell } = require('../utils/well.js');
 const { impersonateSigner, mintEth } = require('../utils');
 
 const { getSigner } = '../utils'
@@ -272,15 +270,6 @@ async function ethUsdtUniswap() {
   ]);
 }
 
-async function beanEthWell() {
-  const well = await deployWell([BEAN, WETH]);
-  const bytecode = await ethers.provider.getCode(well.address)
-  await network.provider.send("hardhat_setCode", [
-    BEAN_ETH_WELL,
-    bytecode,
-  ]);
-}
-
 async function impersonateContract(contractName, deployAddress) {
   contract = await (await ethers.getContractFactory(contractName)).deploy()
   await contract.deployed()
@@ -319,5 +308,4 @@ exports.impersonateEthUsdcUniswap = ethUsdcUniswap
 exports.impersonateEthUsdtUniswap = ethUsdtUniswap
 exports.impersonateBeanstalk = impersonateBeanstalk
 exports.impersonateEthUsdChainlinkAggregator = ethUsdChainlinkAggregator
-exports.impersonateBeanEthWell = beanEthWell
 exports.impersonateContract = impersonateContract

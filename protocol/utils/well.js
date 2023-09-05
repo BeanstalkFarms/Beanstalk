@@ -2,9 +2,9 @@ const fs = require('fs');
 const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL } = require('../test/utils/constants');
 const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
-const { mintEth } = require('./mint');
 const { impersonateBeanstalkOwner } = require('./signer');
 const { increaseToNonce } = require('../scripts/contracts');
+const { impersonateContract } = require('../scripts/impersonate');
 
 const BASE_STRING = './node_modules/@beanstalk/wells/out';
 
@@ -38,7 +38,7 @@ async function deployWellContract(name, arguments = [], account = undefined, ver
     return contract;
 }
 
-async function deployMockToken(name="MockToken", symbol="MOCK") {
+async function deployMockToken(name = "MockToken", symbol = "MOCK") {
     const MockToken = await ethers.getContractFactory('MockToken');
     const mockToken = await MockToken.deploy(name, symbol);
     await mockToken.deployed();
@@ -63,7 +63,7 @@ function encodeWellImmutableData(
             ]
         )
     }
-    
+
     immutableData = ethers.utils.solidityPack(
         [
             'address',                  // aquifer address
@@ -75,15 +75,15 @@ function encodeWellImmutableData(
             'bytes',                    // well function data (bytes)
             'bytes'                     // packed pumps (bytes)
         ], [
-            aquifer,                    // aquifer address
-            tokens.length,              // number of tokens
-            wellFunction.target,        // well function address
-            wellFunction.length,        // well function data length
-            pumps.length,               // number of pumps
-            tokens,                     // tokens array
-            wellFunction.data,          // well function data (bytes)
-            packedPumps                 // packed pumps (bytes)
-        ]
+        aquifer,                    // aquifer address
+        tokens.length,              // number of tokens
+        wellFunction.target,        // well function address
+        wellFunction.length,        // well function data length
+        pumps.length,               // number of pumps
+        tokens,                     // tokens array
+        wellFunction.data,          // well function data (bytes)
+        packedPumps                 // packed pumps (bytes)
+    ]
     );
     return immutableData
 }
@@ -107,7 +107,7 @@ async function deployWell(tokens, verbose = false, salt = ethers.constants.HashZ
         aquifer.address,
         tokens,
         { target: wellFunction.address, data: '0x', length: 0 },
-        [{target: pump.address, data: '0x', length: 0 }]
+        [{ target: pump.address, data: '0x', length: 0 }]
     )
 
     const initData = await encodeInitFunctionCall();
@@ -181,6 +181,27 @@ async function setReserves(account, well, amounts) {
     }
 }
 
+async function impersonateBeanEthWell() {
+    const well = await deployWell([BEAN, WETH]);
+    const bytecode = await ethers.provider.getCode(well.address)
+    await network.provider.send("hardhat_setCode", [
+        BEAN_ETH_WELL,
+        bytecode,
+    ]);
+}
+
+async function impersonateMockWell(pumpBalances = [to18('1'), to18('1')]) {
+    well = await impersonateContract('MockSetComponentsWell', BEAN_ETH_WELL)
+    pump = await deployMockPump()
+    wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
+    await well.setPumps([[this.pump.address, '0x']])
+    await well.setWellFunction([this.wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+    pump.setInstantaneousReserves(pumpBalances)
+    await whitelistWell(this.well.address, '10000', to6('4'))
+    return [well, pump, wellFunction]
+}
+
 async function whitelistWell(wellAddress, stalk, stalkEarnedPerSeason) {
 
     const beanstalk = await getBeanstalk()
@@ -199,24 +220,24 @@ async function deployMockPump() {
     pump = await (await ethers.getContractFactory('MockPump')).deploy()
     await pump.deployed()
     await network.provider.send("hardhat_setCode", [
-      BEANSTALK_PUMP,
-      await ethers.provider.getCode(pump.address),
+        BEANSTALK_PUMP,
+        await ethers.provider.getCode(pump.address),
     ]);
     return await ethers.getContractAt('MockPump', BEANSTALK_PUMP)
 }
 
 async function deployMultiFlowPump() {
     pump = await (await getWellContractFactory('MultiFlowPump')).deploy(
-      '0x3ffe0000000000000000000000000000', // 0.5
-      '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
-      12,
-      '0x3ffecccccccccccccccccccccccccccc' // 0.9
+        '0x3ffe0000000000000000000000000000', // 0.5
+        '0x3ffd555555555555553cbcd83d925070', // 0.333333333333333333
+        12,
+        '0x3ffecccccccccccccccccccccccccccc' // 0.9
     )
     await pump.deployed()
 
     await network.provider.send("hardhat_setCode", [
-      BEANSTALK_PUMP,
-      await ethers.provider.getCode(pump.address),
+        BEANSTALK_PUMP,
+        await ethers.provider.getCode(pump.address),
     ]);
     return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
@@ -231,7 +252,7 @@ async function deployMockWell() {
     await network.provider.send("hardhat_setCode", [
         BEAN_ETH_WELL,
         await ethers.provider.getCode(well.address),
-      ]);
+    ]);
     well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
     await well.init()
 
@@ -261,3 +282,5 @@ exports.deployMockPump = deployMockPump
 exports.deployWellContract = deployWellContract
 exports.deployWellContractAtNonce = deployWellContractAtNonce
 exports.encodeWellImmutableData = encodeWellImmutableData
+exports.impersonateMockWell = impersonateMockWell
+exports.impersonateBeanEthWell = impersonateBeanEthWell

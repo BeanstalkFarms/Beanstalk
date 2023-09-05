@@ -14,7 +14,7 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 /**
  * Initializes the Migration of the Unripe LP underlying tokens from Bean:3Crv to Bean:Eth.
  */
-contract InitMigrateUnripeBean3CrvToEth {
+contract InitMigrateUnripeBean3CrvToBeanEth {
     using SafeERC20 for IERC20;
 
     AppStorage internal s;
