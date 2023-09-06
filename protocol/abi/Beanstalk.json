@@ -6749,13 +6749,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "slope",
+        "name": "relChange",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "int8",
-        "name": "change",
+        "name": "absChange",
         "type": "int8"
       }
     ],
@@ -6886,12 +6886,18 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "relChange",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "int8",
-        "name": "change",
+        "name": "absChange",
         "type": "int8"
       }
     ],
-    "name": "WeatherChange",
+    "name": "TemperatureChange",
     "type": "event"
   },
   {

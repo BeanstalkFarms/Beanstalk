@@ -48,6 +48,8 @@ contract InitBipSeedGauge{
 
         uint128 totalBdv;
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
+        uint24[5] memory lpGaugePoints = [uint24(0),0,0,0,0];
+        bytes4[5] memory GPSelectors = [bytes4(0x00000000),0x00000000,0x00000000,0x00000000, 0x00000000];
         for(uint i = 0; i < siloTokens.length; i++) {
             Storage.SiloSettings storage ss = s.ss[siloTokens[i]];
             assembly {
@@ -60,8 +62,8 @@ contract InitBipSeedGauge{
             newSiloSettings.milestoneStem = oldSiloSettings.milestoneStem;
             newSiloSettings.encodeType = oldSiloSettings.encodeType;
             //TODO: add lpGaugePoints and GPSelector
-            newSiloSettings.lpGaugePoints = 0;
-            newSiloSettings.GPSelector = 0x00000000;
+            newSiloSettings.lpGaugePoints = lpGaugePoints[i];
+            newSiloSettings.GPSelector = GPSelectors[i];
 
             s.ss[siloTokens[i]] = newSiloSettings;
 
@@ -72,6 +74,46 @@ contract InitBipSeedGauge{
         s.seedGauge.percentOfNewGrownStalkToLP = 0.5e6; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
 
+        // initalize V2 cases.
+        s.casesV2 = [
+        //////////////////////////////// Exremely Low L2SR ////////////////////////////////////////
+        //          Dsc soil demand,    Steady soil demand, Inc soil demand,    null
+            bytes8(0x0f4240030f424000), 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+        //////////////////////////////// Reasonably Low L2SR //////////////////////////////////////
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+        //////////////////////////////// Reasonably High L2SR //////////////////////////////////////
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+        //////////////////////////////// Extremely High L2SR //////////////////////////////////////
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
+                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
+                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000  //          P > 1
+        ];
     }
 
     function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint96) {
