@@ -22,7 +22,6 @@ import { AppState } from '~/state';
 import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 import usePeg from '~/hooks/beanstalk/usePeg';
-
 import { FC } from '~/types';
 
 const castField = (data: SunButtonQuery['fields'][number]) => ({
