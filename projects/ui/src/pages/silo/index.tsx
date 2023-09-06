@@ -388,6 +388,9 @@ const RewardsBar: FC<{
     );
   }
 
+  const canClaim =
+    farmerSilo?.beans?.earned?.gt(0) || breakdown.totalValue?.gt(0);
+
   return (
     <Card>
       <Stack
@@ -413,15 +416,9 @@ const RewardsBar: FC<{
             size="medium"
             variant="contained"
             sx={{ width: '100%', whiteSpace: 'nowrap' }}
-            endIcon={
-              <DropdownIcon
-                open={open}
-                disabled={breakdown.totalValue?.eq(0)}
-                light
-              />
-            }
+            endIcon={<DropdownIcon open={open} disabled={!canClaim} light />}
             onClick={open ? hide : show}
-            disabled={breakdown.totalValue?.eq(0)}
+            disabled={!canClaim}
           >
             Claim
           </Button>

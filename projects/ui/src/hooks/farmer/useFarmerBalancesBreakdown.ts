@@ -125,6 +125,7 @@ export default function useFarmerBalancesBreakdown() {
         const amountByState = {
           deposited: siloBalance.deposited?.amount,
           withdrawn: siloBalance.withdrawn?.amount,
+          // claimable needs to be removed. source is empty
           claimable: siloBalance.claimable?.amount,
           farm: tokenBalance.internal,
           circulating: tokenBalance.external,
