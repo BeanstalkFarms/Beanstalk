@@ -136,6 +136,24 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "addMigratedUnderlying",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      },
+      {
         "internalType": "address",
         "name": "underlyingToken",
         "type": "address"
@@ -803,6 +821,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "wethAmountIn",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMintFertilizerOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint128",
         "name": "id",
         "type": "uint128"
@@ -835,9 +872,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint128",
-        "name": "amount",
-        "type": "uint128"
+        "internalType": "uint256",
+        "name": "wethAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minFertilizerOut",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -851,7 +893,13 @@
       }
     ],
     "name": "mintFertilizer",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "payable",
     "type": "function"
   },
