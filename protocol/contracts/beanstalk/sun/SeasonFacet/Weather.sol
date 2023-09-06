@@ -114,7 +114,6 @@ contract Weather is Sun {
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
     function changeTemperature(uint24 mT, int8 bT, uint256 caseId) private {
-        int8 change = bT;
         uint32 t = s.w.t;
 
         if (bT < 0) {
@@ -122,7 +121,7 @@ contract Weather is Sun {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int8).max because change is an int8.
                 // Thus, downcasting t to an int8 will not cause overflow.
-                change = 1 - int8(t);
+                bT = 1 - int8(t);
                 s.w.t = 1;
             } else {
                 s.w.t = t.mul(mT).div(1e6) - (uint32(-bT));
