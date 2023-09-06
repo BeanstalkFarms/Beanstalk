@@ -163,7 +163,7 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
     selectorsToRemove: [ '0x0bfca7e3' ],
     bip: false,
     object: !mock,
-    verbose: true,
+    verbose: verbose,
     account: account,
     verify: false
   });
