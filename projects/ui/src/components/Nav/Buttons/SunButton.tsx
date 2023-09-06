@@ -14,7 +14,6 @@ import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
 import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
 import SunriseButton from '~/components/Sun/SunriseButton';
 import { SunButtonQuery, useSunButtonQuery } from '~/generated/graphql';
-import usePrice from '~/hooks/beanstalk/usePrice';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { toTokenUnitsBN } from '~/util';
 import { BEAN } from '~/constants/tokens';
@@ -23,7 +22,6 @@ import { AppState } from '~/state';
 import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 import usePeg from '~/hooks/beanstalk/usePeg';
-
 import { FC } from '~/types';
 
 const castField = (data: SunButtonQuery['fields'][number]) => ({
@@ -46,7 +44,6 @@ const MAX_ITEMS = 8;
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   /// DATA
   const season = useSeason();
-  const price = usePrice();
   const awaiting = useSelector<AppState, boolean>(
     (state) => state._beanstalk.sun.sunrise.awaiting
   );
@@ -90,7 +87,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const isLoading = season.eq(NEW_BN);
   const startIcon = isTiny ? undefined : (
     <img
-      src={price.lte(1) || awaiting ? drySeasonIcon : rainySeasonIcon}
+      src={bySeason[0]?.rewardBeans.eq(0) || awaiting ? drySeasonIcon : rainySeasonIcon}
       css={{
         width: 25,
         height: 25,
