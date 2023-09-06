@@ -54,7 +54,6 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256 underlyingAmount) {
-
         uint256 unripeSupply = IERC20(unripeToken).totalSupply();
 
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
