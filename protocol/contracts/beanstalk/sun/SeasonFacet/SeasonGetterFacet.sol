@@ -26,7 +26,11 @@ contract SeasonGetterFacet {
 
     AppStorage internal s;
 
+    // 24 * 30 * 6
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
+    uint256 private constant PRECISION = 1e6;
+
+    event PercentGrownStalkToLP(uint256 newPercentGrownStalkToLP);
 
     //////////////////// SEASON GETTERS ////////////////////
 
@@ -164,20 +168,68 @@ contract SeasonGetterFacet {
         co.timestamp = s.season.timestamp; // use season timestamp for oracle
     }
 
+    //////////////////// SEED GAUGE GETTERS ////////////////////
+
     /**
-     * @notice updates the averageGrownStalkPerBdvPerSeason 
+     * @notice returns the average grown stalk per BDV .
      */
-    function updateAverageGrownStalkPerBdv() external {
-        uint256 averageGrownStalkPerBdv = (s.s.stalk / getTotalBdv()) - 10000; // TODO: Check constant
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(averageGrownStalkPerBdv.div(TARGET_SEASONS_TO_CATCHUP));
+    function getAverageGrownStalkPerBdv() public view returns (uint256) {
+        return (s.s.stalk / getTotalBdv()) - 10000; // TODO: Check constant
     }
 
+    /**
+     * @notice updates the averageGrownStalkPerBdvPerSeason in the seed gauge.
+     * @dev anyone can call this function to update. Currently, the function 
+     * updates the averageGrownStalkPerBdvPerSeason such that it will take 6 months
+     * for the average new depositer to catch up to the average grown stalk per BDV.
+     * 
+     * The expectation is that actors will call this function on their own as it benefits them.
+     * Newer depositers will call it if the value increases to catch up to the average faster,
+     * Older depositers will call it if the value decreases to slow down their rate of dilution.
+     */
+    function updateAverageGrownStalkPerBdvPerSeason() external {
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
+            getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
+        );
+        emit PercentGrownStalkToLP(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+    }
+
+    /**
+     * @notice returns the total BDV in beanstalk.
+     * @dev the total BDV may differ from the instaneous BDV,
+     * as BDV is asyncronous. 
+     */
     function getTotalBdv() internal view returns (uint256 totalBdv) {
         address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
         // TODO: implment the decrement deposited BDV thing for unripe
         for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
             totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
         }
+    }
+
+    /**
+     * @notice returns the seed gauge struct.
+     */
+    function getSeedGauge() external view returns (Storage.SeedGauge memory) {
+        return s.seedGauge;
+    }
+    
+    /**
+     * @notice returns the average grown stalk per BDV per season. 
+     * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
+     * note that stalk has 10 decimals. 
+     */
+    function getAverageGrownStalkPerBdvPerSeason() external view returns (uint128) {
+        return s.seedGauge.averageGrownStalkPerBdvPerSeason;
+    }
+
+    /**
+     * @notice returns the percentage of new grown stalk 
+     * issued to the LP silo tokens.
+     * @dev 6 decimal precision (1% = 1e6)
+     */
+    function getPercentOfNewGrownStalkToLP() external view returns (uint128) {
+        return s.seedGauge.percentOfNewGrownStalkToLP;
     }
 
 }

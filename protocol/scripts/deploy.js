@@ -118,13 +118,15 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
+    seasonGetterFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     tokenSupportFacet,
     unripeFacet,
     whitelistFacet,
-    metadataFacet
+    metadataFacet,
+    GaugePointFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -142,6 +144,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'MockSeasonFacet',
+      'SeasonGetterFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
@@ -149,7 +152,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'TokenSupportFacet',
       'MockUnripeFacet',
       'WhitelistFacet',
-      'MetadataFacet'
+      'MetadataFacet',
+      'GaugePointFacet'
     ],
   ) : await deployFacets(
     verbose,
@@ -169,13 +173,15 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'SeasonFacet',
+      'SeasonGetterFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
       'TokenSupportFacet',
       'UnripeFacet',
       'WhitelistFacet',
-      'MetadataFacet'
+      'MetadataFacet',
+      'GaugePointFacet'
     ],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'

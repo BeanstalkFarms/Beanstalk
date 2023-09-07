@@ -115,7 +115,7 @@ library LibGauge {
 
         // if nothing has been deposited, skip grown stalk update.
         if(totalBdv == 0) return;
-        uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv);
+        uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(PRECISION);
         uint256 newGrownStalkToLP = newGrownStalk.mul(s.seedGauge.percentOfNewGrownStalkToLP).div(PRECISION);
 
         // update stalkPerBDVPerSeason for bean

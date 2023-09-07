@@ -115,16 +115,19 @@ contract Weather is Sun {
         );
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
-        (uint16 mT, int16 bT, uint16 mL, int16 bL) = LibCases.decodeCaseData(caseId);
-        changeTemperature(mT, bT, caseId);
-        changeNewGrownStalkPerBDVtoLP(mL, bL, caseId);
+        updateTemperatureAndGrownStalkPerBDVToLP(caseId);
         handleRain(caseId);
     }
 
+    function updateTemperatureAndGrownStalkPerBDVToLP(uint256 caseId) internal {
+        LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
+        updateTemperature(cd.mT, cd.bT, caseId);
+        updateNewGrownStalkPerBDVtoLP(cd.mL, cd.bL, caseId);
+    }
     /**
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
-    function changeTemperature(uint16 mT, int16 bT, uint256 caseId) private {
+    function updateTemperature(uint16 mT, int16 bT, uint256 caseId) private {
         uint32 t = s.w.t;
 
         if (bT < 0) {
@@ -147,7 +150,7 @@ contract Weather is Sun {
     /**
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
-    function changeNewGrownStalkPerBDVtoLP(uint16 mL, int16 bL, uint256 caseId) private {
+    function updateNewGrownStalkPerBDVtoLP(uint16 mL, int16 bL, uint256 caseId) private {
         uint128 percentNewGrownStalkToLP = s.seedGauge.percentOfNewGrownStalkToLP;
         if(bL < 0){
             if(percentNewGrownStalkToLP <= uint128(-bL).mul(GROWN_STALK_PRECISION)){
@@ -157,7 +160,7 @@ contract Weather is Sun {
                 //TODO include min
                 s.seedGauge.percentOfNewGrownStalkToLP = 
                     percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION)
-                    .add(uint128(-bL).mul(GROWN_STALK_PRECISION));
+                    .sub(uint128(-bL).mul(GROWN_STALK_PRECISION));
             }
         } else {
             //TODO include max

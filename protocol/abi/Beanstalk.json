@@ -6397,6 +6397,30 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "bean3CrvGaugePoints",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "currentGaugePoints",
         "type": "uint256"
       },
@@ -6416,6 +6440,43 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "urBeanEthGaugePoints",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newPercentGrownStalkToLP",
+        "type": "uint256"
+      }
+    ],
+    "name": "PercentGrownStalkToLP",
+    "type": "event"
   },
   {
     "inputs": [],
@@ -6459,6 +6520,70 @@
         ],
         "internalType": "struct Storage.CurveMetapoolOracle",
         "name": "co",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAverageGrownStalkPerBdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAverageGrownStalkPerBdvPerSeason",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPercentOfNewGrownStalkToLP",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSeedGauge",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "averageGrownStalkPerBdvPerSeason",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "percentOfNewGrownStalkToLP",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct Storage.SeedGauge",
+        "name": "",
         "type": "tuple"
       }
     ],
@@ -6667,7 +6792,7 @@
   },
   {
     "inputs": [],
-    "name": "updateAverageGrownStalkPerBdv",
+    "name": "updateAverageGrownStalkPerBdvPerSeason",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -6748,15 +6873,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "relChange",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
         "indexed": false,
-        "internalType": "int8",
+        "internalType": "int16",
         "name": "absChange",
-        "type": "int8"
+        "type": "int16"
       }
     ],
     "name": "GrownStalkToLPChange",
@@ -6886,15 +7011,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "relChange",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
         "indexed": false,
-        "internalType": "int8",
+        "internalType": "int16",
         "name": "absChange",
-        "type": "int8"
+        "type": "int16"
       }
     ],
     "name": "TemperatureChange",

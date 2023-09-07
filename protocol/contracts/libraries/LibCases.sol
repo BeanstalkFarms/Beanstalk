@@ -33,7 +33,12 @@ import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 
 
 library LibCases {
-
+    struct CaseData {
+        uint16 mT;
+        int16 bT;
+        uint16 mL;
+        int16 bL;
+    }
     /**
      * @notice given a caseID (0-128), return the caseData.
      * 
@@ -57,16 +62,13 @@ library LibCases {
      */
     function decodeCaseData(uint256 caseId) 
     internal view returns (
-        uint16 mT,
-        int16 bT,
-        uint16 mL,
-        int16 bL
+        CaseData memory cd
     ) {
         bytes8 _caseData = getDataFromCase(caseId);
-        mT = uint16(bytes2(_caseData));
-        bT = int16(bytes2(_caseData << 16));
-        mL = uint16(bytes2(_caseData << 32));
-        bL = int16(bytes2(_caseData << 48));
+        cd.mT = uint16(bytes2(_caseData));
+        cd.bT = int16(bytes2(_caseData << 16));
+        cd.mL = uint16(bytes2(_caseData << 32));
+        cd.bL = int16(bytes2(_caseData << 48));
     }
 
     /**
