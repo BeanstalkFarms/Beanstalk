@@ -22,6 +22,16 @@ contract Weather is Sun {
     using LibSafeMath128 for uint128;
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
+
+    // constants have the same value, but for different reasons.
+    // mT and mL are divided by RELATIVE_PRECISION as they 
+    // are a percentage (100% = 1e4).
+    // bL is multiplied by GROWN_STALK_PRECISION as bL has a 
+    // precision of 2 decimals, and needs to have 6 decimals
+    // to match the precision of percentOfNewGrownStalkToLP.
+    uint16 constant internal RELATIVE_PRECISION = 1e4;
+    uint16 constant internal GROWN_STALK_PRECISION = 1e4;
+
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
@@ -36,8 +46,8 @@ contract Weather is Sun {
     event TemperatureChange(
         uint256 indexed season,
         uint256 caseId,
-        uint256 relChange,
-        int8 absChange
+        uint16 relChange,
+        int16 absChange
     );
 
     /**
@@ -53,8 +63,8 @@ contract Weather is Sun {
     event GrownStalkToLPChange(
         uint256 indexed season,
         uint256 caseId,
-        uint256 relChange,
-        int8 absChange
+        uint16 relChange,
+        int16 absChange
     );
 
     /**
@@ -105,7 +115,7 @@ contract Weather is Sun {
         );
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
-        (uint24 mT, int8 bT, uint24 mL, int8 bL) = LibCases.decodeCaseData(caseId);
+        (uint16 mT, int16 bT, uint16 mL, int16 bL) = LibCases.decodeCaseData(caseId);
         changeTemperature(mT, bT, caseId);
         changeNewGrownStalkPerBDVtoLP(mL, bL, caseId);
         handleRain(caseId);
@@ -114,37 +124,46 @@ contract Weather is Sun {
     /**
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
-    function changeTemperature(uint24 mT, int8 bT, uint256 caseId) private {
+    function changeTemperature(uint16 mT, int16 bT, uint256 caseId) private {
         uint32 t = s.w.t;
 
         if (bT < 0) {
             if (t <= (uint32(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
-                // then 0 <= t <= type(int8).max because change is an int8.
-                // Thus, downcasting t to an int8 will not cause overflow.
-                bT = 1 - int8(t);
+                // then 0 <= t <= type(int16).max because change is an int16.
+                // Thus, downcasting t to an int16 will not cause overflow.
+                bT = 1 - int16(t);
                 s.w.t = 1;
             } else {
-                s.w.t = t.mul(mT).div(1e6) - (uint32(-bT));
+                s.w.t = t.mul(mT).div(RELATIVE_PRECISION) - uint32(-bT);
             }
         } else {
-            s.w.t = t.mul(mT).div(1e6) + (uint32(bT));
+            s.w.t = t.mul(mT).div(RELATIVE_PRECISION) + uint32(bT);
         }
 
-        // TODO: change weather event to include slope
         emit TemperatureChange(s.season.current, caseId, mT, bT);
     }
 
     /**
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
-    function changeNewGrownStalkPerBDVtoLP(uint24 mL, int8 bL, uint256 caseId) private {
+    function changeNewGrownStalkPerBDVtoLP(uint16 mL, int16 bL, uint256 caseId) private {
+        uint128 percentNewGrownStalkToLP = s.seedGauge.percentOfNewGrownStalkToLP;
         if(bL < 0){
-            s.seedGauge.percentOfNewGrownStalkToLP = 
-                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) - uint128(-bL).mul(1e6);
+            if(percentNewGrownStalkToLP <= uint128(-bL).mul(GROWN_STALK_PRECISION)){
+                bL = 1e2 - int16(percentNewGrownStalkToLP);
+                s.seedGauge.percentOfNewGrownStalkToLP = 1e6;
+            } else {
+                //TODO include min
+                s.seedGauge.percentOfNewGrownStalkToLP = 
+                    percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION)
+                    .add(uint128(-bL).mul(GROWN_STALK_PRECISION));
+            }
         } else {
+            //TODO include max
             s.seedGauge.percentOfNewGrownStalkToLP = 
-                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) + uint128(bL).mul(1e6);
+                percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION)
+                .add(uint128(bL).mul(GROWN_STALK_PRECISION));
         }
 
         // TODO: check whether event is good:

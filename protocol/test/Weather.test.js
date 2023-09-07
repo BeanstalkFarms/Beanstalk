@@ -84,7 +84,7 @@ describe('Complex Weather', function () {
           .withArgs(
             await this.season.season(), 
             this.testData.Code, 
-            '1000000', 
+            10000, 
             this.testData.newWeather-this.testData.startingWeather
             )
       })

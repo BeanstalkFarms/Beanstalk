@@ -423,7 +423,7 @@ contract Storage {
     /**
      * @notice System level variables used in the seed Gauge System.
      * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV that beanstalk issues each season.
-     * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precisions
+     * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precision (1% = 1e6)
      */
     struct SeedGauge {
         uint128 averageGrownStalkPerBdvPerSeason;
