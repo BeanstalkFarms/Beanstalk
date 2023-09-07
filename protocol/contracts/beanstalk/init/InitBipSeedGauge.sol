@@ -116,8 +116,8 @@ contract InitBipSeedGauge{
         ];
     }
 
-    function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint96) {
+    function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
         uint256 averageGrownStalkPerBdv = s.s.stalk / totalBdv - 10000;
-        return uint96(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
+        return uint128(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
     }
 }

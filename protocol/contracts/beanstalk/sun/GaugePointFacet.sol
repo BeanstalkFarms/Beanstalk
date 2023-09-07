@@ -40,4 +40,24 @@ contract GaugePointFacet {
             return currentGaugePoints.mul(101).div(100).add(1e6);
         }
     }
+
+    /**
+     * @notice calculates the urBeanEth Gauge Points.
+     */
+    function urBeanEthGaugePoints(
+        uint256 ,
+        uint256 
+    ) external pure returns (uint256) {
+        return 0;
+    }
+
+    /**
+     * @notice calculates the urBeanEth Gauge Points.
+     */
+    function bean3CrvGaugePoints(
+        uint256,
+        uint256 
+    ) external pure returns (uint256) {
+        return 5e6;
+    }
 }

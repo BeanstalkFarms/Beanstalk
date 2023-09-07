@@ -168,8 +168,8 @@ contract SeasonGetterFacet {
      * @notice updates the averageGrownStalkPerBdvPerSeason 
      */
     function updateAverageGrownStalkPerBdv() external {
-        uint256 averageGrownStalkPerBdv = s.s.stalk / getTotalBdv() - 10000; // TODO: Check constant
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint96(averageGrownStalkPerBdv.div(TARGET_SEASONS_TO_CATCHUP));
+        uint256 averageGrownStalkPerBdv = (s.s.stalk / getTotalBdv()) - 10000; // TODO: Check constant
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(averageGrownStalkPerBdv.div(TARGET_SEASONS_TO_CATCHUP));
     }
 
     function getTotalBdv() internal view returns (uint256 totalBdv) {

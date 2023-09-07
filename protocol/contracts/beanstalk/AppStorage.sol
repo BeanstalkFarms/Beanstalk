@@ -426,9 +426,8 @@ contract Storage {
      * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precisions
      */
     struct SeedGauge {
-        uint96 averageGrownStalkPerBdvPerSeason;
-        uint32 percentOfNewGrownStalkToLP;
-        // 16 bytes are free to ultilize in the future.
+        uint128 averageGrownStalkPerBdvPerSeason;
+        uint128 percentOfNewGrownStalkToLP;
     }
 }
 

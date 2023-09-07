@@ -19,6 +19,7 @@ import "./Sun.sol";
 contract Weather is Sun {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
     
@@ -140,10 +141,10 @@ contract Weather is Sun {
     function changeNewGrownStalkPerBDVtoLP(uint24 mL, int8 bL, uint256 caseId) private {
         if(bL < 0){
             s.seedGauge.percentOfNewGrownStalkToLP = 
-                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) - uint32(-bL);
+                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) - uint128(-bL).mul(1e6);
         } else {
             s.seedGauge.percentOfNewGrownStalkToLP = 
-                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) + uint32(bL);
+                s.seedGauge.percentOfNewGrownStalkToLP.mul(mL).div(1e6) + uint128(bL).mul(1e6);
         }
 
         // TODO: check whether event is good:
