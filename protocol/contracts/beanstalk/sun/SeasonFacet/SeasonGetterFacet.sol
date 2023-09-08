@@ -14,6 +14,8 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
+import "hardhat/console.sol";
+
 
 /**
  * @title SeasonGetterFacet
@@ -248,5 +250,9 @@ contract SeasonGetterFacet {
         Decimal.D256 memory deltaPodDemand;
         (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
         return deltaPodDemand.value;
+    }
+
+    function getUsdLiquidity(address well) external view returns (uint256) {
+        return LibWell.getUsdLiquidity(well);
     }
 }

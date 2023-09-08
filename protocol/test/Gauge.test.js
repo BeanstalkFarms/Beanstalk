@@ -40,8 +40,6 @@ describe('Gauge', function () {
     await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     await this.beanThreeCurve.set_supply(toBean('100000'));
-    await this.beanThreeCurve.set_A_precise('1000');
-    await this.beanThreeCurve.set_virtual_price(to18('1'));
     // bean3crv set at parity, 10,000 on each side.
     await this.beanThreeCurve.set_balances([toBean('10000'), to18('10000')]);
     await this.beanThreeCurve.reset_cumulative();
@@ -54,7 +52,6 @@ describe('Gauge', function () {
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-    // deploy well contracts, add liquidity at 1000 bean: 1 eth, and initialize pump.
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
     await this.well.setReserves([to6('1000000'), to18('1000')])
     await advanceTime(3600)
@@ -161,9 +158,19 @@ describe('Gauge', function () {
   })
 
   describe('L2SR calculation', function () {
-    it("getter", async function () {
-      this.result = await this.seasonGetter.getLiquidityToSupplyRatio();
-      console.log(this.result.toString())
+    describe("getter", function () {
+
+      it('returns 0 if no liquidity', async function () {
+        await this.bean.mint(userAddress, to6('1000'));
+        expect(await this.seasonGetter.getLiquidityToSupplyRatio()).to.be.equal(0);
+      })
+
+      it('returns 0 if no supply', async function () {
+        this.beanSupply = await this.bean.totalSupply();
+        this.result = await this.seasonGetter.getLiquidityToSupplyRatio();
+        await expect(this.beanSupply).to.be.equal(0);
+        await expect(this.result).to.be.equal(0);
+      })      
     }) 
   })
   

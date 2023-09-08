@@ -96,20 +96,22 @@ library LibWell {
     }
 
     /**
-     * @dev gets the liquidity of a well in us dollars. 
+     * @notice gets the liquidity of a well in USD. 
      * assumes a CP2 well function. 
+     * 
+     * @dev the function gets the MEV-resistant instanteous reserves,
+     * then calculates the liquidity in USD.
      */
     function getUsdLiquidity(
-        address well, 
-        uint256 amount
+        address well
     ) internal view returns (uint256 usdLiquidity) {
-        uint256[] memory underlyingAmounts = IWell(well).getRemoveLiquidityOut(amount);
+        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, '');
         // get the non-bean address and index
         (address token, uint256 j) = getTokenAndIndexFromWell(well);
         // calculate liquidity in USD (6 decimal precision, same as Bean)
         usdLiquidity = LibUsdOracle.getUsdPrice(token)
-            .mul(underlyingAmounts[j])
-            .mul(2) 
+            .mul(emaReserves[j])
+            .mul(2)
             .div(PRECISION);
     }
 }

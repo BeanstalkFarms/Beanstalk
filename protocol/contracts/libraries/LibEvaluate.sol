@@ -14,6 +14,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/LibUnripe.sol";
+
+import "hardhat/console.sol";
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of beanstalk.
@@ -191,21 +193,26 @@ library LibEvaluate {
     ) internal view returns (
         Decimal.D256 memory lpToSupplyRatio
     ) {
-        
+        // prevent infinite L2SR 
+        if(beanSupply == 0){
+            return Decimal.zero();
+        } 
+
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory assets = LibWhitelistedTokens.getSiloLPTokens();
+        address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
+        console.log("pools:", pools[0]);
+        console.log("pools:", pools[1]);
         uint256 usdLiquidity;
-        for(uint256 i = 0; i < assets.length; i++){
-            // get amount of LP token
-            uint256 amount = s.siloBalances[assets[i]].deposited;
+        for(uint256 i = 0; i < pools.length; i++){
             // get LP amount in USD
-            if(LibWell.isWell(assets[i])){
-                usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(assets[i], amount));
-            } else if(assets[i] == C.CURVE_BEAN_METAPOOL) {
+            if(LibWell.isWell(pools[i])){
+                usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
+            } else if(pools[i] == C.CURVE_BEAN_METAPOOL) {
                 // curve pool
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             }
         }
+        console.log("usdLiquidity:", usdLiquidity);
         // scale down bean supply by the locked beans, if there is fertilizer to be paid off.
         if(s.season.fertilizing == true){
             beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
