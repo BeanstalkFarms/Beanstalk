@@ -29,6 +29,7 @@ describe('Complex Weather', function () {
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
     beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address);
@@ -82,7 +83,7 @@ describe('Complex Weather', function () {
       it('Emits The Correct Case Weather', async function () {
         if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'TemperatureChange')
           .withArgs(
-            await this.season.season(), 
+            await this.seasonGetter.season(), 
             this.testData.Code, 
             10000, 
             this.testData.newWeather-this.testData.startingWeather
@@ -106,7 +107,7 @@ describe('Complex Weather', function () {
         await this.season.setLastSowTimeE('1')
         await this.season.setNextSowTimeE('10')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-        const weather = await this.season.weather();
+        const weather = await this.seasonGetter.weather();
         expect(weather.t).to.equal(7)
         expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
         expect(weather.lastSowTime).to.equal(10)
@@ -116,7 +117,7 @@ describe('Complex Weather', function () {
       await this.season.setLastSowTimeE(MAX_UINT32)
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.season.weather();
+      const weather = await this.seasonGetter.weather();
       expect(weather.t).to.equal(7)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
@@ -126,7 +127,7 @@ describe('Complex Weather', function () {
       await this.season.setLastSowTimeE('1061')
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.season.weather();
+      const weather = await this.seasonGetter.weather();
       expect(weather.t).to.equal(7)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
@@ -136,7 +137,7 @@ describe('Complex Weather', function () {
       await this.season.setLastSowTimeE('1060')
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.season.weather();
+      const weather = await this.seasonGetter.weather();
       expect(weather.t).to.equal(9)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
@@ -146,7 +147,7 @@ describe('Complex Weather', function () {
       await this.season.setLastSowTimeE('940')
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.season.weather();
+      const weather = await this.seasonGetter.weather();
       expect(weather.t).to.equal(9)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
@@ -156,7 +157,7 @@ describe('Complex Weather', function () {
       await this.season.setLastSowTimeE('900')
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.season.weather();
+      const weather = await this.seasonGetter.weather();
       expect(weather.t).to.equal(10)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
@@ -166,7 +167,7 @@ describe('Complex Weather', function () {
       await this.season.setLastSowTimeE('900')
       await this.season.setNextSowTimeE(MAX_UINT32)
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.season.weather();
+      const weather = await this.seasonGetter.weather();
       expect(weather.t).to.equal(9)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(parseInt(MAX_UINT32))

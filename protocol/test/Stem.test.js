@@ -56,7 +56,7 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.diamond = BEANSTALK;
   
       this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond);
-
+      this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
       this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
       this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond);
       this.convert = await ethers.getContractAt('ConvertFacet', this.diamond);
@@ -84,7 +84,7 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
     
           expect(settings['stalkEarnedPerSeason']).to.eq(2000000);
           expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-          expect(settings['milestoneSeason']).to.eq(await this.season.season());
+          expect(settings['milestoneSeason']).to.eq(await this.seasonGetter.season());
           expect(settings['milestoneStem']).to.eq(0);
         });
         
@@ -93,7 +93,7 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
     
           expect(settings['stalkEarnedPerSeason']).to.eq(4000000);
           expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-          expect(settings['milestoneSeason']).to.eq(await this.season.season());
+          expect(settings['milestoneSeason']).to.eq(await this.seasonGetter.season());
           expect(settings['milestoneStem']).to.eq(0);
         });
     
@@ -102,7 +102,7 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
     
           expect(settings['stalkEarnedPerSeason']).to.eq(0);
           expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-          expect(settings['milestoneSeason']).to.eq(await this.season.season());
+          expect(settings['milestoneSeason']).to.eq(await this.seasonGetter.season());
           expect(settings['milestoneStem']).to.eq(0);
         });
     
@@ -111,7 +111,7 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
     
           expect(settings['stalkEarnedPerSeason']).to.eq(0);
           expect(settings['stalkIssuedPerBdv']).to.eq(10000);
-          expect(settings['milestoneSeason']).to.eq(await this.season.season());
+          expect(settings['milestoneSeason']).to.eq(await this.seasonGetter.season());
           expect(settings['milestoneStem']).to.eq(0);
         });
       });

@@ -98,7 +98,7 @@ task("sunrise", async function () {
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
-  console.log("Current time: ", await this.season.time());
+  console.log("Current time: ", await this.seasonGetter.time());
 });
 
 /*task('replant', async () => {

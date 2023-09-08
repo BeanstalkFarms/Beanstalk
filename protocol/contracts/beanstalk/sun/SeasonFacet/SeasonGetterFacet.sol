@@ -116,8 +116,7 @@ contract SeasonGetterFacet {
         (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
 
         // Calculate Lp To Supply Ratio
-        Decimal.D256 memory lpToSupplyRatio;
-        // TODO
+        Decimal.D256 memory lpToSupplyRatio = LibEvaluate.calcLPToSupplyRatio(beanSupply);
 
         caseId = LibEvaluate.evaluateBeanstalk(
             deltaB, 
@@ -232,4 +231,22 @@ contract SeasonGetterFacet {
         return s.seedGauge.percentOfNewGrownStalkToLP;
     }
 
+    function getPodRate() external view returns (uint256) {
+        uint256 beanSupply = C.bean().totalSupply();
+        return Decimal.ratio(
+            s.f.pods.sub(s.f.harvestable),
+            beanSupply
+        ).value;
+    }
+
+    function getLiquidityToSupplyRatio() external view returns (uint256) {
+        uint256 beanSupply = C.bean().totalSupply();
+        return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
+    }
+
+    function getDeltaPodDemand() external view returns (uint256) {
+        Decimal.D256 memory deltaPodDemand;
+        (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
+        return deltaPodDemand.value;
+    }
 }

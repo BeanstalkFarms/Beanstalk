@@ -15,8 +15,9 @@ describe('Sop', function () {
     user2Address = user2.address;
     const contracts = await deploy("Test", false, true)
     ownerAddress = contracts.account;
-    this.diamond = contracts.beanstalkDiamond;
+    this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
@@ -58,7 +59,7 @@ describe('Sop', function () {
 
   describe("Rain", async function () {
     it("Not raining", async function () {
-      const season = await this.season.time()
+      const season = await this.seasonGetter.time()
       expect(season.raining).to.be.equal(false)
     })
 
@@ -66,8 +67,8 @@ describe('Sop', function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
       await this.silo.mow(userAddress, this.beanMetapool.address);
-      const rain = await this.season.rain()
-      const season = await this.season.time()
+      const rain = await this.seasonGetter.rain()
+      const season = await this.seasonGetter.time()
       expect(season.rainStart).to.be.equal(season.current)
       expect(season.raining).to.be.equal(true)
       expect(rain.pods).to.be.equal(await this.field.totalPods())
@@ -83,7 +84,7 @@ describe('Sop', function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
       await this.season.droughtSunrise()
       await this.silo.mow(userAddress, this.beanMetapool.address);
-      const season = await this.season.time()
+      const season = await this.seasonGetter.time()
       expect(season.rainStart).to.be.equal(season.current - 1)
       const userRain = await this.silo.balanceOfSop(userAddress);
       expect(userRain.lastRain).to.be.equal(0);
@@ -93,8 +94,8 @@ describe('Sop', function () {
   describe('Sop when P <= 1', async function () {
     it('sops p = 1', async function () {
       await this.season.rainSunrises(25);
-      const season = await this.season.time();
-      const rain = await this.season.rain()
+      const season = await this.seasonGetter.time();
+      const rain = await this.seasonGetter.rain()
       expect(season.lastSop).to.be.equal(0);
       expect(season.lastSopSeason).to.be.equal(0);
     })
@@ -102,8 +103,8 @@ describe('Sop', function () {
     it('sops p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([to6('100'), to18('0')], to18('50'))
       await this.season.rainSunrises(25);
-      const season = await this.season.time();
-      const rain = await this.season.rain()
+      const season = await this.seasonGetter.time();
+      const rain = await this.seasonGetter.rain()
       expect(season.lastSop).to.be.equal(0);
       expect(season.lastSopSeason).to.be.equal(0);
     })
@@ -118,12 +119,12 @@ describe('Sop', function () {
     })
 
     it('sops p > 1', async function () {
-      const season = await this.season.time();
+      const season = await this.seasonGetter.time();
       const balances = await this.beanMetapool.get_balances()
       const scaledBalance1 = balances[1].div(ethers.utils.parseEther('0.000001'));
       expect(balances[0]).to.be.within(scaledBalance1.sub(1),scaledBalance1.add(1))
       expect(season.lastSop).to.be.equal(season.rainStart);
-      expect(season.lastSopSeason).to.be.equal(await this.season.season());
+      expect(season.lastSopSeason).to.be.equal(await this.seasonGetter.season());
       expect(await this.threeCurve.balanceOf(this.silo.address)).to.be.equal('100416214692705624318')
     })
 
@@ -176,12 +177,12 @@ describe('Sop', function () {
     })
 
     it('sops p > 1', async function () {
-      const season = await this.season.time();
+      const season = await this.seasonGetter.time();
       const balances = await this.beanMetapool.get_balances()
       const scaledBalance1 = balances[1].div(ethers.utils.parseEther('0.000001'));
       expect(balances[0]).to.be.within(scaledBalance1.sub(1),scaledBalance1.add(1))
       expect(season.lastSop).to.be.equal(season.rainStart);
-      expect(season.lastSopSeason).to.be.equal(await this.season.season());
+      expect(season.lastSopSeason).to.be.equal(await this.seasonGetter.season());
       expect(await this.threeCurve.balanceOf(this.silo.address)).to.be.equal('200797438285419950779')
     })
 

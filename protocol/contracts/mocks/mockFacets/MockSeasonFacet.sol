@@ -361,5 +361,5 @@ contract MockSeasonFacet is SeasonFacet  {
     function setPercentOfNewGrownStalkToLP(uint128 percent) external {
         s.seedGauge.percentOfNewGrownStalkToLP = percent;
     }
-
+    
 }

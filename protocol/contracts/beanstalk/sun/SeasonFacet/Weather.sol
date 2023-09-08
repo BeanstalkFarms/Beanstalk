@@ -152,21 +152,24 @@ contract Weather is Sun {
      */
     function updateNewGrownStalkPerBDVtoLP(uint16 mL, int16 bL, uint256 caseId) private {
         uint128 percentNewGrownStalkToLP = s.seedGauge.percentOfNewGrownStalkToLP;
+        percentNewGrownStalkToLP = percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION);
         if(bL < 0){
             if(percentNewGrownStalkToLP <= uint128(-bL).mul(GROWN_STALK_PRECISION)){
-                bL = 1e2 - int16(percentNewGrownStalkToLP);
-                s.seedGauge.percentOfNewGrownStalkToLP = 1e6;
+                bL = - int16(percentNewGrownStalkToLP.div(GROWN_STALK_PRECISION));
+                s.seedGauge.percentOfNewGrownStalkToLP = 0;
             } else {
-                //TODO include min
                 s.seedGauge.percentOfNewGrownStalkToLP = 
-                    percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION)
-                    .sub(uint128(-bL).mul(GROWN_STALK_PRECISION));
+                    percentNewGrownStalkToLP.sub(uint128(-bL).mul(GROWN_STALK_PRECISION));
             }
         } else {
-            //TODO include max
-            s.seedGauge.percentOfNewGrownStalkToLP = 
-                percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION)
-                .add(uint128(bL).mul(GROWN_STALK_PRECISION));
+            if(percentNewGrownStalkToLP.add(uint128(bL).mul(GROWN_STALK_PRECISION)) >= 100e6){
+                bL = int16(uint128(100e6).sub(percentNewGrownStalkToLP).div(GROWN_STALK_PRECISION));
+                s.seedGauge.percentOfNewGrownStalkToLP = 100e6;
+            } else {
+                s.seedGauge.percentOfNewGrownStalkToLP = percentNewGrownStalkToLP.add(
+                    uint128(bL).mul(GROWN_STALK_PRECISION)
+                );
+            }
         }
 
         // TODO: check whether event is good:

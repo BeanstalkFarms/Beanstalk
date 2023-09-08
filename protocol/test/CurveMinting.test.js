@@ -42,6 +42,7 @@ describe('Oracle', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
 
@@ -72,7 +73,7 @@ describe('Oracle', function () {
   describe("Curve", async function () {
 
     it('initializes the oracle', async function () {
-      const o = await this.season.curveOracle();
+      const o = await this.seasonGetter.curveOracle();
       expect(o.initialized).to.equal(true);
       expect(o.balances[0]).to.equal(toBean('100000001000000'));
       expect(o.balances[1]).to.equal(to18('100000001000000'));
@@ -163,14 +164,14 @@ describe('Oracle', function () {
 
     describe("Get Delta B", async function () {
       it('reverts if not a minting pool', async function () {
-        await expect(this.season.poolDeltaB(BEAN)).to.be.revertedWith('Oracle: Pool not supported')
+        await expect(this.seasonGetter.poolDeltaB(BEAN)).to.be.revertedWith('Oracle: Pool not supported')
       })
 
       it("tracks a basic Delta B", async function () {
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
-        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
-        expect(await this.season.totalDeltaB()).to.equal('0');
+        expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+        expect(await this.seasonGetter.totalDeltaB()).to.equal('0');
       });
 
       it("tracks a TWAL with a change", async function () {
@@ -178,8 +179,8 @@ describe('Oracle', function () {
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
-        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
-        expect(await this.season.totalDeltaB()).to.equal('-252354675068');
+        expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal('-252354675068');
+        expect(await this.seasonGetter.totalDeltaB()).to.equal('-252354675068');
       });
     });
 
@@ -236,8 +237,8 @@ describe('Oracle', function () {
       it("tracks a basic Delta B", async function () {
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
-        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
-        expect(await this.season.totalDeltaB()).to.equal('0');
+        expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal('0');
+        expect(await this.seasonGetter.totalDeltaB()).to.equal('0');
       });
 
       it("tracks a TWAL with a change", async function () {
@@ -245,8 +246,8 @@ describe('Oracle', function () {
         await this.beanThreeCurve.update([toBean('2000000'), to18('1000000')])
         await advanceTime(900)
         await hre.network.provider.send("evm_mine")
-        expect(await this.season.poolDeltaB(BEAN_3_CURVE)).to.equal(to6('-1'));
-        expect(await this.season.totalDeltaB()).to.equal(to6('-1'));
+        expect(await this.seasonGetter.poolDeltaB(BEAN_3_CURVE)).to.equal(to6('-1'));
+        expect(await this.seasonGetter.totalDeltaB()).to.equal(to6('-1'));
       });
     });
   });

@@ -40,19 +40,15 @@ describe('Convert', function () {
     await this.season.teleportSunrise(10);
 
     this.season.deployStemsUpgrade();
-
     await this.silo.mockWhitelistToken(
       this.siloToken.address, 
       this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
       '10000', 
       1e6 //aka "1 seed"
     );
-
     await this.season.siloSunrise(0);
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
-
     await this.season.siloSunrise(0);
-
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
   });
 

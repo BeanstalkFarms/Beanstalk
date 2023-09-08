@@ -33,7 +33,8 @@ describe('Whitelist', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);;
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
     const SiloToken = await ethers.getContractFactory("MockToken");
@@ -130,7 +131,7 @@ describe('Whitelist', function () {
       const settings = await this.silo.tokenSettings(this.siloToken.address)
 
       expect(settings[1]).to.equal(50000)
-      const currentSeason = await this.season.season()
+      const currentSeason = await this.seasonGetter.season()
       await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 50000, currentSeason)
     })
 

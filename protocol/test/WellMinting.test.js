@@ -21,6 +21,7 @@ describe('Well Minting', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
     this.bean = await getBean()
     await this.bean.mint(userAddress, to18('1'));
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
@@ -58,7 +59,7 @@ describe('Well Minting', function () {
     })
   
     it("Checks", async function () {
-      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('0')
+      expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('0')
     })
 
   })
@@ -79,7 +80,7 @@ describe('Well Minting', function () {
     })
   
     it("Checks a delta B > 0", async function () {
-      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('133789634067')
+      expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('133789634067')
     })
   })
 
@@ -99,7 +100,7 @@ describe('Well Minting', function () {
     })
 
     it("Checks a delta B < 0", async function () {
-      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('-225006447371')
+      expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('-225006447371')
     })
   })
 
@@ -119,7 +120,7 @@ describe('Well Minting', function () {
     })
 
     it("Checks a Beans below min", async function () {
-      expect(await this.season.poolDeltaB(this.well.address)).to.be.equal('0')
+      expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('0')
     })
 
   })
