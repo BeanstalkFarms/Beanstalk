@@ -4,7 +4,7 @@ import { Token } from "src/classes/Token";
 import { ActionType } from "src/constants/actions";
 import { TokenValue } from "src/TokenValue";
 import { BeanstalkSDK } from "../BeanstalkSDK";
-import { FarmFromMode, FarmToMode, FarmWorkflow } from "../farm";
+import { AdvancedFarmWorkflow, FarmFromMode, FarmToMode, FarmWorkflow } from "../farm";
 
 export class DepositOperation {
   static sdk: BeanstalkSDK;
@@ -14,7 +14,7 @@ export class DepositOperation {
   inputToken: Token;
   inputAmount: TokenValue;
   readonly router: Router;
-  workflow: FarmWorkflow<{ slippage: number } & Record<string, any>>;
+  workflow: AdvancedFarmWorkflow|FarmWorkflow<{ slippage: number } & Record<string, any>>;
   lastAmountIn: TokenValue;
 
   constructor(sdk: BeanstalkSDK, router: Router, targetToken: Token, account: string) {
@@ -37,7 +37,11 @@ export class DepositOperation {
   buildWorkflow() {
     const route = this.router.getRoute(this.inputToken.symbol, `${this.targetToken.symbol}:SILO`);
 
-    this.workflow = DepositOperation.sdk.farm.create(`Deposit`);
+    if (this.targetToken.symbol === "BEANETH") {
+      this.workflow = DepositOperation.sdk.farm.createAdvancedFarm(`Deposit`);
+    } else {
+      this.workflow = DepositOperation.sdk.farm.create(`Deposit`);
+    }
 
     for (let i = 0; i < route.length; i++) {
       let from, to;

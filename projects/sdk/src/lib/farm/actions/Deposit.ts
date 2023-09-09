@@ -1,7 +1,8 @@
-import { BasicPreparedResult, RunContext, Step, StepClass } from "src/classes/Workflow";
+import { BasicPreparedResult, RunContext, StepClass } from "src/classes/Workflow";
 import { ethers } from "ethers";
 import { FarmFromMode, FarmToMode } from "../types";
 import { Token } from "src/classes/Token";
+import { Clipboard } from "src/lib/depot";
 
 export class Deposit extends StepClass<BasicPreparedResult> {
   public name: string = "deposit";
@@ -22,15 +23,17 @@ export class Deposit extends StepClass<BasicPreparedResult> {
           context
         });
         if (!_amountInStep) throw new Error("Deposit: Missing _amountInStep");
+        const wellDeposit = this.token.symbol === "BEANETH";
         return {
           target: Deposit.sdk.contracts.beanstalk.address,
           callData: Deposit.sdk.contracts.beanstalk.interface.encodeFunctionData("deposit", [
             this.token.address,
             _amountInStep,
             this.fromMode
-          ])
+          ]),
+          clipboard: wellDeposit ? Clipboard.encodeSlot(context.step.findTag("depositAmount"), 9, 1) : undefined
         };
-      },
+      }, 
       decode: (data: string) => Deposit.sdk.contracts.beanstalk.interface.decodeFunctionData("deposit", data),
       decodeResult: (result: string) => Deposit.sdk.contracts.beanstalk.interface.decodeFunctionResult("deposit", result)
     };

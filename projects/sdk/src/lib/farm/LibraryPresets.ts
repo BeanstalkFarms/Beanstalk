@@ -277,7 +277,7 @@ export class LibraryPresets {
     this.wellAddLiquidity = (well: BasinWell, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       
       const result = [];
-      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineDeposit");
 
       const transferBack = to === FarmToMode.INTERNAL;
       const recipient = transferBack ? sdk.contracts.pipeline.address : account;
@@ -289,19 +289,29 @@ export class LibraryPresets {
       const addLiquidity = new sdk.farm.actions.WellSync(well, tokenIn, recipient);
 
       // This approves the transferToBeanstalk operation.
-      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address);
+      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, true);
 
       // Transfers the output token back to Beanstalk, from PIPELINE.
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL);
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, true);
 
 
       result.push(transfer);
-      advancedPipe.add(addLiquidity, { tag: "wellSync" });
+      advancedPipe.add(addLiquidity);
+      advancedPipe.add(
+        async function getBalance() {
+          return {
+            target: well.lpToken.address,
+            callData: well.lpToken.getContract().interface.encodeFunctionData("balanceOf", [
+              sdk.contracts.pipeline.address
+            ])
+          };
+        },
+        { tag: "amountToDeposit" }
+      );
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);
       }
-      
       result.push(advancedPipe);
 
       return result;
