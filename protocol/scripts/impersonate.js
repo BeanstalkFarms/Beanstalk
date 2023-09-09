@@ -27,9 +27,8 @@ const {
   ETH_USD_CHAINLINK_AGGREGATOR,
   BEAN_ETH_WELL
 } = require('../test/utils/constants');
-const { deployMockWell } = require('../utils/well.js');
+const { deployWell } = require('../utils/well.js');
 const { impersonateSigner, mintEth } = require('../utils');
-const { to6, toStalk, toBean, to18 } = require('../test/utils/helpers.js');
 
 const { getSigner } = '../utils'
 
@@ -82,6 +81,8 @@ async function curveMetapool() {
       BEAN_3_CURVE,
       JSON.parse(meta3CurveJson).deployedBytecode,
     ]);
+    // const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+
     const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     await beanMetapool.init(BEAN, THREE_CURVE, THREE_POOL);
     await beanMetapool.set_A_precise('1000');
@@ -272,7 +273,12 @@ async function ethUsdtUniswap() {
 }
 
 async function beanEthWell() {
-  await deployMockWell()
+  const well = await deployWell([BEAN, WETH]);
+  const bytecode = await ethers.provider.getCode(well.address)
+  await network.provider.send("hardhat_setCode", [
+    BEAN_ETH_WELL,
+    bytecode,
+  ]);
 }
 
 async function ethUsdChainlinkAggregator() {

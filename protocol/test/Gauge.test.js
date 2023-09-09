@@ -60,6 +60,8 @@ describe('Gauge', function () {
     await owner.sendTransaction({to: user.address, value: 0});
     await this.well.connect(user).mint(user.address, to18('1000'))
     await this.season.siloSunrise(0)
+    await whitelistWell(this.well.address, '10000', to6('4'));
+    await this.season.captureWellE(this.well.address);
   })
 
   beforeEach(async function () {

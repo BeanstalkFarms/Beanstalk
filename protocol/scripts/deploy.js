@@ -198,7 +198,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       await impersonateEthUsdcUniswap()
       await impersonateEthUsdtUniswap()
     }
-    await impersonateBeanEthWell()
     await impersonateCurveMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
