@@ -60,6 +60,8 @@ contract UnripeFacet is ReentrancyGuard {
 
         underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
 
+        require(underlyingAmount > 0, "Chop: no underlying");
+
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
         address underlyingToken = s.u[unripeToken].underlyingToken;
