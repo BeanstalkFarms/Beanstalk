@@ -1,14 +1,18 @@
 const { expect } = require('chai');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, BCM, STABLE_FACTORY } = require('./utils/constants.js');
+const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, BCM, STABLE_FACTORY, PUBLIUS } = require('./utils/constants.js');
 const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { getBeanstalk } = require('../utils/contracts.js');
-const { impersonateBeanstalkOwner } = require('../utils/signer.js');
+const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
 const { mintEth } = require('../utils/mint.js');
+const { ConvertEncoder } = require('./utils/encoder.js');
+const { setReserves } = require('../utils/well.js');
+const { toBN } = require('../utils/helpers.js');
 let user,user2,owner;
+let publius;
 
 let underlyingBefore
 let beanEthUnderlying
@@ -38,8 +42,11 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
       return
     }
 
+    publius = await impersonateSigner(PUBLIUS, true)
+
     owner = await impersonateBeanstalkOwner()
     this.beanstalk = await getBeanstalk()
+    this.well = await ethers.getContractAt('IWell', BEAN_ETH_WELL);
     this.weth = await ethers.getContractAt('IWETH', WETH)
     this.bean = await ethers.getContractAt('IBean', BEAN)
     this.beanEth = await ethers.getContractAt('IWell', BEAN_ETH_WELL)
@@ -70,6 +77,37 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
   
     it('Sends underlying balance to BCM', async function () {
       expect(await this.beanstalk.getExternalBalance(BCM, BEAN_3_CURVE)).to.be.equal(underlyingBefore)
+    })
+
+    describe('Interactions with Unripe fail', async function () {
+      it('chop fails', async function () {
+        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836', to6('1'), 1);
+        await expect(this.beanstalk.connect(publius).chop(UNRIPE_LP, to6('1'), 1, 0)).to.be.revertedWith("Chop: no underlying")
+      })
+
+      it('deposit fails', async function () {
+        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836', to6('1'), 1);
+        await expect(this.beanstalk.connect(publius).deposit(UNRIPE_LP, to6('1'),  1)).to.be.revertedWith('Silo: No Beans under Token.')
+      })
+
+      it('enrootDeposit fails', async function () {
+        await expect(this.beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836', to6('1'))).to.be.revertedWith('SafeMath: subtraction overflow');
+      })
+
+      it('enrootDeposits fails', async function () {
+        await expect(this.beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836'], [to6('1')])).to.be.revertedWith('SafeMath: subtraction overflow');
+      })
+
+      it('convert Unripe Bean to LP fails', async function () {
+        console.log(await this.beanstalk.poolDeltaB(BEAN_ETH_WELL))
+        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272'], [to6('200')])).to.be.revertedWith('SafeMath: subtraction overflow');
+      })
+
+      it('convert Unripe LP to Bean fails', async function () {
+        const liquidityRemover = await impersonateSigner('0x7eaE23DD0f0d8289d38653BCE11b92F7807eFB64', true);
+        await this.well.connect(liquidityRemover).removeLiquidityOneToken(to18('29'), WETH, '0', liquidityRemover.address, ethers.constants.MaxUint256)
+        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
+      })
     })
   })
 
