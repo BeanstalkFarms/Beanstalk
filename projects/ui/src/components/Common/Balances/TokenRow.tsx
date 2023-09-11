@@ -90,7 +90,7 @@ const TokenRow: FC<{
         </Tooltip>
       )}
     </Row>
-    <Tooltip title={amountTooltip || ''} placement="right">
+    <Tooltip title={amountTooltip || ''} placement="top-end">
       <div>
         <Row gap={0.5}>
           {token && <TokenIcon token={token} />}
@@ -101,7 +101,7 @@ const TokenRow: FC<{
           )}
           {value && (
             <Typography variant="body1" textAlign="right" display="block">
-              {value}
+              ${value}
             </Typography>
           )}
         </Row>

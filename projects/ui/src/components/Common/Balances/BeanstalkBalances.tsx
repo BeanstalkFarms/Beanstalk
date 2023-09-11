@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Stack, Typography, Grid, Box } from '@mui/material';
+import BigNumber from 'bignumber.js';
 import ResizablePieChart, {
   PieDataPoint,
 } from '~/components/Common/Charts/PieChart';
@@ -13,6 +14,7 @@ import TokenRow from '~/components/Common/Balances/TokenRow';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { BEAN } from '~/constants/tokens';
 import { FC } from '~/types';
+import StatHorizontal from '../StatHorizontal';
 
 const BeanstalkBalances: FC<{
   breakdown: ReturnType<typeof useBeanstalkSiloBreakdown>;
@@ -24,6 +26,7 @@ const BeanstalkBalances: FC<{
     () => Object.keys(breakdown.tokens),
     [breakdown.tokens]
   );
+  const beanPrice = breakdown.tokens[Bean.address].value.div(breakdown.tokens[Bean.address].amount);
 
   // Drilldown against a State of Token (DEPOSITED, WITHDRAWN, etc.)
   const [hoverAddress, setHoverAddress] = useState<
@@ -60,6 +63,19 @@ const BeanstalkBalances: FC<{
   const hoverToken = hoverAddress ? WHITELIST[hoverAddress] : undefined;
   const assetLabel = hoverToken?.name || 'Token';
 
+  function amountTooltip(amount: BigNumber, value: BigNumber) {
+    return (
+      <Stack gap={0.5}>
+        <StatHorizontal label="Token Amount">
+          {displayFullBN(amount, 2, 2)}
+        </StatHorizontal>
+        <StatHorizontal label="BDV">
+          {displayFullBN((value.div(amount).div(beanPrice)).multipliedBy(amount), 2, 2)}
+        </StatHorizontal>
+      </Stack>
+    )
+  }
+
   // Compile Pie chart data
   const pieChartData = useMemo(() => {
     if (hoverAddress && breakdown.tokens[hoverAddress]) {
@@ -67,12 +83,12 @@ const BeanstalkBalances: FC<{
       if (!thisAddress?.byState) return [];
       return Object.keys(thisAddress.byState).reduce<PieDataPoint[]>(
         (prev, state) => {
-          const amount = thisAddress.byState[state].amount;
-          if (amount) {
+          const value = thisAddress.byState[state].value;
+          if (value) {
             prev.push({
               // Required for PieChart
               label: STATE_CONFIG[state as StateID][0],
-              value: amount.toNumber(),
+              value: value.toNumber(),
               color: STATE_CONFIG[state as StateID][1],
               // Additional
               state: state,
@@ -113,11 +129,12 @@ const BeanstalkBalances: FC<{
               color={WHITELIST[address].color}
               showColor={!hoverAddress}
               token={WHITELIST[address]}
-              amount={displayBN(breakdown.tokens[address].amount)}
+              value={displayBN(breakdown.tokens[address].value)}
               isFaded={hoverAddress !== null && hoverAddress !== address}
               isSelected={hoverAddress === address}
               onMouseOver={onMouseOver(address)}
               onClick={onClick(address)}
+              amountTooltip={amountTooltip(breakdown.tokens[address].amount, breakdown.tokens[address].value)}
             />
           ))}
         </Stack>
@@ -157,18 +174,19 @@ const BeanstalkBalances: FC<{
                 const state = dp.state as StateID;
                 const tokenState =
                   breakdown.tokens[hoverAddress].byState[state];
-                if (!tokenState.amount) return null;
+                if (!tokenState.value || !tokenState.amount) return null;
                 return (
                   <TokenRow
                     key={state}
                     label={dp.label}
                     color={dp.color}
-                    showColor={tokenState.amount.gt(0)}
+                    showColor={tokenState.value.gt(0)}
                     isFaded={false}
-                    amount={displayFullBN(tokenState.amount, 2, 2)}
+                    value={displayFullBN(tokenState.value, 2, 2)}
                     labelTooltip={STATE_CONFIG[state][2](
                       hoverToken === Bean ? 'Beans' : hoverToken.symbol
                     )}
+                    amountTooltip={amountTooltip(tokenState.amount, tokenState.value)}
                   />
                 );
               })}
