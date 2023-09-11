@@ -35,7 +35,6 @@ library LibFertilizer {
 
     function addFertilizer(
         uint128 season,
-        uint256 amount,
         uint256 fertilizerAmount,
         uint256 minLP
     ) internal returns (uint128 id) {
@@ -54,7 +53,7 @@ library LibFertilizer {
         s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
         s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
-        addUnderlying(amount, fertilizerAmount.mul(DECIMALS), minLP);
+        addUnderlying(fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
         if (s.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
@@ -73,7 +72,7 @@ library LibFertilizer {
         humidity = RESTART_HUMIDITY.sub(humidityDecrease);
     }
 
-    function addUnderlying(uint256 amount, uint256 usdAmount, uint256 minAmountOut) internal {
+    function addUnderlying(uint256 usdAmount, uint256 minAmountOut) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
         uint256 percentToFill = usdAmount.mul(C.precision()).div(
@@ -104,11 +103,6 @@ library LibFertilizer {
         C.bean().mint(
             address(C.BEAN_ETH_WELL),
             newDepositedLPBeans
-        );
-
-        IERC20(C.WETH).transfer(
-            address(C.BEAN_ETH_WELL),
-            amount
         );
 
         uint256 newLP = IWell(C.BEAN_ETH_WELL).sync(

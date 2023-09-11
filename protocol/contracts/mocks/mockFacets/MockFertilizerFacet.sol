@@ -22,13 +22,13 @@ contract MockFertilizerFacet is FertilizerFacet {
         LibDiamond.enforceIsContractOwner();
         IERC20(C.WETH).transferFrom(
             msg.sender,
-            address(this),
+            C.BEAN_ETH_WELL,
             uint256(wethAmountIn)
         );
 
         uint256 fertilizerAmount = getMintFertilizerOut(wethAmountIn);
 
-        LibFertilizer.addFertilizer(id, wethAmountIn, fertilizerAmount, minLPOut);
+        LibFertilizer.addFertilizer(id, fertilizerAmount, minLPOut);
     }
 
     function setPenaltyParams(uint256 recapitalized, uint256 fertilized) external {
