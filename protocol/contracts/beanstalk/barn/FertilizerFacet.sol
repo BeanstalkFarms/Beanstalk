@@ -66,13 +66,15 @@ contract FertilizerFacet {
         uint256 minLPTokensOut,
         LibTransfer.From mode
     ) external payable returns (uint256 fertilizerAmountOut) {
-
-        wethAmountIn = LibTransfer.receiveToken(
+        // Transfer the WETH directly to the Well for gas efficiency purposes.
+        wethAmountIn = LibTransfer.transferToken(
             IERC20(C.WETH),
-            uint256(wethAmountIn),
             msg.sender,
-            mode
-        ); // return value <= amount, so downcasting is safe.
+            C.BEAN_ETH_WELL,
+            uint256(wethAmountIn),
+            mode,
+            LibTransfer.To.EXTERNAL
+        );
 
         fertilizerAmountOut = getMintFertilizerOut(wethAmountIn);
 
@@ -83,7 +85,6 @@ contract FertilizerFacet {
 
         uint128 id = LibFertilizer.addFertilizer(
             uint128(s.season.current),
-            wethAmountIn,
             fertilizerAmountOut,
             minLPTokensOut
         );
