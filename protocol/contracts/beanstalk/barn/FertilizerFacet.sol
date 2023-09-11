@@ -66,7 +66,7 @@ contract FertilizerFacet {
         uint256 minLPTokensOut,
         LibTransfer.From mode
     ) external payable returns (uint256 fertilizerAmountOut) {
-        // Transfer the WETH directly to the Well for gas efficiency purposes.
+        // Transfer the WETH directly to the Well for gas efficiency purposes. The WETH is later synced in {LibFertilizer.addUnderlying}.
         wethAmountIn = LibTransfer.transferToken(
             IERC20(C.WETH),
             msg.sender,
