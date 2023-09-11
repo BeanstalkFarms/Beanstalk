@@ -460,7 +460,7 @@ const ConvertPropProvider: FC<{
     () => ({
       // Settings
       settings: {
-        slippage: 0.1,
+        slippage: 0.05,
       },
       // Token Inputs
       tokens: [
