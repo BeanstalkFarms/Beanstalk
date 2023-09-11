@@ -20,6 +20,7 @@ contract MockFertilizerFacet is FertilizerFacet {
         uint256 minLPOut
     ) external payable {
         LibDiamond.enforceIsContractOwner();
+        // Transfer the WETH directly to the Well for gas efficiency purposes. The WETH is later synced in {LibFertilizer.addUnderlying}.
         IERC20(C.WETH).transferFrom(
             msg.sender,
             C.BEAN_ETH_WELL,
