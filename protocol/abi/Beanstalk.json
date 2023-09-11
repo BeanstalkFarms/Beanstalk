@@ -519,29 +519,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint128",
-        "name": "id",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint128",
-        "name": "amount",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minLP",
-        "type": "uint256"
-      }
-    ],
-    "name": "addFertilizerOwner",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address[]",
         "name": "accounts",
         "type": "address[]"
@@ -883,7 +860,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "minLP",
+        "name": "minLPTokensOut",
         "type": "uint256"
       },
       {
