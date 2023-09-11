@@ -19,7 +19,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 /**
  * @author Publius
- * @title Handles Sprouting Beans from Sprout Tokens
+ * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
 contract FertilizerFacet {
@@ -29,6 +29,8 @@ contract FertilizerFacet {
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
+    uint256 private constant FERTILIZER_AMOUNT_PRECISION = 1e24;
+
     AppStorage internal s;
 
     struct Supply {
@@ -36,6 +38,12 @@ contract FertilizerFacet {
         uint256 supply;
     }
 
+
+    /**
+     * @notice Rinses Rinsable Sprouts earned from Fertilizer.
+     * @param ids The ids of the Fertilizer to rinse.
+     * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
+     */
     function claimFertilized(uint256[] calldata ids, LibTransfer.To mode)
         external
         payable
@@ -45,29 +53,17 @@ contract FertilizerFacet {
     }
 
     /**
-     * @dev Returns the amount of Fertilize that can be purchased with `wethAmountIn` WETH.
-     * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`
-     */
-    function getMintFertilizerOut(
-        uint256 wethAmountIn
-    ) external view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = wethAmountIn.mul(
-            LibEthUsdOracle.getEthUsdPrice()
-        ).div(1e24);
-    }
-
-    /**
      * @notice Purchase Fertilizer from the Barn Raise with WETH.
      * @param wethAmountIn Amount of WETH to buy Fertilizer with 18 decimal precision.
-     * @param minFertilizerOut The minimum amount of Fertilizer to purchase.
-     * @param minLP The minimum amount of LP to receive after.
+     * @param minFertilizerOut The minimum amount of Fertilizer to purchase. Protects against a significant ETH/USD price decrease.
+     * @param minLPTokensOut The minimum amount of LP tokens to receive after adding liquidity with `weth`.
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      * @dev The # of Fertilizer minted is equal to the value of the Ether paid in USD.
      */
     function mintFertilizer(
         uint256 wethAmountIn,
         uint256 minFertilizerOut,
-        uint256 minLP,
+        uint256 minLPTokensOut,
         LibTransfer.From mode
     ) external payable returns (uint256 fertilizerAmountOut) {
 
@@ -78,10 +74,7 @@ contract FertilizerFacet {
             mode
         ); // return value <= amount, so downcasting is safe.
 
-        // Convert from Ether amount with 18 decimals to USD amount with 0 decimals.
-        fertilizerAmountOut = wethAmountIn.mul(
-            LibEthUsdOracle.getEthUsdPrice()
-        ).div(1e24);
+        fertilizerAmountOut = getMintFertilizerOut(wethAmountIn);
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer Not enough bought.");
 
@@ -92,33 +85,14 @@ contract FertilizerFacet {
             uint128(s.season.current),
             wethAmountIn,
             fertilizerAmountOut,
-            minLP
+            minLPTokensOut
         );
         C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 
     /**
-     * @notice Contributes to Barn Raise on behalf of existing fertilizer holders.
+     * @dev Callback from Fertilizer contract in `claimFertilized` function.
      */
-    function addFertilizerOwner(
-        uint128 id,
-        uint128 amount,
-        uint256 minLP
-    ) external payable {
-        LibDiamond.enforceIsContractOwner();
-        IERC20(C.WETH).transferFrom(
-            msg.sender,
-            address(this),
-            uint256(amount)
-        );
-
-        uint256 fertilizerAmount = uint256(amount).mul(
-            LibEthUsdOracle.getEthUsdPrice()
-        ).div(1e24);
-
-        LibFertilizer.addFertilizer(id, amount, fertilizerAmount, minLP);
-    }
-
     function payFertilizer(address account, uint256 amount) external payable {
         require(msg.sender == C.fertilizerAddress());
         LibTransfer.sendToken(
@@ -127,6 +101,19 @@ contract FertilizerFacet {
             account,
             LibTransfer.To.INTERNAL
         );
+    }
+
+    /**
+     * @dev Returns the amount of Fertilize that can be purchased with `wethAmountIn` WETH.
+     * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
+     * `wethAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
+     */
+    function getMintFertilizerOut(
+        uint256 wethAmountIn
+    ) public view returns (uint256 fertilizerAmountOut) {
+        fertilizerAmountOut = wethAmountIn.mul(
+            LibEthUsdOracle.getEthUsdPrice()
+        ).div(FERTILIZER_AMOUNT_PRECISION);
     }
 
     function totalFertilizedBeans() external view returns (uint256 beans) {

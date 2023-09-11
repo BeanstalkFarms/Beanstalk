@@ -247,6 +247,13 @@ contract UnripeFacet is ReentrancyGuard {
 
     /////////////// UNDERLYING TOKEN MIGRATION //////////////////
 
+    /**
+     * @notice Adds underlying tokens to an Unripe Token.
+     * @param unripeToken The Unripe Token to add underlying tokens to.
+     * @param amount The amount of underlying tokens to add.
+     * @dev Used to migrate the underlying token of an Unripe Token to a new token.
+     * Only callable by the contract owner.
+     */
     function addMigratedUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
         LibDiamond.enforceIsContractOwner();
         IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
