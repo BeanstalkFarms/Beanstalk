@@ -296,18 +296,7 @@ export class LibraryPresets {
 
 
       result.push(transfer);
-      advancedPipe.add(addLiquidity);
-      advancedPipe.add(
-        async function getBalance() {
-          return {
-            target: well.lpToken.address,
-            callData: well.lpToken.getContract().interface.encodeFunctionData("balanceOf", [
-              sdk.contracts.pipeline.address
-            ])
-          };
-        },
-        { tag: "amountToDeposit" }
-      );
+      advancedPipe.add(addLiquidity, { tag: "amountToDeposit" });
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);

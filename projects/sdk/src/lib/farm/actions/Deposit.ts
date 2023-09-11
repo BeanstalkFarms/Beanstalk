@@ -31,7 +31,7 @@ export class Deposit extends StepClass<BasicPreparedResult> {
             _amountInStep,
             this.fromMode
           ]),
-          clipboard: wellDeposit ? Clipboard.encodeSlot(context.step.findTag("depositAmount"), 9, 1) : undefined
+          clipboard: wellDeposit ? Clipboard.encodeSlot(context.step.findTag("depositAmount"), 6, 1) : undefined
         };
       }, 
       decode: (data: string) => Deposit.sdk.contracts.beanstalk.interface.decodeFunctionData("deposit", data),
