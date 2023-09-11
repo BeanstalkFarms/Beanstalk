@@ -10,6 +10,12 @@ const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const { ConvertEncoder } = require('./utils/encoder.js');
 const { BigNumber } = require('ethers');
+const { deployBasin } = require('../scripts/basin.js');
+const { setReserves } = require('../utils/well.js');
+const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
+const { impersonateEthUsdChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
+const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
+const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
 require('dotenv').config();
 
 let user,user2,owner;
@@ -37,7 +43,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       }
   
       const signer = await impersonateBeanstalkOwner()
-      await mintEth(signer.address);
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
@@ -64,6 +69,21 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
       this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
       this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
+      this.well = await deployBasin(true, undefined, false, true)
+
+      await impersonateEthUsdChainlinkAggregator()
+      await impersonateEthUsdcUniswap()
+
+      await setEthUsdPrice('999.998018')
+      await setEthUsdcPrice('1000')
+
+      await impersonateBean()
+      await impersonateWeth()
+
+      await setReserves(owner, this.well, [to6('100001'), to18('100')])
+
+      await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
+      await finishBeanEthMigration()
 
     });
   
@@ -256,8 +276,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
           amounts.push(newSeason);
         }
 
-        const depositorSigner = await impersonateSigner(depositorAddress);
-        await mintEth(depositorAddress);
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
         await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
@@ -461,8 +480,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
         const token = '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d';
         const stem =  await this.silo.seasonToStem(token, 6061);
-        await mintEth(depositorAddress);
-        const depositorSigner = await impersonateSigner(depositorAddress);
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
         await this.silo.connect(depositorSigner);
         await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertCurveLPToBeans(to6('7863'), to6('0'), this.beanMetapool.address), [stem], [to6('7863')])).to.be.revertedWith('Silo: Migration needed')
       });
@@ -475,13 +493,12 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
         const token = '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab';
         const stem =  await this.silo.seasonToStem(token, 7563);
-        await mintEth(depositorAddress);
 
         const threecrvHolder = '0xe74b28c2eAe8679e3cCc3a94d5d0dE83CCB84705'
         const threecrvSigner = await impersonateSigner(threecrvHolder);
         await this.threeCurve.connect(threecrvSigner).approve(this.beanMetapool.address, to18('100000000000'));
         await this.beanMetapool.connect(threecrvSigner).add_liquidity([to6('0'), to18('10000000')], to18('150'));
-        const depositorSigner = await impersonateSigner(depositorAddress);
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
         await this.silo.connect(depositorSigner);
         await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertBeansToCurveLP(to6('345000'), to6('340000'), this.beanMetapool.address), [stem], [to6('345000')])).to.be.revertedWith('Silo: Migration needed')
       });
@@ -490,29 +507,24 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
         const token = '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d';
         const stem =  await this.silo.seasonToStem(token, 6061);
-        await mintEth(depositorAddress);
-
-        const depositorSigner = await impersonateSigner(depositorAddress);
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
         await this.silo.connect(depositorSigner);
 
         await expect(
           this.convert.connect(depositorSigner).convert(
-            ConvertEncoder.convertUnripeLPToBeans(to6('7863'), to6('7500')), [stem], [to6('7863')]))
+            ConvertEncoder.convertUnripeLPToBeans(to6('7863'), '0'), [stem], [to6('7863')]))
             .to.be.revertedWith('Silo: Migration needed')
       });
 
       it('attempt to convert unripe bean before migrating', async function () {
+        const reserves = await this.well.getReserves();
+        await setReserves(owner, this.well, [reserves[0], reserves[1].add(to18('50'))])
+
         const urBean = '0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449';
         const stem =  await this.silo.seasonToStem(urBean, 6074);
         const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
-        await mintEth(depositorAddress);
-        const depositorSigner = await impersonateSigner(depositorAddress);
-        
-        const threecrvHolder = '0xe74b28c2eAe8679e3cCc3a94d5d0dE83CCB84705'
-        const threecrvSigner = await impersonateSigner(threecrvHolder);
-        await this.threeCurve.connect(threecrvSigner).approve(this.beanMetapool.address, to18('100000000000'));
-        await this.beanMetapool.connect(threecrvSigner).add_liquidity([to6('0'), to18('10000000')], to18('150'));
-        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertUnripeBeansToLP(to6('345000'), to6('340000')), [stem], [to6('345000')])).to.be.revertedWith('Silo: Migration needed')
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
+        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertUnripeBeansToLP(to6('345000'), to6('0')), [stem], [to6('345000')])).to.be.revertedWith('Silo: Migration needed')
       });
     });
   });
