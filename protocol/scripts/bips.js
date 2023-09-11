@@ -160,7 +160,10 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
       "ConvertGettersFacet"
     ],
     initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
-    selectorsToRemove: [ '0x0bfca7e3' ],
+    selectorsToRemove: [
+      '0x0bfca7e3',
+      '0x8cd31ca0'
+    ],
     bip: false,
     object: !mock,
     verbose: verbose,
