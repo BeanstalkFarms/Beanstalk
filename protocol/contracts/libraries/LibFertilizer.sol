@@ -72,6 +72,10 @@ library LibFertilizer {
         humidity = RESTART_HUMIDITY.sub(humidityDecrease);
     }
 
+    /**
+     * @dev Any WETH contributions should already be transferred to the Bean:Eth Well to allow for a gas efficient liquidity
+     * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
+     */
     function addUnderlying(uint256 usdAmount, uint256 minAmountOut) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
