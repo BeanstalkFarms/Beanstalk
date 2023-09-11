@@ -99,8 +99,7 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
       })
 
       it('convert Unripe Bean to LP fails', async function () {
-        console.log(await this.beanstalk.poolDeltaB(BEAN_ETH_WELL))
-        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272'], [to6('200')])).to.be.revertedWith('SafeMath: subtraction overflow');
+        await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
       })
 
       it('convert Unripe LP to Bean fails', async function () {

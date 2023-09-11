@@ -43,8 +43,6 @@ describe('Fertilize', function () {
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('IBean', USDC)
     this.bean = await ethers.getContractAt('IBean', BEAN)
-    this.well = await ethers.getContractAt('IBean', BEAN_3_CURVE)
-    this.weth = await ethers.getContractAt('IBean', THREE_CURVE)
     this.weth = await ethers.getContractAt('IBean', WETH)
 
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
