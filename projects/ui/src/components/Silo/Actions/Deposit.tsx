@@ -350,7 +350,34 @@ const DepositPropProvider: FC<{
       tokens.USDT,
     ];
   }, [sdk.tokens, whitelistedToken]);
+
+  const priorityList = useMemo(() => {
+    const tokens = sdk.tokens;
+    if (tokens.BEAN.equals(whitelistedToken)) {
+      return [
+        tokens.BEAN,
+        tokens.ETH,
+        tokens.WETH,
+        tokens.CRV3,
+        tokens.DAI,
+        tokens.USDC,
+        tokens.USDT,
+      ];
+    }
+    return [
+      whitelistedToken,
+      tokens.ETH,
+      tokens.WETH,
+      tokens.BEAN,
+      tokens.CRV3,
+      tokens.DAI,
+      tokens.USDC,
+      tokens.USDT,
+    ];
+  }, [sdk.tokens, whitelistedToken]);
+
   const allAvailableTokens = useTokenMap(initTokenList);
+  const priorityListTokens = useTokenMap(priorityList);
 
   /// Token List
   const [tokenList, preferredTokens] = useMemo(() => {
@@ -361,8 +388,9 @@ const DepositPropProvider: FC<{
     }
 
     const _tokenList = Object.values(allAvailableTokens);
-    return [_tokenList, _tokenList.map((t) => ({ token: t }))];
-  }, [whitelistedToken, allAvailableTokens]);
+    const _priorityList = Object.values(priorityListTokens);
+    return [_tokenList, _priorityList.map((t) => ({ token: t }))];
+  }, [whitelistedToken, allAvailableTokens, priorityListTokens]);
 
   const baseToken = usePreferredToken(preferredTokens, 'use-best') as
     | ERC20Token
