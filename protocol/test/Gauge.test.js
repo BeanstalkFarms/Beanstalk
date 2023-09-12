@@ -232,7 +232,11 @@ describe('Gauge', function () {
         await this.bean.mint(ownerAddress, to6('2000000'));
         // enable fertilizer, 10000 sprouts unfertilized
         await this.fertilizer.setFertilizerE(true, to6('10000'))
-        // TODO: add unripe after merging with brendans changes
+        await this.unripe.connect(owner).addUnderlying(
+          UNRIPE_BEAN,
+          to6('1000')
+        )
+        // TODO: add unripeLP after merging with brendans changes
         // await this.unripe.connect(owner).addUnderlying(
         //   UNRIPE_LP,
         //   to6('1000')
