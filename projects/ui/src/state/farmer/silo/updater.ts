@@ -15,6 +15,7 @@ import {
   updateFarmerMigrationStatus,
   updateLegacyFarmerSiloRewards,
   updateFarmerSiloBalanceSdk,
+  updateFarmerSiloLoading,
 } from './actions';
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -67,6 +68,7 @@ export const useFetchFarmerSilo = () => {
   /// Handlers
   const fetch = useCallback(async () => {
     if (initialized) {
+      dispatch(updateFarmerSiloLoading(true));
       console.debug('[farmer/silo/useFarmerSilo] FETCH');
 
       // FIXME: multicall this section
@@ -309,6 +311,7 @@ export const useFetchFarmerSilo = () => {
       // HEADS UP: this has to be called after updateLegacyFarmerSiloRewards
       // to prevent some rendering errors. Refactor later.
       dispatch(updateLegacyFarmerSiloBalances(payload));
+      dispatch(updateFarmerSiloLoading(false));
     }
   }, [initialized, sdk, account, dispatch, season]);
 
@@ -329,6 +332,7 @@ const FarmerSiloUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerSilo();
   const account = useAccount();
   const chainId = useChainId();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     clear(account);
@@ -336,7 +340,12 @@ const FarmerSiloUpdater = () => {
   }, [account]);
 
   useEffect(() => {
-    if (account && initialized) fetch();
+    try {
+      if (account && initialized) fetch();
+    } catch (err) {
+      console.log('Error during farmer.silo fetch', err);
+      dispatch(updateFarmerSiloLoading(false));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, chainId, initialized]);
 

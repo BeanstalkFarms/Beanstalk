@@ -24,3 +24,7 @@ export const updateLegacyFarmerSiloBalances =
 export const updateFarmerSiloBalanceSdk = createAction<
   Map<Token, TokenSiloBalance>
 >('farmer/silo/updateFarmerSiloBalancesSdk');
+
+export const updateFarmerSiloLoading = createAction<boolean>(
+  'farmer/silo/loading'
+);
