@@ -676,28 +676,35 @@ const Whitelist: FC<{
                       >
                         <Typography color="text.primary">
                           <Row gap={0.3}>
-                            {/* <Fiat token={token} amount={deposited?.amount} /> */}
-                            {deposited?.amount ? (
-                              <>
-                                <Fiat
-                                  token={token}
-                                  amount={deposited?.amount}
-                                />
-                                {isUnripe ? (
-                                  <Typography
-                                    display="inline"
-                                    color={BeanstalkPalette.theme.winter.red}
-                                  >
-                                    *
-                                  </Typography>
-                                ) : null}
-                              </>
-                            ) : (
+                            {farmerSilo.loading ? (
                               <BeanProgressIcon
                                 size={10}
                                 enabled
                                 variant="indeterminate"
                               />
+                            ) : (
+                              <>
+                                {deposited?.amount ? (
+                                  <>
+                                    <Fiat
+                                      token={token}
+                                      amount={deposited?.amount}
+                                    />
+                                    {isUnripe ? (
+                                      <Typography
+                                        display="inline"
+                                        color={
+                                          BeanstalkPalette.theme.winter.red
+                                        }
+                                      >
+                                        *
+                                      </Typography>
+                                    ) : null}
+                                  </>
+                                ) : (
+                                  <div>?</div>
+                                )}
+                              </>
                             )}
                           </Row>
                         </Typography>
