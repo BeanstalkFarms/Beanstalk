@@ -42,6 +42,7 @@ import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import useAPY from '~/hooks/beanstalk/useAPY';
 import stalkIconBlue from '~/img/beanstalk/stalk-icon-blue.svg';
 import SiloAssetApyChip from './SiloAssetApyChip';
+import BeanProgressIcon from '../Common/BeanProgressIcon';
 
 /**
  * Display a pseudo-table of Whitelisted Silo Tokens.
@@ -675,15 +676,29 @@ const Whitelist: FC<{
                       >
                         <Typography color="text.primary">
                           <Row gap={0.3}>
-                            <Fiat token={token} amount={deposited?.amount} />
-                            {isUnripe ? (
-                              <Typography
-                                display="inline"
-                                color={BeanstalkPalette.theme.winter.red}
-                              >
-                                *
-                              </Typography>
-                            ) : null}
+                            {/* <Fiat token={token} amount={deposited?.amount} /> */}
+                            {deposited?.amount ? (
+                              <>
+                                <Fiat
+                                  token={token}
+                                  amount={deposited?.amount}
+                                />
+                                {isUnripe ? (
+                                  <Typography
+                                    display="inline"
+                                    color={BeanstalkPalette.theme.winter.red}
+                                  >
+                                    *
+                                  </Typography>
+                                ) : null}
+                              </>
+                            ) : (
+                              <BeanProgressIcon
+                                size={10}
+                                enabled
+                                variant="indeterminate"
+                              />
+                            )}
                           </Row>
                         </Typography>
                       </Tooltip>
