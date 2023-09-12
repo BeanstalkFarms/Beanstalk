@@ -7,10 +7,11 @@ const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { getBeanstalk } = require('../utils/contracts.js');
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { ethers } = require('hardhat');
-const { mintEth } = require('../utils/mint.js');
+const { mintEth, mintBeans } = require('../utils/mint.js');
 const { ConvertEncoder } = require('./utils/encoder.js');
 const { setReserves } = require('../utils/well.js');
 const { toBN } = require('../utils/helpers.js');
+const { impersonateBean } = require('../scripts/impersonate.js');
 let user,user2,owner;
 let publius;
 
@@ -144,6 +145,38 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
     it("successfully adds underlying", async function () {
       expect(await this.beanstalk.getTotalUnderlying(UNRIPE_LP)).to.be.equal(beanEthUnderlying)
       expect(await this.beanstalk.getUnderlying(UNRIPE_LP, await this.unripeLp.totalSupply())).to.be.equal(beanEthUnderlying)
+    })
+
+    describe('Interactions with Unripe succeed', async function () {
+      it('chop succeeds', async function () {
+        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836', to6('1'), 1);
+        await this.beanstalk.connect(publius).chop(UNRIPE_LP, to6('1'), 1, 0);
+      })
+
+      it('deposit succeeds', async function () {
+        await this.beanstalk.connect(publius).withdrawDeposit(UNRIPE_LP, '-56836', to6('1'), 1);
+        await this.beanstalk.connect(publius).deposit(UNRIPE_LP, to6('1'),  1);
+      })
+
+      it('enrootDeposit succeeds', async function () {
+        await this.beanstalk.connect(publius).enrootDeposit(UNRIPE_LP, '-56836', to6('1'));
+      })
+
+      it('enrootDeposits succeeds', async function () {
+        await this.beanstalk.connect(publius).enrootDeposits(UNRIPE_LP, ['-56836'], [to6('1')]);
+      })
+
+      it('convert Unripe Bean to LP succeeds', async function () {
+        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeBeansToLP(to6('200'), '0'), ['-16272'], [to6('200')]);
+      })
+
+      it('convert Unripe LP to Bean succeeds', async function () {
+        await impersonateBean()
+        await this.bean.mint(user.address, to6('100000'))
+        await this.bean.connect(user).approve(BEAN_ETH_WELL, to6('100000'))
+        await this.beanEth.connect(user).addLiquidity([to6('100000'), '0'], '0', user.address, ethers.constants.MaxUint256);
+        await this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836'], [to6('200')])
+      })
     })
   })
 })
