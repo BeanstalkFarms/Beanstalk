@@ -26,7 +26,7 @@ const BeanstalkBalances: FC<{
     () => Object.keys(breakdown.tokens),
     [breakdown.tokens]
   );
-  const beanPrice = breakdown.tokens[Bean.address].value.div(breakdown.tokens[Bean.address].amount);
+  const beanPrice = breakdown.tokens[Bean.address]?.value.div(breakdown.tokens[Bean.address]?.amount);
 
   // Drilldown against a State of Token (DEPOSITED, WITHDRAWN, etc.)
   const [hoverAddress, setHoverAddress] = useState<
@@ -64,6 +64,7 @@ const BeanstalkBalances: FC<{
   const assetLabel = hoverToken?.name || 'Token';
 
   function amountTooltip(amount: BigNumber, value: BigNumber) {
+    if (!beanPrice || !amount || !value) return undefined
     return (
       <Stack gap={0.5}>
         <StatHorizontal label="Token Amount">
