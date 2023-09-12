@@ -14,6 +14,7 @@ import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
+
 /**
  * @title Well Library
  * Contains helper functions for common Well related functionality.
@@ -96,7 +97,7 @@ library LibWell {
     }
 
     /**
-     * @notice gets the liquidity of a well in USD. 
+     * @notice gets the liquidity of a well in USD, with 6 decimal precision
      * assumes a CP2 well function. 
      * 
      * @dev the function gets the MEV-resistant instanteous reserves,
@@ -108,10 +109,12 @@ library LibWell {
         uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, '');
         // get the non-bean address and index
         (address token, uint256 j) = getTokenAndIndexFromWell(well);
-        // calculate liquidity in USD (6 decimal precision, same as Bean)
-        usdLiquidity = LibUsdOracle.getUsdPrice(token)
+        // calculate liquidity in USD (same decimal precision as the ema reserves)
+        // token price: 1e6
+        // ema reserves: 1e18
+        usdLiquidity = LibUsdOracle.getTokenPrice(token)
             .mul(emaReserves[j])
             .mul(2)
-            .div(PRECISION);
+            .div(1e6);
     }
 }

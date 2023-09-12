@@ -9,6 +9,7 @@ import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
+
 /**
  * @title Eth Usd Oracle Library
  * @notice Contains functionalty to fetch a manipulation resistant ETH/USD price.

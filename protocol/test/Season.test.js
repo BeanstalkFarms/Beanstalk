@@ -97,7 +97,7 @@ describe('Season', function () {
 
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('14000000', '15000000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('14800000', '14900000')
         })
     })
 
@@ -113,7 +113,7 @@ describe('Season', function () {
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)  
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('14000000', '15000000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('14600000', '14700000')
         })
     })
 })

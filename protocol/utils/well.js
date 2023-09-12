@@ -247,6 +247,32 @@ async function deployMockWell() {
     return [well, wellFunction, pump]
 }
 
+async function deployMockWellWithMockPump() {
+
+    let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
+    await wellFunction.deployed()
+
+    let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
+    await well.deployed()
+    await network.provider.send("hardhat_setCode", [
+        BEAN_ETH_WELL,
+        await ethers.provider.getCode(well.address),
+      ]);
+    well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
+    await well.init()
+
+    pump = await deployMockPump()
+
+    await well.setPumps([[pump.address, '0x']])
+    await well.setWellFunction([wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+
+    await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setReserves([to6('1000000'), to18('1000')])
+
+    return [well, wellFunction, pump]
+}
+
 async function getWellDeployer() {
     return (await ethers.getSigners())[5]
 }
@@ -261,3 +287,4 @@ exports.deployMockPump = deployMockPump
 exports.deployWellContract = deployWellContract
 exports.deployWellContractAtNonce = deployWellContractAtNonce
 exports.encodeWellImmutableData = encodeWellImmutableData
+exports.deployMockWellWithMockPump = deployMockWellWithMockPump

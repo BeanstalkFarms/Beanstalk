@@ -45,8 +45,10 @@ library LibBeanMetaCurve {
     }
 
     /**
-     * @dev calculates the total USD liquidity in the BEAN:3CRV
+     * @notice calculates the total USD liquidity in the BEAN:3CRV
      * Metapool. NOTE: assumes that `balances[0]` is BEAN.
+     * 
+     * @dev 18 decimal precision.
      * TODO: discuss with brendan
      */
     function totalLiquidityUsd() internal view returns (uint256) {
@@ -56,11 +58,13 @@ library LibBeanMetaCurve {
 
         uint256 a = C.curveMetapool().A_precise();
         uint256 D = LibCurve.getD(xp, a);
+        // TODO: confirm decimal precision is 12 
         uint256 price = LibCurve.getPrice(xp, a, D, RATE_MULTIPLIER);
-        uint256 beanValue = balances[0].mul(price).div(RATE_MULTIPLIER);
-        uint256 curveValue = xp[1];
+
+        // price has 12 decimal precision and thus does not need to be scaled down.
+        uint256 beanValue = balances[0].mul(price);
         
-        return beanValue.add(curveValue);
+        return beanValue.add(xp[1]);
     }
 
     function getDeltaB() internal view returns (int256 deltaB) {

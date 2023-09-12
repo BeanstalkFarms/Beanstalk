@@ -30,7 +30,7 @@ const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipSeedGauge, mockBeanstalkAdmin } = require("./scripts/bips.js");
+const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -197,10 +197,6 @@ task("silov3", async function () {
   await bipNewSilo();
 });
 
-task("seedGauge", async function () {
-  await bipSeedGauge();
-});
-
 task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
@@ -253,12 +249,7 @@ module.exports = {
       chainId: 31337,
       url: "https://rpc.vnet.tenderly.co/devnet/silo-v3/3ed19e82-a81c-45e5-9b16-5e385aa74587",
       timeout: 100000
-    },
-    goerli: {
-      chainId: 5,
-      url: process.env.GOERLI_RPC || "",
-      timeout: 100000
-    },
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_KEY
@@ -292,7 +283,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000

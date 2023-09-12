@@ -475,7 +475,7 @@ contract Storage {
  * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
  * @param vestingPeriodRoots the number of roots to add to the global roots, in the case the user plants in the morning. // placed here to save a storage slot.s
- * @param recapitalized The nubmer of USDC that has been recapitalized in the Barn Raise.
+ * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.

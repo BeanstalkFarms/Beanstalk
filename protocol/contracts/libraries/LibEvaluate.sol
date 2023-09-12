@@ -15,7 +15,6 @@ import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/Well/LibWell.sol";
 import "contracts/libraries/LibUnripe.sol";
 
-import "hardhat/console.sol";
 /**
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of beanstalk.
@@ -194,14 +193,10 @@ library LibEvaluate {
         Decimal.D256 memory lpToSupplyRatio
     ) {
         // prevent infinite L2SR 
-        if(beanSupply == 0){
-            return Decimal.zero();
-        } 
+        if(beanSupply == 0) return Decimal.zero();
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
-        console.log("pools:", pools[0]);
-        console.log("pools:", pools[1]);
         uint256 usdLiquidity;
         for(uint256 i = 0; i < pools.length; i++){
             // get LP amount in USD
@@ -212,13 +207,17 @@ library LibEvaluate {
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             }
         }
-        console.log("usdLiquidity:", usdLiquidity);
+
+        // if there is no liquidity, 
+        // return 0 to save gas.
+        if(usdLiquidity == 0) return Decimal.zero();
+
         // scale down bean supply by the locked beans, if there is fertilizer to be paid off.
         if(s.season.fertilizing == true){
             beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
         }
-
-        lpToSupplyRatio = Decimal.ratio(usdLiquidity, beanSupply);
+        // usd liquidity is scaled down from 1e18 to match bean.
+        lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(1e12), beanSupply);
     }
 
     /**

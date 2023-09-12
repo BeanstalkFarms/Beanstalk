@@ -113,31 +113,36 @@ library LibUnripe {
     /** 
      * @notice calculates the total underlying token with penalty deduction.
      */
-    function _getTotalPenalizedUnderlying(address unripeToken, uint256 supply)
+    function _getTotalPenalizedUnderlying(address unripeToken)
         internal
         view
         returns (uint256 redeem)
     {
         require(isUnripe(unripeToken), "not vesting");
+        uint256 supply = IERC20(unripeToken).totalSupply();
         redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
     }
 
     /**
      * @notice gets the amount of beans that are locked in the unripe token.
-     * @dev locked beans are the beans that are forfeitted if the unripe token is chopped.
+     * @dev locked beans are the beans that are forfeited if the unripe token is chopped.
      */
     function getLockedBeans() internal view returns (uint256 lockedAmount){
+        lockedAmount = getTotalUnderlyingForfeited(C.UNRIPE_BEAN)
+            .add(getLockedBeansFromLP());
+    }
+
+    function getLockedBeansFromLP() internal view returns (uint256 lockedBeanAmount){
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 beanIndex = LibWell.getBeanIndexFromWell(C.BEAN_ETH_WELL);
-        lockedAmount = LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
-        lockedAmount = lockedAmount.add(LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_LP)
-            .mul(
-                IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(
-                    s.u[C.UNRIPE_LP].underlyingToken, 
+        uint256 lockedLpAmount = getTotalUnderlyingForfeited(C.UNRIPE_LP);
+        address underlying = s.u[C.UNRIPE_LP].underlyingToken;
+        uint256 beanInLP = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(
+                    underlying, 
                     C.BYTES_ZERO
-                )[beanIndex]
-            )
-        .div(IERC20(s.u[C.UNRIPE_LP].underlyingToken).totalSupply()));
+                )[LibWell.getBeanIndexFromWell(underlying)];
+        lockedBeanAmount = lockedLpAmount
+            .mul(beanInLP)
+            .div(IERC20(underlying).totalSupply());
     }
     
     /** 
@@ -149,9 +154,10 @@ library LibUnripe {
         view
         returns (uint256 redeem)
     {
-        require(isUnripe(unripeToken), "not vesting1");
-        uint256 supply = IERC20(unripeToken).totalSupply();
-        redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        require(isUnripe(unripeToken), "not vesting");
+        redeem = s.u[unripeToken].balanceOfUnderlying
+            .sub(_getTotalPenalizedUnderlying(unripeToken));
     }
 
 
