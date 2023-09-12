@@ -5,17 +5,17 @@ import { Clipboard } from "src/lib/depot";
 
 export class TransferToken extends StepClass<BasicPreparedResult> {
   public name: string = "transferToken";
-  public useClipboard?: boolean;
+  public clipboard?: { tag: string, copySlot: number, pasteSlot: number };
 
   constructor(
     public readonly _tokenIn: string,
     public readonly _recipient: string,
     public readonly _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
     public readonly _toMode: FarmToMode = FarmToMode.INTERNAL,
-    useClipboard?: boolean
+    clipboard?: { tag: string, copySlot: number, pasteSlot: number }
   ) {
     super();
-    this.useClipboard = useClipboard;
+    this.clipboard = clipboard;
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
@@ -29,7 +29,7 @@ export class TransferToken extends StepClass<BasicPreparedResult> {
           amountInStep: _amountInStep,
           fromMode: this._fromMode,
           toMode: this._toMode,
-          useClipboard: this.useClipboard
+          clipboard: this.clipboard
         });
         return {
           target: TransferToken.sdk.contracts.beanstalk.address,
@@ -40,7 +40,7 @@ export class TransferToken extends StepClass<BasicPreparedResult> {
             this._fromMode, //
             this._toMode //
           ]),
-          clipboard: this.useClipboard ? Clipboard.encodeSlot(context.step.findTag("amountToDeposit"), 0, 2) : undefined
+          clipboard: this.clipboard ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot) : undefined
         };
       },
       decode: (data: string) => TransferToken.sdk.contracts.beanstalk.interface.decodeFunctionData("transferToken", data),

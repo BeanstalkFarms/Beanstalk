@@ -289,10 +289,20 @@ export class LibraryPresets {
       const addLiquidity = new sdk.farm.actions.WellSync(well, tokenIn, recipient);
 
       // This approves the transferToBeanstalk operation.
-      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, true);
+      const approveClipboard = {
+        tag: "amountToDeposit", 
+        copySlot: 0, 
+        pasteSlot: 1
+      }
+      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, approveClipboard);
 
       // Transfers the output token back to Beanstalk, from PIPELINE.
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, true);
+      const transferClipboard = {
+        tag: "amountToDeposit", 
+        copySlot: 0, 
+        pasteSlot: 2
+      }
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
 
 
       result.push(transfer);
