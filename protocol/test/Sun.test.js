@@ -2,12 +2,14 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WETH } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
-const { advanceTime } = require('../utils/helpers.js');
-const { deployMockWell } = require('../utils/well.js');
+const { deployMockWell, setReserves } = require('../utils/well.js');
+const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
+const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
+const { advanceTime } = require('../utils/helpers.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -31,6 +33,7 @@ describe('Sun', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('MockToken', USDC);
+    this.weth = await ethers.getContractAt('MockToken', WETH);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
   
     // These are needed for sunrise incentive test
@@ -50,10 +53,12 @@ describe('Sun', function () {
 
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
-    await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'));
-
-    // add unripe
+    await this.weth.mint(owner.address, to18('10000'))
+    await this.usdc.connect(owner).approve(this.diamond.address, to6('10000'))
+    await this.weth.connect(owner).approve(this.diamond.address, to18('10000'))
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
+    // add unripe
+
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeLP.mint(userAddress, to6('1000'))
     await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))
@@ -61,6 +66,11 @@ describe('Sun', function () {
     await this.unripeBean.connect(user).approve(this.diamond.address, to6('100000000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+
+    await setEthUsdPrice('999.998018');
+    await setEthUsdcPrice('1000');
+
+    this.well = await deployBasin(true, undefined, false, true)
 
     [this.well, this.wellFunction, this.pump] = await deployMockWell()
     await this.well.setReserves([to6('1000000'), to18('1000')])
@@ -155,7 +165,7 @@ describe('Sun', function () {
 
   it("all harvestable and all fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('50'));
-    await this.fertilizer.connect(owner).addFertilizerOwner('6274', '20', '0');
+    await this.fertilizer.connect(owner).addFertilizerOwner('6274', to18('0.02'), '0');
     this.result = await this.season.sunSunrise(to6('200'), 8);
     
     expect(await this.field.totalSoil()).to.be.equal('49504950');
@@ -177,7 +187,7 @@ describe('Sun', function () {
 
   it("all harvestable, some fertilizable", async function () {
     await this.field.incrementTotalPodsE('500');
-    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0');
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', to18('0.001'), '0');
     this.result = await this.season.sunSunrise('2000', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '495');
     expect(await this.field.totalSoil()).to.be.equal('495');
@@ -201,7 +211,7 @@ describe('Sun', function () {
     // temperature is 1% 
     await this.field.incrementTotalPodsE('1000');
     // add 1 fertilizer owner, 1 fert (which is equal to 5 beans)
-    await this.fertilizer.connect(owner).addFertilizerOwner('0', '1', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', to18('0.001'), '0')
     //sunrise with 1500 beans 500 given to field, silo, and barn
     this.result = await this.season.sunSunrise('1500', 8);
     // emit a event that 495 soil was issued at season 3 
@@ -227,9 +237,9 @@ describe('Sun', function () {
 
   it("1 all and 1 some fertilizable", async function () {
     await this.field.incrementTotalPodsE(to6('250'));
-    await this.fertilizer.connect(owner).addFertilizerOwner('0', '40', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('0', to18('0.04'), '0')
     this.result = await this.season.sunSunrise(to6('120'), 8);
-    await this.fertilizer.connect(owner).addFertilizerOwner('6374', '40', '0')
+    await this.fertilizer.connect(owner).addFertilizerOwner('6374', to18('0.04'), '0')
     this.result = await this.season.sunSunrise(to6('480'), 8);
 
     expect(await this.fertilizer.isFertilizing()).to.be.equal(true);
@@ -272,8 +282,9 @@ describe('Sun', function () {
 
       snapshotId = await takeSnapshot();
 
-      await this.well.setReserves(mockVal[0]);
-      await this.well.setReserves(mockVal[0]);
+      await setReserves(owner, this.well, mockVal[0]);
+      await setReserves(owner, this.well, mockVal[0]);
+
       // Time skip an hour after setting new balance (twap will be very close to whats in mockVal)
       await timeSkip(START_TIME + 60*60);
 

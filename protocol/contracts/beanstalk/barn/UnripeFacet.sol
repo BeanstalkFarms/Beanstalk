@@ -61,6 +61,8 @@ contract UnripeFacet is ReentrancyGuard {
 
         underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
 
+        require(underlyingAmount > 0, "Chop: no underlying");
+
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
         address underlyingToken = s.u[unripeToken].underlyingToken;
@@ -222,6 +224,25 @@ contract UnripeFacet is ReentrancyGuard {
         returns (address underlyingToken)
     {
         return s.u[unripeToken].underlyingToken;
+    }
+
+    /////////////// UNDERLYING TOKEN MIGRATION //////////////////
+
+    /**
+     * @notice Adds underlying tokens to an Unripe Token.
+     * @param unripeToken The Unripe Token to add underlying tokens to.
+     * @param amount The amount of underlying tokens to add.
+     * @dev Used to migrate the underlying token of an Unripe Token to a new token.
+     * Only callable by the contract owner.
+     */
+    function addMigratedUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
+        LibDiamond.enforceIsContractOwner();
+        IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        LibUnripe.incrementUnderlying(unripeToken, amount);
     }
 
     function getLockedBeans() public view returns (uint256) {

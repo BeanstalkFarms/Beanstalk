@@ -7,7 +7,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployWell, setReserves, whitelistWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const { getBeanstalk } = require('../utils/contracts.js');
-const { impersonateBeanEthWell } = require('../scripts/impersonate.js')
+const { impersonateBeanEthWell } = require('../utils/well.js')
 const fs = require('fs');
 
 let user, user2, owner;

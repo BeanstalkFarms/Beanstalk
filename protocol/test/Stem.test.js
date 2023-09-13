@@ -9,6 +9,12 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { ConvertEncoder } = require('./utils/encoder.js');
 const { BigNumber } = require('ethers');
+const { deployBasin } = require('../scripts/basin.js');
+const { setReserves } = require('../utils/well.js');
+const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
+const { impersonateEthUsdChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
+const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
+const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
 require('dotenv').config();
 
 let user,user2,owner;
@@ -36,10 +42,9 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
         console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
         console.log(error);
         return
-      }4
+      }
   
       const signer = await impersonateBeanstalkOwner()
-      await mintEth(signer.address);
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
@@ -66,6 +71,21 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
       this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
       this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
+      this.well = await deployBasin(true, undefined, false, true)
+
+      await impersonateEthUsdChainlinkAggregator()
+      await impersonateEthUsdcUniswap()
+
+      await setEthUsdPrice('999.998018')
+      await setEthUsdcPrice('1000')
+
+      await impersonateBean()
+      await impersonateWeth()
+
+      await setReserves(owner, this.well, [to6('100001'), to18('100')])
+
+      await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
+      await finishBeanEthMigration()
 
     });
   
@@ -345,40 +365,12 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
             }
             amounts.push(newSeason);
           }
-  
-          const depositorSigner = await impersonateSigner(depositorAddress);
-          await this.silo.connect(depositorSigner);
-  
-          const seasonsJump = 1000000; //if you change this number to any other positive number, test should still pass
-  
-          await this.season.fastForward(seasonsJump);
-  
-          const balanceOfStalkBefore = await this.silo.balanceOfStalk(depositorAddress);
-          const balanceOfStalkUpUntilStemsDeployment = await this.migrate.balanceOfGrownStalkUpToStemsDeployment(depositorAddress);
-  
-          //get balance of grown stalk for each token and add them up
-          var totalBalanceOfGrownStalk = ethers.BigNumber.from(0);
-          for (let i = 0; i < tokens.length; i++) {
-            const stemTip = await this.silo.stemTipForToken(tokens[i]);
-            const [amount, bdv] = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][0]);
-            const amountOfGrownStalkPerToken = stemTip.mul(bdv);
-            totalBalanceOfGrownStalk = totalBalanceOfGrownStalk.add(amountOfGrownStalkPerToken);
-          }
-  
-          await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
-  
-          //verify balance of stalk after is equal to balance of stalk before plus the stalk earned up until stems deployment
-          const balanceOfStalkAfter = await this.silo.balanceOfStalk(depositorAddress);
-  
-          const calculatedTotalAfter = balanceOfStalkBefore.add(balanceOfStalkUpUntilStemsDeployment).add(totalBalanceOfGrownStalk);
-  
-          //verify that the stalk amount for this user is equal to the grown stalk they should have earned up until stems deployment,
-          //plus the grown stalk they should have earned after stems deployment
-          expect(balanceOfStalkAfter).to.be.equal(calculatedTotalAfter);
-  
-          //now mow and it shouldn't revert
-          await this.silo.mow(depositorAddress, this.beanMetapool.address);
-        });
+          amounts.push(newSeason);
+        }
+
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
+        await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
+        await this.silo.mow(depositorAddress, this.beanMetapool.address)
       });
     
       describe('reverts if you try to mow before migrating', function () {
@@ -522,5 +514,80 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
       });
     });
   
-    
-});
+    describe('Silo interaction tests after deploying grown stalk per bdv', function () {
+      it('attempt to withdraw before migrating', async function () {
+        const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+        const depositorSigner = await impersonateSigner(depositorAddress);
+        await this.silo.connect(depositorSigner);
+        
+        const token = '0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449';
+  
+        const seasons = [
+            1964, 2281
+        ];
+        
+        for (let i = 0; i < seasons.length; i++) {
+            const season = seasons[i];
+            seasons[i] = await this.silo.seasonToStem(token, season);
+        }
+  
+        //single withdraw
+        await expect(this.silo.connect(depositorSigner).withdrawDeposit(token, seasons[0], to6('1'), EXTERNAL)).to.be.revertedWith('Silo: Migration needed')
+        
+        //multi withdraw
+        await expect(this.silo.connect(depositorSigner).withdrawDeposits(token, seasons, [to6('1'), to6('1')], EXTERNAL)).to.be.revertedWith('Silo: Migration needed')
+      });
+  
+      //attempt to convert before migrating
+      it('attempt to convert LP before migrating', async function () {
+        const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
+        const token = '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d';
+        const stem =  await this.silo.seasonToStem(token, 6061);
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
+        await this.silo.connect(depositorSigner);
+        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertCurveLPToBeans(to6('7863'), to6('0'), this.beanMetapool.address), [stem], [to6('7863')])).to.be.revertedWith('Silo: Migration needed')
+      });
+
+      // Testing that a single convert type fails before migrating should be sufficient given
+      // that the the migration check happens in the shared logic in `convert(...)`.
+      // Tests for other convert types are commented out until they are fixed.
+
+      it('attempt to convert bean before migrating', async function () {
+        const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+        const token = '0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab';
+        const stem =  await this.silo.seasonToStem(token, 7563);
+
+        const threecrvHolder = '0xe74b28c2eAe8679e3cCc3a94d5d0dE83CCB84705'
+        const threecrvSigner = await impersonateSigner(threecrvHolder);
+        await this.threeCurve.connect(threecrvSigner).approve(this.beanMetapool.address, to18('100000000000'));
+        await this.beanMetapool.connect(threecrvSigner).add_liquidity([to6('0'), to18('10000000')], to18('150'));
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
+        await this.silo.connect(depositorSigner);
+        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertBeansToCurveLP(to6('345000'), to6('340000'), this.beanMetapool.address), [stem], [to6('345000')])).to.be.revertedWith('Silo: Migration needed')
+      });
+
+      it('attempt to convert unripe LP before migrating', async function () {
+        const depositorAddress = '0x5e68bb3de6133baee55eeb6552704df2ec09a824';
+        const token = '0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d';
+        const stem =  await this.silo.seasonToStem(token, 6061);
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
+        await this.silo.connect(depositorSigner);
+
+        await expect(
+          this.convert.connect(depositorSigner).convert(
+            ConvertEncoder.convertUnripeLPToBeans(to6('7863'), '0'), [stem], [to6('7863')]))
+            .to.be.revertedWith('Silo: Migration needed')
+      });
+
+      it('attempt to convert unripe bean before migrating', async function () {
+        const reserves = await this.well.getReserves();
+        await setReserves(owner, this.well, [reserves[0], reserves[1].add(to18('50'))])
+
+        const urBean = '0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449';
+        const stem =  await this.silo.seasonToStem(urBean, 6074);
+        const depositorAddress = '0x10bf1dcb5ab7860bab1c3320163c6dddf8dcc0e4';
+        const depositorSigner = await impersonateSigner(depositorAddress, true);
+        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertUnripeBeansToLP(to6('345000'), to6('0')), [stem], [to6('345000')])).to.be.revertedWith('Silo: Migration needed')
+      });
+    });
+  });

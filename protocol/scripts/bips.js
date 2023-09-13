@@ -144,6 +144,34 @@ async function bip34(mock = true, account = undefined) {
     verify: false
   });
 }
+async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefined, verbose = true) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: [
+      "UnripeFacet",
+      "FertilizerFacet",
+      "BDVFacet",
+      "ConvertFacet",
+      "ConvertGettersFacet"
+    ],
+    initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
+    selectorsToRemove: [
+      '0x0bfca7e3',
+      '0x8cd31ca0'
+    ],
+    bip: false,
+    object: !mock,
+    verbose: verbose,
+    account: account,
+    verify: false
+  });
+
+}
 
 async function bipSeedGauge(mock = true, account = undefined) {
     if (account == undefined) {
@@ -173,3 +201,4 @@ exports.bipNewSilo = bipNewSilo
 exports.bipBasinIntegration = bipBasinIntegration
 exports.bipSeedGauge = bipSeedGauge
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin
+exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth
