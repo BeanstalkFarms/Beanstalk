@@ -14,6 +14,16 @@ export class Deposit extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
+    // Checking if the user isn't directly depositing BEANETH
+    const indirectBeanEth = this.token.symbol === "BEANETH" && context.step.index > 0;
+    const beanEthClipboard = {
+      tag: "depositAmount", 
+      copySlot: 6, 
+      pasteSlot: 1
+    };
+    
+    if (indirectBeanEth && !this.clipboard) this.clipboard = beanEthClipboard;
+
     return {
       name: this.name,
       amountOut: _amountInStep,

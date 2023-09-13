@@ -94,14 +94,8 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
   for (const token of sdk.tokens.siloWhitelist) {
     const from = token.symbol;
     const to = `${from}:SILO`;
-    const useClipboard  = token.equals(sdk.tokens.BEAN_ETH_WELL_LP);
-    const beanEthClipboard = {
-      tag: "depositAmount", 
-      copySlot: 6, 
-      pasteSlot: 1
-    };
     graph.setEdge(from, to, {
-      build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) => new sdk.farm.actions.Deposit(token, fromMode, useClipboard ? beanEthClipboard : undefined),
+      build: (_: string, fromMode: FarmFromMode, toMode: FarmToMode) => new sdk.farm.actions.Deposit(token, fromMode),
       from,
       to,
       label: "deposit"
