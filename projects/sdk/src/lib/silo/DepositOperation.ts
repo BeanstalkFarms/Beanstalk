@@ -37,7 +37,7 @@ export class DepositOperation {
   buildWorkflow() {
     const route = this.router.getRoute(this.inputToken.symbol, `${this.targetToken.symbol}:SILO`);
 
-    if (this.targetToken.symbol === "BEANETH") {
+    if (this.inputToken.symbol !== "BEANETH" && this.targetToken.symbol === "BEANETH") {
       this.workflow = DepositOperation.sdk.farm.createAdvancedFarm(`Deposit`);
     } else {
       this.workflow = DepositOperation.sdk.farm.create(`Deposit`);
