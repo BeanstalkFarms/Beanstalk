@@ -14,10 +14,17 @@ query SeasonalAPY(
   ) {
     id
     season
+    zeroSeedBeanAPY
     twoSeedBeanAPY
     twoSeedStalkAPY
     fourSeedBeanAPY
     fourSeedStalkAPY
+    threeSeedBeanAPY
+    threeSeedStalkAPY
+    threePointTwoFiveSeedBeanAPY
+    threePointTwoFiveSeedStalkAPY
+    fourPointFiveSeedBeanAPY
+    fourPointFiveSeedStalkAPY
     beansPerSeasonEMA
     createdAt
   }

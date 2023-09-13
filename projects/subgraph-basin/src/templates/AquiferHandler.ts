@@ -1,3 +1,4 @@
+import { Address } from "@graphprotocol/graph-ts";
 import { BoreWell } from "../../generated/Aquifer/Aquifer";
 import { ERC20 } from "../../generated/Aquifer/ERC20";
 import { Well } from "../../generated/templates";
@@ -7,6 +8,10 @@ import { loadOrCreateToken } from "../utils/Token";
 import { createWell, loadOrCreateWellFunction } from "../utils/Well";
 
 export function handleBoreWell(event: BoreWell): void {
+  if (event.params.well == Address.fromString("0x875b1da8dcba757398db2bc35043a72b4b62195d")) {
+    // Ignore well with incorrect price function
+    return;
+  }
   let aquifer = loadOrCreateAquifer(event.address);
 
   Well.create(event.params.well);

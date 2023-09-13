@@ -342,6 +342,7 @@ const DepositPropProvider: FC<{
     return [
       tokens.BEAN,
       tokens.ETH,
+      tokens.WETH,
       whitelistedToken,
       tokens.CRV3,
       tokens.DAI,
@@ -458,7 +459,7 @@ const DepositPropProvider: FC<{
           throw new Error('Only one token supported at this time');
         }
 
-        const { BEAN } = sdk.tokens;
+        const { BEAN, BEAN_ETH_WELL_LP } = sdk.tokens;
 
         const formData = values.tokens[0];
         const claimData = values.claimableBeans;
@@ -512,7 +513,8 @@ const DepositPropProvider: FC<{
         const { execute } = await txnBundler.bundle(
           depositTxn,
           amountIn,
-          values.settings.slippage
+          values.settings.slippage,
+          target.equals(BEAN_ETH_WELL_LP) ? 1.2 : undefined
         );
 
         const txn = await execute();

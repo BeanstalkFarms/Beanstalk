@@ -25,7 +25,8 @@ export const LICENSE_LINK =
 export const CODE_OF_CONDUCT_LINK =
   'https://github.com/BeanstalkFarms/Beanstalk/blob/master/CODE_OF_CONDUCT.md';
 export const CURVE_LINK_OLD = 'https://curve.fi/factory/81/';
-export const CURVE_LINK = 'https://curve.fi/factory/152/';
+export const CURVE_LINK = 'https://curve.fi/#/ethereum/pools/factory-v2-152/';
+export const BASIN_WELL_LINK = 'https://basin.exchange/#/wells/';
 export const LUSD_LINK = 'https://curve.fi/factory/103/';
 export const DUNE_LINK = 'https://dune.xyz/tbiq/Beanstalk';
 export const NETLIFY_LINK = 'https://www.netlify.com/';

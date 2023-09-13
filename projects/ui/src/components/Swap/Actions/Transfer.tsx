@@ -21,7 +21,7 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, CRV3, DAI, USDC, USDT, WETH } from '~/constants/tokens';
+import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP, CRV3, DAI, USDC, USDT, WETH } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -389,7 +389,7 @@ const TransferForm: FC<
 
 // ---------------------------------------------------
 
-const SUPPORTED_TOKENS = [BEAN, WETH, CRV3, DAI, USDC, USDT];
+const SUPPORTED_TOKENS = [BEAN, WETH, BEAN_ETH_WELL_LP, BEAN_CRV3_LP, CRV3, DAI, USDC, USDT];
 
 const Transfer: FC<{}> = () => {
   /// Ledger

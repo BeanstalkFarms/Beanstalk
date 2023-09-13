@@ -11,15 +11,15 @@ function YieldDetails() {
   return (
     <TextContainer>
       <div>
-        The BEAN:WETH Well has <strong>zero</strong> trading fees!
-      </div>
-      <div>
-        If <span><StyledLink href="https://app.bean.money/#/governance">BIP-37</StyledLink></span> passes, Beanstalk will 
-        issue Stalk and Seeds to users who Deposit LP tokens in the Silo.
-      </div>
-      <div>
-        Stalkholders receive Bean seigniorage. Check out 
-        the <span><StyledLink href="https://docs.bean.money/almanac/farm/silo">Beanstalk docs.</StyledLink></span>
+        Liquidity providers can earn yield by depositing BEANETH LP in the Beanstalk Silo. You can add liquidity and deposit the LP token in
+        the Silo in a single transaction on the{" "}
+        <StyledLink
+          href="https://app.bean.money/#/silo/0xbea0e11282e2bb5893bece110cf199501e872bad"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Beanstalk UI
+        </StyledLink>
       </div>
     </TextContainer>
   );

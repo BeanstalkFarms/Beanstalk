@@ -23,6 +23,7 @@ export class Tokens {
   public readonly USDT: ERC20Token;
   public readonly LUSD: ERC20Token;
   public readonly BEAN_ETH_UNIV2_LP: ERC20Token;
+  public readonly BEAN_ETH_WELL_LP: ERC20Token;
   public readonly BEAN_CRV3_LP: ERC20Token;
   public readonly UNRIPE_BEAN: ERC20Token;
   public readonly UNRIPE_BEAN_CRV3: ERC20Token;
@@ -114,7 +115,7 @@ export class Tokens {
     );
     this.BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(2)
+      seeds: this.SEEDS.amount(3)
     };
 
     this.BEAN_CRV3_LP = new ERC20Token(
@@ -123,7 +124,7 @@ export class Tokens {
       18,
       "BEAN3CRV",
       {
-        name: "Curve.fi Factory USD Metapool: Bean", // see .name()
+        name: "BEAN:3CRV Curve LP Token", // see .name()
         displayName: "BEAN:3CRV LP",
         isLP: true,
         color: "#DFB385"
@@ -132,7 +133,25 @@ export class Tokens {
     );
     this.BEAN_CRV3_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: this.SEEDS.amount(4)
+      seeds: this.SEEDS.amount(3.25)
+    };
+
+    this.BEAN_ETH_WELL_LP = new ERC20Token(
+      chainId,
+      addresses.BEANWETH_WELL.get(chainId),
+      18,
+      "BEANETH",
+      {
+        name: "BEAN:WETH Well LP Token", // see .name()
+        displayName: "BEAN:ETH LP",
+        isLP: true,
+        color: "#DFB385"
+      },
+      providerOrSigner
+    );
+    this.BEAN_ETH_WELL_LP.rewards = {
+      stalk: this.STALK.amount(1),
+      seeds: this.SEEDS.amount(4.5)
     };
 
     this.UNRIPE_BEAN = new ERC20Token(
@@ -173,6 +192,7 @@ export class Tokens {
 
     this.map.set(addresses.BEAN.get(chainId), this.BEAN);
     this.map.set(addresses.BEAN_CRV3.get(chainId), this.BEAN_CRV3_LP);
+    this.map.set(addresses.BEANWETH_WELL.get(chainId), this.BEAN_ETH_WELL_LP);
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
     this.map.set(addresses.UNRIPE_BEAN_CRV3.get(chainId), this.UNRIPE_BEAN_CRV3);
 
@@ -321,7 +341,7 @@ export class Tokens {
 
     ////////// Groups //////////
 
-    const siloWhitelist = [this.BEAN, this.BEAN_CRV3_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3];
+    const siloWhitelist = [this.BEAN, this.BEAN_CRV3_LP, this.BEAN_ETH_WELL_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3];
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 

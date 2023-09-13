@@ -3,6 +3,7 @@ import {
   CurveMetaPool__factory,
   CurvePlainPool__factory,
   UniswapV2Pair__factory,
+  BasinWell__factory
 } from '~/generated/index';
 import { ChainConstant, AddressMap, SupportedChainId } from '~/constants';
 import { MinBN } from '~/util/Tokens';
@@ -241,6 +242,27 @@ export class CurveMetaPool extends Pool {
   public getReserves(): Promise<Reserves> {
     return this.getContract()
       .get_balances()
+      .then(
+        (result) =>
+          [
+            new BigNumber(result[0].toString()),
+            new BigNumber(result[1].toString()),
+          ] as Reserves
+      );
+  }
+}
+
+// ------------------------------------
+// Basin Well
+// ------------------------------------
+export class BasinWell extends Pool {
+  public getContract() {
+    return BasinWell__factory.connect(this.address, client.provider);
+  }
+
+  public getReserves(): Promise<Reserves> {
+    return this.getContract()
+      .getReserves()
       .then(
         (result) =>
           [

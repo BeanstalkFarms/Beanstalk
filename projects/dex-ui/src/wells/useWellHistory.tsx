@@ -9,7 +9,8 @@ export enum EVENT_TYPE {
   SWAP,
   ADD_LIQUIDITY,
   REMOVE_LIQUIDITY,
-  SYNC
+  SYNC,
+  SHIFT
 }
 
 export type BaseEvent = {
@@ -17,6 +18,11 @@ export type BaseEvent = {
   tx: string;
   timestamp?: number;
   block?: number;
+};
+
+export type ShiftEvent = BaseEvent & {
+  toToken: Token;
+  toAmount: TokenValue;
 };
 
 export type SwapEvent = BaseEvent & {
@@ -32,7 +38,7 @@ export type AddEvent = BaseEvent & {
 };
 export type RemoveEvent = AddEvent;
 
-export type WellEvent = SwapEvent | AddEvent | RemoveEvent;
+export type WellEvent = SwapEvent | AddEvent | RemoveEvent | ShiftEvent ;
 
 const useWellHistory = (well: Well) => {
   const sdk = useSdk();

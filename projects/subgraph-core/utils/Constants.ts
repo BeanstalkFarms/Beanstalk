@@ -14,11 +14,21 @@ export const WETH = Address.fromString("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756C
 
 // Protocol Addresses
 export const BEANSTALK = Address.fromString("0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5");
-export const CURVE_PRICE = Address.fromString("0xA57289161FF18D67A68841922264B317170b0b81");
 export const FERTILIZER = Address.fromString("0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6");
-export const AQUIFER = Address.fromString("0xF6a8aD553b265405526030c2102fda2bDcdDC177");
+export const AQUIFER = Address.fromString("0xBA51AAAA95aeEFc1292515b36D86C51dC7877773");
+
+export const CURVE_PRICE = Address.fromString("0xA57289161FF18D67A68841922264B317170b0b81");
+export const BEANSTALK_PRICE = Address.fromString("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A");
 
 // LP Addresses
+export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");
+export const CRV3_POOL_V1 = Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
+export const CRV3_POOL = Address.fromString("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7");
+export const BEAN_WETH_V1 = Address.fromString("0x87898263B6C5BABe34b4ec53F22d98430b91e371");
+export const WETH_USDC_PAIR = Address.fromString("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc");
+export const BEAN_LUSD_V1 = Address.fromString("0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D");
+export const LUSD_3POOL = Address.fromString("0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA");
+export const BEAN_WETH_CP2_WELL = Address.fromString("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
 
 // Other Constants
 export const BEAN_DECIMALS = 6;
@@ -26,3 +36,5 @@ export const BEAN_DECIMALS = 6;
 export const INITIAL_HUMIDITY = BigDecimal.fromString("500");
 export const MIN_HUMIDITY = BigDecimal.fromString("500");
 export const DELTA_HUMIDITY = BigDecimal.fromString("0.5");
+
+export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");

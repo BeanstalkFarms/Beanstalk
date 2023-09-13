@@ -10,8 +10,10 @@ type APY = {
 type APYs = {
   beansPerSeasonEMA: BigNumber;
   bySeeds: {
-    '2': APY;
-    '4': APY;
+    '0': APY;
+    '3': APY;
+    '3.25': APY;
+    '4.5': APY;
   };
 };
 
@@ -29,13 +31,21 @@ export default function useAPY() {
         data: {
           beansPerSeasonEMA: new BigNumber(siloYield.beansPerSeasonEMA),
           bySeeds: {
-            2: {
-              bean: new BigNumber(siloYield.twoSeedBeanAPY),
-              stalk: new BigNumber(siloYield.twoSeedStalkAPY),
+            0: {
+              bean: new BigNumber(siloYield.zeroSeedBeanAPY),
+              stalk: new BigNumber(0),
             },
-            4: {
-              bean: new BigNumber(siloYield.fourSeedBeanAPY),
-              stalk: new BigNumber(siloYield.fourSeedStalkAPY),
+            3: {
+              bean: new BigNumber(siloYield.threeSeedBeanAPY),
+              stalk: new BigNumber(siloYield.threeSeedStalkAPY),
+            },
+            3.25: {
+              bean: new BigNumber(siloYield.threePointTwoFiveSeedBeanAPY),
+              stalk: new BigNumber(siloYield.threePointTwoFiveSeedStalkAPY),
+            },
+            4.5: {
+              bean: new BigNumber(siloYield.fourPointFiveSeedBeanAPY),
+              stalk: new BigNumber(siloYield.fourPointFiveSeedStalkAPY),
             },
           },
         } as APYs,

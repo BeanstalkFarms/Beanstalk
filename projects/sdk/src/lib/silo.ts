@@ -288,7 +288,7 @@ export class Silo {
         const balance = balances.get(token)!;
 
         // Load stem tip, used to calculate the amount of grown stalk
-        const stemTip = stemTips.get(token);
+        const stemTip = stemTips.get(token.address);
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         for (let stem in deposits) {
@@ -328,7 +328,7 @@ export class Silo {
         const balance = balances.get(token)!;
 
         // Load stem tip, used to calculate the amount of grown stalk
-        const stemTip = stemTips.get(token);
+        const stemTip = stemTips.get(token.address);
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         utils.applyDeposit(balance, token, stemTip, {
@@ -445,8 +445,8 @@ export class Silo {
    * TODO: Check if whitelisted?
    */
   async getStemTips(tokens: Token[]) {
-    return Promise.all(tokens.map((token) => this.getStemTip(token).then((tip) => [token, tip] as const))).then(
-      (tips) => new Map<Token, BigNumber>(tips)
+    return Promise.all(tokens.map((token) => this.getStemTip(token).then((tip) => [token.address, tip] as const))).then(
+      (tips) => new Map<String, BigNumber>(tips)
     );
   }
 

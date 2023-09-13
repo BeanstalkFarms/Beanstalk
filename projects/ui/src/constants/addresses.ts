@@ -11,7 +11,7 @@ export const BEANSTALK_ADDRESSES = {
 
 export const BEANSTALK_PRICE_ADDRESSES = {
   [SupportedChainId.MAINNET]:
-    '0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530'.toLowerCase(),
+    '0xb01CE0008CaD90104651d6A84b6B11e182a9B62A'.toLowerCase(),
 };
 
 export const BEANSTALK_FERTILIZER_ADDRESSES = {
@@ -103,7 +103,7 @@ export const LUSD_ADDRESSES = {
 
 export const BEAN_CRV3_ADDRESSES = {
   // --------------------------------------------------
-  // "Curve.fi Factory USD Metapool: Bean (BEAN3CRV-f)"
+  // "BEAN:3CRV Curve LP Token (BEAN3CRV-f)"
   // [Implements: ERC20 & Metapool]
   // --------------------------------------------------
   // coins[0] = 0xBEA0003eA948Db32082Fc6F4EC0729D258a0444c (BEAN)
@@ -117,6 +117,11 @@ export const BEAN_CRV3_ADDRESSES = {
   //    - 3pool Contract            = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7
   [SupportedChainId.MAINNET]:
     '0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49'.toLowerCase(),
+};
+
+export const BEAN_ETH_WELL_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0xBEA0e11282e2bB5893bEcE110cF199501e872bAd'.toLowerCase(),
 };
 
 // ----------------------------------------

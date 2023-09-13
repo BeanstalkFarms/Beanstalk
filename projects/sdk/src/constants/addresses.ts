@@ -10,7 +10,7 @@ export const addresses = {
   // ----------------------------------------
   // Ecosystem Contracts
   // ----------------------------------------
-  BEANSTALK_PRICE: Address.make("0xF2C2b7eabcB353bF6f2128a7f8e1e32Eeb112530"),
+  BEANSTALK_PRICE: Address.make("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
@@ -37,7 +37,7 @@ export const addresses = {
   // Bean Pool LP Tokens
   // ----------------------------------------
   BEAN_CRV3:
-    // "Curve.fi Factory USD Metapool: Bean (BEAN3CRV-f)"
+    // "BEAN:3CRV Curve LP Token (BEAN3CRV-f)"
     // [Implements: ERC20 & Metapool]
     // --------------------------------------------------
     // coins[0] = 0xBEA0003eA948Db32082Fc6F4EC0729D258a0444c (BEAN)
@@ -54,7 +54,7 @@ export const addresses = {
   // ----------------------------------------
   // Wells Contracts
   // ----------------------------------------
-  BEANWETH_WELL: Address.make("0xb468647b04bf657c9ee2de65252037d781eabafd"),
+  BEANWETH_WELL: Address.make("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens

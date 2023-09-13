@@ -34,6 +34,7 @@ export const L1_CHAIN_IDS = [
   SupportedChainId.MAINNET,
   SupportedChainId.LOCALHOST,
   SupportedChainId.TESTNET,
+  SupportedChainId.ANVIL1,
 ] as const;
 
 export const L2_CHAIN_IDS = [] as const;

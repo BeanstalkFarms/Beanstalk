@@ -1,5 +1,5 @@
 import { BeanstalkSDK } from "@beanstalk/sdk";
-import { AddEvent, BaseEvent, EVENT_TYPE, SwapEvent, WellEvent } from "./useWellHistory";
+import { AddEvent, BaseEvent, EVENT_TYPE, ShiftEvent, SwapEvent, WellEvent } from "./useWellHistory";
 import { fetchFromSubgraphRequest } from "./subgraphFetch";
 import { Settings } from "src/settings";
 import { Well } from "@beanstalk/sdk/Wells";
@@ -14,16 +14,25 @@ const HISTORY_DAYS_AGO_BLOCK_TIMESTAMP = Math.floor(new Date(Date.now() - HISTOR
 const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
   Log.module("history").debug("Loading history from blockchain");
   const contract = well.contract;
+  const swapFilter = contract.filters.Swap();
   const addFilter = contract.filters.AddLiquidity();
   const removeFilter = contract.filters.RemoveLiquidity();
-  const swapFilter = contract.filters.Swap();
   const syncFilter = contract.filters.Sync();
+  const shiftFilter = contract.filters.Shift();
 
   if (!well.lpToken) await well.getLPToken();
 
   const combinedFilter = {
     address: contract.address,
-    topics: [[swapFilter?.topics?.[0] as string, addFilter?.topics?.[0] as string, removeFilter?.topics?.[0] as string, syncFilter?.topics?.[0] as string]]
+    topics: [
+      [
+        swapFilter?.topics?.[0] as string,
+        addFilter?.topics?.[0] as string,
+        removeFilter?.topics?.[0] as string,
+        syncFilter?.topics?.[0] as string,
+        shiftFilter?.topics?.[0] as string
+      ]
+    ]
   };
 
   const getEventType = (topics: string[]) => {
@@ -31,6 +40,7 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
     if (isEqual(removeFilter.topics, topics)) return EVENT_TYPE.REMOVE_LIQUIDITY;
     if (isEqual(swapFilter.topics, topics)) return EVENT_TYPE.SWAP;
     if (isEqual(syncFilter.topics, topics)) return EVENT_TYPE.SYNC;
+    if (isEqual(shiftFilter.topics, topics)) return EVENT_TYPE.SHIFT;
 
     throw new Error("Unknown topics found: " + topics);
   };
@@ -57,6 +67,16 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
         ...base,
         fromToken,
         fromAmount: fromToken.fromBlockchain(data.amountIn),
+        toToken,
+        toAmount: toToken.fromBlockchain(data.amountOut)
+      };
+      return event;
+    }
+    if (type === EVENT_TYPE.SHIFT) {
+      const data = contract.interface.decodeEventLog("Shift", e.data, e.topics);
+      const toToken = well.getTokenByAddress(data.toToken)!;
+      const event: ShiftEvent = {
+        ...base,
         toToken,
         toAmount: toToken.fromBlockchain(data.amountOut)
       };

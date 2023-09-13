@@ -5,6 +5,8 @@ export enum ConvertKind {
   CURVE_LP_TO_BEANS   = 1,
   UNRIPE_BEANS_TO_LP  = 2,
   UNRIPE_LP_TO_BEANS  = 3,
+  BEANS_TO_WELL_LP    = 5,
+  WELL_LP_TO_BEANS    = 6,
 }
 
 export class ConvertEncoder {
@@ -30,5 +32,17 @@ export class ConvertEncoder {
     defaultAbiCoder.encode(
       ['uint256', 'uint256', 'uint256'],
       [ConvertKind.UNRIPE_BEANS_TO_LP, amountBeans, minLP]
+    );
+  
+  static beansToWellLP = (amountBeans: string, minLP: string, pool: string) =>
+    defaultAbiCoder.encode(
+      ['uint256', 'uint256', 'uint256', 'address'],
+      [ConvertKind.BEANS_TO_WELL_LP, amountBeans, minLP, pool]
+    );
+
+  static wellLPToBeans = (amountLP: string, minBeans: string, pool: string) =>
+    defaultAbiCoder.encode(
+      ['uint256', 'uint256', 'uint256', 'address'],
+      [ConvertKind.WELL_LP_TO_BEANS, amountLP, minBeans, pool]
     );
 }

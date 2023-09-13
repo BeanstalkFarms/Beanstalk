@@ -7,10 +7,9 @@ import { Token } from '~/classes';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import type { LegacyDepositCrate } from '~/state/farmer/silo';
 import { displayBN, displayFullBN } from '~/util';
-import { BEAN, STALK } from '~/constants/tokens';
+import { STALK } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
-import useChainConstant from '~/hooks/chain/useChainConstant';
 import COLUMNS from '~/components/Common/Table/cells';
 import Fiat from '~/components/Common/Fiat';
 import TableCard, { TableCardProps } from '../../Common/TableCard';
@@ -24,7 +23,6 @@ const Deposits: FC<
     useLegacySeason?: boolean;
   } & Partial<TableCardProps>
 > = ({ token, siloBalance, useLegacySeason, ...props }) => {
-  const Bean = useChainConstant(BEAN);
   const getUSD = useSiloTokenToFiat();
   const account = useWagmiAccount();
 
@@ -65,7 +63,7 @@ const Deposits: FC<
                     {displayFullBN(params.row.bdv, token.displayDecimals)}
                   </StatHorizontal>
                   <StatHorizontal label="Current Value">
-                    <Fiat amount={params.row.amount} token={Bean} />
+                    <Fiat amount={params.row.amount} token={token} />
                   </StatHorizontal>
                 </Stack>
               }
@@ -125,7 +123,7 @@ const Deposits: FC<
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [useLegacySeason, token.displayDecimals, Bean]
+    [useLegacySeason, token]
   );
 
   const amount = siloBalance?.deposited.amount;
