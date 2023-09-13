@@ -366,11 +366,12 @@ describe.skip('Silo V3: Grown Stalk Per Bdv deployment', function () {
             amounts.push(newSeason);
           }
           amounts.push(newSeason);
-        }
+          const depositorSigner = await impersonateSigner(depositorAddress, true);
+          await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
+          await this.silo.mow(depositorAddress, this.beanMetapool.address);
+        });
 
-        const depositorSigner = await impersonateSigner(depositorAddress, true);
-        await this.migrate.connect(depositorSigner).mowAndMigrate(depositorAddress, tokens, seasons, amounts, 0, 0, []);
-        await this.silo.mow(depositorAddress, this.beanMetapool.address)
+        
       });
     
       describe('reverts if you try to mow before migrating', function () {

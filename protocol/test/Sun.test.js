@@ -71,14 +71,6 @@ describe('Sun', function () {
     await setEthUsdcPrice('1000');
 
     this.well = await deployBasin(true, undefined, false, true)
-
-    [this.well, this.wellFunction, this.pump] = await deployMockWell()
-    await this.well.setReserves([to6('1000000'), to18('1000')])
-    await advanceTime(3600)
-    await owner.sendTransaction({to: user.address, value: 0});
-    await setToSecondsAfterHour(0)
-    await owner.sendTransaction({to: user.address, value: 0});
-    await this.well.connect(user).mint(user.address, to18('1000'))
     await this.season.siloSunrise(0)
   })
 
