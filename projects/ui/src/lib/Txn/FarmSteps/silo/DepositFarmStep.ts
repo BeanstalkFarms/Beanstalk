@@ -80,7 +80,7 @@ export class DepositFarmStep extends FarmStep {
     if (isTargetBean) {
       let _from: FarmFromMode = fromMode;
       // If tokenIn !== BEAN, we need to swap tokenIn => BEAN
-      if (!isInputBean) {
+      if (!isInputBean && amountIn.gt(0)) {
         const swap = this._sdk.swap.buildSwap(
           tokenIn,
           this._target,
@@ -137,15 +137,18 @@ export class DepositFarmStep extends FarmStep {
     }
     // If the target is not BEAN, instead of swapping claimed BEAN for CRV3, we opt for 2 deposits
     else {
-      const deposit = this._sdk.silo.buildDeposit(this._target, account);
+      if (amountIn.gt(0)) {
+        const deposit = this._sdk.silo.buildDeposit(this._target, account);
+        deposit.setInputToken(tokenIn, fromMode);
+        this.pushInput({
+          input: [...deposit.workflow.generators] as StepGenerator[],
+        });
+      }
+
       const depositClaimed = this._sdk.silo.buildDeposit(this._target, account);
 
-      deposit.setInputToken(tokenIn, fromMode);
       /// we claim all beans to 'INTERNAL' first
       depositClaimed.setInputToken(BEAN, FarmFromMode.INTERNAL_TOLERANT);
-      this.pushInput({
-        input: [...deposit.workflow.generators] as StepGenerator[],
-      });
 
       // fore-run the deposit of claimed beans w/ the claimed Beans used
       this.pushInput(
