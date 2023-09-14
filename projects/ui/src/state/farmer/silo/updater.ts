@@ -340,9 +340,11 @@ const FarmerSiloUpdater = () => {
       fetch()
         .catch((err) => {
           if ((err as Error).message.includes('limit the query')) {
-            console.log('Error in fermer.silo: RPC query limit exceeded');
+            console.log(
+              'Failed to fetch Silo events: RPC query limit exceeded'
+            );
           } else {
-            console.log('Error during farmer.silo fetch', err.message);
+            console.log('Failed to fetch Silo events: ', err.message);
           }
         })
         .finally(() => {

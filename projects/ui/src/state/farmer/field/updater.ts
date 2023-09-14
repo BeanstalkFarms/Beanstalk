@@ -110,7 +110,9 @@ const FarmerFieldUpdater = () => {
       fetch()
         .catch((err) => {
           if ((err as Error).message.includes('limit the query')) {
-            console.log('Error in field.updater: RPC query limit exceeded');
+            console.log(
+              'Failed to fetch Field events: RPC query limit exceeded'
+            );
           } else {
             console.log(
               'Failed to fetch Field events: ',
