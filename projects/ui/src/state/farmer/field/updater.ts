@@ -5,7 +5,11 @@ import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import useEvents, { GetEventsFn } from '../events2/updater';
-import { resetFarmerField, updateFarmerField } from './actions';
+import {
+  resetFarmerField,
+  updateFarmerField,
+  updateFarmerFieldLoading,
+} from './actions';
 import useSdk from '~/hooks/sdk';
 import { transform } from '~/util/BigNumber';
 import { FarmerField } from '~/state/farmer/field';
@@ -94,12 +98,30 @@ export const useFetchFarmerField = () => {
 
 const FarmerFieldUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerField();
+  const dispatch = useDispatch();
   const account = useAccount();
   const chainId = useChainId();
 
   useEffect(() => {
     clear();
-    if (account && initialized) fetch();
+
+    if (account && initialized) {
+      dispatch(updateFarmerFieldLoading(true));
+      fetch()
+        .catch((err) => {
+          if ((err as Error).message.includes('limit the query')) {
+            console.log('Error in field.updater: RPC query limit exceeded');
+          } else {
+            console.log(
+              'Failed to fetch Field events: ',
+              (err as Error).message
+            );
+          }
+        })
+        .finally(() => {
+          dispatch(updateFarmerFieldLoading(false));
+        });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, chainId, initialized]);
 
