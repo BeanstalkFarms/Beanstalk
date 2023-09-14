@@ -29,6 +29,8 @@ import usdtLogo from '~/img/tokens/usdt-logo.svg';
 import lusdLogo from '~/img/tokens/lusd-logo.svg';
 import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanCrv3Logo from '~/img/tokens/unripe-lp-logo-circled.svg';
+import useSetting from '~/hooks/app/useSetting';
+import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
@@ -36,16 +38,26 @@ const useBeanstalkSdkContext = () => {
   const provider = useProvider();
   const { data: signer } = useSigner();
 
+  const [datasource] = useSetting('datasource');
+  const [subgraphEnv] = useSetting('subgraphEnv');
+
+  const subgraphUrl =
+    SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
+
   const sdk = useMemo(() => {
     console.log(`Instantiating BeanstalkSDK`, {
       provider,
       signer,
+      datasource,
+      subgraphUrl,
     });
 
     const _sdk = new BeanstalkSDK({
       provider: provider as any,
       signer: signer ?? undefined,
+      source: datasource,
       DEBUG: IS_DEVELOPMENT_ENV,
+      ...(subgraphUrl ? { subgraphUrl } : {}),
     });
 
     _sdk.tokens.ETH.setMetadata({ logo: ethIconCircled });
@@ -72,7 +84,7 @@ const useBeanstalkSdkContext = () => {
     _sdk.tokens.LUSD.setMetadata({ logo: lusdLogo });
 
     return _sdk;
-  }, [provider, signer]);
+  }, [datasource, provider, signer, subgraphUrl]);
 
   return sdk;
 };
