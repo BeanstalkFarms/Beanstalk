@@ -21,6 +21,7 @@ import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } 
 import { CalculationsCurve } from "../generated/Bean3CRV-V1/CalculationsCurve";
 import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
 import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
+import { checkBeanCross } from "./utils/Cross";
 
 export function handleTokenExchange(event: TokenExchange): void {
   // Do not index post-exploit data
@@ -180,7 +181,8 @@ function handleLiquidityChange(
 
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
 }
 
 function handleSwap(
@@ -262,5 +264,6 @@ function handleSwap(
   let volumeUSD = toDecimal(volumeBean).times(newPrice);
   updateBeanValues(BEAN_ERC20_V1.toHexString(), timestamp, newPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, newPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  checkBeanCross(BEAN_ERC20_V1.toHexString(), timestamp, blockNumber, oldBeanPrice, newPrice);
 }
