@@ -172,7 +172,7 @@ const ConvertForm: FC<
       bdvIn = getBDV(tokenIn).times(amountIn);
       depositsBDV = transform(conversion.bdv.abs(), 'bnjs');
       deltaBDV = MaxBN(
-        bdvOut.minus(bdvIn),
+        bdvOut.minus(depositsBDV),
         ZERO_BN
       );
       deltaStalk = MaxBN(
@@ -204,8 +204,7 @@ const ConvertForm: FC<
   }
 
   function showOutputBDV() {
-    const output = depositsBDV.gt(bdvOut) ? depositsBDV : bdvOut
-    return output;
+    return MaxBN(depositsBDV, bdvOut);
   }
 
   /// When a new output token is selected, reset maxAmountIn.
