@@ -278,16 +278,15 @@ const ConvertForm: FC<
               title={getBDVTooltip(bdvIn, transform(conversion.bdv.abs(), 'bnjs'))}
               placement='top'
             >
-              <Box display="flex">
+              <Box display="flex" text-align="center" gap={0.25}>
                 <Typography variant="body1">
                   ~{displayFullBN(bdvIn, 2)} BDV
                 </Typography>
                 <HelpOutlineIcon
                   sx={{
                     color: 'text.secondary',
-                    display: 'inline',
-                    ml: 0.25,
-                    mt: 0.25,
+                    display: 'inline-block',
+                    margin: 'auto',
                     fontSize: '14px',
                   }}
                 />
