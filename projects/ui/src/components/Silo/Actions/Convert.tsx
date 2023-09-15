@@ -141,8 +141,9 @@ const ConvertForm: FC<
   let isReady = false;
   let buttonLoading = false;
   let buttonContent = 'Convert';
-  let bdvOut; // the BDV received after re-depositing `amountOut` of `tokenOut`.
-  let bdvIn: BigNumber;
+  let bdvOut: BigNumber; // the BDV received after re-depositing `amountOut` of `tokenOut`.
+  let bdvIn: BigNumber; // BDV of amountIn.
+  let depositsBDV: BigNumber; // BDV of the deposited crates.
   let deltaBDV: BigNumber | undefined; // the change in BDV during the convert. should always be >= 0.
   let deltaStalk; // the change in Stalk during the convert. should always be >= 0.
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
@@ -169,6 +170,7 @@ const ConvertForm: FC<
       isReady = true;
       bdvOut = getBDV(tokenOut).times(amountOut);
       bdvIn = getBDV(tokenIn).times(amountIn);
+      depositsBDV = transform(conversion.bdv.abs(), 'bnjs');
       deltaBDV = MaxBN(
         bdvOut.minus(bdvIn),
         ZERO_BN
@@ -199,6 +201,11 @@ const ConvertForm: FC<
         </StatHorizontal>
       </Stack>
     )
+  }
+
+  function showOutputBDV() {
+    const output = depositsBDV.gt(bdvOut) ? depositsBDV : bdvOut
+    return output;
   }
 
   /// When a new output token is selected, reset maxAmountIn.
@@ -275,12 +282,12 @@ const ConvertForm: FC<
             _amountOut &&
             deltaBDV && (
             <Tooltip
-              title={getBDVTooltip(bdvIn, transform(conversion.bdv.abs(), 'bnjs'))}
+              title={getBDVTooltip(bdvIn, depositsBDV)}
               placement='top'
             >
               <Box display="flex" text-align="center" gap={0.25}>
                 <Typography variant="body1">
-                  ~{displayFullBN(bdvIn, 2)} BDV
+                  ~{displayFullBN(depositsBDV, 2)} BDV
                 </Typography>
                 <HelpOutlineIcon
                   sx={{
@@ -337,7 +344,7 @@ const ConvertForm: FC<
               <TokenOutput.Row
                 token={tokenOut}
                 amount={amountOut || ZERO_BN}
-                delta={bdvOut ? `~${displayFullBN(bdvOut, 2)} BDV` : undefined}
+                delta={showOutputBDV() ? `~${displayFullBN(showOutputBDV(), 2)} BDV` : undefined}
               />
               <TokenOutput.Row
                 token={sdk.tokens.STALK}
