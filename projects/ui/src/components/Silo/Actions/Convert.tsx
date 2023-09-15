@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, Tooltip } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import {
@@ -44,7 +45,6 @@ import useAccount from '~/hooks/ledger/useAccount';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
-
 import AdditionalTxnsAccordion from '~/components/Common/Form/FormTxn/AdditionalTxnsAccordion';
 import useFarmerFormTxnsActions from '~/hooks/farmer/form-txn/useFarmerFormTxnActions';
 import useAsyncMemo from '~/hooks/display/useAsyncMemo';
@@ -53,6 +53,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
+import StatHorizontal from '~/components/Common/StatHorizontal';
 
 // -----------------------------------------------------------------------
 
@@ -141,7 +142,7 @@ const ConvertForm: FC<
   let buttonLoading = false;
   let buttonContent = 'Convert';
   let bdvOut; // the BDV received after re-depositing `amountOut` of `tokenOut`.
-  // let bdvIn;
+  let bdvIn: BigNumber;
   let deltaBDV: BigNumber | undefined; // the change in BDV during the convert. should always be >= 0.
   let deltaStalk; // the change in Stalk during the convert. should always be >= 0.
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
@@ -164,11 +165,12 @@ const ConvertForm: FC<
     // buttonContent = 'Pathway unavailable';
   } else {
     buttonContent = 'Convert';
-    if (tokenOut && amountOut?.gt(0)) {
+    if (tokenOut && amountOut?.gt(0) && amountIn?.gt(0)) {
       isReady = true;
       bdvOut = getBDV(tokenOut).times(amountOut);
+      bdvIn = getBDV(tokenIn).times(amountIn);
       deltaBDV = MaxBN(
-        bdvOut.minus(transform(conversion.bdv.abs(), 'bnjs')),
+        bdvOut.minus(bdvIn),
         ZERO_BN
       );
       deltaStalk = MaxBN(
@@ -184,6 +186,19 @@ const ConvertForm: FC<
           .sub(bnToTokenValue(tokenOut, conversion.seeds.abs()))
       ); // seeds lost when converting
     }
+  }
+
+  function getBDVTooltip(instantBDV: BigNumber, currentBDV: BigNumber) {
+    return (
+      <Stack gap={0.5}>
+        <StatHorizontal label="Instantaneous BDV:">
+          ~{displayFullBN(instantBDV, 2, 2)}
+        </StatHorizontal>
+        <StatHorizontal label="BDV of Deposits:">
+          ~{displayFullBN(currentBDV, 2, 2)}
+        </StatHorizontal>
+      </Stack>
+    )
   }
 
   /// When a new output token is selected, reset maxAmountIn.
@@ -259,9 +274,25 @@ const ConvertForm: FC<
           displayQuote={(_amountOut) =>
             _amountOut &&
             deltaBDV && (
-              <Typography variant="body1">
-                ~{displayFullBN(conversion.bdv.abs(), 2)} BDV
-              </Typography>
+            <Tooltip
+              title={getBDVTooltip(bdvIn, transform(conversion.bdv.abs(), 'bnjs'))}
+              placement='top'
+            >
+              <Box display="flex">
+                <Typography variant="body1">
+                  ~{displayFullBN(bdvIn, 2)} BDV
+                </Typography>
+                <HelpOutlineIcon
+                  sx={{
+                    color: 'text.secondary',
+                    display: 'inline',
+                    ml: 0.25,
+                    mt: 0.25,
+                    fontSize: '14px',
+                  }}
+                />
+              </Box>
+            </Tooltip>
             )
           }
           tokenSelectLabel={tokenIn.symbol}
