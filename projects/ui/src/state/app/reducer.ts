@@ -1,4 +1,5 @@
 import { createReducer } from '@reduxjs/toolkit';
+import { DataSource } from '@beanstalk/sdk';
 import { SGEnvironments } from '~/graph/endpoints';
 import { persistedState } from '~/state/persist';
 import { App } from '.';
@@ -9,6 +10,7 @@ export const initialState: App = {
   settings: {
     denomination: 'usd',
     subgraphEnv: SGEnvironments.BF_PROD,
+    datasource: DataSource.LEDGER,
     ...persistedState?.app?.settings,
   },
   globals: {

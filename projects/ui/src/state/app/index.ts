@@ -1,9 +1,11 @@
+import { DataSource } from '@beanstalk/sdk';
 import type { EthPriceResponse } from '~/functions/ethprice/ethprice';
 import { SGEnvironments } from '~/graph/endpoints';
 
 export type Settings = {
   denomination: 'usd' | 'bdv';
   subgraphEnv: SGEnvironments;
+  datasource: DataSource;
 };
 
 export type Globals = {

@@ -8,4 +8,6 @@ export type FarmerField = {
 
   harvestablePlots: PlotMap<BigNumberJS>;
   harvestablePods: BigNumberJS;
+
+  loading?: boolean;
 };
