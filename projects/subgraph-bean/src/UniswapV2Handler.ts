@@ -5,6 +5,7 @@ import { BEAN_ERC20_V1, WETH, WETH_USDC_PAIR } from "../../subgraph-core/utils/C
 import { toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolReserves, updatePoolValues } from "./utils/Pool";
 import { loadOrCreateToken } from "./utils/Token";
+import { checkBeanCross } from "./utils/Cross";
 
 // export function handleMint(event: Mint): void {
 //   updatePoolReserves(event.address.toHexString(), event.params.amount0, event.params.amount1, event.block.number);
@@ -93,7 +94,9 @@ export function handleSync(event: Sync): void {
 
   let currentBeanPrice = wethBalance.times(weth.lastPriceUSD).div(beanBalance);
 
-  updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice, oldBeanPrice, currentBeanPrice);
+  updatePoolPrice(event.address.toHexString(), event.block.timestamp, event.block.number, currentBeanPrice);
+
+  checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, currentBeanPrice);
 
   setPoolReserves(event.address.toHexString(), [reserves.value.value0, reserves.value.value1], event.block.number);
 

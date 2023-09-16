@@ -6,6 +6,7 @@ import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
 import { BEANSTALK_PRICE, BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
+import { checkBeanCross } from "./utils/Cross";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -35,18 +36,13 @@ export function handleSunrise(event: Sunrise): void {
 
       // Curve pool update
       let curvePrice = beanstalkPrice.getCurve().price;
-      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curvePrice), oldBeanPrice, beanPrice);
+      updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curvePrice));
 
       // Curve pool update
       let wellPrice = beanstalkPrice.getConstantProductWell(BEAN_WETH_CP2_WELL).price;
-      updatePoolPrice(
-        BEAN_WETH_CP2_WELL.toHexString(),
-        event.block.timestamp,
-        event.block.number,
-        toDecimal(wellPrice),
-        oldBeanPrice,
-        beanPrice
-      );
+      updatePoolPrice(BEAN_WETH_CP2_WELL.toHexString(), event.block.timestamp, event.block.number, toDecimal(wellPrice));
+
+      checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, beanPrice);
     } else {
       // Pre Basin deployment - Use original Curve price contract to update on each season.
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
@@ -54,14 +50,8 @@ export function handleSunrise(event: Sunrise): void {
 
       if (!curve.reverted) {
         updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, toDecimal(curve.value.price), ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
-        updatePoolPrice(
-          BEAN_3CRV.toHexString(),
-          event.block.timestamp,
-          event.block.number,
-          toDecimal(curve.value.price),
-          oldBeanPrice,
-          toDecimal(curve.value.price)
-        );
+        updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curve.value.price));
+        checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
       }
     }
   }

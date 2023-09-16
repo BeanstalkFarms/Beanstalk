@@ -13,6 +13,7 @@ import { BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE } from "../../subgraph-core/ut
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice } from "../generated/Bean3CRV/BeanstalkPrice";
+import { checkBeanCross } from "./utils/Cross";
 
 export function handleTokenExchange(event: TokenExchange): void {
   handleSwap(
@@ -120,7 +121,8 @@ function handleLiquidityChange(
   updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, beanPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
 }
 
 function handleSwap(
@@ -170,5 +172,6 @@ function handleSwap(
   updateBeanValues(BEAN_ERC20.toHexString(), timestamp, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD);
 
   updatePoolValues(poolAddress, timestamp, blockNumber, volumeBean, volumeUSD, deltaLiquidityUSD, curve.value.deltaB);
-  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice, oldBeanPrice, beanPrice);
+  updatePoolPrice(poolAddress, timestamp, blockNumber, newPrice);
+  checkBeanCross(BEAN_ERC20.toHexString(), timestamp, blockNumber, oldBeanPrice, beanPrice);
 }
