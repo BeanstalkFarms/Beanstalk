@@ -10,6 +10,7 @@ import {
 import { DateTime } from 'luxon';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { DataSource } from '@beanstalk/sdk';
 import { FontSize } from '~/components/App/muiTheme';
 import {
   StyledDialog,
@@ -68,6 +69,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
 }) => {
   const [denomination, setDenomination] = useSetting('denomination');
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
+  const [datasource, setDataSource] = useSetting('datasource');
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
@@ -170,6 +172,30 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                   ))}
                 </Select>
               </Box>
+            </Split>
+            <Split>
+              <Typography color="text.secondary">Data Source</Typography>
+              {/* @ts-ignore */}
+              <ButtonGroup variant="outlined" color="dark" disableRipple>
+                <Button
+                  {...buttonStyle}
+                  {...buttonProps(datasource, setDataSource, DataSource.LEDGER)}
+                >
+                  {datasource === DataSource.LEDGER ? '✓ ' : undefined}
+                  Blockchain
+                </Button>
+                <Button
+                  {...buttonStyle}
+                  {...buttonProps(
+                    datasource,
+                    setDataSource,
+                    DataSource.SUBGRAPH
+                  )}
+                >
+                  {datasource === DataSource.SUBGRAPH ? '✓ ' : undefined}
+                  SubGraph
+                </Button>
+              </ButtonGroup>
             </Split>
             <Split>
               <Typography color="text.secondary">Clear cache</Typography>

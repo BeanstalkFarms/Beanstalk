@@ -47,7 +47,6 @@ export const podlineColumns: DataGridProps['columns'] = [
 
 const FieldPage: FC<{}> = () => {
   const account = useAccount();
-  const authState = !account ? 'disconnected' : 'ready';
 
   /// Data
   const farmerField = useAppSelector((s) => s._farmer.field);
@@ -55,6 +54,11 @@ const FieldPage: FC<{}> = () => {
     (s) => s._beanstalk.field.harvestableIndex
   );
 
+  const state = !account
+    ? 'disconnected'
+    : farmerField.loading
+    ? 'loading'
+    : 'ready';
   const harvestablePods = farmerField.harvestablePods;
 
   const rows: any[] = useMemo(() => {
@@ -105,7 +109,7 @@ const FieldPage: FC<{}> = () => {
             <FieldActions />
             <TableCard
               title="Pod Balance"
-              state={authState}
+              state={state}
               amount={farmerField.pods}
               rows={rows}
               columns={podlineColumns}

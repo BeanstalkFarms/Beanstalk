@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { DataSource, Token, TokenValue } from '@beanstalk/sdk';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -233,11 +233,7 @@ export const useFetchFarmerSilo = () => {
           }
         );
       } else {
-        // FIXME: always pulls from contract events
-        const balances = await sdk.silo.getBalances(account, {
-          source: DataSource.LEDGER,
-        });
-
+        const balances = await sdk.silo.getBalances(account);
         balances.forEach((balance, token) => {
           // Post-migration, # of active seeds is calc'd from BDV
           activeSeedBalance = activeSeedBalance.add(
@@ -340,12 +336,21 @@ const FarmerSiloUpdater = () => {
   }, [account]);
 
   useEffect(() => {
-    try {
-      if (account && initialized) fetch();
-    } catch (err) {
-      console.log('Error during farmer.silo fetch', err);
-      dispatch(updateFarmerSiloLoading(false));
-    }
+    if (account && initialized)
+      fetch()
+        .catch((err) => {
+          if ((err as Error).message.includes('limit the query')) {
+            console.log(
+              'Failed to fetch Silo events: RPC query limit exceeded'
+            );
+          } else {
+            console.log('Failed to fetch Silo events: ', err.message);
+          }
+        })
+        .finally(() => {
+          dispatch(updateFarmerSiloLoading(false));
+        });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, chainId, initialized]);
 
