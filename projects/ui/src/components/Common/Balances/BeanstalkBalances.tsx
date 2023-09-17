@@ -86,8 +86,8 @@ const BeanstalkBalances: FC<{
   function getUnripeBreakdown(token: ERC20Token, amount: BigNumber) {
     if (!token || !amount || !isTokenUnripe(token.address)) return { bdv: BigNumber(0), usd: BigNumber(0) };
 
-    const ratio = amount.div(unripeTokens[token.address].supply)
-    const ratioAmount = unripeTokens[token.address].underlying.multipliedBy(ratio)
+    const ratio = amount.div(unripeTokens[token.address].supply);
+    const ratioAmount = unripeTokens[token.address].underlying.multipliedBy(ratio);
     const bdv = siloTokenToFiat(
       token,
       ratioAmount,
@@ -101,7 +101,7 @@ const BeanstalkBalances: FC<{
       false
     );
 
-    return ({ bdv: bdv, usd: usd })
+    return ({ bdv: bdv, usd: usd });
   }
 
   function amountTooltip(token: ERC20Token, amount: BigNumber, isBreakdown?: boolean) {
@@ -244,10 +244,10 @@ const BeanstalkBalances: FC<{
                 const tokenState =
                   breakdown.tokens[hoverAddress].byState[state];
                 const isUnripe = isTokenUnripe(hoverToken.address);
-                let unripeValue;
+                let unripeValue = BigNumber(0);
                 if (!tokenState.value || !tokenState.amount) return null;
                 if (isUnripe) {
-                  unripeValue = getUnripeBreakdown(hoverToken, tokenState.amount).usd
+                  unripeValue = getUnripeBreakdown(hoverToken, tokenState.amount).usd;
                 }
                 return (
                   <TokenRow
@@ -256,7 +256,7 @@ const BeanstalkBalances: FC<{
                     color={dp.color}
                     showColor={tokenState.value.gt(0)}
                     isFaded={false}
-                    value={displayFullBN(isUnripe ? unripeValue! : tokenState.value, 2, 2)
+                    value={displayFullBN(isUnripe ? unripeValue : tokenState.value, 2, 2)
                     }
                     labelTooltip={STATE_CONFIG[state][2](
                       hoverToken === Bean ? 'Beans' : hoverToken.symbol
