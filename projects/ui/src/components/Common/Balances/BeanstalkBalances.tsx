@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Stack, Typography, Grid, Box } from '@mui/material';
 import BigNumber from 'bignumber.js';
+import { useSelector } from 'react-redux';
 import ResizablePieChart, {
   PieDataPoint,
 } from '~/components/Common/Charts/PieChart';
@@ -12,21 +13,40 @@ import useBeanstalkSiloBreakdown, {
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import TokenRow from '~/components/Common/Balances/TokenRow';
 import useChainConstant from '~/hooks/chain/useChainConstant';
-import { BEAN } from '~/constants/tokens';
+import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import { FC } from '~/types';
 import StatHorizontal from '../StatHorizontal';
+import { AppState } from '~/state';
+import useGetChainToken from '~/hooks/chain/useGetChainToken';
+import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
+import { ERC20Token } from '~/classes/Token';
+import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
 
 const BeanstalkBalances: FC<{
   breakdown: ReturnType<typeof useBeanstalkSiloBreakdown>;
 }> = ({ breakdown }) => {
   // Constants
   const WHITELIST = useWhitelist();
+  const getChainToken = useGetChainToken();
   const Bean = useChainConstant(BEAN);
+  const urBean = getChainToken(UNRIPE_BEAN);
+  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
   const availableTokens = useMemo(
     () => Object.keys(breakdown.tokens),
     [breakdown.tokens]
   );
-  const beanPrice = breakdown.tokens[Bean.address]?.value.div(breakdown.tokens[Bean.address]?.amount);
+  const beanPrice = breakdown.tokens[Bean.address]?.value.div(
+    breakdown.tokens[Bean.address]?.amount
+  );
+  const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
+    (state) => state._bean.unripe
+  );
+  const unripeUnderlyingTokens = useUnripeUnderlyingMap();
+  const siloTokenToFiat = useSiloTokenToFiat();
+
+  function isTokenUnripe(tokenAddress: string) {
+    return (tokenAddress.toLowerCase() === urBean.address || tokenAddress.toLowerCase() === urBeanCrv3.address);
+  }
 
   // Drilldown against a State of Token (DEPOSITED, WITHDRAWN, etc.)
   const [hoverAddress, setHoverAddress] = useState<
@@ -63,18 +83,52 @@ const BeanstalkBalances: FC<{
   const hoverToken = hoverAddress ? WHITELIST[hoverAddress] : undefined;
   const assetLabel = hoverToken?.name || 'Token';
 
-  function amountTooltip(amount: BigNumber, value: BigNumber) {
-    if (!beanPrice || !amount || !value) return undefined
+  function getUnripeBreakdown(token: ERC20Token, amount: BigNumber) {
+    if (!token || !amount || !isTokenUnripe(token.address)) return { bdv: BigNumber(0), usd: BigNumber(0) };
+
+    const ratio = amount.div(unripeTokens[token.address].supply)
+    const ratioAmount = unripeTokens[token.address].underlying.multipliedBy(ratio)
+    const bdv = siloTokenToFiat(
+      token,
+      ratioAmount,
+      'bdv',
+      false
+    );
+    const usd = siloTokenToFiat(
+      token,
+      ratioAmount,
+      'usd',
+      false
+    );
+
+    return ({ bdv: bdv, usd: usd })
+  }
+
+  function amountTooltip(token: ERC20Token, amount: BigNumber, isBreakdown?: boolean) {
+    if (!beanPrice || !token || !amount) return undefined;
+
+    const isUnripe = isTokenUnripe(token.address);
+    const underlyingToken = isUnripe ? unripeUnderlyingTokens[token.address] : token;
+    const tokenAmount = isUnripe ? unripeTokens[token.address].underlying : amount;
+    const bdv = isBreakdown && isUnripe 
+      ? getUnripeBreakdown(token, amount).bdv 
+      : siloTokenToFiat(
+          underlyingToken,
+          tokenAmount,
+          'bdv',
+          false
+        );
+
     return (
       <Stack gap={0.5}>
         <StatHorizontal label="Token Amount">
           {displayFullBN(amount, 2, 2)}
         </StatHorizontal>
         <StatHorizontal label="BDV">
-          {displayFullBN((value.div(amount).div(beanPrice)).multipliedBy(amount), 2, 2)}
+          {displayFullBN(bdv, 2, 2)}
         </StatHorizontal>
       </Stack>
-    )
+    );
   }
 
   // Compile Pie chart data
@@ -130,12 +184,26 @@ const BeanstalkBalances: FC<{
               color={WHITELIST[address].color}
               showColor={!hoverAddress}
               token={WHITELIST[address]}
-              value={displayBN(breakdown.tokens[address].value)}
+              value={
+                isTokenUnripe(address)
+                  ? displayBN(
+                      siloTokenToFiat(
+                        unripeUnderlyingTokens[address],
+                        unripeTokens[address].underlying,
+                        'usd',
+                        false
+                      )
+                    )
+                  : displayBN(breakdown.tokens[address].value)
+              }
               isFaded={hoverAddress !== null && hoverAddress !== address}
               isSelected={hoverAddress === address}
               onMouseOver={onMouseOver(address)}
               onClick={onClick(address)}
-              amountTooltip={amountTooltip(breakdown.tokens[address].amount, breakdown.tokens[address].value)}
+              amountTooltip={amountTooltip(
+                WHITELIST[address],
+                breakdown.tokens[address].amount
+              )}
             />
           ))}
         </Stack>
@@ -175,7 +243,12 @@ const BeanstalkBalances: FC<{
                 const state = dp.state as StateID;
                 const tokenState =
                   breakdown.tokens[hoverAddress].byState[state];
+                const isUnripe = isTokenUnripe(hoverToken.address);
+                let unripeValue;
                 if (!tokenState.value || !tokenState.amount) return null;
+                if (isUnripe) {
+                  unripeValue = getUnripeBreakdown(hoverToken, tokenState.amount).usd
+                }
                 return (
                   <TokenRow
                     key={state}
@@ -183,11 +256,16 @@ const BeanstalkBalances: FC<{
                     color={dp.color}
                     showColor={tokenState.value.gt(0)}
                     isFaded={false}
-                    value={displayFullBN(tokenState.value, 2, 2)}
+                    value={displayFullBN(isUnripe ? unripeValue! : tokenState.value, 2, 2)
+                    }
                     labelTooltip={STATE_CONFIG[state][2](
                       hoverToken === Bean ? 'Beans' : hoverToken.symbol
                     )}
-                    amountTooltip={amountTooltip(tokenState.amount, tokenState.value)}
+                    amountTooltip={amountTooltip(
+                      hoverToken,
+                      tokenState.amount,
+                      true
+                    )}
                   />
                 );
               })}
