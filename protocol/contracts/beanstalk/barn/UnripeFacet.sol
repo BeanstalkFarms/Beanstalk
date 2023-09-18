@@ -35,6 +35,8 @@ contract UnripeFacet is ReentrancyGuard {
 
     event ChangeUnderlying(address indexed token, int256 underlying);
 
+    event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
+
     event Chop(
         address indexed account,
         address indexed token,
@@ -262,5 +264,17 @@ contract UnripeFacet is ReentrancyGuard {
             amount
         );
         LibUnripe.incrementUnderlying(unripeToken, amount);
+    }
+
+    /**
+     * @notice Switches the Underlying Token of an Unripe Token.
+     * @param unripeToken The Unripe Token to switch the underlying token of.
+     * @param newUnderlyingToken The new underlying token to switch to.
+     * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
+     */
+    function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) external payable {
+        LibDiamond.enforceIsContractOwner();
+        require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
+        LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 }

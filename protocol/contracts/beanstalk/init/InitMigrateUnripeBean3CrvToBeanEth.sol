@@ -26,6 +26,6 @@ contract InitMigrateUnripeBean3CrvToBeanEth {
             balanceOfUnderlying
         );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
-        s.u[C.UNRIPE_LP].underlyingToken = C.BEAN_ETH_WELL;
+        LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, C.BEAN_ETH_WELL);
     }
 }
