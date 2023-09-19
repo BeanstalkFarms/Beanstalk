@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
-const { BEAN, UNRIPE_BEAN, UNRIPE_LP } = require('./utils/constants')
+const { BEAN, UNRIPE_BEAN, UNRIPE_LP, USDT } = require('./utils/constants')
 const { to6, to18, toStalk } = require('./utils/helpers.js')
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
@@ -201,6 +201,29 @@ describe('Unripe', function () {
         to6('1'),
         to6('0.001')
       )
+    })
+  })
+
+  describe('change underlying', async function () {
+    it('changes underlying token', async function () {
+      this.result = await this.unripe.connect(owner).switchUnderlyingToken(UNRIPE_BEAN, USDT)
+      expect(await this.unripe.getUnderlyingToken(UNRIPE_BEAN)).to.be.equal(USDT)
+      await expect(this.result).to.emit(this.unripe, 'SwitchUnderlyingToken').withArgs(
+        UNRIPE_BEAN,
+        USDT
+      )
+    })
+
+    it('reverts if underlying balance > 0', async function () {
+      await this.unripe.connect(owner).addUnderlying(
+        UNRIPE_BEAN,
+        to6('100')
+      )
+      await expect(this.unripe.connect(owner).switchUnderlyingToken(UNRIPE_BEAN, USDT)).to.be.revertedWith('Unripe: Underlying balance > 0')
+    })
+
+    it('reverts if not owner', async function () {
+      await expect(this.unripe.connect(user).switchUnderlyingToken(UNRIPE_BEAN, USDT)).to.be.revertedWith('LibDiamond: Must be contract owner')
     })
   })
 })
