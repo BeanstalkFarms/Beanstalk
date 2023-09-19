@@ -34,8 +34,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.CURVE_BEAN_METAPOOL,
             BDVFacet.curveToBDV.selector,
-            uint16(BEAN_3CRV_STALK),
-            uint24(BEAN_3CRV_SEEDS * 1e6) //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
+            BEAN_3CRV_STALK,
+            BEAN_3CRV_SEEDS * 1e6 //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
         );
     }
 
@@ -43,8 +43,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.BEAN,
             BDVFacet.beanToBDV.selector,
-            uint16(BEAN_STALK),
-            uint24(BEAN_SEEDS * 1e6)
+            BEAN_STALK,
+            BEAN_SEEDS * 1e6
         );
     }
 
@@ -52,8 +52,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.UNRIPE_BEAN,
             BDVFacet.unripeBeanToBDV.selector,
-            uint16(BEAN_STALK),
-            uint24(BEAN_SEEDS * 1e6)
+            BEAN_STALK,
+            BEAN_SEEDS * 1e6
         );
     }
 
@@ -61,8 +61,8 @@ contract InitWhitelist {
         LibLegacyWhitelist.whitelistToken(
             C.UNRIPE_LP,
             BDVFacet.unripeLPToBDV.selector,
-            uint16(BEAN_3CRV_STALK),
-            uint24(BEAN_3CRV_SEEDS * 1e6)
+            BEAN_3CRV_STALK,
+            BEAN_3CRV_SEEDS * 1e6
         );
     }
 
@@ -84,7 +84,7 @@ contract InitWhitelist {
 
         s.ss[token].encodeType = encodeType;
 
-        s.ss[token].milestoneSeason = uint24(s.season.current);
+        s.ss[token].milestoneSeason = s.season.current;
 
         emit LibWhitelist.WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }

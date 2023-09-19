@@ -36,29 +36,18 @@ describe('Gauge', function () {
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
 
-  
     // set balances to bean3crv
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
-    await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     await this.beanThreeCurve.set_supply(toBean('2000000'));
     // bean3crv set at parity, 1,000,000 on each side.
     await this.beanThreeCurve.set_balances([to6('1000000'), to18('1000000')]);
     await this.beanThreeCurve.set_balances([to6('1000000'), to18('1000000')]);
 
-
-    // add unripe
-    this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
-    this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-    await this.unripeLP.mint(ownerAddress, to6('10000'))
-    await this.unripeBean.mint(ownerAddress, to6('10000'))
-    await this.unripeLP.connect(owner).approve(this.diamond.address, to6('100000000'))
-    await this.unripeBean.connect(owner).approve(this.diamond.address, to6('100000000'))
-    await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
-    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
-
     // init wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
+    this.wellToken = await ethers.getContractAt('MockToken', this.well.address)
+    await this.wellToken.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.well.setReserves([to6('1000000'), to18('1000')])
     await this.well.connect(owner).mint(ownerAddress, to18('1000'))
     await this.season.siloSunrise(0)
@@ -68,6 +57,16 @@ describe('Gauge', function () {
     await setEthUsdPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
+
+    // add unripe
+    this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
+    this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+    await this.unripeLP.mint(ownerAddress, to6('10000'))
+    await this.unripeBean.mint(ownerAddress, to6('10000'))
+    await this.unripeLP.connect(owner).approve(this.diamond.address, to6('100000000'))
+    await this.unripeBean.connect(owner).approve(this.diamond.address, to6('100000000'))
+    await this.unripe.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
+    await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
   })
 
   beforeEach(async function () {
@@ -236,11 +235,11 @@ describe('Gauge', function () {
           UNRIPE_BEAN,
           to6('1000')
         )
-        // TODO: add unripeLP after merging with brendans changes
-        // await this.unripe.connect(owner).addUnderlying(
-        //   UNRIPE_LP,
-        //   to6('1000')
-        // )
+
+        await this.unripe.connect(owner).addUnderlying(
+          UNRIPE_LP,
+          to6('1000')
+        )
 
         // add 1000 LP to 10,000 unripe
         await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('1000'))
