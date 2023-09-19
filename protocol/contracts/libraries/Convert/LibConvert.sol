@@ -9,6 +9,7 @@ import {LibUnripeConvert} from "./LibUnripeConvert.sol";
 import {LibLambdaConvert} from "./LibLambdaConvert.sol";
 import {LibConvertData} from "./LibConvertData.sol";
 import {LibWellConvert} from "./LibWellConvert.sol";
+import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 
@@ -58,6 +59,9 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert
                 .convertLPToBeans(convertData);
+        } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
+            (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
+                .convertUnripeToRipe(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
@@ -76,14 +80,6 @@ library LibConvert {
         if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
             return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
-        /// urBEAN:3CRV LP -> urBEAN
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
-            return LibUnripeConvert.lpToPeg();
-
-        /// urBEAN -> urBEAN:3CRV LP
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
-            return LibUnripeConvert.beansToPeg();
-
         // Lambda -> Lambda
         if (tokenIn == tokenOut) 
             return type(uint256).max;
@@ -95,6 +91,26 @@ library LibConvert {
         // Well LP Token -> Bean
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.lpToPeg(tokenIn);
+
+        // urBEAN3CRV Convert
+        if (tokenIn == C.UNRIPE_LP){
+            // urBEAN:3CRV -> urBEAN
+            if(tokenOut == C.UNRIPE_BEAN)
+                return LibUnripeConvert.lpToPeg();
+            // UrBEAN:3CRV -> BEAN:3CRV
+            if(tokenOut == C.CURVE_BEAN_METAPOOL)
+                return type(uint256).max;
+        }
+
+        // urBEAN Convert
+        if (tokenIn == C.UNRIPE_BEAN){
+            // urBEAN -> urBEAN:3CRV LP
+            if(tokenOut == C.UNRIPE_LP)
+                return LibUnripeConvert.beansToPeg();
+            // UrBEAN -> BEAN
+            if(tokenOut == C.BEAN)
+                return type(uint256).max;
+        }
 
         revert("Convert: Tokens not supported");
     }
@@ -131,6 +147,14 @@ library LibConvert {
         // Well LP Token -> Bean
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
+
+        // UrBEAN -> Bean
+        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
+            return LibChopConvert.getRipeOut(tokenIn, amountIn);
+
+        // UrBEAN:3CRV -> BEAN:3CRV
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.CURVE_BEAN_METAPOOL)
+            return LibChopConvert.getRipeOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
     }
