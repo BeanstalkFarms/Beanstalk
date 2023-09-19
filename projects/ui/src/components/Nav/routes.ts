@@ -8,7 +8,7 @@ import twitterIcon from '~/img/beanstalk/interface/nav/twitter.svg';
 import immunefiIcon from '~/img/beanstalk/interface/nav/immunefi.svg';
 import docsIcon from '~/img/beanstalk/interface/nav/docs.svg';
 import disclosuresIcon from '~/img/beanstalk/interface/nav/disclosures.svg';
-import analyticsIcon from '~/img/beanstalk/interface/nav/analytics.svg';
+import analyticsIcon from '~/img/beanstalk/interface/nav/stats.svg';
 
 export type RouteData = {
   /** Nav item title */
@@ -23,11 +23,11 @@ export type RouteData = {
   icon?: string;
   disabled?: boolean;
   small?: boolean;
-}
+};
 
-type RouteKeys = 'top' | 'market' | 'more' | 'additional' // | 'analytics'
+type RouteKeys = 'top' | 'market' | 'more' | 'additional'; // | 'analytics'
 
-const ROUTES : { [key in RouteKeys] : RouteData[] } = {
+const ROUTES: { [key in RouteKeys]: RouteData[] } = {
   // Main Navigation
   top: [
     {
@@ -61,32 +61,32 @@ const ROUTES : { [key in RouteKeys] : RouteData[] } = {
       path: 'nft',
       title: 'BeaNFTs',
       icon: beanNFTIcon,
-      small: true
+      small: true,
     },
     {
       path: 'swap',
       title: 'Swap',
       icon: swapIcon,
-      small: true
+      small: true,
     },
     {
       path: '/analytics',
       title: 'Analytics',
       icon: analyticsIcon,
-      small: true
+      small: true,
     },
     {
       path: '/governance',
       title: 'Governance',
       icon: governanceIcon,
-      small: true
+      small: true,
     },
     {
       path: 'docs',
       href: 'https://docs.bean.money/almanac',
       title: 'Docs',
       icon: docsIcon,
-      small: true
+      small: true,
     },
   ],
   // About Button
@@ -95,43 +95,43 @@ const ROUTES : { [key in RouteKeys] : RouteData[] } = {
       path: 'about',
       title: 'About',
       href: 'https://bean.money',
-      icon: aboutIcon
+      icon: aboutIcon,
     },
     {
       path: 'disclosures',
       title: 'Disclosures',
       href: 'https://docs.bean.money/almanac/disclosures',
-      icon: disclosuresIcon
+      icon: disclosuresIcon,
     },
     {
       path: 'bugbounty',
       title: 'Bug Bounty',
       href: 'https://immunefi.com/bounty/beanstalk',
-      icon: immunefiIcon
+      icon: immunefiIcon,
     },
     {
       path: 'discord',
       href: 'https://discord.gg/beanstalk',
       title: 'Discord',
-      icon: discordIcon
+      icon: discordIcon,
     },
     {
       path: 'twitter',
       href: 'https://twitter.com/beanstalkfarms',
       title: 'Twitter',
-      icon: twitterIcon
+      icon: twitterIcon,
     },
     {
       path: 'github',
       href: 'https://github.com/beanstalkfarms',
       title: 'GitHub',
-      icon: githubIcon
+      icon: githubIcon,
     },
     {
       path: 'analytics',
       href: 'https://analytics.bean.money',
       title: 'Advanced Analytics',
-      icon: analyticsIcon
+      icon: analyticsIcon,
     },
   ],
   // Market Menu

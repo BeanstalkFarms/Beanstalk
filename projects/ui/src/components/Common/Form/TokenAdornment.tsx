@@ -7,7 +7,8 @@ import {
   Typography,
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import Token from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
+import TokenOld from '~/classes/Token';
 import { BeanstalkPalette, IconSize } from '../../App/muiTheme';
 import { hexToRgba } from '~/util/UI';
 import Row from '~/components/Common/Row';
@@ -16,26 +17,19 @@ import { FC } from '~/types';
 import { BalanceFrom } from './BalanceFromRow';
 import AddressIcon from '../AddressIcon';
 
-export type TokenAdornmentProps = (
-  {
-    token: Token;
-    balanceFrom?: BalanceFrom;
-    buttonLabel?: string | JSX.Element;
-    iconSize?: keyof typeof IconSize;
-    downArrowIconSize?: keyof typeof IconSize;
-  } & ButtonProps
-);
+export type TokenAdornmentProps = {
+  token: Token | TokenOld;
+  balanceFrom?: BalanceFrom;
+  buttonLabel?: string | JSX.Element;
+  iconSize?: keyof typeof IconSize;
+  downArrowIconSize?: keyof typeof IconSize;
+} & ButtonProps;
 
 const wrappedVariantSx = {
   px: 1,
   py: 0.1,
   height: 'unset',
-  border: '1px solid',
-  borderColor: 'text.light',
-  ':hover': {
-    borderColor: 'text.light',
-    backgroundColor: BeanstalkPalette.lightestBlue
-  }
+  border: '',
 };
 
 const TokenAdornment: FC<TokenAdornmentProps> = ({
@@ -44,7 +38,7 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
   balanceFrom,
   // Button
   size,
-  sx, 
+  sx,
   buttonLabel,
   disabled,
   onClick,
@@ -52,13 +46,13 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
   downArrowIconSize = 'small',
   ...props
 }) => {
-  const iconSize = (size && size === 'small' ? 'xs' : _iconSize);
+  const iconSize = size && size === 'small' ? 'xs' : _iconSize;
   const textVariant = size && size === 'small' ? 'body2' : 'bodyMedium';
   return (
     <InputAdornment position="end">
       <Button
-        variant={!balanceFrom ? 'text' : 'outlined'}
-        color={!balanceFrom ? 'primary' : undefined}
+        variant={!balanceFrom ? 'text' : 'outlined-secondary'}
+        color={!balanceFrom ? 'primary' : 'secondary'}
         size={size}
         sx={{
           display: 'inline-flex',
@@ -108,9 +102,9 @@ const TokenAdornment: FC<TokenAdornmentProps> = ({
             />
           ) : null}
           <Box sx={{ color: 'text.primary' }}>
-            <Typography 
-              variant={textVariant} 
-              fontWeight="fontWeightRegular" 
+            <Typography
+              variant={textVariant}
+              fontWeight="fontWeightRegular"
               color="text.primary"
             >
               {buttonLabel || token.symbol}

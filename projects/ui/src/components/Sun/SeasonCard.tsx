@@ -20,7 +20,7 @@ export interface SeasonCardProps {
   isNew?: boolean;
 }
 
-const SeasonCard: FC<SeasonCardProps> = ({ 
+const SeasonCard: FC<SeasonCardProps> = ({
   season,
   rewardBeans,
   issuedSoil,
@@ -28,14 +28,20 @@ const SeasonCard: FC<SeasonCardProps> = ({
   temperature,
   deltaTemperature,
   deltaDemand,
-  isNew = false
+  isNew = false,
 }) => (
   <div>
-    <Box sx={{ '&:hover > .next-season': { display: 'block' }, overflow: 'hidden', position: 'relative' }}>
+    <Box
+      sx={{
+        '&:hover > .next-season': { display: 'block' },
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
       {isNew && (
         <Box
           className="next-season"
-          sx={{ 
+          sx={{
             borderColor: 'rgba(240, 223, 146, 1)',
             borderWidth: 0.5,
             borderStyle: 'solid',
@@ -51,8 +57,14 @@ const SeasonCard: FC<SeasonCardProps> = ({
           }}
         >
           <Row justifyContent="center" height="100%">
-            <Typography pl={1} fontSize={FontSize.sm} textAlign="left" color="text.primary">
-              The forecast for Season {season.toString()} is based on data in the current Season.
+            <Typography
+              pl={1}
+              fontSize={FontSize.sm}
+              textAlign="left"
+              color="text.primary"
+            >
+              The forecast for Season {season.toString()} is based on data in
+              the current Season.
             </Typography>
           </Row>
         </Box>
@@ -71,7 +83,7 @@ const SeasonCard: FC<SeasonCardProps> = ({
           {/* Season */}
           <Grid item xs={1.5} md={1.25}>
             <Row justifyContent="flex-start" spacing={0.5}>
-              {(rewardBeans && rewardBeans.lte(0)) ? (
+              {rewardBeans && rewardBeans.lte(0) ? (
                 <img src={drySeasonIcon} height={IconSize.small} alt="" />
               ) : (
                 <img src={rainySeasonIcon} height={IconSize.small} alt="" />
@@ -93,7 +105,7 @@ const SeasonCard: FC<SeasonCardProps> = ({
               {issuedSoil
                 ? issuedSoil.lt(0.01)
                   ? '<0.01'
-                  : displayFullBN(issuedSoil, 2, 2) 
+                  : displayFullBN(issuedSoil, 2, 2)
                 : '-'}
             </Typography>
           </Grid>
@@ -108,21 +120,34 @@ const SeasonCard: FC<SeasonCardProps> = ({
                 color="text.secondary"
                 sx={{ whiteSpace: 'nowrap' }}
               >
-                (&nbsp;{deltaTemperature && deltaTemperature.lt(0) ? '-' : '+'}{deltaTemperature?.abs().toString() || '0'}%&nbsp;)
+                (&nbsp;{deltaTemperature && deltaTemperature.lt(0) ? '-' : '+'}
+                {deltaTemperature?.abs().toString() || '0'}%&nbsp;)
               </Typography>
             </Row>
           </Grid>
           {/* Pod Rate */}
-          <Grid item xs={0} md={2} display={{ xs: 'none', md: 'block' }} textAlign="right">              
+          <Grid
+            item
+            xs={0}
+            md={2}
+            display={{ xs: 'none', md: 'block' }}
+            textAlign="right"
+          >
             <Typography color="text.primary" variant="bodySmall">
               {podRate?.gt(0) ? `${displayBN(podRate.times(100))}%` : '-'}
             </Typography>
           </Grid>
           {/* Delta Demand */}
-          <Grid item xs={0} md={2} display={{ xs: 'none', md: 'block' }} textAlign="right">
+          <Grid
+            item
+            xs={0}
+            md={2}
+            display={{ xs: 'none', md: 'block' }}
+            textAlign="right"
+          >
             <Typography variant="bodySmall">
-              {deltaDemand 
-                ? (deltaDemand.lt(-10_000 / 100) || deltaDemand.gt(10_000 / 100)) 
+              {deltaDemand
+                ? deltaDemand.lt(-10_000 / 100) || deltaDemand.gt(10_000 / 100)
                   ? `${deltaDemand.lt(0) ? '-' : ''}∞`
                   : `${displayBN(deltaDemand.div(100), true)}%`
                 : '-'}

@@ -50,71 +50,19 @@ library LibUnripeSilo {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
 
-    /*
-     * The values below represent the {LibTokenSilo-beanDenominatedValue} of 
-     * each pre-exploit LP token at the end of Block 14602789 (the block before 
-     * the exploit).
-     * 
-     * {LibUnripeSilo} uses these constants to migrate pre-exploit LP Deposits.
-     * 
-     * Note that the BDV of BEAN itself is always 1, hence why only LP tokens
-     * appear below.
-     */
-    
-    uint256 private constant AMOUNT_TO_BDV_BEAN_ETH = 119_894_802_186_829; // 18 decimal precision
-    uint256 private constant AMOUNT_TO_BDV_BEAN_3CRV = 992_035; // 6 decimal precision
-    uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983_108; // 6 decimal precision
-
-    //////////////////////// Unripe BEAN ////////////////////////
-
-    /*
-     * Unripe Bean Deposits stored in the Silo V1 Bean storage reference have
-     * not yet been Enrooted, as Enrooting moves the Deposit into the Unripe Bean
-     * Silo V2 storage reference (See {SiloFacet-enrootDeposit(s)}).
-     * 
-     * Thus, the BDV of Unripe Bean Deposits stored in the Silo V1 Bean storage 
-     * is equal to the amount deposited times the initial % recapitalized when 
-     * Beanstalk was Replanted.
-     *
-     * As Beanstalk continues to recapitalize, users can call 
-     * {SiloFacet-enrootDeposit(s)} to update the BDV of their Unripe Deposits. 
-     */
+    uint256 private constant AMOUNT_TO_BDV_BEAN_ETH = 119894802186829;
+    uint256 private constant AMOUNT_TO_BDV_BEAN_3CRV = 992035;
+    uint256 private constant AMOUNT_TO_BDV_BEAN_LUSD = 983108;
 
     /**
-     * @dev Removes `amount` of Unripe Beans deposited stored in `account` legacy 
-     * Silo V1 storage and returns the BDV.
-     *
-     * Since Deposited Beans have a BDV of 1, 1 Bean in Silo V1 storage equals
-     * 1 Unripe Bean. 
-     *
-     * FIXME(naming): removeLegacyDepositAsUnripeBean ?
+     * @dev Deletes the legacy Bean storage reference for a given `account` and `id`.
      */
     function removeUnripeBeanDeposit(
         address account,
-        uint32 season,
-        uint256 amount
-    ) internal returns (uint256 bdv) {
-        _removeUnripeBeanDeposit(account, season, amount);
-        bdv = amount.mul(C.initialRecap()).div(1e18);
-        
-    }
-
-    /**
-     * @dev See {removeUnripeBeanDeposit}.
-     * 
-     * FIXME(naming): _removeLegacyDepositAsUnripeBean ?
-     */
-    function _removeUnripeBeanDeposit(
-        address account,
-        uint32 season,
-        uint256 amount
-    ) private {
+        uint32 id
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        
-        s.a[account].bean.deposits[season] = s.a[account].bean.deposits[season].sub(
-            amount,
-            "Silo: Crate balance too low."
-        );
+        delete s.a[account].bean.deposits[id];
     }
 
     /**
@@ -125,10 +73,8 @@ library LibUnripeSilo {
     }
 
     /**
-     * @dev Calculate the `amount` and `bdv` of an Unripe Bean deposit. Sums
-     * across the amounts stored in Silo V1 and Silo V2 storage.
-     * 
-     * This is Unripe Bean equivalent of {LibTokenSilo-tokenDeposit}.
+     * @dev Returns the whole Unripe Bean Deposit for a given `account` and `season`.
+     * Includes non-legacy balance.
      */
     function unripeBeanDeposit(address account, uint32 season)
         internal
@@ -154,138 +100,18 @@ library LibUnripeSilo {
         
     }
 
-    //////////////////////// Unripe LP ////////////////////////
-
-    /*
-     * Unripe LP Deposits stored in the pre-exploit Bean:LUSD and BEAN:3CRV Silo
-     * V2 and the BEAN:ETH legacy Silo V1 storage have not been Enrooted, as
-     * Enrooting moves the Deposit into the Unripe BEAN:3CRV Silo V2 storage 
-     * reference (See {SiloFacet.enrootDeposit(s)}).
-     * 
-     * Thus, the BDV of Unripe BEAN:3CRV Deposits stored in the Silo V1 Bean
-     * storage is equal to the BDV of the amount of token times initial
-     * % recapitalized when Beanstalk was Replanted.
-     */
-
     /**
-     * @dev Removes `amount` Unripe BEAN:3CRV stored in _any_ of the
-     * pre-exploit LP Token Silo storage mappings and returns the BDV. 
-     *
-     * Priorization:
-     * 
-     * 1. Silo V1 format, pre-exploit BEAN:ETH LP token
-     * 2. Silo V2 format, pre-exploit BEAN:3CRV LP token
-     * 3. Silo V2 format, pre-exploit BEAN:LUSD LP token
-     *
-     * Should loop through each of the storage formats in the above order and
-     * remove from each as necessary. A contrived example:
-     * 
-     * +─────────+─────────+─────────────────+─────────────────────────+
-     * | season  | amount  | bdv at exploit  | token                   |
-     * +─────────+─────────+─────────────────+─────────────────────────+
-     * | 6044    | 0.00001 | 500             | BEAN:ETH (pre-exploit)  |
-     * | 6044    | 600     | 610             | BEAN:3CRV (pre-exploit) |
-     * | 6044    | 300     | 290             | BEAN:LUSD (pre-exploit) |
-     * +─────────+─────────+─────────────────+─────────────────────────+
-     *
-     * With the above Deposits, the user should have received:
-     *  500 + 610 + 290 = 1400 Unripe BEAN:3CRV LP.
-     *
-     * Removing 600 Unripe BEAN:3CRV LP would remove all 500 from the pre-exploit
-     * BEAN:ETH Deposit and bring the pre-exploit BEAN:3CRV Deposit from
-     * 610 -> 510.
+     * @dev Deletes all legacy LP storage references for a given `account` and `id`.
      */
     function removeUnripeLPDeposit(
         address account,
-        uint32 season,
-        uint256 amount
-    ) internal returns (uint256 bdv) {
-        bdv = _removeUnripeLPDeposit(account, season, amount);
-        bdv = bdv.mul(C.initialRecap()).div(1e18);
-    }
-
-    /**
-     * @dev See {removeUnripeLPDeposit}.
-     *
-     * Note that 1 Unripe LP = 1 BDV at the block of exploit.
-     */
-    function _removeUnripeLPDeposit(
-        address account,
-        uint32 season,
-        uint256 amount
-    ) private returns (uint256 bdv) {
+        uint32 id
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // Fetch Unripe BEAN:3CRV stored in legacy BEAN:ETH storage 
-        // (Silo V1 format).
-        (uint256 amount1, uint256 bdv1) = getBeanEthUnripeLP(account, season);
-
-        // If the amount in legacy BEAN:ETH storage is more than the desired 
-        // withdraw amount, decrement balances accordingly and return.
-        if (amount1 >= amount) {
-            // Proportionally decrement the Deposited legacy BEAN:ETH Silo balance.
-            uint256 removed = amount.mul(s.a[account].lp.deposits[season]).div(amount1);
-
-            s.a[account].lp.deposits[season] = s.a[account].lp.deposits[season].sub(removed);
-            removed = amount.mul(bdv1).div(amount1);
-            s.a[account].lp.depositSeeds[season] = s
-                .a[account]
-                .lp
-                .depositSeeds[season]
-                .sub(removed.mul(4));
-            
-            return removed;
-        }
-
-        // Use the entire legacy BEAN:ETH balance.
-        amount -= amount1;
-        bdv = bdv1;
-        delete s.a[account].lp.depositSeeds[season];
-        delete s.a[account].lp.deposits[season];
-
-        // Fetch Unripe BEAN:3CRV stored in the legacy BEAN:3CRV Deposit storage 
-        // (Silo V2 format).
-        (amount1, bdv1) = getBean3CrvUnripeLP(account, season);
-        if (amount1 >= amount) {
-            Account.Deposit storage d = s.a[account].legacyDeposits[
-                C.unripeLPPool1()
-            ][season];
-            uint128 removed = uint128(amount.mul(d.amount).div(amount1));
-            s.a[account].legacyDeposits[C.unripeLPPool1()][season].amount = d.amount.sub(
-                removed
-            );  
-            removed = uint128(amount.mul(d.bdv).div(amount1));
-            s.a[account].legacyDeposits[C.unripeLPPool1()][season].bdv = d.bdv.sub(
-                removed
-            );
-            return bdv.add(removed);
-        }
-
-        // Use the entire legacy BEAN:3CRV balance.
-        amount -= amount1;
-        bdv = bdv.add(bdv1);
-        delete s.a[account].legacyDeposits[C.unripeLPPool1()][season];
-
-        // Fetch Unripe BEAN:3CRV stored in the legacy BEAN:LUSD Deposit storage
-        // (Silo V2 format).
-        (amount1, bdv1) = getBeanLusdUnripeLP(account, season);
-        if (amount1 >= amount) {
-            Account.Deposit storage d = s.a[account].legacyDeposits[
-                C.unripeLPPool2()
-            ][season];
-            uint128 removed = uint128(amount.mul(d.amount).div(amount1));
-            s.a[account].legacyDeposits[C.unripeLPPool2()][season].amount = d.amount.sub(
-                removed
-            );
-            removed = uint128(amount.mul(d.bdv).div(amount1));
-            s.a[account].legacyDeposits[C.unripeLPPool2()][season].bdv = d.bdv.sub(
-                removed
-            );
-            return bdv.add(removed);
-        }
-
-        // Revert if `account` does not have enough Unripe BEAN:3CRV across all storage locations.
-        revert("Silo: Crate balance too low.");
+        delete s.a[account].lp.depositSeeds[id];
+        delete s.a[account].lp.deposits[id];
+        delete s.a[account].deposits[C.unripeLPPool1()][id];
+        delete s.a[account].deposits[C.unripeLPPool2()][id];
     }
 
     /**
@@ -296,9 +122,8 @@ library LibUnripeSilo {
     }
 
     /**
-     * @dev Calculate the `amount` and `bdv` of a given Unripe BEAN:3CRV deposit.
-     *
-     * This is Unripe LP equivalent of {LibTokenSilo-tokenDeposit}.
+     * @dev Returns the whole Unripe LP Deposit for a given `account` and `season`.
+     * Includes non-legacy balance.
      */
     function unripeLPDeposit(address account, uint32 season)
         internal

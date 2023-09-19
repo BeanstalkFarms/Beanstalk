@@ -1,11 +1,16 @@
- import React from 'react';
+import React from 'react';
 import { Container, Stack } from '@mui/material';
 import PageHeader from '~/components/Common/PageHeader';
 import RemainingFertilizer from '~/components/Barn/RemainingFertilizer';
 import MyFertilizer from '~/components/Barn/MyFertilizer';
 import BarnActions from '~/components/Barn/Actions';
 import GuideButton from '~/components/Common/Guide/GuideButton';
- import { HOW_TO_BUY_FERTILIZER, HOW_TO_RINSE_SPROUTS, HOW_TO_TRANSFER_FERTILIZER, HOW_TO_TRADE_FERTILIZER } from '~/util/Guides';
+import {
+  HOW_TO_BUY_FERTILIZER,
+  HOW_TO_RINSE_SPROUTS,
+  HOW_TO_TRANSFER_FERTILIZER,
+  HOW_TO_TRADE_FERTILIZER,
+} from '~/util/Guides';
 
 import { FC } from '~/types';
 
@@ -23,7 +28,7 @@ const Barn: FC<{}> = () => (
             guides={[
               HOW_TO_BUY_FERTILIZER,
               HOW_TO_RINSE_SPROUTS,
-              HOW_TO_TRANSFER_FERTILIZER, 
+              HOW_TO_TRANSFER_FERTILIZER,
               HOW_TO_TRADE_FERTILIZER,
             ]}
           />

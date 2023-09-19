@@ -6,9 +6,14 @@ import useSeasonsQuery, {
   MinimumViableSnapshotQuery,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useGenerateChartSeries from '~/hooks/beanstalk/useGenerateChartSeries';
-import { BaseChartProps, BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
+import {
+  BaseChartProps,
+  BaseDataPoint,
+} from '~/components/Common/Charts/ChartPropProvider';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
-import BaseSeasonPlot, { QueryData } from '~/components/Common/Charts/BaseSeasonPlot';
+import BaseSeasonPlot, {
+  QueryData,
+} from '~/components/Common/Charts/BaseSeasonPlot';
 
 export const defaultValueFormatter = (value: number) => `$${value.toFixed(4)}`;
 
@@ -29,6 +34,12 @@ export type SeasonPlotBaseProps = {
    * otherwise returns 0.
    */
   defaultSeason?: number;
+  /**
+   * The date displayed when the chart isn't being hovered.
+   * If not provided, uses the `date` of the last data point if available,
+   * otherwise returns the current timestamp.
+   */
+  defaultDate?: Date;
   /**
    * Height applied to the chart range. Can be a fixed
    * pixel number or a percent if the parent element has a constrained height.
@@ -52,6 +63,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
     queryConfig?: Partial<QueryOptions>;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP'>;
+    statsRowFullWidth?: boolean;
   };
 
 /**
@@ -61,6 +73,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   document,
   defaultValue: _defaultValue,
   defaultSeason: _defaultSeason,
+  defaultDate: _defaultDate,
   getValue,
   formatValue = defaultValueFormatter,
   height = '175px',
@@ -69,6 +82,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   dateKey = 'createdAt',
   queryConfig,
   stackedArea,
+  statsRowFullWidth,
 }: SeasonPlotFinalProps<T>) {
   const timeTabParams = useTimeTabState();
   const getDisplayValue = useCallback((v?: BaseDataPoint[]) => {
@@ -88,7 +102,12 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
     [seasonsQuery, getValue]
   );
 
-  const queryData: QueryData = useGenerateChartSeries(queryParams, timeTabParams[0], dateKey, stackedArea);
+  const queryData: QueryData = useGenerateChartSeries(
+    queryParams,
+    timeTabParams[0],
+    dateKey,
+    stackedArea
+  );
 
   return (
     <BaseSeasonPlot
@@ -103,6 +122,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
         tooltip: false,
         ...LineChartProps,
       }}
+      statsRowFullWidth={statsRowFullWidth}
     />
   );
 }

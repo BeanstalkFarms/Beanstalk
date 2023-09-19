@@ -15,14 +15,16 @@ const FillListing: React.FC<{}> = () => {
   const { listingID } = useParams<{ listingID: string }>();
   const { data: podListing, loading, error } = usePodListing(listingID);
   const beanstalk = useBeanstalkContract();
-  
+
   /// Verify that this listing is still live via the contract.
   const [listingValid, setListingValid] = useState<null | boolean>(null);
   useEffect(() => {
     if (listingID) {
       (async () => {
         try {
-          const _listing = await beanstalk.podListing(listingID.toString()).then(bigNumberResult);
+          const _listing = await beanstalk
+            .podListing(listingID.toString())
+            .then(bigNumberResult);
           console.debug('[pages/listing] listing = ', _listing);
           setListingValid(_listing?.gt(0));
         } catch (e) {
@@ -69,8 +71,7 @@ const FillListing: React.FC<{}> = () => {
         </StatHorizontal>
         <StatHorizontal label="Pods Available">
           <Row gap={0.25}>
-            <TokenIcon token={PODS} />{' '}
-            {displayBN(podListing.remainingAmount)}
+            <TokenIcon token={PODS} /> {displayBN(podListing.remainingAmount)}
           </Row>
         </StatHorizontal>
         <StatHorizontal label="Price per Pod">
@@ -82,7 +83,9 @@ const FillListing: React.FC<{}> = () => {
         <StatHorizontal label="Beans to Fill">
           <Row gap={0.25}>
             <TokenIcon token={BEAN[1]} />{' '}
-            {displayBN(podListing.remainingAmount.times(podListing.pricePerPod))}
+            {displayBN(
+              podListing.remainingAmount.times(podListing.pricePerPod)
+            )}
           </Row>
         </StatHorizontal>
       </Stack>

@@ -6,26 +6,25 @@ interface CustomProps {
   name: string;
 }
 
-export default React.forwardRef<
-  NumberFormat<InputAttributes>,
-  CustomProps
->((props, ref) => {
-  const { onChange, ...other } = props;
-  return (
-    <NumberFormat
-      {...other}
-      getInputRef={ref}
-      onValueChange={(values) => {
-        onChange({
-          target: {
-            name: props.name,
-            value: values.value,
-          },
-        });
-      }}
-      thousandSeparator
-      isNumericString
-      // prefix="$"
-    />
-  );
-});
+export default React.forwardRef<NumberFormat<InputAttributes>, CustomProps>(
+  (props, ref) => {
+    const { onChange, ...other } = props;
+    return (
+      <NumberFormat
+        {...other}
+        getInputRef={ref}
+        onValueChange={(values) => {
+          onChange({
+            target: {
+              name: props.name,
+              value: values.value,
+            },
+          });
+        }}
+        thousandSeparator
+        isNumericString
+        // prefix="$"
+      />
+    );
+  }
+);

@@ -310,12 +310,94 @@ contract SiloFacet is TokenSilo {
         _claimPlenty(msg.sender);
     }
 
-    function bdv(address token, uint256 amount)
-        external
-        view
-        returns (uint256 bdv)
-    {
-        bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+    /*
+     * Update Unripe Deposits
+     */
+
+    /** 
+     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of specified Unripe Deposits.
+     * @param token address of Whitelisted Unripe ERC20
+     * @param seasons array of seasons to enroot
+     * @param amounts array of amount (corresponding to seasons) to enroot
+     */
+    function enrootDeposits(
+        address token,
+        uint32[] calldata seasons,
+        uint256[] calldata amounts
+    ) external payable nonReentrant updateSilo {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+
+        // First, remove Deposits because every deposit is in a different season, we need to get the total Stalk/Seeds, not just BDV
+        AssetsRemoved memory ar = removeDeposits(msg.sender, token, seasons, amounts);
+        AssetsAdded memory aa;
+        // Get new BDV and calculate Seeds (Seeds are not Season dependent like Stalk)
+        aa.bdvAdded = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
+
+        // Iterate through all seasons, redeposit the tokens with new BDV and summate new Stalk.
+        for (uint256 i; i < seasons.length; ++i) {
+            uint256 bdv = amounts[i].mul(aa.bdvAdded).div(ar.tokensRemoved); // Cheaper than calling the BDV function multiple times.
+            LibTokenSilo.addDeposit(
+                msg.sender,
+                token,
+                seasons[i],
+                amounts[i],
+                bdv
+            );
+            aa.stalkAdded = aa.stalkAdded.add(
+                bdv.mul(s.ss[token].stalk).add(
+                    LibSilo.stalkReward(
+                        bdv.mul(s.ss[token].seeds),
+                        season() - seasons[i]
+                    )
+                )
+            );
+            // Count BDV to prevent a rounding error. Do multiplication later to save gas.
+            aa.seedsAdded = aa.seedsAdded.add(bdv);
+        }
+
+        aa.seedsAdded = aa.seedsAdded.mul(s.ss[token].seeds);
+
+        // Add new Stalk
+        LibSilo.depositSiloAssets(
+            msg.sender,
+            aa.seedsAdded.sub(ar.seedsRemoved),
+            aa.stalkAdded.sub(ar.stalkRemoved)
+        );
+    }
+
+    /** 
+     * @notice Claims oustanding Revitalized Stalk and Seeds and updates BDV of a single Unripe Deposit.
+     * @param token address of Whitelisted Unripe ERC20
+     * @param _season season to enroot
+     * @param amount amount to enroot
+     */
+    function enrootDeposit(
+        address token,
+        uint32 _season,
+        uint256 amount
+    ) external payable nonReentrant updateSilo {
+        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+        
+        // First, remove Deposit and Redeposit with new BDV
+        uint256 ogBDV = LibTokenSilo.removeDeposit(
+            msg.sender,
+            token,
+            _season,
+            amount
+        );
+        emit RemoveDeposit(msg.sender, token, _season, amount); // Remove Deposit does not emit an event, while Add Deposit does.
+        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+        LibTokenSilo.addDeposit(msg.sender, token, _season, amount, newBDV);
+
+        // Calculate the different in BDV. Will fail if BDV is lower.
+        uint256 deltaBDV = newBDV.sub(ogBDV);
+
+        // Calculate the new Stalk/Seeds associated with BDV and increment Stalk/Seed balances
+        uint256 deltaSeeds = deltaBDV.mul(s.ss[token].seeds);
+        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalk).add(
+            LibSilo.stalkReward(deltaSeeds, season() - _season)
+        );
+        LibSilo.depositSiloAssets(msg.sender, deltaSeeds, deltaStalk);
     }
 
 }

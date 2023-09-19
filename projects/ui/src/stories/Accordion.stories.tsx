@@ -1,5 +1,11 @@
 import React from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Button, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Button,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import AccordionWrapper from '~/components/Common/Accordion/AccordionWrapper';
@@ -8,7 +14,7 @@ export default {
   component: Button,
   args: {
     wrapped: true,
-  }
+  },
 } as ComponentMeta<typeof Button>;
 
 const Template: ComponentStory<typeof Button> = (args: any) => {
@@ -29,7 +35,7 @@ const Template: ComponentStory<typeof Button> = (args: any) => {
       </AccordionDetails>
     </Accordion>
   );
-  
+
   if (args.wrapped) return <AccordionWrapper>{a}</AccordionWrapper>;
 
   return a;

@@ -1,6 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { BEAN_TO_SEEDS, BEAN_TO_STALK, ONE_BN, TokenMap, ZERO_BN } from '~/constants';
+import {
+  BEAN_TO_SEEDS,
+  BEAN_TO_STALK,
+  ONE_BN,
+  TokenMap,
+  ZERO_BN,
+} from '~/constants';
 import { bigNumberResult } from '~/util/Ledger';
 import { tokenResult, toStringBaseUnitBN } from '~/util';
 import { BEAN, SEEDS, STALK } from '~/constants/tokens';
@@ -15,14 +21,17 @@ export const useFetchBeanstalkSilo = () => {
   const beanstalk = useBeanstalkContract();
   const WHITELIST = useWhitelist();
 
-  /// 
+  ///
   const getChainConstant = useGetChainConstant();
   const Bean = getChainConstant(BEAN);
 
   /// Handlers
   const fetch = useCallback(async () => {
     if (beanstalk) {
-      console.debug('[beanstalk/silo/useBeanstalkSilo] FETCH: whitelist = ', WHITELIST);
+      console.debug(
+        '[beanstalk/silo/useBeanstalkSilo] FETCH: whitelist = ',
+        WHITELIST
+      );
 
       const [
         // 0
@@ -36,19 +45,23 @@ export const useFetchBeanstalkSilo = () => {
         withdrawSeasons,
       ] = await Promise.all([
         // 0
-        beanstalk.totalStalk().then(tokenResult(STALK)),  // Does NOT include Grown Stalk
-        beanstalk.totalSeeds().then(tokenResult(SEEDS)),  // Does NOT include Plantable Seeds
-        beanstalk.totalRoots().then(bigNumberResult),     // 
+        beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
+        beanstalk.totalSeeds().then(tokenResult(SEEDS)), // Does NOT include Plantable Seeds
+        beanstalk.totalRoots().then(bigNumberResult), //
         beanstalk.totalEarnedBeans().then(tokenResult(BEAN)),
         // 4
         Promise.all(
-          Object.keys(WHITELIST).map((addr) => (
+          Object.keys(WHITELIST).map((addr) =>
             Promise.all([
               // FIXME: duplicate tokenResult optimization
-              beanstalk.getTotalDeposited(addr).then(tokenResult(WHITELIST[addr])),
-              beanstalk.getTotalWithdrawn(addr).then(tokenResult(WHITELIST[addr])),
+              beanstalk
+                .getTotalDeposited(addr)
+                .then(tokenResult(WHITELIST[addr])),
+              beanstalk
+                .getTotalWithdrawn(addr)
+                .then(tokenResult(WHITELIST[addr])),
               // BEAN will always have a fixed BDV of 1, skip to save a network request
-              WHITELIST[addr] === Bean 
+              WHITELIST[addr] === Bean
                 ? ONE_BN
                 : beanstalk
                     .bdv(addr, toStringBaseUnitBN(1, WHITELIST[addr].decimals))
@@ -64,19 +77,25 @@ export const useFetchBeanstalkSilo = () => {
               withdrawn: data[1],
               bdvPerToken: data[2],
             }))
-          ))
+          )
         ),
         // 5
         beanstalk.withdrawFreeze().then(bigNumberResult),
       ] as const);
 
-      console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [stalkTotal, seedsTotal, whitelistedAssetTotals[0], whitelistedAssetTotals[0].deposited.toString(), withdrawSeasons]);
+      console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [
+        stalkTotal,
+        seedsTotal,
+        whitelistedAssetTotals[0],
+        whitelistedAssetTotals[0].deposited.toString(),
+        withdrawSeasons,
+      ]);
 
       // farmableStalk and farmableSeed are derived from farmableBeans
       // because 1 bean = 1 stalk, 2 seeds
       const activeStalkTotal = stalkTotal;
       const earnedStalkTotal = earnedBeansTotal.times(BEAN_TO_STALK);
-      const earnedSeedTotal  = earnedBeansTotal.times(BEAN_TO_SEEDS);
+      const earnedSeedTotal = earnedBeansTotal.times(BEAN_TO_SEEDS);
 
       /// Aggregate balances
       const balances = whitelistedAssetTotals.reduce((agg, curr) => {
@@ -87,7 +106,7 @@ export const useFetchBeanstalkSilo = () => {
           },
           withdrawn: {
             amount: curr.withdrawn,
-          }
+          },
         };
 
         return agg;
@@ -97,38 +116,35 @@ export const useFetchBeanstalkSilo = () => {
       // active:  owned, actively earning other silo assets
       // earned:  active but not yet deposited into a Season
       // grown:   inactive
-      dispatch(updateBeanstalkSilo({
-        // Balances
-        balances,
-        // Rewards
-        beans: {
-          earned: earnedBeansTotal,
-          total:  balances[Bean.address].deposited.amount,
-        },
-        stalk: {
-          active: activeStalkTotal,
-          earned: earnedStalkTotal,
-          grown:  ZERO_BN,
-          total:  activeStalkTotal.plus(ZERO_BN),
-        },
-        seeds: {
-          active: seedsTotal,
-          earned: earnedSeedTotal,
-          total:  seedsTotal.plus(earnedSeedTotal),
-        },
-        roots: {
-          total:  rootsTotal,
-        },
-        // Metadata
-        withdrawSeasons: withdrawSeasons
-      }));
+      dispatch(
+        updateBeanstalkSilo({
+          // Balances
+          balances,
+          // Rewards
+          beans: {
+            earned: earnedBeansTotal,
+            total: balances[Bean.address].deposited.amount,
+          },
+          stalk: {
+            active: activeStalkTotal,
+            earned: earnedStalkTotal,
+            grown: ZERO_BN,
+            total: activeStalkTotal.plus(ZERO_BN),
+          },
+          seeds: {
+            active: seedsTotal,
+            earned: earnedSeedTotal,
+            total: seedsTotal.plus(earnedSeedTotal),
+          },
+          roots: {
+            total: rootsTotal,
+          },
+          // Metadata
+          withdrawSeasons: withdrawSeasons,
+        })
+      );
     }
-  }, [
-    beanstalk,
-    WHITELIST,
-    dispatch,
-    Bean,
-  ]);
+  }, [beanstalk, WHITELIST, dispatch, Bean]);
 
   const clear = useCallback(() => {
     console.debug('[beanstalk/silo/useBeanstalkSilo] CLEAR');

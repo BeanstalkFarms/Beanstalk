@@ -6,6 +6,6 @@ export type UnripeToken = {
   chopPenalty: BigNumber;
   underlying: BigNumber;
   supply: BigNumber;
-}
+};
 
 export type Unripe = AddressMap<UnripeToken>;

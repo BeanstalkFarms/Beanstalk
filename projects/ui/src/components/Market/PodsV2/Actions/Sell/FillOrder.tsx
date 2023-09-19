@@ -22,7 +22,9 @@ const FillOrder: React.FC<{}> = () => {
     if (orderID) {
       (async () => {
         try {
-          const _order = await beanstalk.podOrderById(orderID.toString()).then(bigNumberResult);
+          const _order = await beanstalk
+            .podOrderById(orderID.toString())
+            .then(bigNumberResult);
           console.debug('[pages/order] order = ', _order);
           setOrderValid(_order?.gt(0));
         } catch (e) {
@@ -83,7 +85,9 @@ const FillOrder: React.FC<{}> = () => {
           <StatHorizontal label="Beans Remaining">
             <Row gap={0.25}>
               <TokenIcon token={BEAN[1]} />{' '}
-              {displayBN(podOrder.podAmountRemaining.times(podOrder.pricePerPod))}
+              {displayBN(
+                podOrder.podAmountRemaining.times(podOrder.pricePerPod)
+              )}
             </Row>
           </StatHorizontal>
         </Stack>

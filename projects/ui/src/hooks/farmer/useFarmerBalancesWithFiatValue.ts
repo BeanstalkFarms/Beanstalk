@@ -26,7 +26,10 @@ export type TokenBalanceWithFiatValue = {
   value: BigNumber;
 };
 
-const sortTokens = (a: TokenBalanceWithFiatValue, b: TokenBalanceWithFiatValue) => {
+const sortTokens = (
+  a: TokenBalanceWithFiatValue,
+  b: TokenBalanceWithFiatValue
+) => {
   const tkA = sortMap[a.token.symbol as keyof typeof sortMap];
   const tkB = sortMap[b.token.symbol as keyof typeof sortMap];
   return tkA - tkB;
@@ -34,14 +37,17 @@ const sortTokens = (a: TokenBalanceWithFiatValue, b: TokenBalanceWithFiatValue) 
 
 /**
  * Organizes farmer external & internal balance and returns balance data w/ fiat value of each balance
- * @param includeZero 
+ * @param includeZero
  */
 export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
   // constants
   const whitelist = useWhitelist();
 
   // data
-  const tokenMap = useTokenMap<ERC20Token | NativeToken>([...CRV3_UNDERLYING, ETH]);
+  const tokenMap = useTokenMap<ERC20Token | NativeToken>([
+    ...CRV3_UNDERLYING,
+    ETH,
+  ]);
   const tokenList = useMemo(() => Object.values(tokenMap), [tokenMap]);
   const breakdown = useFarmerBalancesBreakdown();
   const farmerBalances = useFarmerBalances();

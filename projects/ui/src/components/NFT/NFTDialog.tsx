@@ -1,7 +1,11 @@
 import React from 'react';
 import { Button, Dialog, Link } from '@mui/material';
-import { StyledDialogActions, StyledDialogContent, StyledDialogTitle } from '../Common/Dialog';
-import { ClaimStatus, COLLECTION_ADDRESS, Nft } from '../../util/BeaNFTs';
+import {
+  StyledDialogActions,
+  StyledDialogContent,
+  StyledDialogTitle,
+} from '../Common/Dialog';
+import { ClaimStatus, Nft } from '../../util/BeaNFTs';
 import NFTImage from './NFTImage';
 
 import { FC } from '~/types';
@@ -17,7 +21,7 @@ const NFTDialog: FC<NFTDialogProps> = ({
   handleDialogClose,
   dialogOpen,
   handleMint,
-  nft
+  nft,
 }) => {
   const nftImage = <NFTImage nft={nft} />;
   return (
@@ -33,14 +37,15 @@ const NFTDialog: FC<NFTDialogProps> = ({
       <StyledDialogContent sx={{ px: 1, pb: 1 }}>
         {nft.claimed === 0 ? (
           <Link
-            href={
-            `https://opensea.io/assets/ethereum/${COLLECTION_ADDRESS[nft.subcollection]}/${nft.id}`
-          }
+            href={`https://opensea.io/assets/ethereum/${nft.subcollection}/${nft.id}`}
             target="_blank"
-            rel="noreferrer">
+            rel="noreferrer"
+          >
             {nftImage}
           </Link>
-        ) : nftImage}
+        ) : (
+          nftImage
+        )}
       </StyledDialogContent>
       <StyledDialogActions sx={{ pt: 0 }}>
         {/* FIXME: should be a LoadingButton */}

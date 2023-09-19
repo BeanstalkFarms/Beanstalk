@@ -39,11 +39,7 @@ const PlotSelectDialog: FC<PlotSelectDialogProps & DialogProps> = ({
   };
 
   return (
-    <Dialog
-      onClose={handleClose}
-      open={open}
-      fullWidth
-    >
+    <Dialog onClose={handleClose} open={open} fullWidth>
       <StyledDialogTitle onClose={handleClose}>My Plots</StyledDialogTitle>
       <StyledDialogContent
         sx={{

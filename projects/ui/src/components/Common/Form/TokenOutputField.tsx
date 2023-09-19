@@ -10,7 +10,7 @@ import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
 
-const TokenOutputField : FC<{
+const TokenOutputField: FC<{
   /** */
   token: Token;
   /** The `amount` of `token` */
@@ -40,25 +40,46 @@ const TokenOutputField : FC<{
   override,
   size,
 }) => {
-  const isZero     = amount.eq(0);
+  const isZero = amount.eq(0);
   const isNegative = amount.lt(0);
-  const prefix     = (!isDelta || isZero) ? '' : isNegative ? '-' : '+';
+  const prefix = !isDelta || isZero ? '' : isNegative ? '-' : '+';
   return (
     <OutputField isNegative={isNegative} size={size}>
       {!isLoading ? (
         <Tooltip title={amountTooltip}>
-          <Typography display="inline" variant={size === 'small' ? 'body1' : 'bodyLarge'} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+          <Typography
+            display="inline"
+            variant={size === 'small' ? 'body1' : 'bodyLarge'}
+            sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}
+          >
             {amount.abs().gt(new BigNumber(1000000)) ? (
               <>
                 {prefix}&nbsp;{displayFullBN(amount.abs(), 0)}
               </>
             ) : (
               <>
-                {prefix}&nbsp;{displayFullBN(amount.abs(), token.displayDecimals, token.displayDecimals)}
+                {prefix}&nbsp;
+                {displayFullBN(
+                  amount.abs(),
+                  token.displayDecimals,
+                  token.displayDecimals
+                )}
               </>
             )}
             {amountSecondary && (
-              <>&nbsp;&nbsp;<Typography display="inline" variant="bodySmall">({typeof amountSecondary === 'string' ? amountSecondary : displayFullBN(amountSecondary, token.displayDecimals || 2)})</Typography></>
+              <>
+                &nbsp;&nbsp;
+                <Typography display="inline" variant="bodySmall">
+                  (
+                  {typeof amountSecondary === 'string'
+                    ? amountSecondary
+                    : displayFullBN(
+                        amountSecondary,
+                        token.displayDecimals || 2
+                      )}
+                  )
+                </Typography>
+              </>
             )}
           </Typography>
         </Tooltip>
@@ -75,11 +96,17 @@ const TokenOutputField : FC<{
               }}
             />
           )}
-          <Typography variant={size === 'small' ? 'bodySmall' : 'bodyMedium'} color="text.primary">
-            {modifier && `${modifier} `}{token.symbol}
+          <Typography
+            variant={size === 'small' ? 'bodySmall' : 'bodyMedium'}
+            color="text.primary"
+          >
+            {modifier && `${modifier} `}
+            {token.symbol}
           </Typography>
         </Row>
-      ) : <Box>{override}</Box>}
+      ) : (
+        <Box>{override}</Box>
+      )}
     </OutputField>
   );
 };

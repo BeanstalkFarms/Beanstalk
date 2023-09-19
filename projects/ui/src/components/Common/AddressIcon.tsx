@@ -9,21 +9,15 @@ import { FC } from '~/types';
 
 const FALLBACK_ADDRESS = BEANSTALK_ADDRESSES[1];
 
-const AddressIcon : FC<BoxProps & {
-  size?: number;
-  address?: string;
-}> = ({
-  size = IconSize.medium,
-  address,
-}) => {
+const AddressIcon: FC<
+  BoxProps & {
+    size?: number;
+    address?: string;
+  }
+> = ({ size = IconSize.medium, address }) => {
   const account = useAccount();
   const addr = address || account || FALLBACK_ADDRESS; // FIXME naming
-  return (
-    <Jazzicon
-      diameter={size}
-      seed={jsNumberForAddress(addr)}
-    />
-  );
+  return <Jazzicon diameter={size} seed={jsNumberForAddress(addr)} />;
 };
 
 export default AddressIcon;

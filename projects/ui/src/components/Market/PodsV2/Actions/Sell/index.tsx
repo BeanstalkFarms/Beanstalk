@@ -8,10 +8,7 @@ const Sell: React.FC<{}> = () => {
   return (
     <Stack px={0.8} py={0.8} gap={1.2}>
       <Box>
-        <SubActionSelect
-          action="sell"
-          id={orderID}
-        />
+        <SubActionSelect action="sell" id={orderID} />
       </Box>
       {/* Order or Fill form */}
       <Outlet />

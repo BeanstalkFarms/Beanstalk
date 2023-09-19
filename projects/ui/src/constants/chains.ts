@@ -12,7 +12,7 @@
  */
 export enum SupportedChainId {
   MAINNET = 1,
-  CUJO = 31337,     // pre-exploit, beanstalk replanted
+  CUJO = 31337, // pre-exploit, beanstalk replanted
   LOCALHOST = 1337,
 }
 
@@ -45,38 +45,38 @@ export enum NetworkType {
 export const L1_CHAIN_IDS = [
   SupportedChainId.MAINNET,
   SupportedChainId.LOCALHOST,
-  SupportedChainId.CUJO
+  SupportedChainId.CUJO,
 ] as const;
 
 export const L2_CHAIN_IDS = [] as const;
 
-export type SupportedL1ChainId = typeof L1_CHAIN_IDS[number]
-export type SupportedL2ChainId = typeof L2_CHAIN_IDS[number]
+export type SupportedL1ChainId = typeof L1_CHAIN_IDS[number];
+export type SupportedL2ChainId = typeof L2_CHAIN_IDS[number];
 
 interface BaseChainInfo {
-  readonly networkType: NetworkType
-  readonly blockWaitMsBeforeWarning?: number
-  readonly docs?: string
-  readonly bridge?: string
-  readonly explorer: string
-  readonly infoLink?: string
-  readonly logoUrl: string
-  readonly label: string
-  readonly helpCenterUrl?: string
+  readonly networkType: NetworkType;
+  readonly blockWaitMsBeforeWarning?: number;
+  readonly docs?: string;
+  readonly bridge?: string;
+  readonly explorer: string;
+  readonly infoLink?: string;
+  readonly logoUrl: string;
+  readonly label: string;
+  readonly helpCenterUrl?: string;
   readonly nativeCurrency: {
-    name: string // e.g. 'Goerli ETH',
-    symbol: string // e.g. 'gorETH',
-    decimals: number // e.g. 18,
-  }
+    name: string; // e.g. 'Goerli ETH',
+    symbol: string; // e.g. 'gorETH',
+    decimals: number; // e.g. 18,
+  };
 }
 
 export interface L1ChainInfo extends BaseChainInfo {
-  readonly networkType: NetworkType.L1
+  readonly networkType: NetworkType.L1;
 }
 
 export interface L2ChainInfo extends BaseChainInfo {
-  readonly networkType: NetworkType.L2
-  readonly bridge: string
-  readonly statusPage?: string
-  readonly defaultListUrl: string
+  readonly networkType: NetworkType.L2;
+  readonly bridge: string;
+  readonly statusPage?: string;
+  readonly defaultListUrl: string;
 }

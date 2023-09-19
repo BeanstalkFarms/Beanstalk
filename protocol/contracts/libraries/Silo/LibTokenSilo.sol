@@ -14,6 +14,7 @@ import "~/libraries/LibSafeMath128.sol";
 import "~/libraries/LibSafeMathSigned128.sol";
 import "~/libraries/LibSafeMathSigned96.sol";
 import "~/libraries/LibBytes.sol";
+import "./LibUnripeSilo.sol";
 
 
 /**
@@ -221,36 +222,41 @@ library LibTokenSilo {
         uint256 amount
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 depositId = LibBytes.packAddressAndStem(token,stem);
-
-        uint256 crateAmount = s.a[account].deposits[depositId].amount;
-        crateBDV = s.a[account].deposits[depositId].bdv;
-
-        require(amount <= crateAmount, "Silo: Crate balance too low.");
-
-        // Partial remove
-        if (amount < crateAmount) {
-            uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
-            uint256 updatedBDV = crateBDV.sub(removedBDV);
-            uint256 updatedAmount = crateAmount.sub(amount);
-
-            // SafeCast unnecessary b/c updatedAmount <= crateAmount and updatedBDV <= crateBDV, which are both <= type(uint128).max
-            s.a[account].deposits[depositId].amount = uint128(updatedAmount);
-            s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
-            //remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-            s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-                removedBDV.toUint128()
-            );
-            return removedBDV;
-        }
-        // Full remove
-        if (crateAmount > 0) delete s.a[account].deposits[depositId];
-
-
-        // SafeMath unnecessary b/c crateBDV <= type(uint128).max
-        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-            uint128(crateBDV)
+        uint256 crateAmount;
+        (crateAmount, crateBDV) = (
+            s.a[account].deposits[token][id].amount,
+            s.a[account].deposits[token][id].bdv
         );
+
+        // If amount to remove is greater than the amount in the Deposit, migrate legacy Deposit to new Deposit
+        if (amount > crateAmount) {
+            // If Unripe Deposit, fetch whole Deposit balance and delete legacy deposit references.
+            if (LibUnripeSilo.isUnripeBean(token)) {
+                (crateAmount, crateBDV) = LibUnripeSilo.unripeBeanDeposit(account, id);
+                LibUnripeSilo.removeUnripeBeanDeposit(account, id);
+            } else if (LibUnripeSilo.isUnripeLP(token)) {
+                (crateAmount, crateBDV) = LibUnripeSilo.unripeLPDeposit(account, id);
+                LibUnripeSilo.removeUnripeLPDeposit(account, id);
+            }
+            require(crateAmount >= amount, "Silo: Crate balance too low.");
+        }
+
+        // Partial Withdraw
+        if (amount < crateAmount) {
+            uint256 base = amount.mul(crateBDV).div(crateAmount);
+            uint256 newBase = crateBDV.sub(base);
+            uint256 newAmount = crateAmount.sub(amount);
+            require(
+                newBase <= uint128(-1) && newAmount <= uint128(-1),
+                "Silo: uint128 overflow."
+            );
+            s.a[account].deposits[token][id].amount = uint128(newAmount);
+            s.a[account].deposits[token][id].bdv = uint128(newBase);
+            return base;
+        }
+
+        // Full Withdraw
+        delete s.a[account].deposits[token][id];
     }
 
     //////////////////////// GETTERS ////////////////////////

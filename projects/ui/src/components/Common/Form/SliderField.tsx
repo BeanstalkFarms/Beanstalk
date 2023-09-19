@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import {
-  Slider,
-  SliderProps,
-} from '@mui/material';
+import { Slider, SliderProps } from '@mui/material';
 import { useFormikContext } from 'formik';
 import throttle from 'lodash/throttle';
 import BigNumber from 'bignumber.js';
@@ -20,18 +17,17 @@ type SliderFieldProps = {
    */
   fields: string[];
   /**
-   * 
+   *
    */
   changeMode?: 'onChange' | 'onChangeCommitted';
   /**
-   * 
+   *
    */
   throttleMs?: number;
 };
 
-const SliderField : FC<
-  SliderFieldProps
-  & SliderProps// Formik Field
+const SliderField: FC<
+  SliderFieldProps & SliderProps // Formik Field
 > = ({
   /// Custom props
   initialState,
@@ -45,7 +41,9 @@ const SliderField : FC<
   ...props
 }) => {
   /// story a copy of the form's value
-  const [internalValue, setInternalValue] = React.useState<number | number[]>(initialState);
+  const [internalValue, setInternalValue] = React.useState<number | number[]>(
+    initialState
+  );
 
   ///
   const { setFieldValue, getFieldProps } = useFormikContext<any>();
@@ -59,62 +57,71 @@ const SliderField : FC<
     // single slider
     if (fields.length === 1) {
       setInternalValue(v0);
-    // double slider
+      // double slider
     } else if (fields.length === 2) {
       if (v0 && v1) {
-        setInternalValue([
-          v0,
-          v1,
-        ]);
+        setInternalValue([v0, v1]);
       }
     }
-  }, [
-    v0,
-    v1,
-    fields
-  ]);
+  }, [v0, v1, fields]);
 
   /// @note `fields` needs to be memoized elsewhere if it's an array,
   /// otherwise this callback refreshes on every render (and thus, so
   /// does throttling).
-  const updateExternal = useCallback((newValue: number | number[], activeThumb?: number) => {
-    /// Single slider
-    if (typeof newValue === 'number') {
-      setFieldValue(fields[0], new BigNumber(newValue));
-    }
-    /// Double slider
-    else if (activeThumb) {
-      /// optimization: onChange provides the slider handle that changed
-      setFieldValue(fields[activeThumb], new BigNumber(newValue[activeThumb]));
-    } else {
-      setFieldValue(fields[0], new BigNumber(newValue[0]));
-      setFieldValue(fields[1], new BigNumber(newValue[1]));
-    }
-  }, [fields, setFieldValue]);
+  const updateExternal = useCallback(
+    (newValue: number | number[], activeThumb?: number) => {
+      /// Single slider
+      if (typeof newValue === 'number') {
+        setFieldValue(fields[0], new BigNumber(newValue));
+      }
+      /// Double slider
+      else if (activeThumb) {
+        /// optimization: onChange provides the slider handle that changed
+        setFieldValue(
+          fields[activeThumb],
+          new BigNumber(newValue[activeThumb])
+        );
+      } else {
+        setFieldValue(fields[0], new BigNumber(newValue[0]));
+        setFieldValue(fields[1], new BigNumber(newValue[1]));
+      }
+    },
+    [fields, setFieldValue]
+  );
 
   const updateExternalThrottled = useMemo(
     () => throttle(updateExternal, throttleMs),
     [updateExternal, throttleMs]
   );
-  
-  const changeHandlers = useMemo(() => ({
-    onChange: (event: Event, newValue: number | number[], activeThumb: number) => {
-      /// Always update internal state immediately.
-      setInternalValue(newValue);
-      /// If requested, push throttled change to the form.
-      if (changeMode === 'onChange') {
-        updateExternalThrottled(newValue, activeThumb);
-      }
-    },
-    onChangeCommitted: (event: React.SyntheticEvent | Event, newValue: number | number[]) => {
-      if (changeMode === 'onChangeCommitted') {
-        updateExternalThrottled(newValue);
-      } else {
-        /// flush the existing onChange call
-        updateExternalThrottled.flush();
-      }
-    }
-  }), [changeMode, updateExternalThrottled]);
+
+  const changeHandlers = useMemo(
+    () => ({
+      onChange: (
+        event: Event,
+        newValue: number | number[],
+        activeThumb: number
+      ) => {
+        /// Always update internal state immediately.
+        setInternalValue(newValue);
+        /// If requested, push throttled change to the form.
+        if (changeMode === 'onChange') {
+          updateExternalThrottled(newValue, activeThumb);
+        }
+      },
+      onChangeCommitted: (
+        event: React.SyntheticEvent | Event,
+        newValue: number | number[]
+      ) => {
+        if (changeMode === 'onChangeCommitted') {
+          updateExternalThrottled(newValue);
+        } else {
+          /// flush the existing onChange call
+          updateExternalThrottled.flush();
+        }
+      },
+    }),
+    [changeMode, updateExternalThrottled]
+  );
 
   return (
     <Slider
@@ -133,7 +140,7 @@ const SliderField : FC<
         '& .MuiSlider-thumb:before': {
           boxShadow: 'none',
         },
-        ...sx
+        ...sx,
       }}
       {...props}
     />

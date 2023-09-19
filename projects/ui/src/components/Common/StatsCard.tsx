@@ -5,7 +5,7 @@ import Stat from '~/components/Common/Stat';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { displayFullBN } from '~/util';
 import { Token } from '~/classes';
-import { BeanstalkPalette }  from '~/components/App/muiTheme';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 /**
  * Show a Card with multiple statistics inside.
@@ -19,11 +19,13 @@ export type StatItem = {
   token?: Token;
   amount: BigNumber;
   amountModifier?: BigNumber;
-}
+};
 
-const StatsCard: FC<{
-  stats: StatItem[];
-} & CardProps> = ({ stats }, props) => (
+const StatsCard: FC<
+  {
+    stats: StatItem[];
+  } & CardProps
+> = ({ stats }, props) => (
   <Card sx={{ p: 1, borderColor: BeanstalkPalette.lightestGrey }} {...props}>
     <Grid container spacing={1} rowSpacing={3}>
       {stats.map((stat, index) => (
@@ -34,16 +36,23 @@ const StatsCard: FC<{
             title={stat.title}
             titleTooltip={stat.tooltip}
             amountIcon={stat.token && <TokenIcon token={stat.token} />}
-            amount={(
+            amount={
               <>
-                {displayFullBN(stat.amount, stat.token ? stat.token.displayDecimals : 2)}
+                {displayFullBN(
+                  stat.amount,
+                  stat.token ? stat.token.displayDecimals : 2
+                )}
                 {stat.amountModifier !== undefined && (
                   <Typography color="primary" variant="h4">
-                    + {displayFullBN(stat.amountModifier, stat.token ? stat.token.displayDecimals : 2)}
+                    +{' '}
+                    {displayFullBN(
+                      stat.amountModifier,
+                      stat.token ? stat.token.displayDecimals : 2
+                    )}
                   </Typography>
                 )}
               </>
-            )}
+            }
           />
         </Grid>
       ))}

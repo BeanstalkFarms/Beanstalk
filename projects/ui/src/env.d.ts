@@ -2,21 +2,21 @@
 
 interface ImportMetaEnv {
   /**
-   * 
+   *
    */
-  readonly VITE_ALCHEMY_API_KEY: string
+  readonly VITE_ALCHEMY_API_KEY: string;
 
   /**
    * When truthy, show dev chains as selectable options
    * within the Network Dialog.
    */
-  readonly VITE_SHOW_DEV_CHAINS?: boolean
+  readonly VITE_SHOW_DEV_CHAINS?: boolean;
 
   /**
    * [Dev only] Impersonate another account.
    * Only works with local forked nodes.
    */
-  readonly VITE_OVERRIDE_FARMER_ACCOUNT?: string
+  readonly VITE_OVERRIDE_FARMER_ACCOUNT?: string;
 
   /**
    * API key for decentralized network subgraph
@@ -30,5 +30,5 @@ interface ImportMetaEnv {
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv
+  readonly env: ImportMetaEnv;
 }

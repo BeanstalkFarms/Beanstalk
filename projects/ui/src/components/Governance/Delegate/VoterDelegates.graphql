@@ -1,0 +1,8 @@
+query VoterDelegates($voter_address: Bytes!, $space_in: [String!]) {
+  delegations(where: { delegator_in: [$voter_address], space_in: $space_in }) {
+    id
+    delegate
+    space
+    timestamp
+  }
+}

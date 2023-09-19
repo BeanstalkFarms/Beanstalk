@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 
 const useTimedRefresh = (
   handler: () => any,
-  intervalMs : number,
-  enabled : boolean = true,
-  enabledBackground: boolean = false,
+  intervalMs: number,
+  enabled: boolean = true,
+  enabledBackground: boolean = false
 ) => {
   const interval = useRef<ReturnType<typeof setInterval>>();
 
@@ -22,7 +22,8 @@ const useTimedRefresh = (
     if (enabled) start();
   }, [enabled, start]);
   const onBlur = useCallback(() => {
-    if (interval.current && enabledBackground === false) clearInterval(interval.current);
+    if (interval.current && enabledBackground === false)
+      clearInterval(interval.current);
   }, [interval, enabledBackground]);
 
   /// Setup interval on initial load or params change

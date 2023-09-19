@@ -42,6 +42,8 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-31](https://bean.money/bip-31): Beanstalk Farms Q1 2023 Budget
 * [BIP-32](https://bean.money/bip-32): Seraph
 * [BIP-33](https://bean.money/bip-33): Beanstalk Farms H1 2023 Budget
+* [BIP-34](https://bean.money/bip-34): Sunrise Improvements
+* [BIP-35](https://bean.money/bip-35): Stalk Delegation and Process Amendments
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
@@ -66,3 +68,4 @@ You can read more about BOPs [here](https://docs.bean.money/almanac/governance/p
 
 * [BOP-1](https://bean.money/bop-1): Ratify Disclosures Statement
 * [BOP-2](https://bean.money/bop-2): Increase and Revisit Bounty for April Governance Exploit
+* [BOP-2](https://bean.money/bop-3): Form the BeaNFT DAO

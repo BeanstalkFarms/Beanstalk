@@ -1,7 +1,10 @@
 import React from 'react';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { Group } from '@visx/group';
-import VisxPie, { ProvidedProps, PieArcDatum } from '@visx/shape/lib/shapes/Pie';
+import VisxPie, {
+  ProvidedProps,
+  PieArcDatum,
+} from '@visx/shape/lib/shapes/Pie';
 import { animated, useTransition, interpolate } from 'react-spring';
 import { Stack, Typography } from '@mui/material';
 
@@ -22,11 +25,11 @@ export type PieDataPoint = {
   label: string;
   value: number;
   color: string;
-} & { [key: string] : any }
+} & { [key: string]: any };
 
 export type PieColorsByLabel = {
-  [key: string]: string
-}; 
+  [key: string]: string;
+};
 
 type AnimatedPieProps<Datum> = ProvidedProps<Datum> & {
   animate?: boolean;
@@ -77,26 +80,27 @@ function AnimatedPie<Datum>({
     leave: animate ? fromLeaveTransition : enterUpdateTransition,
     keys: getKey,
   });
-  return transitions((props, arc, { key }) => 
+  return transitions((props, arc, { key }) => (
     // const [centroidX, centroidY] = path.centroid(arc);
     // const hasSpaceForLabel = arc.endAngle - arc.startAngle >= 0.1;
     // eslint-disable-next-line arrow-body-style
-     (
-       <g key={key}>
-         <animated.path
-          // compute interpolated path d attribute from intermediate angle values
-           d={interpolate([props.startAngle, props.endAngle], (startAngle, endAngle) =>
+    <g key={key}>
+      <animated.path
+        // compute interpolated path d attribute from intermediate angle values
+        d={interpolate(
+          [props.startAngle, props.endAngle],
+          (startAngle, endAngle) =>
             path({
               ...arc,
               startAngle,
               endAngle,
-            }),
-          )}
-           fill={getColor(arc)}
-           onClick={() => onClickDatum(arc)}
-           onTouchStart={() => onClickDatum(arc)}
-        />
-         {/* {hasSpaceForLabel && (
+            })
+        )}
+        fill={getColor(arc)}
+        onClick={() => onClickDatum(arc)}
+        onTouchStart={() => onClickDatum(arc)}
+      />
+      {/* {hasSpaceForLabel && (
           <animated.g style={{ opacity: props.opacity }}>
             <text
               fill="#333"
@@ -113,9 +117,8 @@ function AnimatedPie<Datum>({
             </text>
           </animated.g>
         )} */}
-       </g>
-    )
-  );
+    </g>
+  ));
 }
 
 // ------------------------------------------------------
@@ -138,9 +141,9 @@ type PieCustomizationProps = {
   animate?: boolean;
   data: PieDataPoint[] | undefined;
   donutThickness?: number;
-}
+};
 
-const Pie : FC<PieProps & PieCustomizationProps> = ({
+const Pie: FC<PieProps & PieCustomizationProps> = ({
   title,
   width,
   height,
@@ -158,9 +161,7 @@ const Pie : FC<PieProps & PieCustomizationProps> = ({
   if (!data || data.length === 0) {
     return (
       <Stack sx={{ width, height }} alignItems="center" justifyContent="center">
-        <Typography color="text.secondary">
-          No data
-        </Typography>
+        <Typography color="text.secondary">No data</Typography>
       </Stack>
     );
   }
@@ -179,7 +180,9 @@ const Pie : FC<PieProps & PieCustomizationProps> = ({
               {...pie}
               animate={animate}
               getKey={(arc) => arc.data.label}
-              onClickDatum={({ data: { label } }) => { console.debug(`[Pie] click: ${label}`); }}
+              onClickDatum={({ data: { label } }) => {
+                console.debug(`[Pie] click: ${label}`);
+              }}
               getColor={(arc) => arc.data.color}
               // getColor={(arc) => getBrowserColor(arc.data.label)}
             />
@@ -205,14 +208,10 @@ const Pie : FC<PieProps & PieCustomizationProps> = ({
   );
 };
 
-const ResizablePieChart : FC<PieCustomizationProps> = (props) => (
+const ResizablePieChart: FC<PieCustomizationProps> = (props) => (
   <ParentSize debounceTime={50}>
     {({ width: visWidth, height: visHeight }) => (
-      <Pie
-        width={visWidth}
-        height={visHeight}
-        {...props}
-      />
+      <Pie width={visWidth} height={visHeight} {...props} />
     )}
   </ParentSize>
 );
