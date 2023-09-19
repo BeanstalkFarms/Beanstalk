@@ -3,9 +3,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/LibIncentive.sol";
 import "./Weather.sol";
+import "contracts/libraries/LibGauge.sol";
+import "contracts/libraries/LibIncentive.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/Silo/LibWhitelist.sol";
+import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+
+
 
 /**
  * @title SeasonFacet
@@ -14,6 +19,8 @@ import "./Weather.sol";
  */
 contract SeasonFacet is Weather {
     using SafeMath for uint256;
+
+    uint256 private constant PRECISION = 1e6;
 
     /**
      * @notice Emitted when the Season changes.
@@ -50,57 +57,20 @@ contract SeasonFacet is Weather {
     ) public payable returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
-        require(!paused(), "Season: Paused.");
-        require(seasonTime() > season(), "Season: Still current Season.");
-
+        require(!s.paused, "Season: Paused.");
+        require(seasonTime() > s.season.current, "Season: Still current Season.");
         stepSeason();
         int256 deltaB = stepOracle();
-        uint256 caseId = stepWeather(deltaB);
+        uint256 caseId = calcCaseIdandUpdate(deltaB);
+        LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
     }
 
-    //////////////////// SEASON GETTERS ////////////////////
-
-    /**
-     * @notice Returns the current Season number.
-     */
-    function season() public view returns (uint32) {
-        return s.season.current;
-    }
-
-    /**
-     * @notice Returns whether Beanstalk is Paused. When Paused, the `sunrise()` function cannot be called.
-     */
-    function paused() public view returns (bool) {
-        return s.paused;
-    }
-
-    /**
-     * @notice Returns the Season struct. See {Storage.Season}.
-     */
-    function time() external view returns (Storage.Season memory) {
-        return s.season;
-    }
-
-    /**
-     * @notice Returns whether Beanstalk started this Season above or below peg.
-     */
-    function abovePeg() external view returns (bool) {
-        return s.season.abovePeg;
-    }
-
-    /**
-     * @notice Returns the block during which the current Season started.
-     */
-    function sunriseBlock() external view returns (uint32){
-        return s.season.sunriseBlock;
-    }
-
     /**
      * @notice Returns the expected Season number given the current block timestamp.
-     * {sunrise} can be called when `seasonTime() > season()`.
+     * {sunrise} can be called when `seasonTime() > s.season.current`.
      */
     function seasonTime() public view virtual returns (uint32) {
         if (block.timestamp < s.season.start) return 0;
@@ -116,7 +86,7 @@ contract SeasonFacet is Weather {
     function stepSeason() private {
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
-        emit Sunrise(season());
+        emit Sunrise(s.season.current);
     }
 
     /**
@@ -134,7 +104,7 @@ contract SeasonFacet is Weather {
         // Number of blocks the sunrise is late by
         // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
         uint256 blocksLate = block.timestamp.sub(
-            s.season.start.add(s.season.period.mul(season()))
+            s.season.start.add(s.season.period.mul(s.season.current))
         )
         .div(C.BLOCK_LENGTH_SECONDS);
         
@@ -144,7 +114,5 @@ contract SeasonFacet is Weather {
         
         emit Incentivization(account, incentiveAmount);
         return incentiveAmount;
-    }
-
-
+    } 
 }

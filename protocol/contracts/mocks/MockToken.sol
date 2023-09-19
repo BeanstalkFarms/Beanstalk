@@ -33,7 +33,7 @@ contract MockToken is ERC20, ERC20Burnable, ERC20Permit {
         ERC20Burnable.burnFrom(account, amount);
     }
 
-    function burn(uint256 amount) public override(ERC20Burnable) {
+    function burn(uint256 amount) public override {
         ERC20Burnable.burn(amount);
     }
 

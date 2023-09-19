@@ -7,7 +7,7 @@ async function impersonateSigner(signerAddress, withEth = false) {
   });
 
   if (withEth) {
-    await hre.network.provider.send("hardhat_setBalance", [signerAddress, "0x3635C9ADC5DEA00000"]);
+    await hre.network.provider.send("hardhat_setBalance", [signerAddress, "0x21E19E0C9BAB2400000"]);
   }
   
   return await ethers.getSigner(signerAddress)

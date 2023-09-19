@@ -30,6 +30,7 @@ describe('Curve', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
@@ -451,7 +452,7 @@ describe('Curve', function () {
     })
 
     it('add lp and deposit', async function () {
-      const season = await this.season.season()
+      const season = await this.seasonGetter.season()
       const stemBean = await this.silo.seasonToStem(this.beanMetapool.address, season);
       const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, stemBean)
       expect(dep[0]).to.be.equal(to18('1000'))

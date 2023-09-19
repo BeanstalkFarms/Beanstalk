@@ -74,6 +74,6 @@ contract InitBipNewSilo {
         emit LibWhitelist.UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
 
         //set the stemStartSeason to the current season
-        s.season.stemStartSeason = uint16(currentSeason); //storing as uint16 to save storage space
+        s.season.stemStartSeason = uint16(currentSeason); //storing as uint32 to save storage space
     }
 }

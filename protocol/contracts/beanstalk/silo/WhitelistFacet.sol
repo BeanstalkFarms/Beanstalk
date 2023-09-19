@@ -71,7 +71,7 @@ contract WhitelistFacet {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint16 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();

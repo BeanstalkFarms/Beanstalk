@@ -34,7 +34,6 @@ describe('Well BDV', function () {
     await this.well.setTokens([BEAN, WETH])
     this.pump.setInstantaneousReserves([to18('1'), to18('1')])
     await whitelistWell(this.well.address, '10000', to6('4'))
-  
   });
 
   beforeEach(async function () {

@@ -196,14 +196,10 @@ library LibWellConvert {
         require(maxBeans > 0, "Convert: P must be >= 1.");
         beansConverted = beans > maxBeans ? maxBeans : beans;
         IERC20[] memory tokens = IWell(well).tokens();
-        uint256[] memory amounts = new uint256[](tokens.length);
-        amounts[beanIndex] = beansConverted;
-        C.bean().approve(well, beansConverted);
-        lp = IWell(well).addLiquidity(
-            amounts,
-            minLP,
+        C.bean().transfer(well, beans);
+        lp = IWell(well).sync(
             address(this),
-            block.timestamp
+            minLP
         );
     }
 }

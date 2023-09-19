@@ -1,34 +1,13 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
-const { ETH_USDC_UNISWAP_V3, ETH_USDT_UNISWAP_V3, WETH, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
+const { ETH_USDC_UNISWAP_V3, ETH_USDT_UNISWAP_V3, WETH } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require('../utils/helpers.js');
+const { setEthUsdcPrice, setEthUsdPrice, setEthUsdtPrice, setOracleFailure } = require('../utils/oracle.js');
 
 let user, user2, owner;
-
-let ethUsdcUniswapPool, ethUsdtUniswapPool, ethUsdChainlinkAggregator;
-
-async function setEthUsdcPrice(price) {
-    await ethUsdcUniswapPool.setOraclePrice(to6(price), 18);
-}
-
-async function setEthUsdPrice(price) {
-    const block = await ethers.provider.getBlock("latest");
-    await ethUsdChainlinkAggregator.addRound(to6(price), block.timestamp, block.timestamp, '1')
-}
-
-async function setEthUsdtPrice(price) {
-    await ethUsdtUniswapPool.setOraclePrice(to18('1').div(toBN('1').add(price)), 6);
-}
-
-async function printPrices() {
-    console.log(`CUSD Price: ${await season.getChainlinkEthUsdPrice()}`)
-    console.log(`USDT Price: ${await season.getEthUsdtPrice()}`)
-    console.log(`USDC Price: ${await season.getEthUsdcPrice()}`)
-
-}
 
 async function setToSecondsAfterHour(seconds = 0) {
     const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
@@ -52,11 +31,6 @@ describe('USD Oracle', function () {
         bean = await getBean()
         await setToSecondsAfterHour(0)
         await owner.sendTransaction({to: user.address, value: 0})
-
-        ethUsdtUniswapPool = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDT_UNISWAP_V3);
-        ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
-        await ethUsdChainlinkAggregator.setDecimals(6)
-        ethUsdcUniswapPool = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
 
         await setEthUsdPrice('10000')
         await setEthUsdcPrice('10000')
@@ -171,13 +145,13 @@ describe('USD Oracle', function () {
 
     describe("Handles Uniswap Oracle Failure", async function () {
         it ('succeeds when ETH/USDT call fails', async function () {
-            await ethUsdtUniswapPool.setOracleFailure(true)
+            await setOracleFailure(true, ETH_USDT_UNISWAP_V3)
             await setEthUsdcPrice('10050')
             await checkPriceWithError('10025')
         })
 
         it ('succeeds when ETH/USDC call fails', async function () {
-            await ethUsdcUniswapPool.setOracleFailure(true)
+            await setOracleFailure(true, ETH_USDC_UNISWAP_V3)
             await checkPriceWithError('10000')
         })
     })

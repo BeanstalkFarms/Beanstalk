@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "contracts/libraries/Silo/LibLegacyWhitelist.sol";
+import "contracts/libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 
@@ -63,5 +64,28 @@ contract InitWhitelist {
             BEAN_3CRV_STALK,
             BEAN_3CRV_SEEDS * 1e6
         );
+    }
+
+    /**
+     * @notice Add an ERC-20 token to the Silo Whitelist.
+     * @dev removes require statements for testing.
+     */
+    function mockWhitelistToken(
+        address token,
+        bytes4 selector,
+        uint16 stalkIssuedPerBdv,
+        uint24 stalkEarnedPerSeason,
+        bytes1 encodeType
+    ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.ss[token].selector = selector;
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
+
+        s.ss[token].encodeType = encodeType;
+
+        s.ss[token].milestoneSeason = s.season.current;
+
+        emit LibWhitelist.WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 }

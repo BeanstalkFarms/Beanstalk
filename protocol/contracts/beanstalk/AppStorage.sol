@@ -179,7 +179,7 @@ contract Storage {
     /**
      * @notice System-level Field state variables.
      * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
-     * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.stepWeather}.
+     * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
      * @param pods The pod index; the total number of Pods ever minted.
      * @param harvested The harvested index; the total number of Pods that have ever been Harvested.
      * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
@@ -240,6 +240,7 @@ contract Storage {
      * @dev {Storage.State} contains a mapping from Token address => AssetSilo.
      * Currently, the bdv of deposits are asynchronous, and require an on-chain transaction to update.
      * Thus, the total bdv of deposits cannot be calculated, and must be stored and updated upon a bdv change.
+     * 
      * 
      * Note that "Withdrawn" refers to the amount of Tokens that have been Withdrawn
      * but not yet Claimed. This will be removed in a future BIP.
@@ -357,61 +358,45 @@ contract Storage {
 
     /**
      * @notice Describes the settings for each Token that is Whitelisted in the Silo.
-     * @param selector The encoded BDV function selector for the Token.
-     * @param seeds The Seeds Per BDV that the Silo mints in exchange for Depositing this Token.
-     * @param stalk The Stalk Per BDV that the Silo mints in exchange for Depositing this Token.
+     * @param selector The encoded BDV function selector for the token that pertains to 
+     * an external view Beanstalk function with the following signature:
+     * ```
+     * function tokenToBdv(uint256 amount) external view returns (uint256);
+     * ```
+     * It is called by `LibTokenSilo` through the use of `delegatecall`
+     * to calculate a token's BDV at the time of Deposit.
+     * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
+     * previously called stalk.
+     * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
+     * @param milestoneStem The cumulative amount of grown stalk per BDV for this token at the last stalkEarnedPerSeason update.
+     * @param encodeType determine the encoding type of the selector.
+     * a encodeType of 0x00 means the selector takes an input amount.
+     * 0x01 means the selector takes an input amount and a token.
+     * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
+     * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
+     * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
+     * @param lpGaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
+     * @param GPSelector The encoded gaugePoint function selector for the token that pertains to 
+     * an external view Beanstalk function with the following signature:
+     * ```
+     * function gaugePoints(
+     *  uint256 currentGaugePoints,
+     *  uint256 percentOfDepositedBdv
+     *  ) external view returns (uint256);
+     * ```
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
-     * 
-     * Note: `selector` is an encoded function selector that pertains to an 
-     * external view function with the following signature:
-     * 
-     * `function tokenToBdv(uint256 amount) public view returns (uint256);`
-     * 
-     * It is called by {LibTokenSilo} through the use of delegate call to calculate 
-     * the BDV of Tokens at the time of Deposit.
      */
     struct SiloSettings {
-        /*
-         * @dev: 
-         * 
-         * `selector` is an encoded function selector that pertains to 
-         * an external view Beanstalk function with the following signature:
-         * 
-         * ```
-         * function tokenToBdv(uint256 amount) public view returns (uint256);
-         * ```
-         * 
-         * It is called by `LibTokenSilo` through the use of `delegatecall`
-         * to calculate a token's BDV at the time of Deposit.
-         */
-        bytes4 selector;
-        /*
-         * @dev The Stalk Per BDV Per Season represents how much Stalk one BDV of the underlying deposited token
-         * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
-         *  as 1e10, so 1 legacy seed would be 1e6 * 1e10.
-         */
-        uint32 stalkEarnedPerSeason;
-        /*
-         * @dev The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
-         * previously just called stalk.
-         */
-        uint32 stalkIssuedPerBdv;
-        /*
-         * @dev The last season in which the stalkEarnedPerSeason for this token was updated
-         */
-		uint32 milestoneSeason;
-        /*
-         * @dev The cumulative amount of grown stalk per BDV for this Silo depositable token at the last stalkEarnedPerSeason update
-         */
-		int96 milestoneStem;
-
-        /*
-         @dev 1 byte of space is used for different encoding types.
-         */
-        bytes1 encodeType;
-
-        /// @dev  7 bytes of additional storage space is available here.
-
+        bytes4 selector; // ─────────────┐ 4
+        uint32 stalkEarnedPerSeason; //  │ 4  (16)
+        uint32 stalkIssuedPerBdv; //     │ 4  (8)
+		uint32 milestoneSeason; //       │ 4  (12)
+		int96 milestoneStem; //          │ 12 (28)
+        bytes1 encodeType; // ───────────┘ 1  (29)
+        // 3 bytes are left here.
+        uint32 lpGaugePoints; //  ───────┐ 4  
+        bytes4 GPSelector; //  ──────────┘ 4  (8)
+        // 24 bytes are left here.
     }
 
     /**
@@ -435,6 +420,16 @@ contract Storage {
         address underlyingToken;
         uint256 balanceOfUnderlying;
         bytes32 merkleRoot;
+    }
+
+    /**
+     * @notice System level variables used in the seed Gauge System.
+     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV that beanstalk issues each season.
+     * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precision (1% = 1e6)
+     */
+    struct SeedGauge {
+        uint128 averageGrownStalkPerBdvPerSeason;
+        uint128 percentOfNewGrownStalkToLP;
     }
 }
 
@@ -482,11 +477,12 @@ contract Storage {
  * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
  * @param vestingPeriodRoots the number of roots to add to the global roots, in the case the user plants in the morning. // placed here to save a storage slot.s
- * @param recapitalized The nubmer of USDC that has been recapitalized in the Barn Raise.
+ * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param casesV2 Stores the 96 Weather and seedGauge cases (array has 128 items, but caseId = 3 (mod 4) are not cases)
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -547,4 +543,8 @@ struct AppStorage {
     // Well
     mapping(address => bytes) wellOracleSnapshots;
     uint256 beanEthPrice;
+
+    // Seed Gauge
+    Storage.SeedGauge seedGauge;
+    bytes8[128] casesV2; 
 }

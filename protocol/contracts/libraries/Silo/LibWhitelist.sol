@@ -36,6 +36,13 @@ library LibWhitelist {
         uint256 stalkIssuedPerBdv
     );
 
+    event WhitelistTokenToGauge(
+        address indexed token, 
+        bytes4 selector, 
+        uint32 lpGaugePoints
+    );
+
+
     /**
      * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
      * @param token ERC-20 token being updated in the Silo Whitelist.
@@ -80,14 +87,42 @@ library LibWhitelist {
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
 
         s.ss[token].encodeType = encodeType;
 
-        s.ss[token].milestoneSeason = s.season.current;
+        s.ss[token].milestoneSeason = uint32(s.season.current);
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
+    }
+
+    /**
+     * @notice Add an ERC-20 token to the Seed Gauge Whitelist.
+     * @dev LibWhitelistedTokens.sol must be updated to include the new token.
+     */
+    function whitelistTokenToGauge(
+        address token,
+        bytes4 selector,
+        uint32 lpGaugePoints
+    ) internal {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        //verify you passed in a callable selector
+        (bool success,) = address(this).staticcall(
+            abi.encodeWithSelector(
+                selector,
+                0,
+                0
+            )
+        );
+        require(success, "Whitelist: Invalid selector");
+
+        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
+
+        ss.GPSelector = selector;
+        ss.lpGaugePoints = lpGaugePoints;
+
+        emit WhitelistTokenToGauge(token, selector, lpGaugePoints);
     }
     
     /**
@@ -101,7 +136,7 @@ library LibWhitelist {
 
         require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
 
-        s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); //store grown stalk milestone
+        s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); //store grown stalk milestone
         s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 

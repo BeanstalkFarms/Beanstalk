@@ -5,53 +5,65 @@ pragma experimental ABIEncoderV2;
 
 import "contracts/libraries/Decimal.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import "contracts/libraries/LibEvaluate.sol";
+import "contracts/libraries/LibCases.sol";
 import "./Sun.sol";
 
-library DecimalExtended {
-    uint256 private constant PERCENT_BASE = 1e18;
-
-    function toDecimal(uint256 a) internal pure returns (Decimal.D256 memory) {
-        return Decimal.D256({ value: a });
-    }
-}
-
+// 
 /**
  * @title Weather
  * @author Publius
- * @notice Weather controls the Temperature on the Farm.
+ * @notice Weather controls the Temperature and Grown Stalk to LP on the Farm.
  */
 contract Weather is Sun {
     using SafeMath for uint256;
-    using DecimalExtended for uint256;
     using LibSafeMath32 for uint32;
+    using LibSafeMath128 for uint128;
+    using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
 
-    /// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
-    uint256 private constant SOW_TIME_DEMAND_INCR = 600; // seconds
+    // constants have the same value, but for different reasons.
+    // mT and mL are divided by RELATIVE_PRECISION as they 
+    // are a percentage (100% = 1e4).
+    // bL is multiplied by GROWN_STALK_PRECISION as bL has a 
+    // precision of 2 decimals, and needs to have 6 decimals
+    // to match the precision of percentOfNewGrownStalkToLP.
+    uint16 constant internal RELATIVE_PRECISION = 1e4;
+    uint16 constant internal GROWN_STALK_PRECISION = 1e4;
 
-    uint32 private constant SOW_TIME_STEADY = 60; // seconds
-
-    uint256 private constant POD_RATE_LOWER_BOUND = 0.05e18; // 5%
-    uint256 private constant POD_RATE_OPTIMAL = 0.15e18; // 15%
-    uint256 private constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
-
-    uint256 private constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
-    uint256 private constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
     
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
      * @param season The current Season
      * @param caseId The Weather case, which determines how much the Temperature is adjusted.
-     * @param change The change in Temperature as a delta from the previous value
-     * @dev The name {WeatherChange} is kept for backwards compatibility, 
-     * however the state variable included as `change` is now called Temperature.
+     * @param relChange The relative change in Temperature.
+     * @param absChange The absolute change in Temperature.
      * 
-     * `change` is emitted as a delta for gas efficiency.
+     * @dev the relative change is applied before the absolute change. 
+     * T_n = mT * T_n-1 + bT
      */
-    event WeatherChange(
+    event TemperatureChange(
         uint256 indexed season,
         uint256 caseId,
-        int8 change
+        uint16 relChange,
+        int16 absChange
+    );
+
+    /**
+     * @notice Emitted when the grownStalkToLP changes.
+     * @param season The current Season
+     * @param caseId The Weather case, which determines how much the Temperature is adjusted.
+     * @param relChange The relative change in Temperature.
+     * @param absChange The absolute change in Temperature.
+     * 
+     * @dev the relative change is applied before the absolute change. 
+     * L_n = mL * L_n-1 + bL
+     */
+    event GrownStalkToLPChange(
+        uint256 indexed season,
+        uint256 caseId,
+        uint16 relChange,
+        int16 absChange
     );
 
     /**
@@ -66,154 +78,101 @@ contract Weather is Sun {
         uint256 toField
     );
 
-
-    //////////////////// WEATHER GETTERS ////////////////////
-
-    /**
-     * @notice Returns the current Weather struct. See {AppStorage:Storage.Weather}.
-     */
-    function weather() public view returns (Storage.Weather memory) {
-        return s.w;
-    }
-
-    /**
-     * @notice Returns the current Rain struct. See {AppStorage:Storage.Rain}.
-     */
-    function rain() public view returns (Storage.Rain memory) {
-        return s.r;
-    }
-
-    /**
-     * @notice Returns the Plenty per Root for `season`.
-     */
-    function plentyPerRoot(uint32 season) external view returns (uint256) {
-        return s.sops[season];
-    }
-
     //////////////////// WEATHER INTERNAL ////////////////////
 
     /**
+     * @notice from deltaB, podRate, change in soil demand, and liquidity to supply ratio,
+     * calculate the caseId, and update the temperature and grownStalkPerBDVToLP. 
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     * @dev A detailed explanation of the Weather mechanism can be found in the
-     * Beanstalk whitepaper. An explanation of state variables can be found in {AppStorage}.
+     * @dev A detailed explanation of the temperature and grownStalkPerBDVToLP
+     * mechanism can be found in the Beanstalk whitepaper. 
+     * An explanation of state variables can be found in {AppStorage}.
      */
-    function stepWeather(int256 deltaB) internal returns (uint256 caseId) {
+    function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
-
         // Prevent infinite pod rate
         if (beanSupply == 0) {
             s.w.t = 1;
             return 8; // Reasonably low
         }
 
-        // Calculate Pod Rate
-        Decimal.D256 memory podRate = Decimal.ratio(
-            s.f.pods.sub(s.f.harvestable), // same as totalUnharvestable()
-            beanSupply
-        );
-
         // Calculate Delta Soil Demand
         uint256 dsoil = s.f.beanSown;
         s.f.beanSown = 0;
-    
+
         Decimal.D256 memory deltaPodDemand;
+        (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = LibEvaluate.calcDeltaPodDemand(dsoil);
 
-        // `s.w.thisSowTime` is set to the number of seconds in it took for 
-        // Soil to sell out during the current Season. If Soil didn't sell out,
-        // it remains `type(uint32).max`.
-        if (s.w.thisSowTime < type(uint32).max) {
-            if (
-                s.w.lastSowTime == type(uint32).max || // Didn't Sow all last Season
-                s.w.thisSowTime < SOW_TIME_DEMAND_INCR || // Sow'd all instantly this Season
-                (s.w.lastSowTime > SOW_TIME_STEADY &&
-                    s.w.thisSowTime < s.w.lastSowTime.sub(SOW_TIME_STEADY)) // Sow'd all faster
-            ) {
-                deltaPodDemand = Decimal.from(1e18);
-            } else if (
-                s.w.thisSowTime <= s.w.lastSowTime.add(SOW_TIME_STEADY)
-            ) {
-                // Sow'd all in same time
-                deltaPodDemand = Decimal.one();
-            } else { 
-                deltaPodDemand = Decimal.zero();
-            }
+        // Calculate Lp To Supply Ratio
+        Decimal.D256 memory lpToSupplyRatio = LibEvaluate.calcLPToSupplyRatio(beanSupply);
 
-            s.w.lastSowTime = s.w.thisSowTime;  // Overwrite last Season
-            s.w.thisSowTime = type(uint32).max; // Reset for next Season
-        } 
-
-        // Soil didn't sell out
-        else {
-            uint256 lastDSoil = s.w.lastDSoil;
-
-            if (dsoil == 0) {
-                deltaPodDemand = Decimal.zero(); // If no one sow'd
-            } else if (lastDSoil == 0) {
-                deltaPodDemand = Decimal.from(1e18); // If no one sow'd last Season
-            } else { 
-                deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
-            }
-
-            if (s.w.lastSowTime != type(uint32).max) {
-                s.w.lastSowTime = type(uint32).max;
-            }
-        }
-        
-        // Calculate Weather Case
-        caseId = 0;
-
-        // Evaluate Pod Rate
-        if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
-            caseId = 24;
-        } else if (podRate.greaterThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal())) {
-            caseId = 16;
-        } else if (podRate.greaterThanOrEqualTo(POD_RATE_LOWER_BOUND.toDecimal())) {
-            caseId = 8;
-        }
-
-        // Evaluate Price
-        if (
-            deltaB > 0 ||
-            (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))
-        ) {
-            caseId += 4;
-        }
-
-        // Evaluate Delta Soil Demand
-        if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
-            caseId += 2;
-        } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
-            caseId += 1;
-        }
+        caseId = LibEvaluate.evaluateBeanstalk(
+            deltaB, // deltaB
+            Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply), // Pod Rate
+            deltaPodDemand, // change in soil demand
+            lpToSupplyRatio // lp to Supply Ratio
+        );
 
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
-        
-        changeWeather(caseId);
+        updateTemperatureAndGrownStalkPerBDVToLP(caseId);
         handleRain(caseId);
     }
 
+    function updateTemperatureAndGrownStalkPerBDVToLP(uint256 caseId) internal {
+        LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
+        updateTemperature(cd.mT, cd.bT, caseId);
+        updateNewGrownStalkPerBDVtoLP(cd.mL, cd.bL, caseId);
+    }
     /**
-     * @dev Changes the current Temperature `s.w.t` based on the Weather Case.
+     * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
-    function changeWeather(uint256 caseId) private {
-        int8 change = s.cases[caseId];
+    function updateTemperature(uint16 mT, int16 bT, uint256 caseId) private {
         uint32 t = s.w.t;
 
-        if (change < 0) {
-            if (t <= (uint32(-change))) {
+        if (bT < 0) {
+            if (t <= (uint32(-bT))) {
                 // if (change < 0 && t <= uint32(-change)),
-                // then 0 <= t <= type(int8).max because change is an int8.
-                // Thus, downcasting t to an int8 will not cause overflow.
-                change = 1 - int8(t);
+                // then 0 <= t <= type(int16).max because change is an int16.
+                // Thus, downcasting t to an int16 will not cause overflow.
+                bT = 1 - int16(t);
                 s.w.t = 1;
             } else {
-                s.w.t = t - (uint32(-change));
+                s.w.t = t.mul(mT).div(RELATIVE_PRECISION) - uint32(-bT);
             }
         } else {
-            s.w.t = t + (uint32(change));
+            s.w.t = t.mul(mT).div(RELATIVE_PRECISION) + uint32(bT);
         }
 
-        emit WeatherChange(s.season.current, caseId, change);
+        emit TemperatureChange(s.season.current, caseId, mT, bT);
+    }
+
+    /**
+     * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
+     */
+    function updateNewGrownStalkPerBDVtoLP(uint16 mL, int16 bL, uint256 caseId) private {
+        uint128 percentNewGrownStalkToLP = s.seedGauge.percentOfNewGrownStalkToLP;
+        percentNewGrownStalkToLP = percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION);
+        if(bL < 0){
+            if(percentNewGrownStalkToLP <= uint128(-bL).mul(GROWN_STALK_PRECISION)){
+                bL = - int16(percentNewGrownStalkToLP.div(GROWN_STALK_PRECISION));
+                s.seedGauge.percentOfNewGrownStalkToLP = 0;
+            } else {
+                s.seedGauge.percentOfNewGrownStalkToLP = 
+                    percentNewGrownStalkToLP.sub(uint128(-bL).mul(GROWN_STALK_PRECISION));
+            }
+        } else {
+            if(percentNewGrownStalkToLP.add(uint128(bL).mul(GROWN_STALK_PRECISION)) >= 100e6){
+                bL = int16(uint128(100e6).sub(percentNewGrownStalkToLP).div(GROWN_STALK_PRECISION));
+                s.seedGauge.percentOfNewGrownStalkToLP = 100e6;
+            } else {
+                s.seedGauge.percentOfNewGrownStalkToLP = percentNewGrownStalkToLP.add(
+                    uint128(bL).mul(GROWN_STALK_PRECISION)
+                );
+            }
+        }
+
+        // TODO: check whether event is good:
+        emit GrownStalkToLPChange(s.season.current, caseId, mL, bL);
     }
 
     /**
@@ -223,8 +182,9 @@ contract Weather is Sun {
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
     function handleRain(uint256 caseId) internal {
+        // TODO: update cases, assumes we flood irregardless of LoSR
         // cases 4-7 represent the case where the pod rate is less than 5% and P > 1.
-        if (caseId < 4 || caseId > 7) {
+        if (caseId.mod(32) < 4 || caseId.mod(32) > 7) {
             if (s.season.raining) {
                 s.season.raining = false;
             }
@@ -240,7 +200,7 @@ contract Weather is Sun {
             if (s.r.roots > 0) {
                 sop();
             }
-        }
+        }  
     }
 
     /**

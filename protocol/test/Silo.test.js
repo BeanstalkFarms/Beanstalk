@@ -25,9 +25,10 @@ describe('Silo', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
+    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
 
-    await this.season.teleportSunrise(10);
-    this.season.deployStemsUpgrade();
+    // await this.season.teleportSunrise(10);
+    // this.season.deployStemsUpgrade();
 
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.metadata = await ethers.getContractAt('MetadataFacet', this.diamond.address);
@@ -76,13 +77,11 @@ describe('Silo', function () {
 
   describe('Silo Balances After Deposits', function () {
     it('properly updates the user balances', async function () {
-      //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('2000'));
       expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('1000'));
       expect(await this.silo.balanceOfRoots(userAddress)).to.eq(toStalk('1000000000000000'));
     });
 
     it('properly updates the total balances', async function () {
-      //expect(await this.silo.totalSeeds()).to.eq(to6('4000'));
       expect(await this.silo.totalStalk()).to.eq(toStalk('2000'));
       expect(await this.silo.totalRoots()).to.eq(toStalk('2000000000000000'));
     });
@@ -178,7 +177,7 @@ describe('Silo', function () {
     it('mints an ERC1155 when depositing an whitelisted asset', async function () {
       // we use user 3 as user 1 + user 2 has already deposited - this makes it more clear
       this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
       expect(await this.silo.balanceOf(user3Address, depositID)).to.eq(to6('1000'));
@@ -194,7 +193,7 @@ describe('Silo', function () {
     it('adds to the ERC1155 balance when depositing an whitelisted asset', async function () {
       // user 1 already deposited 1000, so we expect the balanceOf to be 2000e6 here. 
       this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
       await expect(this.result).to.emit(this.silo, 'TransferSingle').withArgs(
@@ -210,7 +209,7 @@ describe('Silo', function () {
 
     it('removes ERC1155 balance when withdrawing an whitelisted asset', async function () {
       // user 1 already deposited 1000, so we expect the balanceOf to be 500e6 here. 
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       
       this.result = await this.silo.connect(user).withdrawDeposit(this.bean.address, stem, to6('500'), EXTERNAL)
@@ -227,7 +226,7 @@ describe('Silo', function () {
 
     it('transfers an ERC1155 deposit', async function () {
       // transfering a deposit from user 1, to user 3
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
 
@@ -268,13 +267,13 @@ describe('Silo', function () {
 
     it('batch transfers an ERC1155 deposit', async function () {
       // skip to next season, user 1 deposits again, and batch transfers the ERC1155 to user 3
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem0 = this.silo.seasonToStem(this.bean.address, season)
       depositID0 = await this.silo.getDepositId(this.bean.address, stem0)
 
       await this.season.farmSunrise();  
 
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem1 = this.silo.seasonToStem(this.bean.address, season)
       depositID1 = await this.silo.getDepositId(this.bean.address, stem1)
 
@@ -329,7 +328,7 @@ describe('Silo', function () {
     });
 
     it('properly gives the correct batch balances', async function () {
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
  
@@ -343,7 +342,7 @@ describe('Silo', function () {
     });
 
     it('properly gives the correct depositID', async function () {
-      season = this.season.season()
+      season = this.seasonGetter.season()
       stem = this.silo.seasonToStem(this.bean.address, season)
       depositID = await this.silo.getDepositId(this.bean.address, stem)
       // first 20 bytes is the address,
@@ -362,28 +361,28 @@ describe('Silo', function () {
     it("properly gives an URI", async function () {
       await this.season.farmSunrises(1000); 
 
+      // bean token
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
 
+      // bean3crv token
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3Crv.txt', 'utf-8');
       depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000200';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
 
-      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
-      depositID3 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
-      expect(await this.metadata.uri(depositID3)).to.eq(depositmetadata);
-
-      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean3Crv.txt', 'utf-8');
-      depositID4 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFFFFFFFFFFFFFFFFFFFF97C';
-      expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
-
-      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean3Crv2.txt', 'utf-8');
-      depositID4 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFF000000000000000000111';
-      expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
-
+      // beanEthToken
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
-      depositID5 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF00000000002';
+      depositID3 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF00000000002';
+      expect(await this.metadata.uri(depositID3)).to.eq(depositmetadata);
+      // urBean token
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
+      depositID4 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
+      expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
+
+      // urBeanEth token
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBeanEth.txt', 'utf-8');
+      depositID5 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFFFFFFFFFFFFFFFFFFFF97C';
       expect(await this.metadata.uri(depositID5)).to.eq(depositmetadata);
 
     });
@@ -415,17 +414,17 @@ describe('Silo', function () {
       beforeEach(async function () {
         await this.season.siloSunrise(to6('100'))
         beginning_timestamp = await time.latest();
-        season = await this.season.season();
-        
+        season = await this.seasonGetter.season();
       })
 
       describe("With Multiple Users", async function () {
         it('a single farmer plants during and after vesting period', async function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-  
+          
           await this.silo.connect(user).plant();
           stem = await this.silo.seasonToStem(this.bean.address, season);
           earned_beans = await this.silo.getDeposit(userAddress, this.bean.address, stem)
+          console.log("earned_beans", earned_beans)
           expect(earned_beans[0]).to.eq(0);
           expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(0);
           expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(0);
@@ -436,7 +435,7 @@ describe('Silo', function () {
           await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
   
           await this.silo.connect(user).plant();
-          earned_beans = await this.silo.getDeposit(userAddress,this.bean.address,stem);
+          earned_beans = await this.silo.getDeposit(userAddress,this.bean.address, stem);
           expect(earned_beans[0]).to.eq(24999999);
           expect(await this.silo.balanceOfEarnedBeans(user2Address)).to.eq(25e6);
           expect(await this.silo.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
@@ -520,7 +519,7 @@ describe('Silo', function () {
           // call sunrise, plant again
           await time.increase(3600)
           await this.season.siloSunrise(to6('100'));
-          season = await this.season.season();
+          season = await this.seasonGetter.season();
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
 
           expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(0); // harvested last season 
@@ -568,7 +567,7 @@ describe('Silo', function () {
 
         it('farmer plants in vesting period, then plants again in the following season', async function () {
           await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          season = await this.season.season();
+          season = await this.seasonGetter.season();
           expect(await this.silo.connect(user2).balanceOfEarnedBeans(userAddress)).to.eq(0);
           await this.silo.connect(user).plant();
 
@@ -582,7 +581,7 @@ describe('Silo', function () {
 
           // sunrise again 
           await this.season.siloSunrise(to6('100'))
-          season = await this.season.season();
+          season = await this.seasonGetter.season();
           stem = await this.silo.seasonToStem(this.bean.address, season);
 
           expect(await this.silo.balanceOfEarnedBeans(userAddress)).to.eq(24999999); 
@@ -705,7 +704,7 @@ describe('Silo', function () {
         await this.season.siloSunrise(to6('100'))
         await time.increase(3600) // 1800 + 1800 = 60 minutes = all beans issued
         await this.season.siloSunrise(to6('100'))
-        season = await this.season.season()
+        season = await this.seasonGetter.season()
       })
 
       describe("With Multiple Users", async function () {

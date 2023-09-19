@@ -9,13 +9,13 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IBean} from "~/interfaces/IBean.sol";
-import {LibDiamond} from "~/libraries/LibDiamond.sol";
-import {LibUnripe} from "~/libraries/LibUnripe.sol";
-import {LibTransfer} from "~/libraries/Token/LibTransfer.sol";
-import "~/C.sol";
-import "~/beanstalk/ReentrancyGuard.sol";
-import "~/libraries/LibChop.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import "contracts/C.sol";
+import "contracts/beanstalk/ReentrancyGuard.sol";
+import "contracts/libraries/LibUnripe.sol";
 
 /**
  * @title UnripeFacet
@@ -33,6 +33,10 @@ contract UnripeFacet is ReentrancyGuard {
         address indexed underlyingToken,
         bytes32 merkleRoot
     );
+
+    event ChangeUnderlying(address indexed token, int256 underlying);
+
+    event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
 
     event Chop(
         address indexed account,
@@ -70,6 +74,7 @@ contract UnripeFacet is ReentrancyGuard {
         // get ripe address and ripe amount
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(unripeToken, amount);
         // send the corresponding amount of ripe token to the user address
+        require(underlyingAmount > 0, "Chop: no underlying");
         IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
         // emit the event
         emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
@@ -165,6 +170,12 @@ contract UnripeFacet is ReentrancyGuard {
         return LibChop._getPenalizedUnderlying(unripeToken, amount);
     }
 
+    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
+        public
+        view
+        returns (uint256 redeem)
+    {
+        return LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
     /**
      * @notice Getter function to check if a token is unripe or not.
      * @param unripeToken The address of the unripe token.
@@ -172,6 +183,10 @@ contract UnripeFacet is ReentrancyGuard {
      */
     function isUnripe(address unripeToken) external view returns (bool unripe) {
         unripe = LibChop.isUnripe(unripeToken);
+    }
+
+    function isUnripe(address unripeToken) external view returns (bool unripe) {
+        return LibUnripe.isUnripe(unripeToken);
     }
 
     /**
@@ -307,5 +322,48 @@ contract UnripeFacet is ReentrancyGuard {
         returns (address underlyingToken)
     {
         return s.u[unripeToken].underlyingToken;
+    }
+
+    /////////////// UNDERLYING TOKEN MIGRATION //////////////////
+
+    /**
+     * @notice Adds underlying tokens to an Unripe Token.
+     * @param unripeToken The Unripe Token to add underlying tokens to.
+     * @param amount The amount of underlying tokens to add.
+     * @dev Used to migrate the underlying token of an Unripe Token to a new token.
+     * Only callable by the contract owner.
+     */
+    function addMigratedUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
+        LibDiamond.enforceIsContractOwner();
+        IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        LibUnripe.incrementUnderlying(unripeToken, amount);
+    }
+
+    /**
+     * @notice Switches the Underlying Token of an Unripe Token.
+     * @param unripeToken The Unripe Token to switch the underlying token of.
+     * @param newUnderlyingToken The new underlying token to switch to.
+     * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
+     */
+    function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) external payable {
+        LibDiamond.enforceIsContractOwner();
+        require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
+        LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
+    }
+
+    function getLockedBeans() public view returns (uint256) {
+        return LibUnripe.getLockedBeans();
+    }
+
+    function getLockedBeansInUrBEAN() public view returns (uint256) {
+        return LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
+    }
+
+    function getLockedBeansInUrBEANETH() public view returns (uint256) {
+        return LibUnripe.getLockedBeansFromLP();
     }
 }

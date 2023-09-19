@@ -290,7 +290,7 @@ contract FieldFacet is ReentrancyGuard {
         _morningTemperature = LibDibbler.morningTemperature();
         abovePeg = s.season.abovePeg;
 
-        // Below peg: Soil is fixed to the amount set during {stepWeather}.
+        // Below peg: Soil is fixed to the amount set during {calcCaseId}.
         // Morning Temperature is dynamic, starting small and logarithmically 
         // increasing to `s.w.t` across the first 25 blocks of the Season.
         if (!abovePeg) {
@@ -318,7 +318,7 @@ contract FieldFacet is ReentrancyGuard {
      * Beanstalk is willing to mint is fixed.
      */
     function totalSoil() external view returns (uint256) {
-        // Below peg: Soil is fixed to the amount set during {stepWeather}.
+        // Below peg: Soil is fixed to the amount set during {calcCaseId}.
         if (!s.season.abovePeg) {
             return uint256(s.f.soil);
         }

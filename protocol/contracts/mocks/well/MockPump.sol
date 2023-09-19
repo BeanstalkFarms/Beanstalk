@@ -20,7 +20,11 @@ contract MockPump is IInstantaneousPump {
         instantaneousReserves = _instantaneousReserves;
     }
 
-    function readInstantaneousReserves(address well, bytes memory data) external override view returns (uint[] memory reserves) {
+    function readInstantaneousReserves(address, bytes memory) external override view returns (uint[] memory reserves) {
         return instantaneousReserves;
+    }
+
+    function update(uint256[] memory _reserves, bytes memory) external {
+        instantaneousReserves = _reserves;
     }
 }

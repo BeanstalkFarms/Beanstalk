@@ -5,8 +5,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage, Storage} from "../AppStorage.sol";
 import {IERC165} from "../../interfaces/IERC165.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IDiamondCut} from "../../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
@@ -42,24 +43,66 @@ contract InitDiamond {
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
-        s.cases = s.cases = [
-        // Dsc, Sdy, Inc, nul
-       int8(3),   1,   0,   0,  // Exs Low: P < 1
-            -1,  -3,  -3,   0,  //          P > 1
-             3,   1,   0,   0,  // Rea Low: P < 1
-            -1,  -3,  -3,   0,  //          P > 1
-             3,   3,   1,   0,  // Rea Hgh: P < 1
-             0,  -1,  -3,   0,  //          P > 1
-             3,   3,   1,   0,  // Exs Hgh: P < 1
-             0,  -1,  -3,   0   //          P > 1
+    //     s.cases = [
+    //     // Dsc, Sdy, Inc, nul
+    //    int8(3),   1,   0,   0,  // Exs Low: P < 1
+    //         -1,  -3,  -3,   0,  //          P > 1
+    //          3,   1,   0,   0,  // Rea Low: P < 1
+    //         -1,  -3,  -3,   0,  //          P > 1
+    //          3,   3,   1,   0,  // Rea Hgh: P < 1
+    //          0,  -1,  -3,   0,  //          P > 1
+    //          3,   3,   1,   0,  // Exs Hgh: P < 1
+    //          0,  -1,  -3,   0   //          P > 1
+    //     ];
+
+        s.casesV2 = [
+        //////////////////////////////// Exremely Low L2SR ////////////////////////////////////////
+    //                Dsc soil demand, Steady soil demand,    Inc soil demand,                Null
+    //                [mT][bT][mL][bL]    [mT][bT][mL][bL]    [mT][bT][mL][bL]    [mT][bT][mL][bL]
+            bytes8(0x2710000327100032), 0x2710000127100032, 0x2710000027100032, 0x0000000000000000, // Exs Low: P < 1
+                    0x2710ffff27100032, 0x2710fffd27100032, 0x2710fffd27100032, 0x0000000000000000, //          P > 1
+                    0x2710000327100032, 0x2710000127100032, 0x2710000027100032, 0x0000000000000000, // Rea Low: P < 1
+                    0x2710ffff27100032, 0x2710fffd27100032, 0x2710fffd27100032, 0x0000000000000000, //          P > 1
+                    0x2710000327100032, 0x2710000327100032, 0x2710000127100032, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x2710000027100032, 0x2710ffff27100032, 0x2710fffd27100032, 0x0000000000000000, //          P > 1
+                    0x2710000327100032, 0x2710000327100032, 0x2710000127100032, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x2710000027100032, 0x2710ffff27100032, 0x2710fffd27100032, 0x0000000000000000, //          P > 1
+        //////////////////////////////// Reasonably Low L2SR //////////////////////////////////////
+                    0x2710000327100019, 0x2710000327100019, 0x2710000027100019, 0x0000000000000000, // Exs Low: P < 1
+                    0x2710ffff27100019, 0x2710fffd27100019, 0x2710fffd27100019, 0x0000000000000000, //          P > 1
+                    0x2710000327100019, 0x2710000327100019, 0x2710000027100019, 0x0000000000000000, // Rea Low: P < 1
+                    0x2710ffff27100019, 0x2710fffd27100019, 0x2710fffd27100019, 0x0000000000000000, //          P > 1
+                    0x2710000327100019, 0x2710000327100019, 0x2710000327100019, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x2710000027100019, 0x2710ffff27100019, 0x2710fffd27100019, 0x0000000000000000, //          P > 1
+                    0x2710000327100019, 0x2710000327100019, 0x2710000327100019, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x2710000027100019, 0x2710ffff27100019, 0x2710fffd27100019, 0x0000000000000000, //          P > 1
+        //////////////////////////////// Reasonably High L2SR //////////////////////////////////////
+                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000002710FFE7, 0x0000000000000000, // Exs Low: P < 1
+                    0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x2710fffd2710FFE7, 0x0000000000000000, //          P > 1
+                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000002710FFE7, 0x0000000000000000, // Rea Low: P < 1
+                    0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x2710fffd2710FFE7, 0x0000000000000000, //          P > 1
+                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000032710FFE7, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x271000002710FFE7, 0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x0000000000000000, //          P > 1
+                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000032710FFE7, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x271000002710FFE7, 0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x0000000000000000, //          P > 1
+        //////////////////////////////// Extremely High L2SR //////////////////////////////////////
+                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000002710FFCE, 0x0000000000000000, // Exs Low: P < 1
+                    0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x2710fffd2710FFCE, 0x0000000000000000, //          P > 1
+                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000002710FFCE, 0x0000000000000000, // Rea Low: P < 1
+                    0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x2710fffd2710FFCE, 0x0000000000000000, //          P > 1
+                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000032710FFCE, 0x0000000000000000, // Rea Hgh: P < 1
+                    0x271000002710FFCE, 0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x0000000000000000, //          P > 1
+                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000032710FFCE, 0x0000000000000000, // Exs Hgh: P < 1
+                    0x271000002710FFCE, 0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x0000000000000000  //          P > 1
+                    
         ];
+
         s.w.t = 1;
 
         s.season.current = 1;
         s.season.withdrawSeasons = 25;
         s.season.period = C.getSeasonPeriod();
         s.season.timestamp = block.timestamp;
-        s.season.stemStartSeason = 0;
         s.season.start = s.season.period > 0 ?
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
@@ -68,7 +111,10 @@ contract InitDiamond {
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
         s.beanEthPrice = 1;
-        
+        s.seedGauge.percentOfNewGrownStalkToLP = 50e6; // 50%
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = 1e6;
+        s.season.stemStartSeason = uint16(s.season.current);
+
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }

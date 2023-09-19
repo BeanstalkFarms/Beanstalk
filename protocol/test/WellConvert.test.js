@@ -31,7 +31,6 @@ describe('Well Convert', function () {
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
 
-
     await setEthUsdPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')

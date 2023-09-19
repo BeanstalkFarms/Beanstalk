@@ -25,7 +25,7 @@ contract MockSiloFacet is SiloFacet {
     using LibSafeMath128 for uint128;
     using SafeMath for uint256;
 
-    function mockWhitelistToken(address token, bytes4 selector, uint32 stalk, uint32 stalkEarnedPerSeason) external {
+    function mockWhitelistToken(address token, bytes4 selector, uint16 stalk, uint24 stalkEarnedPerSeason) external {
        whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
     }
 
@@ -319,8 +319,8 @@ contract MockSiloFacet is SiloFacet {
     function whitelistTokenLegacy(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
+        uint16 stalkIssuedPerBdv,
+        uint24 stalkEarnedPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -328,7 +328,7 @@ contract MockSiloFacet is SiloFacet {
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.ss[token].milestoneSeason = s.season.current;
+        s.ss[token].milestoneSeason = uint24(s.season.current);
 
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }

@@ -14,6 +14,7 @@ import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
+
 /**
  * @title Well Library
  * Contains helper functions for common Well related functionality.
@@ -21,6 +22,9 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 library LibWell {
 
     using SafeMath for uint256;
+
+    uint256 private constant PRECISION = 1e30;
+
 
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
@@ -69,6 +73,19 @@ library LibWell {
     }
 
     /**
+     * @dev Returns the non-Bean token within a Well.
+     * Cannot fail (and thus revert), as wells cannot have 2 of the same tokens as the pairing.
+     */
+    function getTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
+        IERC20[] memory tokens = IWell(well).tokens();
+        for(uint256 i = 0; i < tokens.length; i++){
+            if(address(tokens[i]) != C.BEAN){
+                return (address(tokens[i]), i);
+            }
+        }
+    }
+
+    /**
      * @dev Returns whether an address is a whitelisted Well by checking
      * if the BDV function selector is the `wellBdv` function.
      */
@@ -77,5 +94,24 @@ library LibWell {
     ) internal view returns (bool _isWell) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.ss[well].selector == 0xc84c7727;
+    }
+
+    /**
+     * @notice gets the liquidity of a well in USD, with 6 decimal precision
+     * assumes a CP2 well function. 
+     * 
+     * @dev the function gets the MEV-resistant instanteous reserves,
+     * then calculates the liquidity in USD.
+     */
+    function getUsdLiquidity(
+        address well
+    ) internal view returns (uint256 usdLiquidity) {
+        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, C.BYTES_ZERO);
+        // get the non-bean address and index
+        (address token, uint256 j) = getTokenAndIndexFromWell(well);
+
+        usdLiquidity = LibUsdOracle.getTokenPrice(token)
+            .mul(emaReserves[j])
+            .div(1e6);
     }
 }

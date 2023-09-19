@@ -14,6 +14,7 @@ import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "contracts/l
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import "contracts/libraries/LibBytes.sol";
+import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 
 /**
  * @author Publius
@@ -32,10 +33,12 @@ interface ResetPool {
     function reset_cumulative() external;
 }
 
-contract MockSeasonFacet is SeasonFacet {
+contract MockSeasonFacet is SeasonFacet  {
 
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
+    using SignedSafeMath for int256;
+
 
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
@@ -49,7 +52,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function siloSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
@@ -62,14 +65,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function rainSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(4);
     }
 
     function rainSunrises(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
             handleRain(4);
@@ -78,14 +81,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function droughtSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(3);
     }
 
     function rainSiloSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(4);
@@ -93,7 +96,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function droughtSiloSunrise(uint256 amount) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         handleRain(3);
@@ -101,14 +104,22 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function sunSunrise(int256 deltaB, uint256 caseId) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
         stepSun(deltaB, caseId);
     }
 
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+        require(!s.paused, "Season: Paused.");
+        s.season.current += 1;
+        s.season.sunriseBlock = uint32(block.number);
+        updateTemperatureAndGrownStalkPerBDVToLP(caseId);
+        stepSun(deltaB, caseId);
+    }
+
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.w.t = t;
         s.season.sunriseBlock = uint32(block.number);
@@ -116,7 +127,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function lightSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
     }
@@ -132,14 +143,14 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function farmSunrise() public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
     }
 
     function farmSunrises(uint256 number) public {
-        require(!paused(), "Season: Paused.");
+        require(!s.paused, "Season: Paused.");
         for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
@@ -159,8 +170,8 @@ contract MockSeasonFacet is SeasonFacet {
         s.w.lastDSoil = number;
     }
 
-    function setNextSowTimeE(uint32 time) public {
-        s.w.thisSowTime = time;
+    function setNextSowTimeE(uint32 _time) public {
+        s.w.thisSowTime = _time;
     }
 
     function setLastSowTimeE(uint32 number) public {
@@ -200,17 +211,17 @@ contract MockSeasonFacet is SeasonFacet {
         C.bean().burn(C.bean().balanceOf(address(this)));
     }
 
-    function stepWeatherE(int256 deltaB, uint128 endSoil) external {
+    function calcCaseIdE(int256 deltaB, uint128 endSoil) external {
         s.f.soil = endSoil;
         s.f.beanSown = endSoil;
-        stepWeather(deltaB);
+        calcCaseIdandUpdate(deltaB);
     }
 
-    function setCurrentSeasonE(uint32 season) public {
-        s.season.current = season;
+    function setCurrentSeasonE(uint32 _season) public {
+        s.season.current = _season;
     }
 
-    function stepWeatherWithParams(
+    function calcCaseIdWithParams(
         uint256 pods,
         uint256 _lastDSoil,
         uint128 beanSown,
@@ -223,10 +234,9 @@ contract MockSeasonFacet is SeasonFacet {
         s.r.roots = rainRoots ? 1 : 0;
         s.f.pods = pods;
         s.w.lastDSoil = uint128(_lastDSoil);
-        // s.w.startSoil = startSoil;
         s.f.beanSown = beanSown;
         s.f.soil = endSoil;
-        stepWeather(deltaB);
+        calcCaseIdandUpdate(deltaB);
     }
 
     function resetSeasonStart(uint256 amount) public {
@@ -270,10 +280,6 @@ contract MockSeasonFacet is SeasonFacet {
     function setSunriseBlock(uint256 _block) external {
         s.season.sunriseBlock = uint32(_block);
     }
-    
-    function getSunriseBlock() external view returns (uint256) {
-        return uint256(s.season.sunriseBlock);
-    }
 
     //fake the grown stalk per bdv deployment, does same as InitBipNewSilo
     function deployStemsUpgrade() external {
@@ -283,7 +289,7 @@ contract MockSeasonFacet is SeasonFacet {
         ds.supportedInterfaces[0x0e89341c] = true;
 
 
-        uint32 currentSeason = s.season.current;
+        uint24 currentSeason = uint24(s.season.current);
 
         // Clear the storage variable
         delete s.s.deprecated_seeds;
@@ -310,11 +316,7 @@ contract MockSeasonFacet is SeasonFacet {
         s.ss[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
         s.ss[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.ss[address(C.unripeLP())].milestoneStem = 0;
-
-        //emit event for unripe LP from 4 to 2 grown stalk per bdv per season
-        // emit UpdatedStalkPerBdvPerSeason(address(C.unripeLP()), 2, s.season.current);
-
-
+        
         s.season.stemStartSeason = uint16(s.season.current);
     }
 
@@ -355,4 +357,9 @@ contract MockSeasonFacet is SeasonFacet {
     function getChainlinkEthUsdPrice() external view returns (uint256) {
         return LibChainlinkOracle.getEthUsdPrice();
     }
+
+    function setPercentOfNewGrownStalkToLP(uint128 percent) external {
+        s.seedGauge.percentOfNewGrownStalkToLP = percent;
+    }
+    
 }

@@ -12,7 +12,8 @@ const {
   impersonateBlockBasefee,
   impersonateEthUsdcUniswap,
   impersonateEthUsdtUniswap,
-  impersonateEthUsdChainlinkAggregator
+  impersonateEthUsdChainlinkAggregator,
+  impersonateBeanEthWell
 } = require('./impersonate.js')
 function addCommas(nStr) {
   nStr += ''
@@ -118,13 +119,15 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
+    seasonGetterFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     tokenSupportFacet,
     unripeFacet,
     whitelistFacet,
-    metadataFacet
+    metadataFacet,
+    gaugePointFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -142,6 +145,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'MockSeasonFacet',
+      'SeasonGetterFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
@@ -149,7 +153,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'TokenSupportFacet',
       'MockUnripeFacet',
       'WhitelistFacet',
-      'MetadataFacet'
+      'MetadataFacet',
+      'GaugePointFacet'
     ],
   ) : await deployFacets(
     verbose,
@@ -169,13 +174,15 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'SeasonFacet',
+      'SeasonGetterFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
       'TokenSupportFacet',
       'UnripeFacet',
       'WhitelistFacet',
-      'MetadataFacet'
+      'MetadataFacet',
+      'GaugePointFacet'
     ],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
@@ -217,13 +224,15 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['PauseFacet', pauseFacet],
       ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
+      ['SeasonGetterFacet', seasonGetterFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
       ['TokenSupportFacet', tokenSupportFacet],
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet],
-      ['MetadataFacet', metadataFacet]
+      ['MetadataFacet', metadataFacet],
+      ['GaugePointFacet', gaugePointFacet]
     ],
     owner: account,
     args: args,
@@ -266,11 +275,14 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
+    seasonGetterFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     tokenSupportFacet,
-    unripeFacet
+    unripeFacet,
+    metadataFacet,
+    gaugePointFacet
   }
 }
 
