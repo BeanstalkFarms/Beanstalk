@@ -22,12 +22,12 @@ contract InitBipNewSilo {
 
     AppStorage internal s;
 
-    uint24 constant private BEAN_SEEDS_PER_BDV = 2e6;
-    uint24 constant private BEAN_3CRV_SEEDS_PER_BDV = 4e6;
-    uint24 constant private UNRIPE_BEAN_SEEDS_PER_BDV = 0;
-    uint24 constant private UNRIPE_BEAN_3CRV_SEEDS_PER_BDV = 0;
+    uint32 constant private BEAN_SEEDS_PER_BDV = 2e6;
+    uint32 constant private BEAN_3CRV_SEEDS_PER_BDV = 4e6;
+    uint32 constant private UNRIPE_BEAN_SEEDS_PER_BDV = 0;
+    uint32 constant private UNRIPE_BEAN_3CRV_SEEDS_PER_BDV = 0;
     
-    uint16 constant private STALK_ISSUED_PER_BDV = 10000;
+    uint32 constant private STALK_ISSUED_PER_BDV = 10000;
     
     
     function init() external {
@@ -44,7 +44,7 @@ contract InitBipNewSilo {
 
         //update all silo info for current Silo-able assets
 
-        uint24 currentSeason = uint24(s.season.current);
+        uint32 currentSeason = s.season.current;
 
         s.ss[C.BEAN].stalkEarnedPerSeason = BEAN_SEEDS_PER_BDV;
         s.ss[C.BEAN].stalkIssuedPerBdv = STALK_ISSUED_PER_BDV;
@@ -74,6 +74,6 @@ contract InitBipNewSilo {
         emit LibWhitelist.UpdatedStalkPerBdvPerSeason(address(C.unripeBean()), UNRIPE_BEAN_SEEDS_PER_BDV, s.season.current);
 
         //set the stemStartSeason to the current season
-        s.season.stemStartSeason = uint16(currentSeason); //storing as uint16 to save storage space
+        s.season.stemStartSeason = uint16(currentSeason); //storing as uint32 to save storage space
     }
 }

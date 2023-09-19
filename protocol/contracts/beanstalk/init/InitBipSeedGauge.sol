@@ -28,14 +28,17 @@ contract InitBipSeedGauge{
     // reference
     struct NewSiloSettings {
         bytes4 selector; // ─────────────┐ 4
-        uint24 stalkEarnedPerSeason; //  │ 3  (7)
-        uint16 stalkIssuedPerBdv; //     │ 2  (9)
-		uint24 milestoneSeason; //       │ 3  (12)
-		int96 milestoneStem; //          │ 12 (24)
-        bytes1 encodeType; //            │ 1  (25)
-        uint24 lpGaugePoints; //         │ 3  (28)
-        bytes4 GPSelector; //  ──────────┘ 4  (32)
+        uint32 stalkIssuedPerBdv; //     │ 4  (12)
+		uint32 milestoneSeason; //       │ 4  (16)
+		int96 milestoneStem; //          │ 12 (28)
+        bytes1 encodeType; // ───────────┘ 1  (29)
+        // 3 bytes are left here.
+        uint32 stalkEarnedPerSeason; // ─┐ 4 
+        uint32 lpGaugePoints; //         │ 4  (8)
+        bytes4 GPSelector; //  ──────────┘ 4  (12)
+        // 20 bytes are left here.
     }
+
 
 
 
@@ -47,7 +50,8 @@ contract InitBipSeedGauge{
         Storage.SiloSettings memory newSiloSettings;
 
         uint128 totalBdv;
-        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
+
         uint24[5] memory lpGaugePoints = [uint24(0),0,0,0,0];
         bytes4[5] memory GPSelectors = [bytes4(0x00000000),0x00000000,0x00000000,0x00000000, 0x00000000];
         for(uint i = 0; i < siloTokens.length; i++) {
@@ -56,9 +60,9 @@ contract InitBipSeedGauge{
                 oldSiloSettings.slot := ss.slot
             }
             newSiloSettings.selector = oldSiloSettings.selector;
-            newSiloSettings.stalkEarnedPerSeason = uint24(oldSiloSettings.stalkEarnedPerSeason);
-            newSiloSettings.stalkIssuedPerBdv = uint16(oldSiloSettings.stalkIssuedPerBdv);
-            newSiloSettings.milestoneSeason = uint24(oldSiloSettings.milestoneSeason);
+            newSiloSettings.stalkEarnedPerSeason = oldSiloSettings.stalkEarnedPerSeason;
+            newSiloSettings.stalkIssuedPerBdv = oldSiloSettings.stalkIssuedPerBdv;
+            newSiloSettings.milestoneSeason = oldSiloSettings.milestoneSeason;
             newSiloSettings.milestoneStem = oldSiloSettings.milestoneStem;
             newSiloSettings.encodeType = oldSiloSettings.encodeType;
             //TODO: add lpGaugePoints and GPSelector

@@ -39,7 +39,7 @@ library LibWhitelist {
     event WhitelistTokenToGauge(
         address indexed token, 
         bytes4 selector, 
-        uint24 lpGaugePoints
+        uint32 lpGaugePoints
     );
 
 
@@ -67,8 +67,8 @@ library LibWhitelist {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint16 stalkIssuedPerBdv,
-        uint24 stalkEarnedPerSeason,
+        uint32 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason,
         bytes1 encodeType
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -92,7 +92,7 @@ library LibWhitelist {
 
         s.ss[token].encodeType = encodeType;
 
-        s.ss[token].milestoneSeason = uint24(s.season.current);
+        s.ss[token].milestoneSeason = uint32(s.season.current);
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
@@ -104,7 +104,7 @@ library LibWhitelist {
     function whitelistTokenToGauge(
         address token,
         bytes4 selector,
-        uint16 lpGaugePoints
+        uint32 lpGaugePoints
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         //verify you passed in a callable selector
@@ -130,14 +130,14 @@ library LibWhitelist {
      */
     function updateStalkPerBdvPerSeasonForToken(
         address token,
-        uint24 stalkEarnedPerSeason
+        uint32 stalkEarnedPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
 
         s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); //store grown stalk milestone
-        s.ss[token].milestoneSeason = uint24(s.season.current); //update milestone season as this season
+        s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);

@@ -52,12 +52,12 @@ contract GaugePointFacet {
     }
 
     /**
-     * @notice calculates the urBeanEth Gauge Points.
+     * @notice calculates the bean3Crv Gauge Points.
      */
     function bean3CrvGaugePoints(
         uint256,
         uint256 
     ) external pure returns (uint256) {
-        return 5e6;
+        return 0;
     }
 }

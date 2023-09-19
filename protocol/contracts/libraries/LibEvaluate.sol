@@ -57,9 +57,9 @@ library LibEvaluate {
 
     uint32 private constant SOW_TIME_STEADY = 60; // seconds
 
-    uint256 private constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.75e18; // 75%
-    uint256 private constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.5e18; // 50%
-    uint256 private constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.25e18; // 25%
+    uint256 private constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
+    uint256 private constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
+    uint256 private constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
 
 
     /**
@@ -86,9 +86,8 @@ library LibEvaluate {
         Decimal.D256 memory podRate
     ) internal pure returns (uint256 caseId) {
         if (deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))) {
-            caseId += 4;
+            caseId = 4;
         }
-        return caseId;
     }
 
     /**
@@ -100,11 +99,10 @@ library LibEvaluate {
         Decimal.D256 memory deltaPodDemand
     ) internal pure returns (uint256 caseId) {
         if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
-            caseId += 2;
+            caseId = 2;
         } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
-            caseId += 1;
+            caseId = 1;
         }
-        return caseId;
     }
     
     /**
@@ -116,18 +114,14 @@ library LibEvaluate {
     ) internal pure returns (uint256 caseId) {
         // Extremely High
         if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
-        caseId += 96;
+        caseId = 96;
         // Reasonably High
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
-            caseId += 64;
+            caseId = 64;
         // Reasonably Low
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())) {
-            caseId += 32;
+            caseId = 32;
         }
-	    // Extremely Low -> Add 0
-
-        // for now, set caseId addition to 0
-        caseId = 0;
     }
 
     /**

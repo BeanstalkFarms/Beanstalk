@@ -365,9 +365,6 @@ contract Storage {
      * ```
      * It is called by `LibTokenSilo` through the use of `delegatecall`
      * to calculate a token's BDV at the time of Deposit.
-     * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
-     * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
-     * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
      * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
      * previously called stalk.
      * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
@@ -375,6 +372,9 @@ contract Storage {
      * @param encodeType determine the encoding type of the selector.
      * a encodeType of 0x00 means the selector takes an input amount.
      * 0x01 means the selector takes an input amount and a token.
+     * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
+     * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
+     * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
      * @param lpGaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
      * @param GPSelector The encoded gaugePoint function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature:
@@ -388,13 +388,15 @@ contract Storage {
      */
     struct SiloSettings {
         bytes4 selector; // ─────────────┐ 4
-        uint24 stalkEarnedPerSeason; //  │ 3  (7)
-        uint16 stalkIssuedPerBdv; //     │ 2  (9)
-		uint24 milestoneSeason; //       │ 3  (12)
-		int96 milestoneStem; //          │ 12 (24)
-        bytes1 encodeType; //            │ 1  (25)
-        uint24 lpGaugePoints; //         │ 3  (28)
-        bytes4 GPSelector; //  ──────────┘ 4  (32)
+        uint32 stalkIssuedPerBdv; //     │ 4  (8)
+		uint32 milestoneSeason; //       │ 4  (12)
+        uint32 stalkEarnedPerSeason; //  │ 4  (16)
+		int96 milestoneStem; //          │ 12 (28)
+        bytes1 encodeType; // ───────────┘ 1  (29)
+        // 3 bytes are left here.
+        uint32 lpGaugePoints; //  ───────┐ 4  
+        bytes4 GPSelector; //  ──────────┘ 4  (8)
+        // 24 bytes are left here.
     }
 
     /**

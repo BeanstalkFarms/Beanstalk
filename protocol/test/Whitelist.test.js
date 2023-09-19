@@ -72,9 +72,9 @@ describe('Whitelist', function () {
 
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
 
-      expect(settings[1]).to.equal(1)
+      expect(settings[5]).to.equal(1)
 
-      expect(settings[2]).to.equal(10000)
+      expect(settings[1]).to.equal(10000)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(this.siloToken.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         1,
@@ -130,7 +130,7 @@ describe('Whitelist', function () {
       )
       const settings = await this.silo.tokenSettings(this.siloToken.address)
 
-      expect(settings[1]).to.equal(50000)
+      expect(settings[5]).to.equal(50000)
       const currentSeason = await this.seasonGetter.season()
       await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 50000, currentSeason)
     })

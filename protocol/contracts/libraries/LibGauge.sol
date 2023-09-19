@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "./LibAppStorage.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import "contracts/libraries/Silo/LibWhitelist.sol";
+import "contracts/libraries/LibSafeMath32.sol";
 import "../C.sol";
 
 /**
@@ -17,6 +18,7 @@ import "../C.sol";
  */
 library LibGauge {
     using SafeMath for uint256;
+    using LibSafeMath32 for uint32;
 
     uint256 private constant PRECISION = 1e6;
 
@@ -90,7 +92,7 @@ library LibGauge {
         // Normalize gauge points
         for (uint256 i; i < whitelistedLPSiloTokens.length; ++i) {
             Storage.SiloSettings storage ss = s.ss[whitelistedLPSiloTokens[i]];
-            ss.lpGaugePoints = uint24(uint32(ss.lpGaugePoints) * 100e6 / totalGaugePoints);
+            ss.lpGaugePoints = ss.lpGaugePoints.mul(100e6).div(totalGaugePoints);
             
             emit GaugePointChange(
                 s.season.current,
@@ -118,8 +120,8 @@ library LibGauge {
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(PRECISION);
         uint256 newGrownStalkToLP = newGrownStalk.mul(s.seedGauge.percentOfNewGrownStalkToLP).div(PRECISION);
 
-        // update stalkPerBDVPerSeason for bean
-        issueGrownStalkPerBDV(C.BEAN, newGrownStalk - newGrownStalkToLP);
+        // update stalkPerBDVPerSeason for bean.
+        issueGrownStalkPerBDV(C.BEAN, newGrownStalk.sub(newGrownStalkToLP));
 
         // update stalkPerBdvPerSeason for LP 
         // reuse whitelistedSiloTokens for gas efficency. 

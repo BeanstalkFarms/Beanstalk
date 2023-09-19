@@ -4234,9 +4234,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint24",
+        "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
-        "type": "uint24"
+        "type": "uint32"
       }
     ],
     "name": "updateStalkPerBdvPerSeasonForToken",
@@ -4262,9 +4262,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint24",
+        "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
-        "type": "uint24"
+        "type": "uint32"
       }
     ],
     "name": "whitelistToken",
@@ -4285,14 +4285,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint24",
+        "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
-        "type": "uint24"
+        "type": "uint32"
       },
       {
         "internalType": "bytes1",
@@ -6158,19 +6158,14 @@
             "type": "bytes4"
           },
           {
-            "internalType": "uint24",
-            "name": "stalkEarnedPerSeason",
-            "type": "uint24"
-          },
-          {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "stalkIssuedPerBdv",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint24",
+            "internalType": "uint32",
             "name": "milestoneSeason",
-            "type": "uint24"
+            "type": "uint32"
           },
           {
             "internalType": "int96",
@@ -6183,9 +6178,14 @@
             "type": "bytes1"
           },
           {
-            "internalType": "uint24",
+            "internalType": "uint32",
+            "name": "stalkEarnedPerSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "lpGaugePoints",
-            "type": "uint24"
+            "type": "uint32"
           },
           {
             "internalType": "bytes4",

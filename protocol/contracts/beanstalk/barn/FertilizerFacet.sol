@@ -17,7 +17,6 @@ import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
-
 /**
  * @author Publius
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
