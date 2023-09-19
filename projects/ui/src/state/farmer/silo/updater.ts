@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { DataSource, Token, TokenValue } from '@beanstalk/sdk';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -15,6 +15,7 @@ import {
   updateFarmerMigrationStatus,
   updateLegacyFarmerSiloRewards,
   updateFarmerSiloBalanceSdk,
+  updateFarmerSiloLoading,
 } from './actions';
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -67,6 +68,7 @@ export const useFetchFarmerSilo = () => {
   /// Handlers
   const fetch = useCallback(async () => {
     if (initialized) {
+      dispatch(updateFarmerSiloLoading(true));
       console.debug('[farmer/silo/useFarmerSilo] FETCH');
 
       // FIXME: multicall this section
@@ -231,11 +233,7 @@ export const useFetchFarmerSilo = () => {
           }
         );
       } else {
-        // FIXME: always pulls from contract events
-        const balances = await sdk.silo.getBalances(account, {
-          source: DataSource.LEDGER,
-        });
-
+        const balances = await sdk.silo.getBalances(account);
         balances.forEach((balance, token) => {
           // Post-migration, # of active seeds is calc'd from BDV
           activeSeedBalance = activeSeedBalance.add(
@@ -309,6 +307,7 @@ export const useFetchFarmerSilo = () => {
       // HEADS UP: this has to be called after updateLegacyFarmerSiloRewards
       // to prevent some rendering errors. Refactor later.
       dispatch(updateLegacyFarmerSiloBalances(payload));
+      dispatch(updateFarmerSiloLoading(false));
     }
   }, [initialized, sdk, account, dispatch, season]);
 
@@ -329,6 +328,7 @@ const FarmerSiloUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerSilo();
   const account = useAccount();
   const chainId = useChainId();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     clear(account);
@@ -336,7 +336,21 @@ const FarmerSiloUpdater = () => {
   }, [account]);
 
   useEffect(() => {
-    if (account && initialized) fetch();
+    if (account && initialized)
+      fetch()
+        .catch((err) => {
+          if ((err as Error).message.includes('limit the query')) {
+            console.log(
+              'Failed to fetch Silo events: RPC query limit exceeded'
+            );
+          } else {
+            console.log('Failed to fetch Silo events: ', err.message);
+          }
+        })
+        .finally(() => {
+          dispatch(updateFarmerSiloLoading(false));
+        });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, chainId, initialized]);
 

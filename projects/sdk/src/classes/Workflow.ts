@@ -289,8 +289,10 @@ export abstract class Workflow<
       if (input instanceof StepClass) {
         input.setSDK(Workflow.sdk);
       }
+      const depositOptions = { tag: "depositAmount" }
+      const validInput = input.name === "pipelineDeposit";
       this._generators.push(input);
-      this._options.push(options || null); // null = no options set
+      this._options.push(validInput ? depositOptions : options || null); // null = no options set
     }
     return this; // allow chaining
   }
