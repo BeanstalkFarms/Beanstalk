@@ -106,10 +106,10 @@ library LibWell {
     function getUsdLiquidity(
         address well
     ) internal view returns (uint256 usdLiquidity) {
-        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, '');
+        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, C.BYTES_ZERO);
         // get the non-bean address and index
         (address token, uint256 j) = getTokenAndIndexFromWell(well);
-        
+
         usdLiquidity = LibUsdOracle.getTokenPrice(token)
             .mul(emaReserves[j])
             .div(1e6);

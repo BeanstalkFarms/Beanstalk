@@ -149,12 +149,15 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lockedLpAmount = getTotalUnderlyingForfeited(C.UNRIPE_LP);
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;
-        uint256 beanInLP = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(
-                    underlying, 
-                    C.BYTES_ZERO
-                )[LibWell.getBeanIndexFromWell(underlying)];
+        
+        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(underlying, C.BYTES_ZERO);
+        uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
+        
+        // lockedLp Amount -> MEV resistant? 
+        // emaReserves -> MEV resistant
+        // totalSupply -> MEV resistant (LP mints are based on MEV reserves)
         lockedBeanAmount = lockedLpAmount
-            .mul(beanInLP)
+            .mul(emaReserves[beanIndex])
             .div(IERC20(underlying).totalSupply());
     }
     
