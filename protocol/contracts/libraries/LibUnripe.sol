@@ -133,6 +133,7 @@ library LibUnripe {
     {
         require(isUnripe(unripeToken), "not vesting");
         uint256 supply = IERC20(unripeToken).totalSupply();
+        console.log("getRecapPaidPercentAmount(supply):", getRecapPaidPercentAmount(supply));
         redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
     }
 
@@ -149,11 +150,10 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lockedLpAmount = getTotalUnderlyingForfeited(C.UNRIPE_LP);
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;
-        
         uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(underlying, C.BYTES_ZERO);
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
         
-        // lockedLp Amount -> MEV resistant? 
+        // lockedLp Amount -> MEV resistant
         // emaReserves -> MEV resistant
         // totalSupply -> MEV resistant (LP mints are based on MEV reserves)
         lockedBeanAmount = lockedLpAmount
@@ -172,8 +172,11 @@ library LibUnripe {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(isUnripe(unripeToken), "not vesting");
+        console.log("balanceOfUnderlying", s.u[unripeToken].balanceOfUnderlying);
         redeem = s.u[unripeToken].balanceOfUnderlying
             .sub(_getTotalPenalizedUnderlying(unripeToken));
+        console.log("_getTotalPenalizedUnderlying", _getTotalPenalizedUnderlying(unripeToken));
+
     }
 
 

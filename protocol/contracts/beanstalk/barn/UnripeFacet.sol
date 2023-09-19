@@ -262,4 +262,12 @@ contract UnripeFacet is ReentrancyGuard {
     function getLockedBeans() public view returns (uint256) {
         return LibUnripe.getLockedBeans();
     }
+
+    function getLockedBeansInUrBEAN() public view returns (uint256) {
+        return LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
+    }
+
+    function getLockedBeansInUrBEANETH() public view returns (uint256) {
+        return LibUnripe.getLockedBeansFromLP();
+    }
 }

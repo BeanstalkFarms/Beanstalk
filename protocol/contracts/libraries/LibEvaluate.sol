@@ -61,6 +61,8 @@ library LibEvaluate {
     uint256 private constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
     uint256 private constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
 
+    uint256 private constant LIQUIDITY_PRECISION = 1e12;
+
 
     /**
      * @notice evaluates the pod rate and returns the caseId
@@ -211,7 +213,7 @@ library LibEvaluate {
             beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
         }
         // usd liquidity is scaled down from 1e18 to match bean.
-        lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(1e12), beanSupply);
+        lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
     }
 
     /**

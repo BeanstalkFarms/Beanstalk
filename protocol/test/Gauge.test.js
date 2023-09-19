@@ -47,7 +47,7 @@ describe('Gauge', function () {
     // init wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
     this.wellToken = await ethers.getContractAt('MockToken', this.well.address)
-    await this.wellToken.connect(owner).approve(this.diamond.address, to6('100000000'))
+    await this.wellToken.connect(owner).approve(this.diamond.address, to18('100000000'))
     await this.well.setReserves([to6('1000000'), to18('1000')])
     await this.well.connect(owner).mint(ownerAddress, to18('1000'))
     await this.season.siloSunrise(0)
@@ -61,7 +61,7 @@ describe('Gauge', function () {
     // add unripe
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
-    await this.unripeLP.mint(ownerAddress, to6('10000'))
+    await this.unripeLP.mint(ownerAddress, to18('10000'))
     await this.unripeBean.mint(ownerAddress, to6('10000'))
     await this.unripeLP.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.unripeBean.connect(owner).approve(this.diamond.address, to6('100000000'))
@@ -238,7 +238,7 @@ describe('Gauge', function () {
 
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_LP,
-          to6('1000')
+          to18('1')
         )
 
         // add 1000 LP to 10,000 unripe
@@ -246,13 +246,18 @@ describe('Gauge', function () {
       })
 
       it('getters', async function () {
-        // 100% - 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
-        // 99% underlying bean of urBEAN is locked
-        // = 900 beans locked. 
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('900'));
+        // urBean supply * 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
+        // = 10000 urBEAN * 10% = 1000 BEAN * (100-10%) = 900 beans locked.
+        // urBEANETH supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
+        // = 10000 urBEANETH * 0.1% = 1 BEANETH * (100-10%) = .9 BEANETHLP locked.
+        // 1m beans underlay 1000 beanETHLP tokens.
+        // .9/1000 * 1m = 900 beans locked.
+        expect(await this.unripe.getLockedBeansInUrBEAN()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1800'));
         expect(
           await this.seasonGetter.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.000450202591166024'));
+          ).to.be.eq(to18('1.000900810729656691'));
       })
     })
   })
