@@ -169,14 +169,14 @@ describe('Gauge', function () {
     describe("getter", function () {
 
       it('inital state', async function () {
-        // bean:eth has a ratio of 1000:1 (1m beans),
-        // bean:3crv has a ratio of 1:1 (1m beans)
-        // total supply of bean should be 2m, with 0 circulating.
-        // note precision error due to rounding. 
+        // bean:eth has a ratio of 1000:1 (1m beans paired against 1m usd of eth),
+        // bean:3crv has a ratio of 1:1 (1m beans paired against 1m usd of 3crv)
+        // total supply of bean is 2m, with 0 circulating.
+        // total non-bean liquidity is 2m.
         await this.bean.mint(ownerAddress, to6('2000000'));
         expect(
           await this.seasonGetter.getLiquidityToSupplyRatio()
-          ).to.be.within(to18('1.999999'),to18('2'));
+          ).to.be.equal(to18('1'));
       })
 
       it('returns 0 if no liquidity', async function () {
@@ -204,7 +204,7 @@ describe('Gauge', function () {
         await this.bean.mint(ownerAddress, to6('2000000'));
         newL2SR = await this.seasonGetter.getLiquidityToSupplyRatio();
 
-        expect(newL2SR).to.be.within(to18('0.999999'),to18('1'));
+        expect(newL2SR).to.be.equal(to18('0.5'));
         expect(newL2SR).to.be.lt(initalL2SR);
 
 
@@ -217,7 +217,7 @@ describe('Gauge', function () {
         await this.bean.connect(owner).burn(to6('1000000'));
         newL2SR = await this.seasonGetter.getLiquidityToSupplyRatio();
 
-        expect(newL2SR).to.be.within(to18('3.999999'),to18('4'));
+        expect(newL2SR).to.be.equal(to18('2'));
         expect(newL2SR).to.be.gt(initalL2SR);
       })
     })
@@ -253,8 +253,7 @@ describe('Gauge', function () {
         expect(await this.unripe.getLockedBeans()).to.be.eq(to6('900'));
         expect(
           await this.seasonGetter.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('2.000900405181831824'));
-        
+          ).to.be.eq(to18('1.000450202591166024'));
       })
     })
   })

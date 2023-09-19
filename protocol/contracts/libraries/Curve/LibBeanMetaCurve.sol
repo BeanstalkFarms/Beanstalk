@@ -54,17 +54,10 @@ library LibBeanMetaCurve {
     function totalLiquidityUsd() internal view returns (uint256) {
         // By using previous balances and the virtual price, we protect against flash loan
         uint256[2] memory balances = IMeta3Curve(C.CURVE_BEAN_METAPOOL).get_previous_balances();
-        uint256[2] memory xp = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);
 
-        uint256 a = C.curveMetapool().A_precise();
-        uint256 D = LibCurve.getD(xp, a);
-        // TODO: confirm decimal precision is 12 
-        uint256 price = LibCurve.getPrice(xp, a, D, RATE_MULTIPLIER);
-
-        // price has 12 decimal precision and thus does not need to be scaled down.
-        uint256 beanValue = balances[0].mul(price);
-        
-        return beanValue.add(xp[1]);
+        // balances are reused to save gas.
+        balances = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);        
+        return balances[1];
     }
 
     function getDeltaB() internal view returns (int256 deltaB) {

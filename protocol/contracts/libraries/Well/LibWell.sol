@@ -109,12 +109,9 @@ library LibWell {
         uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, '');
         // get the non-bean address and index
         (address token, uint256 j) = getTokenAndIndexFromWell(well);
-        // calculate liquidity in USD (same decimal precision as the ema reserves)
-        // token price: 1e6
-        // ema reserves: 1e18
+        
         usdLiquidity = LibUsdOracle.getTokenPrice(token)
             .mul(emaReserves[j])
-            .mul(2)
             .div(1e6);
     }
 }
