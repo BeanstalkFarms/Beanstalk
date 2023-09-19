@@ -13,7 +13,7 @@ import {IInstantaneousPump} from "../interfaces/basin/pumps/IInstantaneousPump.s
 
 //TODO: write Natspec.
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -172,10 +172,8 @@ library LibUnripe {
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(isUnripe(unripeToken), "not vesting");
-        console.log("balanceOfUnderlying", s.u[unripeToken].balanceOfUnderlying);
         redeem = s.u[unripeToken].balanceOfUnderlying
             .sub(_getTotalPenalizedUnderlying(unripeToken));
-        console.log("_getTotalPenalizedUnderlying", _getTotalPenalizedUnderlying(unripeToken));
 
     }
 
