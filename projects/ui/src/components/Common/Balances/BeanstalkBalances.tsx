@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Stack, Typography, Grid, Box } from '@mui/material';
 import BigNumber from 'bignumber.js';
-import { useSelector } from 'react-redux';
 import ResizablePieChart, {
   PieDataPoint,
 } from '~/components/Common/Charts/PieChart';
@@ -16,7 +15,7 @@ import useChainConstant from '~/hooks/chain/useChainConstant';
 import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
 import { FC } from '~/types';
 import StatHorizontal from '../StatHorizontal';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import { ERC20Token } from '~/classes/Token';
@@ -38,9 +37,11 @@ const BeanstalkBalances: FC<{
   const beanPrice = breakdown.tokens[Bean.address]?.value.div(
     breakdown.tokens[Bean.address]?.amount
   );
-  const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
+  const unripeTokens = useAppSelector(
     (state) => state._bean.unripe
   );
+  const loadingUnripe = Object.keys(unripeTokens).length === 0;
+  
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
   const siloTokenToFiat = useSiloTokenToFiat();
 
@@ -84,7 +85,7 @@ const BeanstalkBalances: FC<{
   const assetLabel = hoverToken?.name || 'Token';
 
   function getUnripeBreakdown(token: ERC20Token, amount: BigNumber) {
-    if (!token || !amount || !isTokenUnripe(token.address)) return { bdv: BigNumber(0), usd: BigNumber(0) };
+    if (!token || !amount || !isTokenUnripe(token.address) || loadingUnripe) return { bdv: BigNumber(0), usd: BigNumber(0) };
 
     const ratio = amount.div(unripeTokens[token.address].supply);
     const ratioAmount = unripeTokens[token.address].underlying.multipliedBy(ratio);
@@ -105,7 +106,7 @@ const BeanstalkBalances: FC<{
   }
 
   function amountTooltip(token: ERC20Token, amount: BigNumber, isBreakdown?: boolean) {
-    if (!beanPrice || !token || !amount) return undefined;
+    if (!beanPrice || !token || !amount || loadingUnripe) return undefined;
 
     const isUnripe = isTokenUnripe(token.address);
     const underlyingToken = isUnripe ? unripeUnderlyingTokens[token.address] : token;
@@ -185,7 +186,7 @@ const BeanstalkBalances: FC<{
               showColor={!hoverAddress}
               token={WHITELIST[address]}
               value={
-                isTokenUnripe(address)
+                isTokenUnripe(address) && !loadingUnripe
                   ? displayBN(
                       siloTokenToFiat(
                         unripeUnderlyingTokens[address],
