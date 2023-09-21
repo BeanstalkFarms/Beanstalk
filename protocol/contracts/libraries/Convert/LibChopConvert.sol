@@ -3,9 +3,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/Token/LibTransfer.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
 import "./LibConvertData.sol";
-import "~/libraries/LibChop.sol";
+import "contracts/libraries/LibChop.sol";
 import "../../C.sol";
 import {IBean} from "../../interfaces/IBean.sol";
 

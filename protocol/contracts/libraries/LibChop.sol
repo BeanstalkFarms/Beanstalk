@@ -3,9 +3,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "~/libraries/LibUnripe.sol";
+import "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IBean} from "~/interfaces/IBean.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibAppStorage} from "./LibAppStorage.sol";
 
 /**
@@ -25,12 +25,13 @@ library LibChop {
      */
     function chop(
         address unripeToken,
-        uint256 amount
+        uint256 amount,
+        uint256 supply
     ) internal returns (address underlyingToken, uint256 underlyingAmount) {
         // get access to Beanstalk state
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        underlyingAmount = _getPenalizedUnderlying(unripeToken, amount);
+        underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, supply);
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
@@ -43,13 +44,13 @@ library LibChop {
      * @param amount The amount of the of the unripe token
      * @return redeem the amount of ripe underlying assets that can be redeemed from the unripe ones
      */
-    function _getPenalizedUnderlying(address unripeToken, uint256 amount)
+    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
         internal
         view
         returns (uint256 redeem)
     {
         require(isUnripe(unripeToken), "not vesting");
-        redeem = LibUnripe.unripeToUnderlying(unripeToken, getRecapPaidPercentAmount(amount));
+        redeem = LibUnripe.unripeToUnderlying(unripeToken, getRecapPaidPercentAmount(amount), supply);
     }
 
     /**

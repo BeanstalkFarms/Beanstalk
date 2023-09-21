@@ -86,14 +86,14 @@ library LibUnripe {
      * @param unripe The amount of the of the unripe token to be taken as input.
      * @return underlying The amount of the of the ripe token to be credited from its unripe counterpart.
      */
-    function unripeToUnderlying(address unripeToken, uint256 unripe)
+    function unripeToUnderlying(address unripeToken, uint256 unripe, uint256 supply)
         internal
         view
         returns (uint256 underlying)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
         underlying = s.u[unripeToken].balanceOfUnderlying.mul(unripe).div(
-            IBean(unripeToken).totalSupply()
+            supply
         );
     }
 
