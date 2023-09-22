@@ -13,7 +13,8 @@ export function handleAddLiquidity(event: AddLiquidity): void {
     event.block.timestamp,
     event.block.number,
     event.params.tokenAmountsIn[0],
-    event.params.tokenAmountsIn[1]
+    event.params.tokenAmountsIn[1],
+    false
   );
 }
 
@@ -23,7 +24,8 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
     event.block.timestamp,
     event.block.number,
     event.params.tokenAmountsOut[0],
-    event.params.tokenAmountsOut[1]
+    event.params.tokenAmountsOut[1],
+    true
   );
 }
 
@@ -33,7 +35,8 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
     event.block.timestamp,
     event.block.number,
     event.params.tokenOut == BEAN_ERC20 ? event.params.tokenAmountOut : ZERO_BI,
-    event.params.tokenOut != BEAN_ERC20 ? event.params.tokenAmountOut : ZERO_BI
+    event.params.tokenOut != BEAN_ERC20 ? event.params.tokenAmountOut : ZERO_BI,
+    true
   );
 }
 
@@ -42,13 +45,13 @@ export function handleSync(event: Sync): void {
 
   let deltaReserves = deltaBigIntArray(event.params.reserves, pool.reserves);
 
-  handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, deltaReserves[0], deltaReserves[1]);
+  handleLiquidityChange(event.address.toHexString(), event.block.timestamp, event.block.number, deltaReserves[0], deltaReserves[1], false);
 }
 
 export function handleSwap(event: Swap): void {
   handleSwapEvent(
     event.address.toHexString(),
-    event.params.fromToken,
+    event.params.toToken,
     event.params.amountIn,
     event.params.amountOut,
     event.block.timestamp,
@@ -76,7 +79,8 @@ function handleLiquidityChange(
   timestamp: BigInt,
   blockNumber: BigInt,
   token0Amount: BigInt,
-  token1Amount: BigInt
+  token1Amount: BigInt,
+  removal: boolean
 ): void {
   // Get Price Details via Price contract
   let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
@@ -97,8 +101,9 @@ function handleLiquidityChange(
 
   let volumeUSD = ZERO_BD;
   let volumeBean = ZERO_BI;
-  if (token0Amount == ZERO_BI || token1Amount == ZERO_BI) {
-    volumeUSD = deltaLiquidityUSD;
+  if ((token0Amount == ZERO_BI || token1Amount == ZERO_BI) && removal) {
+    // This is a removal and delta liquidity should always be negative.
+    volumeUSD = deltaLiquidityUSD.times(BigDecimal.fromString("-1")).div(BigDecimal.fromString("2"));
     volumeBean = BigInt.fromString(volumeUSD.div(newPrice).times(BigDecimal.fromString("1000000")).truncate(0).toString());
   }
 
