@@ -49,6 +49,8 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.cumulativeDepositCount = 0;
   well.cumulativeWithdrawCount = 0;
   well.cumulativeSwapCount = 0;
+  well.rollingDailyVolumeUSD = ZERO_BD;
+  well.rollingWeeklyVolumeUSD = ZERO_BD;
   well.lastSnapshotDayID = 0;
   well.lastSnapshotHourID = 0;
   well.lastUpdateTimestamp = ZERO_BI;
@@ -286,6 +288,24 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
   newSnapshot.lastUpdateTimestamp = timestamp;
   newSnapshot.lastUpdateBlockNumber = blockNumber;
   newSnapshot.save();
+
+  // Update the rolling daily and weekly volumes
+  well.rollingDailyVolumeUSD = newSnapshot.deltaVolumeUSD;
+  well.rollingWeeklyVolumeUSD = newSnapshot.deltaVolumeUSD;
+  for (let i = 1; i < 168; i++) {
+    let snapshot = WellHourlySnapshot.load(wellAddress.concatI32(hourID - i));
+    if (snapshot == null) {
+      // We hit the last snapshot to total
+      break;
+    }
+    if (i < 24) {
+      well.rollingDailyVolumeUSD = well.rollingDailyVolumeUSD.plus(snapshot.deltaVolumeUSD);
+      well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(snapshot.deltaVolumeUSD);
+    } else {
+      well.rollingWeeklyVolumeUSD = well.rollingWeeklyVolumeUSD.plus(snapshot.deltaVolumeUSD);
+    }
+  }
+  well.save();
 }
 
 export function loadOrCreateWellHourlySnapshot(
