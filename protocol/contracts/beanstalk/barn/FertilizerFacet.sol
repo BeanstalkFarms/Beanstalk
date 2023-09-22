@@ -105,7 +105,7 @@ contract FertilizerFacet {
     }
 
     /**
-     * @dev Returns the amount of Fertilize that can be purchased with `wethAmountIn` WETH.
+     * @dev Returns the amount of Fertilizer that can be purchased with `wethAmountIn` WETH.
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
      * `wethAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
