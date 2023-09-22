@@ -16,6 +16,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/C.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/LibUnripe.sol";
+import "contracts/libraries/LibChop.sol";
 
 /**
  * @title UnripeFacet
@@ -45,8 +46,6 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 underlying
     );
 
-    event ChangeUnderlying(address indexed token, int256 underlying);
-
     event Pick(
         address indexed account,
         address indexed token,
@@ -69,8 +68,8 @@ contract UnripeFacet is ReentrancyGuard {
         LibTransfer.From fromMode,
         LibTransfer.To toMode
     ) external payable nonReentrant returns (uint256) {
-        uint256 supply = IBean(unripeToken).totalSupply();
         // burn the token from the msg.sender address
+        uint256 supply = IBean(unripeToken).totalSupply();
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
         // get ripe address and ripe amount
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(unripeToken, amount, supply);
@@ -140,7 +139,11 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
-        return LibUnripe.unripeToUnderlying(unripeToken, amount);
+        return LibUnripe.unripeToUnderlying(
+            unripeToken, 
+            amount, 
+            IBean(unripeToken).totalSupply()
+        );
     }
 
     /**
@@ -168,7 +171,11 @@ contract UnripeFacet is ReentrancyGuard {
         view
         returns (uint256 redeem)
     {
-        return LibChop._getPenalizedUnderlying(unripeToken, amount);
+        return LibChop._getPenalizedUnderlying(
+            unripeToken, 
+            amount, 
+            IBean(unripeToken).totalSupply()
+        );
     }
 
     function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
@@ -177,6 +184,7 @@ contract UnripeFacet is ReentrancyGuard {
         returns (uint256 redeem)
     {
         return LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
+    }
     /**
      * @notice Getter function to check if a token is unripe or not.
      * @param unripeToken The address of the unripe token.
@@ -184,10 +192,6 @@ contract UnripeFacet is ReentrancyGuard {
      */
     function isUnripe(address unripeToken) external view returns (bool unripe) {
         unripe = LibChop.isUnripe(unripeToken);
-    }
-
-    function isUnripe(address unripeToken) external view returns (bool unripe) {
-        return LibUnripe.isUnripe(unripeToken);
     }
 
     /**

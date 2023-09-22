@@ -13,7 +13,6 @@ import {IInstantaneousPump} from "../interfaces/basin/pumps/IInstantaneousPump.s
 
 //TODO: write Natspec.
 
-// import "hardhat/console.sol";
 
 /**
  * @title LibUnripe
@@ -178,7 +177,6 @@ library LibUnripe {
     {
         require(isUnripe(unripeToken), "not vesting");
         uint256 supply = IERC20(unripeToken).totalSupply();
-        console.log("getRecapPaidPercentAmount(supply):", getRecapPaidPercentAmount(supply));
         redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
     }
 

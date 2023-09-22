@@ -36,7 +36,11 @@ library LibChopConvert {
         // Decode convertdata
         (amountIn, tokenIn) = convertData.lambdaConvert();
         // LibChop.chop just decrements the amount of unripe beans in circulation from the storage
-        (tokenOut, amountOut) = LibChop.chop(tokenIn, amountIn);
+        (tokenOut, amountOut) = LibChop.chop(
+            tokenIn, 
+            amountIn, 
+            IERC20(tokenIn).totalSupply()
+        );
         // UrBEAN still needs to be burned directly (not from an address) 
         IBean(tokenIn).burn(amountIn);
     }
@@ -48,6 +52,10 @@ library LibChopConvert {
      */
     function getRipeOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
         // tokenIn == unripe bean address
-        amount = LibChop._getPenalizedUnderlying(tokenIn, amountIn);
+        amount = LibChop._getPenalizedUnderlying(
+            tokenIn,
+            amountIn, 
+            IERC20(tokenIn).totalSupply()
+        );
     }
 }
