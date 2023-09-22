@@ -94,6 +94,12 @@ export function updateWellVolumes(
 
   let usdVolume = toDecimal(amountIn, swapToken.decimals).times(swapToken.lastPriceUSD);
 
+  // Remove liquidity one token has no input token amount to calculate volume.
+  if (amountIn == ZERO_BI) {
+    swapToken = loadToken(toToken);
+    usdVolume = toDecimal(amountOut.div(BigInt.fromI32(2)), swapToken.decimals).times(swapToken.lastPriceUSD);
+  }
+
   // Update fromToken amounts
 
   let volumeReserves = well.cumulativeVolumeReserves;
