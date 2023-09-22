@@ -28,8 +28,8 @@ contract InitBipBasinIntegration {
 
     AppStorage internal s;
 
-    uint32 constant private NEW_BEAN_SEEDS_PER_BDV = 3e6;
-    uint32 constant private NEW_BEAN_3CRV_SEEDS_PER_BDV = 3.25e6;
+    uint32 constant private NEW_BEAN_GROWN_STALK_PER_BDV_PER_SEASON = 3e6;
+    uint32 constant private NEW_BEAN_3CRV_GROWN_STALK_PER_BDV_PER_SEASON = 3.25e6;
     uint32 constant private BEAN_ETH_SEEDS_PER_BDV = 4.5e6;
 
     uint32 constant private STALK_ISSUED_PER_BDV = 10000;
@@ -38,8 +38,11 @@ contract InitBipBasinIntegration {
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
-        LibWhitelist.updateStalkPerBdvPerSeasonForToken(C.BEAN, NEW_BEAN_SEEDS_PER_BDV);
-        LibWhitelist.updateStalkPerBdvPerSeasonForToken(C.CURVE_BEAN_METAPOOL, NEW_BEAN_3CRV_SEEDS_PER_BDV);
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(C.BEAN, NEW_BEAN_GROWN_STALK_PER_BDV_PER_SEASON);
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+            C.CURVE_BEAN_METAPOOL,
+            NEW_BEAN_3CRV_GROWN_STALK_PER_BDV_PER_SEASON
+        );
         LibWhitelist.whitelistToken(
             C.BEAN_ETH_WELL,
             IBDVFacet.wellBdv.selector,
