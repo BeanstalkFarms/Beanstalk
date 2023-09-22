@@ -14,7 +14,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 /**
  * @author Publius
- * @title InitBipWellsIntegration runs the code for the Basin Integration
+ * @title InitBipBasinIntegration runs the code for the Basin Integration
 **/
 
 interface IBDVFacet {
