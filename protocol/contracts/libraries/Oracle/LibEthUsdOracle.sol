@@ -13,19 +13,19 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * @title Eth Usd Oracle Library
  * @notice Contains functionalty to fetch a manipulation resistant ETH/USD price.
  * @dev
- * The Oracle uses a greey approach to return the average price between the
+ * The Oracle uses a greedy approach to return the average price between the
  * current price returned ETH/USD Chainlink Oracle and either the ETH/USDC
- * Uniswap V3 0.3 fee pool and the ETH/USDT Uniswap V3 0.3 fee pool depending
+ * Uniswap V3 0.05% fee pool and the ETH/USDT Uniswap V3 0.05% fee pool depending
  * on which is closer. 
- 
+ * 
+ * If the prices in the ETH/USDC Uniswap V3 0.05% fee pool and USD/USDT Uniswap V3 0.05% fee pool are
+ * greater than `MAX_DIFFERENCE` apart, then the oracle uses the Chainlink price to maximize liveness.
+ * 
  * The approach is greedy as if the ETH/USDC Uniswap price is sufficiently close
  * to the Chainlink Oracle price (See {MAX_GREEDY_DIFFERENCE}), then the Oracle
  * will not check the ETH/USDT Uniswap Price to save gas.
  * 
- * There are several conditions that will cause the oracle to fail:
- * 1. If the price in both Uniswap pools deviate from the Chainlink price 
- *    by a sufficiently large percent (See {MAX_DIFFERENCE}).
- * 2. If the Chainlink Oracle is broken or frozen (See: {LibChainlinkOracle}).
+ * The oracle will fail if the Chainlink Oracle is broken or frozen (See: {LibChainlinkOracle}).
  **/
 library LibEthUsdOracle {
 
