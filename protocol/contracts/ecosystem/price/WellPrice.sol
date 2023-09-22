@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
 import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";
@@ -24,6 +25,7 @@ interface dec{
 contract WellPrice {
 
     using SafeMath for uint256;
+    using SafeCast for uint256;
 
     IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
     uint256 private constant WELL_DECIMALS = 1e18;
@@ -91,7 +93,7 @@ contract WellPrice {
             wellFunction.data
         );
 
-        deltaB = int256(beansAtPeg) - int256(reserves[beanIndex]);
+        deltaB = beansAtPeg.toInt256() - reserves[beanIndex].toInt256();
     }
 
 }
