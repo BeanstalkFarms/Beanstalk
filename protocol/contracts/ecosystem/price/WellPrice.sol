@@ -61,9 +61,6 @@ contract WellPrice {
             well.getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
                 .mul(PRICE_PRECISION)
                 .div(assetPrice);
-        } else {
-            // cannnot determine a price for bean if the other asset that bean is trading against is 0.
-            pool.price = 0; 
         }
 
         // liquidity is calculated by getting the usd value of the bean portion of the pool, 
