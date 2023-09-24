@@ -60,9 +60,9 @@ export const UNRIPE_BEAN_ADDRESSES = {
     '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449'.toLowerCase(),
 };
 
-export const UNRIPE_BEAN_CRV3_ADDRESSES = {
+export const UNRIPE_BEAN_WETH_ADDRESSES = {
   // --------------------------------------------------
-  // "Unripe BEAN:CRV3 LP": Unripe vesting asset for the BEAN:CRV3 LP token, Localhost
+  // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
   // -------------------------------------------------
   [SupportedChainId.MAINNET]:
     '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D'.toLowerCase(),

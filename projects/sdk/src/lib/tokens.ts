@@ -26,7 +26,7 @@ export class Tokens {
   public readonly BEAN_ETH_WELL_LP: ERC20Token;
   public readonly BEAN_CRV3_LP: ERC20Token;
   public readonly UNRIPE_BEAN: ERC20Token;
-  public readonly UNRIPE_BEAN_CRV3: ERC20Token;
+  public readonly UNRIPE_BEAN_WETH: ERC20Token;
   public readonly STALK: BeanstalkToken;
   public readonly SEEDS: BeanstalkToken;
   public readonly PODS: BeanstalkToken;
@@ -140,10 +140,10 @@ export class Tokens {
       chainId,
       addresses.BEANWETH_WELL.get(chainId),
       18,
-      "BEANETH",
+      "BEANWETH",
       {
         name: "BEAN:WETH Well LP Token", // see .name()
-        displayName: "BEAN:ETH LP",
+        displayName: "BEAN:WETH LP",
         isLP: true,
         color: "#DFB385"
       },
@@ -172,29 +172,29 @@ export class Tokens {
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
-    this.UNRIPE_BEAN_CRV3 = new ERC20Token(
+    this.UNRIPE_BEAN_WETH = new ERC20Token(
       chainId,
-      addresses.UNRIPE_BEAN_CRV3.get(chainId),
+      addresses.UNRIPE_BEAN_WETH.get(chainId),
       6,
-      "urBEAN3CRV",
+      "urBEANWETH",
       {
-        name: "Unripe BEAN3CRV", // see `.name()`
-        displayName: "Unripe BEAN:3CRV LP",
+        name: "Unripe BEANWETH", // see `.name()`
+        displayName: "Unripe BEAN:WETH LP",
         displayDecimals: 2
       },
       providerOrSigner
     );
-    this.UNRIPE_BEAN_CRV3.rewards = {
+    this.UNRIPE_BEAN_WETH.rewards = {
       stalk: this.STALK.amount(1),
       seeds: this.SEEDS.amount(0)
     };
-    this.UNRIPE_BEAN_CRV3.isUnripe = true;
+    this.UNRIPE_BEAN_WETH.isUnripe = true;
 
     this.map.set(addresses.BEAN.get(chainId), this.BEAN);
     this.map.set(addresses.BEAN_CRV3.get(chainId), this.BEAN_CRV3_LP);
     this.map.set(addresses.BEANWETH_WELL.get(chainId), this.BEAN_ETH_WELL_LP);
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
-    this.map.set(addresses.UNRIPE_BEAN_CRV3.get(chainId), this.UNRIPE_BEAN_CRV3);
+    this.map.set(addresses.UNRIPE_BEAN_WETH.get(chainId), this.UNRIPE_BEAN_WETH);
 
     ////////// Beanstalk "Tokens" (non ERC-20) //////////
 
@@ -341,11 +341,11 @@ export class Tokens {
 
     ////////// Groups //////////
 
-    const siloWhitelist = [this.BEAN, this.BEAN_CRV3_LP, this.BEAN_ETH_WELL_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3];
+    const siloWhitelist = [this.BEAN, this.BEAN_CRV3_LP, this.BEAN_ETH_WELL_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_WETH];
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
-    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_CRV3]);
+    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WETH]);
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.BEAN_CRV3_LP]);
     this.erc20Tokens = new Set([...this.siloWhitelist, this.WETH, this.CRV3, this.DAI, this.USDC, this.USDT]);
     this.balanceTokens = new Set([this.ETH, ...this.erc20Tokens]);

@@ -14,7 +14,7 @@ import { useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
 import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import unripeBeanIcon from '~/img/tokens/unripe-bean-logo-circled.svg';
-import brownLPIcon from '~/img/tokens/unripe-lp-logo-circled.svg';
+import brownLPIcon from '~/img/tokens/unrip-beanweth.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import {
   StyledDialogActions,
@@ -33,7 +33,7 @@ import {
   BEAN_ETH_UNIV2_LP,
   BEAN_LUSD_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3,
+  UNRIPE_BEAN_WETH,
 } from '~/constants/tokens';
 import { UNRIPE_ASSET_TOOLTIPS } from '~/constants/tooltips';
 import { ZERO_BN } from '~/constants';
@@ -121,7 +121,7 @@ const PickBeansDialog: FC<
   /// Tokens
   const getChainToken = useGetChainToken();
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanCRV3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
 
   /// Farmer
   const [refetchFarmerSilo] = useFetchFarmerSilo();
@@ -159,7 +159,7 @@ const PickBeansDialog: FC<
             ),
             Promise.all([
               beanstalk.picked(account, urBean.address),
-              beanstalk.picked(account, urBeanCRV3.address),
+              beanstalk.picked(account, urBeanWeth.address),
             ]),
           ]);
           console.debug('[PickDialog] loaded states', {
@@ -177,7 +177,7 @@ const PickBeansDialog: FC<
         errorToast.error(err);
       }
     })();
-  }, [account, beanstalk, open, urBean.address, urBeanCRV3.address]);
+  }, [account, beanstalk, open, urBean.address, urBeanWeth.address]);
 
   /// Tab handlers
   const handleDialogClose = () => {
@@ -223,7 +223,7 @@ const PickBeansDialog: FC<
       if (merkles.bean3crv && picked[1] === false) {
         data.push(
           beanstalk.interface.encodeFunctionData('pick', [
-            urBeanCRV3.address,
+            urBeanWeth.address,
             merkles.bean3crv.amount,
             merkles.bean3crv.proof,
             isDeposit ? FarmToMode.INTERNAL : FarmToMode.EXTERNAL,
@@ -232,7 +232,7 @@ const PickBeansDialog: FC<
         if (isDeposit) {
           data.push(
             beanstalk.interface.encodeFunctionData('deposit', [
-              urBeanCRV3.address,
+              urBeanWeth.address,
               merkles.bean3crv.amount,
               FarmFromMode.INTERNAL, // always use internal for deposits
             ])
@@ -272,7 +272,7 @@ const PickBeansDialog: FC<
       picked,
       beanstalk,
       urBean.address,
-      urBeanCRV3.address,
+      urBeanWeth.address,
       refetchFarmerSilo,
       middleware,
     ]
