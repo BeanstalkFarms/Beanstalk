@@ -128,7 +128,7 @@
   },
   "scripts": {
     "start": "vite --port 4173",
-    "dev": "netlify dev --command \"yarn start\" --targetPort 4173",
+    "dev": "netlify dev --command \"yarn start\" --targetPort 4173 --framework vite",
     "serve": "vite preview",
     "build": "yarn generate && tsc && vite build",
     "build:dev": "tsc --noEmit --watch",
