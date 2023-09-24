@@ -35,7 +35,7 @@ import useToggle from '~/hooks/display/useToggle';
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
-import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
+import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import { CLAIM_SILO_REWARDS, HOW_TO_DEPOSIT_IN_THE_SILO } from '~/util/Guides';
@@ -111,12 +111,12 @@ const RewardsBar: FC<{
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
 
   const balances = farmerSilo.balances;
   const unripeDepositedBalance = balances[
     urBean.address
-  ]?.deposited.amount.plus(balances[urBeanCrv3.address]?.deposited.amount);
+  ]?.deposited.amount.plus(balances[urBeanWeth.address]?.deposited.amount);
 
   const [refetchFarmerSilo] = useFetchFarmerSilo();
   const account = useAccount();

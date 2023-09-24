@@ -9,7 +9,7 @@ import { ethers } from 'ethers';
 import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
 
 export class ConvertFarmStep extends FarmStep {
-    constructor(
+  constructor(
     _sdk: BeanstalkSDK,
     private _tokenIn: Token,
     private _tokenOut: Token,
@@ -19,7 +19,6 @@ export class ConvertFarmStep extends FarmStep {
     super(_sdk);
     this._sdk = _sdk;
     this._deposits = _deposits;
-
   }
 
   /// this logic exists in the SDK but won't work b/c we need to add plant
@@ -146,7 +145,7 @@ export class ConvertFarmStep extends FarmStep {
       [siloConvert.Bean, siloConvert.BeanCrv3],
       [siloConvert.Bean, siloConvert.BeanEth],
       [siloConvert.Bean, siloConvert.BeanCrv3, siloConvert.BeanEth],
-      [siloConvert.urBean, siloConvert.urBeanCrv3],
+      [siloConvert.urBean, siloConvert.urBeanWeth],
     ];
 
     /// b/c siloConvert uses it's own token instances
@@ -154,15 +153,17 @@ export class ConvertFarmStep extends FarmStep {
       [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP],
       [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP],
       [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_ETH_WELL_LP],
-      [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_CRV3],
+      [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_WETH],
     ];
 
-    const index = tokenIn === sdk.tokens.BEAN_CRV3_LP ? 0
-      : tokenIn === sdk.tokens.BEAN_ETH_WELL_LP ? 1
-      : tokenIn === sdk.tokens.BEAN ? 2
-      : 3
-    ;
-
+    const index =
+      tokenIn === sdk.tokens.BEAN_CRV3_LP
+        ? 0
+        : tokenIn === sdk.tokens.BEAN_ETH_WELL_LP
+        ? 1
+        : tokenIn === sdk.tokens.BEAN
+        ? 2
+        : 3;
     const path = pathMatrix[index];
 
     const tokenInIndex = path.findIndex((t) => t.equals(tokenIn));

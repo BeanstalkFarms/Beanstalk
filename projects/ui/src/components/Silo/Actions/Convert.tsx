@@ -328,8 +328,12 @@ const ConvertForm: FC<
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
               {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when
-              deltaB in the {tokenIn.isLP ? tokenIn.symbol : tokenOut.symbol} pool is{' '}
-              {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? 'lower' : 'greater'} than 0.
+              deltaB in the {tokenIn.isLP ? tokenIn.symbol : tokenOut.symbol}{' '}
+              pool is{' '}
+              {tokenIn.isLP || tokenIn.symbol === 'urBEANWETH'
+                ? 'lower'
+                : 'greater'}{' '}
+              than 0.
               <br />
             </WarningAlert>
           </Box>
@@ -589,6 +593,11 @@ const ConvertPropProvider: FC<{
         const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
+
+        const lpConversion =
+          tokenOut.equals(sdk.tokens.BEAN_ETH_WELL_LP) ||
+          tokenIn.address.toLowerCase() ===
+            sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase();
 
         const convertTxn = new ConvertFarmStep(
           sdk,
