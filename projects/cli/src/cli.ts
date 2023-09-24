@@ -7,6 +7,7 @@ import { setbalance } from "./commands/setbalance.js";
 import { sunrise } from "./commands/sunrise.js";
 import { setPrice } from "./commands/setprice.js";
 import { help } from "./commands/help.js";
+import { mineBlocks } from "./commands/mine.js";
 
 main().catch((e) => {
   console.log("FAILED:");
@@ -22,7 +23,7 @@ async function main() {
     { name: "amount", alias: "m", defaultValue: "50000" },
     { name: "rpcUrl", alias: "r", defaultValue: "http://127.0.0.1:8545" },
     { name: "no-imp", type: Boolean },
-    { name: "force", alias: "f", type: Boolean}
+    { name: "force", alias: "f", type: Boolean }
   ];
   const args = commandLineArgs(commands, { partial: true });
 
@@ -40,6 +41,9 @@ async function main() {
       break;
     case "setprice":
       await setPrice(sdk, chain, { params: args._unknown });
+      break;
+    case "mine":
+      await mineBlocks(sdk, { amount: args.amount });
       break;
     case "help":
     default:
