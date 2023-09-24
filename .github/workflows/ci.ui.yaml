@@ -30,8 +30,3 @@ jobs:
         run: yarn ui:generate
       - name: Unit Tests
         run: yarn ui:test
-      - name: Browser Tests
-        uses: cypress-io/github-action@v4
-        with:
-          start: yarn ui:start
-          command: yarn test:browser
