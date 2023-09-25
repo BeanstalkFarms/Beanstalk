@@ -128,9 +128,15 @@ export class FormTxnBundler {
     operation: FarmStep,
     amountIn: TokenValue,
     slippage: number,
-    gasMultiplier?: number
+    gasMultiplier?: number,
+    advancedFarm?: boolean
   ) {
-    const farm = this._sdk.farm.create();
+    let farm: any;
+    if (advancedFarm) {
+      farm = this._sdk.farm.createAdvancedFarm();
+    } else {
+      farm = this._sdk.farm.create();
+    }
 
     Object.entries(this.before).forEach(([step, farmStep]) => {
       const farmInput = farmStep.getFarmInput();

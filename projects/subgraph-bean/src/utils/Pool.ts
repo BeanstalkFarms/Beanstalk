@@ -3,7 +3,7 @@ import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/sch
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getBeanTokenAddress, loadBean } from "./Bean";
-import { checkCrossAndUpdate } from "./Cross";
+import { checkPoolCross } from "./Cross";
 
 export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
   let pool = Pool.load(poolAddress);
@@ -20,6 +20,7 @@ export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool
     pool.volumeUSD = ZERO_BD;
     pool.liquidityUSD = ZERO_BD;
     pool.crosses = 0;
+    pool.lastCross = ZERO_BI;
     pool.deltaBeans = ZERO_BI;
     pool.save();
 
@@ -165,14 +166,7 @@ export function updatePoolSeason(poolAddress: string, timestamp: BigInt, blockNu
   poolDaily.save();
 }
 
-export function updatePoolPrice(
-  poolAddress: string,
-  timestamp: BigInt,
-  blockNumber: BigInt,
-  price: BigDecimal,
-  oldBeanPrice: BigDecimal,
-  newBeanPrice: BigDecimal
-): void {
+export function updatePoolPrice(poolAddress: string, timestamp: BigInt, blockNumber: BigInt, price: BigDecimal): void {
   let pool = loadOrCreatePool(poolAddress, blockNumber);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, timestamp, blockNumber);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, timestamp, blockNumber);
@@ -188,7 +182,7 @@ export function updatePoolPrice(
   poolDaily.lastPrice = price;
   poolDaily.save();
 
-  checkCrossAndUpdate(poolAddress, timestamp, blockNumber, oldPrice, price, oldBeanPrice, newBeanPrice);
+  checkPoolCross(poolAddress, timestamp, blockNumber, oldPrice, price);
 }
 
 export function updatePoolReserves(poolAddress: string, deltaAmount0: BigInt, deltaAmount1: BigInt, blockNumber: BigInt): void {

@@ -7,6 +7,7 @@ import {
   updateFarmerSiloBalanceSdk,
   updateLegacyFarmerSiloBalances,
   updateLegacyFarmerSiloRewards,
+  updateFarmerSiloLoading,
 } from './actions';
 
 const NEG1 = new BigNumber(-1);
@@ -32,8 +33,8 @@ export const initialFarmerSilo: FarmerSilo = {
     total: NEG1,
   },
   migrationNeeded: undefined,
-
   balancesSdk: new Map(),
+  loading: false,
 };
 
 export default createReducer(initialFarmerSilo, (builder) =>
@@ -60,5 +61,8 @@ export default createReducer(initialFarmerSilo, (builder) =>
     })
     .addCase(updateFarmerSiloBalanceSdk, (state, { payload }) => {
       state.balancesSdk = payload;
+    })
+    .addCase(updateFarmerSiloLoading, (state, { payload }) => {
+      state.loading = payload;
     })
 );

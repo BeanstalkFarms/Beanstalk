@@ -221,7 +221,7 @@ export class EventProcessor {
       // farmer's Plots. Find the parent Plot in our cache.
       else {
         let i = 0;
-        const plotIndices = Object.keys(this.plots);
+        const plotIndices = Array.from(this.plots.keys());
 
         while (i < plotIndices.length) {
           // Setup the boundaries of this Plot

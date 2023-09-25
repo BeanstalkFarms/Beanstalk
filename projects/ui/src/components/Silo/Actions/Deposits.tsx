@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { useAccount as useWagmiAccount } from 'wagmi';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
-import { ethers } from 'ethers';
 import { Token } from '~/classes';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import type { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -26,10 +25,10 @@ const Deposits: FC<
   const getUSD = useSiloTokenToFiat();
   const account = useWagmiAccount();
 
-  const rows: (LegacyDepositCrate & { id: ethers.BigNumber })[] = useMemo(
+  const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
-        id: deposit.stem,
+        id: deposit.stem?.toString(),
         ...deposit,
       })) || [],
     [siloBalance?.deposited.crates]
