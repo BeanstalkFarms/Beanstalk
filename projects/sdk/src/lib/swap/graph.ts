@@ -20,7 +20,8 @@ export const setBidirectionalAddRemoveLiquidityEdges = (
   g.setEdge(underlyingToken.symbol, lpToken.symbol, {
     build: (_: string, from: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.AddLiquidity(pool, registry, amounts as any, from, to),
     from: underlyingToken.symbol,
-    to: lpToken.symbol
+    to: lpToken.symbol,
+    label: "addLiquidity"
   });
 
   // LP -> Underlying is RemoveLiquidity
@@ -28,7 +29,8 @@ export const setBidirectionalAddRemoveLiquidityEdges = (
     build: (_: string, from: FarmFromMode, to: FarmToMode) =>
       new sdk.farm.actions.RemoveLiquidityOneToken(pool, registry, underlyingToken.address, from, to),
     from: lpToken.symbol,
-    to: underlyingToken.symbol
+    to: underlyingToken.symbol,
+    label: "removeLiquidity"
   });
 };
 
