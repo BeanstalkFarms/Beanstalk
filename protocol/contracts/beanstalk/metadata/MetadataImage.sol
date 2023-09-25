@@ -36,7 +36,7 @@ contract MetadataImage {
         );
     }
 
-    function generateImage(address token, int96 stem, int96 stemTip) internal view returns (string memory) {
+    function generateImage(address token, int96 stem, int96 stemTip) internal pure returns (string memory) {
         int96 grownStalkPerBdv = stemTip - stem;
         return string(
             abi.encodePacked(
