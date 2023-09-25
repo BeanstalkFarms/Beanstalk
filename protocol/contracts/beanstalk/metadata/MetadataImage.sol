@@ -533,14 +533,14 @@ contract MetadataImage {
 
     function sciNotation(int96 stem) internal pure returns (string memory) {
         if (stem >= 0) {
-            // if stem is greater than 1e7, use scientific notation
+            // if stem is greater than 1e5, use scientific notation
             if (stem > 100_000) {
                 return powerOfTen(uint256(stem));
             } else {
                 return uint256(stem).toString();
             }
         } else {
-            // if stem is greater than 1e7, use scientific notation
+            // if stem is less than -1e5, use scientific notation
             if (-stem > 100_000) {
                 return string(abi.encodePacked("-", powerOfTen(uint256(-stem))));
             } else {
