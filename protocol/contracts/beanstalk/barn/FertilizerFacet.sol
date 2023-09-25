@@ -78,7 +78,8 @@ contract FertilizerFacet {
 
         fertilizerAmountOut = getMintFertilizerOut(wethAmountIn);
 
-        require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer Not enough bought.");
+        require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
+        require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
 
         uint128 remaining = uint128(LibFertilizer.remainingRecapitalization().div(1e6)); // remaining <= 77_000_000 so downcasting is safe.
         require(fertilizerAmountOut <= remaining, "Fertilizer: Not enough remaining.");
