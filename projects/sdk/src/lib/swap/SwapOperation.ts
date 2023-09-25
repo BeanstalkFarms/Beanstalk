@@ -1,4 +1,4 @@
-import { ContractTransaction, ethers, BigNumber } from "ethers";
+import { ContractTransaction, ethers, BigNumber, CallOverrides } from "ethers";
 import { Workflow } from "src/classes/Workflow";
 import { TokenValue } from "src/TokenValue";
 import { Token } from "src/classes/Token";
@@ -51,10 +51,10 @@ export class SwapOperation {
     return this.tokenOut.fromBlockchain(est);
   }
 
-  // TODO: implement
-  // async estimateGas(amountIn: BigNumber | TokenValue, slippage: number): Promise<any> {
-  //   return this.workflow.estimateGas(amountIn, slippage);
-  // }
+  async estimateGas(amountIn: BigNumber | TokenValue, slippage: number): Promise<TokenValue> {
+    const gas = await this.workflow.estimateGas(amountIn, { slippage });
+    return TokenValue.fromBlockchain(gas, 0);
+  }
 
   /**
    * Estimate the min amount to input to the workflow to receive the desiredAmountOut output
@@ -75,10 +75,10 @@ export class SwapOperation {
    * @param slippage A human readable percent value. Ex: 0.1 would mean 0.1% slippage
    * @returns Promise of a Transaction
    */
-  async execute(amountIn: BigNumber | TokenValue, slippage: number): Promise<ContractTransaction> {
+  async execute(amountIn: BigNumber | TokenValue, slippage: number, overrides: CallOverrides = {}): Promise<ContractTransaction> {
     if (!this.isValid()) throw new Error("Invalid swap configuration");
 
-    return this.workflow.execute(amountIn, { slippage });
+    return this.workflow.execute(amountIn, { slippage }, overrides);
   }
 
   getFarm() {
