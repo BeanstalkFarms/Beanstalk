@@ -1,5 +1,5 @@
 import { ContractTransaction } from "ethers";
-import { Router } from "src/classes/Router";
+import { Router, Route } from "src/classes/Router";
 import { Token } from "src/classes/Token";
 import { ActionType } from "src/constants/actions";
 import { TokenValue } from "src/TokenValue";
@@ -16,6 +16,7 @@ export class DepositOperation {
   readonly router: Router;
   workflow: AdvancedFarmWorkflow|FarmWorkflow<{ slippage: number } & Record<string, any>>;
   lastAmountIn: TokenValue;
+  route: Route;
 
   constructor(sdk: BeanstalkSDK, router: Router, targetToken: Token, account: string) {
     if (!sdk.tokens.siloWhitelist.has(targetToken)) throw new Error(`Cannot deposit ${targetToken.symbol}, not on whitelist.`);
@@ -35,7 +36,7 @@ export class DepositOperation {
   }
 
   buildWorkflow() {
-    const route = this.router.getRoute(this.inputToken.symbol, `${this.targetToken.symbol}:SILO`);
+    this.route = this.router.getRoute(this.inputToken.symbol, `${this.targetToken.symbol}:SILO`);
 
     if (this.inputToken.symbol !== "BEANETH" && this.targetToken.symbol === "BEANETH") {
       this.workflow = DepositOperation.sdk.farm.createAdvancedFarm(`Deposit`);
@@ -43,7 +44,7 @@ export class DepositOperation {
       this.workflow = DepositOperation.sdk.farm.create(`Deposit`);
     }
 
-    for (let i = 0; i < route.length; i++) {
+    for (let i = 0; i < this.route.length; i++) {
       let from, to;
       // First leg, use (USER-DEFINED, INTERNAL)
       if (i == 0) {
@@ -51,7 +52,7 @@ export class DepositOperation {
         to = FarmToMode.INTERNAL;
       }
       // Last leg, ie Deposit() step, use (INTERNAL_TOLERANT, not-used)
-      else if (i == route.length - 1) {
+      else if (i == this.route.length - 1) {
         from = FarmFromMode.INTERNAL_TOLERANT;
         to = FarmToMode.EXTERNAL; // Dummy value, not used in the Deposit() step
       }
@@ -60,12 +61,16 @@ export class DepositOperation {
         from = FarmFromMode.INTERNAL_TOLERANT;
         to = FarmToMode.INTERNAL;
       }
-      this.workflow.add(route.getStep(i).build(this.account, from, to));
+      this.workflow.add(this.route.getStep(i).build(this.account, from, to));
     }
   }
 
   getGraph() {
     console.log(this.router.getGraphCode());
+  }
+
+  getSimplePath() {
+    console.log(this.workflow.summarizeSteps());
   }
 
   async getSummary() {
