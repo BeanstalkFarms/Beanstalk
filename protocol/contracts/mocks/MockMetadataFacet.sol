@@ -43,20 +43,20 @@ contract MockMetadataFacet is MetadataImage  {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         int96 stemTip = int96(stalkEarnedPerSeason.mul(seasonsElapsed));
         bytes memory attributes = abi.encodePacked(
-            '\\n\\nToken Symbol: ', getTokenName(token),
-            '\\nToken Address: ', LibStrings.toHexString(uint256(token), 20),
-            '\\nId: ', depositId.toHexString(32),
-            '\\nstem: ', int256(stem).toString(),
-            '\\ninital stalk per BDV: ', stalkIssuedPerBdv.toString(),
-            '\\ngrown stalk per BDV: ', uint256(stemTip - stem).toString(),
-            '\\nstalk grown per BDV per season: ', stalkEarnedPerSeason.toString(),
-            '\\n\\nDISCLAIMER: Due diligence is imperative when assessing this NFT. Opensea and other NFT marketplaces cache the svg output and thus, may require the user to refresh the metadata to properly show the correct values."'
+            ', "attributes": [ { "trait_type": "Token", "value": "', getTokenName(token),
+            '"}, { "trait_type": "Token Address", "value": "', LibStrings.toHexString(uint256(token), 20),
+            '"}, { "trait_type": "Id", "value": "', depositId.toHexString(32),
+            '"}, { "trait_type": "stem", "display_type": "number", "value": ', int256(stem).toString(),
+            '}, { "trait_type": "inital stalk per BDV", "display_type": "number", "value": ', stalkIssuedPerBdv.toString(),
+            '}, { "trait_type": "grown stalk per BDV", "display_type": "number", "value": ', uint256(stemTip - stem).toString(),
+            '}, { "trait_type": "stalk grown per BDV per season", "display_type": "number", "value": ', stalkEarnedPerSeason.toString()
         );
         return string(abi.encodePacked("data:application/json;base64,",LibBytes64.encode(abi.encodePacked(
                 '{',
-                    '"name": "Beanstalk Silo Deposits", "description": "An ERC1155 representing an asset deposited in the Beanstalk Silo. Silo Deposits gain stalk and bean seignorage.',
+                    '"name": "Beanstalk Silo Deposits", "description": "An ERC1155 representing an asset deposited in the Beanstalk Silo. Silo Deposits gain stalk and bean seignorage. ',
+                    '\\n\\nDISCLAIMER: Due diligence is imperative when assessing this NFT. Opensea and other NFT marketplaces cache the svg output and thus, may require the user to refresh the metadata to properly show the correct values."',
                     attributes,
-                    string(abi.encodePacked(', "image": "', imageURI(token, stem, stemTip), '"')),
+                    string(abi.encodePacked('}], "image": "', imageURI(token, stem, stemTip), '"')),
                 '}'
             ))
         ));
