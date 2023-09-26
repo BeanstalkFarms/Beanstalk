@@ -11,7 +11,7 @@ async function main() {
    // only needs to be deployed once. Deploy a new mockMetdata facet, then change the address on MockMetadataERC1155.
     const MockMetadataERC1155 = await ethers.getContractFactory('MockMetadataERC1155');
     console.log('Deploying MockMetadataERC1155...');
-    const mockMetadataERC1155 = await MockMetadataERC1155.deploy('TEST', '0xE40036Db7c1E5f366153B16a2c249EB2bf04bCcc');
+    const mockMetadataERC1155 = await MockMetadataERC1155.deploy('TEST', '0x12a5c6fdF938F276bdf67961a9cc0B58092eDAC9');
     await mockMetadataERC1155.deployed();
     console.log('metadataMockERC1155 deployed to:', mockMetadataERC1155.address);
 
