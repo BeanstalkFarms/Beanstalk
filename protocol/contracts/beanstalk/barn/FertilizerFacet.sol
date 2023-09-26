@@ -78,7 +78,8 @@ contract FertilizerFacet {
 
         fertilizerAmountOut = getMintFertilizerOut(wethAmountIn);
 
-        require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer Not enough bought.");
+        require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
+        require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
 
         uint128 remaining = uint128(LibFertilizer.remainingRecapitalization().div(1e6)); // remaining <= 77_000_000 so downcasting is safe.
         require(fertilizerAmountOut <= remaining, "Fertilizer: Not enough remaining.");
@@ -105,7 +106,7 @@ contract FertilizerFacet {
     }
 
     /**
-     * @dev Returns the amount of Fertilize that can be purchased with `wethAmountIn` WETH.
+     * @dev Returns the amount of Fertilizer that can be purchased with `wethAmountIn` WETH.
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
      * `wethAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
