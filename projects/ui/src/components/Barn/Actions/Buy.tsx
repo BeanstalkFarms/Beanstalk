@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Box, Divider, Link, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -10,6 +16,7 @@ import {
   BeanstalkSDK,
   FarmFromMode,
   FarmToMode,
+  TokenValue,
 } from '@beanstalk/sdk';
 import { useSelector } from 'react-redux';
 
@@ -34,12 +41,7 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
-import {
-  displayFullBN,
-  getTokenIndex,
-  normaliseTV,
-  tokenValueToBN,
-} from '~/util';
+import { getTokenIndex, normaliseTV, tokenValueToBN } from '~/util';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
 import { FarmerBalances } from '~/state/farmer/balances';
 import FertilizerItem from '../FertilizerItem';
@@ -64,6 +66,7 @@ import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDr
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BuyFertilizerFarmStep, ClaimAndDoX } from '~/lib/Txn';
+import { useEthPriceFromBeanstalk } from '~/hooks/ledger/useEthPriceFromBeanstalk';
 
 // ---------------------------------------------------
 
@@ -111,13 +114,22 @@ const BuyForm: FC<
   sdk,
 }) => {
   const formRef = useRef<HTMLDivElement>(null);
-
+  const getEthPrice = useEthPriceFromBeanstalk();
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
+  const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
+
+  useEffect(() => {
+    getEthPrice().then((price) => {
+      setEthPrice(price);
+    });
+  }, [getEthPrice]);
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];
 
-  const { usdc, fert, humidity, actions } =
-    useFertilizerSummary(combinedTokenState);
+  const { fert, humidity, actions } = useFertilizerSummary(
+    combinedTokenState,
+    ethPrice
+  );
 
   // Extract
   const isValid = fert?.gt(0);
@@ -214,8 +226,14 @@ const BuyForm: FC<
                 />
               </Box>
               <WarningAlert>
-                The amount of Fertilizer received rounds down to the nearest
-                USDC. {usdc?.toFixed(2)} USDC = {fert?.toFixed(0)} FERT.
+                The amount of Fertilizer received is: <br />
+                {values.tokens[0].amount?.toFixed(2)}{' '}
+                {values.tokens[0].token.symbol}
+                {values.tokens[0].token.symbol !== 'WETH' && (
+                  <> =&gt; {values.tokens[0].amountOut?.toFixed(2)} WETH </>
+                )}{' '}
+                * {ethPrice.toHuman('short')} <br /> = {fert.toFixed(0)}{' '}
+                Fertilizer
               </WarningAlert>
               <Box width="100%">
                 <AdditionalTxnsAccordion />
@@ -285,6 +303,7 @@ const BuyForm: FC<
 
 const BuyPropProvider: FC<{}> = () => {
   const sdk = useSdk();
+  const getEthPrice = useEthPriceFromBeanstalk();
 
   const { remaining } = useSelector<AppState, AppState['_beanstalk']['barn']>(
     (state) => state._beanstalk.barn
@@ -309,7 +328,7 @@ const BuyPropProvider: FC<{}> = () => {
     };
   }, [sdk.tokens]);
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
-  const tokenOut = sdk.tokens.USDC;
+  const tokenOut = sdk.tokens.WETH;
 
   const initialValues: BuyFormValues = useMemo(
     () => ({
@@ -369,7 +388,8 @@ const BuyPropProvider: FC<{}> = () => {
       let txToast;
       try {
         middleware.before();
-        const { USDC, BEAN } = sdk.tokens;
+        const ethPrice = await getEthPrice();
+        const { USDC, BEAN, WETH } = sdk.tokens;
 
         const { fertilizer } = sdk.contracts;
         if (!sdk.contracts.beanstalk) {
@@ -391,14 +411,13 @@ const BuyPropProvider: FC<{}> = () => {
         }
 
         const amountIn = normaliseTV(tokenIn, _amountIn);
-        const amountOut = USDC.equals(tokenIn)
+        const amountOut = WETH.equals(tokenIn)
           ? amountIn
-          : normaliseTV(USDC, _amountOut);
-        // : USDC.amount(_amountOut?.toString() || '0');
-        const claimedUsedUSDCOut = normaliseTV(USDC, claimData.amountOut);
-        const totalUSDCOut = amountOut.add(claimedUsedUSDCOut);
+          : normaliseTV(WETH, _amountOut);
 
-        if (totalUSDCOut.lte(0)) throw new Error('Amount required');
+        const totalWETHOut = amountOut;
+
+        if (totalWETHOut.lte(0)) throw new Error('Amount required');
 
         const claimAndDoX = new ClaimAndDoX(
           sdk,
@@ -408,12 +427,10 @@ const BuyPropProvider: FC<{}> = () => {
         );
 
         const buyTxn = new BuyFertilizerFarmStep(sdk, account);
+        const estFert = buyTxn.getFertFromWeth(totalWETHOut, ethPrice);
 
         txToast = new TransactionToast({
-          loading: `Buying ${displayFullBN(
-            buyTxn.roundDownUSDC(totalUSDCOut),
-            USDC.displayDecimals
-          )} Fertilizer...`,
+          loading: `Buying ${estFert} Fertilizer...`,
           success: 'Purchase successful.',
         });
 
@@ -421,7 +438,9 @@ const BuyPropProvider: FC<{}> = () => {
           tokenIn,
           amountIn,
           balanceFromToMode(values.balanceFrom),
-          claimAndDoX
+          claimAndDoX,
+          ethPrice,
+          slippage
         );
 
         const performed = txnBundler.setFarmSteps(values.farmActions);
@@ -451,7 +470,6 @@ const BuyPropProvider: FC<{}> = () => {
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        // this sucks
         if (txToast) {
           txToast.error(err);
         } else {
@@ -461,7 +479,15 @@ const BuyPropProvider: FC<{}> = () => {
         console.error(err);
       }
     },
-    [middleware, sdk, account, txnBundler, refetch, refetchAllowances]
+    [
+      middleware,
+      getEthPrice,
+      sdk,
+      account,
+      txnBundler,
+      refetch,
+      refetchAllowances,
+    ]
   );
 
   return (
