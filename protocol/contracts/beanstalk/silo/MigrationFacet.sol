@@ -109,4 +109,12 @@ contract MigrationFacet is ReentrancyGuard {
         );
     }
 
+    /**
+     * @dev Returns the total Migrated BDV since the implementation of the Migration BDV counter.
+     */
+    function totalMigratedBdv(address token) external view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.migratedBdvs[token];
+    }
+
 }

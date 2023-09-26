@@ -16,6 +16,7 @@ const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
 const { impersonateEthUsdChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
+const { toBN } = require('../utils/helpers.js');
 require('dotenv').config();
 
 let user,user2,owner;
@@ -159,15 +160,20 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         const seasons = [[6074],[6061],[6137]];
 
         const amounts = [];
-        for(let i=0; i<seasons.length; i++) {
+        const bdvs = [];
+        for(let i=0; i<tokens.length; i++) {
           const newSeason = [];
+          bdvs.push(toBN('0'))
           for(let j=0; j<seasons[i].length; j++) {
             const deposit = await this.migrate.getDepositLegacy(depositorAddress, tokens[i], seasons[i][j]);
+            bdvs[i] = bdvs[i].add(deposit[1]);
             newSeason.push(deposit[0].toString());
           }
           amounts.push(newSeason);
         }
   
+        console.log(bdvs);
+
         const depositorSigner = await impersonateSigner(depositorAddress);
         await this.silo.connect(depositorSigner);
 
@@ -183,6 +189,10 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
+
+        for(let i=0; i<tokens.length; i++) {
+          expect(await this.migrate.totalMigratedBdv(tokens[i])).to.be.equal(bdvs[i])
+        }
       });
   
       
