@@ -43,7 +43,7 @@ async function main() {
       await setPrice(sdk, chain, { params: args._unknown });
       break;
     case "mine":
-      await mineBlocks(sdk, { amount: args.amount });
+      await mineBlocks(sdk, args.amount);
       break;
     case "help":
     default:

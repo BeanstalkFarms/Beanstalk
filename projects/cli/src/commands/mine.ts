@@ -2,8 +2,8 @@ import { BeanstalkSDK } from "@beanstalk/sdk";
 import chalk from "chalk";
 import { table } from "table";
 
-export const mineBlocks = async (sdk: BeanstalkSDK, { amount }) => {
-  const numBlocks = (amount = 5000 ? 1 : amount);
+export const mineBlocks = async (sdk: BeanstalkSDK, amount) => {
+  const numBlocks = amount === "50000" ? 1 : amount;
 
   async function mineBlocks(blockNumber) {
     while (blockNumber > 0) {
