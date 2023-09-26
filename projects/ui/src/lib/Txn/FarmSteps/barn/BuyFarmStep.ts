@@ -3,7 +3,6 @@ import {
   ERC20Token,
   FarmFromMode,
   FarmToMode,
-  FarmWorkflow,
   NativeToken,
   StepGenerator,
   Token,
@@ -11,8 +10,6 @@ import {
 } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
-import { makeLocalOnlyStep } from '../../util';
-import { tokenValueToBN } from '~/util';
 
 export class BuyFertilizerFarmStep extends FarmStep {
   private _tokenList: (ERC20Token | NativeToken)[];
@@ -27,13 +24,15 @@ export class BuyFertilizerFarmStep extends FarmStep {
     tokenIn: Token,
     amountIn: TokenValue,
     _fromMode: FarmFromMode,
-    claimAndDoX: ClaimAndDoX
+    claimAndDoX: ClaimAndDoX,
+    ethPrice: TokenValue,
+    slippage: number
   ) {
     this.clear();
 
     const { beanstalk } = this._sdk.contracts;
 
-    const { ethIn, usdcIn, beanIn } = BuyFertilizerFarmStep.validateTokenIn(
+    const { wethIn } = BuyFertilizerFarmStep.validateTokenIn(
       this._sdk.tokens,
       this._tokenList,
       tokenIn
@@ -41,92 +40,25 @@ export class BuyFertilizerFarmStep extends FarmStep {
 
     let fromMode = _fromMode;
 
-    const additionalBean = claimAndDoX.claimedBeansUsed;
-
     /// If the user is not using additional BEANs
-    if (!claimAndDoX.isUsingClaimed) {
-      if (!usdcIn) {
-        this.pushInput({
-          ...BuyFertilizerFarmStep.getSwap(
-            this._sdk,
-            tokenIn,
-            this._sdk.tokens.USDC,
-            this._account,
-            fromMode
-          ),
-        });
-        fromMode = FarmFromMode.INTERNAL_TOLERANT;
-      }
-    }
-    /// If the user is using additional BEANs & using either BEAN or ETH
-    else if (!usdcIn) {
-      if (ethIn) {
-        this.pushInput({
-          ...BuyFertilizerFarmStep.getSwap(
-            this._sdk,
-            tokenIn,
-            this._sdk.tokens.BEAN,
-            this._account,
-            fromMode
-          ),
-        });
-        fromMode = FarmFromMode.INTERNAL_TOLERANT;
-      }
-      this.pushInput(
-        makeLocalOnlyStep({
-          name: 'add-claimable-bean',
-          amount: {
-            additionalAmount: additionalBean,
-          },
-        })
-      );
-      if (beanIn) {
-        /// FIXME: Edge case here. If the user has enough in their Internal to cover the full amount,
-        /// & circulating balance is selected, it'll only use BEAN from their internal balance.
-        if (fromMode === FarmFromMode.EXTERNAL) {
-          fromMode = FarmFromMode.INTERNAL_EXTERNAL;
-        }
-      }
+    if (!wethIn) {
       this.pushInput({
-        input: this.getBean2Usdc(fromMode),
+        ...BuyFertilizerFarmStep.getSwap(
+          this._sdk,
+          tokenIn,
+          this._sdk.tokens.WETH,
+          this._account,
+          fromMode
+        ),
       });
-    }
-    /// If the user is using additional BEANs & using USDC
-    else if (usdcIn) {
-      // forerun the buy fert txn w/ bean => USDC swap
-      this.pushInput(
-        makeLocalOnlyStep({
-          name: 'add-claimable-bean',
-          amount: {
-            overrideAmount: additionalBean,
-          },
-        })
-      );
-      /// Internal Tolerant b/c we are claiming our claimable beans to our Internal balance.
-      this.pushInput({
-        input: this.getBean2Usdc(FarmFromMode.INTERNAL_TOLERANT),
-      });
-      // add the original amount of USDC in 'amountIn' w/ the amount out from claimable beans
-      this.pushInput(
-        makeLocalOnlyStep({
-          name: 'add-original-USDC-amount',
-          amount: {
-            additionalAmount: amountIn,
-          },
-        })
-      );
-      if (fromMode === FarmFromMode.EXTERNAL) {
-        fromMode = FarmFromMode.INTERNAL_EXTERNAL;
-      }
+      fromMode = FarmFromMode.INTERNAL_TOLERANT;
     }
 
     this.pushInput({
       input: async (_amountInStep) => {
-        const amountUSDC = this._sdk.tokens.USDC.fromBlockchain(_amountInStep);
-        const roundedUSDCOut = this.roundDownUSDC(amountUSDC);
-        const minLP = await this.calculateMinLP(
-          this._sdk.tokens.USDC.fromBlockchain(roundedUSDCOut.blockchainString)
-        );
+        const amountWeth = this._sdk.tokens.WETH.fromBlockchain(_amountInStep);
+        const amountFert = this.getFertFromWeth(amountWeth, ethPrice);
+        const minLP = await this.calculateMinLP(amountWeth);
 
         return {
           name: 'mintFertilizer',
@@ -134,10 +66,10 @@ export class BuyFertilizerFarmStep extends FarmStep {
           prepare: () => ({
             target: beanstalk.address,
             callData: beanstalk.interface.encodeFunctionData('mintFertilizer', [
-              TokenValue.fromHuman(roundedUSDCOut.toHuman(), 0)
-                .blockchainString,
-              FarmWorkflow.slip(minLP, 0.1),
-              fromMode,
+              amountWeth.toBlockchain(), // wethAmountIn
+              amountFert.toBlockchain(), // minFertilizerOut
+              minLP.addSlippage(slippage).toBlockchain(), // minLPTokensOut (apply slippage here)
+              fromMode, // fromMode
             ]),
           }),
           decode: (data: string) =>
@@ -155,37 +87,30 @@ export class BuyFertilizerFarmStep extends FarmStep {
     return this;
   }
 
-  roundDownUSDC(amount: TokenValue) {
-    const rounded = tokenValueToBN(amount).dp(0, BigNumber.ROUND_DOWN);
-    return this._sdk.tokens.USDC.amount(rounded.toString());
+  // eslint-disable-next-line class-methods-use-this
+  getFertFromWeth(amount: TokenValue, ethPrice: TokenValue) {
+    return amount.mul(ethPrice).reDecimal(0);
   }
 
   // private methods
-  private async calculateMinLP(roundedUSDCIn: TokenValue) {
-    return this._sdk.contracts.curve.zap.callStatic.calc_token_amount(
-      this._sdk.contracts.curve.pools.beanCrv3.address,
-      [
-        // 0.866616 is the ratio to add USDC/Bean at such that post-exploit
-        // delta B in the Bean:3Crv pool with A=1 equals the pre-export
-        // total delta B times the haircut. Independent of the haircut %.
-        roundedUSDCIn.mul(0.866616).blockchainString, // BEAN
-        0, // DAI
-        roundedUSDCIn.blockchainString, // USDC
-        0, // USDT
-      ],
-      true, // _is_deposit
-      { gasLimit: 10000000 }
-    );
-  }
+  // eslint-disable-next-line class-methods-use-this
+  private async calculateMinLP(wethAmount: TokenValue): Promise<TokenValue> {
+    // return this._sdk.contracts.curve.zap.callStatic.calc_token_amount(
+    //   this._sdk.contracts.curve.pools.beanCrv3.address,
+    //   [
+    //     // 0.866616 is the ratio to add USDC/Bean at such that post-exploit
+    //     // delta B in the Bean:3Crv pool with A=1 equals the pre-export
+    //     // total delta B times the haircut. Independent of the haircut %.
+    //     roundedUSDCIn.mul(0.866616).blockchainString, // BEAN
+    //     0, // DAI
+    //     roundedUSDCIn.blockchainString, // USDC
+    //     0, // USDT
+    //   ],
+    //   true, // _is_deposit
+    //   { gasLimit: 10000000 }
+    // );
 
-  private getBean2Usdc(from: FarmFromMode) {
-    return new this._sdk.farm.actions.ExchangeUnderlying(
-      this._sdk.contracts.curve.pools.beanCrv3.address,
-      this._sdk.tokens.BEAN,
-      this._sdk.tokens.USDC,
-      from,
-      FarmToMode.INTERNAL
-    );
+    return TokenValue.ZERO;
   }
 
   private static getSwap(
@@ -224,7 +149,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
     const { swap, input } = BuyFertilizerFarmStep.getSwap(
       sdk,
       tokenIn,
-      sdk.tokens.USDC,
+      sdk.tokens.WETH,
       account,
       _fromMode
     );
@@ -247,13 +172,13 @@ export class BuyFertilizerFarmStep extends FarmStep {
     const { BEAN, ETH, WETH, CRV3, DAI, USDC, USDT } = tokens;
 
     return [
-      { token: BEAN, minimum: new BigNumber(1) },
       { token: ETH, minimum: new BigNumber(0.01) },
       { token: WETH, minimum: new BigNumber(0.01) },
+      { token: BEAN, minimum: new BigNumber(1) },
       { token: CRV3, minimum: new BigNumber(1) },
       { token: DAI, minimum: new BigNumber(1) },
       { token: USDC, minimum: new BigNumber(1) },
-      { token: USDT, minimum: new BigNumber(1) },      
+      { token: USDT, minimum: new BigNumber(1) },
     ];
   }
 
@@ -269,7 +194,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
     return {
       beanIn: sdkTokens.BEAN.equals(tokenIn),
       ethIn: tokenIn.equals(sdkTokens.ETH),
-      usdcIn: sdkTokens.USDC.equals(tokenIn),
+      wethIn: sdkTokens.WETH.equals(tokenIn),
     };
   }
 }
