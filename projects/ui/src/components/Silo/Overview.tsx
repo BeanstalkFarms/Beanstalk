@@ -23,7 +23,7 @@ import Stat from '~/components/Common/Stat';
 import useFarmerSiloHistory from '~/hooks/farmer/useFarmerSiloHistory';
 import { FC } from '~/types';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
-
+import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
 import { MigrateTab } from '~/components/Silo/MigrateTab';
@@ -64,6 +64,7 @@ const seedsStats = (s: BigNumber, v: BigNumber[], d: string) => (
 );
 
 const SLUGS = ['migrate', 'deposits', 'stalk', 'seeds'];
+const altSLUGS = ['deposits', 'stalk', 'seeds'];
 
 const Overview: FC<{
   farmerSilo: AppState['_farmer']['silo'];
@@ -71,11 +72,12 @@ const Overview: FC<{
   breakdown: ReturnType<typeof useFarmerBalancesBreakdown>;
   season: BigNumber;
 }> = ({ farmerSilo, beanstalkSilo, breakdown, season }) => {
-  const [tab, handleChange] = useTabs(SLUGS, 'view');
-
   //
   const account = useAccount();
   const { data, loading } = useFarmerSiloHistory(account, false, true);
+  const migrationNeeded = useMigrationNeeded();
+  //
+  const [tab, handleChange] = useTabs(migrationNeeded ? SLUGS : altSLUGS, 'view');
 
   //
   const ownership =
@@ -122,7 +124,9 @@ const Overview: FC<{
   return (
     <Module>
       <ModuleTabs value={tab} onChange={handleChange} sx={{ minHeight: 0 }}>
-        <StyledTab label={<ChipLabel name="Silo V3">Migrate</ChipLabel>} />
+        {migrationNeeded && (
+          <StyledTab label={<ChipLabel name="Silo V3">Migrate</ChipLabel>} />
+        )}
         <StyledTab
           label={
             <ChipLabel name="Deposits">
@@ -153,16 +157,18 @@ const Overview: FC<{
           }
         />
       </ModuleTabs>
-      <Box
-        sx={{
-          display: tab === 0 ? 'block' : 'none',
-          minHeight: '400px',
-          backgroundColor: 'rgba(244, 244, 244, 0.4)',
-        }}
-      >
-        <MigrateTab />
-      </Box>
-      <Box sx={{ display: tab === 1 ? 'block' : 'none' }}>
+      {migrationNeeded && (
+        <Box
+          sx={{
+            display: tab === 0 ? 'block' : 'none',
+            minHeight: '400px',
+            backgroundColor: 'rgba(244, 244, 244, 0.4)',
+          }}
+        >
+          <MigrateTab />
+        </Box>
+      )}
+      <Box sx={{ display: tab === (migrationNeeded ? 1 : 0) ? 'block' : 'none' }}>
         <OverviewPlot
           label="Silo Deposits"
           account={account}
@@ -184,7 +190,7 @@ const Overview: FC<{
           empty={breakdown.states.deposited.value.eq(0)}
         />
       </Box>
-      <Box sx={{ display: tab === 2 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab === (migrationNeeded ? 2 : 1) ? 'block' : 'none' }}>
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
@@ -214,7 +220,7 @@ const Overview: FC<{
           empty={farmerSilo.stalk.total.lte(0)}
         />
       </Box>
-      <Box sx={{ display: tab === 3 ? 'block' : 'none' }}>
+      <Box sx={{ display: tab === (migrationNeeded ? 3 : 2) ? 'block' : 'none' }}>
         <OverviewPlot
           label="Seeds Ownership"
           account={account}
