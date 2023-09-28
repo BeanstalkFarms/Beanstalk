@@ -10,6 +10,8 @@ import {
 } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
+import { SupportedChainId, BEAN_ETH_WELL_ADDRESSES } from '~/constants';
+import { getChainConstant } from '~/util/Chain';
 
 export class BuyFertilizerFarmStep extends FarmStep {
   private _tokenList: (ERC20Token | NativeToken)[];
@@ -58,7 +60,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
       input: async (_amountInStep) => {
         const amountWeth = this._sdk.tokens.WETH.fromBlockchain(_amountInStep);
         const amountFert = this.getFertFromWeth(amountWeth, ethPrice);
-        const minLP = await this.calculateMinLP(amountWeth);
+        const minLP = await this.calculateMinLP(amountWeth, ethPrice);
 
         return {
           name: 'mintFertilizer',
@@ -68,7 +70,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
             callData: beanstalk.interface.encodeFunctionData('mintFertilizer', [
               amountWeth.toBlockchain(), // wethAmountIn
               amountFert.toBlockchain(), // minFertilizerOut
-              minLP.addSlippage(slippage).toBlockchain(), // minLPTokensOut (apply slippage here)
+              minLP.subSlippage(slippage).toBlockchain(), // minLPTokensOut (with slippage applied)
               fromMode, // fromMode
             ]),
           }),
@@ -93,24 +95,32 @@ export class BuyFertilizerFarmStep extends FarmStep {
   }
 
   // private methods
-  // eslint-disable-next-line class-methods-use-this
-  private async calculateMinLP(wethAmount: TokenValue): Promise<TokenValue> {
-    // return this._sdk.contracts.curve.zap.callStatic.calc_token_amount(
-    //   this._sdk.contracts.curve.pools.beanCrv3.address,
-    //   [
-    //     // 0.866616 is the ratio to add USDC/Bean at such that post-exploit
-    //     // delta B in the Bean:3Crv pool with A=1 equals the pre-export
-    //     // total delta B times the haircut. Independent of the haircut %.
-    //     roundedUSDCIn.mul(0.866616).blockchainString, // BEAN
-    //     0, // DAI
-    //     roundedUSDCIn.blockchainString, // USDC
-    //     0, // USDT
-    //   ],
-    //   true, // _is_deposit
-    //   { gasLimit: 10000000 }
-    // );
 
-    return TokenValue.ZERO;
+  /**
+   *  The steps for calculating minLP given wethAmountIn are:
+   * 1. usdAmountIn = wethAmountIn / wethUsdcPrice (or wethAmountIn * usdcWethPrice. Let's make sure to use  getMintFertilizerOut(1000000)
+   *    or the function that I will add to make sure it uses the same wethUsdc price as the contract or otherwise the amount out could be off)
+   * 2. beansMinted = usdAmountIn * 0.866616  (Because Beanstalk mints 0.866616 Beans for each $1 contributed)
+   * 3. lpAmountOut = beanEthWell.getAddLiquidityOut([beansMinted, wethAmountIn])
+   *
+   * Apply slippage minLPTokensOut = lpAmountOut * (1 - slippage)
+   */
+  // eslint-disable-next-line class-methods-use-this
+  private async calculateMinLP(
+    wethAmount: TokenValue,
+    ethPrice: TokenValue
+  ): Promise<TokenValue> {
+    const beanWethWellAddress = getChainConstant(
+      BEAN_ETH_WELL_ADDRESSES,
+      SupportedChainId.MAINNET
+    ).toLowerCase();
+    const well = await this._sdk.wells.getWell(beanWethWellAddress);
+
+    const usdAmountIn = ethPrice.mul(wethAmount);
+    const beansToMint = usdAmountIn.mul(0.866616);
+    const lpEstimate = await well.addLiquidityQuote([beansToMint, wethAmount]);
+
+    return lpEstimate;
   }
 
   private static getSwap(
