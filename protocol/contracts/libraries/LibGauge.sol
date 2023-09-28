@@ -151,7 +151,7 @@ library LibGauge {
         if(depositedBdv > 0){
             LibWhitelist.updateStalkPerBdvPerSeasonForToken(
                 token,
-                uint24(newGrownStalk.div(depositedBdv))
+                uint32(newGrownStalk.div(depositedBdv))
             );
         }
     }

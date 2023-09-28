@@ -6,6 +6,7 @@ const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployMockWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
+const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 let user, user2, owner;
@@ -47,6 +48,11 @@ describe('Season', function () {
         await owner.sendTransaction({to: user.address, value: 0});
         await beanstalk.connect(user).sunrise();
         await this.well.connect(user).mint(user.address, to18('1000'))
+
+        // init eth/usd oracles
+        await setEthUsdPrice('999.998018')
+        await setEthUsdcPrice('1000')
+        await setEthUsdtPrice('1000')
     })
 
     beforeEach(async function () {
@@ -112,8 +118,8 @@ describe('Season', function () {
             await setToSecondsAfterHour(0)
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)
-            await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('14200000', '14700000')
+        await beanstalk.connect(owner).sunrise();
+            expect(await bean.balanceOf(owner.address)).to.be.within('14400000', '14500000')
         })
     })
 })

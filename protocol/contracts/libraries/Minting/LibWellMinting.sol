@@ -16,6 +16,7 @@ import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOra
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
 /**
  * @title Well Minting Oracle Library
@@ -65,7 +66,7 @@ library LibWellMinting {
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
-            (deltaB, , ) = twaDeltaB(well, lastSnapshot);
+            (deltaB, , , ) = twaDeltaB(well, lastSnapshot);
         }
 
         deltaB = LibMinting.checkForMaxDeltaB(deltaB);
@@ -126,15 +127,20 @@ library LibWellMinting {
     ) internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[] memory twaReserves;
-        (deltaB, s.wellOracleSnapshots[well], twaReserves) = twaDeltaB(
+        uint256[] memory ratios;
+        (deltaB, s.wellOracleSnapshots[well], twaReserves, ratios) = twaDeltaB(
             well,
             lastSnapshot
         );
 
-        // If evaluating the Bean:Eth Constant Product Well, set the BEAN/ETH price so that it
-        // can be read when calculating the Sunrise reward. See {LibIncentive.determineReward}.
+        // If evaluating the Bean:Eth Constant Product Well, 
+        // 1) set the BEAN/ETH price so that it can be read when 
+        // calculating the Sunrise reward and price of Bean. See {LibIncentive.determineReward}.
+        // 2) set the USD/ETH price so that it can be read when 
+        // calculating the price of Bean. See {LibEvaluate.evalPrice}.
         if (well == C.BEAN_ETH_WELL) {
             LibBeanEthWellOracle.setBeanEthWellPrice(twaReserves);
+            LibEthUsdOracle.setUsdEthPrice(ratios);
         }
 
         emit WellOracle(
@@ -152,7 +158,7 @@ library LibWellMinting {
     function twaDeltaB(
         address well,
         bytes memory lastSnapshot
-    ) internal view returns (int256, bytes memory, uint256[] memory) {
+    ) internal view returns (int256, bytes memory, uint256[] memory, uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Try to call `readTwaReserves` and handle failure gracefully, so Sunrise does not revert.
         // On failure, reset the Oracle by returning an empty snapshot and a delta B of 0.
@@ -167,12 +173,12 @@ library LibWellMinting {
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-                return (0, snapshot, new uint256[](0));
+                return (0, snapshot, new uint256[](0), new uint256[](0));
             }
 
             // If the USD Oracle oracle call fails, the minting oracle should be considered off.
             if (!success) {
-                return (0, snapshot, twaReserves);
+                return (0, snapshot, twaReserves, new uint256[](0));
             }
 
             Call memory wellFunction = IWell(well).wellFunction();
@@ -184,7 +190,8 @@ library LibWellMinting {
                 ratios,
                 wellFunction.data
             )).sub(int256(twaReserves[beanIndex]));
-            return (deltaB, snapshot, twaReserves);
+
+            return (deltaB, snapshot, twaReserves, ratios);
         }
         catch {}
     }

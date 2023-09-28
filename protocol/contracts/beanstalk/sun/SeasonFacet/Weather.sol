@@ -88,32 +88,17 @@ contract Weather is Sun {
      * mechanism can be found in the Beanstalk whitepaper. 
      * An explanation of state variables can be found in {AppStorage}.
      */
-    function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256 caseId) {
+    function calcCaseIdandUpdate(
+        int256 deltaB
+    ) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
-        // Prevent infinite pod rate
+        // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
             s.w.t = 1;
-            return 8; // Reasonably low
+            return 9; // Reasonably low
         }
-
-        // Calculate Delta Soil Demand
-        uint256 dsoil = s.f.beanSown;
-        s.f.beanSown = 0;
-
-        Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = LibEvaluate.calcDeltaPodDemand(dsoil);
-
-        // Calculate Lp To Supply Ratio
-        Decimal.D256 memory lpToSupplyRatio = LibEvaluate.calcLPToSupplyRatio(beanSupply);
-
-        caseId = LibEvaluate.evaluateBeanstalk(
-            deltaB, // deltaB
-            Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply), // Pod Rate
-            deltaPodDemand, // change in soil demand
-            lpToSupplyRatio // lp to Supply Ratio
-        );
-
-        s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
+        // Calculate Case Id
+        caseId = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
         updateTemperatureAndGrownStalkPerBDVToLP(caseId);
         handleRain(caseId);
     }
@@ -182,9 +167,8 @@ contract Weather is Sun {
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
     function handleRain(uint256 caseId) internal {
-        // TODO: update cases, assumes we flood irregardless of LoSR
-        // cases 4-7 represent the case where the pod rate is less than 5% and P > 1.
-        if (caseId.mod(32) < 4 || caseId.mod(32) > 7) {
+        // cases 3-8 represent the case where the pod rate is less than 5% and P > 1.
+        if (caseId.mod(32) < 3 || caseId.mod(32) > 8) {
             if (s.season.raining) {
                 s.season.raining = false;
             }

@@ -30,7 +30,7 @@ contract SeasonGetterFacet {
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
     uint256 private constant PRECISION = 1e6;
 
-    event PercentGrownStalkToLP(uint256 newPercentGrownStalkToLP);
+    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     //////////////////// SEASON GETTERS ////////////////////
 
@@ -90,43 +90,6 @@ contract SeasonGetterFacet {
         return s.sops[_season];
     }
 
-    //////////////////// WEATHER INTERNAL ////////////////////
-
-    /**
-     * @notice view function of {calcCaseId}, outputs the expected caseId based on 
-     * deltaB, podrate, change in soil demand, and lp to supply ratio.
-     * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     */
-    function getCaseId(int256 deltaB) internal view returns (uint256 caseId) {
-        uint256 beanSupply = C.bean().totalSupply();
-
-        // Prevent infinite pod rate
-        if (beanSupply == 0) {
-            return 8; // Reasonably low
-        }
-
-        // Calculate Pod Rate
-        Decimal.D256 memory podRate = Decimal.ratio(
-            s.f.pods.sub(s.f.harvestable), // same as totalUnharvestable()
-            beanSupply
-        );
-
-        // Calculate Delta Soil Demand
-        Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
-
-        // Calculate Lp To Supply Ratio
-        Decimal.D256 memory lpToSupplyRatio = LibEvaluate.calcLPToSupplyRatio(beanSupply);
-
-        caseId = LibEvaluate.evaluateBeanstalk(
-            deltaB, 
-            podRate,
-            deltaPodDemand, 
-            lpToSupplyRatio
-        );
-    }
-
-
     //////////////////// ORACLE GETTERS ////////////////////
 
     /**
@@ -177,20 +140,20 @@ contract SeasonGetterFacet {
     }
 
     /**
-     * @notice updates the averageGrownStalkPerBdvPerSeason in the seed gauge.
+     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
      * @dev anyone can call this function to update. Currently, the function 
-     * updates the averageGrownStalkPerBdvPerSeason such that it will take 6 months
+     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
      * for the average new depositer to catch up to the average grown stalk per BDV.
      * 
      * The expectation is that actors will call this function on their own as it benefits them.
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateAverageGrownStalkPerBdvPerSeason() external {
+    function updateStalkPerBdvPerSeason() external {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
-        emit PercentGrownStalkToLP(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 
     /**
@@ -218,8 +181,18 @@ contract SeasonGetterFacet {
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
      * note that stalk has 10 decimals. 
      */
-    function getAverageGrownStalkPerBdvPerSeason() external view returns (uint128) {
+    function getAverageGrownStalkPerBdvPerSeason() public view returns (uint128) {
         return s.seedGauge.averageGrownStalkPerBdvPerSeason;
+    }
+
+    /**
+     * @notice returns the new average grown stalk per BDV per season, 
+     * if updateStalkPerBdvPerSeason() is called.
+     * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
+     * note that stalk has 10 decimals. 
+     */
+    function getNewAverageGrownStalkPerBdvPerSeason() external view returns (uint256) {
+        return getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP);
     }
 
     /**

@@ -68,14 +68,14 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(4);
+        handleRain(3);
     }
 
     function rainSunrises(uint256 amount) public {
         require(!s.paused, "Season: Paused.");
         for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
-            handleRain(4);
+            handleRain(3);
         }
         s.season.sunriseBlock = uint32(block.number);
     }
@@ -84,14 +84,14 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(3);
+        handleRain(2);
     }
 
     function rainSiloSunrise(uint256 amount) public {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(4);
+        handleRain(3);
         mockStepSilo(amount);
     }
 
@@ -228,7 +228,8 @@ contract MockSeasonFacet is SeasonFacet  {
         uint128 endSoil,
         int256 deltaB,
         bool raining,
-        bool rainRoots
+        bool rainRoots,
+        bool aboveQ
     ) public {
         s.season.raining = raining;
         s.r.roots = rainRoots ? 1 : 0;
@@ -236,6 +237,12 @@ contract MockSeasonFacet is SeasonFacet  {
         s.w.lastDSoil = uint128(_lastDSoil);
         s.f.beanSown = beanSown;
         s.f.soil = endSoil;
+        if(aboveQ) {
+            // increase bean price
+            s.beanEthPrice = 1051e6;
+            s.usdEthPrice = 0.001e18;
+        }
+        
         calcCaseIdandUpdate(deltaB);
     }
 

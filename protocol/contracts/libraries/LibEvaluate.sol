@@ -3,17 +3,17 @@
 pragma solidity =0.7.6;
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
-import "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
-import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "contracts/libraries/Oracle/LibUsdOracle.sol";
-import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
-import "contracts/libraries/LibUnripe.sol";
-import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
+import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol"; 
+import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibWell, IInstantaneousPump} from "contracts/libraries/Well/LibWell.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/libraries/Well/LibWell.sol";
-import "contracts/libraries/LibUnripe.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Brean
@@ -63,6 +63,7 @@ library LibEvaluate {
 
     uint256 private constant LIQUIDITY_PRECISION = 1e12;
 
+    uint256 private constant Q = 1.05e6;
 
     /**
      * @notice evaluates the pod rate and returns the caseId
@@ -70,11 +71,11 @@ library LibEvaluate {
      */
     function evalPodRate(Decimal.D256 memory podRate) internal pure returns (uint256 caseId) {
         if (podRate.greaterThanOrEqualTo(POD_RATE_UPPER_BOUND.toDecimal())) {
-            caseId = 24;
+            caseId = 27;
         } else if (podRate.greaterThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal())) {
-            caseId = 16;
+            caseId = 18;
         } else if (podRate.greaterThanOrEqualTo(POD_RATE_LOWER_BOUND.toDecimal())) {
-            caseId = 8;
+            caseId = 9;
         }
     }
 
@@ -86,9 +87,25 @@ library LibEvaluate {
     function evalPrice(
         int256 deltaB, 
         Decimal.D256 memory podRate
-    ) internal pure returns (uint256 caseId) {
+    ) internal returns (uint256 caseId) {
+        // p > 1
         if (deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))) {
-            caseId = 4;
+            // beanstalk will only use the bean/eth well to compute the bean price, 
+            // and thus will skip the p>q check if the bean/eth oracle fails to 
+            // compute a valid price this Season. 
+            uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice(false);
+            console.log("beanEthPrice: %s", beanEthPrice);
+            if(beanEthPrice > 1){
+                uint256 ethUsdPrice = LibEthUsdOracle.getUsdEthPrice();
+                uint256 beanUsdPrice = ethUsdPrice.mul(beanEthPrice).div(1e18);
+                console.log("ethUsdPrice: %s", ethUsdPrice);
+                console.log("beanUsdPrice: %s", beanUsdPrice);
+                if(beanUsdPrice > Q){
+                    // p > q
+                    return caseId = 6;
+                }
+            }
+            caseId = 3;
         }
     }
 
@@ -116,13 +133,13 @@ library LibEvaluate {
     ) internal pure returns (uint256 caseId) {
         // Extremely High
         if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
-        caseId = 96;
+            caseId = 108;
         // Reasonably High
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
-            caseId = 64;
+            caseId = 72;
         // Reasonably Low
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())) {
-            caseId = 32;
+            caseId = 36;
         }
     }
 
@@ -137,7 +154,6 @@ library LibEvaluate {
         uint32 lastSowTime,
         uint32 thisSowTime
     ) {
-
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // `s.w.thisSowTime` is set to the number of seconds in it took for 
@@ -216,19 +232,41 @@ library LibEvaluate {
         lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
     }
 
+     /**
+     * @notice get the deltaPodDemand, lpToSupplyRatio, and podRate.
+     */
+    function getBeanstalkState(uint256 beanSupply) 
+        internal returns (
+            Decimal.D256 memory deltaPodDemand,
+            Decimal.D256 memory lpToSupplyRatio,
+            Decimal.D256 memory podRate
+        )
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // Calculate Delta Soil Demand
+        uint256 dsoil = s.f.beanSown;
+        s.f.beanSown = 0;
+        (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = calcDeltaPodDemand(dsoil);
+        s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
+
+        // Calculate Lp To Supply Ratio
+        lpToSupplyRatio = calcLPToSupplyRatio(beanSupply);
+
+        // Calculate PodRate   
+        podRate = Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply); // Pod Rate
+    }
     /**
-     * @notice evaluates beanstalk based on deltaB, podRate, and deltaPodDemand,
+     * @notice evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
      * and returns the associated caseId.
-     * @param deltaB the amount of beans needed to be sold or bought to get bean to peg.
-     * @param podRate the length of the podline (debt), divided by the bean supply.
-     * @param deltaPodDemand the change in soil demand from the previous season.
      */
     function evaluateBeanstalk(
         int256 deltaB,
-        Decimal.D256 memory podRate,
-        Decimal.D256 memory deltaPodDemand,
-        Decimal.D256 memory lpToSupplyRatio
-    ) internal pure returns (uint256 caseId) {
+        uint256 beanSupply
+    ) internal returns (uint256 caseId) {
+        Decimal.D256 memory deltaPodDemand;
+        Decimal.D256 memory lpToSupplyRatio;
+        Decimal.D256 memory podRate;
+        (deltaPodDemand, lpToSupplyRatio, podRate) = getBeanstalkState(beanSupply);
         caseId = evalPodRate(podRate)  // Evaluate Pod Rate
             .add(evalPrice(deltaB, podRate)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand

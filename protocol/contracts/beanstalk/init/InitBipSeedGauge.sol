@@ -78,6 +78,9 @@ contract InitBipSeedGauge{
         s.seedGauge.percentOfNewGrownStalkToLP = 0.5e6; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
 
+        // initalize s.usdEthPrice 
+        s.usdEthPrice = 1;
+
         // initalize V2 cases.
         s.casesV2 = [
         //////////////////////////////// Exremely Low L2SR ////////////////////////////////////////

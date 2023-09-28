@@ -482,7 +482,8 @@ contract Storage {
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
- * @param casesV2 Stores the 96 Weather and seedGauge cases (array has 128 items, but caseId = 3 (mod 4) are not cases)
+ * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param casesV2 Stores the 144 Weather and seedGauge cases.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -543,8 +544,9 @@ struct AppStorage {
     // Well
     mapping(address => bytes) wellOracleSnapshots;
     uint256 beanEthPrice;
+    uint256 usdEthPrice;
 
     // Seed Gauge
     Storage.SeedGauge seedGauge;
-    bytes8[128] casesV2; 
+    bytes8[144] casesV2; 
 }

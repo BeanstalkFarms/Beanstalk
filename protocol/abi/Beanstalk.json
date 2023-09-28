@@ -263,7 +263,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "underlyingAmount",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -273,6 +273,32 @@
   {
     "inputs": [],
     "name": "getLockedBeans",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLockedBeansInUrBEAN",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLockedBeansInUrBEANETH",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6159,6 +6185,11 @@
           },
           {
             "internalType": "uint32",
+            "name": "stalkEarnedPerSeason",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "stalkIssuedPerBdv",
             "type": "uint32"
           },
@@ -6176,11 +6207,6 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
-          },
-          {
-            "internalType": "uint32",
-            "name": "stalkEarnedPerSeason",
-            "type": "uint32"
           },
           {
             "internalType": "uint32",
@@ -6546,11 +6572,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "newPercentGrownStalkToLP",
+        "name": "newStalkPerBdvPerSeason",
         "type": "uint256"
       }
     ],
-    "name": "PercentGrownStalkToLP",
+    "name": "UpdateStalkPerBdvPerSeason",
     "type": "event"
   },
   {
@@ -6643,6 +6669,19 @@
   {
     "inputs": [],
     "name": "getLiquidityToSupplyRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNewAverageGrownStalkPerBdvPerSeason",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6925,7 +6964,7 @@
   },
   {
     "inputs": [],
-    "name": "updateAverageGrownStalkPerBdvPerSeason",
+    "name": "updateStalkPerBdvPerSeason",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -42,14 +42,17 @@ library LibBeanEthWellOracle {
     }
 
     /**
-     * @dev Returns the BEAN / ETH price stored in {AppStorage} and resets the
-     * storage variable to 1 to reduce gas cost. Only {LibIncentive} accesses
-     * the BEAN/ETH price, so it is safe to assume it will only be read once for
-     * each time it is set.
+     * @dev Returns the BEAN / ETH price stored in {AppStorage}.
+     * The BEAN / ETH price is used twice in sunrise(): Once during {LibEvaluate}
+     * and another at {LibIncentive}. a boolean is used to indicate whether the
+     * storage vairable should be reset to 1 for gas savings. This should be enabled
+     * when this function is called last within the sunrise function.
      */
-    function getBeanEthWellPrice() internal returns (uint price) {
+    function getBeanEthWellPrice(bool isLast) internal returns (uint price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         price = s.beanEthPrice;
-        s.beanEthPrice = 1;
+        if(isLast){
+            s.beanEthPrice = 1;
+        }
     }
 }

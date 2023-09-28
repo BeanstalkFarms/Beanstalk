@@ -80,49 +80,49 @@ describe('Gauge', function () {
   describe('Percent new grown stalk to LP', function () {
     // MockInitDiamond initalizes percentOfNewGrownStalkToLP to 50% (50e6)
 
-    describe('L2SR > 75%', function () {
+    describe('L2SR > 75%', async function () {
       it("increases Percent to LP significantly", async function () {
-        this.result = await this.season.seedGaugeSunSunrise('0', 96);
+        this.result = await this.season.seedGaugeSunSunrise('0', 108);
         expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('49500000');
         await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
           .withArgs(
             3,     // season
-            96,    // caseId
+            108,    // caseId
             10000, // relative change (100% of original) 
             -50    // absolute change (-0.5%)
           );
       })
     });
 
-    describe('50% < L2SR < 75%', function () {
+    describe('50% < L2SR < 75%', async function () {
       it("increases Percent to LP moderately", async function () {
-        this.result = await this.season.seedGaugeSunSunrise('0', 64);
+        this.result = await this.season.seedGaugeSunSunrise('0', 72);
         expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('49750000');
         await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
           .withArgs(
             3, // season
-            64, // caseId
+            72, // caseId
             10000, // relative multiplier 
             -25 // absolute change (-0.5%)
           );
       })
     });
 
-    describe('25% < L2SR < 50%', function () {
+    describe('25% < L2SR < 50%', async function () {
       it("decreases Percent to LP moderately", async function () {
-        this.result = await this.season.seedGaugeSunSunrise('0', 32);
+        this.result = await this.season.seedGaugeSunSunrise('0', 36);
         expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('50250000');
         await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
           .withArgs(
             3, // season
-            32, // caseId
+            36, // caseId
             10000, // relative multiplier 
             25 // absolute change (-0.5%)
           );
       })
     });
 
-    describe('L2SR < 25%', function () {
+    describe('L2SR < 25%', async function () {
       it("increases Percent to LP significantly", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
         expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('50500000');
@@ -138,12 +138,12 @@ describe('Gauge', function () {
 
     it("L2SR cannot go under 0%", async function () {
       await this.season.setPercentOfNewGrownStalkToLP(0.4e6);
-      this.result = await this.season.seedGaugeSunSunrise('0', 96);
+      this.result = await this.season.seedGaugeSunSunrise('0', 108);
       expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('0');
       await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
         .withArgs(
           3,     // season
-          96,    // caseId
+          108,    // caseId
           10000, // relative change (100% of original) 
           -40    // absolute change (-0.4%)
         );
@@ -164,7 +164,7 @@ describe('Gauge', function () {
 
   })
 
-  describe('L2SR calculation', function () {
+  describe('L2SR calculation', async function () {
     describe("getter", function () {
 
       it('inital state', async function () {
@@ -261,6 +261,23 @@ describe('Gauge', function () {
       })
     })
   })
-  
+
+  describe('GaugePoints', async function () {
+
+  })
+
+  describe('averageGrownStalkPerBdvPerSeason', async function () {
+    it('getter', async function (){
+      // expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('100'));
+    })
+
+    it('increases after some seasons pass', async function () {
+
+    })
+
+    it('decreases after a new deposit', async function() {
+      
+    })
+  })
   
 })

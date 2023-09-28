@@ -70,12 +70,22 @@ describe('Complex Weather', function () {
         this.dsoil = this.testData.lastSoil
         this.startSoil = this.testData.startingSoil
         this.endSoil = this.testData.endingSoil
-        this.price = this.testData.priceAvg
+        this.deltaB = this.testData.deltaB
         this.pods = this.testData.unharvestablePods
+        this.aboveQ = this.testData.aboveQ
         await this.bean.mint(userAddress, this.testData.totalOutstandingBeans)
         await this.season.setLastSowTimeE(this.testData.lastSowTime)
         await this.season.setNextSowTimeE(this.testData.thisSowTime)
-        this.result = await this.season.calcCaseIdWithParams(this.pods, this.dsoil,this.startSoil-this.endSoil, this.endSoil, this.price, this.testData.wasRaining, this.testData.rainStalk)
+        this.result = await this.season.calcCaseIdWithParams(
+          this.pods, 
+          this.dsoil, // lastDSoil
+          this.startSoil-this.endSoil, // beanSown
+          this.endSoil, // endSoil
+          this.deltaB, // deltaB
+          this.testData.wasRaining, 
+          this.testData.rainStalk,
+          this.aboveQ // aboveQ
+        )
       })
       it('Checks New Weather', async function () {
         expect(await this.season.getT()).to.eq(this.testData.newWeather)

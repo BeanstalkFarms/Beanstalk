@@ -8,13 +8,14 @@ pragma experimental ABIEncoderV2;
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import "contracts/libraries/LibAppStorage.sol";
 
 
 /**
  * @title Eth Usd Oracle Library
  * @notice Contains functionalty to fetch a manipulation resistant ETH/USD price.
  * @dev
- * The Oracle uses a greey approach to return the average price between the
+ * The Oracle uses a greedy approach to return the average price between the
  * current price returned ETH/USD Chainlink Oracle and either the ETH/USDC
  * Uniswap V3 0.3 fee pool and the ETH/USDT Uniswap V3 0.3 fee pool depending
  * on which is closer. 
@@ -27,6 +28,11 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * 1. If the price in both Uniswap pools deviate from the Chainlink price 
  *    by a sufficiently large percent (See {MAX_DIFFERENCE}).
  * 2. If the Chainlink Oracle is broken or frozen (See: {LibChainlinkOracle}).
+ * 
+ * Contains a function to store and read the USD/ETH price in storage.
+ * When evaluating the state of beanstalk, beanstalk checks whether bean is 
+ * below, above, and excessively above peg. the USD/ETH price is used in
+ * conjunction with the BEAN/ETH price to get the BEAN/USD price.
  **/
 library LibEthUsdOracle {
 
@@ -38,6 +44,10 @@ library LibEthUsdOracle {
     // The maximum percent difference such that the oracle assumes no manipulation is occuring.
     uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%
     uint256 constant ONE = 1e18;
+
+    // The index of the ETH token address in the BEAN/ETH Well.
+    uint256 internal constant BEAN_ETH_WELL_ETH_INDEX = 1;
+
 
     /**
      * @dev Returns the ETH/USD price.
@@ -87,5 +97,34 @@ library LibEthUsdOracle {
         percentDifference = x > y ?
             percentDifference - ONE :
             ONE - percentDifference; // SafeMath unnecessary due to conditional check
+    }
+
+    /**
+     * @dev Sets the USD/ETH price in {AppStorage} given a set of ratios.
+     * It assumes that the ratios correspond to a BEAN/ETH Constant Product Well indexes.
+     */
+    function setUsdEthPrice(uint256[] memory ratios) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // If the reserves length is 0, then {LibWellMinting} failed to compute
+        // valid manipulation resistant reserves and thus the price is set to 0
+        // indicating that the oracle failed to compute a valid price this Season.
+        if (ratios.length == 0) {
+            s.usdEthPrice = 0;
+        } else {
+            s.usdEthPrice = ratios[BEAN_ETH_WELL_ETH_INDEX];
+        }
+    }
+
+    /**
+     * @dev Returns the USD / ETH price stored in {AppStorage} and resets the
+     * storage variable to 1 to reduce gas cost. Only {LibEvalute.evalPrice} accesses
+     * the USD/ETH price, so it is safe to assume it will only be read once for
+     * each time it is set.
+     */
+    function getUsdEthPrice() internal returns (uint price) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        price = s.usdEthPrice;
+        s.usdEthPrice = 1;
     }
 }
