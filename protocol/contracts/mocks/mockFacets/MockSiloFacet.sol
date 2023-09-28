@@ -333,7 +333,7 @@ contract MockSiloFacet is SiloFacet {
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
-    function getSeedsPerToken(address token) public pure override returns (uint256) { //could be pure without console log?
+    function getSeedsPerToken(address token) public pure override returns (uint256) {
         if (token == C.BEAN) {
             return 2;
         } else if (token == C.UNRIPE_BEAN) {

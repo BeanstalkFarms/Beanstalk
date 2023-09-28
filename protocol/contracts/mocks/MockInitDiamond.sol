@@ -147,6 +147,7 @@ contract MockInitDiamond is InitWhitelist {
             block.timestamp;
         s.isFarm = 1;
         s.beanEthPrice = 1;
+        s.usdEthPrice = 1;
         s.season.stemStartSeason = uint16(s.season.current);
         s.seedGauge.percentOfNewGrownStalkToLP = 50e6; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 1e6;

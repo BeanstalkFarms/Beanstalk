@@ -9,12 +9,13 @@ import "contracts/libraries/LibIncentive.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Silo/LibWhitelist.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
 
 
 
 /**
  * @title SeasonFacet
- * @author Publius, Chaikitty
+ * @author Publius, Chaikitty, Brean
  * @notice Holds the Sunrise function and handles all logic for Season changes.
  */
 contract SeasonFacet is Weather {
@@ -113,6 +114,8 @@ contract SeasonFacet is Weather {
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
         
         emit Incentivization(account, incentiveAmount);
+        LibBeanEthWellOracle.resetBeanEthWellPrice();
+        LibEthUsdOracle.resetUsdEthPrice();
         return incentiveAmount;
     } 
 }

@@ -117,14 +117,22 @@ library LibEthUsdOracle {
     }
 
     /**
-     * @dev Returns the USD / ETH price stored in {AppStorage} and resets the
-     * storage variable to 1 to reduce gas cost. Only {LibEvalute.evalPrice} accesses
-     * the USD/ETH price, so it is safe to assume it will only be read once for
-     * each time it is set.
+     * @dev Returns the USD / ETH price stored in {AppStorage}.
+     * The USD / ETH price is used twice in sunrise(): Once during {LibEvaluate.EvalPrice}
+     * and another at {LibEvaluate.Calc}. After use, {resetUsdEthPrice} should be called.
      */
-    function getUsdEthPrice() internal returns (uint price) {
+    function getUsdEthPrice() internal view returns (uint price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         price = s.usdEthPrice;
+    }
+
+    /**
+     * @notice resets s.usdEthPrice to 1. 
+     * @dev should be called at the end of sunrise() once the 
+     * usdEthPrice is not needed anymore to save gas.
+     */
+    function resetUsdEthPrice() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         s.usdEthPrice = 1;
     }
 }

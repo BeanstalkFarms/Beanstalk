@@ -69,7 +69,7 @@ library LibIncentive {
         }
 
         // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice(true);
+        uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
 
         // If the Bean Eth pool couldn't calculate a valid price, use the max reward value.
         if (beanEthPrice <= 1) {

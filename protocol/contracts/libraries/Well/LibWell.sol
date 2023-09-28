@@ -12,7 +12,7 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 
 /**
@@ -97,7 +97,8 @@ library LibWell {
     }
 
     /**
-     * @notice gets the liquidity of a well in USD, with 6 decimal precision
+     * @notice gets the liquidity of a well in USD
+     * precision is in the decimals of the non_bean asset in the well.
      * assumes a CP2 well function. 
      * 
      * @dev the function gets the MEV-resistant instanteous reserves,
@@ -110,7 +111,19 @@ library LibWell {
         // get the non-bean address and index
         (address token, uint256 j) = getTokenAndIndexFromWell(well);
 
-        usdLiquidity = LibUsdOracle.getTokenPrice(token)
+        // if the token is ETH AND in the sunrise function, 
+        // use the value stored in s.usdEthPrice for gas savings.
+        // if s.usdEthPrice is 1, then this function is called outside of sunrise.
+        // if s.usdEthPrice is 0, then the oracle failed to compute a valid price this Season,
+        // and should not be used.
+        uint256 price; 
+        uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
+        if(token == C.WETH && ethUsd > 1){
+            price = uint256(1e24).div(ethUsd);
+        } else {
+            price = LibUsdOracle.getTokenPrice(token);
+        }
+        usdLiquidity = price
             .mul(emaReserves[j])
             .div(1e6);
     }

@@ -1,10 +1,11 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson, to6, to18 } = require('./utils/helpers.js')
-const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL} = require('./utils/constants.js')
+const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN} = require('./utils/constants.js')
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
-const { BEAN } = require('./utils/constants')
-const { deployMockWell } = require('../utils/well.js');
+const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js');
+const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+
 const { advanceTime } = require('../utils/helpers.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
@@ -48,7 +49,7 @@ describe('Complex Weather', function () {
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     // wells
-    [this.well, this.wellFunction, this.pump] = await deployMockWell()
+    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
     await this.well.setReserves([to6('1000000'), to18('1000')])
     await advanceTime(3600)
     await owner.sendTransaction({to: user.address, value: 0});
@@ -56,7 +57,12 @@ describe('Complex Weather', function () {
     await owner.sendTransaction({to: user.address, value: 0});
     await this.well.connect(user).mint(user.address, to18('1000'))
     await beanstalk.connect(user).sunrise();
+    await whitelistWell(this.well.address, '10000', to6('4'))
+    await this.season.captureWellE(this.well.address);
 
+    await setEthUsdPrice('999.998018')
+    await setEthUsdcPrice('1000')
+    await setEthUsdtPrice('1000')
   });
 
   [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {
@@ -65,7 +71,9 @@ describe('Complex Weather', function () {
       before (async function () {
         this.testData = {}
         columns.forEach((key, i) => this.testData[key] = tests[v][i])
+        await this.season.setUsdEthPrice(to18('0.001'));
         await this.season.setYieldE(this.testData.startingWeather)
+        await this.season.setPercentOfNewGrownStalkToLP(this.testData.initalPercentToLp)
         this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
         this.dsoil = this.testData.lastSoil
         this.startSoil = this.testData.startingSoil
@@ -73,6 +81,9 @@ describe('Complex Weather', function () {
         this.deltaB = this.testData.deltaB
         this.pods = this.testData.unharvestablePods
         this.aboveQ = this.testData.aboveQ
+        this.L2SRState = this.testData.L2SR
+        this.newPercentToLp = this.testData.newPercentToLp
+
         await this.bean.mint(userAddress, this.testData.totalOutstandingBeans)
         await this.season.setLastSowTimeE(this.testData.lastSowTime)
         await this.season.setNextSowTimeE(this.testData.thisSowTime)
@@ -84,12 +95,14 @@ describe('Complex Weather', function () {
           this.deltaB, // deltaB
           this.testData.wasRaining, 
           this.testData.rainStalk,
-          this.aboveQ // aboveQ
+          this.aboveQ, // aboveQ
+          this.L2SRState, // L2SR
         )
       })
       it('Checks New Weather', async function () {
         expect(await this.season.getT()).to.eq(this.testData.newWeather)
       })
+
       it('Emits The Correct Case Weather', async function () {
         if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'TemperatureChange')
           .withArgs(
@@ -99,6 +112,22 @@ describe('Complex Weather', function () {
             this.testData.newWeather-this.testData.startingWeather
             )
       })
+
+      it('Checks New Percent To LP', async function () {
+        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP())
+        .to.eq(this.testData.newPercentToLp)
+      })
+
+      it('Emits The Correct LP Case', async function () {
+        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+          .withArgs(
+            await this.seasonGetter.season(), 
+            this.testData.Code, 
+            10000,
+            this.testData.bL
+            )
+      })
+      
     })
   })
 
