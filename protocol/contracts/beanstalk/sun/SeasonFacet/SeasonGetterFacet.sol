@@ -27,8 +27,9 @@ contract SeasonGetterFacet {
     AppStorage internal s;
 
     // 24 * 30 * 6
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;
+    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
+    uint256 private constant STALK_BDV_PRECISION = 1e4;
 
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
@@ -136,7 +137,9 @@ contract SeasonGetterFacet {
      * @notice returns the average grown stalk per BDV .
      */
     function getAverageGrownStalkPerBdv() public view returns (uint256) {
-        return (s.s.stalk / getTotalBdv()) - 10000; // TODO: Check constant
+        uint256 totalBdv = getTotalBdv();
+        if(totalBdv == 0) return 0;
+        return s.s.stalk.div(totalBdv).sub(STALK_BDV_PRECISION); 
     }
 
     /**

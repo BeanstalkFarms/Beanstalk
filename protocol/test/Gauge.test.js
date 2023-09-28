@@ -35,6 +35,7 @@ describe('Gauge', function () {
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
+    await this.bean.connect(user).approve(this.diamond.address, to6('100000000'))
 
     // set balances to bean3crv
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
@@ -267,16 +268,33 @@ describe('Gauge', function () {
   })
 
   describe('averageGrownStalkPerBdvPerSeason', async function () {
+    before(async function() {
+      await this.bean.mint(userAddress, to6('2000'));
+      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
+    })
     it('getter', async function (){
-      // expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('100'));
+      // at season 1, no stalk has grown.
+      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
+      expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
     })
 
     it('increases after some seasons pass', async function () {
-
+      await this.season.teleportSunrise(4322)
+      // season 4322 (user does not gain any stalk until season 2)
+      await this.silo.mow(userAddress, this.bean.address)
+      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0);
+      expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
+      await this.seasonGetter.updateStalkPerBdvPerSeason();
+      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
     })
 
     it('decreases after a new deposit', async function() {
-      
+      await this.season.teleportSunrise(4322)
+      await this.silo.mow(userAddress, this.bean.address)
+      await this.seasonGetter.updateStalkPerBdvPerSeason();
+      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
+      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
+      expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'));
     })
   })
   
