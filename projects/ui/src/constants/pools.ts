@@ -30,10 +30,10 @@ export const BEANETH_WELL_MAINNET = new BasinWell(
   BEAN_ETH_WELL_LP,
   [BEAN, WETH],
   {
-    name: 'BEAN:ETH Well Pool',
+    name: 'BEAN:WETH Well Pool',
     logo: curveLogo,
-    symbol: 'BEAN:ETH',
-    color: '#ed9f9c'
+    symbol: 'BEAN:WETH',
+    color: '#ed9f9c',
   }
 );
 
