@@ -4,7 +4,12 @@ import { useSelector } from 'react-redux';
 import Token from '~/classes/Token';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
+import {
+  BEAN,
+  UNRIPE_BEAN,
+  BEAN_ETH_WELL_LP,
+  UNRIPE_BEAN_WETH,
+} from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
 import { Settings } from '~/state/app';
@@ -17,6 +22,7 @@ const useSiloTokenToFiat = () => {
   const getChainToken = useGetChainToken();
   const Bean = getChainToken(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
+  const beanWeth = getChainToken(BEAN_ETH_WELL_LP);
   const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
 
   ///
@@ -59,7 +65,7 @@ const useSiloTokenToFiat = () => {
 
       // TODOALEX
       if (_token === urBeanWeth) {
-        _poolAddress = urBeanWeth.address;
+        _poolAddress = beanWeth.address;
         _amountLP = _chop
           ? _amount.times(unripe[urBeanWeth.address]?.chopRate || ZERO_BN)
           : _amount;
@@ -69,10 +75,15 @@ const useSiloTokenToFiat = () => {
       const pool = beanPools[_poolAddress];
       if (!pool || !pool?.liquidity || !pool?.supply) return ZERO_BN;
 
-      const usd = _amountLP.div(pool.supply).times(pool.liquidity); // usd value; liquidity
-      return _denomination === 'bdv' ? usd.div(price) : usd;
+      const usd = _amountLP
+        .multipliedBy(pool.lpUsd)
+        .multipliedBy(unripe[urBeanWeth.address]?.chopRate);
+      const bdv = _amountLP
+        .multipliedBy(pool.lpBdv)
+        .multipliedBy(unripe[urBeanWeth.address]?.chopRate);
+      return _denomination === 'bdv' ? bdv : usd;
     },
-    [Bean, beanPools, price, unripe, urBean, urBeanWeth]
+    [Bean, beanPools, beanWeth.address, price, unripe, urBean, urBeanWeth]
   );
 };
 
