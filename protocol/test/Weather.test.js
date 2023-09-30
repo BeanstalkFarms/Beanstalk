@@ -73,7 +73,7 @@ describe('Complex Weather', function () {
         columns.forEach((key, i) => this.testData[key] = tests[v][i])
         await this.season.setUsdEthPrice(to18('0.001'));
         await this.season.setYieldE(this.testData.startingWeather)
-        await this.season.setPercentOfNewGrownStalkToLP(this.testData.initalPercentToLp)
+        await this.season.setBeanToMaxLpGPperBDVRatio(this.testData.initalPercentToLp)
         this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
         this.dsoil = this.testData.lastSoil
         this.startSoil = this.testData.startingSoil
@@ -114,12 +114,12 @@ describe('Complex Weather', function () {
       })
 
       it('Checks New Percent To LP', async function () {
-        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP())
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio())
         .to.eq(this.testData.newPercentToLp)
       })
 
       it('Emits The Correct LP Case', async function () {
-        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
           .withArgs(
             await this.seasonGetter.season(), 
             this.testData.Code, 

@@ -6210,12 +6210,12 @@
           },
           {
             "internalType": "uint32",
-            "name": "lpGaugePoints",
+            "name": "gaugePoints",
             "type": "uint32"
           },
           {
             "internalType": "bytes4",
-            "name": "GPSelector",
+            "name": "gpSelector",
             "type": "bytes4"
           }
         ],
@@ -6694,7 +6694,7 @@
   },
   {
     "inputs": [],
-    "name": "getPercentOfNewGrownStalkToLP",
+    "name": "getBeanToMaxLpGPperBDVRatio",
     "outputs": [
       {
         "internalType": "uint128",
@@ -6731,7 +6731,7 @@
           },
           {
             "internalType": "uint128",
-            "name": "percentOfNewGrownStalkToLP",
+            "name": "BeanToMaxLpGpPerBDVRatio",
             "type": "uint128"
           }
         ],
@@ -7056,7 +7056,7 @@
         "type": "int16"
       }
     ],
-    "name": "GrownStalkToLPChange",
+    "name": "BeanToMaxLPRatioChange",
     "type": "event"
   },
   {

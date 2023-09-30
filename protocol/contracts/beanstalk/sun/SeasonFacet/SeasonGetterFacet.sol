@@ -13,7 +13,7 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
  * @title SeasonGetterFacet
@@ -199,14 +199,25 @@ contract SeasonGetterFacet {
     }
 
     /**
-     * @notice returns the percentage of new grown stalk 
-     * issued to the LP silo tokens.
+     * @notice returns the ratio between bean and max LP gp Per BDV, unscaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
-    function getPercentOfNewGrownStalkToLP() external view returns (uint128) {
-        return s.seedGauge.percentOfNewGrownStalkToLP;
+    function getBeanToMaxLpGPperBDVRatio() external view returns (uint256) {
+        return s.seedGauge.BeanToMaxLpGpPerBDVRatio;
     }
 
+    /**
+     * @notice returns the ratio between bean and max LP gp Per BDV, scaled.
+     * @dev 6 decimal precision (1% = 1e6)
+     */
+    function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
+        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
+    }
+    
+
+    /**
+     * @notice returns the pod rate (unharvestable pods / total bean supply)
+     */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
         return Decimal.ratio(
@@ -215,17 +226,26 @@ contract SeasonGetterFacet {
         ).value;
     }
 
+    /**
+     * @notice returns the L2SR rate (total non-bean liquidity / total bean supply)
+     */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
         return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
     }
 
+    /**
+     * @notice gets the change in demand for pods from the previous season.
+     */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
         (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
         return deltaPodDemand.value;
     }
 
+    /**
+     * @notice gets the non-bean liquidity for a given well.
+     */
     function getUsdLiquidity(address well) external view returns (uint256) {
         return LibWell.getUsdLiquidity(well);
     }

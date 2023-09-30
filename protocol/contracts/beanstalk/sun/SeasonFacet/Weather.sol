@@ -27,7 +27,7 @@ contract Weather is Sun {
     // are a percentage (100% = 1e4).
     // bL is multiplied by GROWN_STALK_PRECISION as bL has a 
     // precision of 2 decimals, and needs to have 6 decimals
-    // to match the precision of percentOfNewGrownStalkToLP.
+    // to match the precision of BeanToMaxLpGpPerBDVRatio.
     uint16 constant internal RELATIVE_PRECISION = 1e4;
     uint16 constant internal GROWN_STALK_PRECISION = 1e4;
 
@@ -59,7 +59,7 @@ contract Weather is Sun {
      * @dev the relative change is applied before the absolute change. 
      * L_n = mL * L_n-1 + bL
      */
-    event GrownStalkToLPChange(
+    event BeanToMaxLPRatioChange(
         uint256 indexed season,
         uint256 caseId,
         uint16 relChange,
@@ -99,14 +99,14 @@ contract Weather is Sun {
         }
         // Calculate Case Id
         caseId = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
-        updateTemperatureAndGrownStalkPerBDVToLP(caseId);
+        updateTemperatureAndBeanToMaxLPRatio(caseId);
         handleRain(caseId);
     }
 
-    function updateTemperatureAndGrownStalkPerBDVToLP(uint256 caseId) internal {
+    function updateTemperatureAndBeanToMaxLPRatio(uint256 caseId) internal {
         LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
         updateTemperature(cd.mT, cd.bT, caseId);
-        updateNewGrownStalkPerBDVtoLP(cd.mL, cd.bL, caseId);
+        updateBeanToMaxLPRatio(cd.mL, cd.bL, caseId);
     }
     /**
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
@@ -134,30 +134,30 @@ contract Weather is Sun {
     /**
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
-    function updateNewGrownStalkPerBDVtoLP(uint16 mL, int16 bL, uint256 caseId) private {
-        uint128 percentNewGrownStalkToLP = s.seedGauge.percentOfNewGrownStalkToLP;
-        percentNewGrownStalkToLP = percentNewGrownStalkToLP.mul(mL).div(RELATIVE_PRECISION);
+    function updateBeanToMaxLPRatio(uint16 mL, int16 bL, uint256 caseId) private {
+        uint128 BeanToMaxLpGpPerBDVRatio = s.seedGauge.BeanToMaxLpGpPerBDVRatio;
+        BeanToMaxLpGpPerBDVRatio = BeanToMaxLpGpPerBDVRatio.mul(mL).div(RELATIVE_PRECISION);
         if(bL < 0){
-            if(percentNewGrownStalkToLP <= uint128(-bL).mul(GROWN_STALK_PRECISION)){
-                bL = - int16(percentNewGrownStalkToLP.div(GROWN_STALK_PRECISION));
-                s.seedGauge.percentOfNewGrownStalkToLP = 0;
+            if(BeanToMaxLpGpPerBDVRatio <= uint128(-bL).mul(GROWN_STALK_PRECISION)){
+                bL = - int16(BeanToMaxLpGpPerBDVRatio.div(GROWN_STALK_PRECISION));
+                s.seedGauge.BeanToMaxLpGpPerBDVRatio = 0;
             } else {
-                s.seedGauge.percentOfNewGrownStalkToLP = 
-                    percentNewGrownStalkToLP.sub(uint128(-bL).mul(GROWN_STALK_PRECISION));
+                s.seedGauge.BeanToMaxLpGpPerBDVRatio = 
+                    BeanToMaxLpGpPerBDVRatio.sub(uint128(-bL).mul(GROWN_STALK_PRECISION));
             }
         } else {
-            if(percentNewGrownStalkToLP.add(uint128(bL).mul(GROWN_STALK_PRECISION)) >= 100e6){
-                bL = int16(uint128(100e6).sub(percentNewGrownStalkToLP).div(GROWN_STALK_PRECISION));
-                s.seedGauge.percentOfNewGrownStalkToLP = 100e6;
+            if(BeanToMaxLpGpPerBDVRatio.add(uint128(bL).mul(GROWN_STALK_PRECISION)) >= 100e6){
+                bL = int16(uint128(100e6).sub(BeanToMaxLpGpPerBDVRatio).div(GROWN_STALK_PRECISION));
+                s.seedGauge.BeanToMaxLpGpPerBDVRatio = 100e6;
             } else {
-                s.seedGauge.percentOfNewGrownStalkToLP = percentNewGrownStalkToLP.add(
+                s.seedGauge.BeanToMaxLpGpPerBDVRatio = BeanToMaxLpGpPerBDVRatio.add(
                     uint128(bL).mul(GROWN_STALK_PRECISION)
                 );
             }
         }
 
         // TODO: check whether event is good:
-        emit GrownStalkToLPChange(s.season.current, caseId, mL, bL);
+        emit BeanToMaxLPRatioChange(s.season.current, caseId, mL, bL);
     }
 
     /**

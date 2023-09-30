@@ -39,7 +39,7 @@ library LibWhitelist {
     event WhitelistTokenToGauge(
         address indexed token, 
         bytes4 selector, 
-        uint32 lpGaugePoints
+        uint32 gaugePoints
     );
 
 
@@ -104,7 +104,7 @@ library LibWhitelist {
     function whitelistTokenToGauge(
         address token,
         bytes4 selector,
-        uint32 lpGaugePoints
+        uint32 gaugePoints
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         //verify you passed in a callable selector
@@ -119,10 +119,10 @@ library LibWhitelist {
 
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 
-        ss.GPSelector = selector;
-        ss.lpGaugePoints = lpGaugePoints;
+        ss.gpSelector = selector;
+        ss.gaugePoints = gaugePoints;
 
-        emit WhitelistTokenToGauge(token, selector, lpGaugePoints);
+        emit WhitelistTokenToGauge(token, selector, gaugePoints);
     }
     
     /**

@@ -87,7 +87,7 @@ library LibEvaluate {
     function evalPrice(
         int256 deltaB, 
         Decimal.D256 memory podRate
-    ) internal returns (uint256 caseId) {
+    ) internal view returns (uint256 caseId) {
         // p > 1
         if (deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))) {
             // beanstalk will only use the bean/eth well to compute the bean price, 

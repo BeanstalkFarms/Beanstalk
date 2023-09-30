@@ -34,8 +34,8 @@ contract InitBipSeedGauge{
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
         uint32 stalkEarnedPerSeason; // ─┐ 4 
-        uint32 lpGaugePoints; //         │ 4  (8)
-        bytes4 GPSelector; //  ──────────┘ 4  (12)
+        uint32 gaugePoints; //         │ 4  (8)
+        bytes4 gpSelector; //  ──────────┘ 4  (12)
         // 20 bytes are left here.
     }
 
@@ -52,8 +52,8 @@ contract InitBipSeedGauge{
         uint128 totalBdv;
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
 
-        uint24[5] memory lpGaugePoints = [uint24(0),0,0,0,0];
-        bytes4[5] memory GPSelectors = [bytes4(0x00000000),0x00000000,0x00000000,0x00000000, 0x00000000];
+        uint24[5] memory gaugePoints = [uint24(0),0,0,0,0];
+        bytes4[5] memory gpSelectors = [bytes4(0x00000001),0x00000001,0x00000001,0x00000001, 0x00000001];
         for(uint i = 0; i < siloTokens.length; i++) {
             Storage.SiloSettings storage ss = s.ss[siloTokens[i]];
             assembly {
@@ -65,9 +65,9 @@ contract InitBipSeedGauge{
             newSiloSettings.milestoneSeason = oldSiloSettings.milestoneSeason;
             newSiloSettings.milestoneStem = oldSiloSettings.milestoneStem;
             newSiloSettings.encodeType = oldSiloSettings.encodeType;
-            //TODO: add lpGaugePoints and GPSelector
-            newSiloSettings.lpGaugePoints = lpGaugePoints[i];
-            newSiloSettings.GPSelector = GPSelectors[i];
+            //TODO: add gaugePoints and gpSelector
+            newSiloSettings.gaugePoints = gaugePoints[i];
+            newSiloSettings.gpSelector = gpSelectors[i];
 
             s.ss[siloTokens[i]] = newSiloSettings;
 
@@ -75,7 +75,7 @@ contract InitBipSeedGauge{
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
         }
         // initalize seed gauge. 
-        s.seedGauge.percentOfNewGrownStalkToLP = 0.5e6; // 50% // TODO: how to set this?
+        s.seedGauge.BeanToMaxLpGpPerBDVRatio = 0.5e6; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
 
         // initalize s.usdEthPrice 

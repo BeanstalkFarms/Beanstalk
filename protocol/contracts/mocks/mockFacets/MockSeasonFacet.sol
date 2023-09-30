@@ -119,7 +119,7 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndGrownStalkPerBDVToLP(caseId);
+        updateTemperatureAndBeanToMaxLPRatio(caseId);
         stepSun(deltaB, caseId);
     }
 
@@ -393,8 +393,8 @@ contract MockSeasonFacet is SeasonFacet  {
         return LibChainlinkOracle.getEthUsdPrice();
     }
 
-    function setPercentOfNewGrownStalkToLP(uint128 percent) external {
-        s.seedGauge.percentOfNewGrownStalkToLP = percent;
+    function setBeanToMaxLpGPperBDVRatio(uint128 percent) external {
+        s.seedGauge.BeanToMaxLpGpPerBDVRatio = percent;
     }
     
     function setUsdEthPrice(uint256 price) external {

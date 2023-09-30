@@ -79,13 +79,13 @@ describe('Gauge', function () {
   })
 
   describe('Percent new grown stalk to LP', function () {
-    // MockInitDiamond initalizes percentOfNewGrownStalkToLP to 50% (50e6)
+    // MockInitDiamond initalizes BeanToMaxLpGpPerBDVRatio to 50% (50e6)
 
-    describe('L2SR > 75%', async function () {
-      it("increases Percent to LP significantly", async function () {
+    describe('L2SR > 80%', async function () {
+      it("decreases Bean to maxLP ratio significantly", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 108);
-        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('49500000');
-        await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('49500000');
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
           .withArgs(
             3,     // season
             108,    // caseId
@@ -95,11 +95,11 @@ describe('Gauge', function () {
       })
     });
 
-    describe('50% < L2SR < 75%', async function () {
-      it("increases Percent to LP moderately", async function () {
+    describe('40% < L2SR < 80%', async function () {
+      it("decreases Bean to maxLP ratio moderately", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 72);
-        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('49750000');
-        await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('49750000');
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
           .withArgs(
             3, // season
             72, // caseId
@@ -109,11 +109,11 @@ describe('Gauge', function () {
       })
     });
 
-    describe('25% < L2SR < 50%', async function () {
-      it("decreases Percent to LP moderately", async function () {
+    describe('12% < L2SR < 40%', async function () {
+      it("increases Bean to maxLP ratio moderately", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
-        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('50250000');
-        await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('50250000');
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
           .withArgs(
             3, // season
             36, // caseId
@@ -123,11 +123,11 @@ describe('Gauge', function () {
       })
     });
 
-    describe('L2SR < 25%', async function () {
-      it("increases Percent to LP significantly", async function () {
+    describe('L2SR < 12%', async function () {
+      it("increases Bean to maxLP ratio significantly", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
-        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('50500000');
-        await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('50500000');
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
           .withArgs(
             3, // season
             0, // caseId
@@ -137,11 +137,11 @@ describe('Gauge', function () {
       })
     });
 
-    it("L2SR cannot go under 0%", async function () {
-      await this.season.setPercentOfNewGrownStalkToLP(0.4e6);
+    it("Bean to maxLP ratio cannot go under 0%", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(0.4e6);
       this.result = await this.season.seedGaugeSunSunrise('0', 108);
-      expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal('0');
-      await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('0');
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
         .withArgs(
           3,     // season
           108,    // caseId
@@ -150,11 +150,11 @@ describe('Gauge', function () {
         );
     })
 
-    it("LS2R cannot go above 100%", async function () {
-      await this.season.setPercentOfNewGrownStalkToLP(99.9e6);
+    it("Bean to maxLP ratio cannot go above 100%", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(99.9e6);
       this.result = await this.season.seedGaugeSunSunrise('0', 0);
-      expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP()).to.be.equal(to6('100'));
-      await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to6('100'));
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
         .withArgs(
           3,     // season
           0,    // caseId

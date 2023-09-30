@@ -375,8 +375,8 @@ contract Storage {
      * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
      * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
      * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
-     * @param lpGaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
-     * @param GPSelector The encoded gaugePoint function selector for the token that pertains to 
+     * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
+     * @param gpSelector The encoded gaugePoint function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature:
      * ```
      * function gaugePoints(
@@ -394,8 +394,8 @@ contract Storage {
 		int96 milestoneStem; //          │ 12 (28)
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
-        uint32 lpGaugePoints; //  ───────┐ 4  
-        bytes4 GPSelector; //  ──────────┘ 4  (8)
+        uint32 gaugePoints; //    ───────┐ 4  
+        bytes4 gpSelector; //  ──────────┘ 4  (8)
         // 24 bytes are left here.
     }
 
@@ -424,12 +424,16 @@ contract Storage {
 
     /**
      * @notice System level variables used in the seed Gauge System.
-     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV that beanstalk issues each season.
-     * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precision (1% = 1e6)
+     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV 
+     * that beanstalk issues each season.
+     * @param BeanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
+     * issued to the largest LP share and Bean. 6 decimal precision.
+     * @dev a beanTomaxLpGpPerBDVRatio of 100e6 means that beans will have the 
+     * same amount of GpPerBDV as the LP with the largest GpPerBDV
      */
     struct SeedGauge {
         uint128 averageGrownStalkPerBdvPerSeason;
-        uint128 percentOfNewGrownStalkToLP;
+        uint128 BeanToMaxLpGpPerBDVRatio;
     }
 }
 

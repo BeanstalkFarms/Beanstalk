@@ -14,8 +14,8 @@ import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
  * 
  * mT: 2 Bytes (1% = 1e2) (temperature can be scaled to 0% to 655% relative)
  * bT: 2 Bytes (1% = 1)   (temperature can change by -32768% to +32767% absolute)
- * mL: 2 Bytes (1% = 1e2) (percentOfNewGrownStalkToLP can be scaled to 0% to 655% relative)
- * bL: 2 Bytes (1% = 1e2) (percentOfNewGrownStalkToLP can change by -327% to +327% absolute)
+ * mL: 2 Bytes (1% = 1e2) (BeanToMaxLpGpPerBDVRatio can be scaled to 0% to 655% relative)
+ * bL: 2 Bytes (1% = 1e2) (BeanToMaxLpGpPerBDVRatio can change by -327% to +327% absolute)
  
  * Temperature and grownStalk percentage to lp is updated as such:
  * T_n = mT * T_n-1 + bT

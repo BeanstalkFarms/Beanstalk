@@ -44,13 +44,4 @@ library LibWhitelistedTokens {
         assets[0] = C.BEAN_ETH_WELL;
         assets[1] = C.CURVE_BEAN_METAPOOL;
     }
-
-     /**
-     * @notice Returns the unripe whitelisted tokens.
-     */
-    function getUnripeSiloTokens() internal pure returns (address[] memory assets) {
-        assets = new address[](2);
-        assets[0] = C.UNRIPE_BEAN;
-        assets[1] = C.UNRIPE_LP;
-    }
 }
