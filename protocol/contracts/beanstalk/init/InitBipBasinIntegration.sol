@@ -45,7 +45,9 @@ contract InitBipBasinIntegration {
             IBDVFacet.wellBdv.selector,
             STALK_ISSUED_PER_BDV,
             BEAN_ETH_SEEDS_PER_BDV,
-            0x01
+            0x01,
+            0,
+            0
         );
 
         s.beanEthPrice = 1;

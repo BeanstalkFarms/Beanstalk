@@ -11,6 +11,8 @@ import "contracts/libraries/Silo/LibWhitelist.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "../C.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @title LibGauge
  * @author Brean
@@ -51,12 +53,14 @@ library LibGauge {
      * and the distribution of grown Stalk to silo assets.
      */
     function stepGauge() internal {
+        console.log("updateGaugePoints:");
         (
             uint256 maxLpGpPerBDV, 
             LpGaugePointData[] memory lpGpData, 
             uint256 totalGaugePoints,
             uint256 totalLPBdv
         ) =  updateGaugePoints();
+        console.log("updateGrownStalkEarnedPerSeason:");
         updateGrownStalkEarnedPerSeason(
             maxLpGpPerBDV,
             lpGpData,
@@ -78,12 +82,14 @@ library LibGauge {
     ) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory LPSiloTokens = LibWhitelistedTokens.getSiloLPTokens();
+        lpGpData = new LpGaugePointData[](LPSiloTokens.length);
 
         // summate total deposited BDV across all whitelisted LP tokens.
         // TODO: add unmigrated
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             totalLPBdv = totalLPBdv.add(s.siloBalances[LPSiloTokens[i]].depositedBdv);
         }
+        console.log("totalLPBdv:", totalLPBdv);
         
         // if nothing has been deposited, skip gauge point update.
         if (totalLPBdv == 0) return (
@@ -101,46 +107,78 @@ library LibGauge {
         }
 
         
+        console.log("in loop:");
         // calculate and update the gauge points for each LP.
         for (uint256 i; i < LPSiloTokens.length; ++i) {
+            console.log("-------");
+            console.log("token:", LPSiloTokens[i]);
             Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
             
             uint256 depositedBdv = s.siloBalances[LPSiloTokens[i]].depositedBdv;
+            console.log("depositedBDV:", s.siloBalances[LPSiloTokens[i]].depositedBdv);
             
+            // 1e6 = 1%
             uint256 percentOfDepositedBdv = depositedBdv
-                .mul(PRECISION)
+                .mul(100e6)
                 .div(totalLPBdv);
 
+            console.log("percentOfDepositedBdv:", percentOfDepositedBdv);
+            console.log("gaugePoints before:", ss.gaugePoints);
             // gets the gauge points of token from GaugePointFacet.
+            console.log("gpSelector:");
+            console.logBytes4(ss.gpSelector);
+            console.log("gaugePoints:", ss.gaugePoints);
+            console.log("optimal % LP deposited:", getOptimalPercentLPDepositedBDV(LPSiloTokens[i]));
+            console.log("current % deposited BDV:", percentOfDepositedBdv);
             uint256 newGaugePoints = getGaugePoints(
                 ss.gpSelector,
                 ss.gaugePoints,
                 getOptimalPercentLPDepositedBDV(LPSiloTokens[i]),
                 percentOfDepositedBdv
             );
+            console.log("gaugePoints after:", newGaugePoints);
             
             // increment totalGaugePoints and calculate the gaugePoints per BDV:
             totalGaugePoints = totalGaugePoints.add(newGaugePoints);
-            lpGpData[i].lpToken = LPSiloTokens[i];
+            console.log("total Gp:", totalGaugePoints);
+            LpGaugePointData memory _lpGpData;
+            _lpGpData.lpToken = LPSiloTokens[i];
+            console.log(" _lpGpData.lpToken",  _lpGpData.lpToken);
+
+            // gauge points has 1e6 precision (1e6 = 1%)
+            // deposited BDV has 1 decimal (1 = 1 )
             uint256 gpPerBDV = uint256(newGaugePoints).mul(PRECISION).div(depositedBdv);
-            if (gpPerBDV> maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
-            lpGpData[i].gpPerBDV = gpPerBDV;
-            
-            // store gauge points for next season. 
+            // gpPerBDV has 6 decimal precision (arbitrary)
+            console.log("gpPerBDV", gpPerBDV);
+            if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
+            console.log("maxLpGpPerBDV", maxLpGpPerBDV);
+            _lpGpData.gpPerBDV = gpPerBDV;
+            console.log("_lpGpData.gpPerBDV", _lpGpData.gpPerBDV);
+            console.log("i", i);
+            console.log("lpGpData length:", lpGpData.length);
+            lpGpData[i] = _lpGpData;
+            console.log("lpGpData[i] token ", lpGpData[i].lpToken);
+            console.log("lpGpData[i] gpPerBdv ", lpGpData[i].gpPerBDV);
+            // store gauge points to normalize
             ss.gaugePoints = uint32(newGaugePoints);
+            console.log("new ss.gaugePoints", ss.gaugePoints);
         }
 
-        // Normalize gauge points
+        // normalize gauge points to 100e6
+        // gaugePoints is scaled up to uint256 to be normalized,
+        // then downcasted. overflow cannot occur uint32.max > 100e6.
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
-            ss.gaugePoints = ss.gaugePoints.mul(100e6).div(uint32(totalGaugePoints));
-            
+            ss.gaugePoints = uint32(uint256(ss.gaugePoints).mul(100e6).div(totalGaugePoints));
+            console.log("token:" , LPSiloTokens[i]);
+            console.log("gauge Points normalized:", ss.gaugePoints);
             emit GaugePointChange(
                 s.season.current,
                 LPSiloTokens[i],
                 ss.gaugePoints
             );
         }
+       
     }
 
     /**
@@ -156,7 +194,6 @@ library LibGauge {
         uint256 percentOfDepositedBdv
     ) internal view returns (uint256 newGaugePoints) 
     {
-        if(gpSelector == 0x00000001) gpSelector = 0x00000002;
         bytes memory callData = abi.encodeWithSelector(
                 gpSelector,
                 gaugePoints,
@@ -187,22 +224,36 @@ library LibGauge {
         uint256 totalLPBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log("-----------------------------------");
+        console.log("updating Grown Stalk Earned Per Season:");
         // TODO: implment the decrement deposited BDV thing for unripe
         uint256 beanDepositedBdv = s.siloBalances[C.BEAN].depositedBdv;
+        console.log("bean deposited BDV:", beanDepositedBdv);
         uint256 totalBdv = totalLPBdv.add(beanDepositedBdv);
+        console.log("new totalBDV:", totalBdv);
 
         // if nothing has been deposited, skip grown stalk update.
         if(totalBdv == 0) return;
 
         // calculate the ratio between the bean and the max LP gauge points per BDV.
+        // 6 decimal precision
         uint256 BeanToMaxLpGpPerBDVRatio = getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
+        console.log("BeanToMaxLpGpPerBDVRatio:", BeanToMaxLpGpPerBDVRatio);
         // get the GaugePoints and GPperBDV for bean 
-        uint256 beanGpPerBDV = maxLpGpPerBDV.mul(BeanToMaxLpGpPerBDVRatio).div(PRECISION);
+        // beanGpPerBDV has 6 decimal preicison 
+        uint256 beanGpPerBDV = maxLpGpPerBDV.mul(BeanToMaxLpGpPerBDVRatio).div(100e6);
+        console.log("beanGpPerBDV:", beanGpPerBDV);
+
         totalGaugePoints = totalGaugePoints.add(beanGpPerBDV.mul(beanDepositedBdv).div(PRECISION));
+        console.log("totalGaugePoints:", totalGaugePoints);
 
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(PRECISION);
-        uint256 newGrownStalkPerGp = newGrownStalk.mul(PRECISION).div(totalGaugePoints);
+        console.log("averageGrownStalkPerBdvPerSeason:", s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        console.log("newGrownStalk:", newGrownStalk);
+
+        uint256 newGrownStalkPerGp = newGrownStalk.mul(1e6).div(totalGaugePoints);
+        console.log("newGrownStalkPerGp:", newGrownStalkPerGp);
 
         // update stalkPerBDVPerSeason for bean.
         issueGrownStalkPerBDV(
@@ -241,14 +292,12 @@ library LibGauge {
         uint256 GrownStalkPerGp,
         uint256 GpPerBDV
     ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 depositedBdv = s.siloBalances[token].depositedBdv;
-        if(depositedBdv > 0){
-            LibWhitelist.updateStalkPerBdvPerSeasonForToken(
-                token,
-                uint32(GrownStalkPerGp.mul(GpPerBDV).div(PRECISION))
-            );
-        }
+        LibWhitelist.updateStalkPerBdvPerSeasonForToken(
+            token,
+            uint32(GrownStalkPerGp.mul(GpPerBDV).div(PRECISION))
+        );
+        console.log("token:", token);
+        console.log("seeds updated to:", uint32(GrownStalkPerGp.mul(GpPerBDV).div(PRECISION)));
     }
 
     /**

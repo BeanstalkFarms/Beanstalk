@@ -400,4 +400,8 @@ contract MockSeasonFacet is SeasonFacet  {
     function setUsdEthPrice(uint256 price) external {
         s.usdEthPrice = price;
     }
+
+    function stepGauge() external {
+        LibGauge.stepGauge();
+    }
 }

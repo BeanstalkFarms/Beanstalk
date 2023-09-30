@@ -2,11 +2,12 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
+const { updateGaugeForToken } = require('../utils/gauge.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
@@ -33,26 +34,44 @@ describe('Gauge', function () {
     this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
+    this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
+    await this.bean.mint(userAddress, to6('10000'))
+
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.bean.connect(user).approve(this.diamond.address, to6('100000000'))
 
     // set balances to bean3crv
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
+    this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-    await this.beanThreeCurve.set_supply(toBean('2000000'));
+    await this.threeCurve.mint(userAddress, to18('1000'))
+    await this.beanThreeCurve.connect(owner).approve(this.diamond.address, to18('100000000'))
+    await this.beanThreeCurve.connect(user).approve(this.diamond.address, to18('100000000'))
+    await this.threeCurve.connect(user).approve(this.diamond.address, to18('100000000000'))
+    await this.threeCurve.connect(user).approve(this.beanThreeCurve.address, to18('100000000000'))
+
     // bean3crv set at parity, 1,000,000 on each side.
     await this.beanThreeCurve.set_balances([to6('1000000'), to18('1000000')]);
     await this.beanThreeCurve.set_balances([to6('1000000'), to18('1000000')]);
-
+    await this.curve.connect(user).addLiquidity(
+      BEAN_3_CURVE,
+      STABLE_FACTORY,
+      [to6('1000'), to18('1000')],
+      to18('2000'),
+      EXTERNAL,
+      EXTERNAL
+    );
     // init wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
-    this.wellToken = await ethers.getContractAt('MockToken', this.well.address)
-    await this.wellToken.connect(owner).approve(this.diamond.address, to18('100000000'))
+    await this.well.connect(owner).approve(this.diamond.address, to18('100000000'))
+    await this.well.connect(user).approve(this.diamond.address, to18('100000000'))
+
     await this.well.setReserves([to6('1000000'), to18('1000')])
-    await this.well.connect(owner).mint(ownerAddress, to18('1000'))
+    await this.well.mint(ownerAddress, to18('1000'))
+    await this.well.mint(userAddress, to18('1000'))
     await this.season.siloSunrise(0)
-    await whitelistWell(this.well.address, '10000', to6('4.5'));
+    await whitelistWell(this.well.address, '10000', to6('4'));
     await this.season.captureWellE(this.well.address);
 
     await setEthUsdPrice('999.998018')
@@ -68,6 +87,10 @@ describe('Gauge', function () {
     await this.unripeBean.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+
+    // update Gauge
+    updateGaugeForToken(BEAN_ETH_WELL, to6('95'))
+    updateGaugeForToken(BEAN_3_CURVE, to6('5'))
   })
 
   beforeEach(async function () {
@@ -285,7 +308,40 @@ describe('Gauge', function () {
   })
 
   describe('GaugePoints', async function () {
+    beforeEach(async function () {
+      beanETHGaugePoints = await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)
+      bean3crvGaugePoints = await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)
+      // deposit half beanETH, half bean3crv:
+      await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL);
+      await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL);
+      // deposit beans: 
+      await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL);
+      await this.season.stepGauge();
+    })
 
+    it('updates gauge points ', async function () {
+      expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to6('96'));
+      expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to6('4'));
+    })
+
+    it('update seeds values', async function () {
+      // mockInitDiamond sets s.averageGrownStalkPerBdvPerSeason to 10e6 (avg 10 seeds per BDV),
+      // and BeanToMaxLpGpPerBDVRatio to 50% (BeanToMaxLpGpPerBDVRatioScaled = 0.625)
+      // total BDV of ~226.5 (100 + 63.245537 + 63.245537)
+      // 1 seed = 1/10000 stalk, so 2265/10000 stalk should be issued this season.
+      // BEANETHGP = 96, gpPerBDV = 96/63.245537 = 1.518
+      // BEAN3CRV = 4; , gpPerBDV = 4/63.245537 = 0.0632 
+      // BEANgpPerBDV = 0.625 * 1.518 = 0.947
+      // total GP = 100 + (0.947*100) = 194.7
+      // stalkPerGp = 2265/10000 / 194.7 = 11_622_776/1e10 stalk per GP
+      // stalkPerGp * GpPerBDV = stalkIssuedPerBDV
+      // stalkIssuedPerBeanBDV = 11_622_776/1e10 * 0.947 = 11_006_768/1e10
+      // stalkIssuedPerBeanETH = 11_622_776/1e10 * 1.518 = 17_643_374/1e10
+      // stalkIssuedPerBean3CRV = 11_622_776/1e10 * 0.0632 = 734_559/1e10
+      expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(11026330);
+      expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(17642130);
+      expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(735082);
+    })
   })
 
   describe('averageGrownStalkPerBdvPerSeason', async function () {

@@ -8,68 +8,43 @@ import "contracts/beanstalk/AppStorage.sol";
 import "../../C.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 /**
- * @author Publius, Brean
+ * @author Brean
  * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct 
  **/
+interface IGaugePointFacet {
+    function defaultGaugePointFunction(
+        uint256 currentGaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv
+    ) external pure returns (uint256 newGaugePoints);
+}
 
 contract InitBipSeedGauge{    
     AppStorage internal s;
 
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4380;    
-    
-    struct OldSiloSettings {
-        bytes4 selector;
-        uint32 stalkEarnedPerSeason; 
-        uint32 stalkIssuedPerBdv;
-		uint32 milestoneSeason;
-		int96 milestoneStem;
-        bytes1 encodeType; 
-    }
-    // reference
-    struct NewSiloSettings {
-        bytes4 selector; // ─────────────┐ 4
-        uint32 stalkIssuedPerBdv; //     │ 4  (12)
-		uint32 milestoneSeason; //       │ 4  (16)
-		int96 milestoneStem; //          │ 12 (28)
-        bytes1 encodeType; // ───────────┘ 1  (29)
-        // 3 bytes are left here.
-        uint32 stalkEarnedPerSeason; // ─┐ 4 
-        uint32 gaugePoints; //         │ 4  (8)
-        bytes4 gpSelector; //  ──────────┘ 4  (12)
-        // 20 bytes are left here.
-    }
-
-
-
+    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;    
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
-
-        // update silo settings from old storage to new storage struct.
-        OldSiloSettings storage oldSiloSettings;
-        Storage.SiloSettings memory newSiloSettings;
-
         uint128 totalBdv;
+        // bean, beanETH, bean3CRV
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
-
-        uint24[5] memory gaugePoints = [uint24(0),0,0,0,0];
-        bytes4[5] memory gpSelectors = [bytes4(0x00000001),0x00000001,0x00000001,0x00000001, 0x00000001];
+        // only lp assets need to be updated.
+        // unripeAssets are not in the seed gauge, 
+        // and bean does not have a gauge point function. 
+        // (it is based on the max gauge points of LP)
+        uint32[5] memory gaugePoints = [uint32(0), 95e6, 100e6, 0, 0];
+        bytes4[5] memory gpSelectors = [
+            bytes4(0x00000000),
+            IGaugePointFacet.defaultGaugePointFunction.selector,
+            IGaugePointFacet.defaultGaugePointFunction.selector,
+            0x00000000,
+            0x00000000
+        ];
         for(uint i = 0; i < siloTokens.length; i++) {
-            Storage.SiloSettings storage ss = s.ss[siloTokens[i]];
-            assembly {
-                oldSiloSettings.slot := ss.slot
-            }
-            newSiloSettings.selector = oldSiloSettings.selector;
-            newSiloSettings.stalkEarnedPerSeason = oldSiloSettings.stalkEarnedPerSeason;
-            newSiloSettings.stalkIssuedPerBdv = oldSiloSettings.stalkIssuedPerBdv;
-            newSiloSettings.milestoneSeason = oldSiloSettings.milestoneSeason;
-            newSiloSettings.milestoneStem = oldSiloSettings.milestoneStem;
-            newSiloSettings.encodeType = oldSiloSettings.encodeType;
-            //TODO: add gaugePoints and gpSelector
-            newSiloSettings.gaugePoints = gaugePoints[i];
-            newSiloSettings.gpSelector = gpSelectors[i];
-
-            s.ss[siloTokens[i]] = newSiloSettings;
+            // update gaugePoints and gpSelectors
+            s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
+            s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
 
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;

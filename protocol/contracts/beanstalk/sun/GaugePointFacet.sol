@@ -23,8 +23,6 @@ contract GaugePointFacet {
      * @notice DefaultGaugePointFunction 
      * is the default function to calculate the gauge points
      * of an LP asset.
-     * @dev this is called if the gaugePoints selector in appStorage
-     * is 1 (0 means not enabled).
      */
     function defaultGaugePointFunction(
         uint256 currentGaugePoints,
@@ -32,6 +30,7 @@ contract GaugePointFacet {
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints) {
         if(percentOfDepositedBdv > optimalPercentDepositedBdv){
+            if(currentGaugePoints < 1e6) return 0;
             newGaugePoints = currentGaugePoints.sub(1e6);
         } else {
             newGaugePoints = currentGaugePoints.add(1e6);

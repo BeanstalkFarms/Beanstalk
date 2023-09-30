@@ -381,6 +381,7 @@ contract Storage {
      * ```
      * function gaugePoints(
      *  uint256 currentGaugePoints,
+     *  uint256 optimalPercentDepositedBdv,
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```

@@ -64,6 +64,8 @@ contract WhitelistFacet {
      * @param selector The function selector that is used to calculate the BDV of the token.
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
+     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
+     * @param gaugePoints The inital gauge points allocated to the token.
      * @dev 
      * Can only be called by Beanstalk or Beanstalk owner.
      * Assumes an `encodeType` of 0.
@@ -72,7 +74,9 @@ contract WhitelistFacet {
         address token,
         bytes4 selector,
         uint16 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
+        uint32 stalkEarnedPerSeason,
+        bytes4 gaugePointSelector,
+        uint32 gaugePoints
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -80,7 +84,9 @@ contract WhitelistFacet {
             selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
-            0x00
+            0x00,
+            gaugePointSelector,
+            gaugePoints
         );
     }
 
@@ -98,7 +104,9 @@ contract WhitelistFacet {
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes4 gaugePointSelector,
+        uint32 gaugePoints
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -106,7 +114,9 @@ contract WhitelistFacet {
             selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
-            encodeType
+            encodeType,
+            gaugePointSelector,
+            gaugePoints
         );
     }
 
@@ -124,6 +134,19 @@ contract WhitelistFacet {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
             stalkEarnedPerSeason
+        );
+    }
+
+    function updateGaugeForToken(
+        address token, 
+        bytes4 gaugePointSelector,
+        uint32 gaugePoints
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateGaugeForToken(
+            token,
+            gaugePointSelector,
+            gaugePoints
         );
     }
 }

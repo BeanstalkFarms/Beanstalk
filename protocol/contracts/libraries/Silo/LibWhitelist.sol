@@ -69,11 +69,13 @@ library LibWhitelist {
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes4 gaugePointSelector,
+        uint32 gaugePoints
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        //verify you passed in a callable selector
+        //verify you passed in a callable BDV selector
         (bool success,) = address(this).staticcall(
             LibTokenSilo.encodeBdvFunction(
                 token,
@@ -82,13 +84,26 @@ library LibWhitelist {
                 0
             )
         );
-        require(success, "Whitelist: Invalid selector");
+        require(success, "Whitelist: Invalid BDV selector");
+
+        //verify you passed in a callable gaugePoint selector
+        (success,) = address(this).staticcall(
+            abi.encodeWithSelector(
+                gaugePointSelector,
+                0,
+                0,
+                0
+            )
+        );
+        require(success, "Whitelist: Invalid BDV selector");
 
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
+        s.ss[token].gpSelector = gaugePointSelector;
+        s.ss[token].gaugePoints = gaugePoints;
 
         s.ss[token].encodeType = encodeType;
 
@@ -101,7 +116,7 @@ library LibWhitelist {
      * @notice Add an ERC-20 token to the Seed Gauge Whitelist.
      * @dev LibWhitelistedTokens.sol must be updated to include the new token.
      */
-    function whitelistTokenToGauge(
+    function updateGaugeForToken(
         address token,
         bytes4 selector,
         uint32 gaugePoints
@@ -111,6 +126,7 @@ library LibWhitelist {
         (bool success,) = address(this).staticcall(
             abi.encodeWithSelector(
                 selector,
+                0,
                 0,
                 0
             )

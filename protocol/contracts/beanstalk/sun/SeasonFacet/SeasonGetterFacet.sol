@@ -249,5 +249,9 @@ contract SeasonGetterFacet {
     function getUsdLiquidity(address well) external view returns (uint256) {
         return LibWell.getUsdLiquidity(well);
     }
+
+    function getGaugePoints(address token) external view returns (uint256) {
+        return s.ss[token].gaugePoints;
+    }
     
 }
