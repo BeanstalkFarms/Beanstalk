@@ -78,10 +78,10 @@ describe('Gauge', function () {
     await revertToSnapshot(snapshotId)
   })
 
-  describe('Percent new grown stalk to LP', function () {
+  describe('Bean to maxLP ratio', function () {
     // MockInitDiamond initalizes BeanToMaxLpGpPerBDVRatio to 50% (50e6)
 
-    describe('L2SR > 80%', async function () {
+    describe('L2SR > excessively high L2SR %', async function () {
       it("decreases Bean to maxLP ratio significantly", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 108);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('49500000');
@@ -95,7 +95,7 @@ describe('Gauge', function () {
       })
     });
 
-    describe('40% < L2SR < 80%', async function () {
+    describe('moderately high L2SR % < L2SR < excessively high L2SR %', async function () {
       it("decreases Bean to maxLP ratio moderately", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 72);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('49750000');
@@ -109,7 +109,7 @@ describe('Gauge', function () {
       })
     });
 
-    describe('12% < L2SR < 40%', async function () {
+    describe('moderately low L2SR % < L2SR < moderately high L2SR %', async function () {
       it("increases Bean to maxLP ratio moderately", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('50250000');
@@ -123,7 +123,7 @@ describe('Gauge', function () {
       })
     });
 
-    describe('L2SR < 12%', async function () {
+    describe('L2SR < moderately low L2SR %', async function () {
       it("increases Bean to maxLP ratio significantly", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('50500000');
@@ -161,6 +161,28 @@ describe('Gauge', function () {
           10000, // relative change (100% of original) 
           10    // absolute change (+0.1%)
         );
+    })
+
+    it("Bean to maxLP ratio properly scales", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(50e6);
+      // 0.25 + 0.5 * (1 - 0.25) = 0.625
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to6('62.5'));
+
+      await this.season.setBeanToMaxLpGPperBDVRatio(51e6);
+      // 0.25 + 0.51 * (1 - 0.25) = 0.6325 (+0.075)
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to6('63.25'))
+    })    
+
+    it("Bean to maxLP ratio cannot decrease below min %", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(0e6);
+      // 0.25 + 0 * (1 - 0.25) = 0.25
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to6('25'));
+    })
+
+    it("Bean to maxLP ratio cannot exceed max %", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(100e6);
+      // 0.25 + 1 * (1 - 0.25) = 1
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to6('100'));
     })
 
   })
@@ -206,7 +228,6 @@ describe('Gauge', function () {
 
         expect(newL2SR).to.be.equal(to18('0.5'));
         expect(newL2SR).to.be.lt(initalL2SR);
-
 
       })
 
