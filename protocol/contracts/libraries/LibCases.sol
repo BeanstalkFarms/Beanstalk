@@ -8,16 +8,17 @@ import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
  * @title LibCases handles the cases for beanstalk.
  * 
  * @dev Cases are used to determine the change in 
- * temperature and grownStalk percentage to liquidity.
+ * temperature and Bean to maxLP gaugePoint per BDV ratio.
  * 
  *  Data format: 
  * 
- * mT: 2 Bytes (1% = 1e2) (temperature can be scaled to 0% to 655% relative)
- * bT: 2 Bytes (1% = 1)   (temperature can change by -32768% to +32767% absolute)
- * mL: 2 Bytes (1% = 1e2) (BeanToMaxLpGpPerBDVRatio can be scaled to 0% to 655% relative)
- * bL: 2 Bytes (1% = 1e2) (BeanToMaxLpGpPerBDVRatio can change by -327% to +327% absolute)
- 
- * Temperature and grownStalk percentage to lp is updated as such:
+ * mT: 4 Bytes (1% = 1e6) 
+ * bT: 1 Bytes (1% = 1)  
+ * mL: 10 Bytes (1% = 1e18)
+ * bL: 10 Bytes (1% = 1e18) 
+ * 7 bytes are left for future use.
+ * 
+ * Temperature and Bean and maxLP gaugePoint per BDV ratio is updated as such:
  * T_n = mT * T_n-1 + bT
  * L_n = mL * L_n-1 + bL
  * 
@@ -26,34 +27,32 @@ import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
  * 
  * temperature is stored in AppStorage with 0 decimal precision (1% = 1), 
  * which is why bT has 0 decimal precision.
- * GrownStalkToLP however, has 6 decimal precision (1% = 1e6).
- * bL is stored with 2 decimal precision, and then scaled up
- * to 6 in { Weather.changeNewGrownStalkPerBDVtoLP() }. 
+ * 
  */
 
 
 library LibCases {
     struct CaseData {
-        uint16 mT;
-        int16 bT;
-        uint16 mL;
-        int16 bL;
+        uint32 mT;
+        int8 bT;
+        uint80 mL;
+        int80 bL;
     }
     /**
-     * @notice given a caseID (0-128), return the caseData.
+     * @notice given a caseID (0-144), return the caseData.
      * 
      * CaseV2 allows developers to change both the absolute 
      * and relative change in temperature and grownStalk to liquidity,
      * with greater precision than CaseV1.
      * 
      */
-    function getDataFromCase(uint256 caseId) internal view returns (bytes8 caseData){
+    function getDataFromCase(uint256 caseId) internal view returns (bytes32 caseData){
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.casesV2[caseId];
     }
 
     /**
-     * @notice given a caseID (0-128), return the data associated.
+     * @notice given a caseID (0-144), return the data associated.
      * @dev * Each case outputs 4 variables: 
      * mT: Relative Temperature change.
      * bT: Absolute Temperature change.  
@@ -64,11 +63,11 @@ library LibCases {
     internal view returns (
         CaseData memory cd
     ) {
-        bytes8 _caseData = getDataFromCase(caseId);
-        cd.mT = uint16(bytes2(_caseData));
-        cd.bT = int16(bytes2(_caseData << 16));
-        cd.mL = uint16(bytes2(_caseData << 32));
-        cd.bL = int16(bytes2(_caseData << 48));
+        bytes32 _caseData = getDataFromCase(caseId);
+        cd.mT = uint32(bytes4(_caseData));
+        cd.bT = int8(bytes1(_caseData << 32));
+        cd.mL = uint80(bytes10(_caseData << 40));
+        cd.bL = int80(bytes10(_caseData << 120));
     }
 
     /**
@@ -79,9 +78,8 @@ library LibCases {
      * @param mL new relative grown stalk to liquidity change.
      * @param bL new absolute grown stalk to liquidity change.
      */
-    function changeCaseData(uint256 caseId, uint16 mT, uint16 bT, uint16 mL, uint16 bL) internal returns (bytes8 caseData){
-        require(caseId < 128, "caseId must be less than 128");
-
+    function changeCaseData(uint256 caseId, uint32 mT, int16 bT, uint80 mL, int80 bL) internal returns (bytes32 caseData){
+        require(caseId <= 144, "caseId must be less than or equal to 144");
         bytes memory data = abi.encodePacked(mT, bT, mL, bL);
         assembly { caseData := mload(add(data, 32)) }
         LibAppStorage.diamondStorage().casesV2[caseId] = caseData;

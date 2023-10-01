@@ -23,8 +23,41 @@ contract MockInitDiamond is InitWhitelist {
 
     AppStorage internal s;
 
+    bytes32 internal constant PLUS_3_PLUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000000006F05B59D3B2000000000000000000);
+    bytes32 internal constant PLUS_1_PLUS_50 = bytes32(0x05F5E1000100056BC75E2D63100000000006F05B59D3B2000000000000000000);
+    bytes32 internal constant PLUS_0_PLUS_50 = bytes32(0x05F5E1000000056BC75E2D63100000000006F05B59D3B2000000000000000000);
+
+    bytes32 internal constant MINUS_1_PLUS_50 = bytes32(0x05F5E100FF00056BC75E2D63100000000006F05B59D3B2000000000000000000);
+    bytes32 internal constant MINUS_3_PLUS_50 = bytes32(0x05F5E100FD00056BC75E2D63100000000006F05B59D3B2000000000000000000);
+
+
+    bytes32 internal constant PLUS_3_PLUS_25 = bytes32(0x05F5E1000300056BC75E2D63100000000003782DACE9D9000000000000000000);
+    bytes32 internal constant PLUS_1_PLUS_25 = bytes32(0x05F5E1000100056BC75E2D63100000000003782DACE9D9000000000000000000);
+    bytes32 internal constant PLUS_0_PLUS_25 = bytes32(0x05F5E1000000056BC75E2D63100000000003782DACE9D9000000000000000000);
+
+    bytes32 internal constant MINUS_1_PLUS_25 = bytes32(0x05F5E100FF00056BC75E2D63100000000003782DACE9D9000000000000000000);
+    bytes32 internal constant MINUS_3_PLUS_25 = bytes32(0x05F5E100FD00056BC75E2D63100000000003782DACE9D9000000000000000000);
+
+
+    bytes32 internal constant PLUS_3_MINUS_25 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+    bytes32 internal constant PLUS_1_MINUS_25 = bytes32(0x05F5E1000100056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+    bytes32 internal constant PLUS_0_MINUS_25 = bytes32(0x05F5E1000000056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+
+    bytes32 internal constant MINUS_1_MINUS_25 = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+    bytes32 internal constant MINUS_3_MINUS_25 = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+
+
+    bytes32 internal constant PLUS_3_MINUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+    bytes32 internal constant PLUS_1_MINUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+    bytes32 internal constant PLUS_0_MINUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+
+    bytes32 internal constant MINUS_1_MINUS_50 = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+    bytes32 internal constant MINUS_3_MINUS_50 = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+
+        
 
 
         C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
@@ -33,61 +66,60 @@ contract MockInitDiamond is InitWhitelist {
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-        s.casesV2 = [
-    //                Dsc soil demand,  Steady soil demand     Inc soil demand
-    //                [mT][bT][mL][bL]    [mT][bT][mL][bL]    [mT][bT][mL][bL]
-                    ///////////////// Exremely Low L2SR ///////////////////////
-            bytes8(0x2710000327100032), 0x2710000127100032, 0x2710000027100032, // Exs Low: P < 1
-                    0x2710ffff27100032, 0x2710fffd27100032, 0x2710fffd27100032, //          P > 1
-                    0x2710ffff27100032, 0x2710fffd27100032, 0x2710fffd27100032, //          P > Q
-                    0x2710000327100032, 0x2710000127100032, 0x2710000027100032, // Rea Low: P < 1
-                    0x2710ffff27100032, 0x2710fffd27100032, 0x2710fffd27100032, //          P > 1
-                    0x2710ffff27100032, 0x2710fffd27100032, 0x2710fffd27100032, //          P > Q
-                    0x2710000327100032, 0x2710000327100032, 0x2710000127100032, // Rea Hgh: P < 1
-                    0x2710000027100032, 0x2710ffff27100032, 0x2710fffd27100032, //          P > 1
-                    0x2710000027100032, 0x2710ffff27100032, 0x2710fffd27100032, //          P > Q
-                    0x2710000327100032, 0x2710000327100032, 0x2710000127100032, // Exs Hgh: P < 1
-                    0x2710000027100032, 0x2710ffff27100032, 0x2710fffd27100032, //          P > 1
-                    0x2710000027100032, 0x2710ffff27100032, 0x2710fffd27100032, //          P > Q
-                    /////////////////// Reasonably Low L2SR ///////////////////
-                    0x2710000327100019, 0x2710000327100019, 0x2710000027100019, // Exs Low: P < 1
-                    0x2710ffff27100019, 0x2710fffd27100019, 0x2710fffd27100019, //          P > 1
-                    0x2710ffff27100019, 0x2710fffd27100019, 0x2710fffd27100019, //          P > Q
-                    0x2710000327100019, 0x2710000327100019, 0x2710000027100019, // Rea Low: P < 1
-                    0x2710ffff27100019, 0x2710fffd27100019, 0x2710fffd27100019, //          P > 1
-                    0x2710ffff27100019, 0x2710fffd27100019, 0x2710fffd27100019, //          P > Q
-                    0x2710000327100019, 0x2710000327100019, 0x2710000327100019, // Rea Hgh: P < 1
-                    0x2710000027100019, 0x2710ffff27100019, 0x2710fffd27100019, //          P > 1
-                    0x2710000027100019, 0x2710ffff27100019, 0x2710fffd27100019, //          P > Q
-                    0x2710000327100019, 0x2710000327100019, 0x2710000327100019, // Exs Hgh: P < 1
-                    0x2710000027100019, 0x2710ffff27100019, 0x2710fffd27100019, //          P > 1
-                    0x2710000027100019, 0x2710ffff27100019, 0x2710fffd27100019, //          P > Q
-                    /////////////////// Reasonably High L2SR //////////////////
-                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000002710FFE7, // Exs Low: P < 1
-                    0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x2710fffd2710FFE7, //          P > 1
-                    0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x2710fffd2710FFE7, //          P > Q
-                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000002710FFE7, // Rea Low: P < 1
-                    0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x2710fffd2710FFE7, //          P > 1
-                    0x2710ffff2710FFE7, 0x2710fffd2710FFE7, 0x2710fffd2710FFE7, //          P > Q
-                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000032710FFE7, // Rea Hgh: P < 1
-                    0x271000002710FFE7, 0x2710ffff2710FFE7, 0x2710fffd2710FFE7, //          P > 1
-                    0x271000002710FFE7, 0x2710ffff2710FFE7, 0x2710fffd2710FFE7, //          P > Q
-                    0x271000032710FFE7, 0x271000032710FFE7, 0x271000032710FFE7, // Exs Hgh: P < 1
-                    0x271000002710FFE7, 0x2710ffff2710FFE7, 0x2710fffd2710FFE7, //          P > 1
-                    0x271000002710FFE7, 0x2710ffff2710FFE7, 0x2710fffd2710FFE7, //          P > Q
-                    /////////////////// Extremely High L2SR ///////////////////
-                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000002710FFCE, // Exs Low: P < 1
-                    0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x2710fffd2710FFCE, //          P > 1
-                    0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x2710fffd2710FFCE, //          P > Q
-                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000002710FFCE, // Rea Low: P < 1
-                    0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x2710fffd2710FFCE, //          P > 1
-                    0x2710ffff2710FFCE, 0x2710fffd2710FFCE, 0x2710fffd2710FFCE, //          P > Q
-                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000032710FFCE, // Rea Hgh: P < 1
-                    0x271000002710FFCE, 0x2710ffff2710FFCE, 0x2710fffd2710FFCE, //          P > 1
-                    0x271000002710FFCE, 0x2710ffff2710FFCE, 0x2710fffd2710FFCE, //          P > Q
-                    0x271000032710FFCE, 0x271000032710FFCE, 0x271000032710FFCE, // Exs Hgh: P < 1
-                    0x271000002710FFCE, 0x2710ffff2710FFCE, 0x2710fffd2710FFCE, //          P > 1
-                    0x271000002710FFCE, 0x2710ffff2710FFCE, 0x2710fffd2710FFCE  //          P > Q
+            s.casesV2 = [
+//               Dsc soil demand,  Steady soil demand  Inc soil demand
+            ///////////////// Exremely Low L2SR ///////////////////////
+            bytes32(PLUS_3_PLUS_50),  PLUS_1_PLUS_50,  PLUS_0_PLUS_50, // Exs Low: P < 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+                     PLUS_3_PLUS_50,  PLUS_1_PLUS_50,  PLUS_0_PLUS_50, // Rea Low: P < 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+                     PLUS_3_PLUS_50,  PLUS_3_PLUS_50,  PLUS_1_PLUS_50, // Rea Hgh: P < 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+                     PLUS_3_PLUS_50,  PLUS_3_PLUS_50,  PLUS_1_PLUS_50, // Exs Hgh: P < 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+            /////////////////// Reasonably Low L2SR ///////////////////
+                     PLUS_3_PLUS_25,  PLUS_1_PLUS_25,  PLUS_0_PLUS_25, // Exs Low: P < 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+                     PLUS_3_PLUS_25,  PLUS_1_PLUS_25,  PLUS_0_PLUS_25, // Rea Low: P < 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+                     PLUS_3_PLUS_25,  PLUS_3_PLUS_25,  PLUS_1_PLUS_25, // Rea Hgh: P < 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+                     PLUS_3_PLUS_25,  PLUS_3_PLUS_25,  PLUS_1_PLUS_25, // Exs Hgh: P < 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+            /////////////////// Reasonably High L2SR //////////////////
+                  PLUS_3_MINUS_25,  PLUS_1_MINUS_25,  PLUS_0_MINUS_25, // Exs Low: P < 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+                  PLUS_3_MINUS_25,  PLUS_1_MINUS_25,  PLUS_0_MINUS_25, // Rea Low: P < 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+                  PLUS_3_MINUS_25,  PLUS_3_MINUS_25,  PLUS_1_MINUS_25, // Rea Hgh: P < 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+                  PLUS_3_MINUS_25,  PLUS_3_MINUS_25,  PLUS_1_MINUS_25, // Exs Hgh: P < 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+            /////////////////// Extremely High L2SR ///////////////////
+                  PLUS_3_MINUS_50,  PLUS_1_MINUS_50,  PLUS_0_MINUS_50, // Exs Low: P < 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > Q
+                  PLUS_3_MINUS_50,  PLUS_1_MINUS_50,  PLUS_0_MINUS_50, // Rea Low: P < 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > Q
+                  PLUS_3_MINUS_50,  PLUS_3_MINUS_50,  PLUS_1_MINUS_50, // Rea Hgh: P < 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50, //          P > Q
+                  PLUS_3_MINUS_50,  PLUS_3_MINUS_50,  PLUS_1_MINUS_50, // Exs Hgh: P < 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50  //          P > Q
         ];
 
         s.w.t = 1;
@@ -106,7 +138,7 @@ contract MockInitDiamond is InitWhitelist {
         s.beanEthPrice = 1;
         s.usdEthPrice = 1;
         s.season.stemStartSeason = uint16(s.season.current);
-        s.seedGauge.BeanToMaxLpGpPerBDVRatio = 50e6; // 50%
+        s.seedGauge.BeanToMaxLpGpPerBDVRatio = 50e18; // 50%
         // 4 + 4 + 2
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 10e6;
         whitelistPools();

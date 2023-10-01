@@ -554,5 +554,5 @@ struct AppStorage {
 
     // Seed Gauge
     Storage.SeedGauge seedGauge;
-    bytes8[144] casesV2; 
+    bytes32[144] casesV2; 
 }

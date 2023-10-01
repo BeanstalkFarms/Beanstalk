@@ -24,6 +24,37 @@ contract InitBipSeedGauge{
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;    
 
+    bytes32 internal constant PLUS_3_PLUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000000006F05B59D3B2000000000000000000);
+    bytes32 internal constant PLUS_1_PLUS_50 = bytes32(0x05F5E1000100056BC75E2D63100000000006F05B59D3B2000000000000000000);
+    bytes32 internal constant PLUS_0_PLUS_50 = bytes32(0x05F5E1000000056BC75E2D63100000000006F05B59D3B2000000000000000000);
+
+    bytes32 internal constant MINUS_1_PLUS_50 = bytes32(0x05F5E100FF00056BC75E2D63100000000006F05B59D3B2000000000000000000);
+    bytes32 internal constant MINUS_3_PLUS_50 = bytes32(0x05F5E100FD00056BC75E2D63100000000006F05B59D3B2000000000000000000);
+
+
+    bytes32 internal constant PLUS_3_PLUS_25 = bytes32(0x05F5E1000300056BC75E2D63100000000003782DACE9D9000000000000000000);
+    bytes32 internal constant PLUS_1_PLUS_25 = bytes32(0x05F5E1000100056BC75E2D63100000000003782DACE9D9000000000000000000);
+    bytes32 internal constant PLUS_0_PLUS_25 = bytes32(0x05F5E1000000056BC75E2D63100000000003782DACE9D9000000000000000000);
+
+    bytes32 internal constant MINUS_1_PLUS_25 = bytes32(0x05F5E100FF00056BC75E2D63100000000003782DACE9D9000000000000000000);
+    bytes32 internal constant MINUS_3_PLUS_25 = bytes32(0x05F5E100FD00056BC75E2D63100000000003782DACE9D9000000000000000000);
+
+
+    bytes32 internal constant PLUS_3_MINUS_25 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+    bytes32 internal constant PLUS_1_MINUS_25 = bytes32(0x05F5E1000100056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+    bytes32 internal constant PLUS_0_MINUS_25 = bytes32(0x05F5E1000000056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+
+    bytes32 internal constant MINUS_1_MINUS_25 = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+    bytes32 internal constant MINUS_3_MINUS_25 = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFFC87D2531627000000000000000000);
+
+
+    bytes32 internal constant PLUS_3_MINUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+    bytes32 internal constant PLUS_1_MINUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+    bytes32 internal constant PLUS_0_MINUS_50 = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+
+    bytes32 internal constant MINUS_1_MINUS_50 = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+    bytes32 internal constant MINUS_3_MINUS_50 = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFF90FA4A62C4E000000000000000000);
+
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
         uint128 totalBdv;
@@ -50,51 +81,67 @@ contract InitBipSeedGauge{
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
         }
         // initalize seed gauge. 
-        s.seedGauge.BeanToMaxLpGpPerBDVRatio = 0.5e6; // 50% // TODO: how to set this?
+        s.seedGauge.BeanToMaxLpGpPerBDVRatio = 50e18; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
 
         // initalize s.usdEthPrice 
         s.usdEthPrice = 1;
 
         // initalize V2 cases.
-        s.casesV2 = [
-        //////////////////////////////// Exremely Low L2SR ////////////////////////////////////////
-        //          Dsc soil demand,    Steady soil demand, Inc soil demand,    null
-            bytes8(0x0f4240030f424000), 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-        //////////////////////////////// Reasonably Low L2SR //////////////////////////////////////
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-        //////////////////////////////// Reasonably High L2SR //////////////////////////////////////
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-        //////////////////////////////// Extremely High L2SR //////////////////////////////////////
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Exs Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240010f424000, 0x0f4240000f424000, 0x0000000000000000, // Rea Low: P < 1
-                    0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Rea Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000, //          P > 1
-                    0x0f4240030f424000, 0x0f4240030f424000, 0x0f4240010f424000, 0x0000000000000000, // Exs Hgh: P < 1
-                    0x0f4240000f424000, 0x0f4240ff0f424000, 0x0f4240fd0f424000, 0x0000000000000000  //          P > 1
+         s.casesV2 = [
+//               Dsc soil demand,  Steady soil demand  Inc soil demand
+            ///////////////// Exremely Low L2SR ///////////////////////
+            bytes32(PLUS_3_PLUS_50),  PLUS_1_PLUS_50,  PLUS_0_PLUS_50, // Exs Low: P < 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+                     PLUS_3_PLUS_50,  PLUS_1_PLUS_50,  PLUS_0_PLUS_50, // Rea Low: P < 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                    MINUS_1_PLUS_50, MINUS_3_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+                     PLUS_3_PLUS_50,  PLUS_3_PLUS_50,  PLUS_1_PLUS_50, // Rea Hgh: P < 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+                     PLUS_3_PLUS_50,  PLUS_3_PLUS_50,  PLUS_1_PLUS_50, // Exs Hgh: P < 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > 1
+                     PLUS_0_PLUS_50, MINUS_1_PLUS_50, MINUS_3_PLUS_50, //          P > Q
+            /////////////////// Reasonably Low L2SR ///////////////////
+                     PLUS_3_PLUS_25,  PLUS_1_PLUS_25,  PLUS_0_PLUS_25, // Exs Low: P < 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+                     PLUS_3_PLUS_25,  PLUS_1_PLUS_25,  PLUS_0_PLUS_25, // Rea Low: P < 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                    MINUS_1_PLUS_25, MINUS_3_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+                     PLUS_3_PLUS_25,  PLUS_3_PLUS_25,  PLUS_1_PLUS_25, // Rea Hgh: P < 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+                     PLUS_3_PLUS_25,  PLUS_3_PLUS_25,  PLUS_1_PLUS_25, // Exs Hgh: P < 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > 1
+                     PLUS_0_PLUS_25, MINUS_1_PLUS_25, MINUS_3_PLUS_25, //          P > Q
+            /////////////////// Reasonably High L2SR //////////////////
+                  PLUS_3_MINUS_25,  PLUS_1_MINUS_25,  PLUS_0_MINUS_25, // Exs Low: P < 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+                  PLUS_3_MINUS_25,  PLUS_1_MINUS_25,  PLUS_0_MINUS_25, // Rea Low: P < 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                 MINUS_1_MINUS_25, MINUS_3_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+                  PLUS_3_MINUS_25,  PLUS_3_MINUS_25,  PLUS_1_MINUS_25, // Rea Hgh: P < 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+                  PLUS_3_MINUS_25,  PLUS_3_MINUS_25,  PLUS_1_MINUS_25, // Exs Hgh: P < 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > 1
+                  PLUS_0_MINUS_25, MINUS_1_MINUS_25, MINUS_3_MINUS_25, //          P > Q
+            /////////////////// Extremely High L2SR ///////////////////
+                  PLUS_3_MINUS_50,  PLUS_1_MINUS_50,  PLUS_0_MINUS_50, // Exs Low: P < 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > Q
+                  PLUS_3_MINUS_50,  PLUS_1_MINUS_50,  PLUS_0_MINUS_50, // Rea Low: P < 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                 MINUS_1_MINUS_50, MINUS_3_MINUS_50, MINUS_3_MINUS_50, //          P > Q
+                  PLUS_3_MINUS_50,  PLUS_3_MINUS_50,  PLUS_1_MINUS_50, // Rea Hgh: P < 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50, //          P > Q
+                  PLUS_3_MINUS_50,  PLUS_3_MINUS_50,  PLUS_1_MINUS_50, // Exs Hgh: P < 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50, //          P > 1
+                  PLUS_0_MINUS_50, MINUS_1_MINUS_50, MINUS_3_MINUS_50  //          P > Q
         ];
     }
 

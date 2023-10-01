@@ -25,9 +25,9 @@ library LibGauge {
     uint256 private constant BDV_PRECISION = 1e6;
     uint256 private constant GP_PRECISION = 1e18;
 
-    uint256 internal constant MAX_BEAN_MAX_LPGP_RATIO = 100e6;
-    uint256 internal constant MIN_BEAN_MAX_LPGP_RATIO = 25e6;
-    uint256 private constant ONE_HUNDRED_PERCENT = 100e6;
+    uint256 internal constant MAX_BEAN_MAX_LPGP_RATIO = 100e18;
+    uint256 internal constant MIN_BEAN_MAX_LPGP_RATIO = 25e18;
+    uint256 private constant ONE_HUNDRED_PERCENT = 100e18;
     uint256 internal constant BEAN_ETH_OPTIMAL_PERCENT = 100e6;
 
     struct LpGaugePointData {
@@ -207,15 +207,15 @@ library LibGauge {
         // 6 decimal precision
         uint256 BeanToMaxLpGpPerBDVRatio = getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
         // get the GaugePoints and GPperBDV for bean 
-        // beanGpPerBDV has 6 decimal preicison 
-        uint256 beanGpPerBDV = maxLpGpPerBDV.mul(BeanToMaxLpGpPerBDVRatio).div(100e6);
+        // beanGpPerBDV has 6 decimal precision, BeanToMaxLpGpPerBDVRatio has 18.
+        uint256 beanGpPerBDV = maxLpGpPerBDV.mul(BeanToMaxLpGpPerBDVRatio).div(100e18);
 
         totalGaugePoints = totalGaugePoints.add(beanGpPerBDV.mul(beanDepositedBdv).div(BDV_PRECISION));
 
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(BDV_PRECISION);
         
-        // gauge points has GP_PRECISION precision.
+        // gauge points has 18 decimal precision.
         uint256 newGrownStalkPerGp = newGrownStalk.mul(GP_PRECISION).div(totalGaugePoints);
 
         // update stalkPerBDVPerSeason for bean.

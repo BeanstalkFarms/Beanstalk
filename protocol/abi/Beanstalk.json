@@ -4234,6 +4234,18 @@
         "internalType": "uint256",
         "name": "stalkIssuedPerBdv",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "gpSelector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
       }
     ],
     "name": "WhitelistToken",
@@ -7077,15 +7089,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint80",
         "name": "relChange",
-        "type": "uint16"
+        "type": "uint80"
       },
       {
         "indexed": false,
-        "internalType": "int16",
+        "internalType": "int80",
         "name": "absChange",
-        "type": "int16"
+        "type": "int80"
       }
     ],
     "name": "BeanToMaxLPRatioChange",
@@ -7215,9 +7227,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "relChange",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,
