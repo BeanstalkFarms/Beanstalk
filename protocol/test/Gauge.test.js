@@ -347,12 +347,12 @@ describe('Gauge', function () {
     it('emits events', async function () {
       await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
         2,  // season
-        BEAN_ETH_WELL,  // caseId
+        BEAN_ETH_WELL,  // token
         to18('96') // new gauge points
       );
       await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
         2,  // season
-        BEAN_3_CURVE,  // caseId
+        BEAN_3_CURVE,  // token
         to18('4') // new gauge points
       );
     })

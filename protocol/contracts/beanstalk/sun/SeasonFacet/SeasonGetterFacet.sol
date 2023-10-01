@@ -238,5 +238,4 @@ contract SeasonGetterFacet {
     function getGaugePoints(address token) external view returns (uint256) {
         return s.ss[token].gaugePoints;
     }
-    
 }
