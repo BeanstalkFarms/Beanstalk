@@ -271,6 +271,10 @@ contract MockSeasonFacet is SeasonFacet  {
             // increase bean price
             s.beanEthPrice = 1051e6;
             s.usdEthPrice = 0.001e18;
+        } else {
+            // decrease bean price
+            s.beanEthPrice = 1000e6;
+            s.usdEthPrice = 0.001e18;
         }
         calcCaseIdandUpdate(deltaB);
     }

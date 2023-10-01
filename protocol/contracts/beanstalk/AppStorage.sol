@@ -430,8 +430,8 @@ contract Storage {
      * that beanstalk issues each season.
      * @param BeanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
      * issued to the largest LP share and Bean. 6 decimal precision.
-     * @dev a beanTomaxLpGpPerBDVRatio of 100e6 means that beans will have the 
-     * same amount of GpPerBDV as the LP with the largest GpPerBDV
+     * @dev a beanTomaxLpGpPerBDVRatio of 100e6 means LP should be incentivized the most,
+     * and that beans will have the minimum seeds ratio. see {LibGauge.getBeanToMaxLpGpPerBDVRatioScaled}
      */
     struct SeedGauge {
         uint128 averageGrownStalkPerBdvPerSeason;
