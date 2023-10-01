@@ -25,12 +25,6 @@ contract SeasonGetterFacet {
     using SignedSafeMath for int256;
 
     AppStorage internal s;
-
-    // 24 * 30 * 6
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
-    uint256 private constant PRECISION = 1e6;
-    uint256 private constant STALK_BDV_PRECISION = 1e4;
-
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     //////////////////// SEASON GETTERS ////////////////////
@@ -137,9 +131,7 @@ contract SeasonGetterFacet {
      * @notice returns the average grown stalk per BDV .
      */
     function getAverageGrownStalkPerBdv() public view returns (uint256) {
-        uint256 totalBdv = getTotalBdv();
-        if(totalBdv == 0) return 0;
-        return s.s.stalk.div(totalBdv).sub(STALK_BDV_PRECISION); 
+        return LibGauge.getAverageGrownStalkPerBdv();
     }
 
     /**
@@ -153,10 +145,7 @@ contract SeasonGetterFacet {
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
     function updateStalkPerBdvPerSeason() external {
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
-            getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
-        );
-        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        LibGauge.updateStalkPerBdvPerSeason();
     }
 
     /**
@@ -165,11 +154,7 @@ contract SeasonGetterFacet {
      * as BDV is asyncronous. 
      */
     function getTotalBdv() internal view returns (uint256 totalBdv) {
-        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
-        // TODO: implment the decrement deposited BDV thing for unripe
-        for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
-            totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
-        }
+        return LibGauge.getTotalBdv();
     }
 
     /**
@@ -195,7 +180,7 @@ contract SeasonGetterFacet {
      * note that stalk has 10 decimals. 
      */
     function getNewAverageGrownStalkPerBdvPerSeason() external view returns (uint256) {
-        return getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP);
+        return getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(LibGauge.TARGET_SEASONS_TO_CATCHUP);
     }
 
     /**

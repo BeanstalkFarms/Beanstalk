@@ -388,6 +388,31 @@ describe('Gauge', function () {
       this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
       expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'));
     })
+
+    it('updates averageGrownStalkPerBDVPerSeason if a week has elapsed', async function () {
+      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
+      // deposit half beanETH, half bean3crv:
+      await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL);
+      await this.bean.mint(userAddress, to6('10000'))
+      await this.curve.connect(user).addLiquidity(
+        BEAN_3_CURVE,
+        STABLE_FACTORY,
+        [to6('1000'), to18('1000')],
+        to18('2000'),
+        EXTERNAL,
+        EXTERNAL
+      );
+      await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL);
+      // deposit beans: 
+      await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL);
+      await this.season.teleportSunrise(168);
+      await this.silo.mow(userAddress, this.bean.address)
+      await this.silo.mow(userAddress, BEAN_ETH_WELL)
+      await this.silo.mow(userAddress, BEAN_3_CURVE)
+      await this.season.stepGauge();
+
+      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(84722);
+    });
   })
   
 })

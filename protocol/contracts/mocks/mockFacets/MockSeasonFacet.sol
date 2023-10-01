@@ -48,6 +48,7 @@ contract MockSeasonFacet is SeasonFacet  {
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
+    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();

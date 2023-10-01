@@ -22,13 +22,19 @@ library LibGauge {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    uint256 private constant BDV_PRECISION = 1e6;
-    uint256 private constant GP_PRECISION = 1e18;
+    uint256 internal constant BDV_PRECISION = 1e6;
+    uint256 internal constant GP_PRECISION = 1e18;
 
     uint256 internal constant MAX_BEAN_MAX_LPGP_RATIO = 100e18;
     uint256 internal constant MIN_BEAN_MAX_LPGP_RATIO = 25e18;
-    uint256 private constant ONE_HUNDRED_PERCENT = 100e18;
+    uint256 internal constant ONE_HUNDRED_PERCENT = 100e18;
     uint256 internal constant BEAN_ETH_OPTIMAL_PERCENT = 100e6;
+
+    // 24 * 30 * 6
+    uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
+    uint256 internal constant STALK_BDV_PRECISION = 1e4;
+
+    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     struct LpGaugePointData {
         address lpToken;
@@ -212,6 +218,12 @@ library LibGauge {
 
         totalGaugePoints = totalGaugePoints.add(beanGpPerBDV.mul(beanDepositedBdv).div(BDV_PRECISION));
 
+        // check if one week elapsed since the last seedGauge update. 
+        // if so, update the average grown stalk per BDV per Season. 
+        // safemath not needed
+        if(s.season.current - s.seedGauge.lastSeedGaugeUpdate >= 168) {
+            updateStalkPerBdvPerSeason();
+        }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(BDV_PRECISION);
         
@@ -290,6 +302,49 @@ library LibGauge {
                 .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO)
                 .div(ONE_HUNDRED_PERCENT)
         );
+    }
+
+    /**
+     * @notice returns the total BDV in beanstalk.
+     * @dev the total BDV may differ from the instaneous BDV,
+     * as BDV is asyncronous. 
+     */
+    function getTotalBdv() internal view returns (uint256 totalBdv) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
+        // TODO: implment the decrement deposited BDV thing for unripe
+        for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
+            totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
+        }
+    }
+
+    /**
+     * @notice returns the average grown stalk per BDV .
+     */
+    function getAverageGrownStalkPerBdv() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 totalBdv = getTotalBdv();
+        if(totalBdv == 0) return 0;
+        return s.s.stalk.div(totalBdv).sub(STALK_BDV_PRECISION); 
+    }
+
+    /**
+     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
+     * @dev anyone can call this function to update. Currently, the function 
+     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
+     * for the average new depositer to catch up to the average grown stalk per BDV.
+     * 
+     * The expectation is that actors will call this function on their own as it benefits them.
+     * Newer depositers will call it if the value increases to catch up to the average faster,
+     * Older depositers will call it if the value decreases to slow down their rate of dilution.
+     */
+    function updateStalkPerBdvPerSeason() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
+            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
+        );
+        s.seedGauge.lastSeedGaugeUpdate = s.season.current;
+        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 
 }
