@@ -88,7 +88,6 @@ library LibGauge {
         lpGpData = new LpGaugePointData[](LPSiloTokens.length);
 
         // summate total deposited BDV across all whitelisted LP tokens.
-        // TODO: add unmigrated
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             totalLPBdv = totalLPBdv.add(s.siloBalances[LPSiloTokens[i]].depositedBdv);
         }
@@ -193,8 +192,6 @@ library LibGauge {
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
      * @dev Called at the end of each Season.
      */
-
-    // TODO
     function updateGrownStalkEarnedPerSeason(
         uint256 maxLpGpPerBDV,
         LpGaugePointData[] memory lpGpData, 
@@ -202,7 +199,6 @@ library LibGauge {
         uint256 totalLPBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // TODO: implment the decrement deposited BDV thing for unripe
         uint256 beanDepositedBdv = s.siloBalances[C.BEAN].depositedBdv;
         uint256 totalBdv = totalLPBdv.add(beanDepositedBdv);
 
@@ -312,7 +308,6 @@ library LibGauge {
     function getTotalBdv() internal view returns (uint256 totalBdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
-        // TODO: implment the decrement deposited BDV thing for unripe
         for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
             totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
         }

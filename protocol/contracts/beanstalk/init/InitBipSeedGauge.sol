@@ -43,8 +43,26 @@ contract InitBipSeedGauge{
     bytes32 internal constant  T_PLUS_1_L_MINUS_ONE = bytes32(0x05F5E1000100056BC75E2D63100000FFFFF21F494C589C000000000000000000);
     bytes32 internal constant  T_PLUS_0_L_MINUS_ONE = bytes32(0x05F5E1000000056BC75E2D63100000FFFFF21F494C589C000000000000000000);
 
+
+    // TODO : update these values 
+    uint256 internal constant BEAN_MIGRATED_BDV = 0;
+    uint256 internal constant BEAN_3CRV_MIGRATED_BDV = 0;
+    uint256 internal constant UR_BEAN_MIGRATED_BDV = 0;
+    uint256 internal constant UR_BEAN_ETH_MIGRATED_BDV = 0;
+
+    uint256 internal constant BEAN_UN_MIGRATED_BDV = 0;
+    uint256 internal constant BEAN_3CRV_UN_MIGRATED_BDV = 0;
+    uint256 internal constant UR_BEAN_UN_MIGRATED_BDV = 0;
+    uint256 internal constant UR_BEAN_ETH_UN_MIGRATED_BDV = 0;
+
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
+        // update depositedBDV for bean, bean3crv, urBean, and urBeanETH:
+        LibTokenSilo.incrementTotalDepositedBdv(C.BEAN, BEAN_UN_MIGRATED_BDV - BEAN_MIGRATED_BDV);
+        LibTokenSilo.incrementTotalDepositedBdv(C.BEAN_3CRV, BEAN_UN_MIGRATED_BDV - BEAN_MIGRATED_BDV);
+        LibTokenSilo.incrementTotalDepositedBdv(C.UR_BEAN, UR_BEAN_UN_MIGRATED_BDV - UR_BEAN_MIGRATED_BDV);
+        LibTokenSilo.incrementTotalDepositedBdv(C.UR_BEAN_ETH, UR_BEAN_ETH_UN_MIGRATED_BDV - UR_BEAN_ETH_MIGRATED_BDV);
+
         uint128 totalBdv;
         // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
@@ -52,7 +70,7 @@ contract InitBipSeedGauge{
         // unripeAssets are not in the seed gauge, 
         // and bean does not have a gauge point function. 
         // (it is based on the max gauge points of LP)
-        uint128[5] memory gaugePoints = [uint128(0), 95e18, 5e18, 0, 0];
+        uint128[5] memory gaugePoints = [uint128(0), 95e18, 5e18, 0, 0]; // TODO: how to set this?
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
             IGaugePointFacet.defaultGaugePointFunction.selector,

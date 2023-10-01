@@ -262,7 +262,6 @@ describe('Gauge', function () {
     // a portion of the supply is locked, due to the difference between
     // the underlying amount and redemption price. 
     // thus the supply can be reduced.
-    // TODO
     describe('with unripe', function() {
       before(async function() {
         await this.bean.mint(ownerAddress, to6('2000000'));
