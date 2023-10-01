@@ -47,6 +47,7 @@ contract MockSeasonFacet is SeasonFacet  {
 
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
+    event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -403,5 +404,11 @@ contract MockSeasonFacet is SeasonFacet  {
 
     function stepGauge() external {
         LibGauge.stepGauge();
+    }
+    
+    function mockSetAverageGrownStalkPerBdvPerSeason(
+        uint128 _averageGrownStalkPerBdvPerSeason
+    ) external {
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
     }
 }

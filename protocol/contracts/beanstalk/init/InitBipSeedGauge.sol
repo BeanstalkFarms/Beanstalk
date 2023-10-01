@@ -27,13 +27,13 @@ contract InitBipSeedGauge{
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
         uint128 totalBdv;
-        // bean, beanETH, bean3CRV
+        // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
         // only lp assets need to be updated.
         // unripeAssets are not in the seed gauge, 
         // and bean does not have a gauge point function. 
         // (it is based on the max gauge points of LP)
-        uint32[5] memory gaugePoints = [uint32(0), 95e6, 100e6, 0, 0];
+        uint128[5] memory gaugePoints = [uint128(0), 95e18, 5e18, 0, 0];
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
             IGaugePointFacet.defaultGaugePointFunction.selector,

@@ -28,18 +28,28 @@ library LibWhitelist {
      * 
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
      * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
+     * @param gpSelector The function selector that returns the gauge points of a given token.
+     * Must have signature:
+     * 
+     * ```
+     * function gpFunction(uint256,uint256,uint256) public view returns (uint256);
+     * ```
+     * 
+     * @param gaugePoints The gauge points of the token.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
-        uint256 stalkIssuedPerBdv
+        uint256 stalkIssuedPerBdv,
+        bytes4 gpSelector,
+        uint128 gaugePoints
     );
 
     event WhitelistTokenToGauge(
         address indexed token, 
         bytes4 selector, 
-        uint32 gaugePoints
+        uint128 gaugePoints
     );
 
 
@@ -71,7 +81,7 @@ library LibWhitelist {
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
-        uint32 gaugePoints
+        uint128 gaugePoints
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -95,7 +105,7 @@ library LibWhitelist {
                 0
             )
         );
-        require(success, "Whitelist: Invalid BDV selector");
+        require(success, "Whitelist: Invalid GaugePoint selector");
 
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
@@ -109,7 +119,14 @@ library LibWhitelist {
 
         s.ss[token].milestoneSeason = uint32(s.season.current);
 
-        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
+        emit WhitelistToken(
+            token,
+            selector,
+            stalkEarnedPerSeason,
+            stalkIssuedPerBdv,
+            gaugePointSelector,
+            gaugePoints
+        );
     }
 
     /**
@@ -119,7 +136,7 @@ library LibWhitelist {
     function updateGaugeForToken(
         address token,
         bytes4 selector,
-        uint32 gaugePoints
+        uint128 gaugePoints
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         //verify you passed in a callable selector
@@ -131,7 +148,7 @@ library LibWhitelist {
                 0
             )
         );
-        require(success, "Whitelist: Invalid selector");
+        require(success, "Whitelist: Invalid GaugePoint selector");
 
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 

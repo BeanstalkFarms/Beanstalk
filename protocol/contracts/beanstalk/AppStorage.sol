@@ -376,6 +376,7 @@ contract Storage {
      * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
      * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
      * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
+     * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
      * @param gpSelector The encoded gaugePoint function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature:
      * ```
@@ -395,9 +396,9 @@ contract Storage {
 		int96 milestoneStem; //          │ 12 (28)
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
-        uint32 gaugePoints; //    ───────┐ 4  
-        bytes4 gpSelector; //  ──────────┘ 4  (8)
-        // 24 bytes are left here.
+        uint128 gaugePoints; //   ───────┐ 16  
+        bytes4 gpSelector; //   ─────────┘ 4  (20)
+        // 12 bytes are left here.
     }
 
     /**

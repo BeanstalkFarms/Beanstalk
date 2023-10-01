@@ -4265,9 +4265,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint128",
         "name": "gaugePoints",
-        "type": "uint32"
+        "type": "uint128"
       }
     ],
     "name": "updateGaugeForToken",
@@ -4321,9 +4321,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint128",
         "name": "gaugePoints",
-        "type": "uint32"
+        "type": "uint128"
       }
     ],
     "name": "whitelistToken",
@@ -4364,9 +4364,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint128",
         "name": "gaugePoints",
-        "type": "uint32"
+        "type": "uint128"
       }
     ],
     "name": "whitelistTokenWithEncodeType",
@@ -6252,9 +6252,9 @@
             "type": "bytes1"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint128",
             "name": "gaugePoints",
-            "type": "uint32"
+            "type": "uint128"
           },
           {
             "internalType": "bytes4",

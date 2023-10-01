@@ -18,6 +18,8 @@ import "contracts/libraries/Well/LibWellBdv.sol";
  */
 contract GaugePointFacet {
     using SafeMath for uint256;
+
+    uint256 private constant ONE_PERCENT = 1e18;
     
     /**
      * @notice DefaultGaugePointFunction 
@@ -30,10 +32,10 @@ contract GaugePointFacet {
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints) {
         if(percentOfDepositedBdv > optimalPercentDepositedBdv){
-            if(currentGaugePoints < 1e6) return 0;
-            newGaugePoints = currentGaugePoints.sub(1e6);
+            if(currentGaugePoints < ONE_PERCENT) return 0;
+            newGaugePoints = currentGaugePoints.sub(ONE_PERCENT);
         } else {
-            newGaugePoints = currentGaugePoints.add(1e6);
+            newGaugePoints = currentGaugePoints.add(ONE_PERCENT);
         }
     }
 }

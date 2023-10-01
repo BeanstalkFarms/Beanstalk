@@ -22,14 +22,13 @@ library LibGauge {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
-    uint256 private constant PRECISION = 1e6;
-    uint256 private constant ONE_HUNDRED_PERCENT = 100e6;
+    uint256 private constant BDV_PRECISION = 1e6;
+    uint256 private constant GP_PRECISION = 1e18;
 
     uint256 internal constant MAX_BEAN_MAX_LPGP_RATIO = 100e6;
     uint256 internal constant MIN_BEAN_MAX_LPGP_RATIO = 25e6;
-    uint256 internal constant BEAN_MAXLPGP_RANGE = MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO;
+    uint256 private constant ONE_HUNDRED_PERCENT = 100e6;
     uint256 internal constant BEAN_ETH_OPTIMAL_PERCENT = 100e6;
-
 
     struct LpGaugePointData {
         address lpToken;
@@ -53,14 +52,12 @@ library LibGauge {
      * and the distribution of grown Stalk to silo assets.
      */
     function stepGauge() internal {
-        console.log("updateGaugePoints:");
         (
             uint256 maxLpGpPerBDV, 
             LpGaugePointData[] memory lpGpData, 
             uint256 totalGaugePoints,
             uint256 totalLPBdv
         ) =  updateGaugePoints();
-        console.log("updateGrownStalkEarnedPerSeason:");
         updateGrownStalkEarnedPerSeason(
             maxLpGpPerBDV,
             lpGpData,
@@ -71,7 +68,7 @@ library LibGauge {
 
     /**
      * @notice re-evaluate the gauge points of each LP asset, then normalize.
-     * @dev Gauge points are normalized to 100e6.
+     * @dev Gauge points are normalized to 100e18.
      */
     function updateGaugePoints() 
     internal returns (
@@ -89,7 +86,6 @@ library LibGauge {
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             totalLPBdv = totalLPBdv.add(s.siloBalances[LPSiloTokens[i]].depositedBdv);
         }
-        console.log("totalLPBdv:", totalLPBdv);
         
         // if nothing has been deposited, skip gauge point update.
         if (totalLPBdv == 0) return (
@@ -102,76 +98,53 @@ library LibGauge {
         // if there is only one pool, there is no need to update the gauge points.
         if (LPSiloTokens.length == 1) {
             uint256 gaugePoints = s.ss[LPSiloTokens[0]].gaugePoints;
-            lpGpData[0].gpPerBDV = gaugePoints.mul(PRECISION).div(totalLPBdv);
+            lpGpData[0].gpPerBDV = gaugePoints.mul(BDV_PRECISION).div(totalLPBdv);
             return (lpGpData[0].gpPerBDV, lpGpData, gaugePoints, totalLPBdv); 
         }
 
         
-        console.log("in loop:");
         // calculate and update the gauge points for each LP.
         for (uint256 i; i < LPSiloTokens.length; ++i) {
-            console.log("-------");
-            console.log("token:", LPSiloTokens[i]);
             Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
             
             uint256 depositedBdv = s.siloBalances[LPSiloTokens[i]].depositedBdv;
-            console.log("depositedBDV:", s.siloBalances[LPSiloTokens[i]].depositedBdv);
             
             // 1e6 = 1%
             uint256 percentOfDepositedBdv = depositedBdv
                 .mul(100e6)
                 .div(totalLPBdv);
 
-            console.log("percentOfDepositedBdv:", percentOfDepositedBdv);
-            console.log("gaugePoints before:", ss.gaugePoints);
             // gets the gauge points of token from GaugePointFacet.
-            console.log("gpSelector:");
-            console.logBytes4(ss.gpSelector);
-            console.log("gaugePoints:", ss.gaugePoints);
-            console.log("optimal % LP deposited:", getOptimalPercentLPDepositedBDV(LPSiloTokens[i]));
-            console.log("current % deposited BDV:", percentOfDepositedBdv);
             uint256 newGaugePoints = getGaugePoints(
                 ss.gpSelector,
                 ss.gaugePoints,
                 getOptimalPercentLPDepositedBDV(LPSiloTokens[i]),
                 percentOfDepositedBdv
             );
-            console.log("gaugePoints after:", newGaugePoints);
             
             // increment totalGaugePoints and calculate the gaugePoints per BDV:
             totalGaugePoints = totalGaugePoints.add(newGaugePoints);
-            console.log("total Gp:", totalGaugePoints);
             LpGaugePointData memory _lpGpData;
             _lpGpData.lpToken = LPSiloTokens[i];
-            console.log(" _lpGpData.lpToken",  _lpGpData.lpToken);
 
-            // gauge points has 1e6 precision (1e6 = 1%)
-            // deposited BDV has 1 decimal (1 = 1 )
-            uint256 gpPerBDV = uint256(newGaugePoints).mul(PRECISION).div(depositedBdv);
+            // gauge points has 18 decimal precision (GP_PRECISION = 1%)
+            // deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
+            uint256 gpPerBDV = uint256(newGaugePoints).mul(BDV_PRECISION).div(depositedBdv);
             // gpPerBDV has 6 decimal precision (arbitrary)
-            console.log("gpPerBDV", gpPerBDV);
             if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
-            console.log("maxLpGpPerBDV", maxLpGpPerBDV);
             _lpGpData.gpPerBDV = gpPerBDV;
-            console.log("_lpGpData.gpPerBDV", _lpGpData.gpPerBDV);
-            console.log("i", i);
-            console.log("lpGpData length:", lpGpData.length);
             lpGpData[i] = _lpGpData;
-            console.log("lpGpData[i] token ", lpGpData[i].lpToken);
-            console.log("lpGpData[i] gpPerBdv ", lpGpData[i].gpPerBDV);
             // store gauge points to normalize
-            ss.gaugePoints = uint32(newGaugePoints);
-            console.log("new ss.gaugePoints", ss.gaugePoints);
+            ss.gaugePoints = uint128(newGaugePoints);
         }
 
-        // normalize gauge points to 100e6
+        // normalize gauge points to 100e18
         // gaugePoints is scaled up to uint256 to be normalized,
-        // then downcasted. overflow cannot occur uint32.max > 100e6.
+        // then downcasted, to prevent overflow during scaling.
+        // final number cannot over flow as uint128.max > 100e18
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
-            ss.gaugePoints = uint32(uint256(ss.gaugePoints).mul(100e6).div(totalGaugePoints));
-            console.log("token:" , LPSiloTokens[i]);
-            console.log("gauge Points normalized:", ss.gaugePoints);
+            ss.gaugePoints = uint128(uint256(ss.gaugePoints).mul(100e18).div(totalGaugePoints));
             emit GaugePointChange(
                 s.season.current,
                 LPSiloTokens[i],
@@ -184,7 +157,6 @@ library LibGauge {
     /**
      * @notice calculates the new gauge points for the given token.
      * @dev function calls the selector of the token's gauge point function.
-     * If the gpSelector is 0x01, then the function uses the default GaugePoint function
      * See {GaugePointFacet.defaultGaugePointFunction()}
      */
     function getGaugePoints(
@@ -224,13 +196,9 @@ library LibGauge {
         uint256 totalLPBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log("-----------------------------------");
-        console.log("updating Grown Stalk Earned Per Season:");
         // TODO: implment the decrement deposited BDV thing for unripe
         uint256 beanDepositedBdv = s.siloBalances[C.BEAN].depositedBdv;
-        console.log("bean deposited BDV:", beanDepositedBdv);
         uint256 totalBdv = totalLPBdv.add(beanDepositedBdv);
-        console.log("new totalBDV:", totalBdv);
 
         // if nothing has been deposited, skip grown stalk update.
         if(totalBdv == 0) return;
@@ -238,22 +206,17 @@ library LibGauge {
         // calculate the ratio between the bean and the max LP gauge points per BDV.
         // 6 decimal precision
         uint256 BeanToMaxLpGpPerBDVRatio = getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
-        console.log("BeanToMaxLpGpPerBDVRatio:", BeanToMaxLpGpPerBDVRatio);
         // get the GaugePoints and GPperBDV for bean 
         // beanGpPerBDV has 6 decimal preicison 
         uint256 beanGpPerBDV = maxLpGpPerBDV.mul(BeanToMaxLpGpPerBDVRatio).div(100e6);
-        console.log("beanGpPerBDV:", beanGpPerBDV);
 
-        totalGaugePoints = totalGaugePoints.add(beanGpPerBDV.mul(beanDepositedBdv).div(PRECISION));
-        console.log("totalGaugePoints:", totalGaugePoints);
+        totalGaugePoints = totalGaugePoints.add(beanGpPerBDV.mul(beanDepositedBdv).div(BDV_PRECISION));
 
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
-        uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(PRECISION);
-        console.log("averageGrownStalkPerBdvPerSeason:", s.seedGauge.averageGrownStalkPerBdvPerSeason);
-        console.log("newGrownStalk:", newGrownStalk);
-
-        uint256 newGrownStalkPerGp = newGrownStalk.mul(1e6).div(totalGaugePoints);
-        console.log("newGrownStalkPerGp:", newGrownStalkPerGp);
+        uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason).mul(totalBdv).div(BDV_PRECISION);
+        
+        // gauge points has GP_PRECISION precision.
+        uint256 newGrownStalkPerGp = newGrownStalk.mul(GP_PRECISION).div(totalGaugePoints);
 
         // update stalkPerBDVPerSeason for bean.
         issueGrownStalkPerBDV(
@@ -294,10 +257,8 @@ library LibGauge {
     ) internal {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
-            uint32(GrownStalkPerGp.mul(GpPerBDV).div(PRECISION))
+            uint32(GrownStalkPerGp.mul(GpPerBDV).div(GP_PRECISION))
         );
-        console.log("token:", token);
-        console.log("seeds updated to:", uint32(GrownStalkPerGp.mul(GpPerBDV).div(PRECISION)));
     }
 
     /**
@@ -325,7 +286,7 @@ library LibGauge {
         uint256 BeanToMaxLpGpPerBDVRatio
     ) internal pure returns (uint256) {
         return uint256(BeanToMaxLpGpPerBDVRatio)
-            .mul(BEAN_MAXLPGP_RANGE).div(ONE_HUNDRED_PERCENT)
+            .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO).div(ONE_HUNDRED_PERCENT)
             .add(MIN_BEAN_MAX_LPGP_RATIO);
     }
 
