@@ -270,6 +270,11 @@ describe('Fertilize', function () {
   })
 
   describe("Mint Fertilizer", async function () {
+    it('Reverts if mints 0', async function () {
+      await this.season.teleportSunrise('6274')
+      await expect(this.fertilizer.connect(user).mintFertilizer('0', '0', '0', EXTERNAL)).to.be.revertedWith('Fertilizer: None bought.')
+    })
+
     describe('1 mint', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6274')

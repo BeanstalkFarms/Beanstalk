@@ -349,7 +349,7 @@ library LibSilo {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         //sop stuff only needs to be updated once per season
-        //if it started raininga nd it's still raining, or there was a sop
+        //if it started raining and it's still raining, or there was a sop
         if (s.season.rainStart > s.season.stemStartSeason) {
             uint32 lastUpdate = _lastUpdate(account);
             if (lastUpdate <= s.season.rainStart && lastUpdate <= s.season.current) {

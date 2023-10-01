@@ -490,7 +490,9 @@ contract Storage {
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
  * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param seedGauge Stores the seedGauge.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
  */
 struct AppStorage {
@@ -552,6 +554,11 @@ struct AppStorage {
     // Well
     mapping(address => bytes) wellOracleSnapshots;
     uint256 beanEthPrice;
+
+    // Silo V3 BDV Migration
+    mapping(address => uint256) migratedBdvs;
+    
+    // usdEth
     uint256 usdEthPrice;
 
     // Seed Gauge
