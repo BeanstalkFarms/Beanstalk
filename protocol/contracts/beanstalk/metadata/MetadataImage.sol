@@ -36,7 +36,7 @@ contract MetadataImage {
         );
     }
 
-    function generateImage(address token, int96 stem, int96 stemTip) internal view returns (string memory) {
+    function generateImage(address token, int96 stem, int96 stemTip) internal pure returns (string memory) {
         int96 grownStalkPerBdv = stemTip - stem;
         return string(
             abi.encodePacked(
@@ -71,8 +71,8 @@ contract MetadataImage {
             beanToken(),
             bean3CRVToken(),
             urBeanToken(),
-            urBean3CRVToken(),
             beanETHCP2WellToken(),
+            urBeanETHCP2WellToken(),
             fullLeafRow(),
             '</defs>'
         ));
@@ -409,36 +409,22 @@ contract MetadataImage {
         return beanTemplateToken(false);
     }
 
-    function bean3CRVToken() internal pure returns (string memory) {
-        return beanLPTemplateToken(false);
-    }
-
     function urBeanToken() internal pure returns (string memory) {
         return beanTemplateToken(true);
     }
 
-    function urBean3CRVToken() internal pure returns (string memory) {
-        return beanLPTemplateToken(true);
+    function beanETHCP2WellToken() internal pure returns (string memory) {
+        return beanETHCP2WellTemplateToken(false);
     }
 
-    function beanTemplateToken(bool ripe) internal pure returns (string memory) {
-        return string(abi.encodePacked( 
-            '<g id="',
-            ripe ? 'urBean' : 'Bean',
-            '"><rect width="12" height="12" rx="6" fill="',
-            ripe ? '#7F5533' : '#46B955',
-            '"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
-            '</g>'
-            )
-        );
+    function urBeanETHCP2WellToken() internal pure returns (string memory) {
+        return beanETHCP2WellTemplateToken(true);
     }
 
-    function beanLPTemplateToken(bool ripe) internal pure returns (string memory) {
+    function bean3CRVToken() internal pure returns (string memory) {
         return string(abi.encodePacked(
-            '<g id="',
-            ripe ? 'urBean3CRV' : 'Bean3CRV',
-            '"><rect y=".5" width="12" height="12" rx="6" fill="',
-            ripe ? '#7F5533' : '#46B955',
+            '<g id="BEAN3CRV',
+            '"><rect y=".5" width="12" height="12" rx="6" fill="#46B955',
             '"/><path d="m7.687 1.764-3.504 9.36S.298 4.499 7.687 1.765Z" fill="#fff"/>',
             '<path d="M8.132 8.078c-.466.64-1.297 1.323-2.695 1.992l2.126-5.777c.089.09.193.204.3.338.303.375.625.891.744 1.484.117.583.04 1.253-.475 1.963Z" fill="url(#a)" stroke="#fff" stroke-width=".5"/>',
             '<defs><linearGradient id="a" x1="6.95" y1="3.853" x2="6.95" y2="10.544" gradientUnits="userSpaceOnUse">',
@@ -448,20 +434,32 @@ contract MetadataImage {
             '</g>'
             )
         );
-    } 
+    }
 
-    function beanETHCP2WellToken() internal pure returns (string memory) {
-        return string(abi.encodePacked(
-            '<g id="BEAN:ETHw">',
-            '<rect width="12" height="12" rx="6" fill="#46B955"/>',
-            '<path d="M6 12A6 6 0 1 0 6 0a6 6 0 0 0 0 12Z" fill="#50AE58"/>',
-            '<path d="m7.684 1.265-3.505 9.36c.003 0-3.884-6.625 3.505-9.36Z" fill="#fff"/>',   
-            '<path d="M8.952 6.986a.063.063 0 0 1-.022.003c-.71.13-1.424.255-2.134.381-.281.052-.565.103-.846.152a.036.036 0 0 1-.026 0l2.14-5.625.004-.003c.297 1.702.59 3.394.884 5.092Zm-.187.478c-1.266.859-2.531 1.721-3.8 2.58l.781-2.054c.007.004.013 0 .023 0 .759-.132 1.514-.268 2.27-.4l.697-.126.03-.006c-.004.003 0 .006 0 .006Z" fill="#000"/>',
+    function beanTemplateToken(bool ripe) internal pure returns (string memory) {
+        return string(abi.encodePacked( 
+            '<g id="',
+            ripe ? 'urBEAN' : 'BEAN',
+            '"><rect width="12" height="12" rx="6" fill="',
+            ripe ? '#7F5533' : '#46B955',
+            '"/><path d="m7.687 1.265-3.504 9.36S.298 3.999 7.687 1.266Zm-2.691 8.78 2.462-6.691s4.538 3.67-2.462 6.691Z" fill="#fff"/>',
             '</g>'
             )
         );
     }
 
+    function beanETHCP2WellTemplateToken(bool ripe) internal pure returns (string memory) {
+        return string(abi.encodePacked(
+            '<g id="',
+            ripe ? 'urBEANETH' : 'BEANETH',
+            '"><rect width="12" height="12" rx="6" fill="',
+            ripe ? '#7F5533' : '#46B955',
+            '"/><path d="m7.684 1.265-3.505 9.36c.003 0-3.884-6.625 3.505-9.36Z" fill="#fff"/>',   
+            '<path d="M8.952 6.986a.063.063 0 0 1-.022.003c-.71.13-1.424.255-2.134.381-.281.052-.565.103-.846.152a.036.036 0 0 1-.026 0l2.14-5.625.004-.003c.297 1.702.59 3.394.884 5.092Zm-.187.478c-1.266.859-2.531 1.721-3.8 2.58l.781-2.054c.007.004.013 0 .023 0 .759-.132 1.514-.268 2.27-.4l.697-.126.03-.006c-.004.003 0 .006 0 .006Z" fill="#000"/>',
+            '</g>'
+            )
+        );
+    }
 
     function useAssetTransform(string memory assetName, int256 x, int256 y) internal pure returns (string memory) { 
         return string(abi.encodePacked(
@@ -535,14 +533,14 @@ contract MetadataImage {
 
     function sciNotation(int96 stem) internal pure returns (string memory) {
         if (stem >= 0) {
-            // if stem is greater than 1e7, use scientific notation
+            // if stem is greater than 1e5, use scientific notation
             if (stem > 100_000) {
                 return powerOfTen(uint256(stem));
             } else {
                 return uint256(stem).toString();
             }
         } else {
-            // if stem is greater than 1e7, use scientific notation
+            // if stem is less than -1e5, use scientific notation
             if (-stem > 100_000) {
                 return string(abi.encodePacked("-", powerOfTen(uint256(-stem))));
             } else {
@@ -652,19 +650,19 @@ contract MetadataImage {
 
     function getTokenName(address token) internal pure returns (string memory tokenString) {
         if (token == C.BEAN) {
-            tokenString = "Bean";
+            tokenString = "BEAN";
         }
         else if (token == C.CURVE_BEAN_METAPOOL) {
-            tokenString = "Bean3CRV";
+            tokenString = "BEAN3CRV";
         }
         else if (token == C.UNRIPE_BEAN) {
-            tokenString = "urBean";
+            tokenString = "urBEAN";
         }
         else if (token == C.UNRIPE_LP) {
-            tokenString = "urBean3CRV";
+            tokenString = "urBEANETH";
         }
         else if (token == C.BEAN_ETH_WELL) {
-            tokenString = "BEAN:ETHw";
+            tokenString = "BEANETH";
         } else {
             revert("token not whitelisted.");
         }

@@ -100,6 +100,25 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "underlyingToken",
+        "type": "address"
+      }
+    ],
+    "name": "SwitchUnderlyingToken",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -495,6 +514,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "newUnderlyingToken",
+        "type": "address"
+      }
+    ],
+    "name": "switchUnderlyingToken",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -4381,6 +4418,25 @@
     "name": "mowAndMigrateNoDeposits",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "totalMigratedBdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
