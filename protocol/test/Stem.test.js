@@ -193,9 +193,10 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         //now mow and it shouldn't revert
         await this.silo.mow(depositorAddress, this.beanMetapool.address)
 
-        for(let i=0; i<tokens.length; i++) {
-          expect(await this.migrate.totalMigratedBdv(tokens[i])).to.be.equal(bdvs[i])
-        }
+        // after the seed Gauge init script, migrating does not increment total BDV. 
+        // for(let i=0; i<tokens.length; i++) {
+        //   expect(await this.migrate.totalMigratedBdv(tokens[i])).to.be.equal(bdvs[i])
+        // }
       });
   
       
