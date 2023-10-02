@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import { useAccount as useWagmiAccount } from 'wagmi';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
+import { ERC20Token } from '@beanstalk/sdk';
+import { BigNumber } from 'ethers';
 import { Token } from '~/classes';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import type { LegacyDepositCrate } from '~/state/farmer/silo';
-import { displayBN, displayFullBN } from '~/util';
+import { displayBN, displayFullBN, transform } from '~/util';
 import { STALK } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
@@ -14,6 +16,8 @@ import Fiat from '~/components/Common/Fiat';
 import TableCard, { TableCardProps } from '../../Common/TableCard';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 import { FC } from '~/types';
+import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
+import useSdk from '~/hooks/sdk';
 
 const Deposits: FC<
   {
@@ -22,8 +26,15 @@ const Deposits: FC<
     useLegacySeason?: boolean;
   } & Partial<TableCardProps>
 > = ({ token, siloBalance, useLegacySeason, ...props }) => {
+  const sdk = useSdk();
   const getUSD = useSiloTokenToFiat();
   const account = useWagmiAccount();
+  const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
+
+  const seeds = transform(newToken.rewards?.seeds.toBlockchain() || "0", 'ethers', sdk.tokens.SEEDS);
+  const stemTip = useStemTipForToken(newToken);
+  const lastStem = stemTip ? stemTip.sub(siloBalance?.mowStatus.lastStem || Number(0)) : Number(0);
+  const mowableStalk = transform(((stemTip?.sub(lastStem) || BigNumber.from(0)).mul(seeds)), 'bnjs', sdk.tokens.STALK);
 
   const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
@@ -37,7 +48,6 @@ const Deposits: FC<
   const columns = useMemo(
     () =>
       [
-        COLUMNS.depositId(useLegacySeason ? 'Season' : 'Stem'),
         {
           field: 'amount',
           flex: 1,
@@ -87,8 +97,8 @@ const Deposits: FC<
           field: 'stalk',
           flex: 1,
           headerName: 'Stalk',
-          align: 'right',
-          headerAlign: 'right',
+          align: 'left',
+          headerAlign: 'left',
           valueFormatter: (params) => displayBN(params.value.total),
           renderCell: (params) => (
             <Tooltip
@@ -97,9 +107,6 @@ const Deposits: FC<
                 <Stack gap={0.5}>
                   <StatHorizontal label="Stalk at Deposit">
                     {displayFullBN(params.row.stalk.base, 2, 2)}
-                  </StatHorizontal>
-                  <StatHorizontal label="Stalk grown since Deposit">
-                    {displayFullBN(params.row.stalk.grown, 2, 2)}
                   </StatHorizontal>
                 </Stack>
               }
@@ -120,9 +127,46 @@ const Deposits: FC<
           ),
           sortable: false,
         },
+        {
+          field: 'stalk.grown',
+          flex: 1,
+          headerName: 'Grown Stalk',
+          align: 'right',
+          headerAlign: 'right',
+          valueFormatter: (params) => displayBN(params.value),
+          renderCell: (params) => (
+          <Tooltip
+            placement="bottom"
+            title={
+              <Stack gap={0.5}>
+                <StatHorizontal label="Mowable Grown Stalk">
+                  {displayFullBN(mowableStalk, 2, 2)}
+                </StatHorizontal>
+                <StatHorizontal label="Mowed Grown Stalk">
+                  {displayFullBN(params.row.stalk.total.minus(mowableStalk), 2, 2)}
+                </StatHorizontal>
+              </Stack>
+            }
+          >
+            <span>
+              <Typography display={{ xs: 'none', md: 'block' }}>
+                {displayFullBN(
+                  params.row.stalk.grown,
+                  STALK.displayDecimals,
+                  STALK.displayDecimals
+                )}
+              </Typography>
+              <Typography display={{ xs: 'block', md: 'none' }}>
+                {displayBN(params.row.stalk.grown)}
+              </Typography>
+            </span>
+          </Tooltip>
+          ),
+          sortable: false,
+        },
         COLUMNS.seeds,
       ] as GridColumns,
-    [useLegacySeason, token]
+    [mowableStalk, token]
   );
 
   const amount = siloBalance?.deposited.amount;

@@ -332,7 +332,7 @@ export class Silo {
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         utils.applyDeposit(balance, token, stemTip, {
-          stem: deposit.season, // FIXME
+          stem: deposit.stem || deposit.season,
           amount: deposit.amount,
           bdv: deposit.bdv
         });
