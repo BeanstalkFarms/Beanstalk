@@ -25,7 +25,7 @@ describe('Ownership', function () {
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address);
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address);
     const SiloToken = await ethers.getContractFactory("MockToken");
     this.siloToken = await SiloToken.deploy("Silo", "SILO")
     await this.siloToken.deployed()

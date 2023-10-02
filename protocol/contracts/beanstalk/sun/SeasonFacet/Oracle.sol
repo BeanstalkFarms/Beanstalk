@@ -3,10 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Minting/LibCurveMinting.sol";
-import "contracts/beanstalk/ReentrancyGuard.sol";
-import "contracts/libraries/Minting/LibWellMinting.sol";
-import "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {C} from "contracts/C.sol";
+import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+
 
 /**
  * @title Oracle

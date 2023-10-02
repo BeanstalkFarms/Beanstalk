@@ -18,17 +18,33 @@ import {AppStorage} from "../AppStorage.sol";
 contract WhitelistFacet {
 
     /**
-     * @notice Emitted when a token is Whitelisted into the Silo.
-     * @param token Address of the token that was Whitelisted.
-     * @param selector The function selector that is used to calculate the BDV of the token.
-     * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
-     * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
+     * @notice Emitted when a token is added to the Silo Whitelist.
+     * @param token ERC-20 token being added to the Silo Whitelist.
+     * @param selector The function selector that returns the BDV of a given
+     * amount of `token`. Must have signature:
+     * 
+     * ```
+     * function bdv(uint256 amount) public view returns (uint256);
+     * ```
+     * 
+     * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
+     * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
+     * @param gpSelector The function selector that returns the gauge points of a given token.
+     * Must have signature:
+     * 
+     * ```
+     * function gpFunction(uint256,uint256,uint256) public view returns (uint256);
+     * ```
+     * 
+     * @param gaugePoints The gauge points of the token.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
-        uint256 stalkIssuedPerBdv
+        uint256 stalkIssuedPerBdv,
+        bytes4 gpSelector,
+        uint128 gaugePoints
     );
 
     /**
@@ -64,6 +80,8 @@ contract WhitelistFacet {
      * @param selector The function selector that is used to calculate the BDV of the token.
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
+     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
+     * @param gaugePoints The inital gauge points allocated to the token.
      * @dev 
      * Can only be called by Beanstalk or Beanstalk owner.
      * Assumes an `encodeType` of 0.
@@ -72,7 +90,9 @@ contract WhitelistFacet {
         address token,
         bytes4 selector,
         uint16 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason
+        uint32 stalkEarnedPerSeason,
+        bytes4 gaugePointSelector,
+        uint128 gaugePoints
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -80,7 +100,9 @@ contract WhitelistFacet {
             selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
-            0x00
+            0x00,
+            gaugePointSelector,
+            gaugePoints
         );
     }
 
@@ -98,7 +120,9 @@ contract WhitelistFacet {
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes4 gaugePointSelector,
+        uint128 gaugePoints
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -106,7 +130,9 @@ contract WhitelistFacet {
             selector,
             stalkIssuedPerBdv,
             stalkEarnedPerSeason,
-            encodeType
+            encodeType,
+            gaugePointSelector,
+            gaugePoints
         );
     }
 
@@ -124,6 +150,19 @@ contract WhitelistFacet {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
             stalkEarnedPerSeason
+        );
+    }
+
+    function updateGaugeForToken(
+        address token, 
+        bytes4 gaugePointSelector,
+        uint128 gaugePoints
+    ) external payable {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibWhitelist.updateGaugeForToken(
+            token,
+            gaugePointSelector,
+            gaugePoints
         );
     }
 }

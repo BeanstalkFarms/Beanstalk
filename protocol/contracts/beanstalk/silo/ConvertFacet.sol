@@ -9,13 +9,25 @@ import {C} from "contracts/C.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+/**
+ * @title IConvertDataFacet
+ * @author Brean
+ * @notice Interface for ConvertDataFacet
+ */
+interface IConvertDataFacet {
+    function decodeConvertData(bytes calldata convertData) external returns (
+        address tokenOut,
+        address tokenIn,
+        uint256 amountOut,
+        uint256 amountIn
+    );
+}
 /**
  * @author Publius
  * @title ConvertFacet handles converting Deposited assets within the Silo.
@@ -75,9 +87,8 @@ contract ConvertFacet is ReentrancyGuard {
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         address toToken; address fromToken; uint256 grownStalk;
-        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
-            convertData
-        );
+        (toToken, fromToken, toAmount, fromAmount) = 
+            IConvertDataFacet(address(this)).decodeConvertData(convertData);
 
         LibSilo._mow(msg.sender, fromToken);
         LibSilo._mow(msg.sender, toToken);

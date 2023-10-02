@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
+
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -11,9 +13,6 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibWell, IInstantaneousPump} from "contracts/libraries/Well/LibWell.sol";
-import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
-
-
 
 /**
  * @author Brean
@@ -87,7 +86,7 @@ library LibEvaluate {
     function evalPrice(
         int256 deltaB, 
         Decimal.D256 memory podRate
-    ) internal returns (uint256 caseId) {
+    ) internal view returns (uint256 caseId) {
         // p > 1
         if (deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))) {
             // beanstalk will only use the bean/eth well to compute the bean price, 

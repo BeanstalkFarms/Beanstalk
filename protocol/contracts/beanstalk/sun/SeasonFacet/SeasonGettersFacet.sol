@@ -3,8 +3,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../AppStorage.sol";
-import "../../../C.sol";
+import {AppStorage, Storage} from "../../AppStorage.sol";
+import {C} from "../../../C.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -13,24 +13,18 @@ import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
- * @title SeasonGetterFacet
- * @author Publius, Chaikitty
+ * @title SeasonGettersFacet
+ * @author Publius, Chaikitty, Brean
  * @notice Holds Getter view functions for the SeasonFacet.
  */
-contract SeasonGetterFacet {
+contract SeasonGettersFacet {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
 
     AppStorage internal s;
-
-    // 24 * 30 * 6
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
-    uint256 private constant PRECISION = 1e6;
-    uint256 private constant STALK_BDV_PRECISION = 1e4;
-
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     //////////////////// SEASON GETTERS ////////////////////
@@ -137,9 +131,7 @@ contract SeasonGetterFacet {
      * @notice returns the average grown stalk per BDV .
      */
     function getAverageGrownStalkPerBdv() public view returns (uint256) {
-        uint256 totalBdv = getTotalBdv();
-        if(totalBdv == 0) return 0;
-        return s.s.stalk.div(totalBdv).sub(STALK_BDV_PRECISION); 
+        return LibGauge.getAverageGrownStalkPerBdv();
     }
 
     /**
@@ -153,10 +145,7 @@ contract SeasonGetterFacet {
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
     function updateStalkPerBdvPerSeason() external {
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
-            getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
-        );
-        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        LibGauge.updateStalkPerBdvPerSeason();
     }
 
     /**
@@ -165,11 +154,7 @@ contract SeasonGetterFacet {
      * as BDV is asyncronous. 
      */
     function getTotalBdv() internal view returns (uint256 totalBdv) {
-        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
-        // TODO: implment the decrement deposited BDV thing for unripe
-        for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
-            totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
-        }
+        return LibGauge.getTotalBdv();
     }
 
     /**
@@ -195,18 +180,29 @@ contract SeasonGetterFacet {
      * note that stalk has 10 decimals. 
      */
     function getNewAverageGrownStalkPerBdvPerSeason() external view returns (uint256) {
-        return getAverageGrownStalkPerBdv().mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP);
+        return getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(LibGauge.TARGET_SEASONS_TO_CATCHUP);
     }
 
     /**
-     * @notice returns the percentage of new grown stalk 
-     * issued to the LP silo tokens.
+     * @notice returns the ratio between bean and max LP gp Per BDV, unscaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
-    function getPercentOfNewGrownStalkToLP() external view returns (uint128) {
-        return s.seedGauge.percentOfNewGrownStalkToLP;
+    function getBeanToMaxLpGPperBDVRatio() external view returns (uint256) {
+        return s.seedGauge.BeanToMaxLpGpPerBDVRatio;
     }
 
+    /**
+     * @notice returns the ratio between bean and max LP gp Per BDV, scaled.
+     * @dev 6 decimal precision (1% = 1e6)
+     */
+    function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
+        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
+    }
+    
+
+    /**
+     * @notice returns the pod rate (unharvestable pods / total bean supply)
+     */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
         return Decimal.ratio(
@@ -215,19 +211,31 @@ contract SeasonGetterFacet {
         ).value;
     }
 
+    /**
+     * @notice returns the L2SR rate (total non-bean liquidity / total bean supply)
+     */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
         return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
     }
 
+    /**
+     * @notice gets the change in demand for pods from the previous season.
+     */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
         (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
         return deltaPodDemand.value;
     }
 
+    /**
+     * @notice gets the non-bean liquidity for a given well.
+     */
     function getUsdLiquidity(address well) external view returns (uint256) {
         return LibWell.getUsdLiquidity(well);
     }
-    
+
+    function getGaugePoints(address token) external view returns (uint256) {
+        return s.ss[token].gaugePoints;
+    }
 }

@@ -4234,6 +4234,18 @@
         "internalType": "uint256",
         "name": "stalkIssuedPerBdv",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "gpSelector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
       }
     ],
     "name": "WhitelistToken",
@@ -4248,6 +4260,29 @@
       }
     ],
     "name": "dewhitelistToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
+      }
+    ],
+    "name": "updateGaugeForToken",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -4291,6 +4326,16 @@
         "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
         "type": "uint32"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
       }
     ],
     "name": "whitelistToken",
@@ -4324,6 +4369,16 @@
         "internalType": "bytes1",
         "name": "encodeType",
         "type": "bytes1"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
       }
     ],
     "name": "whitelistTokenWithEncodeType",
@@ -4457,6 +4512,25 @@
     "name": "mowAndMigrateNoDeposits",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "totalMigratedBdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -6209,13 +6283,13 @@
             "type": "bytes1"
           },
           {
-            "internalType": "uint32",
-            "name": "lpGaugePoints",
-            "type": "uint32"
+            "internalType": "uint128",
+            "name": "gaugePoints",
+            "type": "uint128"
           },
           {
             "internalType": "bytes4",
-            "name": "GPSelector",
+            "name": "gpSelector",
             "type": "bytes4"
           }
         ],
@@ -6498,31 +6572,12 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "currentGaugePoints",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "bean3CrvGaugePoints",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "currentGaugePoints",
+        "name": "optimalPercentDepositedBdv",
         "type": "uint256"
       },
       {
@@ -6531,39 +6586,22 @@
         "type": "uint256"
       }
     ],
-    "name": "beanEthGaugePoints",
+    "name": "defaultGaugePointFunction",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "urBeanEthGaugePoints",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
+        "name": "newGaugePoints",
         "type": "uint256"
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stepGauge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -6655,7 +6693,52 @@
   },
   {
     "inputs": [],
+    "name": "getBeanToMaxLpGPperBDVRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBeanToMaxLpGPperBDVRatioScaled",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getDeltaPodDemand",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getGaugePoints",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6694,19 +6777,6 @@
   },
   {
     "inputs": [],
-    "name": "getPercentOfNewGrownStalkToLP",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getPodRate",
     "outputs": [
       {
@@ -6731,8 +6801,13 @@
           },
           {
             "internalType": "uint128",
-            "name": "percentOfNewGrownStalkToLP",
+            "name": "BeanToMaxLpGpPerBDVRatio",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSeedGaugeUpdate",
+            "type": "uint32"
           }
         ],
         "internalType": "struct Storage.SeedGauge",
@@ -7045,18 +7120,18 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint80",
         "name": "relChange",
-        "type": "uint16"
+        "type": "uint80"
       },
       {
         "indexed": false,
-        "internalType": "int16",
+        "internalType": "int80",
         "name": "absChange",
-        "type": "int16"
+        "type": "int80"
       }
     ],
-    "name": "GrownStalkToLPChange",
+    "name": "BeanToMaxLPRatioChange",
     "type": "event"
   },
   {
@@ -7183,9 +7258,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "relChange",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,

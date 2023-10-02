@@ -3,15 +3,23 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./Weather.sol";
-import "contracts/libraries/LibGauge.sol";
-import "contracts/libraries/LibIncentive.sol";
-import "contracts/libraries/Token/LibTransfer.sol";
-import "contracts/libraries/Silo/LibWhitelist.sol";
-import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {Weather, SafeMath, C} from "./Weather.sol";
+import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
+import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
 
+
+
+/**
+ * @title IGaugeFacet
+ * @author Brean
+ * @notice steps the gauge system.
+ */
+interface IGaugeFacet {
+    function stepGauge() external;
+}
 
 /**
  * @title SeasonFacet
@@ -63,7 +71,7 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
-        LibGauge.stepGauge();
+        IGaugeFacet(address(this)).stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);

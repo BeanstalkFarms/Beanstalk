@@ -11,7 +11,6 @@ import {C} from "../C.sol";
 import {LibWell} from "./Well/LibWell.sol";
 import {IInstantaneousPump} from "../interfaces/basin/pumps/IInstantaneousPump.sol";
 
-//TODO: write Natspec.
 
 
 /**
@@ -220,7 +219,10 @@ library LibUnripe {
 
     }
 
-
+    /**
+     * @notice gets the total recapitalized underlying token.
+     * @param amount The amount of the of the unripe token to be taken as input.
+     */
     function getRecapPaidPercentAmount(uint256 amount)
         internal
         view
@@ -230,11 +232,17 @@ library LibUnripe {
         return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }
 
+    /**
+     * @notice returns true if the token is unripe.
+     */
     function isUnripe(address unripeToken) internal view returns (bool unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = s.u[unripeToken].underlyingToken != address(0);
     }
 
+    /**
+     * @notice returns the underlying token amount of the unripe token.
+     */
     function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
         internal
         view

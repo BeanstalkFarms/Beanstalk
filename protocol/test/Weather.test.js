@@ -30,7 +30,7 @@ describe('Complex Weather', function () {
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
     beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address);
@@ -73,7 +73,7 @@ describe('Complex Weather', function () {
         columns.forEach((key, i) => this.testData[key] = tests[v][i])
         await this.season.setUsdEthPrice(to18('0.001'));
         await this.season.setYieldE(this.testData.startingWeather)
-        await this.season.setPercentOfNewGrownStalkToLP(this.testData.initalPercentToLp)
+        await this.season.setBeanToMaxLpGPperBDVRatio(to18(this.testData.initalPercentToLp))
         this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
         this.dsoil = this.testData.lastSoil
         this.startSoil = this.testData.startingSoil
@@ -82,7 +82,7 @@ describe('Complex Weather', function () {
         this.pods = this.testData.unharvestablePods
         this.aboveQ = this.testData.aboveQ
         this.L2SRState = this.testData.L2SR
-        this.newPercentToLp = this.testData.newPercentToLp
+        this.newPercentToLp = to18(this.testData.newPercentToLp)
 
         await this.bean.mint(userAddress, this.testData.totalOutstandingBeans)
         await this.season.setLastSowTimeE(this.testData.lastSowTime)
@@ -108,23 +108,23 @@ describe('Complex Weather', function () {
           .withArgs(
             await this.seasonGetter.season(), 
             this.testData.Code, 
-            10000, 
+            to6('100'), 
             this.testData.newWeather-this.testData.startingWeather
             )
       })
 
       it('Checks New Percent To LP', async function () {
-        expect(await this.seasonGetter.getPercentOfNewGrownStalkToLP())
-        .to.eq(this.testData.newPercentToLp)
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio())
+        .to.eq(to18(this.testData.newPercentToLp))
       })
 
       it('Emits The Correct LP Case', async function () {
-        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'GrownStalkToLPChange')
+        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
           .withArgs(
             await this.seasonGetter.season(), 
             this.testData.Code, 
-            10000,
-            this.testData.bL
+            to18(this.testData.mL),
+            to18(this.testData.bL)
             )
       })
       

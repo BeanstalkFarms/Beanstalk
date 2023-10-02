@@ -110,6 +110,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     approvalFacet,
     convertFacet,
     convertGettersFacet,
+    convertDataFacet,
     enrootFacet,
     farmFacet,
     fieldFacet,
@@ -119,7 +120,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
-    seasonGetterFacet,
+    seasonGettersFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
@@ -127,7 +128,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     whitelistFacet,
     metadataFacet,
-    gaugePointFacet
+    gaugePointFacet,
+    gaugeFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -137,6 +139,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'ApprovalFacet',
       'MockConvertFacet',
       'ConvertGettersFacet',
+      'ConvertDataFacet',
       'EnrootFacet',
       'FarmFacet',
       'MockFieldFacet',
@@ -145,7 +148,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'MockSeasonFacet',
-      'SeasonGetterFacet',
+      'SeasonGettersFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
@@ -154,7 +157,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockUnripeFacet',
       'WhitelistFacet',
       'MetadataFacet',
-      'GaugePointFacet'
+      'GaugePointFacet',
+      'GaugeFacet'
     ],
   ) : await deployFacets(
     verbose,
@@ -165,6 +169,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'ApprovalFacet',
       'ConvertFacet',
       'ConvertGettersFacet',
+      'ConvertDataFacet',
       'EnrootFacet',
       'FarmFacet',
       'FieldFacet',
@@ -174,7 +179,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'SeasonFacet',
-      'SeasonGetterFacet',
+      'SeasonGettersFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
@@ -182,7 +187,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'UnripeFacet',
       'WhitelistFacet',
       'MetadataFacet',
-      'GaugePointFacet'
+      'GaugePointFacet',
+      'GaugeFacet'
     ],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
@@ -215,6 +221,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['ApprovalFacet', approvalFacet],
       ['ConvertFacet', convertFacet],
       ['ConvertGettersFacet', convertGettersFacet],
+      ['ConvertDataFacet', convertDataFacet],
       ['EnrootFacet', enrootFacet],
       ['FarmFacet', farmFacet],
       ['FieldFacet', fieldFacet],
@@ -224,7 +231,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['PauseFacet', pauseFacet],
       ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
-      ['SeasonGetterFacet', seasonGetterFacet],
+      ['SeasonGettersFacet', seasonGettersFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
@@ -232,7 +239,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet],
       ['MetadataFacet', metadataFacet],
-      ['GaugePointFacet', gaugePointFacet]
+      ['GaugePointFacet', gaugePointFacet],
+      ['GaugeFacet', gaugeFacet]
     ],
     owner: account,
     args: args,
@@ -264,6 +272,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     bdvFacet,
     convertFacet,
     convertGettersFacet,
+    convertDataFacet,
     enrootFacet,
     migrationFacet,
     approvalFacet,
@@ -275,14 +284,15 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
-    seasonGetterFacet,
+    seasonGettersFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     tokenSupportFacet,
     unripeFacet,
     metadataFacet,
-    gaugePointFacet
+    gaugePointFacet,
+    gaugeFacet
   }
 }
 

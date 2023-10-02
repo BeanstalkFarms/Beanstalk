@@ -211,7 +211,9 @@ async function whitelistWell(wellAddress, stalk, stalkEarnedPerSeason) {
         beanstalk.interface.getSighash('wellBdv(address,uint256)'),
         stalk,
         stalkEarnedPerSeason,
-        '0x01'
+        '0x01',
+        beanstalk.interface.getSighash('defaultGaugePointFunction(uint256,uint256,uint256)'),
+        '0'
     )
 
 }

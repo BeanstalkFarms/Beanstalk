@@ -28,18 +28,28 @@ library LibWhitelist {
      * 
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
      * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
+     * @param gpSelector The function selector that returns the gauge points of a given token.
+     * Must have signature:
+     * 
+     * ```
+     * function gpFunction(uint256,uint256,uint256) public view returns (uint256);
+     * ```
+     * 
+     * @param gaugePoints The gauge points of the token.
      */
     event WhitelistToken(
         address indexed token,
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
-        uint256 stalkIssuedPerBdv
+        uint256 stalkIssuedPerBdv,
+        bytes4 gpSelector,
+        uint128 gaugePoints
     );
 
     event WhitelistTokenToGauge(
         address indexed token, 
         bytes4 selector, 
-        uint32 lpGaugePoints
+        uint128 gaugePoints
     );
 
 
@@ -69,11 +79,13 @@ library LibWhitelist {
         bytes4 selector,
         uint32 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes4 gaugePointSelector,
+        uint128 gaugePoints
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        //verify you passed in a callable selector
+        //verify you passed in a callable BDV selector
         (bool success,) = address(this).staticcall(
             LibTokenSilo.encodeBdvFunction(
                 token,
@@ -82,29 +94,49 @@ library LibWhitelist {
                 0
             )
         );
-        require(success, "Whitelist: Invalid selector");
+        require(success, "Whitelist: Invalid BDV selector");
+
+        //verify you passed in a callable gaugePoint selector
+        (success,) = address(this).staticcall(
+            abi.encodeWithSelector(
+                gaugePointSelector,
+                0,
+                0,
+                0
+            )
+        );
+        require(success, "Whitelist: Invalid GaugePoint selector");
 
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
+        s.ss[token].gpSelector = gaugePointSelector;
+        s.ss[token].gaugePoints = gaugePoints;
 
         s.ss[token].encodeType = encodeType;
 
         s.ss[token].milestoneSeason = uint32(s.season.current);
 
-        emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
+        emit WhitelistToken(
+            token,
+            selector,
+            stalkEarnedPerSeason,
+            stalkIssuedPerBdv,
+            gaugePointSelector,
+            gaugePoints
+        );
     }
 
     /**
      * @notice Add an ERC-20 token to the Seed Gauge Whitelist.
      * @dev LibWhitelistedTokens.sol must be updated to include the new token.
      */
-    function whitelistTokenToGauge(
+    function updateGaugeForToken(
         address token,
         bytes4 selector,
-        uint32 lpGaugePoints
+        uint128 gaugePoints
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         //verify you passed in a callable selector
@@ -112,17 +144,18 @@ library LibWhitelist {
             abi.encodeWithSelector(
                 selector,
                 0,
+                0,
                 0
             )
         );
-        require(success, "Whitelist: Invalid selector");
+        require(success, "Whitelist: Invalid GaugePoint selector");
 
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 
-        ss.GPSelector = selector;
-        ss.lpGaugePoints = lpGaugePoints;
+        ss.gpSelector = selector;
+        ss.gaugePoints = gaugePoints;
 
-        emit WhitelistTokenToGauge(token, selector, lpGaugePoints);
+        emit WhitelistTokenToGauge(token, selector, gaugePoints);
     }
     
     /**

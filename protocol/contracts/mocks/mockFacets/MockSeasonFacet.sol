@@ -13,8 +13,12 @@ import "contracts/libraries/LibBytes.sol";
 import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import "contracts/libraries/LibBytes.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 
 /**
  * @author Publius
@@ -47,6 +51,8 @@ contract MockSeasonFacet is SeasonFacet  {
 
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
+    event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
+    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -119,7 +125,7 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndGrownStalkPerBDVToLP(caseId);
+        updateTemperatureAndBeanToMaxLPRatio(caseId);
         stepSun(deltaB, caseId);
     }
 
@@ -270,6 +276,10 @@ contract MockSeasonFacet is SeasonFacet  {
             // increase bean price
             s.beanEthPrice = 1051e6;
             s.usdEthPrice = 0.001e18;
+        } else {
+            // decrease bean price
+            s.beanEthPrice = 1000e6;
+            s.usdEthPrice = 0.001e18;
         }
         calcCaseIdandUpdate(deltaB);
     }
@@ -393,11 +403,21 @@ contract MockSeasonFacet is SeasonFacet  {
         return LibChainlinkOracle.getEthUsdPrice();
     }
 
-    function setPercentOfNewGrownStalkToLP(uint128 percent) external {
-        s.seedGauge.percentOfNewGrownStalkToLP = percent;
+    function setBeanToMaxLpGPperBDVRatio(uint128 percent) external {
+        s.seedGauge.BeanToMaxLpGpPerBDVRatio = percent;
     }
     
     function setUsdEthPrice(uint256 price) external {
         s.usdEthPrice = price;
+    }
+
+    function mockStepGauge() external {
+        LibGauge.stepGauge();
+    }
+    
+    function mockSetAverageGrownStalkPerBdvPerSeason(
+        uint128 _averageGrownStalkPerBdvPerSeason
+    ) external {
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
     }
 }

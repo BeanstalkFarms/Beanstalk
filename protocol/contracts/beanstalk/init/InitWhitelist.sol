@@ -14,6 +14,13 @@ import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
  * @author Publius
  * @title InitBip8 runs the code for BIP-8.
 **/
+interface IGaugePointFacet {
+    function defaultGaugePointFunction(
+        uint256 currentGaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv
+    ) external pure returns (uint256 newGaugePoints);
+}
 
 contract InitWhitelist {
 
@@ -75,7 +82,9 @@ contract InitWhitelist {
         bytes4 selector,
         uint16 stalkIssuedPerBdv,
         uint24 stalkEarnedPerSeason,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes4 gpSelector,
+        uint128 gaugePoints
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.ss[token].selector = selector;
@@ -86,6 +95,13 @@ contract InitWhitelist {
 
         s.ss[token].milestoneSeason = s.season.current;
 
-        emit LibWhitelist.WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
+        emit LibWhitelist.WhitelistToken(
+            token, 
+            selector,
+            stalkEarnedPerSeason, 
+            stalkIssuedPerBdv,
+            gpSelector,
+            gaugePoints
+        );
     }
 }

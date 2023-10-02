@@ -375,12 +375,14 @@ contract Storage {
      * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
      * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
      * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
-     * @param lpGaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
-     * @param GPSelector The encoded gaugePoint function selector for the token that pertains to 
+     * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
+     * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
+     * @param gpSelector The encoded gaugePoint function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature:
      * ```
      * function gaugePoints(
      *  uint256 currentGaugePoints,
+     *  uint256 optimalPercentDepositedBdv,
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
@@ -394,9 +396,9 @@ contract Storage {
 		int96 milestoneStem; //          │ 12 (28)
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
-        uint32 lpGaugePoints; //  ───────┐ 4  
-        bytes4 GPSelector; //  ──────────┘ 4  (8)
-        // 24 bytes are left here.
+        uint128 gaugePoints; //   ───────┐ 16  
+        bytes4 gpSelector; //   ─────────┘ 4  (20)
+        // 12 bytes are left here.
     }
 
     /**
@@ -424,12 +426,18 @@ contract Storage {
 
     /**
      * @notice System level variables used in the seed Gauge System.
-     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV that beanstalk issues each season.
-     * @param percentOfNewGrownStalkToLP the amount of newly grown stalk issued to LP as a percentage. 6 decimal precision (1% = 1e6)
+     * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV 
+     * that beanstalk issues each season.
+     * @param BeanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
+     * issued to the largest LP share and Bean. 6 decimal precision.
+     * @param lastSeedGaugeUpdate the last season in which the gauge points were updated.
+     * @dev a beanTomaxLpGpPerBDVRatio of 100e6 means LP should be incentivized the most,
+     * and that beans will have the minimum seeds ratio. see {LibGauge.getBeanToMaxLpGpPerBDVRatioScaled}
      */
     struct SeedGauge {
         uint128 averageGrownStalkPerBdvPerSeason;
-        uint128 percentOfNewGrownStalkToLP;
+        uint128 BeanToMaxLpGpPerBDVRatio;
+        uint32 lastSeedGaugeUpdate;
     }
 }
 
@@ -482,7 +490,9 @@ contract Storage {
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
  * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
  * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param seedGauge Stores the seedGauge.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
  */
 struct AppStorage {
@@ -544,9 +554,14 @@ struct AppStorage {
     // Well
     mapping(address => bytes) wellOracleSnapshots;
     uint256 beanEthPrice;
+
+    // Silo V3 BDV Migration
+    mapping(address => uint256) migratedBdvs;
+    
+    // usdEth
     uint256 usdEthPrice;
 
     // Seed Gauge
     Storage.SeedGauge seedGauge;
-    bytes8[144] casesV2; 
+    bytes32[144] casesV2; 
 }
