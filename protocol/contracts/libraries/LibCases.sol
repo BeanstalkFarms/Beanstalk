@@ -22,8 +22,7 @@ import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
  * T_n = mT * T_n-1 + bT
  * L_n = mL * L_n-1 + bL
  * 
- * In total, there are 96 cases (4 * 2 * 3 * 4)
- * In practice, the cases range from 0-127.
+ * In total, there are 144 cases (4 * 3 * 3 * 4)
  * 
  * temperature is stored in AppStorage with 0 decimal precision (1% = 1), 
  * which is why bT has 0 decimal precision.
