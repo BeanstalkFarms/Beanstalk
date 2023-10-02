@@ -60,30 +60,44 @@ const useSiloTokenToFiat = () => {
 
       /// For everything else, use the value of the LP token via the beanPool liquidity/supply ratio.
       /// FIXME: the price contract provides this directly now to save a calculation on the frontend.
-      let _poolAddress = _token.address;
-      let _amountLP = _amount;
 
-      // TODOALEX
+      const _poolAddress = _token.address;
+      const _amountLP = _amount;
+
       if (_token === urBeanWeth) {
-        _poolAddress = beanWeth.address;
-        _amountLP = _chop
-          ? _amount.times(unripe[urBeanWeth.address]?.chopRate || ZERO_BN)
-          : _amount;
+        // formula for calculating chopped urBEANETH:
+        // userUrLP * totalUnderlyingLP / totalSupplyUrLP * recapPaidPercent
+        const underlyingTotalLP = unripe[urBeanWeth.address]?.underlying;
+        const totalSupplyUrLP = unripe[urBeanWeth.address]?.supply;
+        const recapPaidPercent = unripe[urBeanWeth.address]?.recapPaidPercent;
+        const choppedLP = _amount
+          .multipliedBy(underlyingTotalLP)
+          .dividedBy(totalSupplyUrLP)
+          .multipliedBy(recapPaidPercent);
+
+        // console.log(`underlyingTotalLP`, underlyingTotalLP.toString()); // 285772.366579734565388865
+        // console.log(`totalSupplyUrLP`, totalSupplyUrLP.toString()); // 101482689.1786
+        // console.log(`recapPaidPercent`, recapPaidPercent.toString()); // 0.006132
+        // console.log(`amountLP`, _amount.toString()); // 370168.862647
+        // console.log(`choppedLP`, choppedLP.toString()); // 6.39190475675572378624622472
+        const lpUsd = beanPools[beanWeth.address]?.lpUsd;
+        const lpBdv = beanPools[beanWeth.address]?.lpBdv;
+
+        return _denomination === 'bdv'
+          ? lpBdv?.multipliedBy(choppedLP)
+          : lpUsd?.multipliedBy(choppedLP);
       }
 
-      /// Grab pool data
+      /// Grab pool data. Here we can only have ripe, LP assets (BEAN:3CRV or BEAN:ETH)
       const pool = beanPools[_poolAddress];
       if (!pool || !pool?.liquidity || !pool?.supply) return ZERO_BN;
 
-      const usd = _amountLP
-        .multipliedBy(pool.lpUsd)
-        .multipliedBy(unripe[urBeanWeth.address]?.chopRate);
-      const bdv = _amountLP
-        .multipliedBy(pool.lpBdv)
-        .multipliedBy(unripe[urBeanWeth.address]?.chopRate);
+      const usd = _amountLP?.multipliedBy(pool.lpUsd);
+      const bdv = _amountLP?.multipliedBy(pool.lpBdv);
+
       return _denomination === 'bdv' ? bdv : usd;
     },
-    [Bean, beanPools, beanWeth.address, price, unripe, urBean, urBeanWeth]
+    [Bean, beanPools, beanWeth, price, unripe, urBean, urBeanWeth]
   );
 };
 
