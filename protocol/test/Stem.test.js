@@ -17,6 +17,7 @@ const { impersonateEthUsdChainlinkAggregator, impersonateEthUsdcUniswap, imperso
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
 const { toBN } = require('../utils/helpers.js');
+const { mockBipAddConvertDataFacet } = require('../utils/gauge.js'); 
 require('dotenv').config();
 
 let user,user2,owner;
@@ -88,7 +89,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
       await finishBeanEthMigration()
-
+      await mockBipAddConvertDataFacet(true, undefined)
     });
   
     beforeEach(async function () {

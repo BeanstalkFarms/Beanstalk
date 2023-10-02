@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../beanstalk/silo/ConvertFacet.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {LibConvert} from "../../libraries/Convert/LibConvert.sol";
 
 /**
  * @author Publius
