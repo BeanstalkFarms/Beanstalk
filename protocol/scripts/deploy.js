@@ -127,7 +127,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     whitelistFacet,
     metadataFacet,
-    gaugePointFacet
+    gaugePointFacet,
+    gaugeFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -154,7 +155,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockUnripeFacet',
       'WhitelistFacet',
       'MetadataFacet',
-      'GaugePointFacet'
+      'GaugePointFacet',
+      'GaugeFacet'
     ],
   ) : await deployFacets(
     verbose,
@@ -182,7 +184,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'UnripeFacet',
       'WhitelistFacet',
       'MetadataFacet',
-      'GaugePointFacet'
+      'GaugePointFacet',
+      'GaugeFacet'
     ],
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
@@ -232,7 +235,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet],
       ['MetadataFacet', metadataFacet],
-      ['GaugePointFacet', gaugePointFacet]
+      ['GaugePointFacet', gaugePointFacet],
+      ['GaugeFacet', gaugeFacet]
     ],
     owner: account,
     args: args,
@@ -282,7 +286,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     tokenSupportFacet,
     unripeFacet,
     metadataFacet,
-    gaugePointFacet
+    gaugePointFacet,
+    gaugeFacet
   }
 }
 

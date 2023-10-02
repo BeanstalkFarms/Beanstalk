@@ -316,7 +316,7 @@ describe('Gauge', function () {
       await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL);
       // deposit beans: 
       await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL);
-      this.result = (await this.season.stepGauge());
+      this.result = (await this.season.mockStepGauge());
     })
 
     it('updates gauge points', async function () {
@@ -408,7 +408,7 @@ describe('Gauge', function () {
       await this.silo.mow(userAddress, this.bean.address)
       await this.silo.mow(userAddress, BEAN_ETH_WELL)
       await this.silo.mow(userAddress, BEAN_3_CURVE)
-      await this.season.stepGauge();
+      await this.season.mockStepGauge();
 
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(84722);
     });

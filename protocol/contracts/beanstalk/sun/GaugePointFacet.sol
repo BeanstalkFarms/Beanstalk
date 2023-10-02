@@ -11,7 +11,7 @@ import "contracts/libraries/LibUnripe.sol";
 import "contracts/libraries/Well/LibWellBdv.sol";
 
 /**
- * @title GaugeFacet
+ * @title GaugePointFacet
  * @author Brean
  * @notice Calculates the gaugePoints for whitelisted Silo LP tokens.
  * 

@@ -13,8 +13,8 @@ import "contracts/libraries/LibBytes.sol";
 import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import "contracts/libraries/LibBytes.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
  * @author Publius
@@ -407,7 +407,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.usdEthPrice = price;
     }
 
-    function stepGauge() external {
+    function mockStepGauge() external {
         LibGauge.stepGauge();
     }
     
