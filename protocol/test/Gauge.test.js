@@ -81,8 +81,8 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     // update Gauge
-    updateGaugeForToken(BEAN_ETH_WELL, to18('95'))
-    updateGaugeForToken(BEAN_3_CURVE, to18('5'))
+    await updateGaugeForToken(BEAN_ETH_WELL, to18('95'))
+    await updateGaugeForToken(BEAN_3_CURVE, to18('5'))
   })
 
   beforeEach(async function () {

@@ -6796,6 +6796,11 @@
             "internalType": "uint128",
             "name": "BeanToMaxLpGpPerBDVRatio",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lastSeedGaugeUpdate",
+            "type": "uint32"
           }
         ],
         "internalType": "struct Storage.SeedGauge",

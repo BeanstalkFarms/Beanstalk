@@ -12,7 +12,7 @@ async function updateGaugeForToken(token, gaugePoints) {
 
     await beanstalk.connect(await impersonateBeanstalkOwner()).updateGaugeForToken(
         token,
-        beanstalk.interface.getSighash('defaultGaugePointFunction(uint256,uint256,uint256)'),
+        beanstalk.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         gaugePoints
     )
 }

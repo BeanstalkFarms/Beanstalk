@@ -48,6 +48,11 @@ contract MockSiloFacet is SiloFacet {
         uint256 unripeLP = getUnripeForAmount(t, amount);
         bdv = bdv.mul(C.initialRecap()).div(1e18);
         incrementTotalDepositedAmount(C.UNRIPE_LP, unripeLP);
+
+        // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
+        // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
+        incrementTotalDepositedBDV(C.UNRIPE_LP, bdv);
+        
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
         uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         LibSilo.mintStalk(msg.sender, stalk);
@@ -60,6 +65,10 @@ contract MockSiloFacet is SiloFacet {
         s.a[msg.sender].bean.deposits[_s] += amount;
         uint256 partialAmount = amount.mul(C.initialRecap()).div(1e18);
         incrementTotalDepositedAmount(C.UNRIPE_BEAN, amount);
+
+        // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
+        // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
+        incrementTotalDepositedBDV(C.UNRIPE_BEAN, partialAmount);
         
         uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_BEAN));
         uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
@@ -269,6 +278,10 @@ contract MockSiloFacet is SiloFacet {
         require(bdv > 0, "Silo: No Beans under Token.");
 
         incrementTotalDepositedAmount(token, amount); // Update Totals
+
+        // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
+        // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
+        incrementTotalDepositedBDV(token, bdv);
         addDepositToAccountLegacy(account, token, season, amount, bdv); // Add to Account
 
         return (
@@ -358,6 +371,13 @@ contract MockSiloFacet is SiloFacet {
     function incrementTotalDepositedAmount(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
+            amount.toUint128()
+        );
+    }
+
+    function incrementTotalDepositedBDV(address token, uint256 amount) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
             amount.toUint128()
         );
     }
