@@ -293,7 +293,7 @@ export const BEAN_ETH_WELL_LP = {
     18,
     {
       name: 'BEAN:ETH Well LP',
-      symbol: 'BEANWETH',
+      symbol: 'BEANETH',
       logo: beanEthWellLpLogoUrl,
       isLP: true,
       color: '#DFB385',
@@ -335,8 +335,8 @@ export const UNRIPE_BEAN_WETH = {
     UNRIPE_BEAN_WETH_ADDRESSES,
     6,
     {
-      name: 'Unripe BEAN:WETH LP',
-      symbol: 'urBEANWETH',
+      name: 'Unripe BEAN:ETH LP',
+      symbol: 'urBEANETH',
       logo: unripeBeanWethLogoUrl,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
