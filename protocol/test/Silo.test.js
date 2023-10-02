@@ -25,7 +25,7 @@ describe('Silo', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
 
     // await this.season.teleportSunrise(10);
     // this.season.deployStemsUpgrade();

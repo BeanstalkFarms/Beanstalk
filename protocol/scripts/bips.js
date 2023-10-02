@@ -191,6 +191,10 @@ async function bipSeedGauge(mock = true, account = undefined) {
       diamondAddress: BEANSTALK,
       facetNames: [
         "SeasonFacet", // Add Seed Gauge system
+        "SeasonGettersFacet", // season getters
+        "ConvertDataFacet", // convert data decoding
+        "GaugePointFacet", // gauge point function caller
+        "GaugeFacet" // gauge point logic
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],

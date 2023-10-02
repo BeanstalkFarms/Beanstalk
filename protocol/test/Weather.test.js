@@ -30,7 +30,7 @@ describe('Complex Weather', function () {
     ownerAddress = contracts.account
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
     beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address);

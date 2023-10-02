@@ -42,7 +42,7 @@ describe('Oracle', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address);
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN);
 

@@ -35,7 +35,7 @@ describe('Whitelist', function () {
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.gaugePoint = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
     const SiloToken = await ethers.getContractFactory("MockToken");

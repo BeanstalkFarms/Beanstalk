@@ -30,7 +30,7 @@ describe('Curve', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)

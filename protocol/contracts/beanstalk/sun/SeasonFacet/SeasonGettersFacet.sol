@@ -16,11 +16,11 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
- * @title SeasonGetterFacet
- * @author Publius, Chaikitty
+ * @title SeasonGettersFacet
+ * @author Publius, Chaikitty, Brean
  * @notice Holds Getter view functions for the SeasonFacet.
  */
-contract SeasonGetterFacet {
+contract SeasonGettersFacet {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
 

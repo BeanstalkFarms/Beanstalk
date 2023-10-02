@@ -15,6 +15,10 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
  **/
 contract ConvertDataFacet {
 
+    /**
+     * @notice Decodes the convert data from calldata, 
+     * and performs actions based on the convert.
+     */
     function decodeConvertData(bytes calldata convertData) 
         external 
         returns (

@@ -21,7 +21,7 @@ describe('Well Minting', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bean = await getBean()
     await this.bean.mint(userAddress, to18('1'));
     [this.well, this.wellFunction, this.pump] = await deployMockWell()

@@ -31,7 +31,7 @@ describe('Gauge', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)

@@ -36,7 +36,7 @@ describe("Silo Enroot", function () {
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getAltBeanstalk(this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
     this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);

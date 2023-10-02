@@ -61,7 +61,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.diamond = BEANSTALK;
   
       this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond);
-      this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond);
+      this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond);
 
 
       this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
