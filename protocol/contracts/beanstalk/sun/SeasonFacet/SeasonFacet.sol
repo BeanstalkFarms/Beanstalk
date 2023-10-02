@@ -29,8 +29,6 @@ interface IGaugeFacet {
 contract SeasonFacet is Weather {
     using SafeMath for uint256;
 
-    uint256 private constant PRECISION = 1e6;
-
     /**
      * @notice Emitted when the Season changes.
      * @param season The new Season number

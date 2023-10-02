@@ -11,8 +11,6 @@ import "contracts/libraries/Silo/LibWhitelist.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "../C.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @title LibGauge
  * @author Brean

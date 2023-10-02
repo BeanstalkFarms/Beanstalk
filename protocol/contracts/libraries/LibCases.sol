@@ -41,7 +41,7 @@ library LibCases {
      * @notice given a caseID (0-144), return the caseData.
      * 
      * CaseV2 allows developers to change both the absolute 
-     * and relative change in temperature and grownStalk to liquidity,
+     * and relative change in temperature and bean to maxLP gaugePoint to BDV ratio,
      * with greater precision than CaseV1.
      * 
      */

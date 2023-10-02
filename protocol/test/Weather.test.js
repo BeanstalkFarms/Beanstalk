@@ -119,7 +119,7 @@ describe('Complex Weather', function () {
       })
 
       it('Emits The Correct LP Case', async function () {
-        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+        if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             await this.seasonGetter.season(), 
             this.testData.Code, 

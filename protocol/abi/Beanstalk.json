@@ -4801,6 +4801,40 @@
   {
     "inputs": [
       {
+        "internalType": "bytes",
+        "name": "convertData",
+        "type": "bytes"
+      }
+    ],
+    "name": "decodeConvertData",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
@@ -7131,7 +7165,7 @@
         "type": "int80"
       }
     ],
-    "name": "BeanToMaxLPRatioChange",
+    "name": "BeanToMaxLpGpPerBDVRatioChange",
     "type": "event"
   },
   {

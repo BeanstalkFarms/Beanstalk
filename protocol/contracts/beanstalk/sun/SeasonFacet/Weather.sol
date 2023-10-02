@@ -55,7 +55,7 @@ contract Weather is Sun {
      * @dev the relative change is applied before the absolute change. 
      * L_n = mL * L_n-1 + bL
      */
-    event BeanToMaxLPRatioChange(
+    event BeanToMaxLpGpPerBDVRatioChange(
         uint256 indexed season,
         uint256 caseId,
         uint80 relChange,
@@ -157,7 +157,7 @@ contract Weather is Sun {
             }
         }
 
-        emit BeanToMaxLPRatioChange(s.season.current, caseId, mL, bL);
+        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, caseId, mL, bL);
     }
 
     /**

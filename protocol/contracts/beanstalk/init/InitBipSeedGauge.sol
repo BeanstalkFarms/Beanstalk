@@ -46,11 +46,6 @@ contract InitBipSeedGauge{
 
 
     // TODO : update these values 
-    uint256 internal constant BEAN_MIGRATED_BDV = 0;
-    uint256 internal constant BEAN_3CRV_MIGRATED_BDV = 0;
-    uint256 internal constant UNRIPE_BEAN_MIGRATED_BDV = 0;
-    uint256 internal constant UNRIPE_LP_MIGRATED_BDV = 0;
-
     uint256 internal constant BEAN_UN_MIGRATED_BDV = 0;
     uint256 internal constant BEAN_3CRV_UN_MIGRATED_BDV = 0;
     uint256 internal constant UNRIPE_BEAN_UN_MIGRATED_BDV = 0;
@@ -59,10 +54,10 @@ contract InitBipSeedGauge{
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
         // update depositedBDV for bean, bean3crv, urBean, and urBeanETH:
-        LibTokenSilo.incrementTotalDepositedBdv(C.BEAN, BEAN_UN_MIGRATED_BDV - BEAN_MIGRATED_BDV);
-        LibTokenSilo.incrementTotalDepositedBdv(C.CURVE_BEAN_METAPOOL, BEAN_UN_MIGRATED_BDV - BEAN_MIGRATED_BDV);
-        LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_BEAN, UNRIPE_BEAN_UN_MIGRATED_BDV - UNRIPE_BEAN_MIGRATED_BDV);
-        LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_LP, UNRIPE_LP_UN_MIGRATED_BDV - UNRIPE_LP_MIGRATED_BDV);
+        LibTokenSilo.incrementTotalDepositedBdv(C.BEAN, BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.BEAN]);
+        LibTokenSilo.incrementTotalDepositedBdv(C.CURVE_BEAN_METAPOOL, BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]);
+        LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_BEAN, UNRIPE_BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_BEAN]);
+        LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_LP, UNRIPE_LP_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]);
 
         uint128 totalBdv;
         // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
