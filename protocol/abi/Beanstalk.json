@@ -6853,10 +6853,36 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getTotalBdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalBdv",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalUsdLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
-        "name": "well",
+        "name": "pool",
         "type": "address"
       }
     ],

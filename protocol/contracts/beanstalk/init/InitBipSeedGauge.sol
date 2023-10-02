@@ -8,6 +8,8 @@ import "contracts/beanstalk/AppStorage.sol";
 import "../../C.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+
 /**
  * @author Brean
  * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct 
@@ -20,10 +22,14 @@ interface IGaugePointFacet {
     ) external pure returns (uint256 newGaugePoints);
 }
 
-contract InitBipSeedGauge{    
+contract InitBipSeedGauge{
+
+    using SafeMath for uint256;
+
     AppStorage internal s;
 
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;    
+    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320; 
+    uint256 private constant PRECISION = 1e6;   
 //                                                              [  mT  ][][       mL         ][       BL         ][    null    ]
     bytes32 internal constant    T_PLUS_3_L_INCR_10 = bytes32(0x05F5E100030005F68E8131ECF800000000000000000000000000000000000000);
     bytes32 internal constant    T_PLUS_1_L_INCR_10 = bytes32(0x05F5E100010005F68E8131ECF800000000000000000000000000000000000000);
@@ -46,16 +52,16 @@ contract InitBipSeedGauge{
 
 
     // TODO : update these values 
-    uint256 internal constant BEAN_UN_MIGRATED_BDV = 0;
-    uint256 internal constant BEAN_3CRV_UN_MIGRATED_BDV = 0;
-    uint256 internal constant UNRIPE_BEAN_UN_MIGRATED_BDV = 0;
-    uint256 internal constant UNRIPE_LP_UN_MIGRATED_BDV = 0;
+    uint256 internal constant BEAN_UN_MIGRATED_BDV = 816_105_148629; // 816k BDV
+    uint256 internal constant BEAN_3CRV_UN_MIGRATED_BDV = 53_419_468565; // 53k BDV
+    uint256 internal constant UNRIPE_BEAN_UN_MIGRATED_BDV = 4_946_644_852785; // 4.9m BDV
+    uint256 internal constant UNRIPE_LP_UN_MIGRATED_BDV = 7_774_709_273192; // 7.7m BDV
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
         // update depositedBDV for bean, bean3crv, urBean, and urBeanETH:
         LibTokenSilo.incrementTotalDepositedBdv(C.BEAN, BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.BEAN]);
-        LibTokenSilo.incrementTotalDepositedBdv(C.CURVE_BEAN_METAPOOL, BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]);
+        LibTokenSilo.incrementTotalDepositedBdv(C.CURVE_BEAN_METAPOOL, BEAN_3CRV_UN_MIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]);
         LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_BEAN, UNRIPE_BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_BEAN]);
         LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_LP, UNRIPE_LP_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]);
 
@@ -146,9 +152,8 @@ contract InitBipSeedGauge{
                      T_PLUS_0_L_INCR_10,   T_MINUS_1_L_INCR_10,   T_MINUS_3_L_INCR_10  //          P > Q
         ];
     }
-
     function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
-        uint256 averageGrownStalkPerBdv = s.s.stalk / totalBdv - 10000;
-        return uint128(averageGrownStalkPerBdv / TARGET_SEASONS_TO_CATCHUP);
+      uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv).sub(10000);
+      return uint128(averageGrownStalkPerBdv.mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP));
     }
 }

@@ -32,6 +32,9 @@ library LibGauge {
     uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 internal constant STALK_BDV_PRECISION = 1e4;
 
+    /**
+     * @notice Emitted when the AverageGrownStalkPerBDVPerSeason Updates.
+     */
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     struct LpGaugePointData {
@@ -118,7 +121,7 @@ library LibGauge {
                 .div(totalLPBdv);
 
             // gets the gauge points of token from GaugePointFacet.
-            uint256 newGaugePoints = getGaugePoints(
+            uint256 newGaugePoints = updateGaugePoints(
                 ss.gpSelector,
                 ss.gaugePoints,
                 getOptimalPercentLPDepositedBDV(LPSiloTokens[i]),
@@ -162,7 +165,7 @@ library LibGauge {
      * @dev function calls the selector of the token's gauge point function.
      * See {GaugePointFacet.defaultGaugePointFunction()}
      */
-    function getGaugePoints(
+    function updateGaugePoints(
         bytes4 gpSelector,
         uint256 gaugePoints,
         uint256 optimalPercentDepositedBDV,
@@ -305,7 +308,7 @@ library LibGauge {
      */
     function getTotalBdv() internal view returns (uint256 totalBdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokens(); 
+        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe(); 
         for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
             totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
         }

@@ -14,6 +14,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -153,7 +154,7 @@ contract SeasonGettersFacet {
      * @dev the total BDV may differ from the instaneous BDV,
      * as BDV is asyncronous. 
      */
-    function getTotalBdv() internal view returns (uint256 totalBdv) {
+    function getTotalBdv() external view returns (uint256 totalBdv) {
         return LibGauge.getTotalBdv();
     }
 
@@ -229,12 +230,23 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice gets the non-bean liquidity for a given well.
+     * @notice gets the non-bean usd liquidity for a given pool.
      */
-    function getUsdLiquidity(address well) external view returns (uint256) {
-        return LibWell.getUsdLiquidity(well);
+    function getUsdLiquidity(address pool) external view returns (uint256) {
+        if(pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
+        return LibWell.getUsdLiquidity(pool);
     }
 
+    /**
+     * @notice gets the non-bean usd total liquidity of bean.
+     */
+    function getTotalUsdLiquidity() external view returns (uint256) {
+        return LibBeanMetaCurve.totalLiquidityUsd().add(LibWell.getUsdLiquidity(C.BEAN_ETH_WELL));
+    }
+
+    /**
+     * @notice returns the current gauge points of a token.
+     */
     function getGaugePoints(address token) external view returns (uint256) {
         return s.ss[token].gaugePoints;
     }

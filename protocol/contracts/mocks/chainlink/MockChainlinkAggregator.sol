@@ -26,6 +26,10 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
         return 1;
     }
 
+    function getLatestRoundId() external view returns (uint80) {
+        return lastRound;
+    }
+
     function getRoundData(
         uint80 _roundId
     ) 

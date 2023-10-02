@@ -181,7 +181,7 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
 
 }
 
-async function bipSeedGauge(mock = true, account = undefined) {
+async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
     if (account == undefined) {
       account = await impersonateBeanstalkOwner();
       await mintEth(account.address);
@@ -200,7 +200,7 @@ async function bipSeedGauge(mock = true, account = undefined) {
       selectorsToRemove: [],
       bip: false,
       object: !mock,
-      verbose: true,
+      verbose: verbose,
       account: account,
       verify: false
     });
