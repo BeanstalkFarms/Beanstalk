@@ -3,12 +3,10 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/SafeCast.sol";
-import "contracts/libraries/LibFertilizer.sol";
-import "contracts/libraries/LibSafeMath128.sol";
-import "contracts/libraries/LibPRBMath.sol";
-import "contracts/C.sol";
-import "./Oracle.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {Oracle, C} from "./Oracle.sol";
 
 /**
  * @title Sun
@@ -18,7 +16,6 @@ import "./Oracle.sol";
 contract Sun is Oracle {
     using SafeCast for uint256;
     using SafeMath for uint256;
-    using LibPRBMath for uint256;
     using LibSafeMath128 for uint128;
 
     /// @dev When Fertilizer is Active, it receives 1/3 of new Bean mints.

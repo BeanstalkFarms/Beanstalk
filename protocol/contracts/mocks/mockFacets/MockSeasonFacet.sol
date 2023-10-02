@@ -15,6 +15,10 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 
 /**
  * @author Publius

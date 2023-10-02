@@ -3,11 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Decimal.sol";
-import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
-import "contracts/libraries/LibEvaluate.sol";
-import "contracts/libraries/LibCases.sol";
-import "./Sun.sol";
+import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import {LibEvaluate, Decimal, DecimalExtended} from "contracts/libraries/LibEvaluate.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibCases} from "contracts/libraries/LibCases.sol";
+import {Sun, SafeMath, C} from "./Sun.sol";
 
 // 
 /**

@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/C.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import "contracts/beanstalk/sun/SeasonFacet/Sun.sol";
 
 /**
  * @author Publius

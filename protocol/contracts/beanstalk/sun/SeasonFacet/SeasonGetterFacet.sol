@@ -3,8 +3,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../AppStorage.sol";
-import "../../../C.sol";
+import {AppStorage, Storage} from "../../AppStorage.sol";
+import {C} from "../../../C.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";

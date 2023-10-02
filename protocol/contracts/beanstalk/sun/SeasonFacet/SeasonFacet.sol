@@ -3,10 +3,11 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./Weather.sol";
-import "contracts/libraries/LibIncentive.sol";
-import "contracts/libraries/Token/LibTransfer.sol";
+import {Weather, SafeMath, C} from "./Weather.sol";
+import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
+import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
 
 
