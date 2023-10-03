@@ -271,34 +271,22 @@ library LibGauge {
     }
 
     /**
-     * @notice get the optimal percent deposited in the silo
-     * among LP.
+     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
+     * @dev anyone can call this function to update. Currently, the function 
+     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
+     * for the average new depositer to catch up to the average grown stalk per BDV.
+     * 
+     * The expectation is that actors will call this function on their own as it benefits them.
+     * Newer depositers will call it if the value increases to catch up to the average faster,
+     * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function getOptimalPercentLPDepositedBDV(
-        address token
-    ) internal pure returns (uint256 optimalPercentDepositedBDV) 
-    {
-        if(token == C.BEAN_ETH_WELL){
-            optimalPercentDepositedBDV = BEAN_ETH_OPTIMAL_PERCENT;
-        } else {
-            optimalPercentDepositedBDV = 0;
-        }
-    }
-
-    /**
-     * @notice returns the ratio between the bean and 
-     * the max LP gauge points per BDV.
-     * @dev s.seedGauge.BeanToMaxLpGpPerBDVRatio is a number between 0 and 100e6,
-     * where f(100e18) = MIN_BEAN_MAX_LPGP_RATIO and f(0) = MAX_BEAN_MAX_LPGP_RATIO.
-     */
-    function getBeanToMaxLpGpPerBDVRatioScaled(
-        uint256 BeanToMaxLpGpPerBDVRatio
-    ) internal pure returns (uint256) {
-        return uint256(100e18)
-            .sub(uint256(BeanToMaxLpGpPerBDVRatio)
-                .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO)
-                .div(ONE_HUNDRED_PERCENT)
+    function updateStalkPerBdvPerSeason() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
+            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
+        s.seedGauge.lastSeedGaugeUpdate = s.season.current;
+        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 
     /**
@@ -325,22 +313,34 @@ library LibGauge {
     }
 
     /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function 
-     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     * 
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
+     * @notice returns the ratio between the bean and 
+     * the max LP gauge points per BDV.
+     * @dev s.seedGauge.BeanToMaxLpGpPerBDVRatio is a number between 0 and 100e6,
+     * where f(100e18) = MIN_BEAN_MAX_LPGP_RATIO and f(0) = MAX_BEAN_MAX_LPGP_RATIO.
      */
-    function updateStalkPerBdvPerSeason() internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
-            getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
+    function getBeanToMaxLpGpPerBDVRatioScaled(
+        uint256 BeanToMaxLpGpPerBDVRatio
+    ) internal pure returns (uint256) {
+        return uint256(100e18)
+            .sub(uint256(BeanToMaxLpGpPerBDVRatio)
+                .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO)
+                .div(ONE_HUNDRED_PERCENT)
         );
-        s.seedGauge.lastSeedGaugeUpdate = s.season.current;
-        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+    }
+
+    /**
+     * @notice get the optimal percent deposited in the silo
+     * among LP.
+     */
+    function getOptimalPercentLPDepositedBDV(
+        address token
+    ) internal pure returns (uint256 optimalPercentDepositedBDV) 
+    {
+        if(token == C.BEAN_ETH_WELL){
+            optimalPercentDepositedBDV = BEAN_ETH_OPTIMAL_PERCENT;
+        } else {
+            optimalPercentDepositedBDV = 0;
+        }
     }
 
 }

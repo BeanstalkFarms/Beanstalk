@@ -68,19 +68,5 @@ library LibCases {
         cd.mL = uint80(bytes10(_caseData << 40));
         cd.bL = int80(bytes10(_caseData << 120));
     }
-
-    /**
-     * @notice changes the data associated with a case.
-     * @param caseId Case to change.
-     * @param mT new relative temperature change.
-     * @param bT new absolute temperature change.
-     * @param mL new relative grown stalk to liquidity change.
-     * @param bL new absolute grown stalk to liquidity change.
-     */
-    function changeCaseData(uint256 caseId, uint32 mT, int16 bT, uint80 mL, int80 bL) internal returns (bytes32 caseData){
-        require(caseId <= 144, "caseId must be less than or equal to 144");
-        bytes memory data = abi.encodePacked(mT, bT, mL, bL);
-        assembly { caseData := mload(add(data, 32)) }
-        LibAppStorage.diamondStorage().casesV2[caseId] = caseData;
-    }
+    
 }
