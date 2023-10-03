@@ -103,6 +103,22 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     }
     return instances
   }
+
+  // A list of public libraries that need to be deployed separately.
+  const libraryNames = [
+  //   'LibGauge'
+  ]
+
+  // A mapping of facet to public library names that will be linked to it.
+  const facetLibraries = {
+  //   'SeaonFacet': [
+  //     'LibGauge'
+  //   ],
+  //   'MockSeasonFacet': [
+  //     'LibGauge'
+  //   ],
+  }
+
   let [
     bdvFacet,
     curveFacet,
@@ -160,6 +176,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'GaugePointFacet',
       'GaugeFacet'
     ],
+    libraryNames,
+    facetLibraries
   ) : await deployFacets(
     verbose,
     [ 
@@ -190,6 +208,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'GaugePointFacet',
       'GaugeFacet'
     ],
+    libraryNames,
+    facetLibraries
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
