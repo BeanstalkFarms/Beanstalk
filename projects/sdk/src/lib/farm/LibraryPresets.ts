@@ -38,13 +38,10 @@ export class LibraryPresets {
   public readonly dai2weth: ActionBuilder;
   public readonly usdc2weth: ActionBuilder;
 
+  public readonly usdt23crv: ActionBuilder;
   public readonly usdc2beaneth;
   public readonly usdt2beaneth;
   public readonly dai2beaneth;
-  usdt23crv: (
-    fromMode?: FarmFromMode,
-    toMode?: FarmToMode
-  ) => import("/Users/alex/0xalecks/Beanstalk/Beanstalk/projects/sdk/src/lib/farm/actions/AddLiquidity").AddLiquidity;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
