@@ -143,7 +143,7 @@ const Deposits: FC<
                   {displayFullBN(mowableStalk, 2, 2)}
                 </StatHorizontal>
                 <StatHorizontal label="Mowed Grown Stalk">
-                  {displayFullBN(params.row.stalk.total.minus(mowableStalk), 2, 2)}
+                  {displayFullBN(params.row.stalk.grown.minus(mowableStalk), 2, 2)}
                 </StatHorizontal>
               </Stack>
             }
