@@ -1,0 +1,17 @@
+[chains]
+ingestor = "http://localhost:8545"
+[chains.mainnet]
+shard = "primary"
+provider = [
+    {label = "mainnet", url = "http://locahost:8545", features = ["archive", "traces"]}
+]
+
+[store]
+[store.primary]
+connection = "postgresql://${postgres_user}:${postgres_pass}@${postgres_host}/${postgres_db}"
+pool_size = 10
+
+[deployment]
+[[deployment.rule]]
+shard = "primary"
+indexers = [ "docker-graph-node-1" ]
