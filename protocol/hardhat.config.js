@@ -12,6 +12,11 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("hardhat-contract-sizer");
 
+// BIP 38 migration ----
+const { bipMigrateUnripeBean3CrvToBeanEth } = require("./scripts/bips.js");
+const { finishBeanEthMigration } = require("./scripts/beanEthMigration.js");
+// ----
+
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
@@ -201,6 +206,11 @@ task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
 
+task("migrate-bip38", async function () {
+  await bipMigrateUnripeBean3CrvToBeanEth();
+  await finishBeanEthMigration();
+});
+
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
 // Add a subtask that sets the action for the TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS task
@@ -255,7 +265,7 @@ module.exports = {
       url: process.env.GOERLI_RPC || "",
       accounts: [process.env.GOERLI_PRIVATE_KEY || ""],
       timeout: 100000
-    },
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_KEY
