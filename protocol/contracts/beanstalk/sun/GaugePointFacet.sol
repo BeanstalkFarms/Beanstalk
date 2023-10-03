@@ -17,6 +17,8 @@ contract GaugePointFacet {
     using SafeMath for uint256;
 
     uint256 private constant ONE_PERCENT = 1e18;
+    uint256 private constant 99_PERCENT = 99e18;
+    uint256 private constant 100_PERCENT = 100e18;
     
     /**
      * @notice DefaultGaugePointFunction 
@@ -29,9 +31,10 @@ contract GaugePointFacet {
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints) {
         if(percentOfDepositedBdv > optimalPercentDepositedBdv){
-            if(currentGaugePoints < ONE_PERCENT) return 0;
+            if(currentGaugePoints =< ONE_PERCENT) return 0;
             newGaugePoints = currentGaugePoints.sub(ONE_PERCENT);
         } else {
+             if(currentGaugePoints >= 99_PERCENT) return 100_PERCENT;
             newGaugePoints = currentGaugePoints.add(ONE_PERCENT);
         }
     }
