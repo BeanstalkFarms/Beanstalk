@@ -168,7 +168,7 @@ contract Weather is Sun {
      */
     function handleRain(uint256 caseId) internal {
         // cases 3-8 represent the case where the pod rate is less than 5% and P > 1.
-        if (caseId.mod(32) < 3 || caseId.mod(32) > 8) {
+        if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
             if (s.season.raining) {
                 s.season.raining = false;
             }
