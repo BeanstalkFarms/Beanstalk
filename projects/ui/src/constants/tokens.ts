@@ -336,7 +336,7 @@ export const UNRIPE_BEAN_WETH = {
     6,
     {
       name: 'Unripe BEAN:ETH LP',
-      symbol: 'urBEANETH',
+      symbol: 'urBEANWETH',
       logo: unripeBeanWethLogoUrl,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
