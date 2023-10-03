@@ -140,10 +140,10 @@ export class Tokens {
       chainId,
       addresses.BEANWETH_WELL.get(chainId),
       18,
-      "BEANWETH",
+      "BEANETH",
       {
-        name: "BEAN:WETH Well LP Token", // see .name()
-        displayName: "BEAN:WETH LP",
+        name: "BEAN:ETH Well LP Token", // see .name()
+        displayName: "BEAN:ETH LP",
         isLP: true,
         color: "#DFB385"
       },
@@ -176,10 +176,10 @@ export class Tokens {
       chainId,
       addresses.UNRIPE_BEAN_WETH.get(chainId),
       6,
-      "urBEANWETH",
+      "urBEANETH",
       {
-        name: "Unripe BEANWETH", // see `.name()`
-        displayName: "Unripe BEAN:WETH LP",
+        name: "Unripe BEANETH", // see `.name()`
+        displayName: "Unripe BEAN:ETH LP",
         displayDecimals: 2
       },
       providerOrSigner
