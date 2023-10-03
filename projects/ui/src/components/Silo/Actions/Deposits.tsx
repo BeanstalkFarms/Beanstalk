@@ -31,10 +31,9 @@ const Deposits: FC<
   const account = useWagmiAccount();
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
 
-  const seeds = transform(newToken.rewards?.seeds.toBlockchain() || "0", 'ethers', sdk.tokens.SEEDS);
-  const stemTip = useStemTipForToken(newToken);
-  const lastStem = stemTip ? stemTip.sub(siloBalance?.mowStatus.lastStem || Number(0)) : Number(0);
-  const mowableStalk = transform(((stemTip?.sub(lastStem) || BigNumber.from(0)).mul(seeds)), 'bnjs', sdk.tokens.STALK);
+  const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
+  const lastStem = siloBalance?.mowStatus.lastStem || BigNumber.from(0);
+  const deltaStem = stemTip?.sub(lastStem) || BigNumber.from(0);
 
   const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
@@ -139,25 +138,18 @@ const Deposits: FC<
             placement="bottom"
             title={
               <Stack gap={0.5}>
-                <StatHorizontal label="Mowable Grown Stalk">
-                  {displayFullBN(mowableStalk, 2, 2)}
-                </StatHorizontal>
                 <StatHorizontal label="Mowed Grown Stalk">
-                  {displayFullBN(params.row.stalk.grown.minus(mowableStalk), 2, 2)}
+                  {displayBN(params.row.stalk.grown.minus(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs')))}
                 </StatHorizontal>
               </Stack>
             }
           >
             <span>
               <Typography display={{ xs: 'none', md: 'block' }}>
-                {displayFullBN(
-                  params.row.stalk.grown,
-                  STALK.displayDecimals,
-                  STALK.displayDecimals
-                )}
+                {displayBN(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs'))}
               </Typography>
               <Typography display={{ xs: 'block', md: 'none' }}>
-                {displayBN(params.row.stalk.grown)}
+                {displayBN(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs'))}
               </Typography>
             </span>
           </Tooltip>
@@ -166,7 +158,7 @@ const Deposits: FC<
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [mowableStalk, token]
+    [deltaStem, sdk.tokens.BEAN, sdk.tokens.STALK, token]
   );
 
   const amount = siloBalance?.deposited.amount;
