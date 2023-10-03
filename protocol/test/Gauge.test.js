@@ -31,7 +31,7 @@ describe('Gauge', function () {
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGetterFacet', this.diamond.address)
+    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
@@ -100,7 +100,7 @@ describe('Gauge', function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 108);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('51'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3,     // season
             108,    // caseId
@@ -114,7 +114,7 @@ describe('Gauge', function () {
       it("decreases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 75);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('49'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             75, // caseId
@@ -128,7 +128,7 @@ describe('Gauge', function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('55'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             36, // caseId
@@ -142,7 +142,7 @@ describe('Gauge', function () {
       it("iincreases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
         expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('55'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             0, // caseId
@@ -156,7 +156,7 @@ describe('Gauge', function () {
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('0.5'));
       this.result = await this.season.seedGaugeSunSunrise('0', 111);
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('0');
-      await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
         .withArgs(
           3,     // season
           111,    // caseId
@@ -169,7 +169,7 @@ describe('Gauge', function () {
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('99.9'));
       this.result = await this.season.seedGaugeSunSunrise('0', 0);
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('100'));
-      await expect(this.result).to.emit(this.season, 'BeanToMaxLPRatioChange')
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
         .withArgs(
           3,     // season
           0,    // caseId
@@ -408,7 +408,7 @@ describe('Gauge', function () {
       await this.silo.mow(userAddress, this.bean.address)
       await this.silo.mow(userAddress, BEAN_ETH_WELL)
       await this.silo.mow(userAddress, BEAN_3_CURVE)
-      await this.season.mocktepGauge();
+      await this.season.mockStepGauge();
 
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(84722);
     });
