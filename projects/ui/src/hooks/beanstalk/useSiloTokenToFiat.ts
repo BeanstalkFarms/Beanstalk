@@ -80,8 +80,8 @@ const useSiloTokenToFiat = () => {
         // console.log(`recapPaidPercent`, recapPaidPercent.toString()); // 0.006132
         // console.log(`amountLP`, _amount.toString()); // 370168.862647
         // console.log(`choppedLP`, choppedLP.toString()); // 6.39190475675572378624622472
-        const lpUsd = beanPools[beanWeth.address]?.lpUsd;
-        const lpBdv = beanPools[beanWeth.address]?.lpBdv;
+        const lpUsd = beanPools[beanWeth.address]?.lpUsd || ZERO_BN;
+        const lpBdv = beanPools[beanWeth.address]?.lpBdv || ZERO_BN;
 
         return _denomination === 'bdv'
           ? lpBdv?.multipliedBy(choppedLP)
