@@ -173,21 +173,21 @@ library LibGauge {
     ) internal view returns (uint256 newGaugePoints) 
     {
         bytes memory callData = abi.encodeWithSelector(
-                gpSelector,
-                gaugePoints,
-                optimalPercentDepositedBDV,
-                percentOfDepositedBdv
-            );
+            gpSelector,
+            gaugePoints,
+            optimalPercentDepositedBDV,
+            percentOfDepositedBdv
+        );
         (bool success, bytes memory data) = address(this).staticcall(callData);
-            if (!success) {
-                if (data.length == 0) revert();
-                assembly {
-                    revert(add(32, data), mload(data))
-                }
-            }
+        if (!success) {
+            if (data.length == 0) revert();
             assembly {
-                newGaugePoints := mload(add(data, add(0x20, 0)))
+                revert(add(32, data), mload(data))
             }
+        }
+        assembly {
+            newGaugePoints := mload(add(data, add(0x20, 0)))
+        }
     }
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
