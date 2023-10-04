@@ -23,10 +23,12 @@ library LibGauge {
     uint256 internal constant BDV_PRECISION = 1e6;
     uint256 internal constant GP_PRECISION = 1e18;
 
+    // max and min are the ranges that the beanToMaxLpGpPerBDVRatioScaled can output.
     uint256 internal constant MAX_BEAN_MAX_LPGP_RATIO = 100e18;
     uint256 internal constant MIN_BEAN_MAX_LPGP_RATIO = 25e18;
+
+    // the maximum value of beanToMaxLpGpPerBDVRatio.
     uint256 internal constant ONE_HUNDRED_PERCENT = 100e18;
-    uint256 internal constant BEAN_ETH_OPTIMAL_PERCENT = 100e6;
 
     // 24 * 30 * 6
     uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
@@ -316,7 +318,7 @@ library LibGauge {
     /**
      * @notice returns the ratio between the bean and 
      * the max LP gauge points per BDV.
-     * @dev s.seedGauge.beanToMaxLpGpPerBDVRatio is a number between 0 and 100e6,
+     * @dev s.seedGauge.beanToMaxLpGpPerBDVRatio is a number between 0 and 100e18,
      * where f(100e18) = MIN_BEAN_MAX_LPGP_RATIO and f(0) = MAX_BEAN_MAX_LPGP_RATIO.
      */
     function getBeanToMaxLpGpPerBDVRatioScaled(
