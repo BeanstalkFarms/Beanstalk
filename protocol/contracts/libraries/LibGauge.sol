@@ -260,17 +260,17 @@ library LibGauge {
     /**
      * @notice issues the grown stalk per BDV for the given token.
      * @param token the token to issue the grown stalk for.
-     * @param GrownStalkPerGp the number of GrownStalk Per Gauge Point.
-     * @param GpPerBDV the amount of GaugePoints per BDV the token has.
+     * @param grownStalkPerGp the number of GrownStalk Per Gauge Point.
+     * @param gpPerBDV the amount of GaugePoints per BDV the token has.
      */
     function issueGrownStalkPerBDV(
         address token, 
-        uint256 GrownStalkPerGp,
-        uint256 GpPerBDV
+        uint256 grownStalkPerGp,
+        uint256 gpPerBDV
     ) internal {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
-            uint32(GrownStalkPerGp.mul(GpPerBDV).div(GP_PRECISION))
+            uint32(grownStalkPerGp.mul(gpPerBDV).div(GP_PRECISION))
         );
     }
 
