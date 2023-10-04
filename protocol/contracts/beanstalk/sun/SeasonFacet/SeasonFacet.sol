@@ -8,9 +8,7 @@ import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
-
-
-
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
  * @title IGaugeFacet
@@ -69,7 +67,7 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
-        IGaugeFacet(address(this)).stepGauge();
+        LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
@@ -124,4 +122,18 @@ contract SeasonFacet is Weather {
         LibEthUsdOracle.resetUsdEthPrice();
         return incentiveAmount;
     } 
+
+     /**
+     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
+     * @dev anyone can call this function to update. Currently, the function 
+     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
+     * for the average new depositer to catch up to the average grown stalk per BDV.
+     * 
+     * The expectation is that actors will call this function on their own as it benefits them.
+     * Newer depositers will call it if the value increases to catch up to the average faster,
+     * Older depositers will call it if the value decreases to slow down their rate of dilution.
+     */
+    function updateStalkPerBdvPerSeason() external {
+        LibGauge.updateStalkPerBdvPerSeason();
+    }
 }

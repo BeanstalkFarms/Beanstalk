@@ -89,7 +89,7 @@ contract InitBipSeedGauge{
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
         }
         // initalize seed gauge. 
-        s.seedGauge.BeanToMaxLpGpPerBDVRatio = 50e18; // 50% // TODO: how to set this?
+        s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
 
         // initalize s.usdEthPrice 

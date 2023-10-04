@@ -36,6 +36,8 @@ library LibWhitelist {
      * ```
      * 
      * @param gaugePoints The gauge points of the token.
+     * @param optimalPercentDepositedBdv The target percentage 
+     * of the total LP deposited BDV for this token.
      */
     event WhitelistToken(
         address indexed token,
@@ -43,13 +45,15 @@ library LibWhitelist {
         uint32 stalkEarnedPerSeason,
         uint256 stalkIssuedPerBdv,
         bytes4 gpSelector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     );
 
-    event WhitelistTokenToGauge(
+    event updateGaugeSettings(
         address indexed token, 
-        bytes4 selector, 
-        uint128 gaugePoints
+        bytes4 selector,
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     );
 
 
@@ -81,7 +85,8 @@ library LibWhitelist {
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -110,14 +115,14 @@ library LibWhitelist {
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
         s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
+        s.ss[token].milestoneSeason = uint32(s.season.current);
+        s.ss[token].encodeType = encodeType;
         s.ss[token].gpSelector = gaugePointSelector;
         s.ss[token].gaugePoints = gaugePoints;
+        s.ss[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
-        s.ss[token].encodeType = encodeType;
-
-        s.ss[token].milestoneSeason = uint32(s.season.current);
 
         emit WhitelistToken(
             token,
@@ -125,7 +130,8 @@ library LibWhitelist {
             stalkEarnedPerSeason,
             stalkIssuedPerBdv,
             gaugePointSelector,
-            gaugePoints
+            gaugePoints,
+            optimalPercentDepositedBdv
         );
     }
 
@@ -136,7 +142,8 @@ library LibWhitelist {
     function updateGaugeForToken(
         address token,
         bytes4 selector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         //verify you passed in a callable selector
@@ -154,8 +161,9 @@ library LibWhitelist {
 
         ss.gpSelector = selector;
         ss.gaugePoints = gaugePoints;
+        ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
-        emit WhitelistTokenToGauge(token, selector, gaugePoints);
+        emit updateGaugeSettings(token, selector, gaugePoints, optimalPercentDepositedBdv);
     }
     
     /**

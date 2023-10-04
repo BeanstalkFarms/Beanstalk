@@ -50,6 +50,7 @@ contract InitBipBasinIntegration {
             BEAN_ETH_SEEDS_PER_BDV,
             0x01,
             0,
+            0,
             0
         );
 

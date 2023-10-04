@@ -37,6 +37,9 @@ contract WhitelistFacet {
      * ```
      * 
      * @param gaugePoints The gauge points of the token.
+     * @param optimalPercentDepositedBdv The target percentage 
+     * of the total LP deposited BDV for this token.
+     * 
      */
     event WhitelistToken(
         address indexed token,
@@ -44,7 +47,8 @@ contract WhitelistFacet {
         uint32 stalkEarnedPerSeason,
         uint256 stalkIssuedPerBdv,
         bytes4 gpSelector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     );
 
     /**
@@ -82,6 +86,8 @@ contract WhitelistFacet {
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
      * @param gaugePoints The inital gauge points allocated to the token.
+     * @param optimalPercentDepositedBdv The target percentage 
+     * of the total LP deposited BDV for this token. Only used if the token is an LP token.
      * @dev 
      * Can only be called by Beanstalk or Beanstalk owner.
      * Assumes an `encodeType` of 0.
@@ -92,7 +98,8 @@ contract WhitelistFacet {
         uint16 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes4 gaugePointSelector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -102,7 +109,8 @@ contract WhitelistFacet {
             stalkEarnedPerSeason,
             0x00,
             gaugePointSelector,
-            gaugePoints
+            gaugePoints,
+            optimalPercentDepositedBdv
         );
     }
 
@@ -113,6 +121,11 @@ contract WhitelistFacet {
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
+     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
+     * @param gaugePoints The inital gauge points allocated to the token.
+     * @param optimalPercentDepositedBdv The target percentage 
+     * of the total LP deposited BDV for this token. Only used if the token is an LP token.
+     * 
      * @dev Can only be called by Beanstalk or Beanstalk owner.
      */
     function whitelistTokenWithEncodeType(
@@ -122,7 +135,8 @@ contract WhitelistFacet {
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
@@ -132,7 +146,8 @@ contract WhitelistFacet {
             stalkEarnedPerSeason,
             encodeType,
             gaugePointSelector,
-            gaugePoints
+            gaugePoints,
+            optimalPercentDepositedBdv
         );
     }
 
@@ -153,16 +168,21 @@ contract WhitelistFacet {
         );
     }
 
+    /**
+     * @notice updates the Gauge point selctor, the gauge points themselves, or the optimal 
+     */
     function updateGaugeForToken(
         address token, 
         bytes4 gaugePointSelector,
-        uint128 gaugePoints
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugeForToken(
             token,
             gaugePointSelector,
-            gaugePoints
+            gaugePoints,
+            optimalPercentDepositedBdv
         );
     }
 }

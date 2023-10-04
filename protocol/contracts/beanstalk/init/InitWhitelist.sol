@@ -72,36 +72,4 @@ contract InitWhitelist {
             BEAN_3CRV_SEEDS * 1e6
         );
     }
-
-    /**
-     * @notice Add an ERC-20 token to the Silo Whitelist.
-     * @dev removes require statements for testing.
-     */
-    function mockWhitelistToken(
-        address token,
-        bytes4 selector,
-        uint16 stalkIssuedPerBdv,
-        uint24 stalkEarnedPerSeason,
-        bytes1 encodeType,
-        bytes4 gpSelector,
-        uint128 gaugePoints
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.ss[token].selector = selector;
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
-
-        s.ss[token].encodeType = encodeType;
-
-        s.ss[token].milestoneSeason = s.season.current;
-
-        emit LibWhitelist.WhitelistToken(
-            token, 
-            selector,
-            stalkEarnedPerSeason, 
-            stalkIssuedPerBdv,
-            gpSelector,
-            gaugePoints
-        );
-    }
 }

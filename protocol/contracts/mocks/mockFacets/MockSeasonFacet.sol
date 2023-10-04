@@ -404,7 +404,7 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function setBeanToMaxLpGPperBDVRatio(uint128 percent) external {
-        s.seedGauge.BeanToMaxLpGpPerBDVRatio = percent;
+        s.seedGauge.beanToMaxLpGpPerBDVRatio = percent;
     }
     
     function setUsdEthPrice(uint256 price) external {

@@ -81,8 +81,8 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     // update Gauge
-    await updateGaugeForToken(BEAN_ETH_WELL, to18('95'))
-    await updateGaugeForToken(BEAN_3_CURVE, to18('5'))
+    await updateGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
+    await updateGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
   })
 
   beforeEach(async function () {
@@ -375,14 +375,14 @@ describe('Gauge', function () {
       await this.silo.mow(userAddress, this.bean.address)
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0);
       expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
-      await this.seasonGetter.updateStalkPerBdvPerSeason();
+      await this.season.updateStalkPerBdvPerSeason();
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
     })
 
     it('decreases after a new deposit', async function() {
       await this.season.teleportSunrise(4322)
       await this.silo.mow(userAddress, this.bean.address)
-      await this.seasonGetter.updateStalkPerBdvPerSeason();
+      await this.season.updateStalkPerBdvPerSeason();
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
       this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
       expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'));

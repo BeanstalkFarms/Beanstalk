@@ -386,6 +386,8 @@ contract Storage {
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
+     * @param optimalPercentDepositedBdv The target percentage 
+     * of the total LP deposited BDV for this token.
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
      */
     struct SiloSettings {
@@ -397,8 +399,8 @@ contract Storage {
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
         uint128 gaugePoints; //   ───────┐ 16  
-        bytes4 gpSelector; //   ─────────┘ 4  (20)
-        // 12 bytes are left here.
+        bytes4 gpSelector; //            │ 4   (20)
+        uint96 optimalPercentDepositedBdv; // ───┘ 12  (32)
     }
 
     /**
@@ -428,7 +430,7 @@ contract Storage {
      * @notice System level variables used in the seed Gauge System.
      * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV 
      * that beanstalk issues each season.
-     * @param BeanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
+     * @param beanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
      * issued to the largest LP share and Bean. 6 decimal precision.
      * @param lastSeedGaugeUpdate the last season in which the gauge points were updated.
      * @dev a beanTomaxLpGpPerBDVRatio of 100e6 means LP should be incentivized the most,
@@ -436,7 +438,7 @@ contract Storage {
      */
     struct SeedGauge {
         uint128 averageGrownStalkPerBdvPerSeason;
-        uint128 BeanToMaxLpGpPerBDVRatio;
+        uint128 beanToMaxLpGpPerBDVRatio;
         uint32 lastSeedGaugeUpdate;
     }
 }

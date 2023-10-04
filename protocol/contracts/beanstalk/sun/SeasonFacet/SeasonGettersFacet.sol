@@ -26,7 +26,6 @@ contract SeasonGettersFacet {
     using SignedSafeMath for int256;
 
     AppStorage internal s;
-    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     //////////////////// SEASON GETTERS ////////////////////
 
@@ -136,20 +135,6 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function 
-     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     * 
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
-     */
-    function updateStalkPerBdvPerSeason() external {
-        LibGauge.updateStalkPerBdvPerSeason();
-    }
-
-    /**
      * @notice returns the total BDV in beanstalk.
      * @dev the total BDV may differ from the instaneous BDV,
      * as BDV is asyncronous. 
@@ -189,7 +174,7 @@ contract SeasonGettersFacet {
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGPperBDVRatio() external view returns (uint256) {
-        return s.seedGauge.BeanToMaxLpGpPerBDVRatio;
+        return s.seedGauge.beanToMaxLpGpPerBDVRatio;
     }
 
     /**
@@ -197,7 +182,7 @@ contract SeasonGettersFacet {
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
-        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
+        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.beanToMaxLpGpPerBDVRatio);
     }
     
 
@@ -233,7 +218,7 @@ contract SeasonGettersFacet {
      * @notice gets the non-bean usd liquidity for a given pool.
      */
     function getUsdLiquidity(address pool) external view returns (uint256) {
-        if(pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
+        if (pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
         return LibWell.getUsdLiquidity(pool);
     }
 

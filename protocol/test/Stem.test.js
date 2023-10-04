@@ -49,6 +49,17 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         diamondAddress: BEANSTALK,
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
         initFacetName: 'InitBipNewSilo',
+        libraryNames: [
+          'LibGauge'
+        ],
+        facetLibraries: {
+          'SeasonFacet': [
+            'LibGauge'
+          ],
+          'MockSeasonFacet': [
+            'LibGauge'
+          ],
+        },
         bip: false,
         object: false,
         verbose: false,
