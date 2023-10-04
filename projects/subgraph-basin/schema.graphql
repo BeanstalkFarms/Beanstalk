@@ -131,6 +131,12 @@ type Well @entity {
   " Total number of trades (swaps) "
   cumulativeSwapCount: Int!
 
+  " Current rolling 24 volume in USD "
+  rollingDailyVolumeUSD: BigDecimal!
+
+  " Current rolling weekly volume in USD "
+  rollingWeeklyVolumeUSD: BigDecimal!
+
   " Day ID of the most recent daily snapshot "
   lastSnapshotDayID: Int!
 
