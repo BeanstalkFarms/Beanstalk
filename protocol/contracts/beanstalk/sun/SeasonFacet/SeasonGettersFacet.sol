@@ -26,7 +26,6 @@ contract SeasonGettersFacet {
     using SignedSafeMath for int256;
 
     AppStorage internal s;
-    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     //////////////////// SEASON GETTERS ////////////////////
 
@@ -133,20 +132,6 @@ contract SeasonGettersFacet {
      */
     function getAverageGrownStalkPerBdv() public view returns (uint256) {
         return LibGauge.getAverageGrownStalkPerBdv();
-    }
-
-    /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function 
-     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     * 
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
-     */
-    function updateStalkPerBdvPerSeason() external {
-        LibGauge.updateStalkPerBdvPerSeason();
     }
 
     /**
