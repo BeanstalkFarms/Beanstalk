@@ -106,7 +106,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge'
+    'LibGauge', 'LibConvert'
   ]
 
   // A mapping of facet to public library names that will be linked to it.
@@ -116,6 +116,12 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     ],
     'MockSeasonFacet': [
       'LibGauge'
+    ],
+    'ConvertFacet': [
+      'LibConvert'
+    ],
+    'MockConvertFacet': [
+      'LibConvert'
     ]
   }
 
@@ -126,7 +132,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     approvalFacet,
     convertFacet,
     convertGettersFacet,
-    convertDataFacet,
     enrootFacet,
     farmFacet,
     fieldFacet,
@@ -154,7 +159,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'ApprovalFacet',
       'MockConvertFacet',
       'ConvertGettersFacet',
-      'ConvertDataFacet',
       'EnrootFacet',
       'FarmFacet',
       'MockFieldFacet',
@@ -185,7 +189,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'ApprovalFacet',
       'ConvertFacet',
       'ConvertGettersFacet',
-      'ConvertDataFacet',
       'EnrootFacet',
       'FarmFacet',
       'FieldFacet',
@@ -238,7 +241,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['ApprovalFacet', approvalFacet],
       ['ConvertFacet', convertFacet],
       ['ConvertGettersFacet', convertGettersFacet],
-      ['ConvertDataFacet', convertDataFacet],
       ['EnrootFacet', enrootFacet],
       ['FarmFacet', farmFacet],
       ['FieldFacet', fieldFacet],
@@ -288,7 +290,6 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     bdvFacet,
     convertFacet,
     convertGettersFacet,
-    convertDataFacet,
     enrootFacet,
     migrationFacet,
     approvalFacet,

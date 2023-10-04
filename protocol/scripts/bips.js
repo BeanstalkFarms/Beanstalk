@@ -192,13 +192,12 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       facetNames: [
         "SeasonFacet", // Add Seed Gauge system
         "SeasonGettersFacet", // season getters
-        "ConvertDataFacet", // convert data decoding
         "GaugePointFacet" // gauge point function caller
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
       libraryNames: [
-        'LibGauge'
+        'LibGauge', 'LibConvert'
       ],
       facetLibraries: {
         'SeasonFacet': [
@@ -207,6 +206,12 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         'MockSeasonFacet': [
           'LibGauge'
         ],
+        'ConvertFacet': [
+          'LibConvert'
+        ],
+        'MockConvertFacet': [
+          'LibConvert'
+        ]
       },
       bip: false,
       object: !mock,

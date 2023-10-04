@@ -28,7 +28,7 @@ library LibConvert {
      * @param convertData Contains convert input parameters for a specified convert
      */
     function convert(bytes calldata convertData)
-        internal
+        external
         returns (
             address tokenOut,
             address tokenIn,

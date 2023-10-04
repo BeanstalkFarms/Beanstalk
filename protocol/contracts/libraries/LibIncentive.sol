@@ -59,6 +59,7 @@ library LibIncentive {
      */
     function determineReward(uint256 initialGasLeft, uint256 blocksLate)
         internal
+        view
         returns (uint256)
     {
 
