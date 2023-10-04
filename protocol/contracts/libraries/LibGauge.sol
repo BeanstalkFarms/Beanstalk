@@ -108,9 +108,6 @@ library LibGauge {
             totalLPBdv
         );
 
-        
-
-        
         // calculate and update the gauge points for each LP.
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
@@ -137,7 +134,7 @@ library LibGauge {
 
             // gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
-            uint256 gpPerBDV = uint256(newGaugePoints).mul(BDV_PRECISION).div(depositedBdv);
+            uint256 gpPerBDV = newGaugePoints.mul(BDV_PRECISION).div(depositedBdv);
             // gpPerBDV has 6 decimal precision (arbitrary)
             if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
             _lpGpData.gpPerBDV = gpPerBDV;
@@ -145,8 +142,8 @@ library LibGauge {
             // store gauge points to normalize
             ss.gaugePoints = uint128(newGaugePoints);
         }
-
-        // normalize gauge points to 100e18
+        
+        // normalize gauge points to 100e18.
         // gaugePoints is scaled up to uint256 to be normalized,
         // then downcasted, to prevent overflow during scaling.
         // final number cannot over flow as uint128.max > 100e18
