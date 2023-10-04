@@ -16,9 +16,9 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 contract GaugePointFacet {
     using SafeMath for uint256;
 
-    uint256 private constant ONE_PERCENT = 1e18;
-    uint256 private constant NINE_NINE_PERCENT = 99e18;
-    uint256 private constant ONE_HUNDRED_PERCENT = 100e18;
+    uint256 private constant ONE_POINT = 1e18;
+    uint256 private constant NINE_NINE_POINTS = 99e18;
+    uint256 private constant ONE_HUNDRED_POINTS = 100e18;
     
     /**
      * @notice DefaultGaugePointFunction 
@@ -31,10 +31,10 @@ contract GaugePointFacet {
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints) {
         if(percentOfDepositedBdv > optimalPercentDepositedBdv){
-            if(currentGaugePoints <= ONE_PERCENT) return 0;
-            newGaugePoints = currentGaugePoints.sub(ONE_PERCENT);
+            if(currentGaugePoints <= ONE_POINT) return 0;
+            newGaugePoints = currentGaugePoints.sub(ONE_POINT);
         } else {
-             if(currentGaugePoints >= NINE_NINE_PERCENT) return ONE_HUNDRED_PERCENT;
+             if(currentGaugePoints >= NINE_NINE_POINTS) return ONE_HUNDRED_POINTS;
             newGaugePoints = currentGaugePoints.add(ONE_PERCENT);
         }
     }
