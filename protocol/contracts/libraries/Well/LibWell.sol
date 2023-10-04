@@ -14,27 +14,22 @@ import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
 import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
-
 /**
  * @title Well Library
  * Contains helper functions for common Well related functionality.
  **/
 library LibWell {
-
     using SafeMath for uint256;
 
     uint256 private constant PRECISION = 1e30;
-
 
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
      */
-    function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
-        uint[] memory ratios,
-        uint beanIndex,
-        bool success
-    ) {
+    function getRatiosAndBeanIndex(
+        IERC20[] memory tokens
+    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
@@ -51,7 +46,7 @@ library LibWell {
         }
         require(beanIndex != type(uint256).max, "Bean not in Well.");
     }
-    
+
     /**
      * @dev Returns the index of Bean in a list of tokens.
      */
@@ -78,8 +73,8 @@ library LibWell {
      */
     function getTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
         IERC20[] memory tokens = IWell(well).tokens();
-        for(uint256 i = 0; i < tokens.length; i++){
-            if(address(tokens[i]) != C.BEAN){
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (address(tokens[i]) != C.BEAN) {
                 return (address(tokens[i]), i);
             }
         }
@@ -89,9 +84,7 @@ library LibWell {
      * @dev Returns whether an address is a whitelisted Well by checking
      * if the BDV function selector is the `wellBdv` function.
      */
-    function isWell(
-        address well
-    ) internal view returns (bool _isWell) {
+    function isWell(address well) internal view returns (bool _isWell) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.ss[well].selector == 0xc84c7727;
     }
@@ -99,32 +92,31 @@ library LibWell {
     /**
      * @notice gets the liquidity of a well in USD
      * precision is in the decimals of the non_bean asset in the well.
-     * assumes a CP2 well function. 
-     * 
+     * assumes a CP2 well function.
+     *
      * @dev the function gets the MEV-resistant instanteous reserves,
      * then calculates the liquidity in USD.
      */
-    function getUsdLiquidity(
-        address well
-    ) internal view returns (uint256 usdLiquidity) {
-        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, C.BYTES_ZERO);
+    function getUsdLiquidity(address well) internal view returns (uint256 usdLiquidity) {
+        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(
+            well,
+            C.BYTES_ZERO
+        );
         // get the non-bean address and index
         (address token, uint256 j) = getTokenAndIndexFromWell(well);
 
-        // if the token is ETH AND in the sunrise function, 
+        // if the token is ETH AND in the sunrise function,
         // use the value stored in s.usdEthPrice for gas savings.
         // if s.usdEthPrice is 1, then this function is called outside of sunrise.
         // if s.usdEthPrice is 0, then the oracle failed to compute a valid price this Season,
         // and should not be used.
-        uint256 price; 
+        uint256 price;
         uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
-        if(token == C.WETH && ethUsd > 1){
+        if (token == C.WETH && ethUsd > 1) {
             price = uint256(1e24).div(ethUsd);
         } else {
             price = LibUsdOracle.getTokenPrice(token);
         }
-        usdLiquidity = price
-            .mul(emaReserves[j])
-            .div(1e6);
+        usdLiquidity = price.mul(emaReserves[j]).div(1e6);
     }
 }
