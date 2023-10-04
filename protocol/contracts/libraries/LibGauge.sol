@@ -18,6 +18,7 @@ import "../C.sol";
  * @notice LibGauge handles functionality related to the seed gauge system.
  */
 library LibGauge {
+    using SafeCast for uint256;
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
 
@@ -62,7 +63,7 @@ library LibGauge {
      * @dev updates the GaugePoints for LP assets (if applicable)
      * and the distribution of grown Stalk to silo assets.
      */
-    function stepGauge() internal {
+    function stepGauge() external {
         (
             uint256 maxLpGpPerBDV, 
             LpGaugePointData[] memory lpGpData, 
@@ -271,7 +272,7 @@ library LibGauge {
     ) internal {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
-            grownStalkPerGp.mul(gpPerBDV).div(GP_PRECISION).toUint32();
+            grownStalkPerGp.mul(gpPerBDV).div(GP_PRECISION).toUint32()
         );
     }
 

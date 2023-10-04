@@ -34,7 +34,7 @@ contract GaugePointFacet {
             newGaugePoints = currentGaugePoints.sub(ONE_POINT);
         } else {
              if(currentGaugePoints >= NINE_NINE_POINTS) return ONE_HUNDRED_POINTS;
-            newGaugePoints = currentGaugePoints.add(ONE_PERCENT);
+            newGaugePoints = currentGaugePoints.add(ONE_POINT);
         }
     }
 }

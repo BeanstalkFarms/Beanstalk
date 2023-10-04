@@ -174,7 +174,7 @@ contract SeasonGettersFacet {
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGPperBDVRatio() external view returns (uint256) {
-        return s.seedGauge.BeanToMaxLpGpPerBDVRatio;
+        return s.seedGauge.beanToMaxLpGpPerBDVRatio;
     }
 
     /**
@@ -182,7 +182,7 @@ contract SeasonGettersFacet {
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
-        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
+        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.beanToMaxLpGpPerBDVRatio);
     }
     
 

@@ -131,28 +131,28 @@ contract Weather is Sun {
      * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
      */
     function updateBeanToMaxLPRatio(uint80 mL, int80 bL, uint256 caseId) private {
-        uint256 BeanToMaxLpGpPerBDVRatio = s.seedGauge.BeanToMaxLpGpPerBDVRatio;
-        BeanToMaxLpGpPerBDVRatio = BeanToMaxLpGpPerBDVRatio.mul(mL).div(RATIO_PRECISION);
-        if(BeanToMaxLpGpPerBDVRatio >= 100e18) { 
-            bL = int80(uint256(100e18).sub(s.seedGauge.BeanToMaxLpGpPerBDVRatio));
+        uint256 beanToMaxLpGpPerBDVRatio = s.seedGauge.beanToMaxLpGpPerBDVRatio;
+        beanToMaxLpGpPerBDVRatio = beanToMaxLpGpPerBDVRatio.mul(mL).div(RATIO_PRECISION);
+        if(beanToMaxLpGpPerBDVRatio >= 100e18) { 
+            bL = int80(uint256(100e18).sub(s.seedGauge.beanToMaxLpGpPerBDVRatio));
             mL = 100e18;
-            s.seedGauge.BeanToMaxLpGpPerBDVRatio = 100e18;
+            s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
         } else {
             if(bL < 0){
-                if(BeanToMaxLpGpPerBDVRatio <= uint128(-bL)){
-                    bL = - int80(BeanToMaxLpGpPerBDVRatio);
-                    s.seedGauge.BeanToMaxLpGpPerBDVRatio = 0;
+                if(beanToMaxLpGpPerBDVRatio <= uint128(-bL)){
+                    bL = - int80(beanToMaxLpGpPerBDVRatio);
+                    s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
                 } else {
-                    s.seedGauge.BeanToMaxLpGpPerBDVRatio = uint128(BeanToMaxLpGpPerBDVRatio.sub(uint128(-bL)));
+                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(beanToMaxLpGpPerBDVRatio.sub(uint128(-bL)));
                 }
             } else {
-                if(BeanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= 100e18){
+                if(beanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= 100e18){
                     // if (change > 0 && 100e18 - beanToMaxLpGpPerBDVRatio <= bL),
                     // then bL cannot overflow.
-                    bL = int80(uint256(100e18).sub(BeanToMaxLpGpPerBDVRatio));
-                    s.seedGauge.BeanToMaxLpGpPerBDVRatio = 100e18;
+                    bL = int80(uint256(100e18).sub(beanToMaxLpGpPerBDVRatio));
+                    s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
                 } else {
-                    s.seedGauge.BeanToMaxLpGpPerBDVRatio = uint128(BeanToMaxLpGpPerBDVRatio.add(uint128(bL)));
+                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(beanToMaxLpGpPerBDVRatio.add(uint128(bL)));
                 }
             }
         }

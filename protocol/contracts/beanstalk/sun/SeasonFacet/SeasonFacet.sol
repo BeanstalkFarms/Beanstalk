@@ -67,7 +67,7 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
-        IGaugeFacet(address(this)).stepGauge();
+        LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, initialGasLeft, mode);
