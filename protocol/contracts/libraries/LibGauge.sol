@@ -247,7 +247,7 @@ library LibGauge {
                 lpGpData[0].gpPerBDV
             );
         } else {
-            for(uint256 i = 0; i < lpGpData.length; i++) {
+            for(uint256 i; i < lpGpData.length; i++) {
                 issueGrownStalkPerBDV(
                     lpGpData[i].lpToken,
                     newGrownStalkPerGp,

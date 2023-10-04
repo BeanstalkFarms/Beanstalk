@@ -206,7 +206,7 @@ library LibEvaluate {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
         uint256 usdLiquidity;
-        for(uint256 i = 0; i < pools.length; i++){
+        for(uint256 i; i < pools.length; i++){
             // get LP amount in USD
             if(LibWell.isWell(pools[i])){
                 usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
