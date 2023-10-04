@@ -17,25 +17,4 @@ async function updateGaugeForToken(token, gaugePoints, optimalPercentDepositedBd
     )
 }
 
-async function mockBipAddConvertDataFacet(mock = true, account = undefined) {
-    if (account == undefined) {
-        account = await impersonateBeanstalkOwner();
-        await mintEth(account.address);
-      }
-    
-      await upgradeWithNewFacets({
-        diamondAddress: BEANSTALK,
-        facetNames: [
-          "ConvertDataFacet", // add ConvertDataFacet
-        ],
-        selectorsToRemove: [],
-        bip: false,
-        object: !mock,
-        verbose: false,
-        account: account,
-        verify: false
-      });
-}
-
-exports.mockBipAddConvertDataFacet = mockBipAddConvertDataFacet;
 exports.updateGaugeForToken = updateGaugeForToken;

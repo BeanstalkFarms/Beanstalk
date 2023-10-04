@@ -50,7 +50,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
         initFacetName: 'InitBipNewSilo',
         libraryNames: [
-          'LibGauge'
+          'LibGauge', 'LibConvert'
         ],
         facetLibraries: {
           'SeasonFacet': [
@@ -59,6 +59,12 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
           'MockSeasonFacet': [
             'LibGauge'
           ],
+          'ConvertFacet': [
+            'LibConvert'
+          ],
+          'MockConvertFacet': [
+            'LibConvert'
+          ]
         },
         bip: false,
         object: false,
@@ -100,7 +106,6 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
       await finishBeanEthMigration()
-      await mockBipAddConvertDataFacet(true, undefined)
     });
   
     beforeEach(async function () {

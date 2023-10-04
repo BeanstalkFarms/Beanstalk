@@ -271,6 +271,7 @@ contract MockSeasonFacet is SeasonFacet  {
                 .div(100)
                 .div(1000) // eth price
                 .mul(totalSupply);
+        reserves[0] = reserves[1].mul(1000e6);
         IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
         if(aboveQ) {
             // increase bean price

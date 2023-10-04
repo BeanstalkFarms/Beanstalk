@@ -274,7 +274,7 @@ describe('Gauge', function () {
 
         await this.unripe.connect(owner).addUnderlying(
           UNRIPE_LP,
-          to18('1')
+          to18('31.62277663')
         )
 
         // add 1000 LP to 10,000 unripe
@@ -285,9 +285,9 @@ describe('Gauge', function () {
         // urBean supply * 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
         // = 10000 urBEAN * 10% = 1000 BEAN * (100-10%) = 900 beans locked.
         // urBEANETH supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
-        // = 10000 urBEANETH * 0.1% = 1 BEANETH * (100-10%) = .9 BEANETHLP locked.
-        // 1m beans underlay 1000 beanETHLP tokens.
-        // .9/1000 * 1m = 900 beans locked.
+        // urBEANETH supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
+        // 1m beans underlay all beanETHLP tokens.
+        // 1m * 0.9% = 900 beans locked.
         expect(await this.unripe.getLockedBeansInUrBEAN()).to.be.eq(to6('900'));
         expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
         expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1800'));

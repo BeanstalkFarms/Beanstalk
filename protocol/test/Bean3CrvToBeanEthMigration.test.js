@@ -12,7 +12,6 @@ const { ConvertEncoder } = require('./utils/encoder.js');
 const { setReserves } = require('../utils/well.js');
 const { toBN } = require('../utils/helpers.js');
 const { impersonateBean } = require('../scripts/impersonate.js');
-const { mockBipAddConvertDataFacet } = require('../utils/gauge.js'); 
 let user,user2,owner;
 let publius;
 
@@ -58,7 +57,6 @@ describe('Bean:3Crv to Bean:Eth Migration', function () {
     underlyingBefore = await this.beanstalk.getTotalUnderlying(UNRIPE_LP);
 
     await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
-    await mockBipAddConvertDataFacet(true, undefined)
   });
 
   beforeEach(async function () {

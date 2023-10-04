@@ -198,7 +198,7 @@ library LibUnripe {
         // lpTokenSupply is calculated rather than calling totalSupply(), 
         // because the Well's lpTokenSupply is not MEV resistant.
         Call memory wellFunction = IWell(underlying).wellFunction();
-        uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
+        uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(emaReserves, wellFunction.data);
         
         // lockedLp Amount -> MEV resistant
         // emaReserves -> MEV resistant
