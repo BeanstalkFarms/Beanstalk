@@ -129,7 +129,7 @@ const Deposits: FC<
         {
           field: 'stalk.grown',
           flex: 1,
-          headerName: 'Grown Stalk',
+          headerName: 'Stalk Grown',
           align: 'right',
           headerAlign: 'right',
           valueFormatter: (params) => displayBN(params.value),
@@ -138,18 +138,21 @@ const Deposits: FC<
             placement="bottom"
             title={
               <Stack gap={0.5}>
-                <StatHorizontal label="Mowed Grown Stalk">
-                  {displayBN(params.row.stalk.grown.minus(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs')))}
+                <StatHorizontal label="Mown Grown Stalk">
+                  {displayFullBN(params.row.stalk.grown.minus(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs')), 2, 2)}
+                </StatHorizontal>
+                <StatHorizontal label="Mowable Grown Stalk">
+                  {displayFullBN(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs'), 2, 2)}
                 </StatHorizontal>
               </Stack>
             }
           >
             <span>
               <Typography display={{ xs: 'none', md: 'block' }}>
-                {displayBN(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs'))}
+                {displayFullBN(params.row.stalk.grown, 2, 2)}
               </Typography>
               <Typography display={{ xs: 'block', md: 'none' }}>
-                {displayBN(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs'))}
+                {displayFullBN(params.row.stalk.grown, 2, 2)}
               </Typography>
             </span>
           </Tooltip>
