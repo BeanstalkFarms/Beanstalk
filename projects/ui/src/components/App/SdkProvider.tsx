@@ -45,7 +45,7 @@ const useBeanstalkSdkContext = () => {
     SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
 
   const sdk = useMemo(() => {
-    console.log(`Instantiating BeanstalkSDK`, {
+    console.info(`Instantiating BeanstalkSDK`, {
       provider,
       signer,
       datasource,
