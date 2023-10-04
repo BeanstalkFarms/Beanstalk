@@ -4246,6 +4246,12 @@
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint96"
       }
     ],
     "name": "WhitelistToken",
@@ -4280,6 +4286,11 @@
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
+      },
+      {
+        "internalType": "uint96",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint96"
       }
     ],
     "name": "updateGaugeForToken",
@@ -4336,6 +4347,11 @@
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
+      },
+      {
+        "internalType": "uint96",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint96"
       }
     ],
     "name": "whitelistToken",
@@ -4379,6 +4395,11 @@
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
+      },
+      {
+        "internalType": "uint96",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint96"
       }
     ],
     "name": "whitelistTokenWithEncodeType",
@@ -6325,6 +6346,11 @@
             "internalType": "bytes4",
             "name": "gpSelector",
             "type": "bytes4"
+          },
+          {
+            "internalType": "uint96",
+            "name": "optimalPercentDepositedBdv",
+            "type": "uint96"
           }
         ],
         "internalType": "struct Storage.SiloSettings",

@@ -118,7 +118,7 @@ library LibGauge {
             uint256 depositedBdv = s.siloBalances[LPSiloTokens[i]].depositedBdv;
             
             // 1e6 = 1%
-            uint256 percentOfDepositedBdv = depositedBdv
+            uint256 percentDepositedBdv = depositedBdv
                 .mul(100e6)
                 .div(totalLPBdv);
 
@@ -126,8 +126,8 @@ library LibGauge {
             uint256 newGaugePoints = updateGaugePoints(
                 ss.gpSelector,
                 ss.gaugePoints,
-                getOptimalPercentLPDepositedBDV(LPSiloTokens[i]),
-                percentOfDepositedBdv
+                ss.optimalPercentDepositedBdv,
+                percentDepositedBdv
             );
             
             // increment totalGaugePoints and calculate the gaugePoints per BDV:
@@ -170,15 +170,15 @@ library LibGauge {
     function updateGaugePoints(
         bytes4 gpSelector,
         uint256 gaugePoints,
-        uint256 optimalPercentDepositedBDV,
-        uint256 percentOfDepositedBdv
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentDepositedBdv
     ) internal view returns (uint256 newGaugePoints) 
     {
         bytes memory callData = abi.encodeWithSelector(
             gpSelector,
             gaugePoints,
-            optimalPercentDepositedBDV,
-            percentOfDepositedBdv
+            optimalPercentDepositedBdv,
+            percentDepositedBdv
         );
         (bool success, bytes memory data) = address(this).staticcall(callData);
         if (!success) {
@@ -328,21 +328,6 @@ library LibGauge {
                 .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO)
                 .div(ONE_HUNDRED_PERCENT)
         );
-    }
-
-    /**
-     * @notice get the optimal percent deposited in the silo
-     * among LP.
-     */
-    function getOptimalPercentLPDepositedBDV(
-        address token
-    ) internal pure returns (uint256 optimalPercentDepositedBDV) 
-    {
-        if(token == C.BEAN_ETH_WELL){
-            optimalPercentDepositedBDV = BEAN_ETH_OPTIMAL_PERCENT;
-        } else {
-            optimalPercentDepositedBDV = 0;
-        }
     }
 
 }

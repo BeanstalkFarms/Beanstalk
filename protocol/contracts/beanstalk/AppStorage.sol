@@ -386,6 +386,8 @@ contract Storage {
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
+     * @param optimalPercentDepositedBdv The target percentage 
+     * of the total LP deposited BDV for this token.
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
      */
     struct SiloSettings {
@@ -397,8 +399,8 @@ contract Storage {
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
         uint128 gaugePoints; //   ───────┐ 16  
-        bytes4 gpSelector; //   ─────────┘ 4  (20)
-        // 12 bytes are left here.
+        bytes4 gpSelector; //            │ 4   (20)
+        uint96 optimalPercentDepositedBdv; // ───┘ 12  (32)
     }
 
     /**
