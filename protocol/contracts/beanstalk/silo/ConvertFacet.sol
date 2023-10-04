@@ -75,8 +75,7 @@ contract ConvertFacet is ReentrancyGuard {
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         address toToken; address fromToken; uint256 grownStalk;
-        (toToken, fromToken, toAmount, fromAmount) = 
-            LibConvert.convert(convertData);
+        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
 
         LibSilo._mow(msg.sender, fromToken);
         LibSilo._mow(msg.sender, toToken);
