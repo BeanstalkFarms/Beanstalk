@@ -197,7 +197,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
     tokenList: Token[],
     tokenIn: Token
   ) {
-    if (!tokenList.find((token) => tokenIn.equals(token))) {
+    if (!tokenList.find((token) => tokenIn.symbol === token.symbol)) {
       throw new Error('Invalid token');
     }
 
