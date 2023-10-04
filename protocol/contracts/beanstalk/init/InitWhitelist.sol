@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "contracts/libraries/Silo/LibLegacyWhitelist.sol";
-import "contracts/libraries/Silo/LibWhitelist.sol";
 import {AppStorage} from "../AppStorage.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 
