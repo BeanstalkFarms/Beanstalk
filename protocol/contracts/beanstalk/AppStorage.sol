@@ -430,7 +430,7 @@ contract Storage {
      * @notice System level variables used in the seed Gauge System.
      * @param averageGrownStalkPerBdvPerSeason The average Grown Stalk Per BDV 
      * that beanstalk issues each season.
-     * @param BeanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
+     * @param beanToMaxLpGpPerBDVRatio a scalar of the gauge points(GP) per bdv 
      * issued to the largest LP share and Bean. 6 decimal precision.
      * @param lastSeedGaugeUpdate the last season in which the gauge points were updated.
      * @dev a beanTomaxLpGpPerBDVRatio of 100e6 means LP should be incentivized the most,
@@ -438,7 +438,7 @@ contract Storage {
      */
     struct SeedGauge {
         uint128 averageGrownStalkPerBdvPerSeason;
-        uint128 BeanToMaxLpGpPerBDVRatio;
+        uint128 beanToMaxLpGpPerBDVRatio;
         uint32 lastSeedGaugeUpdate;
     }
 }

@@ -161,7 +161,6 @@ library LibGauge {
         }
        
     }
-
     /**
      * @notice calculates the new gauge points for the given token.
      * @dev function calls the selector of the token's gauge point function.
@@ -210,10 +209,10 @@ library LibGauge {
 
         // calculate the ratio between the bean and the max LP gauge points per BDV.
         // 6 decimal precision
-        uint256 BeanToMaxLpGpPerBDVRatio = getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.BeanToMaxLpGpPerBDVRatio);
+        uint256 beanToMaxLpGpPerBDVRatio = getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.beanToMaxLpGpPerBDVRatio);
         // get the GaugePoints and GPperBDV for bean 
-        // beanGpPerBDV has 6 decimal precision, BeanToMaxLpGpPerBDVRatio has 18.
-        uint256 beanGpPerBDV = maxLpGpPerBDV.mul(BeanToMaxLpGpPerBDVRatio).div(100e18);
+        // beanGpPerBDV has 6 decimal precision, beanToMaxLpGpPerBDVRatio has 18.
+        uint256 beanGpPerBDV = maxLpGpPerBDV.mul(beanToMaxLpGpPerBDVRatio).div(100e18);
 
         totalGaugePoints = totalGaugePoints.add(beanGpPerBDV.mul(beanDepositedBdv).div(BDV_PRECISION));
 
@@ -317,14 +316,14 @@ library LibGauge {
     /**
      * @notice returns the ratio between the bean and 
      * the max LP gauge points per BDV.
-     * @dev s.seedGauge.BeanToMaxLpGpPerBDVRatio is a number between 0 and 100e6,
+     * @dev s.seedGauge.beanToMaxLpGpPerBDVRatio is a number between 0 and 100e6,
      * where f(100e18) = MIN_BEAN_MAX_LPGP_RATIO and f(0) = MAX_BEAN_MAX_LPGP_RATIO.
      */
     function getBeanToMaxLpGpPerBDVRatioScaled(
-        uint256 BeanToMaxLpGpPerBDVRatio
+        uint256 beanToMaxLpGpPerBDVRatio
     ) internal pure returns (uint256) {
         return uint256(MAX_BEAN_MAX_LPGP_RATIO)
-            .sub(uint256(BeanToMaxLpGpPerBDVRatio)
+            .sub(uint256(beanToMaxLpGpPerBDVRatio)
                 .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO)
                 .div(ONE_HUNDRED_PERCENT)
         );
