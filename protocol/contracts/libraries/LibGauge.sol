@@ -286,6 +286,9 @@ library LibGauge {
      */
     function updateStalkPerBdvPerSeason() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        // will overflow if the average grown stalk per BDV exceeds 1.4e36, 
+        // which is highly improbable assuming consistent new deposits.
+        // thus, safeCast was determined is to be unnecessary.
         s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
