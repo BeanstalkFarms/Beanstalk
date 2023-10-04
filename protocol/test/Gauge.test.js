@@ -295,6 +295,12 @@ describe('Gauge', function () {
           await this.seasonGetter.getLiquidityToSupplyRatio()
           ).to.be.eq(to18('1.000900810729656691'));
       })
+
+      it('is MEV resistant', async function () {
+        expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
+        await this.well.mint(ownerAddress, to18('1000'));
+        expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
+      })
     })
   })
 
