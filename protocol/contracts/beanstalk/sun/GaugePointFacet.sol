@@ -11,7 +11,6 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * @title GaugePointFacet
  * @author Brean
  * @notice Calculates the gaugePoints for whitelisted Silo LP tokens.
- * 
  */
 contract GaugePointFacet {
     using SafeMath for uint256;
