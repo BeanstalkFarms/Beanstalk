@@ -32,7 +32,7 @@ contract InitBipBasinIntegration {
     uint32 constant private NEW_BEAN_3CRV_GROWN_STALK_PER_BDV_PER_SEASON = 3.25e6;
     uint32 constant private BEAN_ETH_SEEDS_PER_BDV = 4.5e6;
 
-    uint16 constant private STALK_ISSUED_PER_BDV = 10000;
+    uint32 constant private STALK_ISSUED_PER_BDV = 10000;
     
     
     function init() external {

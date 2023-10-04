@@ -394,8 +394,8 @@ contract Storage {
         bytes4 selector; // ─────────────┐ 4
         uint32 stalkEarnedPerSeason; //  │ 4  (16)
         uint32 stalkIssuedPerBdv; //     │ 4  (8)
-		uint32 milestoneSeason; //       │ 4  (12)
-		int96 milestoneStem; //          │ 12 (28)
+	    uint32 milestoneSeason; //       │ 4  (12)
+	    int96 milestoneStem; //          │ 12 (28)
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
         uint128 gaugePoints; //   ───────┐ 16  

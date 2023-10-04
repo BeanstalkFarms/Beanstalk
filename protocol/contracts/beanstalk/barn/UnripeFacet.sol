@@ -20,7 +20,7 @@ import "contracts/libraries/LibChop.sol";
 
 /**
  * @title UnripeFacet
- * @author ZrowGz, Publius , deadmanwalking
+ * @author ZrowGz, Publius, deadmanwalking
  * @notice @notice Manage the logic of the vesting process for the Barnraised Funds
  */
 
