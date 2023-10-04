@@ -237,13 +237,11 @@ library LibEvaluate {
      * @notice get the deltaPodDemand, lpToSupplyRatio, and podRate, 
      * and update soil demand parameters.
      */
-    function getBeanstalkState(uint256 beanSupply) 
-        internal returns (
+    function getBeanstalkState(uint256 beanSupply) internal returns (
             Decimal.D256 memory deltaPodDemand,
             Decimal.D256 memory lpToSupplyRatio,
             Decimal.D256 memory podRate
-        )
-    {
+    ) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate Delta Soil Demand
         uint256 dsoil = s.f.beanSown;
