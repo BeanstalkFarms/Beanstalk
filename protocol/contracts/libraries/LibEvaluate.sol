@@ -201,16 +201,16 @@ library LibEvaluate {
         Decimal.D256 memory lpToSupplyRatio
     ) {
         // prevent infinite L2SR 
-        if(beanSupply == 0) return Decimal.zero();
+        if (beanSupply == 0) return Decimal.zero();
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
         uint256 usdLiquidity;
-        for(uint256 i; i < pools.length; i++){
+        for (uint256 i; i < pools.length; i++) {
             // get LP amount in USD
-            if(LibWell.isWell(pools[i])){
+            if (LibWell.isWell(pools[i])) {
                 usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
-            } else if(pools[i] == C.CURVE_BEAN_METAPOOL) {
+            } else if (pools[i] == C.CURVE_BEAN_METAPOOL) {
                 // curve pool
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             }
@@ -218,10 +218,10 @@ library LibEvaluate {
 
         // if there is no liquidity, 
         // return 0 to save gas.
-        if(usdLiquidity == 0) return Decimal.zero();
+        if (usdLiquidity == 0) return Decimal.zero();
 
         // scale down bean supply by the locked beans, if there is fertilizer to be paid off.
-        if(s.season.fertilizing == true){
+        if (s.season.fertilizing == true) {
             beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
         }
         // usd liquidity is scaled down from 1e18 to match bean.

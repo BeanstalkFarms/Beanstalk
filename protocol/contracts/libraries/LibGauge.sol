@@ -210,7 +210,7 @@ library LibGauge {
         uint256 totalBdv = totalLPBdv.add(beanDepositedBdv);
 
         // if nothing has been deposited, skip grown stalk update.
-        if(totalBdv == 0) return;
+        if (totalBdv == 0) return;
 
         // calculate the ratio between the bean and the max LP gauge points per BDV.
         // 6 decimal precision
@@ -224,7 +224,7 @@ library LibGauge {
         // check if one week elapsed since the last seedGauge update. 
         // if so, update the average grown stalk per BDV per Season. 
         // safemath not needed
-        if(s.season.current - s.seedGauge.lastSeedGaugeUpdate >= 168) {
+        if (s.season.current - s.seedGauge.lastSeedGaugeUpdate >= 168) {
             updateStalkPerBdvPerSeason();
         }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
@@ -242,14 +242,14 @@ library LibGauge {
 
         // update stalkPerBdvPerSeason for LP 
         // if there is only one pool, then no need to read gauge points.
-        if(lpGpData.length == 1) {
+        if (lpGpData.length == 1) {
             issueGrownStalkPerBDV(
                 lpGpData[0].lpToken,
                 newGrownStalkPerGp,
                 lpGpData[0].gpPerBDV
             );
         } else {
-            for(uint256 i; i < lpGpData.length; i++) {
+            for (uint256 i; i < lpGpData.length; i++) {
                 issueGrownStalkPerBDV(
                     lpGpData[i].lpToken,
                     newGrownStalkPerGp,
@@ -317,7 +317,7 @@ library LibGauge {
     function getAverageGrownStalkPerBdv() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalBdv = getTotalBdv();
-        if(totalBdv == 0) return 0;
+        if (totalBdv == 0) return 0;
         return s.s.stalk.div(totalBdv).sub(STALK_BDV_PRECISION); 
     }
 

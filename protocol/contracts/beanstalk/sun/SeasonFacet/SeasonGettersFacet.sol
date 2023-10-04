@@ -218,7 +218,7 @@ contract SeasonGettersFacet {
      * @notice gets the non-bean usd liquidity for a given pool.
      */
     function getUsdLiquidity(address pool) external view returns (uint256) {
-        if(pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
+        if (pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
         return LibWell.getUsdLiquidity(pool);
     }
 

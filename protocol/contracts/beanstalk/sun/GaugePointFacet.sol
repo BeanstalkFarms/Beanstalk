@@ -29,11 +29,11 @@ contract GaugePointFacet {
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints) {
-        if(percentOfDepositedBdv > optimalPercentDepositedBdv){
-            if(currentGaugePoints <= ONE_POINT) return 0;
+        if (percentOfDepositedBdv > optimalPercentDepositedBdv) {
+            if (currentGaugePoints <= ONE_POINT) return 0;
             newGaugePoints = currentGaugePoints.sub(ONE_POINT);
         } else {
-             if(currentGaugePoints >= NINE_NINE_POINTS) return ONE_HUNDRED_POINTS;
+             if (currentGaugePoints >= NINE_NINE_POINTS) return ONE_HUNDRED_POINTS;
             newGaugePoints = currentGaugePoints.add(ONE_POINT);
         }
     }
