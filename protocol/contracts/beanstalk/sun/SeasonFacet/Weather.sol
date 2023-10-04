@@ -10,7 +10,7 @@ import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {Sun, SafeMath, C} from "./Sun.sol";
 
-// 
+//
 /**
  * @title Weather
  * @author Publius
@@ -23,19 +23,17 @@ contract Weather is Sun {
     using DecimalExtended for uint256;
     using Decimal for Decimal.D256;
 
-    
-    uint128 constant internal RATIO_PRECISION = 100e18;
-    uint32 constant internal TEMP_PRECISION = 100e6;
+    uint128 internal constant RATIO_PRECISION = 100e18;
+    uint32 internal constant TEMP_PRECISION = 100e6;
 
-    
     /**
      * @notice Emitted when the Temperature (fka "Weather") changes.
      * @param season The current Season
      * @param caseId The Weather case, which determines how much the Temperature is adjusted.
      * @param relChange The relative change in Temperature.
      * @param absChange The absolute change in Temperature.
-     * 
-     * @dev the relative change is applied before the absolute change. 
+     *
+     * @dev the relative change is applied before the absolute change.
      * T_n = mT * T_n-1 + bT
      */
     event TemperatureChange(
@@ -51,8 +49,8 @@ contract Weather is Sun {
      * @param caseId The Weather case, which determines how much the Temperature is adjusted.
      * @param relChange The relative change in Temperature.
      * @param absChange The absolute change in Temperature.
-     * 
-     * @dev the relative change is applied before the absolute change. 
+     *
+     * @dev the relative change is applied before the absolute change.
      * L_n = mL * L_n-1 + bL
      */
     event BeanToMaxLpGpPerBDVRatioChange(
@@ -78,15 +76,13 @@ contract Weather is Sun {
 
     /**
      * @notice from deltaB, podRate, change in soil demand, and liquidity to supply ratio,
-     * calculate the caseId, and update the temperature and grownStalkPerBDVToLP. 
+     * calculate the caseId, and update the temperature and grownStalkPerBDVToLP.
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
      * @dev A detailed explanation of the temperature and grownStalkPerBDVToLP
-     * mechanism can be found in the Beanstalk whitepaper. 
+     * mechanism can be found in the Beanstalk whitepaper.
      * An explanation of state variables can be found in {AppStorage}.
      */
-    function calcCaseIdandUpdate(
-        int256 deltaB
-    ) internal returns (uint256 caseId) {
+    function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256 caseId) {
         uint256 beanSupply = C.bean().totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
@@ -104,6 +100,7 @@ contract Weather is Sun {
         updateTemperature(cd.mT, cd.bT, caseId);
         updateBeanToMaxLPRatio(cd.mL, cd.bL, caseId);
     }
+
     /**
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
@@ -133,26 +130,30 @@ contract Weather is Sun {
     function updateBeanToMaxLPRatio(uint80 mL, int80 bL, uint256 caseId) private {
         uint256 beanToMaxLpGpPerBDVRatio = s.seedGauge.beanToMaxLpGpPerBDVRatio;
         beanToMaxLpGpPerBDVRatio = beanToMaxLpGpPerBDVRatio.mul(mL).div(RATIO_PRECISION);
-        if(beanToMaxLpGpPerBDVRatio >= 100e18) { 
+        if (beanToMaxLpGpPerBDVRatio >= 100e18) {
             bL = int80(uint256(100e18).sub(s.seedGauge.beanToMaxLpGpPerBDVRatio));
             mL = 100e18;
             s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
         } else {
-            if(bL < 0){
-                if(beanToMaxLpGpPerBDVRatio <= uint128(-bL)){
-                    bL = - int80(beanToMaxLpGpPerBDVRatio);
+            if (bL < 0) {
+                if (beanToMaxLpGpPerBDVRatio <= uint128(-bL)) {
+                    bL = -int80(beanToMaxLpGpPerBDVRatio);
                     s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
                 } else {
-                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(beanToMaxLpGpPerBDVRatio.sub(uint128(-bL)));
+                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(
+                        beanToMaxLpGpPerBDVRatio.sub(uint128(-bL))
+                    );
                 }
             } else {
-                if(beanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= 100e18){
+                if (beanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= 100e18) {
                     // if (change > 0 && 100e18 - beanToMaxLpGpPerBDVRatio <= bL),
                     // then bL cannot overflow.
                     bL = int80(uint256(100e18).sub(beanToMaxLpGpPerBDVRatio));
                     s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
                 } else {
-                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(beanToMaxLpGpPerBDVRatio.add(uint128(bL)));
+                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(
+                        beanToMaxLpGpPerBDVRatio.add(uint128(bL))
+                    );
                 }
             }
         }
@@ -184,7 +185,7 @@ contract Weather is Sun {
             if (s.r.roots > 0) {
                 sop();
             }
-        }  
+        }
     }
 
     /**
