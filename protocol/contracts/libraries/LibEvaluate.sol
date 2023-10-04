@@ -56,13 +56,15 @@ library LibEvaluate {
 
     uint32 internal constant SOW_TIME_STEADY = 60; // seconds
 
+    // Liquidity to supply ratio bounds
     uint256 internal constant LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8e18; // 80%
     uint256 internal constant LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4e18; // 40%
     uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
 
-    uint256 internal constant LIQUIDITY_PRECISION = 1e12;
-
+    // Excessive price threshold constant
     uint256 internal constant Q = 1.05e6;
+
+    uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
     /**
      * @notice evaluates the pod rate and returns the caseId
@@ -94,8 +96,7 @@ library LibEvaluate {
             // compute a valid price this Season. 
             uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
             if(beanEthPrice > 1){
-                uint256 ethUsdPrice = LibEthUsdOracle.getUsdEthPrice();
-                uint256 beanUsdPrice = ethUsdPrice.mul(beanEthPrice).div(1e18);
+                uint256 beanUsdPrice = LibEthUsdOracle.getUsdEthPrice().mul(beanEthPrice).div(1e18);
                 if(beanUsdPrice > Q){
                     // p > q
                     return caseId = 6;
@@ -103,6 +104,7 @@ library LibEvaluate {
             }
             caseId = 3;
         }
+        // p < 1
     }
 
     /**
@@ -113,11 +115,14 @@ library LibEvaluate {
     function evalDeltaPodDemand(
         Decimal.D256 memory deltaPodDemand
     ) internal pure returns (uint256 caseId) {
+        // increasing
         if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
             caseId = 2;
+        // steady
         } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
             caseId = 1;
         }
+        // decreasing 
     }
     
     /**
@@ -137,6 +142,7 @@ library LibEvaluate {
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())) {
             caseId = 36;
         }
+        // excessively low (caseId = 0)
     }
 
     /**
@@ -207,11 +213,10 @@ library LibEvaluate {
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
         uint256 usdLiquidity;
         for (uint256 i; i < pools.length; i++) {
-            // get LP amount in USD
+            // get the non-bean value in an LP.
             if (LibWell.isWell(pools[i])) {
                 usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
             } else if (pools[i] == C.CURVE_BEAN_METAPOOL) {
-                // curve pool
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             }
         }
@@ -224,12 +229,13 @@ library LibEvaluate {
         if (s.season.fertilizing == true) {
             beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
         }
-        // usd liquidity is scaled down from 1e18 to match bean.
+        // usd liquidity is scaled down from 1e18 to match bean precision (1e6).
         lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
     }
 
      /**
-     * @notice get the deltaPodDemand, lpToSupplyRatio, and podRate.
+     * @notice get the deltaPodDemand, lpToSupplyRatio, and podRate, 
+     * and update soil demand parameters.
      */
     function getBeanstalkState(uint256 beanSupply) 
         internal returns (
@@ -259,10 +265,11 @@ library LibEvaluate {
         int256 deltaB,
         uint256 beanSupply
     ) internal returns (uint256 caseId) {
-        Decimal.D256 memory deltaPodDemand;
-        Decimal.D256 memory lpToSupplyRatio;
-        Decimal.D256 memory podRate;
-        (deltaPodDemand, lpToSupplyRatio, podRate) = getBeanstalkState(beanSupply);
+        (
+            Decimal.D256 memory deltaPodDemand, 
+            Decimal.D256 memory lpToSupplyRatio, 
+            Decimal.D256 memory podRate
+        ) = getBeanstalkState(beanSupply);
         caseId = evalPodRate(podRate)  // Evaluate Pod Rate
             .add(evalPrice(deltaB, podRate)) // Evaluate Price
             .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand
