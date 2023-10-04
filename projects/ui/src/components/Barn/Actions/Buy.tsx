@@ -230,10 +230,9 @@ const BuyForm: FC<
                 {values.tokens[0].amount?.toFixed(2)}{' '}
                 {values.tokens[0].token.symbol}
                 {values.tokens[0].token.symbol !== 'WETH' && (
-                  <> =&gt; {values.tokens[0].amountOut?.toFixed(2)} WETH </>
+                  <> → {values.tokens[0].amountOut?.toFixed(2)} WETH </>
                 )}{' '}
-                * {ethPrice.toHuman('short')} <br /> = {fert.toFixed(0)}{' '}
-                Fertilizer
+                * ${ethPrice.toHuman('short')} = {fert.toFixed(0)} Fertilizer
               </WarningAlert>
               <Box width="100%">
                 <AdditionalTxnsAccordion />
