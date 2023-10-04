@@ -88,6 +88,13 @@ library LibGauge {
         address[] memory LPSiloTokens = LibWhitelistedTokens.getSiloLPTokens();
         lpGpData = new LpGaugePointData[](LPSiloTokens.length);
 
+        // if there is only one pool, there is no need to update the gauge points.
+        if (LPSiloTokens.length == 1) {
+            uint256 gaugePoints = s.ss[LPSiloTokens[0]].gaugePoints;
+            lpGpData[0].gpPerBDV = gaugePoints.mul(BDV_PRECISION).div(s.siloBalances[LPSiloTokens[0]].depositedBdv);
+            return (lpGpData[0].gpPerBDV, lpGpData, gaugePoints, s.siloBalances[LPSiloTokens[0]].depositedBdv); 
+        }
+        
         // summate total deposited BDV across all whitelisted LP tokens.
         for (uint256 i; i < LPSiloTokens.length; ++i) {
             totalLPBdv = totalLPBdv.add(s.siloBalances[LPSiloTokens[i]].depositedBdv);
@@ -101,12 +108,7 @@ library LibGauge {
             totalLPBdv
         );
 
-        // if there is only one pool, there is no need to update the gauge points.
-        if (LPSiloTokens.length == 1) {
-            uint256 gaugePoints = s.ss[LPSiloTokens[0]].gaugePoints;
-            lpGpData[0].gpPerBDV = gaugePoints.mul(BDV_PRECISION).div(totalLPBdv);
-            return (lpGpData[0].gpPerBDV, lpGpData, gaugePoints, totalLPBdv); 
-        }
+        
 
         
         // calculate and update the gauge points for each LP.
