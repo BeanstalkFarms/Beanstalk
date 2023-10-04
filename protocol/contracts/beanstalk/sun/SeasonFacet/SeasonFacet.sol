@@ -11,15 +11,6 @@ import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
- * @title IGaugeFacet
- * @author Brean
- * @notice steps the gauge system.
- */
-interface IGaugeFacet {
-    function stepGauge() external;
-}
-
-/**
  * @title SeasonFacet
  * @author Publius, Chaikitty, Brean
  * @notice Holds the Sunrise function and handles all logic for Season changes.
@@ -56,10 +47,7 @@ contract SeasonFacet is Weather {
      * @param mode Indicates whether the reward beans are sent to internal or circulating balance
      * @return reward The number of Beans minted to the caller.
      */
-    function gm(
-        address account,
-        LibTransfer.To mode
-    ) public payable returns (uint256) {
+    function gm(address account, LibTransfer.To mode) public payable returns (uint256) {
         uint256 initialGasLeft = gasleft();
 
         require(!s.paused, "Season: Paused.");
@@ -108,27 +96,27 @@ contract SeasonFacet is Weather {
     ) private returns (uint256) {
         // Number of blocks the sunrise is late by
         // Assumes that each block timestamp is exactly `C.BLOCK_LENGTH_SECONDS` apart.
-        uint256 blocksLate = block.timestamp.sub(
-            s.season.start.add(s.season.period.mul(s.season.current))
-        )
-        .div(C.BLOCK_LENGTH_SECONDS);
-        
+        uint256 blocksLate = block
+            .timestamp
+            .sub(s.season.start.add(s.season.period.mul(s.season.current)))
+            .div(C.BLOCK_LENGTH_SECONDS);
+
         uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
-        
+
         emit Incentivization(account, incentiveAmount);
         LibBeanEthWellOracle.resetBeanEthWellPrice();
         LibEthUsdOracle.resetUsdEthPrice();
         return incentiveAmount;
-    } 
+    }
 
-     /**
+    /**
      * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function 
+     * @dev anyone can call this function to update. Currently, the function
      * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
      * for the average new depositer to catch up to the average grown stalk per BDV.
-     * 
+     *
      * The expectation is that actors will call this function on their own as it benefits them.
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
