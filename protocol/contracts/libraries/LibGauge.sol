@@ -325,7 +325,7 @@ library LibGauge {
         uint256 beanToMaxLpGpPerBDVRatio
     ) internal pure returns (uint256) {
         return uint256(MAX_BEAN_MAX_LPGP_RATIO)
-            .sub(uint256(beanToMaxLpGpPerBDVRatio)
+            .sub(beanToMaxLpGpPerBDVRatio
                 .mul(MAX_BEAN_MAX_LPGP_RATIO - MIN_BEAN_MAX_LPGP_RATIO)
                 .div(ONE_HUNDRED_PERCENT)
         );
