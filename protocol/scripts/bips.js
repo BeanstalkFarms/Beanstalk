@@ -160,6 +160,17 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
       "ConvertFacet",
       "ConvertGettersFacet"
     ],
+    libraryNames: [
+      'LibConvert'
+    ],
+    facetLibraries: {
+      'ConvertFacet': [
+        'LibConvert'
+      ],
+      'MockConvertFacet': [
+        'LibConvert'
+      ]
+    },
     initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
     selectorsToRemove: [
       '0x0bfca7e3',

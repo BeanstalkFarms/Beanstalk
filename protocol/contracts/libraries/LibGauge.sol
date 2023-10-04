@@ -286,7 +286,7 @@ library LibGauge {
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateStalkPerBdvPerSeason() internal {
+    function updateStalkPerBdvPerSeason() public {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // will overflow if the average grown stalk per BDV exceeds 1.4e36, 
         // which is highly improbable assuming consistent new deposits.
