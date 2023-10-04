@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./LibAppStorage.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import "contracts/libraries/Silo/LibWhitelist.sol";
 import "contracts/libraries/LibSafeMath32.sol";
@@ -270,7 +271,7 @@ library LibGauge {
     ) internal {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
-            uint32(grownStalkPerGp.mul(gpPerBDV).div(GP_PRECISION))
+            grownStalkPerGp.mul(gpPerBDV).div(GP_PRECISION).toUint32();
         );
     }
 
