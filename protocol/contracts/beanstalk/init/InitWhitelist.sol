@@ -14,13 +14,6 @@ import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
  * @author Publius
  * @title InitBip8 runs the code for BIP-8.
 **/
-interface IGaugePointFacet {
-    function defaultGaugePointFunction(
-        uint256 currentGaugePoints,
-        uint256 optimalPercentDepositedBdv,
-        uint256 percentOfDepositedBdv
-    ) external pure returns (uint256 newGaugePoints);
-}
 
 contract InitWhitelist {
 
