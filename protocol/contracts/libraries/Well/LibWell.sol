@@ -112,9 +112,11 @@ library LibWell {
         // if s.usdEthPrice is 0, then the oracle failed to compute a valid price this Season,
         // and should not be used.
         uint256 price;
-        uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
-        if (token == C.WETH && ethUsd > 1) {
-            price = uint256(1e24).div(ethUsd);
+        if (token == C.WETH) {
+            uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
+            if (ethUsd > 1) {
+                price = uint256(1e24).div(ethUsd);
+            }
         } else {
             price = LibUsdOracle.getTokenPrice(token);
         }
