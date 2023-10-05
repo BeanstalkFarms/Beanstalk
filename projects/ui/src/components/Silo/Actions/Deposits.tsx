@@ -32,16 +32,19 @@ const Deposits: FC<
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
-  const lastStem = siloBalance?.mowStatus.lastStem || BigNumber.from(0);
-  const deltaStem = stemTip?.sub(lastStem) || BigNumber.from(0);
+  const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
+  const deltaStem = transform(stemTip.sub(lastStem), 'bnjs');
+
+  const decimalShift = sdk.tokens.BEAN.decimals - sdk.tokens.STALK.decimals;
 
   const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
         id: deposit.stem?.toString(),
+        mowableStalk: deposit.bdv?.multipliedBy(deltaStem).shiftedBy(decimalShift),
         ...deposit,
       })) || [],
-    [siloBalance?.deposited.crates]
+    [siloBalance?.deposited.crates, deltaStem, decimalShift]
   );
 
   const columns = useMemo(
@@ -139,10 +142,10 @@ const Deposits: FC<
             title={
               <Stack gap={0.5}>
                 <StatHorizontal label="Mown Grown Stalk">
-                  {displayFullBN(params.row.stalk.grown.minus(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs')), 2, 2)}
+                  {displayFullBN(params.row.stalk.grown.minus(params.row.mowableStalk), 2, 2)}
                 </StatHorizontal>
                 <StatHorizontal label="Mowable Grown Stalk">
-                  {displayFullBN(transform(sdk.tokens.STALK.fromBlockchain(transform(params.row.bdv, 'tokenValue', sdk.tokens.BEAN).toBigNumber().mul(deltaStem)), 'bnjs'), 2, 2)}
+                  {displayFullBN(params.row.mowableStalk, 2, 2)}
                 </StatHorizontal>
               </Stack>
             }
@@ -161,7 +164,7 @@ const Deposits: FC<
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [deltaStem, sdk.tokens.BEAN, sdk.tokens.STALK, token]
+    [token]
   );
 
   const amount = siloBalance?.deposited.amount;
