@@ -177,7 +177,6 @@ library LibEvaluate {
             } else { 
                 deltaPodDemand = Decimal.zero();
             }
-            lastSowTime = s.w.thisSowTime;  // Overwrite last Season
         } else {  // Soil didn't sell out
             uint256 lastDSoil = s.w.lastDSoil;
 
@@ -188,11 +187,9 @@ library LibEvaluate {
             } else { 
                 deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
             }
-            
-            if (s.w.lastSowTime != type(uint32).max) {
-                lastSowTime = type(uint32).max;
-            }
         }
+        
+        lastSowTime = s.w.thisSowTime;  // Overwrite last Season
         thisSowTime = type(uint32).max; // Reset for next Season
     }
 
