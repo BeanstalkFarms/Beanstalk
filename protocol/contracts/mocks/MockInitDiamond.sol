@@ -52,7 +52,7 @@ contract MockInitDiamond is InitWhitelist {
         s.season.stemStartSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         // 4 + 4 + 2
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = 10e6;
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
         whitelistPools();
     }
 
