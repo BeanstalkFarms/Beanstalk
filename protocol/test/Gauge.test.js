@@ -7,7 +7,7 @@ const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
-const { updateGaugeForToken } = require('../utils/gauge.js');
+const { initalizeGaugeForToken } = require('../utils/gauge.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
@@ -80,9 +80,9 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-    // update Gauge
-    await updateGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
-    await updateGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
+    // initalize gauge parameters for lp:
+    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
+    await initalizeGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
   })
 
   beforeEach(async function () {

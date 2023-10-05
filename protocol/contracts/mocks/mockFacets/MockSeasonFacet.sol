@@ -12,7 +12,7 @@ import "../MockToken.sol";
 import "contracts/libraries/LibBytes.sol";
 import {LibEthUsdOracle, LibUniswapOracle, LibChainlinkOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
@@ -53,6 +53,11 @@ contract MockSeasonFacet is SeasonFacet  {
     event DeltaB(int256 deltaB);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
+    event updateGaugeSettings(
+        address indexed token, 
+        bytes4 selector,
+        uint96 optimalPercentDepositedBdv
+    );
 
     function reentrancyGuardTest() public nonReentrant {
         reentrancyGuardTest();
@@ -420,5 +425,18 @@ contract MockSeasonFacet is SeasonFacet  {
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = _averageGrownStalkPerBdvPerSeason;
+    }
+
+    function mockInitalizeGaugeForToken(
+        address token,
+        bytes4 gaugePointSelector,
+        uint128 gaugePoints,
+        uint96 optimalPercentDepositedBdv
+    ) external {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        ss.gpSelector = gaugePointSelector;
+        ss.gaugePoints = gaugePoints;
+        ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
 }
