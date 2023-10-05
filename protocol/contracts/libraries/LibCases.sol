@@ -53,10 +53,10 @@ library LibCases {
     /**
      * @notice given a caseID (0-144), return the data associated.
      * @dev * Each case outputs 4 variables:
-     * mT: Relative Temperature change.
-     * bT: Absolute Temperature change.
-     * mL: Relative Grown Stalk to Liquidity change.
-     * bL: Absolute Grown Stalk to Liquidity change.
+     * mT: Relative Temperature change. (1% = 1e6)
+     * bT: Absolute Temperature change. (1% = 1)
+     * mL: Relative Grown Stalk to Liquidity change. (1% = 1e18)
+     * bL: Absolute Grown Stalk to Liquidity change. (1% = 1e18)
      */
     function decodeCaseData(uint256 caseId) internal view returns (CaseData memory cd) {
         bytes32 _caseData = getDataFromCase(caseId);
