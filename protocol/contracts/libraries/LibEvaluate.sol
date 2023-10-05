@@ -211,10 +211,10 @@ library LibEvaluate {
         uint256 usdLiquidity;
         for (uint256 i; i < pools.length; i++) {
             // get the non-bean value in an LP.
-            if (LibWell.isWell(pools[i])) {
-                usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
-            } else if (pools[i] == C.CURVE_BEAN_METAPOOL) {
+            if (pools[i] == C.CURVE_BEAN_METAPOOL) {
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
+            } else if (LibWell.isWell(pools[i])) {
+                usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
             }
         }
 
