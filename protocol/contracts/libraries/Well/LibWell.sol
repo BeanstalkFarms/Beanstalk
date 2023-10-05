@@ -74,7 +74,7 @@ library LibWell {
      */
     function getNonBeanTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
         IERC20[] memory tokens = IWell(well).tokens();
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             if (address(tokens[i]) != C.BEAN) {
                 return (address(tokens[i]), i);
             }
