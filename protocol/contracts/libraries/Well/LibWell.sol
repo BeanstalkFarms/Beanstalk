@@ -93,7 +93,9 @@ library LibWell {
     /**
      * @notice gets the liquidity of a well in USD
      * precision is in the decimals of the non_bean asset in the well.
-     * assumes a CP2 well function.
+     * assumes a well that:
+     * 1) has attached the Beanstalk pump.
+     * 2) has 2 tokens.
      *
      * @dev the function gets the MEV-resistant instanteous reserves,
      * then calculates the liquidity in USD.
