@@ -69,11 +69,12 @@ library LibWell {
 
     /**
      * @dev Returns the non-Bean token within a Well.
+     * Assumes a well with 2 tokens only. 
      * Cannot fail (and thus revert), as wells cannot have 2 of the same tokens as the pairing.
      */
-    function getTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
+    function getNonBeanTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
         IERC20[] memory tokens = IWell(well).tokens();
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             if (address(tokens[i]) != C.BEAN) {
                 return (address(tokens[i]), i);
             }
@@ -92,7 +93,9 @@ library LibWell {
     /**
      * @notice gets the liquidity of a well in USD
      * precision is in the decimals of the non_bean asset in the well.
-     * assumes a CP2 well function.
+     * assumes a well that:
+     * 1) has attached the Beanstalk pump.
+     * 2) has 2 tokens.
      *
      * @dev the function gets the MEV-resistant instanteous reserves,
      * then calculates the liquidity in USD.
@@ -103,7 +106,7 @@ library LibWell {
             C.BYTES_ZERO
         );
         // get the non-bean address and index
-        (address token, uint256 j) = getTokenAndIndexFromWell(well);
+        (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
 
         // if the token is ETH AND in the sunrise function,
         // use the value stored in s.usdEthPrice for gas savings.
@@ -111,9 +114,9 @@ library LibWell {
         // if s.usdEthPrice is 0, then the oracle failed to compute a valid price this Season,
         // and should not be used.
         uint256 price;
-        uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
-        if (token == C.WETH && ethUsd > 1) {
-            price = uint256(1e24).div(ethUsd);
+        if (token == C.WETH) {
+            uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
+            price = ethUsd > 1 ? uint256(1e24).div(ethUsd) : LibUsdOracle.getTokenPrice(token);
         } else {
             price = LibUsdOracle.getTokenPrice(token);
         }

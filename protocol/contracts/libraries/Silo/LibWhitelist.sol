@@ -52,7 +52,6 @@ library LibWhitelist {
     event updateGaugeSettings(
         address indexed token, 
         bytes4 selector,
-        uint128 gaugePoints,
         uint96 optimalPercentDepositedBdv
     );
 
@@ -101,16 +100,7 @@ library LibWhitelist {
         );
         require(success, "Whitelist: Invalid BDV selector");
 
-        //verify you passed in a callable gaugePoint selector
-        (success,) = address(this).staticcall(
-            abi.encodeWithSelector(
-                gaugePointSelector,
-                0,
-                0,
-                0
-            )
-        );
-        require(success, "Whitelist: Invalid GaugePoint selector");
+        verifyGaugeSelector(gaugePointSelector);
 
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
 
@@ -141,29 +131,16 @@ library LibWhitelist {
      */
     function updateGaugeForToken(
         address token,
-        bytes4 selector,
-        uint128 gaugePoints,
+        bytes4 gaugePointSelector,
         uint96 optimalPercentDepositedBdv
     ) internal {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
-        //verify you passed in a callable selector
-        (bool success,) = address(this).staticcall(
-            abi.encodeWithSelector(
-                selector,
-                0,
-                0,
-                0
-            )
-        );
-        require(success, "Whitelist: Invalid GaugePoint selector");
-
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
+        verifyGaugeSelector(gaugePointSelector);
 
-        ss.gpSelector = selector;
-        ss.gaugePoints = gaugePoints;
+        ss.gpSelector = gaugePointSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-
-        emit updateGaugeSettings(token, selector, gaugePoints, optimalPercentDepositedBdv);
+        emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
     
     /**
@@ -193,5 +170,21 @@ library LibWhitelist {
         delete s.ss[token];
 
         emit DewhitelistToken(token);
+    }
+
+    /**
+     * @notice verifies whether the selector is valid for the gauge system.
+     */
+    function verifyGaugeSelector(bytes4 selector) internal {
+        //verify you passed in a callable gaugePoint selector
+        (bool success,) = address(this).staticcall(
+            abi.encodeWithSelector(
+                selector,
+                0,
+                0,
+                0
+            )
+        );
+        require(success, "Whitelist: Invalid GaugePoint selector");
     }
 }

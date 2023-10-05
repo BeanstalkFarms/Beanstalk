@@ -7,7 +7,7 @@ const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
-const { updateGaugeForToken } = require('../utils/gauge.js');
+const { initalizeGaugeForToken } = require('../utils/gauge.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
@@ -80,9 +80,9 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-    // update Gauge
-    await updateGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
-    await updateGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
+    // initalize gauge parameters for lp:
+    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
+    await initalizeGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
   })
 
   beforeEach(async function () {
@@ -331,22 +331,22 @@ describe('Gauge', function () {
     })
 
     it('update seeds values', async function () {
-      // mockInitDiamond sets s.averageGrownStalkPerBdvPerSeason to 10e6 (avg 10 seeds per BDV),
+      // mockInitDiamond sets s.averageGrownStalkPerBdvPerSeason to 3e6 (avg 3 seeds per BDV),
       // and BeanToMaxLpGpPerBDVRatio to 50% (BeanToMaxLpGpPerBDVRatioScaled = 0.625)
       // total BDV of ~226.5 (100 + 63.245537 + 63.245537)
-      // 1 seed = 1/10000 stalk, so 2265/10000 stalk should be issued this season.
+      // 1 seed = 1/10000 stalk, so ~679.5/10000 stalk should be issued this season.
       // BEANETHGP = 96, gpPerBDV = 96/63.245537 = 1.51789
       // BEAN3CRV = 4, gpPerBDV = 4/63.245537 = 0.0632455 
       // BEANgpPerBDV = 0.625 * 1.51789 = 0.948681
       // total GP = 100 + (0.948681*100) = 194.861
-      // stalkPerGp = 2264910730 / 194.861 = 11_622_773/1e10 stalk per GP
+      // stalkPerGp = 679500000 / 194.861 = ~3_487_101/1e10 stalk per GP
       // stalkPerGp * GpPerBDV = stalkIssuedPerBDV
-      // stalkIssuedPerBeanBDV =  11_622_773/1e10 * 0.948683 = ~11_026_327/1e10
-      // stalkIssuedPerBeanETH = 11_622_773/1e10 * 1.51789 = ~17_642_090/1e10
-      // stalkIssuedPerBean3CRV = 11_622_773/1e10 * 0.0632455 = ~735088/1e10
-      expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(11026333);
-      expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(17642133);
-      expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(735088);
+      // stalkIssuedPerBeanBDV =  ~3_487_101/1e10 * 0.948683 = ~3_308_153/1e10
+      // stalkIssuedPerBeanETH = ~3_487_101/1e10 * 1.51789 = ~5_293_035/1e10
+      // stalkIssuedPerBean3CRV = ~3_487_101/1e10 * 0.0632455 = ~220543/1e10
+      expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(3307900);
+      expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(5292640);
+      expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(220526);
     })
     
     it('emits events', async function () {

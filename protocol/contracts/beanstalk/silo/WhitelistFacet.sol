@@ -174,14 +174,12 @@ contract WhitelistFacet {
     function updateGaugeForToken(
         address token, 
         bytes4 gaugePointSelector,
-        uint128 gaugePoints,
         uint96 optimalPercentDepositedBdv
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugeForToken(
             token,
             gaugePointSelector,
-            gaugePoints,
             optimalPercentDepositedBdv
         );
     }
