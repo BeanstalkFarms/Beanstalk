@@ -349,7 +349,7 @@ const BuyPropProvider: FC<{}> = () => {
         amount: undefined,
       },
       settings: {
-        slippage: 0.1,
+        slippage: 0.5,
       },
     }),
     [baseToken, sdk.tokens.BEAN]
@@ -443,7 +443,21 @@ const BuyPropProvider: FC<{}> = () => {
         );
 
         const performed = txnBundler.setFarmSteps(values.farmActions);
-        const { execute } = await txnBundler.bundle(buyTxn, amountIn, 0.1);
+        const { execute, farm } = await txnBundler.bundle(
+          buyTxn,
+          amountIn,
+          slippage
+        );
+        try {
+          // smoke test, if this fails, slippage is too low
+          await farm.estimateGas(amountIn, { slippage: 1 });
+        } catch (err) {
+          console.log('Failed to estimate gas. May need to increase slippage.');
+          txToast.error(
+            new Error('Failed to estimate gas. May need to increase slippage.')
+          );
+          return;
+        }
 
         const txn = await execute();
         txToast.confirming(txn);
