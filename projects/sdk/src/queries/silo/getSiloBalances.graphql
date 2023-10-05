@@ -10,6 +10,7 @@ query getSiloBalances($account: ID!, $season: Int!) {
       }
     ) {
       season
+      stem
       token
       #amount
       amount
