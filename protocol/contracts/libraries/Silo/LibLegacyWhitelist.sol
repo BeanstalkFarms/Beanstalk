@@ -51,7 +51,7 @@ library LibLegacyWhitelist {
         s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; //previously called "seeds"
 
-        s.ss[token].milestoneSeason = uint24(s.season.current);
+        s.ss[token].milestoneSeason = s.season.current;
 
         emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
