@@ -49,15 +49,11 @@ library LibBeanMetaCurve {
      * Metapool. NOTE: assumes that `balances[0]` is BEAN.
      * 
      * @dev 18 decimal precision.
-     * TODO: discuss with brendan
      */
     function totalLiquidityUsd() internal view returns (uint256) {
         // By using previous balances and the virtual price, we protect against flash loan
         uint256[2] memory balances = IMeta3Curve(C.CURVE_BEAN_METAPOOL).get_previous_balances();
-
-        // balances are reused to save gas.
-        balances = LibMetaCurve.getXP(balances, RATE_MULTIPLIER);        
-        return balances[1];
+        return balances[1].mul(C.curve3Pool().get_virtual_price()).div(PRECISION);
     }
 
     function getDeltaB() internal view returns (int256 deltaB) {
