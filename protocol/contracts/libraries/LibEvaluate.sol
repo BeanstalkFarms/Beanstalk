@@ -62,7 +62,7 @@ library LibEvaluate {
     uint256 internal constant LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12e18; // 12%
 
     // Excessive price threshold constant
-    uint256 internal constant Q = 1.05e6;
+    uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
 
     uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
@@ -92,13 +92,13 @@ library LibEvaluate {
         // p > 1
         if (deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))) {
             // beanstalk will only use the bean/eth well to compute the bean price, 
-            // and thus will skip the p>q check if the bean/eth oracle fails to 
+            // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the bean/eth oracle fails to 
             // compute a valid price this Season. 
             uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
             if(beanEthPrice > 1){
                 uint256 beanUsdPrice = LibEthUsdOracle.getUsdEthPrice().mul(beanEthPrice).div(1e18);
-                if(beanUsdPrice > Q){
-                    // p > q
+                if(beanUsdPrice > EXCESSIVE_PRICE_THRESHOLD){
+                    // p > EXCESSIVE_PRICE_THRESHOLD
                     return caseId = 6;
                 }
             }
