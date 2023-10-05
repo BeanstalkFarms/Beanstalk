@@ -62,7 +62,6 @@ contract InitDiamond {
         s.usdEthPrice = 1;
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
-        s.season.stemStartSeason = uint16(s.season.current);
 
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
         emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);
