@@ -116,9 +116,7 @@ library LibWell {
         uint256 price;
         if (token == C.WETH) {
             uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
-            if (ethUsd > 1) {
-                price = uint256(1e24).div(ethUsd);
-            }
+            price = ethUsd > 1 ? uint256(1e24).div(ethUsd) : LibUsdOracle.getTokenPrice(token);
         } else {
             price = LibUsdOracle.getTokenPrice(token);
         }
