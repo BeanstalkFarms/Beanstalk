@@ -69,9 +69,10 @@ library LibWell {
 
     /**
      * @dev Returns the non-Bean token within a Well.
+     * Assumes a well with 2 tokens only. 
      * Cannot fail (and thus revert), as wells cannot have 2 of the same tokens as the pairing.
      */
-    function getTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
+    function getNonBeanTokenAndIndexFromWell(address well) internal view returns (address, uint256) {
         IERC20[] memory tokens = IWell(well).tokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (address(tokens[i]) != C.BEAN) {
@@ -103,7 +104,7 @@ library LibWell {
             C.BYTES_ZERO
         );
         // get the non-bean address and index
-        (address token, uint256 j) = getTokenAndIndexFromWell(well);
+        (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
 
         // if the token is ETH AND in the sunrise function,
         // use the value stored in s.usdEthPrice for gas savings.
