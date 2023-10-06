@@ -72,11 +72,13 @@ contract InitBipSeedGauge {
             0x00000000,
             0x00000000
         ];
+        uint128[5] memory optimalPercentDepositedBdv = [uint128(0), 99e18, 1e18, 0, 0]; 
         for(uint i = 0; i < siloTokens.length; i++) {
         for (uint i = 0; i < siloTokens.length; i++) {
             // update gaugePoints and gpSelectors
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
+            s.ss[siloTokens[i]].optimalPercentDepositedBdv = optimalPercentDepositedBdv[i];
 
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
