@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   Accordion,
+  Alert,
   AccordionDetails,
   AccordionSummary,
   Box,
@@ -13,7 +14,6 @@ import { LoadingButton } from '@mui/lab';
 import { FC } from '~/types';
 import Row from '~/components/Common/Row';
 import Deposits from '~/components/Silo/Actions/Deposits';
-
 import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
@@ -22,6 +22,7 @@ import { BeanstalkPalette, IconSize } from '~/components/App/muiTheme';
 import { displayFullBN } from '~/util';
 import { fetchMigrationData } from '~/state/farmer/silo/updater';
 import TransactionToast from '~/components/Common/TxnToast';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 
 const getMigrationParams = async (account: string) => {
   const data = await fetchMigrationData(account);
@@ -53,6 +54,7 @@ const getMigrationParams = async (account: string) => {
 export const Migrate: FC<{}> = () => {
   const account = useAccount();
   const siloBalance = useFarmerSiloBalances();
+  const farmerSilo = useFarmerSilo();
   const sdk = useSdk();
 
   const [migrating, setMigrating] = useState(false);
@@ -198,6 +200,16 @@ export const Migrate: FC<{}> = () => {
               All of your Grown Stalk will be Mown and added to your 
               Stalk balance during the Migration.
             </Typography>
+            {farmerSilo.stalk.grown.gt(0) &&
+              <Alert
+                variant="outlined"
+                severity="success"
+                icon={<></>}
+                sx={{ textAlign: 'left', background: 'white' }}
+              >
+                {`${displayFullBN(farmerSilo.stalk.grown)} Grown Stalk will be Mown.`}
+              </Alert>
+            }
           </Stack>
           <Stack spacing={1}>
             <Typography variant="h4">
