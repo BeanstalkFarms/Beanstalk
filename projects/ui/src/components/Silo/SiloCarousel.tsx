@@ -4,14 +4,16 @@ import { ERC20Token } from '~/classes/Token';
 import {
   BEAN,
   BEAN_CRV3_LP,
+  BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WETH,
 } from '~/constants/tokens';
 import earnBeansImg from '~/img/beanstalk/silo/edu/earnBeansImg.png';
 import depositBeanImg from '~/img/beanstalk/silo/edu/depositBeanImg.svg';
 import depositBean3crvImg from '~/img/beanstalk/silo/edu/depositBean3crvImg.svg';
-import depositUrBean3crvImg from '~/img/beanstalk/silo/edu/depositUrBean3crvImg.svg';
 import depositUrBeanImg from '~/img/beanstalk/silo/edu/depositUrBeanImg.svg';
+import depositBeanEth from '~/img/beanstalk/silo/edu/depositBeanEth.svg';
+import depositUrBeanEth from '~/img/beanstalk/silo/edu/depositUrBeanEth.svg';
 import earnStalkAndSeedsImg from '~/img/beanstalk/silo/edu/earnStalkAndSeedsImg.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import Carousel from '~/components/Common/Carousel/Carousel';
@@ -26,12 +28,15 @@ const depositCardContentByToken = {
   [BEAN_CRV3_LP[1].address]: {
     img: depositBean3crvImg,
   },
+  [BEAN_ETH_WELL_LP[1].address]: {
+    img: depositBeanEth,
+  },
   [UNRIPE_BEAN[1].address]: {
     img: depositUrBeanImg,
   },
   [UNRIPE_BEAN_WETH[1].address]: {
     // TODO: Update this image to use BEAN/WETH logo
-    img: depositUrBean3crvImg,
+    img: depositUrBeanEth,
   },
 };
 
