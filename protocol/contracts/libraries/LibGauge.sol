@@ -27,7 +27,7 @@ library LibGauge {
 
     // max and min are the ranges that the beanToMaxLpGpPerBDVRatioScaled can output.
     uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
-    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 25e18;
+    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
     uint256 internal constant BEAN_MAX_LP_GP_RATIO_RANGE =
         MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
 
@@ -318,8 +318,9 @@ library LibGauge {
     function getBeanToMaxLpGpPerBDVRatioScaled(
         uint256 beanToMaxLpGpPerBDVRatio
     ) internal pure returns (uint256) {
-        return MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO.sub(
-            beanToMaxLpGpPerBDVRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT)
-        );
+        return
+            beanToMaxLpGpPerBDVRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT).add(
+                MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO
+            );
     }
 }

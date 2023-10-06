@@ -138,7 +138,7 @@ describe('SeedGauge Init Test', function () {
     
     it('bean To MaxLPGpRatio', async function () {
       expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('50'));
-      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('62.5'));
+      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75'));
     })
 
     it('lockedBeans', async function () {
