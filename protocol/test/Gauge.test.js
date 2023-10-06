@@ -82,8 +82,8 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     // initalize gauge parameters for lp:
-    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
-    await initalizeGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
+    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('99'), to6('99'))
+    await initalizeGaugeForToken(BEAN_3_CURVE, to18('5'), to6('1'))
   })
 
   beforeEach(async function () {

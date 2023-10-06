@@ -72,7 +72,7 @@ contract InitBipSeedGauge {
             0x00000000,
             0x00000000
         ];
-        uint128[5] memory optimalPercentDepositedBdv = [uint128(0), 99e18, 1e18, 0, 0]; 
+        uint128[5] memory optimalPercentDepositedBdv = [uint128(0), 99e6, 1e6, 0, 0]; 
         for (uint i = 0; i < siloTokens.length; i++) {
             // update gaugePoints and gpSelectors
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
