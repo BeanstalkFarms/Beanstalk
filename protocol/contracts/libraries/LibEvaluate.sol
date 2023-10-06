@@ -12,7 +12,7 @@ import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibWell, ICumulativePump} from "contracts/libraries/Well/LibWell.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @author Brean

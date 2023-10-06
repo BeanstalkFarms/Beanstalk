@@ -198,7 +198,7 @@ library LibUnripe {
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
         
         // lpTokenSupply is calculated rather than calling totalSupply(), 
-        // because the Well's lpTokenSupply are not MEV resistant.
+        // because the Well's lpTokenSupply is not MEV resistant.
         Call memory wellFunction = IWell(underlying).wellFunction();
         uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
         lockedBeanAmount = lockedLpAmount
