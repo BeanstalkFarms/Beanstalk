@@ -58,7 +58,8 @@ contract InitDiamond {
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
-        s.beanEthPrice = 1;
+        s.ethReserve = 1;
+        s.beanReserve = 1;
         s.usdEthPrice = 1;
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;

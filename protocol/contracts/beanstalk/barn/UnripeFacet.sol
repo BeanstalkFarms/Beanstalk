@@ -13,6 +13,7 @@ import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import "contracts/C.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/LibUnripe.sol";
@@ -360,15 +361,27 @@ contract UnripeFacet is ReentrancyGuard {
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
-    function getLockedBeans() public view returns (uint256) {
-        return LibUnripe.getLockedBeans();
+    function getLockedBeans() external view returns (uint256) {
+        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+            C.BEAN_ETH_WELL,
+            s.wellOracleSnapshots[C.BEAN_ETH_WELL],
+            s.season.timestamp,
+            C.BYTES_ZERO
+        );
+        return LibUnripe.getLockedBeans(twaReserves);
     }
 
-    function getLockedBeansInUrBEAN() public view returns (uint256) {
+    function getLockedBeansInUrBEAN() external view returns (uint256) {
         return LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
     }
 
-    function getLockedBeansInUrBEANETH() public view returns (uint256) {
-        return LibUnripe.getLockedBeansFromLP();
+    function getLockedBeansInUrBEANETH() external view returns (uint256) {
+        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+            C.BEAN_ETH_WELL,
+            s.wellOracleSnapshots[C.BEAN_ETH_WELL],
+            s.season.timestamp,
+            C.BYTES_ZERO
+        );
+        return LibUnripe.getLockedBeansFromLP(twaReserves);
     }
 }

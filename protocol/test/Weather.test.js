@@ -72,6 +72,7 @@ describe('Complex Weather', function () {
         this.testData = {}
         columns.forEach((key, i) => this.testData[key] = tests[v][i])
         await this.season.setUsdEthPrice(to18('0.001'));
+        await this.fertilizer.setFertilizerE(false, to6('0'))
         await this.season.setYieldE(this.testData.startingWeather)
         await this.season.setBeanToMaxLpGPperBDVRatio(to18(this.testData.initalPercentToLp))
         this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))

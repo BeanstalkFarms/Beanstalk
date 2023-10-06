@@ -12,7 +12,7 @@ import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
-import {LibWell, IInstantaneousPump} from "contracts/libraries/Well/LibWell.sol";
+import {LibWell, ICumulativePump} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @author Brean
@@ -199,7 +199,8 @@ library LibEvaluate {
      * @dev no support for non-well AMMs.
      */
     function calcLPToSupplyRatio(
-        uint256 beanSupply
+        uint256 beanSupply,
+        uint256[] memory twaReserves
     ) internal view returns (
         Decimal.D256 memory lpToSupplyRatio
     ) {
@@ -224,7 +225,7 @@ library LibEvaluate {
 
         // scale down bean supply by the locked beans, if there is fertilizer to be paid off.
         if (s.season.fertilizing == true) {
-            beanSupply = beanSupply.sub(LibUnripe.getLockedBeans());
+            beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
         }
         // usd liquidity is scaled down from 1e18 to match bean precision (1e6).
         lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
@@ -246,8 +247,11 @@ library LibEvaluate {
         (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = calcDeltaPodDemand(dsoil);
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
 
-        // Calculate Lp To Supply Ratio
-        lpToSupplyRatio = calcLPToSupplyRatio(beanSupply);
+        // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
+        lpToSupplyRatio = calcLPToSupplyRatio(
+            beanSupply, 
+            LibBeanEthWellOracle.getBeanEthWellReserves()
+        );
 
         // Calculate PodRate   
         podRate = Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply); // Pod Rate

@@ -60,6 +60,7 @@ describe('Gauge', function () {
     await this.well.connect(user).approve(this.diamond.address, to18('100000000'))
 
     await this.well.setReserves([to6('1000000'), to18('1000')])
+    await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
     await this.well.mint(ownerAddress, to18('500'))
     await this.well.mint(userAddress, to18('500'))
     await this.season.siloSunrise(0)
@@ -218,7 +219,7 @@ describe('Gauge', function () {
 
       it('returns 0 if no liquidity', async function () {
         await this.bean.mint(ownerAddress, to6('2000000'));
-        await this.pump.setInstantaneousReserves([to6('0'), to18('0')])
+        await this.pump.setCumulativeReserves([to6('0'), to18('0')]);
         await this.beanThreeCurve.set_balances([to6('0'), to18('0')]);
         await this.beanThreeCurve.set_balances([to6('0'), to18('0')]);
 

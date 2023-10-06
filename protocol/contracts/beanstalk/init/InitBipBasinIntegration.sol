@@ -54,7 +54,11 @@ contract InitBipBasinIntegration {
             0
         );
 
-        s.beanEthPrice = 1;
+        // the init script was initally made with the line below,
+        // but since changed to compile with the current AppStorage.sol
+        // s.beanEthPrice = 1;
+        s.ethReserve = 1;
+        s.beanReserve = 1;
 
         // adds ERC1155MetadataURI for ERC165 Interface ID
         ds.supportedInterfaces[0x0e89341c] = true;

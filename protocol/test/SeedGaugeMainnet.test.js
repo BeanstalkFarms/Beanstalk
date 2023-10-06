@@ -133,7 +133,7 @@ describe('SeedGauge Init Test', function () {
 
     it('L2SR', async function () {
       // lmao 254% L2SR
-      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.equal(to18('2.542934491600116094'));
+      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.equal(to18('2.259032400137145492'));
     })
     
     it('bean To MaxLPGpRatio', async function () {
@@ -143,16 +143,16 @@ describe('SeedGauge Init Test', function () {
 
     it('lockedBeans', async function () {
       // ~31m locked beans, ~35.8m total beans
-      expect(await this.beanstalk.getLockedBeans()).to.be.equal(to6('31239123.609623'));
+      expect(await this.beanstalk.getLockedBeans()).to.be.equal(to6('31239123.637132'));
     })
 
     it('usd Liquidity', async function () {
       // ~11.5m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getUsdLiquidity(BEAN_ETH_WELL)).to.be.equal(to18('11528104.204757174176419123'));
+      expect(await this.beanstalk.getUsdLiquidity(BEAN_ETH_WELL)).to.be.equal(to18('10227788.644938168427974960'));
       // ~118k usd liquidity in Bean3Crv
       expect(await this.beanstalk.getUsdLiquidity(BEAN_3_CURVE)).to.be.equal(to18('118929.150867709373771440'));
       // ~11.6m usd liquidity total
-      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.equal(to18('11647033.355624883550190563'));
+      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.equal(to18('10346717.795805877801746400'));
     })
 
     it('gaugePoints', async function () {

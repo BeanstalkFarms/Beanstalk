@@ -106,7 +106,7 @@ contract SeasonFacet is Weather {
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
         emit Incentivization(account, incentiveAmount);
-        LibBeanEthWellOracle.resetBeanEthWellPrice();
+        LibBeanEthWellOracle.resetBeanEthWellReserves();
         LibEthUsdOracle.resetUsdEthPrice();
         return incentiveAmount;
     }

@@ -15,6 +15,7 @@ import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -202,7 +203,13 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
+        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+            C.BEAN_ETH_WELL,
+            s.wellOracleSnapshots[C.BEAN_ETH_WELL],
+            s.season.timestamp,
+            C.BYTES_ZERO
+        );
+        return LibEvaluate.calcLPToSupplyRatio(beanSupply, twaReserves).value;
     }
 
     /**
@@ -215,11 +222,13 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice gets the non-bean usd liquidity for a given pool.
+     * @notice gets the non-bean usd liquidity for a given well.
+     * additionally supports the Bean3CRV metapool.
      */
-    function getUsdLiquidity(address pool) external view returns (uint256) {
-        if (pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
-        return LibWell.getUsdLiquidity(pool);
+    function getUsdLiquidity(address well) external view returns (uint256) {
+        if (well == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
+        (address token, uint256 j) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        return LibWell.getUsdLiquidityWithPump(well, token, j);
     }
 
     /**

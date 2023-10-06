@@ -8,7 +8,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {C} from "../C.sol";
-import {LibWell, Call, IWell, IWellFunction, IInstantaneousPump} from "./Well/LibWell.sol";
+import {LibWell, Call, IWell, IWellFunction} from "./Well/LibWell.sol";
 
 /**
  * @title LibUnripe
@@ -179,32 +179,30 @@ library LibUnripe {
     /**
      * @notice gets the amount of beans that are locked in the unripe token.
      * @dev locked beans are the beans that are forfeited if the unripe token is chopped.
+     * @param reserves the reserves of the LP that underly the unripe token.
+     * @dev reserves are used as a parameter for gas effiency purposes (see LibEvaluate.calcLPToSupplyRatio}.
      */
-    function getLockedBeans() internal view returns (uint256 lockedAmount){
+    function getLockedBeans(uint256[] memory reserves) internal view returns (uint256 lockedAmount){
         lockedAmount = getTotalUnderlyingForfeited(C.UNRIPE_BEAN)
-            .add(getLockedBeansFromLP());
+            .add(getLockedBeansFromLP(reserves));
     }
 
     /**
-     * @notice gets the MEV-resistant amount of beans that are locked in the unripeLP token.
+     * @notice gets the amount of beans that are locked in the unripeLP token.
+     * @param reserves the reserves of the LP that underly the unripe token.
      */
-    function getLockedBeansFromLP() internal view returns (uint256 lockedBeanAmount){
+    function getLockedBeansFromLP(uint256[] memory reserves) internal view returns (uint256 lockedBeanAmount){
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lockedLpAmount = getTotalUnderlyingForfeited(C.UNRIPE_LP);
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;
-        uint256[] memory emaReserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(underlying, C.BYTES_ZERO);
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
-
-        // lpTokenSupply is calculated rather than calling totalSupply(), 
-        // because the Well's lpTokenSupply is not MEV resistant.
-        Call memory wellFunction = IWell(underlying).wellFunction();
-        uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(emaReserves, wellFunction.data);
         
-        // lockedLp Amount -> MEV resistant
-        // emaReserves -> MEV resistant
-        // lpTokenSupply -> MEV resistant
+        // lpTokenSupply is calculated rather than calling totalSupply(), 
+        // because the Well's lpTokenSupply are not MEV resistant.
+        Call memory wellFunction = IWell(underlying).wellFunction();
+        uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
         lockedBeanAmount = lockedLpAmount
-            .mul(emaReserves[beanIndex])
+            .mul(reserves[beanIndex])
             .div(lpTokenSupply);
     }
     

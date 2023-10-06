@@ -43,7 +43,7 @@ library LibCases {
     // given that multiple cases use the same values.
     //
     // Naming Convention:
-    // PLUS: increment by X (y_i = y_1 + X) 
+    // PLUS: increment by X (y_i = y_1 + X)
     // MINUS decrement by X (y_i = y_1 - X)
     // INCR/DECR: scale up/down by X (y_i = y_1 * X)
     // T: Temperature, L: Bean to max LP gauge point per BDV ratio
@@ -99,7 +99,7 @@ library LibCases {
         cd.bL = int80(bytes10(_caseData << 120));
     }
 
-    function getCasesV2() internal view returns (bytes32[144] memory casesV2) {
+    function getCasesV2() internal pure returns (bytes32[144] memory casesV2) {
         casesV2 = [
         //               Dsc soil demand,  Steady soil demand  Inc soil demand
                     /////////////////////// Exremely Low L2SR ///////////////////////

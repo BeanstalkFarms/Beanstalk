@@ -260,31 +260,33 @@ contract MockSeasonFacet is SeasonFacet  {
         uint256 totalSupply = C.bean().totalSupply();
         if(L2SRState == 3) {
             // reserves[1] = 0.8e18;
-            reserves[1] = uint256(80);
+            reserves[1] = uint256(800);
         } else if (L2SRState == 2) {
             // reserves[1] = 0.8e18 - 1;
-            reserves[1] = uint256(79);
+            reserves[1] = uint256(799);
         } else if (L2SRState == 1) {
             // reserves[1] = 0.4e18 - 1;
-            reserves[1] = uint256(39);
+            reserves[1] = uint256(399);
         } else if (L2SRState == 0) {
             // reserves[1] = 0.12e18 - 1;    
-            reserves[1] = uint256(11);
+            reserves[1] = uint256(119);
         }
+        reserves[0] = reserves[1].mul(totalSupply).div(1000);
         reserves[1] = reserves[1]
-                .mul(LibEvaluate.LIQUIDITY_PRECISION)
-                .div(100)
-                .div(1000) // eth price
-                .mul(totalSupply);
-        reserves[0] = reserves[1].mul(1000e6);
+            .mul(totalSupply)
+            .mul(LibEvaluate.LIQUIDITY_PRECISION)
+            .div(1000) // eth price
+            .div(1000); // reserve[1] / 1000 = %
         IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
+        s.beanReserve = uint128(reserves[0]);
+        s.ethReserve = uint128(reserves[1]);
         if(aboveQ) {
             // increase bean price
-            s.beanEthPrice = 1051e6;
+            s.beanReserve = uint128(reserves[0].mul(2));
             s.usdEthPrice = 0.001e18;
         } else {
             // decrease bean price
-            s.beanEthPrice = 1000e6;
+            s.beanReserve = uint128(reserves[0]);
             s.usdEthPrice = 0.001e18;
         }
         calcCaseIdandUpdate(deltaB);

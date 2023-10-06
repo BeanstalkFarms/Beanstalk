@@ -175,7 +175,7 @@ library LibWhitelist {
     /**
      * @notice verifies whether the selector is valid for the gauge system.
      */
-    function verifyGaugeSelector(bytes4 selector) internal {
+    function verifyGaugeSelector(bytes4 selector) internal view {
         //verify you passed in a callable gaugePoint selector
         (bool success,) = address(this).staticcall(
             abi.encodeWithSelector(
