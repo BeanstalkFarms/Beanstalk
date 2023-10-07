@@ -70,7 +70,7 @@ describe('SeedGauge Init Test', function () {
     // seed Gauge
     await bipSeedGauge(true, undefined, false)
 
-    // mine some blocks so that instanteous reserves can be updated: 
+    // mine some blocks so that reserves can be updated: 
     await mine(10000, { interval: 12 });
     // update curve oracle
     await this.beanstalk.connect(owner).removeLiquidity(
@@ -81,7 +81,7 @@ describe('SeedGauge Init Test', function () {
       '0',
       '0'
     )
-    // update pump
+    // update pump.
     await this.well.connect(owner).addLiquidity(
       [0 , 0],
       '0',
@@ -148,9 +148,9 @@ describe('SeedGauge Init Test', function () {
 
     it('usd Liquidity', async function () {
       // ~11.5m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getUsdLiquidity(BEAN_ETH_WELL)).to.be.equal(to18('10227788.644938168427974960'));
+      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.equal(to18('10227788.644938168427974960'));
       // ~118k usd liquidity in Bean3Crv
-      expect(await this.beanstalk.getUsdLiquidity(BEAN_3_CURVE)).to.be.equal(to18('118929.150867709373771440'));
+      expect(await this.beanstalk.getBean3CRVLiquidity()).to.be.equal(to18('118929.150867709373771440'));
       // ~11.6m usd liquidity total
       expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.equal(to18('10346717.795805877801746400'));
     })

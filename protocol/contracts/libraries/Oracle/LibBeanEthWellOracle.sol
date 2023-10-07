@@ -7,7 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import "contracts/libraries/LibAppStorage.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title Bean Eth Well Oracle Library
@@ -21,9 +22,6 @@ library LibBeanEthWellOracle {
     using SafeCast for uint256;
     using LibSafeMath128 for uint128;
 
-    // The index of the Bean and Weth token addresses in all BEAN/ETH Wells.
-    uint256 constant BEAN_INDEX = 0;
-    uint256 constant ETH_INDEX = 1;
 
     /**
      * @dev Sets the BEAN/ETH price in {AppStorage} given a set of reserves.
@@ -40,8 +38,8 @@ library LibBeanEthWellOracle {
             s.ethReserve = 0;
             s.beanReserve = 0;
         } else {
-            s.ethReserve = reserves[ETH_INDEX].toUint128();
-            s.beanReserve = reserves[BEAN_INDEX].toUint128();
+            s.ethReserve = reserves[C.ETH_INDEX].toUint128();
+            s.beanReserve = reserves[C.BEAN_INDEX].toUint128();
         }
     }
 
@@ -68,8 +66,8 @@ library LibBeanEthWellOracle {
     function getBeanEthWellReserves() internal view returns (uint256[] memory twaReserves) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         twaReserves = new uint256[](2);
-        twaReserves[BEAN_INDEX] = s.beanReserve;
-        twaReserves[ETH_INDEX] = s.ethReserve;
+        twaReserves[C.BEAN_INDEX] = s.beanReserve;
+        twaReserves[C.ETH_INDEX] = s.ethReserve;
     }
 
     /**

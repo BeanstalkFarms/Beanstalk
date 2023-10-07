@@ -9,6 +9,7 @@ import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
@@ -207,7 +208,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice gets the change in demand for pods from the previous season.
+     * @notice returns the change in demand for pods from the previous season.
      */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
@@ -216,20 +217,45 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice gets the non-bean usd liquidity for a given well.
+     * @notice returns the twa non-bean usd liquidity for a given well.
      * additionally supports the Bean3CRV metapool.
+     * 
+     * @param well the well to get the usd liquidity.
+     * @param startTimestamp the timestamp of when the last cumulative reserves were called.
+     * @param tokenUsdPrice the token price to use for the non-bean asset. 
      */
-    function getUsdLiquidity(address well) external view returns (uint256) {
-        if (well == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
-        (address token, uint256 j) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        return LibWell.getUsdLiquidityWithPump(well, token, j);
+    function getTwaUsdLiquidityOfWell(
+        address well,
+        uint256 startTimestamp,
+        uint256 tokenUsdPrice
+    ) external view returns (uint256) {
+        return LibWell.getTwaUsdLiquidity(well, startTimestamp, tokenUsdPrice);
     }
 
     /**
-     * @notice gets the non-bean usd total liquidity of bean.
+     * @notice returns the MEV manipulatation resistant non-bean liqudity
+     * from the bean:3CRV factory pool. 
+     */
+    function getBean3CRVLiquidity() public view returns (uint256 usdLiquidity) {
+        return LibBeanMetaCurve.totalLiquidityUsd();
+    }
+
+    /**
+     * @notice returns the twa beanEth liquidity, using the values stored in beanstalk.
+     */
+    function getBeanEthTwaUsdLiquidity() public view returns (uint256) {
+        return LibWell.getTwaLiquidityFromBeanstalkPump(
+            C.BEAN_ETH_WELL,
+            LibUsdOracle.getTokenPrice(C.WETH)
+        );
+    }
+
+    
+    /**
+     * @notice returns the non-bean usd total liquidity of bean.
      */
     function getTotalUsdLiquidity() external view returns (uint256) {
-        return LibBeanMetaCurve.totalLiquidityUsd().add(LibWell.getUsdLiquidity(C.BEAN_ETH_WELL));
+        return getBean3CRVLiquidity().add(getBeanEthTwaUsdLiquidity());
     }
 
     /**

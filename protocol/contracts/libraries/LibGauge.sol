@@ -119,7 +119,7 @@ library LibGauge {
             uint256 percentDepositedBdv = depositedBdv.mul(100e6).div(totalLPBdv);
 
             // gets the gauge points of token from GaugePointFacet.
-            uint256 newGaugePoints = updateGaugePoints(
+            uint256 newGaugePoints = calcGaugePoints(
                 ss.gpSelector,
                 ss.gaugePoints,
                 ss.optimalPercentDepositedBdv,
@@ -161,7 +161,7 @@ library LibGauge {
      * @dev function calls the selector of the token's gauge point function.
      * See {GaugePointFacet.defaultGaugePointFunction()}
      */
-    function updateGaugePoints(
+    function calcGaugePoints(
         bytes4 gpSelector,
         uint256 gaugePoints,
         uint256 optimalPercentDepositedBdv,

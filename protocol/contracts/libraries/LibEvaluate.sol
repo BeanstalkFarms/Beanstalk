@@ -212,10 +212,12 @@ library LibEvaluate {
         uint256 usdLiquidity;
         for (uint256 i; i < pools.length; i++) {
             // get the non-bean value in an LP.
+            // for the bean eth pool, use the values stored in reserves,
+            // rather than querying the beanstalk pump.
             if (pools[i] == C.CURVE_BEAN_METAPOOL) {
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
-            } else if (LibWell.isWell(pools[i])) {
-                usdLiquidity = usdLiquidity.add(LibWell.getUsdLiquidity(pools[i]));
+            } else if (pools[i] == C.BEAN_ETH_WELL) {
+                usdLiquidity = usdLiquidity.add(LibWell.getBeanEthTwaUsdLiquidityFromReserves(twaReserves));
             }
         }
 

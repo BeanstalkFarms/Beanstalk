@@ -8,8 +8,8 @@ pragma experimental ABIEncoderV2;
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import "contracts/libraries/LibAppStorage.sol";
-
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {C} from "contracts/C.sol";
 /**
  * @title Eth Usd Oracle Library
  * @notice Contains functionalty to fetch a manipulation resistant ETH/USD price.
@@ -38,10 +38,6 @@ library LibEthUsdOracle {
     // The maximum percent difference such that the oracle assumes no manipulation is occuring.
     uint256 constant MAX_DIFFERENCE = 0.01e18; // 1%
     uint256 constant ONE = 1e18;
-
-    // The index of the ETH token address in the BEAN/ETH Well.
-    uint256 internal constant BEAN_ETH_WELL_ETH_INDEX = 1;
-
 
     /**
      * @dev Returns the ETH/USD price.
@@ -106,7 +102,7 @@ library LibEthUsdOracle {
         if (ratios.length == 0) {
             s.usdEthPrice = 0;
         } else {
-            s.usdEthPrice = ratios[BEAN_ETH_WELL_ETH_INDEX];
+            s.usdEthPrice = ratios[C.ETH_INDEX];
         }
     }
 

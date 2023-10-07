@@ -100,14 +100,16 @@ contract SeasonFacet is Weather {
             .timestamp
             .sub(s.season.start.add(s.season.period.mul(s.season.current)))
             .div(C.BLOCK_LENGTH_SECONDS);
-
+        // reset ethUsdEthPrice here rather than at the end, so that the function is 
+        // factored into the incentive amount. {resetBeanEthWellReserves} cannot be done
+        // given that it is used in LibIncentive.
+        LibEthUsdOracle.resetUsdEthPrice();
         uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
+        LibBeanEthWellOracle.resetBeanEthWellReserves();
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
         emit Incentivization(account, incentiveAmount);
-        LibBeanEthWellOracle.resetBeanEthWellReserves();
-        LibEthUsdOracle.resetUsdEthPrice();
         return incentiveAmount;
     }
 

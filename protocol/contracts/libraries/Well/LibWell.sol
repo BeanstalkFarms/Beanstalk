@@ -94,56 +94,90 @@ library LibWell {
 
     /**
      * @notice gets the liquidity of a well in USD
-     * precision is in the decimals of the non_bean asset in the well.
-     * assumes a well that:
-     * 1) has attached the Beanstalk pump.
-     * 2) has 2 tokens.
-     *
-     * @dev if the token is WETH and in the sunrise function,
-     *  we use the value stored in s.usdEthPrice to get the price of eth in usd.
-     *  we use the twaReserves stored in s.ethReserve to get the amount of eth in the pool.
-     *  if s.usdEthPrice is 1 or 0, then this function is called outside of sunrise.
-     *  if s.usdEthPrice or s.ethReserve/s.beanReserve is 0, then the oracle failed to compute
-     *  a valid price this Season, and thus beanstalk cannot calculate the usd liquidity
-     *  (and will return 0).
+     * precision is in the decimals of the non bean asset in the well.
+     * see {getTwaUsdLiquidityWithPump} for well requirements.
      */
-    function getUsdLiquidity(address well) internal view returns (uint256 usdLiquidity) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        // get the non-bean address and index
-        (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-        if (token == C.WETH) {
-            uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
-            if (ethUsd > 1) {
-                uint256 price = uint256(1e24).div(ethUsd);
-                return price.mul(s.ethReserve).div(1e6);
-            }
-        }
-        // if the non-bean asset of the well is not WETH,
-        // or if the usd oracle returns 1/0,
-        // get the liquidity with the pump instead.
-        return getUsdLiquidityWithPump(well, token, j);
-    }
-
-    /**
-     * @notice gets the usd value of a well, using the emaReserves from the pumps.
-     */
-    function getUsdLiquidityWithPump(
+    function getTwaUsdLiquidity(
         address well,
-        address token,
-        uint256 index
+        uint256 startTimestamp,
+        uint256 tokenPrice
     ) internal view returns (uint256 usdLiquidity) {
-        uint256[] memory twaReserves = getTwaReservesFromBeanstalkPump(well);
-        uint256 price = LibUsdOracle.getTokenPrice(token);
-        usdLiquidity = price.mul(twaReserves[index]).div(1e6);
+        // get the non-bean address and index
+        (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
+        return getTwaUsdLiquidityWithPump(well, j, startTimestamp, tokenPrice);
     }
 
     /**
-     * @notice gets the TwaReserves of a given well. 
+     * @notice gets the beanEth non-bean usd liquidity using the twa reserves in storage.
+     *
+     * @dev this is done for gas efficency purposes, rather than calling the pump multiple times.
+     * This function should be called after the reserves have been set. Currently this is only done
+     * in {seasonFacet.sunrise}.
+     *
+     * if LibEthUsdOracle.getUsdEthPrice() returns 1, then this function is called without the reserves being set.
+     * LibEthUsdOracle.getUsdEthPrice() or s.ethReserve returns 0, then the oracle failed to compute
+     * a valid price this Season, and thus beanstalk cannot calculate the usd liquidity.
+     */
+    function getBeanEthTwaUsdLiquidityFromReserves(
+        uint256[] memory twaReserves
+    ) internal view returns (uint256 usdLiquidity) {
+        uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
+        if (ethUsd > 1) {
+            uint256 price = uint256(1e24).div(ethUsd);
+            return price.mul(twaReserves[C.ETH_INDEX]).div(1e6);
+        }
+
+        // if ethUsd == 0, then the beanstalk could not compute a valid eth price,
+        // and should return 0. if s.ethReserve is 0, the previous if block will return 0.
+        if (ethUsd == 0) {
+            return 0;
+        }
+
+        // if the function reaches here, then this is called outside the sunrise function
+        // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
+        // to get the price. This should never be reached during sunrise and thus
+        // should not impact gas.
+        return LibUsdOracle.getTokenPrice(C.WETH).mul(twaReserves[C.ETH_INDEX]).div(1e6);
+    }
+
+    /**
+     * @notice gets the twa usd value of a well, using the emaReserves from the pumps.
+     * @dev assumes a well that:
+     * 1) has attached a pump that has implmented {ICumulativePump}.
+     * 1.1) if multiple pumps are attached, the pump that has implmented
+     *      {ICumulativePump} should be the first attached pump.
+     * 2) has 2 tokens.
+     * @param well well in question.
+     * @param index the index of the non-bean `token` of a given well.
+     * @param startTimestamp the timestamp to use with the cumulative
+     * reserve values returned from the pump.
+     * @param tokenUsdPrice the usd value of 'token'.
+     */
+    function getTwaUsdLiquidityWithPump(
+        address well,
+        uint256 index,
+        uint256 startTimestamp,
+        uint256 tokenUsdPrice
+    ) internal view returns (uint256 usdLiquidity) {
+        ICumulativePump pump = ICumulativePump(IWell(well).pumps()[0].target);
+        (uint256[] memory twaReserves, ) = pump.readTwaReserves(
+            well,
+            pump.readCumulativeReserves(well, C.BYTES_ZERO),
+            startTimestamp,
+            C.BYTES_ZERO
+        );
+        usdLiquidity = tokenUsdPrice.mul(twaReserves[index]).div(1e6);
+    }
+
+    /**
+     * @notice gets the TwaReserves of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
      * the inital timestamp and reserves is the timestamp of the start
      * of the last season.
      */
-    function getTwaReservesFromBeanstalkPump(address well) internal view returns (uint256[] memory twaReserves) {
+    function getTwaReservesFromBeanstalkPump(
+        address well
+    ) internal view returns (uint256[] memory twaReserves) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
             well,
@@ -151,5 +185,26 @@ library LibWell {
             s.season.timestamp,
             C.BYTES_ZERO
         );
+    }
+
+    /**
+     * @notice gets the TwaLiquidity of a given well.
+     * @dev only supports wells that are whitelisted in beanstalk.
+     * the inital timestamp and reserves is the timestamp of the start
+     * of the last season.
+     */
+    function getTwaLiquidityFromBeanstalkPump(
+        address well,
+        uint256 tokenUsdPrice
+    ) internal view returns (uint256 usdLiquidity) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
+        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+            well,
+            s.wellOracleSnapshots[well],
+            s.season.timestamp,
+            C.BYTES_ZERO
+        );
+        usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
     }
 }
