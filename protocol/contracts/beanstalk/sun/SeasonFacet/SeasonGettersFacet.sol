@@ -61,7 +61,7 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the block during which the current Season started.
      */
-    function sunriseBlock() external view returns (uint32){
+    function sunriseBlock() external view returns (uint32) {
         return s.season.sunriseBlock;
     }
 
@@ -95,9 +95,7 @@ contract SeasonGettersFacet {
      * - the Bean:ETH Well
      */
     function totalDeltaB() external view returns (int256 deltaB) {
-        deltaB = LibCurveMinting.check().add(
-            LibWellMinting.check(C.BEAN_ETH_WELL)
-        );
+        deltaB = LibCurveMinting.check().add(LibWellMinting.check(C.BEAN_ETH_WELL));
     }
 
     /**
@@ -138,7 +136,7 @@ contract SeasonGettersFacet {
     /**
      * @notice returns the total BDV in beanstalk.
      * @dev the total BDV may differ from the instaneous BDV,
-     * as BDV is asyncronous. 
+     * as BDV is asyncronous.
      */
     function getTotalBdv() external view returns (uint256 totalBdv) {
         return LibGauge.getTotalBdv();
@@ -150,24 +148,27 @@ contract SeasonGettersFacet {
     function getSeedGauge() external view returns (Storage.SeedGauge memory) {
         return s.seedGauge;
     }
-    
+
     /**
-     * @notice returns the average grown stalk per BDV per season. 
+     * @notice returns the average grown stalk per BDV per season.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
-     * note that stalk has 10 decimals. 
+     * note that stalk has 10 decimals.
      */
     function getAverageGrownStalkPerBdvPerSeason() public view returns (uint128) {
         return s.seedGauge.averageGrownStalkPerBdvPerSeason;
     }
 
     /**
-     * @notice returns the new average grown stalk per BDV per season, 
+     * @notice returns the new average grown stalk per BDV per season,
      * if updateStalkPerBdvPerSeason() is called.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
-     * note that stalk has 10 decimals. 
+     * note that stalk has 10 decimals.
      */
     function getNewAverageGrownStalkPerBdvPerSeason() external view returns (uint256) {
-        return getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(LibGauge.TARGET_SEASONS_TO_CATCHUP);
+        return
+            getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(
+                LibGauge.TARGET_SEASONS_TO_CATCHUP
+            );
     }
 
     /**
@@ -185,17 +186,13 @@ contract SeasonGettersFacet {
     function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
         return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.beanToMaxLpGpPerBDVRatio);
     }
-    
 
     /**
      * @notice returns the pod rate (unharvestable pods / total bean supply)
      */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return Decimal.ratio(
-            s.f.pods.sub(s.f.harvestable),
-            beanSupply
-        ).value;
+        return Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply).value;
     }
 
     /**
@@ -203,11 +200,8 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
-            C.BEAN_ETH_WELL,
-            s.wellOracleSnapshots[C.BEAN_ETH_WELL],
-            s.season.timestamp,
-            C.BYTES_ZERO
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+            C.BEAN_ETH_WELL
         );
         return LibEvaluate.calcLPToSupplyRatio(beanSupply, twaReserves).value;
     }
@@ -217,7 +211,7 @@ contract SeasonGettersFacet {
      */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
+        (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
         return deltaPodDemand.value;
     }
 

@@ -119,7 +119,7 @@ library LibWell {
             }
         }
         // if the non-bean asset of the well is not WETH,
-        // or if the usd oracle returns 1/0, 
+        // or if the usd oracle returns 1/0,
         // get the liquidity with the pump instead.
         return getUsdLiquidityWithPump(well, token, j);
     }
@@ -132,14 +132,24 @@ library LibWell {
         address token,
         uint256 index
     ) internal view returns (uint256 usdLiquidity) {
+        uint256[] memory twaReserves = getTwaReservesFromBeanstalkPump(well);
+        uint256 price = LibUsdOracle.getTokenPrice(token);
+        usdLiquidity = price.mul(twaReserves[index]).div(1e6);
+    }
+
+    /**
+     * @notice gets the TwaReserves of a given well. 
+     * @dev only supports wells that are whitelisted in beanstalk.
+     * the inital timestamp and reserves is the timestamp of the start
+     * of the last season.
+     */
+    function getTwaReservesFromBeanstalkPump(address well) internal view returns (uint256[] memory twaReserves) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+        (twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
             well,
             s.wellOracleSnapshots[well],
             s.season.timestamp,
             C.BYTES_ZERO
         );
-        uint256 price = LibUsdOracle.getTokenPrice(token);
-        usdLiquidity = price.mul(twaReserves[index]).div(1e6);
     }
 }
