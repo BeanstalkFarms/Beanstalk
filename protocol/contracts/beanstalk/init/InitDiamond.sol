@@ -39,7 +39,6 @@ contract InitDiamond {
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-
         C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);

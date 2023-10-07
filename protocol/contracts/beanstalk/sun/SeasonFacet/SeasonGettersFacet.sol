@@ -100,7 +100,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice Returns the current Delta B for the requested pool.
+     * @notice Returns the Time Weighted Average Delta B since the start of the Season for the requested pool.
      */
     function poolDeltaB(address pool) external view returns (int256) {
         if (pool == C.CURVE_BEAN_METAPOOL) return LibCurveMinting.check();
@@ -109,7 +109,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice Returns thelast Well Oracle Snapshot for a given `well`.
+     * @notice Returns the last Well Oracle Snapshot for a given `well`.
      * @return snapshot The encoded cumulative balances the last time the Oracle was captured.
      */
     function wellOracleSnapshot(address well) external view returns (bytes memory snapshot) {
@@ -128,30 +128,30 @@ contract SeasonGettersFacet {
     //////////////////// SEED GAUGE GETTERS ////////////////////
 
     /**
-     * @notice returns the average grown stalk per BDV .
+     * @notice Returns the average grown stalk per BDV.
      */
     function getAverageGrownStalkPerBdv() public view returns (uint256) {
         return LibGauge.getAverageGrownStalkPerBdv();
     }
 
     /**
-     * @notice returns the total BDV in beanstalk.
-     * @dev the total BDV may differ from the instaneous BDV,
-     * as BDV is asyncronous.
+     * @notice Returns the total Deposited BDV in Beanstalk.
+     * @dev the total Deposited BDV may vary from the instantaneous BDV of all Deposited tokens
+     * as the BDV of a Deposit is only updated when a Deposit is interacted with.
      */
     function getTotalBdv() external view returns (uint256 totalBdv) {
         return LibGauge.getTotalBdv();
     }
 
     /**
-     * @notice returns the seed gauge struct.
+     * @notice Returns the seed gauge struct.
      */
     function getSeedGauge() external view returns (Storage.SeedGauge memory) {
         return s.seedGauge;
     }
 
     /**
-     * @notice returns the average grown stalk per BDV per season.
+     * @notice Returns the average grown stalk per BDV per season.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
      * note that stalk has 10 decimals.
      */
@@ -160,7 +160,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the new average grown stalk per BDV per season,
+     * @notice Returns the new average grown stalk per BDV per season,
      * if updateStalkPerBdvPerSeason() is called.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
      * note that stalk has 10 decimals.
@@ -173,7 +173,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the ratio between bean and max LP gp Per BDV, unscaled.
+     * @notice Returns the ratio between bean and max LP gp Per BDV, unscaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGPperBDVRatio() external view returns (uint256) {
@@ -181,7 +181,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the ratio between bean and max LP gp Per BDV, scaled.
+     * @notice Returns the ratio between bean and max LP gp Per BDV, scaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
     function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
@@ -189,7 +189,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the pod rate (unharvestable pods / total bean supply)
+     * @notice Returns the pod rate (unharvestable pods / total bean supply).
      */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
@@ -197,7 +197,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the L2SR rate (total non-bean liquidity / total bean supply)
+     * @notice Returns the L2SR rate (total non-bean liquidity / total bean supply).
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
@@ -259,7 +259,7 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the current gauge points of a token.
+     * @notice Returns the current gauge points of a token.
      */
     function getGaugePoints(address token) external view returns (uint256) {
         return s.ss[token].gaugePoints;
