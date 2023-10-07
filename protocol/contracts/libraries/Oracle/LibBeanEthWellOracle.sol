@@ -46,14 +46,15 @@ library LibBeanEthWellOracle {
     }
 
     /**
-     * @dev Returns the BEAN / ETH price stored in {AppStorage}.
+     * @notice Returns the BEAN / ETH price stored in {AppStorage}.
      * The BEAN / ETH price is used twice in sunrise(): Once during {LibEvaluate}
      * and another at {LibIncentive}. After use, {resetBeanEthWellReserves} should be called.
+     * @dev this function should only be called during the sunrise function.
      */
     function getBeanEthWellPrice() internal view returns (uint price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
         // see {setBeanEthWellReserves} for reasoning.
+        // s.ethReserve should be set prior to this function being called.
         if(s.ethReserve == 0) {
             price = 0;
         } else { 
@@ -61,6 +62,9 @@ library LibBeanEthWellOracle {
         }
     }
 
+    /**
+     * @notice fetches the beanEth reserves that are in storage.
+     */
     function getBeanEthWellReserves() internal view returns (uint256[] memory twaReserves) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         twaReserves = new uint256[](2);
