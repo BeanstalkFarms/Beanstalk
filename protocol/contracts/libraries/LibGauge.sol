@@ -59,8 +59,12 @@ library LibGauge {
      * @notice Updates the seed gauge system.
      * @dev updates the GaugePoints for LP assets (if applicable)
      * and the distribution of grown Stalk to silo assets.
+     * 
+     * If s.usdEthPrice == 0, skip the gauge system, given that
+     * the liquidity cannot be calculated.
      */
     function stepGauge() external {
+        if(LibAppStorage.diamondStorage().usdEthPrice == 0) return;
         (
             uint256 maxLpGpPerBDV,
             LpGaugePointData[] memory lpGpData,
