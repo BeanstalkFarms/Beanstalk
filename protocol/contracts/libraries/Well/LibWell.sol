@@ -105,8 +105,6 @@ library LibWell {
      * if LibWell.getUsdTokenPriceForWell() returns 1, then this function is called without the reserves being set.
      * if s.usdTokenPrice[well] or s.twaReserves[well] returns 0, then the oracle failed to compute
      * a valid price this Season, and thus beanstalk cannot calculate the usd liquidity.
-     *
-     * assumes the non-bean asset has 18 decimals.
      */
     function getWellTwaUsdLiquidityFromReserves(
         address well,
@@ -115,8 +113,7 @@ library LibWell {
         uint256 tokenUsd = getUsdTokenPriceForWell(well);
         (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
         if (tokenUsd > 1) {
-            uint256 price = uint256(1e24).div(tokenUsd);
-            return price.mul(twaReserves[j]).div(1e6);
+            return twaReserves[j].mul(1e18).div(tokenUsd);
         }
 
         // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
