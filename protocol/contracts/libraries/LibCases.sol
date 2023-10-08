@@ -99,8 +99,9 @@ library LibCases {
         cd.bL = int80(bytes10(_caseData << 120));
     }
 
-    function getCasesV2() internal pure returns (bytes32[144] memory casesV2) {
-        casesV2 = [
+function setCasesV2() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.casesV2 = [
         //               Dsc soil demand,  Steady soil demand  Inc soil demand
                     /////////////////////// Exremely Low L2SR ///////////////////////
             bytes32(T_PLUS_3_L_INCR_TEN),    T_PLUS_1_L_INCR_TEN,    T_PLUS_0_L_INCR_TEN, // Exs Low: P < 1

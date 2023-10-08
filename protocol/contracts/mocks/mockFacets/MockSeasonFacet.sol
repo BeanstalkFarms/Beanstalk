@@ -278,16 +278,16 @@ contract MockSeasonFacet is SeasonFacet  {
             .div(1000) // eth price
             .div(1000); // reserve[1] / 1000 = %
         IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
-        s.beanReserve = uint128(reserves[0]);
-        s.ethReserve = uint128(reserves[1]);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
         if(aboveQ) {
             // increase bean price
-            s.beanReserve = uint128(reserves[0].mul(2));
-            s.usdEthPrice = 0.001e18;
+            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0].mul(2));
+            s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         } else {
             // decrease bean price
-            s.beanReserve = uint128(reserves[0]);
-            s.usdEthPrice = 0.001e18;
+            s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
+            s.usdTokenPrice[C.BEAN_ETH_WELL] = 0.001e18;
         }
         calcCaseIdandUpdate(deltaB);
     }
@@ -416,7 +416,7 @@ contract MockSeasonFacet is SeasonFacet  {
     }
     
     function setUsdEthPrice(uint256 price) external {
-        s.usdEthPrice = price;
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = price;
     }
 
     function mockStepGauge() external {

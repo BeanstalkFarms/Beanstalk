@@ -33,7 +33,7 @@ contract MockInitDiamond is InitWhitelist {
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-        s.casesV2 = LibCases.getCasesV2();
+        LibCases.setCasesV2();
         s.w.t = 1;
 
         s.w.thisSowTime = type(uint32).max;
@@ -47,9 +47,8 @@ contract MockInitDiamond is InitWhitelist {
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
         s.isFarm = 1;
-        s.ethReserve = 1;
-        s.beanReserve = 1;
-        s.usdEthPrice = 1;
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
         s.season.stemStartSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         // 4 + 4 + 2

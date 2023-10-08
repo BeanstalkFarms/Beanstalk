@@ -39,12 +39,11 @@ contract InitDiamond {
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-
         C.bean().approve(C.CURVE_BEAN_METAPOOL, type(uint256).max);
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
-        s.casesV2 = LibCases.getCasesV2();
+        LibCases.setCasesV2();
         s.w.t = 1;
 
         s.season.current = 1;
@@ -58,9 +57,8 @@ contract InitDiamond {
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
-        s.ethReserve = 1;
-        s.beanReserve = 1;
-        s.usdEthPrice = 1;
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 

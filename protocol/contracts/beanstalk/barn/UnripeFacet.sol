@@ -14,6 +14,7 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import "contracts/C.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/LibUnripe.sol";
@@ -355,19 +356,17 @@ contract UnripeFacet is ReentrancyGuard {
      * @param newUnderlyingToken The new underlying token to switch to.
      * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
      */
-    function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) external payable {
+    function switchUnderlyingToken(
+        address unripeToken, 
+        address newUnderlyingToken
+    ) external payable {
         LibDiamond.enforceIsContractOwner();
         require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
     function getLockedBeans() external view returns (uint256) {
-        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
-            C.BEAN_ETH_WELL,
-            s.wellOracleSnapshots[C.BEAN_ETH_WELL],
-            s.season.timestamp,
-            C.BYTES_ZERO
-        );
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
         return LibUnripe.getLockedBeans(twaReserves);
     }
 
@@ -376,12 +375,7 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     function getLockedBeansInUrBEANETH() external view returns (uint256) {
-        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
-            C.BEAN_ETH_WELL,
-            s.wellOracleSnapshots[C.BEAN_ETH_WELL],
-            s.season.timestamp,
-            C.BYTES_ZERO
-        );
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
         return LibUnripe.getLockedBeansFromLP(twaReserves);
     }
 }

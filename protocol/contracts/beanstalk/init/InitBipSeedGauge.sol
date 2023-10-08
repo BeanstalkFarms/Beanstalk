@@ -86,15 +86,14 @@ contract InitBipSeedGauge {
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50% // TODO: how to set this?
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initalizeAverageGrownStalkPerBdv(totalBdv);
 
-        // initalize s.usdEthPrice
-        s.usdEthPrice = 1;
+        // initalize s.usdTokenPrice for the bean eth well. 
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
 
-        // overwrite s.beanEthPrice and set s.reserves
-        s.beanReserve = 1;
-        s.ethReserve = 1;
+        // overwrite s.beanEthPrice and set s.twaReserves for the bean eth well. 
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1,1);
 
         // initalize V2 cases.
-        s.casesV2 = LibCases.getCasesV2();
+        LibCases.setCasesV2();
     }
 
     function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {

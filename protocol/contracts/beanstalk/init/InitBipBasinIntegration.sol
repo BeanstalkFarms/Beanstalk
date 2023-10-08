@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage, Storage} from "../AppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
@@ -57,8 +57,7 @@ contract InitBipBasinIntegration {
         // the init script was initally made with the line below,
         // but since changed to compile with the current AppStorage.sol
         // s.beanEthPrice = 1;
-        s.ethReserve = 1;
-        s.beanReserve = 1;
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1,1);
 
         // adds ERC1155MetadataURI for ERC165 Interface ID
         ds.supportedInterfaces[0x0e89341c] = true;

@@ -11,8 +11,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {C} from "contracts/C.sol";
-import {AppStorage, LibAppStorage} from "../LibAppStorage.sol";
-import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 
 /**
  * @title Well Library
@@ -20,6 +21,7 @@ import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOr
  **/
 library LibWell {
     using SafeMath for uint256;
+    using LibSafeMath128 for uint128;
 
     uint256 private constant PRECISION = 1e30;
 
@@ -93,53 +95,176 @@ library LibWell {
     }
 
     /**
-     * @notice gets the liquidity of a well in USD
-     * precision is in the decimals of the non_bean asset in the well.
-     * assumes a well that:
-     * 1) has attached the Beanstalk pump.
-     * 2) has 2 tokens.
+     * @notice gets the non-bean usd liquidity of a well,
+     * using the twa reserves and price in storage.
      *
-     * @dev if the token is WETH and in the sunrise function,
-     *  we use the value stored in s.usdEthPrice to get the price of eth in usd.
-     *  we use the twaReserves stored in s.ethReserve to get the amount of eth in the pool.
-     *  if s.usdEthPrice is 1 or 0, then this function is called outside of sunrise.
-     *  if s.usdEthPrice or s.ethReserve/s.beanReserve is 0, then the oracle failed to compute
-     *  a valid price this Season, and thus beanstalk cannot calculate the usd liquidity
-     *  (and will return 0).
+     * @dev this is done for gas efficency purposes, rather than calling the pump multiple times.
+     * This function should be called after the reserves for the well have been set.
+     * Currently this is only done in {seasonFacet.sunrise}.
+     *
+     * if LibWell.getUsdTokenPriceForWell() returns 1, then this function is called without the reserves being set.
+     * if s.usdTokenPrice[well] or s.twaReserves[well] returns 0, then the oracle failed to compute
+     * a valid price this Season, and thus beanstalk cannot calculate the usd liquidity.
+     *
+     * assumes the non-bean asset has 18 decimals.
      */
-    function getUsdLiquidity(address well) internal view returns (uint256 usdLiquidity) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        // get the non-bean address and index
+    function getWellTwaUsdLiquidityFromReserves(
+        address well,
+        uint256[] memory twaReserves
+    ) internal view returns (uint256 usdLiquidity) {
+        uint256 tokenUsd = getUsdTokenPriceForWell(well);
         (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-        if (token == C.WETH) {
-            uint256 ethUsd = LibEthUsdOracle.getUsdEthPrice();
-            if (ethUsd > 1) {
-                uint256 price = uint256(1e24).div(ethUsd);
-                return price.mul(s.ethReserve).div(1e6);
-            }
+        if (tokenUsd > 1) {
+            uint256 price = uint256(1e24).div(tokenUsd);
+            return price.mul(twaReserves[j]).div(1e6);
         }
-        // if the non-bean asset of the well is not WETH,
-        // or if the usd oracle returns 1/0, 
-        // get the liquidity with the pump instead.
-        return getUsdLiquidityWithPump(well, token, j);
+
+        // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
+        // and should return 0. if s.twaReserves[C.BEAN_ETH_WELL].reserve1 is 0, the previous if block will return 0.
+        if (tokenUsd == 0) {
+            return 0;
+        }
+
+        // if the function reaches here, then this is called outside the sunrise function
+        // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
+        // to get the price. This should never be reached during sunrise and thus
+        // should not impact gas.
+        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
     }
 
     /**
-     * @notice gets the usd value of a well, using the emaReserves from the pumps.
+     * @dev Sets the price in {AppStorage.usdTokenPrice} given a set of ratios.
+     * It assumes that the ratios correspond to the Constant Product Well indexes.
      */
-    function getUsdLiquidityWithPump(
+    function setUsdTokenPriceForWell(address well, uint256[] memory ratios) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // If the reserves length is 0, then {LibWellMinting} failed to compute
+        // valid manipulation resistant reserves and thus the price is set to 0
+        // indicating that the oracle failed to compute a valid price this Season.
+        if (ratios.length == 0) {
+            s.usdTokenPrice[well] = 0;
+        } else {
+            (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
+            s.usdTokenPrice[well] = ratios[j];
+        }
+    }
+
+    /**
+     * @notice Returns the USD / TKN price stored in {AppStorage.usdTokenPrice}.
+     * @dev assumes TKN has 18 decimals.
+     */
+    function getUsdTokenPriceForWell(address well) internal view returns (uint tokenUsd) {
+        tokenUsd = LibAppStorage.diamondStorage().usdTokenPrice[well];
+    }
+
+    /**
+     * @notice resets token price for a well to 1.
+     * @dev must be called at the end of sunrise() once the
+     * price is not needed anymore to save gas.
+     */
+    function resetUsdTokenPriceForWell(address well) internal {
+        LibAppStorage.diamondStorage().usdTokenPrice[well] = 1;
+    }
+
+    /**
+     * @dev Sets the twaReserves in {AppStorage.usdTokenPrice}.
+     * assumes the twaReserve indexes correspond to the Constant Product Well indexes.
+     * if the length of the twaReserves is 0, then the minting oracle is off.
+     *
+     */
+    function setTwaReservesForWell(address well, uint256[] memory twaReserves) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        Storage.TwaReserves memory _twaReserves;
+        // if the length of twaReserves is 0, then return 0.
+        // the length of twaReserves should never be 1, but 
+        // is added for safety.
+        if (twaReserves.length < 1) {
+            _twaReserves = Storage.TwaReserves(
+                uint128(0),
+                uint128(0)
+            );
+        } else {
+            // safeCast not needed as the reserves are uint128 in the wells.
+            _twaReserves = Storage.TwaReserves(
+                uint128(twaReserves[0]),
+                uint128(twaReserves[1])
+            );
+        }
+        s.twaReserves[well] = _twaReserves;
+    }
+
+    /**
+     * @notice Returns the USD / TKN price stored in {AppStorage.usdTokenPrice}.
+     * @dev assumes TKN has 18 decimals.
+     */
+    function getTwaReservesForWell(
+        address well
+    ) internal view returns (uint256[] memory twaReserves) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        twaReserves = new uint256[](2);
+        twaReserves[0] = s.twaReserves[well].reserve0;
+        twaReserves[1] = s.twaReserves[well].reserve1;
+    }
+
+    /**
+     * @notice resets token price for a well to 1.
+     * @dev must be called at the end of sunrise() once the
+     * price is not needed anymore to save gas.
+     */
+    function resetTwaReservesForWell(address well) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.twaReserves[well].reserve0 = 1;
+        s.twaReserves[well].reserve1 = 1;
+    }
+
+    function getWellPriceFromTwaReserves(address well) internal view returns (uint256 price) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // s.twaReserve[well] should be set prior to this function being called.
+        // 'price' is in terms of reserve0:reserve1.
+        if (s.twaReserves[well].reserve0 == 0) {
+            price = 0;
+        } else {
+            price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
+        }
+    }
+
+    /**
+     * @notice gets the TwaReserves of a given well.
+     * @dev only supports wells that are whitelisted in beanstalk.
+     * the inital timestamp and reserves is the timestamp of the start
+     * of the last season.
+     */
+    function getTwaReservesFromBeanstalkPump(
+        address well
+    ) internal view returns (uint256[] memory twaReserves) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        (twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+            well,
+            s.wellOracleSnapshots[well],
+            s.season.timestamp,
+            C.BYTES_ZERO
+        );
+    }
+
+    /**
+     * @notice gets the TwaLiquidity of a given well.
+     * @dev only supports wells that are whitelisted in beanstalk.
+     * the inital timestamp and reserves is the timestamp of the start
+     * of the last season.
+     */
+    function getTwaLiquidityFromBeanstalkPump(
         address well,
-        address token,
-        uint256 index
+        uint256 tokenUsdPrice
     ) internal view returns (uint256 usdLiquidity) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
         (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
             well,
             s.wellOracleSnapshots[well],
             s.season.timestamp,
             C.BYTES_ZERO
         );
-        uint256 price = LibUsdOracle.getTokenPrice(token);
-        usdLiquidity = price.mul(twaReserves[index]).div(1e6);
+        usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
     }
 }

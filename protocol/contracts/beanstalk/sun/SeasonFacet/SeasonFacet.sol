@@ -6,8 +6,7 @@ pragma experimental ABIEncoderV2;
 import {Weather, SafeMath, C} from "./Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
-import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
-import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
@@ -100,28 +99,16 @@ contract SeasonFacet is Weather {
             .timestamp
             .sub(s.season.start.add(s.season.period.mul(s.season.current)))
             .div(C.BLOCK_LENGTH_SECONDS);
-
+        // reset well usdTokenPrice here rather than at the end, so that the function is 
+        // factored into the incentive amount. {resetBeanEthWellReserves} cannot be done
+        // given that it is used in LibIncentive.
+        LibWell.resetUsdTokenPriceForWell(C.BEAN_ETH_WELL);
         uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
+        LibWell.resetTwaReservesForWell(C.BEAN_ETH_WELL);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
         emit Incentivization(account, incentiveAmount);
-        LibBeanEthWellOracle.resetBeanEthWellReserves();
-        LibEthUsdOracle.resetUsdEthPrice();
         return incentiveAmount;
-    }
-
-    /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function
-     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     *
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
-     */
-    function updateStalkPerBdvPerSeason() external {
-        LibGauge.updateStalkPerBdvPerSeason();
     }
 }

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
@@ -40,7 +40,7 @@ library LibIncentive {
 
     /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
     // 21k gas (base cost for a transction) + ~79k gas for other overhead
-    uint256 internal constant SUNRISE_GAS_OVERHEAD = 100_000; // 100k gas
+    uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 100k gas
 
     /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
     address private constant BASE_FEE_CONTRACT = 0x84292919cB64b590C0131550483707E43Ef223aC;
@@ -58,7 +58,7 @@ library LibIncentive {
      * "step" functions have been executed.
      */
     function determineReward(uint256 initialGasLeft, uint256 blocksLate)
-        internal
+        external
         view
         returns (uint256)
     {
@@ -70,7 +70,7 @@ library LibIncentive {
         }
 
         // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
+        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
 
         // If the Bean Eth pool couldn't calculate a valid price, use the max reward value.
         if (beanEthPrice <= 1) {

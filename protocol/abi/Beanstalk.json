@@ -6694,6 +6694,32 @@
   },
   {
     "inputs": [],
+    "name": "getBean3CRVLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "usdLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBeanEthTwaUsdLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getBeanToMaxLpGPperBDVRatio",
     "outputs": [
       {
@@ -6849,11 +6875,21 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "pool",
+        "name": "well",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startTimestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenUsdPrice",
+        "type": "uint256"
       }
     ],
-    "name": "getUsdLiquidity",
+    "name": "getTwaUsdLiquidityOfWell",
     "outputs": [
       {
         "internalType": "uint256",

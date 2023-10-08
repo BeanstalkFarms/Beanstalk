@@ -256,7 +256,7 @@ describe('Sun', function () {
       [[toBean('10000'), to18('6.666666')], 50 * Math.pow(10, 9), 0, EXTERNAL],
       [[toBean('10000'), to18('4.51949333333335')], 30 * Math.pow(10, 9), 0, EXTERNAL],
       [[toBean('50000'), to18('24.5848333333334')], 50 * Math.pow(10, 9), 0, EXTERNAL],
-      [[toBean('10000'), to18('3.33333')], 90 * Math.pow(10, 9), 0, INTERNAL],
+      [[toBean('10000'), to18('3.33333')], 50 * Math.pow(10, 9), 0, INTERNAL],
       [[toBean('10000'), to18('6.66666')], 50 * Math.pow(10, 9), 24, INTERNAL],
       [[toBean('10000'), to18('6.666666')], 50 * Math.pow(10, 9), 500, INTERNAL]
     ];
