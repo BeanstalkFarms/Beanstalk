@@ -58,13 +58,15 @@ contract InitBipSeedGauge {
         );
 
         uint128 totalBdv;
-        // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
         // only lp assets need to be updated.
         // unripeAssets are not in the seed gauge,
         // and bean does not have a gauge point function.
         // (it is based on the max gauge points of LP)
+        // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
-        uint128[5] memory gaugePoints = [uint128(0), 95e18, 5e18, 0, 0]; 
+        uint128 beanEthGp = uint128(s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason) * 500 * 1e12;
+        uint128 bean3crvGp = uint128(s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason) * 500 * 1e12;
+        uint128[5] memory gaugePoints = [uint128(0), beanEthGp, bean3crvGp, 0, 0]; 
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
             IGaugePointFacet.defaultGaugePointFunction.selector,

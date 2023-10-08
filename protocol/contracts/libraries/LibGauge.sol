@@ -143,20 +143,8 @@ library LibGauge {
             if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
             _lpGpData.gpPerBDV = gpPerBDV;
             lpGpData[i] = _lpGpData;
-            // store gauge points to normalize
-            // note: safeCast is unnecessary,
-            // as the max GaugePoints is 100e18 < uint128.max
-            ss.gaugePoints = uint128(newGaugePoints);
-        }
 
-        // normalize gauge points to 100e18.
-        // gaugePoints is scaled up to uint256 to be normalized,
-        // then downcasted, to prevent overflow during scaling.
-        for (uint256 i; i < LPSiloTokens.length; ++i) {
-            Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
-            // safeCast unnecessary; since totalGaugePoints >= ss.gaugePoints,
-            // the max value of ss.gaugePoints can be 100e18 (100e18 < uint128.max)
-            ss.gaugePoints = uint128(uint256(ss.gaugePoints).mul(100e18).div(totalGaugePoints));
+            ss.gaugePoints = newGaugePoints.toUint128();
             emit GaugePointChange(s.season.current, LPSiloTokens[i], ss.gaugePoints);
         }
     }

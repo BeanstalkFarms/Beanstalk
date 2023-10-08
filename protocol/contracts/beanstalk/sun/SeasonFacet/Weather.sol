@@ -125,7 +125,9 @@ contract Weather is Sun {
     }
 
     /**
-     * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
+     * @notice Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
+     * 
+     * @dev mL and bL are set during edge cases such that the event emitted is valid.
      */
     function updateBeanToMaxLPRatio(uint80 mL, int80 bL, uint256 caseId) private {
         uint256 beanToMaxLpGpPerBDVRatio = s.seedGauge.beanToMaxLpGpPerBDVRatio;
@@ -134,6 +136,11 @@ contract Weather is Sun {
             bL = int80(uint256(100e18).sub(s.seedGauge.beanToMaxLpGpPerBDVRatio));
             mL = 100e18;
             s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
+        } else if (beanToMaxLpGpPerBDVRatio <= 0.01e18) {
+            // if the beanToMaxLpGpPerBDVRatio gets less than 0.01%, set it to 0% instead. 
+            bL = int80(s.seedGauge.beanToMaxLpGpPerBDVRatio);
+            mL = 100e18;
+            s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
         } else {
             if (bL < 0) {
                 if (beanToMaxLpGpPerBDVRatio <= uint128(-bL)) {
