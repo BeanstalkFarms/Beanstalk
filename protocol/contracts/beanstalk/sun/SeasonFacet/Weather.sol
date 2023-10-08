@@ -138,7 +138,7 @@ contract Weather is Sun {
             s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
         } else if (beanToMaxLpGpPerBDVRatio <= 0.01e18) {
             // if the beanToMaxLpGpPerBDVRatio gets less than 0.01%, set it to 0% instead. 
-            bL = int80(s.seedGauge.beanToMaxLpGpPerBDVRatio);
+            bL = - int80(s.seedGauge.beanToMaxLpGpPerBDVRatio);
             mL = 100e18;
             s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
         } else {

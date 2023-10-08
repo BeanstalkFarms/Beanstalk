@@ -45,17 +45,18 @@ library LibCases {
     // Naming Convention:
     // PLUS: increment by X (y_i = y_1 + X)
     // MINUS decrement by X (y_i = y_1 - X)
-    // INCR/DECR: scale up/down by X (y_i = y_1 * X)
+    // INCR: scale up by X (y_i = y_1 * X)
+    // DECR: scale down by X (y_i = y_1 * (1-X))
     // T: Temperature, L: Bean to max LP gauge point per BDV ratio
-    // Example: T_PLUS_3_L_INCR_TEN -> Temperature is incremented 3%, 
-    // BeantoMaxLPGaugePointPerBDVRatio is increased 10% (110%)
+    // Example: T_PLUS_3_L_DECR_NINETY-> Temperature is incremented 3%, 
+    // BeantoMaxLPGaugePointPerBDVRatio is decreased by 90%.
     //                                                                  bT
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
-    bytes32 internal constant   T_PLUS_3_L_INCR_TEN = bytes32(0x05F5E100030005F68E8131ECF800000000000000000000000000000000000000);
-    bytes32 internal constant   T_PLUS_1_L_INCR_TEN = bytes32(0x05F5E100010005F68E8131ECF800000000000000000000000000000000000000);
-    bytes32 internal constant   T_PLUS_0_L_INCR_TEN = bytes32(0x05F5E100000005F68E8131ECF800000000000000000000000000000000000000);
-    bytes32 internal constant  T_MINUS_1_L_INCR_TEN = bytes32(0x05F5E100FF0005F68E8131ECF800000000000000000000000000000000000000);
-    bytes32 internal constant  T_MINUS_3_L_INCR_TEN = bytes32(0x05F5E100FD0005F68E8131ECF800000000000000000000000000000000000000);
+    bytes32 internal constant   T_PLUS_3_L_DECR_NINETY = bytes32(0x05F5E1000300008AC7230489E800000000000000000000000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBDV set to 10% of current value.
+    bytes32 internal constant   T_PLUS_1_L_DECR_NINETY = bytes32(0x05F5E1000100008AC7230489E800000000000000000000000000000000000000);
+    bytes32 internal constant   T_PLUS_0_L_DECR_NINETY = bytes32(0x05F5E1000000008AC7230489E800000000000000000000000000000000000000);
+    bytes32 internal constant  T_MINUS_1_L_DECR_NINETY = bytes32(0x05F5E100FF00008AC7230489E800000000000000000000000000000000000000);
+    bytes32 internal constant  T_MINUS_3_L_DECR_NINETY = bytes32(0x05F5E100FD00008AC7230489E800000000000000000000000000000000000000);
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
     bytes32 internal constant   T_PLUS_1_L_PLUS_ONE = bytes32(0x05F5E1000100056BC75E2D6310000000000DE0B6B3A764000000000000000000);
     bytes32 internal constant   T_PLUS_3_L_PLUS_ONE = bytes32(0x05F5E1000300056BC75E2D6310000000000DE0B6B3A764000000000000000000);
@@ -104,57 +105,57 @@ function setCasesV2() internal {
         s.casesV2 = [
         //               Dsc soil demand,  Steady soil demand  Inc soil demand
                     /////////////////////// Exremely Low L2SR ///////////////////////
-            bytes32(T_PLUS_3_L_INCR_TEN),    T_PLUS_1_L_INCR_TEN,    T_PLUS_0_L_INCR_TEN, // Exs Low: P < 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_INCR_TEN,    T_PLUS_1_L_INCR_TEN,    T_PLUS_0_L_INCR_TEN, // Rea Low: P < 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_INCR_TEN,    T_PLUS_3_L_INCR_TEN,    T_PLUS_1_L_INCR_TEN, // Rea Hgh: P < 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_INCR_TEN,    T_PLUS_3_L_INCR_TEN,    T_PLUS_1_L_INCR_TEN, // Exs Hgh: P < 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
+            bytes32(T_PLUS_3_L_DECR_NINETY),    T_PLUS_1_L_DECR_NINETY,    T_PLUS_0_L_DECR_NINETY, // Exs Low: P < 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                     T_PLUS_3_L_DECR_NINETY,    T_PLUS_1_L_DECR_NINETY,    T_PLUS_0_L_DECR_NINETY, // Rea Low: P < 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                     T_PLUS_3_L_DECR_NINETY,    T_PLUS_3_L_DECR_NINETY,    T_PLUS_1_L_DECR_NINETY, // Rea Hgh: P < 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                     T_PLUS_3_L_DECR_NINETY,    T_PLUS_3_L_DECR_NINETY,    T_PLUS_1_L_DECR_NINETY, // Exs Hgh: P < 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
                     /////////////////////// Reasonably Low L2SR ///////////////////////
-                     T_PLUS_3_L_INCR_TEN,    T_PLUS_1_L_INCR_TEN,    T_PLUS_0_L_INCR_TEN, // Exs Low: P < 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_INCR_TEN,    T_PLUS_1_L_INCR_TEN,    T_PLUS_0_L_INCR_TEN, // Rea Low: P < 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE, // Rea Hgh: P < 1
-                    T_PLUS_0_L_MINUS_ONE,  T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE, // Exs Hgh: P < 1
-                    T_PLUS_0_L_MINUS_ONE,  T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
+                     T_PLUS_3_L_DECR_NINETY,    T_PLUS_1_L_DECR_NINETY,    T_PLUS_0_L_DECR_NINETY, // Exs Low: P < 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                     T_PLUS_3_L_DECR_NINETY,    T_PLUS_1_L_DECR_NINETY,    T_PLUS_0_L_DECR_NINETY, // Rea Low: P < 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Rea Hgh: P < 1
+                       T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Exs Hgh: P < 1
+                       T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
                     /////////////////////// Reasonably High L2SR ///////////////////////
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE,    T_PLUS_0_L_PLUS_ONE, // Exs Low: P < 1
-                   T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE,    T_PLUS_0_L_PLUS_ONE, // Rea Low: P < 1
-                   T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE, // Rea Hgh: P < 1
-                    T_PLUS_0_L_MINUS_ONE,  T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE, // Exs Hgh: P < 1
-                    T_PLUS_0_L_MINUS_ONE,  T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Exs Low: P < 1
+                      T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Rea Low: P < 1
+                      T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Rea Hgh: P < 1
+                       T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Exs Hgh: P < 1
+                       T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
                     /////////////////////// Extremely High L2SR ///////////////////////
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE, // Exs Low: P < 1
-                   T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE,    T_PLUS_1_L_PLUS_ONE, // Rea Low: P < 1
-                   T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                    T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_TWO,    T_PLUS_3_L_PLUS_TWO,    T_PLUS_1_L_PLUS_TWO, // Rea Hgh: P < 1
-                    T_PLUS_0_L_MINUS_ONE,  T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN, //          P > Q
-                     T_PLUS_3_L_PLUS_TWO,    T_PLUS_3_L_PLUS_TWO,    T_PLUS_1_L_PLUS_TWO, // Exs Hgh: P < 1
-                    T_PLUS_0_L_MINUS_ONE,  T_MINUS_1_L_MINUS_ONE,  T_MINUS_3_L_MINUS_ONE, //          P > 1
-                     T_PLUS_0_L_INCR_TEN,   T_MINUS_1_L_INCR_TEN,   T_MINUS_3_L_INCR_TEN  //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Exs Low: P < 1
+                      T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Rea Low: P < 1
+                      T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                    T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_TWO,       T_PLUS_3_L_PLUS_TWO,       T_PLUS_1_L_PLUS_TWO, // Rea Hgh: P < 1
+                       T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY, //          P > Q
+                        T_PLUS_3_L_PLUS_TWO,       T_PLUS_3_L_PLUS_TWO,       T_PLUS_1_L_PLUS_TWO, // Exs Hgh: P < 1
+                       T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
+                     T_PLUS_0_L_DECR_NINETY,   T_MINUS_1_L_DECR_NINETY,   T_MINUS_3_L_DECR_NINETY  //          P > Q
         ];
     }
 }

@@ -76,8 +76,7 @@ library LibGauge {
     }
 
     /**
-     * @notice re-evaluate the gauge points of each LP asset, then normalize.
-     * @dev Gauge points are normalized to 100e18.
+     * @notice evaluate the gauge points of each LP asset.
      */
     function updateGaugePoints()
         internal
@@ -139,7 +138,8 @@ library LibGauge {
             // gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
             uint256 gpPerBDV = newGaugePoints.mul(BDV_PRECISION).div(depositedBdv);
-            // gpPerBDV has 6 decimal precision (arbitrary)
+            
+            // gpPerBDV has 6 decimal precision.
             if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
             _lpGpData.gpPerBDV = gpPerBDV;
             lpGpData[i] = _lpGpData;

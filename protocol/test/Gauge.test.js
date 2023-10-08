@@ -128,29 +128,29 @@ describe('Gauge', function () {
       })
     });
 
-    describe('moderately low L2SR % < L2SR < moderately high L2SR % + P > 1', async function () {
+    describe('moderately low L2SR % < L2SR < moderately high L2SR %, excessively low podRate', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('55'));
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('5'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             36, // caseId
-            to18('110'), // relative multiplier 
+            to18('10'), // relative multiplier 
             to18('0') // absolute change (+0.25%)
           );
       })
     });
 
     describe('L2SR < moderately low L2SR %', async function () {
-      it("iincreases Bean to maxLP ratio", async function () {
+      it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('55'));
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('5'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             0, // caseId
-            to18('110'), // relative multiplier 
+            to18('10'), // relative multiplier 
             to18('0') // absolute change (+0.5%)
           );
       })
@@ -169,27 +169,27 @@ describe('Gauge', function () {
         );
     })
 
-    // it("Bean to maxLP ratio will be set to 0 if it hits under 0.01%", async function () {
-    //   await this.season.setBeanToMaxLpGPperBDVRatio(to18('0.5'));
-    //   this.result = await this.season.seedGaugeSunSunrise('0', 111);
-    //   expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('0');
-    //   await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
-    //     .withArgs(
-    //       3,     // season
-    //       111,    // caseId
-    //       to18('100'), // relative change (100% of original) 
-    //       to18('-0.5')    // absolute change (-0.4%)
-    //     );
-    // })
-
-    it("Bean to maxLP ratio cannot go above 100%", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('99.9'));
+    it("Bean to maxLP ratio will be set to 0 if it hits under 0.01%", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0.02'));
       this.result = await this.season.seedGaugeSunSunrise('0', 0);
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('100'));
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('0');
       await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
         .withArgs(
           3,     // season
           0,    // caseId
+          to18('100'), // relative change (100% of original) 
+          to18('-0.02')    // absolute change (-0.4%)
+        );
+    })
+
+    it("Bean to maxLP ratio cannot go above 100%", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(to18('99.9'));
+      this.result = await this.season.seedGaugeSunSunrise('0', 54);
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('100'));
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+        .withArgs(
+          3,     // season
+          54,    // caseId
           to18('100'), // relative change (100% of original) 
           to18('0.1')    // absolute change (+0.1%)
         );
@@ -201,19 +201,19 @@ describe('Gauge', function () {
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75'));
 
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('51'));
-     // 0.51 * (1 - 0.5) + 0.5 = 0.6175
+     // 0.51 * (1 - 0.5) + 0.5 = 75.5
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75.5'))
     })    
 
     it("Bean to maxLP ratio cannot decrease below min %", async function () {
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
-      // 0.25 + 0 * (1 - 0.25) = 0.25
+      // 0 * (1 - 0.5) + 0.5 = .5
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('50'));
     })
 
     it("Bean to maxLP ratio cannot exceed max %", async function () {
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('100'));
-      // 0.25 + 1 * (1 - 0.25) = 1
+      // 100 * (1 - 0.5) + 0.5 = 1
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('100'));
     })
 
