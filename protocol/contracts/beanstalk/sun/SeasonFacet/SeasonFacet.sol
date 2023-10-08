@@ -8,6 +8,7 @@ import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title SeasonFacet
@@ -100,16 +101,17 @@ contract SeasonFacet is Weather {
             .sub(s.season.start.add(s.season.period.mul(s.season.current)))
             .div(C.BLOCK_LENGTH_SECONDS);
 
-        // reset well usdTokenPrice here rather than at the end, so that the function is 
-        // factored into the incentive amount. {resetBeanEthWellReserves} cannot be done
-        // given that it is used in LibIncentive.
-        //
-        // Assumes that no other Well is whitelisted. If another Well is whitelisted, then
-        // the that Well Token Price and TwaReserves should be reset or it will impose additional
-        // gas cost on each Season update.
-        LibWell.resetUsdTokenPriceForWell(C.BEAN_ETH_WELL);
-        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate);
-        LibWell.resetTwaReservesForWell(C.BEAN_ETH_WELL);
+        // Read the Bean / Eth price calculated by the Minting Well.
+        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
+
+        // reset USD Token prices and TWA reserves in storage for all whitelisted LpTokens.
+        address[] memory lpPools = LibWhitelistedTokens.getWellLpTokens();
+        for (uint256 i; i < lpPools.length; i++) {
+            LibWell.resetUsdTokenPriceForWell(lpPools[i]);
+            LibWell.resetTwaReservesForWell(lpPools[i]);
+        }
+
+        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate, beanEthPrice);
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
