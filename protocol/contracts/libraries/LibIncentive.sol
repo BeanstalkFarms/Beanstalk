@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBlockBasefee} from "../interfaces/IBlockBasefee.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "../C.sol";
@@ -70,7 +70,7 @@ library LibIncentive {
         }
 
         // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibBeanEthWellOracle.getBeanEthWellPrice();
+        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
 
         // If the Bean Eth pool couldn't calculate a valid price, use the max reward value.
         if (beanEthPrice <= 1) {

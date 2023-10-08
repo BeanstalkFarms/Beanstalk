@@ -29,6 +29,7 @@ describe('Gauge', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
+    this.gauge = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
@@ -382,14 +383,14 @@ describe('Gauge', function () {
       await this.silo.mow(userAddress, this.bean.address)
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0);
       expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
-      await this.season.updateStalkPerBdvPerSeason();
+      await this.gauge.updateStalkPerBdvPerSeason();
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
     })
 
     it('decreases after a new deposit', async function() {
       await this.season.teleportSunrise(4322)
       await this.silo.mow(userAddress, this.bean.address)
-      await this.season.updateStalkPerBdvPerSeason();
+      await this.gauge.updateStalkPerBdvPerSeason();
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
       this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
       expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'));

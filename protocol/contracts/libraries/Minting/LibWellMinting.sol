@@ -10,7 +10,6 @@ import {SafeMath, C, LibMinting} from "./LibMinting.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
-import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
@@ -132,14 +131,11 @@ library LibWellMinting {
         );
 
         // If evaluating the Bean:Eth Constant Product Well, 
-        // 1) set the BEAN/ETH reserves so that it can be read when 
-        // calculating the Sunrise reward and price of Bean. See {LibIncentive.determineReward}.
-        // 2) set the USD/ETH price so that it can be read when 
+        // 1) set the well reserves so that it can be read later. See {LibIncentive.determineReward}.
+        // 2) set the USD price of the non bean token so that it can be read when 
         // calculating the price of Bean. See {LibEvaluate.evalPrice}.
-        if (well == C.BEAN_ETH_WELL) {
-            LibBeanEthWellOracle.setBeanEthWellReserves(twaReserves);
-            LibEthUsdOracle.setUsdEthPrice(ratios);
-        }
+        LibWell.setTwaReservesForWell(well, twaReserves);
+        LibWell.setUsdTokenPriceForWell(well,ratios);
 
         emit WellOracle(
             s.season.current,

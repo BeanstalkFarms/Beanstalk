@@ -201,10 +201,11 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(
+        uint256[][] memory twaReservesArray = new uint256[][](1);
+        twaReservesArray[0] = LibWell.getTwaReservesFromBeanstalkPump(
             C.BEAN_ETH_WELL
         );
-        return LibEvaluate.calcLPToSupplyRatio(beanSupply, twaReserves).value;
+        return LibEvaluate.calcLPToSupplyRatio(beanSupply, twaReservesArray).value;
     }
 
     /**
@@ -214,22 +215,6 @@ contract SeasonGettersFacet {
         Decimal.D256 memory deltaPodDemand;
         (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
         return deltaPodDemand.value;
-    }
-
-    /**
-     * @notice returns the twa non-bean usd liquidity for a given well.
-     * additionally supports the Bean3CRV metapool.
-     * 
-     * @param well the well to get the usd liquidity.
-     * @param startTimestamp the timestamp of when the last cumulative reserves were called.
-     * @param tokenUsdPrice the token price to use for the non-bean asset. 
-     */
-    function getTwaUsdLiquidityOfWell(
-        address well,
-        uint256 startTimestamp,
-        uint256 tokenUsdPrice
-    ) external view returns (uint256) {
-        return LibWell.getTwaUsdLiquidity(well, startTimestamp, tokenUsdPrice);
     }
 
     /**

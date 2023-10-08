@@ -60,11 +60,12 @@ library LibGauge {
      * @dev updates the GaugePoints for LP assets (if applicable)
      * and the distribution of grown Stalk to silo assets.
      * 
-     * If s.usdEthPrice == 0, skip the gauge system, given that
+     * If the price of bean/eth cannot be computed, 
+     * skip the gauge system, given that
      * the liquidity cannot be calculated.
      */
     function stepGauge() external {
-        if(LibAppStorage.diamondStorage().usdEthPrice == 0) return;
+        if(LibAppStorage.diamondStorage().usdTokenPrice[C.BEAN_ETH_WELL] == 0) return;
         (
             uint256 maxLpGpPerBDV,
             LpGaugePointData[] memory lpGpData,
@@ -278,7 +279,7 @@ library LibGauge {
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateStalkPerBdvPerSeason() public {
+    function updateStalkPerBdvPerSeason() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // will overflow if the average grown stalk per BDV exceeds 1.4e36,
         // which is highly improbable assuming consistent new deposits.
