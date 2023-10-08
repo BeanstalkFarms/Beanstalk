@@ -201,11 +201,7 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        uint256[][] memory twaReservesArray = new uint256[][](1);
-        twaReservesArray[0] = LibWell.getTwaReservesFromBeanstalkPump(
-            C.BEAN_ETH_WELL
-        );
-        return LibEvaluate.calcLPToSupplyRatio(beanSupply, twaReservesArray).value;
+        return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
     }
 
     /**
