@@ -18,8 +18,6 @@ contract GaugePointFacet {
     using SafeMath for uint256;
 
     uint256 private constant ONE_POINT = 1e18;
-    uint256 private constant NINE_NINE_POINTS = 99e18;
-    uint256 private constant ONE_HUNDRED_POINTS = 100e18;
     
     /**
      * @notice DefaultGaugePointFunction 
