@@ -43,7 +43,7 @@ contract InitDiamond {
         C.bean().approve(C.curveZapAddress(), type(uint256).max);
         C.usdc().approve(C.curveZapAddress(), type(uint256).max);
 
-        s.casesV2 = LibCases.getCasesV2();
+        LibCases.setCasesV2();
         s.w.t = 1;
 
         s.season.current = 1;

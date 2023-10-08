@@ -33,7 +33,7 @@ contract MockInitDiamond is InitWhitelist {
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-        s.casesV2 = LibCases.getCasesV2();
+        LibCases.setCasesV2();
         s.w.t = 1;
 
         s.w.thisSowTime = type(uint32).max;

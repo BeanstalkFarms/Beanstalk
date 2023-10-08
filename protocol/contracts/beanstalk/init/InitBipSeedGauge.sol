@@ -92,7 +92,7 @@ contract InitBipSeedGauge {
         s.ethReserve = 1;
 
         // initalize V2 cases.
-        s.casesV2 = LibCases.getCasesV2();
+        LibCases.setCasesV2();
     }
 
     function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
