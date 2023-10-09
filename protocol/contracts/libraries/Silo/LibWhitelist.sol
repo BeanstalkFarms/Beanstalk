@@ -113,7 +113,6 @@ library LibWhitelist {
         s.ss[token].gaugePoints = gaugePoints;
         s.ss[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
 
-
         emit WhitelistToken(
             token,
             selector,

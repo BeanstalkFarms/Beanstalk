@@ -200,20 +200,18 @@ library LibEvaluate {
     /**
      * @notice calculates the liquidity to supply ratio, where liquidity is measured in USD.
      * @param beanSupply the total supply of beans.
-     * @param twaReservesArray an array of twaReserves, 
      * corresponding to the well addresses in the whitelist.
      * @dev no support for non-well AMMs, other than the existing bean:3crv pool.
      */
     function calcLPToSupplyRatio(
-        uint256 beanSupply,
-        uint256[][] memory twaReservesArray
+        uint256 beanSupply
     ) internal view returns (Decimal.D256 memory lpToSupplyRatio) {
         // prevent infinite L2SR
         if (beanSupply == 0) return Decimal.zero();
 
-        AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
-        uint256 usdLiquidity;
+        uint256[] memory twaReserves;
+        uint256 usdLiquidity; 
         for (uint256 i; i < pools.length; i++) {
             // get the non-bean value in an LP.
             // for the bean eth pool, use the values stored in reserves,
@@ -221,9 +219,20 @@ library LibEvaluate {
             if (pools[i] == C.CURVE_BEAN_METAPOOL) {
                 usdLiquidity = usdLiquidity.add(LibBeanMetaCurve.totalLiquidityUsd());
             } else if (LibWell.isWell(pools[i])) {
-                usdLiquidity = usdLiquidity.add(
-                    LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReservesArray[i])
+                twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(
+                    pools[i]
                 );
+                usdLiquidity = usdLiquidity.add(
+                    LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)
+                );
+                if (pools[i] == C.BEAN_ETH_WELL) {
+                    // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
+                    // Note: This statement is put into the for loop to prevent another extraneous read of 
+                    // the twaReserves from storage as `twaReserves` are already loaded into memory.
+                    if (LibAppStorage.diamondStorage().season.fertilizing == true) {
+                        beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
+                    }
+                }
             }
         }
 
@@ -231,11 +240,6 @@ library LibEvaluate {
         // return 0 to save gas.
         if (usdLiquidity == 0) return Decimal.zero();
 
-        // scale down bean supply by the locked beans, if there is fertilizer to be paid off.
-        // note: assumes the first twaReserves entry is the twaReserves of the BeanEth Well.
-        if (s.season.fertilizing == true) {
-            beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReservesArray[0]));
-        }
         // usd liquidity is scaled down from 1e18 to match bean precision (1e6).
         lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
     }
@@ -260,13 +264,10 @@ library LibEvaluate {
         s.f.beanSown = 0;
         (deltaPodDemand, s.w.lastSowTime, s.w.thisSowTime) = calcDeltaPodDemand(dsoil);
         s.w.lastDSoil = uint128(dsoil); // SafeCast not necessary as `s.f.beanSown` is uint128.
-        
-        uint256[][] memory twaReservesArray = new uint256[][](1);
-        twaReservesArray[0] = LibWell.getTwaReservesForWell(C.BEAN_ETH_WELL);
+
         // Calculate Lp To Supply Ratio, fetching the twaReserves in storage:
         lpToSupplyRatio = calcLPToSupplyRatio(
-            beanSupply,
-            twaReservesArray
+            beanSupply
         );
 
         // Calculate PodRate

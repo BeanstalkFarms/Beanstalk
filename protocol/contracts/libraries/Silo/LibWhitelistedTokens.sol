@@ -44,4 +44,12 @@ library LibWhitelistedTokens {
         assets[0] = C.BEAN_ETH_WELL;
         assets[1] = C.CURVE_BEAN_METAPOOL;
     }
+
+    /**
+     * @notice Returns the list of whitelisted Well LP assets.
+     */
+    function getWellLpTokens() internal pure returns (address[] memory assets) {
+        assets = new address[](1);
+        assets[0] = C.BEAN_ETH_WELL;
+    }
 }
