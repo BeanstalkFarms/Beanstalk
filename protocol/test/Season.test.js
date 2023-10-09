@@ -4,7 +4,7 @@ const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { BEAN_3_CURVE, ETH_USDC_UNISWAP_V3, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, MAX_UINT256 } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { deployMockWell } = require('../utils/well.js');
+const { deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -40,7 +40,7 @@ describe('Season', function () {
 
 
         // add wells
-        [this.well, this.wellFunction, this.pump] = await deployMockWell()
+        [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
         await this.well.setReserves([to6('1000000'), to18('1000')])
         await advanceTime(3600)
         await owner.sendTransaction({to: user.address, value: 0});

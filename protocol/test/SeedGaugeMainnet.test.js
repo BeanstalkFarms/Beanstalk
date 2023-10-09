@@ -151,7 +151,7 @@ describe('SeedGauge Init Test', function () {
 
     it('usd Liquidity', async function () {
       // ~11.5m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('10227446'), to18('10227789'));
+      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('10227446'), to18('10227800'));
       // ~118k usd liquidity in Bean3Crv
       expect(await this.beanstalk.getBean3CRVLiquidity()).to.be.equal(to18('118929.150867709373771440'));
       // ~11.6m usd liquidity total

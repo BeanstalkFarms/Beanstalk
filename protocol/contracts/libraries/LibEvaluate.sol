@@ -209,7 +209,7 @@ library LibEvaluate {
         // prevent infinite L2SR
         if (beanSupply == 0) return Decimal.zero();
 
-        address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
+        address[] memory pools = LibWhitelistedTokens.getSiloLpTokens();
         uint256[] memory twaReserves;
         uint256 usdLiquidity; 
         for (uint256 i; i < pools.length; i++) {
