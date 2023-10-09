@@ -26,6 +26,8 @@ import {
   FormStateNew,
   FormTokenStateNew,
   FormTxnsFormState,
+  SettingInput,
+  TxnSettings,
 } from '~/components/Common/Form';
 import TxnPreview from '~/components/Common/Form/TxnPreview';
 import TxnAccordion from '~/components/Common/TxnAccordion';
@@ -349,7 +351,7 @@ const BuyPropProvider: FC<{}> = () => {
         amount: undefined,
       },
       settings: {
-        slippage: 0.5,
+        slippage: 0.1,
       },
     }),
     [baseToken, sdk.tokens.BEAN]
@@ -506,15 +508,24 @@ const BuyPropProvider: FC<{}> = () => {
   return (
     <Formik initialValues={initialValues} onSubmit={onSubmit}>
       {(formikProps) => (
-        <BuyForm
-          handleQuote={handleQuote}
-          balances={balances}
-          tokenOut={tokenOut}
-          tokenList={tokenList}
-          remainingFertilizer={remaining}
-          sdk={sdk}
-          {...formikProps}
-        />
+        <>
+          <TxnSettings placement="form-top-right">
+            <SettingInput
+              name="settings.slippage"
+              label="Slippage Tolerance"
+              endAdornment="%"
+            />
+          </TxnSettings>
+          <BuyForm
+            handleQuote={handleQuote}
+            balances={balances}
+            tokenOut={tokenOut}
+            tokenList={tokenList}
+            remainingFertilizer={remaining}
+            sdk={sdk}
+            {...formikProps}
+          />
+        </>
       )}
     </Formik>
   );
