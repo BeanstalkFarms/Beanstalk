@@ -211,7 +211,8 @@ library LibEvaluate {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
-        uint256 usdLiquidity; uint256[] memory twaReserves;
+        uint256[] memory twaReserves;
+        uint256 usdLiquidity; 
         for (uint256 i; i < pools.length; i++) {
             // get the non-bean value in an LP.
             // for the bean eth pool, use the values stored in reserves,
