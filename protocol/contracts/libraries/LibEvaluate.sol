@@ -209,7 +209,6 @@ library LibEvaluate {
         // prevent infinite L2SR
         if (beanSupply == 0) return Decimal.zero();
 
-        AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory pools = LibWhitelistedTokens.getSiloLPTokens();
         uint256[] memory twaReserves;
         uint256 usdLiquidity; 
@@ -230,7 +229,7 @@ library LibEvaluate {
                     // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
                     // Note: This statement is put into the for loop to prevent another extraneous read of 
                     // the twaReserves from storage as `twaReserves` are already loaded into memory.
-                    if (s.season.fertilizing == true) {
+                    if (LibAppStorage.diamondStorage().season.fertilizing == true) {
                         beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
                     }
                 }
