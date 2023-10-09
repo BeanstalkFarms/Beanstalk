@@ -24,6 +24,8 @@ library LibWell {
     using LibSafeMath128 for uint128;
 
     uint256 private constant PRECISION = 1e30;
+    // The BDV Selector that all Wells should be whitelisted with.
+    bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
 
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
@@ -91,7 +93,7 @@ library LibWell {
      */
     function isWell(address well) internal view returns (bool _isWell) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.ss[well].selector == 0xc84c7727;
+        return s.ss[well].selector == WELL_BDV_SELECTOR;
     }
 
     /**

@@ -39,7 +39,7 @@ library LibWhitelistedTokens {
     /**
      * @notice Returns the current whitelisted LP assets.
      */
-    function getSiloLPTokens() internal pure returns (address[] memory assets) {
+    function getSiloLpTokens() internal pure returns (address[] memory assets) {
         assets = new address[](2);
         assets[0] = C.BEAN_ETH_WELL;
         assets[1] = C.CURVE_BEAN_METAPOOL;

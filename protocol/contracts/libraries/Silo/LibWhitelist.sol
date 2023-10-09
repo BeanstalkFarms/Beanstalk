@@ -96,7 +96,7 @@ library LibWhitelist {
         require(success, "Whitelist: Invalid BDV selector");
         
         // verify the token is in its corresponding array in {LibWhitelistedTokens}.
-        verifyTokenInLibWhitelistedTokens(token);
+        verifyTokenInLibWhitelistedTokens(token, selector);
         
         // verify you passed in a callable gaugePoint Selector.
         verifyGaugeSelector(gaugePointSelector);
@@ -179,18 +179,14 @@ library LibWhitelist {
         require(success, "Whitelist: Invalid GaugePoint selector");
     }
 
-    function verifyTokenInLibWhitelistedTokens(address token) internal view {
+    function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal view {
         // future whitelisted functions will need to be added to the arrays in
         // { LibWhitelistedTokens.sol }
         checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
+        checkTokenInArray(token, LibWhitelistedTokens.getSiloTokensWithUnripe());
 
-        // if the token is a well, perform additional verification with other 
-        // arrays.
-         (bool success, ) = address(token).staticcall(
-            abi.encodeWithSelector(IWell.well.selector)
-        );
-        if(success){
-            checkTokenInArray(token, LibWhitelistedTokens.getSiloLPTokens());      
+        if (selector == LibWell.WELL_BDV_SELECTOR) {
+            checkTokenInArray(token, LibWhitelistedTokens.getSiloLpTokens());      
             checkTokenInArray(token, LibWhitelistedTokens.getWellLpTokens());        
         }
     }
