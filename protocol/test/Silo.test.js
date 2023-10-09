@@ -6,7 +6,7 @@ const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE,
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
-const { whitelistWell, deployMockWell } = require('../utils/well.js');
+const { whitelistWell, deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
 const fs = require('fs');
 
 let user, user2, owner;

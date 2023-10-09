@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
-const { whitelistWell, deployMockWell } = require('../utils/well.js');
+const { whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const { advanceTime } = require('../utils/helpers.js');
 let user,user2,owner;
