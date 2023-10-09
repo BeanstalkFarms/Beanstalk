@@ -5,9 +5,11 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../C.sol";
-import "../LibAppStorage.sol";
-import "contracts/libraries/Silo/LibTokenSilo.sol";
+import {C} from "../../C.sol";
+import {LibAppStorage, AppStorage, Storage} from "../LibAppStorage.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title LibWhitelist
@@ -15,28 +17,27 @@ import "contracts/libraries/Silo/LibTokenSilo.sol";
  * @notice Handles adding and removing ERC-20 tokens from the Silo Whitelist.
  */
 library LibWhitelist {
-
     /**
      * @notice Emitted when a token is added to the Silo Whitelist.
      * @param token ERC-20 token being added to the Silo Whitelist.
      * @param selector The function selector that returns the BDV of a given
      * amount of `token`. Must have signature:
-     * 
+     *
      * ```
      * function bdv(uint256 amount) public view returns (uint256);
      * ```
-     * 
+     *
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
      * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
      * @param gpSelector The function selector that returns the gauge points of a given token.
      * Must have signature:
-     * 
+     *
      * ```
      * function gpFunction(uint256,uint256,uint256) public view returns (uint256);
      * ```
-     * 
+     *
      * @param gaugePoints The gauge points of the token.
-     * @param optimalPercentDepositedBdv The target percentage 
+     * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token.
      */
     event WhitelistToken(
@@ -50,11 +51,10 @@ library LibWhitelist {
     );
 
     event updateGaugeSettings(
-        address indexed token, 
+        address indexed token,
         bytes4 selector,
         uint96 optimalPercentDepositedBdv
     );
-
 
     /**
      * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
@@ -89,17 +89,16 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        //verify you passed in a callable BDV selector
-        (bool success,) = address(this).staticcall(
-            LibTokenSilo.encodeBdvFunction(
-                token,
-                encodeType,
-                selector,
-                0
-            )
+        // verify you passed in a callable BDV selector
+        (bool success, ) = address(this).staticcall(
+            LibTokenSilo.encodeBdvFunction(token, encodeType, selector, 0)
         );
         require(success, "Whitelist: Invalid BDV selector");
-
+        
+        // verify the token is in its corresponding array in {LibWhitelistedTokens}.
+        verifyTokenInLibWhitelistedTokens(token);
+        
+        // verify you passed in a callable gaugePoint Selector.
         verifyGaugeSelector(gaugePointSelector);
 
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
@@ -141,7 +140,7 @@ library LibWhitelist {
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
-    
+
     /**
      * @dev Update the stalk per bdv per season for a token.
      */
@@ -176,14 +175,35 @@ library LibWhitelist {
      */
     function verifyGaugeSelector(bytes4 selector) internal view {
         //verify you passed in a callable gaugePoint selector
-        (bool success,) = address(this).staticcall(
-            abi.encodeWithSelector(
-                selector,
-                0,
-                0,
-                0
-            )
-        );
+        (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector, 0, 0, 0));
         require(success, "Whitelist: Invalid GaugePoint selector");
+    }
+
+    function verifyTokenInLibWhitelistedTokens(address token) internal view {
+        // future whitelisted functions will need to be added to the arrays in
+        // { LibWhitelistedTokens.sol }
+        checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
+
+        // if the token is a well, perform additional verification with other 
+        // arrays.
+         (bool success, ) = address(token).staticcall(
+            abi.encodeWithSelector(IWell.well.selector)
+        );
+        if(success){
+            checkTokenInArray(token, LibWhitelistedTokens.getSiloLPTokens());      
+            checkTokenInArray(token, LibWhitelistedTokens.getWellLpTokens());        
+        }
+    }
+
+    function checkTokenInArray(
+        address token,
+        address[] memory array
+    ) private pure {
+        // verify that the token is in silo tokens.
+        bool success;
+        for (uint i; i < array.length; i++) {
+            if (token == array[i]) success = true;
+        }
+        require(success, "Whitelist: Token not in whitelisted token array");
     }
 }

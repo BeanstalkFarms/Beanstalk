@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../C.sol";
+import {C} from "../../C.sol";
 
 /**
  * @title LibWhitelistedTokens

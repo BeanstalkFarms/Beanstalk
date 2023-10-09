@@ -40,7 +40,7 @@ describe('Season', function () {
 
 
         // add wells
-        [this.well, this.wellFunction, this.pump] = await deployMockWell()
+        [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
         await this.well.setReserves([to6('1000000'), to18('1000')])
         await advanceTime(3600)
         await owner.sendTransaction({to: user.address, value: 0});
