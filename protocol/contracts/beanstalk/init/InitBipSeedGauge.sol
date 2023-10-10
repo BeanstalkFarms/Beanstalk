@@ -22,8 +22,8 @@ interface IGaugePointFacet {
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints);
 }
-contract InitBipSeedGauge{
 
+contract InitBipSeedGauge {
     using SafeMath for uint256;
 
     AppStorage internal s;
@@ -40,19 +40,31 @@ contract InitBipSeedGauge{
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
         // update depositedBDV for bean, bean3crv, urBean, and urBeanETH:
-        LibTokenSilo.incrementTotalDepositedBdv(C.BEAN, BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.BEAN]);
-        LibTokenSilo.incrementTotalDepositedBdv(C.CURVE_BEAN_METAPOOL, BEAN_3CRV_UN_MIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]);
-        LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_BEAN, UNRIPE_BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_BEAN]);
-        LibTokenSilo.incrementTotalDepositedBdv(C.UNRIPE_LP, UNRIPE_LP_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]);
+        LibTokenSilo.incrementTotalDepositedBdv(
+            C.BEAN,
+            BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.BEAN]
+        );
+        LibTokenSilo.incrementTotalDepositedBdv(
+            C.CURVE_BEAN_METAPOOL,
+            BEAN_3CRV_UN_MIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]
+        );
+        LibTokenSilo.incrementTotalDepositedBdv(
+            C.UNRIPE_BEAN,
+            UNRIPE_BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_BEAN]
+        );
+        LibTokenSilo.incrementTotalDepositedBdv(
+            C.UNRIPE_LP,
+            UNRIPE_LP_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]
+        );
 
         uint128 totalBdv;
         // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
-        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
         // only lp assets need to be updated.
-        // unripeAssets are not in the seed gauge, 
-        // and bean does not have a gauge point function. 
+        // unripeAssets are not in the seed gauge,
+        // and bean does not have a gauge point function.
         // (it is based on the max gauge points of LP)
-        uint128[5] memory gaugePoints = [uint128(0), 95e18, 5e18, 0, 0]; // TODO: how to set this?
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
+        uint128[5] memory gaugePoints = [uint128(0), 95e18, 5e18, 0, 0]; 
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
             IGaugePointFacet.defaultGaugePointFunction.selector,
@@ -60,7 +72,7 @@ contract InitBipSeedGauge{
             0x00000000,
             0x00000000
         ];
-        for(uint i = 0; i < siloTokens.length; i++) {
+        for (uint i = 0; i < siloTokens.length; i++) {
             // update gaugePoints and gpSelectors
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
@@ -70,10 +82,13 @@ contract InitBipSeedGauge{
         }
         // initalize seed gauge. 
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50% // TODO: how to set this?
-        s.seedGauge.averageGrownStalkPerBdvPerSeason =  initalizeAverageGrownStalkPerBdv(totalBdv);
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = initalizeAverageGrownStalkPerBdv(totalBdv);
 
-        // initalize s.usdEthPrice 
-        s.usdEthPrice = 1;
+        // initalize s.usdTokenPrice for the bean eth well. 
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+
+        // overwrite s.beanEthPrice and set s.twaReserves for the bean eth well. 
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1,1);
 
         // initalize V2 cases.
         LibCases.setCasesV2();

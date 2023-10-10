@@ -47,8 +47,8 @@ contract MockInitDiamond is InitWhitelist {
             (block.timestamp / s.season.period) * s.season.period :
             block.timestamp;
         s.isFarm = 1;
-        s.beanEthPrice = 1;
-        s.usdEthPrice = 1;
+        s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
         s.season.stemStartSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         // 4 + 4 + 2

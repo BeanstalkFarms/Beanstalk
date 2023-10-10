@@ -9,12 +9,14 @@ import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -60,7 +62,7 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the block during which the current Season started.
      */
-    function sunriseBlock() external view returns (uint32){
+    function sunriseBlock() external view returns (uint32) {
         return s.season.sunriseBlock;
     }
 
@@ -94,9 +96,7 @@ contract SeasonGettersFacet {
      * - the Bean:ETH Well
      */
     function totalDeltaB() external view returns (int256 deltaB) {
-        deltaB = LibCurveMinting.check().add(
-            LibWellMinting.check(C.BEAN_ETH_WELL)
-        );
+        deltaB = LibCurveMinting.check().add(LibWellMinting.check(C.BEAN_ETH_WELL));
     }
 
     /**
@@ -149,7 +149,7 @@ contract SeasonGettersFacet {
     function getSeedGauge() external view returns (Storage.SeedGauge memory) {
         return s.seedGauge;
     }
-    
+
     /**
      * @notice Returns the average grown stalk per BDV per season.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
@@ -166,7 +166,10 @@ contract SeasonGettersFacet {
      * note that stalk has 10 decimals.
      */
     function getNewAverageGrownStalkPerBdvPerSeason() external view returns (uint256) {
-        return getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(LibGauge.TARGET_SEASONS_TO_CATCHUP);
+        return
+            getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(
+                LibGauge.TARGET_SEASONS_TO_CATCHUP
+            );
     }
 
     /**
@@ -184,17 +187,13 @@ contract SeasonGettersFacet {
     function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
         return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.beanToMaxLpGpPerBDVRatio);
     }
-    
 
     /**
      * @notice Returns the pod rate (unharvestable pods / total bean supply).
      */
     function getPodRate() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return Decimal.ratio(
-            s.f.pods.sub(s.f.harvestable),
-            beanSupply
-        ).value;
+        return Decimal.ratio(s.f.pods.sub(s.f.harvestable), beanSupply).value;
     }
 
     /**
@@ -206,27 +205,38 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice gets the change in demand for pods from the previous season.
+     * @notice returns the change in demand for pods from the previous season.
      */
     function getDeltaPodDemand() external view returns (uint256) {
         Decimal.D256 memory deltaPodDemand;
-        (deltaPodDemand, ,) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
+        (deltaPodDemand, , ) = LibEvaluate.calcDeltaPodDemand(s.f.beanSown);
         return deltaPodDemand.value;
     }
 
     /**
-     * @notice gets the non-bean usd liquidity for a given pool.
+     * @notice returns the MEV manipulatation resistant non-bean liqudity
+     * from the bean:3CRV factory pool. 
      */
-    function getUsdLiquidity(address pool) external view returns (uint256) {
-        if (pool == C.CURVE_BEAN_METAPOOL) return LibBeanMetaCurve.totalLiquidityUsd();
-        return LibWell.getUsdLiquidity(pool);
+    function getBean3CRVLiquidity() public view returns (uint256 usdLiquidity) {
+        return LibBeanMetaCurve.totalLiquidityUsd();
     }
 
     /**
-     * @notice gets the non-bean usd total liquidity of bean.
+     * @notice returns the twa beanEth liquidity, using the values stored in beanstalk.
+     */
+    function getBeanEthTwaUsdLiquidity() public view returns (uint256) {
+        return LibWell.getTwaLiquidityFromBeanstalkPump(
+            C.BEAN_ETH_WELL,
+            LibUsdOracle.getTokenPrice(C.WETH)
+        );
+    }
+
+    
+    /**
+     * @notice returns the non-bean usd total liquidity of bean.
      */
     function getTotalUsdLiquidity() external view returns (uint256) {
-        return LibBeanMetaCurve.totalLiquidityUsd().add(LibWell.getUsdLiquidity(C.BEAN_ETH_WELL));
+        return getBean3CRVLiquidity().add(getBeanEthTwaUsdLiquidity());
     }
 
     /**

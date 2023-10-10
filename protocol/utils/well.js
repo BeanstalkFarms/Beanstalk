@@ -245,7 +245,7 @@ async function deployMultiFlowPump() {
     return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
 
-async function deployMockWell() {
+async function deployMockBeanEthWell() {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
@@ -270,6 +270,29 @@ async function deployMockWell() {
 
     return [well, wellFunction, pump]
 }
+
+async function deployMockWell() {
+
+    let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
+    await wellFunction.deployed()
+
+    let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
+    await well.deployed()
+    well = await ethers.getContractAt('MockSetComponentsWell', well.address)
+    await well.init()
+
+    pump = await deployMultiFlowPump()
+
+    await well.setWellFunction([wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+
+    await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setReserves([to6('1000000'), to18('1000')])
+
+    return well
+}
+
+
 
 async function deployMockWellWithMockPump() {
 
@@ -306,6 +329,7 @@ exports.deployWell = deployWell;
 exports.setReserves = setReserves;
 exports.whitelistWell = whitelistWell;
 exports.getWellContractAt = getWellContractAt
+exports.deployMockBeanEthWell = deployMockBeanEthWell
 exports.deployMockWell = deployMockWell
 exports.deployMockPump = deployMockPump
 exports.deployWellContract = deployWellContract

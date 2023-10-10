@@ -7,12 +7,9 @@ pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
 import {SafeMath, C, LibMinting} from "./LibMinting.sol";
-import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {LibBeanEthWellOracle} from "contracts/libraries/Oracle/LibBeanEthWellOracle.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
@@ -133,15 +130,13 @@ library LibWellMinting {
             lastSnapshot
         );
 
-        // If evaluating the Bean:Eth Constant Product Well, 
-        // 1) set the BEAN/ETH price so that it can be read when 
-        // calculating the Sunrise reward and price of Bean. See {LibIncentive.determineReward}.
-        // 2) set the USD/ETH price so that it can be read when 
-        // calculating the price of Bean. See {LibEvaluate.evalPrice}.
-        if (well == C.BEAN_ETH_WELL) {
-            LibBeanEthWellOracle.setBeanEthWellPrice(twaReserves);
-            LibEthUsdOracle.setUsdEthPrice(ratios);
-        }
+        // Set the Well reserves in storage, so that it can be read when
+        // 1) set the USD price of the non bean token so that it can be read when
+        //    calculating the price of Bean. See {LibEvaluate.evalPrice}.
+        // 2) When calculating the Bean reward for calling the Season (Bean:Eth Only).
+        //    See {LibIncentive.determineReward}.
+        LibWell.setTwaReservesForWell(well, twaReserves);
+        LibWell.setUsdTokenPriceForWell(well,ratios);
 
         emit WellOracle(
             s.season.current,

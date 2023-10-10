@@ -441,6 +441,11 @@ contract Storage {
         uint128 beanToMaxLpGpPerBDVRatio;
         uint32 lastSeedGaugeUpdate;
     }
+
+    struct TwaReserves {
+        uint128 reserve0;
+        uint128 reserve1;
+    }
 }
 
 /**
@@ -491,7 +496,7 @@ contract Storage {
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
- * @param beanEthPrice Stores the beanEthPrice during the sunrise() function. Returns 1 otherwise.
+ * @param TwaReserves A mapping from well to its twaReserves. Stores twaReserves during the sunrise function. Returns 1 otherwise for each asset. Currently supports 2 token wells.
  * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
  * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
  * @param seedGauge Stores the seedGauge.
@@ -555,13 +560,13 @@ struct AppStorage {
 
     // Well
     mapping(address => bytes) wellOracleSnapshots;
-    uint256 beanEthPrice;
+    mapping(address => Storage.TwaReserves) twaReserves;
 
     // Silo V3 BDV Migration
     mapping(address => uint256) migratedBdvs;
     
-    // usdEth
-    uint256 usdEthPrice;
+    // well sunrise oracle price
+    mapping(address => uint256) usdTokenPrice;
 
     // Seed Gauge
     Storage.SeedGauge seedGauge;

@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
-const { whitelistWell, deployMockWell } = require('../utils/well.js');
+const { whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const { advanceTime } = require('../utils/helpers.js');
 let user,user2,owner;
@@ -24,7 +24,7 @@ describe('Well Minting', function () {
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bean = await getBean()
     await this.bean.mint(userAddress, to18('1'));
-    [this.well, this.wellFunction, this.pump] = await deployMockWell()
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
     await setEthUsdPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')

@@ -6,7 +6,7 @@ const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE,
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
-const { whitelistWell, deployMockWell } = require('../utils/well.js');
+const { whitelistWell, deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
 const fs = require('fs');
 
 let user, user2, owner;
@@ -39,7 +39,7 @@ describe('Silo', function () {
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
-    [this.well, this.wellFunction, this.pump] = await deployMockWell()
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
     await whitelistWell(this.well.address, '10000', to6('4'))
     await this.season.captureWellE(this.well.address)
     

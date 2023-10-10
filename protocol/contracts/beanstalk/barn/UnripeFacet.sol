@@ -13,6 +13,8 @@ import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import "contracts/C.sol";
 import "contracts/beanstalk/ReentrancyGuard.sol";
 import "contracts/libraries/LibUnripe.sol";
@@ -354,21 +356,26 @@ contract UnripeFacet is ReentrancyGuard {
      * @param newUnderlyingToken The new underlying token to switch to.
      * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
      */
-    function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) external payable {
+    function switchUnderlyingToken(
+        address unripeToken, 
+        address newUnderlyingToken
+    ) external payable {
         LibDiamond.enforceIsContractOwner();
         require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
-    function getLockedBeans() public view returns (uint256) {
-        return LibUnripe.getLockedBeans();
+    function getLockedBeans() external view returns (uint256) {
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
+        return LibUnripe.getLockedBeans(twaReserves);
     }
 
-    function getLockedBeansInUrBEAN() public view returns (uint256) {
+    function getLockedBeansInUrBEAN() external view returns (uint256) {
         return LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
     }
 
-    function getLockedBeansInUrBEANETH() public view returns (uint256) {
-        return LibUnripe.getLockedBeansFromLP();
+    function getLockedBeansInUrBEANETH() external view returns (uint256) {
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
+        return LibUnripe.getLockedBeansFromLP(twaReserves);
     }
 }

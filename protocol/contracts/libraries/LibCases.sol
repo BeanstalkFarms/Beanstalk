@@ -43,7 +43,7 @@ library LibCases {
     // given that multiple cases use the same values.
     //
     // Naming Convention:
-    // PLUS: increment by X (y_i = y_1 + X) 
+    // PLUS: increment by X (y_i = y_1 + X)
     // MINUS decrement by X (y_i = y_1 - X)
     // INCR/DECR: scale up/down by X (y_i = y_1 * X)
     // T: Temperature, L: Bean to max LP gauge point per BDV ratio

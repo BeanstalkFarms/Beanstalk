@@ -203,19 +203,22 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       facetNames: [
         "SeasonFacet", // Add Seed Gauge system
         "SeasonGettersFacet", // season getters
-        "GaugePointFacet" // gauge point function caller
+        "GaugePointFacet", // gauge point function caller
+        "UnripeFacet" // new view functions
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
       libraryNames: [
-        'LibGauge', 'LibConvert'
+        'LibGauge', 'LibConvert', 'LibIncentive'
       ],
       facetLibraries: {
         'SeasonFacet': [
-          'LibGauge'
+          'LibGauge', 
+          'LibIncentive'
         ],
         'MockSeasonFacet': [
-          'LibGauge'
+          'LibGauge', 
+          'LibIncentive'
         ],
         'ConvertFacet': [
           'LibConvert'

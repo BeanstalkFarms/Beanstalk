@@ -1,9 +1,9 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
 const { getBeanstalk } = require('../utils/contracts.js');
-const { deployWell, setReserves, whitelistWell } = require('../utils/well.js');
+const { deployWell, setReserves, whitelistWell, impersonateBeanEthWell } = require('../utils/well.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, WETH, UNRIPE_BEAN, UNRIPE_LP } = require('./utils/constants')
+const { BEAN, BEAN_ETH_WELL } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -23,7 +23,8 @@ describe('Well Convert', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
-    this.well = await deployWell([BEAN, WETH]);
+    impersonateBeanEthWell()
+    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL)
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
@@ -46,7 +47,6 @@ describe('Well Convert', function () {
       this.well,
       [to6('1000000'), to18('1000')]
     );
-
     await whitelistWell(this.well.address, '10000', to6('4'))
   });
 

@@ -32,6 +32,26 @@ contract MockSetComponentsWell is MockToken {
 
     uint256[] _reserves;
 
+    function well()
+        external
+        view
+        returns (
+            IERC20[] memory, 
+            Call memory, 
+            Call[] memory,
+            bytes memory, 
+            address
+        )
+    {
+        return (
+            new IERC20[](0),
+            Call(address(0), new bytes(0)),
+            new Call[](0),
+            new bytes(0),
+            address(0)
+        );
+    }
+
     function pumps() external view returns (Call[] memory) {
         return _pumps;
     }

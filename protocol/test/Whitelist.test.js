@@ -6,6 +6,7 @@ const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE } = 
 const { to18, to6, toStalk, toBean } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
+const { deployMockWellWithMockPump, deployMockWell } = require('../utils/well.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 let user,user2,owner;
@@ -38,9 +39,7 @@ describe('Whitelist', function () {
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
-    const SiloToken = await ethers.getContractFactory("MockToken");
-    this.siloToken = await SiloToken.deploy("Silo", "SILO")
-    await this.siloToken.deployed()
+    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
   })
 
 
@@ -55,7 +54,7 @@ describe('Whitelist', function () {
   describe('whitelist', async function () {
     it('reverts if not owner', async function () {
       await expect(this.whitelist.connect(user2).whitelistToken(
-        this.siloToken.address, 
+        this.well.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
         '1',
@@ -67,14 +66,14 @@ describe('Whitelist', function () {
 
     it('whitelists token', async function () {
       this.result = this.whitelist.connect(owner).whitelistToken(
-        this.siloToken.address, 
+        this.well.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
         '1',
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')
-      const settings = await this.silo.tokenSettings(this.siloToken.address)
+      const settings = await this.silo.tokenSettings(this.well.address)
 
 
       expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
@@ -83,7 +82,7 @@ describe('Whitelist', function () {
 
       expect(settings[2]).to.equal(10000)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(
-        this.siloToken.address, 
+        this.well.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         1,
         10000,
@@ -94,7 +93,7 @@ describe('Whitelist', function () {
 
     it('reverts on whitelisting same token again', async function () {
       this.resultFirst = await this.whitelist.connect(owner).whitelistToken(
-        this.siloToken.address, 
+        this.well.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
         '1',
@@ -103,7 +102,7 @@ describe('Whitelist', function () {
         '0')
       
       await expect(this.whitelist.connect(owner).whitelistToken(
-          this.siloToken.address, 
+          this.well.address, 
           this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
           '10000',
           '1',
@@ -112,13 +111,43 @@ describe('Whitelist', function () {
           '0')).to.be.revertedWith("Whitelist: Token already whitelisted");
     })
 
+    it('reverts on whitelisting a token not in the whitelistTokenArray', async function() {
+      // create a mockToken 
+      const SiloToken = await ethers.getContractFactory("MockToken");
+      this.siloToken = await SiloToken.deploy("Silo", "SILO")
+      await this.siloToken.deployed()
+      
+      await expect(this.whitelist.connect(owner).whitelistToken(
+          this.siloToken.address, 
+          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+          '10000',
+          '1',
+          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+          '0',
+          '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
+    });
+
+    it('reverts on whitelisting a well not in the whitelistTokenArray', async function() {
+      // create a mockWellToken 
+      this.mockWellToken = await deployMockWell();
+      
+      await expect(this.whitelist.connect(owner).whitelistToken(
+          this.mockWellToken.address, 
+          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+          '10000',
+          '1',
+          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+          '0',
+          '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
+    });
+
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
-      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith("Token not whitelisted");
+      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.well.address, 1)).to.be.revertedWith("Token not whitelisted");
     });
 
     it('reverts on whitelisting token with bad selector', async function () {
       await expect(this.whitelist.connect(owner).whitelistToken(
-        this.siloToken.address,
+        this.well.address,
         '0x00000000',
         '10000',
         '1',
@@ -127,7 +156,7 @@ describe('Whitelist', function () {
         '0')).to.be.revertedWith("Whitelist: Invalid BDV selector");
 
         await expect(this.whitelist.connect(owner).whitelistToken(
-          this.siloToken.address,
+          this.well.address,
           this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
           '10000',
           '1',
@@ -137,19 +166,19 @@ describe('Whitelist', function () {
     });
 
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
-      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith("Token not whitelisted");
+      await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.well.address, 1)).to.be.revertedWith("Token not whitelisted");
     });
   })
 
   describe('update stalk per bdv per season for token', async function () {
     it('reverts if not owner', async function () {
-      await expect(this.whitelist.connect(user2).updateStalkPerBdvPerSeasonForToken(this.siloToken.address, 1)).to.be.revertedWith('LibDiamond: Must be contract or owner')
+      await expect(this.whitelist.connect(user2).updateStalkPerBdvPerSeasonForToken(this.well.address, 1)).to.be.revertedWith('LibDiamond: Must be contract or owner')
     })
 
     it('updates stalk per bdv per season', async function () {
       //do initial whitelist so there's something to update
       this.whitelist.connect(owner).whitelistToken(
-        this.siloToken.address, 
+        this.well.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
         '1',
@@ -157,19 +186,19 @@ describe('Whitelist', function () {
         '0',
         '0')
       this.result = this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(
-        this.siloToken.address, 
+        this.well.address, 
         '50000'
       )
-      const settings = await this.silo.tokenSettings(this.siloToken.address)
+      const settings = await this.silo.tokenSettings(this.well.address)
 
       expect(settings[1]).to.equal(50000)
       const currentSeason = await this.seasonGetter.season()
-      await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.siloToken.address, 50000, currentSeason)
+      await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.well.address, 50000, currentSeason)
     })
 
     it('reverts if wrong encode type', async function () {
       await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
-        this.siloToken.address,
+        this.well.address,
         this.bdv.interface.getSighash('wellBdv'),
         1,
         1,
@@ -183,24 +212,24 @@ describe('Whitelist', function () {
 
   describe('dewhitelist', async function () {
     it('reverts if not owner', async function () {
-      await expect(this.whitelist.connect(user2).dewhitelistToken(this.siloToken.address)).to.be.revertedWith('LibDiamond: Must be contract or owner')
+      await expect(this.whitelist.connect(user2).dewhitelistToken(this.well.address)).to.be.revertedWith('LibDiamond: Must be contract or owner')
     })
 
     it('dewhitelists token', async function () {
       await this.whitelist.connect(owner).whitelistToken(
-        this.siloToken.address, 
+        this.well.address, 
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
         '1',
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')
-      this.result = await this.whitelist.connect(owner).dewhitelistToken(this.siloToken.address)
-      const settings = await this.silo.tokenSettings(this.siloToken.address)
+      this.result = await this.whitelist.connect(owner).dewhitelistToken(this.well.address)
+      const settings = await this.silo.tokenSettings(this.well.address)
       expect(settings[0]).to.equal('0x00000000')
       expect(settings[1]).to.equal(0)
       expect(settings[2]).to.equal(0)
-      await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(this.siloToken.address)
+      await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(this.well.address)
     })
   })
 });
