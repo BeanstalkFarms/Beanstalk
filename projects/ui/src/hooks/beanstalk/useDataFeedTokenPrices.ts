@@ -4,14 +4,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { TokenMap } from '../../constants/index';
 import { bigNumberResult } from '../../util/Ledger';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { DAI, ETH, USDC, USDT } from '../../constants/tokens';
+import { CRV3, DAI, ETH, USDC, USDT, WETH } from '../../constants/tokens';
 import {
   DAI_CHAINLINK_ADDRESSES,
   USDT_CHAINLINK_ADDRESSES,
   USDC_CHAINLINK_ADDRESSES,
   ETH_CHAINLINK_ADDRESS,
 } from '../../constants/addresses';
-import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
+import { use3CRVPoolContract, useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { AppState } from '../../state/index';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
 
@@ -39,12 +39,13 @@ export default function useDataFeedTokenPrices() {
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
   const usdcPriceFeed = useAggregatorV3Contract(USDC_CHAINLINK_ADDRESSES);
   const ethPriceFeed = useAggregatorV3Contract(ETH_CHAINLINK_ADDRESS);
+  const crv3Pool = use3CRVPoolContract();
   const getChainToken = useGetChainToken();
   const dispatch = useDispatch();
 
   const fetch = useCallback(async () => {
     if (Object.values(tokenPriceMap).length) return;
-    if (!daiPriceFeed || !usdtPriceFeed || !usdcPriceFeed || !ethPriceFeed)
+    if (!daiPriceFeed || !usdtPriceFeed || !usdcPriceFeed || !ethPriceFeed || !crv3Pool)
       return;
 
     console.debug('[beanstalk/tokenPrices/useCrvUnderlylingPrices] FETCH');
@@ -58,6 +59,7 @@ export default function useDataFeedTokenPrices() {
       usdcPriceDecimals,
       ethPriceData,
       ethPriceDecimals,
+      crv3Price,
     ] = await Promise.all([
       daiPriceFeed.latestRoundData(),
       daiPriceFeed.decimals(),
@@ -67,12 +69,15 @@ export default function useDataFeedTokenPrices() {
       usdcPriceFeed.decimals(),
       ethPriceFeed.latestRoundData(),
       ethPriceFeed.decimals(),
+      crv3Pool.get_virtual_price(),
     ]);
 
     const dai = getChainToken(DAI);
     const usdc = getChainToken(USDC);
     const usdt = getChainToken(USDT);
     const eth = getChainToken(ETH);
+    const weth = getChainToken(WETH);
+    const crv3 = getChainToken(CRV3);
 
     const priceDataCache: TokenMap<BigNumber> = {};
 
@@ -99,6 +104,16 @@ export default function useDataFeedTokenPrices() {
         ethPriceData.answer,
         ethPriceDecimals
       );
+      priceDataCache[weth.address] = getBNResult(
+        ethPriceData.answer,
+        ethPriceDecimals
+      );
+    }
+    if (crv3Price) {
+      priceDataCache[crv3.address] = getBNResult(
+        crv3Price,
+        crv3.decimals
+      );
     }
 
     console.debug(
@@ -112,6 +127,7 @@ export default function useDataFeedTokenPrices() {
     usdtPriceFeed,
     usdcPriceFeed,
     ethPriceFeed,
+    crv3Pool,
     getChainToken,
   ]);
 

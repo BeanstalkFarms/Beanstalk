@@ -11,6 +11,7 @@ import BEANFT_WINTER_ABI from '~/constants/abi/BeaNFT/BeaNFTWinter.json';
 import BEANFT_BARNRAISE_ABI from '~/constants/abi/BeaNFT/BeaNFTBarnRaise.json';
 import AGGREGATOR_V3_ABI from '~/constants/abi/Chainlink/AggregatorV3.json';
 import GNOSIS_DELEGATE_REGISTRY_ABI from '~/constants/abi/Gnosis/DelegateRegistry.json';
+import CURVE3POOL_ABI from '~/constants/abi/Curve/Pool/Curve3Pool.json';
 import useChainConstant from '../chain/useChainConstant';
 import { SupportedChainId } from '~/constants/chains';
 import {
@@ -21,6 +22,7 @@ import {
   BEANSTALK_FERTILIZER_ADDRESSES,
   BEANSTALK_PRICE_ADDRESSES,
   DELEGATES_REGISTRY_ADDRESSES,
+  POOL3_ADDRESSES
 } from '~/constants/addresses';
 import { ChainConstant } from '~/constants';
 import { getChainConstant } from '~/util/Chain';
@@ -35,6 +37,7 @@ import {
   ERC20,
   AggregatorV3,
   DelegateRegistry,
+  Curve3Pool
 } from '~/generated/index';
 
 export type AddressOrAddressMap = string | ChainConstant<string>;
@@ -219,6 +222,16 @@ export function useAggregatorV3Contract(
     abi: AGGREGATOR_V3_ABI,
     signerOrProvider: signer || provider,
   }) as AggregatorV3;
+}
+
+export function use3CRVPoolContract(signer?: ethers.Signer | null) {
+  const address = useChainConstant(POOL3_ADDRESSES);
+  const provider = useProvider();
+  return  useWagmiContract({
+    address,
+    abi: CURVE3POOL_ABI,
+    signerOrProvider: signer || provider,
+  }) as Curve3Pool;
 }
 
 export function useDelegatesRegistryContract(signer?: ethers.Signer | null) {
