@@ -169,16 +169,16 @@ describe('Gauge', function () {
         );
     })
 
-    it("Bean to maxLP ratio will be set to 0 if it hits under 0.01%", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0.02'));
-      this.result = await this.season.seedGaugeSunSunrise('0', 0);
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('0');
+    it("Bean to maxLP ratio can increase from 0%", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
+      this.result = await this.season.seedGaugeSunSunrise('0', 72);
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('1'));
       await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
         .withArgs(
           3,     // season
-          0,    // caseId
+          72,    // caseId
           to18('100'), // relative change (100% of original) 
-          to18('-0.02')    // absolute change (-0.4%)
+          to18('1')    // absolute change (-0.4%)
         );
     })
 
