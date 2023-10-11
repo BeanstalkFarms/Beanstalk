@@ -154,11 +154,13 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [
-      "UnripeFacet",
-      "FertilizerFacet",
       "BDVFacet",
       "ConvertFacet",
-      "ConvertGettersFacet"
+      "ConvertGettersFacet",
+      "FertilizerFacet",
+      "MetadataFacet",
+      "MigrationFacet",
+      "UnripeFacet",
     ],
     initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
     selectorsToRemove: [
