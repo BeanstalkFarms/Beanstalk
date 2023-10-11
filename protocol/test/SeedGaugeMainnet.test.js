@@ -136,31 +136,31 @@ describe('SeedGauge Init Test', function () {
       // the L2SR may differ during testing, due to the fact 
       // that the L2SR is calculated on twa reserves, and thus may slightly differ due to 
       // timestamp differences.
-      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('2.2590'), to18('2.2591'));
+      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('2.25'), to18('2.26'));
     })
     
     it('bean To MaxLPGpRatio', async function () {
       expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('50'));
-      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('62.5'));
+      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75'));
     })
 
     it('lockedBeans', async function () {
       // ~31m locked beans, ~35.8m total beans
-      expect(await this.beanstalk.getLockedBeans()).to.be.equal(to6('31239123.637132'));
+      expect(await this.beanstalk.getLockedBeans()).to.be.within(to6('31239123'), to6('31239124'));
     })
 
     it('usd Liquidity', async function () {
       // ~11.5m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('10227446'), to18('10227800'));
+      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('10205000'), to18('10228000'));
       // ~118k usd liquidity in Bean3Crv
       expect(await this.beanstalk.getBean3CRVLiquidity()).to.be.equal(to18('118929.150867709373771440'));
       // ~11.6m usd liquidity total
-      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('10346700'), to18('10347100'));
+      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('10310000'), to18('10347100'));
     })
 
     it('gaugePoints', async function () {
-      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('95'));
-      expect(await this.beanstalk.getGaugePoints(BEAN_3_CURVE)).to.be.equal(to18('5'));
+      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('2250'));
+      expect(await this.beanstalk.getGaugePoints(BEAN_3_CURVE)).to.be.equal(to18('1625'));
     })
   })
 

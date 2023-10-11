@@ -398,8 +398,8 @@ contract Storage {
 	    int96 milestoneStem; //          │ 12 (28)
         bytes1 encodeType; // ───────────┘ 1  (29)
         // 3 bytes are left here.
-        uint128 gaugePoints; //   ───────┐ 16  
-        bytes4 gpSelector; //            │ 4   (20)
+        uint128 gaugePoints; //   ────--------───┐ 16  
+        bytes4 gpSelector; //                    │ 4   (20)
         uint96 optimalPercentDepositedBdv; // ───┘ 12  (32)
     }
 

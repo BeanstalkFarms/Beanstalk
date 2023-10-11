@@ -83,8 +83,10 @@ describe('Gauge', function () {
     await this.unripe.connect(owner).addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
     // initalize gauge parameters for lp:
-    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('95'), to6('100'))
-    await initalizeGaugeForToken(BEAN_3_CURVE, to18('5'), to6('0'))
+    // token, gauge points, optimal bdv ratio
+    // gauge points are initalized to pre-seedGauge bip values * 500
+    await initalizeGaugeForToken(BEAN_ETH_WELL, to18('2250'), to6('99'))
+    await initalizeGaugeForToken(BEAN_3_CURVE, to18('1625'), to6('1'))
   })
 
   beforeEach(async function () {
@@ -126,29 +128,29 @@ describe('Gauge', function () {
       })
     });
 
-    describe('moderately low L2SR % < L2SR < moderately high L2SR % + P > 1', async function () {
+    describe('moderately low L2SR % < L2SR < moderately high L2SR %, excessively low podRate', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('55'));
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('5'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             36, // caseId
-            to18('110'), // relative multiplier 
+            to18('10'), // relative multiplier 
             to18('0') // absolute change (+0.25%)
           );
       })
     });
 
     describe('L2SR < moderately low L2SR %', async function () {
-      it("iincreases Bean to maxLP ratio", async function () {
+      it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('55'));
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('5'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             0, // caseId
-            to18('110'), // relative multiplier 
+            to18('10'), // relative multiplier 
             to18('0') // absolute change (+0.5%)
           );
       })
@@ -167,14 +169,27 @@ describe('Gauge', function () {
         );
     })
 
+    it("Bean to maxLP ratio can increase from 0%", async function () {
+      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
+      this.result = await this.season.seedGaugeSunSunrise('0', 72);
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('1'));
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+        .withArgs(
+          3,     // season
+          72,    // caseId
+          to18('100'), // relative change (100% of original) 
+          to18('1')    // absolute change (-0.4%)
+        );
+    })
+
     it("Bean to maxLP ratio cannot go above 100%", async function () {
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('99.9'));
-      this.result = await this.season.seedGaugeSunSunrise('0', 0);
+      this.result = await this.season.seedGaugeSunSunrise('0', 54);
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('100'));
       await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
         .withArgs(
           3,     // season
-          0,    // caseId
+          54,    // caseId
           to18('100'), // relative change (100% of original) 
           to18('0.1')    // absolute change (+0.1%)
         );
@@ -182,23 +197,23 @@ describe('Gauge', function () {
 
     it("Bean to maxLP ratio properly scales", async function () {
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('50'));
-      // 1 - (0.50 * (1 - 0.25)) = 0.625
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('62.5'));
+      // 0.50 * (1 - 0.5) + 0.5 = 0.75
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75'));
 
       await this.season.setBeanToMaxLpGPperBDVRatio(to18('51'));
-     // 1 - (0.51 * (1 - 0.25)) = 0.6175
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('61.75'))
+     // 0.51 * (1 - 0.5) + 0.5 = 75.5
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75.5'))
     })    
 
     it("Bean to maxLP ratio cannot decrease below min %", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('100'));
-      // 0.25 + 0 * (1 - 0.25) = 0.25
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('25'));
+      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
+      // 0 * (1 - 0.5) + 0.5 = .5
+      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('50'));
     })
 
     it("Bean to maxLP ratio cannot exceed max %", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
-      // 0.25 + 1 * (1 - 0.25) = 1
+      await this.season.setBeanToMaxLpGPperBDVRatio(to18('100'));
+      // 100 * (1 - 0.5) + 0.5 = 1
       expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('100'));
     })
 
@@ -328,8 +343,8 @@ describe('Gauge', function () {
     })
 
     it('updates gauge points', async function () {
-      expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('96'));
-      expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('4'));
+      expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2251'));
+      expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1624'));
     })
 
     it('update seeds values', async function () {
@@ -346,21 +361,21 @@ describe('Gauge', function () {
       // stalkIssuedPerBeanBDV =  ~3_487_101/1e10 * 0.948683 = ~3_308_153/1e10
       // stalkIssuedPerBeanETH = ~3_487_101/1e10 * 1.51789 = ~5_293_035/1e10
       // stalkIssuedPerBean3CRV = ~3_487_101/1e10 * 0.0632455 = ~220543/1e10
-      expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(3307900);
-      expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(5292640);
-      expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(220526);
+      expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(2771461); // 2.77 seeds per BDV
+      expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(3695281); // 3.69 seeds per BDV
+      expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(2665987); // 2.66 seeds per BDV
     })
     
     it('emits events', async function () {
       await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
         2,  // season
         BEAN_ETH_WELL,  // token
-        to18('96') // new gauge points
+        to18('2251') // new gauge points
       );
       await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
         2,  // season
         BEAN_3_CURVE,  // token
-        to18('4') // new gauge points
+        to18('1624') // new gauge points
       );
     })
 

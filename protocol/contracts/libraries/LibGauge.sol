@@ -27,7 +27,7 @@ library LibGauge {
 
     // max and min are the ranges that the beanToMaxLpGpPerBDVRatioScaled can output.
     uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
-    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 25e18;
+    uint256 internal constant MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
     uint256 internal constant BEAN_MAX_LP_GP_RATIO_RANGE =
         MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
 
@@ -76,8 +76,7 @@ library LibGauge {
     }
 
     /**
-     * @notice re-evaluate the gauge points of each LP asset, then normalize.
-     * @dev Gauge points are normalized to 100e18.
+     * @notice evaluate the gauge points of each LP asset.
      */
     function updateGaugePoints()
         internal
@@ -139,24 +138,13 @@ library LibGauge {
             // gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
             uint256 gpPerBDV = newGaugePoints.mul(BDV_PRECISION).div(depositedBdv);
-            // gpPerBDV has 6 decimal precision (arbitrary)
+            
+            // gpPerBDV has 6 decimal precision.
             if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
             _lpGpData.gpPerBDV = gpPerBDV;
             lpGpData[i] = _lpGpData;
-            // store gauge points to normalize
-            // note: safeCast is unnecessary,
-            // as the max GaugePoints is 100e18 < uint128.max
-            ss.gaugePoints = uint128(newGaugePoints);
-        }
 
-        // normalize gauge points to 100e18.
-        // gaugePoints is scaled up to uint256 to be normalized,
-        // then downcasted, to prevent overflow during scaling.
-        for (uint256 i; i < LPSiloTokens.length; ++i) {
-            Storage.SiloSettings storage ss = s.ss[LPSiloTokens[i]];
-            // safeCast unnecessary; since totalGaugePoints >= ss.gaugePoints,
-            // the max value of ss.gaugePoints can be 100e18 (100e18 < uint128.max)
-            ss.gaugePoints = uint128(uint256(ss.gaugePoints).mul(100e18).div(totalGaugePoints));
+            ss.gaugePoints = newGaugePoints.toUint128();
             emit GaugePointChange(s.season.current, LPSiloTokens[i], ss.gaugePoints);
         }
     }
@@ -323,8 +311,9 @@ library LibGauge {
     function getBeanToMaxLpGpPerBDVRatioScaled(
         uint256 beanToMaxLpGpPerBDVRatio
     ) internal pure returns (uint256) {
-        return MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO.sub(
-            beanToMaxLpGpPerBDVRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT)
-        );
+        return
+            beanToMaxLpGpPerBDVRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT).add(
+                MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO
+            );
     }
 }

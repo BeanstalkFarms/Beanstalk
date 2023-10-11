@@ -125,7 +125,9 @@ contract Weather is Sun {
     }
 
     /**
-     * @dev Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
+     * @notice Changes the grownStalkPerBDVPerSeason ` based on the CaseId.
+     * 
+     * @dev mL and bL are set during edge cases such that the event emitted is valid.
      */
     function updateBeanToMaxLPRatio(uint80 mL, int80 bL, uint256 caseId) private {
         uint256 beanToMaxLpGpPerBDVRatio = s.seedGauge.beanToMaxLpGpPerBDVRatio;
@@ -134,27 +136,26 @@ contract Weather is Sun {
             bL = int80(uint256(100e18).sub(s.seedGauge.beanToMaxLpGpPerBDVRatio));
             mL = 100e18;
             s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
-        } else {
-            if (bL < 0) {
-                if (beanToMaxLpGpPerBDVRatio <= uint128(-bL)) {
-                    bL = -int80(beanToMaxLpGpPerBDVRatio);
-                    s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
-                } else {
-                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(
-                        beanToMaxLpGpPerBDVRatio.sub(uint128(-bL))
-                    );
-                }
+        }
+        if (bL < 0) {
+            if (beanToMaxLpGpPerBDVRatio <= uint128(-bL)) {
+                bL = -int80(beanToMaxLpGpPerBDVRatio);
+                s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
             } else {
-                if (beanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= 100e18) {
-                    // if (change > 0 && 100e18 - beanToMaxLpGpPerBDVRatio <= bL),
-                    // then bL cannot overflow.
-                    bL = int80(uint256(100e18).sub(beanToMaxLpGpPerBDVRatio));
-                    s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
-                } else {
-                    s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(
-                        beanToMaxLpGpPerBDVRatio.add(uint128(bL))
-                    );
-                }
+                s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(
+                    beanToMaxLpGpPerBDVRatio.sub(uint128(-bL))
+                );
+            }
+        } else {
+            if (beanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= 100e18) {
+                // if (change > 0 && 100e18 - beanToMaxLpGpPerBDVRatio <= bL),
+                // then bL cannot overflow.
+                bL = int80(uint256(100e18).sub(beanToMaxLpGpPerBDVRatio));
+                s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
+            } else {
+                s.seedGauge.beanToMaxLpGpPerBDVRatio = uint128(
+                    beanToMaxLpGpPerBDVRatio.add(uint128(bL))
+                );
             }
         }
 
