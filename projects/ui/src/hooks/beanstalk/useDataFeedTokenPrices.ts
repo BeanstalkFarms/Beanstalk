@@ -11,9 +11,10 @@ import {
   USDC_CHAINLINK_ADDRESSES,
   ETH_CHAINLINK_ADDRESS,
 } from '../../constants/addresses';
-import { use3CRVPoolContract, useAggregatorV3Contract } from '~/hooks/ledger/useContract';
+import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { AppState } from '../../state/index';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
+import useSdk from '../sdk';
 
 const getBNResult = (result: any, decimals: number) => {
   const bnResult = bigNumberResult(result);
@@ -35,11 +36,13 @@ export default function useDataFeedTokenPrices() {
     AppState['_beanstalk']['tokenPrices']
   >((state) => state._beanstalk.tokenPrices);
 
+  const sdk = useSdk();
+
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
   const usdcPriceFeed = useAggregatorV3Contract(USDC_CHAINLINK_ADDRESSES);
   const ethPriceFeed = useAggregatorV3Contract(ETH_CHAINLINK_ADDRESS);
-  const crv3Pool = use3CRVPoolContract();
+  const crv3Pool = sdk.contracts.curve.pools.pool3;
   const getChainToken = useGetChainToken();
   const dispatch = useDispatch();
 
