@@ -53,11 +53,12 @@ library LibIncentive {
     /**
      * @param initialGasLeft The amount of gas left at the start of the transaction
      * @param blocksLate The number of blocks late that {sunrise()} was called.
+     * @param beanEthPrice The Bean:Eth price calculated by the Minting Well.
      * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
      * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
      * "step" functions have been executed.
      */
-    function determineReward(uint256 initialGasLeft, uint256 blocksLate)
+    function determineReward(uint256 initialGasLeft, uint256 blocksLate, uint256 beanEthPrice)
         external
         view
         returns (uint256)
@@ -68,9 +69,6 @@ library LibIncentive {
         if (blocksLate > MAX_BLOCKS_LATE) {
             blocksLate = MAX_BLOCKS_LATE;
         }
-
-        // Read the Bean / Eth price calculated by the Minting Well.
-        uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
 
         // If the Bean Eth pool couldn't calculate a valid price, use the max reward value.
         if (beanEthPrice <= 1) {

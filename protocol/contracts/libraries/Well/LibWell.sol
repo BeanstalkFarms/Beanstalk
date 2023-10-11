@@ -24,6 +24,8 @@ library LibWell {
     using LibSafeMath128 for uint128;
 
     uint256 private constant PRECISION = 1e30;
+    // The BDV Selector that all Wells should be whitelisted with.
+    bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
 
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
@@ -91,7 +93,7 @@ library LibWell {
      */
     function isWell(address well) internal view returns (bool _isWell) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.ss[well].selector == 0xc84c7727;
+        return s.ss[well].selector == WELL_BDV_SELECTOR;
     }
 
     /**
@@ -105,8 +107,6 @@ library LibWell {
      * if LibWell.getUsdTokenPriceForWell() returns 1, then this function is called without the reserves being set.
      * if s.usdTokenPrice[well] or s.twaReserves[well] returns 0, then the oracle failed to compute
      * a valid price this Season, and thus beanstalk cannot calculate the usd liquidity.
-     *
-     * assumes the non-bean asset has 18 decimals.
      */
     function getWellTwaUsdLiquidityFromReserves(
         address well,
@@ -115,8 +115,7 @@ library LibWell {
         uint256 tokenUsd = getUsdTokenPriceForWell(well);
         (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
         if (tokenUsd > 1) {
-            uint256 price = uint256(1e24).div(tokenUsd);
-            return price.mul(twaReserves[j]).div(1e6);
+            return twaReserves[j].mul(1e18).div(tokenUsd);
         }
 
         // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
@@ -226,6 +225,13 @@ library LibWell {
             price = 0;
         } else {
             price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
+        }
+    }
+
+    function getTwaReservesFromStorageOrBeanstalkPump(address well) internal view returns (uint256[] memory twaReserves) {
+        twaReserves = getTwaReservesFromBeanstalkPump(well);
+        if (twaReserves[0] == 1) {
+            twaReserves = getTwaReservesFromBeanstalkPump(well);
         }
     }
 

@@ -88,7 +88,7 @@ library LibGauge {
         )
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory LPSiloTokens = LibWhitelistedTokens.getSiloLPTokens();
+        address[] memory LPSiloTokens = LibWhitelistedTokens.getSiloLpTokens();
         lpGpData = new LpGaugePointData[](LPSiloTokens.length);
 
         // if there is only one pool, there is no need to update the gauge points.

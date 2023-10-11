@@ -5,7 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../../C.sol";
+import {C} from "../../C.sol";
 
 /**
  * @title LibWhitelistedTokens
@@ -39,9 +39,17 @@ library LibWhitelistedTokens {
     /**
      * @notice Returns the current whitelisted LP assets.
      */
-    function getSiloLPTokens() internal pure returns (address[] memory assets) {
+    function getSiloLpTokens() internal pure returns (address[] memory assets) {
         assets = new address[](2);
         assets[0] = C.BEAN_ETH_WELL;
         assets[1] = C.CURVE_BEAN_METAPOOL;
+    }
+
+    /**
+     * @notice Returns the list of whitelisted Well LP assets.
+     */
+    function getWellLpTokens() internal pure returns (address[] memory assets) {
+        assets = new address[](1);
+        assets[0] = C.BEAN_ETH_WELL;
     }
 }

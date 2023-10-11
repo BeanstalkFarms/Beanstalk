@@ -130,10 +130,11 @@ library LibWellMinting {
             lastSnapshot
         );
 
-        // If evaluating the Bean:Eth Constant Product Well, 
-        // 1) set the well reserves so that it can be read later. See {LibIncentive.determineReward}.
-        // 2) set the USD price of the non bean token so that it can be read when 
-        // calculating the price of Bean. See {LibEvaluate.evalPrice}.
+        // Set the Well reserves in storage, so that it can be read when
+        // 1) set the USD price of the non bean token so that it can be read when
+        //    calculating the price of Bean. See {LibEvaluate.evalPrice}.
+        // 2) When calculating the Bean reward for calling the Season (Bean:Eth Only).
+        //    See {LibIncentive.determineReward}.
         LibWell.setTwaReservesForWell(well, twaReserves);
         LibWell.setUsdTokenPriceForWell(well,ratios);
 
