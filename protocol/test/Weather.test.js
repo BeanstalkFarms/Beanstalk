@@ -108,8 +108,7 @@ describe('Complex Weather', function () {
         if (this.testData.totalOutstandingBeans !== 0) await expect(this.result).to.emit(this.season, 'TemperatureChange')
           .withArgs(
             await this.seasonGetter.season(), 
-            this.testData.Code, 
-            to6('100'), 
+            this.testData.Code,  
             this.testData.newWeather-this.testData.startingWeather
             )
       })
@@ -124,7 +123,6 @@ describe('Complex Weather', function () {
           .withArgs(
             await this.seasonGetter.season(), 
             this.testData.Code, 
-            to18(this.testData.mL),
             to18(this.testData.bL)
             )
       })

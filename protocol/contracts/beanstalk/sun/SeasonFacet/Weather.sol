@@ -30,33 +30,27 @@ contract Weather is Sun {
      * @notice Emitted when the Temperature (fka "Weather") changes.
      * @param season The current Season
      * @param caseId The Weather case, which determines how much the Temperature is adjusted.
-     * @param relChange The relative change in Temperature.
      * @param absChange The absolute change in Temperature.
-     *
-     * @dev the relative change is applied before the absolute change.
-     * T_n = mT * T_n-1 + bT
+     * 
+     * T_n = T_n-1 +/- bT
      */
     event TemperatureChange(
         uint256 indexed season,
         uint256 caseId,
-        uint32 relChange,
-        int16 absChange
+        int8 absChange
     );
 
     /**
      * @notice Emitted when the grownStalkToLP changes.
      * @param season The current Season
-     * @param caseId The Weather case, which determines how much the Temperature is adjusted.
-     * @param relChange The relative change in Temperature.
-     * @param absChange The absolute change in Temperature.
+     * @param caseId The Weather case, which determines how the BeanToMaxLPGpPerBDVRatio is adjusted.
+     * @param absChange The absolute change in the BeanToMaxLPGpPerBDVRatio.
      *
-     * @dev the relative change is applied before the absolute change.
-     * L_n = mL * L_n-1 + bL
+     * L_n = L_n-1 +/- bL
      */
     event BeanToMaxLpGpPerBDVRatioChange(
         uint256 indexed season,
         uint256 caseId,
-        uint80 relChange,
         int80 absChange
     );
 
@@ -97,22 +91,21 @@ contract Weather is Sun {
 
     function updateTemperatureAndBeanToMaxLPRatio(uint256 caseId) internal {
         LibCases.CaseData memory cd = LibCases.decodeCaseData(caseId);
-        updateTemperature(cd.mT, cd.bT, caseId);
-        updateBeanToMaxLPRatio(cd.mL, cd.bL, caseId);
+        updateTemperature(cd.bT, caseId);
+        updateBeanToMaxLPRatio(cd.bL, caseId);
     }
 
     /**
      * @dev Changes the current Temperature `s.w.t` based on the Case Id.
      */
-    function updateTemperature(uint32 mT, int16 bT, uint256 caseId) private {
+    function updateTemperature(int8 bT, uint256 caseId) private {
         uint256 t = s.w.t;
-        t = t.mul(mT).div(TEMP_PRECISION);
         if (bT < 0) {
             if (t <= uint256(-bT)) {
                 // if (change < 0 && t <= uint32(-change)),
                 // then 0 <= t <= type(int16).max because change is an int16.
                 // Thus, downcasting t to an int16 will not cause overflow.
-                bT = 1 - int16(t);
+                bT = 1 - int8(t);
                 s.w.t = 1;
             } else {
                 s.w.t = uint32(t - uint256(-bT));
@@ -121,7 +114,7 @@ contract Weather is Sun {
             s.w.t = uint32(t + uint256(bT));
         }
 
-        emit TemperatureChange(s.season.current, caseId, mT, bT);
+        emit TemperatureChange(s.season.current, caseId, bT);
     }
 
     /**
@@ -129,14 +122,8 @@ contract Weather is Sun {
      * 
      * @dev mL and bL are set during edge cases such that the event emitted is valid.
      */
-    function updateBeanToMaxLPRatio(uint80 mL, int80 bL, uint256 caseId) private {
+    function updateBeanToMaxLPRatio(int80 bL, uint256 caseId) private {
         uint256 beanToMaxLpGpPerBDVRatio = s.seedGauge.beanToMaxLpGpPerBDVRatio;
-        beanToMaxLpGpPerBDVRatio = beanToMaxLpGpPerBDVRatio.mul(mL).div(RATIO_PRECISION);
-        if (beanToMaxLpGpPerBDVRatio >= 100e18) {
-            bL = int80(uint256(100e18).sub(s.seedGauge.beanToMaxLpGpPerBDVRatio));
-            mL = 100e18;
-            s.seedGauge.beanToMaxLpGpPerBDVRatio = 100e18;
-        }
         if (bL < 0) {
             if (beanToMaxLpGpPerBDVRatio <= uint128(-bL)) {
                 bL = -int80(beanToMaxLpGpPerBDVRatio);
@@ -159,7 +146,7 @@ contract Weather is Sun {
             }
         }
 
-        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, caseId, mL, bL);
+        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, caseId, bL);
     }
 
     /**

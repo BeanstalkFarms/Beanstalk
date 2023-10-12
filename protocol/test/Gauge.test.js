@@ -108,8 +108,7 @@ describe('Gauge', function () {
           .withArgs(
             3,     // season
             108,    // caseId
-            to18('100'), // relative change (100% of original) 
-            to18('1')    // absolute change (-0.5%)
+            to18('1')    // absolute change (+1%)
           );
       })
     });
@@ -122,8 +121,7 @@ describe('Gauge', function () {
           .withArgs(
             3, // season
             75, // caseId
-            to18('100'), // relative multiplier 
-            to18('-1') // absolute change (-0.25%)
+            to18('-1') // absolute change (-1%)
           );
       })
     });
@@ -131,27 +129,26 @@ describe('Gauge', function () {
     describe('moderately low L2SR % < L2SR < moderately high L2SR %, excessively low podRate', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('5'));
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('0'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             36, // caseId
-            to18('10'), // relative multiplier 
-            to18('0') // absolute change (+0.25%)
+            to18('-50') // absolute change (-50%)
           );
       })
     });
 
     describe('L2SR < moderately low L2SR %', async function () {
-      it("increases Bean to maxLP ratio", async function () {
+      it("massively decreases Bean to maxLP ratio", async function () {
+        await this.season.setBeanToMaxLpGPperBDVRatio(to18('51'));
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('5'));
+        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('1'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
           .withArgs(
             3, // season
             0, // caseId
-            to18('10'), // relative multiplier 
-            to18('0') // absolute change (+0.5%)
+            to18('-50') // absolute change (-50%)
           );
       })
     });
@@ -164,8 +161,7 @@ describe('Gauge', function () {
         .withArgs(
           3,     // season
           111,    // caseId
-          to18('100'), // relative change (100% of original) 
-          to18('-0.5')    // absolute change (-0.4%)
+          to18('-0.5')    // absolute change (-0.5%)
         );
     })
 
@@ -177,8 +173,7 @@ describe('Gauge', function () {
         .withArgs(
           3,     // season
           72,    // caseId
-          to18('100'), // relative change (100% of original) 
-          to18('1')    // absolute change (-0.4%)
+          to18('1')    // absolute change (+1%)
         );
     })
 
@@ -190,7 +185,6 @@ describe('Gauge', function () {
         .withArgs(
           3,     // season
           54,    // caseId
-          to18('100'), // relative change (100% of original) 
           to18('0.1')    // absolute change (+0.1%)
         );
     })
