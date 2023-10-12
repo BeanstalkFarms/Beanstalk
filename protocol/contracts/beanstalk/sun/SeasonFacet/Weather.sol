@@ -103,8 +103,8 @@ contract Weather is Sun {
         if (bT < 0) {
             if (t <= uint256(-bT)) {
                 // if (change < 0 && t <= uint32(-change)),
-                // then 0 <= t <= type(int16).max because change is an int16.
-                // Thus, downcasting t to an int16 will not cause overflow.
+                // then 0 <= t <= type(int8).max because change is an int8.
+                // Thus, downcasting t to an int8 will not cause overflow.
                 bT = 1 - int8(t);
                 s.w.t = 1;
             } else {
