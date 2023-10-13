@@ -11,11 +11,12 @@ import {C} from "../../C.sol";
  * @title LibWhitelistedTokens
  * @author Brean
  * @notice LibWhitelistedTokens returns the current whitelisted assets.
+ * @dev a library is used, rather than keeping the addresses in storages,
+ * as a gas optimization.
  */
 library LibWhitelistedTokens {
-
     /**
-     * @notice Returns the current whitelisted assets.
+     * @notice Returns the current whitelisted assets, excluding unripe assets.
      */
     function getSiloTokens() internal pure returns (address[] memory assets) {
         assets = new address[](3);
@@ -25,7 +26,7 @@ library LibWhitelistedTokens {
     }
 
     /**
-     * @notice Returns the current whitelisted assets.
+     * @notice Returns the current whitelisted assets, including whitelisted assets.
      */
     function getSiloTokensWithUnripe() internal pure returns (address[] memory assets) {
         assets = new address[](5);
