@@ -179,7 +179,7 @@ library LibWhitelist {
         require(success, "Whitelist: Invalid GaugePoint selector");
     }
 
-    function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal view {
+    function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal pure {
         // future whitelisted functions will need to be added to the arrays in
         // { LibWhitelistedTokens.sol }
         checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
@@ -191,10 +191,7 @@ library LibWhitelist {
         }
     }
 
-    function checkTokenInArray(
-        address token,
-        address[] memory array
-    ) private pure {
+    function checkTokenInArray(address token, address[] memory array) private pure {
         // verify that the token is in silo tokens.
         bool success;
         for (uint i; i < array.length; i++) {
