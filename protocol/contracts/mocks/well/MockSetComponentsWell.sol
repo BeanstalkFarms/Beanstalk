@@ -34,7 +34,7 @@ contract MockSetComponentsWell is MockToken {
 
     function well()
         external
-        view
+        pure
         returns (
             IERC20[] memory, 
             Call memory, 
