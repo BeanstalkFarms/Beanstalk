@@ -50,6 +50,12 @@ library LibWhitelist {
         uint96 optimalPercentDepositedBdv
     );
 
+    /**
+     * @notice emitted when the gauge settings are updated.
+     * @param token token that is being updated. 
+     * @param selector the new GP selector.
+     * @param optimalPercentDepositedBdv the new optimal Percent deposited BDV
+     */
     event updateGaugeSettings(
         address indexed token,
         bytes4 selector,
@@ -179,23 +185,48 @@ library LibWhitelist {
         require(success, "Whitelist: Invalid GaugePoint selector");
     }
 
+    /**
+     * @notice verifies whether a token is in the required arrays. 
+     * @param token `token` that is being whitelisted.
+     * @param selector the BDV function thats being whitelisted with the token.
+     */
     function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal pure {
         // future whitelisted functions will need to be added to the arrays in
         // { LibWhitelistedTokens.sol }
         checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
         checkTokenInArray(token, LibWhitelistedTokens.getSiloTokensWithUnripe());
 
+        // if it is not a well token, we also must verify the token is not in 
+        // the lp arrays.
         if (selector == LibWell.WELL_BDV_SELECTOR) {
             checkTokenInArray(token, LibWhitelistedTokens.getSiloLpTokens());      
             checkTokenInArray(token, LibWhitelistedTokens.getWellLpTokens());        
+        } else {
+            checkTokenNotInArray(token, LibWhitelistedTokens.getSiloLpTokens());
+            checkTokenNotInArray(token, LibWhitelistedTokens.getWellLpTokens());        
         }
     }
 
+    /**
+     * @notice helper function that checks whether a token is in an array.
+     */
     function checkTokenInArray(address token, address[] memory array) private pure {
-        // verify that the token is in silo tokens.
+        // verify that the token is in the array.
         bool success;
         for (uint i; i < array.length; i++) {
             if (token == array[i]) success = true;
+        }
+        require(success, "Whitelist: Token not in whitelisted token array");
+    }
+
+    /**
+     * @notice helper function that checks whether a token is in an array.
+     */
+    function checkTokenNotInArray(address token, address[] memory array) private pure {
+        // verify that the token is not in the array.
+        bool success = true;
+        for (uint i; i < array.length; i++) {
+            if (token == array[i]) success = false;
         }
         require(success, "Whitelist: Token not in whitelisted token array");
     }
