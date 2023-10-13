@@ -41,8 +41,8 @@ contract UnripeFacet is ReentrancyGuard {
 
     /**
      * @notice emitted when the underlying of a token increases or decreases.
-     * @param token
-     * @param underlying 
+     * @param token the token of which the underlying changes.
+     * @param underlying `amount` that has changed.
      */
     event ChangeUnderlying(address indexed token, int256 underlying);
 
