@@ -192,10 +192,9 @@ library LibWellConvert {
         uint256 minLP,
         address well
     ) internal returns (uint256 lp, uint256 beansConverted) {
-        (uint256 maxBeans, uint beanIndex) = _beansToPeg(well);
+        (uint256 maxBeans, ) = _beansToPeg(well);
         require(maxBeans > 0, "Convert: P must be >= 1.");
         beansConverted = beans > maxBeans ? maxBeans : beans;
-        IERC20[] memory tokens = IWell(well).tokens();
         C.bean().transfer(well, beans);
         lp = IWell(well).sync(
             address(this),
