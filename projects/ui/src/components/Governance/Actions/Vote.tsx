@@ -82,6 +82,9 @@ const VoteForm: FC<
   const canVote = farmerVP.votingPower.total.gt(0);
   const isClosed = differenceInTime <= 0;
 
+  // FIXME: Remove after API key issues are solved 
+  proposal.type = '';
+
   /// Handlers
   const handleClick = useCallback(
     (choice: number | undefined) => () => {
