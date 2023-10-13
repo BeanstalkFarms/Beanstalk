@@ -10,6 +10,8 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
+import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
  * @author Brean
@@ -27,6 +29,8 @@ contract InitBipSeedGauge {
     using SafeMath for uint256;
 
     AppStorage internal s;
+
+    event BeanToMaxLpGpPerBDVRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
@@ -83,10 +87,17 @@ contract InitBipSeedGauge {
 
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
+            
+            // emit event
+            emit LibWhitelist.updateGaugeSettings(siloTokens[i], gpSelectors[i], optimalPercentDepositedBdv[i]);
         }
-        // initalize seed gauge.
+        // initalize seed gauge and emit events.
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
+
+        // TODO: what case should this be? current set to max to indicate an init
+        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBDVRatio));
+        emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         // initalize s.usdTokenPrice for the bean eth well.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
