@@ -302,6 +302,7 @@ const BuyForm: FC<
   );
 };
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const BuyPropProvider: FC<{}> = () => {
   const sdk = useSdk();
   const getEthPrice = useEthPriceFromBeanstalk();
@@ -533,7 +534,19 @@ const BuyPropProvider: FC<{}> = () => {
 
 const Buy: React.FC<{}> = () => (
   <FormTxnProvider>
-    <BuyPropProvider />
+    {/* <BuyPropProvider /> */}
+    <div
+      style={{
+        border: '1px solid red',
+        background: '#f0a1a1',
+        borderRadius: '10px',
+        padding: '10px 10px',
+        color: '#860112',
+        textAlign: 'center',
+      }}
+    >
+      Temporarily disabled while BIP-38 migration is in progress
+    </div>
   </FormTxnProvider>
 );
 

@@ -62,6 +62,7 @@ type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
 };
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const ChopForm: FC<
   FormikProps<ChopFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
@@ -211,7 +212,11 @@ const ChopForm: FC<
                         message: `Add ${displayBN(
                           quote || ZERO_BN
                         )} ${outputToken} to your 
-                        ${values.destination === FarmToMode.EXTERNAL ? `Circulating` : `Farm`} Balance.`,
+                        ${
+                          values.destination === FarmToMode.EXTERNAL
+                            ? `Circulating`
+                            : `Farm`
+                        } Balance.`,
                       },
                     ]}
                   />
@@ -331,11 +336,23 @@ const Chop: FC<{}> = () => {
       onSubmit={onSubmit}
     >
       {(formikProps: FormikProps<ChopFormValues>) => (
-        <ChopForm
-          balances={farmerBalances}
-          beanstalk={beanstalk}
-          {...formikProps}
-        />
+        // <ChopForm
+        //   balances={farmerBalances}
+        //   beanstalk={beanstalk}
+        //   {...formikProps}
+        // />
+        <div
+          style={{
+            border: '1px solid red',
+            background: '#f0a1a1',
+            borderRadius: '10px',
+            padding: '10px 10px',
+            color: '#860112',
+            textAlign: 'center',
+          }}
+        >
+          Temporarily disabled while BIP-38 migration is in progress
+        </div>
       )}
     </Formik>
   );

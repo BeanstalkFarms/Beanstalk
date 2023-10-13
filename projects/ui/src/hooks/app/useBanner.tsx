@@ -15,6 +15,14 @@ const useBanner = () => {
   );
 
   return useMemo(() => {
+    return (
+      <Banner height={BANNER_HEIGHT}>
+        BIP-38 Unripe liquidity migration is in process. Quotes will be affected
+        until the migration is complete. See Discord for details.
+      </Banner>
+    );
+
+    // eslint-disable-next-line no-unreachable
     if (migrationNeeded === true) {
       return (
         <Banner height={BANNER_HEIGHT} to="/silo?view=migrate">
