@@ -82,9 +82,6 @@ const VoteForm: FC<
   const canVote = farmerVP.votingPower.total.gt(0);
   const isClosed = differenceInTime <= 0;
 
-  // FIXME: Remove after API key issues are solved 
-  proposal.type = '';
-
   /// Handlers
   const handleClick = useCallback(
     (choice: number | undefined) => () => {
@@ -443,7 +440,7 @@ const Vote: FC<{
             'Vote successful. It may take some time for your vote to appear on the Beanstalk UI. Check Snapshot for the latest results.',
         });
 
-        const hub = `https://hub.snapshot.org/?apiKey=${SNAPSHOT_API_KEY}`;
+        const hub = `https://hub.snapshot.org`;
         const client = new snapshot.Client712(hub);
 
         const message = {
