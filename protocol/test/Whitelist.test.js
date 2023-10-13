@@ -39,7 +39,12 @@ describe('Whitelist', function () {
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
+
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
+
+    const SiloToken = await ethers.getContractFactory("MockToken");
+    this.siloToken = await SiloToken.deploy("Silo", "SILO")
+    await this.siloToken.deployed()
   })
 
 
@@ -55,7 +60,7 @@ describe('Whitelist', function () {
     it('reverts if not owner', async function () {
       await expect(this.whitelist.connect(user2).whitelistToken(
         this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        this.bdv.interface.getSighash('wellBdv'), 
         '10000',
         '1',
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
@@ -65,25 +70,25 @@ describe('Whitelist', function () {
 
 
     it('whitelists token', async function () {
-      this.result = this.whitelist.connect(owner).whitelistToken(
-        this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+      this.result = this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address,
+        this.bdv.interface.getSighash('wellBdv'),
         '10000',
         '1',
+        1,
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')
       const settings = await this.silo.tokenSettings(this.well.address)
 
-
-      expect(settings[0]).to.equal(this.silo.interface.getSighash("mockBDV(uint256 amount)"))
+      expect(settings[0]).to.equal(this.bdv.interface.getSighash('wellBdv'))
 
       expect(settings[1]).to.equal(1)
 
       expect(settings[2]).to.equal(10000)
       await expect(this.result).to.emit(this.whitelist, 'WhitelistToken').withArgs(
         this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        this.bdv.interface.getSighash('wellBdv'), 
         1,
         10000,
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
@@ -92,31 +97,28 @@ describe('Whitelist', function () {
     })
 
     it('reverts on whitelisting same token again', async function () {
-      this.resultFirst = await this.whitelist.connect(owner).whitelistToken(
+      this.resultFirst = await this.whitelist.connect(owner).whitelistTokenWithEncodeType(
         this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        this.bdv.interface.getSighash('wellBdv'), 
         '10000',
         '1',
+        1,
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')
       
-      await expect(this.whitelist.connect(owner).whitelistToken(
+      await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
           this.well.address, 
-          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+          this.bdv.interface.getSighash('wellBdv'), 
           '10000',
           '1',
+          1,
           this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
           '0',
           '0')).to.be.revertedWith("Whitelist: Token already whitelisted");
     })
 
     it('reverts on whitelisting a token not in the whitelistTokenArray', async function() {
-      // create a mockToken 
-      const SiloToken = await ethers.getContractFactory("MockToken");
-      this.siloToken = await SiloToken.deploy("Silo", "SILO")
-      await this.siloToken.deployed()
-      
       await expect(this.whitelist.connect(owner).whitelistToken(
           this.siloToken.address, 
           this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
@@ -141,6 +143,17 @@ describe('Whitelist', function () {
           '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
     });
 
+    it('reverts on whitelisting a token in a array incorrectly', async function(){
+      await expect(this.whitelist.connect(owner).whitelistToken(
+        this.well.address, 
+        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        '10000',
+        '1',
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        '0',
+        '0')).to.be.revertedWith("Whitelist: Token in incorrect whitelisted token array");
+    })
+
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
       await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.well.address, 1)).to.be.revertedWith("Token not whitelisted");
     });
@@ -148,18 +161,19 @@ describe('Whitelist', function () {
     it('reverts on whitelisting token with bad selector', async function () {
       await expect(this.whitelist.connect(owner).whitelistToken(
         this.well.address,
-        '0x00000000',
+        this.bdv.interface.getSighash('wellBdv'),
         '10000',
         '1',
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')).to.be.revertedWith("Whitelist: Invalid BDV selector");
 
-        await expect(this.whitelist.connect(owner).whitelistToken(
+        await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
           this.well.address,
-          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+          this.bdv.interface.getSighash('wellBdv'), 
           '10000',
           '1',
+          1,
           '0x00000000',
           '0',
           '0')).to.be.revertedWith("Whitelist: Invalid GaugePoint selector");
@@ -177,11 +191,12 @@ describe('Whitelist', function () {
 
     it('updates stalk per bdv per season', async function () {
       //do initial whitelist so there's something to update
-      this.whitelist.connect(owner).whitelistToken(
+      this.whitelist.connect(owner).whitelistTokenWithEncodeType(
         this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        this.bdv.interface.getSighash('wellBdv'),
         '10000',
         '1',
+        1,
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')
@@ -216,11 +231,12 @@ describe('Whitelist', function () {
     })
 
     it('dewhitelists token', async function () {
-      await this.whitelist.connect(owner).whitelistToken(
+      await this.whitelist.connect(owner).whitelistTokenWithEncodeType(
         this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
+        this.bdv.interface.getSighash('wellBdv'),
         '10000',
         '1',
+        1,
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')

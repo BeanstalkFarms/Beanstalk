@@ -228,6 +228,6 @@ library LibWhitelist {
         for (uint i; i < array.length; i++) {
             if (token == array[i]) success = false;
         }
-        require(success, "Whitelist: Token not in whitelisted token array");
+        require(success, "Whitelist: Token in incorrect whitelisted token array");
     }
 }
