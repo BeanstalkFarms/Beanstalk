@@ -4,16 +4,16 @@
 
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
-import "contracts/beanstalk/AppStorage.sol";
-import "../../C.sol";
-import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "contracts/libraries/Silo/LibTokenSilo.sol";
+import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {C} from "../../C.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 
 /**
  * @author Brean
- * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct 
+ * @title InitBipSeedGauge initalizes the seed gauge, updates siloSetting Struct
  **/
 interface IGaugePointFacet {
     function defaultGaugePointFunction(
@@ -28,8 +28,8 @@ contract InitBipSeedGauge {
 
     AppStorage internal s;
 
-    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320; 
-    uint256 private constant PRECISION = 1e6;   
+    uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
+    uint256 private constant PRECISION = 1e6;
 
     // TODO : update these values, once the beanEthMigration BIP has executed.
     uint256 internal constant BEAN_UN_MIGRATED_BDV = 816_105_148629; // 816k BDV
@@ -62,11 +62,11 @@ contract InitBipSeedGauge {
         // unripeAssets are not in the seed gauge,
         // and bean does not have a gauge point function.
         // (it is based on the max gauge points of LP)
-        // bean, beanETH, bean3CRV, urBEAN, urBEAN3CRV
+        // order: bean, beanETH, bean3CRV, urBEAN, urBEANETH
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
         uint128 beanEthGp = uint128(s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason) * 500 * 1e12;
         uint128 bean3crvGp = uint128(s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason) * 500 * 1e12;
-        uint128[5] memory gaugePoints = [uint128(0), beanEthGp, bean3crvGp, 0, 0]; 
+        uint128[5] memory gaugePoints = [uint128(0), beanEthGp, bean3crvGp, 0, 0];
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
             IGaugePointFacet.defaultGaugePointFunction.selector,
@@ -74,7 +74,7 @@ contract InitBipSeedGauge {
             0x00000000,
             0x00000000
         ];
-        uint96[5] memory optimalPercentDepositedBdv = [uint96(0), 99e6, 1e6, 0, 0]; 
+        uint96[5] memory optimalPercentDepositedBdv = [uint96(0), 99e6, 1e6, 0, 0];
         for (uint i = 0; i < siloTokens.length; i++) {
             // update gaugePoints and gpSelectors
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
@@ -84,22 +84,22 @@ contract InitBipSeedGauge {
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
         }
-        // initalize seed gauge. 
-        s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50% // TODO: how to set this?
-        s.seedGauge.averageGrownStalkPerBdvPerSeason = initalizeAverageGrownStalkPerBdv(totalBdv);
+        // initalize seed gauge.
+        s.seedGauge.beanToMaxLpGpPerBDVRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
+        s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
-        // initalize s.usdTokenPrice for the bean eth well. 
+        // initalize s.usdTokenPrice for the bean eth well.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
 
-        // overwrite s.beanEthPrice and set s.twaReserves for the bean eth well. 
-        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1,1);
+        // overwrite s.beanEthPrice and set s.twaReserves for the bean eth well.
+        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
 
         // initalize V2 cases.
         LibCases.setCasesV2();
     }
 
-    function initalizeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
-      uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv).sub(10000);
-      return uint128(averageGrownStalkPerBdv.mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP));
+    function initializeAverageGrownStalkPerBdv(uint256 totalBdv) internal view returns (uint128) {
+        uint256 averageGrownStalkPerBdv = s.s.stalk.div(totalBdv).sub(10000);
+        return uint128(averageGrownStalkPerBdv.mul(PRECISION).div(TARGET_SEASONS_TO_CATCHUP));
     }
 }
