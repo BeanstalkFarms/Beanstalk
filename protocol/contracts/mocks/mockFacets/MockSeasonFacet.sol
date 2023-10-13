@@ -130,7 +130,7 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndBeanToMaxLPRatio(caseId);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
         stepSun(deltaB, caseId);
     }
 
