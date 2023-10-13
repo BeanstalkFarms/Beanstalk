@@ -132,7 +132,6 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('L2SR', async function () {
-      // lmao 254% L2SR
       // the L2SR may differ during testing, due to the fact 
       // that the L2SR is calculated on twa reserves, and thus may slightly differ due to 
       // timestamp differences.
@@ -140,8 +139,8 @@ describe('SeedGauge Init Test', function () {
     })
     
     it('bean To MaxLPGpRatio', async function () {
-      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('50'));
-      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75'));
+      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('33.333333333333333333'));
+      expect(await this.beanstalk.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('66.666666666666666666'));
     })
 
     it('lockedBeans', async function () {
