@@ -111,7 +111,11 @@ contract SeasonFacet is Weather {
             LibWell.resetTwaReservesForWell(lpPools[i]);
         }
 
-        uint256 incentiveAmount = LibIncentive.determineReward(initialGasLeft, blocksLate, beanEthPrice);
+        uint256 incentiveAmount = LibIncentive.determineReward(
+            initialGasLeft,
+            blocksLate,
+            beanEthPrice
+        );
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
