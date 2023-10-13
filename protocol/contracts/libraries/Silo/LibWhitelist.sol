@@ -192,18 +192,17 @@ library LibWhitelist {
      */
     function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal pure {
         // future whitelisted functions will need to be added to the arrays in
-        // { LibWhitelistedTokens.sol }
+        // { LibWhitelistedTokens.sol }.
+        // the gauge system assumes non-bean tokens whitelisted in the silo 
+        // are LP tokens.
         checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
         checkTokenInArray(token, LibWhitelistedTokens.getSiloTokensWithUnripe());
+        checkTokenInArray(token, LibWhitelistedTokens.getSiloLpTokens()); 
 
-        // if it is not a well token, we also must verify the token is not in 
-        // the lp arrays.
         if (selector == LibWell.WELL_BDV_SELECTOR) {
-            checkTokenInArray(token, LibWhitelistedTokens.getSiloLpTokens());      
             checkTokenInArray(token, LibWhitelistedTokens.getWellLpTokens());        
         } else {
-            checkTokenNotInArray(token, LibWhitelistedTokens.getSiloLpTokens());
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWellLpTokens());        
+            checkTokenNotInArray(token, LibWhitelistedTokens.getWellLpTokens());
         }
     }
 
