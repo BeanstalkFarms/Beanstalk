@@ -273,7 +273,7 @@ const SwapForm: FC<
   const handleChangeAmountIn = useCallback(
     (_amountInClamped: BigNumber | undefined) => {
       console.debug('[TokenInput] handleChangeAmountIn', _amountInClamped);
-      if (_amountInClamped) {
+      if (_amountInClamped && !_amountInClamped?.isNaN()) {
         getAmountOut(tokenIn, _amountInClamped);
       } else {
         setFieldValue('tokenOut.amount', undefined);
@@ -284,7 +284,7 @@ const SwapForm: FC<
   const handleChangeAmountOut = useCallback(
     (_amountOutClamped: BigNumber | undefined) => {
       console.debug('[TokenInput] handleChangeAmountOut', _amountOutClamped);
-      if (_amountOutClamped) {
+      if (_amountOutClamped && !_amountOutClamped?.isNaN()) {
         console.debug('[TokenInput] getMinAmountIn', [
           tokenOut,
           _amountOutClamped,
@@ -533,7 +533,7 @@ const SwapForm: FC<
          * an `amountIn` that is too high by typing in the second input,
          * show a message and prompt them to use `max`.
          */}
-        {!noBalance && !enoughBalanceCheck ? (
+        {!noBalance && !enoughBalanceCheck && amountsCheck ? (
           <Alert variant="standard" color="warning" icon={<WarningIcon />}>
             Not enough {tokenIn.symbol}
             {tokensMatch ? ` in your ${copy.MODES[modeIn]}` : ''} to execute

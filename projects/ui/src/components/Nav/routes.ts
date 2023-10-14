@@ -9,6 +9,7 @@ import immunefiIcon from '~/img/beanstalk/interface/nav/immunefi.svg';
 import docsIcon from '~/img/beanstalk/interface/nav/docs.svg';
 import disclosuresIcon from '~/img/beanstalk/interface/nav/disclosures.svg';
 import analyticsIcon from '~/img/beanstalk/interface/nav/stats.svg';
+import basinIcon from '~/img/beanstalk/interface/nav/basin.svg';
 
 export type RouteData = {
   /** Nav item title */
@@ -128,10 +129,10 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
       icon: githubIcon,
     },
     {
-      path: 'analytics',
-      href: 'https://analytics.bean.money',
-      title: 'Advanced Analytics',
-      icon: analyticsIcon,
+      path: 'basin',
+      href: 'https://basin.exchange',
+      title: 'Basin',
+      icon: basinIcon,
     },
   ],
   // Market Menu

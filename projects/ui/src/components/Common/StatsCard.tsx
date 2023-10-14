@@ -27,7 +27,7 @@ const StatsCard: FC<
   } & CardProps
 > = ({ stats }, props) => (
   <Card sx={{ p: 1, borderColor: BeanstalkPalette.lightestGrey }} {...props}>
-    <Grid container sx={{ justifyContent: "space-between" }} spacing={1} rowSpacing={3}>
+    <Grid container sx={{ justifyContent: 'space-between' }} spacing={1} rowSpacing={3}>
       {stats.map((stat, index) => (
         <Grid key={index} item xs={12} md={3}>
           <Stat
@@ -37,21 +37,25 @@ const StatsCard: FC<
             titleTooltip={stat.tooltip}
             amountIcon={stat.token && <TokenIcon token={stat.token} />}
             amount={
-              <>
-                {displayFullBN(
-                  stat.amount,
-                  stat.token ? stat.token.displayDecimals : 2
-                )}
-                {stat.amountModifier !== undefined && (
-                  <Typography color="primary" variant="h4">
-                    +{' '}
-                    {displayFullBN(
-                      stat.amountModifier,
-                      stat.token ? stat.token.displayDecimals : 2
-                    )}
-                  </Typography>
-                )}
-              </>
+              stat.amount.gt(0) ? (
+                <>
+                  {displayFullBN(
+                    stat.amount,
+                    stat.token ? stat.token.displayDecimals : 2
+                  )}
+                  {stat.amountModifier !== undefined && (
+                    <Typography color="primary" variant="h4">
+                      +{' '}
+                      {displayFullBN(
+                        stat.amountModifier,
+                        stat.token ? stat.token.displayDecimals : 2
+                      )}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                '-'
+              )
             }
           />
         </Grid>

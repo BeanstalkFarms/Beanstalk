@@ -180,7 +180,8 @@ const ChopForm: FC<
                         type: ActionType.BASE,
                         message: `Add ${displayBN(
                           amountOut || ZERO_BN
-                        )} ${outputToken} to the balance selected in the Destination field.`,
+                        )} ${outputToken} to your 
+                        ${values.destination === FarmToMode.EXTERNAL ? `Circulating` : `Farm`} Balance.`,
                       },
                     ]}
                   />
