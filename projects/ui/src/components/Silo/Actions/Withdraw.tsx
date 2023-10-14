@@ -158,7 +158,7 @@ const WithdrawForm: FC<
   );
   const { setDestination } = useFormTxnContext();
   useEffect(() => {
-    if (values.destination) setDestination(values.destination)
+    setDestination(values.destination);
   }, [values.destination, setDestination])
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
