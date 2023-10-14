@@ -560,12 +560,14 @@ struct AppStorage {
 
     // Well
     mapping(address => bytes) wellOracleSnapshots;
-    mapping(address => Storage.TwaReserves) twaReserves;
+
+    uint256 deprecated_beanEthPrice;
 
     // Silo V3 BDV Migration
     mapping(address => uint256) migratedBdvs;
-    
-    // well sunrise oracle price
+
+    // Well + USD Price Oracle
+    mapping(address => Storage.TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
 
     // Seed Gauge
