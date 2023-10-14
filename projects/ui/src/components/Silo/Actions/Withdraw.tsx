@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
@@ -156,6 +156,10 @@ const WithdrawForm: FC<
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(whitelistedToken)
   );
+  const { setDestination } = useFormTxnContext();
+  useEffect(() => {
+    if (values.destination) setDestination(values.destination)
+  }, [values.destination, setDestination])
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
@@ -429,7 +433,7 @@ const WithdrawPropProvider: FC<{
         if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
-
+        
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
         const destination = values.destination;
