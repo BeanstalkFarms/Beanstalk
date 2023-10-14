@@ -440,7 +440,7 @@ const Vote: FC<{
             'Vote successful. It may take some time for your vote to appear on the Beanstalk UI. Check Snapshot for the latest results.',
         });
 
-        const hub = `https://hub.snapshot.org`;
+        const hub = `https://hub.snapshot.org/?apiKey=${SNAPSHOT_API_KEY}`;
         const client = new snapshot.Client712(hub);
 
         const message = {
