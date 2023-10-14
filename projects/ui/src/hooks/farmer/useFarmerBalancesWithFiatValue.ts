@@ -15,9 +15,11 @@ const sortMap = {
   urBEAN: 2,
   urBEAN3CRV: 3,
   ETH: 4,
-  DAI: 5,
-  USDC: 6,
-  USDT: 7,
+  WETH: 5,
+  "3CRV": 6,
+  DAI: 7,
+  USDC: 8,
+  USDT: 9,
 } as const;
 
 export type TokenBalanceWithFiatValue = {
