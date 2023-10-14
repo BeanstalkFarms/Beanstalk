@@ -203,9 +203,9 @@ library LibWhitelist {
             checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
         }
         if (selector == LibWell.WELL_BDV_SELECTOR) {
-            checkTokenInArray(token, LibWhitelistedTokens.getWellLpTokens());        
+            checkTokenInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());        
         } else {
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWellLpTokens());
+            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());
         }
     }
 
