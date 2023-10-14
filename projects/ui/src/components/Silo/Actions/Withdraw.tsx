@@ -433,7 +433,7 @@ const WithdrawPropProvider: FC<{
         if (!siloBalance?.deposits) {
           throw new Error('No balances found');
         }
-        
+
         const formData = values.tokens[0];
         const primaryActions = values.farmActions.primary;
         const destination = values.destination;
