@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibWhitelistedTokens, C} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -17,14 +16,14 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
  * @author Brean
  * @title LibEvaluate calculates the caseId based on the state of beanstalk.
  * @dev the current parameters that beanstalk uses to evaluate its state are:
- * - deltaB, the amount of beans needed to be bought/sold to reach peg.
- * - podRate, the ratio of pods outstanding against the bean supply.
- * - delta Soil demand, the change in demand of soil between the current and previous season.
- * - lpToSupplyRatio, the ratio of liquidity against the bean supply.
+ * - DeltaB, the amount of beans needed to be bought/sold to reach peg.
+ * - PodRate, the ratio of pods outstanding against the bean supply.
+ * - Delta Soil demand, the change in demand of soil between the current and previous season.
+ * - LpToSupplyRatio (L2SR), the ratio of liquidity against the bean supply.
  *
  * based on the caseId, beanstalk adjusts:
  * - the temperature
- * - the stalk issued per bdv per season for LP and Bean.
+ * - the ratio of the gaugePoints per BDV of bean and the largest GpPerBdv for a given LP token. 
  */
 
 library DecimalExtended {
@@ -112,7 +111,6 @@ library LibEvaluate {
 
     /**
      * @notice updates the caseId based on the change in soil demand.
-     * @param caseId the inital caseId
      * @param deltaPodDemand the change in soil demand from the previous season.
      */
     function evalDeltaPodDemand(
@@ -131,6 +129,8 @@ library LibEvaluate {
     /**
      * @notice evaluates the lp to supply ratio and returns the caseId
      * @param lpToSupplyRatio the ratio of liquidity to supply.
+     * 
+     * @dev 'liquidity' is definied as the non-bean value in a pool that trades beans.
      */
     function evalLpToSupplyRatio(
         Decimal.D256 memory lpToSupplyRatio

@@ -8,7 +8,9 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IBean} from "../interfaces/IBean.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {C} from "../C.sol";
-import {LibWell, Call, IWell, IWellFunction} from "./Well/LibWell.sol";
+import {LibWell} from "./Well/LibWell.sol";
+import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 
 /**
  * @title LibUnripe
@@ -32,21 +34,16 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.u[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
-                C.unripeBean().totalSupply()
-            );
+            s.u[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(C.unripeBean().totalSupply());
     }
 
     /**
      * @notice Gets the percentage of LP recapitalized after the exploit.
      * @return percent The percentage of LP recapitalized.
-     */ 
+     */
     function percentLPRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return
-            C.unripeLPPerDollar().mul(s.recapitalized).div(
-                C.unripeLP().totalSupply()
-            );
+        return C.unripeLPPerDollar().mul(s.recapitalized).div(C.unripeLP().totalSupply());
     }
 
     /**
@@ -56,9 +53,7 @@ library LibUnripe {
      */
     function incrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.add(
-            amount
-        );
+        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.add(amount);
         emit ChangeUnderlying(token, int256(amount));
     }
 
@@ -69,9 +64,7 @@ library LibUnripe {
      */
     function decrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.sub(
-            amount
-        );
+        s.u[token].balanceOfUnderlying = s.u[token].balanceOfUnderlying.sub(amount);
         emit ChangeUnderlying(token, -int256(amount));
     }
 
@@ -81,15 +74,13 @@ library LibUnripe {
      * @param unripe The amount of the of the unripe token to be taken as input.
      * @return underlying The amount of the of the ripe token to be credited from its unripe counterpart.
      */
-    function unripeToUnderlying(address unripeToken, uint256 unripe, uint256 supply)
-        internal
-        view
-        returns (uint256 underlying)
-    {
+    function unripeToUnderlying(
+        address unripeToken,
+        uint256 unripe,
+        uint256 supply
+    ) internal view returns (uint256 underlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        underlying = s.u[unripeToken].balanceOfUnderlying.mul(unripe).div(
-            supply
-        );
+        underlying = s.u[unripeToken].balanceOfUnderlying.mul(unripe).div(supply);
     }
 
     /**
@@ -98,11 +89,10 @@ library LibUnripe {
      * @param underlying The amount of the of the underlying token to be taken as input.
      * @return unripe The amount of the of the unripe token to be credited from its ripe counterpart.
      */
-    function underlyingToUnripe(address unripeToken, uint256 underlying)
-        internal
-        view
-        returns (uint256 unripe)
-    {
+    function underlyingToUnripe(
+        address unripeToken,
+        uint256 underlying
+    ) internal view returns (uint256 unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = IBean(unripeToken).totalSupply().mul(underlying).div(
             s.u[unripeToken].balanceOfUnderlying
@@ -153,24 +143,22 @@ library LibUnripe {
         emit SwitchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
-    function _getPenalizedUnderlying(address unripeToken, uint256 amount, uint256 supply)
-        internal
-        view
-        returns (uint256 redeem)
-    {
+    function _getPenalizedUnderlying(
+        address unripeToken,
+        uint256 amount,
+        uint256 supply
+    ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
         uint256 sharesBeingRedeemed = getRecapPaidPercentAmount(amount);
         redeem = _getUnderlying(unripeToken, sharesBeingRedeemed, supply);
     }
 
-    /** 
+    /**
      * @notice calculates the total underlying token with penalty deduction.
      */
-    function _getTotalPenalizedUnderlying(address unripeToken)
-        internal
-        view
-        returns (uint256 redeem)
-    {
+    function _getTotalPenalizedUnderlying(
+        address unripeToken
+    ) internal view returns (uint256 redeem) {
         require(isUnripe(unripeToken), "not vesting");
         uint256 supply = IERC20(unripeToken).totalSupply();
         redeem = _getUnderlying(unripeToken, getRecapPaidPercentAmount(supply), supply);
@@ -182,55 +170,55 @@ library LibUnripe {
      * @param reserves the reserves of the LP that underly the unripe token.
      * @dev reserves are used as a parameter for gas effiency purposes (see LibEvaluate.calcLPToSupplyRatio}.
      */
-    function getLockedBeans(uint256[] memory reserves) internal view returns (uint256 lockedAmount){
-        lockedAmount = getTotalUnderlyingForfeited(C.UNRIPE_BEAN)
-            .add(getLockedBeansFromLP(reserves));
+    function getLockedBeans(
+        uint256[] memory reserves
+    ) internal view returns (uint256 lockedAmount) {
+        lockedAmount = getTotalUnderlyingForfeited(C.UNRIPE_BEAN).add(
+            getLockedBeansFromLP(reserves)
+        );
     }
 
     /**
      * @notice gets the amount of beans that are locked in the unripeLP token.
      * @param reserves the reserves of the LP that underly the unripe token.
      */
-    function getLockedBeansFromLP(uint256[] memory reserves) internal view returns (uint256 lockedBeanAmount){
+    function getLockedBeansFromLP(
+        uint256[] memory reserves
+    ) internal view returns (uint256 lockedBeanAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lockedLpAmount = getTotalUnderlyingForfeited(C.UNRIPE_LP);
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
-        
-        // lpTokenSupply is calculated rather than calling totalSupply(), 
+
+        // lpTokenSupply is calculated rather than calling totalSupply(),
         // because the Well's lpTokenSupply is not MEV resistant.
         Call memory wellFunction = IWell(underlying).wellFunction();
-        uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(reserves, wellFunction.data);
-        lockedBeanAmount = lockedLpAmount
-            .mul(reserves[beanIndex])
-            .div(lpTokenSupply);
+        uint lpTokenSupply = IWellFunction(wellFunction.target).calcLpTokenSupply(
+            reserves,
+            wellFunction.data
+        );
+        lockedBeanAmount = lockedLpAmount.mul(reserves[beanIndex]).div(lpTokenSupply);
     }
-    
-    /** 
-     * @notice calculates the total underlying token that would be forfeited, 
+
+    /**
+     * @notice calculates the total underlying token that would be forfeited,
      * if all unripe tokens were chopped.
      */
-    function getTotalUnderlyingForfeited(address unripeToken)
-        internal
-        view
-        returns (uint256 redeem)
-    {
+    function getTotalUnderlyingForfeited(
+        address unripeToken
+    ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(isUnripe(unripeToken), "not vesting");
-        redeem = s.u[unripeToken].balanceOfUnderlying
-            .sub(_getTotalPenalizedUnderlying(unripeToken));
-
+        redeem = s.u[unripeToken].balanceOfUnderlying.sub(
+            _getTotalPenalizedUnderlying(unripeToken)
+        );
     }
 
     /**
      * @notice gets the total recapitalized underlying token.
      * @param amount The amount of the of the unripe token to be taken as input.
      */
-    function getRecapPaidPercentAmount(uint256 amount)
-        internal
-        view
-        returns (uint256 penalty)
-    {
+    function getRecapPaidPercentAmount(uint256 amount) internal view returns (uint256 penalty) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }
@@ -246,14 +234,12 @@ library LibUnripe {
     /**
      * @notice returns the underlying token amount of the unripe token.
      */
-    function _getUnderlying(address unripeToken, uint256 amount, uint256 supply)
-        internal
-        view
-        returns (uint256 redeem)
-    {
+    function _getUnderlying(
+        address unripeToken,
+        uint256 amount,
+        uint256 supply
+    ) internal view returns (uint256 redeem) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(
-            supply
-        );
+        redeem = s.u[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
     }
 }

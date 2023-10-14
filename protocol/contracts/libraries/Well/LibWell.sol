@@ -8,8 +8,7 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
-import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
@@ -23,7 +22,6 @@ library LibWell {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
 
-    uint256 private constant PRECISION = 1e30;
     // The BDV Selector that all Wells should be whitelisted with.
     bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
 
@@ -174,23 +172,15 @@ library LibWell {
      */
     function setTwaReservesForWell(address well, uint256[] memory twaReserves) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Storage.TwaReserves memory _twaReserves;
         // if the length of twaReserves is 0, then return 0.
-        // the length of twaReserves should never be 1, but 
+        // the length of twaReserves should never be 1, but
         // is added for safety.
         if (twaReserves.length < 1) {
-            _twaReserves = Storage.TwaReserves(
-                uint128(0),
-                uint128(0)
-            );
+            s.twaReserves[well] = Storage.TwaReserves(uint128(0), uint128(0));
         } else {
             // safeCast not needed as the reserves are uint128 in the wells.
-            _twaReserves = Storage.TwaReserves(
-                uint128(twaReserves[0]),
-                uint128(twaReserves[1])
-            );
+            s.twaReserves[well] = Storage.TwaReserves(uint128(twaReserves[0]), uint128(twaReserves[1]));
         }
-        s.twaReserves[well] = _twaReserves;
     }
 
     /**
@@ -228,7 +218,9 @@ library LibWell {
         }
     }
 
-    function getTwaReservesFromStorageOrBeanstalkPump(address well) internal view returns (uint256[] memory twaReserves) {
+    function getTwaReservesFromStorageOrBeanstalkPump(
+        address well
+    ) internal view returns (uint256[] memory twaReserves) {
         twaReserves = getTwaReservesFromBeanstalkPump(well);
         if (twaReserves[0] == 1) {
             twaReserves = getTwaReservesFromBeanstalkPump(well);

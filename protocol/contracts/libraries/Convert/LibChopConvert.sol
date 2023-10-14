@@ -3,11 +3,10 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/libraries/Token/LibTransfer.sol";
-import "./LibConvertData.sol";
-import "contracts/libraries/LibChop.sol";
-import "../../C.sol";
-import {IBean} from "../../interfaces/IBean.sol";
+import {LibConvertData} from "./LibConvertData.sol";
+import {LibChop} from "contracts/libraries/LibChop.sol";
+import {C} from "contracts/C.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title LibChopConvert
@@ -35,13 +34,14 @@ library LibChopConvert {
     {
         // Decode convertdata
         (amountIn, tokenIn) = convertData.lambdaConvert();
-        // LibChop.chop just decrements the amount of unripe beans in circulation from the storage
+       
         (tokenOut, amountOut) = LibChop.chop(
             tokenIn, 
             amountIn, 
-            IERC20(tokenIn).totalSupply()
+            IBean(tokenIn).totalSupply()
         );
-        // UrBEAN still needs to be burned directly (not from an address) 
+        // LibChop.chop decrements the amount of an unripe asset in circulation from storage.
+        // thus, the unripe asset still needs to be burned directly.
         IBean(tokenIn).burn(amountIn);
     }
 
@@ -55,7 +55,7 @@ library LibChopConvert {
         amount = LibChop._getPenalizedUnderlying(
             tokenIn,
             amountIn, 
-            IERC20(tokenIn).totalSupply()
+            IBean(tokenIn).totalSupply()
         );
     }
 }

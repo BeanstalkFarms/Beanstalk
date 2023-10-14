@@ -5,12 +5,13 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "./LibAppStorage.sol";
+import {LibAppStorage, AppStorage, Storage} from "./LibAppStorage.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-import "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "contracts/libraries/Silo/LibWhitelist.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "../C.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {C} from "../C.sol";
 
 /**
  * @title LibGauge
@@ -59,13 +60,13 @@ library LibGauge {
      * @notice Updates the seed gauge system.
      * @dev updates the GaugePoints for LP assets (if applicable)
      * and the distribution of grown Stalk to silo assets.
-     * 
-     * If the price of bean/eth cannot be computed, 
+     *
+     * If the price of bean/eth cannot be computed,
      * skip the gauge system, given that
      * the liquidity cannot be calculated.
      */
     function stepGauge() external {
-        if(LibAppStorage.diamondStorage().usdTokenPrice[C.BEAN_ETH_WELL] == 0) return;
+        if (LibAppStorage.diamondStorage().usdTokenPrice[C.BEAN_ETH_WELL] == 0) return;
         (
             uint256 maxLpGpPerBDV,
             LpGaugePointData[] memory lpGpData,
@@ -138,7 +139,7 @@ library LibGauge {
             // gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
             uint256 gpPerBDV = newGaugePoints.mul(BDV_PRECISION).div(depositedBdv);
-            
+
             // gpPerBDV has 6 decimal precision.
             if (gpPerBDV > maxLpGpPerBDV) maxLpGpPerBDV = gpPerBDV;
             _lpGpData.gpPerBDV = gpPerBDV;
@@ -267,7 +268,7 @@ library LibGauge {
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateStalkPerBdvPerSeason() internal {
+    function updateStalkPerBdvPerSeason() public {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // will overflow if the average grown stalk per BDV exceeds 1.4e36,
         // which is highly improbable assuming consistent new deposits.
