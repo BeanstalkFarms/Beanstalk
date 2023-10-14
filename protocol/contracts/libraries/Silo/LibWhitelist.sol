@@ -9,6 +9,7 @@ import {C} from "../../C.sol";
 import {LibAppStorage, AppStorage, Storage} from "../LibAppStorage.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
@@ -51,10 +52,10 @@ library LibWhitelist {
     );
 
     /**
-     * @notice emitted when the gauge settings are updated.
-     * @param token token that is being updated. 
-     * @param selector the new GP selector.
-     * @param optimalPercentDepositedBdv the new optimal Percent deposited BDV
+     * @notice Emitted when the gauge settings are updated.
+     * @param token Token that is being updated. 
+     * @param selector The new GP selector.
+     * @param optimalPercentDepositedBdv The new optimal Percent deposited BDV
      */
     event updateGaugeSettings(
         address indexed token,
@@ -65,8 +66,8 @@ library LibWhitelist {
     /**
      * @notice Emitted when the stalk per bdv per season for a Silo token is updated.
      * @param token ERC-20 token being updated in the Silo Whitelist.
-     * @param stalkEarnedPerSeason new stalk per bdv per season value for this token.
-     * @param season the season that the new stalk per bdv per season value becomes active (The current season).
+     * @param stalkEarnedPerSeason New stalk per bdv per season value for this token.
+     * @param season The season that the new stalk per bdv per season value becomes active (The current season).
      */
     event UpdatedStalkPerBdvPerSeason(
         address indexed token,
@@ -81,7 +82,7 @@ library LibWhitelist {
     event DewhitelistToken(address indexed token);
 
     /**
-     * @dev Add an ERC-20 token to the Silo Whitelist.
+     * @dev Adds an ERC-20 token to the Silo Whitelist.
      */
     function whitelistToken(
         address token,
@@ -130,8 +131,8 @@ library LibWhitelist {
     }
 
     /**
-     * @notice Add an ERC-20 token to the Seed Gauge Whitelist.
-     * @dev LibWhitelistedTokens.sol must be updated to include the new token.
+     * @notice Adds an ERC-20 token to the Seed Gauge Whitelist.
+     * @dev {LibWhitelistedTokens} must be updated to include the new token.
      */
     function updateGaugeForToken(
         address token,
@@ -148,7 +149,7 @@ library LibWhitelist {
     }
 
     /**
-     * @dev Update the stalk per bdv per season for a token.
+     * @dev Updates the Stalk per BDV per Season for a token.
      */
     function updateStalkPerBdvPerSeasonForToken(
         address token,
@@ -158,15 +159,15 @@ library LibWhitelist {
 
         require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
 
-        s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); //store grown stalk milestone
-        s.ss[token].milestoneSeason = s.season.current; //update milestone season as this season
+        s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); // store grown stalk milestone
+        s.ss[token].milestoneSeason = s.season.current; // update milestone season as this season
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.season.current);
     }
 
     /**
-     * @dev Remove an ERC-20 token from the Silo Whitelist.
+     * @dev Removes an ERC-20 token from the Silo Whitelist.
      */
     function dewhitelistToken(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -177,28 +178,30 @@ library LibWhitelist {
     }
 
     /**
-     * @notice verifies whether the selector is valid for the gauge system.
+     * @notice Verifies whether the selector is valid for the gauge system.
      */
     function verifyGaugeSelector(bytes4 selector) internal view {
-        //verify you passed in a callable gaugePoint selector
+        // verify you passed in a callable gaugePoint selector
         (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector, 0, 0, 0));
         require(success, "Whitelist: Invalid GaugePoint selector");
     }
 
     /**
-     * @notice verifies whether a token is in the required arrays. 
+     * @notice Verifies whether a token is in the required arrays. 
      * @param token `token` that is being whitelisted.
-     * @param selector the BDV function thats being whitelisted with the token.
+     * @param selector The BDV function thats being whitelisted with the token.
      */
-    function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal pure {
+    function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal view {
         // future whitelisted functions will need to be added to the arrays in
-        // { LibWhitelistedTokens.sol }.
-        // the gauge system assumes non-bean tokens whitelisted in the silo 
-        // are LP tokens.
-        checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
-        checkTokenInArray(token, LibWhitelistedTokens.getSiloTokensWithUnripe());
-        checkTokenInArray(token, LibWhitelistedTokens.getSiloLpTokens()); 
-
+        // {LibWhitelistedTokens}.
+        checkTokenInArray(token, LibWhitelistedTokens.getWhitelistedTokens());
+        // The gauge system assumes all Whitelisted tokens that are not Unripe tokens
+        // or Bean are LP tokens. Revisit below block if this changes.
+        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+            checkTokenInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
+        } else {
+            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
+        }
         if (selector == LibWell.WELL_BDV_SELECTOR) {
             checkTokenInArray(token, LibWhitelistedTokens.getWellLpTokens());        
         } else {
@@ -207,7 +210,7 @@ library LibWhitelist {
     }
 
     /**
-     * @notice helper function that checks whether a token is in an array.
+     * @notice Checks whether a token is in an array.
      */
     function checkTokenInArray(address token, address[] memory array) private pure {
         // verify that the token is in the array.
@@ -219,7 +222,7 @@ library LibWhitelist {
     }
 
     /**
-     * @notice helper function that checks whether a token is in an array.
+     * @notice Checks whether a token is in an array.
      */
     function checkTokenNotInArray(address token, address[] memory array) private pure {
         // verify that the token is not in the array.

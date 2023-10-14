@@ -10,47 +10,38 @@ import {C} from "../../C.sol";
 /**
  * @title LibWhitelistedTokens
  * @author Brean
- * @notice LibWhitelistedTokens returns the current whitelisted assets.
+ * @notice LibWhitelistedTokens returns the current Whitelisted tokens.
  * @dev a library is used, rather than keeping the addresses in storages,
  * as a gas optimization.
  */
 library LibWhitelistedTokens {
     /**
-     * @notice Returns the current whitelisted assets, excluding unripe assets.
+     * @notice Returns the current Whitelisted tokens, including Unripe tokens.
      */
-    function getSiloTokens() internal pure returns (address[] memory assets) {
-        assets = new address[](3);
-        assets[0] = C.BEAN;
-        assets[1] = C.BEAN_ETH_WELL;
-        assets[2] = C.CURVE_BEAN_METAPOOL;
+    function getWhitelistedTokens() internal pure returns (address[] memory tokens) {
+        tokens = new address[](5);
+        tokens[0] = C.BEAN;
+        tokens[1] = C.BEAN_ETH_WELL;
+        tokens[2] = C.CURVE_BEAN_METAPOOL;
+        tokens[3] = C.UNRIPE_BEAN;
+        tokens[4] = C.UNRIPE_LP;
     }
 
     /**
-     * @notice Returns the current whitelisted assets, including whitelisted assets.
+     * @notice Returns the current Whitelisted LP tokens. 
+     * @dev Unripe LP is not an LP token.
      */
-    function getSiloTokensWithUnripe() internal pure returns (address[] memory assets) {
-        assets = new address[](5);
-        assets[0] = C.BEAN;
-        assets[1] = C.BEAN_ETH_WELL;
-        assets[2] = C.CURVE_BEAN_METAPOOL;
-        assets[3] = C.UNRIPE_BEAN;
-        assets[4] = C.UNRIPE_LP;
+    function getWhitelistedLpTokens() internal pure returns (address[] memory tokens) {
+        tokens = new address[](2);
+        tokens[0] = C.BEAN_ETH_WELL;
+        tokens[1] = C.CURVE_BEAN_METAPOOL;
     }
 
     /**
-     * @notice Returns the current whitelisted LP assets.
+     * @notice Returns the list of Whitelisted Well LP tokens.
      */
-    function getSiloLpTokens() internal pure returns (address[] memory assets) {
-        assets = new address[](2);
-        assets[0] = C.BEAN_ETH_WELL;
-        assets[1] = C.CURVE_BEAN_METAPOOL;
-    }
-
-    /**
-     * @notice Returns the list of whitelisted Well LP assets.
-     */
-    function getWellLpTokens() internal pure returns (address[] memory assets) {
-        assets = new address[](1);
-        assets[0] = C.BEAN_ETH_WELL;
+    function getWhitelistedWellLpTokens() internal pure returns (address[] memory tokens) {
+        tokens = new address[](1);
+        tokens[0] = C.BEAN_ETH_WELL;
     }
 }
