@@ -16,12 +16,12 @@ library LibChopConvert {
     using LibConvertData for bytes;
 
     /**
-     * @notice Converts an unripe asset into its ripe counterpart
-     * @param convertData The encoded data containing the info for the convert
-     * @return tokenOut The address of the ripe token to be returned after the convert
-     * @return tokenIn The address of the unripe token to be converted
-     * @return amountOut The amount of the ripe asset credited after the convert
-     * @return amountIn The amount of the unripe asset to be converted
+     * @notice Converts Deposited Unripe tokens into their Deposited Ripe Tokens.
+     * @param convertData The encoded data containing the info for the convert.
+     * @return tokenOut The address of the Ripe Token received after the Convert.
+     * @return tokenIn The address of the Unripe Token to be converted.
+     * @return amountOut The amount of Ripe Tokens received after the Convert.
+     * @return amountIn The amount of Unripe Tokens to be converted.
      */
     function convertUnripeToRipe(bytes memory convertData)
         internal
@@ -40,17 +40,16 @@ library LibChopConvert {
             amountIn, 
             IBean(tokenIn).totalSupply()
         );
-        // LibChop.chop decrements the amount of an unripe asset in circulation from storage.
-        // thus, the unripe asset still needs to be burned directly.
+
         IBean(tokenIn).burn(amountIn);
     }
 
     /**
-     * @notice Retruns the final amount of ripe assets converted from its unripe counterpart
+     * @notice Returns the final amount of ripe assets converted from its unripe counterpart
      * @param tokenIn The address of the unripe token converted
      * @param amountIn The amount of the unripe asset converted
      */
-    function getRipeOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
+    function getConvertedUnderlyingOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
         // tokenIn == unripe bean address
         amount = LibChop._getPenalizedUnderlying(
             tokenIn,

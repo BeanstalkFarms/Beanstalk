@@ -5,7 +5,7 @@
 pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import {MerkleProof} from "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -22,7 +22,8 @@ import {LibChop} from "contracts/libraries/LibChop.sol";
 /**
  * @title UnripeFacet
  * @author ZrowGz, Publius, deadmanwalking
- * @notice @notice Manage the logic of the vesting process for the Barnraised Funds
+ * @notice Handles functionality related to Unripe Tokens including Chopping, Picking,
+ * managing Unripe Tokens. Also, contains view functions to fetch Unripe Token data.
  */
 
 contract UnripeFacet is ReentrancyGuard {
@@ -40,28 +41,27 @@ contract UnripeFacet is ReentrancyGuard {
     );
 
     /**
-     * @notice emitted when the underlying of a token increases or decreases.
-     * @param token the token of which the underlying changes.
+     * @notice Emitted when the Ripe Token of an Unripe Token increases or decreases.
+     * @param token The token of which the Underlying changes.
      * @param underlying `amount` that has changed.
      */
     event ChangeUnderlying(address indexed token, int256 underlying);
 
     /**
-     * @notice emitted when the underlying token of an unripe asset changes.
-     * @param token the unripe token.
-     * @param underlyingToken the new underlying token.
+     * @notice Emitted when the Ripe Token of an unripe asset changes.
+     * @param token The Unripe Token to change the Ripe Token of.
+     * @param underlyingToken The new Ripe Token.
      */
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
 
     /**
-     * @notice emitted when a user chops.
+     * @notice emitted when a Farmer Chops.
      */
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
 
     /**
      * @notice emitted when a user `picks`.
-     * @dev `picking` is redeeming unripe tokens, for 
-     * users who had beanstalk assets outside the silo.
+     * @dev `picking` is claiming non-Deposited Unripe Tokens.
      */
     event Pick(address indexed account, address indexed token, uint256 amount);
 
@@ -99,11 +99,12 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Enbles a user to collect their share of unripe tokens.
-     * @param token The address of the unripe token to be collected.
-     * @param amount The amount of the of the unripe token to be collected.
-     * @param proof The merkle proof used to validate the claim in order to prevent miltiple picks from occuring.
-     * @param mode Enum value to distinguish the type of account used to credit the unripe tokens after collecting.
+     * @notice Picks a Farmer's Pickable Unripe Tokens.
+     * @dev Pickable Unripe Tokens were distributed to all non-Deposited pre-exploit Bean and Bean LP Tokens.
+     * @param token The Unripe Token address to Pick.
+     * @param amount The amount of Unripe Tokens to Pick.
+     * @param proof The merkle proof used to validate that the Pick is valid.
+     * @param mode The destination balance that the Unripe Tokens are sent to.
      */
     function pick(
         address token,
@@ -125,25 +126,27 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to check if an account has claimed (picked) their share of unripe tokens.
-     * @param account The address of the account.
-     * @param token The address of the unripe token.
+     * @notice Returns whether a given `account` has picked a given `token`.
+     * @param account The address of the account to check.
+     * @param token The address of the Unripe Token to check.
      */
     function picked(address account, address token) public view returns (bool) {
         return s.unripeClaimed[token][account];
     }
 
     /**
-     * @notice Getter function to get the corresponding underlying amount of ripe
-     * tokens from its unripe counterpart.
-     * @param unripeToken The address of the unripe token.
-     * @param amount The amount of the unripe token.
-     * @return redeem The amount of ripe tokens received from the unripe ones.
+     * @notice Returns the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
+     * @dev Does NOT include the penalty associated with the percent of Sprouts that are Rinsable
+     * or Rinsed.
+     * @param unripeToken The address of the Unripe Token.
+     * @param amount The amount of the Unripe Token.
+     * @return underlyingAmount The amount of Ripe Tokens that underly the given amount of
+     * Unripe Tokens.
      */
     function getUnderlying(
         address unripeToken,
         uint256 amount
-    ) public view returns (uint256 redeem) {
+    ) public view returns (uint256 underlyingAmount) {
         return LibUnripe.unripeToUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
     }
 
@@ -180,19 +183,20 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to check if a token is unripe or not.
-     * @param unripeToken The address of the unripe token.
-     * @return unripe Whether the token is unripe or not.
+     * @notice Returns whether a token is an Unripe Token.
+     * @param unripeToken The token address to check.
+     * @return unripe Whether the token is Unripe or not.
      */
     function isUnripe(address unripeToken) external view returns (bool unripe) {
         unripe = LibChop.isUnripe(unripeToken);
     }
 
     /**
-     * @notice Getter function to get the balance of an underlying unripe asset from an account.
-     * @param unripeToken The address of the unripe token.
-     * @param account The address of the account to check.
-     * @return underlying The amount of the underlying asset.
+     * @notice Returns the amount of Ripe Tokens that underly a Farmer's balance of Unripe
+     * Tokens.
+     * @param unripeToken The address of the Unripe Token.
+     * @param account The address of the Farmer to check.
+     * @return underlying The amount of Ripe Tokens that underly the Farmer's balance.
      */
     function balanceOfUnderlying(
         address unripeToken,
@@ -202,8 +206,7 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to get the balance of ripe tokens that can be credited to an account
-     * according to the accounts' balance of an unripe token, if that account decided to convert.
+     * @notice Returns the amount of Ripe Tokens that underly a Farmer's balance of Unripe
      * @param unripeToken The address of the unripe token.
      * @param account The address of the account to check.
      * @return underlying The theoretical amount of the ripe asset in the account.
@@ -216,8 +219,8 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to get the percent funded of an unripe token.
-     * @param unripeToken The address of the unripe token.
+     * @notice Returns the % of Ripe Tokens that have been recapiatlized for a given Unripe Token.
+     * @param unripeToken The address of the Unripe Token.
      * @return percent The recap % of the token.
      */
     function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
@@ -230,25 +233,25 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to get the % penalty of converting from unripe to ripe.
-     * @param unripeToken The address of the unripe token.
-     * @return penalty The penalty %.
+     * @notice Returns the % penalty of Chopping an Unripe Token into its Ripe Token.
+     * @param unripeToken The address of the Unripe Token.
+     * @return penalty The penalty % of Chopping.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
         return LibChop.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
     }
 
     /**
-     * @notice Getter function to get the % of the recapitalization of an unripe asset.
-     * @return penalty The penalty % stemming from the recap.
+     * @notice Returns % of Sprouts that are Rinsable or Rinsed.
+     * @return percent The % stemming from the recap.
      */
-    function getRecapPaidPercent() external view returns (uint256 penalty) {
-        penalty = LibChop.getRecapPaidPercentAmount(LibUnripe.DECIMALS);
+    function getRecapPaidPercent() external view returns (uint256 percent) {
+        percent = LibChop.getRecapPaidPercentAmount(LibUnripe.DECIMALS);
     }
 
     /**
-     * @notice Getter function to get the corresponing amount a of ripe asset when converting
-     * from its unripe counterpart.
+     * @notice Returns the amount of Ripe Tokens that underly a single Unripe Token.
+     * @dev has 6 decimals of precision.
      * @param unripeToken The address of the unripe token.
      * @return underlyingPerToken The underlying ripe token per unripe token. 
      */
@@ -265,7 +268,7 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to get the total underlying amount of an unripe token.
+     * @notice Returns the total amount of Ripe Tokens for a given Unripe Token.
      * @param unripeToken The address of the unripe token.
      * @return underlying The total balance of the token. 
      */
@@ -279,10 +282,10 @@ contract UnripeFacet is ReentrancyGuard {
 
 
     /**
-     * @notice Adds an unripe token to the list of unripe tokens.
-     * @param unripeToken The address of the unripe token to be added.
-     * @param underlyingToken The address of the underlying token.
-     * @param root The merkle root , later used to verify claims.
+     * @notice Adds an Unripe Token to Beanstalk.
+     * @param unripeToken The address of the Unripe Token to be added.
+     * @param underlyingToken The address of the Ripe Token.
+     * @param root The merkle root, which is used to verify claims.
      */
     function addUnripeToken(
         address unripeToken,
@@ -296,9 +299,9 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Getter function to get the underlying token of an unripe token.
-     * @param unripeToken The address of the unripe token.
-     * @return underlyingToken The address of the underlying token.
+     * @notice Returns the Ripe Token of an Unripe Token.
+     * @param unripeToken The address of the Unripe Token.
+     * @return underlyingToken The address of the Ripe Token.
      */
     function getUnderlyingToken(address unripeToken)
         external
@@ -311,10 +314,10 @@ contract UnripeFacet is ReentrancyGuard {
     /////////////// UNDERLYING TOKEN MIGRATION //////////////////
 
     /**
-     * @notice Adds underlying tokens to an Unripe Token.
-     * @param unripeToken The Unripe Token to add underlying tokens to.
-     * @param amount The amount of underlying tokens to add.
-     * @dev Used to migrate the underlying token of an Unripe Token to a new token.
+     * @notice Adds Ripe Tokens to an Unripe Token. Used when changing the Ripe Token.
+     * @param unripeToken The Unripe Token to add Underlying tokens to.
+     * @param amount The amount of Ripe Tokens to add.
+     * @dev Used to migrate the Ripe Token of an Unripe Token to a new token.
      * Only callable by the contract owner.
      */
     function addMigratedUnderlying(
@@ -331,9 +334,9 @@ contract UnripeFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Switches the Underlying Token of an Unripe Token.
-     * @param unripeToken The Unripe Token to switch the underlying token of.
-     * @param newUnderlyingToken The new underlying token to switch to.
+     * @notice Switches the Ripe Token of an Unripe Token.
+     * @param unripeToken The Unripe Token to switch the Ripe Token of.
+     * @param newUnderlyingToken The new Ripe Token to switch to.
      * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
      */
     function switchUnderlyingToken(
@@ -345,16 +348,27 @@ contract UnripeFacet is ReentrancyGuard {
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
+    /**
+     * @notice Returns the number of Beans that are locked (not in circulation) using the TWA reserves in
+     * the Bean:Eth Well including the Unchoppable Beans underlying the Unripe Bean and Unripe LP
+     * Tokens.
+     */
     function getLockedBeans() external view returns (uint256) {
         uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
         return LibUnripe.getLockedBeans(twaReserves);
     }
 
-    function getLockedBeansInUrBEAN() external view returns (uint256) {
+    /**
+     * @notice Returns the number of Beans that are locked underneath the Unripe Bean token.
+     */
+    function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
         return LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
     }
 
-    function getLockedBeansInUrBEANETH() external view returns (uint256) {
+    /**
+     * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
+     */
+    function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
         uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
         return LibUnripe.getLockedBeansFromLP(twaReserves);
     }

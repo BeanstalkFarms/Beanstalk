@@ -150,11 +150,11 @@ library LibConvert {
 
         // UrBEAN -> Bean
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
-            return LibChopConvert.getRipeOut(tokenIn, amountIn);
+            return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         // UrBEAN:3CRV -> BEAN:3CRV
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.CURVE_BEAN_METAPOOL)
-            return LibChopConvert.getRipeOut(tokenIn, amountIn);
+            return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
     }
