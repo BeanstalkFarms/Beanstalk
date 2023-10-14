@@ -14,15 +14,15 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @author Brean
- * @title LibEvaluate calculates the caseId based on the state of beanstalk.
+ * @title LibEvaluate calculates the caseId based on the state of Beanstalk.
  * @dev the current parameters that beanstalk uses to evaluate its state are:
- * - DeltaB, the amount of beans needed to be bought/sold to reach peg.
- * - PodRate, the ratio of pods outstanding against the bean supply.
- * - Delta Soil demand, the change in demand of soil between the current and previous season.
- * - LpToSupplyRatio (L2SR), the ratio of liquidity against the bean supply.
+ * - DeltaB, the amount of Beans needed to be bought/sold to reach peg.
+ * - PodRate, the ratio of Pods outstanding against the bean supply.
+ * - Delta Soil demand, the change in demand of Soil between the current and previous Season.
+ * - LpToSupplyRatio (L2SR), the ratio of liquidity to the circulating Bean supply.
  *
- * based on the caseId, beanstalk adjusts:
- * - the temperature
+ * based on the caseId, Beanstalk adjusts:
+ * - the Temperature
  * - the ratio of the gaugePoints per BDV of bean and the largest GpPerBdv for a given LP token. 
  */
 
@@ -45,7 +45,7 @@ library LibEvaluate {
     uint256 internal constant POD_RATE_OPTIMAL = 0.15e18; // 15%
     uint256 internal constant POD_RATE_UPPER_BOUND = 0.25e18; // 25%
 
-    // Change in soil demand bounds
+    // Change in Soil demand bounds
     uint256 internal constant DELTA_POD_DEMAND_LOWER_BOUND = 0.95e18; // 95%
     uint256 internal constant DELTA_POD_DEMAND_UPPER_BOUND = 1.05e18; // 105%
 
@@ -91,8 +91,8 @@ library LibEvaluate {
         if (
             deltaB > 0 || (deltaB == 0 && podRate.lessThanOrEqualTo(POD_RATE_OPTIMAL.toDecimal()))
         ) {
-            // beanstalk will only use the bean/eth well to compute the bean price,
-            // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the bean/eth oracle fails to
+            // Beanstalk will only use the Bean/Eth well to compute the Bean price,
+            // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the Bean/Eth oracle fails to
             // compute a valid price this Season.
             uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
             if (beanEthPrice > 1) {
@@ -110,8 +110,8 @@ library LibEvaluate {
     }
 
     /**
-     * @notice updates the caseId based on the change in soil demand.
-     * @param deltaPodDemand the change in soil demand from the previous season.
+     * @notice Updates the caseId based on the change in Soil demand.
+     * @param deltaPodDemand The change in Soil demand from the previous Season.
      */
     function evalDeltaPodDemand(
         Decimal.D256 memory deltaPodDemand
@@ -119,16 +119,16 @@ library LibEvaluate {
         // increasing
         if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_UPPER_BOUND.toDecimal())) {
             caseId = 2;
-            // steady
+        // steady
         } else if (deltaPodDemand.greaterThanOrEqualTo(DELTA_POD_DEMAND_LOWER_BOUND.toDecimal())) {
             caseId = 1;
         }
-        // decreasing
+        // decreasing (caseId = 0)
     }
 
     /**
-     * @notice evaluates the lp to supply ratio and returns the caseId
-     * @param lpToSupplyRatio the ratio of liquidity to supply.
+     * @notice Evaluates the lp to supply ratio and returns the caseId.
+     * @param lpToSupplyRatio The ratio of liquidity to supply.
      * 
      * @dev 'liquidity' is definied as the non-bean value in a pool that trades beans.
      */
@@ -138,10 +138,10 @@ library LibEvaluate {
         // Extremely High
         if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_UPPER_BOUND.toDecimal())) {
             caseId = 108;
-            // Reasonably High
+        // Reasonably High
         } else if (lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_OPTIMAL.toDecimal())) {
             caseId = 72;
-            // Reasonably Low
+        // Reasonably Low
         } else if (
             lpToSupplyRatio.greaterThanOrEqualTo(LP_TO_SUPPLY_RATIO_LOWER_BOUND.toDecimal())
         ) {
@@ -151,8 +151,8 @@ library LibEvaluate {
     }
 
     /**
-     * @notice calculates the change in soil demand from the previous season.
-     * @param dsoil the amount of soil sown this season.
+     * @notice Calculates the change in soil demand from the previous season.
+     * @param dsoil The amount of soil sown this season.
      */
     function calcDeltaPodDemand(
         uint256 dsoil
@@ -185,9 +185,9 @@ library LibEvaluate {
             uint256 lastDSoil = s.w.lastDSoil;
 
             if (dsoil == 0) {
-                deltaPodDemand = Decimal.zero(); // If no one sow'd
+                deltaPodDemand = Decimal.zero(); // If no one Sow'd
             } else if (lastDSoil == 0) {
-                deltaPodDemand = Decimal.from(1e18); // If no one sow'd last Season
+                deltaPodDemand = Decimal.from(1e18); // If no one Sow'd last Season
             } else {
                 deltaPodDemand = Decimal.ratio(dsoil, lastDSoil);
             }
@@ -198,10 +198,10 @@ library LibEvaluate {
     }
 
     /**
-     * @notice calculates the liquidity to supply ratio, where liquidity is measured in USD.
-     * @param beanSupply the total supply of beans.
+     * @notice Calculates the liquidity to supply ratio, where liquidity is measured in USD.
+     * @param beanSupply The total supply of Beans.
      * corresponding to the well addresses in the whitelist.
-     * @dev no support for non-well AMMs, other than the existing bean:3crv pool.
+     * @dev No support for non-well AMMs, other than the existing Bean:3CRV pool.
      */
     function calcLPToSupplyRatio(
         uint256 beanSupply
@@ -209,7 +209,7 @@ library LibEvaluate {
         // prevent infinite L2SR
         if (beanSupply == 0) return Decimal.zero();
 
-        address[] memory pools = LibWhitelistedTokens.getSiloLpTokens();
+        address[] memory pools = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256[] memory twaReserves;
         uint256 usdLiquidity; 
         for (uint256 i; i < pools.length; i++) {
@@ -234,19 +234,21 @@ library LibEvaluate {
                     }
                 }
             }
+            // If a new non-Well LP is added, functionality to calculate the USD value of the
+            // liquidity should be added here.
         }
 
         // if there is no liquidity,
         // return 0 to save gas.
         if (usdLiquidity == 0) return Decimal.zero();
 
-        // usd liquidity is scaled down from 1e18 to match bean precision (1e6).
+        // USD liquidity is scaled down from 1e18 to match Bean precision (1e6).
         lpToSupplyRatio = Decimal.ratio(usdLiquidity.div(LIQUIDITY_PRECISION), beanSupply);
     }
 
     /**
-     * @notice get the deltaPodDemand, lpToSupplyRatio, and podRate,
-     * and update soil demand parameters.
+     * @notice Get the deltaPodDemand, lpToSupplyRatio, and podRate, and update soil demand
+     * parameters.
      */
     function getBeanstalkState(
         uint256 beanSupply
@@ -275,7 +277,7 @@ library LibEvaluate {
     }
 
     /**
-     * @notice evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
+     * @notice Evaluates beanstalk based on deltaB, podRate, deltaPodDemand and lpToSupplyRatio.
      * and returns the associated caseId.
      */
     function evaluateBeanstalk(

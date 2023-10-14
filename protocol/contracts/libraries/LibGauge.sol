@@ -89,7 +89,7 @@ library LibGauge {
         )
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory LPSiloTokens = LibWhitelistedTokens.getSiloLpTokens();
+        address[] memory LPSiloTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         lpGpData = new LpGaugePointData[](LPSiloTokens.length);
 
         // if there is only one pool, there is no need to update the gauge points.
@@ -287,7 +287,7 @@ library LibGauge {
      */
     function getTotalBdv() internal view returns (uint256 totalBdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getSiloTokensWithUnripe();
+        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getWhitelistedTokens();
         for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
             totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
         }

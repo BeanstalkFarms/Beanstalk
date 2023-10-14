@@ -15,9 +15,7 @@ import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 /**
  * @title LibUnripe
  * @author Publius
- * @notice Provides utility functions for handling unripe assets including:
- * adding ,removing , estimating conversions
- * and evalutating recapitalization percentages.
+ * @notice Library for handling functionality related to Unripe Tokens and their Ripe Tokens.
  */
 library LibUnripe {
     using SafeMath for uint256;
@@ -28,8 +26,7 @@ library LibUnripe {
     uint256 constant DECIMALS = 1e6;
 
     /**
-     * @notice Gets the percentage of beans recapitalized after the exploit.
-     * @return percent The percentage of beans recapitalized.
+     * @notice Returns the percentage that Unripe Beans have been recapitalized.
      */
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -38,8 +35,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice Gets the percentage of LP recapitalized after the exploit.
-     * @return percent The percentage of LP recapitalized.
+     * @notice Returns the percentage that Unripe LP have been recapitalized.
      */
     function percentLPRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -47,7 +43,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice Increments the balance of an underlying asset in storage.
+     * @notice Increments the underlying balance of an Unripe Token.
      * @param token The address of the unripe token.
      * @param amount The amount of the of the unripe token to be added to the storage reserves
      */
@@ -58,9 +54,9 @@ library LibUnripe {
     }
 
     /**
-     * @notice Decrements the balance of an underlying asset in storage.
-     * @param token The address of the unripe token.
-     * @param amount The amount of the of the unripe token to be removed from storage reserves
+     * @notice Decrements the underlying balance of an Unripe Token.
+     * @param token The address of the Unripe Token.
+     * @param amount The amount of the of the Unripe Token to be removed from storage reserves
      */
     function decrementUnderlying(address token, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -69,10 +65,10 @@ library LibUnripe {
     }
 
     /**
-     * @notice Calculates the amount of ripe assets received from converting or chopping an unripe asset.
-     * @param unripeToken The address of the unripe token.
-     * @param unripe The amount of the of the unripe token to be taken as input.
-     * @return underlying The amount of the of the ripe token to be credited from its unripe counterpart.
+     * @notice Calculates the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
+     * @param unripeToken The address of the Unripe Token
+     * @param unripe The amount of Unripe Tokens.
+     * @return underlying The amount of Ripe Tokens that underly the Unripe Tokens.
      */
     function unripeToUnderlying(
         address unripeToken,
@@ -84,10 +80,10 @@ library LibUnripe {
     }
 
     /**
-     * @notice Calculates the amount of unripe that correspond to the underlying.
-     * @param unripeToken The address of the unripe token.
-     * @param underlying The amount of the of the underlying token to be taken as input.
-     * @return unripe The amount of the of the unripe token to be credited from its ripe counterpart.
+     * @notice Calculates the amount of Unripe Tokens that are underlaid by a given amount of Ripe Tokens.
+     * @param unripeToken The address of the Unripe Tokens.
+     * @param underlying The amount of Ripe Tokens.
+     * @return unripe The amount of the of the Unripe Tokens that are underlaid by the Ripe Tokens.
      */
     function underlyingToUnripe(
         address unripeToken,
@@ -100,9 +96,9 @@ library LibUnripe {
     }
 
     /**
-     * Adds the underlying amount of the unripe token to reserves and
-     * conditionally updates the recapitalization percentages
-     * @param token The address of the unripe token to be added.
+     * @notice Adds Ripe Tokens to an Unripe Token. Also, increments the recapitalized
+     * amount proportionally if the Unripe Token is Unripe LP.
+     * @param token The address of the Unripe Token to add Ripe Tokens to.
      * @param underlying The amount of the of the underlying token to be taken as input.
      */
     function addUnderlying(address token, uint256 underlying) internal {
@@ -117,8 +113,8 @@ library LibUnripe {
     }
 
     /**
-     * Removes the underlying amount of the unripe token to reserves and
-     * conditionally updates the recapitalization percentages
+     * @notice Removes Ripe Tokens from an Unripe Token. Also, decrements the recapitalized
+     * amount proportionally if the Unripe Token is Unripe LP.
      * @param token The address of the unripe token to be removed.
      * @param underlying The amount of the of the underlying token to be removed.
      */
@@ -154,7 +150,8 @@ library LibUnripe {
     }
 
     /**
-     * @notice calculates the total underlying token with penalty deduction.
+     * @notice Calculates the the amount of Ripe Tokens that would be paid out if
+     * all Unripe Tokens were Chopped at the current Chop Rate.
      */
     function _getTotalPenalizedUnderlying(
         address unripeToken
@@ -165,8 +162,8 @@ library LibUnripe {
     }
 
     /**
-     * @notice gets the amount of beans that are locked in the unripe token.
-     * @dev locked beans are the beans that are forfeited if the unripe token is chopped.
+     * @notice Returns the amount of beans that are locked in the unripe token.
+     * @dev Locked beans are the beans that are forfeited if the unripe token is chopped.
      * @param reserves the reserves of the LP that underly the unripe token.
      * @dev reserves are used as a parameter for gas effiency purposes (see LibEvaluate.calcLPToSupplyRatio}.
      */
@@ -179,7 +176,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice gets the amount of beans that are locked in the unripeLP token.
+     * @notice Returns the amount of beans that are locked in the unripeLP token.
      * @param reserves the reserves of the LP that underly the unripe token.
      */
     function getLockedBeansFromLP(
@@ -201,7 +198,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice calculates the total underlying token that would be forfeited,
+     * @notice Calculates the total underlying token that would be forfeited,
      * if all unripe tokens were chopped.
      */
     function getTotalUnderlyingForfeited(
@@ -215,7 +212,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice gets the total recapitalized underlying token.
+     * @notice Returns the total recapitalized underlying token.
      * @param amount The amount of the of the unripe token to be taken as input.
      */
     function getRecapPaidPercentAmount(uint256 amount) internal view returns (uint256 penalty) {
@@ -224,7 +221,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice returns true if the token is unripe.
+     * @notice Returns true if the token is unripe.
      */
     function isUnripe(address unripeToken) internal view returns (bool unripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -232,7 +229,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice returns the underlying token amount of the unripe token.
+     * @notice Returns the underlying token amount of the unripe token.
      */
     function _getUnderlying(
         address unripeToken,

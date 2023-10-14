@@ -105,10 +105,10 @@ contract SeasonFacet is Weather {
         uint256 beanEthPrice = LibWell.getWellPriceFromTwaReserves(C.BEAN_ETH_WELL);
 
         // reset USD Token prices and TWA reserves in storage for all whitelisted Well LP Tokens.
-        address[] memory lpPools = LibWhitelistedTokens.getWellLpTokens();
-        for (uint256 i; i < lpPools.length; i++) {
-            LibWell.resetUsdTokenPriceForWell(lpPools[i]);
-            LibWell.resetTwaReservesForWell(lpPools[i]);
+        address[] memory whitelistedWells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i; i < whitelistedWells.length; i++) {
+            LibWell.resetUsdTokenPriceForWell(whitelistedWells[i]);
+            LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
 
         uint256 incentiveAmount = LibIncentive.determineReward(
