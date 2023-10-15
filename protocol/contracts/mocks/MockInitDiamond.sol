@@ -46,13 +46,15 @@ contract MockInitDiamond is InitWhitelist, Weather {
             block.timestamp;
         s.isFarm = 1;
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+
         s.season.stemStartSeason = uint16(s.season.current);
-        s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
+        s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
         // 4 + 4 + 2
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
-        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBDVRatio));
+        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
         emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         whitelistPools();

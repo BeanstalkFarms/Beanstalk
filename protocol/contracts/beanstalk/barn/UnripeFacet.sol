@@ -368,7 +368,7 @@ contract UnripeFacet is ReentrancyGuard {
     /**
      * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
      */
-    function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
+    function getLockedBeansUnderlyingUnripeBeanEth() external view returns (uint256) {
         uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_ETH_WELL);
         return LibUnripe.getLockedBeansFromLP(twaReserves);
     }

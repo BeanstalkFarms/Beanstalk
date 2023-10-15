@@ -176,10 +176,12 @@ library LibWell {
         // the length of twaReserves should never be 1, but
         // is added for safety.
         if (twaReserves.length < 1) {
-            s.twaReserves[well] = Storage.TwaReserves(uint128(0), uint128(0));
+            delete s.twaReserves[well].reserve0;
+            delete s.twaReserves[well].reserve1;
         } else {
             // safeCast not needed as the reserves are uint128 in the wells.
-            s.twaReserves[well] = Storage.TwaReserves(uint128(twaReserves[0]), uint128(twaReserves[1]));
+            s.twaReserves[well].reserve0 = uint128(twaReserves[0]);
+            s.twaReserves[well].reserve1 = uint128(twaReserves[1]);
         }
     }
 

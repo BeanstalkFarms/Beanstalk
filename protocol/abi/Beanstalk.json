@@ -285,7 +285,7 @@
   },
   {
     "inputs": [],
-    "name": "getLockedBeansInUrBEAN",
+    "name": "getLockedBeansUnderlyingUnripeBean",
     "outputs": [
       {
         "internalType": "uint256",
@@ -298,7 +298,7 @@
   },
   {
     "inputs": [],
-    "name": "getLockedBeansInUrBEANETH",
+    "name": "getLockedBeansUnderlyingUnripeBeanEth",
     "outputs": [
       {
         "internalType": "uint256",
@@ -396,7 +396,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "penalty",
+        "name": "percent",
         "type": "uint256"
       }
     ],
@@ -439,7 +439,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "redeem",
+        "name": "underlyingAmount",
         "type": "uint256"
       }
     ],
@@ -6720,7 +6720,7 @@
   },
   {
     "inputs": [],
-    "name": "getBeanToMaxLpGPperBDVRatio",
+    "name": "getBeanToMaxLpGpPerBdvRatio",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6733,7 +6733,7 @@
   },
   {
     "inputs": [],
-    "name": "getBeanToMaxLpGPperBDVRatioScaled",
+    "name": "getBeanToMaxLpGpPerBdvRatioScaled",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6828,7 +6828,7 @@
           },
           {
             "internalType": "uint128",
-            "name": "beanToMaxLpGpPerBDVRatio",
+            "name": "beanToMaxLpGpPerBdvRatio",
             "type": "uint128"
           },
           {
@@ -6861,35 +6861,6 @@
   {
     "inputs": [],
     "name": "getTotalUsdLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "well",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "startTimestamp",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenUsdPrice",
-        "type": "uint256"
-      }
-    ],
-    "name": "getTwaUsdLiquidityOfWell",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7176,37 +7147,12 @@
       },
       {
         "indexed": false,
-        "internalType": "uint80",
-        "name": "relChange",
-        "type": "uint80"
-      },
-      {
-        "indexed": false,
         "internalType": "int80",
         "name": "absChange",
         "type": "int80"
       }
     ],
-    "name": "BeanToMaxLpGpPerBDVRatioChange",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "beans",
-        "type": "uint256"
-      }
-    ],
-    "name": "Incentivization",
+    "name": "BeanToMaxLpGpPerBdvRatioChange",
     "type": "event"
   },
   {
@@ -7314,15 +7260,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint32",
-        "name": "relChange",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "int16",
+        "internalType": "int8",
         "name": "absChange",
-        "type": "int16"
+        "type": "int8"
       }
     ],
     "name": "TemperatureChange",

@@ -36,7 +36,7 @@ contract Weather is Sun {
      * @param absChange The absolute change in the BeanToMaxLPGpPerBDVRatio.
      * @dev formula: L_n = L_n-1 +/- bL
      */
-    event BeanToMaxLpGpPerBDVRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
+    event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     /**
      * @notice Emitted when Beans are minted during the Season of Plenty.
@@ -50,9 +50,9 @@ contract Weather is Sun {
 
     /**
      * @notice from deltaB, podRate, change in soil demand, and liquidity to supply ratio,
-     * calculate the caseId, and update the temperature and grownStalkPerBDVToLP.
+     * calculate the caseId, and update the temperature and grownStalkPerBdvToLp.
      * @param deltaB Pre-calculated deltaB from {Oracle.stepOracle}.
-     * @dev A detailed explanation of the temperature and grownStalkPerBDVToLP
+     * @dev A detailed explanation of the temperature and grownStalkPerBdvToLp
      * mechanism can be found in the Beanstalk whitepaper.
      * An explanation of state variables can be found in {AppStorage}.
      */
@@ -107,26 +107,26 @@ contract Weather is Sun {
      * @dev bL are set during edge cases such that the event emitted is valid.
      */
     function updateBeanToMaxLPRatio(int80 bL, uint256 caseId) private {
-        uint128 beanToMaxLpGpPerBDVRatio = s.seedGauge.beanToMaxLpGpPerBDVRatio;
+        uint128 beanToMaxLpGpPerBdvRatio = s.seedGauge.beanToMaxLpGpPerBdvRatio;
         if (bL < 0) {
-            if (beanToMaxLpGpPerBDVRatio <= uint128(-bL)) {
-                bL = -int80(beanToMaxLpGpPerBDVRatio);
-                s.seedGauge.beanToMaxLpGpPerBDVRatio = 0;
+            if (beanToMaxLpGpPerBdvRatio <= uint128(-bL)) {
+                bL = -int80(beanToMaxLpGpPerBdvRatio);
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBDVRatio = beanToMaxLpGpPerBDVRatio.sub(uint128(-bL));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.sub(uint128(-bL));
             }
         } else {
-            if (beanToMaxLpGpPerBDVRatio.add(uint128(bL)) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
-                // if (change > 0 && 100e18 - beanToMaxLpGpPerBDVRatio <= bL),
+            if (beanToMaxLpGpPerBdvRatio.add(uint128(bL)) >= MAX_BEAN_LP_GP_PER_BDV_RATIO) {
+                // if (change > 0 && 100e18 - beanToMaxLpGpPerBdvRatio <= bL),
                 // then bL cannot overflow.
-                bL = int80(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBDVRatio));
-                s.seedGauge.beanToMaxLpGpPerBDVRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
+                bL = int80(MAX_BEAN_LP_GP_PER_BDV_RATIO.sub(beanToMaxLpGpPerBdvRatio));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = MAX_BEAN_LP_GP_PER_BDV_RATIO;
             } else {
-                s.seedGauge.beanToMaxLpGpPerBDVRatio = beanToMaxLpGpPerBDVRatio.add(uint128(bL));
+                s.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpPerBdvRatio.add(uint128(bL));
             }
         }
 
-        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, caseId, bL);
+        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, caseId, bL);
     }
 
     /**

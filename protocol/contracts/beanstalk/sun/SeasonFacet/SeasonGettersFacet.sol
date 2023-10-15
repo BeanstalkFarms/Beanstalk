@@ -176,16 +176,16 @@ contract SeasonGettersFacet {
      * @notice Returns the ratio between bean and max LP gp Per BDV, unscaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
-    function getBeanToMaxLpGPperBDVRatio() external view returns (uint256) {
-        return s.seedGauge.beanToMaxLpGpPerBDVRatio;
+    function getBeanToMaxLpGpPerBdvRatio() external view returns (uint256) {
+        return s.seedGauge.beanToMaxLpGpPerBdvRatio;
     }
 
     /**
      * @notice Returns the ratio between bean and max LP gp Per BDV, scaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
-    function getBeanToMaxLpGPperBDVRatioScaled() external view returns (uint256) {
-        return LibGauge.getBeanToMaxLpGpPerBDVRatioScaled(s.seedGauge.beanToMaxLpGpPerBDVRatio);
+    function getBeanToMaxLpGpPerBdvRatioScaled() external view returns (uint256) {
+        return LibGauge.getBeanToMaxLpGpPerBdvRatioScaled(s.seedGauge.beanToMaxLpGpPerBdvRatio);
     }
 
     /**

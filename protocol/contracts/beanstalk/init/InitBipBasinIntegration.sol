@@ -57,7 +57,8 @@ contract InitBipBasinIntegration {
         // the init script was initally made with the line below,
         // but since changed to compile with the current AppStorage.sol
         // s.beanEthPrice = 1;
-        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1,1);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
         // adds ERC1155MetadataURI for ERC165 Interface ID
         ds.supportedInterfaces[0x0e89341c] = true;
