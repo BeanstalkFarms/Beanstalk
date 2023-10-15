@@ -89,11 +89,11 @@ contract InitBipSeedGauge is Weather {
             emit LibWhitelist.updateGaugeSettings(siloTokens[i], gpSelectors[i], optimalPercentDepositedBdv[i]);
         }
         // initalize seed gauge and emit events.
-        s.seedGauge.beanToMaxLpGpPerBDVRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
+        s.seedGauge.beanToMaxLpGpPerBdvRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
         // TODO: what case should this be? current set to max to indicate an init
-        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBDVRatio));
+        emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
         emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         // initalize s.usdTokenPrice for the bean eth well.

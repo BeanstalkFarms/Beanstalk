@@ -103,8 +103,8 @@ describe('Gauge', function () {
     describe('L2SR > excessively high L2SR % + P > 1', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 108);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('51'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('51'));
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3,     // season
             108,    // caseId
@@ -116,8 +116,8 @@ describe('Gauge', function () {
     describe('moderately high L2SR % < L2SR < excessively high L2SR % + P < 1', async function () {
       it("decreases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 75);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('49'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('49'));
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3, // season
             75, // caseId
@@ -129,8 +129,8 @@ describe('Gauge', function () {
     describe('moderately low L2SR % < L2SR < moderately high L2SR %, excessively low podRate', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('0'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('0'));
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3, // season
             36, // caseId
@@ -141,10 +141,10 @@ describe('Gauge', function () {
 
     describe('L2SR < moderately low L2SR %', async function () {
       it("massively decreases Bean to maxLP ratio", async function () {
-        await this.season.setBeanToMaxLpGPperBDVRatio(to18('51'));
+        await this.season.setBeanToMaxLpGpPerBdvRatio(to18('51'));
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('1'));
-        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('1'));
+        await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3, // season
             0, // caseId
@@ -154,10 +154,10 @@ describe('Gauge', function () {
     });
 
     it("Bean to maxLP ratio cannot go under 0%", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0.5'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('0.5'));
       this.result = await this.season.seedGaugeSunSunrise('0', 111);
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal('0');
-      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal('0');
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
         .withArgs(
           3,     // season
           111,    // caseId
@@ -166,10 +166,10 @@ describe('Gauge', function () {
     })
 
     it("Bean to maxLP ratio can increase from 0%", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('0'));
       this.result = await this.season.seedGaugeSunSunrise('0', 72);
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('1'));
-      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('1'));
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
         .withArgs(
           3,     // season
           72,    // caseId
@@ -178,10 +178,10 @@ describe('Gauge', function () {
     })
 
     it("Bean to maxLP ratio cannot go above 100%", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('99.9'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('99.9'));
       this.result = await this.season.seedGaugeSunSunrise('0', 54);
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio()).to.be.equal(to18('100'));
-      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBDVRatioChange')
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('100'));
+      await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
         .withArgs(
           3,     // season
           54,    // caseId
@@ -190,25 +190,25 @@ describe('Gauge', function () {
     })
 
     it("Bean to maxLP ratio properly scales", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('50'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('50'));
       // 0.50 * (1 - 0.5) + 0.5 = 0.75
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75'));
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('75'));
 
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('51'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('51'));
      // 0.51 * (1 - 0.5) + 0.5 = 75.5
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('75.5'))
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('75.5'))
     })    
 
     it("Bean to maxLP ratio cannot decrease below min %", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('0'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('0'));
       // 0 * (1 - 0.5) + 0.5 = .5
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('50'));
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('50'));
     })
 
     it("Bean to maxLP ratio cannot exceed max %", async function () {
-      await this.season.setBeanToMaxLpGPperBDVRatio(to18('100'));
+      await this.season.setBeanToMaxLpGpPerBdvRatio(to18('100'));
       // 100 * (1 - 0.5) + 0.5 = 1
-      expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatioScaled()).to.be.equal(to18('100'));
+      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('100'));
     })
 
   })
@@ -299,8 +299,8 @@ describe('Gauge', function () {
         // urBEANETH supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
-        expect(await this.unripe.getLockedBeansInUrBEAN()).to.be.eq(to6('900'));
-        expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('900'));
         expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1800'));
         expect(
           await this.seasonGetter.getLiquidityToSupplyRatio()
@@ -308,9 +308,9 @@ describe('Gauge', function () {
       })
 
       it('is MEV resistant', async function () {
-        expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('900'));
         await this.well.mint(ownerAddress, to18('1000'));
-        expect(await this.unripe.getLockedBeansInUrBEANETH()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('900'));
       })
     })
   })

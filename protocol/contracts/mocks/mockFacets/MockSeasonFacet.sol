@@ -411,8 +411,8 @@ contract MockSeasonFacet is SeasonFacet  {
         return LibChainlinkOracle.getEthUsdPrice();
     }
 
-    function setBeanToMaxLpGPperBDVRatio(uint128 percent) external {
-        s.seedGauge.beanToMaxLpGpPerBDVRatio = percent;
+    function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external {
+        s.seedGauge.beanToMaxLpGpPerBdvRatio = percent;
     }
     
     function setUsdEthPrice(uint256 price) external {
