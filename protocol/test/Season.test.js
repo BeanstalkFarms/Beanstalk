@@ -27,8 +27,10 @@ describe('Season', function () {
         // add unripe
         this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
         this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
+        this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
         this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
         this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+        this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
         bean = await ethers.getContractAt('MockToken', BEAN)
         await this.unripeLP.mint(user.address, to6('1000'))
         await this.unripeLP.connect(user).approve(this.diamond.address, to6('100000000'))

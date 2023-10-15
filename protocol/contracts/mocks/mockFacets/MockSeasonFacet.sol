@@ -441,4 +441,10 @@ contract MockSeasonFacet is SeasonFacet  {
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
+
+    function mockSetBean3CrvOracle(
+        uint256[2] memory reserves
+    ) external {
+        s.co.balances = reserves;
+    }
 }

@@ -52,6 +52,7 @@ describe('SeedGauge Init Test', function () {
 
     owner = await impersonateBeanstalkOwner()
     this.beanstalk = await getBeanstalk()
+    this.admin = await ethers.getContractAt('MockAdminFacet', this.beanstalk.address);
     this.well = await ethers.getContractAt('IWell', BEAN_ETH_WELL);
     this.weth = await ethers.getContractAt('IWETH', WETH)
     this.bean = await ethers.getContractAt('IBean', BEAN)
@@ -81,6 +82,17 @@ describe('SeedGauge Init Test', function () {
       '0',
       '0'
     )
+
+    await mine(10000, { interval: 12 });
+
+    await this.beanstalk.connect(owner).removeLiquidity(
+      BEAN_3_CURVE,
+      STABLE_FACTORY,
+      [0, 0],
+      ['0', '0'],
+      '0',
+      '0'
+    )
     // update pump.
     await this.well.connect(owner).addLiquidity(
       [0 , 0],
@@ -96,6 +108,8 @@ describe('SeedGauge Init Test', function () {
       await time.latest(), 
       await this.chainlink.getLatestRoundId()
     )
+
+    await this.admin.update3CRVOracle();
   });
 
   beforeEach(async function () {
@@ -135,7 +149,7 @@ describe('SeedGauge Init Test', function () {
       // the L2SR may differ during testing, due to the fact 
       // that the L2SR is calculated on twa reserves, and thus may slightly differ due to 
       // timestamp differences.
-      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('2.25'), to18('2.26'));
+      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('2.43'), to18('2.44'));
     })
     
     it('bean To MaxLPGpRatio', async function () {
@@ -149,12 +163,12 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('usd Liquidity', async function () {
-      // ~11.5m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('10205000'), to18('10228000'));
-      // ~118k usd liquidity in Bean3Crv
-      expect(await this.beanstalk.getBean3CRVLiquidity()).to.be.equal(to18('118929.150867709373771440'));
-      // ~11.6m usd liquidity total
-      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('10310000'), to18('10347100'));
+      // ~10.8m usd liquidity in Bean:Eth
+      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('10845000'), to18('10908000'));
+      // ~281k bean3crv 
+      expect(await this.beanstalk.getBean3CRVLiquidity()).to.be.equal(to18('281262.075413003432396758'));
+      // ~11.13m usd liquidity total
+      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('11130000'), to18('11140000'));
     })
 
     it('gaugePoints', async function () {

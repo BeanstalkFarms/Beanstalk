@@ -113,9 +113,9 @@ library LibCurveMinting {
     function updateOracle() internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[2] memory balances;
-        
+
         (deltaB, balances, s.co.balances) = twaDeltaB();
-        
+
         // temporarily store balances. See {LibWellMinting.UpdateOracle} for an explanation.
         LibMetaCurve.setTwaReservesForPool(C.CURVE_BEAN_METAPOOL, balances);
 
@@ -132,7 +132,7 @@ library LibCurveMinting {
         internal
         view
         returns (int256 deltaB, uint256[2] memory balances, uint256[2] memory cumulativeBalances)
-    {   
+    {
         (balances, cumulativeBalances) = twaBalances();
         uint256 d = LibBeanMetaCurve.getDFroms(balances);
         deltaB = LibBeanMetaCurve.getDeltaBWithD(balances[0], d);
@@ -162,9 +162,13 @@ library LibCurveMinting {
         Storage.CurveMetapoolOracle storage o = s.co;
 
         uint256 deltaTimestamp = block.timestamp.sub(s.season.timestamp);
-
-        _twaBalances[0] = cumulativeBalances[0].sub(o.balances[0]).div(deltaTimestamp);
-        _twaBalances[1] = cumulativeBalances[1].sub(o.balances[1]).div(deltaTimestamp);
+        if (deltaTimestamp == 0) {
+            _twaBalances[0] = 0;
+            _twaBalances[1] = 0;
+        } else {
+            _twaBalances[0] = cumulativeBalances[0].sub(o.balances[0]).div(deltaTimestamp);
+            _twaBalances[1] = cumulativeBalances[1].sub(o.balances[1]).div(deltaTimestamp);
+        }
     }
 
     /**
