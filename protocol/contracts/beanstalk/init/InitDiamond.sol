@@ -57,7 +57,8 @@ contract InitDiamond is Weather {
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 

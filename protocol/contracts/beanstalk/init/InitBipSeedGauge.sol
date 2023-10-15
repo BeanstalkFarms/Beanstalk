@@ -100,7 +100,8 @@ contract InitBipSeedGauge is Weather {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
 
         // overwrite s.beanEthPrice and set s.twaReserves for the bean eth well.
-        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
         // initalize V2 cases.
         LibCases.setCasesV2();

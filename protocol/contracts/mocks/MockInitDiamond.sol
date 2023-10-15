@@ -46,7 +46,9 @@ contract MockInitDiamond is InitWhitelist, Weather {
             block.timestamp;
         s.isFarm = 1;
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
-        s.twaReserves[C.BEAN_ETH_WELL] = Storage.TwaReserves(1, 1);
+        s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
+        s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+
         s.season.stemStartSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         // 4 + 4 + 2
