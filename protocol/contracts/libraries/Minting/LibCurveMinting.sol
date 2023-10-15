@@ -3,10 +3,12 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../Curve/LibBeanMetaCurve.sol";
 import "../LibAppStorage.sol";
 import "../LibSafeMath32.sol";
 import "./LibMinting.sol";
+import "contracts/libraries/Curve/LibMetaCurve.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 
 /**
  * @dev Curve metapool functions used by {LibCurveMinting}. 
@@ -34,6 +36,7 @@ interface IMeta3CurveOracle {
  */
 library LibCurveMinting {
     using SafeMath for uint256;
+    using SafeCast for uint256;
     using LibSafeMath32 for uint32;
 
     /**
@@ -58,7 +61,7 @@ library LibCurveMinting {
     function check() internal view returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
-            (deltaB, ) = twaDeltaB();
+            (deltaB, , ) = twaDeltaB();
         } else {
             deltaB = 0;
         }
@@ -109,8 +112,12 @@ library LibCurveMinting {
      */
     function updateOracle() internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        (deltaB, s.co.balances) = twaDeltaB();
+        uint256[2] memory balances;
+        
+        (deltaB, balances, s.co.balances) = twaDeltaB();
+        
+        // temporarily store balances. See {LibWellMinting.UpdateOracle} for an explanation.
+        LibMetaCurve.setTwaReservesForPool(C.CURVE_BEAN_METAPOOL, balances);
 
         emit MetapoolOracle(s.season.current, deltaB, s.co.balances);
     }
@@ -124,9 +131,8 @@ library LibCurveMinting {
     function twaDeltaB()
         internal
         view
-        returns (int256 deltaB, uint256[2] memory cumulativeBalances)
-    {
-        uint256[2] memory balances;
+        returns (int256 deltaB, uint256[2] memory balances, uint256[2] memory cumulativeBalances)
+    {   
         (balances, cumulativeBalances) = twaBalances();
         uint256 d = LibBeanMetaCurve.getDFroms(balances);
         deltaB = LibBeanMetaCurve.getDeltaBWithD(balances[0], d);

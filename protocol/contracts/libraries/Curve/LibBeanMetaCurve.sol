@@ -3,6 +3,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibMetaCurve, IMeta3Curve} from "./LibMetaCurve.sol";
 import {LibCurve} from "./LibCurve.sol";
@@ -51,8 +52,10 @@ library LibBeanMetaCurve {
      * @dev 18 decimal precision.
      */
     function totalLiquidityUsd() internal view returns (uint256) {
-        // By using previous balances and the virtual price, we protect against flash loan
-        uint256[2] memory balances = IMeta3Curve(C.CURVE_BEAN_METAPOOL).get_previous_balances();
+        // use the value stored in `twaReserves` for gas effiency.
+        uint256[2] memory balances = LibMetaCurve.getReservesFromStorageOrTwaOrPrevBalances(
+            C.CURVE_BEAN_METAPOOL
+        );
         return balances[1].mul(C.curve3Pool().get_virtual_price()).div(PRECISION);
     }
 

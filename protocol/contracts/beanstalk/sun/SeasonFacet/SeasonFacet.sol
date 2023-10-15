@@ -9,6 +9,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibMetaCurve} from "contracts/libraries/Curve/LibMetaCurve.sol";
 
 /**
  * @title SeasonFacet
@@ -103,6 +104,9 @@ contract SeasonFacet is Weather {
             LibWell.resetUsdTokenPriceForWell(whitelistedWells[i]);
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
+
+        // set twaReserves for the bean:3crv pool.abi
+        LibMetaCurve.resetTwaReservesForPool(C.CURVE_BEAN_METAPOOL);
 
         uint256 incentiveAmount = LibIncentive.determineReward(
             initialGasLeft,

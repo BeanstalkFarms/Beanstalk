@@ -87,6 +87,8 @@ describe('Gauge', function () {
     // gauge points are initalized to pre-seedGauge bip values * 500
     await initalizeGaugeForToken(BEAN_ETH_WELL, to18('2250'), to6('99'))
     await initalizeGaugeForToken(BEAN_3_CURVE, to18('1625'), to6('1'))
+
+    await this.beanThreeCurve.reset_cumulative();
   })
 
   beforeEach(async function () {
