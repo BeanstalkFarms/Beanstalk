@@ -114,7 +114,7 @@ describe('Complex Weather', function () {
       })
 
       it('Checks New Percent To LP', async function () {
-        expect(await this.seasonGetter.getBeanToMaxLpGPperBDVRatio())
+        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio())
         .to.eq(to18(this.testData.newPercentToLp))
       })
 
