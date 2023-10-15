@@ -221,7 +221,7 @@ library LibWell {
     function getTwaReservesFromStorageOrBeanstalkPump(
         address well
     ) internal view returns (uint256[] memory twaReserves) {
-        twaReserves = getTwaReservesFromBeanstalkPump(well);
+        twaReserves = getTwaReservesForWell(well);
         if (twaReserves[0] == 1) {
             twaReserves = getTwaReservesFromBeanstalkPump(well);
         }
