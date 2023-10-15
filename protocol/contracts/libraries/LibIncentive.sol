@@ -20,6 +20,13 @@ import "./Curve/LibCurve.sol";
 library LibIncentive {
     using SafeMath for uint256;
 
+    /**
+     * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
+     * @param account The address to which the reward Beans were sent
+     * @param beans The amount of Beans paid as a reward
+     */
+    event Incentivization(address indexed account, uint256 beans);
+
     /// @dev The time range over which to consult the Uniswap V3 ETH:USDC pool oracle. Measured in seconds.
     uint32 internal constant PERIOD = 1800; // 30 minutes
 

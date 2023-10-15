@@ -12,6 +12,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 
 /**
  * @author Brean
@@ -25,40 +26,36 @@ interface IGaugePointFacet {
     ) external pure returns (uint256 newGaugePoints);
 }
 
-contract InitBipSeedGauge {
+contract InitBipSeedGauge is Weather {
     using SafeMath for uint256;
-
-    AppStorage internal s;
-
-    event BeanToMaxLpGpPerBDVRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
 
     // TODO : update these values, once the beanEthMigration BIP has executed.
-    uint256 internal constant BEAN_UN_MIGRATED_BDV = 816_105_148629; // 816k BDV
-    uint256 internal constant BEAN_3CRV_UN_MIGRATED_BDV = 53_419_468565; // 53k BDV
-    uint256 internal constant UNRIPE_BEAN_UN_MIGRATED_BDV = 4_946_644_852785; // 4.9m BDV
-    uint256 internal constant UNRIPE_LP_UN_MIGRATED_BDV = 7_774_709_273192; // 7.7m BDV
+    uint256 internal constant BEAN_UNMIGRATED_BDV = 816_105_148629; // 816k BDV
+    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 53_419_468565; // 53k BDV
+    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 4_946_644_852785; // 4.9m BDV
+    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 7_774_709_273192; // 7.7m BDV
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
         // update depositedBDV for bean, bean3crv, urBean, and urBeanETH:
         LibTokenSilo.incrementTotalDepositedBdv(
             C.BEAN,
-            BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.BEAN]
+            BEAN_UNMIGRATED_BDV - s.migratedBdvs[C.BEAN]
         );
         LibTokenSilo.incrementTotalDepositedBdv(
             C.CURVE_BEAN_METAPOOL,
-            BEAN_3CRV_UN_MIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]
+            BEAN_3CRV_UNMIGRATED_BDV - s.migratedBdvs[C.CURVE_BEAN_METAPOOL]
         );
         LibTokenSilo.incrementTotalDepositedBdv(
             C.UNRIPE_BEAN,
-            UNRIPE_BEAN_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_BEAN]
+            UNRIPE_BEAN_UNMIGRATED_BDV - s.migratedBdvs[C.UNRIPE_BEAN]
         );
         LibTokenSilo.incrementTotalDepositedBdv(
             C.UNRIPE_LP,
-            UNRIPE_LP_UN_MIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]
+            UNRIPE_LP_UNMIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]
         );
 
         uint128 totalBdv;
