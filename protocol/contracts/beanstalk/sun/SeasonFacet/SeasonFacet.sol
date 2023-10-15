@@ -24,13 +24,6 @@ contract SeasonFacet is Weather {
      */
     event Sunrise(uint256 indexed season);
 
-    /**
-     * @notice Emitted when Beanstalk pays `beans` to `account` as a reward for calling `sunrise()`.
-     * @param account The address to which the reward Beans were sent
-     * @param beans The amount of Beans paid as a reward
-     */
-    event Incentivization(address indexed account, uint256 beans);
-
     //////////////////// SUNRISE ////////////////////
 
     /**
@@ -119,7 +112,7 @@ contract SeasonFacet is Weather {
 
         LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
 
-        emit Incentivization(account, incentiveAmount);
+        emit LibIncentive.Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
 

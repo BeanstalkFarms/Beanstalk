@@ -13,20 +13,19 @@ import {IDiamondLoupe} from "../../interfaces/IDiamondLoupe.sol";
 import {LibDiamond} from "../../libraries/LibDiamond.sol";
 import {LibIncentive} from "../../libraries/LibIncentive.sol";
 import {LibCases} from "../../libraries/LibCases.sol";
-import "../../C.sol";
-import "../../interfaces/IBean.sol";
-import "../../interfaces/IWETH.sol";
-import "../../mocks/MockToken.sol";
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {C} from "../../C.sol";
+import {IBean} from "../../interfaces/IBean.sol";
+import {IWETH} from "../../interfaces/IWETH.sol";
+import {MockToken} from "../../mocks/MockToken.sol";
+import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
+import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 
 /**
  * @author Publius
  * @title Init Diamond initializes the Beanstalk Diamond.
 **/
-contract InitDiamond {
-
-    event Incentivization(address indexed account, uint256 beans);
-
-    AppStorage internal s;
+contract InitDiamond is Weather {
 
     address private constant PEG_PAIR = address(0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc);
 
@@ -62,8 +61,11 @@ contract InitDiamond {
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
+        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBDVRatio));
+        emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+
         C.bean().mint(msg.sender, LibIncentive.MAX_REWARD);
-        emit Incentivization(msg.sender, LibIncentive.MAX_REWARD);
+        emit LibIncentive.Incentivization(msg.sender, LibIncentive.MAX_REWARD);
     }
 
 }

@@ -5,24 +5,22 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "../interfaces/IBean.sol";
-import "../interfaces/IWETH.sol";
-import "../mocks/MockToken.sol";
-import {AppStorage} from "../beanstalk/AppStorage.sol";
-import "../C.sol";
-import "contracts/beanstalk/init/InitWhitelist.sol";
+import {IBean} from "../interfaces/IBean.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
+import {MockToken} from "../mocks/MockToken.sol";
+import {AppStorage, Storage} from "../beanstalk/AppStorage.sol";
+import {C} from "../C.sol";
+import {InitWhitelist} from "contracts/beanstalk/init/InitWhitelist.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibCases} from "../libraries/LibCases.sol";
+import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 
 /**
  * @author Publius
  * @title Mock Init Diamond
 **/
-contract MockInitDiamond is InitWhitelist {
-
-    event Incentivization(address indexed account, uint256 beans);
-
-    AppStorage internal s;
+contract MockInitDiamond is InitWhitelist, Weather {
 
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -53,6 +51,10 @@ contract MockInitDiamond is InitWhitelist {
         s.seedGauge.beanToMaxLpGpPerBDVRatio = 50e18; // 50%
         // 4 + 4 + 2
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
+
+        emit BeanToMaxLpGpPerBDVRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBDVRatio));
+        emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+
         whitelistPools();
     }
 
