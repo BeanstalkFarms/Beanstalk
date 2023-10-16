@@ -12,10 +12,11 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {C} from "../C.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @title LibGauge
- * @author Brean
+ * @author Brean, Brendan
  * @notice LibGauge handles functionality related to the seed gauge system.
  */
 library LibGauge {
@@ -61,9 +62,9 @@ library LibGauge {
      * @dev updates the GaugePoints for LP assets (if applicable)
      * and the distribution of grown Stalk to silo assets.
      *
-     * If the price of bean/eth cannot be computed,
-     * skip the gauge system, given that
-     * the liquidity cannot be calculated.
+     * If any of the LP price oracle failed, 
+     * then the gauge system should be skipped, as a valid 
+     * usd liquidity value cannot be computed.
      */
     function stepGauge() external {
         (
@@ -72,11 +73,13 @@ library LibGauge {
             uint256 totalGaugePoints,
             uint256 totalLpBdv
         ) = updateGaugePoints();
+        if (totalLpBdv == type(uint256).max) return;
         updateGrownStalkEarnedPerSeason(maxLpGpPerBdv, lpGpData, totalGaugePoints, totalLpBdv);
     }
 
     /**
      * @notice evaluate the gauge points of each LP asset.
+     * @dev `totalLpBdv` is returned as type(uint256).max when an Oracle failure occurs.
      */
     function updateGaugePoints()
         internal
@@ -93,6 +96,10 @@ library LibGauge {
 
         // if there is only one pool, there is no need to update the gauge points.
         if (whitelistedLpTokens.length == 1) {
+            // Assumes that only Wells use USD price oracles.
+            if (LibWell.isWell(whitelistedLpTokens[0]) && s.usdTokenPrice[whitelistedLpTokens[0]] == 0) {
+                return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
+            }
             uint256 gaugePoints = s.ss[whitelistedLpTokens[0]].gaugePoints;
             lpGpData[0].gpPerBdv = gaugePoints.mul(BDV_PRECISION).div(
                 s.siloBalances[whitelistedLpTokens[0]].depositedBdv
@@ -107,6 +114,10 @@ library LibGauge {
 
         // summate total deposited BDV across all whitelisted LP tokens.
         for (uint256 i; i < whitelistedLpTokens.length; ++i) {
+            // Assumes that only Wells use USD price oracles.
+            if (LibWell.isWell(whitelistedLpTokens[i]) && s.usdTokenPrice[whitelistedLpTokens[i]] == 0) {
+                return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
+            }
             totalLpBdv = totalLpBdv.add(s.siloBalances[whitelistedLpTokens[i]].depositedBdv);
         }
 

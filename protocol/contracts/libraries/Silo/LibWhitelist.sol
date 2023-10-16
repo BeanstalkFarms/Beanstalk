@@ -104,6 +104,13 @@ library LibWhitelist {
         
         // verify the token is in its corresponding array in {LibWhitelistedTokens}.
         verifyTokenInLibWhitelistedTokens(token, selector);
+
+        // If an LP token, initialize oracle storage variables.
+        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+            s.usdTokenPrice[token] = 1;
+            s.twaReserves[token].reserve0 = 1;
+            s.twaReserves[token].reserve1 = 1;
+        }
         
         // verify you passed in a callable gaugePoint Selector.
         verifyGaugeSelector(gaugePointSelector);

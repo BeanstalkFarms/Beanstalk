@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY } = require('./utils/constants.js');
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY, ETH_USDT_UNISWAP_V3 } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { advanceTime } = require('../utils/helpers.js');
@@ -10,6 +10,8 @@ const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('.
 const { initalizeGaugeForToken } = require('../utils/gauge.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
+const { setOracleFailure } = require('../utils/oracle.js');
+
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -64,8 +66,8 @@ describe('Gauge', function () {
     await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
     await this.well.mint(ownerAddress, to18('500'))
     await this.well.mint(userAddress, to18('500'))
-    await this.season.siloSunrise(0)
     await whitelistWell(this.well.address, '10000', to6('4'));
+    await this.season.siloSunrise(0)
     await this.season.captureWellE(this.well.address);
 
     await setEthUsdPrice('999.998018')
@@ -433,6 +435,20 @@ describe('Gauge', function () {
 
       expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(84722);
     });
+  })
+
+  it('does not iterate seed gauge system if oracle failed', async function (){
+    await setOracleFailure(true, ETH_USDT_UNISWAP_V3);
+    await this.season.stepGauge();
+    // verify state is same
+    expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'));
+    expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2250'));
+    expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1625'));
+
+    expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(to6('2'));
+    expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'));
+    expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(to6('4'));
+
   })
   
 })

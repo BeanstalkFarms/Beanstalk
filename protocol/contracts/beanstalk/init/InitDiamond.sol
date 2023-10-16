@@ -56,11 +56,16 @@ contract InitDiamond is Weather {
         s.w.thisSowTime = type(uint32).max;
         s.w.lastSowTime = type(uint32).max;
         s.isFarm = 1;
+
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+
+        // Even though it is not used, still initialize.
+        s.usdTokenPrice[C.CURVE_BEAN_METAPOOL] = 1;
         s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve0 = 1;
         s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve1 = 1;
+
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 

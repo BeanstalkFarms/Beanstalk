@@ -52,6 +52,7 @@ contract MockSeasonFacet is SeasonFacet  {
     event UpdateTWAPs(uint256[2] balances);
     event DeltaB(int256 deltaB);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
+    event Incentivization(address indexed account, uint256 beans);
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
     event updateGaugeSettings(
         address indexed token, 
@@ -419,8 +420,20 @@ contract MockSeasonFacet is SeasonFacet  {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = price;
     }
 
+    // stepGauge without verifying oracle success.
     function mockStepGauge() external {
-        LibGauge.stepGauge();
+        (
+            uint256 maxLpGpPerBdv,
+            LibGauge.LpGaugePointData[] memory lpGpData,
+            uint256 totalGaugePoints,
+            uint256 totalLpBdv
+        ) = LibGauge.updateGaugePoints();
+        if (totalLpBdv == type(uint256).max) return;
+        LibGauge.updateGrownStalkEarnedPerSeason(maxLpGpPerBdv, lpGpData, totalGaugePoints, totalLpBdv);
+    }
+
+    function stepGauge() external {
+       LibGauge.stepGauge();
     }
     
     function mockSetAverageGrownStalkPerBdvPerSeason(

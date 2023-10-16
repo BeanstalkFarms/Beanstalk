@@ -101,6 +101,9 @@ contract InitBipSeedGauge is Weather {
         // set s.twaReserves for the bean eth well, and the bean:3crv pool.
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+
+        // Even though it is not used, still initialize.
+        s.usdTokenPrice[C.CURVE_BEAN_METAPOOL] = 1;
         s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve0 = 1;
         s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve1 = 1;
 
