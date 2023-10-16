@@ -11,6 +11,7 @@ import {C} from "../C.sol";
 import {LibWell} from "./Well/LibWell.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
+import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 
 /**
  * @title LibUnripe
@@ -170,9 +171,9 @@ library LibUnripe {
     function getLockedBeans(
         uint256[] memory reserves
     ) internal view returns (uint256 lockedAmount) {
-        lockedAmount = getTotalUnderlyingForfeited(C.UNRIPE_BEAN).add(
-            getLockedBeansFromLP(reserves)
-        );
+        lockedAmount = LibLockedUnderlying
+            .getLockedUnderlying(C.UNRIPE_BEAN, getRecapPaidPercentAmount(1e6))
+            .add(getLockedBeansFromLP(reserves));
     }
 
     /**
@@ -183,7 +184,10 @@ library LibUnripe {
         uint256[] memory reserves
     ) internal view returns (uint256 lockedBeanAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 lockedLpAmount = getTotalUnderlyingForfeited(C.UNRIPE_LP);
+        uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
+            C.UNRIPE_BEAN,
+            getRecapPaidPercentAmount(1e6)
+        );
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
 
@@ -198,24 +202,14 @@ library LibUnripe {
     }
 
     /**
-     * @notice Calculates the total underlying token that would be forfeited,
-     * if all unripe tokens were chopped.
+     * @notice Calculates the penalized amount based the amount of Sprouts that are Rinsable
+     * or Rinsed (Fertilized).
+     * @param amount The amount of the Unripe Tokens.
+     * @return penalizedAmount The penalized amount of the Ripe Tokens received from Chopping.
      */
-    function getTotalUnderlyingForfeited(
-        address unripeToken
-    ) internal view returns (uint256 redeem) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        require(isUnripe(unripeToken), "not vesting");
-        redeem = s.u[unripeToken].balanceOfUnderlying.sub(
-            _getTotalPenalizedUnderlying(unripeToken)
-        );
-    }
-
-    /**
-     * @notice Returns the total recapitalized underlying token.
-     * @param amount The amount of the of the unripe token to be taken as input.
-     */
-    function getRecapPaidPercentAmount(uint256 amount) internal view returns (uint256 penalty) {
+    function getRecapPaidPercentAmount(
+        uint256 amount
+    ) internal view returns (uint256 penalizedAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }

@@ -106,24 +106,35 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge', 'LibConvert', 'LibIncentive'
+    'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying'
   ]
 
   // A mapping of facet to public library names that will be linked to it.
   const facetLibraries = {
     'SeasonFacet': [
       'LibGauge',
-      'LibIncentive'
+      'LibIncentive',
+      'LibLockedUnderlying'
     ],
     'MockSeasonFacet': [
       'LibGauge',
-      'LibIncentive'
+      'LibIncentive',
+      'LibLockedUnderlying'
+    ],
+    'SeasonGettersFacet': [
+      'LibLockedUnderlying'
     ],
     'ConvertFacet': [
       'LibConvert'
     ],
     'MockConvertFacet': [
       'LibConvert'
+    ],
+    'MockUnripeFacet': [
+      'LibLockedUnderlying'
+    ],
+    'UnripeFacet': [
+      'LibLockedUnderlying'
     ]
   }
 

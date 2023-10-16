@@ -16,7 +16,7 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
 
 /**
@@ -238,7 +238,7 @@ contract UnripeFacet is ReentrancyGuard {
      * @return penalty The penalty % of Chopping.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        return LibChop.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
+        return LibUnripe.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
     }
 
     /**
@@ -246,7 +246,7 @@ contract UnripeFacet is ReentrancyGuard {
      * @return percent The % stemming from the recap.
      */
     function getRecapPaidPercent() external view returns (uint256 percent) {
-        percent = LibChop.getRecapPaidPercentAmount(LibUnripe.DECIMALS);
+        percent = LibUnripe.getRecapPaidPercentAmount(LibUnripe.DECIMALS);
     }
 
     /**
@@ -362,7 +362,10 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe Bean token.
      */
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
-        return LibUnripe.getTotalUnderlyingForfeited(C.UNRIPE_BEAN);
+        return LibLockedUnderlying.getLockedUnderlying(
+            C.UNRIPE_BEAN,
+            LibUnripe.getRecapPaidPercentAmount(1e6)
+        );
     }
 
     /**
