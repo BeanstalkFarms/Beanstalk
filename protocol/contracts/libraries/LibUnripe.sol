@@ -185,7 +185,7 @@ library LibUnripe {
     ) internal view returns (uint256 lockedBeanAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
-            C.UNRIPE_BEAN,
+            C.UNRIPE_LP,
             getRecapPaidPercentAmount(1e6)
         );
         address underlying = s.u[C.UNRIPE_LP].underlyingToken;

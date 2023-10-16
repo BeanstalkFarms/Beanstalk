@@ -36,6 +36,10 @@ library LibLockedUnderlying {
     /**
      * @notice Return the % of Underlying Tokens that would be locked if all of the Unripe Tokens
      * were chopped.
+     * @param unripeToken The address of the Unripe Token
+     * @param recapPercentPaid The % of Sprouts that have been Rinsed or are Rinsable.
+     * Should have 6 decimal precision.
+     *
      * @dev Solves the below equation for N_{⌈U/i⌉}:
      * N_{t+1} = N_t - i * R * N_t / (U - i * t)
      * where:
