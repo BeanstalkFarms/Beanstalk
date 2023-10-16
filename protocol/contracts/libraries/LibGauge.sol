@@ -61,11 +61,12 @@ library LibGauge {
      * @dev updates the GaugePoints for LP assets (if applicable)
      * and the distribution of grown Stalk to silo assets.
      *
-     * If the price of bean/eth cannot be computed,
-     * skip the gauge system, given that
-     * the liquidity cannot be calculated.
+     * If any of the LP price oracle failed, 
+     * then the gauge system should be skipped, as a valid 
+     * usd liquidity value cannot be computed.
      */
     function stepGauge() external {
+        if(!verifyLpPriceSuccess()) return;
         (
             uint256 maxLpGpPerBdv,
             LpGaugePointData[] memory lpGpData,
@@ -315,5 +316,14 @@ library LibGauge {
             beanToMaxLpGpPerBdvRatio.mul(BEAN_MAX_LP_GP_RATIO_RANGE).div(ONE_HUNDRED_PERCENT).add(
                 MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO
             );
+    }
+
+    function verifyLpPriceSuccess() internal view returns (bool) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address[] memory lpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        for(uint i; i < lpTokens.length; i++) {
+            if(s.usdTokenPrice[lpTokens[i]] == 0) return false;
+        }
+        return true;
     }
 }
