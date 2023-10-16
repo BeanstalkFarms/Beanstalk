@@ -23,7 +23,7 @@
     "@mui/material": "^5.11.0",
     "@mui/x-data-grid": "^5.9.0",
     "@reduxjs/toolkit": "^1.5.0",
-    "@snapshot-labs/snapshot.js": "^0.4.19",
+    "@snapshot-labs/snapshot.js": "0.7.3",
     "@visx/clip-path": "^2.10.0",
     "@visx/legend": "^2.10.0",
     "@visx/pattern": "^2.1.2",
