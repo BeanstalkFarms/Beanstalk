@@ -49,7 +49,7 @@ library LibChop {
         require(isUnripe(unripeToken), "not vesting");
         redeem = LibUnripe.unripeToUnderlying(
             unripeToken,
-            getRecapPaidPercentAmount(amount),
+            LibUnripe.getRecapPaidPercentAmount(amount),
             supply
         );
     }
@@ -61,18 +61,5 @@ library LibChop {
     function isUnripe(address unripeToken) internal view returns (bool _isUnripe) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         _isUnripe = s.u[unripeToken].underlyingToken != address(0);
-    }
-
-    /**
-     * @notice Calculates the penalized amount based the amount of Sprouts that are Rinsable
-     * or Rinsed (Fertilized).
-     * @param amount The amount of the Unripe Tokens.
-     * @return penalizedAmount The penalized amount of the Ripe Tokens received from Chopping.
-     */
-    function getRecapPaidPercentAmount(
-        uint256 amount
-    ) internal view returns (uint256 penalizedAmount) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.fertilizedIndex.mul(amount).div(s.unfertilizedIndex);
     }
 }

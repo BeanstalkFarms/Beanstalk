@@ -302,18 +302,19 @@ describe('Gauge', function () {
         // urBEANETH supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('900'));
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('900'));
-        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('1800'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'));
+        expect(await this.unripe.getLockedBeans()).to.be.eq(to6('872.66421'));
+        console.log(await this.bean.totalSupply());
         expect(
           await this.seasonGetter.getLiquidityToSupplyRatio()
-          ).to.be.eq(to18('1.000900810729656691'));
+          ).to.be.eq(to18('1.000436522573813512'));
       })
 
       it('is MEV resistant', async function () {
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'));
         await this.well.mint(ownerAddress, to18('1000'));
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('900'));
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'));
       })
     })
   })

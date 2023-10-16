@@ -163,14 +163,15 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
       "UnripeFacet",
     ],
     libraryNames: [
-      'LibConvert'
+      'LibConvert',
+      'LibLockedUnderlying',
     ],
     facetLibraries: {
       'ConvertFacet': [
         'LibConvert'
       ],
-      'MockConvertFacet': [
-        'LibConvert'
+      'UnripeFacet': [
+        'LibLockedUnderlying'
       ]
     },
     initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
@@ -212,22 +213,22 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
       libraryNames: [
-        'LibGauge', 'LibConvert', 'LibIncentive'
+        'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying'
       ],
       facetLibraries: {
         'SeasonFacet': [
-          'LibGauge', 
-          'LibIncentive'
+          'LibGauge',
+          'LibIncentive',
+          'LibLockedUnderlying'
         ],
-        'MockSeasonFacet': [
-          'LibGauge', 
-          'LibIncentive'
+        'SeasonGettersFacet': [
+          'LibLockedUnderlying'
         ],
         'ConvertFacet': [
           'LibConvert'
         ],
-        'MockConvertFacet': [
-          'LibConvert'
+        'UnripeFacet': [
+          'LibLockedUnderlying'
         ]
       },
       bip: false,
