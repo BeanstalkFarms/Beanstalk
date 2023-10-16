@@ -66,8 +66,8 @@ describe('Gauge', function () {
     await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
     await this.well.mint(ownerAddress, to18('500'))
     await this.well.mint(userAddress, to18('500'))
-    await this.season.siloSunrise(0)
     await whitelistWell(this.well.address, '10000', to6('4'));
+    await this.season.siloSunrise(0)
     await this.season.captureWellE(this.well.address);
 
     await setEthUsdPrice('999.998018')

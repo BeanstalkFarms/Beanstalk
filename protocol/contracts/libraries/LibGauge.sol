@@ -96,6 +96,7 @@ library LibGauge {
 
         // if there is only one pool, there is no need to update the gauge points.
         if (whitelistedLpTokens.length == 1) {
+            // Assumes that only Wells use USD price oracles.
             if (LibWell.isWell(whitelistedLpTokens[0]) && s.usdTokenPrice[whitelistedLpTokens[0]] == 0) {
                 return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
             }
@@ -113,6 +114,7 @@ library LibGauge {
 
         // summate total deposited BDV across all whitelisted LP tokens.
         for (uint256 i; i < whitelistedLpTokens.length; ++i) {
+            // Assumes that only Wells use USD price oracles.
             if (LibWell.isWell(whitelistedLpTokens[i]) && s.usdTokenPrice[whitelistedLpTokens[i]] == 0) {
                 return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
             }
