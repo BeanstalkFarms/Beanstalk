@@ -87,6 +87,9 @@ describe('Gauge', function () {
     // gauge points are initalized to pre-seedGauge bip values * 500
     await initalizeGaugeForToken(BEAN_ETH_WELL, to18('2250'), to6('99'))
     await initalizeGaugeForToken(BEAN_3_CURVE, to18('1625'), to6('1'))
+
+    await this.beanThreeCurve.reset_cumulative();
+    await this.season.updateTWAPCurveE();
   })
 
   beforeEach(async function () {
@@ -231,7 +234,7 @@ describe('Gauge', function () {
         await this.bean.mint(ownerAddress, to6('2000000'));
         await this.pump.setCumulativeReserves([to6('0'), to18('0')]);
         await this.beanThreeCurve.set_balances([to6('0'), to18('0')]);
-        await this.beanThreeCurve.set_balances([to6('0'), to18('0')]);
+        await this.season.mockSetBean3CrvOracle([to6('1000000'), to18('1000000')]);
 
         expect(
           await this.seasonGetter.getLiquidityToSupplyRatio()

@@ -92,16 +92,17 @@ contract InitBipSeedGauge is Weather {
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
-        // TODO: what case should this be? current set to max to indicate an init
         emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
         emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         // initalize s.usdTokenPrice for the bean eth well.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
 
-        // overwrite s.beanEthPrice and set s.twaReserves for the bean eth well.
+        // set s.twaReserves for the bean eth well, and the bean:3crv pool.
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
+        s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve0 = 1;
+        s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve1 = 1;
 
         // initalize V2 cases.
         LibCases.setCasesV2();

@@ -136,7 +136,7 @@ library LibWellMinting {
         // 2) When calculating the Bean reward for calling the Season (Bean:Eth Only).
         //    See {LibIncentive.determineReward}.
         LibWell.setTwaReservesForWell(well, twaReserves);
-        LibWell.setUsdTokenPriceForWell(well,ratios);
+        LibWell.setUsdTokenPriceForWell(well, ratios);
 
         emit WellOracle(
             s.season.current,
