@@ -428,6 +428,7 @@ contract MockSeasonFacet is SeasonFacet  {
             uint256 totalGaugePoints,
             uint256 totalLpBdv
         ) = LibGauge.updateGaugePoints();
+        if (totalLpBdv == type(uint256).max) return;
         LibGauge.updateGrownStalkEarnedPerSeason(maxLpGpPerBdv, lpGpData, totalGaugePoints, totalLpBdv);
     }
 
