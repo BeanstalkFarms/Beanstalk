@@ -297,17 +297,17 @@ const PickBeansDialog: FC<
   const tab0 = (
     <>
       <StyledDialogTitle sx={{ pb: 1 }} onClose={handleDialogClose}>
-        Pick non-Deposited Unripe Beans and Unripe BEAN:3CRV LP
+        Pick non-Deposited Unripe Beans and Unripe BEAN:ETH LP
       </StyledDialogTitle>
       <Row gap={1} pb={2} pl={1} pr={3}>
         <img src={pickImage} alt="pick" css={{ height: 120 }} />
         <Typography sx={{ fontSize: '15px' }} color="text.secondary">
-          To claim non-Deposited Unripe Beans and Unripe BEAN:3CRV LP, they must
-          be Picked. After Replant, you can Pick assets to your wallet, or Pick
+          To claim non-Deposited Unripe Beans and Unripe BEAN:ETH LP, they must
+          be Picked. You can Pick assets to your wallet, or Pick
           and Deposit them directly in the Silo.
           <br />
           <br />
-          Unripe Deposited assets <b>do not need to be Picked</b> and will be
+          Unripe Deposited assets <b>do not need to be Picked</b> and were be
           automatically Deposited at Replant.
           <br />
           <br />
@@ -353,7 +353,7 @@ const PickBeansDialog: FC<
              * Section 3b: Total Unripe Beans
              */}
             <Row justifyContent="space-between" pl={1}>
-              <Typography>Unripe Beans available to Pick at Replant</Typography>
+              <Typography>Unripe Beans available to Pick</Typography>
               <Row gap={0.3}>
                 <img src={unripeBeanIcon} alt="Circulating Beans" width={13} />
                 <Typography variant="h4">
@@ -417,7 +417,7 @@ const PickBeansDialog: FC<
              */}
             <Row justifyContent="space-between" pl={1}>
               <Typography>
-                Unripe BEAN:3CRV LP available to Pick at Replant
+                Unripe BEAN:ETH LP available to Pick
               </Typography>
               <Row gap={0.3}>
                 <img src={brownLPIcon} alt="Circulating Beans" width={13} />
