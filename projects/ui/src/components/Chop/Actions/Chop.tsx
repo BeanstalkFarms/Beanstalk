@@ -57,6 +57,7 @@ import { FC } from '~/types';
 import TransactionToast from '~/components/Common/TxnToast';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
+import useBDV from '~/hooks/beanstalk/useBDV';
 
 type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
@@ -70,11 +71,12 @@ const ChopForm: FC<
   }
 > = ({ values, setFieldValue, balances, beanstalk }) => {
   const sdk = useSdk();
+  const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const unripeUnderlying = useUnripeUnderlyingMap();
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
-  // const [loading, setLoading] = useState(false);
+  const [quoteBdv, setQuoteBdv] = useState<BigNumber>(new BigNumber(0));
 
   /// Derived values
   const state = values.tokens[0];
@@ -97,8 +99,9 @@ const ChopForm: FC<
       const resbn = new BigNumber(result.toString()).div(
         10 ** outputToken.decimals
       );
-      console.log(resbn.toString());
       setQuote(resbn);
+      const bdv = getBDV(outputToken).times(resbn);
+      setQuoteBdv(bdv);
     };
 
     if (state.amount?.gt(0)) {
@@ -106,7 +109,7 @@ const ChopForm: FC<
     } else {
       setQuote(new BigNumber(0));
     }
-  }, [state, inputToken, sdk, outputToken]);
+  }, [state, inputToken, sdk, outputToken, getBDV]);
 
   // Clear quote when token changes
   useEffect(() => {
@@ -194,7 +197,11 @@ const ChopForm: FC<
         {isSubmittable ? (
           <>
             <TxnSeparator />
-            <TokenOutputField token={outputToken} amount={quote || ZERO_BN} />
+            <TokenOutputField
+              token={outputToken}
+              amount={quote || ZERO_BN}
+              bdv={quoteBdv}
+            />
             <Box>
               <Accordion variant="outlined">
                 <StyledAccordionSummary title="Transaction Details" />
