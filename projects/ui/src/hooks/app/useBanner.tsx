@@ -18,7 +18,15 @@ const useBanner = () => {
     return (
       <Banner height={BANNER_HEIGHT}>
         BIP-38 Unripe liquidity migration is in process. Quotes will be affected
-        until the migration is complete. See Discord for details.
+        until the migration is complete. See&nbsp;
+        <a
+          href="https://discord.gg/beanstalk"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Discord
+        </a>
+        &nbsp;for more information.
       </Banner>
     );
 
