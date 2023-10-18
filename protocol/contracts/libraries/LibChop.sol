@@ -30,36 +30,8 @@ library LibChop {
         uint256 supply
     ) internal returns (address underlyingToken, uint256 underlyingAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, supply);
+        underlyingAmount = LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
         underlyingToken = s.u[unripeToken].underlyingToken;
-    }
-
-    /**
-     * @notice Calculates the amount of Ripe Tokens received from Chopping.
-     * @param unripeToken The address of the Unripe Token.
-     * @param amount The amount of Unripe Tokens.
-     * @return redeem The amount of Ripe Tokens received from Chopping.
-     */
-    function _getPenalizedUnderlying(
-        address unripeToken,
-        uint256 amount,
-        uint256 supply
-    ) internal view returns (uint256 redeem) {
-        require(isUnripe(unripeToken), "not vesting");
-        redeem = LibUnripe.unripeToUnderlying(
-            unripeToken,
-            LibUnripe.getRecapPaidPercentAmount(amount),
-            supply
-        );
-    }
-
-    /**
-     * @param unripeToken The address of the token to check.
-     * @return _isUnripe Whether the token is Unripe.
-     */
-    function isUnripe(address unripeToken) internal view returns (bool _isUnripe) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        _isUnripe = s.u[unripeToken].underlyingToken != address(0);
     }
 }
