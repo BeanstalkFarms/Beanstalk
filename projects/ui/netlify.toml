@@ -27,4 +27,4 @@
   port = 8888
   targetPort = 4173
   functionsPort = 59199
-  autoLaunch = true
+  autoLaunch = false
