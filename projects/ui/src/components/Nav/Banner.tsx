@@ -8,17 +8,17 @@ import { FC } from '~/types';
 const sx = {
   color: '#333',
   fontSize: FontSize.sm,
-  overflow: 'hidden',
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
   justifyContent: 'center',
   width: '100%',
   backgroundColor: 'white',
+  padding: '2px',
 };
 
 const Banner: FC<
-  LinkProps & { height: number } & { to?: string } // fixme
+  LinkProps & { height?: number } & { to?: string } // fixme
 > = ({ height, children, to, ...props }) =>
   to ? (
     <Link
