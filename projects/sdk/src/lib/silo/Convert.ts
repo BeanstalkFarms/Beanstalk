@@ -21,24 +21,24 @@ export class Convert {
   BeanCrv3: Token;
   BeanEth: Token;
   urBean: Token;
-  urBeanCrv3: Token;
+  urBeanWeth: Token;
   paths: Map<Token, Token>;
 
   constructor(sdk: BeanstalkSDK) {
     Convert.sdk = sdk;
     this.Bean = Convert.sdk.tokens.BEAN;
-    this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP; 
+    this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP;
     this.BeanEth = Convert.sdk.tokens.BEAN_ETH_WELL_LP;
     this.urBean = Convert.sdk.tokens.UNRIPE_BEAN;
-    this.urBeanCrv3 = Convert.sdk.tokens.UNRIPE_BEAN_CRV3;
+    this.urBeanWeth = Convert.sdk.tokens.UNRIPE_BEAN_WETH;
 
     this.paths = new Map<Token, Token>();
     this.paths.set(this.Bean, this.BeanCrv3);
     this.paths.set(this.BeanCrv3, this.Bean);
     this.paths.set(this.Bean, this.BeanEth);
     this.paths.set(this.BeanEth, this.Bean);
-    this.paths.set(this.urBean, this.urBeanCrv3);
-    this.paths.set(this.urBeanCrv3, this.urBean);
+    this.paths.set(this.urBean, this.urBeanWeth);
+    this.paths.set(this.urBeanWeth, this.urBean);
   }
 
   async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue, slippage: number = 0.1): Promise<ContractTransaction> {
@@ -117,12 +117,12 @@ export class Convert {
   calculateEncoding(fromToken: Token, toToken: Token, amountIn: TokenValue, minAmountOut: TokenValue) {
     let encoding;
 
-    if (fromToken.address === this.urBean.address && toToken.address === this.urBeanCrv3.address) {
+    if (fromToken.address === this.urBean.address && toToken.address === this.urBeanWeth.address) {
       encoding = ConvertEncoder.unripeBeansToLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain() // minLP
       );
-    } else if (fromToken.address === this.urBeanCrv3.address && toToken.address === this.urBean.address) {
+    } else if (fromToken.address === this.urBeanWeth.address && toToken.address === this.urBean.address) {
       encoding = ConvertEncoder.unripeLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain() // minBeans
@@ -178,7 +178,7 @@ export class Convert {
     const deltaB = await Convert.sdk.bean.getDeltaB();
 
     if (deltaB.gte(TokenValue.ZERO)) {
-      if (fromToken.equals(this.BeanCrv3) || fromToken.equals(this.urBeanCrv3) || fromToken.equals(this.BeanEth)) {
+      if (fromToken.equals(this.BeanCrv3) || fromToken.equals(this.urBeanWeth) || fromToken.equals(this.BeanEth)) {
         throw new Error("Cannot convert this token when deltaB is >= 0");
       }
     } else if (deltaB.lt(TokenValue.ZERO)) {

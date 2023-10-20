@@ -14,7 +14,7 @@ import { useTheme } from '@mui/material/styles';
 import { LoadingButton } from '@mui/lab';
 import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import unripeBeanIcon from '~/img/tokens/unripe-bean-logo-circled.svg';
-import brownLPIcon from '~/img/tokens/unripe-lp-logo-circled.svg';
+import brownLPIcon from '~/img/tokens/unrip-beanweth.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import {
   StyledDialogActions,
@@ -33,7 +33,7 @@ import {
   BEAN_ETH_UNIV2_LP,
   BEAN_LUSD_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3,
+  UNRIPE_BEAN_WETH,
 } from '~/constants/tokens';
 import { UNRIPE_ASSET_TOOLTIPS } from '~/constants/tooltips';
 import { ZERO_BN } from '~/constants';
@@ -121,7 +121,7 @@ const PickBeansDialog: FC<
   /// Tokens
   const getChainToken = useGetChainToken();
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanCRV3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
 
   /// Farmer
   const [refetchFarmerSilo] = useFetchFarmerSilo();
@@ -159,7 +159,7 @@ const PickBeansDialog: FC<
             ),
             Promise.all([
               beanstalk.picked(account, urBean.address),
-              beanstalk.picked(account, urBeanCRV3.address),
+              beanstalk.picked(account, urBeanWeth.address),
             ]),
           ]);
           console.debug('[PickDialog] loaded states', {
@@ -177,7 +177,7 @@ const PickBeansDialog: FC<
         errorToast.error(err);
       }
     })();
-  }, [account, beanstalk, open, urBean.address, urBeanCRV3.address]);
+  }, [account, beanstalk, open, urBean.address, urBeanWeth.address]);
 
   /// Tab handlers
   const handleDialogClose = () => {
@@ -223,7 +223,7 @@ const PickBeansDialog: FC<
       if (merkles.bean3crv && picked[1] === false) {
         data.push(
           beanstalk.interface.encodeFunctionData('pick', [
-            urBeanCRV3.address,
+            urBeanWeth.address,
             merkles.bean3crv.amount,
             merkles.bean3crv.proof,
             isDeposit ? FarmToMode.INTERNAL : FarmToMode.EXTERNAL,
@@ -232,7 +232,7 @@ const PickBeansDialog: FC<
         if (isDeposit) {
           data.push(
             beanstalk.interface.encodeFunctionData('deposit', [
-              urBeanCRV3.address,
+              urBeanWeth.address,
               merkles.bean3crv.amount,
               FarmFromMode.INTERNAL, // always use internal for deposits
             ])
@@ -272,7 +272,7 @@ const PickBeansDialog: FC<
       picked,
       beanstalk,
       urBean.address,
-      urBeanCRV3.address,
+      urBeanWeth.address,
       refetchFarmerSilo,
       middleware,
     ]
@@ -297,17 +297,17 @@ const PickBeansDialog: FC<
   const tab0 = (
     <>
       <StyledDialogTitle sx={{ pb: 1 }} onClose={handleDialogClose}>
-        Pick non-Deposited Unripe Beans and Unripe BEAN:3CRV LP
+        Pick non-Deposited Unripe Beans and Unripe BEAN:ETH LP
       </StyledDialogTitle>
       <Row gap={1} pb={2} pl={1} pr={3}>
         <img src={pickImage} alt="pick" css={{ height: 120 }} />
         <Typography sx={{ fontSize: '15px' }} color="text.secondary">
-          To claim non-Deposited Unripe Beans and Unripe BEAN:3CRV LP, they must
-          be Picked. After Replant, you can Pick assets to your wallet, or Pick
+          To claim non-Deposited Unripe Beans and Unripe BEAN:ETH LP, they must
+          be Picked. You can Pick assets to your wallet, or Pick
           and Deposit them directly in the Silo.
           <br />
           <br />
-          Unripe Deposited assets <b>do not need to be Picked</b> and will be
+          Unripe Deposited assets <b>do not need to be Picked</b> and were be
           automatically Deposited at Replant.
           <br />
           <br />
@@ -353,7 +353,7 @@ const PickBeansDialog: FC<
              * Section 3b: Total Unripe Beans
              */}
             <Row justifyContent="space-between" pl={1}>
-              <Typography>Unripe Beans available to Pick at Replant</Typography>
+              <Typography>Unripe Beans available to Pick</Typography>
               <Row gap={0.3}>
                 <img src={unripeBeanIcon} alt="Circulating Beans" width={13} />
                 <Typography variant="h4">
@@ -417,7 +417,7 @@ const PickBeansDialog: FC<
              */}
             <Row justifyContent="space-between" pl={1}>
               <Typography>
-                Unripe BEAN:3CRV LP available to Pick at Replant
+                Unripe BEAN:ETH LP available to Pick
               </Typography>
               <Row gap={0.3}>
                 <img src={brownLPIcon} alt="Circulating Beans" width={13} />

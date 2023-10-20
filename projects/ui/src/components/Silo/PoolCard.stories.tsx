@@ -15,6 +15,8 @@ const poolState: BeanPoolState = {
   deltaB: new BigNumber(100000),
   liquidity: new BigNumber(123567),
   supply: new BigNumber(1234),
+  lpBdv: new BigNumber(1234),
+  lpUsd: new BigNumber(1234),
 };
 
 const Template: ComponentStory<typeof PoolCard> = (args: any) => (

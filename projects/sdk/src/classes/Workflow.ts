@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { CallOverrides, ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { TokenValue } from "src/TokenValue";
@@ -593,7 +593,7 @@ export abstract class Workflow<
    * @param slippage A human readable percent value. Ex: 0.1 would mean 0.1% slippage
    * @returns Promise of a Transaction
    */
-  abstract execute(amountIn: ethers.BigNumber | TokenValue, data: RunData): Promise<ethers.ContractTransaction>;
+  abstract execute(amountIn: ethers.BigNumber | TokenValue, data: RunData, overrides?: CallOverrides): Promise<ethers.ContractTransaction>;
 
   /**
    * CallStatic version of the execute method. Allows testing the execution of the workflow.

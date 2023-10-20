@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FarmToMode } from '@beanstalk/sdk';
 import {
@@ -45,7 +45,7 @@ import {
 } from '~/util';
 import {
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3,
+  UNRIPE_BEAN_WETH,
   UNRIPE_TOKENS,
 } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
@@ -56,20 +56,27 @@ import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import TransactionToast from '~/components/Common/TxnToast';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
+import useSdk from '~/hooks/sdk';
+import useBDV from '~/hooks/beanstalk/useBDV';
 
 type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
 };
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const ChopForm: FC<
   FormikProps<ChopFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
     beanstalk: Beanstalk;
   }
 > = ({ values, setFieldValue, balances, beanstalk }) => {
+  const sdk = useSdk();
+  const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const unripeUnderlying = useUnripeUnderlyingMap();
+  const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
+  const [quoteBdv, setQuoteBdv] = useState<BigNumber>(new BigNumber(0));
 
   /// Derived values
   const state = values.tokens[0];
@@ -77,13 +84,43 @@ const ChopForm: FC<
   const tokenBalance = balances[inputToken.address];
   const outputToken = unripeUnderlying[inputToken.address];
 
+  useEffect(() => {
+    const fetchQuote = async () => {
+      const amountIn = toStringBaseUnitBN(state.amount!, state.token.decimals);
+      const token = inputToken.address;
+      console.log('Fetching chop quote', amountIn?.toString(), token);
+
+      const result = await sdk.contracts.beanstalk.getPenalizedUnderlying(
+        token,
+        amountIn!.toString()
+      );
+
+      // const resbn = tokenResult(state.token)(result)
+      const resbn = new BigNumber(result.toString()).div(
+        10 ** outputToken.decimals
+      );
+      setQuote(resbn);
+      const bdv = getBDV(outputToken).times(resbn);
+      setQuoteBdv(bdv);
+    };
+
+    if (state.amount?.gt(0)) {
+      fetchQuote();
+    } else {
+      setQuote(new BigNumber(0));
+    }
+  }, [state, inputToken, sdk, outputToken, getBDV]);
+
+  // Clear quote when token changes
+  useEffect(() => {
+    setQuote(new BigNumber(0));
+  }, [inputToken]);
+
   /// Chop Penalty  = 99% <-> Chop Rate     = 0.01
   const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
     (_state) => _state._bean.unripe
   );
-  const amountOut = state.amount?.multipliedBy(
-    unripeTokens[inputToken.address]?.chopRate || ZERO_BN
-  );
+
   const chopPenalty =
     unripeTokens[inputToken.address]?.chopPenalty || new BigNumber(100);
 
@@ -109,7 +146,7 @@ const ChopForm: FC<
     [values.tokens, setFieldValue]
   );
 
-  const isSubmittable = amountOut?.gt(0) && values.destination;
+  const isSubmittable = quote?.gt(0) && values.destination;
 
   return (
     <Form autoComplete="off">
@@ -162,7 +199,8 @@ const ChopForm: FC<
             <TxnSeparator />
             <TokenOutputField
               token={outputToken}
-              amount={amountOut || ZERO_BN}
+              amount={quote || ZERO_BN}
+              bdv={quoteBdv}
             />
             <Box>
               <Accordion variant="outlined">
@@ -179,9 +217,13 @@ const ChopForm: FC<
                       {
                         type: ActionType.BASE,
                         message: `Add ${displayBN(
-                          amountOut || ZERO_BN
+                          quote || ZERO_BN
                         )} ${outputToken} to your 
-                        ${values.destination === FarmToMode.EXTERNAL ? `Circulating` : `Farm`} Balance.`,
+                        ${
+                          values.destination === FarmToMode.EXTERNAL
+                            ? `Circulating`
+                            : `Farm`
+                        } Balance.`,
                       },
                     ]}
                   />
@@ -215,7 +257,7 @@ const PREFERRED_TOKENS: PreferredToken[] = [
     minimum: new BigNumber(1),
   },
   {
-    token: UNRIPE_BEAN_CRV3,
+    token: UNRIPE_BEAN_WETH,
     minimum: new BigNumber(1),
   },
 ];
@@ -301,11 +343,23 @@ const Chop: FC<{}> = () => {
       onSubmit={onSubmit}
     >
       {(formikProps: FormikProps<ChopFormValues>) => (
-        <ChopForm
-          balances={farmerBalances}
-          beanstalk={beanstalk}
-          {...formikProps}
-        />
+        // <ChopForm
+        //   balances={farmerBalances}
+        //   beanstalk={beanstalk}
+        //   {...formikProps}
+        // />
+        <div
+          style={{
+            border: '1px solid red',
+            background: '#f0a1a1',
+            borderRadius: '10px',
+            padding: '10px 10px',
+            color: '#860112',
+            textAlign: 'center',
+          }}
+        >
+          Temporarily disabled while BIP-38 migration is in progress
+        </div>
       )}
     </Formik>
   );

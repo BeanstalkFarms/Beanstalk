@@ -20,7 +20,8 @@ export const setBidirectionalAddRemoveLiquidityEdges = (
   g.setEdge(underlyingToken.symbol, lpToken.symbol, {
     build: (_: string, from: FarmFromMode, to: FarmToMode) => new sdk.farm.actions.AddLiquidity(pool, registry, amounts as any, from, to),
     from: underlyingToken.symbol,
-    to: lpToken.symbol
+    to: lpToken.symbol,
+    label: "addLiquidity"
   });
 
   // LP -> Underlying is RemoveLiquidity
@@ -28,7 +29,8 @@ export const setBidirectionalAddRemoveLiquidityEdges = (
     build: (_: string, from: FarmFromMode, to: FarmToMode) =>
       new sdk.farm.actions.RemoveLiquidityOneToken(pool, registry, underlyingToken.address, from, to),
     from: lpToken.symbol,
-    to: underlyingToken.symbol
+    to: underlyingToken.symbol,
+    label: "removeLiquidity"
   });
 };
 
@@ -107,60 +109,20 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "WETH"
   });
 
-  /// USDT<>BEAN via Metapool Exchange Underlying
+  // BEAN<>WETH via Basin Well
+  graph.setEdge("BEAN", "WETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellWethBean(sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+    from: "BEAN",
+    to: "WETH"
+  });
 
-  graph.setEdge("USDT", "BEAN", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdt2bean(from, to),
-    from: "USDT",
+  graph.setEdge("WETH", "BEAN", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellWethBean(sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+    from: "WETH",
     to: "BEAN"
   });
-  graph.setEdge("BEAN", "USDT", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.bean2usdt(from, to),
-    from: "BEAN",
-    to: "USDT"
-  });
-
-  /// USDC<>BEAN via Metapool Exchange Underlying
-
-  graph.setEdge("USDC", "BEAN", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.USDC, sdk.tokens.BEAN, from, to),
-    from: "USDC",
-    to: "BEAN"
-  });
-  graph.setEdge("BEAN", "USDC", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.USDC, from, to),
-    from: "BEAN",
-    to: "USDC"
-  });
-
-  /// DAI<>BEAN via Metapool Exchange Underlying
-
-  graph.setEdge("DAI", "BEAN", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.DAI, sdk.tokens.BEAN, from, to),
-    from: "DAI",
-    to: "BEAN"
-  });
-
-  graph.setEdge("BEAN", "DAI", {
-    build: (_: string, from: FarmFromMode, to: FarmToMode) =>
-      new sdk.farm.actions.ExchangeUnderlying(sdk.contracts.curve.pools.beanCrv3.address, sdk.tokens.BEAN, sdk.tokens.DAI, from, to),
-    from: "BEAN",
-    to: "DAI"
-  });
-
-  /// CRV3<>BEAN via Metapool Exchange
-
-  setBidirectionalExchangeEdges(
-    sdk,
-    graph,
-    sdk.contracts.curve.pools.beanCrv3.address,
-    sdk.contracts.curve.registries.metaFactory.address,
-    sdk.tokens.BEAN,
-    sdk.tokens.CRV3
-  );
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
 

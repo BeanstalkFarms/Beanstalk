@@ -6,6 +6,7 @@ import { AppState } from '~/state';
 import useSiloTokenToFiat from './useSiloTokenToFiat';
 import useWhitelist from './useWhitelist';
 import { ONE_BN, ZERO_BN } from '~/constants';
+import useUnripeUnderlyingMap from './useUnripeUnderlying';
 
 export default function useTVD() {
   const whitelist = useWhitelist();
@@ -16,6 +17,7 @@ export default function useTVD() {
   const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
     (state) => state._bean.unripe
   );
+  const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   const siloTokenToFiat = useSiloTokenToFiat();
 
@@ -33,12 +35,22 @@ export default function useTVD() {
 
     const { tokenTvdMap, total } = Object.values(whitelist).reduce(
       (prev, curr) => {
-        const tvdByToken = siloTokenToFiat(
-          curr,
-          getDepositedAmount(curr),
-          'usd',
-          !curr.isUnripe
-        );
+        let tvdByToken;
+        if (curr.symbol === 'urBEANETH') {
+          tvdByToken = siloTokenToFiat(
+            unripeUnderlyingTokens[curr.address],
+            getDepositedAmount(curr),
+            'usd',
+            false
+          );
+        } else {
+          tvdByToken = siloTokenToFiat(
+            curr,
+            getDepositedAmount(curr),
+            'usd',
+            !curr.isUnripe
+          );
+        }
         const copy = { ...prev.tokenTvdMap };
         copy[curr.address] = tvdByToken;
         return {
@@ -56,5 +68,11 @@ export default function useTVD() {
       tvdByToken: tokenTvdMap,
       total,
     };
-  }, [balances, siloTokenToFiat, unripeTokens, whitelist]);
+  }, [
+    balances,
+    siloTokenToFiat,
+    unripeTokens,
+    unripeUnderlyingTokens,
+    whitelist,
+  ]);
 }

@@ -100,6 +100,25 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "underlyingToken",
+        "type": "address"
+      }
+    ],
+    "name": "SwitchUnderlyingToken",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -126,6 +145,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "addMigratedUnderlying",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -480,6 +517,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "newUnderlyingToken",
+        "type": "address"
+      }
+    ],
+    "name": "switchUnderlyingToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -497,29 +552,6 @@
     ],
     "name": "SetFertilizer",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint128",
-        "name": "id",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint128",
-        "name": "amount",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minLP",
-        "type": "uint256"
-      }
-    ],
-    "name": "addFertilizerOwner",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
   },
   {
     "inputs": [
@@ -803,6 +835,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "wethAmountIn",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMintFertilizerOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint128",
         "name": "id",
         "type": "uint128"
@@ -835,13 +886,18 @@
   {
     "inputs": [
       {
-        "internalType": "uint128",
-        "name": "amount",
-        "type": "uint128"
+        "internalType": "uint256",
+        "name": "wethAmountIn",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "minLP",
+        "name": "minFertilizerOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLPTokensOut",
         "type": "uint256"
       },
       {
@@ -851,7 +907,13 @@
       }
     ],
     "name": "mintFertilizer",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "payable",
     "type": "function"
   },

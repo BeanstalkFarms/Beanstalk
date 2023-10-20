@@ -12,7 +12,7 @@ import useBeanstalkSiloBreakdown, {
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import TokenRow from '~/components/Common/Balances/TokenRow';
 import useChainConstant from '~/hooks/chain/useChainConstant';
-import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
+import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
 import { FC } from '~/types';
 import StatHorizontal from '../StatHorizontal';
 import { useAppSelector } from '~/state';
@@ -29,7 +29,7 @@ const BeanstalkBalances: FC<{
   const getChainToken = useGetChainToken();
   const Bean = useChainConstant(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
   const availableTokens = useMemo(
     () => Object.keys(breakdown.tokens),
     [breakdown.tokens]
@@ -46,7 +46,7 @@ const BeanstalkBalances: FC<{
   function isTokenUnripe(tokenAddress: string) {
     return (
       tokenAddress.toLowerCase() === urBean.address ||
-      tokenAddress.toLowerCase() === urBeanCrv3.address
+      tokenAddress.toLowerCase() === urBeanWeth.address
     );
   }
 
@@ -90,19 +90,28 @@ const BeanstalkBalances: FC<{
       return { bdv: BigNumber(0), usd: BigNumber(0) };
 
     const ratio = amount.div(unripeTokens[token.address].supply);
-    const ratioAmount = unripeTokens[token.address].underlying.multipliedBy(ratio);
+    const ratioAmount =
+      unripeTokens[token.address].underlying.multipliedBy(ratio);
     const bdv = siloTokenToFiat(token, ratioAmount, 'bdv', false);
     const usd = siloTokenToFiat(token, ratioAmount, 'usd', false);
 
     return { bdv: bdv, usd: usd };
   }
 
-  function amountTooltip(token: ERC20Token, amount: BigNumber, isBreakdown?: boolean) {
+  function amountTooltip(
+    token: ERC20Token,
+    amount: BigNumber,
+    isBreakdown?: boolean
+  ) {
     if (!beanPrice || !token || !amount || loadingUnripe) return undefined;
 
     const isUnripe = isTokenUnripe(token.address);
-    const underlyingToken = isUnripe ? unripeUnderlyingTokens[token.address] : token;
-    const tokenAmount = isUnripe ? unripeTokens[token.address].underlying : amount;
+    const underlyingToken = isUnripe
+      ? unripeUnderlyingTokens[token.address]
+      : token;
+    const tokenAmount = isUnripe
+      ? unripeTokens[token.address].underlying
+      : amount;
     const bdv =
       isBreakdown && isUnripe
         ? getUnripeBreakdown(token, amount).bdv
@@ -113,9 +122,7 @@ const BeanstalkBalances: FC<{
         <StatHorizontal label="Token Amount">
           {displayFullBN(amount, 2, 2)}
         </StatHorizontal>
-        <StatHorizontal label="BDV">
-          {displayFullBN(bdv, 2, 2)}
-        </StatHorizontal>
+        <StatHorizontal label="BDV">{displayFullBN(bdv, 2, 2)}</StatHorizontal>
       </Stack>
     );
   }

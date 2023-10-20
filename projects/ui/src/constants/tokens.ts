@@ -24,7 +24,7 @@ import usdcLogoUrl from '~/img/tokens/usdc-logo.svg';
 import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
-import unripeBeanCrv3LogoUrl from '~/img/tokens/unripe-lp-logo-circled.svg';
+import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
 
 // Other imports
 import { ERC20Token, NativeToken, BeanstalkToken } from '~/classes/Token';
@@ -38,7 +38,7 @@ import {
   USDC_ADDRESSES,
   USDT_ADDRESSES,
   UNRIPE_BEAN_ADDRESSES,
-  UNRIPE_BEAN_CRV3_ADDRESSES,
+  UNRIPE_BEAN_WETH_ADDRESSES,
   BEAN_ADDRESSES,
   BEAN_ETH_WELL_ADDRESSES,
 } from './addresses';
@@ -329,15 +329,15 @@ export const UNRIPE_BEAN = {
   ),
 };
 
-export const UNRIPE_BEAN_CRV3 = {
+export const UNRIPE_BEAN_WETH = {
   [SupportedChainId.MAINNET]: new ERC20Token(
     SupportedChainId.MAINNET,
-    UNRIPE_BEAN_CRV3_ADDRESSES,
+    UNRIPE_BEAN_WETH_ADDRESSES,
     6,
     {
-      name: 'Unripe BEAN:3CRV LP',
-      symbol: 'urBEAN3CRV',
-      logo: unripeBeanCrv3LogoUrl,
+      name: 'Unripe BEAN:ETH LP',
+      symbol: 'urBEANETH',
+      logo: unripeBeanWethLogoUrl,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
       isUnripe: true,
@@ -355,11 +355,11 @@ export const UNRIPE_BEAN_CRV3 = {
 
 export const UNRIPE_TOKENS: ChainConstant<ERC20Token>[] = [
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3,
+  UNRIPE_BEAN_WETH,
 ];
 export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
   BEAN,
-  BEAN_CRV3_LP,
+  BEAN_ETH_WELL_LP,
 ];
 
 // Show these tokens as whitelisted in the Silo.
@@ -368,7 +368,7 @@ export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN_CRV3_LP,
   BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3,
+  UNRIPE_BEAN_WETH,
 ];
 
 // All supported ERC20 tokens.

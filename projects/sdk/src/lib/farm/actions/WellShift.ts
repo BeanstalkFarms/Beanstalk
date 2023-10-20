@@ -4,6 +4,9 @@ import { Token } from "src/classes/Token";
 import { RunContext, RunMode, Step, StepClass, Workflow } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 
+/**
+ * Swap tokens in a Well by using the shift() method
+ */
 export class WellShift extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "shift";
 
