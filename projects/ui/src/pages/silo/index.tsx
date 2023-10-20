@@ -572,7 +572,7 @@ const RewardsBar: FC<{
                     hideIfZero
                   />
                 </TokenOutput>
-                {/* <Button
+                <Button
                   disabled={empty}
                   variant="contained"
                   fullWidth
@@ -580,19 +580,7 @@ const RewardsBar: FC<{
                   onClick={handleSubmit}
                 >
                   Claim Rewards
-                </Button> */}
-                <div
-                  style={{
-                    border: '1px solid red',
-                    background: '#f0a1a1',
-                    borderRadius: '10px',
-                    padding: '10px 10px',
-                    color: '#860112',
-                    textAlign: 'center',
-                  }}
-                >
-                  Temporarily disabled while BIP-38 migration is in progress
-                </div>
+                </Button>
                 <Row justifyContent="flex-end" spacing={0.5}>
                   {isEstimatingGas ? (
                     <CircularProgress thickness={3} size={16} />
