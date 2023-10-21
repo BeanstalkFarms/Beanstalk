@@ -15,13 +15,6 @@ const useBanner = () => {
   );
 
   return useMemo(() => {
-    return (
-      <Banner>
-        BIP-38 Unripe liquidity migration is in process. Quotes will be affected
-        until the migration is complete. See Discord for more information.
-      </Banner>
-    );
-
     // eslint-disable-next-line no-unreachable
     if (migrationNeeded === true) {
       return (
