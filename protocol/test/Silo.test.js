@@ -358,6 +358,14 @@ describe('Silo', function () {
       expect(await this.approval.isApprovedForAll(userAddress, user2Address)).to.eq(true);
     });
 
+    it('is a valid json', async function () {
+      depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
+      const depositmetadata = await this.metadata.uri(depositID1);
+      depositMetadataString = atob(depositmetadata.substring(29))
+      // verify that depositMetadataString is a json:
+      expect(await tryParseJSONObject(depositMetadataString) == true);
+    })
+
     it("properly gives an URI", async function () {
       await this.season.farmSunrises(1000); 
 
@@ -900,3 +908,15 @@ describe('Silo', function () {
     });
   });
 });
+
+function tryParseJSONObject (jsonString){
+  try {
+      var o = JSON.parse(jsonString);
+      if (o && typeof o === "object") {
+          return o;
+      }
+  }
+  catch (e) { }
+
+  return false;
+};
