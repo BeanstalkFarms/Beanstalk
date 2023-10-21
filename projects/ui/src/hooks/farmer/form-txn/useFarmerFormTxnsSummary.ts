@@ -27,7 +27,7 @@ const tooltips = {
   earnedBeans:
     'The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.',
   earnedStalk:
-    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership and do not require any action to claim them.',
+    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership even before claiming.',
   earnedSeeds:
     'Seeds earned in conjunction with Earned Beans. Plantable Seeds must be Planted in order to grow Stalk.',
   harvestablePods:
