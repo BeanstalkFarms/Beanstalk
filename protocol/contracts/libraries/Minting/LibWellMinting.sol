@@ -33,7 +33,7 @@ library LibWellMinting {
 
     using SignedSafeMath for int256;
 
-    uint256 constant TURN_BACK_ON_SEASON = 16660;
+    uint256 constant TURN_BACK_ON_SEASON = 16_665;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
