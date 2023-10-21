@@ -35,6 +35,8 @@ contract UnripeFacet is ReentrancyGuard {
 
     event ChangeUnderlying(address indexed token, int256 underlying);
 
+    event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
+
     event Chop(
         address indexed account,
         address indexed token,
@@ -59,6 +61,8 @@ contract UnripeFacet is ReentrancyGuard {
         amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
 
         underlyingAmount = _getPenalizedUnderlying(unripeToken, amount, unripeSupply);
+
+        require(underlyingAmount > 0, "Chop: no underlying");
 
         LibUnripe.decrementUnderlying(unripeToken, underlyingAmount);
 
@@ -241,5 +245,36 @@ contract UnripeFacet is ReentrancyGuard {
         returns (address underlyingToken)
     {
         return s.u[unripeToken].underlyingToken;
+    }
+
+    /////////////// UNDERLYING TOKEN MIGRATION //////////////////
+
+    /**
+     * @notice Adds underlying tokens to an Unripe Token.
+     * @param unripeToken The Unripe Token to add underlying tokens to.
+     * @param amount The amount of underlying tokens to add.
+     * @dev Used to migrate the underlying token of an Unripe Token to a new token.
+     * Only callable by the contract owner.
+     */
+    function addMigratedUnderlying(address unripeToken, uint256 amount) external payable nonReentrant {
+        LibDiamond.enforceIsContractOwner();
+        IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        LibUnripe.incrementUnderlying(unripeToken, amount);
+    }
+
+    /**
+     * @notice Switches the Underlying Token of an Unripe Token.
+     * @param unripeToken The Unripe Token to switch the underlying token of.
+     * @param newUnderlyingToken The new underlying token to switch to.
+     * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
+     */
+    function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) external payable {
+        LibDiamond.enforceIsContractOwner();
+        require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
+        LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 }

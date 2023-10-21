@@ -15,7 +15,7 @@ async function mintBeans(address, amount) {
 }
 
 async function mintEth(address) {
-  await hre.network.provider.send("hardhat_setBalance", [address, "0x3635C9ADC5DEA00000"]);
+  await hre.network.provider.send("hardhat_setBalance", [address, "0x21E19E0C9BAB2400000"]);
 }
 
 exports.mintEth = mintEth;

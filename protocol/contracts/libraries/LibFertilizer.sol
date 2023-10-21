@@ -5,11 +5,14 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./LibAppStorage.sol";
-import "./LibSafeMath128.sol";
-import "../C.sol";
-import "./LibUnripe.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
+import {LibSafeMath128} from "./LibSafeMath128.sol";
+import {C} from "../C.sol";
+import {LibUnripe} from "./LibUnripe.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
 /**
  * @author Publius
@@ -19,6 +22,7 @@ import "./LibUnripe.sol";
 library LibFertilizer {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
+    using SafeCast for uint256;
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
@@ -31,27 +35,29 @@ library LibFertilizer {
 
     function addFertilizer(
         uint128 season,
-        uint128 amount,
+        uint256 fertilizerAmount,
         uint256 minLP
     ) internal returns (uint128 id) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 _amount = uint256(amount);
+
+        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
+
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
         s.unfertilizedIndex = s.unfertilizedIndex.add(
-            _amount.mul(uint128(bpf))
+            fertilizerAmount.mul(bpf)
         );
         // Get id
         id = s.bpf.add(bpf);
         // Update Total and Season supply
-        s.fertilizer[id] = s.fertilizer[id].add(amount);
-        s.activeFertilizer = s.activeFertilizer.add(_amount);
+        s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
+        s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
-        addUnderlying(_amount.mul(DECIMALS), minLP);
+        addUnderlying(fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
-        if (s.fertilizer[id] > amount) return id;
+        if (s.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
-        LibFertilizer.push(id);
+        push(id);
         emit SetFertilizer(id, bpf);
     }
 
@@ -66,10 +72,14 @@ library LibFertilizer {
         humidity = RESTART_HUMIDITY.sub(humidityDecrease);
     }
 
-    function addUnderlying(uint256 amount, uint256 minAmountOut) internal {
+    /**
+     * @dev Any WETH contributions should already be transferred to the Bean:Eth Well to allow for a gas efficient liquidity
+     * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
+     */
+    function addUnderlying(uint256 usdAmount, uint256 minAmountOut) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
-        uint256 percentToFill = amount.mul(C.precision()).div(
+        uint256 percentToFill = usdAmount.mul(C.precision()).div(
             remainingRecapitalization()
         );
         uint256 newDepositedBeans;
@@ -83,25 +93,32 @@ library LibFertilizer {
         }
 
         // Calculate how many Beans to add as LP
-        uint256 newDepositedLPBeans = amount.mul(C.exploitAddLPRatio()).div(
+        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
             DECIMALS
         );
-        // Mint the Beans
+
+        // Mint the Deposited Beans to Beanstalk.
         C.bean().mint(
             address(this),
-            newDepositedBeans.add(newDepositedLPBeans)
+            newDepositedBeans
         );
-        // Add Liquidity
-        uint256 newLP = C.curveZap().add_liquidity(
-            C.CURVE_BEAN_METAPOOL,
-            [newDepositedLPBeans, 0, amount, 0],
+
+        // Mint the LP Beans to the Well to sync.
+        C.bean().mint(
+            address(C.BEAN_ETH_WELL),
+            newDepositedLPBeans
+        );
+
+        uint256 newLP = IWell(C.BEAN_ETH_WELL).sync(
+            address(this),
             minAmountOut
         );
+
         // Increment underlying balances of Unripe Tokens
         LibUnripe.incrementUnderlying(C.UNRIPE_BEAN, newDepositedBeans);
         LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
 
-        s.recapitalized = s.recapitalized.add(amount);
+        s.recapitalized = s.recapitalized.add(usdAmount);
     }
 
     function push(uint128 id) internal {

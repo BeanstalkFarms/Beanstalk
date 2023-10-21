@@ -16,6 +16,7 @@ library LibUnripe {
     using SafeMath for uint256;
 
     event ChangeUnderlying(address indexed token, int256 underlying);
+    event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
 
     uint256 constant DECIMALS = 1e6;
 
@@ -93,5 +94,15 @@ library LibUnripe {
             s.recapitalized = s.recapitalized.sub(recapped);
         }
         decrementUnderlying(token, underlying);
+    }
+
+    /**
+     * @dev Switches the underlying token of an unripe token.
+     * Should only be called if `s.u[unripeToken].balanceOfUnderlying == 0`.
+     */
+    function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.u[unripeToken].underlyingToken = newUnderlyingToken;
+        emit SwitchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 }

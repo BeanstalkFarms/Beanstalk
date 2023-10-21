@@ -1,5 +1,6 @@
 const { BEANSTALK } = require("../test/utils/constants");
-const { getBeanstalk, impersonateBeanstalkOwner, mintEth } = require("../utils");
+const { getBeanstalk, impersonateBeanstalkOwner, mintEth, impersonateSigner } = require("../utils");
+const { deployContract } = require("./contracts");
 const { upgradeWithNewFacets } = require("./diamond");
 const { impersonatePipeline, deployPipeline } = require("./pipeline");
 
@@ -144,6 +145,43 @@ async function bip34(mock = true, account = undefined) {
     verify: false
   });
 }
+async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefined, verbose = true, oracleAccount = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: [
+      "BDVFacet",
+      "ConvertFacet",
+      "ConvertGettersFacet",
+      "FertilizerFacet",
+      "MetadataFacet",
+      "MigrationFacet",
+      "UnripeFacet",
+    ],
+    initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
+    selectorsToRemove: [
+      '0x0bfca7e3',
+      '0x8cd31ca0'
+    ],
+    bip: false,
+    object: !mock,
+    verbose: verbose,
+    account: account,
+    verify: false
+  });
+
+
+  if (oracleAccount == undefined) {
+    oracleAccount = await impersonateSigner('0x30a1976d5d087ef0BA0B4CDe87cc224B74a9c752', true); // Oracle deployer
+    await mintEth(oracleAccount.address);
+  }
+  await deployContract('UsdOracle', oracleAccount, true)
+
+}
 
 exports.bip29 = bip29
 exports.bip30 = bip30
@@ -151,3 +189,4 @@ exports.bip34 = bip34
 exports.bipNewSilo = bipNewSilo
 exports.bipBasinIntegration = bipBasinIntegration
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin
+exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth
