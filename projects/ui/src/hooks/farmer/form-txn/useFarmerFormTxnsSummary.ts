@@ -19,9 +19,9 @@ const tooltips = {
     'Add Plantable Seeds to your Seed balance. Also Mows Grown Stalk, Deposits Earned Beans and claims Earned Stalk.',
   enroot:
     'Add Revitalized Stalk and Seeds to your Stalk and Seed balances, respectively. Also Mows Grown Stalk.',
-  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean',
-  rinse: 'Redeem debt paid back by Beanstalk for purchasing fertilizer',
-  claim: 'Claim Beans that have been withdrawn from the silo',
+  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean.',
+  rinse: 'Redeem debt paid back by Beanstalk for purchasing Fertilizer.',
+  claim: 'Claim Beans that have been withdrawn from the Silo.',
   grownStalk:
     'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk for a particular whitelisted asset is Mown at the beginning of any Silo interaction.',
   earnedBeans:
