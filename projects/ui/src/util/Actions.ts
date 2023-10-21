@@ -280,6 +280,12 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
+      if (a.tokenOut.isLP) {
+        return `Add ${displayTokenAmount(
+          a.amountIn,
+          a.tokenIn
+        )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      }
       return `Swap ${displayTokenAmount(
         a.amountIn,
         a.tokenIn
