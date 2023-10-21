@@ -85,26 +85,6 @@ const SiloActions: FC<{
     ? withdrawalItems.length > 0
     : false;
 
-  if (['urBEANETH', 'urBEAN'].includes(token.symbol)) {
-    return (
-      <>
-        <div
-          style={{
-            border: '1px solid red',
-            background: '#f0a1a1',
-            borderRadius: '10px',
-            padding: '10px 10px',
-            color: '#860112',
-            textAlign: 'center',
-          }}
-        >
-          Interacting with {token.symbol} is temporarily disabled while BIP-38
-          migration is in progress
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <Module>
