@@ -3,7 +3,6 @@ import { FarmToMode } from '@beanstalk/sdk';
 import { Card, Stack, Typography } from '@mui/material';
 import { useFormikContext } from 'formik';
 import BigNumber from 'bignumber.js';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { ZERO_BN } from '~/constants';
 import {
   BeanstalkPalette,
@@ -251,14 +250,6 @@ export default function ClaimBeanDrawerContent<T>({
                           {opt.icon}
                           <Typography variant="inherit" color="inherit">
                             {opt.name} Balance
-                            <HelpOutlineIcon
-                              sx={{
-                                color: 'text.secondary',
-                                display: 'inline',
-                                mb: 0.5,
-                                fontSize: '11px',
-                              }}
-                            />
                           </Typography>
                         </Row>
                       </Typography>
