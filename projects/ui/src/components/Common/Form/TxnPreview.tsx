@@ -416,11 +416,13 @@ const TxnPreview: FC<{
   preActionsWithGraphic?: Action[]; // Find a better way to do this?
   preActions?: Action[]; // Find a better way to do this?
   postActions?: Action[]; // Find a better way to do this?
+  customOrder?: boolean;
 }> = ({
   actions,
   preActionsWithGraphic = [],
   preActions = [],
   postActions = [],
+  customOrder,
 }) => {
   const preInstructionsByType = useMemo(() => {
     const grouped = groupBy(
@@ -514,16 +516,25 @@ const TxnPreview: FC<{
                   }
                   return null;
                 })}
-                {EXECUTION_STEPS.map((step, index) =>
-                  instructionsByType[step] ? (
-                    <TxnStep
-                      key={index}
-                      type={step}
-                      actions={instructionsByType[step]}
-                      highlighted={highlighted}
-                    />
-                  ) : null
-                )}
+                {customOrder
+                  ? actions.map((action, index) => (
+                      <TxnStep
+                        key={index}
+                        type={action!.type}
+                        actions={[action!]}
+                        highlighted={highlighted}
+                      />
+                    ))
+                  : EXECUTION_STEPS.map((step, index) =>
+                      instructionsByType[step] ? (
+                        <TxnStep
+                          key={index}
+                          type={step}
+                          actions={instructionsByType[step]}
+                          highlighted={highlighted}
+                        />
+                      ) : null
+                    )}
               </>
             </Row>
           </Box>
