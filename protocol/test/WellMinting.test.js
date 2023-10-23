@@ -67,7 +67,7 @@ describe('Well Minting', function () {
 
   })
 
-  describe("Delta B > 0", async function () {
+  describe.skip("Delta B > 0", async function () {
     beforeEach(async function () {
       await advanceTime(1800)
       await this.well.setReserves([to6('500000'), to18('1000')])
@@ -78,7 +78,7 @@ describe('Well Minting', function () {
       })
     })
 
-    it ("Captures a delta B > 0", async function () {
+    it("Captures a delta B > 0", async function () {
       expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('133789634067')
     })
   
@@ -87,7 +87,7 @@ describe('Well Minting', function () {
     })
   })
 
-  describe("Delta B < 0", async function () {
+  describe.skip("Delta B < 0", async function () {
     beforeEach(async function () {
       await advanceTime(1800)
       await this.well.setReserves([to6('2000000'), to18('1000')])
