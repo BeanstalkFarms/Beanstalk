@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
@@ -156,6 +156,10 @@ const WithdrawForm: FC<
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(whitelistedToken)
   );
+  const { setDestination } = useFormTxnContext();
+  useEffect(() => {
+    setDestination(values.destination);
+  }, [values.destination, setDestination])
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 

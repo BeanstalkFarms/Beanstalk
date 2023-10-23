@@ -5,6 +5,10 @@ import { Token } from "src/classes/Token";
 import { RunContext, RunMode, Step, StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 
+/**
+ * Add liqudity to a well using the Sync method, which transfers tokens directly to the well first
+ * which does not require an approval
+ */
 export class WellSync extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "wellSync";
 
@@ -31,7 +35,7 @@ export class WellSync extends StepClass<AdvancedPipePreparedResult> {
       throw new Error("Reverse direction is not supported by wellSync");
     }
 
-    let amounts: TokenValue[] = []
+    let amounts: TokenValue[] = [];
     for (let i = 0; i < this._well.tokens.length; i++) {
       if (i === tokenIndex) {
         amounts[i] = this.tokenIn.fromBlockchain(_amountInStep);
@@ -47,23 +51,19 @@ export class WellSync extends StepClass<AdvancedPipePreparedResult> {
       amountOut: quote.toBigNumber(),
       value: ethers.BigNumber.from(0),
       prepare: () => {
-
         const minLP = quote.subSlippage(context.data.slippage || 0.1);
 
         WellSync.sdk.debug(`>[${this.name}.prepare()]`, {
-            well: well.name,
-            recipient: this.recipient,
-            quoteAmountLessSlippage: minLP,
-            method: "sync",
-            context
+          well: well.name,
+          recipient: this.recipient,
+          quoteAmountLessSlippage: minLP,
+          method: "sync",
+          context
         });
 
         return {
           target: well.address,
-          callData: well.contract.interface.encodeFunctionData("sync", [     
-            this.recipient,
-            minLP.toBigNumber().toString(),
-          ])
+          callData: well.contract.interface.encodeFunctionData("sync", [this.recipient, minLP.toBigNumber().toString()])
         };
       },
       decode: (data: string) => well.contract.interface.decodeFunctionData("sync", data),

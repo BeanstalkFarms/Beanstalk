@@ -87,6 +87,8 @@ export const useFetchPools = () => {
                         ),
                         // USD value of 1 LP token == liquidity / supply
                         totalCrosses: new BigNumber(0),
+                        lpUsd: tokenResult(BEAN)(poolData.lpUsd),
+                        lpBdv: tokenResult(BEAN)(poolData.lpBdv),
                       },
                     }))
                     .catch((err) => {

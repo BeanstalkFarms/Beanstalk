@@ -15,6 +15,7 @@ const useBanner = () => {
   );
 
   return useMemo(() => {
+    // eslint-disable-next-line no-unreachable
     if (migrationNeeded === true) {
       return (
         <Banner height={BANNER_HEIGHT} to="/silo?view=migrate">

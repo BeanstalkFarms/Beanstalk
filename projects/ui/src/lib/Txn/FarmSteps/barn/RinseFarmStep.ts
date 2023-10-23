@@ -5,7 +5,7 @@ export class RinseFarmStep extends FarmStep implements EstimatesGas {
   constructor(
     sdk: BeanstalkSDK,
     private _fertilizerIds: string[],
-    private _toMode: FarmToMode = FarmToMode.INTERNAL
+    private _toMode: FarmToMode
   ) {
     super(sdk);
     this._fertilizerIds = _fertilizerIds;

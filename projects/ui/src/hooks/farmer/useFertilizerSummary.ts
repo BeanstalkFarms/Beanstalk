@@ -1,8 +1,16 @@
+import { TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import { FormTokenStateNew } from '~/components/Common/Form';
 import useHumidity from '~/hooks/beanstalk/useHumidity';
 import { Action, ActionType, SwapAction } from '~/util/Actions';
+
+export type SummaryData = {
+  actions: Action[];
+  weth: BigNumber;
+  fert: BigNumber;
+  humidity: BigNumber;
+};
 
 /**
  * Summarize the Actions that will occur when making a Deposit.
@@ -12,18 +20,27 @@ import { Action, ActionType, SwapAction } from '~/util/Actions';
  * @param to A whitelisted Silo Token which the Farmer is depositing to.
  * @param tokens Token form state.
  */
-export default function useFertilizerSummary(tokens: FormTokenStateNew[]) {
+export default function useFertilizerSummary(
+  tokens: FormTokenStateNew[],
+  ethPrice: TokenValue
+) {
   const sdk = useSdk();
-  const usdc = sdk.tokens.USDC;
+
+  // const usdc = sdk.tokens.USDC;
+  const wethToken = sdk.tokens.WETH;
   const eth = sdk.tokens.ETH;
   const [humidity] = useHumidity();
 
-  const summary = (() => {
+  const buildSummary = () => {
     const _data = tokens.reduce(
       (agg, curr) => {
-        const amount = usdc.equals(curr.token) ? curr.amount : curr.amountOut;
+        // const amount = usdc.equals(curr.token) ? curr.amount : curr.amountOut;
+        const amount = wethToken.equals(curr.token)
+          ? curr.amount
+          : curr.amountOut;
         if (amount) {
-          agg.usdc = agg.usdc.plus(amount);
+          // agg.usdc = agg.usdc.plus(amount);
+          agg.weth = agg.weth.plus(amount);
           if (curr.amount && curr.amountOut) {
             const currTokenKey = curr.token.equals(eth)
               ? 'eth'
@@ -39,7 +56,7 @@ export default function useFertilizerSummary(tokens: FormTokenStateNew[]) {
               agg.actions[currTokenKey] = {
                 type: ActionType.SWAP,
                 tokenIn: getNewToOldToken(curr.token),
-                tokenOut: getNewToOldToken(usdc),
+                tokenOut: getNewToOldToken(wethToken),
                 amountIn: curr.amount,
                 amountOut: curr.amountOut,
               };
@@ -50,7 +67,8 @@ export default function useFertilizerSummary(tokens: FormTokenStateNew[]) {
         return agg;
       },
       {
-        usdc: new BigNumber(0), // The amount of USDC to be swapped for FERT.
+        // usdc: new BigNumber(0), // The amount of USD used to buy FERT.
+        weth: new BigNumber(0), // The amount of WETH to be swapped for FERT.
         fert: new BigNumber(0),
         humidity: humidity,
         actions: {} as Record<string, SwapAction>,
@@ -61,19 +79,23 @@ export default function useFertilizerSummary(tokens: FormTokenStateNew[]) {
       ..._data,
       actions: Object.values(_data.actions) as Action[],
     };
-  })();
+  };
 
-  summary.fert = summary.usdc.dp(0, BigNumber.ROUND_DOWN);
+  const data = buildSummary();
 
-  summary.actions.push({
+  data.fert = data.weth
+    .multipliedBy(ethPrice.toHuman())
+    .dp(0, BigNumber.ROUND_DOWN);
+
+  data.actions.push({
     type: ActionType.BUY_FERTILIZER,
-    amountIn: summary.fert,
+    amountIn: data.fert,
     humidity,
   });
-  summary.actions.push({
+  data.actions.push({
     type: ActionType.RECEIVE_FERT_REWARDS,
-    amountOut: humidity.plus(1).times(summary.fert),
+    amountOut: humidity.plus(1).times(data.fert),
   });
 
-  return summary;
+  return data;
 }

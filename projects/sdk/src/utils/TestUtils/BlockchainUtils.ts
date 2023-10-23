@@ -126,8 +126,10 @@ export class BlockchainUtils {
       this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
       this.setROOTBalance(account, this.sdk.tokens.ROOT.amount(amount)),
       this.seturBEANBalance(account, this.sdk.tokens.UNRIPE_BEAN.amount(amount)),
-      this.seturBEAN3CRVBalance(account, this.sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount)),
-      this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount))
+      // this.seturBEAN3CRVBalance(account, this.sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount)),
+      this.seturBEANWETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WETH.amount(amount)),
+      this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount)),
+      this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
@@ -157,10 +159,13 @@ export class BlockchainUtils {
   async seturBEANBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
   }
-  async seturBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_CRV3, account, balance);
+  async seturBEANWETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.UNRIPE_BEAN_WETH, account, balance);
   }
   async setBEAN3CRVBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
+  }
+  async setBEANWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
   }
 
@@ -174,8 +179,9 @@ export class BlockchainUtils {
     slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
     slotConfig.set(this.sdk.tokens.ROOT.address, [151, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_CRV3.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
+    slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
     return slotConfig.get(tokenAddress);
   }
 

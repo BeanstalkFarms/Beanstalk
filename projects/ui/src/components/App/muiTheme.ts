@@ -702,6 +702,11 @@ const muiThemeBase: ThemeOptions = {
         indicator: {
           display: 'none',
         },
+        scrollButtons: {
+          '&.Mui-disabled': {
+            opacity: 0.3,
+          }
+        },
       },
     },
     MuiTab: {
