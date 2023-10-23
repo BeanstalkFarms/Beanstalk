@@ -10,7 +10,7 @@ require("solidity-coverage");
 require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
-require("hardhat-contract-sizer");
+require("@nomiclabs/hardhat-etherscan");
 
 // BIP 38 migration ----
 const { bipMigrateUnripeBean3CrvToBeanEth } = require("./scripts/bips.js");
@@ -27,16 +27,17 @@ const {
   getBean,
   getBeanstalkAdminControls,
   impersonateBeanstalkOwner,
-  mintEth
+  mintEth,
+  getBeanstalk
 } = require("./utils");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require("./test/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
-const { ebip9 } = require("./scripts/ebips.js");
+const { ebip9, ebip10 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -101,6 +102,15 @@ task("sunrise", async function () {
   const beanstalkAdmin = await getBeanstalkAdminControls();
   await beanstalkAdmin.forceSunrise();
 });
+
+task("sunrise2", async function () {
+  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+
+  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
+  await season.sunrise();
+})
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
@@ -211,6 +221,10 @@ task("migrate-bip38", async function () {
   await bipMigrateUnripeBean3CrvToBeanEth();
   await finishBeanEthMigration();
 });
+
+task("ebip10", async function () {
+  await ebip10();
+})
 
 task("ebip9", async function () {
   await ebip9();
