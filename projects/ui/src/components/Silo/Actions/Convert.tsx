@@ -204,7 +204,7 @@ const ConvertForm: FC<
   }
 
   function showOutputBDV() {
-    return MaxBN(depositsBDV, bdvOut);
+    return MaxBN(depositsBDV || ZERO_BN, bdvOut || ZERO_BN);
   }
 
   /// When a new output token is selected, reset maxAmountIn.
