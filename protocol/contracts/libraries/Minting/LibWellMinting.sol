@@ -33,6 +33,8 @@ library LibWellMinting {
 
     using SignedSafeMath for int256;
 
+    uint256 constant TURN_BACK_ON_SEASON = 16_665;
+
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
      * @param season The season that the Well was captured.
@@ -103,6 +105,11 @@ library LibWellMinting {
      */
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        if (s.season.current < TURN_BACK_ON_SEASON) {
+            return;
+        }
+
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
         try ICumulativePump(C.BEANSTALK_PUMP).readCumulativeReserves(
