@@ -39,9 +39,9 @@ const SiloAnalytics: FC<{}> = () => {
       >
         <Tab label="Deposited BEAN" />
         <Tab label="Deposited BEAN3CRV" />
-        <Tab label="Deposited BEANWETH" />
+        <Tab label="Deposited BEANETH" />
         <Tab label="Deposited urBEAN" />
-        <Tab label="Deposited urBEAN3CRV" />
+        <Tab label="Deposited urBEANETH" />
         <Tab label="Stalk" />
         {/* <Tab label="Seeds" /> */}
         <Tab label="0 Seeds Bean vAPY" />
