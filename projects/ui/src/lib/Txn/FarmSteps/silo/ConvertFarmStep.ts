@@ -144,7 +144,7 @@ export class ConvertFarmStep extends FarmStep {
     const pathMatrix = [
       [siloConvert.Bean, siloConvert.BeanCrv3],
       [siloConvert.Bean, siloConvert.BeanEth],
-      [siloConvert.Bean, siloConvert.BeanCrv3, siloConvert.BeanEth],
+      [siloConvert.Bean, siloConvert.BeanEth, siloConvert.BeanCrv3],
       [siloConvert.urBean, siloConvert.urBeanWeth],
     ];
 
@@ -152,7 +152,7 @@ export class ConvertFarmStep extends FarmStep {
     const sdkTokenPathMatrix = [
       [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP],
       [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP],
-      [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP, sdk.tokens.BEAN_ETH_WELL_LP],
+      [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP, sdk.tokens.BEAN_CRV3_LP],
       [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_WETH],
     ];
 
