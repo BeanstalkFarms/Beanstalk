@@ -26,6 +26,7 @@ import {
   displayFullBN,
   displayTokenAmount,
   tokenValueToBN,
+  transform,
   trimAddress,
 } from '~/util';
 import { FontSize } from '~/components/App/muiTheme';
@@ -50,6 +51,7 @@ import {
   WithdrawFarmStep,
 } from '~/lib/Txn';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -87,6 +89,10 @@ const TransferForm: FC<
       BEAN.equals(whitelistedToken) &&
       plantAndDoX
   );
+  const farmerSilo = useFarmerSilo();
+  const earnedBeans = transform(farmerSilo.beans.earned, 'tokenValue', BEAN);
+  const earnedStalk = transform(farmerSilo.stalk.earned, 'tokenValue', STALK);
+  const earnedSeeds = transform(farmerSilo.seeds.earned, 'tokenValue', SEEDS);
 
   // Results
   const withdrawResult = useMemo(() => {
@@ -146,11 +152,11 @@ const TransferForm: FC<
       <TokenOutput>
         <TokenOutput.Row
           token={whitelistedToken}
-          amount={withdrawResult.amount.mul(-1)}
+          amount={(isUsingPlant ? withdrawResult.amount.add(earnedBeans) : withdrawResult.amount).mul(-1)}
         />
         <TokenOutput.Row
           token={STALK}
-          amount={withdrawResult.stalk.mul(-1)}
+          amount={(isUsingPlant ? withdrawResult.stalk.add(earnedStalk) : withdrawResult.stalk).mul(-1)}
           amountTooltip={
             <>
               <div>
@@ -171,7 +177,7 @@ const TransferForm: FC<
             </>
           }
         />
-        <TokenOutput.Row token={SEEDS} amount={withdrawResult.seeds.mul(-1)} />
+        <TokenOutput.Row token={SEEDS} amount={(isUsingPlant ? withdrawResult.seeds.add(earnedSeeds) : withdrawResult.seeds).mul(-1)} />
       </TokenOutput>
     );
   };
@@ -209,14 +215,14 @@ const TransferForm: FC<
                         {
                           type: ActionType.TRANSFER,
                           amount: withdrawResult
-                            ? toBN(withdrawResult.amount.abs())
+                            ? toBN((isUsingPlant ? withdrawResult.amount.add(earnedBeans) : withdrawResult.amount).abs())
                             : ZERO_BN,
                           token: getNewToOldToken(whitelistedToken),
                           stalk: withdrawResult
-                            ? toBN(withdrawResult.stalk.abs())
+                            ? toBN((isUsingPlant ? withdrawResult.stalk.add(earnedStalk) : withdrawResult.stalk).abs())
                             : ZERO_BN,
                           seeds: withdrawResult
-                            ? toBN(withdrawResult?.seeds.abs())
+                            ? toBN((isUsingPlant ? withdrawResult.seeds.add(earnedSeeds) : withdrawResult.seeds).abs())
                             : ZERO_BN,
                           to: values.to,
                         },
