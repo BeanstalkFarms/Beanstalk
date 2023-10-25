@@ -200,13 +200,15 @@ const TransferForm: FC<
             <FieldWrapper label="Transfer to">
               <AddressInputField name="to" />
             </FieldWrapper>
-            {values.to !== '' && withdrawResult?.amount.abs().gt(0) && (
+            {values.to !== '' && withdrawResult?.amount.add(earnedBeans).abs().gt(0) && (
               <>
                 <TxnSeparator />
                 <TokenOutputs />
-                <WarningAlert>
-                  More recent Deposits are Transferred first.
-                </WarningAlert>
+                {withdrawResult?.amount.abs().gt(0) && 
+                  <WarningAlert>
+                    More recent Deposits are Transferred first.
+                  </WarningAlert>
+                }
                 <AdditionalTxnsAccordion filter={disabledActions} />
                 <Box>
                   <TxnAccordion>
@@ -226,34 +228,36 @@ const TransferForm: FC<
                             : ZERO_BN,
                           to: values.to,
                         },
-                        {
-                          type: ActionType.BASE,
-                          message: (
-                            <>
-                              The following Deposits will be used:
-                              <br />
-                              <ul
-                                css={{
-                                  paddingLeft: '25px',
-                                  marginTop: '10px',
-                                  marginBottom: 0,
-                                  fontSize: FontSize.sm,
-                                }}
-                              >
-                                {withdrawResult.crates.map((crate, index) => (
-                                  <li key={index}>
-                                    {displayTokenAmount(
-                                      crate.amount,
-                                      whitelistedToken
-                                    )}{' '}
-                                    from Deposits at Stem{' '}
-                                    {crate.stem.toString()}
-                                  </li>
-                                ))}
-                              </ul>
-                            </>
-                          ),
-                        },
+                        withdrawResult?.amount.abs().gt(0)
+                          ? {
+                              type: ActionType.BASE,
+                              message: (
+                                <>
+                                  The following Deposits will be used:
+                                  <br />
+                                  <ul
+                                    css={{
+                                      paddingLeft: '25px',
+                                      marginTop: '10px',
+                                      marginBottom: 0,
+                                      fontSize: FontSize.sm,
+                                    }}
+                                  >
+                                    {withdrawResult.crates.map((crate, index) => (
+                                      <li key={index}>
+                                        {displayTokenAmount(
+                                          crate.amount,
+                                          whitelistedToken
+                                        )}{' '}
+                                        from Deposits at Stem{' '}
+                                        {crate.stem.toString()}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              ),
+                            } 
+                          : undefined,
                         {
                           type: ActionType.END_TOKEN,
                           token: getNewToOldToken(whitelistedToken),
