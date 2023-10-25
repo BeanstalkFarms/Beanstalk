@@ -31,4 +31,16 @@ library LibUsdOracle {
         revert("Oracle: Token not supported.");
     }
 
+    /**
+     * @dev Returns the TWA price of a given token in in USD.
+     */
+    function getUsdTwap(address token, uint32 lookback) internal view returns (uint256) {
+        if (token == C.WETH) {
+            uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdTwap(lookback);
+            if (ethUsdPrice == 0) return 0;
+            return uint256(1e24).div(ethUsdPrice);
+        }
+        revert("Oracle: Token not supported.");
+    }
+
 }

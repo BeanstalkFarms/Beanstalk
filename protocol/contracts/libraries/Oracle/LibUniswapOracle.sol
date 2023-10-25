@@ -18,10 +18,6 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
  **/
 library LibUniswapOracle {
 
-    // The lookback in seconds for which to calculate the SMA in a Uniswap V3 pool.
-    // Set to 15 minutes
-    uint32 constant PERIOD = 900;
-
     uint128 constant ONE_WETH = 1e18;
 
     /**
@@ -29,8 +25,8 @@ library LibUniswapOracle {
      * Return value has 6 decimal precision.
      * Returns 0 if {IUniswapV3Pool.observe} reverts.
      */
-    function getEthUsdcPrice() internal view returns (uint256 price) {
-        (bool success, int24 tick) = consult(C.UNIV3_ETH_USDC_POOL, PERIOD);
+    function getEthUsdcPrice(uint32 lookback) internal view returns (uint256 price) {
+        (bool success, int24 tick) = consult(C.UNIV3_ETH_USDC_POOL, lookback);
         if (!success) return 0;
         price = OracleLibrary.getQuoteAtTick(tick, ONE_WETH, C.WETH, C.USDC);
     }
@@ -40,8 +36,8 @@ library LibUniswapOracle {
      * Return value has 6 decimal precision.
      * Returns 0 if {IUniswapV3Pool.observe} reverts.
      */
-    function getEthUsdtPrice() internal view returns (uint256 price) {
-        (bool success, int24 tick) = consult(C.UNIV3_ETH_USDT_POOL, PERIOD);
+    function getEthUsdtPrice(uint32 lookback) internal view returns (uint256 price) {
+        (bool success, int24 tick) = consult(C.UNIV3_ETH_USDT_POOL, lookback);
         if (!success) return 0;
         price = OracleLibrary.getQuoteAtTick(tick, ONE_WETH, C.WETH, C.USDT);
     }

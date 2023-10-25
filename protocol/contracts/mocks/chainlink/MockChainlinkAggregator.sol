@@ -40,6 +40,8 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
             uint80 answeredInRound
         )
     {
+        if (_roundId > lastRound) revert();
+        if (_roundId == 0) revert();
         roundId = _roundId;
         answer = answers[_roundId];
         startedAt = startedAts[_roundId];
@@ -59,6 +61,7 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
             uint80 answeredInRound
         )
     {
+        if (lastRound == 0) revert();
         roundId = lastRound;
         answer = answers[lastRound];
         startedAt = startedAts[lastRound];
