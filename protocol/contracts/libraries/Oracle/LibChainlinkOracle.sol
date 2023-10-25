@@ -101,6 +101,8 @@ library LibChainlinkOracle {
             } else {
                 uint256 cumulativePrice;
                 uint256 lastTimestamp = block.timestamp;
+                // Loop through previous rounds and compute cumulative sum until
+                // a round at least `lookback` seconds ago is reached.
                 while(timestamp > endTimestamp) {
                     cumulativePrice = cumulativePrice.add(uint256(answer).mul(lastTimestamp.sub(timestamp)));
                     roundId -= 1;
