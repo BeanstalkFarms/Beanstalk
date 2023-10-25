@@ -65,6 +65,7 @@ library LibChainlinkOracle {
      * @dev Returns the TWAP ETH/USD price from the Chainlink Oracle over the past `lookback` seconds.
      * Return value has 6 decimal precision.
      * Returns 0 if Chainlink's price feed is broken or frozen.
+     * Supports a maximum lookback of 4 hours.
      **/
     function getEthUsdTwap(uint256 lookback) internal view returns (uint256 price) {
         // First, try to get current decimal precision:
