@@ -67,7 +67,7 @@ library LibChainlinkOracle {
      * Return value has 6 decimal precision.
      * Returns 0 if Chainlink's price feed is broken or frozen.
     **/
-    function getTwapEthUsdPrice(uint256 lookback) internal view returns (uint256 price) {
+    function getEthUsdTwap(uint256 lookback) internal view returns (uint256 price) {
         // First, try to get current decimal precision:
         uint8 decimals;
         try priceAggregator.decimals() returns (uint8 _decimals) {

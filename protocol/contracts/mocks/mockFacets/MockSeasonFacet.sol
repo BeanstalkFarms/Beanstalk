@@ -357,6 +357,6 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function getChainlinkTwapEthUsdPrice(uint256 lookback) external view returns (uint256) {
-        return LibChainlinkOracle.getTwapEthUsdPrice(lookback);
+        return LibChainlinkOracle.getEthUsdTwap(lookback);
     }
 }

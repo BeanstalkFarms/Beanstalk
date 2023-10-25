@@ -33,7 +33,8 @@ library LibWellMinting {
 
     using SignedSafeMath for int256;
 
-    uint256 constant TURN_BACK_ON_SEASON = 16_665;
+    // One hour in seconds.
+    uint32 constant ONE_HOUR = 3600;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
@@ -106,10 +107,6 @@ library LibWellMinting {
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        if (s.season.current < TURN_BACK_ON_SEASON) {
-            return;
-        }
-
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
         try ICumulativePump(C.BEANSTALK_PUMP).readCumulativeReserves(
@@ -170,7 +167,7 @@ library LibWellMinting {
             C.BYTES_ZERO
         ) returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
-            (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
+            (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens, ONE_HOUR);
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {

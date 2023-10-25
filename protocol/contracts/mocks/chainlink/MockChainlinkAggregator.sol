@@ -82,6 +82,19 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
         answeredInRounds[lastRound] = answeredInRound;
     }
 
+    function setRound(
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) external {
+        answers[roundId] = answer;
+        startedAts[roundId] = startedAt;
+        updatedAts[roundId] = updatedAt;
+        answeredInRounds[roundId] = answeredInRound;
+    }
+
     function setDecimals(
         uint8 __decimals
     ) external {
