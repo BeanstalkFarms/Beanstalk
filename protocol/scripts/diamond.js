@@ -473,7 +473,9 @@ async function upgradeWithNewFacets ({
       }
     }
 
-    if (!initFacet) {
+    if (initFacetAddress !== undefined) {
+      initFacet = await ethers.getContractAt(initFacetName, initFacetAddress)
+    } else if (!initFacet) {
       const InitFacet = await ethers.getContractFactory(initFacetName, account)
       initFacet = await InitFacet.deploy()
       await initFacet.deployed()

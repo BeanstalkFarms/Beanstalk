@@ -98,6 +98,9 @@ async function ebip11(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["SeasonFacet"],
+    initFacetName: 'InitMint',
+    initArgs: ['0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5', '4194934459'],
+    initFacetAddress: '0x077495925c17230E5e8951443d547ECdbB4925Bb',
     bip: false,
     object: !mock,
     verbose: true,
