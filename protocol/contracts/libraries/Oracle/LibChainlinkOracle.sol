@@ -50,7 +50,7 @@ library LibChainlinkOracle {
         ) {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
-            if (checkForInvalidTimestampOrAnswer(timestamp, answer)) {
+            if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp)) {
                 return 0;
             }
             // Adjust to 6 decimal precision.
@@ -65,7 +65,6 @@ library LibChainlinkOracle {
      * @dev Returns the TWAP ETH/USD price from the Chainlink Oracle over the past `lookback` seconds.
      * Return value has 6 decimal precision.
      * Returns 0 if Chainlink's price feed is broken or frozen.
-     * Supports a maximum lookback of 4 hours.
      **/
     function getEthUsdTwap(uint256 lookback) internal view returns (uint256 price) {
         // First, try to get current decimal precision:
@@ -88,7 +87,7 @@ library LibChainlinkOracle {
         ) {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
-            if (checkForInvalidTimestampOrAnswer(timestamp, answer)) {
+            if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp)) {
                 return 0;
             }
 
@@ -111,7 +110,7 @@ library LibChainlinkOracle {
                         uint256 _timestamp,
                         uint80 /* answeredInRound */
                     ) {
-                        if (checkForInvalidTimestampOrAnswer(_timestamp, _answer)) {
+                        if (checkForInvalidTimestampOrAnswer(_timestamp, _answer, timestamp)) {
                             return 0;
                         }
                         lastTimestamp = timestamp;
@@ -131,11 +130,11 @@ library LibChainlinkOracle {
         }
     }
 
-    function checkForInvalidTimestampOrAnswer(uint256 timestamp, int256 answer) private view returns (bool) {
+    function checkForInvalidTimestampOrAnswer(uint256 timestamp, int256 answer, uint256 currentTimestamp) private view returns (bool) {
         // Check for an invalid timeStamp that is 0, or in the future
-        if (timestamp == 0 || timestamp > block.timestamp) return true;
+        if (timestamp == 0 || timestamp > currentTimestamp) return true;
         // Check if Chainlink's price feed has timed out
-        if (block.timestamp.sub(timestamp) > CHAINLINK_TIMEOUT) return true;
+        if (currentTimestamp.sub(timestamp) > CHAINLINK_TIMEOUT) return true;
         // Check for non-positive price
         if (answer <= 0) return true;
     }
