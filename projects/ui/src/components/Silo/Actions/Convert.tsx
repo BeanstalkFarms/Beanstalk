@@ -169,7 +169,7 @@ const ConvertForm: FC<
     if (tokenOut && (amountOut?.gt(0) || isUsingPlanted) && totalAmountIn?.gt(0)) {
       isReady = true;
       bdvOut = getBDV(tokenOut).times(amountOut || ZERO_BN);
-      bdvIn = getBDV(tokenIn).times(amountIn || ZERO_BN);
+      bdvIn = getBDV(tokenIn).times(totalAmountIn || ZERO_BN);
       depositsBDV = transform(conversion.bdv.abs(), 'bnjs');
       deltaBDV = MaxBN(
         bdvOut.minus(depositsBDV),
