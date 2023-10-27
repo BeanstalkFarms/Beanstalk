@@ -33,9 +33,6 @@ library LibWellMinting {
 
     using SignedSafeMath for int256;
 
-    // One hour in seconds.
-    uint32 constant ONE_HOUR = 3600;
-
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
      * @param season The season that the Well was captured.
@@ -167,7 +164,11 @@ library LibWellMinting {
             C.BYTES_ZERO
         ) returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
-            (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens, ONE_HOUR);
+            (
+                uint256[] memory ratios,
+                uint256 beanIndex,
+                bool success
+            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {

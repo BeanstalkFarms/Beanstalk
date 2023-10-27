@@ -27,7 +27,7 @@ library LibUsdOracle {
      * @dev Returns the price of a given token in in USD with the option of using a lookback.
      * `lookback` should be 0 if the instantaneous price is desired. Otherwise, the TWAP lookback in seconds.
      */
-    function getUsdPrice(address token, uint32 lookback) internal view returns (uint256) {
+    function getUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
         if (token == C.WETH) {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;

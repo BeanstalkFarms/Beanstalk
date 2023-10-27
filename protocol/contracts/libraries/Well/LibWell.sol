@@ -34,7 +34,7 @@ library LibWell {
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
      */
-    function getRatiosAndBeanIndex(IERC20[] memory tokens, uint32 lookback) internal view returns (
+    function getRatiosAndBeanIndex(IERC20[] memory tokens, uint256 lookback) internal view returns (
         uint[] memory ratios,
         uint beanIndex,
         bool success

@@ -56,18 +56,19 @@ library LibEthUsdOracle {
      * Return value has 6 decimal precision.
      * Returns 0 if the Eth Usd Oracle cannot fetch a manipulation resistant price.
     **/
-    function getEthUsdPrice(uint32 lookback) internal view returns (uint256) {
+    function getEthUsdPrice(uint256 lookback) internal view returns (uint256) {
         uint256 chainlinkPrice = lookback > 0 ?
             LibChainlinkOracle.getEthUsdTwap(lookback) :
             LibChainlinkOracle.getEthUsdPrice();
 
-        // Use a lookback of 900 seconds for an instantaneous price query for manipulation resistance.
-        if (lookback == 0) lookback = INSTANT_LOOKBACK;
-
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
 
-        uint256 usdcPrice = LibUniswapOracle.getEthUsdcPrice(lookback);
+        // Use a lookback of 900 seconds for an instantaneous price query for manipulation resistance.
+        if (lookback == 0) lookback = INSTANT_LOOKBACK;
+        if (lookback > type(uint32).max) return 0;
+
+        uint256 usdcPrice = LibUniswapOracle.getEthUsdcPrice(uint32(lookback));
         uint256 usdcChainlinkPercentDiff = getPercentDifference(usdcPrice, chainlinkPrice);
 
         // Check if the USDC price and the Chainlink Price are sufficiently close enough
@@ -76,7 +77,7 @@ library LibEthUsdOracle {
             return chainlinkPrice.add(usdcPrice).div(2);
         }
 
-        uint256 usdtPrice = LibUniswapOracle.getEthUsdtPrice(lookback);
+        uint256 usdtPrice = LibUniswapOracle.getEthUsdtPrice(uint32(lookback));
         uint256 usdtChainlinkPercentDiff = getPercentDifference(usdtPrice, chainlinkPrice);
 
         // Check whether the USDT or USDC price is closer to the Chainlink price.
