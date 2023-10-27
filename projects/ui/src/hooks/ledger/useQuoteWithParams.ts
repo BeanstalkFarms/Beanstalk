@@ -125,7 +125,7 @@ export default function useQuoteWithParams<T>(
 
   // Handler to refresh
   const getAmountOut = useCallback(
-    (tokenIn: ERC20Token | NativeToken, amountIn: BigNumber, params: T) => {
+    (tokenIn: ERC20Token | NativeToken, amountIn: BigNumber, params: any) => {
       if (tokenIn === tokenOut) {
         if (settings.ignoreSameToken) return;
         setQuoting(true);
@@ -133,7 +133,8 @@ export default function useQuoteWithParams<T>(
       }
       abortController.current?.abort(); // cancel promise if it's already in flight
       _getAmountOut.cancel(); // cancel handler if it's currently pending being called by the debouncer
-      if (amountIn.lte(0)) {
+      const isConvertingPlanted = !!params.isConvertingPlanted;
+      if (amountIn.lte(0) && !isConvertingPlanted) {
         setResult(null);
         setQuoting(false);
       } else {

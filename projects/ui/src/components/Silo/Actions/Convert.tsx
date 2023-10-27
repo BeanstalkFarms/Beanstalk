@@ -166,10 +166,10 @@ const ConvertForm: FC<
     // buttonContent = 'Pathway unavailable';
   } else {
     buttonContent = 'Convert';
-    if (tokenOut && amountOut?.gt(0) && amountIn?.gt(0)) {
+    if (tokenOut && (amountOut?.gt(0) || isUsingPlanted) && totalAmountIn?.gt(0)) {
       isReady = true;
-      bdvOut = getBDV(tokenOut).times(amountOut);
-      bdvIn = getBDV(tokenIn).times(amountIn);
+      bdvOut = getBDV(tokenOut).times(amountOut || ZERO_BN);
+      bdvIn = getBDV(tokenIn).times(amountIn || ZERO_BN);
       depositsBDV = transform(conversion.bdv.abs(), 'bnjs');
       deltaBDV = MaxBN(
         bdvOut.minus(depositsBDV),
@@ -291,7 +291,8 @@ const ConvertForm: FC<
           state={values.tokens[0]}
           handleQuote={handleQuote}
           displayQuote={(_amountOut) =>
-            _amountOut &&
+            _amountOut && 
+            amountIn &&
             deltaBDV && (
             <Tooltip
               title={getBDVTooltip(bdvIn, depositsBDV)}
@@ -347,7 +348,7 @@ const ConvertForm: FC<
         ) : null}
 
         {/* Outputs */}
-        {totalAmountIn && tokenOut && maxAmountIn && amountOut?.gt(0) ? (
+        {totalAmountIn && tokenOut && maxAmountIn && (amountOut?.gt(0) || isUsingPlanted) ? (
           <>
             <TxnSeparator mt={-1} />
             <TokenOutput>
@@ -419,7 +420,7 @@ const ConvertForm: FC<
                         totalAmountIn,
                         tokenIn.displayDecimals
                       )} ${tokenIn.name} to ${displayFullBN(
-                        amountOut,
+                        (amountOut || ZERO_BN),
                         tokenIn.displayDecimals
                       )} ${tokenOut.name}.`,
                     },
@@ -551,7 +552,7 @@ const ConvertPropProvider: FC<{
           farmerBalances.deposits,
           tokenIn,
           tokenOut,
-          tokenIn.amount(_amountIn.toString()),
+          tokenIn.amount(_amountIn.toString() || "0"),
           season.toNumber(),
           slippage,
           includePlant ? plantAction : undefined
@@ -586,7 +587,6 @@ const ConvertPropProvider: FC<{
         /// Validation
         if (!account) throw new Error('Wallet connection required');
         if (!slippage) throw new Error('No slippage value set.');
-        if (!_amountIn) throw new Error('No amount input');
         if (!tokenOut) throw new Error('Conversion pathway not set');
         if (!farmerBalances) throw new Error('No balances found');
 
@@ -597,7 +597,7 @@ const ConvertPropProvider: FC<{
 
         const { plantAction } = plantAndDoX;
 
-        const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
+        const amountIn = tokenIn.amount(_amountIn?.toString() || "0"); // amount of from token
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
 
