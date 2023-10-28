@@ -55,8 +55,9 @@ library LibEthUsdOracle {
      * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
      * Return value has 6 decimal precision.
      * Returns 0 if the Eth Usd Oracle cannot fetch a manipulation resistant price.
+     * A lookback of 900 seconds is used in Uniswap V3 pools for instantaneous price queries.
      * If using a non-zero lookback, it is recommended to use a substantially large
-     * `lookback` to protect against manipulation.
+     * `lookback` (> 900 seconds) to protect against manipulation.
     **/
     function getEthUsdPrice(uint256 lookback) internal view returns (uint256) {
         uint256 chainlinkPrice = lookback > 0 ?
