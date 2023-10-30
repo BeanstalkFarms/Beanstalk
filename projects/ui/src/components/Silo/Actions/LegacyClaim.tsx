@@ -374,7 +374,7 @@ const ClaimPropProvider: FC<{
         });
 
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
-        const { execute } = await txnBundler.bundle(claimTxn, amountIn, 0.1);
+        const { execute } = await txnBundler.bundle(claimTxn, amountIn, 0.1, 1.2);
 
         const txn = await execute();
         txToast.confirming(txn);
