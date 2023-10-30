@@ -305,6 +305,8 @@ const RewardsBar: FC<{
     [enrootData, sdk, account]
   );
 
+  const gasMultiplier = 1.2;
+
   const quoteGas = useCallback(async () => {
     const farm = buildWorkflow(claimState);
     if (!farm) {
@@ -343,7 +345,8 @@ const RewardsBar: FC<{
 
       await farm.estimate(ethers.BigNumber.from(0));
 
-      const txn = await farm.execute(ethers.BigNumber.from(0), { slippage: 0 });
+      const adjustedGas = gas ? Math.floor(gas.toNumber() * gasMultiplier) : undefined;
+      const txn = await farm.execute(ethers.BigNumber.from(0), { slippage: 0 }, adjustedGas ? { gasLimit: adjustedGas } : undefined);
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
@@ -362,7 +365,7 @@ const RewardsBar: FC<{
     }
 
     // Reset form
-  }, [buildWorkflow, claimState, refetchFarmerSilo]);
+  }, [buildWorkflow, claimState, gas, refetchFarmerSilo]);
 
   const mounted = useRef<true | undefined>();
   useEffect(() => {
@@ -593,7 +596,7 @@ const RewardsBar: FC<{
                     label={
                       <GasTag
                         px={0}
-                        gasLimit={transform(gas || ZERO_BN, 'bnjs')}
+                        gasLimit={BigNumberJS(Math.floor((gas?.toNumber() || 0) * gasMultiplier))}
                       />
                     }
                   />
