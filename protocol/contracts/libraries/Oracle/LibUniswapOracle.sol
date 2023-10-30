@@ -24,6 +24,9 @@ library LibUniswapOracle {
      * @dev Uses the Uniswap V3 Oracle to get the price of ETH denominated in USDC.
      * Return value has 6 decimal precision.
      * Returns 0 if {IUniswapV3Pool.observe} reverts.
+     * It is recommended to use a substantially large `lookback` (at least 900 seconds) to protect
+     * against manipulation.
+     * Note: Uniswap V3 pool oracles are not multi-block MEV resistant.
      */
     function getEthUsdcPrice(uint32 lookback) internal view returns (uint256 price) {
         (bool success, int24 tick) = consult(C.UNIV3_ETH_USDC_POOL, lookback);
