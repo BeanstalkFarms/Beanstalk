@@ -54,7 +54,7 @@ contract MockSeasonFacet is SeasonFacet  {
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event Incentivization(address indexed account, uint256 beans);
     event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
-    event updateGaugeSettings(
+    event UpdateGaugeSettings(
         address indexed token, 
         bytes4 selector,
         uint96 optimalPercentDepositedBdv
@@ -452,7 +452,7 @@ contract MockSeasonFacet is SeasonFacet  {
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
+        emit UpdateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
 
     function mockSetBean3CrvOracle(

@@ -86,7 +86,7 @@ contract InitBipSeedGauge is Weather {
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
             
             // emit event
-            emit LibWhitelist.updateGaugeSettings(siloTokens[i], gpSelectors[i], optimalPercentDepositedBdv[i]);
+            emit LibWhitelist.UpdateGaugeSettings(siloTokens[i], gpSelectors[i], optimalPercentDepositedBdv[i]);
         }
         // initalize seed gauge and emit events.
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 33_333_333_333_333_333_333; // 33% (50% + 50%* (1/3) = 66%)
