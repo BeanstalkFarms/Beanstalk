@@ -12,10 +12,9 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("hardhat-contract-sizer");
 
-// BIP 38 migration ----
-const { bipMigrateUnripeBean3CrvToBeanEth } = require("./scripts/bips.js");
-const { finishBeanEthMigration } = require("./scripts/beanEthMigration.js");
-// ----
+// BIP 39 
+const { bipSeedGauge } = require("./scripts/bips.js");
+//
 
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
@@ -206,9 +205,8 @@ task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
 
-task("migrate-bip38", async function () {
-  await bipMigrateUnripeBean3CrvToBeanEth();
-  await finishBeanEthMigration();
+task("deployBip39", async function () {
+  await bipSeedGauge();
 });
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
