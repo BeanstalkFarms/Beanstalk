@@ -149,7 +149,7 @@ export const BEAN = {
     },
     {
       stalk: 1,
-      seeds: 3,
+      seeds: 0,
     }
   ),
 };
@@ -242,7 +242,7 @@ export const BEAN_ETH_UNIV2_LP = {
     },
     {
       stalk: 1,
-      seeds: 4,
+      seeds: 0,
     }
   ),
 };
@@ -259,7 +259,7 @@ export const BEAN_LUSD_LP = {
     },
     {
       stalk: 1,
-      seeds: 3,
+      seeds: 0,
     }
   ),
 };
@@ -282,7 +282,7 @@ export const BEAN_CRV3_LP = {
     },
     {
       stalk: 1,
-      seeds: 3.25,
+      seeds: 0,
     }
   ),
 };
@@ -301,7 +301,7 @@ export const BEAN_ETH_WELL_LP = {
     },
     {
       stalk: 1,
-      seeds: 4.5,
+      seeds: 0,
     }
   ),
 };
