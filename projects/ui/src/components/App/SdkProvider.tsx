@@ -30,6 +30,7 @@ import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { useSigner } from '~/hooks/ledger/useSigner';
+import { useDynamicSeeds } from '~/hooks/sdk';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
@@ -94,13 +95,17 @@ export const BeanstalkSDKContext = createContext<
 >(undefined);
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
-  // use the same instance of the sdk across the app
   const sdk = useBeanstalkSdkContext();
+  const ready = useDynamicSeeds(sdk);
 
   return (
-    <BeanstalkSDKContext.Provider value={sdk}>
-      {children}
-    </BeanstalkSDKContext.Provider>
+    <>
+      {ready && (
+        <BeanstalkSDKContext.Provider value={sdk}>
+          {children}
+        </BeanstalkSDKContext.Provider>
+      )}
+    </>
   );
 }
 

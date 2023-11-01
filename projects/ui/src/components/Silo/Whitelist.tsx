@@ -266,7 +266,10 @@ const Whitelist: FC<{
                             </Typography>
                             <TokenIcon token={SEEDS} />
                             <Typography color="text.primary">
-                              {token.rewards?.seeds}
+                              {Math.round(
+                                (token.rewards?.seeds || 0 + Number.EPSILON) *
+                                  100
+                              ) / 100}
                             </Typography>
                           </Row>
                         </Box>
