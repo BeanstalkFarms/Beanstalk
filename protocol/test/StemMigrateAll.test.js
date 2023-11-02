@@ -10,7 +10,7 @@ const { BigNumber } = require('ethers');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai');
 
-const BLOCK_NUMBER = 17301500; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised
+const BLOCK_NUMBER = 18480579; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised
 
 //17251905 is the block the enroot fix was deployed
 
@@ -49,6 +49,7 @@ const eventsAbi = [
   }
 ];
 
+/*
 describe.skip('Silo V3: Stem deployment migrate everyone', function () {
     before(async function () {
 
@@ -578,4 +579,304 @@ describe.skip('Silo V3: Stem deployment migrate everyone', function () {
         }
       });
     });
+});*/
+
+describe('Silo V3: migrate stragglers', function () {
+  before(async function () {
+
+    try {
+      await network.provider.request({
+        method: "hardhat_reset",
+        params: [
+          {
+            forking: {
+              jsonRpcUrl: process.env.FORKING_RPC,
+              blockNumber: BLOCK_NUMBER
+            },
+          },
+        ],
+      });
+    } catch(error) {
+      console.log('forking error in Silo V3: Grown Stalk Per Bdv:');
+      console.log(error);
+      return
+    }
+
+    const signer = await impersonateBeanstalkOwner();
+    // const signer = await impersonateSigner(BCM);
+    await mintEth(signer.address);
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: ['ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
+      // libraryNames: ['LibLegacyTokenSilo'],
+      initFacetName: 'InitBipNewSilo',
+      bip: false,
+      object: false,
+      verbose: false,
+      account: signer
+    });
+
+    this.diamond = BEANSTALK;
+
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond);
+
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond);
+    this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond);
+    this.convert = await ethers.getContractAt('ConvertFacet', this.diamond);
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond);
+    this.bean = await ethers.getContractAt('Bean', BEAN);
+    this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
+    this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
+    this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+  });
+
+  beforeEach(async function () {
+    snapshotId = await takeSnapshot();
+  });
+
+  afterEach(async function () {
+    await revertToSnapshot(snapshotId);
+  });
+
+  const provider = new ethers.providers.JsonRpcProvider(process.env.FORKING_RPC);
+  const contract = new ethers.Contract(BEANSTALK, beanstalkABI, provider);
+
+  const END_BLOCK = 18480579;
+
+  /*function reformatData(data) {
+    const result = {};
+
+    for (const siloAddress in data) {
+      const tokenAddresses = [];
+      const seasonsArray = [];
+      const amountsArray = [];
+
+      console.log('siloAddress: ', siloAddress);
+
+      //iterate through keys in data[siloAddress]
+      for (const tokenAddress of data[siloAddress].keys()) {
+        console.log('tokenAddress: ', tokenAddress);
+        const tokenData = data[siloAddress][tokenAddress];
+        for (const tokenAddress in tokenData) {
+          const seasons = [];
+          const amounts = [];
+
+          for (const season in tokenData[tokenAddress]) {
+            seasons.push(toBN(season));
+            // amounts.push(parseInt(tokenData[tokenAddress][season].amount.hex, 16));
+            amounts.push(ethers.BigNumber.from(tokenData[tokenAddress][season].amount.hex));
+          }
+
+          if (seasons.length > 0 && amounts.length > 0) {
+            tokenAddresses.push(tokenAddress);
+            seasonsArray.push(seasons);
+            amountsArray.push(amounts);
+          }
+        }
+      }
+
+      if (tokenAddresses.length > 0 && seasonsArray.length > 0 && amountsArray.length > 0) {
+        result[siloAddress] = {
+          tokenAddresses,
+          seasonsArray,
+          amountsArray
+        };
+      }
+    }
+
+    return result;
+  }*/
+
+
+  // function reformatData(data) {
+  //   const result = {};
+  
+  //   for (const address in data) {
+  //     const tokenAddresses = Object.keys(data[address]);
+  
+  //     for (const tokenAddress of tokenAddresses) {
+  //       const tokenData = data[address][tokenAddress];
+  //       const seasonIds = Object.keys(tokenData);
+  
+  //       for (const seasonId of seasonIds) {
+  //         const seasonData = tokenData[seasonId];
+  //         const deposit = `${address}-${tokenAddress}-${seasonId}`;
+  
+  //         if (!result[deposit]) {
+  //           result[deposit] = {
+  //             tokens: [],
+  //             seasons: [],
+  //             amounts: [],
+  //           };
+  //         }
+  
+  //         result[deposit].tokens.push(tokenAddresses);
+  //         result[deposit].seasons.push(seasonsArray);
+  //         result[deposit].amounts.push(amountsArray);
+  //       }
+  //     }
+  //   }
+  
+  //   return result;
+  // }
+
+  function reformatData(data) {
+    let reformattedData = {};
+   
+    Object.keys(data).forEach(address => {
+      let tokens = [];
+      let seasons = [];
+      let amounts = [];
+   
+      Object.keys(data[address]).forEach(token => {
+        tokens.push(token);
+        let season = [];
+        let amount = [];
+        Object.keys(data[address][token]).forEach(sea => {
+          season.push(sea);
+          amount.push(data[address][token][sea].amount);
+        });
+        seasons.push(season);
+        amounts.push(amount);
+      });
+   
+      reformattedData[address] = {
+        "tokens": tokens,
+        "seasons": seasons,
+        "amounts": amounts
+      };
+    });
+   
+    return reformattedData;
+   }
+
+  const queryEvents = async (eventSignature, interface, startBlock) => {
+    const eventTopic = ethers.utils.id(eventSignature);
+    // Create the filter object
+    const filter = {
+      fromBlock: startBlock,
+      toBlock: END_BLOCK,
+      address: contract.address,
+      topics: [eventTopic]
+    };
+    const events = await contract.provider.getLogs(filter, 0, END_BLOCK);
+    const updatedEvents = events.map((eventLog) => {
+      let parsedLog;
+      parsedLog = interface.parseLog(eventLog);
+      if (parsedLog) {
+        const { args } = parsedLog;
+        eventLog = { ...eventLog, ...args };
+        const eventName = eventSignature.split("(")[0];
+        eventLog["event"] = eventName;
+      }
+      return eventLog;
+    });
+    return updatedEvents;
+  };
+
+  //get deposits for a sample big depositor, verify they can migrate their deposits correctly
+  describe('properly migrates deposits', function () {
+    it('for all depositors', async function () {
+
+      console.log('start load');
+
+      let deposits = JSON.parse(await fs.readFileSync(__dirname + '/../../projects/ui/src/functions/silov3/data/raw/deposits.json')); 
+      let merkleData = JSON.parse(await fs.readFileSync(__dirname + '/../../projects/ui/src/functions/silov3/data/raw/merkle.json')); 
+
+      // console.log('deposits: ', deposits);
+
+
+      const oldRemoveDepositAbi = [
+        {
+            anonymous: false,
+            inputs: [
+            { indexed: true, internalType: "address", name: "account", type: "address" },
+            { indexed: true, internalType: "address", name: "token", type: "address" },
+            { indexed: false, internalType: "uint32", name: "season", type: "uint32" },
+            { indexed: false, internalType: "uint256", name: "amount", type: "uint256" },
+            ],
+            name: "RemoveDeposit",
+            type: "event",
+        },
+    ];
+
+      const removeDepositInterface = new ethers.utils.Interface(oldRemoveDepositAbi);
+
+      //get every transaction that emitted the RemoveDeposit event after block 17251905
+      let events = await queryEvents("RemoveDeposit(address,address,uint32,uint256)", removeDepositInterface, 17251905);
+      console.log('events: ', events);
+
+      //log number of deposits
+      console.log('deposits before: ', Object.keys(deposits).length);
+
+      //loop through events
+      for (let i = 0; i < events.length; i++) {
+        let event = events[i];
+
+        //get account from event
+        let account = event.account;
+        //if this account is in the deposits file, remove the entire account
+        if (deposits[account]) {
+          delete deposits[account];
+        }
+        
+      }
+
+      console.log('deposits remaining unmigrated: ', Object.keys(deposits).length);
+
+      var depositsReformatted = reformatData(deposits)
+
+      
+      const eventsInterface = new ethers.utils.Interface(eventsAbi);
+      var totalGasUsed = BigNumber.from(0);
+
+      var progress = 0;
+      for (const depositorAddress in depositsReformatted) {
+          console.log('progress:', progress, 'depositorAddress: ', depositorAddress, 'totalGasUsed: ', totalGasUsed);
+
+          // if (depositorAddress == '0x2f0087909A6f638755689d88141F3466F582007d'
+          // || depositorAddress == '0x3B0f3233C6A02BEF203A8B23c647d460Dffc6aa7') {
+          //   console.log('skipping this one for now');
+          //   continue;
+          // }
+
+
+          const tokens = depositsReformatted[depositorAddress]['tokens'];
+          const seasons = depositsReformatted[depositorAddress]['seasons'];
+          const amounts = depositsReformatted[depositorAddress]['amounts'];
+          // console.log('here 1');
+          let stalkDiff = 0;
+          let seedsDiff = 0;
+          let proof = [];
+
+          if (merkleData[depositorAddress]) {
+            stalkDiff = merkleData[depositorAddress]['stalk'];
+            seedsDiff = merkleData[depositorAddress]['seeds'];
+            proof = merkleData[depositorAddress]['proof'];
+          }
+          // console.log('here 2');
+          const depositorSigner = await impersonateSigner(depositorAddress);
+          mintEth(depositorAddress);
+          await this.silo.connect(depositorSigner);
+          console.log('depositorAddress: ', depositorAddress);
+          console.log('tokens: ', tokens);
+          console.log('seasons: ', seasons);
+          console.log('amounts: ', amounts);
+          console.log('stalkDiff: ', stalkDiff);
+          console.log('seedsDiff: ', seedsDiff);
+          console.log('proof: ', proof);
+          // console.log('here 3');
+          const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
+          // console.log('here 4');
+          const receipt = await migrateResult.wait();
+          //get gas used
+          const gasUsed = receipt.gasUsed;
+          totalGasUsed = totalGasUsed.add(gasUsed);
+          // console.log('here 5');
+          progress++;
+      }
+
+      console.log('final totalGasUsed: ', totalGasUsed);
+    });
+  });
 });
