@@ -628,6 +628,7 @@ describe('Silo V3: migrate stragglers', function () {
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+    this.farm = await ethers.getContractAt('FarmFacet', this.diamond)
   });
 
   beforeEach(async function () {
@@ -803,8 +804,7 @@ describe('Silo V3: migrate stragglers', function () {
       const removeDepositInterface = new ethers.utils.Interface(oldRemoveDepositAbi);
 
       //get every transaction that emitted the RemoveDeposit event after block 17251905
-      let events = await queryEvents("RemoveDeposit(address,address,uint32,uint256)", removeDepositInterface, 17251905);
-      console.log('events: ', events);
+      let events = await queryEvents("RemoveDeposit(address,address,uint32,uint256)", removeDepositInterface, 17251905); //update this block to latest block when running actual script, in theory someone could have migrated meanwhile
 
       //log number of deposits
       console.log('deposits before: ', Object.keys(deposits).length);
@@ -812,39 +812,32 @@ describe('Silo V3: migrate stragglers', function () {
       //loop through events
       for (let i = 0; i < events.length; i++) {
         let event = events[i];
-
         //get account from event
         let account = event.account;
         //if this account is in the deposits file, remove the entire account
         if (deposits[account]) {
           delete deposits[account];
         }
-        
       }
 
       console.log('deposits remaining unmigrated: ', Object.keys(deposits).length);
 
       var depositsReformatted = reformatData(deposits)
 
-      
-      const eventsInterface = new ethers.utils.Interface(eventsAbi);
       var totalGasUsed = BigNumber.from(0);
+
+      var batchIntoGroupsOf = 30;
+
+      var nextToMigrate = [];
 
       var progress = 0;
       for (const depositorAddress in depositsReformatted) {
           console.log('progress:', progress, 'depositorAddress: ', depositorAddress, 'totalGasUsed: ', totalGasUsed);
 
-          // if (depositorAddress == '0x2f0087909A6f638755689d88141F3466F582007d'
-          // || depositorAddress == '0x3B0f3233C6A02BEF203A8B23c647d460Dffc6aa7') {
-          //   console.log('skipping this one for now');
-          //   continue;
-          // }
-
-
           const tokens = depositsReformatted[depositorAddress]['tokens'];
           const seasons = depositsReformatted[depositorAddress]['seasons'];
           const amounts = depositsReformatted[depositorAddress]['amounts'];
-          // console.log('here 1');
+
           let stalkDiff = 0;
           let seedsDiff = 0;
           let proof = [];
@@ -854,24 +847,30 @@ describe('Silo V3: migrate stragglers', function () {
             seedsDiff = merkleData[depositorAddress]['seeds'];
             proof = merkleData[depositorAddress]['proof'];
           }
-          // console.log('here 2');
+
           const depositorSigner = await impersonateSigner(depositorAddress);
           mintEth(depositorAddress);
           await this.silo.connect(depositorSigner);
-          console.log('depositorAddress: ', depositorAddress);
-          console.log('tokens: ', tokens);
-          console.log('seasons: ', seasons);
-          console.log('amounts: ', amounts);
-          console.log('stalkDiff: ', stalkDiff);
-          console.log('seedsDiff: ', seedsDiff);
-          console.log('proof: ', proof);
-          // console.log('here 3');
-          const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
-          // console.log('here 4');
-          const receipt = await migrateResult.wait();
-          //get gas used
-          const gasUsed = receipt.gasUsed;
-          totalGasUsed = totalGasUsed.add(gasUsed);
+
+          //use farm to call mowAndMigrate
+          const migrateEncoded = this.migrate.interface.encodeFunctionData('mowAndMigrate', [depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof]);
+
+          nextToMigrate.push(migrateEncoded);
+
+          //address is last depositor in depositors list
+          if (nextToMigrate.length == batchIntoGroupsOf || '0xb3ce85df372271f37dbb40c21aca38acacbb315f' == depositorAddress) {
+
+            const migrateResult = await this.farm.connect(depositorSigner).farm(nextToMigrate);
+
+            // const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
+
+            const receipt = await migrateResult.wait();
+            const gasUsed = receipt.gasUsed;
+            console.log('gasUsed: ', gasUsed);
+            totalGasUsed = totalGasUsed.add(gasUsed);
+            nextToMigrate = [];
+          }
+
           // console.log('here 5');
           progress++;
       }
