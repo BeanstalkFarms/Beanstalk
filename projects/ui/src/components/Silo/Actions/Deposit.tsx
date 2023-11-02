@@ -563,7 +563,7 @@ const DepositPropProvider: FC<{
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        console.log('Deposite Failed: ', err);
+        console.log('Deposit Failed: ', err);
         if (txToast) {
           txToast.error(err);
         } else {
