@@ -257,6 +257,19 @@ const ConvertForm: FC<
     [tokenIn.isUnripe]
   );
 
+  const getConvertWarning = () => {
+    let pool = tokenIn.isLP ? tokenIn.symbol : tokenOut!.symbol;
+    pool += ' pool';
+    if (['urBEANETH', 'urBEAN'].includes(tokenIn.symbol)) pool = 'BEANETH Well';
+
+    const lowerOrGreater =
+      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'lower' : 'greater';
+
+    const message = `${tokenIn.symbol} can only be Converted to ${tokenOut?.symbol} when deltaB in the ${pool} is ${lowerOrGreater} than 0.`;
+
+    return message;
+  };
+
   return (
     <Form noValidate autoComplete="off">
       <TokenSelectDialogNew
@@ -327,9 +340,7 @@ const ConvertForm: FC<
         {!canConvert && tokenOut && maxAmountIn && depositedAmount.gt(0) ? (
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
-              {tokenIn.symbol} can only be Converted to {tokenOut?.symbol} when
-              deltaB in the {tokenIn.isLP ? tokenIn.symbol : tokenOut.symbol} pool is{' '}
-              {tokenIn.isLP || tokenIn.symbol === 'urBEAN3CRV' ? 'lower' : 'greater'} than 0.
+              {getConvertWarning()}
               <br />
             </WarningAlert>
           </Box>
@@ -589,6 +600,11 @@ const ConvertPropProvider: FC<{
         const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
+
+        const lpConversion =
+          tokenOut.equals(sdk.tokens.BEAN_ETH_WELL_LP) ||
+          tokenIn.address.toLowerCase() ===
+            sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase();
 
         const convertTxn = new ConvertFarmStep(
           sdk,

@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { FarmToMode, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
+import { useFormikContext } from 'formik';
 import { ZERO_BN } from '~/constants';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 
@@ -113,6 +114,7 @@ export type FormTxnSummaryMap = {
 export default function useFarmerFormTxnsSummary() {
   ///
   const sdk = useSdk();
+  const { values } = useFormikContext<any>();
 
   /// Farmer
   const farmerSilo = useFarmerSilo();
@@ -257,6 +259,7 @@ export default function useFarmerFormTxnsSummary() {
           {
             type: ActionType.RINSE,
             amount: rinsableSprouts,
+            destination: values.destination,
           },
         ],
       },
@@ -296,6 +299,7 @@ export default function useFarmerFormTxnsSummary() {
     revitalizedSeeds,
     revitalizedStalk,
     sdk.tokens,
+    values.destination
   ]);
 
   /**

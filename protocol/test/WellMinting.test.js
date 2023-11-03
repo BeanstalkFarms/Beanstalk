@@ -6,6 +6,7 @@ const { getBeanstalk, getBean } = require('../utils/contracts.js');
 const { whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const { advanceTime } = require('../utils/helpers.js');
+const { ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
@@ -23,6 +24,7 @@ describe('Well Minting', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bean = await getBean()
+    ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     await this.bean.mint(userAddress, to18('1'));
     [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
     await setEthUsdPrice('999.998018')
@@ -75,7 +77,7 @@ describe('Well Minting', function () {
       })
     })
 
-    it ("Captures a delta B > 0", async function () {
+    it("Captures a delta B > 0", async function () {
       expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('133789634067')
     })
   
@@ -125,14 +127,27 @@ describe('Well Minting', function () {
 
   })
 
-  it("Broken USD Oracle", async function () {
-    await setEthUsdPrice('0')
-    await advanceTime(3600)
-    await user.sendTransaction({
-      to: beanstalk.address,
-      value: 0
+  describe('it reverts on broken USD Oracle', async function () {
+    it("Broken Chainlink Oracle", async function () {
+      await setEthUsdPrice('0')
+      await advanceTime(3600)
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+      expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
     })
-    expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
+
+    it("Not Enough Chainlink Oracle Rounds", async function () {
+      await advanceTime(3600)
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+      const block = await ethers.provider.getBlock("latest");
+      await ethUsdChainlinkAggregator.setRound('1', to6('10000'), block.timestamp, block.timestamp, '1')
+      expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('0')
+    })
   })
   
 })

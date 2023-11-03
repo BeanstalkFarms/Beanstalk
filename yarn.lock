@@ -3341,7 +3341,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/hash@npm:5.7.0, @ethersproject/hash@npm:^5.0.4, @ethersproject/hash@npm:^5.6.1, @ethersproject/hash@npm:^5.7.0":
+"@ethersproject/hash@npm:5.7.0, @ethersproject/hash@npm:^5.0.4, @ethersproject/hash@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/hash@npm:5.7.0"
   dependencies:
@@ -3559,7 +3559,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/units@npm:5.7.0":
+"@ethersproject/units@npm:5.7.0, @ethersproject/units@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/units@npm:5.7.0"
   dependencies:
@@ -9006,24 +9006,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@snapshot-labs/snapshot.js@npm:^0.4.19":
-  version: 0.4.56
-  resolution: "@snapshot-labs/snapshot.js@npm:0.4.56"
+"@snapshot-labs/snapshot.js@npm:0.7.3":
+  version: 0.7.3
+  resolution: "@snapshot-labs/snapshot.js@npm:0.7.3"
   dependencies:
     "@ensdomains/eth-ens-namehash": ^2.0.15
     "@ethersproject/abi": ^5.6.4
     "@ethersproject/address": ^5.6.1
     "@ethersproject/bytes": ^5.6.1
     "@ethersproject/contracts": ^5.6.2
-    "@ethersproject/hash": ^5.6.1
+    "@ethersproject/hash": ^5.7.0
     "@ethersproject/providers": ^5.6.8
+    "@ethersproject/units": ^5.7.0
     "@ethersproject/wallet": ^5.6.2
     ajv: ^8.11.0
     ajv-formats: ^2.1.1
-    cross-fetch: ^3.1.5
+    cross-fetch: ^3.1.6
     json-to-graphql-query: ^2.2.4
     lodash.set: ^4.3.2
-  checksum: 726dd76f8d76809546c032ec2b74991fa5a7f18d7cb162d8142a63d620c735a1174d7154d28685c770e021adec4abfb031c8aff6cdc073daf1623a010de0f8c8
+  checksum: 0db42bdf74a7beb0868ce08e93d06146313cca81fd3e39247b80fc7b34ce4e802bdc8f3e778a9fc32484bddd0789a6da7f4b07997f669332cf88a4c0ee8211e4
   languageName: node
   linkType: hard
 
@@ -18322,6 +18323,15 @@ __metadata:
   dependencies:
     node-fetch: 2.6.7
   checksum: f6b8c6ee3ef993ace6277fd789c71b6acf1b504fd5f5c7128df4ef2f125a429e29cd62dc8c127523f04a5f2fa4771ed80e3f3d9695617f441425045f505cf3bb
+  languageName: node
+  linkType: hard
+
+"cross-fetch@npm:^3.1.6":
+  version: 3.1.8
+  resolution: "cross-fetch@npm:3.1.8"
+  dependencies:
+    node-fetch: ^2.6.12
+  checksum: 78f993fa099eaaa041122ab037fe9503ecbbcb9daef234d1d2e0b9230a983f64d645d088c464e21a247b825a08dc444a6e7064adfa93536d3a9454b4745b3632
   languageName: node
   linkType: hard
 
@@ -27690,9 +27700,9 @@ __metadata:
   linkType: hard
 
 "json-to-graphql-query@npm:^2.2.4":
-  version: 2.2.4
-  resolution: "json-to-graphql-query@npm:2.2.4"
-  checksum: 3caced3bfc59c4aa26632f8a96fa8cc356dd4b82a6cc9c64a16d2eb262d8ac539ed584ca51552a9cde24beb2735f15feaf611619e10182098bdb33d63b2bf5df
+  version: 2.2.5
+  resolution: "json-to-graphql-query@npm:2.2.5"
+  checksum: f35e8a7ecf1d2e567b0b17ddd67ccf3b3cd4739034272a8a1745b5bdad9ecd3fcf4078a18517fdd15b5dd0c877784a99001d443685510ea0fbed5ed5e028d706
   languageName: node
   linkType: hard
 
@@ -30824,7 +30834,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.6.8":
+"node-fetch@npm:^2.6.12, node-fetch@npm:^2.6.8":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
   dependencies:
@@ -38140,7 +38150,7 @@ __metadata:
     "@netlify/functions": ^1.0.0
     "@reduxjs/toolkit": ^1.5.0
     "@rollup/plugin-strip": ^2.1.0
-    "@snapshot-labs/snapshot.js": ^0.4.19
+    "@snapshot-labs/snapshot.js": 0.7.3
     "@storybook/addon-actions": ^6.5.0
     "@storybook/addon-essentials": ^6.5.0
     "@storybook/addon-interactions": ^6.5.0

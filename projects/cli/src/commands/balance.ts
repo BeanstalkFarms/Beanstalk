@@ -9,9 +9,20 @@ export const balance = async (sdk, { account, symbol }) => {
     res.push(await getBal(sdk, symbol, account));
   } else {
     const bals = await Promise.all(
-      ["ETH", "WETH", "BEAN", "USDT", "USDC", "DAI", "CRV3", "UNRIPE_BEAN", "UNRIPE_BEAN_CRV3", "BEAN_CRV3_LP", "ROOT"].map((s) =>
-        getBal(sdk, s, account)
-      )
+      [
+        "ETH",
+        "WETH",
+        "BEAN",
+        "USDT",
+        "USDC",
+        "DAI",
+        "CRV3",
+        "UNRIPE_BEAN",
+        "UNRIPE_BEAN_WETH",
+        "BEAN_CRV3_LP",
+        "BEAN_ETH_WELL_LP",
+        "ROOT"
+      ].map((s) => getBal(sdk, s, account))
     );
     res.push(...bals);
   }

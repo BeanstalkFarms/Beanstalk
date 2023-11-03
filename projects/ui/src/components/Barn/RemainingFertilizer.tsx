@@ -69,7 +69,7 @@ const RemainingFertilizer: FC<{}> = () => {
               <Typography variant="body1">
                 Available Fertilizer&nbsp;
                 <Tooltip
-                  title="The number of Fertilizer that can be bought from Beanstalk in exchange for 1 USDC each."
+                  title="The number of Fertilizer that can be bought from Beanstalk in exchange for 1 USD worth of ETH."
                   placement={isMobile ? 'top' : 'bottom'}
                 >
                   <HelpOutlineIcon

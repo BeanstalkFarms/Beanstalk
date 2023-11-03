@@ -220,6 +220,7 @@ export type SellPodsAction = {
 export type RinseAction = {
   type: ActionType.RINSE;
   amount: BigNumber;
+  destination?: FarmToMode;
   hideGraphic?: boolean;
 };
 
@@ -391,7 +392,7 @@ export const parseActionMessage = (a: Action) => {
       return `Rinse ${displayFullBN(
         a.amount,
         SPROUTS.displayDecimals
-      )} Sprouts.`;
+      )} Sprouts${a.destination ? ` and send to your ${copy.MODES[a.destination]}.` : `.`}`;
     case ActionType.BUY_FERTILIZER:
       return `Buy ${displayFullBN(a.amountIn, 2)} Fertilizer at ${displayFullBN(
         a.humidity.multipliedBy(100),

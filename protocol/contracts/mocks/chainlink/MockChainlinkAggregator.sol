@@ -44,6 +44,8 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
             uint80 answeredInRound
         )
     {
+        if (_roundId > lastRound) revert();
+        if (_roundId == 0) revert();
         roundId = _roundId;
         answer = answers[_roundId];
         startedAt = startedAts[_roundId];
@@ -63,6 +65,7 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
             uint80 answeredInRound
         )
     {
+        if (lastRound == 0) revert();
         roundId = lastRound;
         answer = answers[lastRound];
         startedAt = startedAts[lastRound];
@@ -81,6 +84,19 @@ contract MockChainlinkAggregator is IChainlinkAggregator {
         startedAts[lastRound] = startedAt;
         updatedAts[lastRound] = updatedAt;
         answeredInRounds[lastRound] = answeredInRound;
+    }
+
+    function setRound(
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) external {
+        answers[roundId] = answer;
+        startedAts[roundId] = startedAt;
+        updatedAts[roundId] = updatedAt;
+        answeredInRounds[roundId] = answeredInRound;
     }
 
     function setDecimals(
