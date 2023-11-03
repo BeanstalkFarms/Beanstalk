@@ -46,7 +46,7 @@ library LibIncentive {
     uint256 internal constant MAX_SUNRISE_GAS = 500_000; // 500k gas
 
     /// @dev Accounts for extra gas overhead for completing a Sunrise tranasaction.
-    // 21k gas (base cost for a transction) + ~79k gas for other overhead
+    // 21k gas (base cost for a transction) + ~29 gas for other overhead
     uint256 internal constant SUNRISE_GAS_OVERHEAD = 50_000; // 50k gas
 
     /// @dev Use external contract for block.basefee as to avoid upgrading existing contracts to solidity v8
