@@ -22,11 +22,19 @@ library LibWell {
 
     using SafeMath for uint256;
 
+    function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
+        uint[] memory ratios,
+        uint beanIndex,
+        bool success
+    ) {
+        return getRatiosAndBeanIndex(tokens, 0);
+    }
+
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
      */
-    function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
+    function getRatiosAndBeanIndex(IERC20[] memory tokens, uint256 lookback) internal view returns (
         uint[] memory ratios,
         uint beanIndex,
         bool success
@@ -39,7 +47,7 @@ library LibWell {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]));
+                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
                 if (ratios[i] == 0) {
                     success = false;
                 }

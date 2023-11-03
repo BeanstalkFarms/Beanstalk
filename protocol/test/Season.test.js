@@ -70,7 +70,7 @@ describe('Season', function () {
     })
 
     describe("oracle not initialized, previous balance > 0", async function () {
-        it.skip('season incentive', async function () {
+        it('season incentive', async function () {
             this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
             await this.beanMetapool.set_A_precise('1000');
             await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
@@ -79,12 +79,12 @@ describe('Season', function () {
 
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('10700000', '10800000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('10500000', '10600000')
         })
     })
 
     describe("oracle initialized", async function () {
-        it.skip('season incentive', async function () {
+        it('season incentive', async function () {
             this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
             await this.beanMetapool.set_A_precise('1000');
             await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
@@ -95,7 +95,7 @@ describe('Season', function () {
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)  
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('10500000', '10600000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('10200000', '10300000')
         })
     })
 })
