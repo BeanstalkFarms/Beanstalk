@@ -70,7 +70,7 @@ export default function useDataFeedTokenPrices() {
       usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
       ethPriceFeed.getEthUsdPrice(),
-      ethPriceFeed.getEthUsdTwa(900),
+      ethPriceFeed.getEthUsdTwa(1800),
       crv3Pool.get_virtual_price(),
     ]);
 
