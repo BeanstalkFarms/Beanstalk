@@ -76,11 +76,11 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>Instantaneous ETH Price:</div>
-          <div>${tokenPrices["ETH-instant"]?.toFixed(2) || 0}</div>
+          <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>Time-Weighted ETH Price:</div>
-          <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
+          <div>${tokenPrices["ETH-TWA"]?.toFixed(2) || 0}</div>
         </Box>
       </Box>
     </div>

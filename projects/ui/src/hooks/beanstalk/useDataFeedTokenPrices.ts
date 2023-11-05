@@ -70,7 +70,7 @@ export default function useDataFeedTokenPrices() {
       usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
       ethPriceFeed.getEthUsdPrice(),
-      ethPriceFeed.getEthUsdTwa(1800),
+      ethPriceFeed.getEthUsdTwa(3600),
       crv3Pool.get_virtual_price(),
     ]);
 
@@ -103,15 +103,15 @@ export default function useDataFeedTokenPrices() {
     }
     if (ethPrice && ethPriceTWA) {
       priceDataCache[eth.address] = getBNResult(
-        ethPriceTWA,
+        ethPrice,
         6
       );
       priceDataCache[weth.address] = getBNResult(
-        ethPriceTWA,
+        ethPrice,
         6
       );
-      priceDataCache["ETH-instant"] = getBNResult(
-        ethPrice,
+      priceDataCache["ETH-TWA"] = getBNResult(
+        ethPriceTWA,
         6
       );
     }
