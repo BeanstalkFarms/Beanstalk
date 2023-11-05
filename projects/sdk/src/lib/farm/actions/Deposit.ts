@@ -17,7 +17,7 @@ export class Deposit extends StepClass<BasicPreparedResult> {
     // Checking if the user isn't directly depositing BEANETH
     const indirectBeanEth = this.token.symbol === "BEANETH" && context.step.index > 0;
     const beanEthClipboard = {
-      tag: "depositAmount", 
+      tag: `deposit${context.step.index}Amount`, 
       copySlot: 6, 
       pasteSlot: 1
     };

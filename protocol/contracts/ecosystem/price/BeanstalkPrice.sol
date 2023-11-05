@@ -15,6 +15,13 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
         P.Pool[] ps;
     }
 
+    /**
+     * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
+     * Bean in the following liquidity pools:
+     * - Curve Bean:3Crv Metapool
+     * - Constant Product Bean:Eth Well
+     * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
+    **/
     function price() external view returns (Prices memory p) {
         p.ps = new P.Pool[](2);
         p.ps[0] = getCurve();
