@@ -517,14 +517,16 @@ const TxnPreview: FC<{
                   return null;
                 })}
                 {customOrder
-                  ? actions.map((action, index) => (
-                      <TxnStep
-                        key={index}
-                        type={action!.type}
-                        actions={[action!]}
-                        highlighted={highlighted}
-                      />
-                    ))
+                  ? actions.map((action, index) => 
+                      action ? (
+                        <TxnStep
+                          key={index}
+                          type={action.type}
+                          actions={[action]}
+                          highlighted={highlighted}
+                        />
+                      ) : null
+                    )
                   : EXECUTION_STEPS.map((step, index) =>
                       instructionsByType[step] ? (
                         <TxnStep
