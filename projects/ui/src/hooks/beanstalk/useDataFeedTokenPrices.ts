@@ -9,7 +9,6 @@ import {
   DAI_CHAINLINK_ADDRESSES,
   USDT_CHAINLINK_ADDRESSES,
   USDC_CHAINLINK_ADDRESSES,
-  ETH_CHAINLINK_ADDRESS,
 } from '../../constants/addresses';
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { AppState } from '../../state/index';
@@ -41,7 +40,7 @@ export default function useDataFeedTokenPrices() {
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
   const usdcPriceFeed = useAggregatorV3Contract(USDC_CHAINLINK_ADDRESSES);
-  const ethPriceFeed = useAggregatorV3Contract(ETH_CHAINLINK_ADDRESS);
+  const ethPriceFeed = sdk.contracts.usdOracle;
   const crv3Pool = sdk.contracts.curve.pools.pool3;
   const getChainToken = useGetChainToken();
   const dispatch = useDispatch();
@@ -60,8 +59,8 @@ export default function useDataFeedTokenPrices() {
       usdtPriceDecimals,
       usdcPriceData,
       usdcPriceDecimals,
-      ethPriceData,
-      ethPriceDecimals,
+      ethPrice,
+      ethPriceTWA,
       crv3Price,
     ] = await Promise.all([
       daiPriceFeed.latestRoundData(),
@@ -70,8 +69,8 @@ export default function useDataFeedTokenPrices() {
       usdtPriceFeed.decimals(),
       usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
-      ethPriceFeed.latestRoundData(),
-      ethPriceFeed.decimals(),
+      ethPriceFeed.getEthUsdPrice(),
+      ethPriceFeed.getEthUsdTwa(3600),
       crv3Pool.get_virtual_price(),
     ]);
 
@@ -102,14 +101,18 @@ export default function useDataFeedTokenPrices() {
         usdcPriceDecimals
       );
     }
-    if (ethPriceData && ethPriceDecimals) {
+    if (ethPrice && ethPriceTWA) {
       priceDataCache[eth.address] = getBNResult(
-        ethPriceData.answer,
-        ethPriceDecimals
+        ethPrice,
+        6
       );
       priceDataCache[weth.address] = getBNResult(
-        ethPriceData.answer,
-        ethPriceDecimals
+        ethPrice,
+        6
+      );
+      priceDataCache["ETH-TWA"] = getBNResult(
+        ethPriceTWA,
+        6
       );
     }
     if (crv3Price) {

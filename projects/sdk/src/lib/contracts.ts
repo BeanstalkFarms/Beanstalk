@@ -27,7 +27,9 @@ import {
   BeanstalkPrice__factory,
   BeanstalkPrice,
   Math,
-  Math__factory
+  Math__factory,
+  UsdOracle,
+  UsdOracle__factory,
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
 
@@ -58,6 +60,7 @@ export class Contracts {
   public readonly depot: Depot; // temp
   public readonly root: Root;
   public readonly math: Math;
+  public readonly usdOracle: UsdOracle;
 
   public readonly curve: CurveContracts;
 
@@ -75,6 +78,7 @@ export class Contracts {
     const depotAddress = sdk.addresses.DEPOT.get(sdk.chainId);
     const mathAddress = sdk.addresses.MATH.get(sdk.chainId);
     const rootAddress = sdk.addresses.ROOT.get(sdk.chainId);
+    const usdOracleAddress = sdk.addresses.USD_ORACLE.get(sdk.chainId);
 
     const beancrv3Address = sdk.addresses.BEAN_CRV3.get(sdk.chainId);
     const pool3Address = sdk.addresses.POOL3.get(sdk.chainId);
@@ -93,6 +97,7 @@ export class Contracts {
     this.depot = Depot__factory.connect(depotAddress, sdk.providerOrSigner);
     this.math = Math__factory.connect(mathAddress, sdk.providerOrSigner);
     this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
+    this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
 
     const beanCrv3 = CurveMetaPool__factory.connect(beancrv3Address, sdk.providerOrSigner);
     const pool3 = Curve3Pool__factory.connect(pool3Address, sdk.providerOrSigner);
