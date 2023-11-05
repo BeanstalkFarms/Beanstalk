@@ -75,7 +75,11 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           <div>{beanTokenData.deltaB.gte(0) && '+'}{displayBN(beanTokenData.deltaB, true)}</div>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>ETH Price:</div>
+          <div>Instantaneous ETH Price:</div>
+          <div>${tokenPrices["ETH-instant"]?.toFixed(2) || 0}</div>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>Time-Weighted ETH Price:</div>
           <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
         </Box>
       </Box>
