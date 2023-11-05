@@ -291,8 +291,7 @@ const ConvertForm: FC<
           state={values.tokens[0]}
           handleQuote={handleQuote}
           displayQuote={(_amountOut) =>
-            _amountOut && 
-            amountIn &&
+            _amountOut &&
             deltaBDV && (
             <Tooltip
               title={getBDVTooltip(bdvIn, depositsBDV)}
