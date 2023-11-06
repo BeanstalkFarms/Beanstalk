@@ -1,6 +1,6 @@
-const fs = require('fs')
 const { BEANSTALK } = require("../test/utils/constants")
 const { impersonateBeanstalk } = require("./impersonate")
+const fs = require('fs')
 
 const FacetCutAction = {
   Add: 0,

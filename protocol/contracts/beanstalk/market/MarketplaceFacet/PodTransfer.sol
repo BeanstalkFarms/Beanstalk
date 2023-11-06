@@ -50,7 +50,7 @@ contract PodTransfer is ReentrancyGuard {
      * Internal
      **/
 
-    function __transferPlot(
+    function _transferPlot(
         address from,
         address to,
         uint256 index,
