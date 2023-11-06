@@ -143,8 +143,7 @@ describe('Depot', function () {
 
     describe("Permit Deposit and Transfer Deposits (multiple seasons)", async function () {
         beforeEach(async function () {
-            const permitSelector = await this.mockSilo.interface.getSighash("permitDeposit");
-            const nonce = await this.permit.nonces(permitSelector, user.address);
+            const nonce = await this.beanstalk.connect(user).depositPermitNonces(user.address);
             const signature = await signSiloDepositTokenPermit(user, user.address, this.depot.address, BEAN, to6('2'), nonce);
             permit = await this.depot.interface.encodeFunctionData('permitDeposit',
                 [
@@ -189,8 +188,7 @@ describe('Depot', function () {
 
     describe("Permit Deposit and Transfer Deposits (multiple tokens)", async function () {
         beforeEach(async function () {
-            const permitSelector = await this.mockSilo.interface.getSighash("permitDeposit");
-            const nonce = await this.permit.nonces(permitSelector, user.address);
+            const nonce = await this.beanstalk.connect(user).depositPermitNonces(user.address);
             const signature = await signSiloDepositTokensPermit(user, user.address, this.depot.address, [BEAN, this.siloToken.address], [to6('1'), to6('1')], nonce);
             permit = await this.depot.interface.encodeFunctionData('permitDeposits',
                 [
@@ -314,8 +312,7 @@ describe('Depot', function () {
 
     describe("Permit and Transfer ERC-20 token from Farm balances", async function () {
         beforeEach(async function () {
-            const permitSelector = await this.tokenFacet.interface.getSighash("permitToken");
-            const nonce = await this.permit.nonces(permitSelector, user.address);
+            const nonce = await this.beanstalk.tokenPermitNonces(user.address);
             const signature = await signTokenPermit(user, user.address, this.depot.address, BEAN, to6('1'), nonce);
 
             permit = this.beanstalk.interface.encodeFunctionData('permitToken', [

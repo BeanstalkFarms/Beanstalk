@@ -5,10 +5,10 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../../C.sol";
 import "../LibAppStorage.sol";
-import "../LibPermit.sol";
 
 /**
  * @title LibSiloPermit
@@ -26,6 +26,9 @@ import "../LibPermit.sol";
  */
 library LibSiloPermit {
 
+    bytes32 private constant DEPOSIT_PERMIT_HASHED_NAME = keccak256(bytes("SiloDeposit"));
+    bytes32 private constant DEPOSIT_PERMIT_HASHED_VERSION = keccak256(bytes("1"));
+    bytes32 private constant DEPOSIT_PERMIT_EIP712_TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 private constant DEPOSIT_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address token,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 private constant DEPOSITS_PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,address[] tokens,uint256[] values,uint256 nonce,uint256 deadline)");
 
