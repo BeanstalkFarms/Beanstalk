@@ -223,7 +223,7 @@ library LibGauge {
         // if so, update the average grown stalk per BDV per Season.
         // safemath not needed
         if (s.season.current - s.seedGauge.lastStalkGrowthUpdate >= 168) {
-            UpdateAverageStalkPerBdvPerSeason();
+            updateAverageStalkPerBdvPerSeason();
         }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
