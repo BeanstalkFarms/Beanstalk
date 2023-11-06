@@ -222,7 +222,7 @@ library LibGauge {
         // check if one week elapsed since the last seedGauge update.
         // if so, update the average grown stalk per BDV per Season.
         // safemath not needed
-        if (s.season.current - s.seedGauge.lastSeedGaugeUpdate >= 168) {
+        if (s.season.current - s.seedGauge.lastStalkGrowthUpdate >= 168) {
             updateStalkPerBdvPerSeason();
         }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
@@ -286,7 +286,7 @@ library LibGauge {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
-        s.seedGauge.lastSeedGaugeUpdate = s.season.current;
+        s.seedGauge.lastStalkGrowthUpdate = s.season.current;
         emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 
