@@ -23,6 +23,7 @@ import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 import usePeg from '~/hooks/beanstalk/usePeg';
 import { FC } from '~/types';
+import UpdateStalkButton from '~/components/Sun/UpdateStalkButton';
 
 const castField = (data: SunButtonQuery['fields'][number]) => ({
   season: new BigNumber(data.season),
@@ -87,7 +88,11 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const isLoading = season.eq(NEW_BN);
   const startIcon = isTiny ? undefined : (
     <img
-      src={bySeason[0]?.rewardBeans.eq(0) || awaiting ? drySeasonIcon : rainySeasonIcon}
+      src={
+        bySeason[0]?.rewardBeans.eq(0) || awaiting
+          ? drySeasonIcon
+          : rainySeasonIcon
+      }
       css={{
         width: 25,
         height: 25,
@@ -185,7 +190,8 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         })}
       </Stack>
       <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
-      <Box sx={{ p: 1 }}>
+      <Box sx={{ p: 1, display: 'flex', gap: '5px', flexDirection: 'column' }}>
+        <UpdateStalkButton />
         <SunriseButton />
       </Box>
     </Box>
