@@ -16,6 +16,7 @@ import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
+import { formatNum } from "src/utils/format";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -64,11 +65,11 @@ export const Wells = () => {
   }, [sdk, wells, address]);
 
   if (isLoading) {
-    return <Loading spinnerOnly />
+    return <Loading spinnerOnly />;
   }
 
   if (error) {
-    return <Error message={error?.message} errorOnly />
+    return <Error message={error?.message} errorOnly />;
   }
 
   function WellRow(well: any, index: any) {
@@ -118,7 +119,7 @@ export const Wells = () => {
             <TokenLogos>{logos}</TokenLogos>
             <TokenSymbols>{symbols.join("/")}</TokenSymbols>
           </WellDetail>
-          <Amount>${wellLiquidity[index] ? Number(wellLiquidity[index]!.toHuman()).toFixed(2) : "-.--"}</Amount>
+          <Amount>${formatNum(wellLiquidity[index], { minDecimals: 2 })}</Amount>
         </MobileContainer>
       </TableRow>
     );
