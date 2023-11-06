@@ -6778,6 +6778,19 @@
   },
   {
     "inputs": [],
+    "name": "getLastStalkGrowthRateUpdate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getLiquidityToSupplyRatio",
     "outputs": [
       {
@@ -6792,6 +6805,19 @@
   {
     "inputs": [],
     "name": "getNewAverageGrownStalkPerBdvPerSeason",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNextStalkGrowthRateUpdate",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6833,7 +6859,7 @@
           },
           {
             "internalType": "uint32",
-            "name": "lastSeedGaugeUpdate",
+            "name": "lastStalkGrowthUpdate",
             "type": "uint32"
           }
         ],
