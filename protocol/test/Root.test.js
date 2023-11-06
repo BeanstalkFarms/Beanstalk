@@ -30,8 +30,8 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const ZERO_BYTES = ethers.utils.formatBytes32String("0x0");
 const { time, mineUpTo } = require("@nomicfoundation/hardhat-network-helpers");
 
-let user, user2, owner;
-let userAddress, ownerAddress, user2Address;
+let user, user2, user3, owner;
+let userAddress, ownerAddress, user2Address, user3Address;
 
 let pru;
 
@@ -57,6 +57,10 @@ describe("Root", function () {
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
+    this.permit = await ethers.getContractAt(
+      "MockPermitFacet",
+      this.diamond.address
+    );
     this.season = await ethers.getContractAt(
       "MockSeasonFacet",
       this.diamond.address
@@ -466,9 +470,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -516,9 +521,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -566,9 +572,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -616,9 +623,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -666,9 +674,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -736,9 +745,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -822,7 +832,9 @@ describe("Root", function () {
 
           const nonce2 = await this.silo
             .connect(user2)
-            .depositPermitNonces(user2Address);
+            .deposit(this.siloToken.address, "1000", EXTERNAL);
+
+          const nonce2 = await this.permit.nonces(permitSelector, user2Address);
 
           this.signature2 = await signSiloDepositTokenPermit(
             user2,
@@ -871,9 +883,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
 
           this.signature = await signSiloDepositTokenPermit(
             user,
@@ -883,9 +896,7 @@ describe("Root", function () {
             "50000",
             nonce
           );
-          const nonce2 = await this.silo
-            .connect(user2)
-            .depositPermitNonces(user2Address);
+          const nonce2 = await this.permit.nonces(permitSelector, user2Address);
           this.signature2 = await signSiloDepositTokenPermit(
             user2,
             user2Address,
@@ -894,9 +905,7 @@ describe("Root", function () {
             "50000",
             nonce2
           );
-          const nonce3 = await this.silo
-            .connect(user3)
-            .depositPermitNonces(user3Address);
+          const nonce3 = await this.permit.nonces(permitSelector, user3Address);
           this.signature3 = await signSiloDepositTokenPermit(
             user3,
             user3Address,
@@ -1044,9 +1053,10 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            const nonce = await this.tokenFacet
-              .connect(user)
-              .tokenPermitNonces(userAddress);
+            const permitSelector = await this.tokenFacet.interface.getSighash(
+              "permitToken"
+            );
+            const nonce = await this.permit.nonces(permitSelector, userAddress);
 
             const sig = await signTokenPermit(
               user,
@@ -1265,24 +1275,23 @@ describe("Root", function () {
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-
-              await this.rootToken.connect(user2).mintWithTokenPermit(
-                [
-                  {
-                    token: this.siloToken.address,
-                    seasons: ["102"],
-                    amounts: ["1000"],
-                  },
-                ],
-                EXTERNAL,
-                1,
-                this.signature2.token,
-                this.signature2.value,
-                this.signature2.deadline,
-                this.signature2.split.v,
-                this.signature2.split.r,
-                this.signature2.split.s
-              );
+            await this.rootToken.connect(user2).mintWithTokenPermit(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["102"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              1,
+              this.signature2.token,
+              this.signature2.value,
+              this.signature2.deadline,
+              this.signature2.split.v,
+              this.signature2.split.r,
+              this.signature2.split.s
+            );
 
             await this.rootToken.connect(user).redeem(
               [
@@ -1307,7 +1316,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("990099009900991");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "990099009900991"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1324,9 +1335,7 @@ describe("Root", function () {
               "0"
             );
 
-            expect(await this.rootToken.balanceOf(userAddress)).to.eq(
-              "1"
-            );
+            expect(await this.rootToken.balanceOf(userAddress)).to.eq("1");
             expect(await this.rootToken.balanceOf(user2Address)).to.eq(
               "990099009900990"
             );
@@ -1361,24 +1370,23 @@ describe("Root", function () {
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-
-              await this.rootToken.connect(user2).mintWithTokenPermit(
-                [
-                  {
-                    token: this.siloToken.address,
-                    seasons: ["2"],
-                    amounts: ["1000"],
-                  },
-                ],
-                EXTERNAL,
-                1,
-                this.signature2.token,
-                this.signature2.value,
-                this.signature2.deadline,
-                this.signature2.split.v,
-                this.signature2.split.r,
-                this.signature2.split.s
-              );
+            await this.rootToken.connect(user2).mintWithTokenPermit(
+              [
+                {
+                  token: this.siloToken.address,
+                  seasons: ["2"],
+                  amounts: ["1000"],
+                },
+              ],
+              EXTERNAL,
+              1,
+              this.signature2.token,
+              this.signature2.value,
+              this.signature2.deadline,
+              this.signature2.split.v,
+              this.signature2.split.r,
+              this.signature2.split.s
+            );
 
             await this.rootToken.connect(user2).redeem(
               [
@@ -1403,7 +1411,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1423,9 +1433,7 @@ describe("Root", function () {
             expect(await this.rootToken.balanceOf(userAddress)).to.eq(
               "1000000000000000"
             );
-            expect(await this.rootToken.balanceOf(user2Address)).to.eq(
-              "0"
-            );
+            expect(await this.rootToken.balanceOf(user2Address)).to.eq("0");
           });
         });
 
@@ -1574,7 +1582,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("995024875621891");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "995024875621891"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1900,7 +1910,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1955,7 +1967,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -1999,7 +2013,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("900000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "900000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2051,7 +2067,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000250000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000250000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2112,7 +2130,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2179,7 +2199,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000999999999999");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000999999999999"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2246,7 +2268,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2330,7 +2354,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("3000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "3000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2420,7 +2446,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("3002999999999998");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "3002999999999998"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2458,9 +2486,10 @@ describe("Root", function () {
             .deposit(this.siloToken.address, "1000", EXTERNAL);
         });
         it("reverts if token is not whitelisted", async function () {
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -2496,9 +2525,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -2534,9 +2564,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -2572,9 +2603,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -2610,9 +2642,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokenPermit(
             user,
             userAddress,
@@ -2648,9 +2681,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
 
           this.signature = await signSiloDepositTokenPermit(
             user,
@@ -2688,9 +2722,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
 
           this.signature = await signSiloDepositTokenPermit(
             user,
@@ -2728,9 +2763,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
 
           this.signature = await signSiloDepositTokenPermit(
             user,
@@ -2740,9 +2776,7 @@ describe("Root", function () {
             "5000",
             nonce
           );
-          const nonce2 = await this.silo
-            .connect(user2)
-            .depositPermitNonces(user2Address);
+          const nonce2 = await this.permit.nonces(permitSelector, user2Address);
           this.signature2 = await signSiloDepositTokenPermit(
             user2,
             user2Address,
@@ -2751,9 +2785,7 @@ describe("Root", function () {
             "5000",
             nonce2
           );
-          const nonce3 = await this.silo
-            .connect(user3)
-            .depositPermitNonces(user3Address);
+          const nonce3 = await this.permit.nonces(permitSelector, user3Address);
           this.signature3 = await signSiloDepositTokenPermit(
             user3,
             user3Address,
@@ -2808,7 +2840,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2860,7 +2894,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("900000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "900000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2920,7 +2956,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000250000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000250000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -2998,7 +3036,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3081,7 +3121,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000999999999999");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000999999999999"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3163,7 +3205,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3271,7 +3315,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("3000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "3000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3385,7 +3431,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("3002999999999998");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "3002999999999998"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3422,9 +3470,10 @@ describe("Root", function () {
             .connect(user)
             .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
 
           this.signature = await signSiloDepositTokensPermit(
             user,
@@ -3464,9 +3513,10 @@ describe("Root", function () {
             .connect(user)
             .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokensPermit(
             user,
             userAddress,
@@ -3505,9 +3555,10 @@ describe("Root", function () {
             .connect(user)
             .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokensPermit(
             user,
             userAddress,
@@ -3543,9 +3594,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokensPermit(
             user,
             userAddress,
@@ -3581,9 +3633,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokensPermit(
             user,
             userAddress,
@@ -3619,9 +3672,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
 
           this.signature = await signSiloDepositTokensPermit(
             user,
@@ -3659,9 +3713,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokensPermit(
             user,
             userAddress,
@@ -3703,9 +3758,10 @@ describe("Root", function () {
             .connect(owner)
             .addWhitelistToken(this.siloToken.address);
 
-          const nonce = await this.silo
-            .connect(user)
-            .depositPermitNonces(userAddress);
+          const permitSelector = await this.silo.interface.getSighash(
+            "permitDeposit"
+          );
+          const nonce = await this.permit.nonces(permitSelector, userAddress);
           this.signature = await signSiloDepositTokensPermit(
             user,
             userAddress,
@@ -3714,9 +3770,7 @@ describe("Root", function () {
             ["5000000000"],
             nonce
           );
-          const nonce2 = await this.silo
-            .connect(user2)
-            .depositPermitNonces(user2Address);
+          const nonce2 = await this.permit.nonces(permitSelector, user2Address);
           this.signature2 = await signSiloDepositTokensPermit(
             user2,
             user2Address,
@@ -3725,9 +3779,7 @@ describe("Root", function () {
             ["5000"],
             nonce2
           );
-          const nonce3 = await this.silo
-            .connect(user3)
-            .depositPermitNonces(user3Address);
+          const nonce3 = await this.permit.nonces(permitSelector, user3Address);
           this.signature3 = await signSiloDepositTokensPermit(
             user3,
             user3Address,
@@ -3839,7 +3891,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000000000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000000000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3897,7 +3951,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("900000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "900000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -3959,7 +4015,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("1000250000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "1000250000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4044,7 +4102,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4131,7 +4191,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000999999999999");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000999999999999"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4217,7 +4279,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("2000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "2000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4331,7 +4395,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("3000000000000000");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "3000000000000000"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
@@ -4451,7 +4517,9 @@ describe("Root", function () {
           });
 
           it("correctly update total supply", async function () {
-            expect(await this.rootToken.totalSupply()).to.be.eq("3002999999999998");
+            expect(await this.rootToken.totalSupply()).to.be.eq(
+              "3002999999999998"
+            );
           });
 
           it("correctly update underlyingBdv", async function () {
