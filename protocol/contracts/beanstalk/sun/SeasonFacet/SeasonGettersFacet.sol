@@ -29,6 +29,8 @@ contract SeasonGettersFacet {
 
     AppStorage internal s;
 
+    uint256 constant ONE_WEEK = 168;
+
     //////////////////// SEASON GETTERS ////////////////////
 
     /**
@@ -186,6 +188,20 @@ contract SeasonGettersFacet {
      */
     function getBeanToMaxLpGpPerBdvRatioScaled() external view returns (uint256) {
         return LibGauge.getBeanToMaxLpGpPerBdvRatioScaled(s.seedGauge.beanToMaxLpGpPerBdvRatio);
+    }
+
+    /**
+     * @notice returns the season in which the stalk growth rate was last updated.
+     */
+    function getLastSeedGaugeUpdate() external view returns (uint256) {
+        return s.seedGauge.lastSeedGaugeUpdate;
+    }
+
+    /**
+     * @notice returns the next season in that beanstalk will update the stalk growth rate.
+     */
+    function getNextSeedGaugeUpdate() external view returns (uint256) {
+        return uint256(s.seedGauge.lastSeedGaugeUpdate).add(ONE_WEEK);
     }
 
     /**
