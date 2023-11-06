@@ -93,7 +93,7 @@ contract InitBipSeedGauge is Weather {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
         emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
-        emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         // initalize s.usdTokenPrice for the bean eth well.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;

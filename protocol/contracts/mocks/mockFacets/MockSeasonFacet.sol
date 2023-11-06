@@ -53,7 +53,7 @@ contract MockSeasonFacet is SeasonFacet  {
     event DeltaB(int256 deltaB);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event Incentivization(address indexed account, uint256 beans);
-    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
+    event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
     event UpdateGaugeSettings(
         address indexed token, 
         bytes4 selector,
