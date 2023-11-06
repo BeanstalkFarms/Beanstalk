@@ -13,6 +13,7 @@ import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
+import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 
 /**
  * @author Brean
@@ -28,6 +29,8 @@ interface IGaugePointFacet {
 
 contract InitBipSeedGauge is Weather {
     using SafeMath for uint256;
+    using LibSafeMathSigned96 for int96;
+
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
@@ -77,6 +80,11 @@ contract InitBipSeedGauge is Weather {
         ];
         uint96[5] memory optimalPercentDepositedBdv = [uint96(0), 99e6, 1e6, 0, 0];
         for (uint i = 0; i < siloTokens.length; i++) {
+            // previously, the milestone stem was stored truncated. The seed gauge system now stores
+            // the value untruncated, and thus needs to update all previous milestone stems. 
+            // This is a one time update, and will not be needed in the future.
+            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem.mul(1e6));
+
             // update gaugePoints and gpSelectors
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
