@@ -21,6 +21,7 @@ describe('Token', function () {
         const contracts = await deploy("Test", false, true)
         this.tokenFacet = await ethers.getContractAt('TokenFacet', contracts.beanstalkDiamond.address)
         this.farm = await ethers.getContractAt('FarmFacet', contracts.beanstalkDiamond.address)
+        this.permit = await ethers.getContractAt('MockPermitFacet', contracts.beanstalkDiamond.address);
 
         const MockToken = await ethers.getContractFactory('MockToken')
         this.token = await MockToken.connect(this.user).deploy('Mock', 'MOCK')
@@ -424,16 +425,12 @@ describe('Token', function () {
         })
     
         describe("Approve Token Permit", async function () {
-          describe('reverts', function () {
-            it('reverts if tokenPermitDomainSeparator is invalid', async function () {
-              expect(await this.tokenFacet.connect(this.user).tokenPermitDomainSeparator()).to.be.equal("0xd74031d32a83121ee5d7c0c14f2aac23c5603bf832f855c2e075ba6d0b20612e");
-            });
-          });
       
           describe("single token permit", async function() {
             describe('reverts', function () {
               it('reverts if permit expired', async function () {
-                const nonce = await this.tokenFacet.connect(this.user).tokenPermitNonces(this.user.address);
+                const selector = this.tokenFacet.interface.getSighash("permitToken");
+                const nonce = await this.permit.nonces(selector, this.user.address);
                 const signature = await signTokenPermit(this.user, this.user.address, this.user2.address, this.token.address, '1000', nonce, 1000);
                 await expect(this.tokenFacet.connect(this.user).permitToken(
                   signature.owner, 
@@ -448,7 +445,8 @@ describe('Token', function () {
               });
       
               it('reverts if permit invalid signature', async function () {
-                const nonce = await this.tokenFacet.connect(this.user).tokenPermitNonces(this.user.address);
+                const selector = this.tokenFacet.interface.getSighash("permitToken");
+                const nonce = await this.permit.nonces(selector, this.user.address);
                 const signature = await signTokenPermit(this.user, this.user.address, this.user2.address, this.token.address, '1000', nonce);
                 await expect(this.tokenFacet.connect(this.user).permitToken(
                   this.user2.address, 
@@ -466,7 +464,8 @@ describe('Token', function () {
             describe("approve permit", async function() {
               beforeEach(async function () {
                 // Create permit
-                const nonce = await this.tokenFacet.connect(this.user).tokenPermitNonces(this.user.address);
+                const selector = this.tokenFacet.interface.getSighash("permitToken");
+                const nonce = await this.permit.nonces(selector, this.user.address);
                 const signature = await signTokenPermit(this.user, this.user.address, this.user2.address, this.token.address, '1000', nonce);
                 this.result = await this.tokenFacet.connect(this.user).permitToken(
                   signature.owner, 
@@ -481,7 +480,8 @@ describe('Token', function () {
               });
       
               it("properly updates user permit nonce", async function() {
-                expect(await this.tokenFacet.tokenPermitNonces(this.user.address)).to.be.equal('1')
+                const selector = this.tokenFacet.interface.getSighash("permitToken");
+                expect(await this.permit.nonces(selector, this.user.address)).to.be.equal('1')
               });
       
               it('properly updates user token allowance', async function () {

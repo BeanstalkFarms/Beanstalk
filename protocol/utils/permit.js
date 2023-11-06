@@ -1,20 +1,22 @@
+const { BigNumber } = require("ethers");
+
 const MAX_INT =
   "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-async function getDomain() {
+async function getDomain(chainId) {
   return {
-    name: "SiloDeposit",
+    name: "Beanstalk",
     version: "1",
-    chainId: 1,
+    chainId,
     verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
   };
 }
 
-async function getTokenDomain() {
+async function getTokenDomain(chainId) {
   return {
-    name: "Token",
+    name: "Beanstalk",
     version: "1",
-    chainId: 1,
+    chainId,
     verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
   };
 }
@@ -128,7 +130,8 @@ async function signSiloDepositTokensPermit(
     deadline: deadline || MAX_INT,
   };
 
-  const domain = await getDomain();
+  const chainId = BigNumber.from(await provider.getChainId())
+  const domain = await getDomain(chainId);
   const typedData = createTypedDepositTokensPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 
@@ -153,7 +156,8 @@ async function signSiloDepositTokenPermit(
     deadline: deadline || MAX_INT,
   };
 
-  const domain = await getDomain();
+  const chainId = BigNumber.from(await provider.getChainId())
+  const domain = await getDomain(chainId);
   const typedData = createTypedDepositTokenPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 
@@ -178,7 +182,8 @@ async function signTokenPermit(
     deadline: deadline || MAX_INT,
   };
 
-  const domain = await getTokenDomain();
+  const chainId = BigNumber.from(await provider.getChainId())
+  const domain = await getTokenDomain(chainId);
   const typedData = createTypedTokenPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 

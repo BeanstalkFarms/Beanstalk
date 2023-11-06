@@ -109,7 +109,7 @@ contract Order is Listing {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
         
-        _transferPlot(msg.sender, o.account, index, start, amount);
+        __transferPlot(msg.sender, o.account, index, start, amount);
 
         if (s.podOrders[id] == 0) delete s.podOrders[id];
         
@@ -137,7 +137,7 @@ contract Order is Listing {
         
         if (s.podListings[index] != bytes32(0)) _cancelPodListing(msg.sender, index);
         
-        _transferPlot(msg.sender, o.account, index, start, amount);
+        __transferPlot(msg.sender, o.account, index, start, amount);
 
         if (s.podOrders[id] == 0) delete s.podOrders[id];
         

@@ -12,6 +12,7 @@ archived
 
 # Diamond Cut Outputs
 diamondCut-*.json
+.openzeppelin
 
 #Open Zeppelin Local Config
 .openzeppelin/unknown-1337.json

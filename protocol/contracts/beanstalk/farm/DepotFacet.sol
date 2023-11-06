@@ -26,7 +26,7 @@ contract DepotFacet {
      * @notice Pipe a PipeCall through Pipeline.
      * @param p PipeCall to pipe through Pipeline
      * @return result PipeCall return value
-    **/
+     **/
     function pipe(PipeCall calldata p)
         external
         payable
@@ -40,7 +40,7 @@ contract DepotFacet {
      * Does not support sending Ether in the call
      * @param pipes list of PipeCalls to pipe through Pipeline
      * @return results list of return values from each PipeCall
-    **/
+     **/
     function multiPipe(PipeCall[] calldata pipes)
         external
         payable
@@ -53,7 +53,7 @@ contract DepotFacet {
      * @notice Pipe multiple AdvancedPipeCalls through Pipeline.
      * @param pipes list of AdvancedPipeCalls to pipe through Pipeline
      * @return results list of return values from each AdvancedPipeCall
-    **/
+     **/
     function advancedPipe(AdvancedPipeCall[] calldata pipes, uint256 value)
         external
         payable
@@ -68,7 +68,7 @@ contract DepotFacet {
      * @param p PipeCall to pipe through Pipeline
      * @param value Ether value to send in Pipecall
      * @return result PipeCall return value
-    **/
+     **/
     function etherPipe(PipeCall calldata p, uint256 value)
         external
         payable
@@ -82,7 +82,7 @@ contract DepotFacet {
      * @notice Return the return value of a PipeCall without executing it.
      * @param p PipeCall to execute with a staticcall
      * @return result PipeCall return value
-    **/
+     **/
     function readPipe(PipeCall calldata p)
         external
         view
@@ -92,5 +92,26 @@ contract DepotFacet {
         // Use a static call to ensure no state modification
         (success, result) = p.target.staticcall(p.data);
         LibFunction.checkReturn(success, result);
+    }
+
+    /**
+     * @notice View function to return the PipeCall return value
+     * @dev if the return value is false, it reverts
+     * @param p A function call stored in PipeCall struct
+     * @return result The function call return data
+     **/
+    function validPipe(PipeCall calldata p)
+        external
+        view
+        returns (bytes memory result)
+    {
+        bool success;
+        // Use a static call to ensure no state modification
+        (success, result) = p.target.staticcall(p.data);
+
+        LibFunction.checkReturn(success, result);
+
+        bool res = abi.decode(result, (bool));
+        require(res, "Depot: Valid Pipe returned false");
     }
 }
