@@ -14,7 +14,7 @@ export const ERROR_STRINGS: Record<string, any> = {
 
   // Insufficient funds (< value + gasLimit * gasPrice)
   //   - transaction: the transaction attempted
-  INSUFFICIENT_FUNDS: 'Insufficient funds to complete the transaction.',
+  INSUFFICIENT_FUNDS: 'Insufficient ETH to execute this transaction.',
 
   // Nonce has already been used
   //   - transaction: the transaction attempted
