@@ -111,23 +111,19 @@ export const Well = () => {
     }
 
     observer.current.observe(node);
-
   }, []);
 
-  useEffect(() => () => {
-    if (observer.current) observer.current.disconnect();
-  }, [])
+  useEffect(
+    () => () => {
+      if (observer.current) observer.current.disconnect();
+    },
+    []
+  );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  if (loading)
-    return (
-      <Loading spinnerOnly />
-    );
+  if (loading) return <Loading spinnerOnly />;
 
-  if (error)
-    return (
-      <Error message={error?.message} errorOnly />
-    );
+  if (error) return <Error message={error?.message} errorOnly />;
 
   return (
     <Page>
@@ -180,7 +176,7 @@ export const Well = () => {
           </Item>
         </LiquiditySwapButtons>
         <LiquidityBoxContainer>
-          <LiquidityBox lpToken={well?.lpToken!} />
+          <LiquidityBox well={well} />
         </LiquidityBoxContainer>
         <LearnMoreContainer>
           <LearnMoreLabel onClick={toggle}>
