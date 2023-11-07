@@ -5,10 +5,6 @@ const { signERC2612Permit } = require("eth-permit");
 const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, PIPELINE, BEANSTALK } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const {
-    signBlueprint,
-    getNormalBlueprintData,
-} = require("./utils/tractor.js");
 
 let user, user2, owner;
 
@@ -17,14 +13,6 @@ describe('External Token', function () {
         [owner, user, user2] = await ethers.getSigners();
         const contracts = await deploy("Test", false, true);
         this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
-        this.tractor = await ethers.getContractAt(
-            "TractorFacet",
-            contracts.beanstalkDiamond.address
-        );
-        this.tokenSupport = await ethers.getContractAt(
-            "TokenSupportFacet",
-            contracts.beanstalkDiamond.address
-        );
 
         const Token = await ethers.getContractFactory("MockToken");
         this.token = await Token.deploy("Silo", "SILO")
@@ -123,32 +111,6 @@ describe('External Token', function () {
         })
     })
 
-    describe("Tractor transfer ERC-1155", async function () {
-        beforeEach(async function () {
-            await this.erc1155.mockMint(user.address, '0', '5')
-
-            const transfer = await this.tokenSupport.interface.encodeFunctionData(
-                "tractorTransferERC1155",
-                [this.erc1155.address, PIPELINE, '0', '2']
-            );
-            const blueprint = {
-                publisher: user.address,
-                data: getNormalBlueprintData([transfer]),
-                calldataCopyParams: [],
-                maxNonce: 100,
-                startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-                endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
-            };
-            await signBlueprint(blueprint, user);
-            await this.tractor.connect(user2).tractor(blueprint, "0x");
-        })
-
-        it('transfers ERC-1155', async function () {
-            expect(await this.erc1155.balanceOf(PIPELINE, '0')).to.be.equal('2')
-            expect(await this.erc1155.balanceOf(user.address, '0')).to.be.equal('3')
-        })
-    })
-
     describe("Batch Transfer ERC-1155", async function () {
         beforeEach(async function () {
             await this.erc1155.mockMint(user.address, '0', '5')
@@ -168,70 +130,11 @@ describe('External Token', function () {
         })
     })
 
-    describe("Tractor Batch Transfer ERC-1155", async function () {
-        beforeEach(async function () {
-            await this.erc1155.mockMint(user.address, '0', '5')
-            await this.erc1155.mockMint(user.address, '1', '10')
-
-            const transfer = await this.tokenSupport.interface.encodeFunctionData(
-                "tractorBatchTransferERC1155",
-                [this.erc1155.address, PIPELINE, ['0', '1'], ['2', '3']]
-            );
-            const blueprint = {
-                publisher: user.address,
-                data: getNormalBlueprintData([transfer]),
-                calldataCopyParams: [],
-                maxNonce: 100,
-                startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-                endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
-            };
-            await signBlueprint(blueprint, user);
-            await this.tractor.connect(user2).tractor(blueprint, "0x");
-        })
-
-        it('transfers ERC-1155', async function () {
-            const balances = await this.erc1155.balanceOfBatch(
-                [PIPELINE, PIPELINE, user.address, user.address],
-                ['0', '1', '0', '1']
-            )
-            expect(balances[0]).to.be.equal('2')
-            expect(balances[1]).to.be.equal('3')
-            expect(balances[2]).to.be.equal('3')
-            expect(balances[3]).to.be.equal('7')
-        })
-    })
-
     describe("Transfer ERC-721", async function () {
         beforeEach(async function () {
             await this.erc721.mockMint(user.address, '0')
             await this.erc721.connect(user).approve(this.beanstalk.address, '0')
             await this.beanstalk.connect(user).transferERC721(this.erc721.address, PIPELINE, '0')
-        })
-
-        it('transfers ERC-721', async function () {
-            expect(await this.erc721.ownerOf('0')).to.be.equal(PIPELINE)
-        })
-    })
-
-    describe("Tractor transfer ERC-721", async function () {
-        beforeEach(async function () {
-            await this.erc721.mockMint(user.address, '0')
-            await this.erc721.connect(user).approve(this.beanstalk.address, '0')
-
-            const transfer = await this.tokenSupport.interface.encodeFunctionData(
-                "tractorTransferERC721",
-                [this.erc721.address, PIPELINE, '0']
-            );
-            const blueprint = {
-                publisher: user.address,
-                data: getNormalBlueprintData([transfer]),
-                calldataCopyParams: [],
-                maxNonce: 100,
-                startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-                endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
-            };
-            await signBlueprint(blueprint, user);
-            await this.tractor.connect(user2).tractor(blueprint, "0x");
         })
 
         it('transfers ERC-721', async function () {

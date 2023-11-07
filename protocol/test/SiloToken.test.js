@@ -32,10 +32,6 @@ describe("Silo Token", function () {
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    this.tractor = await ethers.getContractAt(
-      "TractorFacet",
-      this.diamond.address
-    );
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
@@ -1158,115 +1154,6 @@ describe("Silo Token", function () {
         const stem10 = await this.silo.seasonToStem(this.siloToken.address, '10');
         const stem11 = await this.silo.seasonToStem(this.siloToken.address, '11');
         await expect(this.silo.connect(owner).transferDeposits(userAddress, user2Address, this.siloToken.address, [stem10, stem11], ['50','25'])).to.revertedWith('Silo: insufficient allowance');
-      })
-    })
-
-    describe("Tractor transfer deposit", async function () {
-      beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-
-        const transferDeposit = await this.silo.interface.encodeFunctionData(
-          "tractorTransferDeposit",
-          [user2Address, this.siloToken.address, '2', '100']
-        )
-        const blueprint = {
-          publisher: userAddress,
-          data: getNormalBlueprintData([transferDeposit]),
-          calldataCopyParams: [],
-          maxNonce: 100,
-          startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-          endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
-        };
-        await signBlueprint(blueprint, user);
-        await this.tractor.connect(user2).tractor(blueprint, "0x");
-      })
-
-      it('removes the deposit from the sender', async function () {
-        const deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '2')
-        expect(deposit[0]).to.equal('0');
-        expect(deposit[0]).to.equal('0');
-      })
-
-      it('updates users stalk and seeds', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('0')
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('0')
-      })
-
-      it('add the deposit to the recipient', async function () {
-        const deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '2')
-        expect(deposit[0]).to.equal('100');
-        expect(deposit[0]).to.equal('100');
-      })
-
-      it('updates users stalk and seeds', async function () {
-        expect(await this.silo.balanceOfStalk(user2Address)).to.be.equal('1000000')
-        expect(await this.silo.balanceOfSeeds(user2Address)).to.be.equal('100')
-      })
-
-      it('updates total stalk and seeds', async function () {
-        expect(await this.silo.totalStalk()).to.be.equal('1000000')
-        expect(await this.silo.totalSeeds()).to.be.equal('100')
-      })
-    })
-    
-    describe("Tractor transfer deposits", async function () {
-      beforeEach(async function () {
-        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-        await this.season.siloSunrise('0')
-        await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL)
-
-        const transferDeposits = await this.silo.interface.encodeFunctionData(
-          "tractorTransferDeposits",
-          [
-            user2Address,
-            this.siloToken.address,
-            ['2', '3'],
-            ['50','25']
-          ]
-        )
-        const blueprint = {
-          publisher: userAddress,
-          data: getNormalBlueprintData([transferDeposits]),
-          calldataCopyParams: [],
-          maxNonce: 100,
-          startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-          endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
-        };
-        await signBlueprint(blueprint, user);
-        await this.tractor.connect(user2).tractor(blueprint, "0x");
-      })
-
-      it('removes the deposit from the sender', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '2')
-        expect(deposit[0]).to.equal('50');
-        expect(deposit[0]).to.equal('50');
-        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, '3')
-        expect(deposit[0]).to.equal('75');
-        expect(deposit[0]).to.equal('75');
-      })
-
-      it('updates users stalk and seeds', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.be.equal('1250050')
-        expect(await this.silo.balanceOfSeeds(userAddress)).to.be.equal('125')
-      })
-
-      it('add the deposit to the recipient', async function () {
-        let deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '2')
-        expect(deposit[0]).to.equal('50');
-        expect(deposit[0]).to.equal('50');
-        deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, '3')
-        expect(deposit[0]).to.equal('25');
-        expect(deposit[0]).to.equal('25');
-      })
-
-      it('updates users stalk and seeds', async function () {
-        expect(await this.silo.balanceOfStalk(user2Address)).to.be.equal('750050')
-        expect(await this.silo.balanceOfSeeds(user2Address)).to.be.equal('75')
-      })
-
-      it('updates total stalk and seeds', async function () {
-        expect(await this.silo.totalStalk()).to.be.equal('2000100')
-        expect(await this.silo.totalSeeds()).to.be.equal('200')
       })
     })
   })

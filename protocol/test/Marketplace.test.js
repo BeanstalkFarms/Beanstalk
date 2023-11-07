@@ -8,13 +8,8 @@ const { waffleChai } = require("@ethereum-waffle/chai");
 use(waffleChai);
 const { deploy } = require('../scripts/deploy.js')
 const { BEAN, ZERO_ADDRESS } = require('./utils/constants')
-const { signPermitPods } = require("./utils/sign.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require('hardhat');
-const {
-  signBlueprint,
-  getNormalBlueprintData,
-} = require("./utils/tractor.js");
 
 const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000'
 let user, user2, owner;
@@ -33,19 +28,11 @@ describe('Marketplace', function () {
 
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond
-    this.tractor = await ethers.getContractAt(
-      "TractorFacet",
-      this.diamond.address
-    );
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.marketplace = await ethers.getContractAt('MockMarketplaceFacet', this.diamond.address);
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
-    this.permit = await ethers.getContractAt(
-      "MockPermitFacet",
-      this.diamond.address
-    );
 
     await this.bean.mint(userAddress, '500000')
     await this.bean.mint(user2Address, '500000')
@@ -2035,8 +2022,8 @@ describe('Marketplace', function () {
 
     describe("Plot Transfer", async function () {
       describe("reverts", async function () {
-        it('doesn\'t send to 0 address', async function () {
-          await expect(this.marketplace.connect(user).transferPlot(userAddress, ZERO_ADDRESS, '0', '0', '100')).to.be.revertedWith('Field: Transfer to 0 address.')
+        it('doesn\'t sent to 0 address', async function () {
+          await expect(this.marketplace.connect(user).transferPlot(userAddress, ZERO_ADDRESS, '0', '0', '100')).to.be.revertedWith('Field: Transfer to/from 0 address.')
         })
   
         it('Plot not owned by user.', async function () {
@@ -2109,39 +2096,6 @@ describe('Marketplace', function () {
         })
       })
   
-      describe('tractor transfers with existing pod listing', async function () {
-        beforeEach(async function () {
-          await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', '0', EXTERNAL);
-
-          const transferPlot = await this.marketplace.interface.encodeFunctionData(
-            "tractorTransferPlot",
-            [user2Address, '0', '0', '100'],
-          );
-          const blueprint = {
-            publisher: userAddress,
-            data: getNormalBlueprintData([transferPlot]),
-            calldataCopyParams: [],
-            maxNonce: 100,
-            startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-            endTime: Math.floor(Date.now() / 1000) + 10 * 3600,
-          };
-          await signBlueprint(blueprint, user);
-          this.result = await this.tractor.connect(user2).tractor(blueprint, "0x");
-        })
-  
-        it('transfers the plot', async function () {
-          expect(await this.field.plot(user2Address, '0')).to.be.equal('100')
-          expect(await this.field.plot(userAddress, '0')).to.be.equal('0')
-          expect(await this.field.plot(userAddress, '100')).to.be.equal('900')
-          expect(await this.marketplace.podListing('0')).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000')
-        })
-  
-        it('emits plot transfer the plot', async function () {
-          await expect(this.result).to.emit(this.marketplace, 'PlotTransfer').withArgs(userAddress, user2Address, '0', '100');
-          await expect(this.result).to.emit(this.marketplace, 'PodListingCancelled').withArgs(userAddress, '0');
-        })
-      })
-  
       describe('transfers with existing pod listing from other', async function () {
         beforeEach(async function () {
           await this.marketplace.connect(user).createPodListing('0', '0', '1000', '500000', '0', '0', EXTERNAL);
@@ -2167,62 +2121,4 @@ describe('Marketplace', function () {
       })
     })
   })
-
-  it("Permit Pods", async function () {
-    const selector =
-      this.marketplace.interface.getSighash("permitPods");
-    const nonce = await this.permit.nonces(selector, userAddress);
-    const deadline = Math.floor(new Date().getTime() / 1000) + 10 * 60;
-
-    const signature = await signPermitPods(
-      user,
-      this.marketplace.address,
-      userAddress,
-      user2Address,
-      100,
-      nonce,
-      deadline
-    );
-
-    await expect(
-      this.marketplace.connect(user2).permitPods(
-        userAddress,
-        ethers.constants.AddressZero,
-        100,
-        deadline,
-        signature
-      )
-    ).to.be.revertedWith("Field: Pod Approve to 0 address.");
-
-    await expect(
-      this.marketplace.connect(user2).permitPods(
-        userAddress,
-        user2Address,
-        100,
-        deadline - 20 * 60,
-        signature
-      )
-    ).to.be.revertedWith("Field: expired deadline");
-
-    await expect(
-      this.marketplace.connect(user2).permitPods(
-        user2Address,
-        user2Address,
-        100,
-        deadline,
-        signature
-      )
-    ).to.be.revertedWith("Field: invalid signature");
-
-    const tx = await this.marketplace.connect(user2).permitPods(
-      userAddress,
-      user2Address,
-      100,
-      deadline,
-      signature
-    );
-
-    await expect(tx).to.emit(this.marketplace, "PodApproval")
-      .withArgs(userAddress, user2Address, 100);
-  });
 })
