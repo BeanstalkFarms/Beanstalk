@@ -431,3 +431,37 @@ dataSources:
         - event: PodOrderFilled(indexed address,indexed address,bytes32,uint256,uint256,uint256,uint256)
           handler: handlePodOrderFilled_v2
       file: ./src/MarketplaceHandler.ts
+  - kind: ethereum/contract
+    name: BIP39-SeedGauge
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 18522900
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - SeedGauge
+      abis:
+        - name: Beanstalk
+          file: ../subgraph-core/abis/Beanstalk/Beanstalk-BIP39.json
+        - name: BeanstalkPrice
+          file: ../subgraph-core/abis/BeanstalkPrice.json
+      eventHandlers:
+        - event: BeanToMaxLpGpPerBdvRatioChange(indexed uint256,uint256,int80)
+          handler: handleBeanToMaxLpGpPerBdvRatioChange
+        - event: GaugePointChange(indexed uint256,indexed address,uint256)
+          handler: handleGaugePointChange
+        - event: TemperatureChange(indexed uint256,uint256,int8)
+          handler: handleTemperatureChange
+        - event: UpdateGaugeSettings(indexed address,bytes4,uint96)
+          handler: handleUpdateGaugeSettings
+        - event: UpdateAverageStalkPerBdvPerSeason(uint256)
+          handler: handleUpdateAverageStalkPerBdvPerSeason
+        - event: UpdatedStalkPerBdvPerSeason(indexed address,uint32,uint32)
+          handler: handleUpdateStalkPerBdvPerSeason
+        - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,uint128,uint96)
+          handler: handleWhitelistToken_BIP39
+      file: ./src/GaugeHandler.ts
