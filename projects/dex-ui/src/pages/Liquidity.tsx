@@ -69,7 +69,7 @@ export const Liquidity = () => {
   if (loading) return <Loading spinnerOnly />;
 
   if (error) {
-    return <Error message={error?.message} errorOnly />
+    return <Error message={error?.message} errorOnly />;
   }
 
   return (
@@ -85,7 +85,7 @@ export const Liquidity = () => {
           />
           {(tab === null && isMobile) || !isMobile ? (
             <>
-              <LiquidityBox lpToken={well?.lpToken!} />
+              <LiquidityBox well={well} />
               <LearnMoreContainer>
                 <LearnMoreLabel onClick={toggle}>
                   <LearnMoreLine />

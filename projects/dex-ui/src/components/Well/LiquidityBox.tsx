@@ -4,18 +4,26 @@ import { InfoBox } from "src/components/InfoBox";
 import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "../Typography";
 import { TokenLogo } from "../TokenLogo";
 import { FC } from "src/types";
-import { Token } from "@beanstalk/sdk";
+import { TokenValue } from "@beanstalk/sdk";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { size } from "src/breakpoints";
 import { useSiloBalance } from "src/tokens/useSiloBalance";
+import { Well } from "@beanstalk/sdk/Wells";
+import { formatNum } from "src/utils/format";
+import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 
 type Props = {
-  lpToken: Token;
+  well: Well | undefined;
 };
 
-export const LiquidityBox: FC<Props> = ({ lpToken }) => {
-  const { data: balance } = useTokenBalance(lpToken);
-  const { data: siloBalance } = useSiloBalance(lpToken);
+export const LiquidityBox: FC<Props> = ({ well }) => {
+  const { data: balance } = useTokenBalance(well?.lpToken!);
+  const { data: siloBalance } = useSiloBalance(well?.lpToken!);
+  const { data: tokenPrice } = useWellLPTokenPrice(well);
+
+  const lpSymbol = well?.lpToken?.symbol;
+  const ttlBalance = (balance && siloBalance && lpSymbol && balance[lpSymbol].add(siloBalance)) || TokenValue.ZERO;
+  const USDTotal = ttlBalance.mul(tokenPrice || TokenValue.ZERO);
 
   return (
     <InfoBox>
@@ -24,20 +32,23 @@ export const LiquidityBox: FC<Props> = ({ lpToken }) => {
           <BoxHeader>My Liquidity</BoxHeader>
         </TextNudge>
         <BoxHeaderAmount>
-          <TokenLogo token={lpToken} size={16} mobileSize={16} isLP />
-          <TextNudge amount={1.5}>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</TextNudge>
+          <TokenLogo token={well!.lpToken} size={16} mobileSize={16} isLP />
+          <TextNudge amount={1.5}>{balance ? balance[well!.lpToken!.symbol].toHuman("short") : "-"}</TextNudge>
         </BoxHeaderAmount>
       </InfoBox.Header>
       <InfoBox.Body>
         <InfoBox.Row>
           <InfoBox.Key>In my Wallet</InfoBox.Key>
-          <InfoBox.Value>{balance ? balance[lpToken.symbol].toHuman("short") : "-"}</InfoBox.Value>
+          <InfoBox.Value>{balance ? balance[well!.lpToken!.symbol].toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
         <InfoBox.Row>
           <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
           <InfoBox.Value>{siloBalance ? siloBalance.toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
       </InfoBox.Body>
+      <InfoBox.Footer>
+        <InfoBox.Value>USD TOTAL: ${formatNum(USDTotal, { defaultValue: "-", minDecimals: 2 })}</InfoBox.Value>
+      </InfoBox.Footer>
     </InfoBox>
   );
 };
