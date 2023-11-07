@@ -10,7 +10,7 @@ const { BigNumber } = require('ethers');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai');
 
-const BLOCK_NUMBER = 18480579; //a recent block number. Using this so that the currentStalkDiff in _mowAndMigrateMerkleCheck is exercised
+const BLOCK_NUMBER = 18392690; //this is the block number that unripe migration happened
 
 //17251905 is the block the enroot fix was deployed
 
@@ -728,23 +728,28 @@ describe('Silo V3: migrate stragglers', function () {
       let tokens = [];
       let seasons = [];
       let amounts = [];
+      let bdvs = [];
    
       Object.keys(data[address]).forEach(token => {
         tokens.push(token);
         let season = [];
         let amount = [];
+        let innerBdv = [];
         Object.keys(data[address][token]).forEach(sea => {
           season.push(sea);
           amount.push(data[address][token][sea].amount);
+          innerBdv.push(data[address][token][sea].bdv);
         });
         seasons.push(season);
         amounts.push(amount);
+        bdvs.push(innerBdv);
       });
    
       reformattedData[address] = {
         "tokens": tokens,
         "seasons": seasons,
-        "amounts": amounts
+        "amounts": amounts,
+        "bdvs": bdvs
       };
     });
    
@@ -826,9 +831,11 @@ describe('Silo V3: migrate stragglers', function () {
 
       var totalGasUsed = BigNumber.from(0);
 
-      var batchIntoGroupsOf = 30;
+      var batchIntoGroupsOf = 10;
 
       var nextToMigrate = [];
+
+      var unmigrated = {};
 
       var progress = 0;
       for (const depositorAddress in depositsReformatted) {
@@ -837,7 +844,24 @@ describe('Silo V3: migrate stragglers', function () {
           const tokens = depositsReformatted[depositorAddress]['tokens'];
           const seasons = depositsReformatted[depositorAddress]['seasons'];
           const amounts = depositsReformatted[depositorAddress]['amounts'];
+          const bdvs = depositsReformatted[depositorAddress]['bdvs'];
 
+          for (var i = 0; i < tokens.length; i++) {
+            for (var j = 0; j < bdvs[i].length; j++) {
+              var token = tokens[i];
+              var bdv = bdvs[i][j];
+
+              if (!unmigrated[token]) {
+                unmigrated[token] = BigNumber.from(0);
+              }
+
+              unmigrated[token] = unmigrated[token].add(bdv);
+            }
+          }
+
+          console.log('unmigrated: ', unmigrated);
+
+          /*
           let stalkDiff = 0;
           let seedsDiff = 0;
           let proof = [];
@@ -872,7 +896,7 @@ describe('Silo V3: migrate stragglers', function () {
           }
 
           // console.log('here 5');
-          progress++;
+          progress++;*/
       }
 
       console.log('final totalGasUsed: ', totalGasUsed);
