@@ -66,10 +66,10 @@ const useCardContentWithToken = (token: ERC20Token) => [
     imageSrc: depositCardContentByToken[token.address]?.img || depositBeanImg,
   },
   {
-    title: 'Receive Stalk and Seeds for your Deposit',
+    title: `Receive Stalk ${!token.isUnripe ? 'and Seeds' : ''} for your Deposit`,
     texts: [
       'Stalk entitles holders to participate in Beanstalk governance and earn a portion of Bean mints.',
-      'Seeds yield 1/10000 new Stalk every Season.',
+      !token.isUnripe ? 'Seeds yield 1/10000 new Stalk every Season.' : '',
     ],
     imageSrc: earnStalkAndSeedsImg,
   },
