@@ -10,6 +10,7 @@ import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
 import { BodyXS } from "../Typography";
 import { size } from "src/breakpoints";
+import { displayLPTokenSymbol } from "src/utils/format";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE | "FORWARD_SWAP" | "REVERSE_SWAP";
@@ -96,7 +97,7 @@ const QuoteDetails = ({
 
     if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
       const _quoteValue = quote?.quote as TokenValue;
-      return `${_quoteValue.toHuman("short")} ${wellLpToken!.symbol}`;
+      return `${_quoteValue.toHuman("short")} ${displayLPTokenSymbol(wellLpToken!)}`;
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
