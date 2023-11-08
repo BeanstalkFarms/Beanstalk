@@ -20,6 +20,7 @@ import { getPrice } from "src/utils/price/usePrice";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
+import { displayTokenSymbol } from "src/utils/format";
 
 type RemoveLiquidityProps = {
   well: Well;
@@ -125,7 +126,6 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
       });
       let removeLiquidityTxn;
       try {
-        
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
           if (!oneTokenQuote) {
             return;
@@ -423,7 +423,7 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
               <ApproveTokenButton
                 disabled={approveButtonDisabled}
                 loading={false}
-                label={`Approve ${wellLpToken.symbol}`}
+                label={`Approve ${displayTokenSymbol(wellLpToken)}`}
                 onClick={approveTokenButtonClickHandler}
               />
             </ButtonWrapper>
