@@ -337,10 +337,12 @@ export const AddLiquidity = ({ well, slippage, slippageSettingsClickHandler, han
     [address, well.tokens, amounts, useNativeETH, well.address, sdk.addresses.DEPOT.MAINNET, checkMinAllowanceForAllTokens]
   );
 
-  const buttonLabel = useMemo(
-    () => (!atLeastOneAmountNonZero ? "Enter Amount(s)" : !hasEnoughBalance ? "Insufficient Balance" : "Add Liquidity"),
-    [atLeastOneAmountNonZero, hasEnoughBalance]
-  );
+  const buttonLabel = useMemo(() => {
+    if (!address) return "Connect Wallet";
+    if (!hasEnoughBalance) return "Insufficient Balance";
+    if (!atLeastOneAmountNonZero) return "Enter Amount(s)";
+    return "Add Liquidity";
+  }, [atLeastOneAmountNonZero, hasEnoughBalance, address]);
 
   return (
     <div>
