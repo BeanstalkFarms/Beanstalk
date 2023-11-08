@@ -19,11 +19,13 @@ type Props = {
 export const LiquidityBox: FC<Props> = ({ well }) => {
   const { data: balance } = useTokenBalance(well?.lpToken!);
   const { data: siloBalance } = useSiloBalance(well?.lpToken!);
-  const { data: tokenPrice } = useWellLPTokenPrice(well);
+  const { data: tokenPrices } = useWellLPTokenPrice([well]);
 
   const lpSymbol = well?.lpToken?.symbol;
+
+  const lpTokenPrice = tokenPrices.length === 1 ? tokenPrices[0] : TokenValue.ZERO;
   const ttlBalance = (balance && siloBalance && lpSymbol && balance[lpSymbol].add(siloBalance)) || TokenValue.ZERO;
-  const USDTotal = ttlBalance.mul(tokenPrice || TokenValue.ZERO);
+  const USDTotal = ttlBalance.mul(lpTokenPrice);
 
   return (
     <InfoBox>
