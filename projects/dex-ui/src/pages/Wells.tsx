@@ -16,7 +16,7 @@ import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
-import { formatNum } from "src/utils/format";
+import { displayTokenSymbol, formatNum } from "src/utils/format";
 import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 
 export const Wells = () => {
@@ -149,7 +149,7 @@ export const Wells = () => {
           </WellDetail>
         </DesktopContainer>
         <DesktopContainer align="right">
-          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
         </DesktopContainer>
         <DesktopContainer align="right">
           <WellLPBalance>${formatNum(lpTokenPrices[index] || TokenValue.ZERO, { minDecimals: 2 })}</WellLPBalance>

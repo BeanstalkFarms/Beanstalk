@@ -25,8 +25,7 @@ export const formatNum = (
 const TokenSymbolMap = {
   BEANWETHCP2w: "BEAN:ETH LP"
 };
-
-export const displayLPTokenSymbol = (token: Token) => {
+export const displayTokenSymbol = (token: Token) => {
   if (token.symbol in TokenSymbolMap) {
     return TokenSymbolMap[token.symbol as keyof typeof TokenSymbolMap];
   }
