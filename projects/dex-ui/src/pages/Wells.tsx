@@ -17,6 +17,7 @@ import { size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
 import { formatNum } from "src/utils/format";
+import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -27,6 +28,8 @@ export const Wells = () => {
   const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([]);
   const [wellLpBalances, setWellLpBalances] = useState<(TokenValue | undefined)[]>([]);
   const [tab, showTab] = useState<number>(0);
+
+  const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
 
   useMemo(() => {
     const run = async () => {
@@ -148,6 +151,9 @@ export const Wells = () => {
         <DesktopContainer align="right">
           <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
         </DesktopContainer>
+        <DesktopContainer align="right">
+          <WellLPBalance>${formatNum(lpTokenPrices[index] || TokenValue.ZERO, { minDecimals: 2 })}</WellLPBalance>
+        </DesktopContainer>
         <MobileContainer>
           <WellDetail>
             <TokenLogos>{logos}</TokenLogos>
@@ -155,6 +161,9 @@ export const Wells = () => {
             {/* <Deployer>{deployer}</Deployer> */}
           </WellDetail>
           <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+        </MobileContainer>
+        <MobileContainer align="right">
+          <WellLPBalance>${formatNum(lpTokenPrices[index] || TokenValue.ZERO, { minDecimals: 2 })}</WellLPBalance>
         </MobileContainer>
       </TableRow>
     );
@@ -198,7 +207,9 @@ export const Wells = () => {
             <TableRow>
               <DesktopHeader>My Positions</DesktopHeader>
               <DesktopHeader align="right">My Liquidity</DesktopHeader>
+              <DesktopHeader align="right">USD Value</DesktopHeader>
               <MobileHeader>My Liquidity Positions</MobileHeader>
+              <MobileHeader align="right">USD Value</MobileHeader>
             </TableRow>
           </THead>
         )}

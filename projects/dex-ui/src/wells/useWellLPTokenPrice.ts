@@ -5,19 +5,29 @@ import { Well } from "@beanstalk/sdk/Wells";
 import useSdk from "src/utils/sdk/useSdk";
 import { getPrice } from "src/utils/price/usePrice";
 
-export const useWellLPTokenPrice = (well: Well | undefined) => {
-  const [lpTokenPrice, setLPTokenPrice] = useState<TokenValue>(TokenValue.ZERO);
+export const useWellLPTokenPrice = (wells: (Well | undefined)[] | undefined) => {
+  const [lpTokenPrice, setLPTokenPrice] = useState<TokenValue[]>([]);
   const sdk = useSdk();
 
   const fetch = useCallback(async () => {
-    if (!well || !well.tokens || !well.lpToken) return;
-    const [ttlSupply, ...prices] = await Promise.all([well?.lpToken!.getTotalSupply(), ...well?.tokens.map((t) => getPrice(t, sdk))]);
+    if (!wells) return;
 
-    const wellReserveValues = well?.reserves?.map((reserve, idx) => reserve.mul(prices?.[idx] || TokenValue.ZERO));
-    const tvl = wellReserveValues?.reduce((acc, val) => acc.add(val));
+    const tokenPrices: TokenValue[] = [];
 
-    setLPTokenPrice(tvl?.div(ttlSupply) || TokenValue.ZERO);
-  }, [sdk, well]);
+    for (const well of wells) {
+      if (!well || !well.tokens || !well.lpToken) {
+        tokenPrices.push(TokenValue.ZERO);
+        continue;
+      }
+      const [ttlSupply, ...prices] = await Promise.all([well?.lpToken!.getTotalSupply(), ...well?.tokens.map((t) => getPrice(t, sdk))]);
+
+      const wellReserveValues = well?.reserves?.map((reserve, idx) => reserve.mul(prices?.[idx] || TokenValue.ZERO));
+      const tvl = wellReserveValues?.reduce((acc, val) => acc.add(val));
+      tokenPrices.push(tvl?.div(ttlSupply) || TokenValue.ZERO);
+    }
+
+    setLPTokenPrice(tokenPrices);
+  }, [sdk, wells]);
 
   useEffect(() => {
     fetch();
