@@ -47,7 +47,7 @@ export const LiquidityBox: FC<Props> = ({ well }) => {
         </InfoBox.Row>
       </InfoBox.Body>
       <InfoBox.Footer>
-        <InfoBox.Value>USD TOTAL: ${formatNum(USDTotal, { defaultValue: "-", minDecimals: 2 })}</InfoBox.Value>
+        <USDAmount>USD TOTAL: ${formatNum(USDTotal, { defaultValue: "-", minDecimals: 2 })}</USDAmount>
       </InfoBox.Footer>
     </InfoBox>
   );
@@ -64,4 +64,10 @@ const BoxHeaderAmount = styled.div`
   align-items: center;
   gap: 4px;
   ${LinksButtonText}
+`;
+const USDAmount = styled.div`
+  display: flex;
+  flex: 2;
+  justify-content: flex-end;
+  color: #4b5563;
 `;
