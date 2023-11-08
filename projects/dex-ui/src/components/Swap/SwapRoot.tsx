@@ -76,7 +76,9 @@ export const SwapRoot = () => {
   }, [inToken, outToken, builder, account]);
 
   useEffect(() => {
-    readyToSwap && hasEnoughBalance && !!account && inAmount?.gt(TokenValue.ZERO) && outAmount?.gt(TokenValue.ZERO) ? setButtonEnabled(true) : setButtonEnabled(false);
+    readyToSwap && hasEnoughBalance && !!account && inAmount?.gt(TokenValue.ZERO) && outAmount?.gt(TokenValue.ZERO)
+      ? setButtonEnabled(true)
+      : setButtonEnabled(false);
   }, [readyToSwap, account, inAmount, outAmount, hasEnoughBalance]);
 
   const arrowHandler = () => {
@@ -285,7 +287,7 @@ export const SwapRoot = () => {
       // sanity check
       if (recipient === NULL_ADDRESS) throw new Error("FATAL: recipient is the NULL_ADDRESS!");
       const gasEstimate = quote?.gas;
-      const tx = await quote!.doSwap({ gasLimit: gasEstimate?.mul(1.2).toBigNumber() }); 
+      const tx = await quote!.doSwap({ gasLimit: gasEstimate?.mul(1.2).toBigNumber() });
       toast.confirming(tx);
 
       const receipt = await tx.wait();
@@ -320,12 +322,13 @@ export const SwapRoot = () => {
   const getLabel = useCallback(() => {
     if (!account) return "Connect Wallet";
     if (!inAmount && !outAmount) return "Enter Amount";
+    if (inToken.address === outToken.address) return "Select different output token";
     if (inAmount?.eq(TokenValue.ZERO) && outAmount?.eq(TokenValue.ZERO)) return "Enter Amount";
     if (!hasEnoughBalance) return "Insufficient Balance";
     if (needsApproval) return "Approve";
 
     return "Swap";
-  }, [account, hasEnoughBalance, inAmount, needsApproval, outAmount]);
+  }, [account, hasEnoughBalance, inAmount, needsApproval, outAmount, inToken, outToken]);
 
   if (Object.keys(tokens).length === 0)
     return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
