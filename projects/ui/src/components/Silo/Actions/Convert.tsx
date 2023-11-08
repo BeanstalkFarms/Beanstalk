@@ -326,7 +326,7 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : (
-          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} />
+          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} actionText="Convert" />
         )}
 
         {/* User Input: destination token */}
@@ -723,8 +723,8 @@ const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
 }> = (props) => (
   <FormTxnProvider>
-    <strong>Converts are currently disabled. See Discord for details.</strong>
-    {/* <ConvertPropProvider {...props} /> */}
+    {/* <strong>Converts are currently disabled. See Discord for details.</strong> */}
+    <ConvertPropProvider {...props} />
   </FormTxnProvider>
 );
 
