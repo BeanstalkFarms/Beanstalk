@@ -218,12 +218,9 @@ export const Wells = () => {
         <TBody>
           {anyLpPositions === false && tab === 1 ? (
             <>
-              <NoLPRow colSpan={2}>
+              <NoLPRow colSpan={3}>
                 <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
               </NoLPRow>
-              <NoLPRowMobile>
-                <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
-              </NoLPRowMobile>
             </>
           ) : (
             rows
@@ -343,18 +340,6 @@ const NoLPRow = styled.td`
   background-color: #fff;
   height: 120px;
   border-bottom: 0.5px solid #9ca3af;
-  @media (max-width: ${size.mobile}) {
-    display: none;
-  }
-`;
-
-const NoLPRowMobile = styled.td`
-  background-color: #fff;
-  height: 120px;
-  border-bottom: 0.5px solid #9ca3af;
-  @media (min-width: ${size.mobile}) {
-    display: none;
-  }
 `;
 
 const NoLPMessage = styled.div`
