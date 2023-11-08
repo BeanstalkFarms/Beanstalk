@@ -23,7 +23,7 @@ export const formatNum = (
 };
 
 const TokenSymbolMap = {
-  BEANWETHCP2w: "BEAN:ETH LP"
+  BEANWETHCP2w: "BEANETH LP"
 };
 export const displayTokenSymbol = (token: Token) => {
   if (token.symbol in TokenSymbolMap) {
