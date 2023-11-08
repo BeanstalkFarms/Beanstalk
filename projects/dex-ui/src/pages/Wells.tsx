@@ -140,6 +140,8 @@ export const Wells = () => {
       symbols.push(token.symbol);
     });
 
+    const usdVal = lpTokenPrices[index].mul(wellLpBalances[index]!) || TokenValue.ZERO;
+
     return (
       <TableRow key={well.address} onClick={gotoWell}>
         <DesktopContainer>
@@ -152,7 +154,7 @@ export const Wells = () => {
           <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
         </DesktopContainer>
         <DesktopContainer align="right">
-          <WellLPBalance>${formatNum(lpTokenPrices[index] || TokenValue.ZERO, { minDecimals: 2 })}</WellLPBalance>
+          <WellLPBalance>${formatNum(usdVal, { minDecimals: 2 })}</WellLPBalance>
         </DesktopContainer>
         <MobileContainer>
           <WellDetail>
@@ -163,7 +165,7 @@ export const Wells = () => {
           <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
         </MobileContainer>
         <MobileContainer align="right">
-          <WellLPBalance>${formatNum(lpTokenPrices[index] || TokenValue.ZERO, { minDecimals: 2 })}</WellLPBalance>
+          <WellLPBalance>${formatNum(usdVal, { minDecimals: 2 })}</WellLPBalance>
         </MobileContainer>
       </TableRow>
     );
