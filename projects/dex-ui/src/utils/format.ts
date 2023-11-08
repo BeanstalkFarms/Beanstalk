@@ -1,4 +1,4 @@
-import { TokenValue } from "@beanstalk/sdk";
+import { Token, TokenValue } from "@beanstalk/sdk";
 /**
  * We can for the most part use TokenValue.toHuman("short"),
  * but we can use this in cases where we don't want the shorthand K/M/B/T suffixes.
@@ -20,4 +20,16 @@ export const formatNum = (
     minimumFractionDigits: 0 || options?.minDecimals,
     maximumFractionDigits: 2 || options?.maxDecimals
   });
+};
+
+const TokenSymbolMap = {
+  BEANWETHCP2w: "BEAN:ETH LP"
+};
+
+export const displayLPTokenSymbol = (token: Token) => {
+  if (token.symbol in TokenSymbolMap) {
+    return TokenSymbolMap[token.symbol as keyof typeof TokenSymbolMap];
+  }
+
+  return token.symbol;
 };
