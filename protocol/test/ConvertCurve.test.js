@@ -109,8 +109,7 @@ describe('Curve Convert', function () {
       });
 
       it('Not whitelisted pool', async function () {
-        // await setReserves(owner, this.fakeWell, [to6('800000'), to18('1000')]);
-        const convertData = ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('190'), this.bean.address)
+        const convertData = ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('190'), this.fakeMetapool.address)
         await expect(this.convert.connect(owner).convert(
           convertData,
           [],
@@ -426,7 +425,7 @@ describe('Curve Convert', function () {
       });
 
       it('Not whitelisted pool', async function () {
-        const convertData = ConvertEncoder.convertCurveLPToBeans(to18('100'), toBean('99'), this.bean.address)
+        const convertData = ConvertEncoder.convertCurveLPToBeans(to18('100'), toBean('99'), this.fakeMetapool.address)
         await expect(this.convert.connect(owner).convert(
           convertData,
           [],
