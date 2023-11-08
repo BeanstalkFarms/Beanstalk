@@ -11,7 +11,7 @@ import CustomToaster from "../TxnToast/CustomToaster";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
-import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X } from "../Icons";
+import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
 import { size } from "src/breakpoints";
 import { useNetwork } from "wagmi";
 import { Title } from "../PageComponents/Title";
@@ -92,11 +92,24 @@ export const Frame: FC<{}> = ({ children }) => {
               <Box href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
                 <Github width={20} />
               </Box>
+              <Box href="https://app.bean.money" rel="noopener noreferrer" target="_blank">
+                <BeanstalkLogoBlack width={20} />
+              </Box>
             </MobileLargeNavRow>
-            <MobileNavRow href="https://immunefi.com/bounty/beanstalk/" rel="noopener noreferrer" target="_blank" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavRow
+              href="https://immunefi.com/bounty/beanstalk/"
+              rel="noopener noreferrer"
+              target="_blank"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Bug Bounty Program
             </MobileNavRow>
-            <MobileNavRow href="https://docs.basin.exchange/" rel="noopener noreferrer" target="_blank" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavRow
+              href="https://docs.basin.exchange/"
+              rel="noopener noreferrer"
+              target="_blank"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Documentation
             </MobileNavRow>
           </MobileNavLinkContainer>
@@ -104,7 +117,7 @@ export const Frame: FC<{}> = ({ children }) => {
             <BasinConnectButton />
           </MobileConnectContainer>
         </BurgerMenu>
-        {chain?.unsupported ? <Title title="Unsupported Chain"/> : children}
+        {chain?.unsupported ? <Title title="Unsupported Chain" /> : children}
       </Window>
       <Footer />
     </Container>
