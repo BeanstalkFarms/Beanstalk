@@ -1,16 +1,24 @@
 import React from "react";
 import styled from "styled-components";
-import { Discord, Github, Twitter } from "../Icons";
+import { BeanstalkLogoBlack, Discord, Github, Twitter } from "../Icons";
 import { size } from "src/breakpoints";
 
 export const Footer = () => (
   <Container>
     <Box href="https://docs.basin.exchange" rel="noopener noreferrer" target="_blank">
-      <div><span role="img" aria-label="Documentation">📃 Protocol Documentation</span></div> 
+      <div>
+        <span role="img" aria-label="Documentation">
+          📃 Protocol Documentation
+        </span>
+      </div>
       <StyledLink>Visit the Docs →</StyledLink>
     </Box>
     <Box href="https://immunefi.com/bounty/beanstalk/" rel="noopener noreferrer" target="_blank">
-      <div><span role="img" aria-label="Bug Bounty">👾 Basin Bug Bounty Program</span></div>
+      <div>
+        <span role="img" aria-label="Bug Bounty">
+          👾 Basin Bug Bounty Program
+        </span>
+      </div>
       <StyledLink>Learn More →</StyledLink>
     </Box>
     <SmallBox href="https://basin.exchange/discord" rel="noopener noreferrer" target="_blank">
@@ -21,6 +29,9 @@ export const Footer = () => (
     </SmallBox>
     <SmallBox href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
       <Github width={20} />
+    </SmallBox>
+    <SmallBox href="https://app.bean.money" rel="noopener noreferrer" target="_blank">
+      <BeanstalkLogoBlack width={20} />
     </SmallBox>
   </Container>
 );
@@ -63,6 +74,7 @@ const SmallBox = styled.a`
   width: 64px;
   border-left: 1px solid black;
   justify-content: center;
+  align-items: center;
   :hover {
     background-color: #f0fdf4;
   }
@@ -70,4 +82,4 @@ const SmallBox = styled.a`
 
 const StyledLink = styled.span`
   text-decoration: underline;
-`
+`;
