@@ -4,13 +4,25 @@
 
 pragma solidity =0.7.6;
 
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+
 /**
  * @title Lib Tractor
  * @author 0xm00neth
  **/
 library LibTractor {
-    bytes32 constant TRACTOR_STORAGE_POSITION =
-        keccak256("diamond.storage.tractor");
+    bytes32 constant TRACTOR_STORAGE_POSITION = keccak256("diamond.storage.tractor");
+
+    bytes32 private constant TRACTOR_HASHED_NAME = keccak256(bytes("Tractor"));
+    bytes32 private constant TRACTOR_HASHED_VERSION = keccak256(bytes("1"));
+    bytes32 private constant EIP712_TYPE_HASH =
+        keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+    bytes32 public constant BLUEPRINT_TYPE_HASH =
+        keccak256(
+            "Blueprint(address publisher,bytes data,bytesReference[] unsetData,uint256 maxNonce,uint256 startTime,uint256 endTime)"
+        );
 
     struct TractorStorage {
         mapping(bytes32 => uint256) blueprintNonce;
@@ -42,11 +54,7 @@ library LibTractor {
 
     /// @notice get tractor storage from storage
     /// @return ts TractorStorage
-    function tractorStorage()
-        internal
-        pure
-        returns (TractorStorage storage ts)
-    {
+    function tractorStorage() internal pure returns (TractorStorage storage ts) {
         bytes32 position = TRACTOR_STORAGE_POSITION;
         assembly {
             ts.slot := position
@@ -97,35 +105,55 @@ library LibTractor {
         require(publisher != address(1), "Tractor: No active publisher");
     }
 
+    /// @notice get blueprint nonce
+    /// @param blueprintHash blueprint hash
+    /// @return nonce current blueprint nonce
+    function getBlueprintNonce(bytes32 blueprintHash) internal view returns (uint256) {
+        return tractorStorage().blueprintNonce[blueprintHash];
+    }
+
     /// @notice calculates blueprint hash
     /// @param blueprint blueprint object
     /// @return hash calculated Blueprint hash
-    function getBlueprintHash(Blueprint calldata blueprint)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function getBlueprintHash(Blueprint calldata blueprint) public pure returns (bytes32) {
         return
-            keccak256(
-                abi.encodePacked(
-                    blueprint.publisher,
-                    blueprint.data,
-                    blueprint.calldataCopyParams,
-                    blueprint.maxNonce,
-                    blueprint.startTime,
-                    blueprint.endTime
+            _hashTypedDataV4(
+                keccak256(
+                    abi.encode(
+                        BLUEPRINT_TYPE_HASH,
+                        blueprint.publisher,
+                        keccak256(blueprint.data),
+                        keccak256(abi.encodePacked(blueprint.unsetData)),
+                        blueprint.maxNonce,
+                        blueprint.startTime,
+                        blueprint.endTime
+                    )
                 )
             );
     }
 
-    /// @notice get blueprint nonce
-    /// @param blueprintHash blueprint hash
-    /// @return nonce current blueprint nonce
-    function getBlueprintNonce(bytes32 blueprintHash)
-        internal
-        view
-        returns (uint256)
-    {
-        return tractorStorage().blueprintNonce[blueprintHash];
+    /**
+     * @dev See {ECDSA.toTypedDataHash}.
+     */
+    function _hashTypedDataV4(bytes32 structHash) internal view returns (bytes32) {
+        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
+    }
+
+    /**
+     * @dev Returns the domain separator for the current chain.
+     */
+    function _domainSeparatorV4() internal view returns (bytes32) {
+        return _buildDomainSeparator(EIP712_TYPE_HASH, TRACTOR_HASHED_NAME, TRACTOR_HASHED_VERSION);
+    }
+
+    /**
+     * @dev See {_domainSeparatorV4}.
+     */
+    function _buildDomainSeparator(
+        bytes32 typeHash,
+        bytes32 name,
+        bytes32 version
+    ) internal view returns (bytes32) {
+        return keccak256(abi.encode(typeHash, name, version, C.getChainId(), address(this)));
     }
 }
