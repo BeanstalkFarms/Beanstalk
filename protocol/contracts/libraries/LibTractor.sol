@@ -17,14 +17,26 @@ library LibTractor {
         address activePublisher;
     }
 
+    // NOTE(funderberker): Performance cost of using a <32 bytes struct vs packed bytes32 ?
+    struct bytesReference {
+        uint64 index;
+        uint64 length;
+    }
+
     // Blueprint stores blueprint related values
     struct Blueprint {
         address publisher;
         bytes data;
-        bytes32[] calldataCopyParams;
+        bytesReference[] unsetData;
         uint256 maxNonce;
         uint256 startTime;
         uint256 endTime;
+    }
+
+    // SignedBlueprint stores blueprint, hash, and signature, which enables verification.
+    struct SignedBlueprint {
+        Blueprint blueprint;
+        bytes32 blueprintHash; // including this is not strictly necessary, but helps avoid hashing more than once on chain
         bytes signature;
     }
 
