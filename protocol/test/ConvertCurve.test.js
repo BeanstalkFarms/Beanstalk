@@ -114,7 +114,7 @@ describe('Curve Convert', function () {
           convertData,
           [],
           []
-        )).to.be.revertedWith("Convert: Invalid Metapool")
+        )).to.be.revertedWith("Convert: Not a whitelisted Curve pool.")
       })
 
 
@@ -430,7 +430,7 @@ describe('Curve Convert', function () {
           convertData,
           [],
           []
-        )).to.be.revertedWith("Convert: Invalid Metapool")
+        )).to.be.revertedWith("Convert: Not a whitelisted Curve pool.")
       })
     });
 

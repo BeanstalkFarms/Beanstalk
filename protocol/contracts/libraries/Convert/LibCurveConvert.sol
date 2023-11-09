@@ -83,10 +83,6 @@ library LibCurveConvert {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
 
-        // Only supports Bean:3Crv Metapool for now. Modify validation if `LibCurveConvert.sol`
-        // becomes used by another Curve pool.
-        require(pool == C.CURVE_BEAN_METAPOOL, "Convert: Invalid Metapool");
-
         (amountOut, amountIn) = curveRemoveLPTowardsPeg(lp, minBeans, pool);
         tokenOut = C.BEAN;
         tokenIn = pool;
@@ -107,10 +103,6 @@ library LibCurveConvert {
     {
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
-
-        // Only supports Bean:3Crv Metapool for now. Modify validation if `LibCurveConvert.sol`
-        // becomes used by another Curve pool.
-        require(pool == C.CURVE_BEAN_METAPOOL, "Convert: Invalid Metapool");
 
         (amountOut, amountIn) = curveAddLiquidityTowardsPeg(
             beans,
