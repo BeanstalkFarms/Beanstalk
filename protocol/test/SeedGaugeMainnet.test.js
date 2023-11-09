@@ -108,7 +108,7 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('gaugePoints', async function () {
-      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('2250'));
+      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('7963.64325'));
       expect(await this.beanstalk.getGaugePoints(BEAN_3_CURVE)).to.be.equal(to18('1625'));
     })
   })

@@ -67,9 +67,12 @@ contract InitBipSeedGauge is Weather {
         // and bean does not have a gauge point function.
         // (it is based on the max gauge points of LP)
         // order: bean, beanETH, bean3CRV, urBEAN, urBEANETH
+        uint128 beanEthToBean3CrvDepositedRatio = s.siloBalances[C.BEAN_ETH_WELL].depositedBdv * 1e6 /  s.siloBalances[C.CURVE_BEAN_METAPOOL].depositedBdv;
         address[] memory siloTokens = LibWhitelistedTokens.getWhitelistedTokens();
-        uint128 beanEthGp = uint128(s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason) * 500 * 1e12;
-        uint128 bean3crvGp = uint128(s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason) * 500 * 1e12;
+        uint128 beanEthGp = uint128(
+            s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason) * 500 * beanEthToBean3CrvDepositedRatio * 1e6;
+        uint128 bean3crvGp = uint128(
+            s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason) * 500 * 1e12;
         uint128[5] memory gaugePoints = [uint128(0), beanEthGp, bean3crvGp, 0, 0];
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
