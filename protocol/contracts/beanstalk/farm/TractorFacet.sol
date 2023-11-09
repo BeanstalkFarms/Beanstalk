@@ -33,9 +33,9 @@ contract TractorFacet is ReentrancyGuard {
     /// @param blueprint Blueprint object
     event PublishBlueprint(LibTractor.SignedBlueprint signedBlueprint);
 
-    /// @dev Emitted on destroyBlueprint()
+    /// @dev Emitted on cancelBlueprint()
     /// @param blueprintHash Blueprint Hash
-    event DestroyBlueprint(bytes32 blueprintHash);
+    event CancelBlueprint(bytes32 blueprintHash);
 
     /// @dev Emitted on tractor()
     /// @param operator The operator address
@@ -47,7 +47,7 @@ contract TractorFacet is ReentrancyGuard {
     /*************/
 
     modifier verifySignedBlueprint(LibTractor.SignedBlueprint calldata signedBlueprint) {
-        bytes32 blueprintHash = LibTractor.getBlueprintHash(signedBlueprint);
+        bytes32 blueprintHash = LibTractor._getBlueprintHash(signedBlueprint);
         require(blueprintHash == blueprint.blueprintHash, "TractorFacet: invalid hash");
         address signer = ECDSA.recover(blueprintHash, signature);
         require(signer == blueprint.publisher, "TractorFacet: invalid signer");
@@ -57,17 +57,17 @@ contract TractorFacet is ReentrancyGuard {
     /// @notice Check blueprint nonce, increment nonce, handle active publisher.
     modifier runBlueprint(LibTractor.Blueprint calldata blueprint) {
         require(
-            LibTractor.getBlueprintNonce(signedBlueprint.blueprintHash) < blueprint.maxNonce,
+            LibTractor._getBlueprintNonce(signedBlueprint.blueprintHash) < blueprint.maxNonce,
             "TractorFacet: maxNonce reached"
         );
         require(
             blueprint.startTime <= block.timestamp && block.timestamp <= blueprint.endTime,
             "TractorFacet: blueprint is not active"
         );
-        LibTractor.setPublisher(blueprint.publisher);
+        LibTractor._setPublisher(blueprint.publisher);
         _;
-        LibTractor.incrementBlueprintNonce(signedBlueprint.blueprintHash);
-        LibTractor.resetPublisher();
+        LibTractor._incrementBlueprintNonce(signedBlueprint.blueprintHash);
+        LibTractor._resetPublisher();
     }
 
     /******************/
@@ -75,45 +75,27 @@ contract TractorFacet is ReentrancyGuard {
     /******************/
 
     /// @notice Publish new blueprint
-    ///
     /// Emits {PublishBlueprint} event
-    ///
     /// @param blueprint Blueprint object
     function publishBlueprint(
         LibTractor.SignedBlueprint calldata signedBlueprint
     ) external verifySignedBlueprint(signedBlueprint) {
-        // emits event
         emit PublishBlueprint(signedBlueprint);
     }
 
     /// @notice Destroy existing blueprint
-    ///
-    /// Emits {DestroyBlueprint} event
-    ///
+    /// Emits {CancelBlueprint} event
     /// @param blueprint Blueprint object
-    function destroyBlueprint(
+    function cancelBlueprint(
         LibTractor.SignedBlueprint calldata signedBlueprint
     ) external verifySignedBlueprint(signedBlueprint) {
         require(msg.sender == blueprint.publisher, "TractorFacet: not publisher");
-
-        // cancel blueprint
-        LibTractor.cancelBlueprint(signedBlueprint.blueprintHash);
-
-        // emits event
-        emit DestroyBlueprint(signedBlueprint.blueprintHash);
-    }
-
-    /// @notice return current blueprint nonce
-    /// @param blueprint Blueprint object
-    /// @return nonce current blueprint nonce
-    function blueprintNonce(bytes32 calldata blueprintHash) external view returns (uint256) {
-        return LibTractor.getBlueprintNonce(blueprintHash);
+        LibTractor._cancelBlueprint(signedBlueprint.blueprintHash);
+        emit CancelBlueprint(signedBlueprint.blueprintHash);
     }
 
     /// @notice Tractor Operation
-    ///
     /// Emits {Tractor} event
-    ///
     /// @param blueprint Blueprint object
     /// @param fillData data updates provided by tractor operator
     function tractor(
@@ -155,12 +137,28 @@ contract TractorFacet is ReentrancyGuard {
 
             results = new bytes[](data.length);
             for (uint256 i = 0; i < data.length; ++i) {
-                results[i] = LibFarm.advancedFarmMem(data[i], results);
+                results[i] = LibFarm.advancedFarm(data[i], results);
             }
         } else {
             revert("TractorFacet: unknown blueprint type");
         }
 
         emit Tractor(msg.sender, signedBlueprint.blueprintHash);
+    }
+
+    /// @notice return current blueprint nonce
+    /// @param blueprint Blueprint object
+    /// @return nonce current blueprint nonce
+    function getBlueprintNonce(bytes32 calldata blueprintHash) external view returns (uint256) {
+        return LibTractor._getBlueprintNonce(blueprintHash);
+    }
+
+    /// @notice return EIP712 hash of the blueprint
+    /// @param blueprint Blueprint object
+    /// @return hash calculated Blueprint hash
+    function getBlueprintHash(
+        LibTractor.Blueprint calldata blueprint
+    ) external pure returns (bytes32) {
+        return LibTractor._getBlueprintHash(blueprint);
     }
 }

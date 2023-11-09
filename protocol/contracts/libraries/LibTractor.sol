@@ -54,7 +54,7 @@ library LibTractor {
 
     /// @notice get tractor storage from storage
     /// @return ts TractorStorage
-    function tractorStorage() internal pure returns (TractorStorage storage ts) {
+    function _tractorStorage() internal pure returns (TractorStorage storage ts) {
         bytes32 position = TRACTOR_STORAGE_POSITION;
         assembly {
             ts.slot := position
@@ -63,7 +63,7 @@ library LibTractor {
 
     /// @notice increment the blueprint nonce by 1
     /// @param blueprintHash blueprint hash
-    function incrementBlueprintNonce(bytes32 blueprintHash) internal {
+    function _incrementBlueprintNonce(bytes32 blueprintHash) internal {
         TractorStorage storage ts = tractorStorage();
         ++ts.blueprintNonce[blueprintHash];
     }
@@ -71,13 +71,13 @@ library LibTractor {
     /// @notice cancel blueprint
     /// @dev set blueprintNonce to type(uint256).max
     /// @param blueprintHash blueprint hash
-    function cancelBlueprint(bytes32 blueprintHash) internal {
+    function _cancelBlueprint(bytes32 blueprintHash) internal {
         tractorStorage().blueprintNonce[blueprintHash] = type(uint256).max;
     }
 
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
-    function setPublisher(address publisher) internal {
+    function _setPublisher(address publisher) internal {
         require(
             tractorStorage().activePublisher == address(0) ||
                 tractorStorage().activePublisher == address(1),
@@ -87,20 +87,20 @@ library LibTractor {
     }
 
     /// @notice reset blueprint publisher address
-    function resetPublisher() internal {
+    function _resetPublisher() internal {
         tractorStorage().activePublisher = address(1);
     }
 
     /// @notice return current activePublisher address
     /// @return publisher current activePublisher address
-    function getBlueprintPublisher() internal view returns (address) {
+    function _getBlueprintPublisher() internal view returns (address) {
         return tractorStorage().activePublisher;
     }
 
     /// @notice return current activePublisher address
     /// @dev reverts if activePublisher is 0x0
     /// @return publisher current activePublisher address
-    function getActivePublisher() internal view returns (address publisher) {
+    function _getActivePublisher() internal view returns (address publisher) {
         publisher = getBlueprintPublisher();
         require(publisher != address(1), "Tractor: No active publisher");
     }
@@ -108,14 +108,14 @@ library LibTractor {
     /// @notice get blueprint nonce
     /// @param blueprintHash blueprint hash
     /// @return nonce current blueprint nonce
-    function getBlueprintNonce(bytes32 blueprintHash) internal view returns (uint256) {
+    function _getBlueprintNonce(bytes32 blueprintHash) internal view returns (uint256) {
         return tractorStorage().blueprintNonce[blueprintHash];
     }
 
     /// @notice calculates blueprint hash
     /// @param blueprint blueprint object
     /// @return hash calculated Blueprint hash
-    function getBlueprintHash(Blueprint calldata blueprint) public pure returns (bytes32) {
+    function _getBlueprintHash(Blueprint calldata blueprint) internal pure returns (bytes32) {
         return
             _hashTypedDataV4(
                 keccak256(
@@ -143,17 +143,15 @@ library LibTractor {
      * @dev Returns the domain separator for the current chain.
      */
     function _domainSeparatorV4() internal view returns (bytes32) {
-        return _buildDomainSeparator(EIP712_TYPE_HASH, TRACTOR_HASHED_NAME, TRACTOR_HASHED_VERSION);
-    }
-
-    /**
-     * @dev See {_domainSeparatorV4}.
-     */
-    function _buildDomainSeparator(
-        bytes32 typeHash,
-        bytes32 name,
-        bytes32 version
-    ) internal view returns (bytes32) {
-        return keccak256(abi.encode(typeHash, name, version, C.getChainId(), address(this)));
+        return
+            keccak256(
+                abi.encode(
+                    EIP712_TYPE_HASH,
+                    TRACTOR_HASHED_NAME,
+                    TRACTOR_HASHED_VERSION,
+                    C.getChainId(),
+                    address(this)
+                )
+            );
     }
 }
