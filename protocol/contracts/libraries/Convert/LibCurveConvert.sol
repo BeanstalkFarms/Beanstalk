@@ -82,7 +82,6 @@ library LibCurveConvert {
     {
         (uint256 lp, uint256 minBeans, address pool) = convertData
             .convertWithAddress();
-
         (amountOut, amountIn) = curveRemoveLPTowardsPeg(lp, minBeans, pool);
         tokenOut = C.BEAN;
         tokenIn = pool;
@@ -103,7 +102,6 @@ library LibCurveConvert {
     {
         (uint256 beans, uint256 minLP, address pool) = convertData
             .convertWithAddress();
-
         (amountOut, amountIn) = curveAddLiquidityTowardsPeg(
             beans,
             minLP,
