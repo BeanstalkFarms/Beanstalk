@@ -24,6 +24,7 @@ describe('Well Convert', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
     this.well = await deployWell([BEAN, WETH]);
+    this.fakeWell = await deployWell([BEAN, WETH]);
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
@@ -99,6 +100,16 @@ describe('Well Convert', function () {
     describe('p > 1', async function () {
       beforeEach(async function () {
         await setReserves(owner, this.well, [to6('800000'), to18('1000')]);
+      })
+
+      it('reverts if not whitelisted well', async function () {
+        await setReserves(owner, this.fakeWell, [to6('800000'), to18('1000')]);
+        const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.fakeWell.address)
+        await expect(this.convert.connect(owner).convertInternalE(
+          this.bean.address,
+          to6('100000'),
+          convertData
+        )).to.be.revertedWith("Convert: Invalid Well")
       })
 
       it('convert below max', async function () {
@@ -184,6 +195,16 @@ describe('Well Convert', function () {
     describe('p <= 1', async function () {
       beforeEach(async function () {
         await setReserves(owner, this.well, [to6('1200000'), to18('1000')]);
+      })
+
+      it('reverts if not whitelisted well', async function () {
+        await setReserves(owner, this.fakeWell, [to6('800000'), to18('1000')]);
+        const convertData = ConvertEncoder.convertWellLPToBeans(to18('2000'), to6('100000'), this.fakeWell.address)
+        await expect(this.convert.connect(owner).convertInternalE(
+          this.well.address,
+          '3018239549693752550560',
+          convertData
+        )).to.be.revertedWith("Convert: Invalid Well")
       })
 
       it('convert below max', async function () {
