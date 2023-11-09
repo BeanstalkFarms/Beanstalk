@@ -108,7 +108,7 @@ async function ebip11(mock = true, account = undefined) {
   });
 }
 
-async function ebip12(mock = true, account = undefined) {
+async function ebip13(mock = true, account = undefined) {
   if (account == undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
@@ -147,4 +147,4 @@ exports.ebip8 = ebip8;
 exports.ebip9 = ebip9;
 exports.ebip10 = ebip10;
 exports.ebip11 = ebip11;
-exports.ebip12 = ebip12;
+exports.ebip13 = ebip13;
