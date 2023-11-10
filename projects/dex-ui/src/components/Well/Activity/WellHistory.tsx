@@ -23,15 +23,18 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD }: WellHistoryProps
   const totalEvents = events?.length || 0;
   const totalPages = Math.ceil(totalEvents / eventsPerPage);
   const [currentPage, setCurrentPage] = useState(1);
-  const newestEventOnPage = (eventsPerPage * currentPage) - eventsPerPage;
-  const oldestEventOnPage = (eventsPerPage * currentPage) - 1;
-  
+  const newestEventOnPage = eventsPerPage * currentPage - eventsPerPage;
+  const oldestEventOnPage = eventsPerPage * currentPage - 1;
+
   const lpTokenSupply = useTokenSupply(well.lpToken!);
-  const lpTokenPrice = lpTokenSupply.totalSupply ? reservesUSD.div(lpTokenSupply.totalSupply) : TokenValue.ZERO;
+  const isNonEmptyWell = lpTokenSupply.totalSupply && lpTokenSupply.totalSupply.gt(0);
+  const lpTokenPrice = lpTokenSupply.totalSupply && isNonEmptyWell ? reservesUSD.div(lpTokenSupply.totalSupply) : TokenValue.ZERO;
 
   const eventRows: JSX.Element[] = (events || [])
     .filter((e: WellEvent) => filter === null || e.type == filter)
-    .map<ReactElement>((e, index): any => (index >= newestEventOnPage && index <= oldestEventOnPage) && renderEvent(e, well, tokenPrices, lpTokenPrice));
+    .map<ReactElement>(
+      (e, index): any => index >= newestEventOnPage && index <= oldestEventOnPage && renderEvent(e, well, tokenPrices, lpTokenPrice)
+    );
 
   return (
     <WellHistoryContainer>
@@ -53,25 +56,61 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD }: WellHistoryProps
               </Row>
             </THead>
             <TBody>
-              {eventRows}
-              <MobilePageSelector>
-                <PageSelector colSpan={2}>
-                  <SelectorContainer>
-                    <StyledTabButton active pageLimit={currentPage === 1} onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}>←</StyledTabButton>
-                      {`Page ${currentPage} of ${totalPages}`}
-                    <StyledTabButton active pageLimit={currentPage === totalPages} onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}>→</StyledTabButton>
-                  </SelectorContainer>
-                </PageSelector>
-              </MobilePageSelector>
-              <DesktopPageSelector>
-                <PageSelector colSpan={4}>
-                  <SelectorContainer>
-                    <StyledTabButton active pageLimit={currentPage === 1} onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}>←</StyledTabButton>
-                      {`Page ${currentPage} of ${totalPages}`}
-                    <StyledTabButton active pageLimit={currentPage === totalPages} onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}>→</StyledTabButton>
-                  </SelectorContainer>
-                </PageSelector>
-              </DesktopPageSelector>
+              {eventRows.length ? (
+                eventRows
+              ) : (
+                <>
+                  <NoEventsRow colSpan={4}>
+                    <NoEventsData>No events to show</NoEventsData>
+                  </NoEventsRow>
+                </>
+              )}
+              {isNonEmptyWell ? (
+                <>
+                  <MobilePageSelector>
+                    <PageSelector colSpan={2}>
+                      <SelectorContainer>
+                        <StyledTabButton
+                          active
+                          pageLimit={currentPage === 1}
+                          onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                        >
+                          ←
+                        </StyledTabButton>
+                        {`Page ${currentPage} of ${totalPages}`}
+                        <StyledTabButton
+                          active
+                          pageLimit={currentPage === totalPages}
+                          onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                        >
+                          →
+                        </StyledTabButton>
+                      </SelectorContainer>
+                    </PageSelector>
+                  </MobilePageSelector>
+                  <DesktopPageSelector>
+                    <PageSelector colSpan={4}>
+                      <SelectorContainer>
+                        <StyledTabButton
+                          active
+                          pageLimit={currentPage === 1}
+                          onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                        >
+                          ←
+                        </StyledTabButton>
+                        {`Page ${currentPage} of ${totalPages}`}
+                        <StyledTabButton
+                          active
+                          pageLimit={currentPage === totalPages}
+                          onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                        >
+                          →
+                        </StyledTabButton>
+                      </SelectorContainer>
+                    </PageSelector>
+                  </DesktopPageSelector>
+                </>
+              ) : null}
             </TBody>
           </Table>
         </>
@@ -111,16 +150,32 @@ const SelectorContainer = styled.div`
   align-items: center;
   font-weight: 600;
   gap: 8px;
-  background-color: #F9F8F6;
-`
+  background-color: #f9f8f6;
+`;
 
-const StyledTabButton = styled(TabButton)<{pageLimit: boolean}>`
-  background-color: #F9F8F6;
+const StyledTabButton = styled(TabButton)<{ pageLimit: boolean }>`
+  background-color: #f9f8f6;
   outline: 0px;
-  ${({pageLimit}) => pageLimit && 'color: #9CA3AF;'}
-`
+  ${({ pageLimit }) => pageLimit && "color: #9CA3AF;"}
+`;
 
 const PageSelector = styled(Td)`
   padding: 0px;
   text-align: end;
-`
+`;
+
+const NoEventsRow = styled.td`
+  background-color: #fff;
+  height: 120px;
+  border-bottom: 0.5px solid #9ca3af;
+`;
+
+const NoEventsData = styled.div`
+  display: flex;
+  justify-content: center;
+  color: #4b5563;
+
+  @media (max-width: ${size.mobile}) {
+    font-size: 14px;
+  }
+`;
