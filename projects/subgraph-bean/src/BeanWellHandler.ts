@@ -103,12 +103,17 @@ function handleLiquidityChange(
   let volumeBean = ZERO_BI;
   if ((token0Amount == ZERO_BI || token1Amount == ZERO_BI) && removal) {
     if (token0Amount != ZERO_BI) {
-      volumeBean = token0Amount;
+      volumeBean = token0Amount.div(BigInt.fromI32(2));
       volumeUSD = toDecimal(token0Amount).times(toDecimal(wellPrice.value.price));
     } else {
       let wellPairInBean = toDecimal(wellPrice.value.balances[0]).div(toDecimal(wellPrice.value.balances[1], 18));
       volumeBean = BigInt.fromString(
-        toDecimal(token1Amount, 18).times(wellPairInBean).times(BigDecimal.fromString("1000000")).truncate(0).toString()
+        toDecimal(token1Amount, 18)
+          .times(wellPairInBean)
+          .times(BigDecimal.fromString("1000000"))
+          .div(BigDecimal.fromString("2"))
+          .truncate(0)
+          .toString()
       );
       volumeUSD = toDecimal(volumeBean).times(toDecimal(wellPrice.value.price));
     }
