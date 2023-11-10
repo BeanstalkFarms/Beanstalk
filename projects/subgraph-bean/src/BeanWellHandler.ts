@@ -102,9 +102,16 @@ function handleLiquidityChange(
   let volumeUSD = ZERO_BD;
   let volumeBean = ZERO_BI;
   if ((token0Amount == ZERO_BI || token1Amount == ZERO_BI) && removal) {
-    // This is a removal and delta liquidity should always be negative.
-    volumeUSD = deltaLiquidityUSD.times(BigDecimal.fromString("-1")).div(BigDecimal.fromString("2"));
-    volumeBean = BigInt.fromString(volumeUSD.div(newPrice).times(BigDecimal.fromString("1000000")).truncate(0).toString());
+    if (token0Amount != ZERO_BI) {
+      volumeBean = token0Amount;
+      volumeUSD = toDecimal(token0Amount).times(toDecimal(wellPrice.value.price));
+    } else {
+      let wellPairInBean = toDecimal(wellPrice.value.balances[0]).div(toDecimal(wellPrice.value.balances[1], 18));
+      volumeBean = BigInt.fromString(
+        toDecimal(token1Amount, 18).times(wellPairInBean).times(BigDecimal.fromString("1000000")).truncate(0).toString()
+      );
+      volumeUSD = toDecimal(volumeBean).times(toDecimal(wellPrice.value.price));
+    }
   }
 
   setPoolReserves(poolAddress, wellPrice.value.balances, blockNumber);
