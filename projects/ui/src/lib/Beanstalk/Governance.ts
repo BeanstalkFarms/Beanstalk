@@ -27,7 +27,7 @@ const QUORUM = {
   [GovProposalType.BIP]: 0.5,
   [GovProposalType.BOP]: 0.35,
   [GovProposalType.BFCP_A]: 0.25,
-  [GovProposalType.BFCP_B]: 0.25,
+  [GovProposalType.BFCP_B]: 0.35,
   [GovProposalType.BFCP_C]: 0.25,
   [GovProposalType.BFCP_D]: 0.25,
   [GovProposalType.BSP]: 0.1,
