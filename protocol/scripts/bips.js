@@ -230,9 +230,6 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         'ConvertFacet': [
           'LibConvert'
         ],
-        'ConvertGettersFacet': [
-          'LibConvert'
-        ],
         'UnripeFacet': [
           'LibLockedUnderlying'
         ]
