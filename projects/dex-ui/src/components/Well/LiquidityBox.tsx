@@ -11,6 +11,7 @@ import { useSiloBalance } from "src/tokens/useSiloBalance";
 import { Well } from "@beanstalk/sdk/Wells";
 import { formatNum } from "src/utils/format";
 import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
+import useTokenBalanceInternal from "src/tokens/useTokenBalanceInternal";
 
 type Props = {
   well: Well | undefined;
@@ -19,6 +20,7 @@ type Props = {
 export const LiquidityBox: FC<Props> = ({ well }) => {
   const { data: balance } = useTokenBalance(well?.lpToken!);
   const { data: siloBalance } = useSiloBalance(well?.lpToken!);
+  const { data: internalBalance } = useTokenBalanceInternal(well?.lpToken);
 
   /// memoize here to prevent new arr instances when passing into useWellLPTokenPrice
   const wellArr = useMemo(() => [well], [well]);
@@ -31,7 +33,8 @@ export const LiquidityBox: FC<Props> = ({ well }) => {
 
   const siloTokenBalance = lpSymbol && siloBalance ? siloBalance : TokenValue.ZERO;
   const lpBalance = lpSymbol && balance ? balance[lpSymbol] : TokenValue.ZERO;
-  const ttlBalance = siloTokenBalance.add(lpBalance);
+  const farmBalance = lpSymbol && internalBalance ? internalBalance : TokenValue.ZERO;
+  const ttlBalance = siloTokenBalance.add(lpBalance).add(farmBalance);
   const USDTotal = ttlBalance.mul(lpTokenPrice);
 
   return (
@@ -53,6 +56,10 @@ export const LiquidityBox: FC<Props> = ({ well }) => {
         <InfoBox.Row>
           <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
           <InfoBox.Value>{siloBalance ? siloBalance.toHuman("short") : "-"}</InfoBox.Value>
+        </InfoBox.Row>
+        <InfoBox.Row>
+          <InfoBox.Key>In my Farm Balance</InfoBox.Key>
+          <InfoBox.Value>{internalBalance ? farmBalance.toHuman("short") : "-"}</InfoBox.Value>
         </InfoBox.Row>
       </InfoBox.Body>
       <InfoBox.Footer>
