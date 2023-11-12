@@ -89,7 +89,9 @@ export default function useProposalBlockData(
   const score =
     proposal.space.id === GovSpace.BeanSprout
       ? new BigNumber(proposal.scores_total || ZERO_BN)
-      : new BigNumber(proposal.scores[0] || ZERO_BN);
+      : proposal.title.includes("BFCP-B-") && proposal.choices && proposal.choices[1].includes("Remove")
+        ? new BigNumber(proposal.scores[1])
+        : new BigNumber(proposal.scores[0] || ZERO_BN);
 
   /// Voting power
   const { data: vpData } = useProposalVotingPowerQuery({
