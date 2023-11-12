@@ -55,15 +55,15 @@ export const useWellLPTokenPrice = (wells: (Well | undefined)[] | undefined) => 
       const well = wells[wellIdx];
 
       const tokens = well?.tokens;
-      const reserves = well?.reserves || [TokenValue.ZERO, TokenValue.ZERO];
+      const reserves = well?.reserves && well.reserves.length === 2 ? well.reserves : [TokenValue.ZERO, TokenValue.ZERO];
       const lpToken = well?.lpToken;
       const lpTokenSupply = tokenSupplies[wellIdx] || TokenValue.ONE;
 
-      if (!well || !tokens || !lpToken) continue;
-
-      const wellReserveValues = reserves.map((reserve, rIdx) => reserve.mul(tokenPriceMap[tokens[rIdx].address] || TokenValue.ZERO));
-      const wellTVL = wellReserveValues?.reduce((acc, val) => acc.add(val));
-      lpTokenPrices[lpToken.address] = (wellTVL && wellTVL?.div(lpTokenSupply)) || TokenValue.ZERO;
+      if (well && tokens && lpToken) {
+        const wellReserveValues = reserves.map((reserve, rIdx) => reserve.mul(tokenPriceMap[tokens[rIdx].address] || TokenValue.ZERO));
+        const wellTVL = wellReserveValues?.reduce((acc, val) => acc.add(val));
+        lpTokenPrices[lpToken.address] = wellTVL && lpTokenSupply.gt(0) ? wellTVL.div(lpTokenSupply) : TokenValue.ZERO;
+      }
     }
     setLPTokenPriceMap(lpTokenPrices);
   }, [sdk, tokenSupplies, wells]);

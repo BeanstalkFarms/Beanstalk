@@ -144,9 +144,6 @@ export const Wells = () => {
     const lpBalance = wellLpBalances[index] || TokenValue.ZERO;
 
     const lpPrice = (lpAddress && lpAddress in lpTokenPrices && lpTokenPrices[lpAddress]) || undefined;
-    console.log({
-      lpTokenPrices
-    });
     const usdVal = (lpPrice && lpPrice.mul(lpBalance)) || undefined;
 
     return (
