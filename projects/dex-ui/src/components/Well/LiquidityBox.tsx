@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import styled from "styled-components";
 import { InfoBox } from "src/components/InfoBox";
 import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "../Typography";
@@ -19,12 +19,19 @@ type Props = {
 export const LiquidityBox: FC<Props> = ({ well }) => {
   const { data: balance } = useTokenBalance(well?.lpToken!);
   const { data: siloBalance } = useSiloBalance(well?.lpToken!);
-  const { data: tokenPrices } = useWellLPTokenPrice([well]);
+
+  /// memoize here to prevent new arr instances when passing into useWellLPTokenPrice
+  const wellArr = useMemo(() => [well], [well]);
+  const { data: lpTokenPriceMap } = useWellLPTokenPrice(wellArr);
 
   const lpSymbol = well?.lpToken?.symbol;
+  const lpAddress = well?.lpToken?.address;
 
-  const lpTokenPrice = tokenPrices.length === 1 ? tokenPrices[0] : TokenValue.ZERO;
-  const ttlBalance = (balance && siloBalance && lpSymbol && balance[lpSymbol].add(siloBalance)) || TokenValue.ZERO;
+  const lpTokenPrice = lpAddress && lpAddress in lpTokenPriceMap ? lpTokenPriceMap[lpAddress] : TokenValue.ZERO;
+
+  const siloTokenBalance = lpSymbol && siloBalance ? siloBalance : TokenValue.ZERO;
+  const lpBalance = lpSymbol && balance ? balance[lpSymbol] : TokenValue.ZERO;
+  const ttlBalance = siloTokenBalance.add(lpBalance);
   const USDTotal = ttlBalance.mul(lpTokenPrice);
 
   return (
