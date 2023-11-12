@@ -79,6 +79,8 @@ contract ConvertFacet is ReentrancyGuard {
             convertData
         );
 
+        require(fromAmount > 0, "Convert: From amount is 0.");
+
         LibSilo._mow(msg.sender, fromToken);
         LibSilo._mow(msg.sender, toToken);
 

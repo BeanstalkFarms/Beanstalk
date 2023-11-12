@@ -71,21 +71,24 @@ async function curve() {
 
 }
 
-async function curveMetapool() {
+async function curveMetapool(address, name) {
 
     // Deploy Bean Metapool
     let meta3CurveJson = fs.readFileSync(`./artifacts/contracts/mocks/curve/MockMeta3Curve.sol/MockMeta3Curve.json`);
     await network.provider.send("hardhat_setCode", [
-      BEAN_3_CURVE,
+      address,
       JSON.parse(meta3CurveJson).deployedBytecode,
     ]);
-    // const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
 
-    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
+    const beanMetapool = await ethers.getContractAt('MockMeta3Curve', address);
     await beanMetapool.init(BEAN, THREE_CURVE, THREE_POOL);
     await beanMetapool.set_A_precise('1000');
     await beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-    await beanMetapool.setSymbol("BEAN3CRV-f");
+    await beanMetapool.setSymbol(`${name}-f`);
+}
+
+async function bean3CrvMetapool() {
+  await curveMetapool(BEAN_3_CURVE, 'BEAN3CRV');
 }
 
 async function weth() {
@@ -295,7 +298,8 @@ async function ethUsdChainlinkAggregator() {
 exports.impersonateRouter = router
 exports.impersonateBean = bean
 exports.impersonateCurve = curve
-exports.impersonateCurveMetapool = curveMetapool 
+exports.impersonateCurveMetapool = curveMetapool
+exports.impersonateBean3CrvMetapool = bean3CrvMetapool
 exports.impersonateCurveLUSD = curveLUSD
 exports.impersonatePool = pool
 exports.impersonateWeth = weth

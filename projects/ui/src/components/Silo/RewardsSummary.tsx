@@ -88,7 +88,7 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
         />
         <RewardItem
           title="Earned Stalk"
-          tooltip="Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership and do not require any action to claim them."
+          tooltip="Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership even before claiming."
           amount={stalk.earned}
           icon={stalkIcon}
           compact={compact}

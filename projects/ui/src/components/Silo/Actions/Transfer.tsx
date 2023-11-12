@@ -26,6 +26,7 @@ import {
   displayFullBN,
   displayTokenAmount,
   tokenValueToBN,
+  transform,
   trimAddress,
 } from '~/util';
 import { FontSize } from '~/components/App/muiTheme';
@@ -50,6 +51,7 @@ import {
   WithdrawFarmStep,
 } from '~/lib/Txn';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -87,6 +89,10 @@ const TransferForm: FC<
       BEAN.equals(whitelistedToken) &&
       plantAndDoX
   );
+  const farmerSilo = useFarmerSilo();
+  const earnedBeans = transform(farmerSilo.beans.earned, 'tokenValue', BEAN);
+  const earnedStalk = transform(farmerSilo.stalk.earned, 'tokenValue', STALK);
+  const earnedSeeds = transform(farmerSilo.seeds.earned, 'tokenValue', SEEDS);
 
   // Results
   const withdrawResult = useMemo(() => {
@@ -146,11 +152,11 @@ const TransferForm: FC<
       <TokenOutput>
         <TokenOutput.Row
           token={whitelistedToken}
-          amount={withdrawResult.amount.mul(-1)}
+          amount={(isUsingPlant ? withdrawResult.amount.add(earnedBeans) : withdrawResult.amount).mul(-1)}
         />
         <TokenOutput.Row
           token={STALK}
-          amount={withdrawResult.stalk.mul(-1)}
+          amount={(isUsingPlant ? withdrawResult.stalk.add(earnedStalk) : withdrawResult.stalk).mul(-1)}
           amountTooltip={
             <>
               <div>
@@ -171,7 +177,7 @@ const TransferForm: FC<
             </>
           }
         />
-        <TokenOutput.Row token={SEEDS} amount={withdrawResult.seeds.mul(-1)} />
+        <TokenOutput.Row token={SEEDS} amount={(isUsingPlant ? withdrawResult.seeds.add(earnedSeeds) : withdrawResult.seeds).mul(-1)} />
       </TokenOutput>
     );
   };
@@ -194,13 +200,15 @@ const TransferForm: FC<
             <FieldWrapper label="Transfer to">
               <AddressInputField name="to" />
             </FieldWrapper>
-            {values.to !== '' && withdrawResult?.amount.abs().gt(0) && (
+            {values.to !== '' && withdrawResult?.amount.add(earnedBeans).abs().gt(0) && (
               <>
                 <TxnSeparator />
                 <TokenOutputs />
-                <WarningAlert>
-                  More recent Deposits are Transferred first.
-                </WarningAlert>
+                {withdrawResult?.amount.abs().gt(0) && 
+                  <WarningAlert>
+                    More recent Deposits are Transferred first.
+                  </WarningAlert>
+                }
                 <AdditionalTxnsAccordion filter={disabledActions} />
                 <Box>
                   <TxnAccordion>
@@ -209,45 +217,47 @@ const TransferForm: FC<
                         {
                           type: ActionType.TRANSFER,
                           amount: withdrawResult
-                            ? toBN(withdrawResult.amount.abs())
+                            ? toBN((isUsingPlant ? withdrawResult.amount.add(earnedBeans) : withdrawResult.amount).abs())
                             : ZERO_BN,
                           token: getNewToOldToken(whitelistedToken),
                           stalk: withdrawResult
-                            ? toBN(withdrawResult.stalk.abs())
+                            ? toBN((isUsingPlant ? withdrawResult.stalk.add(earnedStalk) : withdrawResult.stalk).abs())
                             : ZERO_BN,
                           seeds: withdrawResult
-                            ? toBN(withdrawResult?.seeds.abs())
+                            ? toBN((isUsingPlant ? withdrawResult.seeds.add(earnedSeeds) : withdrawResult.seeds).abs())
                             : ZERO_BN,
                           to: values.to,
                         },
-                        {
-                          type: ActionType.BASE,
-                          message: (
-                            <>
-                              The following Deposits will be used:
-                              <br />
-                              <ul
-                                css={{
-                                  paddingLeft: '25px',
-                                  marginTop: '10px',
-                                  marginBottom: 0,
-                                  fontSize: FontSize.sm,
-                                }}
-                              >
-                                {withdrawResult.crates.map((crate, index) => (
-                                  <li key={index}>
-                                    {displayTokenAmount(
-                                      crate.amount,
-                                      whitelistedToken
-                                    )}{' '}
-                                    from Deposits at Stem{' '}
-                                    {crate.stem.toString()}
-                                  </li>
-                                ))}
-                              </ul>
-                            </>
-                          ),
-                        },
+                        withdrawResult?.amount.abs().gt(0)
+                          ? {
+                              type: ActionType.BASE,
+                              message: (
+                                <>
+                                  The following Deposits will be used:
+                                  <br />
+                                  <ul
+                                    css={{
+                                      paddingLeft: '25px',
+                                      marginTop: '10px',
+                                      marginBottom: 0,
+                                      fontSize: FontSize.sm,
+                                    }}
+                                  >
+                                    {withdrawResult.crates.map((crate, index) => (
+                                      <li key={index}>
+                                        {displayTokenAmount(
+                                          crate.amount,
+                                          whitelistedToken
+                                        )}{' '}
+                                        from Deposits at Stem{' '}
+                                        {crate.stem.toString()}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              ),
+                            } 
+                          : undefined,
                         {
                           type: ActionType.END_TOKEN,
                           token: getNewToOldToken(whitelistedToken),

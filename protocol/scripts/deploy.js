@@ -4,7 +4,7 @@ const diamond = require('./diamond.js')
 const { 
   impersonateBean, 
   impersonateCurve,
-  impersonateCurveMetapool, 
+  impersonateBean3CrvMetapool, 
   impersonateWeth, 
   impersonateUnripe, 
   impersonateFertilizer,
@@ -14,6 +14,7 @@ const {
   impersonateEthUsdtUniswap,
   impersonateEthUsdChainlinkAggregator
 } = require('./impersonate.js')
+
 function addCommas(nStr) {
   nStr += ''
   const x = nStr.split('.')
@@ -191,7 +192,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       await impersonateEthUsdcUniswap()
       await impersonateEthUsdtUniswap()
     }
-    await impersonateCurveMetapool()
+    await impersonateBean3CrvMetapool()
     await impersonateUnripe()
     await impersonateFertilizer()
     await impersonateBlockBasefee();

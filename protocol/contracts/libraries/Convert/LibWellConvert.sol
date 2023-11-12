@@ -127,6 +127,8 @@ library LibWellConvert {
     {
         (uint256 lp, uint256 minBeans, address well) = convertData.convertWithAddress();
 
+        require(LibWell.isWell(well), "Convert: Invalid Well");
+
         tokenOut = C.BEAN;
         tokenIn = well;
 
@@ -173,6 +175,8 @@ library LibWellConvert {
     {
         (uint256 beans, uint256 minLP, address well) = convertData
             .convertWithAddress();
+
+        require(LibWell.isWell(well), "Convert: Invalid Well");
     
         tokenOut = well;
         tokenIn = C.BEAN;
