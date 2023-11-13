@@ -317,7 +317,11 @@ library LibGauge {
      * @notice returns the ratio between the bean and
      * the max LP gauge points per BDV.
      * @dev s.seedGauge.beanToMaxLpGpPerBdvRatio is a number between 0 and 100e18,
-     * where f(100e18) = MIN_BEAN_MAX_LPGP_RATIO and f(0) = MAX_BEAN_MAX_LPGP_RATIO.
+     * where f(0) = MIN_BEAN_MAX_LPGP_RATIO and f(100e18) = MAX_BEAN_MAX_LPGP_RATIO.
+     * At the minimum value (0), beans should have half of the 
+     * largest gauge points per BDV out of the LPs.
+     * At the maximum value (100e18), beans should have the same amount of  
+     * gauge points per BDV as the largest out of the LPs.
      */
     function getBeanToMaxLpGpPerBdvRatioScaled(
         uint256 beanToMaxLpGpPerBdvRatio
