@@ -191,7 +191,8 @@ library LibGauge {
 
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
-     * @dev Called at the end of each Season.
+     * @dev Called at the end of each Season. 
+     * The gauge system considers the total BDV of all whitelisted silo tokens, excluding unripe assets.
      */
     function updateGrownStalkEarnedPerSeason(
         uint256 maxLpGpPerBdv,
@@ -201,10 +202,10 @@ library LibGauge {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 beanDepositedBdv = s.siloBalances[C.BEAN].depositedBdv;
-        uint256 totalBdv = totalLpBdv.add(beanDepositedBdv);
+        uint256 totalGaugeBdv = totalLpBdv.add(beanDepositedBdv);
 
         // if nothing has been deposited, skip grown stalk update.
-        if (totalBdv == 0) return;
+        if (totalGaugeBdv == 0) return;
 
         // calculate the ratio between the bean and the max LP gauge points per BDV.
         // 6 decimal precision
@@ -227,7 +228,7 @@ library LibGauge {
         }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
-            .mul(totalBdv)
+            .mul(totalGaugeBdv)
             .div(BDV_PRECISION);
 
         // gauge points has 18 decimal precision.
@@ -304,7 +305,8 @@ library LibGauge {
     }
 
     /**
-     * @notice returns the average grown stalk per BDV .
+     * @notice returns the average grown stalk per BDV.
+     * @dev `totalBDV` refers to the total BDV deposited in the silo.
      */
     function getAverageGrownStalkPerBdv() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
