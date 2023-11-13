@@ -268,7 +268,7 @@ const ConvertForm: FC<
     if (['urBEANETH', 'urBEAN'].includes(tokenIn.symbol)) pool = 'BEANETH Well';
 
     const lowerOrGreater =
-      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'lower' : 'greater';
+      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'less' : 'greater';
 
     const message = `${tokenIn.symbol} can only be Converted to ${tokenOut?.symbol} when deltaB in the ${pool} is ${lowerOrGreater} than 0.`;
 
