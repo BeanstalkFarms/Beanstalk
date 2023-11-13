@@ -231,7 +231,7 @@ const DepositForm: FC<
             />
           );
         })}
-        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle />}
+        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle actionText="Deposit" />}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -296,7 +296,7 @@ const DepositForm: FC<
           Deposit
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Beans">
+      <FormWithDrawer.Drawer title="Deposit Claimable Beans">
         <ClaimBeanDrawerContent
           quoteProviderProps={{
             name: 'claimableBeans',

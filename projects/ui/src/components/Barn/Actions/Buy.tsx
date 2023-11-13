@@ -206,7 +206,7 @@ const BuyForm: FC<
           balanceFrom={values.balanceFrom}
           params={quoteProviderParams}
         />
-        <ClaimBeanDrawerToggle />
+        <ClaimBeanDrawerToggle actionText='Buy Fert with'/>
         {/* Outputs */}
         {fert?.gt(0) ? (
           <>
@@ -287,7 +287,7 @@ const BuyForm: FC<
           Buy
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Beans">
+      <FormWithDrawer.Drawer title="Buy Fert with Claimable Beans">
         <ClaimBeanDrawerContent<BuyQuoteHandlerParams>
           quoteProviderProps={{
             tokenOut: token,
