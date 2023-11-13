@@ -279,7 +279,7 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
