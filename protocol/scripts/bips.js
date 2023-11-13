@@ -208,7 +208,13 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "SeasonGettersFacet", // season getters
         "GaugePointFacet", // gauge point function caller
         "UnripeFacet", // new view functions
-        "MockAdminFacet" // testing purposes
+        "SiloFacet", // new view functions
+        "ConvertFacet", // add unripe convert
+        "ConvertGetterFacet", // add unripe convert getters
+        "WhitelistFacet", // update whitelist abilities.
+        "MetadataFacet", // update metadata
+        "BDVFacet", // update bdv functions
+        "FieldFacet" // update for comments
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
