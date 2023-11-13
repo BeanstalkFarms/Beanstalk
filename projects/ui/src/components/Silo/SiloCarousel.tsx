@@ -46,13 +46,7 @@ const useCardContentWithToken = (token: ERC20Token) => [
     title: `Deposit ${token.name}`,
     texts: [
       `Use the form to Deposit ${token.symbol} into the Silo.`,
-      `Beanstalk allows you to use ${
-        token.isUnripe
-          ? token.symbol
-          : token.symbol === 'BEAN'
-          ? 'BEAN or ETH'
-          : 'BEAN, ETH, WETH, 3CRV, DAI, USDC, or USDT'
-      } from your wallet or Farm balance to Deposit ${
+      `Beanstalk allows you to use different assets from your wallet or Farm balance to Deposit ${
         token.symbol
       } into the Silo.${
         token.isUnripe
