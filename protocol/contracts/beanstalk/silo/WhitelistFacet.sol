@@ -169,7 +169,7 @@ contract WhitelistFacet {
     }
 
     /**
-     * @notice updates the Gauge point selctor, the gauge points themselves, or the optimal 
+     * @notice updates the Gauge point selctor, or the optimal 
      */
     function updateGaugeForToken(
         address token, 

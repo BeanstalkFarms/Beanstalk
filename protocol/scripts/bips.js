@@ -210,7 +210,8 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "UnripeFacet", // new view functions
         "SiloFacet", // update from view functions
         "ConvertFacet", // new unripe -> ripe functionality
-        "ConvertGettersFacet" // update view functionality
+        "ConvertGettersFacet", // update view functionality
+        "WhitelistFacet"
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
