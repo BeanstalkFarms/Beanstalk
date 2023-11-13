@@ -260,7 +260,11 @@ const ConvertForm: FC<
 
   const getConvertWarning = () => {
     let pool = tokenIn.isLP ? tokenIn.symbol : tokenOut!.symbol;
-    pool += ' pool';
+    if (tokenOut && !tokenOut.equals(sdk.tokens.BEAN_CRV3_LP)) {
+      pool += ' Well';
+    } else {
+      pool += ' pool';
+    }
     if (['urBEANETH', 'urBEAN'].includes(tokenIn.symbol)) pool = 'BEANETH Well';
 
     const lowerOrGreater =
