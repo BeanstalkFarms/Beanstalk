@@ -15,6 +15,7 @@ import depositUrBeanImg from '~/img/beanstalk/silo/edu/depositUrBeanImg.svg';
 import depositBeanEth from '~/img/beanstalk/silo/edu/depositBeanEth.svg';
 import depositUrBeanEth from '~/img/beanstalk/silo/edu/depositUrBeanEth.svg';
 import earnStalkAndSeedsImg from '~/img/beanstalk/silo/edu/earnStalkAndSeedsImg.svg';
+import earnStalkImg from '~/img/beanstalk/silo/edu/earnStalkImg.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import Carousel from '~/components/Common/Carousel/Carousel';
 import EmbeddedCard from '~/components/Common/EmbeddedCard';
@@ -66,12 +67,11 @@ const useCardContentWithToken = (token: ERC20Token) => [
     imageSrc: depositCardContentByToken[token.address]?.img || depositBeanImg,
   },
   {
-    title: 'Receive Stalk and Seeds for your Deposit',
+    title: `Receive Stalk ${!token.isUnripe ? 'and Seeds' : ''} for your Deposit`,
     texts: [
       'Stalk entitles holders to participate in Beanstalk governance and earn a portion of Bean mints.',
-      'Seeds yield 1/10000 new Stalk every Season.',
     ],
-    imageSrc: earnStalkAndSeedsImg,
+    imageSrc: token.isUnripe ? earnStalkImg : earnStalkAndSeedsImg,
   },
   {
     title: 'Earn Beans',
