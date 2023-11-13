@@ -194,7 +194,7 @@ const TransferForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Transfer' />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">

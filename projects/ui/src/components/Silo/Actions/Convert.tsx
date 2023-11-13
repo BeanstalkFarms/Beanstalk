@@ -326,7 +326,7 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : (
-          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} />
+          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} actionText='Convert' />
         )}
 
         {/* User Input: destination token */}
