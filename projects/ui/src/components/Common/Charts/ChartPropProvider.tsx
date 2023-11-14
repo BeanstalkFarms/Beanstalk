@@ -200,6 +200,11 @@ const defaultChartStyles: ChartMultiStyles = {
     fillPrimary: chartColors.yellowLight,
     strokeWidth: 2,
   },
+  4: {
+    stroke: chartColors.blue,
+    fillPrimary: chartColors.blueLight,
+    strokeWidth: 2,
+  },
 };
 
 /**
