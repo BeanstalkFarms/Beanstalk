@@ -8,7 +8,7 @@ import useWhitelist from './useWhitelist';
 import { BeanstalkSiloBalance } from '~/state/beanstalk/silo';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP } from '~/constants/tokens';
+import { BEAN, BEAN_ETH_WELL_LP } from '~/constants/tokens';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import { UnripeToken } from '~/state/bean/unripe';
 
@@ -60,7 +60,7 @@ export const STATE_CONFIG = {
   ripePooled: [
     'Ripe Pooled',
     colors.chart.primaryLight,
-    (name: string) => `Pooled ${name} that make up Ripe BEAN:3CRV.`,
+    (name: string) => `Pooled ${name} that make up Ripe BEANETH.`,
   ],
 } as const;
 
@@ -156,7 +156,6 @@ export default function useBeanstalkSiloBreakdown() {
 
   const getChainToken = useGetChainToken();
   const Bean = getChainToken(BEAN);
-  const Bean3CRV = getChainToken(BEAN_CRV3_LP);
   const BeanETH = getChainToken(BEAN_ETH_WELL_LP);
   const unripeToRipe = useUnripeUnderlyingMap('unripe');
   const ripeToUnripe = useUnripeUnderlyingMap('ripe');
@@ -195,29 +194,27 @@ export default function useBeanstalkSiloBreakdown() {
 
             // Handle: BEAN
             if (TOKEN === Bean) {
-              budget = Object.values(multisigBalances).reduce(
+              /* budget = Object.values(multisigBalances).reduce(
                 (_prev, curr) => _prev.plus(curr),
                 ZERO_BN
-              );
+              ); */
               // const pooled = Object.values(poolState).reduce((_prev, curr) => _prev.plus(curr.reserves[0]), ZERO_BN);
               const totalPooled = Object.values(poolState).reduce(
                 (_prev, curr) => _prev.plus(curr.reserves[0]),
                 ZERO_BN
               );
 
-              // TODO: need to verify it's correct to comment this out after the BIP38 migration
-              // // Ripe Pooled = BEAN:3crv_RESERVES * (Ripe BEAN:3CRV / BEAN:3CRV Token Supply)
-              // // TODO: can we reduce this duplicate code?
-              // ripePooled = new BigNumber(totalPooled).multipliedBy(
-              //   new BigNumber(
-              //     unripeTokenState[ripeToUnripe[Bean3CRV.address].address]
-              //       ?.underlying || 0
-              //   ).div(new BigNumber(poolState[Bean3CRV.address]?.supply || 0))
-              // );
+              // Ripe Pooled = BEAN:ETH_RESERVES * (Ripe BEAN:ETH / BEAN:ETH Token Supply)
+              ripePooled = new BigNumber(totalPooled).multipliedBy(
+                 new BigNumber(
+                   unripeTokenState[ripeToUnripe[BeanETH.address].address]
+                     ?.underlying || 0
+                 ).div(new BigNumber(poolState[BeanETH.address]?.supply || 0))
+               );
               // pooled = new BigNumber(totalPooled).minus(ripePooled);
 
               farmable = beanSupply
-                .minus(budget)
+                // .minus(budget)
                 .minus(totalPooled)
                 .minus(ripe || ZERO_BN)
                 .minus(siloBalance.deposited.amount)
@@ -309,7 +306,6 @@ export default function useBeanstalkSiloBreakdown() {
       poolState,
       getUSD,
       unripeTokenState,
-      multisigBalances,
       beanSupply,
     ]
   );
