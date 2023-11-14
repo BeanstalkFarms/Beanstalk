@@ -525,4 +525,81 @@ describe('Unripe Convert', function () {
 //       });
 //     });
   });
+
+  // Unripe to Ripe test
+  describe('convert unripe beans to beans', async function () {
+
+    beforeEach(async function () {
+      // GO TO SEASON 10
+      await this.season.teleportSunrise(10);
+      this.season.deployStemsUpgrade();
+    });
+
+    describe('basic urBEAN-->BEAN convert', function () {
+
+      // PERFORM A DEPOSIT AND A CONVERT BEFORE EVERY TEST
+      beforeEach(async function () {
+
+        // user deposits 200 UrBEAN to the silo from external account
+        await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
+        // GO FORWARD 1 SEASON AND DONT DISTRIBUTE ANY REWARDS TO SILO
+        // season 11
+        await this.season.siloSunrise(0);
+        // SET FERT PARAMS
+        await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
+        // INTERACTING WITH THE CONVERT FACET CONVERT(bytes calldata convertData, int96[] memory stems,uint256[] memory amounts) FUNCTION
+        this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeToRipe(to6('100') , this.unripeBean.address) , ['0'], [to6('100')] );
+      });
+
+      // CHECK TO SEE THAT RECAP AND PENALTY VALUES ARE UPDATED AFTER THE CONVERT
+      it('getters', async function () {
+        expect(await this.unripe.getRecapPaidPercent()).to.be.equal(to6('0.01'))
+        expect(await this.unripe.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal('101000')
+        expect(await this.unripe.getPenalty(UNRIPE_BEAN)).to.be.equal(to6('0.00101'))
+        expect(await this.unripe.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6('999.90'))
+        expect(await this.unripe.isUnripe(UNRIPE_BEAN)).to.be.equal(true)
+        // same fert , less supply --> penalty goes down
+        expect(await this.unripe.getPenalizedUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.00101'))
+        expect(await this.unripe.getUnderlying(UNRIPE_BEAN, to6('1'))).to.be.equal(to6('0.1010'))
+      })
+
+      // TOTALS
+      it('properly updates total values', async function () {
+        // UNRIPE BEAN DEPOSIT TEST
+        expect(await this.silo.getTotalDeposited(this.unripeBean.address)).to.eq(to6('100'));
+        // RIPE BEAN CONVERTED TEST
+        expect(await this.silo.getTotalDeposited(this.bean.address)).to.eq(to6('0.1'));
+        // TOTAL STALK TEST
+        expect(await this.silo.totalStalk()).to.eq(toStalk('20.004'));
+        // VERIFY urBEANS ARE BURNED
+        expect(await this.unripeBean.totalSupply()).to.be.equal(to6('9900'))
+      });
+
+      // USER VALUES TEST
+      it('properly updates user values', async function () {
+        // USER STALK TEST
+        // 1 urBEAN yields 2/10000 grown stalk every season witch is claimable with mow()
+        // after every silo interaction(here --> convert).
+        // Since we go forward a season after the deposit, the user should now have 400/10000 grown stalk 
+        // not affected by the unripe --> ripe convert
+        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('20.004'));
+      });
+
+      // USER DEPOSITS TEST
+      it('properly updates user deposits', async function () {
+        expect((await this.silo.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('100'));
+        expect((await this.silo.getDeposit(userAddress, this.bean.address, 0))[0]).to.eq(to6('0.1'));
+      });
+
+      // EVENTS TEST
+      it('emits events', async function () {
+        await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
+          .withArgs(userAddress, this.unripeBean.address, [0], [to6('100')], to6('100'), [to6('10')]);
+        await expect(this.result).to.emit(this.silo, 'AddDeposit')
+          .withArgs(userAddress, this.bean.address, 0 , to6('0.1'), to6('10'));
+        await expect(this.result).to.emit(this.convert, 'Convert')
+          .withArgs(userAddress, this.unripeBean.address, this.bean.address, to6('100') , to6('0.1'));
+      });
+    });
+  });
 });
