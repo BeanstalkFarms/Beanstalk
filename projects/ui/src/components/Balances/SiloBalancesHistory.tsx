@@ -53,7 +53,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', height: '380px', position: 'relative' }}>
+    <Box sx={{ width: '100%', height: '390px', position: 'relative' }}>
       {account !== undefined ? (
         <BaseSeasonPlot
           queryData={queryData}
