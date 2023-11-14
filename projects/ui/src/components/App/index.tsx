@@ -204,6 +204,7 @@ export default function App() {
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
+          {/*
           <Box
             sx={{
               position: 'fixed',
@@ -220,7 +221,8 @@ export default function App() {
               &middot; {sgEnvKey}
             </Typography>
           </Box>
-        </Box>
+          */}
+          </Box>
       </Box>
     </>
   );
