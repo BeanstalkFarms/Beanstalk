@@ -6590,6 +6590,69 @@
     "type": "function"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateGaugeSettings",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "season",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "gaugePoints",
+        "type": "uint256"
+      }
+    ],
+    "name": "GaugePointChange",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newStalkPerBdvPerSeason",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateStalkPerBdvPerSeason",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -6778,19 +6841,6 @@
   },
   {
     "inputs": [],
-    "name": "getLastStalkGrowthRateUpdate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getLiquidityToSupplyRatio",
     "outputs": [
       {
@@ -6805,19 +6855,6 @@
   {
     "inputs": [],
     "name": "getNewAverageGrownStalkPerBdvPerSeason",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getNextStalkGrowthRateUpdate",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6859,7 +6896,7 @@
           },
           {
             "internalType": "uint32",
-            "name": "lastStalkGrowthUpdate",
+            "name": "lastSeedGaugeUpdate",
             "type": "uint32"
           }
         ],
@@ -7346,7 +7383,7 @@
   },
   {
     "inputs": [],
-    "name": "updateAverageStalkPerBdvPerSeason",
+    "name": "updateStalkPerBdvPerSeason",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
