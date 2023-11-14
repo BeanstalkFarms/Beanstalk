@@ -194,10 +194,10 @@ const ConvertForm: FC<
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
       <Stack gap={0.5}>
-        <StatHorizontal label="Instantaneous BDV:">
+        <StatHorizontal label="Current BDV:">
           ~{displayFullBN(instantBDV, 2, 2)}
         </StatHorizontal>
-        <StatHorizontal label="BDV of Deposits:">
+        <StatHorizontal label="Recorded BDV:">
           ~{displayFullBN(depositBDV, 2, 2)}
         </StatHorizontal>
       </Stack>
