@@ -94,7 +94,6 @@ const SiloActions: FC<{
     ? withdrawalItems.length > 0
     : false;
 
-  console.log('Choppingss: ', isChopping);
   return (
     <>
       <Module

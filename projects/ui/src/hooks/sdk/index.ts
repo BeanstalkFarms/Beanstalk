@@ -80,8 +80,6 @@ export const useRefreshSeeds = () => {
         }
         token!.rewards!.seeds = parseFloat(seeds.toHuman());
       }
-
-      console.log('seeds loaded');
     },
     [getChainToken]
   );
