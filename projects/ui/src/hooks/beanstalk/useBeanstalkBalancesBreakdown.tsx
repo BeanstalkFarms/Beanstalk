@@ -33,7 +33,7 @@ export const STATE_CONFIG = {
   withdrawn: [
     'Claimable',
     colors.chart.yellowLight,
-    (name: string) => `Legacy Claimable ${name} Withdrawals from pre-Silo V3.`,
+    (name: string) => `Legacy Claimable ${name === 'Beans' ? 'Bean' : name} Withdrawals from before Silo V3.`,
   ],
   farmable: [
     'Farm & Circulating',
@@ -53,7 +53,7 @@ export const STATE_CONFIG = {
     (name: string) =>
       `${name} minted as the percentage of Fertilizer sold increases. Ripe ${name} are the ${name} underlying Unripe ${name}. ${
         name === 'Beans'
-          ? 'Does not include Beans that make up Ripe BEAN:3CRV.'
+          ? 'Does not include Beans that make up Ripe BEANETH.'
           : ''
       }`,
   ],
