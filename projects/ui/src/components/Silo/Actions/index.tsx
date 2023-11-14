@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Button, Tab } from '@mui/material';
 import { ERC20Token } from '@beanstalk/sdk';
 import { Link } from 'react-router-dom';
@@ -47,6 +47,15 @@ const SiloActions: FC<{
   const [tab, handleChange] = useTabs(SLUGS, 'action');
   const migrationNeeded = useMigrationNeeded();
   const account = useAccount();
+  const [isChopping, setIsChopping] = useState(false);
+
+  const tabChange = (
+    event: React.SyntheticEvent<Element, Event>,
+    newIndex: number
+  ) => {
+    setIsChopping(false);
+    handleChange(event, newIndex);
+  };
 
   const token = useMemo(() => {
     const match = sdk.tokens.findBySymbol(props.token.symbol) as ERC20Token;
@@ -85,9 +94,20 @@ const SiloActions: FC<{
     ? withdrawalItems.length > 0
     : false;
 
+  console.log('Choppingss: ', isChopping);
   return (
     <>
-      <Module>
+      <Module
+        sx={
+          isChopping
+            ? {
+                backgroundImage:
+                  'linear-gradient(135deg, #fffee0 25%, #cccccc 25%, #cccccc 50%, #fffee0 50%, #fffee0 75%, #cccccc 75%, #cccccc 100%)',
+                backgroundSize: '56.57px 56.57px',
+              }
+            : {}
+        }
+      >
         {migrationNeeded ? (
           <Alert
             sx={{
@@ -106,7 +126,22 @@ const SiloActions: FC<{
             </Link>
           </Alert>
         ) : null}
-        <ModuleTabs value={tab} onChange={handleChange}>
+        {isChopping ? (
+          <Alert
+            sx={{
+              borderRadius: 0,
+              position: 'relative',
+              zIndex: 1,
+              backgroundColor: 'error.main',
+              color: 'light.main',
+            }}
+            icon={<></>}
+          >
+            This will perform a CHOP operation!!
+          </Alert>
+        ) : null}
+        {/* <ModuleTabs value={tab} onChange={handleChange}> */}
+        <ModuleTabs value={tab} onChange={tabChange}>
           <Tab label="Deposit" disabled={migrationNeeded === true} />
           <Tab label="Convert" disabled={migrationNeeded === true} />
           <Tab label="Transfer" disabled={migrationNeeded === true} />
@@ -121,7 +156,9 @@ const SiloActions: FC<{
         </ModuleTabs>
         <ModuleContent>
           {tab === 0 && <Deposit token={token} />}
-          {tab === 1 && <Convert fromToken={token} />}
+          {tab === 1 && (
+            <Convert fromToken={token} setChopping={setIsChopping} />
+          )}
           {tab === 2 && <Transfer token={token} />}
           {tab === 3 && <Withdraw token={token} />}
           {tab === 4 && hasClaimableBeans && withdrawalItems && (
