@@ -146,6 +146,7 @@ export class ConvertFarmStep extends FarmStep {
       [siloConvert.Bean, siloConvert.BeanEth],
       [siloConvert.Bean, siloConvert.BeanEth, siloConvert.BeanCrv3],
       [siloConvert.urBean, siloConvert.urBeanWeth],
+      [siloConvert.urBean, siloConvert.Bean],
     ];
 
     /// b/c siloConvert uses it's own token instances
@@ -153,7 +154,12 @@ export class ConvertFarmStep extends FarmStep {
       [sdk.tokens.BEAN, sdk.tokens.BEAN_CRV3_LP],
       [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP],
       [sdk.tokens.BEAN, sdk.tokens.BEAN_ETH_WELL_LP, sdk.tokens.BEAN_CRV3_LP],
-      [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_WETH],
+      [sdk.tokens.UNRIPE_BEAN, sdk.tokens.UNRIPE_BEAN_WETH, sdk.tokens.BEAN],
+      [
+        sdk.tokens.UNRIPE_BEAN_WETH,
+        sdk.tokens.UNRIPE_BEAN,
+        sdk.tokens.BEAN_ETH_WELL_LP,
+      ],
     ];
 
     const index =
@@ -163,9 +169,10 @@ export class ConvertFarmStep extends FarmStep {
         ? 1
         : tokenIn === sdk.tokens.BEAN
         ? 2
-        : 3;
+        : tokenIn === sdk.tokens.UNRIPE_BEAN
+        ? 3
+        : 4;
     const path = pathMatrix[index];
-
     const tokenInIndex = path.findIndex((t) => t.equals(tokenIn));
     const tokenOutIndex = Number(Boolean(!tokenInIndex));
 

@@ -1,5 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Stack, Typography, Tooltip } from '@mui/material';
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { Box, Stack, Typography, Tooltip, TextField } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
@@ -72,14 +79,6 @@ type ConvertQuoteHandlerParams = {
 
 // -----------------------------------------------------------------------
 
-const INIT_CONVERSION = {
-  amount: ZERO_BN,
-  bdv: ZERO_BN,
-  stalk: ZERO_BN,
-  seeds: ZERO_BN,
-  actions: [],
-};
-
 const ConvertForm: FC<
   FormikProps<ConvertFormValues> & {
     /** List of tokens that can be converted to. */
@@ -92,6 +91,7 @@ const ConvertForm: FC<
     sdk: BeanstalkSDK;
     conversion: ConvertDetails;
     plantAndDoX: ReturnType<typeof usePlantAndDoX>;
+    setChopping: Dispatch<SetStateAction<boolean>>;
   }
 > = ({
   tokenList,
@@ -105,10 +105,14 @@ const ConvertForm: FC<
   isSubmitting,
   setFieldValue,
   conversion,
+  setChopping,
 }) => {
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
+  const [isChopping, setIsChopping] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [choppingConfirmed, setChoppingConfirmed] = useState(false);
 
   const plantCrate = plantAndDoX?.crate?.bn;
 
@@ -165,7 +169,7 @@ const ConvertForm: FC<
   } else if (!canConvert) {
     // buttonContent = 'Pathway unavailable';
   } else {
-    buttonContent = 'Convert';
+    buttonContent = isChopping ? 'Chop and Convert' : 'Convert';
     if (
       tokenOut &&
       (amountOut?.gt(0) || isUsingPlanted) &&
@@ -190,6 +194,14 @@ const ConvertForm: FC<
       ); // seeds lost when converting
     }
   }
+
+  useEffect(() => {
+    if (confirmText.toUpperCase() === 'THIS WILL CHOP') {
+      setChoppingConfirmed(true);
+    } else {
+      setChoppingConfirmed(false);
+    }
+  }, [confirmText, setChoppingConfirmed]);
 
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
@@ -218,10 +230,15 @@ const ConvertForm: FC<
       if (tokenOut !== _tokenOut) {
         setFieldValue('tokenOut', _tokenOut);
         setFieldValue('maxAmountIn', null);
+        setConfirmText('');
       }
     },
     [setFieldValue, tokenOut]
   );
+
+  useEffect(() => {
+    setConfirmText('');
+  }, [amountIn]);
 
   /// When `tokenIn` or `tokenOut` changes, refresh the
   /// max amount that the user can input of `tokenIn`.
@@ -239,9 +256,19 @@ const ConvertForm: FC<
 
         const _maxAmountInStr = tokenIn.amount(_maxAmountIn.toString());
         console.debug('[Convert][maxAmountIn]: ', _maxAmountInStr);
+
+        // Figure out if we're chopping
+        const chopping =
+          (tokenIn.address === sdk.tokens.UNRIPE_BEAN.address &&
+            tokenOut?.address === sdk.tokens.BEAN.address) ||
+          (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WETH.address &&
+            tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
+
+        setChopping(chopping);
+        setIsChopping(chopping);
       }
     })();
-  }, [sdk, setFieldValue, tokenIn, tokenOut]);
+  }, [sdk, setChopping, setFieldValue, tokenIn, tokenOut]);
 
   const quoteHandlerParams = useMemo(
     () => ({
@@ -448,10 +475,42 @@ const ConvertForm: FC<
           </>
         ) : null}
 
+        {isReady && isChopping && (
+          <Box sx={{ m: 1 }}>
+            <Typography
+              sx={{
+                fontSize: 'bodySmall',
+                px: 0.5,
+                mb: 0.25,
+              }}
+              component="span"
+              display="inline-block"
+            >
+              This conversion will effectively perform a CHOP opperation. Please
+              confirm you understand this by typing{' '}
+              <strong>&quot;THIS WILL CHOP&quot;</strong>below.
+            </Typography>
+            <TextField
+              fullWidth
+              type="text"
+              name="confirm"
+              color="error"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              sx={{
+                background: '#f5d1d1',
+                borderRadius: '10px',
+                border: '1px solid red',
+                input: { color: '#880202', textTransform: 'uppercase' },
+              }}
+            />
+          </Box>
+        )}
+
         {/* Submit */}
         <SmartSubmitButton
           loading={buttonLoading || isQuoting}
-          disabled={!isReady || isSubmitting}
+          disabled={!isReady || isSubmitting || !choppingConfirmed}
           type="submit"
           variant="contained"
           color="primary"
@@ -470,7 +529,8 @@ const ConvertForm: FC<
 
 const ConvertPropProvider: FC<{
   fromToken: ERC20Token | NativeToken;
-}> = ({ fromToken }) => {
+  setChopping: Dispatch<SetStateAction<boolean>>;
+}> = ({ fromToken, setChopping }) => {
   const sdk = useSdk();
 
   /// Token List
@@ -612,11 +672,6 @@ const ConvertPropProvider: FC<{
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
 
-        const lpConversion =
-          tokenOut.equals(sdk.tokens.BEAN_ETH_WELL_LP) ||
-          tokenIn.address.toLowerCase() ===
-            sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase();
-
         const convertTxn = new ConvertFarmStep(
           sdk,
           tokenIn,
@@ -704,6 +759,7 @@ const ConvertPropProvider: FC<{
             />
           </TxnSettings>
           <ConvertForm
+            setChopping={setChopping}
             handleQuote={handleQuote}
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             siloBalances={farmerSiloBalances}
@@ -721,6 +777,7 @@ const ConvertPropProvider: FC<{
 
 const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
+  setChopping: Dispatch<SetStateAction<boolean>>;
 }> = (props) => (
   <FormTxnProvider>
     <ConvertPropProvider {...props} />

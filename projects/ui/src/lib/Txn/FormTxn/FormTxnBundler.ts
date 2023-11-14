@@ -1,4 +1,5 @@
 import { BeanstalkSDK, TokenValue } from '@beanstalk/sdk';
+import { BigNumber } from 'ethers';
 import {
   ClaimFarmStep,
   EnrootFarmStep,
@@ -14,7 +15,6 @@ import {
   FormTxnMap,
 } from '~/lib/Txn/FormTxn/types';
 import { FormTxnBundlerPresets as presets } from '~/lib/Txn/FormTxn/presets';
-import { BigNumber } from 'ethers';
 import { Token } from '@beanstalk/sdk-core';
 
 type FormTxnFarmStep =
@@ -210,16 +210,26 @@ export class FormTxnBundler {
     const estimate = await farm.estimate(amountIn);
     console.debug('[FormTxnBundler][bundle]: estimate = ', estimate.toString());
 
-    let gasEstimate: BigNumber
-    let adjustedGas: string
+    let gasEstimate: BigNumber;
+    let adjustedGas: string;
     if (gasMultiplier) {
       gasEstimate = await farm.estimateGas(amountIn, { slippage });
-      adjustedGas = Math.round(gasEstimate.toNumber() * gasMultiplier).toString();
-      console.debug('[FormTxnBundler][bundle]: estimateGas = ', gasEstimate.toString());
+      adjustedGas = Math.round(
+        gasEstimate.toNumber() * gasMultiplier
+      ).toString();
+      console.debug(
+        '[FormTxnBundler][bundle]: estimateGas = ',
+        gasEstimate.toString()
+      );
       console.debug('[FormTxnBundler][bundle]: adjustedGas = ', adjustedGas);
     }
 
-    const execute = () => farm.execute(amountIn, { slippage }, gasMultiplier ? { gasLimit: adjustedGas } : undefined);
+    const execute = () =>
+      farm.execute(
+        amountIn,
+        { slippage },
+        gasMultiplier ? { gasLimit: adjustedGas } : undefined
+      );
 
     return {
       estimate,
