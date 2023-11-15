@@ -13,9 +13,15 @@ type TokenMap<T> = Record<string, T>;
  * - TVL = (reserve1 amount  * token1 price ) + (reserve2 amount + token2 price)
  */
 
-export const useWellLPTokenPrice = (wells: (Well | undefined)[] | undefined) => {
+export const useWellLPTokenPrice = (params: Well | (Well | undefined)[] | undefined) => {
   const [lpTokenPriceMap, setLPTokenPriceMap] = useState<TokenMap<TokenValue>>({});
   const sdk = useSdk();
+
+  const wells = useMemo(() => {
+    // Make into array for easier processing
+    if (!params) return [];
+    return Array.isArray(params) ? params : [params];
+  }, [params]);
 
   const lpTokens = useMemo(() => {
     if (!wells || !wells.length) return [];
@@ -39,7 +45,6 @@ export const useWellLPTokenPrice = (wells: (Well | undefined)[] | undefined) => 
       const tokenLyst = Object.entries(_tokenMap);
 
       const prices = await Promise.all(tokenLyst.map(([, token]) => getPrice(token, sdk)));
-
       const data = tokenLyst.reduce<TokenMap<TokenValue>>((memo, [tokenAddress], index) => {
         memo[tokenAddress] = prices[index] || TokenValue.ZERO;
         return memo;

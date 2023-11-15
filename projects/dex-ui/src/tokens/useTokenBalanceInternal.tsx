@@ -8,22 +8,23 @@ const emptyAddress = "0x0";
 /**
  * tokenBalanceInternal refers to farm balance
  */
-export default function useTokenBalanceInternal(_token: Token | undefined) {
+export default function useTokenBalanceInternal(token: Token | undefined) {
   const { address } = useAccount();
   const sdk = useSdk();
 
   const beanstalk = sdk.contracts.beanstalk;
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery<TokenValue, Error>(
-    ["farmer", "internalBalance", sdk, _token?.address || emptyAddress],
+  const { data, isLoading, error, refetch, isFetching } = useQuery<Record<string, TokenValue>, Error>(
+    ["token", "internalBalance", sdk, token?.address || emptyAddress],
     async () => {
-      if (!address || !_token) return TokenValue.ZERO;
-      const token = sdk.tokens.findByAddress(_token.address);
+      const resultMap: Record<string, TokenValue> = {};
 
-      if (!token) return TokenValue.ZERO;
+      if (address && token) {
+        const result = await beanstalk.getInternalBalance(address, token.address);
+        resultMap[token.symbol] = token.fromBlockchain(result);
+      }
 
-      const result = await beanstalk.getInternalBalance(address, token.address);
-      return token.fromBlockchain(result);
+      return resultMap;
     },
     {
       /**
