@@ -148,25 +148,3 @@ const BreakdownRow = styled.div`
   justify-content: space-between;
   gap: 4px;
 `;
-
-const getTooltipProps = (isWhitelisted: boolean) => {
-  if (isWhitelisted) {
-    return {
-      offsetX: -20,
-      offsetY: 375,
-      arrowSize: 4,
-      arrowOffset: 95,
-      side: "top",
-      width: 175
-    };
-  }
-
-  return {
-    offsetX: -20,
-    offsetY: 200,
-    arrowSize: 4,
-    arrowOffset: 95,
-    side: "top",
-    width: 175
-  };
-};

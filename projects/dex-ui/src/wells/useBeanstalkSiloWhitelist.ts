@@ -11,7 +11,7 @@ const WHITELIST_MAP = {
 
 /// set of wells that are whitelisted for the Beanstalk silo
 export const useBeanstalkSiloWhitelist = () => {
-  const whitelistedAddresses = useMemo(() => Object.keys(WHITELIST_MAP).map((item) => item.toLowerCase()), []);
+  const whitelistedAddresses = useMemo(() => Object.keys(WHITELIST_MAP), []);
 
   const getIsWhitelisted = (well: Well | undefined) => {
     if (!well) return false;
