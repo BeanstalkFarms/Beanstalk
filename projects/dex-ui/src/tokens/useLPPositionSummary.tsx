@@ -1,4 +1,4 @@
-import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
+import { Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { erc20ABI, useAccount, useQueryClient } from "wagmi";
