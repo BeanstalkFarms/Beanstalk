@@ -30,7 +30,7 @@ export const Footer = () => (
     <SmallBox href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
       <Github width={20} />
     </SmallBox>
-    <SmallBox href="https://app.bean.money" rel="noopener noreferrer" target="_blank">
+    <SmallBox href="https://bean.money" rel="noopener noreferrer" target="_blank">
       <BeanstalkLogoBlack width={20} />
     </SmallBox>
   </Container>

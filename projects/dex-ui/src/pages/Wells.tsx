@@ -33,13 +33,7 @@ const PositionBreakdown: React.FC<{
   const isMobile = useIsMobile();
 
   const getTooltipProps = () => {
-    let base = {
-      side: "right",
-      offsetX: 3,
-      offsetY: -100,
-      arrowSize: 4,
-      arrowOffset: 40
-    };
+    let base = { side: "right", offsetX: 3, offsetY: -100, arrowSize: 4, arrowOffset: 40 };
 
     if (isMobile) {
       if (isLP) {
@@ -101,6 +95,7 @@ export const Wells = () => {
   const { hasPositions, getPositionWithWell } = useLPPositionSummary();
 
   const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
+  const isMobile = useIsMobile();
 
   useMemo(() => {
     const run = async () => {
@@ -312,7 +307,7 @@ export const Wells = () => {
         <TBody>
           {hasPositions === false && tab === 1 ? (
             <>
-              <NoLPRow colSpan={3}>
+              <NoLPRow colSpan={isMobile ? 2 : 3}>
                 <NoLPMessage>Liquidity Positions will appear here.</NoLPMessage>
               </NoLPRow>
             </>
