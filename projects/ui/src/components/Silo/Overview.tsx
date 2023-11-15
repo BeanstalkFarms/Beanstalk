@@ -11,7 +11,6 @@ import {
   displayPercentage,
   displayStalk,
   displayUSD,
-  STALK_PER_SEED_PER_SEASON,
 } from '~/util';
 import { ChipLabel, StyledTab } from '~/components/Common/Tabs';
 import { ZERO_BN } from '~/constants';
@@ -27,6 +26,7 @@ import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
 import { MigrateTab } from '~/components/Silo/MigrateTab';
+import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 
 const depositStats = (s: BigNumber, v: BigNumber[], d: string) => (
   <Stat
@@ -76,6 +76,7 @@ const Overview: FC<{
   const account = useAccount();
   const { data, loading } = useFarmerSiloHistory(account, false, true);
   const migrationNeeded = useMigrationNeeded();
+  const siloBalance = useFarmerSiloBalances();
   //
   const [tab, handleChange] = useTabs(migrationNeeded ? SLUGS : altSLUGS, 'view');
 
@@ -84,6 +85,14 @@ const Overview: FC<{
     farmerSilo.stalk.active?.gt(0) && beanstalkSilo.stalk.total?.gt(0)
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
+
+  const deposits = Object.values(siloBalance).map(token => token.deposited.crates).flat(Infinity)
+
+  let totalStalkGrown = farmerSilo.stalk.grown;
+
+  deposits.forEach((deposit: any) => {
+    totalStalkGrown = totalStalkGrown.plus(deposit.stalk.grown)
+  })
 
   const stalkStats = useCallback(
     (s: BigNumber, v: BigNumber[], d: string) => (
@@ -107,10 +116,10 @@ const Overview: FC<{
           sx={{ minWidth: 200, ml: 0 }}
         />
         <Stat
-          title="Grown Stalk per Day"
+          title="Total Stalk Grown"
           titleTooltip="The number of Stalk your Seeds will grow every 24 Seasons based on your current Seed balance."
           amount={displayStalk(
-            farmerSilo.seeds.active.times(STALK_PER_SEED_PER_SEASON).times(24)
+            totalStalkGrown
           )}
           color="text.primary"
           gap={0.25}
@@ -118,7 +127,7 @@ const Overview: FC<{
         />
       </>
     ),
-    [farmerSilo, ownership]
+    [ownership, totalStalkGrown]
   );
 
   return (
