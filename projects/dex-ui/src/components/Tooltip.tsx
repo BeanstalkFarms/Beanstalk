@@ -79,7 +79,7 @@ const TooltipBox = styled.div<TooltipProps>`
              left: ${props.arrowOffset}%;`
         : props.side === "left"
         ? `left: calc(100% - ${props.arrowSize}px);
-             top: ${props.arrowOffset}&;`
+             top: ${props.arrowOffset}%;`
         : props.side === "right"
         ? `right: calc(100% - ${props.arrowSize}px);;
              top: ${props.arrowOffset}%;`
