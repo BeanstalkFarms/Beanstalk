@@ -18,6 +18,7 @@ import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
 import { displayTokenSymbol, formatNum } from "src/utils/format";
 import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -30,6 +31,8 @@ export const Wells = () => {
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
+
+  const { getPositionWithWell } = useLPPositionSummary();
 
   useMemo(() => {
     const run = async () => {
@@ -143,6 +146,7 @@ export const Wells = () => {
     const lpAddress = well.lpToken.address;
     const lpBalance = wellLpBalances[index] || TokenValue.ZERO;
 
+    const position = getPositionWithWell(well);
     const lpPrice = (lpAddress && lpAddress in lpTokenPrices && lpTokenPrices[lpAddress]) || undefined;
     const usdVal = (lpPrice && lpPrice.mul(lpBalance)) || undefined;
 
@@ -155,7 +159,7 @@ export const Wells = () => {
           </WellDetail>
         </DesktopContainer>
         <DesktopContainer align="right">
-          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
+          <WellLPBalance>{`${position?.total.toHuman("short") || "-"} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
         </DesktopContainer>
         <DesktopContainer align="right">
           <WellLPBalance>${formatNum(usdVal, { minDecimals: 2 })}</WellLPBalance>
@@ -166,7 +170,7 @@ export const Wells = () => {
             <TokenSymbols>{symbols.join("/")}</TokenSymbols>
             {/* <Deployer>{deployer}</Deployer> */}
           </WellDetail>
-          <WellLPBalance>{`${wellLpBalances[index]!.toHuman("short")} ${well.lpToken.symbol}`}</WellLPBalance>
+          <WellLPBalance>{`${position?.total.toHuman("short") || "-"} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
         </MobileContainer>
         <MobileContainer align="right">
           <WellLPBalance>${formatNum(usdVal, { defaultValue: "-", minDecimals: 2 })}</WellLPBalance>
