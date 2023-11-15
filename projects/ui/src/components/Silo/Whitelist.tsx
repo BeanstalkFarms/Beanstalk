@@ -499,9 +499,9 @@ const Whitelist: FC<{
                       {/* If this is the entry for Bean deposits,
                        * display Earned Beans and Deposited Beans separately.
                        * Internally they are both considered "Deposited". */}
-                      {token === Bean ? (
                         <Tooltip
                           title={
+                            token === Bean ? (
                             <>
                               {displayFullBN(
                                 deposited?.amount || ZERO_BN,
@@ -536,6 +536,13 @@ const Whitelist: FC<{
                               BEAN
                               <br />
                             </>
+                            ) : deposited?.amount.gt(0) && 
+                              <>
+                                  {`Recorded BDV: `}{displayFullBN(
+                                    deposited?.bdv || ZERO_BN,
+                                    token.displayDecimals
+                                  )}
+                              </>
                           }
                         >
                           <span>
@@ -543,7 +550,7 @@ const Whitelist: FC<{
                               deposited?.amount || ZERO_BN,
                               token.displayDecimals
                             )}
-                            {farmerSilo.beans.earned.gt(0) ? (
+                            {token.equals(Bean) && farmerSilo.beans.earned.gt(0) ? (
                               <Typography component="span" color="primary.main">
                                 {' + '}
                                 {displayFullBN(
@@ -554,12 +561,6 @@ const Whitelist: FC<{
                             ) : null}
                           </span>
                         </Tooltip>
-                      ) : (
-                        displayFullBN(
-                          deposited?.amount || ZERO_BN,
-                          token.displayDecimals
-                        )
-                      )}
                       <Box display={{ md: 'inline', xs: 'none' }}>
                         &nbsp;{token.symbol}
                       </Box>
