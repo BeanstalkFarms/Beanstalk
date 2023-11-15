@@ -16,9 +16,29 @@ import { useAccount } from "wagmi";
 import { size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
-import { displayTokenSymbol, formatNum } from "src/utils/format";
+import { displayTokenSymbol, formatNum, formatUSD } from "src/utils/format";
 import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+import { Tooltip } from "src/components/Tooltip";
+
+const tooltipProps = {
+  offsetX: -20,
+  offsetY: 375,
+  arrowSize: 4,
+  arrowOffset: 95,
+  side: "top",
+  width: 200
+} as const;
+
+const usdValueTooltipProps = {
+  offsetX: -40,
+  offsetY: 375,
+  arrowSize: 4,
+  arrowOffset: 95,
+  side: "top",
+  width: 200
+} as const;
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -33,6 +53,7 @@ export const Wells = () => {
   const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
 
   const { getPositionWithWell } = useLPPositionSummary();
+  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
 
   useMemo(() => {
     const run = async () => {
@@ -132,23 +153,34 @@ export const Wells = () => {
   }
 
   function MyLPsRow(well: any, index: any) {
-    if (!well || !wellLpBalances || !wellLpBalances[index] || wellLpBalances[index]!.eq(TokenValue.ZERO)) return;
+    const position = getPositionWithWell(well);
     const tokens = well.tokens || [];
     const logos: ReactNode[] = [];
     const symbols: string[] = [];
     const gotoWell = () => navigate(`/wells/${well.address}`);
+
+    if (!well || !position || position.total.lte(0)) {
+      return null;
+    }
 
     tokens.map((token: any) => {
       logos.push(<TokenLogo token={token} size={25} key={token.symbol} />);
       symbols.push(token.symbol);
     });
 
-    const lpAddress = well.lpToken.address;
-    const lpBalance = wellLpBalances[index] || TokenValue.ZERO;
-
-    const position = getPositionWithWell(well);
+    const lpAddress = well.lpToken.address as string;
     const lpPrice = (lpAddress && lpAddress in lpTokenPrices && lpTokenPrices[lpAddress]) || undefined;
-    const usdVal = (lpPrice && lpPrice.mul(lpBalance)) || undefined;
+    const whitelisted = getIsWhitelisted(well);
+
+    const lpBalance = wellLpBalances[index] || TokenValue.ZERO;
+    const positionTotalUSD = (lpPrice && lpPrice.mul(lpBalance)) || undefined;
+
+    const usdValue = {
+      total: lpPrice?.mul(position.total) || TokenValue.ZERO,
+      external: lpPrice?.mul(position.external) || TokenValue.ZERO,
+      silo: lpPrice?.mul(position.silo) || TokenValue.ZERO,
+      internal: lpPrice?.mul(position.internal) || TokenValue.ZERO
+    };
 
     return (
       <TableRow key={well.address} onClick={gotoWell}>
@@ -159,10 +191,66 @@ export const Wells = () => {
           </WellDetail>
         </DesktopContainer>
         <DesktopContainer align="right">
-          <WellLPBalance>{`${position?.total.toHuman("short") || "-"} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
+          <BalanceContainer>
+            <WellLPBalance>
+              {whitelisted ? (
+                <Tooltip
+                  {...tooltipProps}
+                  content={
+                    <Breakdown>
+                      <BreakdownRow>
+                        {"Wallet: "}
+                        <span>{formatNum(position.external)}</span>
+                      </BreakdownRow>
+                      <BreakdownRow>
+                        {"Silo Deposits: "}
+                        <span>{formatNum(position.silo)}</span>
+                      </BreakdownRow>
+                      <BreakdownRow>
+                        {"Farm Balance: "}
+                        <span>{formatNum(position.internal)}</span>
+                      </BreakdownRow>
+                    </Breakdown>
+                  }
+                >
+                  {`${position?.total.toHuman("short") || "-"} ${displayTokenSymbol(well.lpToken)}`}
+                </Tooltip>
+              ) : (
+                <>{`${position?.total.toHuman("short") || "-"} ${displayTokenSymbol(well.lpToken)}`}</>
+              )}
+            </WellLPBalance>
+          </BalanceContainer>
         </DesktopContainer>
         <DesktopContainer align="right">
-          <WellLPBalance>${formatNum(usdVal, { minDecimals: 2 })}</WellLPBalance>
+          <BalanceContainer>
+            <WellLPBalance>
+              {whitelisted ? (
+                <Tooltip
+                  {...usdValueTooltipProps}
+                  content={
+                    <Breakdown>
+                      <BreakdownRow>
+                        {"Wallet: "}
+                        <span>{formatUSD(usdValue.external)}</span>
+                      </BreakdownRow>
+                      <BreakdownRow>
+                        {"Silo Deposits: "}
+                        <span>{formatUSD(usdValue.silo)}</span>
+                      </BreakdownRow>
+                      <BreakdownRow>
+                        {"Farm Balance: "}
+                        <span>{formatUSD(usdValue.internal)}</span>
+                      </BreakdownRow>
+                    </Breakdown>
+                  }
+                >
+                  {formatUSD(positionTotalUSD)}
+                </Tooltip>
+              ) : (
+                <>{formatUSD(positionTotalUSD)}</>
+              )}
+            </WellLPBalance>
+          </BalanceContainer>
         </DesktopContainer>
         <MobileContainer>
           <WellDetail>
@@ -173,7 +261,7 @@ export const Wells = () => {
           <WellLPBalance>{`${position?.total.toHuman("short") || "-"} ${displayTokenSymbol(well.lpToken)}`}</WellLPBalance>
         </MobileContainer>
         <MobileContainer align="right">
-          <WellLPBalance>${formatNum(usdVal, { defaultValue: "-", minDecimals: 2 })}</WellLPBalance>
+          <WellLPBalance>{formatUSD(positionTotalUSD)}</WellLPBalance>
         </MobileContainer>
       </TableRow>
     );
@@ -367,4 +455,23 @@ const WellLPBalance = styled.div`
     font-size: 14px;
     font-weight: normal;
   }
+`;
+
+const BalanceContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const Breakdown = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+`;
+
+const BreakdownRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 4px;
 `;
