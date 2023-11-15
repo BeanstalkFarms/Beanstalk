@@ -179,13 +179,21 @@ export const useLPPositionSummary = () => {
     [positions]
   );
 
+  const hasPositions = useMemo(() => {
+    if (!positions) return false;
+
+    return Object.entries(positions).some(([_, { total }]) => {
+      return total.gt(TokenValue.ZERO);
+    });
+  }, [positions]);
+
   return {
     data: positions,
-    // data: combined,
     isLoading: siloBalanceRest.isLoading || balanceRest.isLoading,
     error: siloBalanceRest.error || balanceRest.error,
     refetch: refetch,
     isFetching: siloBalanceRest.isFetching || balanceRest.isFetching,
-    getPositionWithWell
+    getPositionWithWell,
+    hasPositions
   };
 };
