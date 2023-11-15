@@ -1,49 +1,55 @@
 import React, { useMemo } from "react";
 import styled from "styled-components";
-import { InfoBox } from "src/components/InfoBox";
-import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "../Typography";
-import { TokenLogo } from "../TokenLogo";
-import { FC } from "src/types";
+
 import { TokenValue } from "@beanstalk/sdk";
-import { useTokenBalance } from "src/tokens/useTokenBalance";
-import { size } from "src/breakpoints";
-import { useSiloBalance } from "src/tokens/useSiloBalance";
 import { Well } from "@beanstalk/sdk/Wells";
-import { formatNum } from "src/utils/format";
+
+import { size } from "src/breakpoints";
+import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
+import { InfoBox } from "src/components/InfoBox";
+import { TokenLogo } from "src/components/TokenLogo";
+import { Tooltip } from "src/components/Tooltip";
+import { FC } from "src/types";
+import { formatUSD } from "src/utils/format";
+
 import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
-import useTokenBalanceInternal from "src/tokens/useTokenBalanceInternal";
-import { Tooltip } from "../Tooltip";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+
 type Props = {
   well: Well | undefined;
 };
 
-export const LiquidityBox: FC<Props> = ({ well }) => {
-  const { data: balance } = useTokenBalance(well?.lpToken!);
-  const { data: siloBalance } = useSiloBalance(well?.lpToken!);
-  const { data: internalBalance } = useTokenBalanceInternal(well?.lpToken);
+const tooltipProps = {
+  offsetX: -20,
+  offsetY: 375,
+  arrowSize: 4,
+  arrowOffset: 95,
+  side: "top",
+  width: 175
+} as const;
 
-  /// memoize here to prevent new arr instances when passing into useWellLPTokenPrice
-  const { data: lpTokenPriceMap } = useWellLPTokenPrice(useMemo(() => [well], [well]));
+const displayTV = (value?: TokenValue) => (value?.gt(0) ? value.toHuman("short") : "-");
 
-  const lpSymbol = well?.lpToken?.symbol;
+export const LiquidityBox: FC<Props> = (props) => {
+  const well = useMemo(() => props.well, [props.well]);
+
+  const { getPositionWithWell } = useLPPositionSummary();
+  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
+
+  const position = getPositionWithWell(well);
+  const isWhitelisted = getIsWhitelisted(well);
+
+  const { data: lpTokenPriceMap } = useWellLPTokenPrice(well);
+
   const lpAddress = well?.lpToken?.address;
-
   const lpTokenPrice = lpAddress && lpAddress in lpTokenPriceMap ? lpTokenPriceMap[lpAddress] : TokenValue.ZERO;
 
-  const lp = {
-    silo: lpSymbol && siloBalance ? siloBalance : TokenValue.ZERO,
-    wallet: lpSymbol && balance ? balance?.[lpSymbol] : TokenValue.ZERO,
-    farm: lpSymbol && internalBalance ? internalBalance : TokenValue.ZERO
-  };
+  const siloUSD = position?.silo.mul(lpTokenPrice) || TokenValue.ZERO;
+  const externalUSD = position?.external.mul(lpTokenPrice) || TokenValue.ZERO;
+  const internalUSD = position?.internal.mul(lpTokenPrice) || TokenValue.ZERO;
 
-  const usd = {
-    silo: lp.silo.mul(lpTokenPrice),
-    wallet: lp.wallet.mul(lpTokenPrice),
-    farm: lp.farm.mul(lpTokenPrice)
-  };
-
-  const lpTotal = lp.farm.add(lp.silo).add(lp.wallet);
-  const USDTotal = usd.silo.add(usd.wallet).add(usd.farm);
+  const USDTotal = siloUSD.add(externalUSD).add(internalUSD);
 
   return (
     <InfoBox>
@@ -53,51 +59,55 @@ export const LiquidityBox: FC<Props> = ({ well }) => {
         </TextNudge>
         <BoxHeaderAmount>
           <TokenLogo token={well!.lpToken} size={16} mobileSize={16} isLP />
-          <TextNudge amount={1.5}>{lpTotal.gt(0) ? lpTotal.toHuman("short") : "-"}</TextNudge>
+          <TextNudge amount={1.5}>{displayTV(position?.total)}</TextNudge>
         </BoxHeaderAmount>
       </InfoBox.Header>
       <InfoBox.Body>
         <InfoBox.Row>
           <InfoBox.Key>In my Wallet</InfoBox.Key>
-          <InfoBox.Value>{lp.wallet.gt(0) ? lp.wallet.toHuman("short") : "-"}</InfoBox.Value>
+          <InfoBox.Value>{displayTV(position?.external)}</InfoBox.Value>
         </InfoBox.Row>
-        <InfoBox.Row>
-          <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
-          <InfoBox.Value>{lp.silo.gt(0) ? lp.silo.toHuman("short") : "-"}</InfoBox.Value>
-        </InfoBox.Row>
-        <InfoBox.Row>
-          <InfoBox.Key>In my Farm Balance</InfoBox.Key>
-          <InfoBox.Value>{lp.farm.gt(0) ? lp.farm.toHuman("short") : "-"}</InfoBox.Value>
-        </InfoBox.Row>
+        {isWhitelisted ? (
+          <>
+            <InfoBox.Row>
+              <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
+              <InfoBox.Value>{displayTV(position?.silo)}</InfoBox.Value>
+            </InfoBox.Row>
+            <InfoBox.Row>
+              <InfoBox.Key>In my Farm Balance</InfoBox.Key>
+              <InfoBox.Value>{displayTV(position?.internal)}</InfoBox.Value>
+            </InfoBox.Row>
+          </>
+        ) : null}
       </InfoBox.Body>
       <InfoBox.Footer>
         <USDWrapper>
-          <Tooltip
-            offsetX={-20}
-            offsetY={375}
-            arrowSize={4}
-            arrowOffset={95}
-            side={"top"}
-            width={175}
-            content={
-              <Breakdown>
-                <BreakdownRow>
-                  {"Wallet: "}
-                  <div>${usd.wallet.toHuman("short")}</div>
-                </BreakdownRow>
-                <BreakdownRow>
-                  {"Silo Deposits: "}
-                  <div>${usd.silo.toHuman("short")}</div>
-                </BreakdownRow>
-                <BreakdownRow>
-                  {"Farm Balance: "}
-                  <div>${usd.farm.toHuman("short")}</div>
-                </BreakdownRow>
-              </Breakdown>
-            }
-          >
-            USD TOTAL: ${formatNum(USDTotal, { defaultValue: "-", minDecimals: 2 })}
-          </Tooltip>
+          {isWhitelisted ? (
+            <Tooltip
+              {...tooltipProps}
+              content={
+                <Breakdown>
+                  <BreakdownRow>
+                    {"Wallet: "}
+                    <div>${externalUSD.toHuman("short")}</div>
+                  </BreakdownRow>
+
+                  <BreakdownRow>
+                    {"Silo Deposits: "}
+                    <div>${siloUSD.toHuman("short")}</div>
+                  </BreakdownRow>
+                  <BreakdownRow>
+                    {"Farm Balance: "}
+                    <div>${internalUSD.toHuman("short")}</div>
+                  </BreakdownRow>
+                </Breakdown>
+              }
+            >
+              USD TOTAL: {formatUSD(USDTotal)}
+            </Tooltip>
+          ) : (
+            <>USD TOTAL: {formatUSD(USDTotal)}</>
+          )}
         </USDWrapper>
       </InfoBox.Footer>
     </InfoBox>
@@ -138,3 +148,25 @@ const BreakdownRow = styled.div`
   justify-content: space-between;
   gap: 4px;
 `;
+
+const getTooltipProps = (isWhitelisted: boolean) => {
+  if (isWhitelisted) {
+    return {
+      offsetX: -20,
+      offsetY: 375,
+      arrowSize: 4,
+      arrowOffset: 95,
+      side: "top",
+      width: 175
+    };
+  }
+
+  return {
+    offsetX: -20,
+    offsetY: 200,
+    arrowSize: 4,
+    arrowOffset: 95,
+    side: "top",
+    width: 175
+  };
+};

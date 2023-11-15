@@ -1,11 +1,14 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
+
+type NumberPrimitive = string | number | TokenValue | undefined;
+
 /**
  * We can for the most part use TokenValue.toHuman("short"),
  * but we can use this in cases where we don't want the shorthand K/M/B/T suffixes.
  * We use Number.toLocaleString() instead of Number.toFixed() as it includes thousands separators
  */
 export const formatNum = (
-  val: string | number | TokenValue | undefined,
+  val: NumberPrimitive,
   options?: {
     defaultValue?: string;
     minDecimals?: number;
@@ -20,6 +23,15 @@ export const formatNum = (
     minimumFractionDigits: 0 || options?.minDecimals,
     maximumFractionDigits: 2 || options?.maxDecimals
   });
+};
+
+export const formatUSD = (
+  val: NumberPrimitive,
+  options?: {
+    defaultValue: string;
+  }
+) => {
+  return `$${formatNum(val || TokenValue.ZERO, { minDecimals: 2, maxDecimals: 2, ...options })}`;
 };
 
 const TokenSymbolMap = {
