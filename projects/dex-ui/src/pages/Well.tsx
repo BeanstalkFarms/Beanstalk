@@ -128,7 +128,7 @@ export const Well = () => {
   return (
     <Page>
       <ContentWrapper>
-        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
+        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
         <HeaderContainer>
           <Item>
             <Header>
