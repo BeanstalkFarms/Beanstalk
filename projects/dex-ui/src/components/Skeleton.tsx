@@ -4,7 +4,7 @@ import styled, { css, keyframes } from "styled-components";
 
 export type SkeletonProps = {
   height: number;
-  width: number;
+  width?: number;
   // if true, rounded will be ignored
   circle?: boolean;
   // defaults to true
