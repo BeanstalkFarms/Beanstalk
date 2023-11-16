@@ -4,7 +4,8 @@ import { mediaQuery } from "src/breakpoints";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import shapesIcons from "src/assets/images/home-banner.svg";
-import { BodyL, BodyXS, H2 } from "src/components/Typography";
+import { BodyL } from "src/components/Typography";
+import { ContractInfoMarquee } from "src/components/Frame/ContractInfoMarquee";
 
 const copy = {
   build: "Use components written, audited and deployed by other developers for your custom liquidity pool.",
@@ -14,78 +15,94 @@ const copy = {
 
 export const Home = () => {
   return (
-    <Container>
-      <Content>
-        <MevBanner>
-          <MevBannerBG>
-            <MevInfo>
-              <MevTitle>Multi-Flow Pump is here!</MevTitle>
-              <div>
-                Explore the <span style={{ fontWeight: 600 }}>multi-block MEV manipulation resistant Oracle </span>framework, with easy
-                integration for everyone.
-              </div>
-            </MevInfo>
-            <GetStarted>Get Started →</GetStarted>
-          </MevBannerBG>
-        </MevBanner>
-        <InfoContainer>
-          <TitleSubtitleContainer>
-            <Title>A Composable EVM-native DEX </Title>
-            <SubTitle>
-              Customizable liquidity pools with shared components.&nbsp;
-              <WhitepaperLink href={"/basin.pdf"} target="_blank">
-                Read the whitepaper →
-              </WhitepaperLink>
-            </SubTitle>
-          </TitleSubtitleContainer>
-          <AccordionContainer>
-            <AccordionItem to="/">
-              <AccordionTitle>
-                <Emoji role="img" aria-label="crystal ball">
-                  🔮
-                </Emoji>
-                &nbsp;Build using components
-              </AccordionTitle>
-              <AccordionContent>{copy.build}</AccordionContent>
-            </AccordionItem>
-            <AccordionItem to="/wells">
-              <AccordionTitle>
+    <>
+      <Container>
+        <Content>
+          <MevBanner>
+            <MevBannerBG>
+              <MevInfo>
+                <MevTitle>Multi-Flow Pump is here!</MevTitle>
                 <div>
-                  <Emoji role="img" aria-label="lightning">
-                    ⚡️
-                  </Emoji>
-                  &nbsp;Deploy flexible liquidity
+                  Explore the <span style={{ fontWeight: 600 }}>multi-block MEV manipulation resistant Oracle </span>framework, with easy
+                  integration for everyone.
                 </div>
-              </AccordionTitle>
-              <AccordionContent>{copy.deploy}</AccordionContent>
-            </AccordionItem>
-            <AccordionItem to="/swap">
-              <AccordionTitle>
-                <div>
-                  <Emoji role="img" aria-label="heart">
-                    ❤️
+              </MevInfo>
+              <GetStarted>Get Started →</GetStarted>
+            </MevBannerBG>
+          </MevBanner>
+          <InfoContainer>
+            <TitleSubtitleContainer>
+              <Title>A Composable EVM-native DEX </Title>
+              <SubTitle>
+                Customizable liquidity pools with shared components.&nbsp;
+                <WhitepaperLink href={"/basin.pdf"} target="_blank">
+                  Read the whitepaper →
+                </WhitepaperLink>
+              </SubTitle>
+            </TitleSubtitleContainer>
+            <AccordionContainer>
+              <AccordionItem to="/">
+                <AccordionTitle>
+                  <Emoji role="img" aria-label="crystal ball">
+                    🔮
                   </Emoji>
-                  &nbsp;Zero-fee swaps
-                </div>
-              </AccordionTitle>
-              <AccordionContent>{copy.fees}</AccordionContent>
-            </AccordionItem>
-          </AccordionContainer>
-        </InfoContainer>
-      </Content>
-    </Container>
+                  &nbsp;Build using components
+                </AccordionTitle>
+                <AccordionContent>{copy.build}</AccordionContent>
+              </AccordionItem>
+              <AccordionItem to="/wells">
+                <AccordionTitle>
+                  <div>
+                    <Emoji role="img" aria-label="lightning">
+                      ⚡️
+                    </Emoji>
+                    &nbsp;Deploy flexible liquidity
+                  </div>
+                </AccordionTitle>
+                <AccordionContent>{copy.deploy}</AccordionContent>
+              </AccordionItem>
+              <AccordionItem to="/swap">
+                <AccordionTitle>
+                  <div>
+                    <Emoji role="img" aria-label="heart">
+                      ❤️
+                    </Emoji>
+                    &nbsp;Zero-fee swaps
+                  </div>
+                </AccordionTitle>
+                <AccordionContent>{copy.fees}</AccordionContent>
+              </AccordionItem>
+            </AccordionContainer>
+          </InfoContainer>
+          <MarqueeContainer>
+            <ContractInfoMarquee />
+          </MarqueeContainer>
+        </Content>
+      </Container>
+    </>
   );
 };
 
+const MarqueeContainer = styled.div`
+  ${mediaQuery.sm.only} {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
+`;
+
 const Container = styled.div`
   height: calc(100% - 24px);
-  padding: 12px;
+  padding-top: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-bottom: 0px;
 
   ${mediaQuery.sm.up} {
     padding-top: 32px;
     padding-left: 48px;
     padding-right: 48px;
-    padding-bottom: 24px;
+
     height: 100%;
     width: 100%;
     justify-content: center;
@@ -99,6 +116,7 @@ const Content = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
+
   ${mediaQuery.sm.up} {
     justify-content: space-between;
     align-items: center;
@@ -263,11 +281,10 @@ const AccordionContainer = styled.div`
   ${mediaQuery.sm.only} {
     flex-direction: column;
     position: relative;
-    bottom: 0px;
+    bottom: calc(57px + 12px); // 57px is the height of the contract info marquee
     gap: 12px;
     justify-content: space-around;
     position: fixed;
-    bottom: 12px;
     width: calc(100vw - 24px);
   }
 `;
@@ -349,19 +366,17 @@ const AccordionContent = styled.div`
 const AccordionTitle = styled.div`
   text-align: center;
   width: 100%;
-
-  ${mediaQuery.md.up} {
-    ${H2}
-    font-weight: 600;
-  }
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
 
   ${mediaQuery.md.only} {
-    ${BodyL}
-    font-weight: 600;
+    font-size: 20px;
+    line-height: 24px;
   }
 
   ${mediaQuery.sm.only} {
-    ${BodyXS}
-    font-weight: 600;
+    font-size: 14px;
+    line-height: 22px;
   }
 `;
