@@ -27,7 +27,7 @@ export const ContractInfoMarquee = () => {
   const data = Object.entries(CarouselData);
 
   /// See TokenMarquee.tsx for more info on how this works
-  const speedPerItem = 20;
+  const speedPerItem = 25;
   const repeatableWidth = 1192.34;
   const numItems = 3;
   const animationDuration = numItems * speedPerItem;
