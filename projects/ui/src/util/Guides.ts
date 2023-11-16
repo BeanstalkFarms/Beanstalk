@@ -98,6 +98,10 @@ export const HOW_TO_VOTE: Guide = {
   title: 'How to Vote on Governance Proposals',
   url: 'https://docs.bean.money/almanac/guides/governance/vote-on-proposals',
 };
+export const VIEW_PAST_GOV_PROPOSALS: Guide = {
+  title: 'View Past Governance Proposals',
+  url: 'https://github.com/BeanstalkFarms/Beanstalk-Governance-Proposals',
+};
 
 /// CHOP
 export const HOW_TO_CHOP_UNRIPE_BEANS: Guide = {
