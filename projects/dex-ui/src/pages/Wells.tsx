@@ -81,6 +81,15 @@ const PositionBreakdown: React.FC<{
   );
 };
 
+/// format value with 2 decimals, if value is less than 1M, otherwise use short format
+const formatMayDecimals = (tv: TokenValue | undefined) => {
+  if (!tv) return "-.--";
+  if (tv.lt(1_000_000)) {
+    return formatNum(tv, { minDecimals: 2, maxDecimals: 2 });
+  }
+  return tv.toHuman("short");
+};
+
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
   const navigate = useNavigate();
@@ -236,7 +245,7 @@ export const Wells = () => {
           </WellDetail>
         </DesktopContainer>
         <DesktopContainer>
-          <WellPricing>{wellFunctionNames[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
+          <WellPricing>{wellFunctionNames?.[index] ? wellFunctionNames[index] : "Price Function"}</WellPricing>
         </DesktopContainer>
         <DesktopContainer align="right">
           <TradingFee>0.00%</TradingFee>
@@ -246,12 +255,12 @@ export const Wells = () => {
         </DesktopContainer>
         <DesktopContainer align="right">
           <Reserves>
-            {smallLogos[0]}
-            {well.reserves![0] ? well.reserves![0].toHuman("short") : "-.--"}
+            {<TokenLogoWrapper>{smallLogos[0]}</TokenLogoWrapper>}
+            {formatMayDecimals(well.reserves?.[0])}
           </Reserves>
           <Reserves>
-            {smallLogos[1]}
-            {well.reserves![1] ? well.reserves![1].toHuman("short") : "-.--"}
+            {<TokenLogoWrapper>{smallLogos[1]}</TokenLogoWrapper>}
+            {formatMayDecimals(well.reserves?.[1])}
           </Reserves>
           {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
         </DesktopContainer>
@@ -389,10 +398,10 @@ const TokenLogos = styled.div`
 const TokenSymbols = styled.div`
   font-size: 20px;
   line-height: 24px;
-  margin-top: 8px;
   color: #1c1917;
   @media (max-width: ${size.mobile}) {
     font-size: 14px;
+    margin-top: 2px;
   }
 `;
 
@@ -412,7 +421,8 @@ const Reserves = styled.div`
   display: flex;
   flex-direction: row;
   justify-content flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: 4px;
   flex: 1;
 `;
 
@@ -478,4 +488,8 @@ const BreakdownRow = styled.div`
   flex-direction: row;
   justify-content: space-between;
   gap: 4px;
+`;
+
+const TokenLogoWrapper = styled.div`
+  margin-bottom: 2px;
 `;
