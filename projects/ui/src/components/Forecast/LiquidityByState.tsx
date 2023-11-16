@@ -47,14 +47,14 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
     {
       title: 'Pods',
       tooltip:
-        'The total Unharvestable Pod supply. Pods become Harvestable on a FIFO basis.',
+        'The total number of Unharvestable Pods. Pods become Harvestable on a FIFO basis.',
       token: PODS,
       amount: beanstalkField.podLine,
     },
     {
       title: 'Sprouts',
       tooltip:
-        'The total Unrinsable Sprout supply. Sprouts are the number of Beans left to be earned from Active Fertilizer. Sprouts become Rinsable on a pari passu basis.',
+        'The total number of Unrinsable Sprouts. Sprouts are the number of Beans left to be earned from Active Fertilizer. Sprouts become Rinsable on a pari passu basis.',
       token: SPROUTS,
       amount: beanstalkBarn.unfertilized,
     },
