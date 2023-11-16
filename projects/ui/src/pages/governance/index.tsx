@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Stack } from '@mui/material';
 import PageHeader from '~/components/Common/PageHeader';
-import { HOW_TO_VOTE } from '~/util/Guides';
+import { HOW_TO_VOTE, VIEW_PAST_GOV_PROPOSALS } from '~/util/Guides';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 
 import { FC } from '~/types';
@@ -17,7 +17,7 @@ const GovernancePage: FC<{}> = () => (
         control={
           <GuideButton
             title="The Farmers' Almanac: Governance Guides"
-            guides={[HOW_TO_VOTE]}
+            guides={[HOW_TO_VOTE, VIEW_PAST_GOV_PROPOSALS]}
           />
         }
       />
