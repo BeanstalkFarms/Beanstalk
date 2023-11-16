@@ -84,8 +84,11 @@ export const Home = () => {
 };
 
 const MarqueeContainer = styled.div`
+  position: fixed;
+  bottom: 72px;
+
   ${mediaQuery.sm.only} {
-    position: absolute;
+    position: fixed;
     left: 0;
     bottom: 0;
   }
@@ -308,15 +311,9 @@ const AccordionItem = styled(Link)`
   width: 33%;
   transition: background-color 0.3s ease;
   overflow: hidden;
-  max-height: 132px; // Initial max-height
+  max-height: 113px; // Initial max-height
   box-sizing: border-box;
   text-decoration: none;
-
-  &:hover {
-    border: 1.5px solid #46b955;
-    background-color: #f0fdf4;
-    outline: 0.5px solid transparent;
-  }
 
   &:hover {
     border: 1.5px solid #46b955;

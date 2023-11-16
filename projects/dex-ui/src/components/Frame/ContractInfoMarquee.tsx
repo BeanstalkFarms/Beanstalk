@@ -33,7 +33,6 @@ export const ContractInfoMarquee = () => {
   const animationDuration = numItems * speedPerItem;
 
   return (
-    // <div style={{ background: "white", width: `calc(${})` }}>
     <Scroller x={repeatableWidth} duration={animationDuration}>
       <CarouselRow style={{ justifyContent: "flex-start" }}>
         <>
@@ -57,7 +56,6 @@ export const ContractInfoMarquee = () => {
         </>
       </CarouselRow>
     </Scroller>
-    // </div>
   );
 };
 
