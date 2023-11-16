@@ -119,13 +119,13 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
     },
     {
       path: 'twitter',
-      href: 'https://twitter.com/beanstalkfarms',
+      href: 'https://twitter.com/beanstalkmoney',
       title: 'Twitter',
       icon: twitterIcon,
     },
     {
       path: 'github',
-      href: 'https://github.com/beanstalkfarms',
+      href: 'https://github.com/BeanstalkFarms/Beanstalk',
       title: 'GitHub',
       icon: githubIcon,
     },
@@ -137,7 +137,7 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
     },
     {
       path: 'pipeline',
-      href: 'https://evmpipeline.org/',
+      href: 'https://evmpipeline.org',
       title: 'Pipeline',
       icon: pipelineIcon,
     },
