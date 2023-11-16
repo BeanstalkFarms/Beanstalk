@@ -117,7 +117,7 @@ const Overview: FC<{
         />
         <Stat
           title="Total Stalk Grown"
-          titleTooltip="The number of Stalk your Seeds will grow every 24 Seasons based on your current Seed balance."
+          titleTooltip="The total number of Mown and Mowable Grown Stalk your Deposits have accrued."
           amount={displayStalk(
             totalStalkGrown
           )}
