@@ -66,4 +66,7 @@ const ParentText = styled(Link)`
   @media (max-width: ${size.mobile}) {
     ${BodyXS}
   }
+  :hover {
+    color: #000000;
+  }
 `;
