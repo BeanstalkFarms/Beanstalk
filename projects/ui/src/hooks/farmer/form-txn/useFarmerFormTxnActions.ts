@@ -88,7 +88,7 @@ export default function useFarmerFormTxnsActions(options?: {
       return transfer;
     } 
     
-    if (transferTo === FarmToMode.INTERNAL && transferAmount?.gt(0)) {
+    if ((transferTo === FarmToMode.INTERNAL || transferTo === undefined) && transferAmount?.gt(0)) {
       const transfer = {
         type: ActionType.BASE,
         message: `Return ${displayTokenAmount(transferAmount, sdk.tokens.BEAN)} to your Farm Balance.`,
