@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useWell } from "src/wells/useWell";
 import styled from "styled-components";
@@ -16,7 +16,7 @@ import { Log } from "src/utils/logger";
 import { BodyXS, TextNudge } from "src/components/Typography";
 import { ImageButton } from "src/components/ImageButton";
 import { ChevronDown } from "src/components/Icons";
-import { size } from "src/breakpoints";
+import { mediaQuery, size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
 
@@ -25,17 +25,9 @@ export const Liquidity = () => {
   const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
   const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
-  const [isMobile, setIsMobile] = useState(window.matchMedia(`(max-width: ${size.mobile})`).matches);
-  const [tab, setTab] = useState(isMobile ? null : 0);
+  const [tab, setTab] = useState(0);
 
-  // Media query
-  useEffect(() => {
-    window.matchMedia(`(max-width: ${size.mobile})`).addEventListener("change", (event) => setIsMobile(event.matches));
-
-    return () => {
-      window.matchMedia(`(max-width: ${size.mobile})`).removeEventListener("change", (event) => setIsMobile(event.matches));
-    };
-  }, []);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Slippage-related
   const [showSlippageSettings, setShowSlippageSettings] = useState<boolean>(false);
@@ -49,7 +41,6 @@ export const Liquidity = () => {
     Log.module("liquidity").debug(`Slippage changed: ${parseFloat(value)}`);
     setSlippage(parseFloat(value));
   };
-  // /Slippage-related
 
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => {
@@ -79,48 +70,44 @@ export const Liquidity = () => {
           <Button
             secondary
             label="← Back To Well Details"
-            width={isMobile ? "100vw" : "100%"}
-            margin={isMobile ? "-12px -11px 0px -12px" : "0"}
+            width={"100%"}
+            margin={"0px"}
             onClick={() => navigate(`../wells/${wellAddress}`)}
           />
-          {(tab === null && isMobile) || !isMobile ? (
-            <>
-              <LiquidityBox well={well} />
-              <LearnMoreContainer>
-                <LearnMoreLabel onClick={toggle}>
-                  <LearnMoreLine />
-                  <LearnMoreText>
-                    <TextNudge amount={2}>Learn more about this Well</TextNudge>
-                    <ImageButton
-                      component={ChevronDown}
-                      size={10}
-                      rotate={open ? "180" : "0"}
-                      onClick={toggle}
-                      padding="0px"
-                      alt="Click to expand and learn how to earn yield"
-                      color={"#46B955"}
-                    />
-                  </LearnMoreText>
-                  <LearnMoreLine />
-                </LearnMoreLabel>
-                <LearnMoreButtons open={open}>
-                  <LearnYield />
-                  <LearnWellFunction name={wellFunctionName} />
-                  <LearnPump />
-                </LearnMoreButtons>
-              </LearnMoreContainer>
-            </>
-          ) : null}
+          <LiquidityBox well={well} />
+          <LearnMoreContainer>
+            <LearnMoreLabel onClick={toggle}>
+              <LearnMoreLine />
+              <LearnMoreText>
+                <TextNudge amount={2}>Learn more about this Well</TextNudge>
+                <ImageButton
+                  component={ChevronDown}
+                  size={10}
+                  rotate={open ? "180" : "0"}
+                  onClick={toggle}
+                  padding="0px"
+                  alt="Click to expand and learn how to earn yield"
+                  color={"#46B955"}
+                />
+              </LearnMoreText>
+              <LearnMoreLine />
+            </LearnMoreLabel>
+            <LearnMoreButtons open={open}>
+              <LearnYield />
+              <LearnWellFunction name={wellFunctionName} />
+              <LearnPump />
+            </LearnMoreButtons>
+          </LearnMoreContainer>
         </SideBar>
-        <CenterBar id="centerbar">
-          <AddRemoveLiquidityRow gap={0} tabSelected={tab === 0 || tab === 1}>
+        <CenterBar id="centerbar" ref={scrollRef}>
+          <AddRemoveLiquidityRow gap={0} tabSelected={true}>
             <Item stretch>
-              <TabButton onClick={() => setTab(isMobile && tab === 0 ? null : 0)} active={tab === 0} stretch bold justify hover>
+              <TabButton onClick={() => setTab(0)} active={tab === 0} stretch bold justify hover>
                 <span>Add Liquidity</span>
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={() => setTab(isMobile && tab === 1 ? null : 1)} active={tab === 1} stretch bold justify hover>
+              <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover>
                 <span>Remove Liquidity</span>
               </TabButton>
             </Item>
@@ -142,32 +129,38 @@ export const Liquidity = () => {
             />
           )}
         </CenterBar>
-        <SideBar id="leftbar" />
       </ContentWrapper>
     </Page>
   );
 };
 
+const EmptyItem = styled.div`
+  display: none;
+`;
+
 const ContentWrapper = styled.div`
-  // outline: 1px solid red;
   display: flex;
   flex-direction: row;
-  justify-content: center;
   gap: 48px;
-  @media (max-width: ${size.mobile}) {
+
+  ${mediaQuery.lg.down} {
     flex-direction: column;
     gap: 16px;
+  }
+
+  ${mediaQuery.lg.only} {
+    justify-content: flex-start;
   }
 `;
 
 const SideBar = styled.div`
-  // outline: 1px solid green;
   display: flex;
   flex-direction: column;
   width: calc(16 * 24px);
   min-width: calc(16 * 24px);
   gap: 24px;
-  @media (max-width: ${size.mobile}) {
+
+  ${mediaQuery.lg.down} {
     width: 100%;
     min-width: 100%;
     gap: 16px;
@@ -175,13 +168,17 @@ const SideBar = styled.div`
 `;
 
 const CenterBar = styled.div`
-  // outline: 1px solid green;
   display: flex;
   flex-direction: column;
-  width: calc(17 * 24px);
-  min-width: calc(17 * 24px);
   gap: 24px;
-  @media (max-width: ${size.mobile}) {
+  width: 100%;
+
+  ${mediaQuery.md.up} {
+    width: calc(17 * 24px);
+    min-width: calc(17 * 24px);
+  }
+
+  ${mediaQuery.md.down} {
     width: 100%;
     min-width: 100%;
     gap: 16px;
@@ -206,16 +203,18 @@ const LearnMoreContainer = styled.div`
   gap: 16px;
   order: 1;
   width: 100%;
+
   @media (min-width: ${size.mobile}) {
     gap: 24px;
     order: 0;
   }
 `;
 const LearnMoreLabel = styled.div`
-  display: flex;
-  flex-direction: row;
-  @media (min-width: ${size.mobile}) {
-    display: none;
+  display: none;
+
+  ${mediaQuery.lg.down} {
+    display: flex;
+    flex-direction: row;
   }
 `;
 
@@ -240,11 +239,12 @@ const LearnMoreText = styled.div`
 `;
 
 const LearnMoreButtons = styled.div<{ open: boolean }>`
-  ${(props) => (props.open ? "display: flex" : "display: none")};
+  display: flex;
   flex-direction: column;
-  gap: 16px;
-  @media (min-width: ${size.mobile}) {
-    display: flex;
-    gap: 24px;
+  gap: 24px;
+
+  ${mediaQuery.lg.down} {
+    ${(props) => (props.open ? "display: flex" : "display: none")};
+    gap: 16px;
   }
 `;

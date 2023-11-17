@@ -452,7 +452,7 @@ const LargeGapContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   @media (max-width: ${size.mobile}) {
-    margin-bottom: 40px;
+    margin-bottom: 64px;
   }
 `;
 
