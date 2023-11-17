@@ -21,7 +21,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     subgraphs: {
       beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk',
       bean: 'https://graph.node.bean.money/subgraphs/name/bean',
-      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
+      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft',
     },
   },
   [SGEnvironments.BF_DEV]: {
