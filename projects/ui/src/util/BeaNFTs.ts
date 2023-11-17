@@ -2,6 +2,7 @@ import {
   BEANFT_BARNRAISE_ADDRESSES,
   BEANFT_GENESIS_ADDRESSES,
   BEANFT_WINTER_ADDRESSES,
+  BEANFT_BASIN_ADDRESSES,
 } from '~/constants';
 
 export enum ClaimStatus {
@@ -34,22 +35,25 @@ export const COLLECTION_ADDRESS: { [c: string]: string } = {
   Genesis: BEANFT_GENESIS_ADDRESSES[1],
   Winter: BEANFT_WINTER_ADDRESSES[1],
   BarnRaise: BEANFT_BARNRAISE_ADDRESSES[1],
+  Basin: BEANFT_BASIN_ADDRESSES[1],
 };
 
 export const ADDRESS_COLLECTION: { [c: string]: string } = {
   [BEANFT_GENESIS_ADDRESSES[1]]: COLLECTION_ADDRESS.Genesis,
   [BEANFT_WINTER_ADDRESSES[1]]: COLLECTION_ADDRESS.Winter,
   [BEANFT_BARNRAISE_ADDRESSES[1]]: COLLECTION_ADDRESS.BarnRaise,
+  [BEANFT_BASIN_ADDRESSES[1]]: COLLECTION_ADDRESS.Basin,
 };
 
 export async function loadNFTs(account: string) {
   const genesisNFTs: Nft[] = [];
   const winterNFTs: Nft[] = [];
   const barnRaiseNFTs: Nft[] = [];
+  const basinNFTs: Nft[] = [];
 
   try {
     const ownedNFTs = await fetch(
-      'https://graph.node.bean.money/subgraphs/name/beanft',
+      'https://graph.node.bean.money/subgraphs/name/beanft-dev',
       {
         method: 'POST',
         headers: {
@@ -63,6 +67,7 @@ export async function loadNFTs(account: string) {
                 genesis
                 barnRaise
                 winter
+                basin
               }
             }
           `,
@@ -108,6 +113,17 @@ export async function loadNFTs(account: string) {
           });
         });
       }
+
+      if (ownedNFTsJSON.data.beaNFTUser.basin) {
+        ownedNFTsJSON.data.beaNFTUser.basin.sort();
+        ownedNFTsJSON.data.beaNFTUser.basin.forEach((element: number) => {
+          basinNFTs.push({
+            id: element,
+            account: account.toLowerCase(),
+            subcollection: 'Basin',
+          });
+        });
+      }
     }
   } catch (e) {
     console.error(e)
@@ -117,5 +133,6 @@ export async function loadNFTs(account: string) {
     genesis: genesisNFTs,
     winter: winterNFTs,
     barnRaise: barnRaiseNFTs,
+    basin: basinNFTs,
   };
 }

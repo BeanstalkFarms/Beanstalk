@@ -211,7 +211,7 @@ const snapshotLabsLink = new HttpLink({
 });
 
 const beanftLink = new HttpLink({
-  uri: 'https://graph.node.bean.money/subgraphs/name/beanft',
+  uri: sgEnv.subgraphs.beanft,
 });
 /// ///////////////////////// Client ////////////////////////////
 

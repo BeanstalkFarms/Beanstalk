@@ -11,6 +11,7 @@ type SGEnvironment = {
   subgraphs: {
     beanstalk: string;
     bean: string;
+    beanft: string;
   };
 };
 
@@ -20,6 +21,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     subgraphs: {
       beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk',
       bean: 'https://graph.node.bean.money/subgraphs/name/bean',
+      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },
   [SGEnvironments.BF_DEV]: {
@@ -27,6 +29,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     subgraphs: {
       beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk-dev',
       bean: 'https://graph.node.bean.money/subgraphs/name/bean-dev',
+      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },
   [SGEnvironments.BF_TEST]: {
@@ -35,6 +38,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
       beanstalk:
         'https://graph.node.bean.money/subgraphs/name/beanstalk-testing',
       bean: 'https://graph.node.bean.money/subgraphs/name/bean-testing',
+      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },
   [SGEnvironments.BF_2_0_3]: {
@@ -42,6 +46,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     subgraphs: {
       beanstalk: 'https://graph.node.bean.money/subgraphs/name/beanstalk-2-0-3',
       bean: 'https://graph.node.bean.money/subgraphs/name/bean', // fixme
+      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },
   [SGEnvironments.DNET_2_0_3]: {
@@ -51,6 +56,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
         import.meta.env.VITE_THEGRAPH_API_KEY
       }/subgraphs/id/R9rnzRuiyDybfDsZfoM7eA9w8WuHtZKbroGrgWwDw1d`,
       bean: 'https://graph.node.bean.money/subgraphs/name/bean', // fixme
+      beanft: 'https://graph.node.bean.money/subgraphs/name/beanft-dev',
     },
   },
 };
