@@ -13,7 +13,7 @@ import { Well } from "@beanstalk/sdk/Wells";
 import { Skeleton } from "src/components/Skeleton";
 
 import { useNavigate } from "react-router-dom";
-import useIsMobile from "src/utils/ui/useIsMobile";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
 
 const PositionBreakdown: React.FC<{
   items: { external: TokenValue; silo: TokenValue; internal: TokenValue; total: TokenValue };
