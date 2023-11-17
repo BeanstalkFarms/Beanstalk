@@ -3,6 +3,7 @@ type BeaNFTUser @entity {
   barnRaise: [Int!]
   genesis: [Int!]
   winter: [Int!]
+  basin: [Int!]
 },
 type CollectionData @entity {
   id: ID!
