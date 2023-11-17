@@ -175,7 +175,7 @@ export default function useFarmerFormTxnsSummary() {
             amount: earnedStalk,
           },
           {
-            description: 'Earned Seeds',
+            description: 'Plantable Seeds',
             tooltip: tooltips.earnedSeeds,
             token: SEEDS,
             amount: earnedSeeds,

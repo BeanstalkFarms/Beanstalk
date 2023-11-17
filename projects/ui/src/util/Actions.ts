@@ -354,10 +354,7 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.PLANT:
       return `Plant ${displayFullBN(a.bean, 2)} Bean${
         a.bean.gt(1) ? 's' : ''
-      }, ${displayFullBN(a.seeds, 2)} Seeds, and ${displayFullBN(
-        a.stalk,
-        2
-      )} Stalk.`;
+      }, ${displayFullBN(a.stalk, 2)} Stalk, and ${displayFullBN(a.seeds, 2)} Seeds.`;
     case ActionType.ENROOT:
       return `Enroot revitalized ${displayFullBN(
         a.stalk,
