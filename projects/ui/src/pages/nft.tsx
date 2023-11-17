@@ -19,6 +19,7 @@ import {
   BEANFT_GENESIS_ADDRESSES,
   BEANFT_WINTER_ADDRESSES,
   BEANFT_BARNRAISE_ADDRESSES,
+  BEANFT_BASIN_ADDRESSES,
 } from '~/constants';
 import NFTGrid from '~/components/NFT/NFTGrid';
 import {
@@ -34,7 +35,7 @@ import { HOW_TO_MINT_BEANFTS } from '~/util/Guides';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 
-const SLUGS = ['genesis', 'winter', 'barnraise'];
+const SLUGS = ['genesis', 'winter', 'barnraise', 'basin'];
 
 const NFTPage: FC<{}> = () => {
   const account = useAccount();
@@ -52,6 +53,7 @@ const NFTPage: FC<{}> = () => {
   const [genesisNFTs, setGenesisNFTs] = useState<Nft[] | null>(null);
   const [winterNFTs, setWinterNFTs] = useState<Nft[] | null>(null);
   const [barnRaiseNFTs, setBarnRaiseNFTs] = useState<Nft[] | null>(null);
+  const [basinNFTs, setBasinNFTs] = useState<Nft[] | null>(null);
   const unmintedGenesis = genesisNFTs?.filter(
     (nft) => nft.claimed === ClaimStatus.UNCLAIMED
   );
@@ -133,7 +135,6 @@ const NFTPage: FC<{}> = () => {
         ).then((response) => response.json());
       } catch (e) {
         console.log('BEANFT - ERROR FECTHING MINTABLE NFTS');
-        console.log('BEANFT - ERROR FETCHING MINTABLE NFTS');
       }
 
       // batchNFTMetadata
@@ -177,6 +178,11 @@ const NFTPage: FC<{}> = () => {
               break;
             case 'Barn Raise':
               contractAddress === BEANFT_BARNRAISE_ADDRESSES[1]
+                ? (currentCollection = true)
+                : (currentCollection = false);
+              break;
+            case 'Basin':
+              contractAddress === BEANFT_BASIN_ADDRESSES[1]
                 ? (currentCollection = true)
                 : (currentCollection = false);
               break;
@@ -353,10 +359,12 @@ const NFTPage: FC<{}> = () => {
         const genNFTs = data.genesis;
         const winNFTs = data.winter;
         const barnNFTs = data.barnRaise;
+        const basiNFTs = data.basin;
 
         parseMints(genNFTs, BEANFT_GENESIS_ADDRESSES[1], setGenesisNFTs);
         parseMints(winNFTs, BEANFT_WINTER_ADDRESSES[1], setWinterNFTs);
         parseMints(barnNFTs, BEANFT_BARNRAISE_ADDRESSES[1], setBarnRaiseNFTs);
+        parseMints(basiNFTs, BEANFT_BASIN_ADDRESSES[1], setBasinNFTs);
       });
     }
   }, [account, parseMints]);
@@ -409,6 +417,12 @@ const NFTPage: FC<{}> = () => {
                     barnRaiseNFTs === null ? 0 : barnRaiseNFTs?.length
                   })`}
                 />
+                \
+                <Tab
+                  label={`Basin (${
+                    basinNFTs === null ? 0 : basinNFTs?.length
+                  })`}
+                />
               </Tabs>
               {/* TODO: componentize these card action buttons */}
               {tab === 0 && genesisNFTs && !hideGenesis && (
@@ -446,6 +460,7 @@ const NFTPage: FC<{}> = () => {
                   <NFTGrid
                     nfts={genesisNFTs}
                     handleDialogOpen={handleDialogOpen}
+                    collectionAddress={BEANFT_GENESIS_ADDRESSES[1]}
                   />
                 )}
                 {/* winter */}
@@ -453,6 +468,7 @@ const NFTPage: FC<{}> = () => {
                   <NFTGrid
                     nfts={winterNFTs}
                     handleDialogOpen={handleDialogOpen}
+                    collectionAddress={BEANFT_WINTER_ADDRESSES[1]}
                   />
                 )}
                 {/* barn raise */}
@@ -460,6 +476,15 @@ const NFTPage: FC<{}> = () => {
                   <NFTGrid
                     nfts={barnRaiseNFTs}
                     handleDialogOpen={handleDialogOpen}
+                    collectionAddress={BEANFT_BARNRAISE_ADDRESSES[1]}
+                  />
+                )}
+                {/* basin */}
+                {tab === 3 && (
+                  <NFTGrid
+                    nfts={basinNFTs}
+                    handleDialogOpen={handleDialogOpen}
+                    collectionAddress={BEANFT_BASIN_ADDRESSES[1]}
                   />
                 )}
               </>

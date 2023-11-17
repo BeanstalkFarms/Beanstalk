@@ -43,6 +43,11 @@ export const BEANFT_BARNRAISE_ADDRESSES = {
     '0xa969BB19b1d35582Ded7EA869cEcD60A3Bd5D1E8'.toLowerCase(),
 };
 
+export const BEANFT_BASIN_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x191b7d1cfa89c9389bbf5f7f49f4b8f93ec3740f'.toLowerCase(),
+};
+
 // ----------------------------------------
 // Bean & Unripe Bean Tokens
 // ----------------------------------------
