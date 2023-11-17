@@ -5,7 +5,7 @@ import { FarmToMode, FarmFromMode } from '@beanstalk/sdk';
 import useFarmerFormTxnsSummary from './useFarmerFormTxnsSummary';
 import { FormTokenStateNew, FormTxnsFormState } from '~/components/Common/Form';
 import useSdk from '~/hooks/sdk';
-import { ActionType } from '~/util';
+import { ActionType, displayTokenAmount } from '~/util';
 import { ZERO_BN } from '~/constants';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn } from '~/lib/Txn';
@@ -86,7 +86,17 @@ export default function useFarmerFormTxnsActions(options?: {
       };
 
       return transfer;
+    } 
+    
+    if (transferTo === FarmToMode.INTERNAL && transferAmount?.gt(0)) {
+      const transfer = {
+        type: ActionType.BASE,
+        message: `Return ${displayTokenAmount(transferAmount, sdk.tokens.BEAN)} to your Farm Balance.`,
+      };
+
+      return transfer;
     }
+
     return undefined;
   }, [
     account,
