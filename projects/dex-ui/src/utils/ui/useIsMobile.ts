@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { size } from "src/breakpoints";
 
-const useIsMobile = () => {
+export const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.matchMedia(`(max-width: ${size.mobile})`).matches);
   // Media query
   useEffect(() => {
@@ -14,5 +14,3 @@ const useIsMobile = () => {
 
   return isMobile;
 };
-
-export default useIsMobile;
