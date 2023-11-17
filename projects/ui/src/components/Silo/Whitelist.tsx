@@ -501,7 +501,7 @@ const Whitelist: FC<{
                        * Internally they are both considered "Deposited". */}
                         <Tooltip
                           title={
-                            token === Bean ? (
+                            token.equals(Bean) && farmerSilo.beans.earned.gt(0) ? (
                             <>
                               {displayFullBN(
                                 deposited?.amount || ZERO_BN,
@@ -536,7 +536,7 @@ const Whitelist: FC<{
                               BEAN
                               <br />
                             </>
-                            ) : deposited?.amount.gt(0) && 
+                            ) : !token.equals(Bean) && deposited?.amount.gt(0) && 
                               <>
                                   {`Recorded BDV: `}{displayFullBN(
                                     deposited?.bdv || ZERO_BN,
