@@ -168,7 +168,7 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
         sdk.farm.presets.usdt2beaneth(well, account, fromMode, toMode),
       from: sdk.tokens.USDT.symbol,
       to: targetToken.symbol,
-      label: "swap2weth,eposit"
+      label: "swap2weth,deposit"
     });
 
     // DAI => BEAN_ETH_LP
