@@ -75,7 +75,7 @@ const NFTPage: FC<{}> = () => {
 
   async function getNFTMetadataBatch(nftArray: any[], contractAddress: string) {
     const nftMetadataBatchBaseURL =
-      'https://eth-mainnet.alchemyapi.io/nft/v2/demo/getNFTMetadataBatch';
+      'https://eth-mainnet.g.alchemy.com/nft/v3/f6piiDvMBMGRYvCOwLJFMD7cUjIvI1TP/getNFTMetadataBatch';
 
     const nfts: any[] = [];
     let batchRequest: any[] = [];
@@ -106,7 +106,7 @@ const NFTPage: FC<{}> = () => {
               throw 'ALCHEMY FETCH ERROR';
             }
             const response = await request.json();
-            response.forEach((element: any) => {
+            response.nfts.forEach((element: any) => {
               nfts.push(element);
             });
             batchRequest = [];
@@ -156,7 +156,7 @@ const NFTPage: FC<{}> = () => {
       } while (mintableNfts[0] === 'ERROR');
 
       const nftHashes = ownedNfts.map((nft: any) =>
-        nft.metadata.image.replace('ipfs://', '')
+        nft.image.originalUrl.replace('https://ipfs.io/ipfs/', '')
       );
 
       // Unminted NFTs
@@ -164,25 +164,26 @@ const NFTPage: FC<{}> = () => {
         for (let i = 0; i < mintableNfts.length; i += 1) {
           const isNotMinted = mintableNfts[i].error;
           const mintableSubcollection = mintables[i].subcollection;
+          const nftContract = contractAddress.toLowerCase();
           let currentCollection;
           switch (mintableSubcollection) {
             case 'Genesis':
-              contractAddress === BEANFT_GENESIS_ADDRESSES[1]
+              nftContract === BEANFT_GENESIS_ADDRESSES[1]
                 ? (currentCollection = true)
                 : (currentCollection = false);
               break;
             case 'Winter':
-              contractAddress === BEANFT_WINTER_ADDRESSES[1]
+              nftContract === BEANFT_WINTER_ADDRESSES[1]
                 ? (currentCollection = true)
                 : (currentCollection = false);
               break;
             case 'Barn Raise':
-              contractAddress === BEANFT_BARNRAISE_ADDRESSES[1]
+              nftContract === BEANFT_BARNRAISE_ADDRESSES[1]
                 ? (currentCollection = true)
                 : (currentCollection = false);
               break;
             case 'Basin':
-              contractAddress === BEANFT_BASIN_ADDRESSES[1]
+              nftContract === BEANFT_BASIN_ADDRESSES[1]
                 ? (currentCollection = true)
                 : (currentCollection = false);
               break;
@@ -213,13 +214,9 @@ const NFTPage: FC<{}> = () => {
       if (ownedNfts.length > 0) {
         for (let i = 0; i < ownedNfts.length; i += 1) {
           const subcollection =
-            ADDRESS_COLLECTION[ownedNfts[i].contract.address];
+            ADDRESS_COLLECTION[ownedNfts[i].contract.address.toLowerCase()];
           nfts.push({
-            // Genesis BeaNFT titles: 'BeaNFT (ID number)' || Winter and Barn Raise BeaNFT titles: '(ID number)'
-            id:
-              subcollection === BEANFT_GENESIS_ADDRESSES[1]
-                ? parseInt(ownedNfts[i].title.split(' ')[1], 10)
-                : ownedNfts[i].title,
+            id: ownedNfts[i].tokenId,
             account: account,
             subcollection: subcollection,
             claimed: ClaimStatus.CLAIMED,
