@@ -17,8 +17,7 @@ import { BodyXS, TextNudge } from "src/components/Typography";
 import { ImageButton } from "src/components/ImageButton";
 import { ChevronDown } from "src/components/Icons";
 import { mediaQuery, size } from "src/breakpoints";
-import { Loading } from "../components/Loading";
-import { Error } from "../components/Error";
+import { Error } from "src/components/Error";
 import { LoadingItem } from "src/components/LoadingItem";
 
 export const Liquidity = () => {
@@ -59,8 +58,6 @@ export const Liquidity = () => {
     };
     run();
   }, [well]);
-
-  if (loading) return <Loading spinnerOnly />;
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
@@ -139,7 +136,8 @@ export const Liquidity = () => {
           )}
           {tab === 1 && (
             <RemoveLiquidity
-              well={well!}
+              well={well}
+              loading={loading}
               slippage={slippage}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}
@@ -163,9 +161,9 @@ export const Liquidity = () => {
                 </TabButton>
               </Item>
             </AddRemoveLiquidityRow>
-            <AddLiquidityLoading />
-          </CenterBar> */}
-        {/* </div> */}
+            <RemoveLiquidityLoading />
+          </CenterBar>
+        </div> */}
       </ContentWrapper>
     </Page>
   );

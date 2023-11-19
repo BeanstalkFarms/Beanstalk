@@ -7,12 +7,6 @@ import { SwapRoot } from "src/components/Swap/SwapRoot";
 import { useWellTokens } from "src/tokens/useWellTokens";
 import styled from "styled-components";
 
-/**
- * Normally we would not check the loading state at this level, but
- * if we don't it'll cause errors in the SwapRoot component & it's children.
- * It's simpler to render a separate loading component here instead of handling it
- * everywhere else.
- */
 export const Swap = () => {
   const { isLoading } = useWellTokens();
 

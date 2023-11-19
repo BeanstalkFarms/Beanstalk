@@ -21,15 +21,21 @@ import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
+import { LoadingTemplate } from "../LoadingTemplate";
+import { LoadingItem } from "../LoadingItem";
 
-type RemoveLiquidityProps = {
-  well: Well;
+type BaseRemoveLiquidityProps = {
+  // well: Well;
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
 };
 
-export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
+type RemoveLiquidityProps = {
+  well: Well;
+} & BaseRemoveLiquidityProps;
+
+const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
@@ -441,6 +447,39 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
       )}
     </div>
   );
+};
+
+export const RemoveLiquidity = (props: BaseRemoveLiquidityProps & { well: Well | undefined; loading: boolean }) => {
+  if (!props.well || props.loading) {
+    return (
+      <LargeGapContainer>
+        <TokenContainer>
+          <LoadingTemplate.Input />
+        </TokenContainer>
+        <MediumGapContainer>
+          <OutputModeSelectorContainer>
+            <LoadingTemplate.OutputSingle width={100} size={20} mb={4} />
+            <LoadingTemplate.Flex row gap={8}>
+              <LoadingTemplate.Button />
+              <LoadingTemplate.Button />
+            </LoadingTemplate.Flex>
+          </OutputModeSelectorContainer>
+          <TokenContainer>
+            <LoadingTemplate.Input />
+          </TokenContainer>
+          <TokenContainer>
+            <LoadingTemplate.Input />
+          </TokenContainer>
+        </MediumGapContainer>
+        <LoadingTemplate.OutputSingle width={185} />
+        <ButtonWrapper>
+          <LoadingTemplate.Button />
+        </ButtonWrapper>
+      </LargeGapContainer>
+    );
+  }
+
+  return <RemoveLiquidityContent {...props} well={props.well} />;
 };
 
 type ReadOnlyRowProps = {
