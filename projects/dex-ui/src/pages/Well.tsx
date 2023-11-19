@@ -176,7 +176,7 @@ export const Well = () => {
           </Item>
         </LiquiditySwapButtons>
         <LiquidityBoxContainer>
-          <LiquidityBox well={well} />
+          <LiquidityBox well={well} loading={loading} />
         </LiquidityBoxContainer>
         <LearnMoreContainer>
           <LearnMoreLabel onClick={toggle}>

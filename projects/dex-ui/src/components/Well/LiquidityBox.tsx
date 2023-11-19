@@ -2,10 +2,9 @@ import React, { useMemo } from "react";
 import styled from "styled-components";
 
 import { TokenValue } from "@beanstalk/sdk";
-import { Well } from "@beanstalk/sdk/Wells";
 
-import { mediaQuery, size } from "src/breakpoints";
-import { BodyCaps, BodyS, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
+import { mediaQuery } from "src/breakpoints";
+import { BodyCaps, BodyS, LinksButtonText, TextNudge } from "src/components/Typography";
 import { InfoBox } from "src/components/InfoBox";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Tooltip } from "src/components/Tooltip";
@@ -15,9 +14,12 @@ import { formatUSD } from "src/utils/format";
 import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+import { LoadingItem } from "src/components/LoadingItem";
+import { Well } from "@beanstalk/sdk/Wells";
 
 type Props = {
   well: Well | undefined;
+  loading: boolean;
 };
 
 const tooltipProps = {
@@ -31,8 +33,8 @@ const tooltipProps = {
 
 const displayTV = (value?: TokenValue) => (value?.gt(0) ? value.toHuman("short") : "-");
 
-export const LiquidityBox: FC<Props> = (props) => {
-  const well = useMemo(() => props.well, [props.well]);
+export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
+  const well = useMemo(() => _well, [_well]);
 
   const { getPositionWithWell } = useLPPositionSummary();
   const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
@@ -55,19 +57,27 @@ export const LiquidityBox: FC<Props> = (props) => {
     <InfoBox>
       <InfoBox.Header>
         <TextNudge amount={0} mobileAmount={2}>
-          <BoxHeader>My Liquidity</BoxHeader>
+          <BoxHeader>
+            <LoadingItem loading={loading} onLoading={null}>
+              {"My Liquidity"}
+            </LoadingItem>
+          </BoxHeader>
         </TextNudge>
-        <BoxHeaderAmount>
-          <TokenLogo token={well!.lpToken} size={16} mobileSize={16} isLP />
-          <TextNudge amount={1.5}>{displayTV(position?.total)}</TextNudge>
-        </BoxHeaderAmount>
+        <LoadingItem loading={loading} onLoading={null}>
+          <BoxHeaderAmount>
+            <TokenLogo token={well?.lpToken} size={16} mobileSize={16} isLP />
+            <TextNudge amount={1.5}>{displayTV(position?.total)}</TextNudge>
+          </BoxHeaderAmount>
+        </LoadingItem>
       </InfoBox.Header>
       <InfoBox.Body>
         <InfoBox.Row>
-          <InfoBox.Key>In my Wallet</InfoBox.Key>
+          <LoadingItem loading={loading} loadProps={{ height: 24, width: 100 }}>
+            <InfoBox.Key>In my Wallet</InfoBox.Key>
+          </LoadingItem>
           <InfoBox.Value>{displayTV(position?.external)}</InfoBox.Value>
         </InfoBox.Row>
-        {isWhitelisted ? (
+        {!loading && isWhitelisted ? (
           <>
             <InfoBox.Row>
               <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
@@ -82,32 +92,34 @@ export const LiquidityBox: FC<Props> = (props) => {
       </InfoBox.Body>
       <InfoBox.Footer>
         <USDWrapper>
-          {isWhitelisted ? (
-            <Tooltip
-              {...tooltipProps}
-              content={
-                <Breakdown>
-                  <BreakdownRow>
-                    {"Wallet: "}
-                    <div>${externalUSD.toHuman("short")}</div>
-                  </BreakdownRow>
+          <LoadingItem loading={loading} loadProps={{ height: 24, width: 100 }}>
+            {isWhitelisted ? (
+              <Tooltip
+                {...tooltipProps}
+                content={
+                  <Breakdown>
+                    <BreakdownRow>
+                      {"Wallet: "}
+                      <div>${externalUSD.toHuman("short")}</div>
+                    </BreakdownRow>
 
-                  <BreakdownRow>
-                    {"Silo Deposits: "}
-                    <div>${siloUSD.toHuman("short")}</div>
-                  </BreakdownRow>
-                  <BreakdownRow>
-                    {"Farm Balance: "}
-                    <div>${internalUSD.toHuman("short")}</div>
-                  </BreakdownRow>
-                </Breakdown>
-              }
-            >
-              USD TOTAL: {formatUSD(USDTotal)}
-            </Tooltip>
-          ) : (
-            <>USD TOTAL: {formatUSD(USDTotal)}</>
-          )}
+                    <BreakdownRow>
+                      {"Silo Deposits: "}
+                      <div>${siloUSD.toHuman("short")}</div>
+                    </BreakdownRow>
+                    <BreakdownRow>
+                      {"Farm Balance: "}
+                      <div>${internalUSD.toHuman("short")}</div>
+                    </BreakdownRow>
+                  </Breakdown>
+                }
+              >
+                <>USD TOTAL: {formatUSD(USDTotal)}</>
+              </Tooltip>
+            ) : (
+              <>USD TOTAL: {formatUSD(USDTotal)}</>
+            )}
+          </LoadingItem>
         </USDWrapper>
       </InfoBox.Footer>
     </InfoBox>
@@ -116,13 +128,10 @@ export const LiquidityBox: FC<Props> = (props) => {
 
 const BoxHeader = styled.div`
   ${BodyCaps}
-  @media (max-width: ${size.mobile}) {
+  min-height: 24px;
+  ${mediaQuery.sm.only} {
     ${BodyS}
   }
-`;
-
-const InfoText = styled.div`
-  ${BodyS}
 `;
 
 const BoxHeaderAmount = styled.div`

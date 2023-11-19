@@ -7,7 +7,7 @@ export type SkeletonProps = {
   width?: number;
   // if true, rounded will be ignored
   circle?: boolean;
-  // defaults to true
+  // defaults to false
   rounded?: boolean;
   // defaults to pulse
   shimmer?: boolean;
@@ -47,7 +47,7 @@ const SkeletonBase = css<SkeletonProps>`
   ${(props) => `
     height: ${props.height ? `${props.height}px` : "100%"};
     width: ${props.width ? `${props.width}px` : "100%"};
-    border-radius: ${props.circle ? "50%" : props.rounded === false ? `0px` : "4px"};
+    border-radius: ${props.circle ? "50%" : props.rounded === true ? `4px` : "0px"};
   `}
 `;
 
