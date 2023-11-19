@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { BodyL, BodyXS, TextNudge } from "../Typography";
+import { BodyL, BodyS, TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { TokenLogo } from "../TokenLogo";
@@ -38,7 +38,7 @@ const Symbol = styled.div`
   ${BodyL}
   color: #4B5563;
   @media (max-width: ${size.mobile}) {
-    ${BodyXS}
+    ${BodyS}
   }
 `;
 const Wrapper = styled.div`
@@ -54,7 +54,7 @@ const Amount = styled.div`
   text-align: right;
   color: #000000;
   @media (max-width: ${size.mobile}) {
-    ${BodyXS}
+    ${BodyS}
     font-weight: 600;
   }
 `;
@@ -65,6 +65,6 @@ const Percent = styled.div`
   text-align: right;
   color: #9ca3af;
   @media (max-width: ${size.mobile}) {
-    ${BodyXS}
+    ${BodyS}
   }
 `;

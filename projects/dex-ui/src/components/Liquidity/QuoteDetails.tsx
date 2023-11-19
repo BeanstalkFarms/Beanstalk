@@ -8,7 +8,7 @@ import SlippagePanel from "./SlippagePanel";
 import { ChevronDown, Info } from "../Icons";
 import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
-import { BodyXS } from "../Typography";
+import { BodyS } from "../Typography";
 import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 
@@ -343,6 +343,6 @@ const QuoteContainer = styled.div`
   display: flex;
   flex-direction: column;
   @media (max-width: ${size.mobile}) {
-    ${BodyXS}
+    ${BodyS}
   }
 `;

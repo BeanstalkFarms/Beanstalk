@@ -161,9 +161,8 @@ const StyledRow = styled(TabRow)`
   @media (max-width: ${size.mobile}) {
     position: fixed;
     width: 100vw;
-    margin-left: -12px;
-    margin-bottom: -2px;
-    top: calc(100% - 40px);
+    top: calc(100% - 48px);
+    left: 0;
   }
 `;
 
