@@ -38,8 +38,8 @@ LoadingTemplate.Button = () => (
   </Background>
 );
 
-LoadingTemplate.OutputSingle = ({ size, width }: { size?: number; width?: number }) => (
-  <Background width={width || 90}>
+LoadingTemplate.OutputSingle = ({ size, width, mb }: { size?: number; width?: number; mb?: number }) => (
+  <Background width={width || 90} mb={mb}>
     <Skeleton width={width || 90} height={size ? size : 24} />
   </Background>
 );
@@ -52,11 +52,12 @@ LoadingTemplate.Flex = styled.div<{ row?: boolean; gap?: number }>`
     `}
 `;
 
-const Background = styled.div<{ width?: number }>`
+const Background = styled.div<{ width?: number; mb?: number }>`
   display: flex;
   background: white;
   ${(props) => `
-    width: ${props.width ? `${props.width}px` : "100"};
+    width: ${props.width ? `${props.width}px` : "100%"};
+    margin-bottom: ${props.mb ? props.mb : 0}px;
   `}
 `;
 
