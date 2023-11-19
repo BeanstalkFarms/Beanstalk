@@ -4,8 +4,8 @@ import styled from "styled-components";
 import { TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk/Wells";
 
-import { size } from "src/breakpoints";
-import { BodyCaps, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
+import { mediaQuery, size } from "src/breakpoints";
+import { BodyCaps, BodyS, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
 import { InfoBox } from "src/components/InfoBox";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Tooltip } from "src/components/Tooltip";
@@ -117,9 +117,14 @@ export const LiquidityBox: FC<Props> = (props) => {
 const BoxHeader = styled.div`
   ${BodyCaps}
   @media (max-width: ${size.mobile}) {
-    ${BodyXS}
+    ${BodyS}
   }
 `;
+
+const InfoText = styled.div`
+  ${BodyS}
+`;
+
 const BoxHeaderAmount = styled.div`
   display: flex;
   align-items: center;

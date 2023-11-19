@@ -17,7 +17,7 @@ export const Swap = () => {
 
   return (
     <Page>
-      <Title title="Swap" />
+      <Title title="Swap" fontWeight={"600"} largeOnMobile />
       {isLoading ? <SwapLoading /> : <SwapRoot />}
     </Page>
   );
