@@ -3,7 +3,7 @@ import { Well } from "@beanstalk/sdk/Wells";
 
 const WHITELIST_MAP = {
   /// BEANWETHCP2w (BEANETH LP)
-  "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd": {
+  "0xbea0e11282e2bb5893bece110cf199501e872bad": {
     address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd",
     lpTokenAddress: "0xbea0e11282e2bb5893bece110cf199501e872bad"
   }
@@ -15,7 +15,7 @@ export const useBeanstalkSiloWhitelist = () => {
 
   const getIsWhitelisted = (well: Well | undefined) => {
     if (!well) return false;
-    const wellAddress = well.address;
+    const wellAddress = well.address.toLowerCase();
 
     return wellAddress in WHITELIST_MAP;
   };
