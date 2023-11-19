@@ -19,7 +19,7 @@ export const mediaQuery = {
   },
   md: {
     // 1024px & above
-    up: `@media (min-width: ${mediaSizes.mobile}px)`,
+    up: `@media (min-width: ${mediaSizes.tablet}px)`,
     // between 769px & 1024px
     only: `@media (min-width: ${mediaSizes.mobile}px) and (max-width: ${mediaSizes.tablet - 1}px)`,
     // 1024px & below
