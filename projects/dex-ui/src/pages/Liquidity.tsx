@@ -134,10 +134,6 @@ export const Liquidity = () => {
   );
 };
 
-const EmptyItem = styled.div`
-  display: none;
-`;
-
 const ContentWrapper = styled.div`
   display: flex;
   flex-direction: row;
