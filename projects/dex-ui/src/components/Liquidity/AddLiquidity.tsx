@@ -16,7 +16,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
-import { LoadingTemplate } from "../LoadingTemplate";
+import { LoadingTemplate } from "src/components/LoadingTemplate";
 
 type BaseAddLiquidityProps = {
   slippage: number;
@@ -33,32 +33,6 @@ export type AddLiquidityQuote = {
     quote: TokenValue[];
   };
   estimate: TokenValue;
-};
-
-export const AddLiquidityLoading = () => (
-  <div>
-    <LargeGapContainer>
-      <LoadingTemplate.Flex gap={12}>
-        <LoadingTemplate.Input />
-        <LoadingTemplate.Input />
-      </LoadingTemplate.Flex>
-      <LoadingTemplate.Flex gap={8}>
-        <LoadingTemplate.OutputSingle size={20} width={285} />
-        <LoadingTemplate.OutputSingle size={20} width={145} />
-      </LoadingTemplate.Flex>
-      <ButtonWrapper>
-        <LoadingTemplate.Button />
-      </ButtonWrapper>
-    </LargeGapContainer>
-  </div>
-);
-
-export const AddLiquidity = (props: BaseAddLiquidityProps & { well: Well | undefined; loading: boolean }) => {
-  if (!props.well || props.loading) {
-    return <AddLiquidityLoading />;
-  }
-
-  return <AddLiquidityContent {...props} well={props.well} />;
 };
 
 const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
@@ -441,6 +415,30 @@ const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, han
       )}
     </div>
   );
+};
+
+export const AddLiquidity = (props: BaseAddLiquidityProps & { well: Well | undefined; loading: boolean }) => {
+  if (!props.well || props.loading) {
+    return (
+      <div>
+        <LargeGapContainer>
+          <LoadingTemplate.Flex gap={12}>
+            <LoadingTemplate.Input />
+            <LoadingTemplate.Input />
+          </LoadingTemplate.Flex>
+          <LoadingTemplate.Flex gap={8}>
+            <LoadingTemplate.OutputSingle size={20} width={285} />
+            <LoadingTemplate.OutputSingle size={20} width={145} />
+          </LoadingTemplate.Flex>
+          <ButtonWrapper>
+            <LoadingTemplate.Button />
+          </ButtonWrapper>
+        </LargeGapContainer>
+      </div>
+    );
+  }
+
+  return <AddLiquidityContent {...props} well={props.well} />;
 };
 
 const LargeGapContainer = styled.div`
