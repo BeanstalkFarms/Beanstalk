@@ -243,6 +243,11 @@ const TransferForm: FC<
                                       fontSize: FontSize.sm,
                                     }}
                                   >
+                                    {isUsingPlant &&
+                                      <li key="earnedBeanCrate">
+                                        {`${displayTokenAmount(earnedBeans, sdk.tokens.BEAN, { showName: false })} Earned Beans`}
+                                      </li>
+                                    }
                                     {withdrawResult.crates.map((crate, index) => (
                                       <li key={index}>
                                         {displayTokenAmount(
