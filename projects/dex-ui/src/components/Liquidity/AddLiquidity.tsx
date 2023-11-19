@@ -16,13 +16,17 @@ import useSdk from "src/utils/sdk/useSdk";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
+import { LoadingTemplate } from "../LoadingTemplate";
 
-type AddLiquidityProps = {
-  well: Well;
+type BaseAddLiquidityProps = {
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
 };
+
+type AddLiquidityProps = {
+  well: Well;
+} & BaseAddLiquidityProps;
 
 export type AddLiquidityQuote = {
   quote: {
@@ -31,7 +35,33 @@ export type AddLiquidityQuote = {
   estimate: TokenValue;
 };
 
-export const AddLiquidity = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
+export const AddLiquidityLoading = () => (
+  <div>
+    <LargeGapContainer>
+      <LoadingTemplate.Flex gap={12}>
+        <LoadingTemplate.Input />
+        <LoadingTemplate.Input />
+      </LoadingTemplate.Flex>
+      <LoadingTemplate.Flex gap={8}>
+        <LoadingTemplate.OutputSingle size={20} width={285} />
+        <LoadingTemplate.OutputSingle size={20} width={145} />
+      </LoadingTemplate.Flex>
+      <ButtonWrapper>
+        <LoadingTemplate.Button />
+      </ButtonWrapper>
+    </LargeGapContainer>
+  </div>
+);
+
+export const AddLiquidity = (props: BaseAddLiquidityProps & { well: Well | undefined; loading: boolean }) => {
+  if (!props.well || props.loading) {
+    return <AddLiquidityLoading />;
+  }
+
+  return <AddLiquidityContent {...props} well={props.well} />;
+};
+
+const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: AddLiquidityProps) => {
   const { address } = useAccount();
   const [amounts, setAmounts] = useState<LiquidityAmounts>({});
   const inputs = Object.values(amounts);

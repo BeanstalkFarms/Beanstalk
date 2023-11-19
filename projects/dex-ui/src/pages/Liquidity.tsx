@@ -19,11 +19,14 @@ import { ChevronDown } from "src/components/Icons";
 import { mediaQuery, size } from "src/breakpoints";
 import { Loading } from "../components/Loading";
 import { Error } from "../components/Error";
+import { LoadingItem } from "src/components/LoadingItem";
 
 export const Liquidity = () => {
   const { address: wellAddress } = useParams<"address">();
-  const navigate = useNavigate();
   const { well, loading, error } = useWell(wellAddress!);
+
+  const navigate = useNavigate();
+
   const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
   const [tab, setTab] = useState(0);
 
@@ -67,14 +70,16 @@ export const Liquidity = () => {
     <Page>
       <ContentWrapper>
         <SideBar id="sidebar">
-          <Button
-            secondary
-            label="← Back To Well Details"
-            width={"100%"}
-            margin={"0px"}
-            onClick={() => navigate(`../wells/${wellAddress}`)}
-          />
-          <LiquidityBox well={well} />
+          <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+            <Button
+              secondary
+              label="← Back To Well Details"
+              width={"100%"}
+              margin={"0px"}
+              onClick={() => navigate(`../wells/${wellAddress}`)}
+            />
+          </LoadingItem>
+          <LiquidityBox well={well} loading={loading} />
           <LearnMoreContainer>
             <LearnMoreLabel onClick={toggle}>
               <LearnMoreLine />
@@ -93,28 +98,40 @@ export const Liquidity = () => {
               <LearnMoreLine />
             </LearnMoreLabel>
             <LearnMoreButtons open={open}>
-              <LearnYield />
-              <LearnWellFunction name={wellFunctionName} />
-              <LearnPump />
+              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+                <LearnYield />
+              </LoadingItem>
+              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+                <LearnWellFunction name={wellFunctionName} />
+              </LoadingItem>
+              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+                <LearnPump />
+              </LoadingItem>
             </LearnMoreButtons>
           </LearnMoreContainer>
         </SideBar>
+        {/* <div style={{ display: "flex", flexDirection: "row", gap: "2px" }}> */}
         <CenterBar id="centerbar" ref={scrollRef}>
           <AddRemoveLiquidityRow gap={0} tabSelected={true}>
             <Item stretch>
               <TabButton onClick={() => setTab(0)} active={tab === 0} stretch bold justify hover>
-                <span>Add Liquidity</span>
+                <LoadingItem loading={loading} onLoading={<>{""}</>}>
+                  <span>Add Liquidity</span>
+                </LoadingItem>
               </TabButton>
             </Item>
             <Item stretch>
               <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover>
-                <span>Remove Liquidity</span>
+                <LoadingItem loading={loading} onLoading={<>{""}</>}>
+                  <span>Remove Liquidity</span>
+                </LoadingItem>
               </TabButton>
             </Item>
           </AddRemoveLiquidityRow>
           {tab === 0 && (
             <AddLiquidity
-              well={well!}
+              well={well}
+              loading={loading}
               slippage={slippage}
               slippageSettingsClickHandler={slippageSettingsClickHandler}
               handleSlippageValueChange={handleSlippageValueChange}
@@ -129,6 +146,26 @@ export const Liquidity = () => {
             />
           )}
         </CenterBar>
+        {/* <CenterBar id="centerbar" ref={scrollRef}>
+            <AddRemoveLiquidityRow gap={0} tabSelected={true}>
+              <Item stretch>
+                <TabButton onClick={() => setTab(0)} active={tab === 0} stretch bold justify hover>
+                  <LoadingItem loading={loading} onLoading={<>{""}</>}>
+                    <span>Add Liquidity</span>
+                  </LoadingItem>
+                </TabButton>
+              </Item>
+              <Item stretch>
+                <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover>
+                  <LoadingItem loading={loading} onLoading={<>{""}</>}>
+                    <span>Remove Liquidity</span>
+                  </LoadingItem>
+                </TabButton>
+              </Item>
+            </AddRemoveLiquidityRow>
+            <AddLiquidityLoading />
+          </CenterBar> */}
+        {/* </div> */}
       </ContentWrapper>
     </Page>
   );
@@ -243,4 +280,11 @@ const LearnMoreButtons = styled.div<{ open: boolean }>`
     ${(props) => (props.open ? "display: flex" : "display: none")};
     gap: 16px;
   }
+`;
+
+const EmptyLearnItem = styled.div`
+  width: 100%;
+  height: 48px;
+  border: 0.5px solid #9ca3af;
+  background: #f9f8f6;
 `;
