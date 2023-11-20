@@ -21,15 +21,14 @@ import { OtherSection } from "src/components/Well/OtherSection";
 import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
-import { mediaQuery } from "src/breakpoints";
-import { Loading } from "src/components/Loading";
+import { mediaQuery, size } from "src/breakpoints";
 import { Error } from "../components/Error";
 import { useWellWithParams } from "src/wells/useWellWithParams";
 import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 
 export const Well = () => {
-  const { well, loading: isLoading, error } = useWellWithParams();
+  const { well, loading, error } = useWellWithParams();
 
   const sdk = useSdk();
   const navigate = useNavigate();
@@ -123,16 +122,18 @@ export const Well = () => {
   );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  if (isLoading) return <Loading spinnerOnly />;
+  // if (isLoading) return <Loading spinnerOnly />;
 
   if (error) return <Error message={error?.message} errorOnly />;
-
-  const loading = true;
 
   return (
     <Page>
       <ContentWrapper>
         <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
+
+        {/*
+         *Header
+         */}
         <HeaderContainer>
           <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
             <Item>
@@ -149,6 +150,7 @@ export const Well = () => {
             </StyledItem>
           </LoadingItem>
         </HeaderContainer>
+
         {/*
          * Reserves
          */}
@@ -157,17 +159,19 @@ export const Well = () => {
             <Reserves reserves={reserves} />
           </LoadingItem>
         </ReservesContainer>
+
         {/*
          * Chart Section
          */}
         <ChartContainer>
-          <ChartSection well={well!} />
+          <ChartSection well={well} loading={loading} />
         </ChartContainer>
+
         {/*
          * Chart Type Button Selectors
          */}
         <ActivityOtherButtons gap={24} mobileGap={"0px"}>
-          <LoadingItem loading={false} onLoading={<SkeletonButtonsRow />}>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
             <Item stretch>
               <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
                 Activity
@@ -180,12 +184,21 @@ export const Well = () => {
             </Item>
           </LoadingItem>
         </ActivityOtherButtons>
+
+        {/*
+         * Well History & Contract Info Tables
+         */}
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
-          {tab === 1 && <OtherSection well={well!} loading={loading} />}
+          {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
+          {tab === 1 && <OtherSection well={well} loading={loading} />}
         </BottomContainer>
+
+        {/*
+         * UI Helpers
+         */}
         <ColumnBreak />
         <StickyDetector ref={containerRef} />
+
         {/*
          * Liquidity Swap Button
          */}
@@ -199,12 +212,14 @@ export const Well = () => {
             </Item>
           </LoadingItem>
         </LiquiditySwapButtons>
+
         {/*
          * Liquidity Box
          */}
         <LiquidityBoxContainer>
           <LiquidityBox well={well} loading={loading} />
         </LiquidityBoxContainer>
+
         {/*
          * Learn More
          */}
