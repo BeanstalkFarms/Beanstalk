@@ -22,8 +22,8 @@ const getMarginStyles = (props: { margin?: MarginProps }) => `
   margin-left: ${props.margin?.left ? props.margin.left : 0}px;
 `;
 
-export function LoadingTemplate(props: { children: React.ReactNode }) {
-  return <>{props.children}</>;
+export function LoadingTemplate(props: FlexProps & { children: React.ReactNode }) {
+  return <FlexBox {...props} />;
 }
 
 LoadingTemplate.Input = () => (
@@ -113,6 +113,7 @@ type FlexProps = {
   gap?: number;
   alignItems?: string;
   justifyContent?: string;
+  width?: string | number;
 };
 
 const FlexBox = styled.div<FlexProps>`
@@ -122,6 +123,7 @@ const FlexBox = styled.div<FlexProps>`
       gap: ${props.gap || 0}px;
       ${props.alignItems && `align-items: ${props.alignItems};`}
       ${props.justifyContent && `justify-content: ${props.justifyContent};`}
+      ${props.width && `width: ${typeof props.width === "string" ? props.width : `${props.width}px`}`}
   `}
 `;
 
