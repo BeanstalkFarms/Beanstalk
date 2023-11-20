@@ -167,7 +167,7 @@ export const Well = () => {
          * Chart Type Button Selectors
          */}
         <ActivityOtherButtons gap={24} mobileGap={"0px"}>
-          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+          <LoadingItem loading={false} onLoading={<SkeletonButtonsRow />}>
             <Item stretch>
               <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
                 Activity
@@ -181,8 +181,8 @@ export const Well = () => {
           </LoadingItem>
         </ActivityOtherButtons>
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} />}
-          {tab === 1 && <OtherSection well={well!} />}
+          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
+          {tab === 1 && <OtherSection well={well!} loading={loading} />}
         </BottomContainer>
         <ColumnBreak />
         <StickyDetector ref={containerRef} />
@@ -199,9 +199,15 @@ export const Well = () => {
             </Item>
           </LoadingItem>
         </LiquiditySwapButtons>
+        {/*
+         * Liquidity Box
+         */}
         <LiquidityBoxContainer>
           <LiquidityBox well={well} loading={loading} />
         </LiquidityBoxContainer>
+        {/*
+         * Learn More
+         */}
         <LearnMoreContainer>
           <LearnMoreLabel onClick={toggle}>
             <LearnMoreLine />
