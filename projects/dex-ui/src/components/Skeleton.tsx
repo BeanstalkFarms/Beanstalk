@@ -2,6 +2,13 @@ import React from "react";
 
 import styled, { css, keyframes } from "styled-components";
 
+type MarginProps = {
+  bottom?: number;
+  top?: number;
+  left?: number;
+  right?: number;
+};
+
 export type SkeletonProps = {
   height: number;
   width?: number;
@@ -11,6 +18,8 @@ export type SkeletonProps = {
   rounded?: boolean;
   // defaults to pulse
   shimmer?: boolean;
+  // margin:
+  margin?: MarginProps;
 };
 
 export const Skeleton: React.FC<SkeletonProps> = (props) => {
@@ -47,7 +56,11 @@ const SkeletonBase = css<SkeletonProps>`
   ${(props) => `
     height: ${props.height ? `${props.height}px` : "100%"};
     width: ${props.width ? `${props.width}px` : "100%"};
-    border-radius: ${props.circle ? "50%" : props.rounded === true ? `4px` : "0px"};
+    border-radius: ${props.circle ? "50%" : props.rounded === true ? "4px" : "0px"};
+    margin-top: ${props.margin?.top || 0}px;
+    margin-bottom: ${props.margin?.bottom || 0}px;
+    margin-right: ${props.margin?.right || 0}px;
+    margin-left: ${props.margin?.left || 0}px;
   `}
 `;
 

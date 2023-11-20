@@ -3,7 +3,28 @@ import styled from "styled-components";
 import { Skeleton } from "./Skeleton";
 import { ArrowButton } from "./Swap/ArrowButton";
 
-export function LoadingTemplate() {}
+type MarginProps = {
+  left?: number;
+  right?: number;
+  bottom?: number;
+  top?: number;
+};
+
+type DimensionProps = {
+  height?: number;
+  width?: number;
+};
+
+const getMarginStyles = (props: { margin?: MarginProps }) => `
+  margin-bottom: ${props.margin?.bottom ? props.margin.bottom : 0}px;
+  margin-top: ${props.margin?.top ? props.margin.top : 0}px;
+  margin-right: ${props.margin?.right ? props.margin.right : 0}px;
+  margin-left: ${props.margin?.left ? props.margin.left : 0}px;
+`;
+
+export function LoadingTemplate(props: { children: React.ReactNode }) {
+  return <>{props.children}</>;
+}
 
 LoadingTemplate.Input = () => (
   <LoadingInputItem>
@@ -21,13 +42,24 @@ LoadingTemplate.Arrow = () => (
   </ArrowContainer>
 );
 
-LoadingTemplate.OutputDouble = ({ size }: { size?: number }) => (
+LoadingTemplate.OutputDouble = ({ size, height }: { size?: number; height?: number }) => (
   <OutputRow>
-    <Background>
+    <Background width={90} height={height}>
       <Skeleton width={90} height={size ? size : 24} />
     </Background>
-    <Background>
+    <Background width={70} height={height}>
       <Skeleton width={70} height={size ? size : 24} />
+    </Background>
+  </OutputRow>
+);
+
+LoadingTemplate.LabelValue = ({ height, labelWidth, valueWidth }: { height?: number; labelWidth?: number; valueWidth?: number }) => (
+  <OutputRow>
+    <Background width={labelWidth}>
+      <Skeleton width={labelWidth} height={height || 24} />
+    </Background>
+    <Background width={valueWidth}>
+      <Skeleton width={valueWidth} height={height || 24} />
     </Background>
   </OutputRow>
 );
@@ -38,26 +70,69 @@ LoadingTemplate.Button = () => (
   </Background>
 );
 
-LoadingTemplate.OutputSingle = ({ size, width, mb }: { size?: number; width?: number; mb?: number }) => (
-  <Background width={width || 90} mb={mb}>
-    <Skeleton width={width || 90} height={size ? size : 24} />
+LoadingTemplate.Item = ({ height, width, margin }: DimensionProps & { margin?: MarginProps }) => (
+  <Background width={width || 90} margin={margin} height={height}>
+    <Skeleton width={width || 90} height={height || 24} />
   </Background>
 );
 
-LoadingTemplate.Flex = styled.div<{ row?: boolean; gap?: number }>`
+LoadingTemplate.OutputSingle = ({ size, width, mb }: { size?: number; width?: number; mb?: number }) => (
+  <Background width={width || 90} margin={{ bottom: mb }}>
+    <Skeleton width={width || 90} height={size || 24} />
+  </Background>
+);
+
+LoadingTemplate.Flex = (props: FlexProps & { children: React.ReactNode }) => <FlexBox {...props} />;
+
+LoadingTemplate.TokenLogo = ({ count = 1, size }: { count?: number; size: number }) => {
+  if (count === 0) return null;
+
+  if (count === 1) {
+    return (
+      <Background height={size} width={size} circle>
+        <Skeleton height={size} width={size} circle />
+      </Background>
+    );
+  }
+
+  return (
+    <FlexBox row>
+      {Array(count)
+        .fill(null)
+        .map((_, i) => (
+          <Background height={size} width={size} circle key={`Token-Logo-skeleton-${i}`} margin={{ left: i === 0 ? 0 : -8 }}>
+            <Skeleton height={size} width={size} circle />
+          </Background>
+        ))}
+    </FlexBox>
+  );
+};
+
+type FlexProps = {
+  row?: boolean;
+  gap?: number;
+  alignItems?: string;
+  justifyContent?: string;
+};
+
+const FlexBox = styled.div<FlexProps>`
   display: flex;
   ${(props) => `
-        flex-direction: ${props.row ? "row" : "column"};
-        gap: ${props.gap || 0}px;
-    `}
+      flex-direction: ${props.row ? "row" : "column"};
+      gap: ${props.gap || 0}px;
+      ${props.alignItems && `align-items: ${props.alignItems};`}
+      ${props.justifyContent && `justify-content: ${props.justifyContent};`}
+  `}
 `;
 
-const Background = styled.div<{ width?: number; mb?: number }>`
+const Background = styled.div<{ width?: number; height?: number; margin?: MarginProps; circle?: boolean; rounded?: boolean }>`
   display: flex;
   background: white;
   ${(props) => `
+    height: ${props.height ? `${props.height}px` : "100%"};
     width: ${props.width ? `${props.width}px` : "100%"};
-    margin-bottom: ${props.mb ? props.mb : 0}px;
+    border-radius: ${props.circle ? "50%" : props.rounded === true ? "4px" : "0px"};
+    ${getMarginStyles(props)}
   `}
 `;
 
@@ -77,7 +152,6 @@ const LoadingInputItem = styled.div`
   border: 0.5px solid #d1d5db;
   padding: 23.5px 8px;
   outline: 0.5px solid black;
-  //   outline-offset: -1px;
 `;
 
 const SkeletonRow = styled.div`
@@ -93,3 +167,18 @@ const ArrowContainer = styled.div`
   flex-direction: row;
   justify-content: center;
 `;
+
+type Responsive<T> =
+  | {
+      sm?: T;
+      md?: T;
+      lg?: T;
+    }
+  | T;
+
+type FlexingProps = {
+  height: number;
+  width: number;
+  alignItems?: string;
+  justifyContent?: string;
+};

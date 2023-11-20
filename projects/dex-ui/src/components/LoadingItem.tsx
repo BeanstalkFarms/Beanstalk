@@ -3,7 +3,7 @@ import { Skeleton, SkeletonProps } from "./Skeleton";
 
 type BaseProps = {
   loading?: boolean;
-  children: React.ReactNode;
+  children: React.ReactNode | React.ReactNode[];
 };
 
 type WithOnLoadingProps = BaseProps & {
