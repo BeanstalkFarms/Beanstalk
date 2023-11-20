@@ -82,7 +82,6 @@ export default function useFarmerFormTxnsActions(options?: {
         token: sdk.tokens.BEAN,
         source: FarmFromMode.INTERNAL,
         destination: FarmToMode.EXTERNAL,
-        to: account,
       };
 
       return transfer;
