@@ -49,6 +49,7 @@ import BeanProgressIcon from '../Common/BeanProgressIcon';
  * This table is the entry point to deposit Beans, LP, etc.
  */
 import { FC } from '~/types';
+import StatHorizontal from '../Common/StatHorizontal';
 
 const ARROW_CONTAINER_WIDTH = 20;
 const TOOLTIP_COMPONENT_PROPS = {
@@ -500,6 +501,7 @@ const Whitelist: FC<{
                        * display Earned Beans and Deposited Beans separately.
                        * Internally they are both considered "Deposited". */}
                         <Tooltip
+                          placement="right"
                           title={
                             token.equals(Bean) && farmerSilo.beans.earned.gt(0) ? (
                             <>
@@ -537,12 +539,14 @@ const Whitelist: FC<{
                               <br />
                             </>
                             ) : !token.equals(Bean) && deposited?.amount.gt(0) && 
-                              <>
-                                  {`Recorded BDV: `}{displayFullBN(
-                                    deposited?.bdv || ZERO_BN,
-                                    token.displayDecimals
-                                  )}
-                              </>
+                              <Stack gap={0.5}>
+                                <StatHorizontal label="Current BDV:">
+                                  {displayFullBN(deposited?.amount.multipliedBy(getBDV(token)) || ZERO_BN, token.displayDecimals)}
+                                </StatHorizontal>
+                                <StatHorizontal label="Recorded BDV:">
+                                  {displayFullBN(deposited?.bdv || ZERO_BN,token.displayDecimals)}
+                                </StatHorizontal>
+                              </Stack>
                           }
                         >
                           <span>
@@ -559,11 +563,9 @@ const Whitelist: FC<{
                                 )}
                               </Typography>
                             ) : null}
+                            &nbsp;{token.symbol}
                           </span>
                         </Tooltip>
-                      <Box display={{ md: 'inline', xs: 'none' }}>
-                        &nbsp;{token.symbol}
-                      </Box>
                     </Typography>
                   </Grid>
 
