@@ -131,7 +131,6 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
       </DesktopRow>
       <MobileRow>
         <TabButton onClick={() => setChartTypeDrawerOpen(true)}>{tab === 0 ? "LIQUIDITY" : "VOLUME"}</TabButton>
-
         <BottomDrawer showDrawer={isChartTypeDrawerOpen} headerText={"View Chart"} toggleDrawer={setChartTypeDrawerOpen}>
           <DrawerRow
             onClick={() => {
@@ -148,11 +147,9 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
             VOLUME
           </DrawerRow>
         </BottomDrawer>
-
         <FilterButton onClick={() => setChartRangeDrawerOpen(true)}>
           {dropdownButtonText} <ChevronDown width={6} />
         </FilterButton>
-
         <BottomDrawer showDrawer={isChartRangeDrawerOpen} headerText={"Time Period"} toggleDrawer={setChartRangeDrawerOpen}>
           <DrawerRow
             onClick={() => {
@@ -204,10 +201,10 @@ export const ChartSection: FC<{ well: Well | undefined; loading?: boolean }> = (
     return (
       <Container id="chart-section-loading">
         <DesktopRow>
-          <LoadingTabButton width={110.59}>{""}</LoadingTabButton>
-          <LoadingTabButton width={99.17} active>
+          <LoadingTabButton width={110.59} active>
             {""}
           </LoadingTabButton>
+          <LoadingTabButton width={99.17}>{""}</LoadingTabButton>
           <LoadingFilterButton width={103.41}>{""}</LoadingFilterButton>
         </DesktopRow>
         <MobileRow>

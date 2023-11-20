@@ -127,133 +127,135 @@ export const Well = () => {
   if (error) return <Error message={error?.message} errorOnly />;
 
   return (
-    <Page>
-      <ContentWrapper>
-        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
+    <PageWrapper>
+      <Page>
+        <ContentWrapper>
+          <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
 
-        {/*
-         *Header
-         */}
-        <HeaderContainer>
-          <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
-            <Item>
-              <Header>
-                <TokenLogos>{logos}</TokenLogos>
-                <TextNudge amount={10} mobileAmount={-2}>
-                  {title}
-                </TextNudge>
-              </Header>
-            </Item>
-            <StyledItem column stretch>
-              <FunctionName>{wellFunctionName}</FunctionName>
-              <Fee>0.00% Trading Fee</Fee>
-            </StyledItem>
-          </LoadingItem>
-        </HeaderContainer>
-
-        {/*
-         * Reserves
-         */}
-        <ReservesContainer>
-          <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
-            <Reserves reserves={reserves} />
-          </LoadingItem>
-        </ReservesContainer>
-
-        {/*
-         * Chart Section
-         */}
-        <ChartContainer>
-          <ChartSection well={well} loading={loading} />
-        </ChartContainer>
-
-        {/*
-         * Chart Type Button Selectors
-         */}
-        <ActivityOtherButtons gap={24} mobileGap={"0px"}>
-          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
-            <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
-                Activity
-              </TabButton>
-            </Item>
-            <Item stretch>
-              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-                Contract Addresses
-              </TabButton>
-            </Item>
-          </LoadingItem>
-        </ActivityOtherButtons>
-
-        {/*
-         * Well History & Contract Info Tables
-         */}
-        <BottomContainer>
-          {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
-          {tab === 1 && <OtherSection well={well} loading={loading} />}
-        </BottomContainer>
-
-        {/*
-         * UI Helpers
-         */}
-        <ColumnBreak />
-        <StickyDetector ref={containerRef} />
-
-        {/*
-         * Liquidity Swap Button
-         */}
-        <LiquiditySwapButtons gap={24} mobileGap={isSticky ? "0px" : "8px"} sticky={isSticky}>
-          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
-            <Item stretch>
-              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
-            </Item>
-            <Item stretch>
-              <Button label="Swap" onClick={goSwap} />
-            </Item>
-          </LoadingItem>
-        </LiquiditySwapButtons>
-
-        {/*
-         * Liquidity Box
-         */}
-        <LiquidityBoxContainer>
-          <LiquidityBox well={well} loading={loading} />
-        </LiquidityBoxContainer>
-
-        {/*
-         * Learn More
-         */}
-        <LearnMoreContainer>
-          <LearnMoreLabel onClick={toggle}>
-            <LearnMoreLine />
-            <LearnMoreText>
-              <TextNudge amount={2}>Learn more about this Well</TextNudge>
-              <ImageButton
-                component={ChevronDown}
-                size={10}
-                rotate={open ? "180" : "0"}
-                onClick={toggle}
-                padding="0px"
-                alt="Click to expand and learn how to earn yield"
-                color={"#46B955"}
-              />
-            </LearnMoreText>
-            <LearnMoreLine />
-          </LearnMoreLabel>
-          <LearnMoreButtons open={open}>
-            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnYield />
+          {/*
+           *Header
+           */}
+          <HeaderContainer>
+            <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
+              <Item>
+                <Header>
+                  <TokenLogos>{logos}</TokenLogos>
+                  <TextNudge amount={10} mobileAmount={-2}>
+                    {title}
+                  </TextNudge>
+                </Header>
+              </Item>
+              <StyledItem column stretch>
+                <FunctionName>{wellFunctionName}</FunctionName>
+                <Fee>0.00% Trading Fee</Fee>
+              </StyledItem>
             </LoadingItem>
-            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+          </HeaderContainer>
+
+          {/*
+           * Reserves
+           */}
+          <ReservesContainer>
+            <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
+              <Reserves reserves={reserves} />
             </LoadingItem>
-            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnPump />
+          </ReservesContainer>
+
+          {/*
+           * Chart Section
+           */}
+          <ChartContainer>
+            <ChartSection well={well} loading={loading} />
+          </ChartContainer>
+
+          {/*
+           * Chart Type Button Selectors
+           */}
+          <ActivityOtherButtons gap={24} mobileGap={"0px"}>
+            <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+              <Item stretch>
+                <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
+                  Activity
+                </TabButton>
+              </Item>
+              <Item stretch>
+                <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
+                  Contract Addresses
+                </TabButton>
+              </Item>
             </LoadingItem>
-          </LearnMoreButtons>
-        </LearnMoreContainer>
-      </ContentWrapper>
-    </Page>
+          </ActivityOtherButtons>
+
+          {/*
+           * Well History & Contract Info Tables
+           */}
+          <BottomContainer>
+            {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
+            {tab === 1 && <OtherSection well={well} loading={loading} />}
+          </BottomContainer>
+
+          {/*
+           * UI Helpers
+           */}
+          <ColumnBreak />
+          <StickyDetector ref={containerRef} />
+
+          {/*
+           * Liquidity Swap Button
+           */}
+          <LiquiditySwapButtons gap={24} mobileGap={isSticky ? "0px" : "8px"} sticky={isSticky}>
+            <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+              <Item stretch>
+                <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+              </Item>
+              <Item stretch>
+                <Button label="Swap" onClick={goSwap} />
+              </Item>
+            </LoadingItem>
+          </LiquiditySwapButtons>
+
+          {/*
+           * Liquidity Box
+           */}
+          <LiquidityBoxContainer>
+            <LiquidityBox well={well} loading={loading} />
+          </LiquidityBoxContainer>
+
+          {/*
+           * Learn More
+           */}
+          <LearnMoreContainer>
+            <LearnMoreLabel onClick={toggle}>
+              <LearnMoreLine />
+              <LearnMoreText>
+                <TextNudge amount={2}>Learn more about this Well</TextNudge>
+                <ImageButton
+                  component={ChevronDown}
+                  size={10}
+                  rotate={open ? "180" : "0"}
+                  onClick={toggle}
+                  padding="0px"
+                  alt="Click to expand and learn how to earn yield"
+                  color={"#46B955"}
+                />
+              </LearnMoreText>
+              <LearnMoreLine />
+            </LearnMoreLabel>
+            <LearnMoreButtons open={open}>
+              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+                <LearnYield />
+              </LoadingItem>
+              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+                <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+              </LoadingItem>
+              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+                <LearnPump />
+              </LoadingItem>
+            </LearnMoreButtons>
+          </LearnMoreContainer>
+        </ContentWrapper>
+      </Page>
+    </PageWrapper>
   );
 };
 
@@ -261,6 +263,15 @@ const leftColumnWidth = 940;
 const rightColumnWidth = 400;
 
 const calcWellContentMaxWidth = `min(calc(100% - 48px - 400px), ${leftColumnWidth}px)`;
+
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  ${mediaQuery.between.smAndLg} {
+    align-items: center;
+  }
+`;
 
 const ContentWrapper = styled.div`
   display: flex;
@@ -275,8 +286,8 @@ const ContentWrapper = styled.div`
     height: 1400px;
   }
 
-  ${mediaQuery.lg.down} {
-    flex-flow: column nowrap;
+  ${mediaQuery.between.smAndLg} {
+    max-width: ${size.mobile};
   }
 `;
 
@@ -389,7 +400,7 @@ const LiquiditySwapButtons = styled(Row)<{ sticky?: boolean }>`
   }
 
   ${mediaQuery.md.only} {
-    max-width: calc(100vw - 96px);
+    max-width: calc(100vw - 48px);
   }
 `;
 
