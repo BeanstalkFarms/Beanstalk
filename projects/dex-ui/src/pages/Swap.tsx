@@ -8,12 +8,14 @@ import { useWellTokens } from "src/tokens/useWellTokens";
 import styled from "styled-components";
 
 export const Swap = () => {
-  const { isLoading } = useWellTokens();
+  const { isLoading, data } = useWellTokens();
+
+  const loading = !data || isLoading || !data.length;
 
   return (
     <Page>
       <Title title="Swap" fontWeight={"600"} largeOnMobile />
-      {isLoading ? (
+      {loading ? (
         <Container>
           <LoadingTemplate.Input />
           <LoadingTemplate.Arrow />
