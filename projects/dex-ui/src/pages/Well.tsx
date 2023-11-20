@@ -1,6 +1,5 @@
 import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useWell } from "src/wells/useWell";
+import { useNavigate } from "react-router-dom";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { TokenValue } from "@beanstalk/sdk";
@@ -25,12 +24,15 @@ import { ImageButton } from "src/components/ImageButton";
 import { mediaQuery } from "src/breakpoints";
 import { Loading } from "src/components/Loading";
 import { Error } from "../components/Error";
+import { useWellWithParams } from "src/wells/useWellWithParams";
+import { LoadingItem } from "src/components/LoadingItem";
+import { LoadingTemplate } from "src/components/LoadingTemplate";
 
 export const Well = () => {
+  const { well, loading: isLoading, error } = useWellWithParams();
+
   const sdk = useSdk();
   const navigate = useNavigate();
-  const { address: wellAddress } = useParams<"address">();
-  const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
 
@@ -121,45 +123,62 @@ export const Well = () => {
   );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  if (loading) return <Loading spinnerOnly />;
+  if (isLoading) return <Loading spinnerOnly />;
 
   if (error) return <Error message={error?.message} errorOnly />;
+
+  const loading = true;
 
   return (
     <Page>
       <ContentWrapper>
         <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
         <HeaderContainer>
-          <Item>
-            <Header>
-              <TokenLogos>{logos}</TokenLogos>
-              <TextNudge amount={10} mobileAmount={-2}>
-                {title}
-              </TextNudge>
-            </Header>
-          </Item>
-          <StyledItem column stretch>
-            <FunctionName>{wellFunctionName}</FunctionName>
-            <Fee>0.00% Trading Fee</Fee>
-          </StyledItem>
+          <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
+            <Item>
+              <Header>
+                <TokenLogos>{logos}</TokenLogos>
+                <TextNudge amount={10} mobileAmount={-2}>
+                  {title}
+                </TextNudge>
+              </Header>
+            </Item>
+            <StyledItem column stretch>
+              <FunctionName>{wellFunctionName}</FunctionName>
+              <Fee>0.00% Trading Fee</Fee>
+            </StyledItem>
+          </LoadingItem>
         </HeaderContainer>
+        {/*
+         * Reserves
+         */}
         <ReservesContainer>
-          <Reserves reserves={reserves} />
+          <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
+            <Reserves reserves={reserves} />
+          </LoadingItem>
         </ReservesContainer>
+        {/*
+         * Chart Section
+         */}
         <ChartContainer>
           <ChartSection well={well!} />
         </ChartContainer>
+        {/*
+         * Chart Type Button Selectors
+         */}
         <ActivityOtherButtons gap={24} mobileGap={"0px"}>
-          <Item stretch>
-            <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
-              Activity
-            </TabButton>
-          </Item>
-          <Item stretch>
-            <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-              Contract Addresses
-            </TabButton>
-          </Item>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
+                Activity
+              </TabButton>
+            </Item>
+            <Item stretch>
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
+                Contract Addresses
+              </TabButton>
+            </Item>
+          </LoadingItem>
         </ActivityOtherButtons>
         <BottomContainer>
           {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} />}
@@ -167,13 +186,18 @@ export const Well = () => {
         </BottomContainer>
         <ColumnBreak />
         <StickyDetector ref={containerRef} />
+        {/*
+         * Liquidity Swap Button
+         */}
         <LiquiditySwapButtons gap={24} mobileGap={isSticky ? "0px" : "8px"} sticky={isSticky}>
-          <Item stretch>
-            <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
-          </Item>
-          <Item stretch>
-            <Button label="Swap" onClick={goSwap} />
-          </Item>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+            </Item>
+            <Item stretch>
+              <Button label="Swap" onClick={goSwap} />
+            </Item>
+          </LoadingItem>
         </LiquiditySwapButtons>
         <LiquidityBoxContainer>
           <LiquidityBox well={well} loading={loading} />
@@ -196,9 +220,15 @@ export const Well = () => {
             <LearnMoreLine />
           </LearnMoreLabel>
           <LearnMoreButtons open={open}>
-            <LearnYield />
-            <LearnWellFunction name={wellFunctionName || "A Well Function"} />
-            <LearnPump />
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnYield />
+            </LoadingItem>
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+            </LoadingItem>
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnPump />
+            </LoadingItem>
           </LearnMoreButtons>
         </LearnMoreContainer>
       </ContentWrapper>
@@ -448,3 +478,56 @@ const ColumnBreak = styled.div`
     width: 0px;
   }
 `;
+
+const EmptyLearnItem = styled.div`
+  width: 100%;
+  height: 48px;
+  border: 0.5px solid #9ca3af;
+  background: #f9f8f6;
+`;
+
+const SkeletonHeader: React.FC<{}> = () => (
+  <>
+    <Item>
+      <Header>
+        <LoadingTemplate.TokenLogo count={2} size={48} />
+        <LoadingTemplate.Item width={150} height={32} margin={{ top: 8 }} />
+      </Header>
+    </Item>
+    <StyledItem column stretch>
+      <LoadingTemplate.Item height={24} width={150} />
+      <LoadingTemplate.Item height={20} width={100} margin={{ top: 4 }} />
+    </StyledItem>
+  </>
+);
+
+const SkeletonReserves: React.FC<{}> = () => {
+  return (
+    <Row gap={24}>
+      {Array(2)
+        .fill(null)
+        .map((_, i) => (
+          <LoadingTemplate key={`ReservesLoading-${i}`}>
+            <LoadingTemplate.Flex gap={4}>
+              <LoadingTemplate.Item width={75} height={20} />
+              <LoadingTemplate.Flex gap={4} row alignItems="flex-end">
+                <LoadingTemplate.Item width={100} height={24} />
+                <LoadingTemplate.Item width={70} height={24} />
+              </LoadingTemplate.Flex>
+            </LoadingTemplate.Flex>
+          </LoadingTemplate>
+        ))}
+    </Row>
+  );
+};
+
+const SkeletonButtonsRow: React.FC<{}> = () => (
+  <>
+    <Item stretch>
+      <LoadingTemplate.Button />
+    </Item>
+    <Item stretch>
+      <LoadingTemplate.Button />
+    </Item>
+  </>
+);
