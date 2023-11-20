@@ -11,15 +11,17 @@ import { size } from "src/breakpoints";
 import { useTokenSupply } from "src/tokens/useTokenSupply";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 
-type WellHistoryProps = {
-  well: Well;
+type BaseWellHistoryProps = {
   tokenPrices: (TokenValue | null)[];
   reservesUSD: TokenValue;
-  loading?: boolean;
 };
 
-export const WellHistory = ({ well, tokenPrices, reservesUSD, loading: _loading }: WellHistoryProps) => {
-  const { data: events, isLoading } = useWellHistory(well);
+type WellHistoryProps = {
+  well: Well;
+} & BaseWellHistoryProps;
+
+const WellHistoryContent = ({ well, tokenPrices, reservesUSD }: WellHistoryProps) => {
+  const { data: events, isLoading: loading } = useWellHistory(well);
   const [filter, setFilter] = useState<EVENT_TYPE | null>(null);
   const eventsPerPage = 10;
   const totalEvents = events?.length || 0;
@@ -38,8 +40,6 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD, loading: _loading 
       (e, index): any => index >= newestEventOnPage && index <= oldestEventOnPage && renderEvent(e, well, tokenPrices, lpTokenPrice)
     );
 
-  const loading = isLoading || _loading;
-
   return (
     <WellHistoryContainer>
       {/* <div>
@@ -51,43 +51,14 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD, loading: _loading 
       <Table width="100%">
         <THead>
           <Row>
-            <Th>{loading ? "" : "Action"}</Th>
-            <DesktopOnlyTh align={"right"}>{loading ? "" : "Value"}</DesktopOnlyTh>
-            <DesktopOnlyTh align={"right"}>{loading ? "" : "Description"}</DesktopOnlyTh>
-            <Th align={"right"}>{loading ? "" : "Time"}</Th>
+            <Th>Action</Th>
+            <DesktopOnlyTh align={"right"}>Value</DesktopOnlyTh>
+            <DesktopOnlyTh align={"right"}>Description</DesktopOnlyTh>
+            <Th align={"right"}>Time</Th>
           </Row>
         </THead>
         <TBody>
-          {loading ? (
-            <>
-              {Array(10)
-                .fill(null)
-                .map((_, rowIdx) => (
-                  <LoadingRow key={`table-row-${rowIdx}`}>
-                    <Td>
-                      <LoadingTemplate.Flex>
-                        <LoadingTemplate.Item width={75} />
-                      </LoadingTemplate.Flex>
-                    </Td>
-                    <DesktopOnlyTd align={"right"}>
-                      <LoadingTemplate alignItems="flex-end">
-                        <LoadingTemplate.Item width={75} />
-                      </LoadingTemplate>
-                    </DesktopOnlyTd>
-                    <DesktopOnlyTd align={"right"}>
-                      <LoadingTemplate alignItems="flex-end">
-                        <LoadingTemplate.Item width={75} />
-                      </LoadingTemplate>
-                    </DesktopOnlyTd>
-                    <Td align={"right"}>
-                      <LoadingTemplate alignItems="flex-end">
-                        <LoadingTemplate.Item width={75} />
-                      </LoadingTemplate>
-                    </Td>
-                  </LoadingRow>
-                ))}
-            </>
-          ) : eventRows.length ? (
+          {eventRows.length ? (
             eventRows
           ) : (
             <>
@@ -146,6 +117,57 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD, loading: _loading 
       </Table>
     </WellHistoryContainer>
   );
+};
+
+export const WellHistory: React.FC<BaseWellHistoryProps & { well: Well | undefined; loading?: boolean }> = (props) => {
+  if (props.loading || !props.well) {
+    return (
+      <WellHistoryContainer>
+        <Table width="100%">
+          <THead>
+            <Row>
+              <Th>{""}</Th>
+              <DesktopOnlyTh align={"right"}>{""}</DesktopOnlyTh>
+              <DesktopOnlyTh align={"right"}>{""}</DesktopOnlyTh>
+              <Th align={"right"}>{""}</Th>
+            </Row>
+          </THead>
+          <TBody>
+            <>
+              {Array(10)
+                .fill(null)
+                .map((_, rowIdx) => (
+                  <LoadingRow key={`table-row-${rowIdx}`}>
+                    <Td>
+                      <LoadingTemplate.Flex>
+                        <LoadingTemplate.Item width={75} />
+                      </LoadingTemplate.Flex>
+                    </Td>
+                    <DesktopOnlyTd align={"right"}>
+                      <LoadingTemplate alignItems="flex-end">
+                        <LoadingTemplate.Item width={75} />
+                      </LoadingTemplate>
+                    </DesktopOnlyTd>
+                    <DesktopOnlyTd align={"right"}>
+                      <LoadingTemplate alignItems="flex-end">
+                        <LoadingTemplate.Item width={75} />
+                      </LoadingTemplate>
+                    </DesktopOnlyTd>
+                    <Td align={"right"}>
+                      <LoadingTemplate alignItems="flex-end">
+                        <LoadingTemplate.Item width={75} />
+                      </LoadingTemplate>
+                    </Td>
+                  </LoadingRow>
+                ))}
+            </>
+          </TBody>
+        </Table>
+      </WellHistoryContainer>
+    );
+  }
+
+  return <WellHistoryContent well={props.well} tokenPrices={props.tokenPrices} reservesUSD={props.reservesUSD} />;
 };
 
 const DesktopOnlyTd = styled(Td)`
