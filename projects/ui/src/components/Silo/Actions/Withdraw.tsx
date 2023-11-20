@@ -368,7 +368,7 @@ const WithdrawForm: FC<
           tokens={[]}
           mode="auto"
         >
-          Withdraw
+          {values.destination ? 'Withdraw' : 'Select Destination'}
         </SmartSubmitButton>
       </Stack>
     </Form>
