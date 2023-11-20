@@ -27,8 +27,12 @@ export const mediaQuery = {
   },
   lg: {
     // 1200px & below
-    down: `@media (max-width: ${mediaSizes.tablet}px)`,
+    down: `@media (max-width: ${mediaSizes.desktop}px)`,
     // 1200px & above
     only: `@media (min-width: ${mediaSizes.desktop}px)`
+  },
+  between: {
+    // between 769px & 1200px
+    smAndLg: `@media (min-width: ${mediaSizes.mobile}px) and (max-width: ${mediaSizes.desktop - 1}px)`
   }
 };
