@@ -58,7 +58,20 @@ contract Account {
         uint256 stalk;
         uint256 seeds;
     }
-
+    
+    /**
+     * @notice Stores a Farmer's germinating assets.
+     * @param stalk germinating stalk - stalk from assets deposited in the last two seasons.
+     * @param roots germinating roots - roots from assets deposited in the last two seasons.
+     * @param germinatingTokenMask - a bitmask of all the tokens that are germinating.
+     * @param germinatingAmounts - a mapping of token address to germinating amounts/bdv.
+     */
+    struct FarmerGerminating {
+        uint112 stalk;
+        uint112 roots;
+        uint32 germinatingTokenMask;
+        mapping(address => Deposit) germinatingAmounts;
+    }
     /**
      * @notice This struct stores the mow status for each Silo-able token, for each farmer. 
      * This gets updated each time a farmer mows, or adds/removes deposits.
@@ -105,6 +118,8 @@ contract Account {
      * @param tokenAllowances Internal balance token allowances.
      * @param depositPermitNonces A Farmer's current deposit permit nonce
      * @param tokenPermitNonces A Farmer's current token permit nonce
+     * @param oddGerminating A Farmer's germinating assets during odd seasons.
+     * @param evenGerminating A Farmer's germinating assets during even seasons.
      */
     struct State {
         Field field; // A Farmer's Field storage.
@@ -156,6 +171,8 @@ contract Account {
         mapping(uint256 => Deposit) deposits; // SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
         mapping(address => MowStatus) mowStatuses; // Store a MowStatus for each Whitelisted Silo token
         mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping 
+        FarmerGerminating oddGeminating; // A Farmer's germinating assets from odd seasons.
+        FarmerGerminating evenGeminating; // A Farmer's germinating assets from even seasons.
     }
 }
 
@@ -442,9 +459,29 @@ contract Storage {
         uint32 lastStalkGrowthUpdate;
     }
 
+    /**
+     * @notice Stores the twaReserves for each well during the sunrise function.
+     */
     struct TwaReserves {
         uint128 reserve0;
         uint128 reserve1;
+    }
+
+    /**
+     * @notice Stores the total germination amounts for each whitelisted token.
+     */
+    struct SiloGermination {
+        uint128 deposited;
+        uint128 depositedBdv;
+    }
+
+    /** 
+     * @notice Stores the system level germination data.
+     */
+    struct TotalGerminating {
+        uint128 stalk;
+        uint128 roots;
+        mapping(address => SiloGermination) siloGerminating;
     }
 }
 
@@ -501,6 +538,8 @@ contract Storage {
  * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
  * @param seedGauge Stores the seedGauge.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
+ * @param oddGerminating Stores germinating data during odd seasons.
+ * @param evenGerminating Stores germinating data during even seasons.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -573,4 +612,8 @@ struct AppStorage {
     // Seed Gauge
     Storage.SeedGauge seedGauge;
     bytes32[144] casesV2; 
+
+    // Germination
+    Storage.TotalGerminating oddGerminating;
+    Storage.TotalGerminating evenGerminating;
 }
