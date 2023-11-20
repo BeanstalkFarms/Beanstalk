@@ -57,7 +57,7 @@ library LibWhitelist {
      * @param selector The new GP selector.
      * @param optimalPercentDepositedBdv The new optimal Percent deposited BDV
      */
-    event updateGaugeSettings(
+    event UpdateGaugeSettings(
         address indexed token,
         bytes4 selector,
         uint96 optimalPercentDepositedBdv
@@ -152,7 +152,7 @@ library LibWhitelist {
 
         ss.gpSelector = gaugePointSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
+        emit UpdateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
 
     /**

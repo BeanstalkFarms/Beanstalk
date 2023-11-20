@@ -178,7 +178,7 @@ export const useFetchFarmerSilo = () => {
                     let seedsTV;
                     if (token === sdk.tokens.UNRIPE_BEAN) {
                       seedsTV = sdk.tokens.SEEDS.amount(2).mul(bdvTV);
-                    } else if (token === sdk.tokens.UNRIPE_BEAN_CRV3) {
+                    } else if (token === sdk.tokens.UNRIPE_BEAN_WETH) {
                       seedsTV = sdk.tokens.SEEDS.amount(4).mul(bdvTV);
                     } else {
                       seedsTV = token.getSeeds(bdvTV);

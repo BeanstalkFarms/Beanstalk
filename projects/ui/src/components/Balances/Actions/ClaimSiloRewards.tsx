@@ -26,7 +26,7 @@ import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import RewardsForm, { ClaimRewardsFormParams } from '../../Silo/RewardsForm';
 import { ClaimRewardsAction } from '~/util';
-import { UNRIPE_BEAN, UNRIPE_BEAN_CRV3 } from '~/constants/tokens';
+import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
 import DescriptionButton from '../../Common/DescriptionButton';
 import GasTag from '../../Common/GasTag';
 import { hoverMap } from '~/constants/silo';
@@ -93,10 +93,10 @@ const ClaimRewardsContent: React.FC<
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
   const unripeDepositedBalance = balances[
     urBean.address
-  ]?.deposited.amount.plus(balances[urBeanCrv3.address]?.deposited.amount);
+  ]?.deposited.amount.plus(balances[urBeanWeth.address]?.deposited.amount);
 
   /// Handlers
   const onMouseOver = useCallback(

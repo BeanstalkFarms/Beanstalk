@@ -195,7 +195,7 @@ library LibWellConvert {
         (uint256 maxBeans, ) = _beansToPeg(well);
         require(maxBeans > 0, "Convert: P must be >= 1.");
         beansConverted = beans > maxBeans ? maxBeans : beans;
-        C.bean().transfer(well, beans);
+        C.bean().transfer(well, beansConverted);
         lp = IWell(well).sync(
             address(this),
             minLP

@@ -44,6 +44,9 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-33](https://bean.money/bip-33): Beanstalk Farms H1 2023 Budget
 * [BIP-34](https://bean.money/bip-34): Sunrise Improvements
 * [BIP-35](https://bean.money/bip-35): Stalk Delegation and Process Amendments
+* [BIP-36](https://bean.money/bip-36): Silo V3
+* [BIP-37](https://bean.money/bip-37): Basin Integration
+* [BIP-38](https://bean.money/bip-38): Migrate urBEAN3CRV to urBEANETH
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
@@ -59,6 +62,7 @@ You can read about the BCM's Emergency Response Procedures [here](https://docs.b
 * [EBIP-5](https://bean.money/ebip-5): Remove transferTokenFrom Function
 * [EBIP-6](https://bean.money/ebip-6): Resolve EBIP-4 and EBIP-5
 * [EBIP-7](https://bean.money/ebip-7): Enroot BDV Update
+* [EBIP-8](https://bean.money/ebip-8): Enroot BDV Rounding
 
 ## Beanstalk Operations Proposal (BOP)
 
@@ -68,4 +72,4 @@ You can read more about BOPs [here](https://docs.bean.money/almanac/governance/p
 
 * [BOP-1](https://bean.money/bop-1): Ratify Disclosures Statement
 * [BOP-2](https://bean.money/bop-2): Increase and Revisit Bounty for April Governance Exploit
-* [BOP-2](https://bean.money/bop-3): Form the BeaNFT DAO
+* [BOP-3](https://bean.money/bop-3): Form the BeaNFT DAO

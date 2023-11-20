@@ -28,7 +28,7 @@ import usdcLogo from '~/img/tokens/usdc-logo.svg';
 import usdtLogo from '~/img/tokens/usdt-logo.svg';
 import lusdLogo from '~/img/tokens/lusd-logo.svg';
 import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
-import unripeBeanCrv3Logo from '~/img/tokens/unripe-lp-logo-circled.svg';
+import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
 import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 
@@ -45,7 +45,7 @@ const useBeanstalkSdkContext = () => {
     SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
 
   const sdk = useMemo(() => {
-    console.log(`Instantiating BeanstalkSDK`, {
+    console.info(`Instantiating BeanstalkSDK`, {
       provider,
       signer,
       datasource,
@@ -67,7 +67,7 @@ const useBeanstalkSdkContext = () => {
     _sdk.tokens.BEAN_CRV3_LP.setMetadata({ logo: beanCrv3LpLogo });
     _sdk.tokens.BEAN_ETH_WELL_LP.setMetadata({ logo: beanEthWellLpLogo });
     _sdk.tokens.UNRIPE_BEAN.setMetadata({ logo: unripeBeanLogo });
-    _sdk.tokens.UNRIPE_BEAN_CRV3.setMetadata({ logo: unripeBeanCrv3Logo });
+    _sdk.tokens.UNRIPE_BEAN_WETH.setMetadata({ logo: unripeBeanWethLogoUrl });
 
     _sdk.tokens.STALK.setMetadata({ logo: stalkLogo });
     _sdk.tokens.SEEDS.setMetadata({ logo: seedLogo });

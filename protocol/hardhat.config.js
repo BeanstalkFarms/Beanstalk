@@ -10,12 +10,11 @@ require("solidity-coverage");
 require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
-require("hardhat-contract-sizer");
+require("@nomiclabs/hardhat-etherscan");
 
-// BIP 38 migration ----
-const { bipMigrateUnripeBean3CrvToBeanEth } = require("./scripts/bips.js");
-const { finishBeanEthMigration } = require("./scripts/beanEthMigration.js");
-// ----
+// BIP 39 
+const { bipSeedGauge } = require("./scripts/bips.js");
+//
 
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
@@ -27,15 +26,17 @@ const {
   getBean,
   getBeanstalkAdminControls,
   impersonateBeanstalkOwner,
-  mintEth
+  mintEth,
+  getBeanstalk
 } = require("./utils");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_3_CURVE } = require("./test/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
+const { ebip9, ebip10, ebip11 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -101,6 +102,15 @@ task("sunrise", async function () {
   await beanstalkAdmin.forceSunrise();
 });
 
+task("sunrise2", async function () {
+  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+
+  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
+  await season.sunrise();
+})
+
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   console.log("Current time: ", await this.seasonGetter.time());
@@ -137,7 +147,11 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   modules.forEach((module) => {
     const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
     const files = glob.sync(pattern);
-
+    if (module == "silo") {
+      // Manually add in libraries that emit events
+      files.push("contracts/libraries/Silo/LibWhitelist.sol")
+      files.push("contracts/libraries/LibGauge.sol")
+    }
     files.forEach((file) => {
       const facetName = getFacetName(file);
       const jsonFileName = `${facetName}.json`;
@@ -206,10 +220,21 @@ task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
 
-task("migrate-bip38", async function () {
-  await bipMigrateUnripeBean3CrvToBeanEth();
-  await finishBeanEthMigration();
+task("deployBip39", async function () {
+  await bipSeedGauge();
 });
+
+task("ebip11", async function () {
+  await ebip11();
+})
+
+task("ebip10", async function () {
+  await ebip10();
+})
+
+task("ebip9", async function () {
+  await ebip9();
+})
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 

@@ -53,8 +53,8 @@ contract MockSeasonFacet is SeasonFacet  {
     event DeltaB(int256 deltaB);
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event Incentivization(address indexed account, uint256 beans);
-    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
-    event updateGaugeSettings(
+    event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
+    event UpdateGaugeSettings(
         address indexed token, 
         bytes4 selector,
         uint96 optimalPercentDepositedBdv
@@ -401,15 +401,19 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function getEthUsdcPrice() external view returns (uint256) {
-        return LibUniswapOracle.getEthUsdcPrice();
+        return LibUniswapOracle.getEthUsdcPrice(900);
     }
 
     function getEthUsdtPrice() external view returns (uint256) {
-        return LibUniswapOracle.getEthUsdtPrice();
+        return LibUniswapOracle.getEthUsdtPrice(900);
     }
 
     function getChainlinkEthUsdPrice() external view returns (uint256) {
         return LibChainlinkOracle.getEthUsdPrice();
+    }
+
+    function getChainlinkTwapEthUsdPrice(uint256 lookback) external view returns (uint256) {
+        return LibChainlinkOracle.getEthUsdTwap(lookback);
     }
 
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external {
@@ -452,7 +456,7 @@ contract MockSeasonFacet is SeasonFacet  {
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit updateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
+        emit UpdateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
     }
 
     function mockSetBean3CrvOracle(

@@ -20,3 +20,11 @@
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
+
+[dev]
+  command = "yarn start"
+  framework = "#custom"
+  port = 8888
+  targetPort = 4173
+  functionsPort = 59199
+  autoLaunch = false

@@ -33,8 +33,7 @@ export const STATE_CONFIG = {
   withdrawn: [
     'Claimable',
     colors.chart.yellowLight,
-    (name: string) =>
-      `Legacy Claimable ${name} Withdrawals from pre-Silo V3.`,
+    (name: string) => `Legacy Claimable ${name} Withdrawals from pre-Silo V3.`,
   ],
   farmable: [
     'Farm & Circulating',
@@ -206,15 +205,16 @@ export default function useBeanstalkSiloBreakdown() {
                 ZERO_BN
               );
 
-              // Ripe Pooled = BEAN:3crv_RESERVES * (Ripe BEAN:3CRV / BEAN:3CRV Token Supply)
-              // TODO: can we reduce this duplicate code?
-              ripePooled = new BigNumber(totalPooled).multipliedBy(
-                new BigNumber(
-                  unripeTokenState[ripeToUnripe[Bean3CRV.address].address]
-                    ?.underlying || 0
-                ).div(new BigNumber(poolState[Bean3CRV.address]?.supply || 0))
-              );
-              pooled = new BigNumber(totalPooled).minus(ripePooled);
+              // TODO: need to verify it's correct to comment this out after the BIP38 migration
+              // // Ripe Pooled = BEAN:3crv_RESERVES * (Ripe BEAN:3CRV / BEAN:3CRV Token Supply)
+              // // TODO: can we reduce this duplicate code?
+              // ripePooled = new BigNumber(totalPooled).multipliedBy(
+              //   new BigNumber(
+              //     unripeTokenState[ripeToUnripe[Bean3CRV.address].address]
+              //       ?.underlying || 0
+              //   ).div(new BigNumber(poolState[Bean3CRV.address]?.supply || 0))
+              // );
+              // pooled = new BigNumber(totalPooled).minus(ripePooled);
 
               farmable = beanSupply
                 .minus(budget)
@@ -234,7 +234,8 @@ export default function useBeanstalkSiloBreakdown() {
 
             const amountByState = {
               deposited: siloBalance.deposited?.amount,
-              withdrawn: TOKEN === BeanETH ? undefined : siloBalance.withdrawn?.amount,
+              withdrawn:
+                TOKEN === BeanETH ? undefined : siloBalance.withdrawn?.amount,
               pooled: pooled,
               ripePooled: ripePooled,
               ripe: ripe,
@@ -243,7 +244,10 @@ export default function useBeanstalkSiloBreakdown() {
             };
             const usdValueByState = {
               deposited: getUSD(TOKEN, siloBalance.deposited.amount),
-              withdrawn: TOKEN === BeanETH ? undefined : getUSD(TOKEN, siloBalance.withdrawn.amount),
+              withdrawn:
+                TOKEN === BeanETH
+                  ? undefined
+                  : getUSD(TOKEN, siloBalance.withdrawn.amount),
               pooled: pooled ? getUSD(TOKEN, pooled) : undefined,
               ripePooled: ripePooled ? getUSD(TOKEN, ripePooled) : undefined,
               ripe: ripe ? getUSD(TOKEN, ripe) : undefined,
@@ -301,7 +305,6 @@ export default function useBeanstalkSiloBreakdown() {
       ripeToUnripe,
       unripeToRipe,
       Bean,
-      Bean3CRV,
       BeanETH,
       poolState,
       getUSD,

@@ -33,6 +33,11 @@ contract CurvePrice {
     uint256 private constant j = 1;
     address[2] private tokens = [0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab, 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490];
 
+    /**
+     * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for Bean
+     * in the Bean:3Crv Metapool.
+     * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
+    **/
     function getCurve() public view returns (P.Pool memory pool) {
         pool.pool = POOL;
         pool.tokens = tokens;

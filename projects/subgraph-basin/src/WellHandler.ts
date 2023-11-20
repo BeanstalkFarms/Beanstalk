@@ -94,8 +94,6 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
     event.block.number
   );
 
-  updateWellTokenBalances(event.address, indexedBalances, event.block.timestamp, event.block.number);
-
   updateWellLiquidityTokenBalance(event.address, ZERO_BI.minus(event.params.lpAmountIn), event.block.timestamp, event.block.number);
 
   updateWellTokenUSDPrices(event.address, event.block.number);

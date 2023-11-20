@@ -10,10 +10,41 @@ const { sdk, account, utils } = getTestUtils();
 
 jest.setTimeout(30000);
 
+const happyPaths: Record<string, string> = {
+  "ETH:BEAN": "ETH -> WETH -> BEAN -> BEAN:SILO",
+  "ETH:BEAN3CRV": "ETH -> WETH -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "ETH:BEANWETH": "ETH -> WETH -> BEANWETH -> BEANWETH:SILO",
+
+  "WETH:BEAN": "WETH -> BEAN -> BEAN:SILO",
+  "WETH:BEAN3CRV": "WETH -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "WETH:BEANWETH": "WETH -> BEANWETH -> BEANWETH:SILO",
+
+  "BEAN:BEAN": "BEAN -> BEAN:SILO",
+  "BEAN:BEAN3CRV": "BEAN -> BEAN3CRV -> BEAN3CRV:SILO",
+  "BEAN:BEANWETH": "BEAN -> BEANWETH -> BEANWETH:SILO",
+
+  "3CRV:BEAN": "3CRV -> USDC -> WETH -> BEAN -> BEAN:SILO", // TODO: Fix this path
+  "3CRV:BEAN3CRV": "3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "3CRV:BEANWETH": "3CRV -> USDC -> BEANWETH -> BEANWETH:SILO",
+
+  "DAI:BEAN": "DAI -> WETH -> BEAN -> BEAN:SILO",
+  "DAI:BEAN3CRV": "DAI -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "DAI:BEANWETH": "DAI -> BEANWETH -> BEANWETH:SILO",
+
+  "USDC:BEAN": "USDC -> WETH -> BEAN -> BEAN:SILO",
+  "USDC:BEAN3CRV": "USDC -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "USDC:BEANWETH": "USDC -> BEANWETH -> BEANWETH:SILO",
+
+  "USDT:BEAN": "USDT -> WETH -> BEAN -> BEAN:SILO",
+  "USDT:BEAN3CRV": "USDT -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "USDT:BEANWETH": "USDT -> BEANWETH -> BEANWETH:SILO"
+};
+
 describe("Silo Deposit", function () {
   const builder = new DepositBuilder(sdk);
 
   const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist);
+  const whiteListedTokensRipe = whiteListedTokens.filter((t) => !t.isUnripe);
   const bean3CrvDepositable = [
     sdk.tokens.ETH,
     sdk.tokens.WETH,
@@ -27,6 +58,22 @@ describe("Silo Deposit", function () {
   beforeAll(async () => {
     await utils.resetFork();
     await utils.setAllBalances(account, "20000");
+  });
+
+  describe("Routes correctly", () => {
+    describe.each(bean3CrvDepositable)("Whitelist Token", (token: Token) => {
+      it.each(whiteListedTokensRipe.map((t) => [t.symbol, t]))(`Deposit ${token.symbol} into %s`, async (symbol: string, silo: Token) => {
+        const op = builder.buildDeposit(silo, account);
+        op.setInputToken(token);
+
+        // need to run an estimate first to generate the route
+        await op.estimate(token.amount(10));
+        const path = op.route.toString();
+
+        const goodPath = happyPaths[`${token.symbol}:${silo.symbol}`];
+        expect(path).toBe(goodPath);
+      });
+    });
   });
 
   it("Estimates", async () => {

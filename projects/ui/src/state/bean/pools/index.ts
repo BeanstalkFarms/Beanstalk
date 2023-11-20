@@ -58,6 +58,12 @@ export type BeanPoolState = {
    * The total supply of the Pool's LP token.
    */
   supply: BigNumber;
+
+  /**
+   * The price of 1 LP token in usd or bdv
+   */
+  lpUsd: BigNumber;
+  lpBdv: BigNumber;
 };
 
 export type BeanPools = {

@@ -29,8 +29,8 @@ export const addresses = {
   UNRIPE_BEAN:
     // "Unripe Bean": Unripe vesting asset for the Bean token, Localhost
     Address.make("0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449"),
-  UNRIPE_BEAN_CRV3:
-    // "Unripe BEAN:CRV3 LP": Unripe vesting asset for the BEAN:CRV3 LP token, Localhost
+  UNRIPE_BEAN_WETH:
+    // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
     Address.make("0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D"),
 
   // ----------------------------------------

@@ -43,7 +43,7 @@ library LibGauge {
     /**
      * @notice Emitted when the AverageGrownStalkPerBdvPerSeason Updates.
      */
-    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
+    event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     struct LpGaugePointData {
         address lpToken;
@@ -223,8 +223,8 @@ library LibGauge {
         // check if one week elapsed since the last seedGauge update.
         // if so, update the average grown stalk per BDV per Season.
         // safemath not needed
-        if (s.season.current - s.seedGauge.lastSeedGaugeUpdate >= 168) {
-            updateStalkPerBdvPerSeason();
+        if (s.season.current - s.seedGauge.lastStalkGrowthUpdate >= 168) {
+            updateAverageStalkPerBdvPerSeason();
         }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
@@ -270,7 +270,7 @@ library LibGauge {
     }
 
     /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
+     * @notice updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
      * @dev anyone can call this function to update. Currently, the function
      * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
      * for the average new depositer to catch up to the average grown stalk per BDV.
@@ -279,7 +279,7 @@ library LibGauge {
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateStalkPerBdvPerSeason() public {
+    function updateAverageStalkPerBdvPerSeason() public {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // will overflow if the average grown stalk per BDV exceeds 1.4e36,
         // which is highly improbable assuming consistent new deposits.
@@ -287,8 +287,8 @@ library LibGauge {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
-        s.seedGauge.lastSeedGaugeUpdate = s.season.current;
-        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        s.seedGauge.lastStalkGrowthUpdate = s.season.current;
+        emit UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 
     /**

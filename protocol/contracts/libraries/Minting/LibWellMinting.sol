@@ -101,6 +101,7 @@ library LibWellMinting {
      */
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
         // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
         // Need to handle failure gracefully, so Sunrise does not revert.
         try ICumulativePump(C.BEANSTALK_PUMP).readCumulativeReserves(
@@ -164,7 +165,11 @@ library LibWellMinting {
             C.BYTES_ZERO
         ) returns (uint[] memory twaReserves, bytes memory snapshot) {
             IERC20[] memory tokens = IWell(well).tokens();
-            (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(tokens);
+            (
+                uint256[] memory ratios,
+                uint256 beanIndex,
+                bool success
+            ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {

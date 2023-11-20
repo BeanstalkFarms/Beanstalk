@@ -29,6 +29,8 @@ const TokenOutputField: FC<{
   override?: any;
   /** */
   size?: 'small';
+  /** BDV  */
+  bdv?: BigNumber;
 }> = ({
   token,
   amount,
@@ -39,6 +41,7 @@ const TokenOutputField: FC<{
   isLoading = false,
   override,
   size,
+  bdv,
 }) => {
   const isZero = amount.eq(0);
   const isNegative = amount.lt(0);
@@ -47,41 +50,51 @@ const TokenOutputField: FC<{
     <OutputField isNegative={isNegative} size={size}>
       {!isLoading ? (
         <Tooltip title={amountTooltip}>
-          <Typography
-            display="inline"
-            variant={size === 'small' ? 'body1' : 'bodyLarge'}
-            sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}
-          >
-            {amount.abs().gt(new BigNumber(1000000)) ? (
-              <>
-                {prefix}&nbsp;{displayFullBN(amount.abs(), 0)}
-              </>
-            ) : (
-              <>
-                {prefix}&nbsp;
-                {displayFullBN(
-                  amount.abs(),
-                  token.displayDecimals,
-                  token.displayDecimals
-                )}
-              </>
+          <Box>
+            <Typography
+              display="inline"
+              variant={size === 'small' ? 'body1' : 'bodyLarge'}
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+              }}
+            >
+              {amount.abs().gt(new BigNumber(1000000)) ? (
+                <>
+                  {prefix}&nbsp;{displayFullBN(amount.abs(), 0)}
+                </>
+              ) : (
+                <>
+                  {prefix}&nbsp;
+                  {displayFullBN(
+                    amount.abs(),
+                    token.displayDecimals,
+                    token.displayDecimals
+                  )}
+                </>
+              )}
+              {amountSecondary && (
+                <>
+                  &nbsp;&nbsp;
+                  <Typography display="inline" variant="bodySmall">
+                    (
+                    {typeof amountSecondary === 'string'
+                      ? amountSecondary
+                      : displayFullBN(
+                          amountSecondary,
+                          token.displayDecimals || 2
+                        )}
+                    )
+                  </Typography>
+                </>
+              )}
+            </Typography>
+            {bdv && (
+              <Typography variant="bodySmall" color="text.secondary">
+                ~{displayFullBN(bdv!, 0)} BDV
+              </Typography>
             )}
-            {amountSecondary && (
-              <>
-                &nbsp;&nbsp;
-                <Typography display="inline" variant="bodySmall">
-                  (
-                  {typeof amountSecondary === 'string'
-                    ? amountSecondary
-                    : displayFullBN(
-                        amountSecondary,
-                        token.displayDecimals || 2
-                      )}
-                  )
-                </Typography>
-              </>
-            )}
-          </Typography>
+          </Box>
         </Tooltip>
       ) : (
         <CircularProgress size={16} thickness={5} />
