@@ -166,7 +166,7 @@ export class BlockchainUtils {
     this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
   }
   async setBEANWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
+    this.setBalance(this.sdk.tokens.BEAN_ETH_WELL_LP, account, balance);
   }
 
   private getBalanceConfig(tokenAddress: string) {
