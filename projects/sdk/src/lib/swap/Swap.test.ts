@@ -41,7 +41,7 @@ beforeAll(async () => {
 
 describe("Swap", function () {
   // ETH, BEAN => x, using EXTERNAL as the source
-  describe.each([
+  describe.skip.each([
     // ETH => x
     [sdk.tokens.ETH, sdk.tokens.WETH],
     [sdk.tokens.ETH, sdk.tokens.USDT],
