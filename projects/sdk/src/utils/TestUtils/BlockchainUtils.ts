@@ -241,6 +241,63 @@ export class BlockchainUtils {
     await this.setCurvePoolBalances(POOL_ADDRESS, PREV_BALANCE_SLOT, currentBean, currentCrv3);
   }
 
+  async setWellLiquidity(lpToken: Token, amounts: TokenValue[], account = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266") {
+    const well = await this.sdk.wells.getWell(lpToken.address);
+    const tokens = well.tokens;
+
+    for await (const [index, token] of (tokens || []).entries()) {
+      const amount = amounts[index];
+      await this.setBalance(token, account, amount);
+      await token.approve(well.address, amount);
+    }
+
+    const tx = await well.addLiquidity(amounts, TokenValue.ONE, account);
+    await tx.wait();
+  }
+
+  /**
+   * DeltaB is currently under 0. We need to BUY beans to bring the price over 1
+   */
+  async setPriceOver1(multiplier = 1, account = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266") {
+    let deltaB = await this.sdk.bean.getDeltaB();
+    if (deltaB.gte(TokenValue.ZERO)) {
+      console.log("DeltaB already over 0, skipping");
+      return;
+    }
+    const op = this.sdk.swap.buildSwap(this.sdk.tokens.WETH, this.sdk.tokens.BEAN, account);
+    const beanAmountToBuy = deltaB.abs().mul(multiplier);
+    const quote = await op.estimateReversed(beanAmountToBuy);
+    console.log(`DeltaB is ${deltaB.toHuman()}. BUYING ${beanAmountToBuy.toHuman()} BEANS (with a ${multiplier}x multiplier)`);
+
+    await this.setBalance(this.sdk.tokens.WETH, account, quote);
+    const txa = await this.sdk.tokens.WETH.approveBeanstalk(quote);
+    await txa.wait();
+
+    const tx = op.execute(quote, 0.2);
+    await (await tx).wait();
+  }
+
+  /**
+   * DeltaB is currently over 0. We need to SELL beans to bring the price below 1
+   */
+  async setPriceUnder1(multiplier = 1, account = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266") {
+    let deltaB = await this.sdk.bean.getDeltaB();
+    if (deltaB.lt(TokenValue.ZERO)) {
+      console.log("DeltaB already under zero, skipping");
+      return;
+    }
+    const op = this.sdk.swap.buildSwap(this.sdk.tokens.BEAN, this.sdk.tokens.WETH, account);
+    const amount = deltaB.abs().mul(multiplier);
+    console.log(`DeltaB is ${deltaB.toHuman()}. SELLING ${amount.toHuman()} BEANS (with a ${multiplier}x multiplier)`);
+
+    await this.setBalance(this.sdk.tokens.BEAN, account, amount);
+    const txa = await this.sdk.tokens.BEAN.approveBeanstalk(amount);
+    await txa.wait();
+
+    const tx = op.execute(amount, 0.2);
+    await (await tx).wait();
+  }
+
   /**
    * Returns the amounts of bean and 3crv in the Curve pool
    */

@@ -13,7 +13,7 @@ jest.setTimeout(30000);
 describe("Silo Convert", function () {
   const convert = new Convert(sdk);
   const BEAN = sdk.tokens.BEAN;
-  const BEANLP = sdk.tokens.BEAN_CRV3_LP;
+  const BEANLP = sdk.tokens.BEAN_ETH_WELL_LP;
   const urBEAN = sdk.tokens.UNRIPE_BEAN;
   const urBEANLP = sdk.tokens.UNRIPE_BEAN_WETH;
   const whitelistedTokens = [BEAN, BEANLP, urBEAN, urBEANLP];
@@ -21,7 +21,7 @@ describe("Silo Convert", function () {
   beforeAll(async () => {
     await utils.resetFork();
     // set default state as p > 1
-    await utils.setCurveLiquidity(10_000_000, 15_000_000);
+    await utils.setPriceOver1(2);
   });
 
   it("Validates tokens", async () => {
@@ -60,27 +60,26 @@ describe("Silo Convert", function () {
     // random order
     const crates = [c3, c1, c2];
 
-    // ensure it picks across multiple crates
-    // crates should be sorted ASC by season
     const calc1 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(850), crates, currentSeason);
-    expect(calc1.crates.length).toEqual(3);
-    expect(calc1.crates[0].amount.toHuman()).toEqual("500"); // takes full amount from c1
-    expect(calc1.crates[0].stem.toString()).toEqual("9000"); // confirm this is c1
-    expect(calc1.crates[1].amount.toHuman()).toEqual("300"); // takes full amount from c2
-    expect(calc1.crates[1].stem.toString()).toEqual("9001"); // confirm this is c2
-    expect(calc1.crates[2].amount.toHuman()).toEqual("50"); // takes 300 from c3
-    expect(calc1.crates[2].stem.toString()).toEqual("9002"); // confirm this is c3
-    expect(calc1.seeds.toHuman()).toEqual("1700");
-    expect(calc1.stalk.toHuman()).toEqual("1019.92");
 
-    // ensure it pulls one crate
-    // crate should be sorted ASC by season
+    expect(calc1.crates.length).toEqual(3);
+    expect(calc1.crates[0].amount.toHuman()).toEqual("100"); // takes full amount from c1
+    expect(calc1.crates[0].stem.toString()).toEqual("10000"); // confirm this is c1
+    expect(calc1.crates[1].amount.toHuman()).toEqual("500"); // takes full amount from c2
+    expect(calc1.crates[1].stem.toString()).toEqual("10000"); // confirm this is c2
+    expect(calc1.crates[2].amount.toHuman()).toEqual("250"); // takes 300 from c3
+    expect(calc1.crates[2].stem.toString()).toEqual("10000"); // confirm this is c3
+    expect(calc1.seeds.toHuman()).toEqual("2549.999999");
+    expect(calc1.stalk.toHuman()).toEqual("849.9999999999");
+
     const calc2 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(400), crates, currentSeason);
-    expect(calc2.crates.length).toEqual(1);
-    expect(calc2.crates[0].amount.toHuman()).toEqual("400"); // takes full amount from c1
-    expect(calc1.crates[0].stem.toString()).toEqual("9000"); // confirm this is c3
-    expect(calc2.seeds.toHuman()).toEqual("800");
-    expect(calc2.stalk.toHuman()).toEqual("480");
+    expect(calc2.crates.length).toEqual(2);
+    expect(calc2.crates[0].amount.toHuman()).toEqual("100");
+    expect(calc1.crates[0].stem.toString()).toEqual("10000");
+    expect(calc2.crates[1].amount.toHuman()).toEqual("300");
+    expect(calc1.crates[1].stem.toString()).toEqual("10000");
+    expect(calc2.seeds.toHuman()).toEqual("1200");
+    expect(calc2.stalk.toHuman()).toEqual("400");
   });
 
   it("Calculates crates when toToken is NOT LP", async () => {
@@ -102,28 +101,25 @@ describe("Silo Convert", function () {
     // random order
     const crates = [c2, c1, c3];
 
-    // ensure it picks across multiple crates
-    // crates should be sorted ASC by BDVRatio
     const calc1 = convert.calculateConvert(BEANLP, BEAN, BEANLP.amount(3000), crates, currentSeason);
-
     expect(calc1.crates.length).toEqual(3);
     expect(calc1.crates[0].amount.toHuman()).toEqual("2000"); // takes full amount from c1
-    expect(calc1.crates[0].stem.toString()).toEqual("10100"); // confirm this is c1
+    expect(calc1.crates[0].stem.toString()).toEqual("10393"); // confirm this is c1
     expect(calc1.crates[1].amount.toHuman()).toEqual("500"); // takes full amount from c2
-    expect(calc1.crates[1].stem.toString()).toEqual("10102"); // confirm this is c2
+    expect(calc1.crates[1].stem.toString()).toEqual("10393"); // confirm this is c2
     expect(calc1.crates[2].amount.toHuman()).toEqual("500"); // takes 300 from c3
-    expect(calc1.crates[2].stem.toString()).toEqual("10101"); // confirm this is c3
-    expect(calc1.seeds.toHuman()).toEqual("13096");
-    expect(calc1.stalk.toHuman()).toEqual("3625");
+    expect(calc1.crates[2].stem.toString()).toEqual("10393"); // confirm this is c3
+    expect(calc1.seeds.toHuman()).toEqual("14733");
+    expect(calc1.stalk.toHuman()).toEqual("3000");
 
-    // ensure it pulls one crate
-    // crate should be sorted ASC by season
     const calc2 = convert.calculateConvert(BEAN, BEANLP, BEAN.amount(2000), crates, currentSeason);
-    expect(calc2.crates.length).toEqual(1);
-    expect(calc2.crates[0].amount.toHuman()).toEqual("2000"); // takes full amount from c1
-    expect(calc1.crates[0].stem.toString()).toEqual("10100"); // confirm this is c3
-    expect(calc2.seeds.toHuman()).toEqual("4246");
-    expect(calc2.stalk.toHuman()).toEqual("2357.4");
+    expect(calc2.crates.length).toEqual(2);
+    expect(calc2.crates[0].amount.toHuman()).toEqual("1000");
+    expect(calc1.crates[0].stem.toString()).toEqual("10393");
+    expect(calc2.crates[1].amount.toHuman()).toEqual("1000");
+    expect(calc1.crates[1].stem.toString()).toEqual("10393");
+    expect(calc2.seeds.toHuman()).toEqual("6886.5");
+    expect(calc2.stalk.toHuman()).toEqual("2000");
   });
 
   describe.each([
@@ -172,7 +168,9 @@ describe("Silo Convert", function () {
     describe("DeltaB < 0", () => {
       beforeAll(async () => {
         // Force deltaB < 0
-        await utils.setCurveLiquidity(15_000_000, 10_000_000);
+        // 10M bean & 1 ETH
+        // await utils.setWellLiquidity(sdk.tokens.BEAN_ETH_WELL_LP, [TokenValue.fromHuman(10_000_000, 6), TokenValue.fromHuman(1, 18)]);
+        await utils.setPriceUnder1(2);
       });
 
       describe.each([
@@ -208,7 +206,10 @@ describe("Silo Convert", function () {
     describe("DeltaB > 0", () => {
       beforeAll(async () => {
         // Force deltaB > 0
-        await utils.setCurveLiquidity(10_000_000, 15_000_000);
+        // await utils.setCurveLiquidity(10_000_000, 15_000_000);
+        // 100 bean & 10000 ETH
+        // await utils.setWellLiquidity(sdk.tokens.BEAN_ETH_WELL_LP, [TokenValue.fromHuman(100, 6), TokenValue.fromHuman(10000, 18)]);
+        await utils.setPriceOver1(2);
       });
 
       describe.each([
