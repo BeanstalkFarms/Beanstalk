@@ -22,10 +22,8 @@ import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 import { LoadingTemplate } from "../LoadingTemplate";
-import { LoadingItem } from "../LoadingItem";
 
 type BaseRemoveLiquidityProps = {
-  // well: Well;
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
@@ -449,7 +447,7 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   );
 };
 
-export const RemoveLiquidity = (props: BaseRemoveLiquidityProps & { well: Well | undefined; loading: boolean }) => {
+export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps> = (props) => {
   if (!props.well || props.loading) {
     return (
       <LargeGapContainer>

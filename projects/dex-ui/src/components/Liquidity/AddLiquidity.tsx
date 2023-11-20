@@ -417,7 +417,7 @@ const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, han
   );
 };
 
-export const AddLiquidity = (props: BaseAddLiquidityProps & { well: Well | undefined; loading: boolean }) => {
+export const AddLiquidity: React.FC<BaseAddLiquidityProps & { well: Well | undefined; loading: boolean }> = (props) => {
   if (!props.well || props.loading) {
     return (
       <div>
