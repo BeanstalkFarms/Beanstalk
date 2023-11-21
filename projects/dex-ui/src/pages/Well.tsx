@@ -28,7 +28,9 @@ import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 
 export const Well = () => {
-  const { well, loading, error } = useWellWithParams();
+  const { well, loading: _loading, error } = useWellWithParams();
+
+  const loading = true;
 
   const sdk = useSdk();
   const navigate = useNavigate();
@@ -47,9 +49,9 @@ export const Well = () => {
   }, [open]);
 
   useEffect(() => {
-    const run = async () => {
-      if (!well?.tokens) return;
+    if (!well?.tokens) return;
 
+    const run = async () => {
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);
@@ -122,140 +124,147 @@ export const Well = () => {
   );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  // if (isLoading) return <Loading spinnerOnly />;
-
   if (error) return <Error message={error?.message} errorOnly />;
 
   return (
-    <PageWrapper>
-      <Page>
-        <ContentWrapper>
-          <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
+    <Page>
+      <ContentWrapper>
+        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
 
-          {/*
-           *Header
-           */}
-          <HeaderContainer>
-            <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
-              <Item>
-                <Header>
-                  <TokenLogos>{logos}</TokenLogos>
-                  <TextNudge amount={10} mobileAmount={-2}>
-                    {title}
-                  </TextNudge>
-                </Header>
-              </Item>
-              <StyledItem column stretch>
-                <FunctionName>{wellFunctionName}</FunctionName>
-                <Fee>0.00% Trading Fee</Fee>
-              </StyledItem>
+        {/*
+         *Header
+         */}
+        <HeaderContainer>
+          <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
+            <Item>
+              <Header>
+                <TokenLogos>{logos}</TokenLogos>
+                <TextNudge amount={10} mobileAmount={-2}>
+                  {title}
+                </TextNudge>
+              </Header>
+            </Item>
+            <StyledItem column stretch>
+              <FunctionName>{wellFunctionName}</FunctionName>
+              <Fee>0.00% Trading Fee</Fee>
+            </StyledItem>
+          </LoadingItem>
+        </HeaderContainer>
+
+        {/*
+         * Reserves
+         */}
+        <ReservesContainer>
+          <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
+            <Reserves reserves={reserves} />
+          </LoadingItem>
+        </ReservesContainer>
+
+        {/*
+         * Chart Section
+         */}
+        <ChartSectionContainer>
+          <ChartSection well={well} loading={loading} />
+        </ChartSectionContainer>
+
+        {/*
+         * Chart Type Button Selectors
+         */}
+        <ActivityOtherButtons gap={24} mobileGap={"0px"}>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
+                Activity
+              </TabButton>
+            </Item>
+            <Item stretch>
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
+                Contract Addresses
+              </TabButton>
+            </Item>
+          </LoadingItem>
+        </ActivityOtherButtons>
+
+        {/*
+         * Well History & Contract Info Tables
+         */}
+        <BottomContainer>
+          {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
+          {tab === 1 && <OtherSection well={well} loading={loading} />}
+        </BottomContainer>
+
+        {/*
+         * UI Helpers
+         */}
+        <ColumnBreak />
+        <StickyDetector ref={containerRef} />
+
+        {/*
+         * Liquidity Swap Buttons
+         * We render both Mobile & Desktop to prevent flex order switching animations from happening on page width changes
+         */}
+        <LiquiditySwapButtonsMobile sticky={isSticky}>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+            </Item>
+            <Item stretch>
+              <Button label="Swap" onClick={goSwap} />
+            </Item>
+          </LoadingItem>
+        </LiquiditySwapButtonsMobile>
+        <LiquiditySwapButtonsDesktop gap={24}>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+            </Item>
+            <Item stretch>
+              <Button label="Swap" onClick={goSwap} />
+            </Item>
+          </LoadingItem>
+        </LiquiditySwapButtonsDesktop>
+
+        {/*
+         * Liquidity Box
+         */}
+        <LiquidityBoxContainer>
+          <LiquidityBox well={well} loading={loading} />
+        </LiquidityBoxContainer>
+
+        {/*
+         * Learn More
+         */}
+        <LearnMoreContainer>
+          <LearnMoreLabel onClick={toggle}>
+            <LearnMoreLine />
+            <LearnMoreText>
+              <TextNudge amount={2}>Learn more about this Well</TextNudge>
+              <ImageButton
+                component={ChevronDown}
+                size={10}
+                rotate={open ? "180" : "0"}
+                onClick={toggle}
+                padding="0px"
+                alt="Click to expand and learn how to earn yield"
+                color={"#46B955"}
+              />
+            </LearnMoreText>
+            <LearnMoreLine />
+          </LearnMoreLabel>
+          <LearnMoreButtons open={open}>
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnYield />
             </LoadingItem>
-          </HeaderContainer>
-
-          {/*
-           * Reserves
-           */}
-          <ReservesContainer>
-            <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
-              <Reserves reserves={reserves} />
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
             </LoadingItem>
-          </ReservesContainer>
-
-          {/*
-           * Chart Section
-           */}
-          <ChartContainer>
-            <ChartSection well={well} loading={loading} />
-          </ChartContainer>
-
-          {/*
-           * Chart Type Button Selectors
-           */}
-          <ActivityOtherButtons gap={24} mobileGap={"0px"}>
-            <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
-              <Item stretch>
-                <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
-                  Activity
-                </TabButton>
-              </Item>
-              <Item stretch>
-                <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-                  Contract Addresses
-                </TabButton>
-              </Item>
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnPump />
             </LoadingItem>
-          </ActivityOtherButtons>
-
-          {/*
-           * Well History & Contract Info Tables
-           */}
-          <BottomContainer>
-            {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
-            {tab === 1 && <OtherSection well={well} loading={loading} />}
-          </BottomContainer>
-
-          {/*
-           * UI Helpers
-           */}
-          <ColumnBreak />
-          <StickyDetector ref={containerRef} />
-
-          {/*
-           * Liquidity Swap Button
-           */}
-          <LiquiditySwapButtons gap={24} mobileGap={isSticky ? "0px" : "8px"} sticky={isSticky}>
-            <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
-              <Item stretch>
-                <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
-              </Item>
-              <Item stretch>
-                <Button label="Swap" onClick={goSwap} />
-              </Item>
-            </LoadingItem>
-          </LiquiditySwapButtons>
-
-          {/*
-           * Liquidity Box
-           */}
-          <LiquidityBoxContainer>
-            <LiquidityBox well={well} loading={loading} />
-          </LiquidityBoxContainer>
-
-          {/*
-           * Learn More
-           */}
-          <LearnMoreContainer>
-            <LearnMoreLabel onClick={toggle}>
-              <LearnMoreLine />
-              <LearnMoreText>
-                <TextNudge amount={2}>Learn more about this Well</TextNudge>
-                <ImageButton
-                  component={ChevronDown}
-                  size={10}
-                  rotate={open ? "180" : "0"}
-                  onClick={toggle}
-                  padding="0px"
-                  alt="Click to expand and learn how to earn yield"
-                  color={"#46B955"}
-                />
-              </LearnMoreText>
-              <LearnMoreLine />
-            </LearnMoreLabel>
-            <LearnMoreButtons open={open}>
-              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnYield />
-              </LoadingItem>
-              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnWellFunction name={wellFunctionName || "A Well Function"} />
-              </LoadingItem>
-              <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnPump />
-              </LoadingItem>
-            </LearnMoreButtons>
-          </LearnMoreContainer>
-        </ContentWrapper>
-      </Page>
-    </PageWrapper>
+          </LearnMoreButtons>
+        </LearnMoreContainer>
+      </ContentWrapper>
+    </Page>
   );
 };
 
@@ -263,15 +272,6 @@ const leftColumnWidth = 940;
 const rightColumnWidth = 400;
 
 const calcWellContentMaxWidth = `min(calc(100% - 48px - 400px), ${leftColumnWidth}px)`;
-
-const PageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${mediaQuery.between.smAndLg} {
-    align-items: center;
-  }
-`;
 
 const ContentWrapper = styled.div`
   display: flex;
@@ -288,6 +288,8 @@ const ContentWrapper = styled.div`
 
   ${mediaQuery.between.smAndLg} {
     max-width: ${size.mobile};
+    flex: 2;
+    align-self: center;
   }
 `;
 
@@ -347,7 +349,7 @@ const ReservesContainer = styled.div`
   }
 `;
 
-const ChartContainer = styled.div`
+const ChartSectionContainer = styled.div`
   width: 100%;
   order: 4;
 
@@ -377,30 +379,48 @@ const StickyDetector = styled.div`
   margin-bottom: -24px;
   order: 2;
 
+  ${mediaQuery.sm.up} {
+    display: none;
+  }
+`;
+
+const LiquiditySwapButtonsMobile = styled(Row)<{ sticky?: boolean }>`
+  width: 100%;
+  order: 2;
+  top: 0px;
+  z-index: 10;
+  transition: all 0.3s ease-in-out;
+  gap: 8px;
+
+  ${mediaQuery.md.only} {
+    max-width: ${size.mobile};
+  }
+
+  ${mediaQuery.sm.only} {
+    position: sticky;
+    gap: ${(props) => (props.sticky ? "0px" : "8px")};
+    margin-left: ${(props) => (props.sticky ? "-12px" : "0px")};
+    width: ${(props) => (props.sticky ? "100vw" : "100%")};
+  }
+
   ${mediaQuery.lg.only} {
     display: none;
   }
 `;
 
-const LiquiditySwapButtons = styled(Row)<{ sticky?: boolean }>`
-  width: ${(props) => (props.sticky ? "100vw" : "100%")};
-  margin-left: ${(props) => (props.sticky ? "-12px" : "0px")};
-  order: 2;
-  position: sticky;
+const LiquiditySwapButtonsDesktop = styled(Row)`
+  max-width: ${rightColumnWidth}px;
+  width: 100%;
+  order: 0;
+  margin-top: 48px;
+  position: relative;
+  margin-left: 0px;
+  transition: all 0.3s ease-in-out;
   top: 0px;
   z-index: 10;
-  transition: all 0.3s ease-in-out;
 
-  ${mediaQuery.lg.only} {
-    max-width: ${rightColumnWidth}px;
-    order: 0;
-    margin-top: 48px;
-    position: relative;
-    margin-left: 0px;
-  }
-
-  ${mediaQuery.md.only} {
-    max-width: calc(100vw - 48px);
+  ${mediaQuery.lg.down} {
+    display: none;
   }
 `;
 
@@ -411,6 +431,7 @@ const StyledItem = styled(Item)`
     align-items: flex-end;
   }
 `;
+
 const BottomContainer = styled.div`
   display: flex;
   flex-direction: column;

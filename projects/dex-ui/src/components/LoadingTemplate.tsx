@@ -84,7 +84,7 @@ LoadingTemplate.OutputSingle = ({ size, width, mb }: { size?: number; width?: nu
 
 LoadingTemplate.Flex = (props: FlexProps & { children: React.ReactNode }) => <FlexBox {...props} />;
 
-LoadingTemplate.TokenLogo = ({ count = 1, size }: { count?: number; size: number }) => {
+LoadingTemplate.TokenLogo = ({ count = 1, size, mobileSize }: { count?: number; size: number; mobileSize?: number }) => {
   if (count === 0) return null;
 
   if (count === 1) {
