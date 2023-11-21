@@ -13,7 +13,6 @@ export class UnwrapEth extends StepClass<BasicPreparedResult> {
     return {
       name: this.name,
       amountOut: _amountInStep, // amountInStep should be an amount of ETH.
-      value: _amountInStep, // need to use this amount in the txn.
       prepare: () => {
         UnwrapEth.sdk.debug(`[${this.name}.encode()]`, { fromMode: this.fromMode, _amountInStep, context });
         return {
