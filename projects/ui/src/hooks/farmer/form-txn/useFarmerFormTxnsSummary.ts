@@ -259,7 +259,7 @@ export default function useFarmerFormTxnsSummary() {
           {
             type: ActionType.RINSE,
             amount: rinsableSprouts,
-            destination: values.destination,
+            destination: values.destination || FarmToMode.INTERNAL,
           },
         ],
       },
