@@ -42,18 +42,15 @@ LoadingTemplate.Arrow = () => (
   </ArrowContainer>
 );
 
-LoadingTemplate.OutputDouble = ({ size, height }: { size?: number; height?: number }) => (
-  <OutputRow>
-    <Background width={90} height={height}>
-      <Skeleton width={90} height={size ? size : 24} />
-    </Background>
-    <Background width={70} height={height}>
-      <Skeleton width={70} height={size ? size : 24} />
-    </Background>
-  </OutputRow>
-);
-
-LoadingTemplate.LabelValue = ({ height, labelWidth, valueWidth }: { height?: number; labelWidth?: number; valueWidth?: number }) => (
+LoadingTemplate.LabelValue = ({
+  height,
+  labelWidth = 90,
+  valueWidth = 70
+}: {
+  height?: number;
+  labelWidth?: number;
+  valueWidth?: number;
+}) => (
   <OutputRow>
     <Background width={labelWidth}>
       <Skeleton width={labelWidth} height={height || 24} />
@@ -73,12 +70,6 @@ LoadingTemplate.Button = () => (
 LoadingTemplate.Item = ({ height, width, margin }: DimensionProps & { margin?: MarginProps }) => (
   <Background width={width || 90} margin={margin} height={height}>
     <Skeleton width={width || 90} height={height || 24} />
-  </Background>
-);
-
-LoadingTemplate.OutputSingle = ({ size, width, mb }: { size?: number; width?: number; mb?: number }) => (
-  <Background width={width || 90} margin={{ bottom: mb }}>
-    <Skeleton width={width || 90} height={size || 24} />
   </Background>
 );
 

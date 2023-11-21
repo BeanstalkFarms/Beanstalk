@@ -2,51 +2,57 @@ import React from "react";
 
 import styled, { keyframes } from "styled-components";
 
-const CarouselData: Record<string, { display: string; to: string }> = {
-  ADDRESS: {
-    display: "0x1584B668643617D18321a0BEc6EF3786F4b8Eb7B",
-    to: "/" // TODO: link to etherscan
-  },
-  DEPLOY: {
-    display: "17113653",
-    to: "/" // TODO: link to etherscan
-  },
-  AUDIT: {
-    display: "HALBORN, CYFRIN",
-    to: "https://www.halborn.com/" // TODO: link to audit
-  },
-  V1: {
-    display: "WHITEPAPER",
-    to: "/basin.pdf"
-  }
+type ContractMarqueeInfo = Record<string, { display: string; to?: string; url?: string }[]>;
+
+const CarouselData: ContractMarqueeInfo = {
+  ADDRESS: [
+    {
+      display: "0x1584B668643617D18321a0BEc6EF3786F4b8Eb7B",
+      url: "https://etherscan.io/address/0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
+    }
+  ],
+  AUDIT: [
+    { display: "HALBORN", url: "/halborn-basin-audit.pdf" },
+    { display: "CYFRIN", url: "/cyfrin-basin-audit.pdf" },
+    { display: "CODE4RENA", url: "https://code4rena.com/reports/2023-07-basin" }
+  ],
+  V1: [{ display: "WHITEPAPER", url: "/basin.pdf" }]
 };
 
-export const ContractInfoMarqueeHeight = 57;
+const speedPerItem = 16; // approx same speed as TokenMarquee
+const itemGap = 24;
+const numItems = 4;
+const singleItemWidth = 1107.44;
 
 export const ContractInfoMarquee = () => {
   const data = Object.entries(CarouselData);
 
-  /// See TokenMarquee.tsx for more info on how this works
-  const speedPerItem = 25;
-  const repeatableWidth = 1192.34;
-  const numItems = 3;
+  const totalItemWidth = numItems * singleItemWidth;
+  const totalGapWidth = numItems * itemGap;
+
+  const totalWidth = totalItemWidth + totalGapWidth;
+
+  const repeatableWidth = totalWidth / numItems;
   const animationDuration = numItems * speedPerItem;
 
   return (
     <Scroller x={repeatableWidth} duration={animationDuration}>
       <CarouselRow style={{ justifyContent: "flex-start" }}>
         <>
-          {Array(numItems + 1)
+          {Array(numItems)
             .fill(null)
             .map((_, idx) => (
               <Container key={`single-item-${idx}`}>
-                {data.map(([key, { display, to }], idx) => (
+                {data.map(([key, data], idx) => (
                   <RowContainer key={`${key}-${idx}`}>
                     <InfoRow>
                       <InfoText>{key.toUpperCase()}:</InfoText>
-                      <TextLink href={to} target="_blank" rel="noopener noreferrer">
-                        {display}
-                      </TextLink>
+                      {data.map(({ display, url }, i) => (
+                        <TextLink href={url} target="_blank" rel="noopener noreferrer" key={`${display}-${i}`}>
+                          {display}
+                          <span>{data.length > 1 && i + 1 < data.length ? <>{","}</> : ""}</span>
+                        </TextLink>
+                      ))}
                     </InfoRow>
                     <InfoText>/</InfoText>
                   </RowContainer>
@@ -80,13 +86,13 @@ const CarouselRow = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  gap: 24px;
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: row;
   gap: 24px;
-  margin-right: 24px;
 `;
 
 const RowContainer = styled.div`

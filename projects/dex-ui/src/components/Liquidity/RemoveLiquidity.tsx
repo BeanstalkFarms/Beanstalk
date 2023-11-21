@@ -456,7 +456,7 @@ export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolea
         </TokenContainer>
         <MediumGapContainer>
           <OutputModeSelectorContainer>
-            <LoadingTemplate.OutputSingle width={100} size={20} mb={4} />
+            <LoadingTemplate.Item width={100} height={20} margin={{ bottom: 4 }} />
             <LoadingTemplate.Flex row gap={8}>
               <LoadingTemplate.Button />
               <LoadingTemplate.Button />
@@ -469,7 +469,7 @@ export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolea
             <LoadingTemplate.Input />
           </TokenContainer>
         </MediumGapContainer>
-        <LoadingTemplate.OutputSingle width={185} />
+        <LoadingTemplate.Item width={185} />
         <ButtonWrapper>
           <LoadingTemplate.Button />
         </ButtonWrapper>

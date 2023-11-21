@@ -4,7 +4,7 @@ import { Item } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { TabButton } from "src/components/TabButton";
-import { Row, TBody, THead, Table, Td, Th } from "src/components/Table";
+import { Row, TBody, THead, Table, Th } from "src/components/Table";
 import { Row as TabRow } from "src/components/Layout";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";

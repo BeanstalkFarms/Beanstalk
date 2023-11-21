@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React from "react";
 import { mediaQuery } from "src/breakpoints";
-import { Link } from "react-router-dom";
+
 import styled from "styled-components";
 import shapesIcons from "src/assets/images/home-banner.svg";
 import { BodyL } from "src/components/Typography";
@@ -11,6 +11,14 @@ const copy = {
   build: "Use components written, audited and deployed by other developers for your custom liquidity pool.",
   deploy: "Liquidity pools with unique pricing functions for more granular market making.",
   fees: "Trade assets using liquidity pools that don’t impose trading fees."
+};
+
+const links = {
+  multiFlowPump: "/multi-flow-pump.pdf",
+  whitepaper: "/basin.pdf",
+  docs: "https://docs.basin.exchange/",
+  wells: "/#/wells",
+  swap: "/#/swap"
 };
 
 export const Home = () => {
@@ -27,7 +35,9 @@ export const Home = () => {
                   integration for everyone.
                 </div>
               </MevInfo>
-              <GetStarted>Get Started →</GetStarted>
+              <GetStartedContainer href={links.multiFlowPump} target="_blank" rel="noopener noreferrer">
+                <GetStarted>Get Started →</GetStarted>
+              </GetStartedContainer>
             </MevBannerBG>
           </MevBanner>
           <InfoContainer>
@@ -35,13 +45,13 @@ export const Home = () => {
               <Title>A Composable EVM-native DEX </Title>
               <SubTitle>
                 Customizable liquidity pools with shared components.&nbsp;
-                <WhitepaperLink href={"/basin.pdf"} target="_blank">
+                <WhitepaperLink href={links.whitepaper} target="_blank">
                   Read the whitepaper →
                 </WhitepaperLink>
               </SubTitle>
             </TitleSubtitleContainer>
             <AccordionContainer>
-              <AccordionItem to="/">
+              <AccordionItem href={links.docs} target="_blank" rel="noopener noreferrer">
                 <AccordionTitle>
                   <Emoji role="img" aria-label="crystal ball">
                     🔮
@@ -50,7 +60,7 @@ export const Home = () => {
                 </AccordionTitle>
                 <AccordionContent>{copy.build}</AccordionContent>
               </AccordionItem>
-              <AccordionItem to="/wells">
+              <AccordionItem href={links.wells}>
                 <AccordionTitle>
                   <div>
                     <Emoji role="img" aria-label="lightning">
@@ -61,7 +71,7 @@ export const Home = () => {
                 </AccordionTitle>
                 <AccordionContent>{copy.deploy}</AccordionContent>
               </AccordionItem>
-              <AccordionItem to="/swap">
+              <AccordionItem href={links.swap}>
                 <AccordionTitle>
                   <div>
                     <Emoji role="img" aria-label="heart">
@@ -161,6 +171,12 @@ const MevTitle = styled.div`
   ${BodyL}
 `;
 
+const GetStartedContainer = styled.a`
+  :focus {
+    text-decoration: none;
+  }
+`;
+
 const GetStarted = styled.div`
   display: flex;
   justify-content: center;
@@ -253,6 +269,7 @@ const WhitepaperLink = styled.a`
   display: flex;
   align-items: center;
   white-space: nowrap;
+  margin-left: 4px;
 
   :hover {
     text-decoration: underline;
@@ -296,7 +313,7 @@ const Emoji = styled.span`
   margin-right: 4px;
 `;
 
-const AccordionItem = styled(Link)`
+const AccordionItem = styled.a`
   display: flex;
   flex-direction: column;
   justify-content: center;
