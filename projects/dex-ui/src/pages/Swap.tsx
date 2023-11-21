@@ -20,7 +20,7 @@ export const Swap = () => {
           <LoadingTemplate.Input />
           <LoadingTemplate.Arrow />
           <LoadingTemplate.Input />
-          <LoadingTemplate.OutputDouble />
+          <LoadingTemplate.LabelValue labelWidth={120} />
           <LoadingTemplate.Button />
         </Container>
       ) : (

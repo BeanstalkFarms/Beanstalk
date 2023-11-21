@@ -427,8 +427,8 @@ export const AddLiquidity: React.FC<BaseAddLiquidityProps & { well: Well | undef
             <LoadingTemplate.Input />
           </LoadingTemplate.Flex>
           <LoadingTemplate.Flex gap={8}>
-            <LoadingTemplate.OutputSingle size={20} width={285} />
-            <LoadingTemplate.OutputSingle size={20} width={145} />
+            <LoadingTemplate.Item height={20} width={285} />
+            <LoadingTemplate.Item height={20} width={145} />
           </LoadingTemplate.Flex>
           <ButtonWrapper>
             <LoadingTemplate.Button />
