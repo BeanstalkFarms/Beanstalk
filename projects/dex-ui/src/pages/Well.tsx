@@ -28,9 +28,7 @@ import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 
 export const Well = () => {
-  const { well, loading: _loading, error } = useWellWithParams();
-
-  const loading = true;
+  const { well, loading: loading, error } = useWellWithParams();
 
   const sdk = useSdk();
   const navigate = useNavigate();
