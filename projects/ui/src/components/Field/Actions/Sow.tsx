@@ -308,7 +308,7 @@ const SowForm: FC<
                   actions={[
                     {
                       type: ActionType.BUY_BEANS,
-                      beanAmount: totalBeansAmount,
+                      beanAmount: beans,
                       beanPrice: beanPrice,
                       token: getNewToOldToken(tokenIn),
                       tokenAmount: amountIn || ZERO_BN,
