@@ -151,7 +151,7 @@ const WithdrawForm: FC<
   );
 
   // claim and plant
-  const txActions = useFarmerFormTxnsActions();
+  const txActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(whitelistedToken)

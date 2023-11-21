@@ -83,7 +83,7 @@ const TransferForm: FC<
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
   /// Claim and Plant
-  const txnActions = useFarmerFormTxnsActions();
+  const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       BEAN.equals(whitelistedToken) &&
