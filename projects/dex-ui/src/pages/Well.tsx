@@ -22,7 +22,7 @@ import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
 import { mediaQuery, size } from "src/breakpoints";
-import { Error } from "../components/Error";
+import { Error } from "src/components/Error";
 import { useWellWithParams } from "src/wells/useWellWithParams";
 import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
@@ -425,7 +425,7 @@ const LiquiditySwapButtonsDesktop = styled(Row)`
 const StyledItem = styled(Item)`
   align-items: flex-start;
 
-  ${mediaQuery.md.up} {
+  ${mediaQuery.lg.only} {
     align-items: flex-end;
   }
 `;
@@ -537,11 +537,34 @@ const EmptyLearnItem = styled.div`
   background: #f9f8f6;
 `;
 
+const MobileOnlyTokenLogoContainer = styled.div`
+  display: none;
+  ${mediaQuery.sm.only} {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 6px;
+  }
+`;
+
+const NonMobileTokenLogoContainer = styled.div`
+  display: block;
+
+  ${mediaQuery.sm.only} {
+    display: none;
+  }
+`;
+
 const SkeletonHeader: React.FC<{}> = () => (
   <>
     <Item>
       <Header>
-        <LoadingTemplate.TokenLogo count={2} size={48} />
+        <MobileOnlyTokenLogoContainer>
+          <LoadingTemplate.TokenLogo count={2} size={24} />
+        </MobileOnlyTokenLogoContainer>
+        <NonMobileTokenLogoContainer>
+          <LoadingTemplate.TokenLogo count={2} size={48} />
+        </NonMobileTokenLogoContainer>
         <LoadingTemplate.Item width={150} height={32} margin={{ top: 8 }} />
       </Header>
     </Item>
