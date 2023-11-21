@@ -1,0 +1,151 @@
+import React from "react";
+import styled from "styled-components";
+import { BodyL, BodyS } from "../Typography";
+import { TokenLogo } from "../TokenLogo";
+import useSdk from "src/utils/sdk/useSdk";
+import { Tooltip, TooltipProps } from "../Tooltip";
+import { TokenValue } from "@beanstalk/sdk";
+
+import StartSparkle from "src/assets/images/start-sparkle.svg";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { Well } from "@beanstalk/sdk/Wells";
+
+type Props = {
+  well?: Well;
+  apy?: TokenValue;
+  tooltipProps?: Partial<Pick<TooltipProps, "offsetX" | "offsetY" | "side">>;
+};
+
+export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps }) => {
+  const sdk = useSdk();
+
+  const bean = sdk.tokens.BEAN;
+  const isMobile = useIsMobile();
+
+  const apy = TokenValue.fromHuman("0.0458", 4);
+
+  const displayAPY = `${apy.mul(100).toHuman("short")}%`;
+
+  const tooltipWidth = isMobile ? 250 : 360;
+
+  return (
+    <TooltipContainer>
+      <Tooltip
+        content={
+          <Container>
+            <TitleContainer>
+              <div className="title">Well Yield</div>
+              <div className="label-value">
+                <div className="label">
+                  <div className="logo-wrapper">
+                    <TokenLogo token={bean} size={16} />
+                  </div>
+                  Bean vAPY
+                </div>
+                {displayAPY}
+              </div>
+            </TitleContainer>
+            <ContentContainer>
+              <div>
+                The Variable Bean APY (vAPY) uses historical data of Beans earned by <span className="underlined">Silo Depositors</span> to
+                estimate future returns
+              </div>
+            </ContentContainer>
+          </Container>
+        }
+        offsetY={tooltipProps?.offsetY || 0}
+        offsetX={tooltipProps?.offsetX || 0}
+        arrowOffset={0}
+        arrowSize={0}
+        side={tooltipProps?.side || "top"}
+        bgColor="white"
+        width={tooltipWidth}
+      >
+        <ChildContainer>
+          <StyledImg src={StartSparkle} alt="basin-bean-vAPY" />
+          <div>{displayAPY} vAPY</div>
+        </ChildContainer>
+      </Tooltip>
+    </TooltipContainer>
+  );
+};
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+
+  .underlined {
+    text-decoration: underline;
+  }
+`;
+
+const TitleContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .title {
+    ${BodyS}
+    font-weight: 600;
+  }
+
+  .label-value {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    ${BodyS}
+    color: #46b955;
+    font-weight: 600;
+
+    .logo-wrapper {
+      position: relative;
+      margin-top: 2px;
+    }
+
+    .label {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+    }
+  }
+`;
+
+const ContentContainer = styled.div`
+  display: flex;
+  width: 100%;
+  ${BodyS}
+`;
+
+const StyledImg = styled.img`
+  display: flex;
+  width: 24px;
+  height: 24px;
+  padding: 3px 2px 3px 3px;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+`;
+
+const ChildContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  background: #edf8ee;
+  padding: 4px;
+  color: #46b955;
+  width: max-content;
+  border-radius: 4px;
+
+  ${BodyL}
+  font-weight: 600;
+`;
+
+const TooltipContainer = styled.div`
+  width: max-content;
+`;
