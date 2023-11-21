@@ -127,7 +127,7 @@ const AddPlantTxnToggle: React.FC<{
                   {`${actionText || 'Use'} Earned Beans`}
                 </Typography>
                 <Typography variant="body1" color="text.tertiary">
-                  {`Toggle to ${actionText || 'claim'} Earned Beans in this transaction.`}
+                  {`Toggle to ${actionText || 'Claim'} Earned Beans in this transaction.`}
                 </Typography>
               </Stack>
             </Row>
