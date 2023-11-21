@@ -16,10 +16,11 @@ const isClaimingBeansAction = (action: FormTxn) =>
 export default function useFarmerFormTxnsActions(options?: {
   showGraphicOnClaim?: boolean | undefined;
   claimBeansState?: FormTokenStateNew | undefined;
+  mode?: 'plantToggle';
 }) {
   const sdk = useSdk();
   const { values } = useFormikContext<FormTxnsFormState>();
-  const { summary } = useFarmerFormTxnsSummary();
+  const { summary } = useFarmerFormTxnsSummary(options?.mode);
   const account = useAccount();
 
   const getTxnActions = useCallback(
