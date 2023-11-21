@@ -85,6 +85,12 @@ export function displayFullBN(
     return '~0';
   }
 
+  const bnAbs = bn.abs();
+  const lowestAmt = BigNumber(1).div(BigNumber(10).pow(maxDecimals));
+  if (bnAbs.lt(lowestAmt) && bnAbs.gt(0)) {
+    return `<${lowestAmt.toString()}`;
+  }
+
   return amt;
 }
 
