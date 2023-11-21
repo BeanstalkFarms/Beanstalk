@@ -11,26 +11,36 @@ type Props = {
   arrowOffset: number;
   side: string;
   width?: number;
+  bgColor?: "black" | "white";
 };
 
-export const Tooltip: FC<Props> = ({ children, content, offsetX, offsetY, arrowSize, arrowOffset, side, width }) => {
+export const Tooltip: FC<Props> = ({ children, content, offsetX, offsetY, arrowSize, arrowOffset, side, width, bgColor = "black" }) => {
   return (
     <TooltipContainer>
       {children}
-      <TooltipBox offsetX={offsetX} offsetY={offsetY} arrowSize={arrowSize} arrowOffset={arrowOffset} width={width} side={side}>
+      <TooltipBox
+        offsetX={offsetX}
+        offsetY={offsetY}
+        arrowSize={arrowSize}
+        arrowOffset={arrowOffset}
+        width={width}
+        side={side}
+        bgColor={bgColor}
+      >
         {content}
       </TooltipBox>
     </TooltipContainer>
   );
 };
 
-type TooltipProps = {
+export type TooltipProps = {
   offsetX: number;
   offsetY: number;
   arrowSize: number;
   arrowOffset: number;
   side: string;
   width?: number;
+  bgColor?: "black" | "white";
 };
 
 const TooltipContainer = styled.div`
@@ -40,11 +50,12 @@ const TooltipContainer = styled.div`
 const TooltipBox = styled.div<TooltipProps>`
   padding: 8px;
   border-radius: 2px;
-  background: #000;
-  color: #fff;
+  background: ${(props) => (props.bgColor === "white" ? "#FFF" : "#000")};
+  color: ${(props) => (props.bgColor === "white" ? "#000" : "#FFF")};
   position: absolute;
   transform: translateX(${(props) => props.offsetX}%);
   width: ${(props) => (props.width ? props.width : 200)}px;
+  border: ${(props) => (props.bgColor === "white" ? "1px solid #000" : "none")};
   line-height: 18px;
   font-size: 14px;
   visibility: hidden;
