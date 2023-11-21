@@ -9,11 +9,7 @@ const tokenMap: Record<string, Token> = {};
 const TokenContext = createContext(tokenMap);
 
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: tokens, isLoading, error } = useWellTokens();
-
-  if (isLoading) {
-    <></>;
-  }
+  const { data: tokens, error } = useWellTokens();
 
   if (error) {
     return <Error message={error?.message} />;
