@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { TokenValue } from "@beanstalk/sdk";
 
 import { mediaQuery } from "src/breakpoints";
-import { BodyCaps, BodyS, LinksButtonText, TextNudge } from "src/components/Typography";
+import { BodyCaps, BodyS, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
 import { InfoBox } from "src/components/InfoBox";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Tooltip } from "src/components/Tooltip";
@@ -16,6 +16,7 @@ import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { LoadingItem } from "src/components/LoadingItem";
 import { Well } from "@beanstalk/sdk/Wells";
+import { Info } from "../Icons";
 
 type Props = {
   well: Well | undefined;
@@ -80,11 +81,52 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
         {!loading && isWhitelisted ? (
           <>
             <InfoBox.Row>
-              <InfoBox.Key>Deposited in the Silo</InfoBox.Key>
+              <InfoBox.Key>
+                <TooltipContainer>
+                  In the Beanstalk Silo
+                  <Tooltip
+                    content={
+                      <div className="tooltip-content">
+                        BEANETH LP token holders can Deposit their LP tokens <span className="underline">in the Beanstalk Silo</span> for
+                        yield.
+                      </div>
+                    }
+                    offsetX={0}
+                    offsetY={0}
+                    side="bottom"
+                    arrowSize={4}
+                    arrowOffset={50}
+                    width={270}
+                  >
+                    <Info color="#4b5563" />
+                  </Tooltip>
+                </TooltipContainer>
+              </InfoBox.Key>
               <InfoBox.Value>{displayTV(position?.silo)}</InfoBox.Value>
             </InfoBox.Row>
             <InfoBox.Row>
-              <InfoBox.Key>In my Farm Balance</InfoBox.Key>
+              <InfoBox.Key>
+                <TooltipContainer>
+                  In my Beanstalk Farm Balance
+                  <Tooltip
+                    content={
+                      <div className="tooltip-content">
+                        <span className="underline">Farm Balance</span> allows users of the Beanstalk protocol to hold assets without
+                        needing to withdraw to an external wallet. Using Farm Balances can help reduce gas costs and efficient movement of
+                        assets within Beanstalk.
+                      </div>
+                    }
+                    offsetX={0}
+                    offsetY={0}
+                    arrowOffset={50}
+                    side="bottom"
+                    arrowSize={4}
+                    width={270}
+                  >
+                    <Info color="#4b5563" />
+                  </Tooltip>
+                </TooltipContainer>
+              </InfoBox.Key>
               <InfoBox.Value>{displayTV(position?.internal)}</InfoBox.Value>
             </InfoBox.Row>
           </>
@@ -102,7 +144,6 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                       {"Wallet: "}
                       <div>${externalUSD.toHuman("short")}</div>
                     </BreakdownRow>
-
                     <BreakdownRow>
                       {"Silo Deposits: "}
                       <div>${siloUSD.toHuman("short")}</div>
@@ -161,4 +202,17 @@ const BreakdownRow = styled.div`
   flex-direction: row;
   justify-content: space-between;
   gap: 4px;
+`;
+
+const TooltipContainer = styled.div`
+  display: inline-flex;
+  gap: 4px;
+
+  .tooltip-content {
+    ${BodyXS}
+  }
+
+  .underline {
+    text-decoration: underline;
+  }
 `;
