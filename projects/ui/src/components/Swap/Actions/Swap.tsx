@@ -760,10 +760,22 @@ const Swap: FC<{}> = () => {
           loading: 'Swapping...',
           success: 'Swap successful.',
         });
-
+        let gas;
+        try {
+          gas = await values.swapOperation.estimateGas(
+            amountIn,
+            values.settings.slippage
+          );
+        } catch (err) {
+          console.warn(
+            'Failed to estimate gas: ',
+            (err as unknown as Error).message
+          );
+        }
         const txn = await values.swapOperation.execute(
           amountIn,
-          values.settings.slippage
+          values.settings.slippage,
+          { gasLimit: gas?.mul(1.1).toBigNumber() }
         );
         txToast.confirming(txn);
 

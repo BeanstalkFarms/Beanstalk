@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { CallOverrides, ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { TokenValue } from "src/TokenValue";
@@ -289,10 +289,13 @@ export abstract class Workflow<
       if (input instanceof StepClass) {
         input.setSDK(Workflow.sdk);
       }
-      const depositOptions = { tag: "depositAmount" }
-      const validInput = input.name === "pipelineDeposit";
+
+      const isPipelineDeposit = input.name === "pipelineDeposit";
+      const filteredOptions = this._options.filter((option) => !(option && option.onlyLocal));
+      const pipelineDepositOptions = { tag: `deposit${filteredOptions.length + 1}Amount` };
+
       this._generators.push(input);
-      this._options.push(validInput ? depositOptions : options || null); // null = no options set
+      this._options.push(isPipelineDeposit ? pipelineDepositOptions : options || null); // null = no options set
     }
     return this; // allow chaining
   }
@@ -593,7 +596,7 @@ export abstract class Workflow<
    * @param slippage A human readable percent value. Ex: 0.1 would mean 0.1% slippage
    * @returns Promise of a Transaction
    */
-  abstract execute(amountIn: ethers.BigNumber | TokenValue, data: RunData): Promise<ethers.ContractTransaction>;
+  abstract execute(amountIn: ethers.BigNumber | TokenValue, data: RunData, overrides?: CallOverrides): Promise<ethers.ContractTransaction>;
 
   /**
    * CallStatic version of the execute method. Allows testing the execution of the workflow.

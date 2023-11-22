@@ -50,13 +50,14 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet'],
         initFacetName: 'InitBipNewSilo',
         libraryNames: [
-          'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying'
+          'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting'
         ],
         facetLibraries: {
           'MockSeasonFacet': [
             'LibGauge', 
             'LibIncentive',
-            'LibLockedUnderlying'
+            'LibLockedUnderlying',
+            'LibCurveMinting'
           ],
           'ConvertFacet': [
             'LibConvert'

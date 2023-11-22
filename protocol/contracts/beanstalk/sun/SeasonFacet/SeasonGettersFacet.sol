@@ -29,6 +29,8 @@ contract SeasonGettersFacet {
 
     AppStorage internal s;
 
+    uint256 constant ONE_WEEK = 168;
+
     //////////////////// SEASON GETTERS ////////////////////
 
     /**
@@ -161,7 +163,7 @@ contract SeasonGettersFacet {
 
     /**
      * @notice Returns the new average grown stalk per BDV per season,
-     * if updateStalkPerBdvPerSeason() is called.
+     * if UpdateAverageStalkPerBdvPerSeason() is called.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
      * note that stalk has 10 decimals.
      */
@@ -186,6 +188,20 @@ contract SeasonGettersFacet {
      */
     function getBeanToMaxLpGpPerBdvRatioScaled() external view returns (uint256) {
         return LibGauge.getBeanToMaxLpGpPerBdvRatioScaled(s.seedGauge.beanToMaxLpGpPerBdvRatio);
+    }
+
+    /**
+     * @notice returns the season in which the stalk growth rate was last updated.
+     */
+    function getLastStalkGrowthRateUpdate() external view returns (uint256) {
+        return s.seedGauge.lastStalkGrowthUpdate;
+    }
+
+    /**
+     * @notice returns the next season in that beanstalk will update the stalk growth rate.
+     */
+    function getNextStalkGrowthRateUpdate() external view returns (uint256) {
+        return uint256(s.seedGauge.lastStalkGrowthUpdate).add(ONE_WEEK);
     }
 
     /**

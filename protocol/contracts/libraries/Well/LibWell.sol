@@ -25,13 +25,23 @@ library LibWell {
     // The BDV Selector that all Wells should be whitelisted with.
     bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
 
+    function getRatiosAndBeanIndex(IERC20[] memory tokens) internal view returns (
+        uint[] memory ratios,
+        uint beanIndex,
+        bool success
+    ) {
+        return getRatiosAndBeanIndex(tokens, 0);
+    }
+
     /**
      * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
      * These actions are combined into a single function for gas efficiency.
      */
-    function getRatiosAndBeanIndex(
-        IERC20[] memory tokens
-    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
+    function getRatiosAndBeanIndex(IERC20[] memory tokens, uint256 lookback) internal view returns (
+        uint[] memory ratios,
+        uint beanIndex,
+        bool success
+    ) {
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
@@ -40,7 +50,7 @@ library LibWell {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]));
+                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
                 if (ratios[i] == 0) {
                     success = false;
                 }

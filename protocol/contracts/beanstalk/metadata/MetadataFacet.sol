@@ -49,7 +49,7 @@ contract MetadataFacet is MetadataImage {
                     '"name": "Beanstalk Silo Deposits", "description": "An ERC1155 representing an asset deposited in the Beanstalk Silo. Silo Deposits gain stalk and bean seignorage. ',
                     '\\n\\nDISCLAIMER: Due diligence is imperative when assessing this NFT. Opensea and other NFT marketplaces cache the svg output and thus, may require the user to refresh the metadata to properly show the correct values."',                    
                     attributes,
-                    string(abi.encodePacked(', "image": "', imageURI(token, stem, stemTip), '"')),
+                    string(abi.encodePacked(' }], "image": "', imageURI(token, stem, stemTip), '"')),
                 '}'
             ))
         ));

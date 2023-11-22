@@ -56,6 +56,74 @@ async function ebip8(mock = true, account = undefined) {
   });
 }
 
+async function ebip9(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["SeasonFacet"],
+    initFacetName: "InitTurnOffBeanEthWell",
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+async function ebip10(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["ConvertFacet"],
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+async function ebip11(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["SeasonFacet"],
+    initFacetName: 'InitMint',
+    initArgs: ['0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5', '4194934459'],
+    initFacetAddress: '0x077495925c17230E5e8951443d547ECdbB4925Bb',
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+async function ebip13(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["ConvertFacet"],
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
 async function bipDiamondCut(name, dc, account, mock = true) {
   beanstalk = await getBeanstalk();
   if (mock) {
@@ -76,3 +144,7 @@ async function bipDiamondCut(name, dc, account, mock = true) {
 exports.ebip6 = ebip6;
 exports.ebip7 = ebip7;
 exports.ebip8 = ebip8;
+exports.ebip9 = ebip9;
+exports.ebip10 = ebip10;
+exports.ebip11 = ebip11;
+exports.ebip13 = ebip13;

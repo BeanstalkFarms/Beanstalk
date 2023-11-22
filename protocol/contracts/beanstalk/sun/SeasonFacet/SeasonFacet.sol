@@ -121,7 +121,7 @@ contract SeasonFacet is Weather {
     }
 
     /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
+     * @notice updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
      * @dev anyone can call this function to update. Currently, the function
      * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
      * for the average new depositer to catch up to the average grown stalk per BDV.
@@ -130,7 +130,7 @@ contract SeasonFacet is Weather {
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateStalkPerBdvPerSeason() external {
-        LibGauge.updateStalkPerBdvPerSeason();
+    function updateAverageStalkPerBdvPerSeason() external {
+        LibGauge.updateAverageStalkPerBdvPerSeason();
     }
 }

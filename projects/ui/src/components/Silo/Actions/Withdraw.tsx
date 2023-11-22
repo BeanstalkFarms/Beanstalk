@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
@@ -156,6 +156,10 @@ const WithdrawForm: FC<
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(whitelistedToken)
   );
+  const { setDestination } = useFormTxnContext();
+  useEffect(() => {
+    setDestination(values.destination);
+  }, [values.destination, setDestination])
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
@@ -320,11 +324,17 @@ const WithdrawForm: FC<
             <Box>
               <TxnAccordion>
                 <TxnPreview
+                  customOrder
                   actions={[
                     {
                       type: ActionType.WITHDRAW,
                       amount: toBN(withdrawResult.amount),
                       token: getNewToOldToken(whitelistedToken),
+                    },
+                    {
+                      type: ActionType.UPDATE_SILO_REWARDS,
+                      stalk: toBN(withdrawResult.stalk.mul(-1)),
+                      seeds: toBN(withdrawResult.seeds.mul(-1)),
                     },
                     removingLiquidity && amountOut && values.tokenOut
                       ? {
@@ -336,19 +346,13 @@ const WithdrawForm: FC<
                         }
                       : undefined,
                     {
-                      type: ActionType.UPDATE_SILO_REWARDS,
-                      stalk: toBN(withdrawResult.stalk.mul(-1)),
-                      seeds: toBN(withdrawResult.seeds.mul(-1)),
-                    },
-                    {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(whitelistedToken),
+                      token: getNewToOldToken(values.tokenOut || whitelistedToken),
                       destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
                   ]}
-                  {...txActions}
                 />
               </TxnAccordion>
             </Box>

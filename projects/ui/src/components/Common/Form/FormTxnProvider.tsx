@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TokenValue } from '@beanstalk/sdk';
+import { FarmToMode, TokenValue } from '@beanstalk/sdk';
 import { FC, MayPromise } from '~/types';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -81,6 +81,7 @@ const useInitFormTxnContext = () => {
 
   /// Context State
   const [txnBundler, setTxnBundler] = useState(new FormTxnBundler(sdk, {}));
+  const [destination, setDestination] = useState<FarmToMode | undefined>();
 
   /// On any change, update the txn bundler
   useEffect(() => {
@@ -118,7 +119,7 @@ const useInitFormTxnContext = () => {
         ? new HarvestFarmStep(sdk, plotIds).build()
         : undefined,
       [FormTxn.RINSE]: rinsable.gt(0)
-        ? new RinseFarmStep(sdk, fertilizerIds).build()
+        ? new RinseFarmStep(sdk, fertilizerIds, destination || FarmToMode.INTERNAL).build()
         : undefined,
       [FormTxn.CLAIM]: seasons?.length
         ? new ClaimFarmStep(sdk, BEAN, seasons).build(BEAN)
@@ -135,6 +136,7 @@ const useInitFormTxnContext = () => {
     farmerSilo.beans.earned,
     getBDV,
     sdk,
+    destination
   ]);
 
   useEffect(() => {
@@ -196,6 +198,7 @@ const useInitFormTxnContext = () => {
     txnBundler,
     plantAndDoX,
     refetch,
+    setDestination
   } as const;
 };
 

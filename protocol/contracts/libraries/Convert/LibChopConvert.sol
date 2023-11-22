@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {LibConvertData} from "./LibConvertData.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {C} from "contracts/C.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 
@@ -51,7 +52,7 @@ library LibChopConvert {
      */
     function getConvertedUnderlyingOut(address tokenIn, uint256 amountIn) internal view returns(uint256 amount) {
         // tokenIn == unripe bean address
-        amount = LibChop._getPenalizedUnderlying(
+        amount = LibUnripe._getPenalizedUnderlying(
             tokenIn,
             amountIn, 
             IBean(tokenIn).totalSupply()

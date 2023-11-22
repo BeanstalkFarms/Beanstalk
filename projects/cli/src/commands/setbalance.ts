@@ -11,7 +11,7 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
   if (!symbol) {
     await chain.setAllBalances(account, amount);
   } else {
-    const symbols = ["ETH", "WETH", "BEAN", "USDT", "USDC", "DAI", "3CRV", "BEAN3CRV", "urBEAN", "urBEAN3CRV", "ROOT"];
+    const symbols = ["ETH", "WETH", "BEAN", "USDT", "USDC", "DAI", "3CRV", "BEAN3CRV", "BEANWETH", "urBEAN", "urBEANWETH", "ROOT"];
     if (!symbols.includes(symbol)) {
       console.log(`${chalk.bold.red("Error")} - ${chalk.bold.white(symbol)} is not a valid token. Valid options are: `);
       console.log(symbols.map((s) => chalk.green(s)).join(", "));
@@ -19,8 +19,9 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
     }
     let t = sdk.tokens[symbol] as Token;
     if (symbol === "urBEAN") t = sdk.tokens.UNRIPE_BEAN;
-    if (symbol === "urBEAN3CRV") t = sdk.tokens.UNRIPE_BEAN_CRV3;
+    if (symbol === "urBEANWETH") t = sdk.tokens.UNRIPE_BEAN_WETH;
     if (symbol === "BEAN3CRV") t = sdk.tokens.BEAN_CRV3_LP;
+    if (symbol === "BEANWETH") t = sdk.tokens.BEAN_ETH_WELL_LP;
     if (typeof chain[`set${symbol}Balance`] !== "function")
       throw new Error(`${symbol} is not a valid token or the method ${chalk.bold.whiteBright("")}`);
 

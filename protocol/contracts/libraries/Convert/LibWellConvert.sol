@@ -127,6 +127,8 @@ library LibWellConvert {
     {
         (uint256 lp, uint256 minBeans, address well) = convertData.convertWithAddress();
 
+        require(LibWell.isWell(well), "Convert: Invalid Well");
+
         tokenOut = C.BEAN;
         tokenIn = well;
 
@@ -173,6 +175,8 @@ library LibWellConvert {
     {
         (uint256 beans, uint256 minLP, address well) = convertData
             .convertWithAddress();
+
+        require(LibWell.isWell(well), "Convert: Invalid Well");
     
         tokenOut = well;
         tokenIn = C.BEAN;
@@ -195,7 +199,7 @@ library LibWellConvert {
         (uint256 maxBeans, ) = _beansToPeg(well);
         require(maxBeans > 0, "Convert: P must be >= 1.");
         beansConverted = beans > maxBeans ? maxBeans : beans;
-        C.bean().transfer(well, beans);
+        C.bean().transfer(well, beansConverted);
         lp = IWell(well).sync(
             address(this),
             minLP

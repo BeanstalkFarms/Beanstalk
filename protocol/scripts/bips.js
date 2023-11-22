@@ -208,18 +208,24 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "SeasonGettersFacet", // season getters
         "GaugePointFacet", // gauge point function caller
         "UnripeFacet", // new view functions
-        "MockAdminFacet" // testing purposes
+        "SiloFacet", // new view functions
+        "ConvertFacet", // add unripe convert
+        "ConvertGettersFacet", // add unripe convert getters
+        "WhitelistFacet", // update whitelist abilities.
+        "MetadataFacet", // update metadata
+        "BDVFacet", // update bdv functions
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
       libraryNames: [
-        'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying'
+        'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting'
       ],
       facetLibraries: {
         'SeasonFacet': [
           'LibGauge',
           'LibIncentive',
-          'LibLockedUnderlying'
+          'LibLockedUnderlying',
+          'LibCurveMinting'
         ],
         'SeasonGettersFacet': [
           'LibLockedUnderlying'

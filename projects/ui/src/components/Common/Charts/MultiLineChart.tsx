@@ -147,6 +147,9 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
       common.margin.bottom, // chart edge to data region first pixel
   };
 
+  let yScale = scales[0].yScale(1);
+  if (Number.isNaN(yScale)) yScale = 0;
+
   return (
     <div style={{ position: 'relative' }}>
       <div
@@ -175,8 +178,8 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
           {/** Add TWAP line */}
           {(isTWAP || pegLine) && (
             <Line
-              from={{ x: 0, y: scales[0].yScale(1) }}
-              to={{ x: width - common.yAxisWidth, y: scales[0].yScale(1) }}
+              from={{ x: 0, y: yScale }}
+              to={{ x: width - common.yAxisWidth, y: yScale }}
               stroke={BeanstalkPalette.grey}
               strokeWidth={0.5}
             />

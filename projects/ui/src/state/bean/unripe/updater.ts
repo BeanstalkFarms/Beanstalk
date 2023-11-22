@@ -37,6 +37,9 @@ export const useUnripe = () => {
               unripeTokens[addr]
                 .getTotalSupply()
                 .then(tokenResult(unripeTokens[addr])),
+              beanstalk
+                .getRecapPaidPercent()
+                .then(tokenResult(unripeTokens[addr])),
             ])
           )
         );
@@ -49,6 +52,7 @@ export const useUnripe = () => {
               chopPenalty: ONE_BN.minus(chopRate).times(100),
               underlying: results[index][1],
               supply: results[index][2],
+              recapPaidPercent: results[index][3],
             };
             return prev;
           },

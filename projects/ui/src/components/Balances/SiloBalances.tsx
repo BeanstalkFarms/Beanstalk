@@ -17,7 +17,7 @@ import {
   SEEDS,
   STALK,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_CRV3,
+  UNRIPE_BEAN_WETH,
 } from '~/constants/tokens';
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import { BeanstalkPalette, IconSize } from '../App/muiTheme';
@@ -52,7 +52,7 @@ const SiloBalances: React.FC<{}> = () => {
 
   const Bean = getChainToken(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanCrv3 = getChainToken(UNRIPE_BEAN_CRV3);
+  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   // State
@@ -129,7 +129,7 @@ const SiloBalances: React.FC<{}> = () => {
       <Stack px={1} py={1} spacing={1}>
         {tokens.map(([address, token]) => {
           const deposits = balances[address]?.deposited;
-          const isUnripe = token === urBean || token === urBeanCrv3;
+          const isUnripe = token === urBean || token === urBeanWeth;
 
           return (
             <Box key={`${token.address}-${token.chainId}`}>

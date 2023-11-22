@@ -43,8 +43,14 @@ export default function usePreferredToken(
       // in the sdk, address of ETH is "". We need to use "eth" as key
       const key =
         tok instanceof Token && tok.symbol === 'ETH' ? 'eth' : tok.address;
-      const bal = balances[key];
-      return bal?.total?.gte(min) || false;
+
+      const storedBalances = localStorage.getItem('farmerBalances');
+      const localBalances = storedBalances ? JSON.parse(storedBalances) : null;
+      const isBalanceValid = !!Object.entries(balances).length;
+      const useStoredBalance = !isBalanceValid && localBalances;
+
+      const bal = useStoredBalance ? localBalances[key] : balances[key];
+      return (useStoredBalance ? BigNumber(bal.total).gte(min) : bal?.total?.gte(min)) || false;
     });
     // console.debug(`[hooks/usePreferredToken] found a preferred token: ${index}`);
     if (index > -1) return getChainToken(list[index].token);

@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { FarmToMode, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
+import { useFormikContext } from 'formik';
 import { ZERO_BN } from '~/constants';
 import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 
@@ -18,15 +19,15 @@ const tooltips = {
     'Add Plantable Seeds to your Seed balance. Also Mows Grown Stalk, Deposits Earned Beans and claims Earned Stalk.',
   enroot:
     'Add Revitalized Stalk and Seeds to your Stalk and Seed balances, respectively. Also Mows Grown Stalk.',
-  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean',
-  rinse: 'Redeem debt paid back by Beanstalk for purchasing fertilizer',
-  claim: 'Claim Beans that have been withdrawn from the silo',
+  harvest: 'Redeem debt paid back by Beanstalk for 1 Bean.',
+  rinse: 'Redeem debt paid back by Beanstalk for purchasing Fertilizer.',
+  claim: 'Claim Beans that have been withdrawn from the Silo.',
   grownStalk:
     'Stalk earned from Seeds. Grown Stalk does not contribute to Stalk ownership until it is Mown. Grown Stalk for a particular whitelisted asset is Mown at the beginning of any Silo interaction.',
   earnedBeans:
     'The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited in the current Season.',
   earnedStalk:
-    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership and do not require any action to claim them.',
+    'Stalk earned from Earned Beans. Earned Stalk automatically contribute to Stalk ownership even before claiming.',
   earnedSeeds:
     'Seeds earned in conjunction with Earned Beans. Plantable Seeds must be Planted in order to grow Stalk.',
   harvestablePods:
@@ -113,6 +114,7 @@ export type FormTxnSummaryMap = {
 export default function useFarmerFormTxnsSummary() {
   ///
   const sdk = useSdk();
+  const { values } = useFormikContext<any>();
 
   /// Farmer
   const farmerSilo = useFarmerSilo();
@@ -257,6 +259,7 @@ export default function useFarmerFormTxnsSummary() {
           {
             type: ActionType.RINSE,
             amount: rinsableSprouts,
+            destination: values.destination,
           },
         ],
       },
@@ -296,6 +299,7 @@ export default function useFarmerFormTxnsSummary() {
     revitalizedSeeds,
     revitalizedStalk,
     sdk.tokens,
+    values.destination
   ]);
 
   /**

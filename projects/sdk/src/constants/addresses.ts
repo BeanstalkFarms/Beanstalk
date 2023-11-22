@@ -15,6 +15,7 @@ export const addresses = {
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
+  USD_ORACLE: Address.make("0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"),
 
   // ----------------------------------------
   // BeaNFT Contracts
@@ -29,8 +30,8 @@ export const addresses = {
   UNRIPE_BEAN:
     // "Unripe Bean": Unripe vesting asset for the Bean token, Localhost
     Address.make("0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449"),
-  UNRIPE_BEAN_CRV3:
-    // "Unripe BEAN:CRV3 LP": Unripe vesting asset for the BEAN:CRV3 LP token, Localhost
+  UNRIPE_BEAN_WETH:
+    // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
     Address.make("0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D"),
 
   // ----------------------------------------

@@ -22,6 +22,7 @@ export class LibraryPresets {
 
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
+  public readonly weth2bean3crv: ActionBuilder;
   public readonly wellWethBean;
   public readonly wellAddLiquidity;
 
@@ -37,6 +38,7 @@ export class LibraryPresets {
   public readonly dai2weth: ActionBuilder;
   public readonly usdc2weth: ActionBuilder;
 
+  public readonly usdt23crv: ActionBuilder;
   public readonly usdc2beaneth;
   public readonly usdt2beaneth;
   public readonly dai2beaneth;
@@ -176,6 +178,20 @@ export class LibraryPresets {
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
 
+    ///////// WETH  -> 3CRV ///////////
+    this.weth2bean3crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+      this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.usdt23crv(fromMode, FarmToMode.INTERNAL) as StepGenerator
+    ];
+
+    //////// USDT -> 3CRV  ////////
+    this.usdt23crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => {
+      const pool = sdk.contracts.curve.pools.pool3.address;
+      const registry = sdk.contracts.curve.registries.poolRegistry.address;
+      // [0 ,0 , 1] is for USDT; [DAI, USDC, USDT]
+      return new sdk.farm.actions.AddLiquidity(pool, registry, [0, 0, 1], fromMode, toMode);
+    };
+
     ///////// DAI -> USDT ///////////
     this.dai2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new Exchange(
@@ -197,7 +213,7 @@ export class LibraryPresets {
         fromMode,
         toMode
       );
-    
+
     ///////// DAI -> WETH ///////////
     this.dai2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
       this.dai2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
@@ -209,7 +225,6 @@ export class LibraryPresets {
       this.usdc2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
       this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
     ];
-
 
     ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
     this.usdc2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
@@ -275,7 +290,6 @@ export class LibraryPresets {
     };
 
     this.wellAddLiquidity = (well: BasinWell, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
-      
       const result = [];
       const advancedPipe = sdk.farm.createAdvancedPipe("pipelineDeposit");
 
@@ -304,13 +318,13 @@ export class LibraryPresets {
       }
       const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
 
-
       result.push(transfer);
       advancedPipe.add(addLiquidity, { tag: "amountToDeposit" });
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);
       }
+
       result.push(advancedPipe);
 
       return result;

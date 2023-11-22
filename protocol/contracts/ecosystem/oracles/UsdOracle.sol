@@ -20,4 +20,8 @@ contract UsdOracle {
         return LibEthUsdOracle.getEthUsdPrice();
     }
 
+    function getEthUsdTwa(uint256 lookback) external view returns (uint256) {
+        return LibEthUsdOracle.getEthUsdPrice(lookback);
+    }
+
 }

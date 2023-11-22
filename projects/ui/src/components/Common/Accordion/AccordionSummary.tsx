@@ -34,8 +34,10 @@ const StyledAccordionSummary: FC<{
             ? {
                 background:
                   'linear-gradient(90deg, #1D8A79 0%, #7B61FF 36.58%, #1F78B4 96.2%)',
-                '-webkit-background-clip': 'text',
-                '-webkit-text-fill-color': 'transparent',
+                // '-webkit-background-clip': 'text',
+                // '-webkit-text-fill-color': 'transparent',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
               }
             : null
         }
