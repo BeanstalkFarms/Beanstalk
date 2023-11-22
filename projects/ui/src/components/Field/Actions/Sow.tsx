@@ -314,7 +314,7 @@ const SowForm: FC<
                       tokenAmount: amountIn || ZERO_BN,
                     },
                     {
-                      type: ActionType.BURN_BEANS,
+                      type: ActionType.SOW_BEANS,
                       amount: totalBeansAmount,
                     },
                     {

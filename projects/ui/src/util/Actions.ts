@@ -25,7 +25,7 @@ export enum ActionType {
 
   /// FIELD
   BUY_BEANS,
-  BURN_BEANS,
+  SOW_BEANS,
   RECEIVE_PODS,
   HARVEST,
   RECEIVE_BEANS,
@@ -158,8 +158,8 @@ export type BuyBeansAction = {
   tokenAmount: BigNumber;
 };
 
-export type BurnBeansAction = FieldAction & {
-  type: ActionType.BURN_BEANS;
+export type SowBeansAction = FieldAction & {
+  type: ActionType.SOW_BEANS;
   amount: BigNumber;
 };
 
@@ -227,6 +227,7 @@ export type RinseAction = {
 export type FertilizerBuyAction = {
   type: ActionType.BUY_FERTILIZER;
   amountIn: BigNumber;
+  amountOut: BigNumber;
   humidity: BigNumber;
 };
 
@@ -256,7 +257,7 @@ export type Action =
   | PlantAction
   | MowAction
   /// FIELD
-  | BurnBeansAction
+  | SowBeansAction
   | ReceivePodsAction
   | FieldHarvestAction
   | ReceiveBeansAction
@@ -371,8 +372,8 @@ export const parseActionMessage = (a: Action) => {
       )} Beans with ${displayFullBN(a.tokenAmount, a.token.displayDecimals)} ${
         a.token.name
       } for ~$${displayFullBN(a.beanPrice, BEAN[1].displayDecimals)} each.`;
-    case ActionType.BURN_BEANS:
-      return `Burn ${displayFullBN(a.amount, BEAN[1].displayDecimals)} ${
+    case ActionType.SOW_BEANS:
+      return `Sow ${displayFullBN(a.amount, BEAN[1].displayDecimals)} ${
         a.amount.eq(new BigNumber(1)) ? 'Bean' : 'Beans'
       }.`;
     case ActionType.RECEIVE_PODS:
@@ -403,10 +404,10 @@ export const parseActionMessage = (a: Action) => {
         SPROUTS.displayDecimals
       )} Sprouts${a.destination ? ` and send to your ${copy.MODES[a.destination]}.` : `.`}`;
     case ActionType.BUY_FERTILIZER:
-      return `Buy ${displayFullBN(a.amountIn, 2)} Fertilizer at ${displayFullBN(
+      return `Buy ${displayFullBN(a.amountOut, 2)} Fertilizer at ${displayFullBN(
         a.humidity.multipliedBy(100),
         1
-      )}% Humidity.`;
+      )}% Humidity with ${displayFullBN(a.amountIn, 2)} Wrapped Ether.`;
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
 
