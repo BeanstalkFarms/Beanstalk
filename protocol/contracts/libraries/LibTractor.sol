@@ -21,7 +21,7 @@ library LibTractor {
         );
     bytes32 public constant BLUEPRINT_TYPE_HASH =
         keccak256(
-            "Blueprint(address publisher,bytes data,bytesReference[] unsetData,uint256 maxNonce,uint256 startTime,uint256 endTime)"
+            "Blueprint(address publisher,bytes data,bytes operatorData,uint256 maxNonce,uint256 startTime,uint256 endTime)"
         );
 
     struct TractorStorage {
@@ -30,23 +30,24 @@ library LibTractor {
     }
 
     // NOTE(funderberker): Performance cost of using a <32 bytes struct vs packed bytes32 ?
-    struct bytesReference {
-        uint64 index;
-        uint64 length;
+    struct operatorPasteParams {
+        uint80 copyByteIndex;
+        uint80 pasteCallIndex;
+        uint80 pasteByteIndex;
     }
 
     // Blueprint stores blueprint related values
     struct Blueprint {
         address publisher;
         bytes data;
-        bytesReference[] unsetData;
+        bytes operatorPasteParams;
         uint256 maxNonce;
         uint256 startTime;
         uint256 endTime;
     }
 
-    // SignedBlueprint stores blueprint, hash, and signature, which enables verification.
-    struct SignedBlueprint {
+    // Requisition stores blueprint, hash, and signature, which enables verification.
+    struct Requisition {
         Blueprint blueprint;
         bytes32 blueprintHash; // including this is not strictly necessary, but helps avoid hashing more than once on chain
         bytes signature;
@@ -79,8 +80,7 @@ library LibTractor {
     /// @param publisher blueprint publisher address
     function _setPublisher(address publisher) internal {
         require(
-            tractorStorage().activePublisher == address(0) ||
-                tractorStorage().activePublisher == address(1),
+            tractorStorage().activePublisher == address(1),
             "LibTractor: publisher already set"
         );
         tractorStorage().activePublisher = publisher;
@@ -123,7 +123,7 @@ library LibTractor {
                         BLUEPRINT_TYPE_HASH,
                         blueprint.publisher,
                         keccak256(blueprint.data),
-                        keccak256(abi.encodePacked(blueprint.unsetData)),
+                        keccak256(abi.encodePacked(blueprint.operatorData)),
                         blueprint.maxNonce,
                         blueprint.startTime,
                         blueprint.endTime
