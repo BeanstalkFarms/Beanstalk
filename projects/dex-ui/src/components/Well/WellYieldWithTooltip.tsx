@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import styled from "styled-components";
 import { BodyL, BodyS } from "../Typography";
 import { TokenLogo } from "../TokenLogo";
@@ -9,24 +9,36 @@ import { TokenValue } from "@beanstalk/sdk";
 import StartSparkle from "src/assets/images/start-sparkle.svg";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { Well } from "@beanstalk/sdk/Wells";
+import useBeanstalkSiloAPYs from "src/wells/useBeanstalkSiloAPYs";
+import { mediaQuery } from "src/breakpoints";
 
 type Props = {
-  well?: Well;
+  well: Well | undefined;
   apy?: TokenValue;
+  loading?: boolean;
   tooltipProps?: Partial<Pick<TooltipProps, "offsetX" | "offsetY" | "side">>;
 };
 
-export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps }) => {
+export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) => {
   const sdk = useSdk();
 
   const bean = sdk.tokens.BEAN;
   const isMobile = useIsMobile();
 
-  const apy = TokenValue.fromHuman("0.0458", 4);
+  const { getSiloAPYWithWell } = useBeanstalkSiloAPYs();
 
-  const displayAPY = `${apy.mul(100).toHuman("short")}%`;
+  const apy = useMemo(() => {
+    const data = getSiloAPYWithWell(well);
+
+    if (!data) return undefined;
+    return `${data.mul(100).toHuman("short")}%`;
+  }, [well, getSiloAPYWithWell]);
 
   const tooltipWidth = isMobile ? 250 : 360;
+
+  if (!apy) {
+    return null;
+  }
 
   return (
     <TooltipContainer>
@@ -42,7 +54,7 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps }) => {
                   </div>
                   Bean vAPY
                 </div>
-                {displayAPY}
+                {apy}
               </div>
             </TitleContainer>
             <ContentContainer>
@@ -63,7 +75,7 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps }) => {
       >
         <ChildContainer>
           <StyledImg src={StartSparkle} alt="basin-bean-vAPY" />
-          <div>{displayAPY} vAPY</div>
+          <div>{apy} vAPY</div>
         </ChildContainer>
       </Tooltip>
     </TooltipContainer>
@@ -80,6 +92,10 @@ const Container = styled.div`
 
   .underlined {
     text-decoration: underline;
+  }
+
+  ${mediaQuery.sm.only} {
+    gap: 16px;
   }
 `;
 
@@ -129,6 +145,11 @@ const StyledImg = styled.img`
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+
+  ${mediaQuery.sm.only} {
+    height: 20px;
+    width: 20px;
+  }
 `;
 
 const ChildContainer = styled.div`
@@ -144,6 +165,10 @@ const ChildContainer = styled.div`
 
   ${BodyL}
   font-weight: 600;
+
+  ${mediaQuery.sm.only} {
+    ${BodyS}
+  }
 `;
 
 const TooltipContainer = styled.div`
