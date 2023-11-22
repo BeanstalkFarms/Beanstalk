@@ -26,14 +26,19 @@ import { Error } from "src/components/Error";
 import { useWellWithParams } from "src/wells/useWellWithParams";
 import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { WellYieldWithTooltip } from "src/components/Well/WellYieldWithTooltip";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
 
 export const Well = () => {
-  const { well, loading: loading, error } = useWellWithParams();
+  const { well, loading: dataLoading, error } = useWellWithParams();
+  const loading = useLagLoading(dataLoading);
 
   const sdk = useSdk();
   const navigate = useNavigate();
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
+  const isMobile = useIsMobile();
 
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
@@ -140,6 +145,16 @@ export const Well = () => {
                 <TextNudge amount={10} mobileAmount={-2}>
                   {title}
                 </TextNudge>
+                <div className="silo-yield-section">
+                  <WellYieldWithTooltip
+                    well={well}
+                    tooltipProps={{
+                      offsetX: isMobile ? -35 : 0,
+                      offsetY: 0,
+                      side: "top"
+                    }}
+                  />
+                </div>
               </Header>
             </Item>
             <StyledItem column stretch>
@@ -281,7 +296,7 @@ const ContentWrapper = styled.div`
   width: 100%;
 
   ${mediaQuery.lg.only} {
-    height: 1400px;
+    height: 1500px;
   }
 
   ${mediaQuery.between.smAndLg} {
@@ -305,6 +320,10 @@ const Header = styled.div`
   ${mediaQuery.lg.down} {
     font-size: 24px;
     gap: 8px;
+  }
+
+  .silo-yield-section {
+    align-self: center;
   }
 `;
 
