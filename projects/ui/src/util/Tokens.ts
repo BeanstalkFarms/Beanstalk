@@ -105,10 +105,12 @@ export function displayTokenAmount(
   config: {
     allowNegative?: boolean;
     showName?: boolean;
+    showSymbol?: boolean;
     modifier?: string;
   } = {
     allowNegative: false,
     showName: true,
+    showSymbol: false,
   }
 ) {
   const amount = BigNumber.isBigNumber(_amount)
@@ -118,8 +120,14 @@ export function displayTokenAmount(
   const outputValue = config.allowNegative 
     ? displayFullBN(amount, token.displayDecimals) 
     : displayFullBN(amount.abs(), token.displayDecimals);
+  
+  const modifier = config.modifier || '';
 
-  return `${outputValue} ${config.modifier ? `${config.modifier}` : ''} ${config.showName ? token.name : ''}`;
+  const name = config.showName ? token.name : '';
+
+  const symbol = config.showSymbol ? token.symbol : '';
+
+  return `${outputValue} ${modifier} ${name}${symbol}`;
 }
 
 /**
