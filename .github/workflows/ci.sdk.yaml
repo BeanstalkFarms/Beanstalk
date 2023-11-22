@@ -24,13 +24,15 @@ jobs:
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          profile: minimal
-          override: true
+      - name: Install Rust (Stable)
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      # - name: Install rust
+      #   uses: actions-rs/toolchain@v1
+      #   with:
+      #     toolchain: stable
+      #     target: wasm32-unknown-unknown
+      #     profile: minimal
+      #     override: true
       - name: Install Anvil
         uses: foundry-rs/foundry-toolchain@v1
         with:
