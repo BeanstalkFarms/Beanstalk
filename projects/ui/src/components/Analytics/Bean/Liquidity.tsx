@@ -18,8 +18,7 @@ const formatValue = (value: number) =>
   `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {
   title: 'Liquidity',
-  titleTooltip:
-    'The USD value of the tokens in the BEAN:3CRV and BEAN:ETH pools at the end of every Season.',
+  titleTooltip: 'The total USD value of tokens in liquidity pools on the Oracle Whitelist at the beginning of every Season.',
   gap: 0.25,
 };
 const queryConfig = {

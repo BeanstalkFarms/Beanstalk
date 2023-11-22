@@ -22,6 +22,7 @@ const formatValue = (value: number) => (
 );
 const StatProps = {
   title: 'Liquidity',
+  titleTooltip: 'The total USD value of tokens in liquidity pools on the Oracle Whitelist at the beginning of every Season.',
   gap: 0.25,
   color: 'primary',
   sx: { ml: 0 },

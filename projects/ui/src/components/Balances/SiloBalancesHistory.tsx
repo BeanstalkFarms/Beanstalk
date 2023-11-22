@@ -53,13 +53,21 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', height: '380px', position: 'relative' }}>
+    <Box sx={{ width: '100%', height: '390px', position: 'relative' }}>
       {account !== undefined ? (
         <BaseSeasonPlot
           queryData={queryData}
           height={300}
           StatProps={{
-            title: 'Total Deposited Value',
+            title: 'Value Deposited',
+            titleTooltip:
+              <>
+                  The historical USD value of your Silo Deposits at the beginning of every Season. <br />
+                <Typography variant="bodySmall">
+                  Note: Unripe assets are valued based on the current Chop Rate. Earned Beans are shown upon Plant.
+                </Typography>
+              </>
+            ,
             gap: 0.25,
           }}
           timeTabParams={timeTabParams}

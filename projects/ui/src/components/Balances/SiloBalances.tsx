@@ -443,7 +443,7 @@ const SiloBalances: React.FC<{}> = () => {
                         <Typography color="text.primary" component="span">
                           {displayFullBN(
                             token.getSeeds(deposits?.bdv ?? ZERO_BN),
-                            0
+                            2
                           )}
                         </Typography>
                       </Row>

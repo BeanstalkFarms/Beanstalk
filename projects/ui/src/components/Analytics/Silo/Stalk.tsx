@@ -17,7 +17,7 @@ const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {
   title: 'Stalk',
-  titleTooltip: 'The total number of Stalk at the end of each Season.',
+  titleTooltip: 'The total number of Stalk at the beginning of every Season.',
   gap: 0.5,
 };
 const queryConfig = {

@@ -5,7 +5,7 @@ import { FarmToMode, FarmFromMode } from '@beanstalk/sdk';
 import useFarmerFormTxnsSummary from './useFarmerFormTxnsSummary';
 import { FormTokenStateNew, FormTxnsFormState } from '~/components/Common/Form';
 import useSdk from '~/hooks/sdk';
-import { ActionType } from '~/util';
+import { ActionType, displayTokenAmount } from '~/util';
 import { ZERO_BN } from '~/constants';
 import useAccount from '~/hooks/ledger/useAccount';
 import { FormTxn } from '~/lib/Txn';
@@ -16,10 +16,11 @@ const isClaimingBeansAction = (action: FormTxn) =>
 export default function useFarmerFormTxnsActions(options?: {
   showGraphicOnClaim?: boolean | undefined;
   claimBeansState?: FormTokenStateNew | undefined;
+  mode?: 'plantToggle';
 }) {
   const sdk = useSdk();
   const { values } = useFormikContext<FormTxnsFormState>();
-  const { summary } = useFarmerFormTxnsSummary();
+  const { summary } = useFarmerFormTxnsSummary(options?.mode);
   const account = useAccount();
 
   const getTxnActions = useCallback(
@@ -82,11 +83,20 @@ export default function useFarmerFormTxnsActions(options?: {
         token: sdk.tokens.BEAN,
         source: FarmFromMode.INTERNAL,
         destination: FarmToMode.EXTERNAL,
-        to: account,
+      };
+
+      return transfer;
+    } 
+    
+    if ((transferTo === FarmToMode.INTERNAL || transferTo === undefined) && transferAmount?.gt(0)) {
+      const transfer = {
+        type: ActionType.BASE,
+        message: `Return ${displayTokenAmount(transferAmount, sdk.tokens.BEAN)} to your Farm Balance.`,
       };
 
       return transfer;
     }
+
     return undefined;
   }, [
     account,

@@ -83,7 +83,7 @@ const TransferForm: FC<
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
   /// Claim and Plant
-  const txnActions = useFarmerFormTxnsActions();
+  const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       BEAN.equals(whitelistedToken) &&
@@ -160,13 +160,13 @@ const TransferForm: FC<
           amountTooltip={
             <>
               <div>
-                Withdrawing from {withdrawResult.crates.length} Deposit
+                Transferring from {withdrawResult.crates.length} Deposit
                 {withdrawResult.crates.length === 1 ? '' : 's'}:
               </div>
               <Divider sx={{ opacity: 0.2, my: 1 }} />
               {withdrawResult.crates.map((_crate, i) => (
                 <div key={i}>
-                  Season {_crate.stem.toString()}:{' '}
+                  Stem {_crate.stem.toString()}:{' '}
                   {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)}{' '}
                   BDV,{' '}
                   {displayFullBN(_crate.stalk.total, STALK.displayDecimals)}{' '}
@@ -194,7 +194,7 @@ const TransferForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Transfer' />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
@@ -243,6 +243,11 @@ const TransferForm: FC<
                                       fontSize: FontSize.sm,
                                     }}
                                   >
+                                    {isUsingPlant &&
+                                      <li key="earnedBeanCrate">
+                                        {`${displayTokenAmount(earnedBeans, sdk.tokens.BEAN, { showName: false })} Earned Beans`}
+                                      </li>
+                                    }
                                     {withdrawResult.crates.map((crate, index) => (
                                       <li key={index}>
                                         {displayTokenAmount(

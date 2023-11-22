@@ -111,7 +111,7 @@ export type FormTxnSummaryMap = {
   [action in FormTxn]: FormTxnSummary;
 };
 
-export default function useFarmerFormTxnsSummary() {
+export default function useFarmerFormTxnsSummary(mode?: 'plantToggle') {
   ///
   const sdk = useSdk();
   const { values } = useFormikContext<any>();
@@ -175,7 +175,7 @@ export default function useFarmerFormTxnsSummary() {
             amount: earnedStalk,
           },
           {
-            description: 'Earned Seeds',
+            description: 'Plantable Seeds',
             tooltip: tooltips.earnedSeeds,
             token: SEEDS,
             amount: earnedSeeds,
@@ -259,7 +259,7 @@ export default function useFarmerFormTxnsSummary() {
           {
             type: ActionType.RINSE,
             amount: rinsableSprouts,
-            destination: values.destination,
+            destination: mode === 'plantToggle' ? (values.destination || FarmToMode.INTERNAL) : values.destination,
           },
         ],
       },
@@ -299,7 +299,8 @@ export default function useFarmerFormTxnsSummary() {
     revitalizedSeeds,
     revitalizedStalk,
     sdk.tokens,
-    values.destination
+    values.destination,
+    mode
   ]);
 
   /**

@@ -149,7 +149,7 @@ const ConvertForm: FC<
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
   let deltaSeeds; // the change in seeds during the convert.
 
-  const txnActions = useFarmerFormTxnsActions();
+  const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
 
   /// Change button state and prepare outputs
   if (depositedAmount.eq(0)) {
@@ -194,10 +194,10 @@ const ConvertForm: FC<
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
       <Stack gap={0.5}>
-        <StatHorizontal label="Instantaneous BDV:">
+        <StatHorizontal label="Current BDV:">
           ~{displayFullBN(instantBDV, 2, 2)}
         </StatHorizontal>
-        <StatHorizontal label="BDV of Deposits:">
+        <StatHorizontal label="Recorded BDV:">
           ~{displayFullBN(depositBDV, 2, 2)}
         </StatHorizontal>
       </Stack>
@@ -260,11 +260,15 @@ const ConvertForm: FC<
 
   const getConvertWarning = () => {
     let pool = tokenIn.isLP ? tokenIn.symbol : tokenOut!.symbol;
-    pool += ' pool';
+    if (tokenOut && !tokenOut.equals(sdk.tokens.BEAN_CRV3_LP)) {
+      pool += ' Well';
+    } else {
+      pool += ' pool';
+    }
     if (['urBEANETH', 'urBEAN'].includes(tokenIn.symbol)) pool = 'BEANETH Well';
 
     const lowerOrGreater =
-      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'lower' : 'greater';
+      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'less' : 'greater';
 
     const message = `${tokenIn.symbol} can only be Converted to ${tokenOut?.symbol} when deltaB in the ${pool} is ${lowerOrGreater} than 0.`;
 
@@ -322,7 +326,7 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : (
-          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} />
+          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} actionText='Convert' />
         )}
 
         {/* User Input: destination token */}

@@ -85,6 +85,13 @@ export function displayFullBN(
     return '~0';
   }
 
+  const bnAbs = bn.abs();
+  const lowestAmt = BigNumber(1).div(BigNumber(10).pow(maxDecimals));
+  if (bnAbs.lt(lowestAmt) && bnAbs.gt(0)) {
+    if (bn.gt(0)) return `<${lowestAmt.toString()}`;
+    if (bn.lt(0)) return `- <${lowestAmt.toString()}`;
+  }
+
   return amt;
 }
 
@@ -98,23 +105,29 @@ export function displayTokenAmount(
   config: {
     allowNegative?: boolean;
     showName?: boolean;
+    showSymbol?: boolean;
     modifier?: string;
   } = {
     allowNegative: false,
     showName: true,
+    showSymbol: false,
   }
 ) {
   const amount = BigNumber.isBigNumber(_amount)
     ? _amount
     : tokenValueToBN(_amount);
 
-  return `${(config.allowNegative ? amount : amount.abs())
-    .toNumber()
-    .toLocaleString('en-US', {
-      maximumFractionDigits: token.displayDecimals,
-    })} ${config.modifier ? `${config.modifier} ` : ''}${
-    config.showName ? token.name : ''
-  }`;
+  const outputValue = config.allowNegative 
+    ? displayFullBN(amount, token.displayDecimals) 
+    : displayFullBN(amount.abs(), token.displayDecimals);
+  
+  const modifier = config.modifier || '';
+
+  const name = config.showName ? token.name : '';
+
+  const symbol = config.showSymbol ? token.symbol : '';
+
+  return `${outputValue} ${modifier} ${name}${symbol}`;
 }
 
 /**

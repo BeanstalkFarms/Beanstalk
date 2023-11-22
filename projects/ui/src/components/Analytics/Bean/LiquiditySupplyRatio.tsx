@@ -15,9 +15,9 @@ const getValue = (season: LiquiditySupplyRatioQuery['seasons'][number]) =>
 const formatValue = (value: number) =>
   `${value.toFixed(4)}%`;
 const statProps = {
-  title: 'Liquidity:Supply Ratio',
+  title: 'Liquidity to Supply Ratio',
   titleTooltip:
-    `The ratio of Beans in liquidity pools on the Oracle Whitelist per Bean, displayed as a percentage. The Liquidity:Supply Ratio is a useful indicator of Beanstalk's health.`,
+    `The ratio of Beans in liquidity pools on the Oracle Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health.`,
   gap: 0.25,
 };
 const queryConfig = {
