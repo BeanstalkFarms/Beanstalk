@@ -297,7 +297,7 @@ const WithdrawForm: FC<
                     {withdrawResult.crates.map((_crate, i) => (
                       // FIXME: same as convert
                       <div key={i}>
-                        Season {_crate.stem.toString()}:{' '}
+                        Stem {_crate.stem.toString()}:{' '}
                         {displayFullBN(
                           _crate.bdv,
                           whitelistedToken.displayDecimals

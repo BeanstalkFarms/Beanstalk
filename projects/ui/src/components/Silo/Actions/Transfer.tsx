@@ -160,13 +160,13 @@ const TransferForm: FC<
           amountTooltip={
             <>
               <div>
-                Withdrawing from {withdrawResult.crates.length} Deposit
+                Transferring from {withdrawResult.crates.length} Deposit
                 {withdrawResult.crates.length === 1 ? '' : 's'}:
               </div>
               <Divider sx={{ opacity: 0.2, my: 1 }} />
               {withdrawResult.crates.map((_crate, i) => (
                 <div key={i}>
-                  Season {_crate.stem.toString()}:{' '}
+                  Stem {_crate.stem.toString()}:{' '}
                   {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)}{' '}
                   BDV,{' '}
                   {displayFullBN(_crate.stalk.total, STALK.displayDecimals)}{' '}
