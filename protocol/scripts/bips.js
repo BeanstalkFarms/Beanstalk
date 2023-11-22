@@ -210,7 +210,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "UnripeFacet", // new view functions
         "SiloFacet", // new view functions
         "ConvertFacet", // add unripe convert
-        "ConvertGetterFacet", // add unripe convert getters
+        "ConvertGettersFacet", // add unripe convert getters
         "WhitelistFacet", // update whitelist abilities.
         "MetadataFacet", // update metadata
         "BDVFacet", // update bdv functions
