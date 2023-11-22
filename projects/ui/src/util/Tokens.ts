@@ -115,13 +115,11 @@ export function displayTokenAmount(
     ? _amount
     : tokenValueToBN(_amount);
 
-  return `${(config.allowNegative ? amount : amount.abs())
-    .toNumber()
-    .toLocaleString('en-US', {
-      maximumFractionDigits: token.displayDecimals,
-    })} ${config.modifier ? `${config.modifier} ` : ''}${
-    config.showName ? token.name : ''
-  }`;
+  const outputValue = config.allowNegative 
+    ? displayFullBN(amount, token.displayDecimals) 
+    : displayFullBN(amount.abs(), token.displayDecimals);
+
+  return `${outputValue} ${config.modifier ? `${config.modifier}` : ''} ${config.showName ? token.name : ''}`;
 }
 
 /**
