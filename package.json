@@ -43,6 +43,7 @@
     "ui:build": "yarn workspace ui build",
     "ui:test": "yarn workspace ui test",
     "test:browser": "yarn workspace tests test:browser",
-    "ex": "yarn workspace @beanstalk/examples x"
+    "ex": "yarn workspace @beanstalk/examples x",
+    "anvil4tests": "anvil --fork-url https://eth-mainnet.g.alchemy.com/v2/Kk7ktCQL5wz4v4AG8bR2Gun8TAASQ-qi  --chain-id 1337 --fork-block-number 18629000"
   }
 }
