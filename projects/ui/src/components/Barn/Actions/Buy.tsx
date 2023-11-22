@@ -229,12 +229,34 @@ const BuyForm: FC<
               </Box>
               <WarningAlert>
                 The amount of Fertilizer received is: <br />
-                {displayTokenAmount(values.tokens[0].amount || BigNumber(0), values.tokens[0].token, { showName: false, showSymbol: true })}
+                {values.tokens[0].amount?.gt(0) && (
+                  <>
+                    {displayTokenAmount(
+                      values.tokens[0].amount || BigNumber(0),
+                      values.tokens[0].token,
+                      { showName: false, showSymbol: true }
+                    )}
+                  </>
+                )}{' '}
                 {values.claimableBeans.amount?.gt(0) && (
-                  <> + {displayTokenAmount(values.claimableBeans.amount, sdk.tokens.BEAN, { showName: false, showSymbol: true })}</>
-                )}
+                  <> 
+                    {values.tokens[0].amount?.gt(0) && (<>+ </>)} 
+                    {displayTokenAmount(
+                      values.claimableBeans.amount, 
+                      sdk.tokens.BEAN, 
+                      { showName: false, showSymbol: true }
+                    )}
+                  </>
+                )}{' '}
                 {values.tokens[0].token.symbol !== 'WETH' && (
-                  <> → {displayTokenAmount(values.tokens[0].amount || BigNumber(0), sdk.tokens.WETH, { showName: false, showSymbol: true })}</>
+                  <> 
+                    →{' '} 
+                    {displayTokenAmount(
+                      values.tokens[0].amountOut?.plus(values.claimableBeans.amountOut || BigNumber(0)) || BigNumber(0), 
+                      sdk.tokens.WETH, 
+                      { showName: false, showSymbol: true }
+                    )}
+                  </>
                 )}{' '}
                 * ${ethPrice.toHuman('short')} = {fert.toFixed(0)} Fertilizer
               </WarningAlert>
