@@ -26,7 +26,7 @@ const { sdk, account, utils } = getTestUtils();
 
 /// Tests
 beforeAll(async () => {
-  // await utils.resetFork();
+  await utils.resetFork();
   const amount = sdk.tokens.BEAN.amount("100000");
   await utils.setBalance(sdk.tokens.BEAN, account, amount);
   await sdk.tokens.BEAN.approveBeanstalk(amount);
@@ -41,7 +41,6 @@ describe("Silo Balance loading", () => {
     });
     it("loads an account with deposits (fuzzy)", async () => {
       const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
-      console.log(balance);
       chaiExpect(balance.amount.toHuman()).to.eq("100000");
     });
 
