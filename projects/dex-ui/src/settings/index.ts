@@ -11,6 +11,7 @@ export type DexSettings = {
   PRODUCTION: boolean;
   AQUIFER_ADDRESS: Address;
   SUBGRAPH_URL: string;
+  BEANSTALK_SUBGRAPH_URL: string;
   WELLS_ORIGIN_BLOCK: number;
   LOAD_HISTORY_FROM_GRAPH: boolean;
   NETLIFY_CONTEXT?: string;
