@@ -4,7 +4,7 @@ import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
-import { BEAN, PODS, SPROUTS } from '../constants/tokens';
+import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
 export enum ActionType {
@@ -280,6 +280,18 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
+      if (a.tokenOut.isLP && a.tokenOut.symbol !== CRV3[1].symbol && !a.tokenOut.isUnripe) {
+        return `Add ${displayTokenAmount(
+          a.amountIn,
+          a.tokenIn
+        )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      }
+      if (a.tokenIn.isLP && a.tokenIn.symbol !== CRV3[1].symbol && !a.tokenIn.isUnripe) {
+        return `Burn ${displayTokenAmount(
+          a.amountIn,
+          a.tokenIn
+        )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
+      }
       return `Swap ${displayTokenAmount(
         a.amountIn,
         a.tokenIn
@@ -319,7 +331,7 @@ export const parseActionMessage = (a: Action) => {
         a.token
       )} from the Silo.`;
     case ActionType.IN_TRANSIT:
-      return `Receive ${displayTokenAmount(a.amount.abs(), a.token)} to your ${copy.MODES[a.destination]}.`;
+      return `Receive ${displayTokenAmount(a.amount.abs(), a.token)} in your ${copy.MODES[a.destination]}.`;
     case ActionType.UPDATE_SILO_REWARDS: // FIXME: don't like "update" here
       return `${a.stalk.lt(0) ? 'Burn' : 'Receive'} ${displayFullBN(
         a.stalk.abs(),

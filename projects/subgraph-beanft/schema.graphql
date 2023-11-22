@@ -1,0 +1,10 @@
+type BeaNFTUser @entity {
+  id: ID!
+  barnRaise: [Int!]
+  genesis: [Int!]
+  winter: [Int!]
+},
+type CollectionData @entity {
+  id: ID!
+  minted: [Int!]
+}
