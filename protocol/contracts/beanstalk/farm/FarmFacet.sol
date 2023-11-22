@@ -62,6 +62,25 @@ contract FarmFacet {
         }
     }
 
+    function tractorAdvancedFarm(
+        Requisition calldata requisition,
+        bytes[] memory operatorCallData
+    ) external payable withEth returns (bytes[] memory results) verifyRequisition(requisition) {
+        // Paste operatorCallData into blueprint callData.
+        requisition.blueprint.data = useOperatorClipboard(
+            requisition.blueprint.data,
+            requisition.blueprint.clipboard,
+            operatorCallData
+        );
+
+        // NOTE code duplication bad.
+        // Use updated blueprint.data as advancedFarm callData.
+        results = new bytes[](requisition.blueprint.data.length);
+        for (uint256 i = 0; i < requisition.blueprint.data.length; ++i) {
+            results[i] = _advancedFarm(requisition.blueprint.data[i], results);
+        }
+    }
+
     function _advancedFarm(AdvancedFarmCall calldata data, bytes[] memory returnData)
         internal
         returns (bytes memory result)
