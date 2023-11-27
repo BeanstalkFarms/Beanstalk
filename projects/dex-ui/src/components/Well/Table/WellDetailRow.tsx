@@ -8,6 +8,8 @@ import { mediaQuery, size } from "src/breakpoints";
 import { formatNum } from "src/utils/format";
 import { Well } from "@beanstalk/sdk/Wells";
 import { Skeleton } from "src/components/Skeleton";
+import { WellYieldWithTooltip } from "../WellYieldWithTooltip";
+import { Item } from "src/components/Layout";
 
 /// format value with 2 decimals, if value is less than 1M, otherwise use short format
 const formatMayDecimals = (tv: TokenValue | undefined) => {
@@ -51,7 +53,9 @@ export const WellDetailRow: FC<{
         <WellPricing>{functionName || "Price Function"}</WellPricing>
       </DesktopContainer>
       <DesktopContainer align="right">
-        <TradingFee>0.00%</TradingFee>
+        <Item column right>
+          <WellYieldWithTooltip well={well} />
+        </Item>
       </DesktopContainer>
       <DesktopContainer align="right">
         <Amount>${liquidity ? liquidity.toHuman("short") : "-.--"}</Amount>
@@ -91,7 +95,7 @@ export const WellDetailLoadingRow: FC<{}> = () => {
         <Skeleton height={24} width={125} />
       </DesktopContainer>
       <DesktopContainer align="right">
-        <Skeleton height={24} width={75} />
+        <Skeleton height={32} width={75} />
       </DesktopContainer>
       <DesktopContainer align="right">
         <Skeleton height={24} width={90} />
@@ -209,4 +213,8 @@ const WellPricing = styled.div`
 
 const TokenLogoWrapper = styled.div`
   margin-bottom: 2px;
+`;
+
+const TooltipContainer = styled.div`
+  display: flex;
 `;
