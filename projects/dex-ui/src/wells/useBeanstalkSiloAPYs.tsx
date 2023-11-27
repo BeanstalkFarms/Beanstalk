@@ -4,7 +4,7 @@ import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
 import { useBeanstalkSiloWhitelist } from "./useBeanstalkSiloWhitelist";
 
-const useBeanstalkSiloAPYs = () => {
+export const useBeanstalkSiloAPYs = () => {
   const { getSeedsWithWell } = useBeanstalkSiloWhitelist();
 
   const query = useQuery(
@@ -51,5 +51,3 @@ const useBeanstalkSiloAPYs = () => {
     getSiloAPYWithWell
   };
 };
-
-export default useBeanstalkSiloAPYs;
