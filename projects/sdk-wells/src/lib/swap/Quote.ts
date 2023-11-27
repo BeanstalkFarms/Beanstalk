@@ -1,7 +1,7 @@
 import { Token, TokenValue } from "@beanstalk/sdk-core";
 import { Route } from "src/lib/routing";
 import { Direction, SwapStep } from "src/lib/swap/SwapStep";
-import { Depot, Depot__factory, WETH9, WETH9__factory, UnwrapEthJunction__factory, UnwrapEthJunction } from "src/constants/generated";
+import { Depot, Depot__factory, WETH9, WETH9__factory, UnwrapAndSendEthJunction__factory, UnwrapAndSendEthJunction } from "src/constants/generated";
 import { addresses } from "src/constants/addresses";
 import { WellsSDK } from "src/lib/WellsSDK";
 import { TxOverrides } from "src/lib/Well";
@@ -12,7 +12,7 @@ import { Clipboard } from "src/lib/clipboard/clipboard";
 import { UnWrapEthStep } from "./UnWrapStep";
 
 const DEFAULT_DEADLINE = 60 * 5; // in seconds
-const JUNCTION_ADDRESS = addresses.JUNCTION.get(1);
+const UNWRAP_AND_SEND_JUNCTION = addresses.UNWRAP_AND_SEND_JUNCTION.get(1);
 
 export type QuotePrepareResult = {
   doSwap: (overrides?: TxOverrides) => Promise<ContractTransaction>;
@@ -44,7 +44,7 @@ export class Quote {
   fullQuote: TokenValue | undefined;
   slippage: number;
   weth9: WETH9;
-  junction: UnwrapEthJunction;
+  unwrapAndSendEthJunction: UnwrapAndSendEthJunction;
   debug: boolean = false;
 
   constructor(sdk: WellsSDK, fromToken: Token, toToken: Token, route: Route, account: string) {
@@ -57,7 +57,7 @@ export class Quote {
     this.account = account;
 
     this.weth9 = WETH9__factory.connect(addresses.WETH9.get(this.sdk.chainId), this.sdk.providerOrSigner);
-    this.junction = UnwrapEthJunction__factory.connect(addresses.JUNCTION.get(this.sdk.chainId), this.sdk.providerOrSigner);
+    this.unwrapAndSendEthJunction = UnwrapAndSendEthJunction__factory.connect(addresses.UNWRAP_AND_SEND_JUNCTION.get(this.sdk.chainId), this.sdk.providerOrSigner);
 
     for (const { from, to, well } of this.route) {
       if (from.symbol === "ETH" && to.symbol === "WETH") {
@@ -214,8 +214,8 @@ export class Quote {
       const step = steps[i];
       let nextRecipient = steps[i + 1]?.well.contract.address ?? recipient;
 
-      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to Junction
-      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = JUNCTION_ADDRESS;
+      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to the Unwrap and Send ETH Junction
+      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = UNWRAP_AND_SEND_JUNCTION;
 
       const { contract, method, parameters } = step.swapMany(nextRecipient, step.quoteResultWithSlippage!);
 
@@ -282,8 +282,8 @@ export class Quote {
       ]);
 
       const unwrapAndSendWeth = {
-        target: this.junction.address,
-        callData: this.junction.interface.encodeFunctionData("unwrapAndSendETH", [recipient]),
+        target: this.unwrapAndSendEthJunction.address,
+        callData: this.unwrapAndSendEthJunction.interface.encodeFunctionData("unwrapAndSendETH", [recipient]),
         clipboard: Clipboard.encode([])
       };
 
@@ -353,8 +353,8 @@ export class Quote {
       const nextStep = steps[i + 1] || null;
       let nextRecipient = i === steps.length - 1 ? recipient : pipelineAddress;
 
-      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to Junction
-      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = JUNCTION_ADDRESS;
+      // If this is a swap that ends in ETH, we need to send the amount of the last swap (which should be WETH) to the Unwrap and Send ETH Junction
+      if (i === steps.length - 1 && this.toToken.symbol === "ETH") nextRecipient = UNWRAP_AND_SEND_JUNCTION;
 
       const amountWithSlippage = step.quoteResultWithSlippage!;
       const maxAmountOut = amountWithSlippage;
@@ -426,8 +426,8 @@ export class Quote {
       ]);
 
       const unwrapAndSendWeth = {
-        target: this.junction.address,
-        callData: this.junction.interface.encodeFunctionData("unwrapAndSendETH", [recipient]),
+        target: this.unwrapAndSendEthJunction.address,
+        callData: this.unwrapAndSendEthJunction.interface.encodeFunctionData("unwrapAndSendETH", [recipient]),
         clipboard: Clipboard.encode([])
       };
 
