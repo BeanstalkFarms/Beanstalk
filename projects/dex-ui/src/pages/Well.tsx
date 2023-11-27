@@ -29,10 +29,16 @@ import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { WellYieldWithTooltip } from "src/components/Well/WellYieldWithTooltip";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
 
 export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
-  const loading = useLagLoading(dataLoading);
+  const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
+
+  useMultiFlowPumpTWAReserves();
+
+  const loading = useLagLoading(dataLoading || apysLoading);
 
   const sdk = useSdk();
   const navigate = useNavigate();
@@ -169,7 +175,7 @@ export const Well = () => {
          */}
         <ReservesContainer>
           <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
-            <Reserves reserves={reserves} />
+            <Reserves reserves={reserves} well={well} />
           </LoadingItem>
         </ReservesContainer>
 
