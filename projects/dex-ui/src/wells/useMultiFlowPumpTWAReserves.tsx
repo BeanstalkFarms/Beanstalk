@@ -6,6 +6,8 @@ import { multicall } from "@wagmi/core";
 import MULTI_PUMP_ABI from "src/abi/MULTI_PUMP_ABI.json";
 import { TokenValue } from "@beanstalk/sdk";
 import { useQuery } from "@tanstack/react-query";
+import { Well } from "@beanstalk/sdk/Wells";
+import { useCallback } from "react";
 
 export const useMultiFlowPumpTWAReserves = () => {
   const { data: wells } = useWells();
@@ -37,7 +39,7 @@ export const useMultiFlowPumpTWAReserves = () => {
 
       const twaReservesResult: any[] = await multicall({ contracts: calls });
 
-      const mapping: Record<string, any[]> = {};
+      const mapping: Record<string, TokenValue[]> = {};
       let index = 0;
 
       whitelistedWells.forEach((well) => {
@@ -58,6 +60,7 @@ export const useMultiFlowPumpTWAReserves = () => {
           index += 1;
         });
 
+        /// In case there is more than one pump, divide the reserves by the number of pumps
         mapping[well.address] = [twa[0].div(numPumps), twa[1].div(numPumps)];
       });
       return mapping;
@@ -69,5 +72,14 @@ export const useMultiFlowPumpTWAReserves = () => {
     }
   );
 
-  return query;
+  const getTWAReservesWithWell = useCallback(
+    (well: Well | undefined) => {
+      if (!well || !query.data) return undefined;
+
+      return query.data[well.address];
+    },
+    [query.data]
+  );
+
+  return { ...query, getTWAReservesWithWell };
 };
