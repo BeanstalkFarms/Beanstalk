@@ -281,13 +281,13 @@ export class Quote {
         0
       ]);
 
-      const unwrapAndSendWeth = {
+      const unwrapAndSendEth = {
         target: this.unwrapAndSendEthJunction.address,
         callData: this.unwrapAndSendEthJunction.interface.encodeFunctionData("unwrapAndSendETH", [recipient]),
         clipboard: Clipboard.encode([])
       };
 
-      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...shiftOps, unwrapAndSendWeth], 0]);
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...shiftOps, unwrapAndSendEth], 0]);
 
       doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         return this.depot.farm([transferToFirstWell, pipe], overrides);
@@ -425,13 +425,13 @@ export class Quote {
         0
       ]);
 
-      const unwrapAndSendWeth = {
+      const unwrapAndSendEth = {
         target: this.unwrapAndSendEthJunction.address,
         callData: this.unwrapAndSendEthJunction.interface.encodeFunctionData("unwrapAndSendETH", [recipient]),
         clipboard: Clipboard.encode([])
       };
 
-      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...operations, unwrapAndSendWeth], 0]);
+      pipe = this.depot.interface.encodeFunctionData("advancedPipe", [[...operations, unwrapAndSendEth], 0]);
 
       doSwap = (overrides: TxOverrides = {}): Promise<ContractTransaction> => {
         return this.depot.farm([transferToPipeline, pipe], overrides);
