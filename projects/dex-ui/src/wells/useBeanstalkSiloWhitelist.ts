@@ -15,13 +15,13 @@ const WHITELIST_MAP = {
 };
 
 const functions = {
-  isWhitelisted: (well: Well | undefined) => {
+  getIsWhitelisted: (well: Well | undefined) => {
     if (!well) return false;
     const wellAddress = well.address.toLowerCase();
 
     return wellAddress in WHITELIST_MAP;
   },
-  seedsWithWell: (well: Well | undefined) => {
+  getSeedsWithWell: (well: Well | undefined) => {
     const wellAddress = well?.address.toLowerCase();
     const key = wellAddress as keyof typeof WHITELIST_MAP;
     return WHITELIST_MAP?.[key]?.seeds || undefined;
