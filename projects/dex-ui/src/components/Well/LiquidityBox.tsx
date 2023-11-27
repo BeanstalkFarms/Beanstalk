@@ -17,6 +17,7 @@ import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { LoadingItem } from "src/components/LoadingItem";
 import { Well } from "@beanstalk/sdk/Wells";
 import { Info } from "../Icons";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
 
 type Props = {
   well: Well | undefined;
@@ -36,6 +37,8 @@ const displayTV = (value?: TokenValue) => (value?.gt(0) ? value.toHuman("short")
 
 export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
   const well = useMemo(() => _well, [_well]);
+
+  const isMobile = useIsMobile();
 
   const { getPositionWithWell } = useLPPositionSummary();
   const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
@@ -94,8 +97,8 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                         &nbsp;for yield.
                       </div>
                     }
-                    offsetX={0}
-                    offsetY={0}
+                    offsetX={isMobile ? -40 : -1}
+                    offsetY={350}
                     side="bottom"
                     arrowSize={4}
                     arrowOffset={50}
@@ -121,9 +124,9 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                         Farm Balances can help reduce gas costs and efficient movement of assets within Beanstalk.
                       </div>
                     }
-                    offsetX={0}
-                    offsetY={0}
-                    arrowOffset={50}
+                    offsetX={isMobile ? -40 : -1}
+                    offsetY={630}
+                    arrowOffset={0}
                     side="bottom"
                     arrowSize={4}
                     width={270}
