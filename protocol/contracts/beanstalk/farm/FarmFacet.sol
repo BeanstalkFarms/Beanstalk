@@ -73,11 +73,11 @@ contract FarmFacet {
             operatorCallData
         );
 
-        // NOTE code duplication bad.
-        // Use updated blueprint.data as advancedFarm callData.
+        AdvancedFarmCall memory advancedFarmCall;
         results = new bytes[](requisition.blueprint.data.length);
         for (uint256 i = 0; i < requisition.blueprint.data.length; ++i) {
-            results[i] = _advancedFarm(requisition.blueprint.data[i], results);
+            advancedFarmCall = abi.decode(requisition.blueprint.data[i], (AdvancedFarmCall));
+            results[i] = _advancedFarm(advancedFarmCall, results);
         }
     }
 
@@ -91,8 +91,8 @@ contract FarmFacet {
         if (pipeType == 0x00) {
             result = _farm(data.callData);
         } else {
-            result = LibFunction.useClipboard(data.callData, data.clipboard, returnData);
-            _farmMem(result);
+            bytes callData = LibFunction.useClipboard(data.callData, data.clipboard, returnData);
+            result = _farmMem(callData);
         }
     }
 
