@@ -26,15 +26,15 @@ describe("Silo Convert", function () {
 
   it("Validates tokens", async () => {
     const a = async () => {
-      await convert.convert(sdk.tokens.USDC, BEANLP, TokenValue.ONE);
+      await (await convert.convert(sdk.tokens.USDC, BEANLP, TokenValue.ONE)).wait();
       throw new Error("fromToken is nost whitelisted");
     };
     const b = async () => {
-      await convert.convert(BEAN, sdk.tokens.USDC, TokenValue.ONE);
+      await (await convert.convert(BEAN, sdk.tokens.USDC, TokenValue.ONE)).wait();
       throw new Error("fromToken is nost whitelisted");
     };
     const c = async () => {
-      await convert.convert(BEAN, BEAN, TokenValue.ONE);
+      await (await convert.convert(BEAN, BEAN, TokenValue.ONE)).wait();
       throw new Error("Cannot convert between the same token");
     };
     await expect(a).rejects.toThrowError("fromToken is not whitelisted");
@@ -45,7 +45,7 @@ describe("Silo Convert", function () {
   it("Validates amount", async () => {
     await utils.setBEANBalance(account, TokenValue.ZERO);
     const a = async () => {
-      await convert.convert(BEAN, BEANLP, BEAN.amount(500));
+      await (await convert.convert(BEAN, BEANLP, BEAN.amount(500))).wait();
     };
 
     await expect(a).rejects.toThrowError("Insufficient balance");
@@ -131,7 +131,7 @@ describe("Silo Convert", function () {
     const { from, to } = pair;
 
     it(`Convert ${from.symbol} -> ${to.symbol}`, async () => {
-      const fn = async () => sdk.silo.convert(from, to, from.amount(1));
+      const fn = async () => await (await sdk.silo.convert(from, to, from.amount(1))).wait();
       await expect(fn).rejects.toThrowError("Cannot convert between the same token");
     });
   });
@@ -160,17 +160,21 @@ describe("Silo Convert", function () {
       const { from, to } = pair;
 
       it(`Fail ${from.symbol} -> ${to.symbol}`, async () => {
-        const fn = async () => sdk.silo.convert(from, to, from.amount(1));
+        const fn = async () => await (await sdk.silo.convert(from, to, from.amount(1))).wait();
         await expect(fn).rejects.toThrowError("Cannot convert between these tokens");
       });
     });
 
     describe("DeltaB < 0", () => {
+      let deltaB: TokenValue;
+
       beforeAll(async () => {
         // Force deltaB < 0
         // 10M bean & 1 ETH
         // await utils.setWellLiquidity(sdk.tokens.BEAN_ETH_WELL_LP, [TokenValue.fromHuman(10_000_000, 6), TokenValue.fromHuman(1, 18)]);
         await utils.setPriceUnder1(2);
+        deltaB = await sdk.bean.getDeltaB();
+        expect(deltaB.lt(TokenValue.ZERO)).toBe(true);
       });
 
       describe.each([
@@ -182,7 +186,8 @@ describe("Silo Convert", function () {
         it(`${from.symbol} -> ${to.symbol}`, async () => {
           const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
-          await sdk.silo.convert(from, to, from.amount(100));
+          const tx = await sdk.silo.convert(from, to, from.amount(100), 0.1, { gasLimit: 5000000 });
+          await tx.wait();
           const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
@@ -196,7 +201,7 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
-          const fn = async () => await sdk.silo.convert(from, to, from.amount(100));
+          const fn = async () => await (await sdk.silo.convert(from, to, from.amount(100))).wait();
 
           await expect(fn).rejects.toThrowError("Cannot convert this token when deltaB is < 0");
         });
@@ -204,12 +209,16 @@ describe("Silo Convert", function () {
     });
 
     describe("DeltaB > 0", () => {
+      let deltaB: TokenValue;
+
       beforeAll(async () => {
         // Force deltaB > 0
         // await utils.setCurveLiquidity(10_000_000, 15_000_000);
         // 100 bean & 10000 ETH
         // await utils.setWellLiquidity(sdk.tokens.BEAN_ETH_WELL_LP, [TokenValue.fromHuman(100, 6), TokenValue.fromHuman(10000, 18)]);
         await utils.setPriceOver1(2);
+        deltaB = await sdk.bean.getDeltaB();
+        expect(deltaB.gte(TokenValue.ZERO)).toBe(true);
       });
 
       describe.each([
@@ -221,7 +230,8 @@ describe("Silo Convert", function () {
         it(`${from.symbol} -> ${to.symbol}`, async () => {
           const balanceBefore = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
           const { minAmountOut } = await sdk.silo.convertEstimate(from, to, from.amount(100));
-          await sdk.silo.convert(from, to, from.amount(100));
+          const tx = await sdk.silo.convert(from, to, from.amount(100), 0.1, { gasLimit: 5000000 });
+          await tx.wait();
           const balanceAfter = await sdk.silo.getBalance(to, account, { source: DataSource.LEDGER });
 
           expect(balanceAfter.amount.gte(balanceBefore.amount.add(minAmountOut))).toBe(true);
@@ -235,8 +245,7 @@ describe("Silo Convert", function () {
         const { from, to } = pair;
 
         it(`${from.symbol} -> ${to.symbol}`, async () => {
-          const fn = async () => await sdk.silo.convert(from, to, from.amount(100));
-
+          const fn = async () => await (await sdk.silo.convert(from, to, from.amount(100))).wait();
           await expect(fn).rejects.toThrowError("Cannot convert this token when deltaB is >= 0");
         });
       });

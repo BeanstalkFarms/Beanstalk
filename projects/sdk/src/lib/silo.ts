@@ -1,4 +1,5 @@
 import { BigNumber, ContractTransaction } from "ethers";
+import type { PayableOverrides } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "./BeanstalkSDK";
 import { EventProcessor } from "src/lib/events/processor";
@@ -156,8 +157,8 @@ export class Silo {
    * @param fromAmount Amount to convert
    * @returns Promise of Transaction
    */
-  async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue) {
-    return this.siloConvert.convert(fromToken, toToken, fromAmount);
+  async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue, slippage: number = 0.1, overrides: PayableOverrides = {}) {
+    return this.siloConvert.convert(fromToken, toToken, fromAmount, slippage, overrides);
   }
 
   /**
