@@ -81,7 +81,7 @@ export const Wells = () => {
           </TabButton>
         </Item>
       </StyledRow>
-      <Table>
+      <StyledTable>
         {tab === 0 ? (
           <THead>
             <TableRow>
@@ -150,10 +150,14 @@ export const Wells = () => {
             </>
           )}
         </TBody>
-      </Table>
+      </StyledTable>
     </Page>
   );
 };
+
+const StyledTable = styled(Table)`
+  overflow: auto;
+`;
 
 const TableRow = styled(Row)`
   @media (max-width: ${size.mobile}) {

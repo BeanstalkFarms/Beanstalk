@@ -87,8 +87,11 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                   <Tooltip
                     content={
                       <div className="tooltip-content">
-                        BEANETH LP token holders can Deposit their LP tokens <span className="underline">in the Beanstalk Silo</span> for
-                        yield.
+                        BEANETH LP token holders can Deposit their LP tokens{" "}
+                        <a className="underline" href="https://app.bean.money/#/balances" target="_blank" rel="noopener noreferrer">
+                          in the Beanstalk Silo
+                        </a>
+                        &nbsp;for yield.
                       </div>
                     }
                     offsetX={0}
@@ -111,9 +114,11 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                   <Tooltip
                     content={
                       <div className="tooltip-content">
-                        <span className="underline">Farm Balance</span> allows users of the Beanstalk protocol to hold assets without
-                        needing to withdraw to an external wallet. Using Farm Balances can help reduce gas costs and efficient movement of
-                        assets within Beanstalk.
+                        <a className="underline" href="https://app.bean.money/#/balances" target="_blank" rel="noopener noreferrer">
+                          Farm Balance
+                        </a>
+                        &nbsp;allows users of the Beanstalk protocol to hold assets without needing to withdraw to an external wallet. Using
+                        Farm Balances can help reduce gas costs and efficient movement of assets within Beanstalk.
                       </div>
                     }
                     offsetX={0}
@@ -214,5 +219,9 @@ const TooltipContainer = styled.div`
 
   .underline {
     text-decoration: underline;
+
+    &:visited {
+      color: #fff;
+    }
   }
 `;
