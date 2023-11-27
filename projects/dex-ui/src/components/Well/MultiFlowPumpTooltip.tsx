@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react";
+import React, { FC } from "react";
 import { Info } from "src/components/Icons";
 import { Tooltip, TooltipProps } from "src/components/Tooltip";
 import { mediaQuery } from "src/breakpoints";

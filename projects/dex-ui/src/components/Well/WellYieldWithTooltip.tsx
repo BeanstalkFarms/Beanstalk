@@ -59,8 +59,16 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) =>
             </TitleContainer>
             <ContentContainer>
               <div>
-                The Variable Bean APY (vAPY) uses historical data of Beans earned by <span className="underlined">Silo Depositors</span> to
-                estimate future returns
+                The Variable Bean APY (vAPY) uses historical data of Beans earned by{" "}
+                <a
+                  href="https://docs.bean.money/almanac/guides/silo/understand-vapy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underlined"
+                >
+                  Silo Depositors
+                </a>
+                &nbsp;to estimate future returns
               </div>
             </ContentContainer>
           </Container>
@@ -92,6 +100,10 @@ const Container = styled.div`
 
   .underlined {
     text-decoration: underline;
+
+    &:visited {
+      color: #000;
+    }
   }
 
   ${mediaQuery.sm.only} {
@@ -102,6 +114,8 @@ const Container = styled.div`
 const TitleContainer = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
   gap: 8px;
 
   .title {
@@ -112,6 +126,7 @@ const TitleContainer = styled.div`
   .label-value {
     display: flex;
     flex-direction: row;
+    width: 100%;
     justify-content: space-between;
     align-items: center;
     ${BodyS}
@@ -135,6 +150,7 @@ const ContentContainer = styled.div`
   display: flex;
   width: 100%;
   ${BodyS}
+  text-align: left;
 `;
 
 const StyledImg = styled.img`
