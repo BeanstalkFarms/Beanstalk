@@ -10,6 +10,9 @@ import { formatNum, formatPercent } from "src/utils/format";
 
 import { MultiFlowPumpTooltip } from "./MultiFlowPumpTooltip";
 import { Well } from "@beanstalk/sdk/Wells";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+import { TooltipProps } from "../Tooltip";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
 
 export type ReservesProps = {
   well: Well | undefined;
@@ -19,18 +22,24 @@ export type ReservesProps = {
     dollarAmount: TokenValue | null;
     percentage: TokenValue | null;
   }[];
+  twaReserves: TokenValue[] | undefined;
 };
 
-export const Reserves: FC<ReservesProps> = ({ reserves, well }) => {
+export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => {
+  const { getIsMultiPumpWell } = useBeanstalkSiloWhitelist();
+  const isMobile = useIsMobile();
+
   if (!well) return null;
 
   const rows = (reserves ?? []).map((r, i) => (
     <Item key={i} column>
       <Symbol>
         {r.token?.symbol}
-        <div className="info-icon">
-          <MultiFlowPumpTooltip well={well} />
-        </div>
+        {getIsMultiPumpWell(well) && (
+          <div className="info-icon">
+            <MultiFlowPumpTooltip well={well} twaReserves={twaReserves} tooltipProps={getTooltipProps(isMobile, i)} />
+          </div>
+        )}
       </Symbol>
       <Wrapper>
         <TokenLogo token={r.token} size={16} mobileSize={16} />
@@ -89,3 +98,17 @@ const Percent = styled.div`
     ${BodyS}
   }
 `;
+
+const baseTooltipProps = { offsetX: 0, offsetY: 0, arrowSize: 0, arrowOffset: 0, side: "top" } as TooltipProps;
+
+const getTooltipProps = (isMobile: boolean, index: number) => {
+  const copy = { ...baseTooltipProps };
+  if (!isMobile) return copy;
+
+  copy.width = 300;
+
+  if (index === 0) copy.offsetX = -15;
+  else copy.offsetX = -70;
+
+  return copy;
+};

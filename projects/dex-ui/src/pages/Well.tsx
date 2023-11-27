@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
@@ -36,9 +36,9 @@ export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
 
-  useMultiFlowPumpTWAReserves();
+  const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
 
-  const loading = useLagLoading(dataLoading || apysLoading);
+  const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
 
   const sdk = useSdk();
   const navigate = useNavigate();
@@ -94,6 +94,8 @@ export const Well = () => {
   reserves.forEach((reserve) => {
     reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
   });
+
+  const twaReserves = useMemo(() => getTWAReservesWithWell(well), [well, getTWAReservesWithWell]);
 
   const goLiquidity = () => navigate(`./liquidity`);
 
@@ -175,7 +177,7 @@ export const Well = () => {
          */}
         <ReservesContainer>
           <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
-            <Reserves reserves={reserves} well={well} />
+            <Reserves reserves={reserves} well={well} twaReserves={twaReserves} />
           </LoadingItem>
         </ReservesContainer>
 
