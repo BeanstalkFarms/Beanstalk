@@ -275,6 +275,11 @@ export class BlockchainUtils {
 
     const tx = op.execute(quote, 0.2);
     await (await tx).wait();
+    deltaB = await this.sdk.bean.getDeltaB();
+
+    if (!deltaB.gte(TokenValue.ZERO)) {
+      throw new Error(`DeltaB is still under 0 after buying beans. deltaB: ${deltaB.toHuman()}`);
+    }
   }
 
   /**
@@ -294,8 +299,14 @@ export class BlockchainUtils {
     const txa = await this.sdk.tokens.BEAN.approveBeanstalk(amount);
     await txa.wait();
 
-    const tx = op.execute(amount, 0.2);
-    await (await tx).wait();
+    const tx = await op.execute(amount, 0.2);
+    await tx.wait();
+
+    deltaB = await this.sdk.bean.getDeltaB();
+
+    if (!deltaB.lt(TokenValue.ZERO)) {
+      throw new Error(`DeltaB is still over 0 after buying beans. deltaB: ${deltaB.toHuman()}`);
+    }
   }
 
   /**

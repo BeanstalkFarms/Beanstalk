@@ -144,7 +144,7 @@ async function testDeposit(op: DepositOperation, source: Token, dest: Token) {
   }
   const balanceBefore = await sdk.silo.getBalance(dest, account, { source: DataSource.LEDGER });
   op.setInputToken(source);
-  await op.execute(amount, 0.5).then((r) => r.wait());
+  await op.execute(amount, 0.5, { gasLimit: 5_000_000 }).then((r) => r.wait());
   const balanceAfter = await sdk.silo.getBalance(dest, account, { source: DataSource.LEDGER });
 
   expect(balanceAfter.amount.gt(balanceBefore.amount)).toBe(true);
