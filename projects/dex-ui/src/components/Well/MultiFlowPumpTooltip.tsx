@@ -7,17 +7,23 @@ import { Item, Row } from "src/components/Layout";
 import { BodyS } from "src/components/Typography";
 import { Well } from "@beanstalk/sdk/Wells";
 import { TokenLogo } from "src/components/TokenLogo";
+import { TokenValue } from "@beanstalk/sdk";
+import { formatNum } from "src/utils/format";
 
 export const MultiFlowPumpTooltip: FC<{
   well: Well;
+  twaReserves: TokenValue[] | undefined;
   children?: React.ReactNode; // if no children, then the tooltip icon is rendered
   tooltipProps?: TooltipProps;
-}> = ({ well, children, tooltipProps }) => {
+}> = ({ well, children, tooltipProps, twaReserves }) => {
   const token1 = well.tokens?.[0];
   const reserve1 = well.reserves?.[0];
 
   const token2 = well.tokens?.[1];
   const reserve2 = well.reserves?.[1];
+
+  const twaReserves1 = twaReserves?.[0];
+  const twaReserves2 = twaReserves?.[1];
 
   if (!token1 || !token2 || !reserve1 || !reserve2) return null;
 
@@ -45,7 +51,7 @@ export const MultiFlowPumpTooltip: FC<{
                     <TokenLogo token={token1} size={16} />
                     {token1.symbol}
                   </div>
-                  {reserve1.toHuman("short")}
+                  {formatNum(reserve1, { minDecimals: 2 })}
                 </StyledRow>
               </StyledItem>
               <StyledItem stretch>
@@ -54,31 +60,33 @@ export const MultiFlowPumpTooltip: FC<{
                     <TokenLogo token={token2} size={16} />
                     {token2.symbol}
                   </div>
-                  {reserve2.toHuman("short")}
+                  {formatNum(reserve2, { minDecimals: 2 })}
                 </StyledRow>
               </StyledItem>
             </ReserveData>
-            <ReserveData column stretch>
-              <div className="reserve-type">Time-weighted average reserves</div>
-              <StyledItem stretch>
-                <StyledRow>
-                  <div className="reserve-token-container">
-                    <TokenLogo token={token1} size={16} />
-                    {token1.symbol}
-                  </div>
-                  {reserve1.toHuman("short")}
-                </StyledRow>
-              </StyledItem>
-              <StyledItem stretch>
-                <StyledRow>
-                  <div className="reserve-token-container">
-                    <TokenLogo token={token2} size={16} />
-                    {token2.symbol}
-                  </div>
-                  {reserve2.toHuman("short")}
-                </StyledRow>
-              </StyledItem>
-            </ReserveData>
+            {twaReserves1 && twaReserves2 && (
+              <ReserveData column stretch>
+                <div className="reserve-type">Time-weighted average reserves</div>
+                <StyledItem stretch>
+                  <StyledRow>
+                    <div className="reserve-token-container">
+                      <TokenLogo token={token1} size={16} />
+                      {token1.symbol}
+                    </div>
+                    {formatNum(twaReserves1, { minDecimals: 2 })}
+                  </StyledRow>
+                </StyledItem>
+                <StyledItem stretch>
+                  <StyledRow>
+                    <div className="reserve-token-container">
+                      <TokenLogo token={token2} size={16} />
+                      {token2.symbol}
+                    </div>
+                    {formatNum(twaReserves2, { minDecimals: 2 })}
+                  </StyledRow>
+                </StyledItem>
+              </ReserveData>
+            )}
           </ReservesInfo>
         </Container>
       }
