@@ -9,7 +9,7 @@ import { TokenValue } from "@beanstalk/sdk";
 import StartSparkle from "src/assets/images/start-sparkle.svg";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { Well } from "@beanstalk/sdk/Wells";
-import useBeanstalkSiloAPYs from "src/wells/useBeanstalkSiloAPYs";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { mediaQuery } from "src/breakpoints";
 
 type Props = {
