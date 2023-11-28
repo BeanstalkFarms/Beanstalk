@@ -21,6 +21,7 @@ const ProposalContent: FC<{
   quorum: ReturnType<typeof useProposalBlockData>;
 }> = (props) => {
   const pctOfQuorum = props.quorum?.data.pctOfQuorum;
+  const proposalBody = props.proposal.body?.replaceAll("![image](ipfs://", "![image](https://snapshot.4everland.link/ipfs/");
   return (
     <Card sx={{ p: 2 }}>
       <Row justifyContent="space-between">
@@ -65,7 +66,7 @@ const ProposalContent: FC<{
         )}
       </Row>
       <Box maxWidth="100%" mt={1}>
-        <MarkdownWrapper>{props.proposal?.body}</MarkdownWrapper>
+        <MarkdownWrapper>{proposalBody}</MarkdownWrapper>
       </Box>
     </Card>
   );
