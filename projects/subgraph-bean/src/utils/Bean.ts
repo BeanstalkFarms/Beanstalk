@@ -1,6 +1,14 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
-import { BEAN_3CRV, BEAN_ERC20_V1, BEAN_ERC20, BEAN_WETH_V1, BEAN_WETH_CP2_WELL } from "../../../subgraph-core/utils/Constants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20_V1,
+  BEAN_ERC20,
+  BEAN_WETH_V1,
+  BEAN_WETH_CP2_WELL,
+  BEAN_3CRV_V1,
+  BEAN_LUSD_V1
+} from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getV1Crosses } from "./Cross";
@@ -150,10 +158,19 @@ export function getBeanTokenAddress(blockNumber: BigInt): string {
 
 export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
   if (blockNumber < BigInt.fromString("15278082")) {
-    let pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), blockNumber);
     let bean = loadBean(BEAN_ERC20_V1.toHexString());
 
-    bean.supplyInPegLP = toDecimal(pool.reserves[1]).div(toDecimal(bean.supply));
+    let pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), blockNumber);
+
+    let lpSupply = toDecimal(pool.reserves[1]);
+
+    pool = loadOrCreatePool(BEAN_3CRV_V1.toHexString(), blockNumber);
+    lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
+
+    pool = loadOrCreatePool(BEAN_LUSD_V1.toHexString(), blockNumber);
+    lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
+
+    bean.supplyInPegLP = lpSupply.div(toDecimal(bean.supply));
     bean.save();
   } else {
     let pegSupply = ZERO_BI;
