@@ -17,7 +17,7 @@ const formatValue = (value: number) =>
 const statProps = {
   title: 'Liquidity to Supply Ratio',
   titleTooltip:
-    `The ratio of Beans in liquidity pools on the Oracle Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health.`,
+    `The ratio of Beans in liquidity pools on the Oracle Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health. Pre-exploit values include liquidity in pools on the Deposit Whitelist.`,
   gap: 0.25,
 };
 const queryConfig = {
