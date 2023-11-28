@@ -62,29 +62,10 @@ contract FarmFacet {
         }
     }
 
-    function tractorAdvancedFarm(
-        Requisition calldata requisition,
-        bytes[] memory operatorCallData
-    ) external payable withEth returns (bytes[] memory results) verifyRequisition(requisition) {
-        // Paste operatorCallData into blueprint callData.
-        requisition.blueprint.data = useOperatorClipboard(
-            requisition.blueprint.data,
-            requisition.blueprint.clipboard,
-            operatorCallData
-        );
-
-        AdvancedFarmCall memory advancedFarmCall;
-        results = new bytes[](requisition.blueprint.data.length);
-        for (uint256 i = 0; i < requisition.blueprint.data.length; ++i) {
-            advancedFarmCall = abi.decode(requisition.blueprint.data[i], (AdvancedFarmCall));
-            results[i] = _advancedFarm(advancedFarmCall, results);
-        }
-    }
-
-    function _advancedFarm(AdvancedFarmCall calldata data, bytes[] memory returnData)
-        internal
-        returns (bytes memory result)
-    {
+    function _advancedFarm(
+        AdvancedFarmCall calldata data,
+        bytes[] memory returnData
+    ) internal returns (bytes memory result) {
         bytes1 pipeType = data.clipboard[0];
         // 0x00 -> Static Call - Execute static call
         // else > Advanced Call - Use clipboard on and execute call

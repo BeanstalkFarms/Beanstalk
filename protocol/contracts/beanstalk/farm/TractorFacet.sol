@@ -6,9 +6,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../ReentrancyGuard.sol";
 import "../../libraries/LibBytes.sol";
-import "../../libraries/LibFarm.sol";
 import "../../libraries/LibTractor.sol";
-import "../../libraries/LibPermit.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
@@ -100,7 +98,7 @@ contract TractorFacet is ReentrancyGuard {
     /// @param fillData data updates provided by tractor operator
     function tractor(
         LibTractor.Requisition calldata requisition,
-        bytes calldata fillData
+        bytes memory operatorCallData
     )
         external
         payable
@@ -109,38 +107,31 @@ contract TractorFacet is ReentrancyGuard {
         returns (bytes[] memory results)
     {
         // extract blueprint type and publisher data from blueprint.data.
-        bytes1 blueprintType = blueprint.data[0];
+        // bytes1 blueprintType = blueprint.data[0]; // TODO we are not using type
         bytes memory blueprintData = LibBytes.sliceFrom(blueprint.data, 1);
 
         // Update data with operator-defined fillData.
         {
-            uint64 copyIndex;
-            for (uint256 i; i != blueprint.unsetData.length; ++i) {
-                bytes32 pasteReference = blueprint.unsetData[i];
-                LibFunction.pasteBytes(
-                    fillData,
+            // TODO how does iterating over a bytes object work? Here we assume each 32 byte slot is one object.
+            for (uint256 i; i != blueprint.operatorPasteParams.length; ++i) {
+                bytes32 operatorPasteParams = blueprint.operatorPasteParams[i];
+                LibFunction.executeOperatorPasteParams(
+                    operatorCallData,
                     blueprintData,
-                    copyIndex,
-                    pasteReference.index,
-                    pasteReference.length
+                    operatorPasteParams
                 );
-                copyIndex += pasteReference.length;
             }
         }
 
         // Decode and execute advanced farm calls.
-        if (uint8(blueprintType) == uint8(BlueprintType.ADVANCED_FARM)) {
-            LibFarm.AdvancedFarmCall[] memory data = abi.decode(
-                blueprintData,
-                (LibFarm.AdvancedFarmCall[])
-            );
+        LibFarm.AdvancedFarmCall[] memory data = abi.decode(
+            blueprintData,
+            (LibFarm.AdvancedFarmCall[])
+        );
 
-            results = new bytes[](data.length);
-            for (uint256 i = 0; i < data.length; ++i) {
-                results[i] = LibFarm.advancedFarm(data[i], results);
-            }
-        } else {
-            revert("TractorFacet: unknown blueprint type");
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; ++i) {
+            results[i] = beanstalk._advancedFarm(data[i], results);
         }
 
         emit Tractor(msg.sender, requisition.blueprintHash);
