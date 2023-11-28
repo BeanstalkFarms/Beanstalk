@@ -66,6 +66,7 @@
     "@graphql-codegen/typescript-graphql-request": "^4.5.6",
     "@graphql-codegen/typescript-operations": "^2.5.4",
     "@graphql-codegen/typescript-resolvers": "2.7.4",
+    "@jest/test-sequencer": "29.7.0",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
     "@rollup/plugin-commonjs": "23.0.2",
     "@rollup/plugin-json": "5.0.1",

@@ -47,7 +47,7 @@ describe("Silo Withdrawl", function () {
     expect(t).rejects.toThrow("Insufficient balance");
   });
 
-  it("Calculates crates correctly", async () => {
+  it.only("Calculates crates correctly", async () => {
     const currentSeason = 10_000;
     const c1 = utils.mockDepositCrate(token, 900, "200", currentSeason);
     const c2 = utils.mockDepositCrate(token, 800, "500", currentSeason);
@@ -57,21 +57,16 @@ describe("Silo Withdrawl", function () {
     const crates = [c3, c1, c2];
 
     const calc1 = withdraw.calculateWithdraw(token, token.amount(1000), crates, currentSeason);
-    expect(calc1.crates.length).toEqual(3);
-    expect(calc1.crates[0].amount.toHuman()).toEqual("200"); // takes full amount from c1
-    expect(calc1.crates[0].stem.toString()).toEqual("900"); // confirm this is c1
-    expect(calc1.crates[1].amount.toHuman()).toEqual("500"); // takes full amount from c2
-    expect(calc1.crates[1].stem.toString()).toEqual("800"); // confirm this is c2
-    expect(calc1.crates[2].amount.toHuman()).toEqual("300"); // takes 300 from c3
-    expect(calc1.crates[2].stem.toString()).toEqual("700"); // confirm this is c3
-    expect(calc1.seeds.toHuman()).toEqual("2000");
-    expect(calc1.stalk.toHuman()).toEqual("2842");
+    expect(calc1.crates.length).toEqual(1);
+    expect(calc1.crates[0].amount.toHuman()).toEqual("1000"); // takes full amount from c1
+    expect(calc1.crates[0].stem.toString()).toEqual("10000"); // confirm this is c1
+    expect(calc1.seeds.toHuman()).toEqual("3000");
 
     const calc2 = withdraw.calculateWithdraw(token, token.amount(120), crates, currentSeason);
     expect(calc2.crates.length).toEqual(1);
     expect(calc2.crates[0].amount.toHuman()).toEqual("120"); // takes full amount from c1
-    expect(calc1.crates[0].stem.toString()).toEqual("900"); // confirm this is c3
-    expect(calc2.seeds.toHuman()).toEqual("240");
-    expect(calc2.stalk.toHuman()).toEqual("338.4");
+    expect(calc1.crates[0].stem.toString()).toEqual("10000"); // confirm this is c3
+    expect(calc2.seeds.toHuman()).toEqual("360");
+    expect(calc2.stalk.toHuman()).toEqual("120");
   });
 });

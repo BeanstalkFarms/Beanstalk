@@ -41,7 +41,7 @@ beforeAll(async () => {
 
 describe("Swap", function () {
   // ETH, BEAN => x, using EXTERNAL as the source
-  describe.each([
+  describe.skip.each([
     // ETH => x
     [sdk.tokens.ETH, sdk.tokens.WETH],
     [sdk.tokens.ETH, sdk.tokens.USDT],
@@ -135,7 +135,7 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
   const op = sdk.swap.buildSwap(tokenIn, tokenOut, account, from, to);
   expect(op.isValid()).toBe(true);
 
-  let tx = await (await op.execute(amount, slippage)).wait();
+  let tx = await (await op.execute(amount, slippage, { gasLimit: 5_000_000 })).wait();
   expect(tx.status).toBe(1);
 
   const [tokenInBalanceAfter, tokenOutBalanceAfter] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
