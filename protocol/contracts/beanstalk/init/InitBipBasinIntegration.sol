@@ -51,6 +51,7 @@ contract InitBipBasinIntegration {
             0x01,
             0,
             0,
+            0,
             0
         );
 

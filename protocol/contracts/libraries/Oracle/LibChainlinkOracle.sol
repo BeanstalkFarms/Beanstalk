@@ -21,7 +21,8 @@ library LibChainlinkOracle {
     // Uses the same timeout as Liquity's Chainlink timeout.
     uint256 public constant CHAINLINK_TIMEOUT = 14400; // 4 hours: 60 * 60 * 4
 
-    IChainlinkAggregator constant priceAggregator = IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    IChainlinkAggregator constant priceAggregator =
+        IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 
     /**
@@ -101,7 +102,9 @@ library LibChainlinkOracle {
                 // Loop through previous rounds and compute cumulative sum until
                 // a round at least `lookback` seconds ago is reached.
                 while (timestamp > endTimestamp) {
-                    cumulativePrice = cumulativePrice.add(uint256(answer).mul(lastTimestamp.sub(timestamp)));
+                    cumulativePrice = cumulativePrice.add(
+                        uint256(answer).mul(lastTimestamp.sub(timestamp))
+                    );
                     roundId -= 1;
                     try priceAggregator.getRoundData(roundId) returns (
                         uint80 /* roundId */,
@@ -121,7 +124,9 @@ library LibChainlinkOracle {
                         return 0;
                     }
                 }
-                cumulativePrice = cumulativePrice.add(uint256(answer).mul(lastTimestamp.sub(endTimestamp)));
+                cumulativePrice = cumulativePrice.add(
+                    uint256(answer).mul(lastTimestamp.sub(endTimestamp))
+                );
                 return cumulativePrice.mul(PRECISION).div(10 ** decimals).div(lookback);
             }
         } catch {
@@ -130,7 +135,11 @@ library LibChainlinkOracle {
         }
     }
 
-    function checkForInvalidTimestampOrAnswer(uint256 timestamp, int256 answer, uint256 currentTimestamp) private view returns (bool) {
+    function checkForInvalidTimestampOrAnswer(
+        uint256 timestamp,
+        int256 answer,
+        uint256 currentTimestamp
+    ) private pure returns (bool) {
         // Check for an invalid timeStamp that is 0, or in the future
         if (timestamp == 0 || timestamp > currentTimestamp) return true;
         // Check if Chainlink's price feed has timed out

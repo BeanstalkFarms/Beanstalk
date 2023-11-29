@@ -27,7 +27,7 @@ contract MetadataImage {
     uint256 constant NUM_PLOTS = 21;
     uint256 constant STALK_GROWTH = 2e2;
 
-    function imageURI(address token, int96 stem, int96 stemTip) public view returns (string memory) {
+    function imageURI(address token, int96 stem, int96 stemTip) public pure returns (string memory) {
         return string(
             abi.encodePacked(
                 "data:image/svg+xml;base64,", 

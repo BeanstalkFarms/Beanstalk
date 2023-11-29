@@ -163,7 +163,8 @@ library LibGauge {
     /**
      * @notice calculates the new gauge points for the given token.
      * @dev function calls the selector of the token's gauge point function.
-     * See {GaugePointFacet.defaultGaugePointFunction()}
+     * Currently all assets uses the default GaugePoint Function.
+     * {GaugePointFacet.defaultGaugePointFunction()}
      */
     function calcGaugePoints(
         bytes4 gpSelector,
