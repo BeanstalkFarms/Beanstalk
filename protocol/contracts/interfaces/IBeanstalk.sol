@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-upgradeable-8/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AdvancedFarmCall} from "../libraries/LibFarm.sol";
 
 enum ConvertKind {
     BEANS_TO_CURVE_LP,
@@ -63,7 +64,7 @@ interface IBeanstalk {
     function update(address account) external payable;
 
     function transferInternalTokenFrom(
-        IERC20Upgradeable token,
+        IERC20 token,
         address from,
         address to,
         uint256 amount,
@@ -71,7 +72,7 @@ interface IBeanstalk {
     ) external payable;
 
     function transferToken(
-        IERC20Upgradeable token,
+        IERC20 token,
         address recipient,
         uint256 amount,
         From fromMode,
@@ -93,11 +94,30 @@ interface IBeanstalk {
         bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
-    ) external payable returns (uint32 toSeason, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv);
+    )
+        external
+        payable
+        returns (
+            uint32 toSeason,
+            uint256 fromAmount,
+            uint256 toAmount,
+            uint256 fromBdv,
+            uint256 toBdv
+        );
 
     function getDeposit(
         address account,
         address token,
         uint32 season
     ) external view returns (uint256, uint256);
+
+    function enrootDeposits(
+        address token,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) external payable;
+
+    function advancedFarm(
+        AdvancedFarmCall[] calldata data
+    ) external payable returns (bytes[] memory results);
 }

@@ -4,11 +4,11 @@
 
 pragma solidity =0.7.6;
 
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title Lib Tractor
- * @author 0xm00neth
+ * @author 0xm00neth, funderbrker
  **/
 library LibTractor {
     bytes32 constant TRACTOR_STORAGE_POSITION = keccak256("diamond.storage.tractor");
@@ -25,11 +25,14 @@ library LibTractor {
         );
 
     struct TractorStorage {
+        // Number of times the blueprint has been run.
         mapping(bytes32 => uint256) blueprintNonce;
+        // Blueprint hash => counter index => counter value.
+        mapping(bytes32 => mapping(uint256 => uint256)) blueprintCounters;
+        // Publisher of current operations. Set to address(1) when no active publisher.
         address activePublisher;
     }
 
-    // NOTE(funderberker): Performance cost of using a <32 bytes struct vs packed bytes32 ?
     struct operatorPasteParams {
         uint80 copyByteIndex;
         uint80 pasteCallIndex;
@@ -65,7 +68,7 @@ library LibTractor {
     /// @notice increment the blueprint nonce by 1
     /// @param blueprintHash blueprint hash
     function _incrementBlueprintNonce(bytes32 blueprintHash) internal {
-        TractorStorage storage ts = tractorStorage();
+        TractorStorage storage ts = _tractorStorage();
         ++ts.blueprintNonce[blueprintHash];
     }
 
@@ -73,49 +76,50 @@ library LibTractor {
     /// @dev set blueprintNonce to type(uint256).max
     /// @param blueprintHash blueprint hash
     function _cancelBlueprint(bytes32 blueprintHash) internal {
-        tractorStorage().blueprintNonce[blueprintHash] = type(uint256).max;
+        _tractorStorage().blueprintNonce[blueprintHash] = type(uint256).max;
     }
 
     /// @notice set blueprint publisher address
     /// @param publisher blueprint publisher address
     function _setPublisher(address publisher) internal {
         require(
-            tractorStorage().activePublisher == address(1),
+            _tractorStorage().activePublisher == address(1),
             "LibTractor: publisher already set"
         );
-        tractorStorage().activePublisher = publisher;
+        _tractorStorage().activePublisher = publisher;
     }
 
     /// @notice reset blueprint publisher address
     function _resetPublisher() internal {
-        tractorStorage().activePublisher = address(1);
+        _tractorStorage().activePublisher = address(1);
     }
 
     /// @notice return current activePublisher address
     /// @return publisher current activePublisher address
-    function _getBlueprintPublisher() internal view returns (address) {
-        return tractorStorage().activePublisher;
+    function _getActivePublisher() internal view returns (address) {
+        return _tractorStorage().activePublisher;
     }
 
-    /// @notice return current activePublisher address
-    /// @dev reverts if activePublisher is 0x0
-    /// @return publisher current activePublisher address
-    function _getActivePublisher() internal view returns (address publisher) {
-        publisher = getBlueprintPublisher();
-        require(publisher != address(1), "Tractor: No active publisher");
+    /// @notice return current activePublisher address or msg.sender if no active blueprint
+    /// @return user to take actions on behalf of
+    function _getUser() internal view returns (address user) {
+        user = _getActivePublisher();
+        if (user == address(1)) {
+            user = msg.sender;
+        }
     }
 
     /// @notice get blueprint nonce
     /// @param blueprintHash blueprint hash
     /// @return nonce current blueprint nonce
     function _getBlueprintNonce(bytes32 blueprintHash) internal view returns (uint256) {
-        return tractorStorage().blueprintNonce[blueprintHash];
+        return _tractorStorage().blueprintNonce[blueprintHash];
     }
 
     /// @notice calculates blueprint hash
     /// @param blueprint blueprint object
     /// @return hash calculated Blueprint hash
-    function _getBlueprintHash(Blueprint calldata blueprint) internal pure returns (bytes32) {
+    function _getBlueprintHash(Blueprint calldata blueprint) internal view returns (bytes32) {
         return
             _hashTypedDataV4(
                 keccak256(
@@ -123,7 +127,7 @@ library LibTractor {
                         BLUEPRINT_TYPE_HASH,
                         blueprint.publisher,
                         keccak256(blueprint.data),
-                        keccak256(abi.encodePacked(blueprint.operatorData)),
+                        keccak256(abi.encodePacked(blueprint.operatorPasteParams)),
                         blueprint.maxNonce,
                         blueprint.startTime,
                         blueprint.endTime
@@ -133,10 +137,16 @@ library LibTractor {
     }
 
     /**
-     * @dev See {ECDSA.toTypedDataHash}.
+     * @dev Returns an Ethereum Signed Typed Data, created from a
+     * `domainSeparator` and a `structHash`. This produces hash corresponding
+     * to the one signed with the
+     * https://eips.ethereum.org/EIPS/eip-712[`eth_signTypedData`]
+     * JSON-RPC method as part of EIP-712.
+     *
+     * Sourced from OpenZeppelin 0.8 ECDSA lib.
      */
     function _hashTypedDataV4(bytes32 structHash) internal view returns (bytes32) {
-        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), structHash));
     }
 
     /**

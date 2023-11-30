@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibDiamond} from "./LibDiamond.sol";
+import {AdvancedFarmCall} from "./LibFarm.sol";
 
 /**
  * @title Lib Function
@@ -17,7 +18,7 @@ library LibFunction {
      * @notice Checks The return value of a any function call for success, if not returns the error returned in `results`
      * @param success Whether the corresponding function call succeeded
      * @param result The return data of the corresponding function call
-    **/
+     **/
     function checkReturn(bool success, bytes memory result) internal pure {
         if (!success) {
             // Next 5 lines from https://ethereum.stackexchange.com/a/83577
@@ -35,12 +36,8 @@ library LibFunction {
      * @param selector The function selector to fetch the facet address for
      * @dev Fails if no set facet address
      * @return facet The facet address
-    **/
-    function facetForSelector(bytes4 selector)
-        internal
-        view
-        returns (address facet)
-    {
+     **/
+    function facetForSelector(bytes4 selector) internal view returns (address facet) {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         facet = ds.selectorToFacetAndPosition[selector].facetAddress;
         require(facet != address(0), "Diamond: Function does not exist");
@@ -73,49 +70,66 @@ library LibFunction {
      @return data The function call return datas
     **/
     function useClipboard(
-        bytes calldata callData,
-        bytes calldata clipboard,
+        bytes memory callData,
+        bytes memory clipboard,
         bytes[] memory returnData
     ) internal pure returns (bytes memory data) {
         bytes1 typeId = clipboard[0];
         if (typeId == 0x01) {
             bytes32 pasteParams = abi.decode(clipboard, (bytes32));
-            data = LibFunction.pasteAdvancedBytes(callData, returnData, pasteParams);
+            data = LibFunction.pasteClipboardBytes(returnData, callData, pasteParams);
         } else if (typeId == 0x02) {
-            (, bytes32[] memory pasteParams) = abi.decode(
-                clipboard,
-                (uint256, bytes32[])
-            );
+            (, bytes32[] memory pasteParams) = abi.decode(clipboard, (uint256, bytes32[]));
             data = callData;
             for (uint256 i; i < pasteParams.length; i++)
-                data = LibFunction.pasteAdvancedBytes(data, returnData, pasteParams[i]);
+                data = LibFunction.pasteClipboardBytes(returnData, data, pasteParams[i]);
         } else {
             revert("Function: Advanced Type not supported");
         }
     }
 
     /**
-     * @notice Copies 32 bytes from returnData into callData determined by pasteParams
-     * @param callData The callData bytes of the next function call
-     * @param returnData A list of bytes corresponding to return data from previous function calls in the transaction
+     * @notice Copies 32 bytes from returnData into callData, determined by pasteParams
+     * Should be in the following format
+     * [2 bytes | 10 bytes               | 10 bytes        | 10 bytes        ]
+     * [ N/A    | returnDataItemIndex    | copyByteIndex   | pasteByteIndex  ]
+     **/
+    function pasteClipboardBytes(
+        bytes[] memory returnData, // paste source
+        bytes memory data, // paste destination
+        bytes32 pasteParams // ReturnPasteParams
+    ) internal pure returns (bytes memory pastedData) {
+        // Shift `pasteParams` right 22 bytes to isolate pasteCallIndex.
+        // bytes memory pasteCallIndex = pasteParams[]();
+        data = paste32Bytes(
+            returnData[uint80(bytes10(pasteParams << 16))], // isolate returnDataItemIndex
+            data,
+            uint256(bytes32(bytes10(pasteParams << 96))), // Isolate copyByteIndex
+            uint256(bytes32(bytes10(pasteParams << 176))) // Isolate pasteByteIndex
+        );
+    }
+
+    /**
+     * @notice Copies 32 bytes from operatorCallData into blueprint data, determined by pasteParams
+     * @param operatorData The callData provided by thee operator. Copy from location.
+     * @param data The data from blueprint. Paste to location.
      * @param pasteParams Denotes which data should be copied and where it should be pasted
      * Should be in the following format
-     * [2 bytes | 10 bytes         | 10 bytes  | 10 bytes   ]
-     * [ N/A    | returnDataIndex  | copyIndex | pasteIndex ]
-     * @return pastedData the calldata for the next function call with bytes pasted from returnData
+     * [2 bytes | 10 bytes         | 10 bytes        | 10 bytes        ]
+     * [ N/A    | copyByteIndex    | pasteCallIndex  | pasteByteIndex  ]
      **/
-    function pasteAdvancedBytes(
-        bytes memory callData,
-        bytes[] memory returnData,
+    //  TODO return pastedData the calldata for the next function call with bytes pasted from returnData ?
+    function pasteOperatorBytes(
+        bytes memory operatorData,
+        bytes[] memory data,
         bytes32 pasteParams
-    ) internal pure returns (bytes memory pastedData) {
-        // Shift `pasteParams` right 22 bytes to insolated reduceDataIndex
-        bytes memory copyData = returnData[uint256((pasteParams << 16) >> 176)];
-        pastedData = paste32Bytes(
-            copyData,
-            callData,
-            uint256((pasteParams << 96) >> 176), // Isolate copyIndex
-            uint256((pasteParams << 176) >> 176) // Isolate pasteIndex
+    ) internal pure {
+        uint80 pasteCallIndex = uint80(bytes10(pasteParams << 96));
+        data[pasteCallIndex] = paste32Bytes(
+            operatorData,
+            data[pasteCallIndex],
+            uint256(bytes32(bytes10(pasteParams << 16))), // Isolate copyByteIndex
+            uint256(bytes32(bytes10(pasteParams << 176))) // Isolate pasteByteIndex
         );
     }
 
@@ -126,7 +140,7 @@ library LibFunction {
      * @param copyIndex The index in copyData to copying from
      * @param pasteIndex The index in pasteData to paste into
      * @return pastedData The data with the copied with 32 bytes
-    **/
+     **/
     function paste32Bytes(
         bytes memory copyData,
         bytes memory pasteData,
@@ -136,6 +150,39 @@ library LibFunction {
         assembly {
             mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
         }
+        pastedData = pasteData;
+    }
+
+    /**
+     * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
+     * @param copyData The data bytes to copy from
+     * @param pasteData The data bytes to paste into
+     * @param copyIndex The index in copyData to copying from
+     * @param pasteIndex The index in pasteData to paste into
+     * @param length The length of bytes to copy
+     * @return pastedData The data with the copied with 32 bytes
+     **/
+    function pasteBytes(
+        bytes memory copyData,
+        bytes memory pasteData,
+        uint256 copyIndex,
+        uint256 pasteIndex,
+        uint256 length
+    ) internal pure returns (bytes memory pastedData) {
+        uint256 num = length / 32;
+        for (uint256 i; i != num; ++i) {
+            assembly {
+                mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
+            }
+            pasteIndex += 32;
+            copyIndex += 32;
+        }
+
+        uint256 diff = length % 32;
+        for (uint256 i; i != diff; ++i) {
+            pasteData[pasteIndex + i - 32] = copyData[copyIndex + i - 32];
+        }
+
         pastedData = pasteData;
     }
 }

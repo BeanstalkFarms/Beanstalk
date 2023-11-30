@@ -13,6 +13,6 @@ import {LibTractor} from "../../libraries/LibTractor.sol";
  **/
 contract InitTractor {
     function init() external {
-        LibTractor.resetPublisher();
+        LibTractor._resetPublisher();
     }
 }
