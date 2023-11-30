@@ -808,8 +808,13 @@ describe('Silo V3: migrate stragglers', function () {
 
       const removeDepositInterface = new ethers.utils.Interface(oldRemoveDepositAbi);
 
-      //get every transaction that emitted the RemoveDeposit event after block 17251905
-      let events = await queryEvents("RemoveDeposit(address,address,uint32,uint256)", removeDepositInterface, 17251905); //update this block to latest block when running actual script, in theory someone could have migrated meanwhile
+      //get every transaction that emitted the RemoveDeposit event after block 17671557
+      //this is the block that silo v3 was deployed on:
+      //https://etherscan.io/tx/0x17ca3482479f4a0f13f0337a9288b8569e531e71e1e932813d04e6ed1224e95c
+      //the idea is that we are starting with a list of all deposits at the point of silo v3 deployment (deposits.json)
+      //then we want to see which accounts migrated, which we can do by looking at all the legacy RemoveDeposit events
+      //and removing those accounts from the list of deposits that were present at the time of silo v3 deployment
+      let events = await queryEvents("RemoveDeposit(address,address,uint32,uint256)", removeDepositInterface, 17671557);
 
       //log number of deposits
       console.log('deposits before: ', Object.keys(deposits).length);
