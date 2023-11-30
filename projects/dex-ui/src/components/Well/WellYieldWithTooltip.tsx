@@ -68,7 +68,7 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) =>
                 >
                   Silo Depositors
                 </a>
-                &nbsp;to estimate future returns
+                &nbsp;to estimate future returns.
               </div>
             </ContentContainer>
           </Container>
