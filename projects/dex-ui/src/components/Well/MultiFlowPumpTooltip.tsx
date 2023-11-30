@@ -39,7 +39,7 @@ export const MultiFlowPumpTooltip: FC<{
                 Multi Flow Pump
               </a>
               , an inter-block MEV manipulation resistant oracle, stores reserve data from this Well. In particular, Multi Flow stores
-              reserve data in two formats
+              reserve data in two formats:
             </div>
           </TitleAndContentContainer>
           <ReservesInfo column stretch>
