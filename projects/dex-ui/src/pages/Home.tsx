@@ -16,7 +16,7 @@ const copy = {
 const links = {
   multiFlowPump: "/multi-flow-pump.pdf",
   whitepaper: "/basin.pdf",
-  docs: "https://docs.basin.exchange/",
+  docs: "https://docs.basin.exchange/implementations/overview",
   wells: "/#/wells",
   swap: "/#/swap"
 };

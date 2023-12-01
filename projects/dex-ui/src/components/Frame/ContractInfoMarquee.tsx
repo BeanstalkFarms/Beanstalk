@@ -8,7 +8,7 @@ const CarouselData: ContractMarqueeInfo = {
   ADDRESS: [
     {
       display: "0x1584B668643617D18321a0BEc6EF3786F4b8Eb7B",
-      url: "https://etherscan.io/address/0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
+      url: "https://etherscan.io/address/0x1584B668643617D18321a0BEc6EF3786F4b8Eb7B"
     }
   ],
   AUDIT: [

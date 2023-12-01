@@ -37,7 +37,7 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) =>
   const tooltipWidth = isMobile ? 250 : 360;
 
   if (!apy) {
-    return null;
+    return <>{"-"}</>;
   }
 
   return (
