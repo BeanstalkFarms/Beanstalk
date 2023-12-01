@@ -272,7 +272,7 @@ export class LibraryPresets {
       }
       const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, approveClipboard);
 
-      // When transferBack is true, we tell Wells to send the swap result to PIEPLINE, otherwise
+      // When transferBack is true, we tell Wells to send the swap result to PIPELINE, otherwise
       // send it directly to the user
       const recipient = transferBack ? sdk.contracts.pipeline.address : account;
 
