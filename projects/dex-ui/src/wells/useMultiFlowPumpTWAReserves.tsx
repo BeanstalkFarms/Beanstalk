@@ -61,7 +61,8 @@ export const useMultiFlowPumpTWAReserves = () => {
         });
 
         /// In case there is more than one pump, divide the reserves by the number of pumps
-        mapping[well.address] = [twa[0].div(numPumps), twa[1].div(numPumps)];
+        /// Is this how to handle the case where there is more than one pump?
+        mapping[well.address.toLowerCase()] = [twa[0].div(numPumps), twa[1].div(numPumps)];
       });
       return mapping;
     },
@@ -76,7 +77,7 @@ export const useMultiFlowPumpTWAReserves = () => {
     (well: Well | undefined) => {
       if (!well || !query.data) return undefined;
 
-      return query.data[well.address];
+      return query.data[well.address.toLowerCase()];
     },
     [query.data]
   );
