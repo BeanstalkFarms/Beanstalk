@@ -277,7 +277,7 @@ export class LibraryPresets {
       const recipient = transferBack ? sdk.contracts.pipeline.address : account;
 
       // Set up the AdvancedPipe workflow that will call Wells via PIPELINE
-      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineBeanWethSwap");
 
       // Approve WELL to spend PIPELINE's input token
       const approve = new sdk.farm.actions.ApproveERC20(fromToken, WELL_ADDRESS);
