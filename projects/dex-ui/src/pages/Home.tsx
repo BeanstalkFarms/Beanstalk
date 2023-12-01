@@ -31,7 +31,8 @@ export const Home = () => {
               <MevInfo>
                 <MevTitle>Multi Flow Pump is here!</MevTitle>
                 <div>
-                  Explore the <span style={{ fontWeight: 600 }}>inter-block MEV manipulation resistant oracle implementation</span> used by the BEAN:WETH Well.
+                  Explore the <span style={{ fontWeight: 600 }}>inter-block MEV manipulation resistant oracle implementation</span> used by
+                  the BEAN:WETH Well.
                 </div>
               </MevInfo>
               <GetStartedContainer href={links.multiFlowPump} target="_blank" rel="noopener noreferrer">
@@ -171,6 +172,8 @@ const MevTitle = styled.div`
 `;
 
 const GetStartedContainer = styled.a`
+  text-decoration: none;
+
   :focus {
     text-decoration: none;
   }
