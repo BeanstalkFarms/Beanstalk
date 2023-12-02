@@ -29,6 +29,7 @@ type TokenInput = {
   onTokenChange?: (t: Token) => void;
   canChangeValue?: boolean;
   debounceTime?: number;
+  clamp?: boolean;
 };
 
 export const TokenInput: FC<TokenInput> = ({
@@ -44,12 +45,15 @@ export const TokenInput: FC<TokenInput> = ({
   loading = false,
   allowNegative = false,
   canChangeValue = true,
-  debounceTime = 500
+  debounceTime = 500,
+  clamp = false
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data: balance, isLoading: isBalanceLoading } = useTokenBalance(token);
   width = width ?? "100%";
+
+  // console.log("balance: ", balance?.[token.symbol].toHuman());
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateAmount = useCallback(
@@ -97,6 +101,7 @@ export const TokenInput: FC<TokenInput> = ({
           inputRef={inputRef}
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
+          max={clamp ? balance?.[token.symbol] : undefined}
         />
         <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} />
       </TopRow>
