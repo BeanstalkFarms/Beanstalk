@@ -66,7 +66,7 @@ library LibIncentive {
      * "step" functions have been executed.
      */
     function determineReward(uint256 initialGasLeft, uint256 blocksLate, uint256 beanEthPrice)
-        external
+        internal
         view
         returns (uint256)
     {

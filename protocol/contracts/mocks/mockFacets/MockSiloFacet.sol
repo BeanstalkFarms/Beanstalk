@@ -346,6 +346,16 @@ contract MockSiloFacet is SiloFacet {
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
+    function addWhitelistSelector(address token, bytes4 selector) external {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.ss[token].selector = selector;
+    }
+
+    function removeWhitelistSelector(address token) external {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.ss[token].selector = 0x00000000;
+    }
+
     function getSeedsPerToken(address token) public pure override returns (uint256) {
         if (token == C.BEAN) {
             return 2;

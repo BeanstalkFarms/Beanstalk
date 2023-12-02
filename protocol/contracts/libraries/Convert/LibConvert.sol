@@ -38,10 +38,10 @@ library LibConvert {
     {
         LibConvertData.ConvertKind kind = convertData.convertKind();
 
-        if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
-                .convertBeansToLP(convertData);
-        } else if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
+        // if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
+        //     (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
+        //         .convertBeansToLP(convertData);
+        if (kind == LibConvertData.ConvertKind.CURVE_LP_TO_BEANS) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
                 .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
@@ -77,8 +77,9 @@ library LibConvert {
             return LibCurveConvert.lpToPeg(C.CURVE_BEAN_METAPOOL);
         
         /// BEAN -> BEAN:3CRV LP
-        if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
-            return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
+        // NOTE: cannot convert due to bean:3crv dewhitelisting
+        // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
+        //     return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
         // Lambda -> Lambda
         if (tokenIn == tokenOut) 
@@ -125,8 +126,9 @@ library LibConvert {
             return LibCurveConvert.getBeanAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
         
         /// BEAN -> BEAN:3CRV LP
-        if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
-            return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
+        // NOTE: cannot convert due to bean:3crv dewhitelisting
+        // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
+        //     return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
         /// urBEAN:3CRV LP -> urBEAN
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)

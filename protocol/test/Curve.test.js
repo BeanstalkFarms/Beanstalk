@@ -37,9 +37,11 @@ describe('Curve', function () {
     this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address)
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('IERC20', USDC)
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
+    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address)
 
     await this.season.siloSunrise(0)
     await this.bean.connect(user).approve(this.diamond.address, '100000000000')
@@ -447,8 +449,15 @@ describe('Curve', function () {
       await this.bean.mint(user2Address, to6('500'))
       await this.threeCurve.connect(user2).approve(this.silo.address, to18('5000000'))
       await this.bean.connect(user2).approve(this.silo.address, to6('50000000'))
-
+      // psuedo whitelist for testing purposes 
+      await this.silo.mockWhitelistToken(
+        BEAN_3_CURVE,
+        this.bdv.interface.getSighash('curveToBDV'),
+        10000,
+        to6('1')
+      );
       await this.farm.connect(user2).farm([addLiquidity, deposit])
+      await this.whitelist.dewhitelistToken(BEAN_3_CURVE)
     })
 
     it('add lp and deposit', async function () {

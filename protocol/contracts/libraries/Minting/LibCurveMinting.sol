@@ -33,6 +33,8 @@ interface IMeta3CurveOracle {
  * Each Capture stores the encoded cumulative balances returned by the Pump in `s.co`.
  * Because Curve pools use `balances` refer to the quantity of tokens in each pool, {LibCurveMinting}
  * does as well.
+ * 
+ * NOTE: with the bean:3crv dewhitelisting, LibCurveMinting is no longer used and is kept for historical purposes.
  */
 library LibCurveMinting {
     using SafeMath for uint256;
@@ -115,9 +117,6 @@ library LibCurveMinting {
         uint256[2] memory balances;
 
         (deltaB, balances, s.co.balances) = twaDeltaB();
-
-        // temporarily store balances. See {LibWellMinting.UpdateOracle} for an explanation.
-        LibMetaCurve.setTwaReservesForPool(C.CURVE_BEAN_METAPOOL, balances);
 
         emit MetapoolOracle(s.season.current, deltaB, s.co.balances);
     }

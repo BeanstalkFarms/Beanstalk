@@ -23,7 +23,7 @@ contract InitWhitelist {
     uint32 private constant BEAN_SEEDS = 2; //seeds per bdv of bean (1e6 is one bean)
 
     function whitelistPools() internal {
-        whitelistBean3Crv();
+        // whitelistBean3Crv();
         whitelistBean();
         whitelistUnripeBean();
         whitelistUnripeLP();

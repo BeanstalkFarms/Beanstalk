@@ -33,9 +33,10 @@ describe('Whitelist', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
-    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
+    this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.gaugePoint = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
+    this.liquidityWeight = await ethers.getContractAt('LiquidityWeightFacet', this.diamond.address)
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
@@ -63,7 +64,8 @@ describe('Whitelist', function () {
         this.bdv.interface.getSighash('wellBdv'), 
         '10000',
         '1',
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0')).to.be.revertedWith('LibDiamond: Must be contract or owner')
     })
@@ -76,7 +78,8 @@ describe('Whitelist', function () {
         '10000',
         '1',
         1,
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0')
       const settings = await this.silo.tokenSettings(this.well.address)
@@ -91,7 +94,8 @@ describe('Whitelist', function () {
         this.bdv.interface.getSighash('wellBdv'), 
         1,
         10000,
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0')
     })
@@ -103,7 +107,8 @@ describe('Whitelist', function () {
         '10000',
         '1',
         1,
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0')
       
@@ -113,7 +118,8 @@ describe('Whitelist', function () {
           '10000',
           '1',
           1,
-          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+          this.liquidityWeight.interface.getSighash("maxWeight()"),
           '0',
           '0')).to.be.revertedWith("Whitelist: Token already whitelisted");
     })
@@ -124,7 +130,8 @@ describe('Whitelist', function () {
           this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
           '10000',
           '1',
-          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+          this.liquidityWeight.interface.getSighash("maxWeight()"),
           '0',
           '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
     });
@@ -138,7 +145,8 @@ describe('Whitelist', function () {
           this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
           '10000',
           '1',
-          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+          this.liquidityWeight.interface.getSighash("maxWeight()"),
           '0',
           '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
     });
@@ -149,7 +157,8 @@ describe('Whitelist', function () {
         this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
         '10000',
         '1',
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0')).to.be.revertedWith("Whitelist: Token in incorrect whitelisted token array");
     })
@@ -164,19 +173,35 @@ describe('Whitelist', function () {
         this.bdv.interface.getSighash('wellBdv'),
         '10000',
         '1',
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
-        '0')).to.be.revertedWith("Whitelist: Invalid BDV selector");
+        '0'
+      )).to.be.revertedWith("Whitelist: Invalid BDV selector");
 
-        await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
-          this.well.address,
-          this.bdv.interface.getSighash('wellBdv'), 
-          '10000',
-          '1',
-          1,
-          '0x00000000',
-          '0',
-          '0')).to.be.revertedWith("Whitelist: Invalid GaugePoint selector");
+      await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address,
+        this.bdv.interface.getSighash('wellBdv'), 
+        '10000',
+        '1',
+        1,
+        '0x00000000',
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
+        '0',
+        '0'
+      )).to.be.revertedWith("Whitelist: Invalid GaugePoint selector");
+
+      await expect(this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address,
+        this.bdv.interface.getSighash('wellBdv'), 
+        '10000',
+        '1',
+        1,
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        '0x00000000',
+        '0',
+        '0'
+      )).to.be.revertedWith("Whitelist: Invalid LiquidityWeight selector");
     });
 
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
@@ -197,7 +222,8 @@ describe('Whitelist', function () {
         '10000',
         '1',
         1,
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0')
       this.result = this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(
@@ -218,7 +244,8 @@ describe('Whitelist', function () {
         1,
         1,
         2,
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
         '0',
         '0'
       )).to.revertedWith('Silo: Invalid encodeType');
@@ -231,21 +258,27 @@ describe('Whitelist', function () {
     })
 
     it('dewhitelists token', async function () {
-      await this.whitelist.connect(owner).whitelistTokenWithEncodeType(
-        this.well.address, 
-        this.bdv.interface.getSighash('wellBdv'),
-        '10000',
-        '1',
-        1,
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
-        '0',
-        '0')
-      this.result = await this.whitelist.connect(owner).dewhitelistToken(this.well.address)
-      const settings = await this.silo.tokenSettings(this.well.address)
+      await this.silo.mockWhitelistToken(
+        BEAN_3_CURVE,
+        this.bdv.interface.getSighash('curveToBDV'),
+        10000,
+        to6('1')
+      );
+      this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE)
+      const settings = await this.silo.tokenSettings(BEAN_3_CURVE)
+      // milestone season, stem, or stalkIssuedPerBDV should not be cleared.
       expect(settings[0]).to.equal('0x00000000')
       expect(settings[1]).to.equal(0)
-      expect(settings[2]).to.equal(0)
-      await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(this.well.address)
+      expect(settings[2]).to.equal(10000)
+      expect(settings[3]).to.equal(1)
+      expect(settings[4]).to.equal(0)
+      expect(settings[5]).to.equal('0x00')
+      expect(settings[6]).to.equal('0x00000000')
+      expect(settings[7]).to.equal('0x00000000')
+      expect(settings[8]).to.equal(0)
+      expect(settings[9]).to.equal(0)
+
+      await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(BEAN_3_CURVE)
     })
   })
 });

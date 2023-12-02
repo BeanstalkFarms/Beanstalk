@@ -174,13 +174,28 @@ library LibWhitelist {
     }
 
     /**
-     * @dev Removes an ERC-20 token from the Silo Whitelist.
+     * @notice Removes an ERC-20 token from the Silo Whitelist.
+     * 
      */
     function dewhitelistToken(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        delete s.ss[token];
+        // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
+        verifyTokenNotInLibWhitelistedTokens(token, s.ss[token].selector);
+        
+        // set the stalkEarnedPer season to 0 and update milestone stem.
+        updateStalkPerBdvPerSeasonForToken(token, 0);
 
+        // delete the selector and encodeType.
+        delete s.ss[token].selector;
+        delete s.ss[token].encodeType;
+        
+        // delete gaugePoints, gaugePointSelector, liquidityWeightSelector, and optimalPercentDepositedBdv.
+        delete s.ss[token].gaugePoints;
+        delete s.ss[token].gpSelector;
+        delete s.ss[token].lwSelector;
+        delete s.ss[token].optimalPercentDepositedBdv;
+        
         emit DewhitelistToken(token);
     }
 
@@ -210,6 +225,29 @@ library LibWhitelist {
         // verify you passed in a callable liquidityWeight selector
         (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector));
         require(success, "Whitelist: Invalid LiquidityWeight selector");
+    }
+
+    /**
+     * @notice Verifies whether a token is NOT in the arrays.
+     * @param token `token` that is being whitelisted.
+     * @param selector The BDV function thats being whitelisted with the token.
+     */
+    function verifyTokenNotInLibWhitelistedTokens(address token, bytes4 selector) internal view {
+        // future whitelisted functions will need to be added to the arrays in
+        checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedTokens());
+        
+        // however, all whitelisted tokens 
+        // or previously whitelisted tokens should still be in getSiloTokens.
+        checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
+        
+        // The gauge system assumes all Whitelisted tokens that are not Unripe tokens
+        // or Bean are LP tokens. Revisit below block if this changes.
+        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
+        }
+        if (selector == LibWell.WELL_BDV_SELECTOR) {
+            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());
+        }
     }
 
     /**

@@ -214,18 +214,17 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "WhitelistFacet", // update whitelist abilities.
         "MetadataFacet", // update metadata
         "BDVFacet", // update bdv functions
+        "LiquidityWeightFacet" // add liquidity weight facet
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
       libraryNames: [
-        'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting'
+        'LibGauge', 'LibConvert', 'LibLockedUnderlying',
       ],
       facetLibraries: {
         'SeasonFacet': [
           'LibGauge',
-          'LibIncentive',
           'LibLockedUnderlying',
-          'LibCurveMinting'
         ],
         'SeasonGettersFacet': [
           'LibLockedUnderlying'

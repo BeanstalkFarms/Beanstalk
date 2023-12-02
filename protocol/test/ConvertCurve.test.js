@@ -19,14 +19,15 @@ describe('Curve Convert', function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
-
+    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
+    this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address);
     await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
     this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
 
@@ -60,7 +61,7 @@ describe('Curve Convert', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe('calculates beans to peg', async function () {
+  describe.skip('calculates beans to peg LEGACY', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
       expect(await this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address)).to.be.equal(ethers.utils.parseUnits('200', 6));
@@ -76,6 +77,24 @@ describe('Curve Convert', function () {
     });
   });
 
+  describe('calculates beans to peg', async function () {
+    it('p > 1', async function () {
+      await expect(this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address))
+        .to.be.revertedWith("Convert: Tokens not supported");
+    });
+
+    it('p = 1', async function () {
+      await expect(this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address))
+        .to.be.revertedWith("Convert: Tokens not supported");
+    });
+
+    it('p < 1', async function () {
+      await expect(this.convertGet.getMaxAmountIn(this.bean.address, this.beanMetapool.address))
+        .to.be.revertedWith("Convert: Tokens not supported");
+    });
+  });
+
+  // bean3crv dewhitelisting means that people cannot convert bean to bean3crv LP. 
   describe('calculates lp to peg', async function () {
     it('p > 1', async function () {
       await this.beanMetapool.connect(user2).add_liquidity([toBean('200'), to18('0')], to18('150'));
@@ -92,7 +111,9 @@ describe('Curve Convert', function () {
     });
   })
 
-  describe('convert beans to lp', async function () {
+  // bean3crv dewhitelisting means that people cannot convert bean to bean3crv LP. 
+  // They are able to still convert legacy deposited bean3crv LP to bean.
+  describe.skip('convert beans to lp LEGACY', async function () {
 
     describe('revert', async function () {
       it('not enough LP', async function () {
@@ -120,7 +141,7 @@ describe('Curve Convert', function () {
 
     });
 
-  describe('below max', async function () {
+    describe('below max', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(12);
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
@@ -401,6 +422,35 @@ describe('Curve Convert', function () {
     });
   });
 
+  describe('convert beans to lp', async function () {
+    describe('below max', async function () {
+      beforeEach(async function () {
+        await this.season.teleportSunrise(12);
+        await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
+        await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
+      });
+
+      it('it gets amount out', async function () {
+        await expect(this.convertGet.getAmountOut(
+          BEAN,
+          BEAN_3_CURVE,
+          toBean('100')
+        )).to.be.revertedWith("Convert: Tokens not supported")
+      })
+
+      it('returns correct values', async function () {
+        const stemBean = await this.silo.seasonToStem(this.bean.address, '12');
+        const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '12');
+        // this.result = await this.convert.connect(user).callStatic.convert(ConvertEncoder.convertBeansToCurveLP(toBean('100'), to18('99'), this.beanMetapool.address), [stemBean], [toBean('100')])
+
+        await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('100'), to18('99'), this.beanMetapool.address), [stemBean], [toBean('100')]))
+          .to.be.revertedWith("Convert: Invalid payload");
+
+      })
+    });
+  })
+
+  // NOTE: since bean3crv dewhitelisting, this test is updated for legacy purposes only.
   describe('convert lp to beans', async function () {
 
     describe('revert', async function () {
@@ -409,7 +459,14 @@ describe('Curve Convert', function () {
       });
       it('not enough Beans', async function () {
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
+        await this.silo.mockWhitelistToken(
+          this.beanMetapool.address,
+          this.bdv.interface.getSighash('curveToBDV'),
+          '10000',
+          to6('1')
+        );
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
+        await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
         const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
 
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('250'), this.beanMetapool.address), [stemMetapool], [to18('200')]))
@@ -419,7 +476,14 @@ describe('Curve Convert', function () {
       it('p < 1', async function () {
         const stemMetapool = await this.silo.seasonToStem(this.beanMetapool.address, '10');
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('1')], to18('0.5'));
+        await this.silo.mockWhitelistToken(
+          this.beanMetapool.address,
+          this.bdv.interface.getSighash('curveToBDV'),
+          '10000',
+          to6('1')
+        );
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
+        await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('190'), this.beanMetapool.address), [stemMetapool], ['1000']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
@@ -436,11 +500,15 @@ describe('Curve Convert', function () {
 
     describe('below max', function () {
       beforeEach(async function () {
+        await this.silo.addWhitelistSelector(
+          this.beanMetapool.address,
+          this.bdv.interface.getSighash('curveToBDV')
+        );
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
+        await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
       });
-
 
       it('it gets amount out', async function () {
         expect(await this.convertGet.getAmountOut(
@@ -461,12 +529,10 @@ describe('Curve Convert', function () {
           expect(await this.silo.getTotalDepositedBdv(this.bean.address)).to.eq('100618167');
           expect(await this.silo.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
           expect(await this.silo.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('900'));
-          //expect(await this.silo.totalSeeds()).to.eq('3801236334');
           expect(await this.silo.totalStalk()).to.eq('10006181670000');
         });
 
         it('properly updates user values', async function () {
-          //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('3801236334');
           expect(await this.silo.balanceOfStalk(userAddress)).to.eq('10006181670000');
         });
 
@@ -496,7 +562,9 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
+        await this.silo.addWhitelistSelector(this.beanMetapool.address,this.bdv.interface.getSighash('curveToBDV'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
+        await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
       });
 
 
@@ -552,16 +620,16 @@ describe('Curve Convert', function () {
 
     describe('after 1 season', function () {
       beforeEach(async function () {
+        await this.silo.addWhitelistSelector(
+          this.beanMetapool.address,
+          this.bdv.interface.getSighash('curveToBDV')
+        );
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('1000'), EXTERNAL);
         await this.season.siloSunrise(0);
+        await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
       });
-
-
-      it('it gets amount out', async function () {
-
-      })
 
       describe('it converts', async function () {
         beforeEach(async function () {
@@ -608,9 +676,11 @@ describe('Curve Convert', function () {
       beforeEach(async function () {
         await this.season.teleportSunrise(10);
         await this.beanMetapool.connect(user).add_liquidity([toBean('200'), to18('0')], to18('150'));
+        await this.silo.addWhitelistSelector(this.beanMetapool.address, this.bdv.interface.getSighash('curveToBDV'));
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), EXTERNAL);
         await this.season.siloSunrise(0);
         await this.silo.connect(user).deposit(this.beanMetapool.address, to18('500'), EXTERNAL);
+        await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
       });
 
 

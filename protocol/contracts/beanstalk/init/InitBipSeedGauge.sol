@@ -43,17 +43,21 @@ contract InitBipSeedGauge is Weather {
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
 
-    uint256 internal constant BEAN_UNMIGRATED_BDV = 304_630_107407; // ~300k BDV
+    uint256 internal constant BEAN_UNMIGRATED_BDV = 306_693_996418; // ~300k BDV
     uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_212_521946; // ~26k BDV
-    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_209_210_313166; // 3.2m BDV
-    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_680_992_571569; // 6.68m BDV
+    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_230_682_326697; // 3.2m BDV
+    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_782_494_411175; // 6.68m BDV
 
     // gauge point factor is used to scale up the gauge points of the bean and bean3crv pools.
-    uint256 internal GAUGE_POINT_FACTOR = 500;
+    uint128 internal constant BEAN_ETH_INITAL_GAUGE_POINTS = 1000e18;
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
-        // update depositedBDV for bean, bean3crv, urBean, and urBeanETH:
+
+        // dewhitelist bean3crv.
+        LibWhitelist.dewhitelistToken(C.CURVE_BEAN_METAPOOL);
+
+        // update depositedBDV for bean, bean3crv, urBean, and urBeanETH.
         LibTokenSilo.incrementTotalDepositedBdv(
             C.BEAN,
             BEAN_UNMIGRATED_BDV - s.migratedBdvs[C.BEAN]
@@ -71,37 +75,19 @@ contract InitBipSeedGauge is Weather {
             UNRIPE_LP_UNMIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]
         );
 
-        // only lp assets need to be updated.
-        // unripeAssets are not in the seed gauge,
-        // and bean does not have a gauge point function.
-        // (it is based on the max gauge points of LP)
-        // order: bean, beanETH, bean3CRV, urBEAN, urBEANETH
-        uint128 beanEthToBean3CrvDepositedRatio = s
-            .siloBalances[C.BEAN_ETH_WELL]
-            .depositedBdv
-            .mul(1e6)
-            .div(s.siloBalances[C.CURVE_BEAN_METAPOOL].depositedBdv);
-        address[] memory siloTokens = LibWhitelistedTokens.getWhitelistedTokens();
-        uint128 beanEthGp = uint256(s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason)
-            .mul(GAUGE_POINT_FACTOR)
-            .mul(beanEthToBean3CrvDepositedRatio)
-            .mul(1e6)
-            .toUint128();
-        uint128 bean3crvGp = uint256(s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason)
-            .mul(GAUGE_POINT_FACTOR)
-            .mul(1e12)
-            .toUint128();
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
 
         bytes4 gpSelector = IGaugePointFacet.defaultGaugePointFunction.selector;
         bytes4 lwSelector = ILiquidityWeightFacet.maxWeight.selector;
         
-        bytes4[5] memory gpSelectors = [bytes4(0), gpSelector, gpSelector, 0, 0];
-        bytes4[5] memory lwSelectors = [bytes4(0), lwSelector, lwSelector, 0, 0];
-        uint128[5] memory gaugePoints = [uint128(0), beanEthGp, bean3crvGp, 0, 0];
-        uint64[5] memory optimalPercentDepositedBdv = [uint64(0), 99e6, 1e6, 0, 0];
+        bytes4[5] memory gpSelectors = [bytes4(0), gpSelector, 0, 0, 0];
+        bytes4[5] memory lwSelectors = [bytes4(0), lwSelector, 0, 0, 0];
+        uint128[5] memory gaugePoints = [uint128(0), BEAN_ETH_INITAL_GAUGE_POINTS, 0, 0, 0];
+        uint64[5] memory optimalPercentDepositedBdv = [uint64(0), 100e6, 0, 0, 0];
         
         uint128 totalBdv;
         for (uint i = 0; i < siloTokens.length; i++) {
+
             // previously, the milestone stem was stored truncated. The seed gauge system now stores
             // the value untruncated, and thus needs to update all previous milestone stems.
             // This is a one time update, and will not be needed in the future.
@@ -144,11 +130,6 @@ contract InitBipSeedGauge is Weather {
         // set s.twaReserves for the bean eth well, and the bean:3crv pool.
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
-
-        // Even though it is not used, still initialize.
-        s.usdTokenPrice[C.CURVE_BEAN_METAPOOL] = 1;
-        s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve0 = 1;
-        s.twaReserves[C.CURVE_BEAN_METAPOOL].reserve1 = 1;
 
         // initalize V2 cases.
         LibCases.setCasesV2();

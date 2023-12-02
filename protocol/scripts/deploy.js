@@ -107,7 +107,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting'
+    'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting'
   ]
 
   // A mapping of facet to public library names that will be linked to it.
@@ -116,11 +116,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'LibGauge',
       'LibIncentive',
       'LibLockedUnderlying',
-      'LibCurveMinting'
     ],
     'MockSeasonFacet': [
       'LibGauge',
-      'LibIncentive',
       'LibLockedUnderlying',
       'LibCurveMinting'
     ],
@@ -191,7 +189,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'TokenFacet',
       'TokenSupportFacet',
       'MockUnripeFacet',
-      'WhitelistFacet',
+      'MockWhitelistFacet',
       'MetadataFacet',
       'GaugePointFacet',
       'LiquidityWeightFacet'

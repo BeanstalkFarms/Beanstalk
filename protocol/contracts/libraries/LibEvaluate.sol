@@ -201,7 +201,7 @@ library LibEvaluate {
      * @notice Calculates the liquidity to supply ratio, where liquidity is measured in USD.
      * @param beanSupply The total supply of Beans.
      * corresponding to the well addresses in the whitelist.
-     * @dev No support for non-well AMMs, other than the existing Bean:3CRV pool.
+     * @dev No support for non-well AMMs at this time.
      */
     function calcLPToSupplyRatio(
         uint256 beanSupply
@@ -217,28 +217,26 @@ library LibEvaluate {
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
             uint256 liquidityWeight = getLiquidityWeight(s.ss[pools[i]].lwSelector);
+            
             // get the non-bean value in an LP.
-            // for the bean eth pool, use the values stored in reserves,
-            // rather than querying the beanstalk pump.
-            if (pools[i] == C.CURVE_BEAN_METAPOOL) {
-                usdLiquidity = usdLiquidity.add(liquidityWeight.mul(LibBeanMetaCurve.totalLiquidityUsd()).div(1e18));
-            } else if (LibWell.isWell(pools[i])) {
-                twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(
-                    pools[i]
-                );
-                usdLiquidity = usdLiquidity.add(
-                    liquidityWeight.mul(LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)).div(1e18)
-                );
-                if (pools[i] == C.BEAN_ETH_WELL) {
-                    // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
-                    // Note: This statement is put into the for loop to prevent another extraneous read of 
-                    // the twaReserves from storage as `twaReserves` are already loaded into memory.
-                    if (LibAppStorage.diamondStorage().season.fertilizing == true) {
-                        beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
-                    }
+            twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(
+                pools[i]
+            );
+
+            usdLiquidity = usdLiquidity.add(
+                liquidityWeight.mul(LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)).div(1e18)
+            );
+            
+            if (pools[i] == C.BEAN_ETH_WELL) {
+                // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
+                // Note: This statement is put into the for loop to prevent another extraneous read of 
+                // the twaReserves from storage as `twaReserves` are already loaded into memory.
+                if (LibAppStorage.diamondStorage().season.fertilizing == true) {
+                    beanSupply = beanSupply.sub(LibUnripe.getLockedBeans(twaReserves));
                 }
             }
-            // If a new non-Well LP is added, functionality to calculate the USD value of the
+            
+            // If a new non-Well LP is added, functionality to calculate the USD value of the 
             // liquidity should be added here.
         }
 
