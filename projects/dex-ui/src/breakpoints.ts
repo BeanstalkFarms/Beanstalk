@@ -9,30 +9,32 @@ const mediaSizes = {
   desktop: 1200
 };
 
-/// we add 1px to the mobile and tablet sizes so that the media queries don't overlap
+const BP_GAP = 0.05;
+
+/// we subtract 0.05px to some queries to prevent overlapping
 export const mediaQuery = {
   sm: {
     // 769px & above
     up: `@media (min-width: ${mediaSizes.mobile}px)`,
-    // 768px & below
-    only: `@media (max-width: ${mediaSizes.mobile - 1}px)`
+    // 768.95px & below
+    only: `@media (max-width: ${mediaSizes.mobile - BP_GAP}px)`
   },
   md: {
     // 1024px & above
     up: `@media (min-width: ${mediaSizes.tablet}px)`,
-    // between 769px & 1024px
-    only: `@media (min-width: ${mediaSizes.mobile}px) and (max-width: ${mediaSizes.tablet - 1}px)`,
+    // between 769px & 1023.95px
+    only: `@media (min-width: ${mediaSizes.mobile}px) and (max-width: ${mediaSizes.tablet - BP_GAP}px)`,
     // 1024px & below
-    down: `@media (max-width: ${mediaSizes.tablet}px)`
+    down: `@media (max-width: ${mediaSizes.tablet - BP_GAP}px)`
   },
   lg: {
     // 1200px & below
-    down: `@media (max-width: ${mediaSizes.desktop}px)`,
+    down: `@media (max-width: ${mediaSizes.desktop - BP_GAP}px)`,
     // 1200px & above
     only: `@media (min-width: ${mediaSizes.desktop}px)`
   },
   between: {
-    // between 769px & 1200px
-    smAndLg: `@media (min-width: ${mediaSizes.mobile}px) and (max-width: ${mediaSizes.desktop - 1}px)`
+    // between 769px & 1199.95px
+    smAndLg: `@media (min-width: ${mediaSizes.mobile}px) and (max-width: ${mediaSizes.desktop - BP_GAP}px)`
   }
 };
