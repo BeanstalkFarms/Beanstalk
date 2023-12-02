@@ -11,11 +11,66 @@ import { ChartContainer } from "./ChartStyles";
 import { BottomDrawer } from "src/components/BottomDrawer";
 import { mediaQuery, size } from "src/breakpoints";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { IWellHourlySnapshot } from "src/wells/chartDataLoader";
+import { TokenValue } from "@beanstalk/sdk";
 
 function timeToLocal(originalTime: number) {
   const d = new Date(originalTime * 1000);
   return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()) / 1000;
 }
+
+type TimeToHourlySnapshotItem = {
+  data: Pick<IWellHourlySnapshot, "deltaVolumeUSD" | "totalLiquidityUSD">;
+  count: number;
+};
+
+export type IChartDataItem = {
+  time: number;
+  value: string;
+};
+
+// some snapshots are duplicated, so we need to deduplicate them
+const parseAndDeduplicateSnapshots = (arr: IWellHourlySnapshot[]) => {
+  const snapshotMap = arr.reduce<Record<string, TimeToHourlySnapshotItem>>((memo, snapshot) => {
+    const timeKey = timeToLocal(Number(snapshot.lastUpdateTimestamp)).toString();
+    const deltaVolumeUSD = Number(snapshot.deltaVolumeUSD);
+    const totalLiquidityUSD = Number(snapshot.totalLiquidityUSD);
+
+    if (!(timeKey in memo)) {
+      memo[timeKey] = {
+        data: { deltaVolumeUSD, totalLiquidityUSD },
+        count: 1
+      };
+    } else {
+      memo[timeKey].data.deltaVolumeUSD += deltaVolumeUSD;
+      memo[timeKey].data.totalLiquidityUSD += totalLiquidityUSD;
+      memo[timeKey].count++;
+    }
+
+    return memo;
+  }, {});
+
+  const liquidityData: IChartDataItem[] = [];
+  const volumeData: IChartDataItem[] = [];
+
+  for (const [time, { data, count }] of Object.entries(snapshotMap)) {
+    const timeKey = Number(time);
+
+    liquidityData.push({
+      time: timeKey,
+      value: Number(TokenValue.ZERO.add(data.totalLiquidityUSD).div(count).toHuman()).toFixed(2)
+    });
+    volumeData.push({
+      time: timeKey,
+      value: Number(TokenValue.ZERO.add(data.deltaVolumeUSD).div(count).toHuman()).toFixed(2)
+    });
+  }
+
+  return {
+    liquidityData,
+    volumeData
+  };
+};
 
 const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
   const [tab, setTab] = useState(0);
@@ -25,28 +80,17 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
 
   const { data: chartData, refetch, error, isLoading: chartDataLoading } = useWellChartData(well, timePeriod);
 
-  const [liquidityData, setLiquidityData] = useState<any[]>([]);
-  const [volumeData, setVolumeData] = useState<any[]>([]);
+  const [liquidityData, setLiquidityData] = useState<IChartDataItem[]>([]);
+  const [volumeData, setVolumeData] = useState<IChartDataItem[]>([]);
 
   const [isChartTypeDrawerOpen, setChartTypeDrawerOpen] = useState(false);
   const [isChartRangeDrawerOpen, setChartRangeDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!chartData) return;
-    let _liquidityData: any = [];
-    let _volumeData: any = [];
-    for (let i = 0; i < chartData.length; i++) {
-      _liquidityData.push({
-        time: timeToLocal(Number(chartData[i].lastUpdateTimestamp)),
-        value: Number(chartData[i].totalLiquidityUSD).toFixed(2)
-      });
-      _volumeData.push({
-        time: timeToLocal(Number(chartData[i].lastUpdateTimestamp)),
-        value: Number(chartData[i].deltaVolumeUSD).toFixed(2)
-      });
-    }
-    setLiquidityData([..._liquidityData]);
-    setVolumeData([..._volumeData]);
+    const dedupliated = parseAndDeduplicateSnapshots(chartData);
+    setLiquidityData(dedupliated.liquidityData);
+    setVolumeData(dedupliated.volumeData);
   }, [chartData]);
 
   useEffect(() => {
@@ -182,16 +226,19 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         </BottomDrawer>
       </MobileRow>
       {error !== null && <ChartError>{`Error Loading Chart Data :(`}</ChartError>}
-      {chartDataLoading && (
+      {chartDataLoading ? (
         <ChartLoader>
           <LoadingTemplate gap={4}>
             <LoadingTemplate.Item width={100} height={24} />
             <LoadingTemplate.Item width={150} height={24} />
           </LoadingTemplate>
         </ChartLoader>
+      ) : (
+        <>
+          {tab === 0 && !error && <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} />}
+          {tab === 1 && !error && <Chart data={volumeData} legend={"HOURLY VOLUME"} />}
+        </>
       )}
-      {tab === 0 && !error && !chartDataLoading && <Chart data={liquidityData} legend={"TOTAL LIQUIDITY"} />}
-      {tab === 1 && !error && !chartDataLoading && <Chart data={volumeData} legend={"HOURLY VOLUME"} />}
     </Container>
   );
 };
