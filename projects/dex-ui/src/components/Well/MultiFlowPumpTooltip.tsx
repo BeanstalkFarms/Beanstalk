@@ -35,7 +35,7 @@ export const MultiFlowPumpTooltip: FC<{
             <div className="container-title">Multi Flow Pump</div>
             <div className="content">
               The&nbsp;
-              <a className="content-link" href="/" target="_blank" rel="noopener noreferrer">
+              <a className="content-link" href="/multi-flow-pump.pdf" target="_blank" rel="noopener noreferrer">
                 Multi Flow Pump
               </a>
               , an inter-block MEV manipulation resistant oracle, stores reserve data from this Well. In particular, Multi Flow stores
