@@ -10,7 +10,43 @@ const { BigNumber } = require('ethers');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { expect } = require('chai');
 
-//we need to know the amount of BDV that migrated between silo v3 deployment (17671557) and unripe migration (18392690)
+//in deposits.json we have every deposit that needs to be migrated to silo v3 (at point of silo v3 deployment)
+
+
+//total unmigrated from bip38 onward 18392690
+
+//all deposits at bip 38
+
+//that includes everyone who did not migrate between silo v3 and bip 38
+/*
+
+
+
+SILOV3 //started total bdv deposited counter
+
+
+
+BIP38 //started migrated counter
+
+user migrates
+migration counter increases
+
+latest block (add total not migrated from silov3 to bip38 and subtract migrated from bip38 to latest block)
+
+
+
+we need everyone who has not migrated by time of bip38
+
+
+deposits
+remove everyone who did migrate up until bip38
+
+total migrated between silo v3 and bip38
+
+
+*/
+
+
 
 
 //17251905 is the block the enroot fix was deployed
@@ -19,7 +55,7 @@ const { expect } = require('chai');
 
 const UNRIPE_MIGRATION = 18392690;
 const SILOV3_DEPLOYMENT = 17671557;
-const ENROOT_FIX = 17251905;
+// const ENROOT_FIX = 17251905;
 
 
 
@@ -198,17 +234,17 @@ describe('Silo V3: migration calculation', function () {
         //get account from event
         let account = event.account;
         //if this account is in the deposits file, remove the entire account
-        // if (deposits[account]) {
-        //   delete deposits[account];
-        // }
+        if (deposits[account]) {
+          delete deposits[account];
+        }
 
-        depositsMigratedBetweenSiloV3AndUnripeMigration[account] = deposits[account];
+        // depositsMigratedBetweenSiloV3AndUnripeMigration[account] = deposits[account];
       }
 
       console.log('deposits remaining unmigrated: ', Object.keys(deposits).length);
 
       // var depositsReformatted = reformatData(deposits)
-      var depositsReformatted = reformatData(depositsMigratedBetweenSiloV3AndUnripeMigration)
+      var depositsReformatted = reformatData(deposits)
 
       var totalGasUsed = BigNumber.from(0);
 
