@@ -49,7 +49,7 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
   const sdk = useSdk();
 
-  const lpBalance = getPositionWithWell(well)?.external;
+  const lpBalance = useMemo(() => getPositionWithWell(well)?.external, [getPositionWithWell, well]);
 
   useEffect(() => {
     const run = async () => {

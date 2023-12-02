@@ -16,8 +16,7 @@ import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { LoadingItem } from "src/components/LoadingItem";
 import { Well } from "@beanstalk/sdk/Wells";
-import { Info } from "../Icons";
-import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { Info } from "src/components/Icons";
 
 type Props = {
   well: Well | undefined;
@@ -37,8 +36,6 @@ const displayTV = (value?: TokenValue) => (value?.gt(0) ? value.toHuman("short")
 
 export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
   const well = useMemo(() => _well, [_well]);
-
-  const isMobile = useIsMobile();
 
   const { getPositionWithWell } = useLPPositionSummary();
   const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
@@ -97,11 +94,11 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                         &nbsp;for yield.
                       </div>
                     }
-                    offsetX={isMobile ? -40 : -1}
+                    offsetX={-40}
                     offsetY={350}
                     side="bottom"
-                    arrowSize={4}
-                    arrowOffset={50}
+                    arrowSize={0}
+                    arrowOffset={0}
                     width={270}
                   >
                     <Info color="#4b5563" />
@@ -120,15 +117,15 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                         <a className="underline" href="https://app.bean.money/#/balances" target="_blank" rel="noopener noreferrer">
                           Farm Balances
                         </a>
-                        &nbsp;allow Beanstalk users to hold assets in the protocol on their behalf. Using
-                        Farm Balances can reduce gas costs and facilitate efficient movement of assets within Beanstalk.
+                        &nbsp;allow Beanstalk users to hold assets in the protocol on their behalf. Using Farm Balances can reduce gas costs
+                        and facilitate efficient movement of assets within Beanstalk.
                       </div>
                     }
-                    offsetX={isMobile ? -40 : -1}
-                    offsetY={630}
+                    offsetX={-40}
+                    offsetY={525}
                     arrowOffset={0}
                     side="bottom"
-                    arrowSize={4}
+                    arrowSize={0}
                     width={270}
                   >
                     <Info color="#4b5563" />
