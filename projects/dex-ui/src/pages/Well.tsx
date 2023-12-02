@@ -304,7 +304,7 @@ const ContentWrapper = styled.div`
   width: 100%;
 
   ${mediaQuery.lg.only} {
-    height: 1500px;
+    height: 1600px;
   }
 
   ${mediaQuery.between.smAndLg} {
