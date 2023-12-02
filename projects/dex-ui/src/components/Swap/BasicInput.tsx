@@ -13,6 +13,7 @@ type Props = {
   onFocus?: FocusEventHandler<HTMLInputElement>;
   onBlur?: FocusEventHandler<HTMLInputElement>;
   canChangeValue?: boolean;
+  max?: TokenValue;
 };
 
 export const BasicInput: FC<Props> = ({
@@ -24,7 +25,8 @@ export const BasicInput: FC<Props> = ({
   onFocus,
   onBlur,
   inputRef,
-  canChangeValue = true
+  canChangeValue = true,
+  max
 }) => {
   const [id, _] = useState(_id ?? Math.random().toString(36).substring(2, 7));
   const [displayValue, setDisplayValue] = useState(value);
@@ -42,6 +44,15 @@ export const BasicInput: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  const maxNum = max && parseFloat(max.toHuman());
+  const clamp = useCallback(
+    (amount: string) => {
+      if (amount === "" || amount === ".") return amount;
+      return maxNum !== undefined ? Math.min(parseFloat(amount), maxNum).toString() : amount;
+    },
+    [maxNum]
+  );
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       let rawValue = e.target.value;
@@ -55,10 +66,10 @@ export const BasicInput: FC<Props> = ({
         rawValue = `0${rawValue}`;
       }
 
-      setDisplayValue(rawValue);
-      onChange?.(cleanValue);
+      setDisplayValue(clamp(rawValue));
+      onChange?.(clamp(cleanValue));
     },
-    [onChange]
+    [onChange, clamp]
   );
 
   const filterKeyDown = useCallback(

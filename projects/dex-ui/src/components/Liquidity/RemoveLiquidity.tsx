@@ -22,6 +22,7 @@ import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 import { LoadingTemplate } from "../LoadingTemplate";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 
 type BaseRemoveLiquidityProps = {
   slippage: number;
@@ -42,11 +43,13 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
-  const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
   const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
 
-  const sdk = useSdk();
+  const { getPositionWithWell } = useLPPositionSummary();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
+  const sdk = useSdk();
+
+  const lpBalance = getPositionWithWell(well)?.external;
 
   useEffect(() => {
     const run = async () => {
@@ -70,6 +73,8 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   const { oneTokenQuote } = oneToken;
   const { customRatioQuote } = custom;
 
+  const hasEnoughBalance = !address || !wellLpToken || !lpTokenAmount || !lpBalance ? false : lpTokenAmount.lte(lpBalance);
+
   useEffect(() => {
     if (well.lpToken) {
       let lpTokenWithMetadata = well.lpToken;
@@ -78,28 +83,6 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
       setWellLpToken(lpTokenWithMetadata);
     }
   }, [well.lpToken]);
-
-  useEffect(() => {
-    const checkBalances = async () => {
-      if (!address || !wellLpToken || !lpTokenAmount) {
-        setHasEnoughBalance(false);
-        return;
-      }
-
-      let insufficientBalances = false;
-
-      if (lpTokenAmount.gt(TokenValue.ZERO)) {
-        const balance = await wellLpToken.getBalance(address);
-        if (lpTokenAmount.gt(balance)) {
-          insufficientBalances = true;
-        }
-      }
-
-      setHasEnoughBalance(!insufficientBalances);
-    };
-
-    checkBalances();
-  }, [address, lpTokenAmount, wellLpToken]);
 
   useEffect(() => {
     if (customRatioQuote) {
@@ -318,6 +301,7 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
               canChangeValue={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
               showBalance={true}
               loading={false}
+              clamp
             />
           </TokenContainer>
           <MediumGapContainer>
