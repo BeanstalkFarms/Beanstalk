@@ -84,8 +84,8 @@ const useSiloTokenToFiat = () => {
         const lpBdv = beanPools[beanWeth.address]?.lpBdv || ZERO_BN;
 
         return _denomination === 'bdv'
-          ? lpBdv?.multipliedBy(choppedLP)
-          : lpUsd?.multipliedBy(choppedLP);
+          ? lpBdv?.multipliedBy(_chop ? choppedLP : _amount)
+          : lpUsd?.multipliedBy(_chop ? choppedLP : _amount);
       }
 
       /// Grab pool data. Here we can only have ripe, LP assets (BEAN:3CRV or BEAN:ETH)
