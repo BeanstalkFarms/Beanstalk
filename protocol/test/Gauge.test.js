@@ -240,6 +240,15 @@ describe('Gauge', function () {
           ).to.be.equal(to18('1'));
       })
 
+      it('liquidity Weighted', async function () {
+        await this.bean.mint(ownerAddress, to6('1000000'));
+        await this.silo.mockUpdateLiquidityWeight(
+          BEAN_ETH_WELL, 
+          this.silo.interface.getSighash('mockLiquidityWeight')
+        )
+        expect(await this.seasonGetter.getLiquidityToSupplyRatio()).to.be.equal(to18('0.5'));
+      })
+
       it('returns 0 if no liquidity', async function () {
         await this.bean.mint(ownerAddress, to6('1000000'));
         await this.pump.setCumulativeReserves([to6('0'), to18('0')]);

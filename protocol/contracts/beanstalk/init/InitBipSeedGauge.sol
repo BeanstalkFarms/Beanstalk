@@ -49,7 +49,7 @@ contract InitBipSeedGauge is Weather {
     uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_782_494_411175; // 6.68m BDV
 
     // gauge point factor is used to scale up the gauge points of the bean and bean3crv pools.
-    uint128 internal constant BEAN_ETH_INITAL_GAUGE_POINTS = 1000e18;
+    uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 1000e18;
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
@@ -82,7 +82,7 @@ contract InitBipSeedGauge is Weather {
         
         bytes4[5] memory gpSelectors = [bytes4(0), gpSelector, 0, 0, 0];
         bytes4[5] memory lwSelectors = [bytes4(0), lwSelector, 0, 0, 0];
-        uint128[5] memory gaugePoints = [uint128(0), BEAN_ETH_INITAL_GAUGE_POINTS, 0, 0, 0];
+        uint128[5] memory gaugePoints = [uint128(0), BEAN_ETH_INITIAL_GAUGE_POINTS, 0, 0, 0];
         uint64[5] memory optimalPercentDepositedBdv = [uint64(0), 100e6, 0, 0, 0];
         
         uint128 totalBdv;
