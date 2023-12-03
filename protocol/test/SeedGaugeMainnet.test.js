@@ -75,18 +75,18 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('average grown stalk per BDV per Season', async function () {
-      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.518287'));
+      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.291203'));
     })
 
     it('average Grown Stalk Per BDV', async function() {
       // average is 2.3839 grown stalk per BDV
       // note: should change with updated BDVs
-      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(23839);
+      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22858);
     })
 
     it('totalBDV', async function () {
       // ~40m total BDV
-      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('41000000'), to6('42000000'));
+      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('42000000'), to6('43000000'));
     })
 
     it('L2SR', async function () {

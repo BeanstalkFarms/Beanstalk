@@ -43,10 +43,11 @@ contract InitBipSeedGauge is Weather {
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
 
-    uint256 internal constant BEAN_UNMIGRATED_BDV = 306_693_996418; // ~300k BDV
-    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_212_521946; // ~26k BDV
-    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_230_682_326697; // 3.2m BDV
-    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_782_494_411175; // 6.68m BDV
+    uint256 internal constant BEAN_UNMIGRATED_BDV = 347_206_927197; // ~347k BDV
+    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_512_602424; // ~26k BDV
+    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_736_196_158417; // ~3.7m BDV
+    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 7_119_564_766493; // ~7.12m BDV
+    uint256 internal constant SILO_V2_EARNED_BEANS = 342_221_369041; // ~342k BDV
 
     // gauge point factor is used to scale up the gauge points of the bean and bean3crv pools.
     uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 1000e18;
@@ -60,7 +61,7 @@ contract InitBipSeedGauge is Weather {
         // update depositedBDV for bean, bean3crv, urBean, and urBeanETH.
         LibTokenSilo.incrementTotalDepositedBdv(
             C.BEAN,
-            BEAN_UNMIGRATED_BDV - s.migratedBdvs[C.BEAN]
+            BEAN_UNMIGRATED_BDV - s.migratedBdvs[C.BEAN] + SILO_V2_EARNED_BEANS
         );
         LibTokenSilo.incrementTotalDepositedBdv(
             C.CURVE_BEAN_METAPOOL,
