@@ -228,23 +228,37 @@ describe('Silo V3: migration calculation', function () {
 
       const depositsMigratedBetweenSiloV3AndUnripeMigration = {};
 
+      var removeEventTotals = {};
+
       //loop through events
       for (let i = 0; i < events.length; i++) {
+        
         let event = events[i];
+        // console.log('event: ', event);
         //get account from event
         let account = event.account;
-        //if this account is in the deposits file, remove the entire account
-        if (deposits[account]) {
-          delete deposits[account];
-        }
 
-        // depositsMigratedBetweenSiloV3AndUnripeMigration[account] = deposits[account];
+        //update remove event totals
+        if (!removeEventTotals[event.token]) {
+          removeEventTotals[event.token] = BigNumber.from(0);
+        }
+        removeEventTotals[event.token] = removeEventTotals[event.token].add(event.amount);
+
+        //if this account is in the deposits file, remove the entire account
+        // if (deposits[account]) {
+        //   delete deposits[account];
+        // }
+
+        depositsMigratedBetweenSiloV3AndUnripeMigration[account] = deposits[account];
       }
 
-      console.log('deposits remaining unmigrated: ', Object.keys(deposits).length);
+      console.log('removeEventTotals: ', removeEventTotals);
+
+      console.log('deposits migrated between: ', Object.keys(depositsMigratedBetweenSiloV3AndUnripeMigration).length);
 
       // var depositsReformatted = reformatData(deposits)
       var depositsReformatted = reformatData(deposits)
+      var depositsMigratedBetweenSiloV3AndUnripeMigrationReformatted = reformatData(depositsMigratedBetweenSiloV3AndUnripeMigration)
 
       var totalGasUsed = BigNumber.from(0);
 
@@ -252,71 +266,47 @@ describe('Silo V3: migration calculation', function () {
 
       var nextToMigrate = [];
 
-      var unmigrated = {};
+      var totalUnmigrated = {};
+      var migratedBetweenSilov3AndBip38 = {};
 
       var progress = 0;
+      //first calculate TOTAL unmigrated amounts (aka all of silov2 at time of silov3 depoyment)
       for (const depositorAddress in depositsReformatted) {
-          console.log('progress:', progress, 'depositorAddress: ', depositorAddress, 'totalGasUsed: ', totalGasUsed);
-
+          // console.log('progress:', progress, 'depositorAddress: ', depositorAddress, 'totalGasUsed: ', totalGasUsed);
           const tokens = depositsReformatted[depositorAddress]['tokens'];
-          const seasons = depositsReformatted[depositorAddress]['seasons'];
-          const amounts = depositsReformatted[depositorAddress]['amounts'];
           const bdvs = depositsReformatted[depositorAddress]['bdvs'];
-
           for (var i = 0; i < tokens.length; i++) {
             for (var j = 0; j < bdvs[i].length; j++) {
               var token = tokens[i];
               var bdv = bdvs[i][j];
-
-              if (!unmigrated[token]) {
-                unmigrated[token] = BigNumber.from(0);
+              if (!totalUnmigrated[token]) {
+                totalUnmigrated[token] = BigNumber.from(0);
               }
-
-              unmigrated[token] = unmigrated[token].add(bdv);
+              totalUnmigrated[token] = totalUnmigrated[token].add(bdv);
             }
           }
-
-          console.log('migrated between silov3 and unripe migration: ', unmigrated);
-
-          /*
-          let stalkDiff = 0;
-          let seedsDiff = 0;
-          let proof = [];
-
-          if (merkleData[depositorAddress]) {
-            stalkDiff = merkleData[depositorAddress]['stalk'];
-            seedsDiff = merkleData[depositorAddress]['seeds'];
-            proof = merkleData[depositorAddress]['proof'];
-          }
-
-          const depositorSigner = await impersonateSigner(depositorAddress);
-          mintEth(depositorAddress);
-          await this.silo.connect(depositorSigner);
-
-          //use farm to call mowAndMigrate
-          const migrateEncoded = this.migrate.interface.encodeFunctionData('mowAndMigrate', [depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof]);
-
-          nextToMigrate.push(migrateEncoded);
-
-          //address is last depositor in depositors list
-          if (nextToMigrate.length == batchIntoGroupsOf || '0xb3ce85df372271f37dbb40c21aca38acacbb315f' == depositorAddress) {
-
-            const migrateResult = await this.farm.connect(depositorSigner).farm(nextToMigrate);
-
-            // const migrateResult = await this.migrate.mowAndMigrate(depositorAddress, tokens, seasons, amounts, stalkDiff, seedsDiff, proof);
-
-            const receipt = await migrateResult.wait();
-            const gasUsed = receipt.gasUsed;
-            console.log('gasUsed: ', gasUsed);
-            totalGasUsed = totalGasUsed.add(gasUsed);
-            nextToMigrate = [];
-          }
-
-          // console.log('here 5');
-          progress++;*/
       }
+      console.log('total unmigrated to start with: ', totalUnmigrated);
 
-      console.log('final totalGasUsed: ', totalGasUsed);
+      //then calculate total migrated between silov3 and bip38
+      for (const depositorAddress in depositsMigratedBetweenSiloV3AndUnripeMigrationReformatted) {
+        // console.log('progress:', progress, 'depositorAddress: ', depositorAddress, 'totalGasUsed: ', totalGasUsed);
+        const tokens = depositsMigratedBetweenSiloV3AndUnripeMigrationReformatted[depositorAddress]['tokens'];
+        const bdvs = depositsMigratedBetweenSiloV3AndUnripeMigrationReformatted[depositorAddress]['bdvs'];
+        for (var i = 0; i < tokens.length; i++) {
+          for (var j = 0; j < bdvs[i].length; j++) {
+            var token = tokens[i];
+            var bdv = bdvs[i][j];
+            if (!migratedBetweenSilov3AndBip38[token]) {
+              migratedBetweenSilov3AndBip38[token] = BigNumber.from(0);
+            }
+            migratedBetweenSilov3AndBip38[token] = migratedBetweenSilov3AndBip38[token].add(bdv);
+          }
+        }
+      }
+      console.log('migrated between silov3 and unripe migration: ', migratedBetweenSilov3AndBip38);
+
+      // console.log('final totalGasUsed: ', totalGasUsed);
     });
   });
 });
