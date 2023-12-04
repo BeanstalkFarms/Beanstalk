@@ -3,12 +3,15 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
+// TODO rm
+import "forge-std/console.sol";
+
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../ReentrancyGuard.sol";
 import "../../libraries/LibBytes.sol";
-import "../../libraries/LibTractor.sol";
+import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
-import {LibFunction} from "../../libraries/LibFunction.sol";
+import {LibOperatorPasteParams} from "../../libraries/LibOperatorPasteParams.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
@@ -102,33 +105,70 @@ contract TractorFacet is ReentrancyGuard {
         runBlueprint(requisition)
         returns (bytes[] memory results)
     {
+        console.log("HERE1");
         // extract blueprint type and publisher data from blueprint.data.
         // bytes1 blueprintType = blueprint.data[0]; // TODO we are not using type
+        console.logBytes(requisition.blueprint.data);
         bytes memory blueprintData = LibBytes.sliceFrom(requisition.blueprint.data, 1);
+        require(blueprintData.length > 0, "Tractor: blueprint data empty");
+
+        console.log("HERE2");
 
         // Decode and execute advanced farm calls.
-        bytes[] memory splitData = abi.decode(blueprintData, (bytes[]));
-
-        // Update data with operator-defined fillData.
-        {
-            // TODO how does iterating over a bytes object work? Here we assume each 32 byte slot is one object.
-            for (uint256 i; i != requisition.blueprint.operatorPasteParams.length; ++i) {
-                bytes32 operatorPasteParams = requisition.blueprint.operatorPasteParams[i];
-                LibFunction.pasteOperatorBytes(
-                    operatorCallData,
-                    splitData, // pass by reference?
-                    operatorPasteParams
-                );
-            }
+        // Cut out blueprint data type and calldata selector. Keep location and length (it is a dynamically sized
+        // object or dynamically sized objects).
+        // bytes[] memory splitData;
+        // // NOTE this decode fails silently - decoding with a diff type array has undefined behavior.
+        // splitData = abi.decode(LibBytes.sliceFrom(requisition.blueprint.data, 1 + 4), (bytes[]));
+        // console.log("splitData before pastes");
+        // for (uint256 i = 0; i < splitData.length; ++i) {
+        //     console.logBytes(splitData[i]);
+        // }
+        // NOTE this decode works
+        AdvancedFarmCall[] memory calls = abi.decode(
+            LibBytes.sliceFrom(requisition.blueprint.data, 1 + 4),
+            (AdvancedFarmCall[])
+        );
+        bytes[] memory callsAsBytes = new bytes[](calls.length);
+        console.log("AdvancedFarmCall splitData before pastes");
+        for (uint256 i = 0; i < calls.length; ++i) {
+            callsAsBytes[i] = abi.encode(calls[i]);
+            console.logBytes(abi.encode(calls[i]));
         }
 
-        // Decode and execute advanced farm calls.
-        AdvancedFarmCall[] memory calls = abi.decode(abi.encode(splitData), (AdvancedFarmCall[]));
+        // TODO improve memory efficiency by manually digging into the bytes and splitting them up using read lengths.
 
-        results = new bytes[](calls.length);
-        for (uint256 i = 0; i < calls.length; ++i) {
-            results[i] = LibFarm._advancedFarmMem(calls[i], results);
-        }   
+        console.log("HERE3");
+
+        // Update data with operator-defined fillData.
+        // TODO how does iterating over a bytes object work? Here we assume each 32 byte slot is one object.
+        for (uint256 i; i != requisition.blueprint.operatorPasteParams.length; ++i) {
+            bytes32 operatorPasteParams = requisition.blueprint.operatorPasteParams[i];
+            callsAsBytes = LibOperatorPasteParams.pasteBytes(
+                operatorPasteParams,
+                operatorCallData,
+                callsAsBytes // NOTE pass by reference?
+            );
+        }
+
+        console.log("HERE4");
+
+        // // Decode and execute advanced farm calls.
+        // AdvancedFarmCall[] memory calls = abi.decode(abi.encode(splitData), (AdvancedFarmCall[]));
+        console.log("splitData after pastes");
+        for (uint256 i = 0; i < callsAsBytes.length; ++i) {
+            console.logBytes(callsAsBytes[i]);
+        }
+
+        results = new bytes[](callsAsBytes.length);
+        for (uint256 i = 0; i < callsAsBytes.length; ++i) {
+            results[i] = LibFarm._advancedFarmMem(
+                abi.decode(callsAsBytes[i], (AdvancedFarmCall)),
+                results
+            );
+        }
+
+        console.log("HERE5");
 
         emit Tractor(msg.sender, requisition.blueprintHash);
     }

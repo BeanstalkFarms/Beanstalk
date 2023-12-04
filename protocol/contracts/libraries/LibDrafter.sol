@@ -5,6 +5,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+// TODO rm
+import "forge-std/console.sol";
+
 import {JunctionFacet} from "../beanstalk/junction/JunctionFacet.sol";
 import {IBeanstalk} from "../interfaces/IBeanstalk.sol";
 import {LibClipboard} from "./LibClipboard.sol";

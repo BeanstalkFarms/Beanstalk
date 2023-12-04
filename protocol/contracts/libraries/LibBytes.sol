@@ -71,8 +71,8 @@ library LibBytes {
     }
 
     function toBytes32(bytes memory _bytes, uint256 _start) internal pure returns (bytes32) {
-        require(_start + 32 >= _start, "toUint256_overflow");
-        require(_bytes.length >= _start + 32, "toUint256_outOfBounds");
+        require(_start + 32 >= _start, "toBytes32_overflow");
+        require(_bytes.length >= _start + 32, "toBytes32_outOfBounds");
         bytes32 tempBytes32;
 
         assembly {
