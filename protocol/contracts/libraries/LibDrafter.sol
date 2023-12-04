@@ -15,6 +15,7 @@ import {AdvancedFarmCall} from "./LibFarm.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibTransfer} from "./Token/LibTransfer.sol";
 import {C} from "../C.sol";
+import {LibOperatorPasteParams, SLOT_SIZE, PUBLISHER_COPY_INDEX, OPERATOR_COPY_INDEX} from "./LibOperatorPasteParams.sol";
 
 // Functional
 // Cant use any operations here, only functions and direct data
@@ -38,12 +39,8 @@ import {C} from "../C.sol";
 //            generalized way.
 
 // This is the default size of arrays containing stems/deposits. Operators can populate the array up to the size.
-uint80 constant ARRAY_LENGTH = 10;
+uint80 constant ARRAY_LENGTH = 5;
 
-uint80 constant PUBLISHER_COPY_INDEX = type(uint80).max;
-uint80 constant OPERATOR_COPY_INDEX = type(uint80).max - 1;
-
-uint80 constant SLOT_SIZE = 32;
 uint80 constant ADDR_SIZE = 20;
 uint80 constant TARGET_SIZE = 20;
 uint80 constant SELECTOR_SIZE = 4;
@@ -58,64 +55,25 @@ uint80 constant ARGS_START_INDEX = TARGET_SIZE + SELECTOR_SIZE;
 library LibDrafter {
     using LibBytes for bytes;
 
-    struct operatorPasteStruct {
-        uint80 copyByteIndex;
-        uint80 pasteCallIndex;
-        uint80 pasteByteIndex;
-    }
-
-    function encodeOperatorPasteParams(
-        uint80 copyByteIndex,
-        uint80 pasteCallIndex,
-        uint80 pasteByteIndex
-    ) private pure returns (bytes32) {
-        return abi.encodePacked(copyByteIndex, pasteCallIndex, pasteByteIndex).toBytes32(0);
-    }
-
-    // function encodeOperatorPasteParams(
-    //     operatorPasteStruct memory operatorPasteStruct
-    // ) private pure returns (bytes memory) {
-    //     return abi.encodePacked(operatorPasteStruct.copyByteIndex, operatorPasteStruct.pasteCallIndex, operatorPasteStruct.pasteByteIndex);
+    // struct operatorPasteStruct {
+    //     uint80 copyByteIndex;
+    //     uint80 pasteCallIndex;
+    //     uint80 pasteByteIndex;
     // }
-
-    function generateOperatorPasteParams(
-        uint256 length,
-        uint80 copyStartByteIndex,
-        uint80 pasteCallIndex,
-        uint80 pasteStartByteIndex
-    ) private pure returns (bytes memory) {
-        bytes memory operatorPasteParams;
-        for (uint80 i = 0; i < length; i++) {
-            // operatorPasteStructs[i] = operatorPasteStruct({
-            //     copyByteIndex: copyStartByteIndex + SLOT_SIZE * i,
-            //     pasteCallIndex: pasteCallIndex,
-            //     pasteByteIndex: pasteStartByteIndex + SLOT_SIZE * i
-            // });
-            operatorPasteParams = operatorPasteParams.append(
-                encodeOperatorPasteParams(
-                    copyStartByteIndex + SLOT_SIZE * i, // copyByteIndex
-                    pasteCallIndex, // pasteCallIndex
-                    pasteStartByteIndex + SLOT_SIZE * i // pasteByteIndex
-                )
-            );
-        }
-        return operatorPasteParams;
-    }
 
     // NOTE OperaterCallData is encoded lazily, with each object taking a 32 bytes slot.
 
-    // OperatorCallData shape:
-    // 0-319: urBean stems
-    // 320-639: urBean amounts
-    // 640-959: urLP stems
-    // 960-1280: urLP amounts
-    //
+    // OperatorCallData expected shape:
+    // 0-119: int96[] - urBean stems
+    // 120-439: uint256[] - urBean amounts
+    // 440-559: int96[] - urLP stems
+    // 560-879: uint256[] - urLP amounts
 
     /// @notice generate a standard blueprint for enrooting deposits. Token, stems, and amounts are set by publisher
     ///         at blueprint creation time. Operator is paid in beans proportional to the total increase in stalk.
     function draftEnrootDeposits()
         external
-        pure
+        view
         returns (bytes memory data, bytes memory operatorPasteParams)
     {
         // Use contract and interface objects to extract selectors.
@@ -129,25 +87,17 @@ library LibDrafter {
         int96[] memory stems = new int96[](ARRAY_LENGTH);
         uint256[] memory amounts = new uint256[](ARRAY_LENGTH);
 
-        // // One array of operatorPasteStruct for the entire blueprint.
-        // operatorPasteStruct[] memory operatorPasteStructs = new operatorPasteStruct[](3);
-
         // Advanced Farm calls, composed of calldata and return paste params (clipboard).
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](6);
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](7);
 
         ////// getStalk(publisher) - returnData[0] //////
         advancedFarmCalls[0] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(beanstalk.balanceOfStalk.selector, address(0)),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteParams = operatorPasteParams.append(
-            encodeOperatorPasteParams(PUBLISHER_COPY_INDEX, 0, ARGS_START_INDEX)
+            LibOperatorPasteParams.encode(PUBLISHER_COPY_INDEX, 0, ARGS_START_INDEX)
         );
-        // operatorPasteStructs[0] = operatorPasteStruct({
-        //     copyByteIndex: PUBLISHER_COPY_INDEX,
-        //     pasteCallIndex: 0,
-        //     pasteByteIndex: ARGS_START_INDEX
-        // });
 
         ////// EnrootDeposits(UNRIPE_BEAN, stems, amounts) - returnData[1] //////
         advancedFarmCalls[1] = AdvancedFarmCall({
@@ -157,11 +107,11 @@ library LibDrafter {
                 stems,
                 amounts
             ),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteParams = abi.encode(
             operatorPasteParams,
-            generateOperatorPasteParams(
+            LibOperatorPasteParams.generate(
                 ARRAY_LENGTH,
                 SLOT_SIZE * 0,
                 1,
@@ -172,7 +122,7 @@ library LibDrafter {
         operatorCallDataLength += ARRAY_LENGTH * SLOT_SIZE;
         operatorPasteParams = abi.encode(
             operatorPasteParams,
-            generateOperatorPasteParams(
+            LibOperatorPasteParams.generate(
                 ARRAY_LENGTH,
                 operatorCallDataLength,
                 1,
@@ -190,11 +140,11 @@ library LibDrafter {
                 stems,
                 amounts
             ),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteParams = abi.encode(
             operatorPasteParams,
-            generateOperatorPasteParams(
+            LibOperatorPasteParams.generate(
                 ARRAY_LENGTH,
                 operatorCallDataLength,
                 1,
@@ -205,7 +155,7 @@ library LibDrafter {
         operatorCallDataLength += ARRAY_LENGTH * SLOT_SIZE;
         operatorPasteParams = abi.encode(
             operatorPasteParams,
-            generateOperatorPasteParams(
+            LibOperatorPasteParams.generate(
                 ARRAY_LENGTH,
                 operatorCallDataLength,
                 1,
@@ -218,10 +168,10 @@ library LibDrafter {
         ////// getStalk(publisher) - returnData[3] //////
         advancedFarmCalls[3] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(beanstalk.balanceOfStalk.selector, address(0)),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteParams = operatorPasteParams.append(
-            encodeOperatorPasteParams(PUBLISHER_COPY_INDEX, 3, ARGS_START_INDEX)
+            LibOperatorPasteParams.encode(PUBLISHER_COPY_INDEX, 3, ARGS_START_INDEX)
         );
 
         ///// junctions.Sub - returnData[4] //////
@@ -278,13 +228,22 @@ library LibDrafter {
             )
         });
         operatorPasteParams = operatorPasteParams.append(
-            encodeOperatorPasteParams(PUBLISHER_COPY_INDEX, 6, ARGS_START_INDEX + ADDR_SIZE)
+            LibOperatorPasteParams.encode(PUBLISHER_COPY_INDEX, 6, ARGS_START_INDEX + ADDR_SIZE)
         );
 
-        data = abi.encodePacked(
-            bytes("0x00"), // type
-            abi.encodeWithSelector(beanstalk.advancedFarm.selector, advancedFarmCalls)
+        bytes memory callData = abi.encodeWithSelector(
+            beanstalk.advancedFarm.selector,
+            advancedFarmCalls
         );
+        data = abi.encodePacked(
+            bytes1(0), // type
+            callData
+        );
+        console.logBytes(callData);
+        console.log("adv farm call:");
+        console.logBytes(abi.encode(advancedFarmCalls[0]));
+        console.log("adv farm calls:");
+        console.logBytes(abi.encode(advancedFarmCalls));
     }
 
     /*
@@ -305,7 +264,7 @@ library LibDrafter {
         });
         advancedFarmCalls[0] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(beanstalk.balanceOfStalk.selector, address(0)),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
 
         ////// Mow(account, token) - returnData[1] //////
@@ -321,7 +280,7 @@ library LibDrafter {
         });
         advancedFarmCalls[1] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(beanstalk.Mow.selector, address(0), address(0)),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
 
         ////// getStalk(publisher) - returnData[2] //////
@@ -332,7 +291,7 @@ library LibDrafter {
         });
         advancedFarmCalls[2] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(beanstalk.balanceOfStalk.selector, address(0)),
-            clipboard: bytes("0x00")
+            clipboard: abi.encodePacked(bytes2(0))
         });
 
         ///// junctions.Sub - returnData[3] //////

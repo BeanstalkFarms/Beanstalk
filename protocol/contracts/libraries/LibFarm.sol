@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibFunction} from "./LibFunction.sol";
+import {LibClipboard} from "./LibClipboard.sol";
 
 /**
  * @title Farm Lib
@@ -32,7 +33,7 @@ library LibFarm {
         if (pipeType == 0x00) {
             result = _farm(data.callData);
         } else {
-            bytes memory callData = LibFunction.useClipboard(
+            bytes memory callData = LibClipboard.useClipboard(
                 data.callData,
                 data.clipboard,
                 returnData
@@ -52,7 +53,7 @@ library LibFarm {
         if (pipeType == 0x00) {
             result = _farmMem(data.callData);
         } else {
-            bytes memory callData = LibFunction.useClipboard(
+            bytes memory callData = LibClipboard.useClipboard(
                 data.callData,
                 data.clipboard,
                 returnData

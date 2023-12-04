@@ -33,12 +33,6 @@ library LibTractor {
         address activePublisher;
     }
 
-    struct operatorPasteParams {
-        uint80 copyByteIndex;
-        uint80 pasteCallIndex;
-        uint80 pasteByteIndex;
-    }
-
     // Blueprint stores blueprint related values
     struct Blueprint {
         address publisher;
