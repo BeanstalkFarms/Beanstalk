@@ -111,7 +111,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
             )}
             <Link
               underline="hover"
-              href="https://docs.bean.money/almanac/guides/silo/understand-vapy"
+              href="https://docs.bean.money/almanac/guides/silo/understand-silo-vapy"
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
