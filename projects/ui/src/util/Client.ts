@@ -3,7 +3,7 @@ import {
   configureChains,
   Chain,
 } from 'wagmi';
-import { alchemyProvider } from 'wagmi/providers/alchemy';
+// import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 import { providers } from 'ethers';
 import { mainnet, localhost } from 'wagmi/chains';
@@ -15,6 +15,8 @@ import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet';
 import { TESTNET_RPC_ADDRESSES, SupportedChainId } from '~/constants';
 
 // ------------------------------------------------------------
+const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
+if (!ALCHEMY_KEY) throw new Error('VITE_ALCHEMY_API_KEY is not set');
 
 export type JsonRpcBatchProviderConfig = Omit<
   providers.FallbackProviderConfig,
@@ -98,17 +100,26 @@ if (import.meta.env.VITE_SHOW_DEV_CHAINS) {
 }
 
 const { chains, provider } = configureChains(baseChains, [
-  alchemyProvider({
-    apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
-    priority: 0,
-  }),
-  /// On known networks (homestead, goerli, etc.) Alchemy will
-  /// be used by default. In other cases, we fallback to a
-  /// provided RPC address for the given testnet chain.
+  // This is to be removed. We are using the batch provider below for everything
+  // and giving it the Alchemy url manually. Leaving this here for now in case we need to revert
+  // alchemyProvider({
+  //   apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
+  //   priority: 0,
+  // }),
+
+  // This will batch all read operations that happen in the same event loop
   jsonRpcBatchProvider({
     priority: 1,
     rpc: (_chain) => {
-      if (!TESTNET_RPC_ADDRESSES[_chain.id]) return null;
+      // if we're on mainnet, use the alchemy RPC
+      if (_chain.id === SupportedChainId.MAINNET)
+        return { http: ` https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}` };
+
+      // if we're on a testnet or dev, lookup what rpc to use
+      if (!TESTNET_RPC_ADDRESSES[_chain.id]) {
+        console.error('No RPC address for chain', _chain.id);
+        return null;
+      }
       return { http: TESTNET_RPC_ADDRESSES[_chain.id] };
     },
   }),

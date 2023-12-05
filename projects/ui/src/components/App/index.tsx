@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -38,7 +38,6 @@ import SiloTokenPage from '~/pages/silo/token';
 import SwapPage from '~/pages/swap';
 import GovernanceUpdater from '~/state/beanstalk/governance/updater';
 
-import { sgEnvKey } from '~/graph/client';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
 
@@ -222,7 +221,7 @@ export default function App() {
             </Typography>
           </Box>
           */}
-          </Box>
+        </Box>
       </Box>
     </>
   );
