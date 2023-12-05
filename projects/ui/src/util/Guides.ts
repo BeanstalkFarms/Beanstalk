@@ -12,6 +12,10 @@ export const HOW_TO_DEPOSIT_IN_THE_SILO: Guide = {
   title: 'How to Deposit in the Silo',
   url: 'https://docs.bean.money/almanac/guides/silo/deposit',
 };
+export const UNDERSTAND_SILO_VAPY: Guide = {
+  title: 'Understand Silo vAPY',
+  url: 'https://docs.bean.money/almanac/guides/silo/understand-silo-vapy',
+};
 export const HOW_TO_CONVERT_DEPOSITS: Guide = {
   title: 'How to Convert Deposits',
   url: 'https://docs.bean.money/almanac/guides/silo/convert',
@@ -44,6 +48,10 @@ export const HOW_TO_HARVEST_PODS: Guide = {
 };
 
 // BARN
+export const UNDERSTAND_FERT_VAPY: Guide = {
+  title: 'Understand Fert vAPY',
+  url: 'https://docs.bean.money/almanac/guides/barn/understand-fert-vapy',
+};
 export const HOW_TO_BUY_FERTILIZER: Guide = {
   title: 'How to Buy Fertilizer',
   url: 'https://docs.bean.money/almanac/guides/barn/buy-fertilizer',
