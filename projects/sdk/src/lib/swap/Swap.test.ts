@@ -122,6 +122,7 @@ async function transferToFarmBalance(tokenIn: Token, _amount: string) {
  */
 async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to: FarmToMode, _amount?: string) {
   const [tokenInBalanceBefore, tokenOutBalanceBefore] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
+  const pipelineBalancesBefore = await getPipelineBalances();
 
   const v = ["ETH", "WETH"].includes(tokenIn.symbol) ? 30 : 300;
   const amount = tokenIn.fromHuman(_amount ? _amount : v);
@@ -139,17 +140,23 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
   expect(tx.status).toBe(1);
 
   const [tokenInBalanceAfter, tokenOutBalanceAfter] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
+  const pipelineBalancesAfter = await getPipelineBalances();
 
   // There are less tokenIn than before the swapped
   expect(tokenInBalanceAfter.lt(tokenInBalanceBefore));
   // There are more tokenOut after the swap
   expect(tokenOutBalanceAfter.gt(tokenOutBalanceBefore));
-  // tokenOut balance is bigger than desired swap ammount, with some slippage tolerance
+  // tokenOut balance is bigger than desired swap amount, with some slippage tolerance
   expect(tokenOutBalanceAfter.gte(amountWithSlippage));
+  // Pipeline balances haven't changed
+  for (const token in pipelineBalancesBefore) {
+    expect(pipelineBalancesBefore[token].eq(pipelineBalancesAfter[token]))
+  }
+
 }
 
-async function getBalance(token: Token, mode: string) {
-  const balances = await sdk.tokens.getBalance(token, account);
+async function getBalance(token: Token, mode: string, user?: string) {
+  const balances = await sdk.tokens.getBalance(token, user || account);
   if (mode === "0") {
     return balances.external;
   }
@@ -161,3 +168,42 @@ async function getBalance(token: Token, mode: string) {
   }
   throw new Error("Unknown mode");
 }
+
+async function getPipelineBalances() {
+  const pipeline = sdk.contracts.pipeline.address;
+  const [
+    ethBalance,
+    wethBalance,
+    beanBalance,
+    usdtBalance,
+    usdcBalance,
+    daiBalance,
+    crv3Balance,
+    beancrv3Balance,
+    beanethBalance
+  ] = await Promise.all(
+    [
+      getBalance(sdk.tokens.ETH, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.WETH, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.BEAN, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.USDT, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.USDC, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.DAI, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.CRV3, FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.BEAN_CRV3_LP,FarmFromMode.EXTERNAL, pipeline),
+      getBalance(sdk.tokens.BEAN_ETH_WELL_LP, FarmFromMode.EXTERNAL, pipeline)
+    ]
+  );
+
+  return {
+    [sdk.tokens.ETH.symbol]: ethBalance,
+    [sdk.tokens.WETH.symbol]: wethBalance,
+    [sdk.tokens.BEAN.symbol]: beanBalance,
+    [sdk.tokens.USDT.symbol]: usdtBalance,
+    [sdk.tokens.USDC.symbol]: usdcBalance,
+    [sdk.tokens.DAI.symbol]: daiBalance,
+    [sdk.tokens.CRV3.symbol]: crv3Balance,
+    [sdk.tokens.BEAN_CRV3_LP.symbol]: beancrv3Balance,
+    [sdk.tokens.BEAN_ETH_WELL_LP.symbol]: beanethBalance
+  }; 
+};
