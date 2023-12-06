@@ -11,13 +11,14 @@ import "../ReentrancyGuard.sol";
 import "../../libraries/LibBytes.sol";
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
-import {LibOperatorPasteParams} from "../../libraries/LibOperatorPasteParams.sol";
+import {LibOperatorPasteInstr} from "../../libraries/LibOperatorPasteInstr.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author 0xm00neth
  */
 contract TractorFacet is ReentrancyGuard {
+    using LibOperatorPasteInstr for bytes32;
     /*********/
     /* Enums */
     /*********/
@@ -97,7 +98,7 @@ contract TractorFacet is ReentrancyGuard {
     /// Emits {Tractor} event
     function tractor(
         LibTractor.Requisition calldata requisition,
-        bytes memory operatorCallData
+        bytes memory operatorData
     )
         external
         payable
@@ -129,12 +130,6 @@ contract TractorFacet is ReentrancyGuard {
             LibBytes.sliceFrom(requisition.blueprint.data, 1 + 4),
             (AdvancedFarmCall[])
         );
-        bytes[] memory callsAsBytes = new bytes[](calls.length);
-        console.log("AdvancedFarmCall splitData before pastes");
-        for (uint256 i = 0; i < calls.length; ++i) {
-            callsAsBytes[i] = abi.encode(calls[i]);
-            console.logBytes(abi.encode(calls[i]));
-        }
 
         // TODO improve memory efficiency by manually digging into the bytes and splitting them up using read lengths.
 
@@ -142,30 +137,24 @@ contract TractorFacet is ReentrancyGuard {
 
         // Update data with operator-defined fillData.
         // TODO how does iterating over a bytes object work? Here we assume each 32 byte slot is one object.
-        for (uint256 i; i != requisition.blueprint.operatorPasteParams.length; ++i) {
-            bytes32 operatorPasteParams = requisition.blueprint.operatorPasteParams[i];
-            callsAsBytes = LibOperatorPasteParams.pasteBytes(
-                operatorPasteParams,
-                operatorCallData,
-                callsAsBytes // NOTE pass by reference?
+        for (uint256 i; i < requisition.blueprint.operatorPasteInstrs.length; ++i) {
+            bytes32 operatorPasteInstr = requisition.blueprint.operatorPasteInstrs[i];
+            // require(calls.length > pasteCallIndex, "PB: pasteCallIndex out of bounds");
+            // NOTE pass by reference ?
+            LibOperatorPasteInstr.pasteBytes(
+                operatorPasteInstr,
+                operatorData,
+                calls[operatorPasteInstr.pasteCallIndex()].callData
             );
         }
 
         console.log("HERE4");
 
-        // // Decode and execute advanced farm calls.
-        // AdvancedFarmCall[] memory calls = abi.decode(abi.encode(splitData), (AdvancedFarmCall[]));
-        console.log("splitData after pastes");
-        for (uint256 i = 0; i < callsAsBytes.length; ++i) {
-            console.logBytes(callsAsBytes[i]);
-        }
-
-        results = new bytes[](callsAsBytes.length);
-        for (uint256 i = 0; i < callsAsBytes.length; ++i) {
-            results[i] = LibFarm._advancedFarmMem(
-                abi.decode(callsAsBytes[i], (AdvancedFarmCall)),
-                results
-            );
+        results = new bytes[](calls.length);
+        for (uint256 i = 0; i < calls.length; ++i) {
+            require(calls[i].callData.length != 0, "TractorFacet: Empty AdvancedFarmCall");
+            console.logBytes(calls[i].callData);
+            results[i] = LibFarm._advancedFarmMem(calls[i], results);
         }
 
         console.log("HERE5");

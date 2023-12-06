@@ -46,30 +46,40 @@ library LibFunction {
         require(facet != address(0), "Diamond: Function does not exist");
     }
 
-
     /**
      * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
      * @param copyData The data bytes to copy from
      * @param pasteData The data bytes to paste into
      * @param copyIndex The index in copyData to copying from
      * @param pasteIndex The index in pasteData to paste into
-     * @return pastedData The data with the copied with 32 bytes
      **/
     function paste32Bytes(
         bytes memory copyData,
         bytes memory pasteData,
         uint256 copyIndex,
         uint256 pasteIndex
-    ) internal view returns (bytes memory pastedData) {
+    ) internal view {
+        // returns (bytes memory pastedData) {
         console.log("paste32Bytes");
-        console.logBytes(copyData);
-        console.logBytes(pasteData);
         console.log(copyIndex);
         console.log(pasteIndex);
+        console.logBytes(copyData);
+        console.logBytes(pasteData);
+
+        // bytes32 mload_;
 
         assembly {
+            // // Skip length (32 bytes).
+            // mload_ := mload(add(add(copyData, 0x20), copyIndex))
             mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
+            // mstore(
+            //     add(add(pasteData, 0x20), pasteIndex),
+            //     mload(add(add(copyData, 0x20), copyIndex))
+            // )
         }
-        pastedData = pasteData;
+        console.logBytes(pasteData);
+        // console.log("mload_");
+        // console.logBytes32(mload_);
+        // pastedData = pasteData;
     }
 }

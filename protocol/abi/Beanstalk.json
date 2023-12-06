@@ -1660,7 +1660,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "operatorCallData",
+        "name": "operatorData",
         "type": "bytes"
       }
     ],

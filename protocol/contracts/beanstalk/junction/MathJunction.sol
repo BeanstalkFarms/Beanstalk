@@ -10,7 +10,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
  * @title MathJunction
  * @author funderberker
  * @notice A Junction library that enables basic safe math functionality for blueprint encoded calls. Wraps SafeMath.
- * @dev Will be called from FarmFacet. Has access to Beanstalk state (delegatecall).
+ * @dev Will be called from JunctionFacet. Has access to Beanstalk state (delegatecall).
  * @dev Deviates from Beanstalk lib standard by using external functions. This provides a known callable selector.
  **/
 contract MathJunction {

@@ -37,7 +37,7 @@ library LibTractor {
     struct Blueprint {
         address publisher;
         bytes data;
-        bytes operatorPasteParams;
+        bytes32[] operatorPasteInstrs;
         uint256 maxNonce;
         uint256 startTime;
         uint256 endTime;
@@ -121,7 +121,7 @@ library LibTractor {
                         BLUEPRINT_TYPE_HASH,
                         blueprint.publisher,
                         keccak256(blueprint.data),
-                        keccak256(abi.encodePacked(blueprint.operatorPasteParams)),
+                        keccak256(abi.encodePacked(blueprint.operatorPasteInstrs)),
                         blueprint.maxNonce,
                         blueprint.startTime,
                         blueprint.endTime

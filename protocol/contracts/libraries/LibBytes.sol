@@ -122,17 +122,4 @@ library LibBytes {
     function unpackAddressAndStem(uint256 data) internal pure returns (address, int96) {
         return (address(uint160(data >> 96)), int96(int256(data)));
     }
-
-    function append(bytes memory data0, bytes32 data1) internal pure returns (bytes memory) {
-        // Append bytes with slot padding. One pasteParam per slot.
-        return abi.encode(data0, data1);
-    }
-
-    function appendPacked(
-        bytes memory data0,
-        bytes memory data1
-    ) internal pure returns (bytes memory) {
-        // Append bytes in packed style.
-        return abi.encodePacked(data0, data1);
-    }
 }

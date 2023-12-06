@@ -4,9 +4,13 @@
 
 pragma solidity =0.7.6;
 
+// TODO rm
+import "forge-std/console.sol";
+
 import {LibBytes} from "./LibBytes.sol";
 import {LibTractor} from "./LibTractor.sol";
 import {LibFunction} from "./LibFunction.sol";
+import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 
 //
 /**
@@ -18,41 +22,9 @@ import {LibFunction} from "./LibFunction.sol";
 library LibClipboard {
     using LibBytes for bytes;
 
-    struct ReturnPasteParams {
-        uint80 returnDataItemIndex;
-        uint80 copyByteIndex; // first 32 bytes are the length of the return value
-        uint80 pasteByteIndex; // first 24 bytes are target + selector (see struct AdvancedPipeCall)
-    }
-
-    // Does not include leading 2 bytes of type+userEtherFlag or padding.
-    // Encoder v2 does not encodePacked structs. Have to do it manually.
-    // returns bytes with length 30
-    function encodeReturnPasteParams(
-        ReturnPasteParams memory returnPasteParams
-    ) internal pure returns (bytes memory) {
-        return
-            abi.encodePacked(
-                returnPasteParams.returnDataItemIndex,
-                returnPasteParams.copyByteIndex,
-                returnPasteParams.pasteByteIndex
-            );
-    }
-
-    function decodeReturnPasteParams(
-        bytes memory returnPasteParams
-    ) internal pure returns (ReturnPasteParams memory) {
-        require(returnPasteParams.length == 30, "LibClipboard: invalid returnPasteParams");
-        return
-            ReturnPasteParams({
-                returnDataItemIndex: uint80(returnPasteParams.toUint256(0)),
-                copyByteIndex: uint80(returnPasteParams.toUint256(10)),
-                pasteByteIndex: uint80(returnPasteParams.toUint256(20))
-            });
-    }
-
-    function encodeClipboard(ReturnPasteParams memory params) internal pure returns (bytes memory) {
-        ReturnPasteParams[] memory returnPasteParams = new ReturnPasteParams[](1);
-        returnPasteParams[0] = params;
+    function encodeClipboard(bytes32 returnPasteParam) internal pure returns (bytes memory) {
+        bytes32[] memory returnPasteParams = new bytes32[](1);
+        returnPasteParams[0] = returnPasteParam;
         return encodeClipboard(0, returnPasteParams);
     }
 
@@ -60,12 +32,12 @@ library LibClipboard {
      * @notice Encode a clipboard for a single call.
      * @dev Not the most gas efficient. Many small calls to encodePacked.
      * @param etherValue Ether value to send with call.
-     * @param returnPasteParams Array of ReturnPasteParams structs to encode into a bytes object.
+     * @param returnPasteParams Array of returnPasteParam encoded as bytes32 objects.
      * @return clipboard Encoded clipboard, adhering to https://evmpipeline.org/pipeline.pdf, Figure 2.
      */
     function encodeClipboard(
         uint256 etherValue,
-        ReturnPasteParams[] memory returnPasteParams
+        bytes32[] memory returnPasteParams
     ) internal pure returns (bytes memory clipboard) {
         // Set clipboard type and use ether flag.
         clipboard = abi.encodePacked(
@@ -76,28 +48,50 @@ library LibClipboard {
         );
 
         // Set paste params, with proper padding.
-        if (clipboard[1] == bytes1(uint8(1))) {
+        if (clipboard[0] == bytes1(uint8(1))) {
             clipboard = abi.encodePacked(
                 clipboard,
-                encodeReturnPasteParams(returnPasteParams[0]),
-                etherValue
+                uint240(uint256(returnPasteParams[0])) // remove padding
             );
-        } else {
+        } else if (clipboard[0] == bytes1(uint8(2))) {
             clipboard = abi.encodePacked(clipboard, bytes30(0), returnPasteParams.length);
             for (uint256 i; i < returnPasteParams.length; ++i) {
-                clipboard = abi.encodePacked(
-                    clipboard,
-                    abi.encodePacked(bytes2(0), encodeReturnPasteParams(returnPasteParams[i]))
-                );
+                clipboard = abi.encodePacked(clipboard, returnPasteParams[i]);
             }
         }
 
         // Optionally append ether value.
-        if (clipboard[2] == bytes1(uint8(1))) {
+        if (clipboard[1] == bytes1(uint8(1))) {
             clipboard = abi.encodePacked(clipboard, etherValue);
         }
 
         return clipboard;
+    }
+
+    function decodeClipboard(
+        bytes memory clipboard
+    )
+        internal
+        pure
+        returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams)
+    {
+        typeId = clipboard[0];
+        bytes1 useEther = clipboard[1];
+        if (typeId == 0x01) {
+            returnPasteParams = new bytes32[](1);
+            // Replace leading 2 bytes with padding.
+            returnPasteParams[0] = bytes32(uint256(uint240(uint256(clipboard.toBytes32(0)))));
+        } else if (typeId == 0x02) {
+            uint256 numPasteParams = clipboard.toUint256(32);
+            returnPasteParams = new bytes32[](numPasteParams);
+            for (uint256 i; i < numPasteParams; i++) {
+                returnPasteParams[i] = clipboard.toBytes32(64 + i * 32);
+            }
+        }
+
+        if (useEther == 0x01) {
+            etherValue = clipboard.toUint256(clipboard.length - 32);
+        }
     }
 
     /** @notice Use a Clipboard on callData to copy return values stored as returnData from any Advanced Calls
@@ -131,40 +125,17 @@ library LibClipboard {
         bytes memory clipboard,
         bytes[] memory returnData
     ) internal view returns (bytes memory data) {
-        bytes1 typeId = clipboard[0];
-        if (typeId == 0x01) {
-            bytes32 pasteParams = abi.decode(clipboard, (bytes32));
-            data = pasteBytes(returnData, callData, pasteParams);
-        } else if (typeId == 0x02) {
-            (, bytes32[] memory pasteParams) = abi.decode(clipboard, (uint256, bytes32[]));
-            data = callData;
-            for (uint256 i; i < pasteParams.length; i++)
-                data = pasteBytes(returnData, data, pasteParams[i]);
-        } else {
-            revert("Function: Advanced Type not supported");
+        console.log("useClipboard-0");
+        console.logBytes(clipboard);
+        console.logBytes(callData);
+        (bytes1 typeId, , bytes32[] memory returnPasteParams) = decodeClipboard(clipboard);
+        require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
+        data = callData;
+        for (uint256 i; i < returnPasteParams.length; i++) {
+            data = LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
         }
-    }
-
-    /**
-     * @notice Copies 32 bytes from returnData into callData, determined by pasteParams
-     * Should be in the following format
-     * [2 bytes | 10 bytes               | 10 bytes        | 10 bytes        ]
-     * [ N/A    | returnDataItemIndex    | copyByteIndex   | pasteByteIndex  ]
-     **/
-    function pasteBytes(
-        bytes[] memory returnData, // paste source
-        bytes memory data, // paste destination
-        bytes32 pasteParams // ReturnPasteParams
-    ) internal view returns (bytes memory pastedData) {
-        // Shift `pasteParams` right 22 bytes to isolate pasteCallIndex.
-        // bytes memory pasteCallIndex = pasteParams[]();
-        data = LibFunction.paste32Bytes(
-            returnData[uint80(bytes10(pasteParams << 16))], // isolate returnDataItemIndex
-            data,
-            uint256(bytes32(bytes10(pasteParams << 96))), // Isolate copyByteIndex
-            uint256(bytes32(bytes10(pasteParams << 176))) // Isolate pasteByteIndex
-        );
-        // NOTE pass by reference?
+        console.log("useClipboard-9");
+        console.logBytes(data);
     }
 
     // /**
