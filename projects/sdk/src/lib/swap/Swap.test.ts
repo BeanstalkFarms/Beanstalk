@@ -148,7 +148,7 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
   expect(tokenOutBalanceAfter.gt(tokenOutBalanceBefore));
   // tokenOut balance is bigger than desired swap amount, with some slippage tolerance
   expect(tokenOutBalanceAfter.gte(amountWithSlippage));
-  // Pipeline balances haven't changed
+  // Balances are still the same
   for (const token in pipelineBalancesBefore) {
     expect(pipelineBalancesBefore[token].eq(pipelineBalancesAfter[token]))
   }
