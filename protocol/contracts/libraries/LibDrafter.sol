@@ -115,7 +115,7 @@ library LibDrafter {
         ////// MathJunction.sub(internalBalance, tip) - returnData[1] //////
         advancedFarmCalls[1] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(junctionFacet.sub.selector, uint256(0), tip),
-            clipboard: LibClipboard.encodeClipboard(
+            clipboard: LibClipboard.encode(
                 LibReturnPasteParam.encode(
                     0,
                     SLOT_SIZE, // copy after length data
@@ -132,7 +132,7 @@ library LibDrafter {
                 uint256(0),
                 LibTransfer.From.INTERNAL
             ),
-            clipboard: LibClipboard.encodeClipboard(
+            clipboard: LibClipboard.encode(
                 LibReturnPasteParam.encode(
                     1,
                     SLOT_SIZE, // copy after length data
@@ -311,7 +311,7 @@ library LibDrafter {
         returnPasteParams[1] = LibReturnPasteParam.encode(0, 0, ARGS_START_INDEX + SLOT_SIZE);
         advancedFarmCalls[4] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(junctionFacet.sub.selector, uint256(0), uint256(0)),
-            clipboard: LibClipboard.encodeClipboard(0, returnPasteParams)
+            clipboard: LibClipboard.encode(0, returnPasteParams)
         });
 
         ////// junctions.MulDiv(amount, rewardRatio, precision) - returnData[5] //////
@@ -322,9 +322,7 @@ library LibDrafter {
                 C.PRECISION / 10000, // 0.01% of stalk
                 C.PRECISION
             ),
-            clipboard: LibClipboard.encodeClipboard(
-                LibReturnPasteParam.encode(4, 0, ARGS_START_INDEX)
-            )
+            clipboard: LibClipboard.encode(LibReturnPasteParam.encode(4, 0, ARGS_START_INDEX))
         });
 
         ////// beanstalk.transfer - returnData[6] //////
@@ -337,7 +335,7 @@ library LibDrafter {
                 LibTransfer.From.INTERNAL,
                 LibTransfer.To.EXTERNAL
             ),
-            clipboard: LibClipboard.encodeClipboard(
+            clipboard: LibClipboard.encode(
                 LibReturnPasteParam.encode(
                     5,
                     0,

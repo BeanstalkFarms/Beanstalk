@@ -94,6 +94,7 @@ library LibTractor {
         return _tractorStorage().activePublisher;
     }
 
+    // TODO gas golf harder.
     /// @notice return current activePublisher address or msg.sender if no active blueprint
     /// @return user to take actions on behalf of
     function _getUser() internal view returns (address user) {

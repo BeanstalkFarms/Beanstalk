@@ -16,16 +16,15 @@ import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 /**
  * @title LibClipboard
  * @author funderbrker
- * @notice LibClipboard offers utility functions for composing Pipeline clipboards.
- * @dev Not gas golfed for on-chain usage. These functions are intended to be standardized client helpers.
+ * @notice LibClipboard offers utility functions for managing Pipeline clipboards.
  */
 library LibClipboard {
     using LibBytes for bytes;
 
-    function encodeClipboard(bytes32 returnPasteParam) internal pure returns (bytes memory) {
+    function encode(bytes32 returnPasteParam) internal pure returns (bytes memory) {
         bytes32[] memory returnPasteParams = new bytes32[](1);
         returnPasteParams[0] = returnPasteParam;
-        return encodeClipboard(0, returnPasteParams);
+        return encode(0, returnPasteParams);
     }
 
     /**
@@ -35,7 +34,7 @@ library LibClipboard {
      * @param returnPasteParams Array of returnPasteParam encoded as bytes32 objects.
      * @return clipboard Encoded clipboard, adhering to https://evmpipeline.org/pipeline.pdf, Figure 2.
      */
-    function encodeClipboard(
+    function encode(
         uint256 etherValue,
         bytes32[] memory returnPasteParams
     ) internal pure returns (bytes memory clipboard) {
@@ -68,7 +67,7 @@ library LibClipboard {
         return clipboard;
     }
 
-    function decodeClipboard(
+    function decode(
         bytes memory clipboard
     )
         internal
@@ -96,6 +95,7 @@ library LibClipboard {
 
     /** @notice Use a Clipboard on callData to copy return values stored as returnData from any Advanced Calls
      * that have already been executed and paste them into the callData of the next Advanced Call, in a customizable manner
+     * https://evmpipeline.org/pipeline.pdf, Figure 2
      * @param callData The callData bytes of next Advanced Call to paste onto
      * @param clipboard 0, 1 or n encoded paste operations and encoded ether value if using Pipeline
      * -------------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ library LibClipboard {
         console.log("useClipboard-0");
         console.logBytes(clipboard);
         console.logBytes(callData);
-        (bytes1 typeId, , bytes32[] memory returnPasteParams) = decodeClipboard(clipboard);
+        (bytes1 typeId, , bytes32[] memory returnPasteParams) = decode(clipboard);
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;
         for (uint256 i; i < returnPasteParams.length; i++) {
