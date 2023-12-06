@@ -149,9 +149,11 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
   // tokenOut balance is bigger than desired swap amount, with some slippage tolerance
   expect(tokenOutBalanceAfter.gte(amountWithSlippage));
   // Balances are still the same
-  for (const token in pipelineBalancesBefore) {
-    expect(pipelineBalancesBefore[token].eq(pipelineBalancesAfter[token]))
-  }
+  for (const [token, beforeBalance] of pipelineBalancesBefore) {
+    const afterBalance = pipelineBalancesAfter.get(token);
+    expect(beforeBalance.external.eq(afterBalance!.external));
+    expect(beforeBalance.internal.eq(afterBalance!.internal));
+  };
 
 }
 
@@ -171,39 +173,9 @@ async function getBalance(token: Token, mode: string, user?: string) {
 
 async function getPipelineBalances() {
   const pipeline = sdk.contracts.pipeline.address;
-  const [
-    ethBalance,
-    wethBalance,
-    beanBalance,
-    usdtBalance,
-    usdcBalance,
-    daiBalance,
-    crv3Balance,
-    beancrv3Balance,
-    beanethBalance
-  ] = await Promise.all(
-    [
-      getBalance(sdk.tokens.ETH, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.WETH, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.BEAN, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.USDT, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.USDC, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.DAI, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.CRV3, FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.BEAN_CRV3_LP,FarmFromMode.EXTERNAL, pipeline),
-      getBalance(sdk.tokens.BEAN_ETH_WELL_LP, FarmFromMode.EXTERNAL, pipeline)
-    ]
-  );
+  const ethBalance = await sdk.tokens.getBalance(sdk.tokens.ETH, pipeline);
+  const erc20balances = await sdk.tokens.getBalances(pipeline);
+  const allBalances = erc20balances.set(sdk.tokens.ETH, ethBalance);
 
-  return {
-    [sdk.tokens.ETH.symbol]: ethBalance,
-    [sdk.tokens.WETH.symbol]: wethBalance,
-    [sdk.tokens.BEAN.symbol]: beanBalance,
-    [sdk.tokens.USDT.symbol]: usdtBalance,
-    [sdk.tokens.USDC.symbol]: usdcBalance,
-    [sdk.tokens.DAI.symbol]: daiBalance,
-    [sdk.tokens.CRV3.symbol]: crv3Balance,
-    [sdk.tokens.BEAN_CRV3_LP.symbol]: beancrv3Balance,
-    [sdk.tokens.BEAN_ETH_WELL_LP.symbol]: beanethBalance
-  }; 
+  return allBalances;
 };
