@@ -174,8 +174,8 @@ async function getBalance(token: Token, mode: string, user?: string) {
 async function getPipelineBalances() {
   const pipeline = sdk.contracts.pipeline.address;
   const ethBalance = await sdk.tokens.getBalance(sdk.tokens.ETH, pipeline);
-  const erc20balances = await sdk.tokens.getBalances(pipeline);
-  const allBalances = erc20balances.set(sdk.tokens.ETH, ethBalance);
+  const erc20Balances = await sdk.tokens.getBalances(pipeline);
+  const allBalances = erc20Balances.set(sdk.tokens.ETH, ethBalance);
 
   return allBalances;
 };
