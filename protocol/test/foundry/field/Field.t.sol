@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {FieldFacet} from "~/beanstalk/field/FieldFacet.sol";
+import { FieldFacet } from "~/beanstalk/field/FieldFacet.sol";
 import "test/foundry/utils/LibConstant.sol";
 import "~/libraries/LibPRBMath.sol";
 import "../utils/TestHelper.sol";
@@ -14,14 +14,14 @@ contract FieldTest is FieldFacet, TestHelper {
     using Decimal for Decimal.D256;
 
     Storage.Weather weather;
-    
+
     /**
-     * @notice the diamond is setup in the constructor, 
+     * @notice the diamond is setup in the constructor,
      * with all the mock facets deployed and added.
-     * @dev this creates a beanstalk instance with a blank state - 
-     * this does not consider upgrading the current beanstalk, 
+     * @dev this creates a beanstalk instance with a blank state -
+     * this does not consider upgrading the current beanstalk,
      * so care is needed when:
-     * - adding new functions with the same selectors 
+     * - adding new functions with the same selectors
      * - changing of appStorage layout
      */
     constructor() {
@@ -46,10 +46,9 @@ contract FieldTest is FieldFacet, TestHelper {
         field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
     }
 
-
     /**
      * user should not sow if the amount input is less than the minSoil.
-     * @dev we set the soil, as in the code, we verify that the amount of 
+     * @dev we set the soil, as in the code, we verify that the amount of
      * beans is greater than the soil in the field..
      */
     function testCannotSowBelowMinSoil(uint256 beanSown) public {
@@ -65,13 +64,7 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSow();
-        sowAssertEq(
-            brean,
-            beanBalanceBefore,
-            totalBeanSupplyBefore,
-            100e6,
-            101e6
-        );
+        sowAssertEq(brean, beanBalanceBefore, totalBeanSupplyBefore, 100e6, 101e6);
         assertEq(uint256(field.totalSoil()), 0, "total Soil");
     }
 
@@ -81,13 +74,7 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSomeSow();
-        sowAssertEq(
-            brean,
-            beanBalanceBefore,
-            totalBeanSupplyBefore,
-            100e6,
-            101e6
-        );
+        sowAssertEq(brean, beanBalanceBefore, totalBeanSupplyBefore, 100e6, 101e6);
         assertEq(uint256(field.totalSoil()), 100e6, "total Soil");
     }
 
@@ -97,39 +84,27 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSomeSowFromInternal();
-        sowAssertEq(
-            brean,
-            beanBalanceBefore,
-            totalBeanSupplyBefore,
-            100e6,
-            101e6
-        );
+        sowAssertEq(brean, beanBalanceBefore, totalBeanSupplyBefore, 100e6, 101e6);
         assertEq(uint256(field.totalSoil()), 100e6);
     }
 
     /**
      * sow soil from internal tolerant mode.
-     * @dev internal tolerant will receive tokens 
-     * from the user's Internal Balance and will not fail 
+     * @dev internal tolerant will receive tokens
+     * from the user's Internal Balance and will not fail
      * if there is not enough in their Internal Balance.
-     */ 
+     */
     function testSowSomeSoilFromInternalTolerant() public {
         uint256 beanBalanceBefore = C.bean().balanceOf(brean);
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSomeSowFromInternalTolerant();
-        sowAssertEq(
-            brean,
-            beanBalanceBefore,
-            totalBeanSupplyBefore,
-            100e6,
-            101e6
-        );
+        sowAssertEq(brean, beanBalanceBefore, totalBeanSupplyBefore, 100e6, 101e6);
         assertEq(uint256(field.totalSoil()), 100e6);
     }
 
-    /** 
-     * in cases where a user wants to sow more beans than soil available, 
+    /**
+     * in cases where a user wants to sow more beans than soil available,
      * beanstalk introduces a `minSoil` parameter, which allows the user to
      * specify the minimum amount of soil they are willing to sow.
      * This test makes an attempt to sow 200 soil, with a minimum of 100 soil.
@@ -140,18 +115,12 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSowMin();
-        sowAssertEq(
-            brean,
-            beanBalanceBefore,
-            totalBeanSupplyBefore,
-            100e6,
-            101e6
-        );
+        sowAssertEq(brean, beanBalanceBefore, totalBeanSupplyBefore, 100e6, 101e6);
         assertEq(uint256(field.totalSoil()), 0);
     }
 
-    /** 
-     * in cases where a user wants to sow more beans than soil available, 
+    /**
+     * in cases where a user wants to sow more beans than soil available,
      * beanstalk introduces a `minSoil` parameter, which allows the user to
      * specify the minimum amount of soil they are willing to sow.
      * This test makes an attempt to sow 100 soil, with a minimum of 50 soil.
@@ -162,13 +131,7 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 totalBeanSupplyBefore = C.bean().totalSupply();
 
         _beforeEachSowMinWithEnoughSoil();
-        sowAssertEq(
-            brean,
-            beanBalanceBefore,
-            totalBeanSupplyBefore,
-            100e6,
-            101e6
-        );
+        sowAssertEq(brean, beanBalanceBefore, totalBeanSupplyBefore, 100e6, 101e6);
         assertEq(uint256(field.totalSoil()), 100e6);
     }
 
@@ -255,20 +218,20 @@ contract FieldTest is FieldFacet, TestHelper {
     function testCannotHarvestUnownedPlot() public {
         _beforeEachHarvest();
         field.incrementTotalHarvestableE(101e6);
-        uint256[] memory harvestPlot = new uint[](1);
+        uint256[] memory harvestPlot = new uint256[](1);
         harvestPlot[0] = 0;
         vm.prank(siloChad);
         vm.expectRevert("Field: no plot");
         field.harvest(harvestPlot, LibTransfer.To.EXTERNAL);
     }
 
-    /** 
-     * a user cannot harvest an unharvestable plot. 
+    /**
+     * a user cannot harvest an unharvestable plot.
      * a plot is unharvestable if the index of plot > s.f.harvestable.
      */
     function testCannotHarvestUnharvestablePlot() public {
         _beforeEachHarvest();
-        uint256[] memory harvestPlot = new uint[](1);
+        uint256[] memory harvestPlot = new uint256[](1);
         harvestPlot[0] = 0;
         vm.prank(brean);
         vm.expectRevert("Field: Plot not Harvestable");
@@ -348,19 +311,18 @@ contract FieldTest is FieldFacet, TestHelper {
 
     //////////////////// MORNING AUCTION ////////////////////////////
     /**
-     * The morning auction is a mechanism that introduces 
-     * reflexivity to the temperature that beanstalk is willing to lend at. 
-     * During the first 25 blocks (5 minutes) of the season (dubbed the morning), 
-     * the temperature starts at 1% and increases logarithmically until it reaches 
-     * the maximum temperature. 
+     * The morning auction is a mechanism that introduces
+     * reflexivity to the temperature that beanstalk is willing to lend at.
+     * During the first 25 blocks (5 minutes) of the season (dubbed the morning),
+     * the temperature starts at 1% and increases logarithmically until it reaches
+     * the maximum temperature.
      * The formula for the morning auction is:
-     * max(temperature*log_a*b+1(a*c + 1),1) where: 
+     * max(temperature*log_a*b+1(a*c + 1),1) where:
      * a = 2,
      * b = 25 (length of morning auction)
      * c = number of blocks elapsed since the start of season.
      */
     function testMorningAuctionValues(uint256 blockNo, uint32 _temperature) public {
-        
         // tests that morning auction values align with manually calculated values
         _temperature = uint32(bound(uint256(_temperature), 1, 100_000_000)); // arbitary large number
         season.setMaxTempE(_temperature);
@@ -368,43 +330,44 @@ contract FieldTest is FieldFacet, TestHelper {
 
         uint256[26] memory ScaleValues;
         ScaleValues = [
-            uint256(1000000), // Delta = 0
-            279415312704, // Delta = 1
-            409336034395, // 2
-            494912626048, // 3
-            558830625409, // 4
-            609868162219, // 5
-            652355825780, // 6
-            688751347100, // 7
-            720584687295, // 8
-            748873234524, // 9
-            774327938752, // 10
-            797465225780, // 11
-            818672068791, // 12
-            838245938114, // 13
-            856420437864, // 14
-            873382373802, // 15
-            889283474924, // 16
-            904248660443, // 17
-            918382006208, // 18
-            931771138485, // 19
-            944490527707, // 20
-            956603996980, // 21
-            968166659804, // 22
-            979226436102, // 23
-            989825252096, // 24
-            1000000000000 // 25
+            uint256(1_000_000), // Delta = 0
+            279_415_312_704, // Delta = 1
+            409_336_034_395, // 2
+            494_912_626_048, // 3
+            558_830_625_409, // 4
+            609_868_162_219, // 5
+            652_355_825_780, // 6
+            688_751_347_100, // 7
+            720_584_687_295, // 8
+            748_873_234_524, // 9
+            774_327_938_752, // 10
+            797_465_225_780, // 11
+            818_672_068_791, // 12
+            838_245_938_114, // 13
+            856_420_437_864, // 14
+            873_382_373_802, // 15
+            889_283_474_924, // 16
+            904_248_660_443, // 17
+            918_382_006_208, // 18
+            931_771_138_485, // 19
+            944_490_527_707, // 20
+            956_603_996_980, // 21
+            968_166_659_804, // 22
+            979_226_436_102, // 23
+            989_825_252_096, // 24
+            1_000_000_000_000 // 25
         ];
 
         vm.roll(blockNo);
-        
+
         // temperature is scaled as such:
         // (1e2)    season.weather().t
         // (1e12)    * pct
         // (1e6)     / TEMPERATURE_PRECISION
         // (1e8)     = temperature
-        uint256 __temperature = uint256(season.weather().t).mulDiv(ScaleValues[blockNo - 1], 1e6, LibPRBMath.Rounding.Up);
-        // temperature is always 1% if a user sows at the same block 
+        uint256 __temperature =
+            uint256(season.weather().t).mulDiv(ScaleValues[blockNo - 1], 1e6, LibPRBMath.Rounding.Up);
+        // temperature is always 1% if a user sows at the same block
         // as the sunrise block, irregardless of temperature
         uint256 calcTemperature = blockNo == 1 ? 1e6 : max(__temperature, 1e6);
         assertApproxEqAbs(field.temperature(), calcTemperature, 0); // +/- 1 due to rounding
@@ -414,7 +377,7 @@ contract FieldTest is FieldFacet, TestHelper {
     // various sowing at different dutch auctions + different soil amount
     // soil sown should be larger than starting soil
     // pods issued should be the same maximum
-    function test_remainingPods_abovePeg(uint256 rand) prank(brean) public {
+    function test_remainingPods_abovePeg(uint256 rand) public prank(brean) {
         _beforeEachMorningAuction();
         uint256 _block = 1;
         uint256 maxBeans = 10e6;
@@ -423,12 +386,12 @@ contract FieldTest is FieldFacet, TestHelper {
 
         while (field.totalSoil() > 0) {
             vm.roll(_block);
-            // we want to randomize the amount of soil sown, 
-            // but currently foundry does not support stateful fuzz testing. 
+            // we want to randomize the amount of soil sown,
+            // but currently foundry does not support stateful fuzz testing.
             uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
-            
+
             // if beans is less than maxBeans, then sow remaining instead
-            if(maxBeans > field.totalSoil()){
+            if (maxBeans > field.totalSoil()) {
                 beans = field.totalSoil();
             }
             totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
@@ -455,13 +418,13 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 initalBal = C.bean().balanceOf(brean); // inital balance
 
         while (field.totalSoil() > 0) {
-            // we want to randomize the beans sown, 
-            // but currently foundry does not support stateful fuzz testing. 
+            // we want to randomize the beans sown,
+            // but currently foundry does not support stateful fuzz testing.
             uint256 beans = uint256(keccak256(abi.encodePacked(rand))).mod(maxBeans);
             vm.roll(_block);
             uint256 lastTotalSoil = field.totalSoil();
             // if beans is less than maxBeans, then sow remaining instead
-            if(maxBeans > field.totalSoil()){
+            if (maxBeans > field.totalSoil()) {
                 beans = field.totalSoil();
             }
             totalSoilSown = totalSoilSown + beans;
@@ -477,15 +440,11 @@ contract FieldTest is FieldFacet, TestHelper {
 
         // check the amt of soil sown at the end of the season is equal to start soil
         assertEq(totalSoilSown, 100e6, "totalSoilSown");
-        assertEq(
-            totalSoilSown, 
-            initalBal - C.bean().balanceOf(brean), 
-            "total bean used does not equal total soil sown"
-        );
+        assertEq(totalSoilSown, initalBal - C.bean().balanceOf(brean), "total bean used does not equal total soil sown");
     }
 
     // multiple fixed amount sows at different dutch auction times
-    function testRoundingErrorBelowPeg(uint256 beans) prank(brean) public {
+    function testRoundingErrorBelowPeg(uint256 beans) public prank(brean) {
         // we bound between 1 and 10 beans to sow, out of 100 total soil.
         beans = bound(beans, 1e6, 10e6);
         _beforeEachMorningAuction();
@@ -497,29 +456,21 @@ contract FieldTest is FieldFacet, TestHelper {
             vm.roll(_block);
             lastTotalSoil = field.totalSoil();
             // if beans is less than the amount of soil in the field, then sow remaining instead
-            if(beans > field.totalSoil()) beans = field.totalSoil();
+            if (beans > field.totalSoil()) beans = field.totalSoil();
             totalSoilSown = totalSoilSown + beans;
             totalPodsMinted = totalPodsMinted + field.sow(beans, 1e6, LibTransfer.From.EXTERNAL);
-            
+
             // because totalsoil is scaled up,
-            // it may cause the delta to be up to 2 off 
+            // it may cause the delta to be up to 2 off
             // (if one was rounded up, and the other is rounded down)
             assertApproxEqAbs(lastTotalSoil - field.totalSoil(), beans, 2);
             // cap the blocks between 1 - 25 blocks
-            if(_block < 25) _block++;
+            if (_block < 25) _block++;
         }
 
-        assertEq(
-            field.totalUnharvestable(), 
-            totalPodsMinted, 
-            "TotalUnharvestable doesn't equal totalPodsMinted"
-        );
+        assertEq(field.totalUnharvestable(), totalPodsMinted, "TotalUnharvestable doesn't equal totalPodsMinted");
         // check the amount of beans sown at the end of the season is greater than the start soil
-        assertGt(
-            totalSoilSown, 
-            100e6, 
-            "Total soil sown is less than inital soil issued."
-        ); 
+        assertGt(totalSoilSown, 100e6, "Total soil sown is less than inital soil issued.");
     }
 
     /**
@@ -531,7 +482,7 @@ contract FieldTest is FieldFacet, TestHelper {
     function testSoilDecrementsOverDutchAbovePeg(uint256 startingSoil) public {
         _beforeEachMorningAuction();
         // uint256 startingSoil = 100e6;
-        startingSoil = bound(startingSoil, 100e6, 10000e6);
+        startingSoil = bound(startingSoil, 100e6, 10_000e6);
         season.setSoilE(startingSoil);
         startingSoil = startingSoil.mulDiv(200, 101);
         uint256 sfsoil = uint256(field.totalRealSoil());
@@ -552,7 +503,6 @@ contract FieldTest is FieldFacet, TestHelper {
             }
         }
     }
-    
 
     /**
      * sowing all soil, with variable soil, temperature, and place in the morning auction.
@@ -561,12 +511,7 @@ contract FieldTest is FieldFacet, TestHelper {
      * soil/bean used should always be greater/equal to soil issued.
      */
     function testSowAllMorningAuctionAbovePeg(uint256 soil, uint32 temperature, uint256 _block) public {
-        sowAllInit(
-            temperature,
-            soil,
-            _block,
-            true
-        );
+        sowAllInit(temperature, soil, _block, true);
         uint256 remainingPods = field.remainingPods();
         uint256 totalSoil = field.totalSoil();
         vm.prank(brean);
@@ -580,18 +525,9 @@ contract FieldTest is FieldFacet, TestHelper {
      * sowing all soil, with variable soil, temperature, and block below peg
      * pods issued should always be lower than remainingPods
      * soil/bean used should always be equal to soil issued.
-     */ 
-    function testSowAllMorningAuctionBelowPeg(
-        uint256 soil, 
-        uint32 temperature, 
-        uint256 _block
-    ) prank(brean) public {
-        sowAllInit(
-            temperature,
-            soil,
-            _block,
-            false
-        );
+     */
+    function testSowAllMorningAuctionBelowPeg(uint256 soil, uint32 temperature, uint256 _block) public prank(brean) {
+        sowAllInit(temperature, soil, _block, false);
         uint256 remainingPods = field.remainingPods();
         uint256 totalSoil = field.totalSoil();
         field.sow(totalSoil, 1e6, LibTransfer.From.EXTERNAL);
@@ -615,7 +551,7 @@ contract FieldTest is FieldFacet, TestHelper {
 
     function _beforeEachFullHarvest() public {
         field.incrementTotalHarvestableE(101e6);
-        uint256[] memory harvestPlot = new uint[](1);
+        uint256[] memory harvestPlot = new uint256[](1);
         harvestPlot[0] = 0;
         vm.prank(brean);
         vm.expectEmit(true, true, false, true);
@@ -626,7 +562,7 @@ contract FieldTest is FieldFacet, TestHelper {
 
     function _beforeEachPartialHarvest() public {
         field.incrementTotalHarvestableE(50e6);
-        uint256[] memory harvestPlot = new uint[](1);
+        uint256[] memory harvestPlot = new uint256[](1);
         harvestPlot[0] = 0;
         vm.prank(brean);
         vm.expectEmit(true, true, false, true);
@@ -647,8 +583,8 @@ contract FieldTest is FieldFacet, TestHelper {
     function _beforeEachHarvestEntirePlotWithListing() public {
         field.incrementTotalHarvestableE(101e6);
         vm.prank(brean);
-        marketplace.createPodListing(0, 0, 500, 500000, 200 * 1e6, 1 * 1e6, LibTransfer.To.EXTERNAL);
-        uint256[] memory harvestPlot = new uint[](1);
+        marketplace.createPodListing(0, 0, 500, 500_000, 200 * 1e6, 1 * 1e6, LibTransfer.To.EXTERNAL);
+        uint256[] memory harvestPlot = new uint256[](1);
         harvestPlot[0] = 0;
         vm.prank(brean);
         vm.expectEmit(true, true, false, true);
@@ -676,7 +612,7 @@ contract FieldTest is FieldFacet, TestHelper {
         field.sow(100e6, 1e6, LibTransfer.From.EXTERNAL);
     }
 
-    function _beforeEachSomeSowFromInternal() prank(brean) public {
+    function _beforeEachSomeSowFromInternal() public prank(brean) {
         season.setSoilE(200e6);
         token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
         vm.expectEmit(true, true, true, true);
@@ -685,7 +621,7 @@ contract FieldTest is FieldFacet, TestHelper {
         field.sow(100e6, 1e6, LibTransfer.From.INTERNAL);
     }
 
-    function _beforeEachSomeSowFromInternalTolerant() prank(brean) public {
+    function _beforeEachSomeSowFromInternalTolerant() public prank(brean) {
         season.setSoilE(200e6);
         token.transferToken(C.bean(), brean, 100e6, LibTransfer.From.EXTERNAL, LibTransfer.To.INTERNAL);
         vm.expectEmit(true, true, true, true);
@@ -694,7 +630,7 @@ contract FieldTest is FieldFacet, TestHelper {
         field.sow(100e6, 1e6, LibTransfer.From.INTERNAL_TOLERANT);
     }
 
-    function _beforeEachSowMin() prank(brean) public {
+    function _beforeEachSowMin() public prank(brean) {
         season.setSoilE(100e6);
         vm.roll(30);
         vm.expectEmit(true, true, true, true);
@@ -703,7 +639,7 @@ contract FieldTest is FieldFacet, TestHelper {
         field.sowWithMin(200e6, 1e6, 100e6, LibTransfer.From.EXTERNAL);
     }
 
-    function _beforeEachSowMinWithEnoughSoil() prank(brean) public {
+    function _beforeEachSowMinWithEnoughSoil() public prank(brean) {
         season.setSoilE(200e6);
         vm.expectEmit(true, true, true, true);
         // account, index, beans, pods
@@ -740,7 +676,9 @@ contract FieldTest is FieldFacet, TestHelper {
         uint256 preTotalBalance,
         uint256 sowedAmount,
         uint256 expectedPods
-    ) public {
+    )
+        public
+    {
         assertEq(C.bean().balanceOf(account), preBeanBalance - sowedAmount, "balanceOf");
         assertEq(field.plot(account, 0), expectedPods, "plot");
         assertEq(C.bean().balanceOf(address(field)), 0, "field balanceOf");
@@ -751,16 +689,11 @@ contract FieldTest is FieldFacet, TestHelper {
         assertEq(field.harvestableIndex(), 0, "harvestableIndex");
     }
 
-    function sowAllInit(
-        uint32 temperature,
-        uint256 soil,
-        uint256 _block,
-        bool abovePeg
-    ) public {
-        temperature = uint32(bound(uint256(temperature), 1, 10000));
+    function sowAllInit(uint32 temperature, uint256 soil, uint256 _block, bool abovePeg) public {
+        temperature = uint32(bound(uint256(temperature), 1, 10_000));
         soil = bound(soil, 1e6, 100e6);
         // maximum blockdelta within a season is 300 blocks, but the block starts at 1
-        _block = bound(_block, 1, 301); 
+        _block = bound(_block, 1, 301);
         season.setMaxTempE(temperature);
         season.setSoilE(soil);
         season.setAbovePegE(abovePeg);

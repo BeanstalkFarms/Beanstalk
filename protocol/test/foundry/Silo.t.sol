@@ -14,7 +14,7 @@ import "~/C.sol";
 contract SiloTest is MockSiloFacet, TestHelper {
     using SafeMath for uint256;
     using LibSafeMath32 for uint32;
-  
+
     function setUp() public {
         console.log("diamondSetup");
         setupDiamond();
@@ -28,7 +28,6 @@ contract SiloTest is MockSiloFacet, TestHelper {
         vm.prank(siloChad);
         IERC20(C.bean()).approve(diamond, uint256(-1));
     }
-    function testAAA() public {
-        
-    }
+
+    function testAAA() public { }
 }
