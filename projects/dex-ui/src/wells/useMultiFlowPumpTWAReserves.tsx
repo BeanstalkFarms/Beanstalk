@@ -73,9 +73,12 @@ export const useMultiFlowPumpTWAReserves = () => {
     }
   );
 
+  console.log("twaReserves: ", query.data);
+
   const getTWAReservesWithWell = useCallback(
     (well: Well | undefined) => {
       if (!well || !query.data) return undefined;
+      console.log("[GetTWAReservesWithWell] well: ", well.address);
 
       return query.data[well.address.toLowerCase()];
     },
