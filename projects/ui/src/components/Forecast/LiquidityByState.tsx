@@ -33,11 +33,11 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
     {
       title: 'Stalk',
       tooltip:
-        'This is the total Stalk supply. Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs.',
+        'The total Stalk supply. Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs.',
       token: STALK,
       amount: beanstalkSilo.stalk.total,
     },
-   /* {
+    /* {
       title: 'Seeds',
       tooltip:
         'This is the total Seed supply. Each Seed yields 1/10000 Grown Stalk each Season.',
@@ -47,14 +47,14 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
     {
       title: 'Pods',
       tooltip:
-        'This is the total Pod supply. Pods become Harvestable on a FIFO basis.',
+        'The total number of Unharvestable Pods. Pods become Harvestable on a FIFO basis.',
       token: PODS,
       amount: beanstalkField.podLine,
     },
     {
       title: 'Sprouts',
       tooltip:
-        'This is the total Sprout supply. Sprouts are the number of Beans left to be earned from Active Fertilizer. Sprouts become Rinsable on a pari passu basis.',
+        'The total number of Unrinsable Sprouts. Sprouts are the number of Beans left to be earned from Active Fertilizer. Sprouts become Rinsable on a pari passu basis.',
       token: SPROUTS,
       amount: beanstalkBarn.unfertilized,
     },

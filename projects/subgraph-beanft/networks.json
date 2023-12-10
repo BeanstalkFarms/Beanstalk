@@ -11,6 +11,10 @@
     "barnraise": {
       "address": "0xa969bb19b1d35582ded7ea869cecd60a3bd5d1e8",
       "startBlock": 15533885
+    },
+    "basin": {
+      "address": "0x191b7d1cfa89c9389bbf5f7f49f4b8f93ec3740f",
+      "startBlock": 18590231
     }
   }
 }

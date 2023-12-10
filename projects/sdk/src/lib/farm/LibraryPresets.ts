@@ -257,17 +257,33 @@ export class LibraryPresets {
       const transfer = new sdk.farm.actions.TransferToken(fromToken.address, sdk.contracts.pipeline.address, from, FarmToMode.EXTERNAL);
 
       // This transfers the output token back to Beanstalk, from PIPELINE. Used when transferBack == true
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL);
+      const transferClipboard = {
+        tag: "swap",
+        copySlot: 0,
+        pasteSlot: 2
+      };
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(
+        toToken.address,
+        account,
+        FarmFromMode.EXTERNAL,
+        FarmToMode.INTERNAL,
+        transferClipboard
+      );
 
       // This approves the transferToBeanstalk operation. Used when transferBack == true
-      const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address);
+      const approveClipboard = {
+        tag: "swap",
+        copySlot: 0,
+        pasteSlot: 1
+      };
+      const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, approveClipboard);
 
-      // When transferBack is true, we tell Wells to send the swap result to PIEPLINE, otherwise
+      // When transferBack is true, we tell Wells to send the swap result to PIPELINE, otherwise
       // send it directly to the user
       const recipient = transferBack ? sdk.contracts.pipeline.address : account;
 
       // Set up the AdvancedPipe workflow that will call Wells via PIPELINE
-      const advancedPipe = sdk.farm.createAdvancedPipe("Pipeline");
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineBeanWethSwap");
 
       // Approve WELL to spend PIPELINE's input token
       const approve = new sdk.farm.actions.ApproveERC20(fromToken, WELL_ADDRESS);
@@ -304,19 +320,25 @@ export class LibraryPresets {
 
       // This approves the transferToBeanstalk operation.
       const approveClipboard = {
-        tag: "amountToDeposit", 
-        copySlot: 0, 
+        tag: "amountToDeposit",
+        copySlot: 0,
         pasteSlot: 1
-      }
+      };
       const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, approveClipboard);
 
       // Transfers the output token back to Beanstalk, from PIPELINE.
       const transferClipboard = {
-        tag: "amountToDeposit", 
-        copySlot: 0, 
+        tag: "amountToDeposit",
+        copySlot: 0,
         pasteSlot: 2
-      }
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
+      };
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(
+        well.address,
+        account,
+        FarmFromMode.EXTERNAL,
+        FarmToMode.INTERNAL,
+        transferClipboard
+      );
 
       result.push(transfer);
       advancedPipe.add(addLiquidity, { tag: "amountToDeposit" });

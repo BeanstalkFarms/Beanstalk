@@ -1,3 +1,4 @@
+import React from 'react';
 import { tickFormatPercentage } from '~/components/Analytics/formatters';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import SeasonPlot, {
@@ -11,13 +12,11 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 
 const getValue = (season: LiquiditySupplyRatioQuery['seasons'][number]) =>
-  (season.supplyInPegLP * 100);
-const formatValue = (value: number) =>
-  `${value.toFixed(4)}%`;
+  season.supplyInPegLP * 100;
+const formatValue = (value: number) => `${value.toFixed(4)}%`;
 const statProps = {
-  title: 'Liquidity:Supply Ratio',
-  titleTooltip:
-    `The ratio of Beans in liquidity pools on the Oracle Whitelist per Bean, displayed as a percentage. The Liquidity:Supply Ratio is a useful indicator of Beanstalk's health.`,
+  title: 'Liquidity to Supply Ratio',
+  titleTooltip: `The ratio of Beans in liquidity pools on the Oracle Whitelist per Bean, displayed as a percentage, at the beginning of every Season. The Liquidity to Supply Ratio is a useful indicator of Beanstalk's health. Pre-exploit values include liquidity in pools on the Deposit Whitelist.`,
   gap: 0.25,
 };
 const queryConfig = {

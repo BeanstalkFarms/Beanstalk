@@ -3,12 +3,17 @@ import { ethers } from "ethers";
 import { FarmFromMode, FarmToMode } from "../types";
 import { Token } from "src/classes/Token";
 import { Clipboard } from "src/lib/depot";
+import { ClipboardSettings } from "src/types";
 
 export class Deposit extends StepClass<BasicPreparedResult> {
   public name: string = "deposit";
-  public clipboard?: { tag: string, copySlot: number, pasteSlot: number };
+  public clipboard?: ClipboardSettings;
 
-  constructor(public readonly token: Token, public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL_EXTERNAL, clipboard?: { tag: string, copySlot: number, pasteSlot: number }) {
+  constructor(
+    public readonly token: Token,
+    public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL_EXTERNAL,
+    clipboard?: ClipboardSettings
+  ) {
     super();
     this.clipboard = clipboard;
   }
@@ -17,11 +22,11 @@ export class Deposit extends StepClass<BasicPreparedResult> {
     // Checking if the user isn't directly depositing BEANETH
     const indirectBeanEth = this.token.symbol === "BEANETH" && context.step.index > 0;
     const beanEthClipboard = {
-      tag: `deposit${context.step.index}Amount`, 
-      copySlot: 6, 
+      tag: `deposit${context.step.index}Amount`,
+      copySlot: 6,
       pasteSlot: 1
     };
-    
+
     if (indirectBeanEth && !this.clipboard) this.clipboard = beanEthClipboard;
 
     return {
@@ -43,9 +48,11 @@ export class Deposit extends StepClass<BasicPreparedResult> {
             _amountInStep,
             this.fromMode
           ]),
-          clipboard: this.clipboard ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot) : undefined
+          clipboard: this.clipboard
+            ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot)
+            : undefined
         };
-      }, 
+      },
       decode: (data: string) => Deposit.sdk.contracts.beanstalk.interface.decodeFunctionData("deposit", data),
       decodeResult: (result: string) => Deposit.sdk.contracts.beanstalk.interface.decodeFunctionResult("deposit", result)
     };

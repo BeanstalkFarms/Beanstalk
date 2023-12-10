@@ -2,17 +2,18 @@ import { ethers } from "ethers";
 import { BasicPreparedResult, RunContext, Step, StepClass } from "src/classes/Workflow";
 import { FarmFromMode, FarmToMode } from "../types";
 import { Clipboard } from "src/lib/depot";
+import { ClipboardSettings } from "src/types";
 
 export class TransferToken extends StepClass<BasicPreparedResult> {
   public name: string = "transferToken";
-  public clipboard?: { tag: string, copySlot: number, pasteSlot: number };
+  public clipboard?: ClipboardSettings;
 
   constructor(
     public readonly _tokenIn: string,
     public readonly _recipient: string,
     public readonly _fromMode: FarmFromMode = FarmFromMode.INTERNAL_TOLERANT,
     public readonly _toMode: FarmToMode = FarmToMode.INTERNAL,
-    clipboard?: { tag: string, copySlot: number, pasteSlot: number }
+    clipboard?: ClipboardSettings
   ) {
     super();
     this.clipboard = clipboard;
@@ -40,7 +41,9 @@ export class TransferToken extends StepClass<BasicPreparedResult> {
             this._fromMode, //
             this._toMode //
           ]),
-          clipboard: this.clipboard ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot) : undefined
+          clipboard: this.clipboard
+            ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot)
+            : undefined
         };
       },
       decode: (data: string) => TransferToken.sdk.contracts.beanstalk.interface.decodeFunctionData("transferToken", data),

@@ -231,7 +231,9 @@ const DepositForm: FC<
             />
           );
         })}
-        {migrationNeeded === true ? null : <ClaimBeanDrawerToggle />}
+        {migrationNeeded === true ? null : (
+          <ClaimBeanDrawerToggle actionText="Deposit" />
+        )}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -296,7 +298,7 @@ const DepositForm: FC<
           Deposit
         </SmartSubmitButton>
       </Stack>
-      <FormWithDrawer.Drawer title="Use Claimable Beans">
+      <FormWithDrawer.Drawer title="Deposit Claimable Beans">
         <ClaimBeanDrawerContent
           quoteProviderProps={{
             name: 'claimableBeans',
@@ -543,7 +545,7 @@ const DepositPropProvider: FC<{
           amountIn,
           values.settings.slippage,
           target.equals(BEAN_ETH_WELL_LP) ? 1.2 : undefined,
-          tokenIn.symbol !== "BEANETH" && target.equals(BEAN_ETH_WELL_LP)
+          tokenIn.symbol !== 'BEANETH' && target.equals(BEAN_ETH_WELL_LP)
         );
 
         const txn = await execute();

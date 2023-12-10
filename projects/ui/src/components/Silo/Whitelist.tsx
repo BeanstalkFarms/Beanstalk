@@ -49,6 +49,7 @@ import BeanProgressIcon from '../Common/BeanProgressIcon';
  * This table is the entry point to deposit Beans, LP, etc.
  */
 import { FC } from '~/types';
+import StatHorizontal from '../Common/StatHorizontal';
 
 const ARROW_CONTAINER_WIDTH = 20;
 const TOOLTIP_COMPONENT_PROPS = {
@@ -125,7 +126,7 @@ const Whitelist: FC<{
                     returns for Depositing assets in the Silo.&nbsp;
                     <Link
                       underline="hover"
-                      href="https://docs.bean.money/almanac/guides/silo/understand-vapy"
+                      href="https://docs.bean.money/almanac/guides/silo/understand-silo-vapy"
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
@@ -499,9 +500,11 @@ const Whitelist: FC<{
                       {/* If this is the entry for Bean deposits,
                        * display Earned Beans and Deposited Beans separately.
                        * Internally they are both considered "Deposited". */}
-                      {token === Bean ? (
-                        <Tooltip
-                          title={
+                      <Tooltip
+                        placement="right"
+                        title={
+                          token.equals(Bean) &&
+                          farmerSilo.beans.earned.gt(0) ? (
                             <>
                               {displayFullBN(
                                 deposited?.amount || ZERO_BN,
@@ -536,33 +539,47 @@ const Whitelist: FC<{
                               BEAN
                               <br />
                             </>
-                          }
-                        >
-                          <span>
-                            {displayFullBN(
-                              deposited?.amount || ZERO_BN,
-                              token.displayDecimals
-                            )}
-                            {farmerSilo.beans.earned.gt(0) ? (
-                              <Typography component="span" color="primary.main">
-                                {' + '}
-                                {displayFullBN(
-                                  farmerSilo.beans.earned,
-                                  token.displayDecimals
-                                )}
-                              </Typography>
-                            ) : null}
-                          </span>
-                        </Tooltip>
-                      ) : (
-                        displayFullBN(
-                          deposited?.amount || ZERO_BN,
-                          token.displayDecimals
-                        )
-                      )}
-                      <Box display={{ md: 'inline', xs: 'none' }}>
-                        &nbsp;{token.symbol}
-                      </Box>
+                          ) : (
+                            !token.equals(Bean) &&
+                            deposited?.amount.gt(0) && (
+                              <Stack gap={0.5}>
+                                <StatHorizontal label="Current BDV:">
+                                  {displayFullBN(
+                                    deposited?.amount.multipliedBy(
+                                      getBDV(token)
+                                    ) || ZERO_BN,
+                                    token.displayDecimals
+                                  )}
+                                </StatHorizontal>
+                                <StatHorizontal label="Recorded BDV:">
+                                  {displayFullBN(
+                                    deposited?.bdv || ZERO_BN,
+                                    token.displayDecimals
+                                  )}
+                                </StatHorizontal>
+                              </Stack>
+                            )
+                          )
+                        }
+                      >
+                        <span>
+                          {displayFullBN(
+                            deposited?.amount || ZERO_BN,
+                            token.displayDecimals
+                          )}
+                          {token.equals(Bean) &&
+                          farmerSilo.beans.earned.gt(0) ? (
+                            <Typography component="span" color="primary.main">
+                              {' + '}
+                              {displayFullBN(
+                                farmerSilo.beans.earned,
+                                token.displayDecimals
+                              )}
+                            </Typography>
+                          ) : null}
+                          &nbsp;{token.symbol}
+                        </span>
+                      </Tooltip>
                     </Typography>
                   </Grid>
 

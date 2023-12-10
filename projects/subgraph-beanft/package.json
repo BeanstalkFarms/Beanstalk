@@ -11,11 +11,14 @@
     "create-hosted": "graph create --node http://graph.node.bean.money:8020/ beanft",
     "remove-hosted": "graph remove --node http://graph.node.bean.money:8020/ beanft",
     "deploy-hosted": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanft",
+    "create-hosted-dev": "graph create --node http://graph.node.bean.money:8020/ beanft-dev",
+    "remove-hosted-dev": "graph remove --node http://graph.node.bean.money:8020/ beanft-dev",
+    "deploy-hosted-dev": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanft-dev",
     "test": "graph test"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.46.1",
-    "@graphprotocol/graph-ts": "^0.29.1",
+    "@graphprotocol/graph-cli": "0.56.0",
+    "@graphprotocol/graph-ts": "0.31.0",
     "ethers": "^6.3.0"
   },
   "devDependencies": {

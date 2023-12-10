@@ -38,7 +38,11 @@ import { AppState } from '~/state';
 import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import GuideButton from '~/components/Common/Guide/GuideButton';
-import { CLAIM_SILO_REWARDS, HOW_TO_DEPOSIT_IN_THE_SILO } from '~/util/Guides';
+import {
+  CLAIM_SILO_REWARDS,
+  HOW_TO_DEPOSIT_IN_THE_SILO,
+  UNDERSTAND_SILO_VAPY,
+} from '~/util/Guides';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
@@ -345,8 +349,14 @@ const RewardsBar: FC<{
 
       await farm.estimate(ethers.BigNumber.from(0));
 
-      const adjustedGas = gas ? Math.floor(gas.toNumber() * gasMultiplier) : undefined;
-      const txn = await farm.execute(ethers.BigNumber.from(0), { slippage: 0 }, adjustedGas ? { gasLimit: adjustedGas } : undefined);
+      const adjustedGas = gas
+        ? Math.floor(gas.toNumber() * gasMultiplier)
+        : undefined;
+      const txn = await farm.execute(
+        ethers.BigNumber.from(0),
+        { slippage: 0 },
+        adjustedGas ? { gasLimit: adjustedGas } : undefined
+      );
       txToast.confirming(txn);
 
       const receipt = await txn.wait();
@@ -596,7 +606,9 @@ const RewardsBar: FC<{
                     label={
                       <GasTag
                         px={0}
-                        gasLimit={BigNumberJS(Math.floor((gas?.toNumber() || 0) * gasMultiplier))}
+                        gasLimit={BigNumberJS(
+                          Math.floor((gas?.toNumber() || 0) * gasMultiplier)
+                        )}
                       />
                     }
                   />
@@ -643,7 +655,11 @@ const SiloPage: FC<{}> = () => {
           control={
             <GuideButton
               title="The Farmers' Almanac: Silo Guides"
-              guides={[HOW_TO_DEPOSIT_IN_THE_SILO, CLAIM_SILO_REWARDS]}
+              guides={[
+                UNDERSTAND_SILO_VAPY,
+                HOW_TO_DEPOSIT_IN_THE_SILO,
+                CLAIM_SILO_REWARDS,
+              ]}
             />
           }
         />

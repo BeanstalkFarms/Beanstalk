@@ -18,6 +18,7 @@ import StatHorizontal from '~/components/Common/StatHorizontal';
 import { FC } from '~/types';
 import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
 import useSdk from '~/hooks/sdk';
+import useBDV from '~/hooks/beanstalk/useBDV';
 
 const Deposits: FC<
   {
@@ -28,6 +29,7 @@ const Deposits: FC<
 > = ({ token, siloBalance, useLegacySeason, ...props }) => {
   const sdk = useSdk();
   const getUSD = useSiloTokenToFiat();
+  const getBDV = useBDV();
   const account = useWagmiAccount();
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
 
@@ -41,7 +43,9 @@ const Deposits: FC<
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
         id: deposit.stem?.toString(),
-        mowableStalk: deposit.bdv?.multipliedBy(deltaStem).shiftedBy(decimalShift),
+        mowableStalk: deposit.bdv
+          ?.multipliedBy(deltaStem)
+          .shiftedBy(decimalShift),
         ...deposit,
       })) || [],
     [siloBalance?.deposited.crates, deltaStem, decimalShift]
@@ -67,14 +71,20 @@ const Deposits: FC<
               placement="bottom"
               title={
                 <Stack gap={0.5}>
-                  <StatHorizontal label="BDV when Deposited">
-                    {displayFullBN(params.row.bdv.div(params.row.amount), 6)}
-                  </StatHorizontal>
-                  <StatHorizontal label="Total BDV">
+                  <StatHorizontal label="Recorded BDV">
                     {displayFullBN(params.row.bdv, token.displayDecimals)}
+                  </StatHorizontal>
+                  <StatHorizontal label="Current BDV">
+                    {displayFullBN(
+                      params.row.amount.multipliedBy(getBDV(token)),
+                      token.displayDecimals
+                    )}
                   </StatHorizontal>
                   <StatHorizontal label="Current Value">
                     <Fiat amount={params.row.amount} token={token} />
+                  </StatHorizontal>
+                  <StatHorizontal label="Stem">
+                    {params.row.stem.toString()}
                   </StatHorizontal>
                 </Stack>
               }
@@ -137,34 +147,38 @@ const Deposits: FC<
           headerAlign: 'right',
           valueFormatter: (params) => displayBN(params.value),
           renderCell: (params) => (
-          <Tooltip
-            placement="bottom"
-            title={
-              <Stack gap={0.5}>
-                <StatHorizontal label="Mown Grown Stalk">
-                  {displayFullBN(params.row.stalk.grown.minus(params.row.mowableStalk), 2, 2)}
-                </StatHorizontal>
-                <StatHorizontal label="Mowable Grown Stalk">
-                  {displayFullBN(params.row.mowableStalk, 2, 2)}
-                </StatHorizontal>
-              </Stack>
-            }
-          >
-            <span>
-              <Typography display={{ xs: 'none', md: 'block' }}>
-                {displayFullBN(params.row.stalk.grown, 2, 2)}
-              </Typography>
-              <Typography display={{ xs: 'block', md: 'none' }}>
-                {displayFullBN(params.row.stalk.grown, 2, 2)}
-              </Typography>
-            </span>
-          </Tooltip>
+            <Tooltip
+              placement="bottom"
+              title={
+                <Stack gap={0.5}>
+                  <StatHorizontal label="Mown Grown Stalk">
+                    {displayFullBN(
+                      params.row.stalk.grown.minus(params.row.mowableStalk),
+                      2,
+                      2
+                    )}
+                  </StatHorizontal>
+                  <StatHorizontal label="Mowable Grown Stalk">
+                    {displayFullBN(params.row.mowableStalk, 2, 2)}
+                  </StatHorizontal>
+                </Stack>
+              }
+            >
+              <span>
+                <Typography display={{ xs: 'none', md: 'block' }}>
+                  {displayFullBN(params.row.stalk.grown, 2, 2)}
+                </Typography>
+                <Typography display={{ xs: 'block', md: 'none' }}>
+                  {displayFullBN(params.row.stalk.grown, 2, 2)}
+                </Typography>
+              </span>
+            </Tooltip>
           ),
           sortable: false,
         },
         COLUMNS.seeds,
       ] as GridColumns,
-    [token]
+    [token, getBDV]
   );
 
   const amount = siloBalance?.deposited.amount;

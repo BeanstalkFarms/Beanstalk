@@ -10,6 +10,7 @@ import docsIcon from '~/img/beanstalk/interface/nav/docs.svg';
 import disclosuresIcon from '~/img/beanstalk/interface/nav/disclosures.svg';
 import analyticsIcon from '~/img/beanstalk/interface/nav/stats.svg';
 import basinIcon from '~/img/beanstalk/interface/nav/basin.svg';
+import pipelineIcon from '~/img/beanstalk/interface/nav/pipeline.svg';
 
 export type RouteData = {
   /** Nav item title */
@@ -118,13 +119,13 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
     },
     {
       path: 'twitter',
-      href: 'https://twitter.com/beanstalkfarms',
+      href: 'https://twitter.com/beanstalkmoney',
       title: 'Twitter',
       icon: twitterIcon,
     },
     {
       path: 'github',
-      href: 'https://github.com/beanstalkfarms',
+      href: 'https://github.com/BeanstalkFarms/Beanstalk',
       title: 'GitHub',
       icon: githubIcon,
     },
@@ -133,6 +134,12 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
       href: 'https://basin.exchange',
       title: 'Basin',
       icon: basinIcon,
+    },
+    {
+      path: 'pipeline',
+      href: 'https://evmpipeline.org',
+      title: 'Pipeline',
+      icon: pipelineIcon,
     },
   ],
   // Market Menu

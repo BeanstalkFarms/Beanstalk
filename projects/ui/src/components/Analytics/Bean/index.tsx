@@ -1,12 +1,12 @@
 import { Card, Tab, Tabs } from '@mui/material';
 
+import React from 'react';
 import Crosses from '~/components/Analytics/Bean/Crosses';
 import DeltaB from '~/components/Analytics/Bean/DeltaB';
 import { FC } from '~/types';
 import Liquidity from '~/components/Analytics/Bean/Liquidity';
 import MarketCap from '~/components/Analytics/Bean/MarketCap';
 import Price from './Price';
-import React from 'react';
 import Supply from '~/components/Analytics/Bean/Supply';
 import VolumeChart from '~/components/Analytics/Bean/VolumeChart';
 import useTabs from '~/hooks/display/useTabs';
@@ -20,7 +20,7 @@ const SLUGS = [
   'supply',
   'crosses',
   'delta_b',
-  'liquiditysupplyratio'
+  'liquiditysupplyratio',
 ];
 
 const BeanAnalytics: FC<{}> = () => {
@@ -40,7 +40,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Supply" />
         <Tab label="Crosses" />
         <Tab label="deltaB" />
-        <Tab label="Liquidity:Supply Ratio" />
+        <Tab label="L2SR" />
       </Tabs>
       {/* 
         TODO: The height prop currently *only* reflects in the chart height. However, the full component

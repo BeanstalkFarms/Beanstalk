@@ -104,7 +104,10 @@ const WithdrawForm: FC<
     // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code
     () => [
       whitelistedToken,
-      ...(((whitelistedToken.isLP && whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP) && pool?.tokens) || []),
+      ...((whitelistedToken.isLP &&
+        whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP &&
+        pool?.tokens) ||
+        []),
     ],
     [pool, sdk.tokens, whitelistedToken]
   );
@@ -151,7 +154,7 @@ const WithdrawForm: FC<
   );
 
   // claim and plant
-  const txActions = useFarmerFormTxnsActions();
+  const txActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(whitelistedToken)
@@ -159,7 +162,7 @@ const WithdrawForm: FC<
   const { setDestination } = useFormTxnContext();
   useEffect(() => {
     setDestination(values.destination);
-  }, [values.destination, setDestination])
+  }, [values.destination, setDestination]);
 
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
 
@@ -279,7 +282,7 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText="Withdraw" />
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -297,7 +300,7 @@ const WithdrawForm: FC<
                     {withdrawResult.crates.map((_crate, i) => (
                       // FIXME: same as convert
                       <div key={i}>
-                        Season {_crate.stem.toString()}:{' '}
+                        Stem {_crate.stem.toString()}:{' '}
                         {displayFullBN(
                           _crate.bdv,
                           whitelistedToken.displayDecimals
@@ -348,11 +351,14 @@ const WithdrawForm: FC<
                     {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(values.tokenOut || whitelistedToken),
+                      token: getNewToOldToken(
+                        values.tokenOut || whitelistedToken
+                      ),
                       destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
                   ]}
+                  {...txActions}
                 />
               </TxnAccordion>
             </Box>
@@ -368,7 +374,7 @@ const WithdrawForm: FC<
           tokens={[]}
           mode="auto"
         >
-          Withdraw
+          {values.destination ? 'Withdraw' : 'Select Destination'}
         </SmartSubmitButton>
       </Stack>
     </Form>

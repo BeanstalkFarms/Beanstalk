@@ -225,7 +225,8 @@ export function useFetchNFTVotingPower() {
         const genesis = curr.genesis?.length || 0;
         const winter = curr.winter?.length || 0;
         const barnRaise = curr.barnRaise?.length || 0;
-        acc[curr.id] = new BigNumber(genesis + winter + barnRaise);
+        const basin = curr.basin?.length || 0;
+        acc[curr.id] = new BigNumber(genesis + winter + barnRaise + basin);
         return acc;
       }, {});
 

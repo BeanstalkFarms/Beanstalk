@@ -83,7 +83,7 @@ const TransferForm: FC<
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
   /// Claim and Plant
-  const txnActions = useFarmerFormTxnsActions();
+  const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       BEAN.equals(whitelistedToken) &&
@@ -152,21 +152,27 @@ const TransferForm: FC<
       <TokenOutput>
         <TokenOutput.Row
           token={whitelistedToken}
-          amount={(isUsingPlant ? withdrawResult.amount.add(earnedBeans) : withdrawResult.amount).mul(-1)}
+          amount={(isUsingPlant
+            ? withdrawResult.amount.add(earnedBeans)
+            : withdrawResult.amount
+          ).mul(-1)}
         />
         <TokenOutput.Row
           token={STALK}
-          amount={(isUsingPlant ? withdrawResult.stalk.add(earnedStalk) : withdrawResult.stalk).mul(-1)}
+          amount={(isUsingPlant
+            ? withdrawResult.stalk.add(earnedStalk)
+            : withdrawResult.stalk
+          ).mul(-1)}
           amountTooltip={
             <>
               <div>
-                Withdrawing from {withdrawResult.crates.length} Deposit
+                Transferring from {withdrawResult.crates.length} Deposit
                 {withdrawResult.crates.length === 1 ? '' : 's'}:
               </div>
               <Divider sx={{ opacity: 0.2, my: 1 }} />
               {withdrawResult.crates.map((_crate, i) => (
                 <div key={i}>
-                  Season {_crate.stem.toString()}:{' '}
+                  Stem {_crate.stem.toString()}:{' '}
                   {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)}{' '}
                   BDV,{' '}
                   {displayFullBN(_crate.stalk.total, STALK.displayDecimals)}{' '}
@@ -177,7 +183,13 @@ const TransferForm: FC<
             </>
           }
         />
-        <TokenOutput.Row token={SEEDS} amount={(isUsingPlant ? withdrawResult.seeds.add(earnedSeeds) : withdrawResult.seeds).mul(-1)} />
+        <TokenOutput.Row
+          token={SEEDS}
+          amount={(isUsingPlant
+            ? withdrawResult.seeds.add(earnedSeeds)
+            : withdrawResult.seeds
+          ).mul(-1)}
+        />
       </TokenOutput>
     );
   };
@@ -194,81 +206,108 @@ const TransferForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText="Transfer" />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
               <AddressInputField name="to" />
             </FieldWrapper>
-            {values.to !== '' && withdrawResult?.amount.add(earnedBeans).abs().gt(0) && (
-              <>
-                <TxnSeparator />
-                <TokenOutputs />
-                {withdrawResult?.amount.abs().gt(0) && 
-                  <WarningAlert>
-                    More recent Deposits are Transferred first.
-                  </WarningAlert>
-                }
-                <AdditionalTxnsAccordion filter={disabledActions} />
-                <Box>
-                  <TxnAccordion>
-                    <TxnPreview
-                      actions={[
-                        {
-                          type: ActionType.TRANSFER,
-                          amount: withdrawResult
-                            ? toBN((isUsingPlant ? withdrawResult.amount.add(earnedBeans) : withdrawResult.amount).abs())
-                            : ZERO_BN,
-                          token: getNewToOldToken(whitelistedToken),
-                          stalk: withdrawResult
-                            ? toBN((isUsingPlant ? withdrawResult.stalk.add(earnedStalk) : withdrawResult.stalk).abs())
-                            : ZERO_BN,
-                          seeds: withdrawResult
-                            ? toBN((isUsingPlant ? withdrawResult.seeds.add(earnedSeeds) : withdrawResult.seeds).abs())
-                            : ZERO_BN,
-                          to: values.to,
-                        },
-                        withdrawResult?.amount.abs().gt(0)
-                          ? {
-                              type: ActionType.BASE,
-                              message: (
-                                <>
-                                  The following Deposits will be used:
-                                  <br />
-                                  <ul
-                                    css={{
-                                      paddingLeft: '25px',
-                                      marginTop: '10px',
-                                      marginBottom: 0,
-                                      fontSize: FontSize.sm,
-                                    }}
-                                  >
-                                    {withdrawResult.crates.map((crate, index) => (
-                                      <li key={index}>
-                                        {displayTokenAmount(
-                                          crate.amount,
-                                          whitelistedToken
-                                        )}{' '}
-                                        from Deposits at Stem{' '}
-                                        {crate.stem.toString()}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </>
-                              ),
-                            } 
-                          : undefined,
-                        {
-                          type: ActionType.END_TOKEN,
-                          token: getNewToOldToken(whitelistedToken),
-                        },
-                      ]}
-                      {...txnActions}
-                    />
-                  </TxnAccordion>
-                </Box>
-              </>
-            )}
+            {values.to !== '' &&
+              withdrawResult?.amount.add(earnedBeans).abs().gt(0) && (
+                <>
+                  <TxnSeparator />
+                  <TokenOutputs />
+                  {withdrawResult?.amount.abs().gt(0) && (
+                    <WarningAlert>
+                      More recent Deposits are Transferred first.
+                    </WarningAlert>
+                  )}
+                  <AdditionalTxnsAccordion filter={disabledActions} />
+                  <Box>
+                    <TxnAccordion>
+                      <TxnPreview
+                        actions={[
+                          {
+                            type: ActionType.TRANSFER,
+                            amount: withdrawResult
+                              ? toBN(
+                                  (isUsingPlant
+                                    ? withdrawResult.amount.add(earnedBeans)
+                                    : withdrawResult.amount
+                                  ).abs()
+                                )
+                              : ZERO_BN,
+                            token: getNewToOldToken(whitelistedToken),
+                            stalk: withdrawResult
+                              ? toBN(
+                                  (isUsingPlant
+                                    ? withdrawResult.stalk.add(earnedStalk)
+                                    : withdrawResult.stalk
+                                  ).abs()
+                                )
+                              : ZERO_BN,
+                            seeds: withdrawResult
+                              ? toBN(
+                                  (isUsingPlant
+                                    ? withdrawResult.seeds.add(earnedSeeds)
+                                    : withdrawResult.seeds
+                                  ).abs()
+                                )
+                              : ZERO_BN,
+                            to: values.to,
+                          },
+                          withdrawResult?.amount.abs().gt(0)
+                            ? {
+                                type: ActionType.BASE,
+                                message: (
+                                  <>
+                                    The following Deposits will be used:
+                                    <br />
+                                    <ul
+                                      css={{
+                                        paddingLeft: '25px',
+                                        marginTop: '10px',
+                                        marginBottom: 0,
+                                        fontSize: FontSize.sm,
+                                      }}
+                                    >
+                                      {isUsingPlant && (
+                                        <li key="earnedBeanCrate">
+                                          {`${displayTokenAmount(
+                                            earnedBeans,
+                                            sdk.tokens.BEAN,
+                                            { showName: false }
+                                          )} Earned Beans`}
+                                        </li>
+                                      )}
+                                      {withdrawResult.crates.map(
+                                        (crate, index) => (
+                                          <li key={index}>
+                                            {displayTokenAmount(
+                                              crate.amount,
+                                              whitelistedToken
+                                            )}{' '}
+                                            from Deposits at Stem{' '}
+                                            {crate.stem.toString()}
+                                          </li>
+                                        )
+                                      )}
+                                    </ul>
+                                  </>
+                                ),
+                              }
+                            : undefined,
+                          {
+                            type: ActionType.END_TOKEN,
+                            token: getNewToOldToken(whitelistedToken),
+                          },
+                        ]}
+                        {...txnActions}
+                      />
+                    </TxnAccordion>
+                  </Box>
+                </>
+              )}
           </>
         )}
         <SmartSubmitButton

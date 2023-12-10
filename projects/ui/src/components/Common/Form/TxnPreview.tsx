@@ -213,7 +213,7 @@ const TxnStep: FC<{
         </IconRow>
       );
       break;
-    case ActionType.BURN_BEANS:
+    case ActionType.SOW_BEANS:
       step = (
         <IconRow spacing={0.3}>
           <Typography fontWeight="bold" sx={{ fontSize: 20 }}>
@@ -386,7 +386,7 @@ const EXECUTION_STEPS = [
   ActionType.CREATE_ORDER,
   ActionType.TRANSFER,
   ActionType.BUY_BEANS,
-  ActionType.BURN_BEANS,
+  ActionType.SOW_BEANS,
   ActionType.TRANSFER_PODS,
   ActionType.TRANSFER_MULTIPLE_PLOTS,
   ActionType.SELL_PODS,
@@ -517,7 +517,7 @@ const TxnPreview: FC<{
                   return null;
                 })}
                 {customOrder
-                  ? actions.map((action, index) => 
+                  ? actions.map((action, index) =>
                       action ? (
                         <TxnStep
                           key={index}

@@ -5,7 +5,7 @@ schema:
     "https://graph.node.bean.money/subgraphs/name/bean-dev",
     "https://hub.snapshot.org/graphql",
     "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot",
-    "https://graph.node.bean.money/subgraphs/name/beanft"
+    "https://graph.node.bean.money/subgraphs/name/beanft-dev"
   ]
 documents: "src/**/*.graphql"
 generates:

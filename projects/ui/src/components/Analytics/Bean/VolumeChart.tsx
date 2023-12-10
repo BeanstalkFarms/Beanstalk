@@ -93,7 +93,9 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
         }`
       : 0;
 
-  const currentDate = currentHoverBar ? currentHoverBar.date.toLocaleDateString() : (new Date()).toLocaleDateString();
+  const currentDate = currentHoverBar
+    ? currentHoverBar.date.toLocaleDateString()
+    : new Date().toLocaleDateString();
 
   const chartControlsHeight = 75;
   const chartHeight = height - chartControlsHeight;
@@ -112,7 +114,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
       >
         <ChartInfoOverlay
           title="Volume"
-          titleTooltip="The total volume in the BEAN:3CRV and BEAN:ETH pools in every Season."
+          titleTooltip="The total USD volume in liquidity pools on the Oracle Whitelist every Season."
           gap={0.25}
           isLoading={queryData?.loading}
           amount={formatValue(currentHoverBar?.count ?? 0)}
@@ -146,7 +148,12 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
                 seriesData={transformData(queryData?.data[0])}
                 getX={(datum) => datum.date}
                 getY={(datum) => Number(datum.count)}
-                xTickFormat={(date: Date) => date.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' })}
+                xTickFormat={(date: Date) =>
+                  date.toLocaleDateString(undefined, {
+                    month: '2-digit',
+                    day: '2-digit',
+                  })
+                }
                 yTickFormat={tickFormatUSD}
                 width={width || parent.width}
                 height={chartHeight || parent.height}

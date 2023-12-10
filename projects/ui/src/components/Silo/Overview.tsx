@@ -7,12 +7,7 @@ import { AppState } from '~/state';
 import useTabs from '~/hooks/display/useTabs';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { SEEDS, STALK } from '~/constants/tokens';
-import {
-  displayPercentage,
-  displayStalk,
-  displayUSD,
-  STALK_PER_SEED_PER_SEASON,
-} from '~/util';
+import { displayPercentage, displayStalk, displayUSD } from '~/util';
 import { ChipLabel, StyledTab } from '~/components/Common/Tabs';
 import { ZERO_BN } from '~/constants';
 import Row from '~/components/Common/Row';
@@ -27,13 +22,14 @@ import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
 import { MigrateTab } from '~/components/Silo/MigrateTab';
+import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 
 const depositStats = (s: BigNumber, v: BigNumber[], d: string) => (
   <Stat
     title="Value Deposited"
     titleTooltip={
       <>
-        Shows the historical value of your Silo Deposits. <br />
+        The historical USD value of your Silo Deposits. <br />
         <Typography variant="bodySmall">
           Note: Unripe assets are valued based on the current Chop Rate. Earned
           Beans are shown upon Plant.
@@ -76,14 +72,28 @@ const Overview: FC<{
   const account = useAccount();
   const { data, loading } = useFarmerSiloHistory(account, false, true);
   const migrationNeeded = useMigrationNeeded();
+  const siloBalance = useFarmerSiloBalances();
   //
-  const [tab, handleChange] = useTabs(migrationNeeded ? SLUGS : altSLUGS, 'view');
+  const [tab, handleChange] = useTabs(
+    migrationNeeded ? SLUGS : altSLUGS,
+    'view'
+  );
 
   //
   const ownership =
     farmerSilo.stalk.active?.gt(0) && beanstalkSilo.stalk.total?.gt(0)
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
+
+  const deposits = Object.values(siloBalance)
+    .map((token) => token.deposited.crates)
+    .flat(Infinity);
+
+  let totalStalkGrown = farmerSilo.stalk.grown;
+
+  deposits.forEach((deposit: any) => {
+    totalStalkGrown = totalStalkGrown.plus(deposit.stalk.grown);
+  });
 
   const stalkStats = useCallback(
     (s: BigNumber, v: BigNumber[], d: string) => (
@@ -107,18 +117,16 @@ const Overview: FC<{
           sx={{ minWidth: 200, ml: 0 }}
         />
         <Stat
-          title="Grown Stalk per Day"
-          titleTooltip="The number of Stalk your Seeds will grow every 24 Seasons based on your current Seed balance."
-          amount={displayStalk(
-            farmerSilo.seeds.active.times(STALK_PER_SEED_PER_SEASON).times(24)
-          )}
+          title="Total Stalk Grown"
+          titleTooltip="The total number of Mown and Mowable Grown Stalk your Deposits have accrued."
+          amount={displayStalk(totalStalkGrown)}
           color="text.primary"
           gap={0.25}
           sx={{ minWidth: 120, ml: 0 }}
         />
       </>
     ),
-    [farmerSilo, ownership]
+    [ownership, totalStalkGrown]
   );
 
   return (
@@ -168,7 +176,9 @@ const Overview: FC<{
           <MigrateTab />
         </Box>
       )}
-      <Box sx={{ display: tab === (migrationNeeded ? 1 : 0) ? 'block' : 'none' }}>
+      <Box
+        sx={{ display: tab === (migrationNeeded ? 1 : 0) ? 'block' : 'none' }}
+      >
         <OverviewPlot
           label="Silo Deposits"
           account={account}
@@ -190,7 +200,9 @@ const Overview: FC<{
           empty={breakdown.states.deposited.value.eq(0)}
         />
       </Box>
-      <Box sx={{ display: tab === (migrationNeeded ? 2 : 1) ? 'block' : 'none' }}>
+      <Box
+        sx={{ display: tab === (migrationNeeded ? 2 : 1) ? 'block' : 'none' }}
+      >
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
@@ -220,7 +232,9 @@ const Overview: FC<{
           empty={farmerSilo.stalk.total.lte(0)}
         />
       </Box>
-      <Box sx={{ display: tab === (migrationNeeded ? 3 : 2) ? 'block' : 'none' }}>
+      <Box
+        sx={{ display: tab === (migrationNeeded ? 3 : 2) ? 'block' : 'none' }}
+      >
         <OverviewPlot
           label="Seeds Ownership"
           account={account}

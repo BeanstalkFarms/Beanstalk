@@ -55,7 +55,7 @@ const FertilizerAPYChip: React.FC<{}> = () => {
               {copy.vAPY} &nbsp;
               <Link
                 underline="hover"
-                href="https://docs.bean.money/almanac/guides/barn"
+                href="https://docs.bean.money/almanac/guides/barn/understand-fert-vapy"
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
