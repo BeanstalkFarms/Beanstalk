@@ -3,12 +3,17 @@ import { ethers } from "ethers";
 import { FarmFromMode, FarmToMode } from "../types";
 import { Token } from "src/classes/Token";
 import { Clipboard } from "src/lib/depot";
+import { ClipboardSettings } from "src/types";
 
 export class Deposit extends StepClass<BasicPreparedResult> {
   public name: string = "deposit";
-  public clipboard?: { tag: string, copySlot: number, pasteSlot: number };
+  public clipboard?: ClipboardSettings;
 
-  constructor(public readonly token: Token, public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL_EXTERNAL, clipboard?: { tag: string, copySlot: number, pasteSlot: number }) {
+  constructor(
+    public readonly token: Token, 
+    public readonly fromMode: FarmFromMode = FarmFromMode.INTERNAL_EXTERNAL, 
+    clipboard?: ClipboardSettings
+  ) {
     super();
     this.clipboard = clipboard;
   }

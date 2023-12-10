@@ -1,12 +1,15 @@
 import type { JestConfigWithTsJest } from "ts-jest";
 
 const jestConfig: JestConfigWithTsJest = {
+  testSequencer: "<rootDir>/testSequencer.js",
+  runner: "jest-serial-runner",
   projects: [
     {
       // @ts-ignore
       preset: "ts-jest",
       displayName: "sdk-wells",
       rootDir: "projects/sdk-wells",
+
       testMatch: ["<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)", "<rootDir>/test/**/?(*.)+(spec|test).[jt]s?(x)"],
       moduleNameMapper: {
         "@beanstalk/sdk-wells/(.*)$": "<rootDir>/src/$1",

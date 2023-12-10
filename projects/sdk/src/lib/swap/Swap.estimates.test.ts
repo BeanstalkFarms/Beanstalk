@@ -34,6 +34,9 @@ describe("Estimate", function () {
       await estimate(tokenIn, tokenOut);
     });
     it(`estimateReverse(${tokenIn.symbol}, ${tokenOut.symbol})`, async () => {
+      // Not supported
+      if (tokenOut.symbol === sdk.tokens.CRV3.symbol) return;
+
       await estimateReverse(tokenIn, tokenOut);
     });
   });

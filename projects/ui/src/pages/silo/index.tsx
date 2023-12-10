@@ -38,7 +38,7 @@ import { AppState } from '~/state';
 import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import GuideButton from '~/components/Common/Guide/GuideButton';
-import { CLAIM_SILO_REWARDS, HOW_TO_DEPOSIT_IN_THE_SILO } from '~/util/Guides';
+import { CLAIM_SILO_REWARDS, HOW_TO_DEPOSIT_IN_THE_SILO, UNDERSTAND_SILO_VAPY } from '~/util/Guides';
 
 import { FC } from '~/types';
 import useSdk from '~/hooks/sdk';
@@ -643,7 +643,7 @@ const SiloPage: FC<{}> = () => {
           control={
             <GuideButton
               title="The Farmers' Almanac: Silo Guides"
-              guides={[HOW_TO_DEPOSIT_IN_THE_SILO, CLAIM_SILO_REWARDS]}
+              guides={[UNDERSTAND_SILO_VAPY, HOW_TO_DEPOSIT_IN_THE_SILO, CLAIM_SILO_REWARDS]}
             />
           }
         />

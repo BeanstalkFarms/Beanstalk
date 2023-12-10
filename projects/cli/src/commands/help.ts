@@ -47,8 +47,22 @@ export const help = () => {
       content: [
         { name: "{bold.greenBright balance}", summary: "Display balance(s). Optionally specify account or token" },
         { name: "{bold.greenBright setbalance}", summary: "Set balance(s). Optionally specify account, token, or amount" },
-        { name: "{bold.greenBright setprice}", summary: "Set BEAN price by setting liquidity. Defaults to 20M BEAN and 20M 3CRV. Parameters are millions. See examples below" },
+        {
+          name: "{bold.greenBright setprice}",
+          summary: "Set BEAN price by setting liquidity. Defaults to 20M BEAN and 20M 3CRV. Parameters are millions. See examples below"
+        },
         { name: "{bold.greenBright sunrise}", summary: "Calls the sunrise() function" },
+        { name: "{bold.greenBright mine}", summary: "Mines a block (or more)" },
+        { name: "{bold.greenBright deltab}", summary: "Display current DeltaB" },
+        {
+          name: "{bold.greenBright setpriceover}",
+          summary: "Buys enough BEANs to set DeltaB over 0, and the price over 1.00. Multiplier may be applied"
+        },
+        {
+          name: "{bold.greenBright setpriceunder}",
+          summary: "Sells enough BEANs to set DeltaB under 0, and the price under 1.00. Multiplier may be applied"
+        },
+
         { name: "{bold.greenBright help}", summary: "You're looking at it :)" }
       ]
     },
