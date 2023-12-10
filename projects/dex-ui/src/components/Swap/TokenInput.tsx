@@ -53,8 +53,6 @@ export const TokenInput: FC<TokenInput> = ({
   const { data: balance, isLoading: isBalanceLoading } = useTokenBalance(token);
   width = width ?? "100%";
 
-  // console.log("balance: ", balance?.[token.symbol].toHuman());
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateAmount = useCallback(
     debounce((value: string) => {

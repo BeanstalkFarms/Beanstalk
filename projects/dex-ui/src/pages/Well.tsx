@@ -35,7 +35,6 @@ import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserv
 export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
-
   const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
 
   const loading = useLagLoading(dataLoading || apysLoading || twaLoading);

@@ -14,31 +14,37 @@ const WHITELIST_MAP = {
   }
 };
 
-const functions = {
-  getIsWhitelisted: (well: Well | undefined) => {
-    if (!well) return false;
-    const wellAddress = well.address.toLowerCase();
 
-    return wellAddress in WHITELIST_MAP;
-  },
-  getSeedsWithWell: (well: Well | undefined) => {
-    const wellAddress = well?.address.toLowerCase();
-    const key = wellAddress as keyof typeof WHITELIST_MAP;
-    return WHITELIST_MAP?.[key]?.seeds || undefined;
-  },
-  getIsMultiPumpWell: (well: Well | undefined) => {
-    if (well) {
-      const wellAddress = well.address.toLowerCase();
-      const key = wellAddress as keyof typeof WHITELIST_MAP;
-      return WHITELIST_MAP?.[key]?.isMultiFlowPump || false;
-    }
-    return false;
-  }
+const getIsWhitelisted = (well: Well | undefined) => {
+  if (!well) return false;
+  const wellAddress = well.address.toLowerCase();
+
+  return wellAddress in WHITELIST_MAP;
 };
+
+const getSeedsWithWell = (well: Well | undefined) => {
+  const wellAddress = well?.address.toLowerCase();
+  const key = wellAddress as keyof typeof WHITELIST_MAP;
+  return WHITELIST_MAP?.[key]?.seeds || undefined;
+};
+
+const getIsMultiPumpWell = (well: Well | undefined) => {
+  if (well) {
+    const wellAddress = well.address.toLowerCase();
+    const key = wellAddress as keyof typeof WHITELIST_MAP;
+    return WHITELIST_MAP?.[key]?.isMultiFlowPump || false;
+  }
+  return false;
+}
 
 /// set of wells that are whitelisted for the Beanstalk silo
 export const useBeanstalkSiloWhitelist = () => {
   const whitelistedAddresses = useMemo(() => Object.keys(WHITELIST_MAP), []);
 
-  return { whitelist: whitelistedAddresses, ...functions } as const;
+  return { 
+    whitelist: whitelistedAddresses, 
+    getIsWhitelisted, 
+    getSeedsWithWell, 
+    getIsMultiPumpWell
+  } as const;
 };
