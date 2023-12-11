@@ -44,7 +44,7 @@ type FormTxnFarmStep =
  *        - it is intended for this to be called in an 'onSubmit' function where the user
  *          has confirmed which FarmSteps they want to perform.
  *        - setFarmSteps() deduplicates any FarmSteps that are implied by other FarmSteps
- *          as welll as any FarmSteps that are excluded by the form.
+ *          as well as any FarmSteps that are excluded by the form.
  *
  *    3. Call build() to perform the bundling of FarmSteps into a single, executable Workflow.
  *        - It is assumed every FarmStep added to have previous been 'built'.
@@ -69,12 +69,6 @@ export class FormTxnBundler {
   private before: Partial<FormTxnMap<FarmStep>>;
 
   private after: Partial<FormTxnMap<FarmStep>>;
-
-  // FormTxns that imply other FormTxns when added
-  static implied: Partial<FormTxnMap> = {
-    [FormTxn.ENROOT]: FormTxn.MOW,
-    [FormTxn.PLANT]: FormTxn.MOW,
-  };
 
   static presets = presets;
 
@@ -189,38 +183,19 @@ export class FormTxnBundler {
 
   /**
    * @param data
-   * deduplicate farm steps & remove implicit actions.
+   * deduplicate farm steps.
    */
   private static deduplicateFarmSteps(data: FormTxnBundlerInterface) {
     const before = new Set(data.primary || []);
     const after = new Set(data.secondary || []);
 
     const allActions = new Set([...before, ...after]);
-
     /// deduplicate
     // if an action is in both primary and secondary, remove it from secondary
     [...before].forEach((action) => {
       if (after.has(action)) {
         after.delete(action);
       }
-    });
-
-    /// deduplicate implied actions
-    [...allActions].forEach((action) => {
-      const implied = FormTxnBundler.implied[action];
-      if (implied) {
-        allActions.has(implied) && allActions.delete(implied);
-        before.has(implied) && before.delete(implied);
-        after.has(implied) && after.delete(implied);
-      }
-    });
-
-    const removeItems = [...(data.exclude || []), ...(data.implied || [])];
-
-    removeItems.forEach((toRemove) => {
-      allActions.has(toRemove) && allActions.delete(toRemove);
-      before.has(toRemove) && before.delete(toRemove);
-      after.has(toRemove) && after.delete(toRemove);
     });
 
     return {
