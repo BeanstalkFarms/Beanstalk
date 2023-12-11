@@ -12,7 +12,7 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP 39 
+// BIP 39
 const { bipSeedGauge } = require("./scripts/bips.js");
 //
 
@@ -29,7 +29,12 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
+const {
+  EXTERNAL,
+  INTERNAL,
+  INTERNAL_EXTERNAL,
+  INTERNAL_TOLERANT
+} = require("./test/utils/balances.js");
 const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
@@ -57,7 +62,9 @@ task("buyBeans")
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const txn = await (await getBeanMetapool())
+      .connect(signer)
+      .exchange_underlying("2", "0", args.amount, "0");
     const result = await txn.wait();
     console.log("Done", result);
   });
@@ -103,13 +110,13 @@ task("sunrise", async function () {
 });
 
 task("sunrise2", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
 
-  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
+  season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   await season.sunrise();
-})
+});
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
@@ -222,15 +229,15 @@ task("deployBip39", async function () {
 
 task("ebip11", async function () {
   await ebip11();
-})
+});
 
 task("ebip10", async function () {
   await ebip10();
-})
+});
 
 task("ebip9", async function () {
   await ebip9();
-})
+});
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
