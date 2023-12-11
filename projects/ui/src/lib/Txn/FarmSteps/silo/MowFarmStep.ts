@@ -39,7 +39,7 @@ export class MowFarmStep extends FarmStep implements EstimatesGas {
         this._account,
         tokensToMow
       );
-    }
+    };
     console.debug(`[MowFarmStep][estimateGas]: `, gasAmount.toString());
 
     return gasAmount;
