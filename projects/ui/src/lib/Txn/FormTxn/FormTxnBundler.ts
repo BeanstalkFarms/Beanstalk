@@ -70,6 +70,12 @@ export class FormTxnBundler {
 
   private after: Partial<FormTxnMap<FarmStep>>;
 
+  // FormTxns that imply other FormTxns when added
+  static implied: Partial<FormTxnMap> = {
+    [FormTxn.ENROOT]: FormTxn.MOW,
+    [FormTxn.PLANT]: FormTxn.MOW,
+  };
+
   static presets = presets;
 
   constructor(
