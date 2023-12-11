@@ -104,10 +104,11 @@ const useInitFormTxnContext = () => {
     );
     const claimable = farmerSilo.balances[sdk.tokens.BEAN.address]?.claimable;
     const seasons = claimable?.crates.map((c) => c.season.toString());
+    const grownStalkByToken = farmerSilo.stalk.grownByToken;
 
     const farmSteps = {
       [FormTxn.MOW]: account
-        ? new MowFarmStep(sdk, account).build()
+        ? new MowFarmStep(sdk, account, grownStalkByToken).build()
         : undefined,
       [FormTxn.PLANT]: earnedBeans.gt(0)
         ? new PlantFarmStep(sdk).build()
@@ -134,6 +135,7 @@ const useInitFormTxnContext = () => {
     farmerField.harvestablePlots,
     farmerSilo.balances,
     farmerSilo.beans.earned,
+    farmerSilo.stalk.grownByToken,
     getBDV,
     sdk,
     destination
