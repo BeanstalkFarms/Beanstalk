@@ -1345,9 +1345,9 @@
                 "type": "bytes"
               },
               {
-                "internalType": "bytes",
-                "name": "operatorPasteParams",
-                "type": "bytes"
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
               },
               {
                 "internalType": "uint256",
@@ -1386,7 +1386,7 @@
         "type": "tuple"
       }
     ],
-    "name": "PublishBlueprint",
+    "name": "PublishRequisition",
     "type": "event"
   },
   {
@@ -1425,9 +1425,9 @@
                 "type": "bytes"
               },
               {
-                "internalType": "bytes",
-                "name": "operatorPasteParams",
-                "type": "bytes"
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
               },
               {
                 "internalType": "uint256",
@@ -1485,9 +1485,9 @@
             "type": "bytes"
           },
           {
-            "internalType": "bytes",
-            "name": "operatorPasteParams",
-            "type": "bytes"
+            "internalType": "bytes32[]",
+            "name": "operatorPasteInstrs",
+            "type": "bytes32[]"
           },
           {
             "internalType": "uint256",
@@ -1557,9 +1557,9 @@
                 "type": "bytes"
               },
               {
-                "internalType": "bytes",
-                "name": "operatorPasteParams",
-                "type": "bytes"
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
               },
               {
                 "internalType": "uint256",
@@ -1597,7 +1597,7 @@
         "type": "tuple"
       }
     ],
-    "name": "publishBlueprint",
+    "name": "publishRequisition",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1619,9 +1619,9 @@
                 "type": "bytes"
               },
               {
-                "internalType": "bytes",
-                "name": "operatorPasteParams",
-                "type": "bytes"
+                "internalType": "bytes32[]",
+                "name": "operatorPasteInstrs",
+                "type": "bytes32[]"
               },
               {
                 "internalType": "uint256",

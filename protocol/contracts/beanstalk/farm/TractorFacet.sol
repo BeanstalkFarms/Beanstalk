@@ -4,7 +4,8 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 // TODO rm
-import "forge-std/console.sol";
+// import "forge-std/console.sol";
+import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "../ReentrancyGuard.sol";
@@ -33,8 +34,8 @@ contract TractorFacet is ReentrancyGuard {
     /* Events */
     /**********/
 
-    /// @dev Emitted on publishBlueprint()
-    event PublishBlueprint(LibTractor.Requisition requisition);
+    /// @dev Emitted on publishRequisition()
+    event PublishRequisition(LibTractor.Requisition requisition);
 
     /// @dev Emitted on cancelBlueprint()
     event CancelBlueprint(bytes32 blueprintHash);
@@ -49,7 +50,10 @@ contract TractorFacet is ReentrancyGuard {
     modifier verifyRequisition(LibTractor.Requisition calldata requisition) {
         bytes32 blueprintHash = LibTractor._getBlueprintHash(requisition.blueprint);
         require(blueprintHash == requisition.blueprintHash, "TractorFacet: invalid hash");
-        address signer = ECDSA.recover(requisition.blueprintHash, requisition.signature);
+        address signer = ECDSA.recover(
+            ECDSA.toEthSignedMessageHash(requisition.blueprintHash),
+            requisition.signature
+        );
         require(signer == requisition.blueprint.publisher, "TractorFacet: invalid signer");
         _;
     }
@@ -77,11 +81,11 @@ contract TractorFacet is ReentrancyGuard {
     /******************/
 
     /// @notice Publish new blueprint
-    /// Emits {PublishBlueprint} event
-    function publishBlueprint(
+    /// Emits {PublishRequisition} event
+    function publishRequisition(
         LibTractor.Requisition calldata requisition
     ) external verifyRequisition(requisition) {
-        emit PublishBlueprint(requisition);
+        emit PublishRequisition(requisition);
     }
 
     /// @notice Destroy existing blueprint

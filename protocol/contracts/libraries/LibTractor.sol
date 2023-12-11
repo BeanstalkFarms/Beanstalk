@@ -151,7 +151,7 @@ library LibTractor {
         return
             keccak256(
                 abi.encode(
-                    EIP712_TYPE_HASH,
+                    BLUEPRINT_TYPE_HASH,
                     TRACTOR_HASHED_NAME,
                     TRACTOR_HASHED_VERSION,
                     C.getChainId(),
