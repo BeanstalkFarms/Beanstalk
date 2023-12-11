@@ -28,10 +28,18 @@ export class MowFarmStep extends FarmStep implements EstimatesGas {
       }
     });
     console.debug(`[MowFarmStep][estimateGas]: tokensToMow = `, tokensToMow);
-    const gasAmount = await beanstalk.estimateGas.mowMultiple(
-      this._account,
-      tokensToMow
-    );
+    let gasAmount;
+    if (tokensToMow.length === 1) {
+      gasAmount = await beanstalk.estimateGas.mow(
+        this._account,
+        tokensToMow[0]
+      );
+    } else {
+      gasAmount = await beanstalk.estimateGas.mowMultiple(
+        this._account,
+        tokensToMow
+      );
+    }
     console.debug(`[MowFarmStep][estimateGas]: `, gasAmount.toString());
 
     return gasAmount;
@@ -49,23 +57,43 @@ export class MowFarmStep extends FarmStep implements EstimatesGas {
     });
     console.debug(`[MowFarmStep][build]: tokensToMow = `, tokensToMow);
 
-    this.pushInput({
-      input: async (_amountInStep) => ({
-        name: 'mowMultiple',
-        amountOut: _amountInStep,
-        prepare: () => ({
-          target: beanstalk.address,
-          callData: beanstalk.interface.encodeFunctionData('mowMultiple', [
-            this._account,
-            tokensToMow,
-          ]),
+    if (tokensToMow.length === 1) {
+      this.pushInput({
+        input: async (_amountInStep) => ({
+          name: 'mow',
+          amountOut: _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData: beanstalk.interface.encodeFunctionData('mow', [
+              this._account,
+              tokensToMow[0],
+            ]),
+          }),
+          decode: (data: string) =>
+            beanstalk.interface.decodeFunctionData('mow', data),
+          decodeResult: (result: string) =>
+            beanstalk.interface.decodeFunctionResult('mow', result),
         }),
-        decode: (data: string) =>
-          beanstalk.interface.decodeFunctionData('mowMultiple', data),
-        decodeResult: (result: string) =>
-          beanstalk.interface.decodeFunctionResult('mowMultiple', result),
-      }),
-    });
+      });
+    } else {
+      this.pushInput({
+        input: async (_amountInStep) => ({
+          name: 'mowMultiple',
+          amountOut: _amountInStep,
+          prepare: () => ({
+            target: beanstalk.address,
+            callData: beanstalk.interface.encodeFunctionData('mowMultiple', [
+              this._account,
+              tokensToMow,
+            ]),
+          }),
+          decode: (data: string) =>
+            beanstalk.interface.decodeFunctionData('mowMultiple', data),
+          decodeResult: (result: string) =>
+            beanstalk.interface.decodeFunctionResult('mowMultiple', result),
+        }),
+      });
+    };
 
     console.debug('[MowFarmStep][build]: ', this.getFarmInput());
 
