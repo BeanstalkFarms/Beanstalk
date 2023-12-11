@@ -3,6 +3,7 @@
  **/
 
 pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
 // TODO rm
 import "forge-std/console.sol";
@@ -10,6 +11,8 @@ import "forge-std/console.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibFunction} from "./LibFunction.sol";
 import {LibTractor} from "./LibTractor.sol";
+
+// TODO make internal lib?
 
 uint80 constant PUBLISHER_COPY_INDEX = type(uint80).max;
 uint80 constant OPERATOR_COPY_INDEX = type(uint80).max - 1;

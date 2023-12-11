@@ -3,6 +3,7 @@
  **/
 
 pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
 // TODO rm
 import "forge-std/console.sol";
@@ -12,7 +13,8 @@ import {LibTractor} from "./LibTractor.sol";
 import {LibFunction} from "./LibFunction.sol";
 import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 
-//
+// TODO make internal lib?
+
 /**
  * @title LibClipboard
  * @author funderbrker
@@ -69,11 +71,7 @@ library LibClipboard {
 
     function decode(
         bytes memory clipboard
-    )
-        internal
-        pure
-        returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams)
-    {
+    ) internal pure returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams) {
         typeId = clipboard[0];
         bytes1 useEther = clipboard[1];
         if (typeId == 0x01) {
@@ -170,4 +168,5 @@ library LibClipboard {
 
     //     pastedData = pasteData;
     // }
+
 }
