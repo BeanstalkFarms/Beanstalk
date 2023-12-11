@@ -14,7 +14,7 @@ import { BodyS } from "../Typography";
 import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 
-type Props = {
+export type TokenPickerProps = {
   token: Token;
   excludeToken?: Token;
   editable?: boolean;
@@ -26,7 +26,7 @@ type ContainerProps = {
   editable?: Boolean;
 };
 
-export const TokenPicker: FC<Props> = ({ token, excludeToken, editable = true, onChange, connectorFor }) => {
+export const TokenPicker: FC<TokenPickerProps> = ({ token, excludeToken, editable = true, onChange, connectorFor }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const tokens = useTokens();
   const [list, setList] = useState<Token[]>([]);
