@@ -1,41 +1,144 @@
-/**
- * SPDX-License-Identifier: MIT
- **/
-
+// SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-// NOTE Not for on-chain use. Not gas efficient.
-//      It is also just sloppy. This is not what Solidity is designed for.
+///////// DEPRECATED IN FAVOR OF JS TESTS /////////
 
-// TODO rm
-import "forge-std/console.sol";
+import "forge-std/Test.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {JunctionFacet} from "../beanstalk/junction/JunctionFacet.sol";
-import {TokenFacet} from "../beanstalk/farm/TokenFacet.sol";
-import {IBeanstalk} from "../interfaces/IBeanstalk.sol";
+import {C} from "contracts/C.sol";
+import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {IBeanstalk} from "contracts/interfaces/IBeanstalk.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {TokenFacet} from "contracts/beanstalk/farm/TokenFacet.sol";
+import {TractorFacet} from "contracts/beanstalk/farm/TractorFacet.sol";
+import {JunctionFacet} from "contracts/beanstalk/junction/JunctionFacet.sol";
+import {InitTractor} from "contracts/beanstalk/init/InitTractor.sol";
+import {TestHelper} from "test/foundry/utils/TestHelper.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibClipboard} from "./LibClipboard.sol";
 import {AdvancedFarmCall} from "./LibFarm.sol";
 import {LibBytes} from "./LibBytes.sol";
-import {LibTransfer} from "./Token/LibTransfer.sol";
-import {C} from "../C.sol";
-import {LibOperatorPasteInstr, SLOT_SIZE, PUBLISHER_COPY_INDEX, OPERATOR_COPY_INDEX} from "./LibOperatorPasteInstr.sol";
+import {LibOperatorPasteInstr} from "./LibOperatorPasteInstr.sol";
 import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 
-// Functional
-// Cant use any operations here, only functions and direct data
+// This is the default size of arrays containing stems/deposits. Operators can populate the array up to the size.
+uint80 constant ARRAY_LENGTH = 5;
 
-// abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)
-// use this to generate function call data. this is equivalent to
-// bytes memory data = bytes.append(bytes4(selector), abi.encode(...));
-// selector can be retrieved by
-// aContract.someFunction.selector
+contract TractorTest is TestHelper {
+    uint256 private constant PUBLISHER_PRIVATE_KEY = 123456789;
 
-// can only make ONE call to advancedFarmCall bc the local return data is cached and used internally
+    address private PUBLISHER;
+    address private constant OPERATOR = address(982340983475);
 
-// each sub function needs its own unique clipboard config
+    address private constant BEANSTALK = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+    address private constant BEANSTALK_OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
+
+    IBeanstalk beanstalk;
+    IERC20 bean;
+
+    TractorFacet tractorFacet;
+    JunctionFacet junctionFacet;
+    TokenFacet tokenFacet;
+
+    function setUp() public {
+        vm.createSelectFork({urlOrAlias: "mainnet", blockNumber: 18_686_631});
+
+        beanstalk = IBeanstalk(BEANSTALK);
+        bean = IERC20(C.BEAN);
+        tokenFacet = TokenFacet(BEANSTALK);
+
+        PUBLISHER = vm.addr(PUBLISHER_PRIVATE_KEY);
+
+        // Cut and init TractorFacet.
+        InitTractor initTractor = new InitTractor();
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+        cut[0] = _cut("TractorFacet", address(new TractorFacet()));
+        vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
+        IDiamondCut(BEANSTALK).diamondCut(
+            cut,
+            address(initTractor), // address of contract with init() function
+            abi.encodeWithSignature("init()")
+        );
+        tractorFacet = TractorFacet(BEANSTALK);
+
+        // Cut and init JunctionFacet.
+        cut = new IDiamondCut.FacetCut[](1);
+        cut[0] = _cut("JunctionFacet", address(new JunctionFacet()));
+        vm.prank(BEANSTALK_OWNER); // LibAppStorage.diamondStorage().contractOwner
+        IDiamondCut(BEANSTALK).diamondCut(
+            cut,
+            address(0), // address of contract with init() function
+            ""
+        );
+        junctionFacet = JunctionFacet(BEANSTALK);
+
+        // Mint beans
+        // vm.prank(0x62d69f6867A0A084C6d313943dC22023Bc263691);
+        deal(C.BEAN, PUBLISHER, 5000e6);
+        console.log("Bean supply is", C.bean().totalSupply());
+
+        // Operator position is unimportant, verify no held Beans.
+        assertEq(C.bean().balanceOf(OPERATOR), 0);
+    }
+
+    function test_depositAllBeans() public {
+        uint256 tip = 10e6;
+
+        // Move publisher Beans to internal balance.
+        uint256 beanBalance = bean.balanceOf(PUBLISHER);
+        vm.prank(PUBLISHER);
+        // tokenFacet.approveToken(BEANSTALK, bean, beanBalance);
+        bean.approve(BEANSTALK, beanBalance);
+        vm.prank(PUBLISHER);
+        beanstalk.transferToken(
+            bean,
+            PUBLISHER,
+            beanBalance,
+            LibTransfer.From.EXTERNAL,
+            LibTransfer.To.INTERNAL
+        );
+        assertEq(
+            tokenFacet.getInternalBalance(PUBLISHER, bean),
+            beanBalance,
+            "Internal balance init failure"
+        );
+
+        // User creates a Requisition containing a blueprint with instructions to Enroot.
+        LibTractor.Requisition memory requisition;
+        (bytes memory data, bytes32[] memory operatorPasteInstrs) = LibDrafter.draftDepositAllBeans(
+            tip
+        );
+        requisition.blueprint = LibTractor.Blueprint({
+            publisher: PUBLISHER,
+            data: data,
+            operatorPasteInstrs: operatorPasteInstrs,
+            maxNonce: 100,
+            startTime: 0,
+            endTime: type(uint256).max
+        });
+
+        requisition.blueprintHash = tractorFacet.getBlueprintHash(requisition.blueprint);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(PUBLISHER_PRIVATE_KEY, requisition.blueprintHash);
+        requisition.signature = abi.encodePacked(r, s, v);
+
+        // No operator calldata used.
+        bytes memory operatorData;
+
+        // Operator executes the Blueprint, enrooting the user.
+        vm.prank(OPERATOR);
+        tractorFacet.tractor(requisition, operatorData);
+
+        // Verify state of User and Operator.
+        assertEq(bean.balanceOf(OPERATOR), tip);
+        assertEq(bean.balanceOf(PUBLISHER), uint256(0));
+        // check logs, get deposit ID, verify internal balance.
+        // vm.assertEq(BEANSTALK.INTERNALBALANCE(PUBLISHER), xxx);
+    }
+}
 
 // TODO how to encode dynamically sized data? Not possible, without either:
 //    1. Telling the contract how to extract data (i.e. unique functions for each call type)
@@ -45,15 +148,6 @@ import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 //            of the data is not known ahead of time. So the blueprint copyData cannot be configured in a
 //            generalized way.
 
-// This is the default size of arrays containing stems/deposits. Operators can populate the array up to the size.
-uint80 constant ARRAY_LENGTH = 5;
-
-// uint80 constant ADDR_SIZE = 20;
-// uint80 constant TARGET_SIZE = 20; // There is not target encoded in Farm calls bc they are all internal to the diamond.
-uint80 constant SELECTOR_SIZE = 4;
-uint80 constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE; // shape of AdvancedFarmCall.callData: 32 bytes (length of callData), 4 bytes (selector), X bytes (args)
-uint80 constant ADDR_SLOT_OFFSET = 12; // 32 - 20
-
 /**
  * @title Lib Drafter
  * @author funderbrker
@@ -62,12 +156,6 @@ uint80 constant ADDR_SLOT_OFFSET = 12; // 32 - 20
  **/
 library LibDrafter {
     using LibBytes for bytes;
-
-    // struct operatorPasteStruct {
-    //     uint80 copyByteIndex;
-    //     uint80 pasteCallIndex;
-    //     uint80 pasteByteIndex;
-    // }
 
     /**
      * @notice  Draft a set of instructions enabling the operator to auto deposit all Beans from publisher internal bal.
@@ -85,9 +173,7 @@ library LibDrafter {
         IBeanstalk beanstalk;
         TokenFacet tokenFacet;
         JunctionFacet junctionFacet;
-        // IERC20 bean;
 
-        // uint80 operatorDataLength;
         uint256 operatorPasteInstrsLength;
 
         // Preset the operatorPasteInstrs size because Solidity.
@@ -106,9 +192,9 @@ library LibDrafter {
             clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteInstrs[operatorPasteInstrsLength] = LibOperatorPasteInstr.encode(
-            PUBLISHER_COPY_INDEX,
+            C.PUBLISHER_COPY_INDEX,
             0,
-            ARGS_START_INDEX + ADDR_SLOT_OFFSET
+            C.ARGS_START_INDEX + C.ADDR_SLOT_OFFSET
         );
         operatorPasteInstrsLength += 1;
 
@@ -118,8 +204,8 @@ library LibDrafter {
             clipboard: LibClipboard.encode(
                 LibReturnPasteParam.encode(
                     0,
-                    SLOT_SIZE, // copy after length data
-                    ARGS_START_INDEX
+                    C.SLOT_SIZE, // copy after length data
+                    C.ARGS_START_INDEX
                 )
             )
         });
@@ -135,8 +221,8 @@ library LibDrafter {
             clipboard: LibClipboard.encode(
                 LibReturnPasteParam.encode(
                     1,
-                    SLOT_SIZE, // copy after length data
-                    ARGS_START_INDEX + SLOT_SIZE
+                    C.SLOT_SIZE, // copy after length data
+                    C.ARGS_START_INDEX + C.SLOT_SIZE
                 )
             )
         });
@@ -154,9 +240,9 @@ library LibDrafter {
             clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteInstrs[operatorPasteInstrsLength] = LibOperatorPasteInstr.encode(
-            OPERATOR_COPY_INDEX,
+            C.OPERATOR_COPY_INDEX,
             3,
-            ARGS_START_INDEX + SLOT_SIZE + ADDR_SLOT_OFFSET
+            C.ARGS_START_INDEX + C.SLOT_SIZE + C.ADDR_SLOT_OFFSET
         ); // + ADDR_SIZE)
         operatorPasteInstrsLength += 1;
 
@@ -213,9 +299,9 @@ library LibDrafter {
             clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteInstrs[0] = LibOperatorPasteInstr.encode(
-            PUBLISHER_COPY_INDEX,
+            C.PUBLISHER_COPY_INDEX,
             0,
-            ARGS_START_INDEX
+            C.ARGS_START_INDEX
         );
         operatorPasteInstrsLength += 1;
 
@@ -237,10 +323,10 @@ library LibDrafter {
                 0,
                 1,
                 // Read the location of the stems array from the calldata.
-                advancedFarmCalls[1].callData.toUint80(ARGS_START_INDEX + SLOT_SIZE)
+                advancedFarmCalls[1].callData.toUint80(C.ARGS_START_INDEX + C.SLOT_SIZE)
             )
         );
-        operatorDataLength += ARRAY_LENGTH * SLOT_SIZE;
+        operatorDataLength += ARRAY_LENGTH * C.SLOT_SIZE;
         operatorPasteInstrsLength += ARRAY_LENGTH;
         mergeOperatorPasteInstrs(
             operatorPasteInstrs,
@@ -250,10 +336,10 @@ library LibDrafter {
                 operatorDataLength,
                 1,
                 // Read the location of the amounts array from the calldata.
-                advancedFarmCalls[1].callData.toUint80(ARGS_START_INDEX + SLOT_SIZE * 2)
+                advancedFarmCalls[1].callData.toUint80(C.ARGS_START_INDEX + C.SLOT_SIZE * 2)
             )
         );
-        operatorDataLength += ARRAY_LENGTH * SLOT_SIZE;
+        operatorDataLength += ARRAY_LENGTH * C.SLOT_SIZE;
         operatorPasteInstrsLength += ARRAY_LENGTH;
 
         ////// EnrootDeposits(UNRIPE_LP, stems, amounts) - returnData[1] //////
@@ -274,10 +360,10 @@ library LibDrafter {
                 operatorDataLength,
                 1,
                 // Read the location of the stems array from the calldata.
-                advancedFarmCalls[2].callData.toUint80(ARGS_START_INDEX + SLOT_SIZE)
+                advancedFarmCalls[2].callData.toUint80(C.ARGS_START_INDEX + C.SLOT_SIZE)
             )
         );
-        operatorDataLength += ARRAY_LENGTH * SLOT_SIZE;
+        operatorDataLength += ARRAY_LENGTH * C.SLOT_SIZE;
         operatorPasteInstrsLength += ARRAY_LENGTH;
         mergeOperatorPasteInstrs(
             operatorPasteInstrs,
@@ -287,10 +373,10 @@ library LibDrafter {
                 operatorDataLength,
                 1,
                 // Read the location of the amounts array from the calldata.
-                advancedFarmCalls[2].callData.toUint80(ARGS_START_INDEX + SLOT_SIZE * 2)
+                advancedFarmCalls[2].callData.toUint80(C.ARGS_START_INDEX + C.SLOT_SIZE * 2)
             )
         );
-        operatorDataLength += ARRAY_LENGTH * SLOT_SIZE;
+        operatorDataLength += ARRAY_LENGTH * C.SLOT_SIZE;
         operatorPasteInstrsLength += ARRAY_LENGTH;
 
         ////// getStalk(publisher) - returnData[3] //////
@@ -299,16 +385,16 @@ library LibDrafter {
             clipboard: abi.encodePacked(bytes2(0))
         });
         operatorPasteInstrs[operatorPasteInstrsLength] = LibOperatorPasteInstr.encode(
-            PUBLISHER_COPY_INDEX,
+            C.PUBLISHER_COPY_INDEX,
             3,
-            ARGS_START_INDEX
+            C.ARGS_START_INDEX
         );
         operatorPasteInstrsLength += 1;
 
         ///// junctions.Sub - returnData[4] //////
         bytes32[] memory returnPasteParams = new bytes32[](2);
-        returnPasteParams[0] = LibReturnPasteParam.encode(3, 0, ARGS_START_INDEX);
-        returnPasteParams[1] = LibReturnPasteParam.encode(0, 0, ARGS_START_INDEX + SLOT_SIZE);
+        returnPasteParams[0] = LibReturnPasteParam.encode(3, 0, C.ARGS_START_INDEX);
+        returnPasteParams[1] = LibReturnPasteParam.encode(0, 0, C.ARGS_START_INDEX + C.SLOT_SIZE);
         advancedFarmCalls[4] = AdvancedFarmCall({
             callData: abi.encodeWithSelector(junctionFacet.sub.selector, uint256(0), uint256(0)),
             clipboard: LibClipboard.encode(0, returnPasteParams)
@@ -322,7 +408,7 @@ library LibDrafter {
                 C.PRECISION / 10000, // 0.01% of stalk
                 C.PRECISION
             ),
-            clipboard: LibClipboard.encode(LibReturnPasteParam.encode(4, 0, ARGS_START_INDEX))
+            clipboard: LibClipboard.encode(LibReturnPasteParam.encode(4, 0, C.ARGS_START_INDEX))
         });
 
         ////// beanstalk.transfer - returnData[6] //////
@@ -339,14 +425,14 @@ library LibDrafter {
                 LibReturnPasteParam.encode(
                     5,
                     0,
-                    ARGS_START_INDEX + SLOT_SIZE + SLOT_SIZE // + ADDR_SIZE + ADDR_SIZE
+                    C.ARGS_START_INDEX + C.SLOT_SIZE + C.SLOT_SIZE // + ADDR_SIZE + ADDR_SIZE
                 )
             )
         });
         operatorPasteInstrs[operatorPasteInstrsLength] = LibOperatorPasteInstr.encode(
-            OPERATOR_COPY_INDEX,
+            C.OPERATOR_COPY_INDEX,
             6,
-            ARGS_START_INDEX + SLOT_SIZE
+            C.ARGS_START_INDEX + C.SLOT_SIZE
         ); // + ADDR_SIZE)
         operatorPasteInstrsLength += 1;
 
