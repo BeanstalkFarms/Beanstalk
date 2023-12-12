@@ -7,10 +7,9 @@ pragma solidity =0.7.6;
 // TODO rm
 import "forge-std/console.sol";
 
+import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibFunction} from "./LibFunction.sol";
-
-uint80 constant SLOT_SIZE = 32;
 
 // https://evmpipeline.org/pipeline.pdf
 
@@ -75,9 +74,9 @@ library LibReturnPasteParam {
         console.log(_returnDataItemIndex);
         console.log(_copyByteIndex);
         console.log(_pasteByteIndex);
-        require(SLOT_SIZE <= _pasteByteIndex, "PB: _pasteByteIndex too small");
+        require(C.SLOT_SIZE <= _pasteByteIndex, "PB: _pasteByteIndex too small");
         require(_pasteByteIndex <= data.length, "PB: _pasteByteIndex too large");
-        require(SLOT_SIZE <= _copyByteIndex, "PB: _copyByteIndex too small");
+        require(C.SLOT_SIZE <= _copyByteIndex, "PB: _copyByteIndex too small");
         require(_copyByteIndex <= data.length, "PB: _copyByteIndex too large");
         require(_returnDataItemIndex < returnData.length, "PB: _returnDataItemIndex too large");
         LibFunction.paste32Bytes(

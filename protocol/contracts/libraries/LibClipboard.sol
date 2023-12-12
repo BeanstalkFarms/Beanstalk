@@ -13,8 +13,6 @@ import {LibTractor} from "./LibTractor.sol";
 import {LibFunction} from "./LibFunction.sol";
 import {LibReturnPasteParam} from "./LibReturnPasteParam.sol";
 
-// TODO make internal lib?
-
 /**
  * @title LibClipboard
  * @author funderbrker
@@ -71,7 +69,11 @@ library LibClipboard {
 
     function decode(
         bytes memory clipboard
-    ) internal pure returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams) {
+    )
+        internal
+        pure
+        returns (bytes1 typeId, uint256 etherValue, bytes32[] memory returnPasteParams)
+    {
         typeId = clipboard[0];
         bytes1 useEther = clipboard[1];
         if (typeId == 0x01) {
@@ -135,38 +137,4 @@ library LibClipboard {
         console.log("useClipboard-9");
         console.logBytes(data);
     }
-
-    // /**
-    //  * @notice Copy 32 Bytes from copyData at copyIndex and paste into pasteData at pasteIndex
-    //  * @param copyData The data bytes to copy from
-    //  * @param pasteData The data bytes to paste into
-    //  * @param copyIndex The index in copyData to copying from
-    //  * @param pasteIndex The index in pasteData to paste into
-    //  * @param length The length of bytes to copy
-    //  * @return pastedData The data with the copied with 32 bytes
-    //  **/
-    // function pasteBytes(
-    //     bytes memory copyData,
-    //     bytes memory pasteData,
-    //     uint256 copyIndex,
-    //     uint256 pasteIndex,
-    //     uint256 length
-    // ) internal pure returns (bytes memory pastedData) {
-    //     uint256 num = length / 32;
-    //     for (uint256 i; i != num; ++i) {
-    //         assembly {
-    //             mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
-    //         }
-    //         pasteIndex += 32;
-    //         copyIndex += 32;
-    //     }
-
-    //     uint256 diff = length % 32;
-    //     for (uint256 i; i != diff; ++i) {
-    //         pasteData[pasteIndex + i - 32] = copyData[copyIndex + i - 32];
-    //     }
-
-    //     pastedData = pasteData;
-    // }
-
 }

@@ -8,15 +8,10 @@ pragma experimental ABIEncoderV2;
 // TODO rm
 import "forge-std/console.sol";
 
+import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibFunction} from "./LibFunction.sol";
 import {LibTractor} from "./LibTractor.sol";
-
-// TODO make internal lib?
-
-uint80 constant PUBLISHER_COPY_INDEX = type(uint80).max;
-uint80 constant OPERATOR_COPY_INDEX = type(uint80).max - 1;
-uint80 constant SLOT_SIZE = 32;
 
 /**
  * @title LibOperatorPasteInstr
@@ -61,9 +56,9 @@ library LibOperatorPasteInstr {
         bytes32[] memory operatorPasteInstrs = new bytes32[](length);
         for (uint80 i = 0; i < length; i++) {
             operatorPasteInstrs[i] = encode(
-                copyStartByteIndex + SLOT_SIZE * i,
+                copyStartByteIndex + C.SLOT_SIZE * i,
                 _pasteCallIndex,
-                pasteStartByteIndex + SLOT_SIZE * i
+                pasteStartByteIndex + C.SLOT_SIZE * i
             );
         }
         return operatorPasteInstrs;
@@ -105,24 +100,24 @@ library LibOperatorPasteInstr {
         console.log(callData.length);
         console.log(_pasteByteIndex);
         // _pasteByteIndex must have 32 bytes of available space and not write into the length data.
-        require(SLOT_SIZE <= _pasteByteIndex, "PB: _pasteByteIndex too small");
+        require(C.SLOT_SIZE <= _pasteByteIndex, "PB: _pasteByteIndex too small");
         require(_pasteByteIndex <= callData.length, "PB: _pasteByteIndex too large");
 
         console.log(_copyByteIndex);
         bytes memory copyData;
-        if (_copyByteIndex == PUBLISHER_COPY_INDEX) {
+        if (_copyByteIndex == C.PUBLISHER_COPY_INDEX) {
             console.log("HERE-PB-P-0");
             copyData = abi.encodePacked(
                 bytes32(bytes20(LibTractor._tractorStorage().activePublisher))
             );
             // Skip length data.
-            _copyByteIndex = SLOT_SIZE;
+            _copyByteIndex = C.SLOT_SIZE;
             console.log("HERE-PB-P-1");
-        } else if (_copyByteIndex == OPERATOR_COPY_INDEX) {
+        } else if (_copyByteIndex == C.OPERATOR_COPY_INDEX) {
             console.log("HERE-PB-O-0");
             copyData = abi.encodePacked(bytes32(bytes20(msg.sender)));
             // Skip length data.
-            _copyByteIndex = SLOT_SIZE;
+            _copyByteIndex = C.SLOT_SIZE;
         } else {
             console.log("HERE-PB-C-0");
             copyData = operatorData;
@@ -130,7 +125,7 @@ library LibOperatorPasteInstr {
         console.log(_copyByteIndex);
         console.logBytes(copyData);
         // _copyByteIndex must have 32 bytes of available space and not write into the length data.
-        require(SLOT_SIZE <= _copyByteIndex, "PB: _copyByteIndex too small");
+        require(C.SLOT_SIZE <= _copyByteIndex, "PB: _copyByteIndex too small");
         require(_copyByteIndex <= callData.length, "PB: _copyByteIndex too large");
 
         console.logBytes(callData);

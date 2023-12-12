@@ -84,6 +84,15 @@ library C {
     uint256 internal constant BEAN_INDEX = 0;
     uint256 internal constant ETH_INDEX = 1;
 
+    //////////////////// Tractor ////////////////////
+
+    uint80 internal constant SELECTOR_SIZE = 4;
+    uint80 internal constant SLOT_SIZE = 32;
+    uint80 internal constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
+    uint80 internal constant ADDR_SLOT_OFFSET = 12;
+    uint80 internal constant PUBLISHER_COPY_INDEX = type(uint80).max;
+    uint80 internal constant OPERATOR_COPY_INDEX = type(uint80).max - 1;
+
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
     }
