@@ -10,6 +10,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {AppStorage} from "../AppStorage.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
@@ -48,8 +49,8 @@ contract FertilizerFacet {
         external
         payable
     {
-        uint256 amount = C.fertilizer().beanstalkUpdate(msg.sender, ids, s.bpf);
-        LibTransfer.sendToken(C.bean(), amount, msg.sender, mode);
+        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._getUser(), ids, s.bpf);
+        LibTransfer.sendToken(C.bean(), amount, LibTractor._getUser(), mode);
     }
 
     /**

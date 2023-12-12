@@ -11,7 +11,8 @@ import {C} from "contracts/C.sol";
  * @author 0xm00neth, funderbrker
  **/
 library LibTractor {
-    bytes32 constant TRACTOR_STORAGE_POSITION = keccak256("diamond.storage.tractor");
+    // 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
+    // bytes32 constant TRACTOR_STORAGE_POSITION = keccak256("diamond.storage.tractor");
 
     bytes32 private constant TRACTOR_HASHED_NAME = keccak256(bytes("Tractor"));
     bytes32 private constant TRACTOR_HASHED_VERSION = keccak256(bytes("1"));
@@ -52,10 +53,10 @@ library LibTractor {
 
     /// @notice get tractor storage from storage
     /// @return ts TractorStorage
-    function _tractorStorage() internal pure returns (TractorStorage storage ts) {
-        bytes32 position = TRACTOR_STORAGE_POSITION;
+    function _tractorStorage() internal view returns (TractorStorage storage ts) {
+        // keccak256("diamond.storage.tractor") == 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
         assembly {
-            ts.slot := position
+            ts.slot := 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
         }
     }
 

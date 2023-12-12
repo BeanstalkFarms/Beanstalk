@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {C} from "contracts/C.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
@@ -77,8 +78,8 @@ contract ConvertFacet is ReentrancyGuard {
         address toToken; address fromToken; uint256 grownStalk;
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
 
-        LibSilo._mow(msg.sender, fromToken);
-        LibSilo._mow(msg.sender, toToken);
+        LibSilo._mow(LibTractor._getUser(), fromToken);
+        LibSilo._mow(LibTractor._getUser(), toToken);
 
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
@@ -92,7 +93,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
-        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
+        emit Convert(LibTractor._getUser(), fromToken, toToken, fromAmount, toAmount);
     }
 
     function _withdrawTokens(
@@ -117,7 +118,7 @@ contract ConvertFacet is ReentrancyGuard {
                     //keeping track of stalk removed must happen before we actually remove the deposit
                     //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
                     depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        LibTractor._getUser(),
                         token,
                         stems[i],
                         amounts[i]
@@ -135,7 +136,7 @@ contract ConvertFacet is ReentrancyGuard {
                     amounts[i] = maxTokens.sub(a.tokensRemoved);
                     
                     depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        LibTractor._getUser(),
                         token,
                         stems[i],
                         amounts[i]
@@ -164,7 +165,7 @@ contract ConvertFacet is ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                msg.sender,
+                LibTractor._getUser(),
                 token,
                 stems,
                 amounts,
@@ -173,8 +174,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                msg.sender, 
-                msg.sender,
+                LibTractor._getUser(), 
+                LibTractor._getUser(),
                 address(0), 
                 depositIds, 
                 amounts
@@ -187,7 +188,7 @@ contract ConvertFacet is ReentrancyGuard {
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
         LibSilo.burnStalk(
-            msg.sender,
+            LibTractor._getUser(),
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.stalkRemoved, a.bdvRemoved);
@@ -213,11 +214,11 @@ contract ConvertFacet is ReentrancyGuard {
 
         (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
 
-        LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
+        LibSilo.mintStalk(LibTractor._getUser(), bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
         LibTokenSilo.addDepositToAccount(
-            msg.sender, 
+            LibTractor._getUser(), 
             token, 
             stem, 
             amount, 

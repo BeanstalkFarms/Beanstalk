@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {IERC1155Receiver} from "contracts/interfaces/IERC1155Receiver.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/libraries/Token/LibWeth.sol";
 import "contracts/libraries/Token/LibEth.sol";
@@ -62,7 +63,7 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
     ) external payable {
         LibTransfer.transferToken(
             token,
-            msg.sender,
+            LibTractor._getUser(),
             recipient,
             amount,
             fromMode,
@@ -90,8 +91,8 @@ contract TokenFacet is IERC1155Receiver, ReentrancyGuard {
             toMode
         );
 
-        if (sender != msg.sender) {
-            LibTokenApprove.spendAllowance(sender, msg.sender, token, amount);
+        if (sender != LibTractor._getUser()) {
+            LibTokenApprove.spendAllowance(sender, LibTractor._getUser(), token, amount);
         }
     }
 
