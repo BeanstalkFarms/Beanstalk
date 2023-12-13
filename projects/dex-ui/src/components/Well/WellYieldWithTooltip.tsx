@@ -61,7 +61,7 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) =>
               <div>
                 The Variable Bean APY (vAPY) uses historical data of Beans earned by{" "}
                 <a
-                  href="https://docs.bean.money/almanac/guides/silo/understand-vapy"
+                  href="https://docs.bean.money/almanac/guides/silo/understand-silo-vapy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underlined"
