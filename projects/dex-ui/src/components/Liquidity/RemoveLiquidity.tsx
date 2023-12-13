@@ -431,34 +431,36 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   );
 };
 
+const RemoveLiquidityLoading = () => (
+  <LargeGapContainer>
+    <TokenContainer>
+      <LoadingTemplate.Input />
+    </TokenContainer>
+    <MediumGapContainer>
+      <OutputModeSelectorContainer>
+        <LoadingTemplate.Item width={100} height={20} margin={{ bottom: 4 }} />
+        <LoadingTemplate.Flex row gap={8}>
+          <LoadingTemplate.Button />
+          <LoadingTemplate.Button />
+        </LoadingTemplate.Flex>
+      </OutputModeSelectorContainer>
+      <TokenContainer>
+        <LoadingTemplate.Input />
+      </TokenContainer>
+      <TokenContainer>
+        <LoadingTemplate.Input />
+      </TokenContainer>
+    </MediumGapContainer>
+    <LoadingTemplate.Item width={185} />
+    <ButtonWrapper>
+      <LoadingTemplate.Button />
+    </ButtonWrapper>
+  </LargeGapContainer>
+);
+
 export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps> = (props) => {
   if (!props.well || props.loading) {
-    return (
-      <LargeGapContainer>
-        <TokenContainer>
-          <LoadingTemplate.Input />
-        </TokenContainer>
-        <MediumGapContainer>
-          <OutputModeSelectorContainer>
-            <LoadingTemplate.Item width={100} height={20} margin={{ bottom: 4 }} />
-            <LoadingTemplate.Flex row gap={8}>
-              <LoadingTemplate.Button />
-              <LoadingTemplate.Button />
-            </LoadingTemplate.Flex>
-          </OutputModeSelectorContainer>
-          <TokenContainer>
-            <LoadingTemplate.Input />
-          </TokenContainer>
-          <TokenContainer>
-            <LoadingTemplate.Input />
-          </TokenContainer>
-        </MediumGapContainer>
-        <LoadingTemplate.Item width={185} />
-        <ButtonWrapper>
-          <LoadingTemplate.Button />
-        </ButtonWrapper>
-      </LargeGapContainer>
-    );
+    return <RemoveLiquidityLoading />;
   }
 
   return <RemoveLiquidityContent {...props} well={props.well} />;

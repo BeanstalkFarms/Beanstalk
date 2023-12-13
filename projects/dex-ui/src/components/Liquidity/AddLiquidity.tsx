@@ -417,25 +417,27 @@ const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, han
   );
 };
 
+const AddLiquidityLoading = () => (
+  <div>
+    <LargeGapContainer>
+      <LoadingTemplate.Flex gap={12}>
+        <LoadingTemplate.Input />
+        <LoadingTemplate.Input />
+      </LoadingTemplate.Flex>
+      <LoadingTemplate.Flex gap={8}>
+        <LoadingTemplate.Item height={20} width={285} />
+        <LoadingTemplate.Item height={20} width={145} />
+      </LoadingTemplate.Flex>
+      <ButtonWrapper>
+        <LoadingTemplate.Button />
+      </ButtonWrapper>
+    </LargeGapContainer>
+  </div>
+);
+
 export const AddLiquidity: React.FC<BaseAddLiquidityProps & { well: Well | undefined; loading: boolean }> = (props) => {
   if (!props.well || props.loading) {
-    return (
-      <div>
-        <LargeGapContainer>
-          <LoadingTemplate.Flex gap={12}>
-            <LoadingTemplate.Input />
-            <LoadingTemplate.Input />
-          </LoadingTemplate.Flex>
-          <LoadingTemplate.Flex gap={8}>
-            <LoadingTemplate.Item height={20} width={285} />
-            <LoadingTemplate.Item height={20} width={145} />
-          </LoadingTemplate.Flex>
-          <ButtonWrapper>
-            <LoadingTemplate.Button />
-          </ButtonWrapper>
-        </LargeGapContainer>
-      </div>
-    );
+    return <AddLiquidityLoading />;
   }
 
   return <AddLiquidityContent {...props} well={props.well} />;
