@@ -4,7 +4,7 @@ import debounce from "lodash/debounce";
 import { FC } from "src/types";
 import styled, { keyframes } from "styled-components";
 import { BasicInput } from "./BasicInput";
-import { TokenPicker } from "./TokenPicker";
+import { TokenPicker, TokenPickerProps } from "./TokenPicker";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { Spinner } from "../Spinner";
 import { BodyXS } from "../Typography";
@@ -30,7 +30,7 @@ type TokenInput = {
   canChangeValue?: boolean;
   debounceTime?: number;
   clamp?: boolean;
-};
+} & Pick<TokenPickerProps, "excludeToken">;
 
 export const TokenInput: FC<TokenInput> = ({
   id,
@@ -47,6 +47,8 @@ export const TokenInput: FC<TokenInput> = ({
   canChangeValue = true,
   debounceTime = 500,
   clamp = false
+  /// TokenPickerProps
+  excludeToken
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -101,7 +103,7 @@ export const TokenInput: FC<TokenInput> = ({
           canChangeValue={!!canChangeValue}
           max={clamp ? balance?.[token.symbol] : undefined}
         />
-        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} />
+        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} excludeToken={excludeToken} />
       </TopRow>
 
       {showBalance && (

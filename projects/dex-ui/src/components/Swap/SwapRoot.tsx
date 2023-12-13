@@ -345,6 +345,7 @@ export const SwapRoot = () => {
           onTokenChange={handleInputTokenChange}
           canChangeToken={true}
           loading={isLoadingAllBalances}
+          excludeToken={outToken}
         />
       </SwapInputContainer>
       <ArrowContainer>
@@ -361,6 +362,7 @@ export const SwapRoot = () => {
           canChangeToken={true}
           showBalance={true}
           loading={isLoadingAllBalances}
+          excludeToken={inToken}
         />
       </SwapInputContainer>
       <QuoteDetails
