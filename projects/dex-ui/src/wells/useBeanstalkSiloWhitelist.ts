@@ -1,46 +1,41 @@
-import { useMemo } from "react";
+import { useCallback } from "react";
 import { Well } from "@beanstalk/sdk/Wells";
-import { BEANETH_ADDRESS } from "src/utils/addresses";
+import { BEANETH_MULTIPUMP_ADDRESS } from "src/utils/addresses";
+import useSdk from "src/utils/sdk/useSdk";
+import { TokenValue } from "@beanstalk/sdk";
 
-const WHITELIST_MAP = {
-  /// BEANWETHCP2w (BEANETH LP)
-  [`${BEANETH_ADDRESS}`]: {
-    address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd",
-    /// better way to do this?
-    isMultiFlowPump: true,
-    /// Can we make this mapping dynamic?
-    seeds: 4.5
-  }
+export type BeanstalkSiloWhitelistConfig = {
+  address: string;
+  isMultiFlowPump: boolean;
+  seeds: TokenValue;
 };
 
-const getIsWhitelisted = (well: Well | undefined) => {
-  if (!well) return false;
-  const wellAddress = well.address.toLowerCase();
-
-  return wellAddress in WHITELIST_MAP;
-};
-
-const getSeedsWithWell = (well: Well | undefined) => {
-  const wellAddress = well?.address.toLowerCase();
-  const key = wellAddress as keyof typeof WHITELIST_MAP;
-  return WHITELIST_MAP?.[key]?.seeds || undefined;
-};
-
-const getIsMultiPumpWell = (well: Well | undefined) => {
-  if (well) {
-    const wellAddress = well.address.toLowerCase();
-    const key = wellAddress as keyof typeof WHITELIST_MAP;
-    return WHITELIST_MAP?.[key]?.isMultiFlowPump || false;
-  }
-  return false;
-};
-
-/// set of wells that are whitelisted for the Beanstalk silo
 export const useBeanstalkSiloWhitelist = () => {
-  const whitelistedAddresses = useMemo(() => Object.keys(WHITELIST_MAP), []);
+  const sdk = useSdk();
+
+  const getIsWhitelisted = useCallback(
+    (well: Well | undefined) => {
+      if (!well?.lpToken) return false;
+      const token = sdk.tokens.findByAddress(well.lpToken.address);
+      return token && sdk.tokens.siloWhitelist.has(token);
+    },
+    [sdk.tokens]
+  );
+
+  const getSeedsWithWell = useCallback(
+    (well: Well | undefined) => {
+      if (!well?.lpToken) return undefined;
+      return sdk.tokens.findByAddress(well.lpToken.address)?.getSeeds();
+    },
+    [sdk.tokens]
+  );
+
+  const getIsMultiPumpWell = useCallback((well: Well | undefined) => {
+    if (!well?.pumps) return false;
+    return !!well.pumps.find((pump) => pump.address.toLowerCase() === BEANETH_MULTIPUMP_ADDRESS);
+  }, []);
 
   return {
-    whitelist: whitelistedAddresses,
     getIsWhitelisted,
     getSeedsWithWell,
     getIsMultiPumpWell

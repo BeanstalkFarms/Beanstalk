@@ -4,6 +4,7 @@ import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
 import { useBeanstalkSiloWhitelist } from "./useBeanstalkSiloWhitelist";
 
+// TODO: BIP39 will change the APYs we get from the subgraph
 export const useBeanstalkSiloAPYs = () => {
   const { getSeedsWithWell } = useBeanstalkSiloWhitelist();
 
@@ -24,20 +25,21 @@ export const useBeanstalkSiloAPYs = () => {
       const seeds = getSeedsWithWell(well);
       if (!query.data || !seeds) return undefined;
 
+      const seedsStr = parseFloat(seeds.toHuman()).toString();
       const d = query.data;
 
-      switch (seeds) {
-        case 0:
+      switch (seedsStr) {
+        case "0":
           return d.zeroSeedBeanAPY;
-        case 2:
+        case "2":
           return d.twoSeedBeanAPY;
-        case 3:
+        case "3":
           return d.threeSeedBeanAPY;
-        case 3.5:
+        case "3.5":
           return d.threePointTwoFiveSeedBeanAPY;
-        case 4:
+        case "4":
           return d.fourSeedBeanAPY;
-        case 4.5:
+        case "4.5":
           return d.fourPointFiveSeedBeanAPY;
         default:
           return undefined;
