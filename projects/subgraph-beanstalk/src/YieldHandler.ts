@@ -72,6 +72,7 @@ export function updateBeanEMA(t: i32, timestamp: BigInt): void {
     );
     tokenYield.beanAPY = tokenAPY[0];
     tokenYield.stalkAPY = tokenAPY[1];
+    tokenYield.createdAt = timestamp;
     tokenYield.save();
 
     tokenIds.push(tokenYield.id);

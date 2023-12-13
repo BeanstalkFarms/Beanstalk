@@ -293,6 +293,7 @@ export function loadTokenYield(token: Address, season: i32): TokenYield {
     tokenYield.season = season;
     tokenYield.beanAPY = ZERO_BD;
     tokenYield.stalkAPY = ZERO_BD;
+    tokenYield.createdAt = ZERO_BI;
     tokenYield.save();
   }
   return tokenYield as TokenYield;
