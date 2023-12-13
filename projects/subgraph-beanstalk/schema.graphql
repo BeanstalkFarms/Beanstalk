@@ -345,6 +345,8 @@ type TokenYield @entity {
   beanAPY: BigDecimal!
   "Stalk APY for season"
   stalkAPY: BigDecimal!
+  "Unix timestamp of update"
+  createdAt: BigInt!
 }
 
 type WhitelistTokenSetting @entity {
