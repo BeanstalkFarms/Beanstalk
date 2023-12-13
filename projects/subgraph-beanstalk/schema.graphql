@@ -114,6 +114,8 @@ type Silo @entity {
   plantableStalk: BigInt!
   "Current seeds balance"
   seeds: BigInt!
+  "Current average grown stalk per bdv per season"
+  grownStalkPerBdvPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
   "Cumulative total for bean mints sent to the silo"
@@ -141,6 +143,8 @@ type SiloHourlySnapshot @entity {
   plantableStalk: BigInt!
   "Point in time current seeds balance"
   seeds: BigInt!
+  "Point in time average grown stalk per bdv per season"
+  grownStalkPerBdvPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
   "Point in time cumulative total for bean mints sent to the silo"
@@ -182,6 +186,8 @@ type SiloDailySnapshot @entity {
   plantableStalk: BigInt!
   "Point in time current seeds balance"
   seeds: BigInt!
+  "Point in time average grown stalk per bdv per season"
+  grownStalkPerBdvPerSeason: BigInt!
   "Point in time current roots balance"
   roots: BigInt!
   "Point in time cumulative total for bean mints sent to the silo"
@@ -320,8 +326,40 @@ type SiloYield @entity {
   fourPointFiveSeedBeanAPY: BigDecimal!
   "Stalk APY for 4.5 seeds per BDV"
   fourPointFiveSeedStalkAPY: BigDecimal!
+  "Current whitelisted silo tokens"
+  whitelistedTokens: [String!]!
+  "Current Bean (0) and Stalk (1) APY for each token."
+  tokenAPYS: [TokenYield!]!
   "Unix timestamp of update"
   createdAt: BigInt!
+}
+
+type TokenYield @entity {
+  "Token address - season"
+  id: Bytes!
+  "Token being calculated"
+  token: Bytes!
+  "Season for APY calculation"
+  season: Int!
+  "Bean APY for season"
+  beanAPY: BigDecimal!
+  "Stalk APY for season"
+  stalkAPY: BigDecimal!
+}
+
+type WhitelistTokenSetting @entity {
+  " Contract address for the whitelisted token "
+  id: Bytes!
+  " Encoded BDV selector "
+  selector: Bytes!
+  "Represents how much Stalk one BDV of the underlying deposited token grows each season."
+  stalkEarnedPerSeason: BigInt!
+  "The stalk per BDV that the silo grants in exchange for depositing this token."
+  stalkIssuedPerBdv: BigInt!
+  "The last season in which the stalkEarnedPerSeason for this token was updated."
+  milestoneSeason: Int!
+  "Last timestamp entity was updated"
+  updatedAt: BigInt!
 }
 
 type Field @entity {
