@@ -29,6 +29,7 @@ type TokenInput = {
   onTokenChange?: (t: Token) => void;
   canChangeValue?: boolean;
   debounceTime?: number;
+  clamp?: boolean;
 } & Pick<TokenPickerProps, "excludeToken">;
 
 export const TokenInput: FC<TokenInput> = ({
@@ -45,6 +46,7 @@ export const TokenInput: FC<TokenInput> = ({
   allowNegative = false,
   canChangeValue = true,
   debounceTime = 500,
+  clamp = false
   /// TokenPickerProps
   excludeToken
 }) => {
@@ -99,6 +101,7 @@ export const TokenInput: FC<TokenInput> = ({
           inputRef={inputRef}
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
+          max={clamp ? balance?.[token.symbol] : undefined}
         />
         <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} excludeToken={excludeToken} />
       </TopRow>

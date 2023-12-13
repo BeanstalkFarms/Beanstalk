@@ -9,14 +9,63 @@ import { TokenValue } from "@beanstalk/sdk";
 import { TabButton } from "src/components/TabButton";
 import { size } from "src/breakpoints";
 import { useTokenSupply } from "src/tokens/useTokenSupply";
+import { LoadingTemplate } from "src/components/LoadingTemplate";
 
-type WellHistoryProps = {
-  well: Well;
+type BaseWellHistoryProps = {
   tokenPrices: (TokenValue | null)[];
   reservesUSD: TokenValue;
 };
 
-export const WellHistory = ({ well, tokenPrices, reservesUSD }: WellHistoryProps) => {
+type WellHistoryProps = {
+  well: Well;
+} & BaseWellHistoryProps;
+
+const WellHistorySkeleton: React.FC<{}> = () => (
+  <WellHistoryContainer>
+    <Table width="100%">
+      <THead>
+        <Row>
+          <Th>{""}</Th>
+          <DesktopOnlyTh align={"right"}>{""}</DesktopOnlyTh>
+          <DesktopOnlyTh align={"right"}>{""}</DesktopOnlyTh>
+          <Th align={"right"}>{""}</Th>
+        </Row>
+      </THead>
+      <TBody>
+        <>
+          {Array(10)
+            .fill(null)
+            .map((_, rowIdx) => (
+              <LoadingRow key={`table-row-${rowIdx}`}>
+                <Td>
+                  <LoadingTemplate.Flex>
+                    <LoadingTemplate.Item width={75} />
+                  </LoadingTemplate.Flex>
+                </Td>
+                <DesktopOnlyTd align={"right"}>
+                  <LoadingTemplate alignItems="flex-end">
+                    <LoadingTemplate.Item width={75} />
+                  </LoadingTemplate>
+                </DesktopOnlyTd>
+                <DesktopOnlyTd align={"right"}>
+                  <LoadingTemplate alignItems="flex-end">
+                    <LoadingTemplate.Item width={75} />
+                  </LoadingTemplate>
+                </DesktopOnlyTd>
+                <Td align={"right"}>
+                  <LoadingTemplate alignItems="flex-end">
+                    <LoadingTemplate.Item width={75} />
+                  </LoadingTemplate>
+                </Td>
+              </LoadingRow>
+            ))}
+        </>
+      </TBody>
+    </Table>
+  </WellHistoryContainer>
+);
+
+const WellHistoryContent: React.FC<WellHistoryProps> = ({ well, tokenPrices, reservesUSD }) => {
   const { data: events, isLoading: loading } = useWellHistory(well);
   const [filter, setFilter] = useState<EVENT_TYPE | null>(null);
   const eventsPerPage = 10;
@@ -30,6 +79,10 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD }: WellHistoryProps
   const isNonEmptyWell = lpTokenSupply.totalSupply && lpTokenSupply.totalSupply.gt(0);
   const lpTokenPrice = lpTokenSupply.totalSupply && isNonEmptyWell ? reservesUSD.div(lpTokenSupply.totalSupply) : TokenValue.ZERO;
 
+  if (loading) {
+    return <WellHistorySkeleton />;
+  }
+
   const eventRows: JSX.Element[] = (events || [])
     .filter((e: WellEvent) => filter === null || e.type == filter)
     .map<ReactElement>(
@@ -38,86 +91,96 @@ export const WellHistory = ({ well, tokenPrices, reservesUSD }: WellHistoryProps
 
   return (
     <WellHistoryContainer>
-      {!loading && (
-        <>
-          {/* <div>
+      {/* <div>
             <button onClick={() => setFilter(null)}>All</button>
             <button onClick={() => setFilter(EVENT_TYPE.SWAP)}>Swaps</button>
             <button onClick={() => setFilter(EVENT_TYPE.ADD_LIQUIDITY)}>Deposits</button>
             <button onClick={() => setFilter(EVENT_TYPE.REMOVE_LIQUIDITY)}>Withdraws</button>
           </div> */}
-          <Table width="100%">
-            <THead>
-              <Row>
-                <Th>Action</Th>
-                <DesktopOnlyTh align={"right"}>Value</DesktopOnlyTh>
-                <DesktopOnlyTh align={"right"}>Description</DesktopOnlyTh>
-                <Th align={"right"}>Time</Th>
-              </Row>
-            </THead>
-            <TBody>
-              {eventRows.length ? (
-                eventRows
-              ) : (
-                <>
-                  <NoEventsRow colSpan={4}>
-                    <NoEventsData>No events to show</NoEventsData>
-                  </NoEventsRow>
-                </>
-              )}
-              {isNonEmptyWell ? (
-                <>
-                  <MobilePageSelector>
-                    <PageSelector colSpan={2}>
-                      <SelectorContainer>
-                        <StyledTabButton
-                          active
-                          pageLimit={currentPage === 1}
-                          onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
-                        >
-                          ←
-                        </StyledTabButton>
-                        {`Page ${currentPage} of ${totalPages}`}
-                        <StyledTabButton
-                          active
-                          pageLimit={currentPage === totalPages}
-                          onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                        >
-                          →
-                        </StyledTabButton>
-                      </SelectorContainer>
-                    </PageSelector>
-                  </MobilePageSelector>
-                  <DesktopPageSelector>
-                    <PageSelector colSpan={4}>
-                      <SelectorContainer>
-                        <StyledTabButton
-                          active
-                          pageLimit={currentPage === 1}
-                          onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
-                        >
-                          ←
-                        </StyledTabButton>
-                        {`Page ${currentPage} of ${totalPages}`}
-                        <StyledTabButton
-                          active
-                          pageLimit={currentPage === totalPages}
-                          onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                        >
-                          →
-                        </StyledTabButton>
-                      </SelectorContainer>
-                    </PageSelector>
-                  </DesktopPageSelector>
-                </>
-              ) : null}
-            </TBody>
-          </Table>
-        </>
-      )}
+      <Table width="100%">
+        <THead>
+          <Row>
+            <Th>Action</Th>
+            <DesktopOnlyTh align={"right"}>Value</DesktopOnlyTh>
+            <DesktopOnlyTh align={"right"}>Description</DesktopOnlyTh>
+            <Th align={"right"}>Time</Th>
+          </Row>
+        </THead>
+        <TBody>
+          {eventRows.length ? (
+            eventRows
+          ) : (
+            <>
+              <NoEventsRow colSpan={4}>
+                <NoEventsData>No events to show</NoEventsData>
+              </NoEventsRow>
+            </>
+          )}
+          {!loading && isNonEmptyWell ? (
+            <>
+              <MobilePageSelector>
+                <PageSelector colSpan={2}>
+                  <SelectorContainer>
+                    <StyledTabButton
+                      active
+                      pageLimit={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                    >
+                      ←
+                    </StyledTabButton>
+                    {`Page ${currentPage} of ${totalPages}`}
+                    <StyledTabButton
+                      active
+                      pageLimit={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                    >
+                      →
+                    </StyledTabButton>
+                  </SelectorContainer>
+                </PageSelector>
+              </MobilePageSelector>
+              <DesktopPageSelector>
+                <PageSelector colSpan={4}>
+                  <SelectorContainer>
+                    <StyledTabButton
+                      active
+                      pageLimit={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                    >
+                      ←
+                    </StyledTabButton>
+                    {`Page ${currentPage} of ${totalPages}`}
+                    <StyledTabButton
+                      active
+                      pageLimit={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                    >
+                      →
+                    </StyledTabButton>
+                  </SelectorContainer>
+                </PageSelector>
+              </DesktopPageSelector>
+            </>
+          ) : null}
+        </TBody>
+      </Table>
     </WellHistoryContainer>
   );
 };
+
+export const WellHistory: React.FC<BaseWellHistoryProps & { well: Well | undefined; loading?: boolean }> = (props) => {
+  if (props.loading || !props.well) {
+    return <WellHistorySkeleton />;
+  }
+
+  return <WellHistoryContent well={props.well} tokenPrices={props.tokenPrices} reservesUSD={props.reservesUSD} />;
+};
+
+const DesktopOnlyTd = styled(Td)`
+  @media (max-width: ${size.mobile}) {
+    display: none;
+  }
+`;
 
 const WellHistoryContainer = styled.div`
   display: flex;
@@ -177,5 +240,11 @@ const NoEventsData = styled.div`
 
   @media (max-width: ${size.mobile}) {
     font-size: 14px;
+  }
+`;
+
+const LoadingRow = styled(Row)`
+  :hover {
+    cursor: default;
   }
 `;

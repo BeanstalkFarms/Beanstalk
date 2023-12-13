@@ -1,6 +1,5 @@
-import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useWell } from "src/wells/useWell";
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { TokenValue } from "@beanstalk/sdk";
@@ -22,17 +21,29 @@ import { OtherSection } from "src/components/Well/OtherSection";
 import { WellHistory } from "src/components/Well/Activity/WellHistory";
 import { ChevronDown } from "src/components/Icons";
 import { ImageButton } from "src/components/ImageButton";
-import { size } from "src/breakpoints";
-import { Loading } from "src/components/Loading";
-import { Error } from "../components/Error";
+import { mediaQuery, size } from "src/breakpoints";
+import { Error } from "src/components/Error";
+import { useWellWithParams } from "src/wells/useWellWithParams";
+import { LoadingItem } from "src/components/LoadingItem";
+import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { WellYieldWithTooltip } from "src/components/Well/WellYieldWithTooltip";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
 
 export const Well = () => {
+  const { well, loading: dataLoading, error } = useWellWithParams();
+  const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
+  const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
+
+  const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
+
   const sdk = useSdk();
   const navigate = useNavigate();
-  const { address: wellAddress } = useParams<"address">();
-  const { well, loading, error } = useWell(wellAddress!);
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
+  const isMobile = useIsMobile();
 
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
@@ -46,9 +57,9 @@ export const Well = () => {
   }, [open]);
 
   useEffect(() => {
-    const run = async () => {
-      if (!well?.tokens) return;
+    if (!well?.tokens) return;
 
+    const run = async () => {
       if (well.tokens) {
         const prices = await Promise.all(well.tokens.map((t) => getPrice(t, sdk)));
         setPrices(prices);
@@ -82,6 +93,8 @@ export const Well = () => {
   reserves.forEach((reserve) => {
     reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
   });
+
+  const twaReserves = useMemo(() => getTWAReservesWithWell(well), [well, getTWAReservesWithWell]);
 
   const goLiquidity = () => navigate(`./liquidity`);
 
@@ -121,63 +134,126 @@ export const Well = () => {
   );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  if (loading) return <Loading spinnerOnly />;
-
   if (error) return <Error message={error?.message} errorOnly />;
 
   return (
     <Page>
       <ContentWrapper>
-        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} center />
+        <StyledTitle title={title} parent={{ title: "Liquidity", path: "/wells" }} fontWeight="550" center />
+
+        {/*
+         *Header
+         */}
         <HeaderContainer>
-          <Item>
-            <Header>
-              <TokenLogos>{logos}</TokenLogos>
-              <TextNudge amount={10} mobileAmount={-2}>
-                {title}
-              </TextNudge>
-            </Header>
-          </Item>
-          <StyledItem column stretch>
-            <FunctionName>{wellFunctionName}</FunctionName>
-            <Fee>0.00% Trading Fee</Fee>
-          </StyledItem>
+          <LoadingItem loading={loading} onLoading={<SkeletonHeader />}>
+            <Item>
+              <Header>
+                <TokenLogos>{logos}</TokenLogos>
+                <TextNudge amount={10} mobileAmount={-2}>
+                  {title}
+                </TextNudge>
+                <div className="silo-yield-section">
+                  <WellYieldWithTooltip
+                    well={well}
+                    tooltipProps={{
+                      offsetX: isMobile ? -35 : 0,
+                      offsetY: 0,
+                      side: "top"
+                    }}
+                  />
+                </div>
+              </Header>
+            </Item>
+            <StyledItem column stretch>
+              <FunctionName>{wellFunctionName}</FunctionName>
+              <Fee>0.00% Trading Fee</Fee>
+            </StyledItem>
+          </LoadingItem>
         </HeaderContainer>
+
+        {/*
+         * Reserves
+         */}
         <ReservesContainer>
-          <Reserves reserves={reserves} />
+          <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
+            <Reserves reserves={reserves} well={well} twaReserves={twaReserves} />
+          </LoadingItem>
         </ReservesContainer>
-        <ChartContainer>
-          <ChartSection well={well!} />
-        </ChartContainer>
+
+        {/*
+         * Chart Section
+         */}
+        <ChartSectionContainer>
+          <ChartSection well={well} loading={loading} />
+        </ChartSectionContainer>
+
+        {/*
+         * Chart Type Button Selectors
+         */}
         <ActivityOtherButtons gap={24} mobileGap={"0px"}>
-          <Item stretch>
-            <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
-              Activity
-            </TabButton>
-          </Item>
-          <Item stretch>
-            <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
-              Contract Addresses
-            </TabButton>
-          </Item>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <TabButton onClick={(e) => showTab(e, 0)} active={tab === 0} stretch justify bold hover>
+                Activity
+              </TabButton>
+            </Item>
+            <Item stretch>
+              <TabButton onClick={(e) => showTab(e, 1)} active={tab === 1} stretch justify bold hover>
+                Contract Addresses
+              </TabButton>
+            </Item>
+          </LoadingItem>
         </ActivityOtherButtons>
+
+        {/*
+         * Well History & Contract Info Tables
+         */}
         <BottomContainer>
-          {tab === 0 && <WellHistory well={well!} tokenPrices={prices} reservesUSD={totalUSD} />}
-          {tab === 1 && <OtherSection well={well!} />}
+          {tab === 0 && <WellHistory well={well} tokenPrices={prices} reservesUSD={totalUSD} loading={loading} />}
+          {tab === 1 && <OtherSection well={well} loading={loading} />}
         </BottomContainer>
+
+        {/*
+         * UI Helpers
+         */}
         <ColumnBreak />
         <StickyDetector ref={containerRef} />
-        <LiquiditySwapButtons gap={24} mobileGap={isSticky ? "0px" : "8px"} sticky={isSticky}>
-          <Item stretch>
-            <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
-          </Item>
-          <Item stretch>
-            <Button label="Swap" onClick={goSwap} />
-          </Item>
-        </LiquiditySwapButtons>
+
+        {/*
+         * Liquidity Swap Buttons
+         * We render both Mobile & Desktop to prevent flex order switching animations from happening on page width changes
+         */}
+        <LiquiditySwapButtonsMobile sticky={isSticky}>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+            </Item>
+            <Item stretch>
+              <Button label="Swap" onClick={goSwap} />
+            </Item>
+          </LoadingItem>
+        </LiquiditySwapButtonsMobile>
+        <LiquiditySwapButtonsDesktop gap={24}>
+          <LoadingItem loading={loading} onLoading={<SkeletonButtonsRow />}>
+            <Item stretch>
+              <Button secondary label="Add/Rm Liquidity" onClick={goLiquidity} />
+            </Item>
+            <Item stretch>
+              <Button label="Swap" onClick={goSwap} />
+            </Item>
+          </LoadingItem>
+        </LiquiditySwapButtonsDesktop>
+
+        {/*
+         * Liquidity Box
+         */}
         <LiquidityBoxContainer>
-          <LiquidityBox well={well} />
+          <LiquidityBox well={well} loading={loading} />
         </LiquidityBoxContainer>
+
+        {/*
+         * Learn More
+         */}
         <LearnMoreContainer>
           <LearnMoreLabel onClick={toggle}>
             <LearnMoreLine />
@@ -196,9 +272,15 @@ export const Well = () => {
             <LearnMoreLine />
           </LearnMoreLabel>
           <LearnMoreButtons open={open}>
-            <LearnYield />
-            <LearnWellFunction name={wellFunctionName || "A Well Function"} />
-            <LearnPump />
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnYield />
+            </LoadingItem>
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnWellFunction name={wellFunctionName || "A Well Function"} />
+            </LoadingItem>
+            <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
+              <LearnPump />
+            </LoadingItem>
           </LearnMoreButtons>
         </LearnMoreContainer>
       </ContentWrapper>
@@ -209,19 +291,25 @@ export const Well = () => {
 const leftColumnWidth = 940;
 const rightColumnWidth = 400;
 
+const calcWellContentMaxWidth = `min(calc(100% - 48px - 400px), ${leftColumnWidth}px)`;
+
 const ContentWrapper = styled.div`
-  // outline: 1px solid red;
   display: flex;
   flex-flow: column wrap;
   flex: auto;
   justify-content: flex-start;
-  align-content: center;
+  align-content: start;
   gap: 24px;
-  @media (min-width: ${size.mobile}) {
-    height: 1400px;
+  width: 100%;
+
+  ${mediaQuery.lg.only} {
+    height: 1600px;
   }
-  @media (max-width: ${size.mobile}) {
-    flex-flow: column nowrap;
+
+  ${mediaQuery.between.smAndLg} {
+    max-width: ${size.mobile};
+    flex: 2;
+    align-self: center;
   }
 `;
 
@@ -236,9 +324,13 @@ const Header = styled.div`
   line-height: 32px;
   gap: 24px;
 
-  @media (max-width: ${size.mobile}) {
+  ${mediaQuery.lg.down} {
     font-size: 24px;
     gap: 8px;
+  }
+
+  .silo-yield-section {
+    align-self: center;
   }
 `;
 
@@ -250,8 +342,13 @@ const TokenLogos = styled.div`
 `;
 
 const HeaderContainer = styled(Row)`
-  width: ${leftColumnWidth}px;
-  @media (max-width: ${size.mobile}) {
+  ${mediaQuery.lg.only} {
+    display: flex;
+    max-width: ${calcWellContentMaxWidth};
+    width: 100%;
+  }
+
+  ${mediaQuery.lg.down} {
     display: flex;
     width: 100%;
     flex-direction: column;
@@ -259,22 +356,30 @@ const HeaderContainer = styled(Row)`
     gap: 8px;
     order: 0;
   }
+
+  ${mediaQuery.md.up} {
+    align-item: space-between;
+  }
 `;
 
 const ReservesContainer = styled.div`
   width: 100%;
   order: 3;
-  @media (min-width: ${size.mobile}) {
-    width: ${leftColumnWidth}px;
+
+  ${mediaQuery.lg.only} {
+    max-width: ${calcWellContentMaxWidth};
+    width: 100%;
     order: 0;
   }
 `;
 
-const ChartContainer = styled.div`
+const ChartSectionContainer = styled.div`
   width: 100%;
   order: 4;
-  @media (min-width: ${size.mobile}) {
-    width: ${leftColumnWidth}px;
+
+  ${mediaQuery.lg.only} {
+    display: block;
+    max-width: ${calcWellContentMaxWidth};
     order: 0;
   }
 `;
@@ -282,8 +387,10 @@ const ChartContainer = styled.div`
 const ActivityOtherButtons = styled(Row)`
   width: 100%;
   order: 5;
-  @media (min-width: ${size.mobile}) {
-    width: ${leftColumnWidth}px;
+
+  ${mediaQuery.lg.only} {
+    max-width: ${calcWellContentMaxWidth};
+    width: 100%;
     order: 0;
   }
 `;
@@ -295,63 +402,95 @@ const StickyDetector = styled.div`
   background-color: transparent;
   margin-bottom: -24px;
   order: 2;
-  @media (min-width: ${size.mobile}) {
+
+  ${mediaQuery.sm.up} {
     display: none;
   }
 `;
 
-const LiquiditySwapButtons = styled(Row)<{ sticky?: boolean }>`
-  width: ${(props) => (props.sticky ? "100vw" : "100%")};
-  margin-left: ${(props) => (props.sticky ? "-12px" : "0px")};
+const LiquiditySwapButtonsMobile = styled(Row)<{ sticky?: boolean }>`
+  width: 100%;
   order: 2;
-  position: sticky;
   top: 0px;
   z-index: 10;
   transition: all 0.3s ease-in-out;
-  @media (min-width: ${size.mobile}) {
-    margin-top: 48px;
-    width: ${rightColumnWidth}px;
-    position: relative;
-    margin-left: 0px;
-    order: 0;
+  gap: 8px;
+
+  ${mediaQuery.md.only} {
+    max-width: ${size.mobile};
+  }
+
+  ${mediaQuery.sm.only} {
+    position: sticky;
+    gap: ${(props) => (props.sticky ? "0px" : "8px")};
+    margin-left: ${(props) => (props.sticky ? "-12px" : "0px")};
+    width: ${(props) => (props.sticky ? "100vw" : "100%")};
+  }
+
+  ${mediaQuery.lg.only} {
+    display: none;
+  }
+`;
+
+const LiquiditySwapButtonsDesktop = styled(Row)`
+  max-width: ${rightColumnWidth}px;
+  width: 100%;
+  order: 0;
+  margin-top: 48px;
+  position: relative;
+  margin-left: 0px;
+  transition: all 0.3s ease-in-out;
+  top: 0px;
+  z-index: 10;
+
+  ${mediaQuery.lg.down} {
+    display: none;
   }
 `;
 
 const StyledItem = styled(Item)`
-  @media (min-width: ${size.mobile}) {
-    align-items: end;
+  align-items: flex-start;
+
+  ${mediaQuery.lg.only} {
+    align-items: flex-end;
   }
 `;
+
 const BottomContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
   width: 100%;
   order: 6;
-  @media (min-width: ${size.mobile}) {
-    width: ${leftColumnWidth}px;
+
+  ${mediaQuery.lg.only} {
+    max-width: ${calcWellContentMaxWidth};
+    width: 100%;
     order: 0;
   }
 `;
 
 const FunctionName = styled.div`
   ${BodyL}
-  @media (max-width: ${size.mobile}) {
+
+  ${mediaQuery.lg.down} {
     ${BodyS}
   }
 `;
 const Fee = styled.div`
   ${BodyS}
   color: #4B5563;
-  @media (max-width: ${size.mobile}) {
+  ${mediaQuery.lg.down} {
     ${BodyXS}
   }
 `;
 
 const LiquidityBoxContainer = styled.div`
-  width: ${rightColumnWidth}px;
-  @media (max-width: ${size.mobile}) {
-    display: none;
+  display: none;
+
+  ${mediaQuery.lg.only} {
+    display: block;
+    max-width: ${rightColumnWidth}px;
   }
 `;
 
@@ -361,16 +500,17 @@ const LearnMoreContainer = styled.div`
   gap: 16px;
   order: 1;
   width: 100%;
-  @media (min-width: ${size.mobile}) {
-    width: ${rightColumnWidth}px;
-    gap: 24px;
+
+  ${mediaQuery.lg.only} {
+    max-width: ${rightColumnWidth}px;
     order: 0;
+    gap: 24px;
   }
 `;
 const LearnMoreLabel = styled.div`
   display: flex;
   flex-direction: row;
-  @media (min-width: ${size.mobile}) {
+  ${mediaQuery.lg.only} {
     display: none;
   }
 `;
@@ -399,7 +539,8 @@ const LearnMoreButtons = styled.div<{ open: boolean }>`
   ${(props) => (props.open ? "display: flex" : "display: none")};
   flex-direction: column;
   gap: 16px;
-  @media (min-width: ${size.mobile}) {
+
+  ${mediaQuery.lg.only} {
     display: flex;
     gap: 24px;
   }
@@ -407,9 +548,86 @@ const LearnMoreButtons = styled.div<{ open: boolean }>`
 
 const ColumnBreak = styled.div`
   display: none;
-  @media (min-width: ${size.mobile}) {
+
+  ${mediaQuery.lg.only} {
     display: block;
     flex-basis: 100%;
     width: 0px;
   }
 `;
+
+const EmptyLearnItem = styled.div`
+  width: 100%;
+  height: 48px;
+  border: 0.5px solid #9ca3af;
+  background: #f9f8f6;
+`;
+
+const MobileOnlyTokenLogoContainer = styled.div`
+  display: none;
+  ${mediaQuery.sm.only} {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 6px;
+  }
+`;
+
+const NonMobileTokenLogoContainer = styled.div`
+  display: block;
+
+  ${mediaQuery.sm.only} {
+    display: none;
+  }
+`;
+
+const SkeletonHeader: React.FC<{}> = () => (
+  <>
+    <Item>
+      <Header>
+        <MobileOnlyTokenLogoContainer>
+          <LoadingTemplate.TokenLogo count={2} size={24} />
+        </MobileOnlyTokenLogoContainer>
+        <NonMobileTokenLogoContainer>
+          <LoadingTemplate.TokenLogo count={2} size={48} />
+        </NonMobileTokenLogoContainer>
+        <LoadingTemplate.Item width={150} height={32} margin={{ top: 8 }} />
+      </Header>
+    </Item>
+    <StyledItem column stretch>
+      <LoadingTemplate.Item height={24} width={150} />
+      <LoadingTemplate.Item height={20} width={100} margin={{ top: 4 }} />
+    </StyledItem>
+  </>
+);
+
+const SkeletonReserves: React.FC<{}> = () => {
+  return (
+    <Row gap={24}>
+      {Array(2)
+        .fill(null)
+        .map((_, i) => (
+          <LoadingTemplate key={`ReservesLoading-${i}`}>
+            <LoadingTemplate.Flex gap={4}>
+              <LoadingTemplate.Item width={75} height={20} />
+              <LoadingTemplate.Flex gap={4} row alignItems="flex-end">
+                <LoadingTemplate.Item width={100} height={24} />
+                <LoadingTemplate.Item width={70} height={24} />
+              </LoadingTemplate.Flex>
+            </LoadingTemplate.Flex>
+          </LoadingTemplate>
+        ))}
+    </Row>
+  );
+};
+
+const SkeletonButtonsRow: React.FC<{}> = () => (
+  <>
+    <Item stretch>
+      <LoadingTemplate.Button />
+    </Item>
+    <Item stretch>
+      <LoadingTemplate.Button />
+    </Item>
+  </>
+);
