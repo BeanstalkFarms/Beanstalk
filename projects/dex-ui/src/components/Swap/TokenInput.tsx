@@ -46,7 +46,7 @@ export const TokenInput: FC<TokenInput> = ({
   allowNegative = false,
   canChangeValue = true,
   debounceTime = 500,
-  clamp = false
+  clamp = false,
   /// TokenPickerProps
   excludeToken
 }) => {
