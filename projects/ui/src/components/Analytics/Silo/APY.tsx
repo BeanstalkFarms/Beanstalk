@@ -15,7 +15,7 @@ const formatValue = (value: number) => `${value.toFixed(2)}%`;
 const queryConfig = {
   variables: {
     season_gt: 6074,
-    token: SILO_WHITELIST[0][1].address,
+    token: '',
   },
 };
 const lineChartProps: Partial<LineChartProps> = {
@@ -36,8 +36,6 @@ const metricTitles = {
   UnripeBean: 'urBEAN vAPY',
   UnripeBeanETH: 'urBEANETH Well vAPY',
 };
-
-console.log(SILO_WHITELIST);
 
 const APY: FC<{
   height?: SeasonPlotBaseProps['height'];
@@ -63,7 +61,16 @@ const APY: FC<{
       [metric]
     )}
     LineChartProps={lineChartProps}
-    queryConfig={queryConfig}
+    queryConfig={useMemo(() => {
+      const tokenAddress = metricToKey[metric];
+      return {
+        ...queryConfig,
+        variables: {
+          ...queryConfig.variables,
+          token: tokenAddress,
+        },
+      };
+    }, [metric])}
   />
 );
 
