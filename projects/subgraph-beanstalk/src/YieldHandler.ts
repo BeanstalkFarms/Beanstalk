@@ -4,15 +4,8 @@ import { BEANSTALK, FERTILIZER } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer } from "./utils/Fertilizer";
 import { loadFertilizerYield } from "./utils/FertilizerYield";
-import { loadSilo, loadSiloHourlySnapshot } from "./utils/Silo";
-import { loadSiloYield } from "./utils/SiloYield";
-import {
-  HISTORIC_VAPY_8_000,
-  HISTORIC_VAPY_10_000,
-  HISTORIC_VAPY_12_000,
-  HISTORIC_VAPY_14_000,
-  HISTORIC_VAPY_16_000
-} from "./utils/HistoricYield";
+import { loadSilo, loadSiloHourlySnapshot, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "./utils/SiloEntities";
+// import {
 // import { HISTORIC_VAPY } from "./utils/HistoricYield";
 
 const MAX_WINDOW = 720;

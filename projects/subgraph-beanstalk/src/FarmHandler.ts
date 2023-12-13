@@ -2,7 +2,7 @@ import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { InternalBalanceChanged } from "../generated/Farm/Beanstalk";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
-import { loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloAsset";
+import { loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloEntities";
 import { loadFarmer } from "./utils/Farmer";
 
 export function handleInternalBalanceChanged(event: InternalBalanceChanged): void {
