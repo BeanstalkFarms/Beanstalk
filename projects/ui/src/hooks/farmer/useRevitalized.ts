@@ -47,12 +47,10 @@ export default function useRevitalized() {
     (state) => state._beanstalk.silo
   );
   const sdk = useSdk();
-
   return useMemo(() => {
     let revitalizedBDV = ZERO_BN;
     let revitalizedStalk = ZERO_BN;
     let revitalizedSeeds = ZERO_BN;
-
     // The amount of BDV this Deposit should have based on the formula:
     // amount * bdvPerToken
     // The latter value flucatuates over time as more Fertilizer is purchased.
@@ -154,11 +152,5 @@ export default function useRevitalized() {
       revitalizedStalk,
       revitalizedSeeds,
     };
-  }, [
-    balances,
-    beanstalkSilo.balances,
-    sdk.tokens.BEAN,
-    sdk.tokens.STALK,
-    sdk.tokens.unripeTokens,
-  ]);
+  }, [balances, beanstalkSilo.balances, sdk]);
 }
