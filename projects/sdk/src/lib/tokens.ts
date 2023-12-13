@@ -168,7 +168,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN.rewards = {
       stalk: this.STALK.amount(0),
-      seeds: null
+      seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
@@ -186,7 +186,7 @@ export class Tokens {
     );
     this.UNRIPE_BEAN_WETH.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: null
+      seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN_WETH.isUnripe = true;
 

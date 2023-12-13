@@ -34,7 +34,9 @@ CoreToken.prototype.getStalk = function (bdv?: TokenValue): TokenValue {
  * Get the amount of Seeds rewarded per deposited BDV of this Token.
  * */
 CoreToken.prototype.getSeeds = function (bdv?: TokenValue): TokenValue {
-  if (!this.rewards?.seeds) throw new Error(`Token ${this.symbol} has no seeds defined!`);
+  if (this.rewards?.seeds === undefined || this.rewards.seeds === null) {
+    throw new Error(`Token ${this.symbol} has no seeds defined!`);
+  }
   if (!bdv) return this.rewards.seeds;
 
   return this.rewards.seeds.mul(bdv);
