@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { Well } from "@beanstalk/sdk/Wells";
 import { BEANETH_MULTIPUMP_ADDRESS } from "src/utils/addresses";
 import useSdk from "src/utils/sdk/useSdk";
-import { TokenValue } from "@beanstalk/sdk";
 
 export const useBeanstalkSiloWhitelist = () => {
   const sdk = useSdk();
@@ -11,7 +10,7 @@ export const useBeanstalkSiloWhitelist = () => {
     (well: Well | undefined) => {
       if (!well?.lpToken) return false;
       const token = sdk.tokens.findByAddress(well.lpToken.address);
-      return token && sdk.tokens.siloWhitelist.has(token);
+      return Boolean(token && sdk.tokens.siloWhitelist.has(token));
     },
     [sdk.tokens]
   );
