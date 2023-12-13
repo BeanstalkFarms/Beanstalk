@@ -50,7 +50,10 @@ export const WellDetailRow: FC<{
         </WellDetail>
       </DesktopContainer>
       <DesktopContainer>
-        <WellPricing>{functionName || "Price Function"}</WellPricing>
+        <PricingFunction>
+          <div className="function-name">{functionName || "Price Function"}</div>
+          <div className="trading-fee">{"0.00% Trading Fees"}</div>
+        </PricingFunction>
       </DesktopContainer>
       <DesktopContainer align="right">
         <Item column right>
@@ -198,23 +201,21 @@ const MoreReserves = styled.div`
   color: #9ca3af;
 `;
 
-const TradingFee = styled.div`
-  font-size: 20px;
-  line-height: 24px;
-  color: #4b5563;
-  text-transform: uppercase;
-`;
-
-const WellPricing = styled.div`
-  font-size: 20px;
-  line-height: 24px;
-  text-transform: capitalize;
-`;
-
 const TokenLogoWrapper = styled.div`
   margin-bottom: 2px;
 `;
 
-const TooltipContainer = styled.div`
-  display: flex;
+const PricingFunction = styled.div`
+  .function-name {
+    color: #1c1917;
+    font-size: 20px;
+    line-height: 24px;
+    text-transform: capitalize;
+  }
+
+  .trading-fee {
+    color: #4b5563;
+    font-size: 16px;
+    line-height: 24px;
+  }
 `;

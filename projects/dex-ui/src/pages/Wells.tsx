@@ -87,7 +87,7 @@ export const Wells = () => {
             <TableRow>
               <DesktopHeader>Well</DesktopHeader>
               <DesktopHeader>Well Function</DesktopHeader>
-              <DesktopHeader align="right">Trading Fees</DesktopHeader>
+              <DesktopHeader align="right">Yield</DesktopHeader>
               <DesktopHeader align="right">Total Liquidity</DesktopHeader>
               <DesktopHeader align="right">Reserves</DesktopHeader>
               <MobileHeader>All Wells</MobileHeader>
