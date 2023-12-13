@@ -4,12 +4,6 @@ import { BEANETH_MULTIPUMP_ADDRESS } from "src/utils/addresses";
 import useSdk from "src/utils/sdk/useSdk";
 import { TokenValue } from "@beanstalk/sdk";
 
-export type BeanstalkSiloWhitelistConfig = {
-  address: string;
-  isMultiFlowPump: boolean;
-  seeds: TokenValue;
-};
-
 export const useBeanstalkSiloWhitelist = () => {
   const sdk = useSdk();
 
