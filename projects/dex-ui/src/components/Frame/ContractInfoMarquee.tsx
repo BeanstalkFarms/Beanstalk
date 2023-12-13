@@ -7,7 +7,7 @@ type ContractMarqueeInfo = Record<string, { display: string; to?: string; url?: 
 const CarouselData: ContractMarqueeInfo = {
   ADDRESS: [
     {
-      display: "0x1584B668643617D18321a0BEc6EF3786F4b8Eb7B",
+      display: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773",
       url: "https://etherscan.io/address/0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
     }
   ],
@@ -19,10 +19,10 @@ const CarouselData: ContractMarqueeInfo = {
   V1: [{ display: "WHITEPAPER", url: "/basin.pdf" }]
 };
 
-const speedPerItem = 16; // approx same speed as TokenMarquee
+const speedPerItem = 16; // approx same speed as TokenMarque
 const itemGap = 24;
 const numItems = 4;
-const singleItemWidth = 1107.44;
+const singleItemWidth = 1112.06;
 
 export const ContractInfoMarquee = () => {
   const data = Object.entries(CarouselData);

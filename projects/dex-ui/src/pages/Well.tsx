@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
@@ -26,14 +26,24 @@ import { Error } from "src/components/Error";
 import { useWellWithParams } from "src/wells/useWellWithParams";
 import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { WellYieldWithTooltip } from "src/components/Well/WellYieldWithTooltip";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
 
 export const Well = () => {
-  const { well, loading: loading, error } = useWellWithParams();
+  const { well, loading: dataLoading, error } = useWellWithParams();
+  const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
+  const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
+
+  const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
 
   const sdk = useSdk();
   const navigate = useNavigate();
   const [prices, setPrices] = useState<(TokenValue | null)[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string | undefined>("-");
+  const isMobile = useIsMobile();
 
   const [tab, setTab] = useState(0);
   const showTab = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>, i: number) => {
@@ -83,6 +93,8 @@ export const Well = () => {
   reserves.forEach((reserve) => {
     reserve.percentage = reserve.dollarAmount && totalUSD.gt(TokenValue.ZERO) ? reserve.dollarAmount.div(totalUSD) : TokenValue.ZERO;
   });
+
+  const twaReserves = useMemo(() => getTWAReservesWithWell(well), [well, getTWAReservesWithWell]);
 
   const goLiquidity = () => navigate(`./liquidity`);
 
@@ -140,6 +152,16 @@ export const Well = () => {
                 <TextNudge amount={10} mobileAmount={-2}>
                   {title}
                 </TextNudge>
+                <div className="silo-yield-section">
+                  <WellYieldWithTooltip
+                    well={well}
+                    tooltipProps={{
+                      offsetX: isMobile ? -35 : 0,
+                      offsetY: 0,
+                      side: "top"
+                    }}
+                  />
+                </div>
               </Header>
             </Item>
             <StyledItem column stretch>
@@ -154,7 +176,7 @@ export const Well = () => {
          */}
         <ReservesContainer>
           <LoadingItem loading={loading} onLoading={<SkeletonReserves />}>
-            <Reserves reserves={reserves} />
+            <Reserves reserves={reserves} well={well} twaReserves={twaReserves} />
           </LoadingItem>
         </ReservesContainer>
 
@@ -281,7 +303,7 @@ const ContentWrapper = styled.div`
   width: 100%;
 
   ${mediaQuery.lg.only} {
-    height: 1400px;
+    height: 1600px;
   }
 
   ${mediaQuery.between.smAndLg} {
@@ -305,6 +327,10 @@ const Header = styled.div`
   ${mediaQuery.lg.down} {
     font-size: 24px;
     gap: 8px;
+  }
+
+  .silo-yield-section {
+    align-self: center;
   }
 `;
 

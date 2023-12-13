@@ -8,15 +8,15 @@ import { BodyL } from "src/components/Typography";
 import { ContractInfoMarquee } from "src/components/Frame/ContractInfoMarquee";
 
 const copy = {
-  build: "Use components written, audited and deployed by other developers for your custom liquidity pool.",
-  deploy: "Liquidity pools with unique pricing functions for more granular market making.",
-  fees: "Trade assets using liquidity pools that don’t impose trading fees."
+  build: "Use DEX components written, audited and deployed by other developers for your custom liquidity pool.",
+  deploy: "Deploy liquidity in pools with unique pricing functions for more granular market making.",
+  fees: "Exchange assets in liquidity pools that don't impose trading fees."
 };
 
 const links = {
   multiFlowPump: "/multi-flow-pump.pdf",
   whitepaper: "/basin.pdf",
-  docs: "https://docs.basin.exchange/",
+  docs: "https://docs.basin.exchange/implementations/overview",
   wells: "/#/wells",
   swap: "/#/swap"
 };
@@ -29,10 +29,10 @@ export const Home = () => {
           <MevBanner>
             <MevBannerBG>
               <MevInfo>
-                <MevTitle>Multi-Flow Pump is here!</MevTitle>
+                <MevTitle>Multi Flow Pump is here!</MevTitle>
                 <div>
-                  Explore the <span style={{ fontWeight: 600 }}>multi-block MEV manipulation resistant Oracle </span>framework, with easy
-                  integration for everyone.
+                  Explore the <span style={{ fontWeight: 600 }}>inter-block MEV manipulation resistant oracle implementation</span> used by
+                  the BEAN:WETH Well.
                 </div>
               </MevInfo>
               <GetStartedContainer href={links.multiFlowPump} target="_blank" rel="noopener noreferrer">
@@ -42,7 +42,7 @@ export const Home = () => {
           </MevBanner>
           <InfoContainer>
             <TitleSubtitleContainer>
-              <Title>A Composable EVM-native DEX </Title>
+              <Title>A Composable EVM-Native DEX </Title>
               <SubTitle>
                 Customizable liquidity pools with shared components.&nbsp;
                 <WhitepaperLink href={links.whitepaper} target="_blank">
@@ -172,6 +172,8 @@ const MevTitle = styled.div`
 `;
 
 const GetStartedContainer = styled.a`
+  text-decoration: none;
+
   :focus {
     text-decoration: none;
   }

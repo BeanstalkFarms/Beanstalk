@@ -17,6 +17,8 @@ import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 
 import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
 import { MyWellPositionLoadingRow, MyWellPositionRow } from "src/components/Well/Table/MyWellPositionRow";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -27,8 +29,10 @@ export const Wells = () => {
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices } = useWellLPTokenPrice(wells);
+  const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
+  const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
 
-  const { hasPositions, getPositionWithWell } = useLPPositionSummary();
+  const loading = useLagLoading(isLoading || apysLoading || positionsLoading);
 
   useMemo(() => {
     const run = async () => {
@@ -77,7 +81,7 @@ export const Wells = () => {
           </TabButton>
         </Item>
       </StyledRow>
-      <Table>
+      <StyledTable>
         {tab === 0 ? (
           <THead>
             <TableRow>
@@ -101,7 +105,7 @@ export const Wells = () => {
           </THead>
         )}
         <TBody>
-          {isLoading ? (
+          {loading ? (
             <>
               {Array(5)
                 .fill(null)
@@ -146,10 +150,14 @@ export const Wells = () => {
             </>
           )}
         </TBody>
-      </Table>
+      </StyledTable>
     </Page>
   );
 };
+
+const StyledTable = styled(Table)`
+  overflow: auto;
+`;
 
 const TableRow = styled(Row)`
   @media (max-width: ${size.mobile}) {
