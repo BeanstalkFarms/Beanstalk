@@ -48,7 +48,6 @@ export default function useRevitalized() {
     (state) => state._beanstalk.silo
   );
   const sdk = useSdk();
-
   return useMemo(() => {
     let revitalizedBDV = ZERO_BN;
     let revitalizedStalk = ZERO_BN;

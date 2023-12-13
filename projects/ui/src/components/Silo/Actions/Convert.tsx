@@ -1,11 +1,4 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack, Typography, Tooltip, TextField } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
@@ -19,10 +12,12 @@ import {
   TokenValue,
   ConvertDetails,
 } from '@beanstalk/sdk';
+import { useSelector } from 'react-redux';
 import {
   FormStateNew,
   FormTxnsFormState,
   SettingInput,
+  SettingSwitch,
   SmartSubmitButton,
   TxnSettings,
 } from '~/components/Common/Form';
@@ -30,7 +25,7 @@ import TxnPreview from '~/components/Common/Form/TxnPreview';
 import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import PillRow from '~/components/Common/Form/PillRow';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import { displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
+import { displayBN, displayFullBN, MaxBN, MinBN } from '~/util/Tokens';
 import { ZERO_BN } from '~/constants';
 import useToggle from '~/hooks/display/useToggle';
 import { tokenValueToBN, bnToTokenValue, transform } from '~/util';
@@ -61,12 +56,15 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import usePlantAndDoX from '~/hooks/farmer/form-txn/usePlantAndDoX';
 import StatHorizontal from '~/components/Common/StatHorizontal';
+import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
+import { AppState } from '~/state';
 
 // -----------------------------------------------------------------------
 
 type ConvertFormValues = FormStateNew & {
   settings: {
     slippage: number;
+    allowUnripeConvert: boolean;
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
@@ -78,6 +76,15 @@ type ConvertQuoteHandlerParams = {
 };
 
 // -----------------------------------------------------------------------
+
+const filterTokenList = (
+  fromToken: Token,
+  allowUnripeConvert: boolean,
+  list: Token[]
+): Token[] => {
+  if (allowUnripeConvert || !fromToken.isUnripe) return list;
+  return list.filter((token) => token.isUnripe);
+};
 
 const ConvertForm: FC<
   FormikProps<ConvertFormValues> & {
@@ -91,13 +98,11 @@ const ConvertForm: FC<
     sdk: BeanstalkSDK;
     conversion: ConvertDetails;
     plantAndDoX: ReturnType<typeof usePlantAndDoX>;
-    setChopping: Dispatch<SetStateAction<boolean>>;
   }
 > = ({
-  tokenList,
+  tokenList: tokenListFull,
   siloBalances,
   handleQuote,
-  currentSeason,
   plantAndDoX,
   sdk,
   // Formik
@@ -105,7 +110,6 @@ const ConvertForm: FC<
   isSubmitting,
   setFieldValue,
   conversion,
-  setChopping,
 }) => {
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
@@ -113,6 +117,26 @@ const ConvertForm: FC<
   const [isChopping, setIsChopping] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [choppingConfirmed, setChoppingConfirmed] = useState(false);
+  const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
+    (_state) => _state._bean.unripe
+  );
+  const [tokenList, setTokenList] = useState(
+    filterTokenList(
+      values.tokens[0].token,
+      values.settings.allowUnripeConvert,
+      tokenListFull
+    )
+  );
+
+  useEffect(() => {
+    setTokenList(
+      filterTokenList(
+        values.tokens[0].token,
+        values.settings.allowUnripeConvert,
+        tokenListFull
+      )
+    );
+  }, [tokenListFull, values.settings.allowUnripeConvert, values.tokens]);
 
   const plantCrate = plantAndDoX?.crate?.bn;
 
@@ -196,7 +220,7 @@ const ConvertForm: FC<
   }
 
   useEffect(() => {
-    if (confirmText.toUpperCase() === 'THIS WILL CHOP') {
+    if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
       setChoppingConfirmed(true);
     } else {
       setChoppingConfirmed(false);
@@ -264,11 +288,10 @@ const ConvertForm: FC<
           (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WETH.address &&
             tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
 
-        setChopping(chopping);
         setIsChopping(chopping);
       }
     })();
-  }, [sdk, setChopping, setFieldValue, tokenIn, tokenOut]);
+  }, [sdk, setFieldValue, tokenIn, tokenOut]);
 
   const quoteHandlerParams = useMemo(
     () => ({
@@ -301,6 +324,8 @@ const ConvertForm: FC<
 
     return message;
   };
+
+  const chopPercent = unripeTokens[tokenIn?.address || 0]?.chopPenalty || 0;
 
   return (
     <Form noValidate autoComplete="off">
@@ -385,7 +410,28 @@ const ConvertForm: FC<
         (amountOut?.gt(0) || isUsingPlanted) ? (
           <>
             <TxnSeparator mt={-1} />
-            <TokenOutput>
+            <TokenOutput danger={isChopping}>
+              <Typography
+                sx={{
+                  fontSize: FontSize.sm,
+                  fontWeight: 'bold',
+                  color: BeanstalkPalette.trueRed,
+                  px: 0.5,
+                  mb: 0.25,
+                  '&:after': {
+                    content: "''",
+                    display: 'block',
+                    margin: '10px 10px',
+                    borderBottom: '1px solid #e9ccce',
+                  },
+                }}
+                component="span"
+                display="inline-block"
+              >
+                You will forfeit {displayBN(chopPercent)}% your claim to future
+                Ripe assets through this transaction
+              </Typography>
+              <br />
               <TokenOutput.Row
                 token={tokenOut}
                 amount={amountOut || ZERO_BN}
@@ -488,7 +534,7 @@ const ConvertForm: FC<
             >
               This conversion will effectively perform a CHOP opperation. Please
               confirm you understand this by typing{' '}
-              <strong>&quot;THIS WILL CHOP&quot;</strong>below.
+              <strong>&quot;CHOP MY ASSETS&quot;</strong>below.
             </Typography>
             <TextField
               fullWidth
@@ -513,7 +559,7 @@ const ConvertForm: FC<
           disabled={!isReady || isSubmitting || !choppingConfirmed}
           type="submit"
           variant="contained"
-          color="primary"
+          color={isChopping ? 'error' : 'primary'}
           size="large"
           tokens={[]}
           mode="auto"
@@ -529,8 +575,7 @@ const ConvertForm: FC<
 
 const ConvertPropProvider: FC<{
   fromToken: ERC20Token | NativeToken;
-  setChopping: Dispatch<SetStateAction<boolean>>;
-}> = ({ fromToken, setChopping }) => {
+}> = ({ fromToken }) => {
   const sdk = useSdk();
 
   /// Token List
@@ -580,6 +625,7 @@ const ConvertPropProvider: FC<{
       // Settings
       settings: {
         slippage: 0.05,
+        allowUnripeConvert: false,
       },
       // Token Inputs
       tokens: [
@@ -757,9 +803,16 @@ const ConvertPropProvider: FC<{
               label="Slippage Tolerance"
               endAdornment="%"
             />
+
+            {/* Only show the switch if we are on an an unripe silo's page */}
+            {fromToken.isUnripe && (
+              <SettingSwitch
+                name="settings.allowUnripeConvert"
+                label="Allow Converts to Ripe (Chop)"
+              />
+            )}
           </TxnSettings>
           <ConvertForm
-            setChopping={setChopping}
             handleQuote={handleQuote}
             tokenList={tokenList as (ERC20Token | NativeToken)[]}
             siloBalances={farmerSiloBalances}
@@ -777,7 +830,6 @@ const ConvertPropProvider: FC<{
 
 const Convert: FC<{
   fromToken: ERC20Token | NativeToken;
-  setChopping: Dispatch<SetStateAction<boolean>>;
 }> = (props) => (
   <FormTxnProvider>
     <ConvertPropProvider {...props} />
