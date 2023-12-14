@@ -978,14 +978,16 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
   let silo = loadSilo(event.address);
   let currentList = silo.whitelistedTokens;
-  if (currentList.length == 0) {
-    // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
-    currentList.push(UNRIPE_BEAN.toHexString());
-    currentList.push(UNRIPE_BEAN_3CRV.toHexString());
-  }
+
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
   silo.save();
+
+  let setting = loadWhitelistTokenSetting(event.params.token);
+  setting.selector = event.params.selector;
+  setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
+  setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  setting.save();
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);

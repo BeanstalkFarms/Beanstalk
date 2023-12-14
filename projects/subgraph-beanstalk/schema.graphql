@@ -304,32 +304,10 @@ type SiloYield @entity {
   u: Int!
   "Bean EMA for season"
   beansPerSeasonEMA: BigDecimal!
-  "Bean APY for 0 seeds per BDV"
-  zeroSeedBeanAPY: BigDecimal!
-  "Bean APY for 2 seeds per BDV"
-  twoSeedBeanAPY: BigDecimal!
-  "Stalk APY for 2 seeds per BDV"
-  twoSeedStalkAPY: BigDecimal!
-  "Bean APY for 3 seeds per BDV"
-  threeSeedBeanAPY: BigDecimal!
-  "Stalk APY for 3 seeds per BDV"
-  threeSeedStalkAPY: BigDecimal!
-  "Bean APY for 3.25 seeds per BDV"
-  threePointTwoFiveSeedBeanAPY: BigDecimal!
-  "Stalk APY for 3.25 seeds per BDV"
-  threePointTwoFiveSeedStalkAPY: BigDecimal!
-  "Bean APY for 4 seeds per BDV"
-  fourSeedBeanAPY: BigDecimal!
-  "Stalk APY for 4 seeds per BDV"
-  fourSeedStalkAPY: BigDecimal!
-  "Bean APY for 4.5 seeds per BDV"
-  fourPointFiveSeedBeanAPY: BigDecimal!
-  "Stalk APY for 4.5 seeds per BDV"
-  fourPointFiveSeedStalkAPY: BigDecimal!
   "Current whitelisted silo tokens"
   whitelistedTokens: [String!]!
   "Current Bean (0) and Stalk (1) APY for each token."
-  tokenAPYS: [TokenYield!]!
+  tokenAPYS: [TokenYield!]! @derivedFrom(field: "siloYield")
   "Unix timestamp of update"
   createdAt: BigInt!
 }
@@ -341,6 +319,8 @@ type TokenYield @entity {
   token: Bytes!
   "Season for APY calculation"
   season: Int!
+  "Related silo yield entity"
+  siloYield: SiloYield!
   "Bean APY for season"
   beanAPY: BigDecimal!
   "Stalk APY for season"

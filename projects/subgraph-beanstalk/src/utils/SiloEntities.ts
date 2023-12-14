@@ -265,19 +265,7 @@ export function loadSiloYield(season: i32): SiloYield {
     siloYield.beta = ZERO_BD;
     siloYield.u = 0;
     siloYield.beansPerSeasonEMA = ZERO_BD;
-    siloYield.zeroSeedBeanAPY = ZERO_BD;
-    siloYield.twoSeedBeanAPY = ZERO_BD;
-    siloYield.twoSeedStalkAPY = ZERO_BD;
-    siloYield.threeSeedBeanAPY = ZERO_BD;
-    siloYield.threeSeedStalkAPY = ZERO_BD;
-    siloYield.threePointTwoFiveSeedBeanAPY = ZERO_BD;
-    siloYield.threePointTwoFiveSeedStalkAPY = ZERO_BD;
-    siloYield.fourSeedBeanAPY = ZERO_BD;
-    siloYield.fourSeedStalkAPY = ZERO_BD;
-    siloYield.fourPointFiveSeedBeanAPY = ZERO_BD;
-    siloYield.fourPointFiveSeedStalkAPY = ZERO_BD;
     siloYield.whitelistedTokens = [];
-    siloYield.tokenAPYS = [];
     siloYield.createdAt = ZERO_BI;
     siloYield.save();
   }
@@ -291,6 +279,7 @@ export function loadTokenYield(token: Address, season: i32): TokenYield {
     tokenYield = new TokenYield(id);
     tokenYield.token = token;
     tokenYield.season = season;
+    tokenYield.siloYield = season.toString();
     tokenYield.beanAPY = ZERO_BD;
     tokenYield.stalkAPY = ZERO_BD;
     tokenYield.createdAt = ZERO_BI;
