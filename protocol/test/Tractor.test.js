@@ -19,6 +19,7 @@ const { ethers } = require("hardhat");
 const { time, mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 let publisher, operator, user;
+let advancedFarmCalls;
 
 // async function reset() {
 //   await network.provider.request({
@@ -257,9 +258,8 @@ describe("Tractor", function () {
     const initOperatorBeans = await this.bean.balanceOf(operator.address);
 
     // Tip operator 50% of Bean change in Beans.
-    const tipRatio = (ethers.BigNumber.from(1).mul(RATIO_FACTOR).div(2)[
-      (advancedFarmCalls, this.blueprint.operatorPasteInstrs)
-    ] = await draftPlant(tipRatio));
+    const tipRatio = ethers.BigNumber.from(1).mul(RATIO_FACTOR).div(2);
+    [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftPlant(tipRatio);
     this.blueprint.data = await encodeBlueprintData(advancedFarmCalls);
     this.requisition.blueprintHash = await this.tractorFacet
       .connect(publisher)
