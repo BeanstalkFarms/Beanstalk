@@ -24,7 +24,7 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
     **/
     function price() external view returns (Prices memory p) {
         p.ps = new P.Pool[](2);
-        // p.ps[0] = getCurve();
+        p.ps[0] = getCurve();
         p.ps[1] = getConstantProductWell(C.BEAN_ETH_WELL);
 
         // assumes that liquidity and prices on all pools uses the same precision.
