@@ -112,7 +112,7 @@ const VolumeChart: FC<{ width?: number; height: number }> = ({
       >
         <ChartInfoOverlay
           title="Volume"
-          titleTooltip="The total USD volume in liquidity pools on the Oracle Whitelist every Season."
+          titleTooltip="The total USD volume in liquidity pools on the Minting Whitelist every Season."
           gap={0.25}
           isLoading={queryData?.loading}
           amount={formatValue(currentHoverBar?.count ?? 0)}

@@ -18,7 +18,7 @@ const formatValue = (value: number) =>
   `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {
   title: 'Volume',
-  titleTooltip: 'The total USD volume in liquidity pools on the Oracle Whitelist every Season.',
+  titleTooltip: 'The total USD volume in liquidity pools on the Minting Whitelist every Season.',
   gap: 0.25,
 };
 const queryConfig = { context: { subgraph: 'bean' } };

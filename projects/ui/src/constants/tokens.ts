@@ -235,7 +235,7 @@ export const BEAN_ETH_UNIV2_LP = {
     18,
     {
       name: 'BEAN:ETH LP',
-      symbol: 'OLD BEANETH',
+      symbol: 'Old BEANETH',
       logo: beanEthLpLogoUrl,
       displayDecimals: 9,
       isLP: true,
@@ -253,7 +253,7 @@ export const BEAN_LUSD_LP = {
     18,
     {
       name: 'BEAN:LUSD LP',
-      symbol: 'OLD BEANLUSD',
+      symbol: 'Old BEANLUSD',
       logo: beanLusdLogoUrl,
       isLP: true,
     },
@@ -313,7 +313,7 @@ export const BEAN_CRV3_V1_LP = {
     6,
     {
       name: 'BEAN:CRV3 V1 LP',
-      symbol: 'OLD BEAN3CRV',
+      symbol: 'Old BEAN3CRV',
       logo: beanCrv3LpLogoUrl,
       isLP: true,
       color: '#DFB385',
