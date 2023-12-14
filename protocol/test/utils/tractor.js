@@ -68,7 +68,39 @@ const generateCalldataCopyParams = (info) => {
   });
 };
 
-const encodeDraft = async (draft) => {};
+const encodeBlueprintData = async (advancedFarmCalls) => {
+  return ethers.utils.solidityPack(
+    ["bytes1", "bytes"],
+    [
+      0, // data type
+      (await farmFacetInterface()).encodeFunctionData("advancedFarm", [advancedFarmCalls])
+      // await farmFacetInterface().then((interface) => { interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]) })
+    ]
+  );
+};
+
+const draftInternalBalanceOfBeans = async (callNumber) => {
+  let tmpAdvancedFarmCalls = [];
+  let tmpOperatorPasteInstrs = [];
+  tmpAdvancedFarmCalls.push({
+    callData: (await tokenFacetInterface()).encodeFunctionData("getInternalBalance", [
+      ZERO_ADDRESS,
+      BEAN
+    ]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+  tmpOperatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(
+          PUBLISHER_COPY_INDEX,
+          callNumber,
+          ARGS_START_INDEX // + ADDR_SLOT_OFFSET
+        )
+    )
+  );
+  return [tmpAdvancedFarmCalls, tmpOperatorPasteInstrs];
+};
 
 const draftBalanceOfStalk = async (callNumber) => {
   let tmpAdvancedFarmCalls = [];
@@ -134,6 +166,10 @@ const draftDepositInternalBeanBalance = async (tip) => {
   ).deployed();
   const drafter = await ethers.getContractAt("Drafter", contractFactory.address);
 
+  // temp arrays for handling returns.
+  let tmpAdvancedFarmCalls = [];
+  let tmpOperatorPasteInstrs = [];
+
   // AdvancedFarmCall[]
   let advancedFarmCalls = [];
 
@@ -141,17 +177,9 @@ const draftDepositInternalBeanBalance = async (tip) => {
   let operatorPasteInstrs = [];
 
   // call[0] - Get publisher internal balance.
-  advancedFarmCalls.push({
-    callData: tokenFacetInterface.encodeFunctionData("getInternalBalance", [ZERO_ADDRESS, BEAN]),
-    clipboard: ethers.utils.hexlify("0x000000")
-  });
-  operatorPasteInstrs.push(
-    await drafter.encodeOperatorPasteInstr(
-      PUBLISHER_COPY_INDEX,
-      0,
-      ARGS_START_INDEX // + ADDR_SLOT_OFFSET
-    )
-  );
+  [tmpAdvancedFarmCalls, tmpOperatorPasteInstrs] = await draftInternalBalanceOfBeans(0);
+  advancedFarmCalls.push(...tmpAdvancedFarmCalls);
+  operatorPasteInstrs.push(...tmpOperatorPasteInstrs);
 
   // call[1] - Check if at least 1000 Beans in publisher internal balance.
   advancedFarmCalls.push({
@@ -204,17 +232,10 @@ const draftDepositInternalBeanBalance = async (tip) => {
     )
   );
 
-  console.log("advancedFarmCalls");
   console.log(advancedFarmCalls);
-  const blueprintData = ethers.utils.solidityPack(
-    ["bytes1", "bytes"],
-    [
-      0, // data type
-      farmFacetInterface.encodeFunctionData("advancedFarm", [advancedFarmCalls]) // data
-    ]
-  );
+  console.log(operatorPasteInstrs);
 
-  return [blueprintData, operatorPasteInstrs];
+  return [advancedFarmCalls, operatorPasteInstrs];
 };
 
 /**
@@ -232,16 +253,12 @@ const draftMow = async (rewardRatio) => {
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
 
-  console.log("HERE_JS_0");
-
   // call[0] - Get initial publisher stalk balance.
   [tmpAdvancedFarmCalls, tmpOperatorPasteInstrs] = await draftBalanceOfStalk(0);
   advancedFarmCalls.push(...tmpAdvancedFarmCalls);
   operatorPasteInstrs.push(...tmpOperatorPasteInstrs);
 
-  console.log("HERE_JS_1");
-
-  // call[1] - Get publisher internal balance.
+  // call[1] - Mow.
   advancedFarmCalls.push({
     callData: (await siloFacetInterface()).encodeFunctionData("mow", [ZERO_ADDRESS, ZERO_ADDRESS]),
     clipboard: ethers.utils.hexlify("0x000000")
@@ -321,17 +338,73 @@ const draftMow = async (rewardRatio) => {
 
   console.log(advancedFarmCalls);
   console.log(operatorPasteInstrs);
-  console.log("HERE_JS_9");
-  const blueprintData = ethers.utils.solidityPack(
-    ["bytes1", "bytes"],
-    [
-      0, // data type
-      (await farmFacetInterface()).encodeFunctionData("advancedFarm", [advancedFarmCalls])
-      // await farmFacetInterface().then((interface) => { interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]) })
-    ]
+
+  return [advancedFarmCalls, operatorPasteInstrs];
+};
+
+/**
+ * Blueprint allowing the Operator to Plant on behalf of the Publisher.
+ * Operator is rewarded Beans as a ratio of earned beans claimed.
+ */
+const draftPlant = async (rewardRatio) => {
+  // AdvancedFarmCall[]
+  let advancedFarmCalls = [];
+
+  // bytes32[]
+  let operatorPasteInstrs = [];
+
+  // call[0] - Plant.
+  advancedFarmCalls.push({
+    callData: (await siloFacetInterface()).encodeFunctionData("plant", []),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+
+  // call[1] - Get Bean reward amount from stalk balance difference.
+  advancedFarmCalls.push({
+    callData: (await junctionFacetInterface()).encodeFunctionData("mulDiv", [
+      rewardRatio,
+      0,
+      RATIO_FACTOR
+    ]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+        ])
+    )
+  });
+
+  // call[2] - Transfer Bean reward to operator from publisher external balance.
+  advancedFarmCalls.push({
+    callData: (await tokenFacetInterface()).encodeFunctionData("transferToken", [
+      BEAN,
+      ZERO_ADDRESS,
+      0,
+      EXTERNAL,
+      EXTERNAL
+    ]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 2)
+        ])
+    )
+  });
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(
+          OPERATOR_COPY_INDEX,
+          2,
+          ARGS_START_INDEX + SLOT_SIZE // + ADDR_SLOT_OFFSET
+        )
+    )
   );
 
-  return [blueprintData, operatorPasteInstrs];
+  console.log(advancedFarmCalls);
+  console.log(operatorPasteInstrs);
+
+  return [advancedFarmCalls, operatorPasteInstrs];
 };
 
 module.exports = {
@@ -341,7 +414,9 @@ module.exports = {
   getNormalBlueprintData,
   getAdvancedBlueprintData,
   generateCalldataCopyParams,
+  encodeBlueprintData,
   draftDepositInternalBeanBalance,
   draftMow,
+  draftPlant,
   RATIO_FACTOR
 };
