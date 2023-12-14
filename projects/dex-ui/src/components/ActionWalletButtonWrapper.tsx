@@ -1,11 +1,11 @@
+import React from "react";
 import { ConnectKitButton } from "connectkit";
-import React, { ComponentProps } from "react";
 import { Button } from "src/components/Swap/Button";
 import { useAccount } from "wagmi";
 
-type ActionWalletButtonProps = ComponentProps<typeof Button>;
+type ActionWalletButtonProps = { children: JSX.Element };
 
-export const ActionWalletButton = (props: ActionWalletButtonProps) => {
+export const ActionWalletButtonWrapper = ({ children }: ActionWalletButtonProps) => {
   const { address } = useAccount();
 
   return !address ? (
@@ -15,6 +15,6 @@ export const ActionWalletButton = (props: ActionWalletButtonProps) => {
       }}
     </ConnectKitButton.Custom>
   ) : (
-    <Button {...props} />
+    children
   );
 };

@@ -17,7 +17,7 @@ import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
-import { ActionWalletButton } from "../ConnectWalletButton";
+import { ActionWalletButtonWrapper } from "src/components/ActionWalletButtonWrapper";
 
 type BaseAddLiquidityProps = {
   slippage: number;
@@ -404,12 +404,14 @@ const AddLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, han
                 return null;
               })}
             <ButtonWrapper>
-              <ActionWalletButton
-                disabled={!addLiquidityButtonEnabled}
-                loading={false}
-                label={`${buttonLabel} →`}
-                onClick={addLiquidityButtonClickHandler}
-              />
+              <ActionWalletButtonWrapper>
+                <AddLiquidityButton
+                  disabled={!addLiquidityButtonEnabled}
+                  loading={false}
+                  label={`${buttonLabel} →`}
+                  onClick={addLiquidityButtonClickHandler}
+                />
+              </ActionWalletButtonWrapper>
             </ButtonWrapper>
           </MediumGapContainer>
         </LargeGapContainer>

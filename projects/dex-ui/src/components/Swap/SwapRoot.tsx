@@ -15,7 +15,8 @@ import QuoteDetails from "../Liquidity/QuoteDetails";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { size } from "src/breakpoints";
-import { ActionWalletButton } from "src/components/ConnectWalletButton";
+import { ActionWalletButtonWrapper } from "src/components/ActionWalletButtonWrapper";
+import { Button } from "./Button";
 
 const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -374,7 +375,9 @@ export const SwapRoot = () => {
         tokenPrices={prices}
       />
       <SwapButtonContainer data-trace="true">
-        <ActionWalletButton label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
+        <ActionWalletButtonWrapper>
+          <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
+        </ActionWalletButtonWrapper>
       </SwapButtonContainer>
     </Container>
   );

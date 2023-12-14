@@ -23,7 +23,7 @@ import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 import { LoadingTemplate } from "../LoadingTemplate";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-import { ActionWalletButton } from "../ConnectWalletButton";
+import { ActionWalletButtonWrapper } from "../ActionWalletButtonWrapper";
 
 type BaseRemoveLiquidityProps = {
   slippage: number;
@@ -418,12 +418,14 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
             </ButtonWrapper>
           )}
           <ButtonWrapper>
-            <ActionWalletButton
-              disabled={!removeLiquidityButtonEnabled}
-              label={buttonLabel}
-              onClick={removeLiquidityButtonClickHandler}
-              loading={false}
-            />
+            <ActionWalletButtonWrapper>
+              <Button
+                disabled={!removeLiquidityButtonEnabled}
+                label={buttonLabel}
+                onClick={removeLiquidityButtonClickHandler}
+                loading={false}
+              />
+            </ActionWalletButtonWrapper>
           </ButtonWrapper>
         </LargeGapContainer>
       )}
