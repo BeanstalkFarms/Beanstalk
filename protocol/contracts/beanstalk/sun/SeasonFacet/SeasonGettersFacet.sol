@@ -209,7 +209,7 @@ contract SeasonGettersFacet {
      * @param well 
      */
     function getGaugePointsPerBdvForWell(address well) public view returns (uint256) {
-        if(LibWell.isWell(well)) {
+        if (LibWell.isWell(well)) {
             uint256 wellGaugePoints = s.ss[well].gaugePoints;
             uint256 wellDepositedBdv = s.siloBalances[well].depositedBdv;
             return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
