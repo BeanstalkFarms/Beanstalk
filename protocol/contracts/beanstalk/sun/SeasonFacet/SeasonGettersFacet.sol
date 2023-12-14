@@ -193,12 +193,36 @@ contract SeasonGettersFacet {
     }
 
     /**
+     * @notice returns the Gauge Points per BDV for a given token.
+     * @param token The token to get the Gauge Points per BDV for.
+     */
+    function getGaugePointsPerBdvForToken(address token) public view returns (uint256) {
+        if (token == C.BEAN) {
+            return getBeanGaugePointsPerBdv();
+        } else {
+            return getGaugePointsPerBdvForWell(token);
+        }
+    }
+
+    /**
+     * gets the Gauge Points per BDV for a given well.
+     * @param well 
+     */
+    function getGaugePointsPerBdvForWell(address well) public view returns (uint256) {
+        if(LibWell.isWell(well)) {
+            uint256 wellGaugePoints = s.ss[well].gaugePoints;
+            uint256 wellDepositedBdv = s.siloBalances[well].depositedBdv;
+            return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
+        } else {
+            revert ("Token not supported");
+        }
+    }
+
+    /**
      * @notice calculates the BEANETH Gauge Points (GP) per BDV.
      */
     function getBeanEthGaugePointsPerBdv() public view returns (uint256) {
-        uint256 beanEthGaugePoints = s.ss[C.BEAN_ETH_WELL].gaugePoints;
-        uint256 beanEthDepositedBdv = s.siloBalances[C.BEAN_ETH_WELL].depositedBdv;
-        return beanEthGaugePoints.mul(LibGauge.BDV_PRECISION).div(beanEthDepositedBdv);
+        return getGaugePointsPerBdvForWell(C.BEAN_ETH_WELL);
     }
 
     /**
