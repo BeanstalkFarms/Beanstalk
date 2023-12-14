@@ -8,7 +8,6 @@ import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { useSwapBuilder } from "./useSwapBuilder";
 import { useAccount } from "wagmi";
 import { Quote, QuoteResult } from "@beanstalk/sdk/Wells";
-import { Button } from "./Button";
 import { Log } from "src/utils/logger";
 import { useSearchParams } from "react-router-dom";
 import { TransactionToast } from "../TxnToast/TransactionToast";
@@ -16,6 +15,7 @@ import QuoteDetails from "../Liquidity/QuoteDetails";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { size } from "src/breakpoints";
+import { ActionWalletButton } from "src/components/ConnectWalletButton";
 
 const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -320,7 +320,6 @@ export const SwapRoot = () => {
   };
 
   const getLabel = useCallback(() => {
-    if (!account) return "Connect Wallet";
     if (!inAmount && !outAmount) return "Enter Amount";
     if (inToken.address === outToken.address) return "Select different output token";
     if (inAmount?.eq(TokenValue.ZERO) && outAmount?.eq(TokenValue.ZERO)) return "Enter Amount";
@@ -328,7 +327,7 @@ export const SwapRoot = () => {
     if (needsApproval) return "Approve";
 
     return "Swap";
-  }, [account, hasEnoughBalance, inAmount, needsApproval, outAmount, inToken, outToken]);
+  }, [hasEnoughBalance, inAmount, needsApproval, outAmount, inToken, outToken]);
 
   if (Object.keys(tokens).length === 0)
     return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
@@ -375,7 +374,7 @@ export const SwapRoot = () => {
         tokenPrices={prices}
       />
       <SwapButtonContainer data-trace="true">
-        <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
+        <ActionWalletButton label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
       </SwapButtonContainer>
     </Container>
   );
