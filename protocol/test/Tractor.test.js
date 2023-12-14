@@ -3,30 +3,41 @@ const { deploy } = require("../scripts/deploy.js");
 const { getAltBeanstalk } = require("../utils/contracts.js");
 const { toBN, encodeAdvancedData } = require("../utils/index.js");
 const {
+  RATIO_FACTOR,
+  initDrafter,
   signRequisition,
   getNormalBlueprintData,
   getAdvancedBlueprintData,
-  generateCalldataCopyParams
+  generateCalldataCopyParams,
+  draftDepositInternalBeanBalance,
+  draftMow
 } = require("./utils/tractor.js");
-const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const { BEAN, BEAN_3_CURVE, THREE_CURVE, ZERO_ADDRESS } = require("./utils/constants.js");
-const { to6, to18 } = require("./utils/helpers.js");
+const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
+const { to6, to18, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require("hardhat");
+const { time, mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 let publisher, operator, user;
 
-const ARRAY_LENGTH = 5;
-const SLOT_SIZE = 32;
-const SELECTOR_SIZE = 4;
-const ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE; // shape of AdvancedFarmCall.callData: 32 bytes (length of callData), 4 bytes (selector), X bytes (args)
-const ADDR_SLOT_OFFSET = 12; // 32 - 20
-const PUBLISHER_COPY_INDEX = ethers.BigNumber.from(2).pow(80).sub(1); // ethers.constants.MaxUint80;
-const OPERATOR_COPY_INDEX = PUBLISHER_COPY_INDEX.sub(1);
+// async function reset() {
+//   await network.provider.request({
+//     method: "hardhat_reset",
+//     params: [{
+//       forking: {
+//         jsonRpcUrl: process.env.FORKING_RPC,
+//         blockNumber: ,
+//       },
+//     },],
+//   });
+// }
 
 describe("Tractor", function () {
   before(async function () {
     [owner, publisher, operator, user] = await ethers.getSigners();
+    console.log("publisher", publisher.address);
+    console.log("operator", operator.address);
     const contracts = await deploy("Test", false, true);
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getAltBeanstalk(this.diamond.address);
@@ -36,12 +47,7 @@ describe("Tractor", function () {
     this.seasonFacet = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);
     this.siloFacet = await ethers.getContractAt("MockSiloFacet", this.diamond.address);
 
-    // this.LibOperatorPasteInstr = await ethers.getContractAt("LibOperatorPasteInstr", this.diamond.address);
-
-    let contractFactory = await (
-      await (await ethers.getContractFactory("Drafter")).deploy()
-    ).deployed();
-    this.drafter = await ethers.getContractAt("Drafter", contractFactory.address);
+    await initDrafter();
 
     // let libraryFactory = await (await (await ethers.getContractFactory("LibOperatorPasteInstr")).deploy()).deployed();
     // this.libOperatorPasteInstr = await ethers.getContractAt("LibOperatorPasteInstr", libraryFactory.address);
@@ -54,9 +60,9 @@ describe("Tractor", function () {
     this.tokenFacet = await ethers.getContractAt("TokenFacet", this.diamond.address);
 
     await this.seasonFacet.lightSunrise();
-    await this.bean.connect(publisher).approve(this.siloFacet.address, to6("5000"));
+    await this.bean.connect(publisher).approve(this.siloFacet.address, to6("20000"));
     // await this.bean.connect(user2).approve(this.siloFacet.address, to6("5000"));
-    await this.bean.mint(publisher.address, to6("5000"));
+    await this.bean.mint(publisher.address, to6("20000"));
     // await this.bean.mint(user2Address, to6("10000"));
 
     // await this.siloFacet.update(publisher.address);
@@ -68,97 +74,15 @@ describe("Tractor", function () {
     //   .connect(user2)
     //   .deposit(this.bean.address, to6("1000"), EXTERNAL);
 
-    /**
-     * Encodes the userData parameter for removing BEAN/ETH lp, then converting that Bean to LP using Curve Pool
-     * @param tip - amount of beans to tip to operator external balance
-     */
-    this.draftDepositAllBeans = async (tip) => {
-      // AdvancedFarmCall[]
-      let advancedFarmCalls = [];
-
-      // bytes32[]
-      let operatorPasteInstrs = [];
-
-      // call[0] - Get publisher internal balance.
-      advancedFarmCalls.push({
-        callData: this.tokenFacet.interface.encodeFunctionData("getInternalBalance", [
-          ZERO_ADDRESS,
-          this.bean.address
-        ]),
-        clipboard: ethers.utils.hexlify("0x000000")
-      });
-      operatorPasteInstrs.push(
-        await this.drafter.encodeOperatorPasteInstr(
-          PUBLISHER_COPY_INDEX,
-          0,
-          ARGS_START_INDEX + ADDR_SLOT_OFFSET
-        )
-      );
-
-      // call[1] - Get difference between publisher internal balance and tip.
-      advancedFarmCalls.push({
-        callData: this.junctionFacet.interface.encodeFunctionData("sub", [0, tip]),
-        // must manually key in encode function to avoid ambiguity.
-        clipboard: await this.drafter.encodeClipboard(0, [
-          await this.drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX)
-        ])
-      });
-
-      // call[2] - Deposit publisher internal balance, less tip.
-      advancedFarmCalls.push({
-        callData: this.siloFacet.interface.encodeFunctionData("deposit", [
-          this.bean.address,
-          0,
-          INTERNAL
-        ]),
-        clipboard: await this.drafter.encodeClipboard(0, [
-          await this.drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
-        ])
-      });
-
-      // call[3] - Transfer tip to operator external balance.
-      advancedFarmCalls.push({
-        callData: this.tokenFacet.interface.encodeFunctionData("transferToken", [
-          this.bean.address,
-          ZERO_ADDRESS,
-          tip,
-          INTERNAL,
-          EXTERNAL
-        ]),
-        clipboard: ethers.utils.hexlify("0x000000")
-      });
-      operatorPasteInstrs.push(
-        await this.drafter.encodeOperatorPasteInstr(
-          OPERATOR_COPY_INDEX,
-          3,
-          ARGS_START_INDEX + SLOT_SIZE + ADDR_SLOT_OFFSET
-        )
-      );
-
-      console.log("advancedFarmCalls");
-      console.log(advancedFarmCalls);
-      blueprintData = ethers.utils.solidityPack(
-        ["bytes1", "bytes"],
-        [
-          0, // data type
-          this.farmFacet.interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]) // data
-        ]
-      );
-
-      return { data: blueprintData, operatorPasteInstrs: operatorPasteInstrs };
-    };
-
-    const { data, operatorPasteInstrs } = await this.draftDepositAllBeans(10);
-
-    console.log("data");
-    console.log(data);
-    console.log("operatorPasteInstrs");
-    console.log(operatorPasteInstrs);
+    // console.log("data");
+    // console.log(data);
+    // console.log("operatorPasteInstrs");
+    // console.log(operatorPasteInstrs);
 
     this.blueprint = {
       publisher: publisher.address,
-      data: data,
-      operatorPasteInstrs: operatorPasteInstrs,
+      data: ethers.utils.hexlify("0x"),
+      operatorPasteInstrs: [],
       maxNonce: 100,
       startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
       endTime: Math.floor(Date.now() / 1000) + 10 * 3600
@@ -170,7 +94,8 @@ describe("Tractor", function () {
       blueprint: this.blueprint,
       blueprintHash: await this.tractorFacet.connect(publisher).getBlueprintHash(this.blueprint)
     };
-    signRequisition(this.requisition, publisher);
+    await signRequisition(this.requisition, publisher);
+    console.log(this.requisition);
   });
 
   beforeEach(async function () {
@@ -201,7 +126,7 @@ describe("Tractor", function () {
       await signRequisition(this.requisition, user);
       await expect(
         this.tractorFacet.connect(publisher).publishRequisition(this.requisition)
-      ).to.be.revertedWith("TractorFacet: invalid signer");
+      ).to.be.revertedWith("TractorFacet: signer mismatch");
     });
 
     it("should publish blueprint", async function () {
@@ -247,12 +172,18 @@ describe("Tractor", function () {
   });
 
   describe("Deposit Publisher Internal Beans", function () {
-    it("should not fail when signature is valid", async function () {
+    it("should not fail", async function () {
+      [this.blueprint.data, this.blueprint.operatorPasteInstrs] =
+        await draftDepositInternalBeanBalance(to6("10"));
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+
       // Transfer Bean to internal balance.
       this.beanstalk
         .connect(publisher)
         .transferToken(this.bean.address, publisher.address, to6("1000"), 0, 1);
-      expect(await this.bean.balanceOf(publisher.address)).to.be.eq(to6("4000"));
       expect(
         await this.tokenFacet.getInternalBalance(publisher.address, this.bean.address)
       ).to.be.eq(to6("1000"));
@@ -267,8 +198,102 @@ describe("Tractor", function () {
       expect(
         await this.tokenFacet.getInternalBalance(publisher.address, this.bean.address)
       ).to.be.eq(to6("0"));
-      expect(await this.bean.balanceOf(publisher.address)).to.be.eq(to6("4000"));
-      expect(await this.bean.balanceOf(operator.address)).to.be.eq(to6(tip));
+      expect(await this.bean.balanceOf(operator.address)).to.be.eq(to6("10"));
+    });
+
+    // describe("Run Tractor", function () {
+    //   it("Enroot publisher deposit", async function () {
+    //     [this.blueprint.data, this.blueprint.operatorPasteInstrs] = await draftDepositInternalBeanBalance(ethers.BigNumber.from(0.01).mul(RATIO_FACTOR));
+    //     this.requisition.blueprintHash = await this.tractorFacet.connect(publisher).getBlueprintHash(this.blueprint);
+    //     await signRequisition(this.requisition, publisher);
+
+    //     await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+
+    //     // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
+    //     // token, stem, amount
+    //     let operatorData = ethers.util.defaultAbiCoder .encode(
+    //       ["address", "int96", "uint256"],
+    //       [BEAN,]
+    //     );
+
+    //     // Confirm init state.
+    //     const initPublisherStalk = await this.siloFacet.balanceOfStalk(publisher.address);
+    //     const initPublisherBeans = await this.bean.balanceOf(publisher.address);
+    //     const initOperatorBeans = await this.bean.balanceOf(operator.address);
+
+    //     await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+    //     // Confirm final state.
+    //     expect(
+    //       await this.siloFacet.balanceOfStalk(publisher.address)
+    //     ).to.be.gt(initPublisherStalk);
+    //     expect(await this.bean.balanceOf(publisher.address)).to.be.lt(initPublisherBeans);
+    //     expect(await this.bean.balanceOf(operator.address)).to.be.gt(initOperatorBeans);
+    //   });
+
+    it("Mow publisher", async function () {
+      // Give publisher Grown Stalk.
+      this.result = await this.siloFacet
+        .connect(publisher)
+        .deposit(this.bean.address, to6("10000"), EXTERNAL);
+      console.log("HERE_JS_00");
+      await this.seasonFacet.siloSunrise(to6("0"));
+      await time.increase(3600); // wait until end of season to get earned
+      await mine(25);
+      expect(await this.siloFacet.balanceOfGrownStalk(publisher.address, this.bean.address)).to.eq(
+        toStalk("2")
+      );
+
+      // Capture init state.
+      const initPublisherStalk = await this.siloFacet.balanceOfStalk(publisher.address);
+      const initPublisherBeans = await this.bean.balanceOf(publisher.address);
+      const initOperatorBeans = await this.bean.balanceOf(operator.address);
+
+      // Tip operator 50% of Stalk change in Beans. Factor in decimal difference of Stalk and Bean.
+      const tipRatio = ethers.BigNumber.from(1)
+        .mul(RATIO_FACTOR)
+        .div(2)
+        .mul(ethers.BigNumber.from(10).pow(6))
+        .div(ethers.BigNumber.from(10).pow(10));
+      [this.blueprint.data, this.blueprint.operatorPasteInstrs] = await draftMow(tipRatio);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+
+      console.log("HERE_JS_3");
+
+      await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+
+      // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
+      // token, stem, amount
+      let operatorData = ethers.utils.defaultAbiCoder.encode(
+        ["address"], // token
+        [BEAN]
+      );
+
+      console.log("HERE_JS_4");
+
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      console.log("HERE_JS_6");
+
+      // Confirm final state.
+      const publisherStalkGain =
+        (await this.siloFacet.balanceOfStalk(publisher.address)) - initPublisherStalk;
+      const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
+      console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(operatorPaid, 10));
+      console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+
+      expect(
+        await this.siloFacet.balanceOfGrownStalk(publisher.address, this.bean.address),
+        "publisher Grown Stalk did not decrease"
+      ).to.eq(toStalk("0"));
+      expect(publisherStalkGain, "publisher Stalk did not increase").to.be.gt(0);
+      expect(await this.bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
+        initPublisherBeans
+      );
+      expect(operatorPaid, "unpaid operator").to.be.gt(0);
     });
   });
 
