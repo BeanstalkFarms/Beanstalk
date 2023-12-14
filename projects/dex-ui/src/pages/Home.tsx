@@ -209,7 +209,7 @@ const InfoContainer = styled.div`
   gap: 8px;
   box-sizing: border-box;
   height: 100%;
-
+  
   ${mediaQuery.sm.up} {
     padding-top: min(25%, 185px);
     justify-content: flex-start
@@ -291,6 +291,10 @@ const AccordionContainer = styled.div`
   align-items: center;
   gap: 24px;
   width: 100%;
+
+  ${mediaQuery.sm.up} {
+    padding-bottom: 150px;
+  }
 
   /// Tablet
   ${mediaQuery.md.only} {
