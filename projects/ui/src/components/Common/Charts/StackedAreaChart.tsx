@@ -23,7 +23,7 @@ import ChartPropProvider, {
 import Row from '../Row';
 import { defaultValueFormatter } from './SeasonPlot';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { SILO_WHITELIST } from '~/constants/tokens';
+import { SILO_WHITELIST, ALL_LP_POOLS } from '~/constants/tokens';
 
 type Props = {
   width: number;
@@ -32,7 +32,7 @@ type Props = {
   ProviderChartProps;
 
 const Graph = (props: Props) => {
-  const siloTokens = useTokenMap(SILO_WHITELIST);
+  const siloTokens = useTokenMap(props.useOldLpTokens ? ALL_LP_POOLS : SILO_WHITELIST);
   const {
     // Chart sizing
     width,

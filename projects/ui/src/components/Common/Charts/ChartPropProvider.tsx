@@ -139,6 +139,7 @@ export type BaseChartProps = {
   scale?: keyof typeof SCALES;
   pegLine?: boolean;
   isTWAP?: boolean;
+  useOldLpTokens?: boolean;
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;
