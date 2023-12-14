@@ -292,8 +292,14 @@ library LibLegacyTokenSilo {
         require((LibSilo.migrationNeeded(account) || balanceOfSeeds(account) > 0), "no migration needed");
 
 
-        //do a legacy mow using the old silo seasons deposits
-        LibSilo.mintGrownStalk(account, balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        // do a legacy mow using the old silo seasons deposits (this only mints stalk up to stemStartSeason)
+        // should not germinate since all siloV2 deposits were deposited for > 2 seasons.
+        LibSilo.mintStalk(
+            account, 
+            balanceOfGrownStalkUpToStemsDeployment(account),
+            LibGerminate.Germinate.NOT_GERMINATING
+        );
+
         updateLastUpdateToNow(account);
         //at this point we've completed the guts of the old mow function, now we need to do the migration
  
@@ -342,10 +348,11 @@ library LibLegacyTokenSilo {
                         perTokenData.token, 
                         perDepositData.grownStalk,
                         crateBDV
-                    ), 
+                    ),
                     perDepositData.amount, 
                     crateBDV,
-                    LibTokenSilo.Transfer.emitTransferSingle
+                    LibTokenSilo.Transfer.emitTransferSingle,
+                    LibGerminate.Germinate.NOT_GERMINATING
                 );
  
                 // add to running total of seeds
@@ -359,8 +366,8 @@ library LibLegacyTokenSilo {
             setMowStatus(account, perTokenData.token, perTokenData.stemTip);
         }
  
-        // user deserves stalk grown between stemStartSeason and now
-        LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
+        // user deserves non germinating stalk grown between stemStartSeason and now
+        LibSilo.mintStalk(account, migrateData.totalGrownStalk, LibGerminate.Germinate.NOT_GERMINATING);
 
         //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
         return balanceOfSeeds(account).sub(migrateData.totalSeeds);
@@ -374,7 +381,7 @@ library LibLegacyTokenSilo {
         uint256 seedsVariance
     ) internal {
         if (seedsDiff > 0) {
-            //verify merkle tree to determine stalk/seeds diff drift from convert issue
+            // verify merkle tree to determine stalk/seeds diff drift from convert issue
             bytes32 leaf = keccak256(abi.encode(account, stalkDiff, seedsDiff));
             
             require(
@@ -383,25 +390,26 @@ library LibLegacyTokenSilo {
             );
         }
 
-        //make sure seedsVariance equals seedsDiff input
+        // make sure seedsVariance equals seedsDiff input
         require(seedsVariance == seedsDiff, "seeds misalignment, double check submitted deposits");
 
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        //emit that all their seeds are gone, note need to take into account seedsDiff
+        // emit that all their seeds are gone, note need to take into account seedsDiff
         emit SeedsBalanceChanged(account, -int256(s.a[account].s.seeds));
 
-        //and wipe out old seed balances (all your seeds are belong to stem)
+        // and wipe out old seed balances (all your seeds are belong to stem)
         setBalanceOfSeeds(account, 0);
 
-        //stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
-        //the amount of stalk that has grown since then
+        // stalk diff was calculated based on ENROOT_FIX_SEASON, so we need to calculate
+        // the amount of stalk that has grown since then
         if (seedsDiff > 0) {
             uint256 currentStalkDiff = (uint256(s.season.current).sub(ENROOT_FIX_SEASON)).mul(seedsDiff).add(stalkDiff);
 
-            //emit the stalk variance
+            // emit the stalk variance.
+            // all deposits in siloV2 are not germinating.
             if (currentStalkDiff > 0) {
-                LibSilo.burnStalk(account, currentStalkDiff);
+                LibSilo.burnStalk(account, currentStalkDiff, LibGerminate.Germinate.NOT_GERMINATING);
             }
         }
     }

@@ -108,8 +108,7 @@ contract Silo is SiloExit {
         // Calculate balance of Earned Beans.
         beans = _balanceOfEarnedBeans(account, accountStalk);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
-        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
-        if (beans == 0) return (0,stemTip);
+        if (beans == 0) return (0, stemTip);
         
         // Reduce the Silo's supply of Earned Beans.
         // SafeCast unnecessary because beans is <= s.earnedBeans.
@@ -122,9 +121,9 @@ contract Silo is SiloExit {
             stemTip,
             beans, // amount
             beans, // bdv
-            LibTokenSilo.Transfer.emitTransferSingle
+            LibTokenSilo.Transfer.emitTransferSingle,
+            LibGerminate.getSeasonGerminationState()
         );
-        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
@@ -134,7 +133,6 @@ contract Silo is SiloExit {
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
         s.a[account].s.stalk = accountStalk.add(stalk);
-
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);

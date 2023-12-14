@@ -35,6 +35,22 @@ contract EnrootFacet is ReentrancyGuard {
         uint256 amount,
         uint256[] bdvs
     );
+    
+    /**
+     * @notice EnrootData is a struct that holds data needed for enrooting a token.
+     */
+    struct EnrootData {
+        uint256 newTotalBdv;
+        uint256 stalkAdded;
+        uint256 bdvAdded;
+        uint32 stalkPerBdv;
+        LibGerminate.GermStem germStem;
+    }
+
+    modifier mowSender(address token) {
+       LibSilo._mow(msg.sender, token);
+        _;
+    }
 
     //////////////////////// UPDATE UNRIPE DEPOSITS ////////////////////////
 
@@ -60,14 +76,20 @@ contract EnrootFacet is ReentrancyGuard {
         uint256 amount
     ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
-        // First, remove Deposit and Redeposit with new BDV
+        
+        // get germination state.
+        (LibGerminate.Germinate germ, int96 stemTip) = LibGerminate.getGerminationState(token, stem);
+
+        // remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
             token,
             stem,
-            amount
+            amount,
+            germ
         );
-        emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); // Remove Deposit does not emit an event, while Add Deposit does.
+        // Remove Deposit does not emit an event, while Add Deposit does.
+        emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); 
 
         // Calculate the current BDV for `amount` of `token` and add a Deposit.
         uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
@@ -78,26 +100,20 @@ contract EnrootFacet is ReentrancyGuard {
             stem, 
             amount, 
             newBDV,
-            LibTokenSilo.Transfer.noEmitTransferSingle
+            LibTokenSilo.Transfer.noEmitTransferSingle,
+            germ
         ); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
-        LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
+        LibTokenSilo.incrementTotalGerminatingBdv(token, deltaBDV, germ);
 
         // Mint Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(stem,
-                                LibTokenSilo.stemTipForToken(token),
-                                uint128(deltaBDV))
+            LibSilo.stalkReward(stem, stemTip, uint128(deltaBDV))
         );
 
-        LibSilo.mintStalk(msg.sender, deltaStalk);
-    }
-
-    modifier mowSender(address token) {
-       LibSilo._mow(msg.sender, token);
-        _;
+        LibSilo.mintStalk(msg.sender, deltaStalk, germ);
     }
 
     /** 
@@ -123,56 +139,124 @@ contract EnrootFacet is ReentrancyGuard {
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(msg.sender, token, stems, amounts);
 
-        // Get new BDV
-        uint256 newTotalBdv = LibTokenSilo.beanDenominatedValue(token, ar.tokensRemoved);
-        uint256 stalkAdded; uint256 bdvAdded;
-
-        //pulled these vars out because of "CompilerError: Stack too deep, try removing local variables."
-        int96 _lastStem = LibTokenSilo.stemTipForToken(token); //need for present season
-        uint32 _stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
-
-        uint256 depositBdv;
+        // Get enroot data.
+        EnrootData memory enrootData = _getTokenEnrootData(token, ar);
 
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
+            uint256 depositBdv;
             if (i+1 == stems.length) {
                 // Ensure that a rounding error does not occur by using the
                 // remainder BDV for the last Deposit.
-                depositBdv = newTotalBdv.sub(bdvAdded);
+                depositBdv = enrootData.newTotalBdv.sub(enrootData.bdvAdded);
             } else {
                 // depositBdv is a proportional amount of the total bdv.
                 // Cheaper than calling the BDV function multiple times.
-                depositBdv = amounts[i].mul(newTotalBdv).div(ar.tokensRemoved);
+                depositBdv = amounts[i].mul(enrootData.newTotalBdv).div(
+                    ar.tokensRemoved
+                    .add(ar.oddTokensRemoved)
+                    .add(ar.evenTokensRemoved)
+                );
             }
-            LibTokenSilo.addDepositToAccount(
-                msg.sender,
-                token,
-                stems[i],
-                amounts[i],
-                depositBdv,
-                LibTokenSilo.Transfer.noEmitTransferSingle
-            );
-            
-            stalkAdded = stalkAdded.add(
-                depositBdv.mul(_stalkPerBdv).add(
-                    LibSilo.stalkReward(
-                        stems[i],
-                        _lastStem,
-                        uint128(depositBdv)
-                    )
+
+            enrootData.stalkAdded = enrootData.stalkAdded.add(
+                addDepositAndCalculateStalk(
+                    token,
+                    stems[i],
+                    amounts[i],
+                    depositBdv,
+                    enrootData
                 )
             );
 
-            bdvAdded = bdvAdded.add(depositBdv);
+            enrootData.bdvAdded = enrootData.bdvAdded.add(depositBdv);
         }
 
-        LibTokenSilo.incrementTotalDepositedBdv(token, bdvAdded.sub(ar.bdvRemoved));
+        // note: we include the germinating bdv and stalk
+        // to get the change in stalk from enrooting.
+        incrementTotalGerminatingBdvAndMintStalk(
+            token,
+            enrootData.bdvAdded.sub(
+                ar.bdvRemoved
+                .add(ar.evenBdvRemoved)
+                .add(ar.oddBdvRemoved)
+            ),
+            enrootData.stalkAdded.sub(
+                ar.stalkRemoved
+                .add(ar.evenStalkRemoved)
+                .add(ar.oddStalkRemoved)
+            )
+        );
+    }
 
-        // Mint Stalk associated with the delta BDV.
+    /**
+     * @notice Gets data needed for enrooting a token.
+     * @dev placed outside for stack overflow reasons.
+     */
+    function _getTokenEnrootData(
+        address token,
+        LibSilo.AssetsRemoved memory ar
+    ) private view returns (EnrootData memory enrootData) {
+        enrootData.newTotalBdv = LibTokenSilo.beanDenominatedValue(token, ar.bdvRemoved);
+        enrootData.germStem = LibGerminate.getGerminatingStem(token);
+        enrootData.stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
+    }
+    /**
+     * @notice Adds a deposit to the account and calculates the stalk added.
+     * @dev Placed in a function for stack overflow reasons.
+     */
+    function addDepositAndCalculateStalk(
+        address token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv,
+        EnrootData memory enrootData
+    ) private returns (uint256 stalkAdded) {
+        LibTokenSilo.addDepositToAccount(
+                msg.sender,
+                token,
+                stem,
+                amount,
+                bdv,
+                LibTokenSilo.Transfer.noEmitTransferSingle,
+                LibGerminate._getGerminationState(stem, enrootData.germStem.germinatingStem)
+            );
+
+            return bdv.mul(enrootData.stalkPerBdv).add(
+                LibSilo.stalkReward(
+                    stem,
+                    enrootData.germStem.stemTip,
+                    uint128(bdv) // safeCast not needed because bdv is already uint128.
+                )
+            );
+    }
+    /**
+     * @notice Increments total germinating bdv and mints germinating stalk,
+     * allocated to the current season.
+     * 
+     * @dev Placed in an function for stack overflow reasons.
+     * @param token The token to increment total germinating bdv for.
+     * @param bdvChange The change in bdv from enrooting.
+     * @param stalkChange The change in stalk from enrooting.
+     */
+    function incrementTotalGerminatingBdvAndMintStalk(
+        address token,
+        uint256 bdvChange,
+        uint256 stalkChange
+    ) private {
+        LibGerminate.Germinate _germ = LibGerminate.getSeasonGerminationState();
+        
+        LibTokenSilo.incrementTotalGerminatingBdv(
+            token, 
+            bdvChange,
+            _germ
+        );
+
         LibSilo.mintStalk(
             msg.sender,
-            stalkAdded.sub(ar.stalkRemoved)
+            stalkChange,
+            _germ
         );
     }
 }

@@ -259,7 +259,7 @@ contract MockSeasonFacet is SeasonFacet  {
         // 3 = exs high, 1 = rea high, 2 = rea low, 3 = exs low
         uint256[] memory reserves = new uint256[](2);
         uint256 totalSupply = C.bean().totalSupply();
-        if(L2SRState == 3) {
+        if (L2SRState == 3) {
             // reserves[1] = 0.8e18;
             reserves[1] = uint256(800);
         } else if (L2SRState == 2) {

@@ -102,7 +102,7 @@ library LibMetaCurve {
     ) internal view returns (uint256[2] memory twaReserves) {
         twaReserves = getTwaReservesForPool(pool);
         if (twaReserves[0] == 1) {
-            if(pool == C.CURVE_BEAN_METAPOOL){
+            if (pool == C.CURVE_BEAN_METAPOOL){
                 (twaReserves, ) = LibCurveMinting.twaBalances();
             } else {
                 twaReserves = IMeta3Curve(pool).get_previous_balances();

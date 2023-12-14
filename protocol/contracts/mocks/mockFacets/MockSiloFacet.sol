@@ -55,7 +55,8 @@ contract MockSiloFacet is SiloFacet {
         
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
         uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
-        LibSilo.mintStalk(msg.sender, stalk);
+        // not germinating because this is a old deposit.
+        LibSilo.mintStalk(msg.sender, stalk, LibGerminate.Germinate.NOT_GERMINATING);
         mintSeeds(msg.sender, seeds);
         LibTransfer.receiveToken(IERC20(C.UNRIPE_LP), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
@@ -73,7 +74,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_BEAN));
         uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
         
-        LibSilo.mintStalk(msg.sender, stalk);
+        LibSilo.mintStalk(msg.sender, stalk, LibGerminate.Germinate.NOT_GERMINATING);
         mintSeeds(msg.sender, seeds);
         LibTransfer.receiveToken(IERC20(C.UNRIPE_BEAN), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
@@ -122,7 +123,7 @@ contract MockSiloFacet is SiloFacet {
     function __mowLegacy(address account) private {
         // If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalkLegacy(account));
+        LibSilo.mintStalk(account, balanceOfGrownStalkLegacy(account), LibGerminate.Germinate.NOT_GERMINATING);
     }
 
     function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
@@ -256,7 +257,7 @@ contract MockSiloFacet is SiloFacet {
             _season(),
             amount
         );
-        LibSilo.mintStalk(account, stalk);
+        LibSilo.mintStalk(account, stalk, LibGerminate.Germinate.NOT_GERMINATING);
         mintSeeds(account, seeds);
     }
 

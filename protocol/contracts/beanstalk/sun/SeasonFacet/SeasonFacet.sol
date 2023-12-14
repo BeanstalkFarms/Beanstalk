@@ -10,6 +10,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibMetaCurve} from "contracts/libraries/Curve/LibMetaCurve.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title SeasonFacet
@@ -49,6 +50,7 @@ contract SeasonFacet is Weather {
         stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
+        LibGerminate.endTotalGermination();
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 

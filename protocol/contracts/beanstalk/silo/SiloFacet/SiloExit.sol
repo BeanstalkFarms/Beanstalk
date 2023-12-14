@@ -184,16 +184,9 @@ contract SiloExit is ReentrancyGuard {
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;
 
-        uint256 stalk;
-        if(LibSilo.inVestingPeriod()){
-            stalk = s.s.stalk.sub(s.newEarnedStalk)
-                .mul(s.a[account].roots.add(s.a[account].deltaRoots)) // add the delta roots of the user
-                .div(s.s.roots.add(s.vestingPeriodRoots)); // add delta of global roots 
-        } else {
-            stalk = s.s.stalk
+        uint256 stalk = s.s.stalk
                 .mul(s.a[account].roots)
                 .div(s.s.roots);
-        }
         
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
@@ -364,17 +357,6 @@ contract SiloExit is ReentrancyGuard {
         return LibSilo.migrationNeeded(account);
     }
 
-    /**
-     * @notice Returns true if Earned Beans from the previous
-     * Sunrise call are still vesting. 
-     * 
-     * Vesting Earned Beans cannot be received via `plant()` 
-     * until the vesting period is over, and will be forfeited 
-     * if a farmer withdraws during the vesting period. 
-     */
-    function inVestingPeriod() public view returns (bool) {
-        return LibSilo.inVestingPeriod();
-    }
     //////////////////////// INTERNAL ////////////////////////
 
     /**

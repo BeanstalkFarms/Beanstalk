@@ -35,10 +35,10 @@ contract InitBipSeedGauge is Weather {
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
 
-    uint256 internal constant BEAN_UNMIGRATED_BDV = 304_630_107407; // ~300k BDV
-    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_212_521946; // ~26k BDV
-    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_209_210_313166; // 3.2m BDV
-    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_680_992_571569; // 6.68m BDV
+    uint256 internal constant BEAN_UNMIGRATED_BDV = 347_206_927197; // ~347k BDV
+    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_512_602_424; // ~26k BDV
+    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_736_196_158_417; // ~3.7m BDV
+    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 7_119_564_766_493; // ~7.1m BDV
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {

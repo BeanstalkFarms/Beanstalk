@@ -185,12 +185,6 @@ contract Sun is Oracle {
         // for gas savings.
         uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
         s.s.stalk = s.s.stalk.add(seasonStalk);
-        // `s.newEarnedStalk` is an accounting mechanism that tracks the  number
-        // of Earned stalk that is allocated during the season. 
-        // This is used in _balanceOfEarnedBeans() to linearly distrubute 
-        // beans over the course of the season.
-        s.newEarnedStalk = seasonStalk.toUint128();
-        s.vestingPeriodRoots = 0;
 
         // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].deposited = s

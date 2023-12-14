@@ -15,6 +15,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking
@@ -97,6 +98,14 @@ contract ConvertFacet is ReentrancyGuard {
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
 
+    /**
+     * @notice removes the deposits from msg.sender and returns the
+     * grown stalk and bdv removed.
+     * 
+     * @dev if a user inputs a stem of a deposit that is `germinating`, 
+     * the function will omit that deposit. This is due to the fact that
+     * germinating deposits can be manipulated and skip the germination process.
+     */
     function _withdrawTokens(
         address token,
         int96[] memory stems,
@@ -114,45 +123,33 @@ contract ConvertFacet is ReentrancyGuard {
         {
             uint256[] memory bdvsRemoved = new uint256[](stems.length);
             uint256[] memory depositIds = new uint256[](stems.length);
-            while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
-                if (a.tokensRemoved.add(amounts[i]) < maxTokens) {
-                    //keeping track of stalk removed must happen before we actually remove the deposit
-                    //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
-                    depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
-                        token,
-                        stems[i],
-                        amounts[i]
-                    );
-                    bdvsRemoved[i] = depositBDV;
-                    a.stalkRemoved = a.stalkRemoved.add(
-                        LibSilo.stalkReward(
-                            stems[i],
-                            LibTokenSilo.stemTipForToken(token),
-                            depositBDV.toUint128()
-                        )
-                    );
-                    
-                } else {
-                    amounts[i] = maxTokens.sub(a.tokensRemoved);
-                    
-                    depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
-                        token,
-                        stems[i],
-                        amounts[i]
-                    );
 
-                    bdvsRemoved[i] = depositBDV;
-                    a.stalkRemoved = a.stalkRemoved.add(
-                        LibSilo.stalkReward(
-                            stems[i],
-                        LibTokenSilo.stemTipForToken(token),
-                            depositBDV.toUint128()
-                        )
-                    );
-                    
+            // get germinating stem and stemTip for the token
+            LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
+
+            while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
+                // skip any stems that are germinating.
+                if (germStem.germinatingStem <= stems[i]) {
+                    i++;
+                    continue;
                 }
+
+                if (a.tokensRemoved.add(amounts[i]) >= maxTokens) amounts[i] = maxTokens.sub(a.tokensRemoved);
+                depositBDV = LibTokenSilo.removeDepositFromAccount(
+                        msg.sender,
+                        token,
+                        stems[i],
+                        amounts[i],
+                        LibGerminate.Germinate.NOT_GERMINATING
+                    );
+                bdvsRemoved[i] = depositBDV;
+                a.stalkRemoved = a.stalkRemoved.add(
+                    LibSilo.stalkReward(
+                        stems[i],
+                        germStem.stemTip,
+                        depositBDV.toUint128()
+                    )
+                );
                 
                 a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
                 a.bdvRemoved = a.bdvRemoved.add(depositBDV);
@@ -188,9 +185,12 @@ contract ConvertFacet is ReentrancyGuard {
             "Convert: Not enough tokens removed."
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
+
+        // all deposits converted are not germinating.
         LibSilo.burnStalk(
             msg.sender,
-            a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
+            a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)),
+            LibGerminate.Germinate.NOT_GERMINATING
         );
         return (a.stalkRemoved, a.bdvRemoved);
     }
@@ -204,27 +204,34 @@ contract ConvertFacet is ReentrancyGuard {
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        //calculate stem index we need to deposit at from grownStalk and bdv
-        //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
-        //then in affect we lose that partial season's worth of stalk when we deposit
-        //so here we need to update grownStalk to be the amount you'd have with the above deposit
+        // TODO: add increment TotalGerminating logic
+        // 1: check whether the stem is a germinating stem. If so,
+        // increment the total germinating amount.
         
-        /// @dev the two functions were combined into one function to save gas.
-        // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
-        // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
-
-        (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
-
-        LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
-
-        LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
+        LibGerminate.Germinate germ;
+        (grownStalk, stem, germ) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
+        
+        LibSilo.mintStalk(
+            msg.sender, 
+            bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk),
+            germ
+        );
+        
+        // if the new stem is germinating, increment total germinating.
+        // else increment total deposited.
+        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
+            LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
+        } else {
+            LibTokenSilo.incrementTotalGerminating(token, amount, bdv, germ);
+        }
         LibTokenSilo.addDepositToAccount(
             msg.sender, 
             token, 
             stem, 
-            amount, 
+            amount,
             bdv,
-            LibTokenSilo.Transfer.emitTransferSingle
+            LibTokenSilo.Transfer.emitTransferSingle,
+            germ
         );
     }
 }
