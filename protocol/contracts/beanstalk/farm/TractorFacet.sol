@@ -54,7 +54,12 @@ contract TractorFacet is ReentrancyGuard {
             ECDSA.toEthSignedMessageHash(requisition.blueprintHash),
             requisition.signature
         );
-        require(signer == requisition.blueprint.publisher, "TractorFacet: invalid signer");
+        console.log("blueprintHash:");
+        console.logBytes32(blueprintHash);
+        console.log("signature:");
+        console.logBytes(requisition.signature);
+        console.log("signer: %s", signer);
+        require(signer == requisition.blueprint.publisher, "TractorFacet: signer mismatch");
         _;
     }
 
@@ -141,14 +146,16 @@ contract TractorFacet is ReentrancyGuard {
 
         // Update data with operator-defined fillData.
         // TODO how does iterating over a bytes object work? Here we assume each 32 byte slot is one object.
+        uint80 pasteCallIndex;
         for (uint256 i; i < requisition.blueprint.operatorPasteInstrs.length; ++i) {
             bytes32 operatorPasteInstr = requisition.blueprint.operatorPasteInstrs[i];
-            // require(calls.length > pasteCallIndex, "PB: pasteCallIndex out of bounds");
-            // NOTE pass by reference ?
+            pasteCallIndex = operatorPasteInstr.pasteCallIndex();
+            console.log("pasteCallIndex: %s", pasteCallIndex);
+            require(calls.length > pasteCallIndex, "OP: pasteCallIndex out of bounds");
             LibOperatorPasteInstr.pasteBytes(
                 operatorPasteInstr,
                 operatorData,
-                calls[operatorPasteInstr.pasteCallIndex()].callData
+                calls[pasteCallIndex].callData
             );
         }
 

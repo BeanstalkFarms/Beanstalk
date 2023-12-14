@@ -94,28 +94,29 @@ library LibOperatorPasteInstr {
     ) internal view returns (bytes memory) {
         console.log("HERE-PB-0");
         console.logBytes32(operatorPasteInstr);
+        console.logBytes(callData);
         (uint80 _copyByteIndex, , uint80 _pasteByteIndex) = decode(operatorPasteInstr);
         console.log("HERE-PB-1");
 
         console.log(callData.length);
         console.log(_pasteByteIndex);
         // _pasteByteIndex must have 32 bytes of available space and not write into the length data.
-        require(C.SLOT_SIZE <= _pasteByteIndex, "PB: _pasteByteIndex too small");
-        require(_pasteByteIndex <= callData.length, "PB: _pasteByteIndex too large");
+        require(C.SLOT_SIZE <= _pasteByteIndex, "OP: _pasteByteIndex too small");
+        require(_pasteByteIndex <= callData.length, "OP: _pasteByteIndex too large");
 
         console.log(_copyByteIndex);
         bytes memory copyData;
         if (_copyByteIndex == C.PUBLISHER_COPY_INDEX) {
             console.log("HERE-PB-P-0");
             copyData = abi.encodePacked(
-                bytes32(bytes20(LibTractor._tractorStorage().activePublisher))
+                uint256(uint160(LibTractor._tractorStorage().activePublisher))
             );
             // Skip length data.
             _copyByteIndex = C.SLOT_SIZE;
             console.log("HERE-PB-P-1");
         } else if (_copyByteIndex == C.OPERATOR_COPY_INDEX) {
             console.log("HERE-PB-O-0");
-            copyData = abi.encodePacked(bytes32(bytes20(msg.sender)));
+            copyData = abi.encodePacked(uint256(uint160(msg.sender)));
             // Skip length data.
             _copyByteIndex = C.SLOT_SIZE;
         } else {
@@ -125,10 +126,9 @@ library LibOperatorPasteInstr {
         console.log(_copyByteIndex);
         console.logBytes(copyData);
         // _copyByteIndex must have 32 bytes of available space and not write into the length data.
-        require(C.SLOT_SIZE <= _copyByteIndex, "PB: _copyByteIndex too small");
-        require(_copyByteIndex <= callData.length, "PB: _copyByteIndex too large");
+        require(C.SLOT_SIZE <= _copyByteIndex, "OP: _copyByteIndex too small");
+        require(_copyByteIndex <= callData.length, "OP: _copyByteIndex too large");
 
-        console.logBytes(callData);
         // data[_pasteCallIndex] = LibFunction.paste32Bytes(
         //     copyData,
         //     data[_pasteCallIndex],
