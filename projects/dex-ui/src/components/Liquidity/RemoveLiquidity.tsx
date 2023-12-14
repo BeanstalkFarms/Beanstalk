@@ -20,15 +20,21 @@ import { getPrice } from "src/utils/price/usePrice";
 import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
+import { displayTokenSymbol } from "src/utils/format";
+import { LoadingTemplate } from "../LoadingTemplate";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 
-type RemoveLiquidityProps = {
-  well: Well;
+type BaseRemoveLiquidityProps = {
   slippage: number;
   slippageSettingsClickHandler: () => void;
   handleSlippageValueChange: (value: string) => void;
 };
 
-export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
+type RemoveLiquidityProps = {
+  well: Well;
+} & BaseRemoveLiquidityProps;
+
+const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
   const { address } = useAccount();
 
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
@@ -37,11 +43,13 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
-  const [hasEnoughBalance, setHasEnoughBalance] = useState(false);
   const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
 
-  const sdk = useSdk();
+  const { getPositionWithWell } = useLPPositionSummary();
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
+  const sdk = useSdk();
+
+  const lpBalance = useMemo(() => getPositionWithWell(well)?.external, [getPositionWithWell, well]);
 
   useEffect(() => {
     const run = async () => {
@@ -65,6 +73,8 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
   const { oneTokenQuote } = oneToken;
   const { customRatioQuote } = custom;
 
+  const hasEnoughBalance = !address || !wellLpToken || !lpTokenAmount || !lpBalance ? false : lpTokenAmount.lte(lpBalance);
+
   useEffect(() => {
     if (well.lpToken) {
       let lpTokenWithMetadata = well.lpToken;
@@ -73,28 +83,6 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
       setWellLpToken(lpTokenWithMetadata);
     }
   }, [well.lpToken]);
-
-  useEffect(() => {
-    const checkBalances = async () => {
-      if (!address || !wellLpToken || !lpTokenAmount) {
-        setHasEnoughBalance(false);
-        return;
-      }
-
-      let insufficientBalances = false;
-
-      if (lpTokenAmount.gt(TokenValue.ZERO)) {
-        const balance = await wellLpToken.getBalance(address);
-        if (lpTokenAmount.gt(balance)) {
-          insufficientBalances = true;
-        }
-      }
-
-      setHasEnoughBalance(!insufficientBalances);
-    };
-
-    checkBalances();
-  }, [address, lpTokenAmount, wellLpToken]);
 
   useEffect(() => {
     if (customRatioQuote) {
@@ -125,7 +113,6 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
       });
       let removeLiquidityTxn;
       try {
-        
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
           if (!oneTokenQuote) {
             return;
@@ -314,6 +301,7 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
               canChangeValue={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Custom}
               showBalance={true}
               loading={false}
+              clamp
             />
           </TokenContainer>
           <MediumGapContainer>
@@ -423,7 +411,7 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
               <ApproveTokenButton
                 disabled={approveButtonDisabled}
                 loading={false}
-                label={`Approve ${wellLpToken.symbol}`}
+                label={`Approve ${displayTokenSymbol(wellLpToken)}`}
                 onClick={approveTokenButtonClickHandler}
               />
             </ButtonWrapper>
@@ -443,6 +431,41 @@ export const RemoveLiquidity = ({ well, slippage, slippageSettingsClickHandler, 
   );
 };
 
+const RemoveLiquidityLoading = () => (
+  <LargeGapContainer>
+    <TokenContainer>
+      <LoadingTemplate.Input />
+    </TokenContainer>
+    <MediumGapContainer>
+      <OutputModeSelectorContainer>
+        <LoadingTemplate.Item width={100} height={20} margin={{ bottom: 4 }} />
+        <LoadingTemplate.Flex row gap={8}>
+          <LoadingTemplate.Button />
+          <LoadingTemplate.Button />
+        </LoadingTemplate.Flex>
+      </OutputModeSelectorContainer>
+      <TokenContainer>
+        <LoadingTemplate.Input />
+      </TokenContainer>
+      <TokenContainer>
+        <LoadingTemplate.Input />
+      </TokenContainer>
+    </MediumGapContainer>
+    <LoadingTemplate.Item width={185} />
+    <ButtonWrapper>
+      <LoadingTemplate.Button />
+    </ButtonWrapper>
+  </LargeGapContainer>
+);
+
+export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps> = (props) => {
+  if (!props.well || props.loading) {
+    return <RemoveLiquidityLoading />;
+  }
+
+  return <RemoveLiquidityContent {...props} well={props.well} />;
+};
+
 type ReadOnlyRowProps = {
   selected?: boolean;
 };
@@ -452,7 +475,7 @@ const LargeGapContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   @media (max-width: ${size.mobile}) {
-    margin-bottom: 40px;
+    margin-bottom: 64px;
   }
 `;
 
