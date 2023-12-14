@@ -361,7 +361,7 @@ contract TokenSilo is Silo {
         for (uint256 i; i < stems.length; ++i) {
             LibGerminate.Germinate germ = LibGerminate._getGerminationState(
                 stems[i],
-                germStem.germinatingStem
+                germStem
             );
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 sender,

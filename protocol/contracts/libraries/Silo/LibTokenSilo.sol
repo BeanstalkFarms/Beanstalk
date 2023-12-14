@@ -581,7 +581,7 @@ library LibTokenSilo {
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         stem = germStem.stemTip.sub(toInt96(grownStalk.div(bdv)));
         _grownStalk = uint256(germStem.stemTip.sub(stem).mul(toInt96(bdv)));
-        germ = LibGerminate._getGerminationState(stem, germStem.germinatingStem);
+        germ = LibGerminate._getGerminationState(stem, germStem);
     }
 
     /**

@@ -220,7 +220,7 @@ contract EnrootFacet is ReentrancyGuard {
                 amount,
                 bdv,
                 LibTokenSilo.Transfer.noEmitTransferSingle,
-                LibGerminate._getGerminationState(stem, enrootData.germStem.germinatingStem)
+                LibGerminate._getGerminationState(stem, enrootData.germStem)
             );
 
             return bdv.mul(enrootData.stalkPerBdv).add(

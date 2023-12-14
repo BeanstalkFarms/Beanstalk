@@ -159,7 +159,6 @@ library LibSilo {
             s.s.roots = s.s.roots.add(roots);
             s.a[account].roots = s.a[account].roots.add(roots);
         } else {
-
             Account.FarmerGerminating storage farmerGerm;
             Storage.TotalGerminating storage totalGerm;
 
@@ -170,14 +169,13 @@ library LibSilo {
                 farmerGerm = s.a[account].evenGerminating;
                 totalGerm = s.evenGerminating;
             }
-            
+
             farmerGerm.stalk = farmerGerm.stalk.add(stalk.toUint112());
             farmerGerm.roots = farmerGerm.roots.add(roots.toUint112());
 
             totalGerm.stalk = totalGerm.stalk.add(stalk.toUint128());
             totalGerm.roots = totalGerm.roots.add(roots.toUint128());
         }
-        
 
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
@@ -221,7 +219,7 @@ library LibSilo {
                 farmerGerm = s.a[account].evenGerminating;
                 totalGerm = s.evenGerminating;
             }
-            
+
             farmerGerm.stalk = farmerGerm.stalk.sub(stalk.toUint112());
             farmerGerm.roots = farmerGerm.roots.sub(roots.toUint112());
 
@@ -272,9 +270,9 @@ library LibSilo {
      * @dev assumes stalk is germinating.
      */
     function transferGerminatingStalk(
-        address sender, 
-        address recipient, 
-        uint256 stalk, 
+        address sender,
+        address recipient,
+        uint256 stalk,
         LibGerminate.Germinate GermState
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -322,9 +320,7 @@ library LibSilo {
         }
 
         if (ar.oddStalkRemoved > 0) {
-            ar.oddStalkRemoved = ar.oddStalkRemoved.add(
-                ar.oddBdvRemoved.mul(stalkPerBDV)
-            );
+            ar.oddStalkRemoved = ar.oddStalkRemoved.add(ar.oddBdvRemoved.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
                 recipient,
@@ -334,9 +330,7 @@ library LibSilo {
         }
 
         if (ar.evenStalkRemoved > 0) {
-            ar.evenStalkRemoved = ar.evenStalkRemoved.add(
-                ar.evenBdvRemoved.mul(stalkPerBDV)
-            );
+            ar.evenStalkRemoved = ar.evenStalkRemoved.add(ar.evenBdvRemoved.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
                 recipient,
@@ -408,12 +402,8 @@ library LibSilo {
             if (_lastStem == _stemTip) {
                 return;
             }
-        
-            mintStalk(
-                account, 
-                _balanceOfGrownStalk(_lastStem, _stemTip, _bdv),
-                germ
-            );
+
+            mintStalk(account, _balanceOfGrownStalk(_lastStem, _stemTip, _bdv), germ);
         }
 
         // If this `account` has no BDV, skip to save gas. Still need to update lastStem
@@ -583,7 +573,10 @@ library LibSilo {
         uint256[] memory removedDepositIDs = new uint256[](stems.length);
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
         for (uint256 i; i < stems.length; ++i) {
-            LibGerminate.Germinate germState = LibGerminate._getGerminationState(stems[i], germStem.germinatingStem);
+            LibGerminate.Germinate germState = LibGerminate._getGerminationState(
+                stems[i],
+                germStem
+            );
             uint256 crateBdv = LibTokenSilo.removeDepositFromAccount(
                 account,
                 token,
@@ -598,8 +591,8 @@ library LibSilo {
             // if the deposit is germinating, decrement germinating values,
             // otherwise increment deposited values.
             // token is added to `ar.tokensRemoved` regardless of germination state.
-            
-            if (germState == LibGerminate.Germinate.NOT_GERMINATING) { 
+
+            if (germState == LibGerminate.Germinate.NOT_GERMINATING) {
                 ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
                 ar.stalkRemoved = ar.stalkRemoved.add(crateStalk);
                 ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
@@ -631,7 +624,6 @@ library LibSilo {
                 ar.evenBdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
             );
         }
-
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
         emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);

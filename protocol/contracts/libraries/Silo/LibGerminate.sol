@@ -171,7 +171,7 @@ library LibGerminate {
     function getGerminationState(address token, int96 stem) internal view returns (Germinate, int96) {
         // if the stem of the token is the stemTip, then it should be germinating.
         GermStem memory germStem = getGerminatingStem(token);
-        return (_getGerminationState(stem, germStem.germinatingStem), germStem.stemTip);
+        return (_getGerminationState(stem, germStem), germStem.stemTip);
     }
 
     /**
@@ -230,19 +230,19 @@ library LibGerminate {
      */
     function _getGerminationState(
         int96 stem,
-        int96 germinationStem
+        GermStem memory germData
     ) internal view returns (Germinate) {
 
-        if (stem < germinationStem) {
+        if (stem < germData.germinatingStem) {
             // if the stem of the deposit is lower than the germination stem, 
             // then the deposit is not germinating.
             return Germinate.NOT_GERMINATING;
         } else {
             // return the gemination state based on whether the stem 
-            // is equal to the germination stem or stemTip.
-            // if the stem is not equal to the germination stem, then it
-            // must equal the stemTip here.
-            if (stem == germinationStem) {
+            // is equal to the stemTip.
+            // if the stem is equal to the stem tip, it is in the inital stages of germination.
+            // if the stem is not equal to the stemTip, its in the germination process.
+            if (stem == germData.stemTip) {
                 return isCurrentSeasonOdd() ? Germinate.ODD : Germinate.EVEN;
             } else {
                 return isCurrentSeasonOdd() ? Germinate.EVEN : Germinate.ODD;
