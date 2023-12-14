@@ -7,11 +7,12 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 
 import { FC } from '~/types';
 import useSeasonsQuery, { SeasonRange } from '~/hooks/beanstalk/useSeasonsQuery';
-import { BaseDataPoint } from '../Common/Charts/ChartPropProvider';
+import { BaseDataPoint, ChartMultiStyles } from '../Common/Charts/ChartPropProvider';
 import useSdk from '~/hooks/sdk';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
 import BaseSeasonPlot, { QueryData } from '../Common/Charts/BaseSeasonPlot';
 import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
+import { BeanstalkPalette } from '../App/muiTheme';
 
 /// Setup SeasonPlot
 const formatValue = (value: number) => (
@@ -48,6 +49,29 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
     BEAN_LUSD_LP_V1,
     BEAN_CRV3_V1,
   ];
+
+  const chartStyle: ChartMultiStyles = {
+    [sdk.pools.BEAN_CRV3.address]: { 
+      stroke: BeanstalkPalette.theme.spring.blue, 
+      fillPrimary: BeanstalkPalette.theme.spring.lightBlue 
+    },
+    [sdk.pools.BEAN_ETH_WELL.address]: { 
+      stroke: BeanstalkPalette.theme.spring.beanstalkGreen, 
+      fillPrimary: BeanstalkPalette.theme.spring.washedGreen 
+    },
+    [sdk.tokens.BEAN_ETH_UNIV2_LP.address]: { 
+      stroke: BeanstalkPalette.theme.spring.chart.purple, 
+      fillPrimary: BeanstalkPalette.theme.spring.chart.purpleLight 
+    },
+    [BEAN_LUSD_LP_V1.address]: { 
+      stroke: BeanstalkPalette.theme.spring.grey, 
+      fillPrimary: BeanstalkPalette.theme.spring.lightishGrey 
+    },
+    [BEAN_CRV3_V1.address]: { 
+      stroke: BeanstalkPalette.theme.spring.chart.yellow, 
+      fillPrimary: BeanstalkPalette.theme.spring.chart.yellowLight 
+    },
+  };
 
   // Filters non-relevant tokens from the tooltip on a per-season basis
   const seasonFilter = {
@@ -154,7 +178,8 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
             getDisplayValue: getStatValue,
             tooltip: true,
             useOldLpTokens: true,
-            tokenPerSeasonFilter: seasonFilter
+            tokenPerSeasonFilter: seasonFilter,
+            stylesConfig: chartStyle
           }}
         />
       </Box>
