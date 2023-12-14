@@ -140,6 +140,7 @@ export type BaseChartProps = {
   pegLine?: boolean;
   isTWAP?: boolean;
   useOldLpTokens?: boolean;
+  tokenPerSeasonFilter?: { [key: string]: { from: number, to: number } };
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;

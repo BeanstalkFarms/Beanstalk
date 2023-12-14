@@ -32,7 +32,9 @@ type Props = {
   ProviderChartProps;
 
 const Graph = (props: Props) => {
-  const siloTokens = useTokenMap(props.useOldLpTokens ? ALL_LP_POOLS : SILO_WHITELIST);
+  const siloTokens = useTokenMap(
+    props.useOldLpTokens ? ALL_LP_POOLS : SILO_WHITELIST
+  );
   const {
     // Chart sizing
     width,
@@ -74,7 +76,9 @@ const Graph = (props: Props) => {
 
   // generate ticks
   const [tickSeasons, tickDates] = useMemo(() => {
-    const interval = Math.ceil(series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9));
+    const interval = Math.ceil(
+      series[0].length / (width > 700 ? 12 : width < 450 ? 6 : 9)
+    );
     const shift = Math.ceil(interval / 3); // slight shift on tick labels
     return data.reduce<[number[], string[]]>(
       (prev, curr, i) => {
@@ -90,7 +94,7 @@ const Graph = (props: Props) => {
       },
       [[], []]
     );
-  }, [data, scales]);
+  }, [data, series, width]);
 
   // tooltip
   const { containerRef, containerBounds } = useTooltipInPortal({
@@ -359,36 +363,48 @@ const Graph = (props: Props) => {
                   >
                     {typeof tooltip === 'boolean' ? (
                       <Stack gap={0.5}>
-                        {reversedKeys.map((key, index) => (
-                          <Row
-                            key={index}
-                            justifyContent="space-between"
-                            gap={3}
-                          >
-                            <Row gap={1}>
-                              <Box
-                                sx={{
-                                  width: '12px',
-                                  height: '12px',
-                                  borderRadius: '50%',
-                                  background: getStyle(
-                                    key,
-                                    reversedKeys.length - index - 1
-                                  ).to,
-                                  border: 1,
-                                  borderColor: getStyle(
-                                    key,
-                                    reversedKeys.length - index - 1
-                                  ).stroke,
-                                }}
-                              />
-                              <Typography>{siloTokens[key]?.symbol}</Typography>
-                            </Row>
-                            <Typography textAlign="right">
-                              {formatValue(tooltipData[key])}
-                            </Typography>
-                          </Row>
-                        ))}
+                        {reversedKeys.map((key, index) => {
+                          const seasonFilter = props.tokenPerSeasonFilter;
+                          if (
+                            !seasonFilter ||
+                            (tooltipData.season >= seasonFilter[key].from &&
+                              tooltipData.season <= seasonFilter[key].to)
+                          ) {
+                            return (
+                              <Row
+                                key={index}
+                                justifyContent="space-between"
+                                gap={3}
+                              >
+                                <Row gap={1}>
+                                  <Box
+                                    sx={{
+                                      width: '12px',
+                                      height: '12px',
+                                      borderRadius: '50%',
+                                      background: getStyle(
+                                        key,
+                                        reversedKeys.length - index - 1
+                                      ).to,
+                                      border: 1,
+                                      borderColor: getStyle(
+                                        key,
+                                        reversedKeys.length - index - 1
+                                      ).stroke,
+                                    }}
+                                  />
+                                  <Typography>
+                                    {siloTokens[key]?.symbol}
+                                  </Typography>
+                                </Row>
+                                <Typography textAlign="right">
+                                  {formatValue(tooltipData[key])}
+                                </Typography>
+                              </Row>
+                            );
+                          }
+                          return null;
+                        })}
                       </Stack>
                     ) : (
                       tooltip({ d: [tooltipData] })

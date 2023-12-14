@@ -49,6 +49,15 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
     BEAN_CRV3_V1,
   ];
 
+  // Filters non-relevant tokens from the tooltip on a per-season basis
+  const seasonFilter = {
+    [sdk.tokens.BEAN_ETH_UNIV2_LP.address]: { from: 0, to: 6074 },
+    [BEAN_LUSD_LP_V1.address]: { from: 0, to: 6074 },
+    [BEAN_CRV3_V1.address]: { from: 0, to: 6074 },
+    [sdk.pools.BEAN_CRV3.address]: { from: 6074, to: Infinity },
+    [sdk.pools.BEAN_ETH_WELL.address]: { from: 15241, to: Infinity },
+  };
+
   const queryConfigBeanCrv3 = useMemo(() => ({ 
     variables: { pool: sdk.pools.BEAN_CRV3.address }, 
     context: { subgraph: 'bean' } 
@@ -144,7 +153,8 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
           ChartProps={{
             getDisplayValue: getStatValue,
             tooltip: true,
-            useOldLpTokens: true
+            useOldLpTokens: true,
+            tokenPerSeasonFilter: seasonFilter
           }}
         />
       </Box>
