@@ -117,6 +117,8 @@ library LibCurveMinting {
         uint256[2] memory balances;
 
         (deltaB, balances, s.co.balances) = twaDeltaB();
+        // temporarily store balances. See {LibWellMinting.UpdateOracle} for an explanation.
+        // LibMetaCurve.setTwaReservesForPool(C.CURVE_BEAN_METAPOOL, balances);
 
         emit MetapoolOracle(s.season.current, deltaB, s.co.balances);
     }
