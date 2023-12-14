@@ -54,7 +54,7 @@ contract MockSiloFacet is SiloFacet {
         incrementTotalDepositedBDV(C.UNRIPE_LP, bdv);
         
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
-        uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
+        uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         // not germinating because this is a old deposit.
         LibSilo.mintStalk(msg.sender, stalk, LibGerminate.Germinate.NOT_GERMINATING);
         mintSeeds(msg.sender, seeds);
@@ -72,7 +72,7 @@ contract MockSiloFacet is SiloFacet {
         incrementTotalDepositedBDV(C.UNRIPE_BEAN, partialAmount);
         
         uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_BEAN));
-        uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, _season() - _s));
+        uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         
         LibSilo.mintStalk(msg.sender, stalk, LibGerminate.Germinate.NOT_GERMINATING);
         mintSeeds(msg.sender, seeds);
@@ -101,11 +101,11 @@ contract MockSiloFacet is SiloFacet {
      *  - {SiloFacet-transferDeposit(s)}
      */
     function _mowLegacy(address account) internal {
-        uint32 _lastUpdate = lastUpdate(account);
+        uint32 _lastUpdate = s.a[account].lastUpdate;
 
         // If `account` was already updated this Season, there's no Stalk to Mow.
-        // _lastUpdate > _season() should not be possible, but it is checked anyway.
-        if (_lastUpdate >= _season()) return;
+        // _lastUpdate > s.season.current should not be possible, but it is checked anyway.
+        if (_lastUpdate >= s.season.current) return;
 
         // Increments `plenty` for `account` if a Flood has occured.
         // Saves Rain Roots for `account` if it is Raining.
@@ -117,7 +117,7 @@ contract MockSiloFacet is SiloFacet {
 
         // Reset timer so that Grown Stalk for a particular Season can only be 
         // claimed one time. 
-        s.a[account].lastUpdate = _season();
+        s.a[account].lastUpdate = s.season.current;
     }
 
     function __mowLegacy(address account) private {
@@ -135,7 +135,7 @@ contract MockSiloFacet is SiloFacet {
         }
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.season.lastSopSeason > _lastUpdate) {
-            s.a[account].sop.plenty = balanceOfPlenty(account);
+            s.a[account].sop.plenty = LibSilo.balanceOfPlenty(account);
             s.a[account].lastSop = s.season.lastSop;
         }
         if (s.season.raining) {
@@ -162,7 +162,7 @@ contract MockSiloFacet is SiloFacet {
         return
             LibLegacyTokenSilo.stalkReward(
                 s.a[account].s.seeds,
-                _season() - lastUpdate(account)
+                s.season.current - s.a[account].lastUpdate
             );
     }
 
@@ -254,7 +254,7 @@ contract MockSiloFacet is SiloFacet {
         (uint256 seeds, uint256 stalk) = libTokenSiloDepositLegacy(
             account,
             token,
-            _season(),
+            s.season.current,
             amount
         );
         LibSilo.mintStalk(account, stalk, LibGerminate.Germinate.NOT_GERMINATING);
@@ -347,7 +347,7 @@ contract MockSiloFacet is SiloFacet {
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
-    function getSeedsPerToken(address token) public pure override returns (uint256) {
+    function getSeedsPerToken(address token) public pure returns (uint256) {
         if (token == C.BEAN) {
             return 2;
         } else if (token == C.UNRIPE_BEAN) {

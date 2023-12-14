@@ -5,9 +5,18 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./SiloExit.sol";
-
+import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {C} from "contracts/C.sol";
 /**
  * @title Silo
  * @author Publius, Pizzaman1337, Brean
@@ -21,7 +30,7 @@ import "./SiloExit.sol";
  * "Season of Plenty".
  */
  
-contract Silo is SiloExit {
+contract Silo is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
@@ -106,7 +115,7 @@ contract Silo is SiloExit {
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
-        beans = _balanceOfEarnedBeans(account, accountStalk);
+        beans = LibSilo._balanceOfEarnedBeans(account, accountStalk);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
         if (beans == 0) return (0, stemTip);
         

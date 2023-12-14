@@ -1,34 +1,26 @@
-/*
 /**
  * SPDX-License-Identifier: MIT
  **/
 
 pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "contracts/beanstalk/ReentrancyGuard.sol";
-import "contracts/libraries/Silo/LibSilo.sol";
-import "contracts/libraries/Silo/LibTokenSilo.sol";
-import "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/libraries/LibSafeMath128.sol";
-import "contracts/C.sol";
+import {AppStorage, Storage, Account} from "contracts/beanstalk/AppStorage.sol";
+import {LibLegacyTokenSilo} from "contracts/libraries/Silo/LibLegacyTokenSilo.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {C} from "contracts/C.sol";
 
 /**
- * @title SiloExit
- * @author Publius, Brean, Pizzaman1337
- * @notice Exposes public view functions for Silo total balances, account
- * balances, account update history, and Season of Plenty (SOP) balances.
- *
- * Provides utility functions like {_season} for upstream usage throughout
- * SiloFacet.
- */
-contract SiloExit is ReentrancyGuard {
+ * @author Brean
+ * @title SiloGettersFacet contains view functions related to the silo.
+ **/
+contract SiloGettersFacet is ReentrancyGuard {
+
     using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
-    using LibSafeMath128 for uint128;
 
     /**
      * @dev Stores account-level Season of Plenty balances.
@@ -50,12 +42,102 @@ contract SiloExit is ReentrancyGuard {
         uint256 plenty; 
     }
 
+    //////////////////////// GETTERS ////////////////////////
+
+    /**
+     * @notice Find the amount and BDV of `token` that `account` has Deposited in stem index `stem`.
+     *
+     * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
+     *
+     * @return amount The number of tokens contained in this Deposit.
+     * @return bdv The BDV associated with this Deposit.
+     */
+    function getDeposit(
+        address account,
+        address token,
+        int96 stem
+    ) external view returns (uint256, uint256) {
+        return LibTokenSilo.getDeposit(account, token, stem);
+    }
+
+    /**
+     * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
+     */
+    function getTotalDeposited(address token) external view returns (uint256) {
+        return s.siloBalances[token].deposited;
+    }
+
+    /**
+     * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
+     */
+    function getTotalDepositedBdv(address token) external view returns (uint256) {
+        return s.siloBalances[token].depositedBdv;
+    }
+
+    /**
+     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
+     *
+     * Contains:
+     *  - the BDV function selector
+     *  - Stalk per BDV
+     *  - stalkEarnedPerSeason
+     *  - milestoneSeason
+     *  - lastStem
+     */
+    function tokenSettings(address token) external view returns (Storage.SiloSettings memory) {
+        return s.ss[token];
+    }
+
+    //////////////////////// ERC1155 ////////////////////////
+
+    /**
+     * @notice returns the amount of tokens in a Deposit.
+     *
+     * @dev see {getDeposit} for both the bdv and amount.
+     */
+    function balanceOf(address account, uint256 depositId) external view returns (uint256 amount) {
+        return s.a[account].deposits[depositId].amount;
+    }
+
+    /**
+     * @notice returns an array of amounts corresponding to Deposits.
+     */
+    function balanceOfBatch(
+        address[] calldata accounts,
+        uint256[] calldata depositIds
+    ) external view returns (uint256[] memory) {
+        require(accounts.length == depositIds.length, "ERC1155: ids and amounts length mismatch");
+        uint256[] memory balances = new uint256[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; i++) {
+            balances[i] = s.a[accounts[i]].deposits[depositIds[i]].amount;
+        }
+        return balances;
+    }
+
+    /**
+     * @notice outputs the depositID given an token address and stem.
+     */
+    function getDepositId(address token, int96 stem) external pure returns (uint256) {
+        return LibBytes.packAddressAndStem(token, stem);
+    }
+
+    /**
+     * @notice returns the bean denominated value ("bdv") of a token amount.
+     */
+    function bdv(address token, uint256 amount)
+        external
+        view
+        returns (uint256 _bdv)
+    {
+        _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+    }
+
     //////////////////////// UTILTIES ////////////////////////
 
     /**
      * @notice Get the last Season in which `account` updated their Silo.
      */
-    function lastUpdate(address account) public view returns (uint32) {
+    function lastUpdate(address account) external view returns (uint32) {
         return s.a[account].lastUpdate;
     }
 
@@ -64,14 +146,14 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice Returns the total supply of Stalk. Does NOT include Grown Stalk.
      */
-    function totalStalk() public view returns (uint256) {
+    function totalStalk() external view returns (uint256) {
         return s.s.stalk;
     }
 
     /**
      * @notice Returns the total supply of Roots.
      */
-    function totalRoots() public view returns (uint256) {
+    function totalRoots() external view returns (uint256) {
         return s.s.roots;
     }
 
@@ -81,7 +163,7 @@ contract SiloExit is ReentrancyGuard {
      * supply. Earned Beans are simply seignorage Beans held by Beanstalk for 
      * distribution to Stalkholders during {SiloFacet-plant}.   
      */
-    function totalEarnedBeans() public view returns (uint256) {
+    function totalEarnedBeans() external view returns (uint256) {
         return s.earnedBeans;
     }
 
@@ -94,7 +176,7 @@ contract SiloExit is ReentrancyGuard {
      * @dev Earned Stalk earns Bean Mints, but Grown Stalk does not due to
      * computational complexity.
      */
-    function balanceOfStalk(address account) public view returns (uint256) {
+    function balanceOfStalk(address account) external view returns (uint256) {
         return s.a[account].s.stalk.add(balanceOfEarnedStalk(account));
     }
 
@@ -112,7 +194,7 @@ contract SiloExit is ReentrancyGuard {
      * When a Flood occurs, Plenty is distributed based on a Farmer's balance 
      * of Roots when it started Raining.
      */
-    function balanceOfRoots(address account) public view returns (uint256) {
+    function balanceOfRoots(address account) external view returns (uint256) {
         return s.a[account].roots;
     }
 
@@ -124,7 +206,7 @@ contract SiloExit is ReentrancyGuard {
      * @dev This passes in the last stem the user mowed at and the current stem
      */
     function balanceOfGrownStalk(address account, address token)
-        public
+        external
         view
         returns (uint256)
     {
@@ -148,7 +230,7 @@ contract SiloExit is ReentrancyGuard {
         address token,
         int96 stem
     )
-        public
+        external
         view
         returns (uint grownStalk)
     {
@@ -164,41 +246,7 @@ contract SiloExit is ReentrancyGuard {
         view
         returns (uint256 beans)
     {
-        beans = _balanceOfEarnedBeans(account, s.a[account].s.stalk);
-    }
-
-    /**
-     * @dev Internal function to compute `account` balance of Earned Beans.
-     *
-     * The number of Earned Beans is equal to the difference between: 
-     *  - the "expected" Stalk balance, determined from the account balance of 
-     *    Roots. 
-     *  - the "account" Stalk balance, stored in account storage.
-     * divided by the number of Stalk per Bean.
-     * The earned beans from the latest season 
-     */
-    function _balanceOfEarnedBeans(address account, uint256 accountStalk) 
-        internal
-        view
-        returns (uint256 beans) {
-        // There will be no Roots before the first Deposit is made.
-        if (s.s.roots == 0) return 0;
-
-        uint256 stalk = s.s.stalk
-                .mul(s.a[account].roots)
-                .div(s.s.roots);
-        
-        // Beanstalk rounds down when minting Roots. Thus, it is possible that
-        // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
-        // As `account` Earned Balance balance should never be negative, 
-        // Beanstalk returns 0 instead.
-        if (stalk <= accountStalk) return 0;
-
-        // Calculate Earned Stalk and convert to Earned Beans.
-        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN); // Note: SafeMath is redundant here.
-        if (beans > s.earnedBeans) return s.earnedBeans;
-
-        return beans;
+        beans = LibSilo._balanceOfEarnedBeans(account, s.a[account].s.stalk);
     }
 
     /**
@@ -256,7 +304,7 @@ contract SiloExit is ReentrancyGuard {
      * @notice Returns the last Season that it started Raining resulting in a 
      * Season of Plenty.
      */
-    function lastSeasonOfPlenty() public view returns (uint32) {
+    function lastSeasonOfPlenty() external view returns (uint32) {
         return s.season.lastSop;
     }
 
@@ -265,7 +313,7 @@ contract SiloExit is ReentrancyGuard {
      * Seasons of Plenty.
      */
     function balanceOfPlenty(address account)
-        public
+        external
         view
         returns (uint256 plenty)
     {
@@ -276,7 +324,7 @@ contract SiloExit is ReentrancyGuard {
      * @notice Returns the `account` balance of Roots the last time it was 
      * Raining during a Silo update.
      */
-    function balanceOfRainRoots(address account) public view returns (uint256) {
+    function balanceOfRainRoots(address account) external view returns (uint256) {
         return s.a[account].sop.roots;
     }
 
@@ -292,10 +340,9 @@ contract SiloExit is ReentrancyGuard {
         sop.lastRain = s.a[account].lastRain;
         sop.lastSop = s.a[account].lastSop;
         sop.roots = s.a[account].sop.roots;
-        sop.plenty = balanceOfPlenty(account);
+        sop.plenty = LibSilo.balanceOfPlenty(account);
         sop.plentyPerRoot = s.a[account].sop.plentyPerRoot;
     }
-
 
     //////////////////////// STEM ////////////////////////
 
@@ -311,7 +358,7 @@ contract SiloExit is ReentrancyGuard {
      * with a larger seeds per BDV, to a lower seeds per BDV.
      */
     function stemTipForToken(address token)
-        public
+        external
         view
         returns (int96 _stemTip)
     {
@@ -325,7 +372,7 @@ contract SiloExit is ReentrancyGuard {
      * kept for legacy reasons. 
      */
     function seasonToStem(address token, uint32 season)
-        public
+        external
         view
         returns (int96 stem)
     {
@@ -346,14 +393,14 @@ contract SiloExit is ReentrancyGuard {
     /**
      * @notice returns the season in which beanstalk initalized siloV3.
      */
-    function stemStartSeason() public view virtual returns (uint16) {
+    function stemStartSeason() external view virtual returns (uint16) {
         return s.season.stemStartSeason;
     }
 
     /**
      * @notice returns whether an account needs to migrate to siloV3.
      */
-    function migrationNeeded(address account) public view returns (bool) {
+    function migrationNeeded(address account) external view returns (bool) {
         return LibSilo.migrationNeeded(account);
     }
 
@@ -365,4 +412,5 @@ contract SiloExit is ReentrancyGuard {
     function _season() internal view returns (uint32) {
         return s.season.current;
     }
+
 }

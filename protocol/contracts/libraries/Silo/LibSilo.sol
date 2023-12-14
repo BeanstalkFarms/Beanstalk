@@ -657,4 +657,39 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.a[account].lastUpdate > 0 && s.a[account].lastUpdate < s.season.stemStartSeason;
     }
+
+    /**
+     * @dev Internal function to compute `account` balance of Earned Beans.
+     *
+     * The number of Earned Beans is equal to the difference between: 
+     *  - the "expected" Stalk balance, determined from the account balance of 
+     *    Roots. 
+     *  - the "account" Stalk balance, stored in account storage.
+     * divided by the number of Stalk per Bean.
+     * The earned beans from the latest season 
+     */
+    function _balanceOfEarnedBeans(address account, uint256 accountStalk) 
+        internal
+        view
+        returns (uint256 beans) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // There will be no Roots before the first Deposit is made.
+        if (s.s.roots == 0) return 0;
+
+        uint256 stalk = s.s.stalk
+                .mul(s.a[account].roots)
+                .div(s.s.roots);
+        
+        // Beanstalk rounds down when minting Roots. Thus, it is possible that
+        // balanceOfRoots / totalRoots * totalStalk < s.a[account].s.stalk.
+        // As `account` Earned Balance balance should never be negative, 
+        // Beanstalk returns 0 instead.
+        if (stalk <= accountStalk) return 0;
+
+        // Calculate Earned Stalk and convert to Earned Beans.
+        beans = (stalk - accountStalk).div(C.STALK_PER_BEAN); // Note: SafeMath is redundant here.
+        if (beans > s.earnedBeans) return s.earnedBeans;
+
+        return beans;
+    }
 }

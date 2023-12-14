@@ -13,9 +13,9 @@ import "./Silo.sol";
  * @notice This contract contains functions for depositing, withdrawing and
  * claiming whitelisted Silo tokens.
  *
- * - "Removing a Deposit" only removes from the `account`; the total amount
- *   deposited in the Silo is decremented during withdrawal, _after_ a Withdrawal
- *   is created. See "Finish Removal".
+ * "Removing a Deposit" only removes from the `account`; the total amount
+ * deposited in the Silo is decremented during withdrawal, _after_ a Withdrawal
+ * is created. See "Finish Removal".
  */
 contract TokenSilo is Silo {
     using SafeMath for uint256;
@@ -28,7 +28,7 @@ contract TokenSilo is Silo {
      * There is no "AddDeposits" event because there is currently no operation in which Beanstalk
      * creates multiple Deposits in different stems:
      *
-     *  - `deposit()` always places the user's deposit in the current `_season()`.
+     *  - `deposit()` always places the user's deposit in the current season.
      *  - `convert()` collapses multiple deposits into a single Season to prevent loss of Stalk.
      *
      * @param account The account that added a Deposit.
@@ -419,82 +419,4 @@ contract TokenSilo is Silo {
         return bdvs;
     }
 
-    //////////////////////// GETTERS ////////////////////////
-
-    /**
-     * @notice Find the amount and BDV of `token` that `account` has Deposited in stem index `stem`.
-     *
-     * Returns a deposit tuple `(uint256 amount, uint256 bdv)`.
-     *
-     * @return amount The number of tokens contained in this Deposit.
-     * @return bdv The BDV associated with this Deposit.
-     */
-    function getDeposit(
-        address account,
-        address token,
-        int96 stem
-    ) external view returns (uint256, uint256) {
-        return LibTokenSilo.getDeposit(account, token, stem);
-    }
-
-    /**
-     * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
-     */
-    function getTotalDeposited(address token) external view returns (uint256) {
-        return s.siloBalances[token].deposited;
-    }
-
-    /**
-     * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
-     */
-    function getTotalDepositedBdv(address token) external view returns (uint256) {
-        return s.siloBalances[token].depositedBdv;
-    }
-
-    /**
-     * @notice Get the Storage.SiloSettings for a whitelisted Silo token.
-     *
-     * Contains:
-     *  - the BDV function selector
-     *  - Stalk per BDV
-     *  - stalkEarnedPerSeason
-     *  - milestoneSeason
-     *  - lastStem
-     */
-    function tokenSettings(address token) external view returns (Storage.SiloSettings memory) {
-        return s.ss[token];
-    }
-
-    //////////////////////// ERC1155 ////////////////////////
-
-    /**
-     * @notice returns the amount of tokens in a Deposit.
-     *
-     * @dev see {getDeposit} for both the bdv and amount.
-     */
-    function balanceOf(address account, uint256 depositId) external view returns (uint256 amount) {
-        return s.a[account].deposits[depositId].amount;
-    }
-
-    /**
-     * @notice returns an array of amounts corresponding to Deposits.
-     */
-    function balanceOfBatch(
-        address[] calldata accounts,
-        uint256[] calldata depositIds
-    ) external view returns (uint256[] memory) {
-        require(accounts.length == depositIds.length, "ERC1155: ids and amounts length mismatch");
-        uint256[] memory balances = new uint256[](accounts.length);
-        for (uint256 i = 0; i < accounts.length; i++) {
-            balances[i] = s.a[accounts[i]].deposits[depositIds[i]].amount;
-        }
-        return balances;
-    }
-
-    /**
-     * @notice outputs the depositID given an token address and stem.
-     */
-    function getDepositId(address token, int96 stem) external pure returns (uint256) {
-        return LibBytes.packAddressAndStem(token, stem);
-    }
 }
