@@ -3,7 +3,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
+import {LibWellMinting, IWell} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -160,7 +160,7 @@ contract Weather is Sun {
      * @dev Flood was previously called a "Season of Plenty" (SOP for short).
      * When Beanstalk has been Oversaturated for a Season, Beanstalk returns the
      * Bean price to its peg by minting additional Beans and selling them directly
-     * on Curve. Proceeds  from the sale in the form of 3CRV are distributed to
+     * on the BEANETH well. Proceeds from the sale in the form of WETH are distributed to
      * Stalkholders at the beginning of a Season in proportion to their Stalk
      * ownership when the Farm became Oversaturated. Also, at the beginning of the
      * Flood, all Pods that were minted before the Farm became Oversaturated Ripen
@@ -168,7 +168,7 @@ contract Weather is Sun {
      * For more information On Oversaturation see {Weather.handleRain}.
      */
     function sop() private {
-        int256 newBeans = LibBeanMetaCurve.getDeltaB();
+        int256 newBeans = LibWellMinting.check(C.BEAN_ETH_WELL);
         if (newBeans <= 0) return;
 
         uint256 sopBeans = uint256(newBeans);
@@ -183,15 +183,22 @@ contract Weather is Sun {
             C.bean().mint(address(this), sopBeans);
         }
 
-        // Swap Beans for 3CRV.
-        uint256 amountOut = C.curveMetapool().exchange(0, 1, sopBeans, 0);
+        // Swap Beans for WETH.
+        uint256 amountOut = IWell(C.BEAN_ETH_WELL).swapFrom(
+            C.bean(), 
+            C.weth(), 
+            sopBeans, 
+            0,
+            address(this),
+            type(uint256).max
+        );
 
         rewardSop(amountOut);
         emit SeasonOfPlenty(s.season.current, amountOut, newHarvestable);
     }
 
     /**
-     * @dev Allocate 3CRV during a Season of Plenty.
+     * @dev Allocate WETH during a Season of Plenty.
      */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
