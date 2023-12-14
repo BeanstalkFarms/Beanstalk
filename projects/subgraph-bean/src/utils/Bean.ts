@@ -159,16 +159,22 @@ export function getBeanTokenAddress(blockNumber: BigInt): string {
 export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
   if (blockNumber < BigInt.fromString("15278082")) {
     let bean = loadBean(BEAN_ERC20_V1.toHexString());
+    let lpSupply = ZERO_BD;
 
-    let pool = loadOrCreatePool(BEAN_WETH_V1.toHexString(), blockNumber);
+    let pool = Pool.load(BEAN_WETH_V1.toHexString());
+    if (pool != null) {
+      lpSupply = lpSupply.plus(toDecimal(pool.reserves[1]));
+    }
 
-    let lpSupply = toDecimal(pool.reserves[1]);
+    pool = Pool.load(BEAN_3CRV_V1.toHexString());
+    if (pool != null) {
+      lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
+    }
 
-    pool = loadOrCreatePool(BEAN_3CRV_V1.toHexString(), blockNumber);
-    lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
-
-    pool = loadOrCreatePool(BEAN_LUSD_V1.toHexString(), blockNumber);
-    lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
+    pool = Pool.load(BEAN_LUSD_V1.toHexString());
+    if (pool != null) {
+      lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
+    }
 
     bean.supplyInPegLP = lpSupply.div(toDecimal(bean.supply));
     bean.save();
