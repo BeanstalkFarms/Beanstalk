@@ -4,7 +4,6 @@ import {
   SeasonalLiquidityPerPoolDocument,
 } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
-
 import { FC } from '~/types';
 import useSeasonsQuery, { SeasonRange } from '~/hooks/beanstalk/useSeasonsQuery';
 import { BaseDataPoint, ChartMultiStyles } from '../Common/Charts/ChartPropProvider';
