@@ -47,8 +47,8 @@ export function checkPoolCross(pool: string, timestamp: BigInt, blockNumber: Big
   let poolInfo = loadOrCreatePool(pool, blockNumber);
   let token = poolInfo.bean;
   let bean = loadBean(token);
-  let poolHourly = loadOrCreatePoolHourlySnapshot(token, timestamp, BigInt.fromI32(bean.lastSeason));
-  let poolDaily = loadOrCreatePoolDailySnapshot(token, timestamp, blockNumber);
+  let poolHourly = loadOrCreatePoolHourlySnapshot(pool, timestamp, BigInt.fromI32(bean.lastSeason));
+  let poolDaily = loadOrCreatePoolDailySnapshot(pool, timestamp, blockNumber);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
     let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, timestamp);
