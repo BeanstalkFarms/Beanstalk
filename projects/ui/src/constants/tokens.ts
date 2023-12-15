@@ -391,14 +391,6 @@ export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   UNRIPE_BEAN_WETH,
 ];
 
-export const ALL_LP_POOLS: ChainConstant<ERC20Token>[] = [
-  BEAN_CRV3_LP,
-  BEAN_ETH_WELL_LP,
-  BEAN_LUSD_LP,
-  BEAN_ETH_UNIV2_LP,
-  BEAN_CRV3_V1_LP
-]
-
 // All supported ERC20 tokens.
 export const ERC20_TOKENS: ChainConstant<ERC20Token>[] = [
   // Whitelisted Silo tokens

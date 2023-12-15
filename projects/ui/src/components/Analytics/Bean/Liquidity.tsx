@@ -6,12 +6,11 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 import useSeasonsQuery, { SeasonRange } from '~/hooks/beanstalk/useSeasonsQuery';
 import { BaseDataPoint, ChartMultiStyles } from '../../Common/Charts/ChartPropProvider';
-import useSdk from '~/hooks/sdk';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
 import BaseSeasonPlot, { QueryData } from '../../Common/Charts/BaseSeasonPlot';
-import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
-import { BeanstalkPalette } from '../../App/muiTheme';
 import { SeasonPlotBaseProps } from '~/components/Common/Charts/SeasonPlot';
+import { BEAN_CRV3_LP, BEAN_CRV3_V1_LP, BEAN_ETH_UNIV2_LP, BEAN_ETH_WELL_LP, BEAN_LUSD_LP } from '~/constants/tokens';
+import { BeanstalkPalette } from '../../App/muiTheme';
 
 /// Setup SeasonPlot
 const formatValue = (value: number) => (
@@ -28,8 +27,7 @@ const StatProps = {
 const Liquidity: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ 
   height, 
 }) => {
-  //
-  const sdk = useSdk();
+
   const timeTabParams = useTimeTabState();
   const season = useSeason();
   
@@ -39,27 +37,31 @@ const Liquidity: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
     return dataPoint?.value || 0;
   };
 
+  const BEAN_CRV3 = BEAN_CRV3_LP[1];
+  const BEAN_ETH_WELL = BEAN_ETH_WELL_LP[1];
+  const BEAN_ETH_UNIV2 = BEAN_ETH_UNIV2_LP[1];
   const BEAN_LUSD_LP_V1 = BEAN_LUSD_LP[1];
   const BEAN_CRV3_V1 = BEAN_CRV3_V1_LP[1];
 
   const poolList = [
-    sdk.pools.BEAN_CRV3,
-    sdk.pools.BEAN_ETH_WELL,
-    sdk.tokens.BEAN_ETH_UNIV2_LP,
+    BEAN_CRV3,
+    BEAN_ETH_WELL,
+    BEAN_ETH_UNIV2,
     BEAN_LUSD_LP_V1,
     BEAN_CRV3_V1,
   ];
 
+  // Order must be the same as poolList!
   const chartStyle: ChartMultiStyles = {
-    [sdk.pools.BEAN_CRV3.address]: { 
+    [BEAN_CRV3.address]: { 
       stroke: BeanstalkPalette.theme.spring.blue, 
       fillPrimary: BeanstalkPalette.theme.spring.lightBlue 
     },
-    [sdk.pools.BEAN_ETH_WELL.address]: { 
+    [BEAN_ETH_WELL.address]: { 
       stroke: BeanstalkPalette.theme.spring.beanstalkGreen, 
       fillPrimary: BeanstalkPalette.theme.spring.washedGreen 
     },
-    [sdk.tokens.BEAN_ETH_UNIV2_LP.address]: { 
+    [BEAN_ETH_UNIV2.address]: { 
       stroke: BeanstalkPalette.theme.spring.chart.purple, 
       fillPrimary: BeanstalkPalette.theme.spring.chart.purpleLight 
     },
@@ -75,27 +77,27 @@ const Liquidity: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
 
   // Filters non-relevant tokens from the tooltip on a per-season basis
   const seasonFilter = {
-    [sdk.tokens.BEAN_ETH_UNIV2_LP.address]: { from: 0, to: 6074 },
+    [BEAN_ETH_UNIV2.address]: { from: 0, to: 6074 },
     [BEAN_LUSD_LP_V1.address]: { from: 5502, to: 6074 },
     [BEAN_CRV3_V1.address]: { from: 3658, to: 6074 },
-    [sdk.pools.BEAN_CRV3.address]: { from: 6074, to: Infinity },
-    [sdk.pools.BEAN_ETH_WELL.address]: { from: 15241, to: Infinity },
+    [BEAN_CRV3.address]: { from: 6074, to: Infinity },
+    [BEAN_ETH_WELL.address]: { from: 15241, to: Infinity },
   };
 
   const queryConfigBeanCrv3 = useMemo(() => ({ 
-    variables: { pool: sdk.pools.BEAN_CRV3.address }, 
+    variables: { pool: BEAN_CRV3.address }, 
     context: { subgraph: 'bean' } 
-  }), [sdk.pools.BEAN_CRV3.address]);
+  }), [BEAN_CRV3.address]);
 
   const queryConfigBeanEthWell = useMemo(() => ({ 
-    variables: { pool: sdk.pools.BEAN_ETH_WELL.address }, 
+    variables: { pool: BEAN_ETH_WELL.address }, 
     context: { subgraph: 'bean' } 
-  }), [sdk.pools.BEAN_ETH_WELL.address]);
+  }), [BEAN_ETH_WELL.address]);
 
   const queryConfigBeanEthOld = useMemo(() => ({
-    variables: { pool: sdk.tokens.BEAN_ETH_UNIV2_LP.address }, 
+    variables: { pool: BEAN_ETH_UNIV2.address }, 
     context: { subgraph: 'bean' }
-  }), [sdk.tokens.BEAN_ETH_UNIV2_LP.address]);
+  }), [BEAN_ETH_UNIV2.address]);
 
   const queryConfigBeanLusdOld = useMemo(() => ({
     variables: { pool: BEAN_LUSD_LP_V1.address }, 
@@ -136,9 +138,9 @@ const Liquidity: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
     season: 0, 
     date: 0, 
     value: 0, 
-    [sdk.pools.BEAN_CRV3.address]: 0, 
-    [sdk.pools.BEAN_ETH_WELL.address]: 0,
-    [sdk.tokens.BEAN_ETH_UNIV2_LP.address]: 0,
+    [BEAN_CRV3.address]: 0, 
+    [BEAN_ETH_WELL.address]: 0,
+    [BEAN_ETH_UNIV2.address]: 0,
     [BEAN_LUSD_LP_V1.address]: 0,
     [BEAN_CRV3_V1.address]: 0,
   };
@@ -175,7 +177,7 @@ const Liquidity: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
       ChartProps={{
         getDisplayValue: getStatValue,
         tooltip: true,
-        useOldLpTokens: true,
+        useCustomTokenList: poolList,
         tokenPerSeasonFilter: seasonFilter,
         stylesConfig: chartStyle
       }}
