@@ -156,7 +156,9 @@ describe("Tractor", function () {
     it("Deposit Publisher Internal Beans", async function () {
       [advancedFarmCalls, this.blueprint.operatorPasteInstrs] =
         await draftDepositInternalBeanBalance(to6("10"));
-      this.blueprint.data = await encodeBlueprintData(advancedFarmCalls);
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
       this.requisition.blueprintHash = await this.tractorFacet
         .connect(publisher)
         .getBlueprintHash(this.blueprint);
@@ -207,7 +209,9 @@ describe("Tractor", function () {
         .mul(ethers.BigNumber.from(10).pow(6))
         .div(ethers.BigNumber.from(10).pow(10));
       [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftMow(tipRatio);
-      this.blueprint.data = await encodeBlueprintData(advancedFarmCalls);
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
       this.requisition.blueprintHash = await this.tractorFacet
         .connect(publisher)
         .getBlueprintHash(this.blueprint);
@@ -260,7 +264,9 @@ describe("Tractor", function () {
     // Tip operator 50% of Bean change in Beans.
     const tipRatio = ethers.BigNumber.from(1).mul(RATIO_FACTOR).div(2);
     [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftPlant(tipRatio);
-    this.blueprint.data = await encodeBlueprintData(advancedFarmCalls);
+    this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+      advancedFarmCalls
+    ]);
     this.requisition.blueprintHash = await this.tractorFacet
       .connect(publisher)
       .getBlueprintHash(this.blueprint);
