@@ -1,9 +1,11 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { getAltBeanstalk } = require("../utils/contracts.js");
+const { deployPipeline, impersonatePipeline } = require("../scripts/pipeline.js");
+const { impersonateSigner } = require("../utils/signer.js");
 const { toBN, encodeAdvancedData } = require("../utils/index.js");
 const {
-  initDrafter,
+  initContracts,
   signRequisition,
   encodeBlueprintData,
   draftDepositInternalBeanBalance,
@@ -42,12 +44,14 @@ describe("Tractor", function () {
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getAltBeanstalk(this.diamond.address);
     this.tractorFacet = await ethers.getContractAt("TractorFacet", this.diamond.address);
-    this.junctionFacet = await ethers.getContractAt("JunctionFacet", this.diamond.address);
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
     this.seasonFacet = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);
     this.siloFacet = await ethers.getContractAt("MockSiloFacet", this.diamond.address);
 
-    await initDrafter();
+    const pipeAccount = impersonateSigner("0x533545dE45Bd44e6B5a6D649256CCfE3b6E1abA6");
+    pipeline = await impersonatePipeline(pipeAccount);
+
+    await initContracts();
 
     this.bean = await ethers.getContractAt("Bean", BEAN);
 

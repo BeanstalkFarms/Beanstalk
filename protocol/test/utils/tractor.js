@@ -7,27 +7,36 @@ const { to6, to18 } = require("./helpers.js");
 // const ARRAY_LENGTH = 5;
 const SLOT_SIZE = 32;
 const SELECTOR_SIZE = 4;
-const ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE; // shape of AdvancedFarmCall.callData: 32 bytes (length of callData), 4 bytes (selector), X bytes (args)
-const ADDR_SLOT_OFFSET = 12; // 32 - 20
+const ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
+const EXTERNAL_ARGS_START_INDEX = SELECTOR_SIZE * 2 + SLOT_SIZE * 4 + SLOT_SIZE;
+const PIPE_RETURN_BYTE_OFFSET = 64;
+// const ADDR_SLOT_OFFSET = 12; // 32 - 20
 const PUBLISHER_COPY_INDEX = ethers.BigNumber.from(2).pow(80).sub(1); // MaxUint80;
 const OPERATOR_COPY_INDEX = PUBLISHER_COPY_INDEX.sub(1);
 
 const RATIO_FACTOR = ethers.BigNumber.from(10).pow(ethers.BigNumber.from(18));
 
 let drafterAddr;
+let junctionAddr;
 
 // Init test chain state for Drafter to function.
-const initDrafter = async () =>
-  (drafterAddr = await (
+const initContracts = async () => {
+  drafterAddr = await (
     await (await (await ethers.getContractFactory("Drafter")).deploy()).deployed()
-  ).address);
+  ).address;
+  console.log("Drafter deployed to:", drafterAddr);
+  junctionAddr = await (
+    await (await (await ethers.getContractFactory("Junction")).deploy()).deployed()
+  ).address;
+  console.log("Junction deployed to:", junctionAddr);
+};
 
 // Interfaces needed to encode calldata.
 const farmFacetInterface = async () => (await ethers.getContractFactory("FarmFacet")).interface;
-const junctionFacetInterface = async () =>
-  (await ethers.getContractFactory("JunctionFacet")).interface;
 const tokenFacetInterface = async () => (await ethers.getContractFactory("TokenFacet")).interface;
 const siloFacetInterface = async () => (await ethers.getContractFactory("SiloFacet")).interface;
+const junctionInterface = async () => (await ethers.getContractFactory("Junction")).interface;
+const pipelineInterface = async () => (await ethers.getContractFactory("Pipeline")).interface;
 
 // Need to actually execute the logic in Drafter pure functions.
 // Are these making actual rpc calls?
@@ -79,6 +88,23 @@ const encodeBlueprintData = async (advancedFarmCalls) => {
   );
 };
 
+// Shape:
+//      4 bytes  (pipe selector)
+//      32 bytes (location of PipeData)
+//      32 bytes (PipeData.target)
+//      n bytes  (PipeData.data)
+//        32 bytes (PipeData.data location)
+//        32 bytes (PipeData.data length)
+//        4 bytes  (PipeData.data external selector)
+//        n bytes  (PipeData.data external args)
+const wrapExternalCall = async (target, callData) => {
+  pipeCall = {
+    target: target,
+    data: callData
+  };
+  return (await pipelineInterface()).encodeFunctionData("pipe", [pipeCall]);
+};
+
 const draftInternalBalanceOfBeans = async (callNumber) => {
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
@@ -126,19 +152,22 @@ const draftDiffOfReturns = async (returnDataItemIndex0, returnDataItemIndex1) =>
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
   tmpAdvancedFarmCalls.push({
-    callData: (await junctionFacetInterface()).encodeFunctionData("sub", [0, 0]),
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("sub", [0, 0])
+    ),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
           await drafter.encodeLibReturnPasteParam(
             returnDataItemIndex0,
             SLOT_SIZE,
-            ARGS_START_INDEX
+            EXTERNAL_ARGS_START_INDEX
           ),
           await drafter.encodeLibReturnPasteParam(
             returnDataItemIndex1,
             SLOT_SIZE,
-            ARGS_START_INDEX + SLOT_SIZE
+            EXTERNAL_ARGS_START_INDEX + SLOT_SIZE
           )
         ])
     )
@@ -154,7 +183,6 @@ const draftDiffOfReturns = async (returnDataItemIndex0, returnDataItemIndex1) =>
  */
 const draftDepositInternalBeanBalance = async (tip) => {
   // Interfaces needed to encode calldata.
-  const junctionFacetInterface = (await ethers.getContractFactory("JunctionFacet")).interface;
   const farmFacetInterface = (await ethers.getContractFactory("FarmFacet")).interface;
   const tokenFacetInterface = (await ethers.getContractFactory("TokenFacet")).interface;
   const siloFacetInterface = (await ethers.getContractFactory("SiloFacet")).interface;
@@ -183,25 +211,34 @@ const draftDepositInternalBeanBalance = async (tip) => {
 
   // call[1] - Check if at least 1000 Beans in publisher internal balance.
   advancedFarmCalls.push({
-    callData: junctionFacetInterface.encodeFunctionData("gte", [0, to6("1000")]),
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("gte", [0, to6("1000")])
+    ),
     clipboard: await drafter.encodeClipboard(0, [
-      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX)
+      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
     ])
   });
 
   // call[2] - Require internal balance check true.
   advancedFarmCalls.push({
-    callData: junctionFacetInterface.encodeFunctionData("check", [false]),
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("check", [false])
+    ),
     clipboard: await drafter.encodeClipboard(1, [
-      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX)
+      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
     ])
   });
 
   // call[3] - Get difference between publisher internal balance and tip.
   advancedFarmCalls.push({
-    callData: junctionFacetInterface.encodeFunctionData("sub", [0, tip]),
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("sub", [0, tip])
+    ),
     clipboard: await drafter.encodeClipboard(0, [
-      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX)
+      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
     ])
   });
 
@@ -209,7 +246,11 @@ const draftDepositInternalBeanBalance = async (tip) => {
   advancedFarmCalls.push({
     callData: siloFacetInterface.encodeFunctionData("deposit", [BEAN, 0, INTERNAL]),
     clipboard: await drafter.encodeClipboard(0, [
-      await drafter.encodeLibReturnPasteParam(3, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+      await drafter.encodeLibReturnPasteParam(
+        3,
+        SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+        ARGS_START_INDEX + SLOT_SIZE
+      )
     ])
   });
 
@@ -296,15 +337,18 @@ const draftMow = async (rewardRatio) => {
 
   // call[4] - Get Bean reward amount from stalk balance difference.
   advancedFarmCalls.push({
-    callData: (await junctionFacetInterface()).encodeFunctionData("mulDiv", [
-      rewardRatio,
-      0,
-      RATIO_FACTOR
-    ]),
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("mulDiv", [rewardRatio, 0, RATIO_FACTOR])
+    ),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
-          await drafter.encodeLibReturnPasteParam(3, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+          await drafter.encodeLibReturnPasteParam(
+            3,
+            SLOT_SIZE,
+            EXTERNAL_ARGS_START_INDEX + SLOT_SIZE
+          )
         ])
     )
   });
@@ -361,15 +405,18 @@ const draftPlant = async (rewardRatio) => {
 
   // call[1] - Get Bean reward amount from stalk balance difference.
   advancedFarmCalls.push({
-    callData: (await junctionFacetInterface()).encodeFunctionData("mulDiv", [
-      rewardRatio,
-      0,
-      RATIO_FACTOR
-    ]),
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("mulDiv", [rewardRatio, 0, RATIO_FACTOR])
+    ),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
-          await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+          await drafter.encodeLibReturnPasteParam(
+            0,
+            SLOT_SIZE,
+            EXTERNAL_ARGS_START_INDEX + SLOT_SIZE
+          )
         ])
     )
   });
@@ -408,7 +455,7 @@ const draftPlant = async (rewardRatio) => {
 };
 
 module.exports = {
-  initDrafter,
+  initContracts,
   drafter,
   signRequisition,
   getNormalBlueprintData,
@@ -420,3 +467,14 @@ module.exports = {
   draftPlant,
   RATIO_FACTOR
 };
+
+////////// EXAMPLE PIPE -> JUNCTION FUNCTION_DATA //////////
+
+// 08e1a0ab // pipe selector
+// 0000000000000000000000000000000000000000000000000000000000000020 // arg0 (location of dynamic sized data - PipeCall)
+// 0000000000000000000000007969c5ed335650692bc04293b07f5bf2e7a673c0 // PipeCall.target
+// 0000000000000000000000000000000000000000000000000000000000000040 // PipeCall.data location
+// 0000000000000000000000000000000000000000000000000000000000000044 // length of PipeCall.data
+// b67d77c5 // selector
+// 0000000000000000000000000000000000000000000000000000000000000000 // external arg0
+// 0000000000000000000000000000000000000000000000000000000000000000 // external arg1
