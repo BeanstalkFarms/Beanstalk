@@ -70,6 +70,6 @@ const StyledButton = styled.button<ButtonProps>`
     ${BodyXS}
     font-weight: 600;
     padding: 8px 8px;
-    height: 40px;
+    height: 48x;
   }
 `;

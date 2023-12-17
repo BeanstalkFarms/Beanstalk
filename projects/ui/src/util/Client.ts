@@ -113,7 +113,7 @@ const { chains, provider } = configureChains(baseChains, [
     rpc: (_chain) => {
       // if we're on mainnet, use the alchemy RPC
       if (_chain.id === SupportedChainId.MAINNET)
-        return { http: ` https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}` };
+        return { http: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}` };
 
       // if we're on a testnet or dev, lookup what rpc to use
       if (!TESTNET_RPC_ADDRESSES[_chain.id]) {

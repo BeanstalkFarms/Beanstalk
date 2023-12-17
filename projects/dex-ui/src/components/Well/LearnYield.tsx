@@ -18,7 +18,7 @@ function YieldDetails() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Beanstalk UI
+          Beanstalk UI.
         </StyledLink>
       </div>
     </TextContainer>

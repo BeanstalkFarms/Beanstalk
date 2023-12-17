@@ -45,6 +45,14 @@ export const Github = ({ color = "#000", width, height }: SVGProps) => (
   </svg>
 );
 
+export const BeanstalkLogoBlack = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg width={width} height={height} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="24" fill={color} />
+    <path d="M30.7438 5.05786L16.7279 42.5026C16.7279 42.5026 1.18757 15.9919 30.7438 5.05786Z" fill="white" />
+    <path d="M19.9849 40.1793L29.8344 13.4126C29.8344 13.4126 47.9863 28.0973 19.9849 40.1793Z" fill="white" />
+  </svg>
+);
+
 export const YieldSparkle = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
     <path
@@ -209,9 +217,9 @@ export const RightArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps
   </svg>
 );
 
-export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24}: SVGProps) => (
-  <svg width={width}height={height} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <line x1="4" y1="7" x2="20" y2="7" stroke={color} strokeWidth="2"/>
-    <line x1="4" y1="15" x2="20" y2="15" stroke={color} strokeWidth="2"/>
+export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg width={width} height={height} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="4" y1="7" x2="20" y2="7" stroke={color} strokeWidth="2" />
+    <line x1="4" y1="15" x2="20" y2="15" stroke={color} strokeWidth="2" />
   </svg>
 );
