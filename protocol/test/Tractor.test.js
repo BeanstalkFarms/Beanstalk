@@ -14,7 +14,9 @@ const {
   draftMow,
   draftPlant,
   draftConvertUrBeanToUrLP,
-  RATIO_FACTOR
+  draftConvert,
+  RATIO_FACTOR,
+  ConvertKind
 } = require("./utils/tractor.js");
 const {
   BEAN,
@@ -35,17 +37,7 @@ const ZERO_BYTES = ethers.utils.formatBytes32String("0x0");
 let publisher, operator, user;
 let advancedFarmCalls;
 
-// async function reset() {
-//   await network.provider.request({
-//     method: "hardhat_reset",
-//     params: [{
-//       forking: {
-//         jsonRpcUrl: process.env.FORKING_RPC,
-//         blockNumber: ,
-//       },
-//     },],
-//   });
-// }
+// TODO remove old convert tractor test
 
 describe("Tractor", function () {
   before(async function () {
@@ -435,7 +427,8 @@ describe("Tractor", function () {
     it("Convert urBean to urLP", async function () {
       [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftConvertUrBeanToUrLP(
         to6("20"),
-        RATIO_FACTOR.div(10)
+        // RATIO_FACTOR.div(10)
+        0
       );
       this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls
@@ -450,6 +443,62 @@ describe("Tractor", function () {
       let operatorData = ethers.utils.defaultAbiCoder.encode(
         ["int96"], // stem
         [0]
+      );
+
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // Confirm final state.
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeBean.address),
+        "mid totalDeposited urBean"
+      ).to.eq("0");
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeBean.address),
+        "mid totalDepositedBDV urBean"
+      ).to.eq("0");
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeLP.address),
+        "mid totalDeposited urLP"
+      ).to.gt("0");
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
+        "mid totalDepositedBDV urLP"
+      ).to.gt("0");
+      expect(await this.siloFacet.totalStalk(), "mid totalStalk").to.gt(toStalk("2000"));
+      expect(
+        await this.siloFacet.balanceOfStalk(publisher.address),
+        "mid publisher balanceOfStalk"
+      ).to.gt(toStalk("2000"));
+
+      let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
+      expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
+      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      expect(deposit[0], "mid publisher urLP deposit amount").to.gt("0");
+      expect(deposit[1], "mid publisher urLP deposit BDV").to.eq(to6("2000"));
+    });
+
+    it("Generalized UR convert", async function () {
+      [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftConvert(
+        to6("20"),
+        // RATIO_FACTOR.div(2), // minUrLpPerUrBeanRatio = 50%
+        // RATIO_FACTOR.div(2) // minUrBeanPerUrLpRatio = 50%
+        0,
+        0
+      );
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+      await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+
+      // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
+      let operatorData = ethers.utils.defaultAbiCoder.encode(
+        ["int96", "uint8"], // stem, convertKind
+        [0, ConvertKind.UNRIPE_BEANS_TO_LP]
       );
 
       await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);

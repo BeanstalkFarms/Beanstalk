@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
-const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN } = require("./constants.js");
+const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP } = require("./constants.js");
 const { to6, to18 } = require("./helpers.js");
 
 // const ARRAY_LENGTH = 5;
@@ -13,8 +13,11 @@ const PIPE_RETURN_BYTE_OFFSET = 64;
 // const ADDR_SLOT_OFFSET = 12; // 32 - 20
 const PUBLISHER_COPY_INDEX = ethers.BigNumber.from(2).pow(80).sub(1); // MaxUint80;
 const OPERATOR_COPY_INDEX = PUBLISHER_COPY_INDEX.sub(1);
+// NOTE copy and paste byte indices are for the largest index of the 32 bytes (ie the rightmost byte, ie the most significant byte)
+//      This was unexpected to me, but seemingly intentional in the clipboard paste32Bytes implementation.
 
 const TO_FILL = 0;
+const TO_FILL_BYTES = ethers.utils.hexZeroPad(0, 32);
 
 const RATIO_FACTOR = ethers.BigNumber.from(10).pow(ethers.BigNumber.from(18));
 
@@ -107,13 +110,13 @@ const encodeBlueprintData = async (advancedFarmCalls) => {
 
 // Shape:
 //      4 bytes  (pipe selector)
-//      32 bytes (location of PipeData)
-//      32 bytes (PipeData.target)
-//      n bytes  (PipeData.data)
-//        32 bytes (PipeData.data location)
-//        32 bytes (PipeData.data length)
-//        4 bytes  (PipeData.data external selector)
-//        n bytes  (PipeData.data external args)
+//      32 bytes (location of PipeCall)
+//      32 bytes (PipeCall.target)
+//      n bytes  (PipeCall.data)
+//        32 bytes (PipeCall.data location)
+//        32 bytes (PipeCall.data length)
+//        4 bytes  (PipeCall.data external selector)
+//        n bytes  (PipeCall.data external args)
 const wrapExternalCall = async (target, callData) => {
   pipeCall = {
     target: target,
@@ -500,7 +503,7 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
 
   // Call[1] - Junction get deposit balance in Beans.
   advancedFarmCalls.push({
-    callData: (await siloFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, BEAN]),
+    callData: (await siloFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
@@ -524,7 +527,11 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
     clipboard: await drafter().then(
       async (drafter) =>
         await drafter.encodeClipboard(0, [
-          await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+          await drafter.encodeLibReturnPasteParam(
+            1,
+            SLOT_SIZE,
+            EXTERNAL_ARGS_START_INDEX + SLOT_SIZE
+          )
         ])
     )
   });
@@ -532,7 +539,6 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
   // call[3] - Convert.
   // Shape
   //     4 bytes convert selector
-  // ?
   //     32 bytes location of convertData (100)
   //     32 bytes location of stems (160)
   //     32 bytes location of amounts (244)
@@ -558,8 +564,12 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
         await drafter.encodeClipboard(0, [
           // amountIn (== balanceOf deposit)
           await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 5),
-          // minAmountOut
-          await drafter.encodeLibReturnPasteParam(2, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 6),
+          // minAmountOut // NOTE this is not being well exercised. Should confirm in test that it is not 0.
+          await drafter.encodeLibReturnPasteParam(
+            2,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            ARGS_START_INDEX + SLOT_SIZE * 6
+          ),
           // amounts[0] (== amountIn == balanceOf deposit)
           await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 10)
         ])
@@ -597,6 +607,227 @@ const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
   return [advancedFarmCalls, operatorPasteInstrs];
 };
 
+/**
+ * Blueprint allowing the Operator to Convert one entire urLP deposit to urBean of the Publisher.
+ * Operator is rewarded flat rate tip.
+ */
+const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) => {
+  // AdvancedFarmCall[]
+  let advancedFarmCalls = [];
+
+  // bytes32[]
+  let operatorPasteInstrs = [];
+
+  // Call[0] - Junction get tokenIn address.
+  advancedFarmCalls.push({
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (
+        await junctionInterface()
+      ).encodeFunctionData("bytes32Switch", [
+        TO_FILL,
+        [
+          ethers.utils.hexZeroPad(0, 32),
+          ethers.utils.hexZeroPad(0, 32),
+          ethers.utils.hexZeroPad(UNRIPE_BEAN, 32), // left pad address
+          ethers.utils.hexZeroPad(UNRIPE_LP, 32) // left pad address
+          // ethers.utils.hexConcat([UNRIPE_BEAN, "0x000000000000000000000000"]), // right pad address
+          // ethers.utils.hexConcat([UNRIPE_LP, "0x000000000000000000000000"]) // right pad address
+        ]
+      ])
+    ),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+  console.log("byte padding");
+  console.log(UNRIPE_BEAN);
+  console.log(ethers.utils.hexZeroPad(UNRIPE_BEAN, 32));
+  console.log(minUrLpPerUrBeanRatio);
+  console.log(ethers.utils.hexZeroPad(minUrLpPerUrBeanRatio, 32));
+  // Get convert type as switch selector.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE * 2, 0, EXTERNAL_ARGS_START_INDEX)
+    )
+  );
+
+  // Call[1] - Junction get min out per in.
+  advancedFarmCalls.push({
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (
+        await junctionInterface()
+      ).encodeFunctionData("bytes32Switch", [
+        TO_FILL,
+        [
+          ethers.constants.MaxUint256,
+          ethers.constants.MaxUint256,
+          ethers.utils.hexZeroPad(minUrLpPerUrBeanRatio, 32),
+          ethers.utils.hexZeroPad(minUrBeanPerUrLpRatio, 32)
+        ]
+      ])
+    ),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+  // Get convert type as switch selector.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        // convert type
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE * 2, 1, EXTERNAL_ARGS_START_INDEX)
+    )
+  );
+
+  // Call[2] - Get deposit ID.
+  advancedFarmCalls.push({
+    callData: (await siloFacetInterface()).encodeFunctionData("getDepositId", [
+      ZERO_ADDRESS,
+      TO_FILL // stem
+    ]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          // deposit token
+          await drafter.encodeLibReturnPasteParam(
+            0,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            ARGS_START_INDEX
+          )
+        ])
+    )
+  });
+  // Get stem from operator data.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE, 2, ARGS_START_INDEX + SLOT_SIZE)
+    )
+  );
+
+  // Call[3] - Get deposit amount.
+  advancedFarmCalls.push({
+    callData: (await siloFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, TO_FILL]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          // deposit ID
+          await drafter.encodeLibReturnPasteParam(2, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+        ])
+    )
+  });
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        // account
+        await drafter.encodeOperatorPasteInstr(PUBLISHER_COPY_INDEX, 3, ARGS_START_INDEX)
+    )
+  );
+
+  // Call[4] - Junction get min out.
+  advancedFarmCalls.push({
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("mulDiv", [TO_FILL, TO_FILL, RATIO_FACTOR])
+    ),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          // Min out per in.
+          await drafter.encodeLibReturnPasteParam(
+            1,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            EXTERNAL_ARGS_START_INDEX
+          ),
+          // Deposit amount.
+          await drafter.encodeLibReturnPasteParam(
+            3,
+            SLOT_SIZE,
+            EXTERNAL_ARGS_START_INDEX + SLOT_SIZE
+          )
+        ])
+    )
+  });
+
+  // call[5] - Convert.
+  // Shape
+  //     32 bytes - length
+  //     4 bytes convert selector
+  //     32 bytes location of convertData (100)
+  //     32 bytes location of stems (160)
+  //     32 bytes location of amounts (244)
+  //     32 bytes - length of convertData (65)
+  //     32 bytes - convert kind (UNRIPE_LP_TO_BEANS)
+  //     32 bytes - amountIn
+  //     32 bytes - minAmountOut
+  //     32 bytes - length of stems (32)
+  //     32 bytes - stems[0]
+  //     32 bytes - length of amounts (32)
+  //     32 bytes - amounts[0]
+  advancedFarmCalls.push({
+    callData: convertFacetInterface.encodeFunctionData("convert", [
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "uint256", "uint256"], // type, amountIn, minAmountOut
+        [TO_FILL, TO_FILL, TO_FILL]
+      ), // convertData
+      [TO_FILL], // stems
+      [TO_FILL] // amounts
+    ]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          // amountIn (== balanceOf deposit)
+          await drafter.encodeLibReturnPasteParam(3, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 5),
+          // minAmountOut
+          await drafter.encodeLibReturnPasteParam(
+            4,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            ARGS_START_INDEX + SLOT_SIZE * 6
+          ),
+          // amounts[0] (== amountIn == balanceOf deposit)
+          await drafter.encodeLibReturnPasteParam(3, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 10)
+        ])
+    )
+  });
+  // convert type.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        // convert type
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE * 2, 5, ARGS_START_INDEX + SLOT_SIZE * 4)
+    )
+  );
+  // Get stem from operator data.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE, 5, ARGS_START_INDEX + SLOT_SIZE * 8)
+    )
+  );
+
+  // call[6] - Transfer Bean reward to operator from publisher internal balance.
+  advancedFarmCalls.push({
+    callData: (await tokenFacetInterface()).encodeFunctionData("transferToken", [
+      BEAN,
+      ZERO_ADDRESS,
+      tip,
+      INTERNAL,
+      EXTERNAL
+    ]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(OPERATOR_COPY_INDEX, 6, ARGS_START_INDEX + SLOT_SIZE)
+    )
+  );
+
+  console.log(advancedFarmCalls);
+  console.log(operatorPasteInstrs);
+
+  return [advancedFarmCalls, operatorPasteInstrs];
+};
+
 module.exports = {
   initContracts,
   drafter,
@@ -609,16 +840,7 @@ module.exports = {
   draftMow,
   draftPlant,
   draftConvertUrBeanToUrLP,
-  RATIO_FACTOR
+  draftConvert,
+  RATIO_FACTOR,
+  ConvertKind
 };
-
-////////// EXAMPLE PIPE -> JUNCTION FUNCTION_DATA //////////
-
-// 08e1a0ab // pipe selector
-// 0000000000000000000000000000000000000000000000000000000000000020 // arg0 (location of dynamic sized data - PipeCall)
-// 0000000000000000000000007969c5ed335650692bc04293b07f5bf2e7a673c0 // PipeCall.target
-// 0000000000000000000000000000000000000000000000000000000000000040 // PipeCall.data location
-// 0000000000000000000000000000000000000000000000000000000000000044 // length of PipeCall.data
-// b67d77c5 // selector
-// 0000000000000000000000000000000000000000000000000000000000000000 // external arg0
-// 0000000000000000000000000000000000000000000000000000000000000000 // external arg1
