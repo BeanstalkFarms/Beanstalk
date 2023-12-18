@@ -33,4 +33,11 @@ contract LogicJunction {
     function neq(uint256 a, uint256 b) public pure returns (bool) {
         return a != b;
     }
+
+    function bytes32Switch(
+        uint256 selector,
+        bytes32[] calldata options
+    ) public pure returns (bytes32) {
+        return options[selector];
+    }
 }
