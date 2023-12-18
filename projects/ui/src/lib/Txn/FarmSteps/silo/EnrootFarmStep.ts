@@ -13,9 +13,12 @@ enum EnrootType {
 }
 
 export class EnrootFarmStep extends FarmStep implements EstimatesGas {
+
+  _crates: Record<string, LegacyDepositCrate[]>
+
   constructor(
     _sdk: BeanstalkSDK,
-    private _crates: Record<string, LegacyDepositCrate[]>
+    _crates: Record<string, LegacyDepositCrate[]>
   ) {
     super(_sdk);
     this._crates = _crates;

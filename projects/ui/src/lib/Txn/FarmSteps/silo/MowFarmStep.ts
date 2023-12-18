@@ -4,25 +4,26 @@ import { ethers } from 'ethers';
 import { FarmStep, EstimatesGas } from '~/lib/Txn/Interface';
 
 export class MowFarmStep extends FarmStep implements EstimatesGas {
-  private _account: string;
+  _account: string;
 
-  private _grownByToken: Map<Token, TokenValue>;
+  _tokensToMow: Map<Token, TokenValue>;
 
   constructor(
     _sdk: BeanstalkSDK,
     _account: string,
-    _grownByToken: Map<Token, TokenValue>
-    // This step now calls mowMultiple on all tokens that have Grown Stalk
+    _tokensToMow: Map<Token, TokenValue>
+    // This step now calls mow or mowMultiple depending on how many tokens
+    // are in _tokensToMow
   ) {
     super(_sdk);
     this._account = _account;
-    this._grownByToken = _grownByToken;
+    this._tokensToMow = _tokensToMow;
   }
 
   async estimateGas(): Promise<ethers.BigNumber> {
     const { beanstalk } = this._sdk.contracts;
     const tokensToMow: string[] = [];
-    this._grownByToken.forEach((grown, token) => {
+    this._tokensToMow.forEach((grown, token) => {
       if (grown.gt(0)) {
         tokensToMow.push(token.address);
       }
@@ -50,7 +51,7 @@ export class MowFarmStep extends FarmStep implements EstimatesGas {
 
     const { beanstalk } = this._sdk.contracts;
     const tokensToMow: string[] = [];
-    this._grownByToken.forEach((grown, token) => {
+    this._tokensToMow.forEach((grown, token) => {
       if (grown.gt(0)) {
         tokensToMow.push(token.address);
       }
