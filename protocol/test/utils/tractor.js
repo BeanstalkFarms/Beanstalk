@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
-const { BEAN, ZERO_ADDRESS } = require("./constants.js");
+const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN } = require("./constants.js");
 const { to6, to18 } = require("./helpers.js");
 
 // const ARRAY_LENGTH = 5;
@@ -14,7 +14,19 @@ const PIPE_RETURN_BYTE_OFFSET = 64;
 const PUBLISHER_COPY_INDEX = ethers.BigNumber.from(2).pow(80).sub(1); // MaxUint80;
 const OPERATOR_COPY_INDEX = PUBLISHER_COPY_INDEX.sub(1);
 
+const TO_FILL = 0;
+
 const RATIO_FACTOR = ethers.BigNumber.from(10).pow(ethers.BigNumber.from(18));
+
+// Copied from protocol/test/Tractor.test.js
+const ConvertKind = {
+  BEANS_TO_CURVE_LP: 0,
+  CURVE_LP_TO_BEANS: 1,
+  UNRIPE_BEANS_TO_LP: 2,
+  UNRIPE_LP_TO_BEANS: 3,
+  BEANS_TO_WELL_LP: 5,
+  WELL_LP_TO_BEANS: 6
+};
 
 let drafterAddr;
 let junctionAddr;
@@ -31,10 +43,15 @@ const initContracts = async () => {
   console.log("Junction deployed to:", junctionAddr);
 };
 
+// TODO clean up use of interfaces. Clearly this is not how hardhat wants to be used.
+const convertFacetInterface = new ethers.utils.Interface([
+  "function convert(bytes convertData, int96[] stems, uint256[] amounts) returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)"
+]);
 // Interfaces needed to encode calldata.
 const farmFacetInterface = async () => (await ethers.getContractFactory("FarmFacet")).interface;
 const tokenFacetInterface = async () => (await ethers.getContractFactory("TokenFacet")).interface;
 const siloFacetInterface = async () => (await ethers.getContractFactory("SiloFacet")).interface;
+// const convertFacetInterface = async () => (await ethers.getContractFactory("ConvertFacet")).interface;
 const junctionInterface = async () => (await ethers.getContractFactory("Junction")).interface;
 const pipelineInterface = async () => (await ethers.getContractFactory("Pipeline")).interface;
 
@@ -454,6 +471,132 @@ const draftPlant = async (rewardRatio) => {
   return [advancedFarmCalls, operatorPasteInstrs];
 };
 
+/**
+ * Blueprint allowing the Operator to Convert one entire urBean deposit to urLP of the Publisher.
+ * Operator is rewarded flat rate tip.
+ */
+const draftConvertUrBeanToUrLP = async (tip, minOutLpPerBean) => {
+  // AdvancedFarmCall[]
+  let advancedFarmCalls = [];
+
+  // bytes32[]
+  let operatorPasteInstrs = [];
+
+  // Call[0] - Junction get deposit ID.
+  advancedFarmCalls.push({
+    callData: (await siloFacetInterface()).encodeFunctionData("getDepositId", [
+      UNRIPE_BEAN,
+      0 // stem
+    ]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+  // Get stem from operator data.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE, 0, ARGS_START_INDEX + SLOT_SIZE)
+    )
+  );
+
+  // Call[1] - Junction get deposit balance in Beans.
+  advancedFarmCalls.push({
+    callData: (await siloFacetInterface()).encodeFunctionData("balanceOf", [ZERO_ADDRESS, BEAN]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+        ])
+    )
+  });
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(PUBLISHER_COPY_INDEX, 1, ARGS_START_INDEX)
+    )
+  );
+
+  // Call[2] - Junction get min LP out.
+  advancedFarmCalls.push({
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("mulDiv", [minOutLpPerBean, 0, RATIO_FACTOR])
+    ),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE)
+        ])
+    )
+  });
+
+  // call[3] - Convert.
+  // Shape
+  //     4 bytes convert selector
+  // ?
+  //     32 bytes location of convertData (100)
+  //     32 bytes location of stems (160)
+  //     32 bytes location of amounts (244)
+  //     32 bytes - length of convertData (65)
+  //     32 bytes - convert kind (UNRIPE_LP_TO_BEANS)
+  //     32 bytes - amountIn
+  //     32 bytes - minAmountOut
+  //     32 bytes - length of stems (32)
+  //     32 bytes - stems[0]
+  //     32 bytes - length of amounts (32)
+  //     32 bytes - amounts[0]
+  advancedFarmCalls.push({
+    callData: convertFacetInterface.encodeFunctionData("convert", [
+      ethers.utils.defaultAbiCoder.encode(
+        ["uint256", "uint256", "uint256"], // type, amountIn, minAmountOut
+        [ConvertKind.UNRIPE_BEANS_TO_LP, TO_FILL, TO_FILL]
+      ), // convertData
+      [TO_FILL], // stems
+      [TO_FILL] // amounts
+    ]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          // amountIn (== balanceOf deposit)
+          await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 5),
+          // minAmountOut
+          await drafter.encodeLibReturnPasteParam(2, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 6),
+          // amounts[0] (== amountIn == balanceOf deposit)
+          await drafter.encodeLibReturnPasteParam(1, SLOT_SIZE, ARGS_START_INDEX + SLOT_SIZE * 10)
+        ])
+    )
+  });
+  // Get stem from operator data.
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(SLOT_SIZE, 3, ARGS_START_INDEX + SLOT_SIZE * 8)
+    )
+  );
+
+  // call[4] - Transfer Bean reward to operator from publisher internal balance.
+  advancedFarmCalls.push({
+    callData: (await tokenFacetInterface()).encodeFunctionData("transferToken", [
+      BEAN,
+      ZERO_ADDRESS,
+      tip,
+      INTERNAL,
+      EXTERNAL
+    ]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+  operatorPasteInstrs.push(
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(OPERATOR_COPY_INDEX, 4, ARGS_START_INDEX + SLOT_SIZE)
+    )
+  );
+
+  console.log(advancedFarmCalls);
+  console.log(operatorPasteInstrs);
+
+  return [advancedFarmCalls, operatorPasteInstrs];
+};
+
 module.exports = {
   initContracts,
   drafter,
@@ -465,6 +608,7 @@ module.exports = {
   draftDepositInternalBeanBalance,
   draftMow,
   draftPlant,
+  draftConvertUrBeanToUrLP,
   RATIO_FACTOR
 };
 

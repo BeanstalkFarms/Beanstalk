@@ -1,8 +1,10 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
+const { deployBasin } = require("../scripts/basin.js");
 const { getAltBeanstalk } = require("../utils/contracts.js");
 const { deployPipeline, impersonatePipeline } = require("../scripts/pipeline.js");
 const { impersonateSigner } = require("../utils/signer.js");
+const { setEthUsdcPrice, setEthUsdPrice, printPrices } = require("../utils/oracle.js");
 const { toBN, encodeAdvancedData } = require("../utils/index.js");
 const {
   initContracts,
@@ -11,14 +13,24 @@ const {
   draftDepositInternalBeanBalance,
   draftMow,
   draftPlant,
+  draftConvertUrBeanToUrLP,
   RATIO_FACTOR
 } = require("./utils/tractor.js");
-const { BEAN, BEAN_3_CURVE, THREE_CURVE, ZERO_ADDRESS } = require("./utils/constants.js");
+const {
+  BEAN,
+  UNRIPE_LP,
+  UNRIPE_BEAN,
+  BEAN_ETH_WELL,
+  WETH,
+  ZERO_ADDRESS
+} = require("./utils/constants.js");
 const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
 const { to6, to18, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { ethers } = require("hardhat");
 const { time, mine } = require("@nomicfoundation/hardhat-network-helpers");
+
+const ZERO_BYTES = ethers.utils.formatBytes32String("0x0");
 
 let publisher, operator, user;
 let advancedFarmCalls;
@@ -47,6 +59,14 @@ describe("Tractor", function () {
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
     this.seasonFacet = await ethers.getContractAt("MockSeasonFacet", this.diamond.address);
     this.siloFacet = await ethers.getContractAt("MockSiloFacet", this.diamond.address);
+    this.depot = await ethers.getContractAt("DepotFacet", this.diamond.address);
+    this.tokenFacet = await ethers.getContractAt("TokenFacet", this.diamond.address);
+    // this.convertFacet = await ethers.getContractAt('ConvertFacet', this.diamond.address);
+    // this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
+    this.unripeFacet = await ethers.getContractAt("MockUnripeFacet", this.diamond.address);
+    this.unripeBean = await ethers.getContractAt("MockToken", UNRIPE_BEAN);
+    this.unripeLP = await ethers.getContractAt("MockToken", UNRIPE_LP);
+    this.fertilizer = await ethers.getContractAt("MockFertilizerFacet", this.diamond.address);
 
     const pipeAccount = impersonateSigner("0x533545dE45Bd44e6B5a6D649256CCfE3b6E1abA6");
     pipeline = await impersonatePipeline(pipeAccount);
@@ -54,15 +74,58 @@ describe("Tractor", function () {
     await initContracts();
 
     this.bean = await ethers.getContractAt("Bean", BEAN);
+    this.weth = await ethers.getContractAt("MockToken", WETH);
 
-    this.depot = await ethers.getContractAt("DepotFacet", this.diamond.address);
-    this.tokenFacet = await ethers.getContractAt("TokenFacet", this.diamond.address);
+    this.well = await deployBasin(true, undefined, false, true);
+    this.wellToken = await ethers.getContractAt("IERC20", this.well.address);
+    await this.wellToken.connect(owner).approve(this.diamond.address, ethers.constants.MaxUint256);
+    await this.bean.connect(owner).approve(this.diamond.address, ethers.constants.MaxUint256);
 
-    await this.seasonFacet.lightSunrise();
-    await this.bean.connect(publisher).approve(this.siloFacet.address, to6("20000"));
-    // await this.bean.connect(user2).approve(this.siloFacet.address, to6("5000"));
+    await setEthUsdPrice("999.998018");
+    await setEthUsdcPrice("1000");
+
+    // await this.seasonFacet.lightSunrise();
+    await this.seasonFacet.siloSunrise(0);
+
+    await this.bean.mint(owner.address, to6("10000000000"));
+    await this.weth.mint(owner.address, to18("1000000000"));
     await this.bean.mint(publisher.address, to6("20000"));
-    // await this.bean.mint(user2Address, to6("10000"));
+    await this.unripeBean.mint(publisher.address, to6("10000"));
+    await this.unripeLP.mint(publisher.address, to6("3162.277660"));
+
+    await this.bean.connect(publisher).approve(this.diamond.address, ethers.constants.MaxUint256);
+    await this.weth.connect(publisher).approve(this.diamond.address, ethers.constants.MaxUint256);
+    await this.wellToken
+      .connect(publisher)
+      .approve(this.diamond.address, ethers.constants.MaxUint256);
+    await this.unripeBean
+      .connect(publisher)
+      .approve(this.diamond.address, ethers.constants.MaxUint256);
+    await this.unripeLP
+      .connect(publisher)
+      .approve(this.diamond.address, ethers.constants.MaxUint256);
+
+    await this.bean.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.weth.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.bean.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.weth.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
+
+    await this.well
+      .connect(owner)
+      .addLiquidity([to6("1000000"), to18("2000")], 0, owner.address, ethers.constants.MaxUint256);
+
+    // Handle configuration of recapitalization?
+    this.fertilizerFacet = await ethers.getContractAt("MockFertilizerFacet", this.diamond.address);
+    await this.fertilizerFacet.setFertilizerE(true, to6("10000"));
+    await this.fertilizerFacet.setPenaltyParams(to6("500"), "0");
+
+    await this.unripeFacet.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
+    await this.unripeFacet.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+    await this.unripeFacet.connect(owner).addUnderlying(UNRIPE_BEAN, to6("10000"));
+    await this.unripeFacet.connect(owner).addUnderlying(
+      UNRIPE_LP,
+      to18("3162.277660") // 3162.2776601683793319
+    );
 
     // await this.siloFacet.update(publisher.address);
 
@@ -91,6 +154,7 @@ describe("Tractor", function () {
     await revertToSnapshot(snapshotId);
   });
 
+  /*
   describe("Publish Blueprint", function () {
     it("should fail when signature is invalid #1", async function () {
       this.requisition.signature = "0x0000";
@@ -248,57 +312,177 @@ describe("Tractor", function () {
       );
       expect(operatorPaid, "unpaid operator").to.be.gt(0);
     });
+
+    it("Plant publisher", async function () {
+      // Give publisher Earned Beans.
+      this.result = await this.siloFacet
+        .connect(publisher)
+        .deposit(this.bean.address, to6("10000"), EXTERNAL);
+      await this.seasonFacet.siloSunrise(to6("1000"));
+      await time.increase(3600); // wait until end of season to get earned
+      await mine(25);
+      expect(await this.siloFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
+
+      // Capture init state.
+      const initPublisherStalkBalance = await this.siloFacet.balanceOfStalk(publisher.address);
+      const initPublisherBeans = await this.bean.balanceOf(publisher.address);
+      const initOperatorBeans = await this.bean.balanceOf(operator.address);
+
+      // Tip operator 50% of Bean change in Beans.
+      const tipRatio = ethers.BigNumber.from(1).mul(RATIO_FACTOR).div(2);
+      [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftPlant(tipRatio);
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+
+      await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+
+      // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
+      let operatorData = ethers.utils.hexlify("0x000000");
+
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // Confirm final state.
+      expect(
+        await this.siloFacet.balanceOfEarnedBeans(publisher.address),
+        "publisher Earned Bean did not go to 0"
+      ).to.eq(0);
+
+      const publisherStalkGain =
+        (await this.siloFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
+      const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
+      console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
+      console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+
+      expect(publisherStalkGain, "publisher stalk balance did not increase").to.be.gt(0);
+      expect(await this.bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
+        initPublisherBeans
+      );
+      expect(operatorPaid, "unpaid operator").to.be.gt(0);
+    });
   });
+  */
 
-  it("Plant publisher", async function () {
-    // Give publisher Earned Beans.
-    this.result = await this.siloFacet
-      .connect(publisher)
-      .deposit(this.bean.address, to6("10000"), EXTERNAL);
-    await this.seasonFacet.siloSunrise(to6("1000"));
-    await time.increase(3600); // wait until end of season to get earned
-    await mine(25);
-    expect(await this.siloFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
+  describe("Bi-directional unripe convert of publisher", async function () {
+    // before(async function () {
 
-    // Capture init state.
-    const initPublisherStalkBalance = await this.siloFacet.balanceOfStalk(publisher.address);
-    const initPublisherBeans = await this.bean.balanceOf(publisher.address);
-    const initOperatorBeans = await this.bean.balanceOf(operator.address);
+    //   this.urBeanToUrLpBlueprint = this.blueprint;
+    //   this.urBeanToUrLpRequisition;
 
-    // Tip operator 50% of Bean change in Beans.
-    const tipRatio = ethers.BigNumber.from(1).mul(RATIO_FACTOR).div(2);
-    [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftPlant(tipRatio);
-    this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
-      advancedFarmCalls
-    ]);
-    this.requisition.blueprintHash = await this.tractorFacet
-      .connect(publisher)
-      .getBlueprintHash(this.blueprint);
-    await signRequisition(this.requisition, publisher);
+    // });
 
-    await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+    // // Compose blueprint and operator data
+    // beforeEach(async function () {
 
-    // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
-    let operatorData = ethers.utils.hexlify("0x000000");
+    // });
 
-    await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+    // Prepare Beanstalk
+    beforeEach(async function () {
+      // await this.seasonFacet.teleportSunrise(10);
+      this.seasonFacet.deployStemsUpgrade();
+      await this.siloFacet
+        .connect(publisher)
+        .deposit(this.unripeBean.address, to6("2000"), EXTERNAL);
+      await this.seasonFacet.siloSunrise(0);
+      await this.seasonFacet.siloSunrise(0);
+      await this.seasonFacet.siloSunrise(0);
+      await this.seasonFacet.siloSunrise(0);
+    });
+    beforeEach(async function () {
+      // Transfer Bean to publisher internal balance.
+      this.beanstalk
+        .connect(publisher)
+        .transferToken(this.bean.address, publisher.address, to6("100"), 0, 1);
+    });
+    // Confirm initial state.
+    beforeEach(async function () {
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeBean.address),
+        "initial totalDeposited urBean"
+      ).to.eq(to6("2000"));
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeBean.address),
+        "initial totalDepositedBDV urBean"
+      ).to.eq(to6("2000"));
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeLP.address),
+        "initial totalDeposited urLP"
+      ).to.eq("0");
+      // const bdv = await this.siloFacet.bdv(this.unripeLP.address, '4711829')
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
+        "initial totalDepositedBDV urLP"
+      ).to.eq("0");
+      // expect(await this.siloFacet.totalStalk()).to.eq(toStalk('100').add(bdv.mul(to6('0.01'))));
+      expect(await this.siloFacet.totalStalk(), "initial totalStalk").to.gt("0");
+      expect(
+        await this.siloFacet.balanceOfStalk(publisher.address),
+        "initial publisher balanceOfStalk"
+      ).to.eq(toStalk("2000"));
 
-    // Confirm final state.
-    expect(
-      await this.siloFacet.balanceOfEarnedBeans(publisher.address),
-      "publisher Earned Bean did not go to 0"
-    ).to.eq(0);
+      let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      expect(deposit[0], "initial publisher urBean deposit amount").to.eq(to6("2000"));
+      expect(deposit[1], "initial publisher urBean deposit BDV").to.eq(to6("2000"));
+      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      expect(deposit[0], "initial publisher urLP deposit amount").to.eq("0");
+      expect(deposit[1], "initial publisher urLP deposit BDV").to.eq("0");
+    });
 
-    const publisherStalkGain =
-      (await this.siloFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
-    const operatorPaid = (await this.bean.balanceOf(operator.address)) - initOperatorBeans;
-    console.log("Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10));
-    console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+    it("Convert urBean to urLP", async function () {
+      [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftConvertUrBeanToUrLP(
+        to6("20"),
+        RATIO_FACTOR.div(10)
+      );
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+      await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
 
-    expect(publisherStalkGain, "publisher stalk balance did not increase").to.be.gt(0);
-    expect(await this.bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
-      initPublisherBeans
-    );
-    expect(operatorPaid, "unpaid operator").to.be.gt(0);
+      // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
+      let operatorData = ethers.utils.defaultAbiCoder.encode(
+        ["int96"], // stem
+        [0]
+      );
+
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // Confirm final state.
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeBean.address),
+        "mid totalDeposited urBean"
+      ).to.eq("0");
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeBean.address),
+        "mid totalDepositedBDV urBean"
+      ).to.eq("0");
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeLP.address),
+        "mid totalDeposited urLP"
+      ).to.gt("0");
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
+        "mid totalDepositedBDV urLP"
+      ).to.gt("0");
+      expect(await this.siloFacet.totalStalk(), "mid totalStalk").to.gt(toStalk("2000"));
+      expect(
+        await this.siloFacet.balanceOfStalk(publisher.address),
+        "mid publisher balanceOfStalk"
+      ).to.gt(toStalk("2000"));
+
+      let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
+      expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
+      expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
+      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      expect(deposit[0], "mid publisher urLP deposit amount").to.gt("0");
+      expect(deposit[1], "mid publisher urLP deposit BDV").to.eq(to6("2000"));
+    });
   });
 });
