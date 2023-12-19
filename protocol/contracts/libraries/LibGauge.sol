@@ -43,7 +43,7 @@ library LibGauge {
     /**
      * @notice Emitted when the AverageGrownStalkPerBdvPerSeason Updates.
      */
-    event UpdateStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
+    event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
 
     struct LpGaugePointData {
         address lpToken;
@@ -191,7 +191,8 @@ library LibGauge {
 
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
-     * @dev Called at the end of each Season.
+     * @dev Called at the end of each Season. 
+     * The gauge system considers the total BDV of all whitelisted silo tokens, excluding unripe assets.
      */
     function updateGrownStalkEarnedPerSeason(
         uint256 maxLpGpPerBdv,
@@ -201,10 +202,10 @@ library LibGauge {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 beanDepositedBdv = s.siloBalances[C.BEAN].depositedBdv;
-        uint256 totalBdv = totalLpBdv.add(beanDepositedBdv);
+        uint256 totalGaugeBdv = totalLpBdv.add(beanDepositedBdv);
 
         // if nothing has been deposited, skip grown stalk update.
-        if (totalBdv == 0) return;
+        if (totalGaugeBdv == 0) return;
 
         // calculate the ratio between the bean and the max LP gauge points per BDV.
         // 6 decimal precision
@@ -223,11 +224,11 @@ library LibGauge {
         // if so, update the average grown stalk per BDV per Season.
         // safemath not needed
         if (s.season.current - s.seedGauge.lastStalkGrowthUpdate >= 168) {
-            updateStalkPerBdvPerSeason();
+            updateAverageStalkPerBdvPerSeason();
         }
         // calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
-            .mul(totalBdv)
+            .mul(totalGaugeBdv)
             .div(BDV_PRECISION);
 
         // gauge points has 18 decimal precision.
@@ -269,7 +270,7 @@ library LibGauge {
     }
 
     /**
-     * @notice updates the updateStalkPerBdvPerSeason in the seed gauge.
+     * @notice updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
      * @dev anyone can call this function to update. Currently, the function
      * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
      * for the average new depositer to catch up to the average grown stalk per BDV.
@@ -278,7 +279,7 @@ library LibGauge {
      * Newer depositers will call it if the value increases to catch up to the average faster,
      * Older depositers will call it if the value decreases to slow down their rate of dilution.
      */
-    function updateStalkPerBdvPerSeason() public {
+    function updateAverageStalkPerBdvPerSeason() public {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // will overflow if the average grown stalk per BDV exceeds 1.4e36,
         // which is highly improbable assuming consistent new deposits.
@@ -287,7 +288,7 @@ library LibGauge {
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
         s.seedGauge.lastStalkGrowthUpdate = s.season.current;
-        emit UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 
     /**
@@ -304,7 +305,8 @@ library LibGauge {
     }
 
     /**
-     * @notice returns the average grown stalk per BDV .
+     * @notice returns the average grown stalk per BDV.
+     * @dev `totalBDV` refers to the total BDV deposited in the silo.
      */
     function getAverageGrownStalkPerBdv() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -317,7 +319,11 @@ library LibGauge {
      * @notice returns the ratio between the bean and
      * the max LP gauge points per BDV.
      * @dev s.seedGauge.beanToMaxLpGpPerBdvRatio is a number between 0 and 100e18,
-     * where f(100e18) = MIN_BEAN_MAX_LPGP_RATIO and f(0) = MAX_BEAN_MAX_LPGP_RATIO.
+     * where f(0) = MIN_BEAN_MAX_LPGP_RATIO and f(100e18) = MAX_BEAN_MAX_LPGP_RATIO.
+     * At the minimum value (0), beans should have half of the 
+     * largest gauge points per BDV out of the LPs.
+     * At the maximum value (100e18), beans should have the same amount of  
+     * gauge points per BDV as the largest out of the LPs.
      */
     function getBeanToMaxLpGpPerBdvRatioScaled(
         uint256 beanToMaxLpGpPerBdvRatio

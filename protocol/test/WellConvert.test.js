@@ -3,7 +3,7 @@ const { deploy } = require('../scripts/deploy.js');
 const { getBeanstalk } = require('../utils/contracts.js');
 const { deployWell, setReserves, whitelistWell, impersonateBeanEthWell } = require('../utils/well.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, BEAN_ETH_WELL } = require('./utils/constants')
+const { BEAN, BEAN_ETH_WELL, WETH } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -23,8 +23,9 @@ describe('Well Convert', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
-    impersonateBeanEthWell()
-    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL)
+    impersonateBeanEthWell();
+    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+    this.fakeWell = await deployWell([BEAN, WETH]);
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
@@ -99,6 +100,16 @@ describe('Well Convert', function () {
     describe('p > 1', async function () {
       beforeEach(async function () {
         await setReserves(owner, this.well, [to6('800000'), to18('1000')]);
+      })
+
+      it('reverts if not whitelisted well', async function () {
+        await setReserves(owner, this.fakeWell, [to6('800000'), to18('1000')]);
+        const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.fakeWell.address)
+        await expect(this.convert.connect(owner).convertInternalE(
+          this.bean.address,
+          to6('100000'),
+          convertData
+        )).to.be.revertedWith("Convert: Invalid Well")
       })
 
       it('convert below max', async function () {
@@ -184,6 +195,16 @@ describe('Well Convert', function () {
     describe('p <= 1', async function () {
       beforeEach(async function () {
         await setReserves(owner, this.well, [to6('1200000'), to18('1000')]);
+      })
+
+      it('reverts if not whitelisted well', async function () {
+        await setReserves(owner, this.fakeWell, [to6('800000'), to18('1000')]);
+        const convertData = ConvertEncoder.convertWellLPToBeans(to18('2000'), to6('100000'), this.fakeWell.address)
+        await expect(this.convert.connect(owner).convertInternalE(
+          this.well.address,
+          '3018239549693752550560',
+          convertData
+        )).to.be.revertedWith("Convert: Invalid Well")
       })
 
       it('convert below max', async function () {

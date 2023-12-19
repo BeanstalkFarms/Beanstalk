@@ -5,8 +5,9 @@ const {
   impersonateBean,
   impersonateCurve,
   impersonateCurveMetapool,
-  impersonateWeth,
-  impersonateUnripe,
+  impersonateBean3CrvMetapool, 
+  impersonateWeth, 
+  impersonateUnripe, 
   impersonateFertilizer,
   impersonatePrice,
   impersonateBlockBasefee,
@@ -15,6 +16,7 @@ const {
   impersonateEthUsdChainlinkAggregator,
   impersonateBeanEthWell
 } = require("./impersonate.js");
+
 function addCommas(nStr) {
   nStr += "";
   const x = nStr.split(".");
@@ -225,8 +227,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       await impersonateEthUsdtUniswap();
     }
     await impersonateCurveMetapool();
-    await impersonateUnripe();
-    await impersonateFertilizer();
+    await impersonateBean3CrvMetapool()
+    await impersonateUnripe()
+    await impersonateFertilizer()
     await impersonateBlockBasefee();
     await impersonateEthUsdChainlinkAggregator();
   }

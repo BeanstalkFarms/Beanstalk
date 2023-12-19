@@ -163,7 +163,7 @@ contract SeasonGettersFacet {
 
     /**
      * @notice Returns the new average grown stalk per BDV per season,
-     * if updateStalkPerBdvPerSeason() is called.
+     * if UpdateAverageStalkPerBdvPerSeason() is called.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
      * note that stalk has 10 decimals.
      */

@@ -41,7 +41,7 @@ const { to6 } = require("./test/utils/helpers.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -154,7 +154,11 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   modules.forEach((module) => {
     const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
     const files = glob.sync(pattern);
-
+    if (module == "silo") {
+      // Manually add in libraries that emit events
+      files.push("contracts/libraries/Silo/LibWhitelist.sol")
+      files.push("contracts/libraries/LibGauge.sol")
+    }
     files.forEach((file) => {
       const facetName = getFacetName(file);
       const jsonFileName = `${facetName}.json`;
@@ -226,6 +230,10 @@ task("beanstalkAdmin", async function () {
 task("deployBip39", async function () {
   await bipSeedGauge();
 });
+
+task("ebip13", async function () {
+  await ebip13();
+})
 
 task("ebip11", async function () {
   await ebip11();

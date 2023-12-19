@@ -13,6 +13,7 @@ import {LibCases} from "contracts/libraries/LibCases.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
+import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 
 /**
  * @author Brean
@@ -28,15 +29,16 @@ interface IGaugePointFacet {
 
 contract InitBipSeedGauge is Weather {
     using SafeMath for uint256;
+    using LibSafeMathSigned96 for int96;
+
 
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
 
-    // TODO : update these values, once the beanEthMigration BIP has executed.
-    uint256 internal constant BEAN_UNMIGRATED_BDV = 816_105_148629; // 816k BDV
-    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 53_419_468565; // 53k BDV
-    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 4_946_644_852785; // 4.9m BDV
-    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 7_774_709_273192; // 7.7m BDV
+    uint256 internal constant BEAN_UNMIGRATED_BDV = 304_630_107407; // ~300k BDV
+    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_212_521946; // ~26k BDV
+    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_209_210_313166; // 3.2m BDV
+    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_680_992_571569; // 6.68m BDV
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
@@ -64,9 +66,12 @@ contract InitBipSeedGauge is Weather {
         // and bean does not have a gauge point function.
         // (it is based on the max gauge points of LP)
         // order: bean, beanETH, bean3CRV, urBEAN, urBEANETH
+        uint128 beanEthToBean3CrvDepositedRatio = s.siloBalances[C.BEAN_ETH_WELL].depositedBdv * 1e6 /  s.siloBalances[C.CURVE_BEAN_METAPOOL].depositedBdv;
         address[] memory siloTokens = LibWhitelistedTokens.getWhitelistedTokens();
-        uint128 beanEthGp = uint128(s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason) * 500 * 1e12;
-        uint128 bean3crvGp = uint128(s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason) * 500 * 1e12;
+        uint128 beanEthGp = uint128(
+            s.ss[C.BEAN_ETH_WELL].stalkEarnedPerSeason) * 500 * beanEthToBean3CrvDepositedRatio * 1e6;
+        uint128 bean3crvGp = uint128(
+            s.ss[C.CURVE_BEAN_METAPOOL].stalkEarnedPerSeason) * 500 * 1e12;
         uint128[5] memory gaugePoints = [uint128(0), beanEthGp, bean3crvGp, 0, 0];
         bytes4[5] memory gpSelectors = [
             bytes4(0x00000000),
@@ -77,6 +82,11 @@ contract InitBipSeedGauge is Weather {
         ];
         uint96[5] memory optimalPercentDepositedBdv = [uint96(0), 99e6, 1e6, 0, 0];
         for (uint i = 0; i < siloTokens.length; i++) {
+            // previously, the milestone stem was stored truncated. The seed gauge system now stores
+            // the value untruncated, and thus needs to update all previous milestone stems. 
+            // This is a one time update, and will not be needed in the future.
+            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem.mul(1e6));
+
             // update gaugePoints and gpSelectors
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].gpSelector = gpSelectors[i];
@@ -84,7 +94,7 @@ contract InitBipSeedGauge is Weather {
 
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
-            
+
             // emit event
             emit LibWhitelist.UpdateGaugeSettings(siloTokens[i], gpSelectors[i], optimalPercentDepositedBdv[i]);
         }
@@ -93,7 +103,7 @@ contract InitBipSeedGauge is Weather {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = initializeAverageGrownStalkPerBdv(totalBdv);
 
         emit BeanToMaxLpGpPerBdvRatioChange(s.season.current, type(uint256).max, int80(s.seedGauge.beanToMaxLpGpPerBdvRatio));
-        emit LibGauge.UpdateStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
+        emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         // initalize s.usdTokenPrice for the bean eth well.
         s.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
