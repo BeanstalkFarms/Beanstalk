@@ -4,10 +4,9 @@ const diamond = require("./diamond.js");
 const {
   impersonateBean,
   impersonateCurve,
-  impersonateCurveMetapool,
-  impersonateBean3CrvMetapool, 
-  impersonateWeth, 
-  impersonateUnripe, 
+  impersonateBean3CrvMetapool,
+  impersonateWeth,
+  impersonateUnripe,
   impersonateFertilizer,
   impersonatePrice,
   impersonateBlockBasefee,
@@ -226,10 +225,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       await impersonateEthUsdcUniswap();
       await impersonateEthUsdtUniswap();
     }
-    await impersonateCurveMetapool();
-    await impersonateBean3CrvMetapool()
-    await impersonateUnripe()
-    await impersonateFertilizer()
+    await impersonateBean3CrvMetapool();
+    await impersonateUnripe();
+    await impersonateFertilizer();
     await impersonateBlockBasefee();
     await impersonateEthUsdChainlinkAggregator();
   }
