@@ -14,6 +14,11 @@ library LibTractor {
     // 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
     // bytes32 constant TRACTOR_STORAGE_POSITION = keccak256("diamond.storage.tractor");
 
+    enum CounterUpdateType {
+        INCREASE,
+        DECREASE
+    }
+
     bytes32 private constant TRACTOR_HASHED_NAME = keccak256(bytes("Tractor"));
     bytes32 private constant TRACTOR_HASHED_VERSION = keccak256(bytes("1"));
     bytes32 private constant EIP712_TYPE_HASH =
@@ -28,8 +33,8 @@ library LibTractor {
     struct TractorStorage {
         // Number of times the blueprint has been run.
         mapping(bytes32 => uint256) blueprintNonce;
-        // Blueprint hash => counter index => counter value.
-        mapping(bytes32 => mapping(uint256 => uint256)) blueprintCounters;
+        // Publisher Address => counter id => counter value.
+        mapping(address => mapping(bytes32 => uint256)) blueprintCounters;
         // Publisher of current operations. Set to address(1) when no active publisher.
         address activePublisher;
     }

@@ -149,6 +149,34 @@ contract TractorFacet is ReentrancyGuard {
         emit Tractor(msg.sender, requisition.blueprintHash);
     }
 
+    /// @notice get counter count
+    /// @return count counter count
+    function getCounter(bytes32 counterId) public view returns (uint256 count) {
+        return
+            LibTractor._tractorStorage().blueprintCounters[
+                LibTractor._tractorStorage().activePublisher
+            ][counterId];
+    }
+
+    /// @notice update counter count
+    /// @return count counter count
+    function updateCounter(
+        bytes32 counterId,
+        LibTractor.CounterUpdateType updateType,
+        uint256 amount
+    ) external returns (uint256 count) {
+        uint256 newCount;
+        if (updateType == LibTractor.CounterUpdateType.INCREASE) {
+            newCount = getCounter(counterId).add(amount);
+        } else if (updateType == LibTractor.CounterUpdateType.DECREASE) {
+            newCount = getCounter(counterId).sub(amount);
+        }
+        LibTractor._tractorStorage().blueprintCounters[
+            LibTractor._tractorStorage().activePublisher
+        ][counterId] = newCount;
+        return newCount;
+    }
+
     /// @notice return current blueprint nonce
     /// @return nonce current blueprint nonce
     function getBlueprintNonce(bytes32 blueprintHash) external view returns (uint256) {

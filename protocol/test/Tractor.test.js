@@ -15,6 +15,7 @@ const {
   draftPlant,
   draftConvertUrBeanToUrLP,
   draftConvert,
+  draftDepositInternalBeansWithLimit,
   RATIO_FACTOR,
   ConvertKind
 } = require("./utils/tractor.js");
@@ -213,6 +214,10 @@ describe("Tractor", function () {
   });
 
   describe("Run Tractor", function () {
+    afterEach(async function () {
+      await revertToSnapshot(snapshotId);
+    });
+
     it("Deposit Publisher Internal Beans", async function () {
       [advancedFarmCalls, this.blueprint.operatorPasteInstrs] =
         await draftDepositInternalBeanBalance(to6("10"));
@@ -243,6 +248,43 @@ describe("Tractor", function () {
         await this.tokenFacet.getInternalBalance(publisher.address, this.bean.address)
       ).to.be.eq(to6("0"));
       expect(await this.bean.balanceOf(operator.address)).to.be.eq(to6("10"));
+    });
+
+    it("Deposit with Counter Limit", async function () {
+      [advancedFarmCalls, this.blueprint.operatorPasteInstrs] =
+        await draftDepositInternalBeansWithLimit(to6("1000"));
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+
+      // Transfer Bean to internal balance.
+      this.beanstalk
+        .connect(publisher)
+        .transferToken(this.bean.address, publisher.address, to6("2000"), 0, 1);
+      expect(
+        await this.tokenFacet.getInternalBalance(publisher.address, this.bean.address)
+      ).to.be.eq(to6("2000"));
+
+      await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+
+      // No operator calldata used.
+      const operatorData = ethers.utils.hexlify("0x");
+
+      for (let i = 0; i < 9; i++) {
+        await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+      }
+
+      // Confirm final state.
+      expect(
+        this.tractorFacet.connect(operator).tractor(this.requisition, operatorData)
+      ).to.be.revertedWith("Junction: check failed");
+      expect(
+        await this.tokenFacet.getInternalBalance(publisher.address, this.bean.address)
+      ).to.be.eq(to6("1000"));
     });
 
     it("Mow publisher", async function () {

@@ -31,6 +31,12 @@ const ConvertKind = {
   WELL_LP_TO_BEANS: 6
 };
 
+// From LibTractorFacet.sol
+const CounterUpdateType = {
+  INCREASE: 0,
+  DECREASE: 1
+};
+
 let drafterAddr;
 let junctionAddr;
 
@@ -57,6 +63,8 @@ const siloFacetInterface = async () => (await ethers.getContractFactory("SiloFac
 // const convertFacetInterface = async () => (await ethers.getContractFactory("ConvertFacet")).interface;
 const junctionInterface = async () => (await ethers.getContractFactory("Junction")).interface;
 const pipelineInterface = async () => (await ethers.getContractFactory("Pipeline")).interface;
+const tractorFacetInterface = async () =>
+  (await ethers.getContractFactory("TractorFacet")).interface;
 
 // Need to actually execute the logic in Drafter pure functions.
 // Are these making actual rpc calls?
@@ -202,18 +210,6 @@ const draftDiffOfReturns = async (returnDataItemIndex0, returnDataItemIndex1) =>
  * @param tip - amount of beans to tip to operator external balance
  */
 const draftDepositInternalBeanBalance = async (tip) => {
-  // Interfaces needed to encode calldata.
-  const farmFacetInterface = (await ethers.getContractFactory("FarmFacet")).interface;
-  const tokenFacetInterface = (await ethers.getContractFactory("TokenFacet")).interface;
-  const siloFacetInterface = (await ethers.getContractFactory("SiloFacet")).interface;
-
-  // Need to actually execute the logic in Drafter pure functions.
-  // Are these making actual rpc calls?
-  let contractFactory = await (
-    await (await ethers.getContractFactory("Drafter")).deploy()
-  ).deployed();
-  const drafter = await ethers.getContractAt("Drafter", contractFactory.address);
-
   // temp arrays for handling returns.
   let tmpAdvancedFarmCalls = [];
   let tmpOperatorPasteInstrs = [];
@@ -235,9 +231,11 @@ const draftDepositInternalBeanBalance = async (tip) => {
       junctionAddr,
       (await junctionInterface()).encodeFunctionData("gte", [0, to6("1000")])
     ),
-    clipboard: await drafter.encodeClipboard(0, [
-      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
-    ])
+    clipboard: await drafter().then(async (drafter) =>
+      drafter.encodeClipboard(0, [
+        await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
+      ])
+    )
   });
 
   // call[2] - Require internal balance check true.
@@ -246,9 +244,16 @@ const draftDepositInternalBeanBalance = async (tip) => {
       junctionAddr,
       (await junctionInterface()).encodeFunctionData("check", [false])
     ),
-    clipboard: await drafter.encodeClipboard(1, [
-      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
-    ])
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(1, [
+          await drafter.encodeLibReturnPasteParam(
+            1,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            EXTERNAL_ARGS_START_INDEX
+          )
+        ])
+    )
   });
 
   // call[3] - Get difference between publisher internal balance and tip.
@@ -257,26 +262,32 @@ const draftDepositInternalBeanBalance = async (tip) => {
       junctionAddr,
       (await junctionInterface()).encodeFunctionData("sub", [0, tip])
     ),
-    clipboard: await drafter.encodeClipboard(0, [
-      await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
-    ])
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          await drafter.encodeLibReturnPasteParam(0, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
+        ])
+    )
   });
 
   // call[4] - Deposit publisher internal balance, less tip.
   advancedFarmCalls.push({
-    callData: siloFacetInterface.encodeFunctionData("deposit", [BEAN, 0, INTERNAL]),
-    clipboard: await drafter.encodeClipboard(0, [
-      await drafter.encodeLibReturnPasteParam(
-        3,
-        SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
-        ARGS_START_INDEX + SLOT_SIZE
-      )
-    ])
+    callData: (await siloFacetInterface()).encodeFunctionData("deposit", [BEAN, 0, INTERNAL]),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(0, [
+          await drafter.encodeLibReturnPasteParam(
+            3,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            ARGS_START_INDEX + SLOT_SIZE
+          )
+        ])
+    )
   });
 
   // call[5] - Transfer tip to operator external balance.
   advancedFarmCalls.push({
-    callData: tokenFacetInterface.encodeFunctionData("transferToken", [
+    callData: (await tokenFacetInterface()).encodeFunctionData("transferToken", [
       BEAN,
       ZERO_ADDRESS,
       tip,
@@ -286,10 +297,9 @@ const draftDepositInternalBeanBalance = async (tip) => {
     clipboard: ethers.utils.hexlify("0x000000")
   });
   operatorPasteInstrs.push(
-    await drafter.encodeOperatorPasteInstr(
-      OPERATOR_COPY_INDEX,
-      5,
-      ARGS_START_INDEX + SLOT_SIZE // + ADDR_SLOT_OFFSET
+    await drafter().then(
+      async (drafter) =>
+        await drafter.encodeOperatorPasteInstr(OPERATOR_COPY_INDEX, 5, ARGS_START_INDEX + SLOT_SIZE)
     )
   );
 
@@ -828,6 +838,82 @@ const draftConvert = async (tip, minUrLpPerUrBeanRatio, minUrBeanPerUrLpRatio) =
   return [advancedFarmCalls, operatorPasteInstrs];
 };
 
+/**
+ * Blueprint to deposit 100 Beans from internal balance of publisher. Uses counters to limit deposits to maxCumulativeDepositAmount.
+ * Serves as a demo of using counters.
+ */
+const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount) => {
+  // AdvancedFarmCall[]
+  let advancedFarmCalls = [];
+
+  // bytes32[]
+  let operatorPasteInstrs = [];
+
+  // call[0] - Deposit 100 Beans from publisher internal balance.
+  advancedFarmCalls.push({
+    callData: (await siloFacetInterface()).encodeFunctionData("deposit", [
+      BEAN,
+      to6("100"),
+      INTERNAL
+    ]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+
+  const counterId = ethers.utils.keccak256(Date.now());
+
+  // call[1] - Increment counter by 100.
+  advancedFarmCalls.push({
+    callData: (await tractorFacetInterface()).encodeFunctionData("updateCounter", [
+      counterId,
+      CounterUpdateType.INCREASE,
+      to6("100")
+    ]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+
+  // call[2] - Get counter value (redundant with return of call[1], but illustrative).
+  advancedFarmCalls.push({
+    callData: (await tractorFacetInterface()).encodeFunctionData("getCounter", [counterId]),
+    clipboard: ethers.utils.hexlify("0x000000")
+  });
+
+  // call[3] - Check if counter less than or equal to maxCumulativeDepositAmount.
+  advancedFarmCalls.push({
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("lte", [0, maxCumulativeDepositAmount])
+    ),
+    clipboard: await drafter().then(async (drafter) =>
+      drafter.encodeClipboard(0, [
+        await drafter.encodeLibReturnPasteParam(2, SLOT_SIZE, EXTERNAL_ARGS_START_INDEX)
+      ])
+    )
+  });
+
+  // call[4] - Require counter check true.
+  advancedFarmCalls.push({
+    callData: await wrapExternalCall(
+      junctionAddr,
+      (await junctionInterface()).encodeFunctionData("check", [false])
+    ),
+    clipboard: await drafter().then(
+      async (drafter) =>
+        await drafter.encodeClipboard(1, [
+          await drafter.encodeLibReturnPasteParam(
+            3,
+            SLOT_SIZE + PIPE_RETURN_BYTE_OFFSET,
+            EXTERNAL_ARGS_START_INDEX
+          )
+        ])
+    )
+  });
+
+  console.log(advancedFarmCalls);
+  console.log(operatorPasteInstrs);
+
+  return [advancedFarmCalls, operatorPasteInstrs];
+};
+
 module.exports = {
   initContracts,
   drafter,
@@ -841,6 +927,7 @@ module.exports = {
   draftPlant,
   draftConvertUrBeanToUrLP,
   draftConvert,
+  draftDepositInternalBeansWithLimit,
   RATIO_FACTOR,
   ConvertKind
 };
