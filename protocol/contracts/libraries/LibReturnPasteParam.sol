@@ -4,9 +4,6 @@
 
 pragma solidity =0.7.6;
 
-// TODO rm
-import "forge-std/console.sol";
-
 import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibFunction} from "./LibFunction.sol";
@@ -67,17 +64,16 @@ library LibReturnPasteParam {
         bytes[] memory returnData, // paste source
         bytes memory data // paste destination
     ) internal view returns (bytes memory pastedData) {
-        console.log("pasteBytes - clipboard");
         uint256 _returnDataItemIndex = returnDataItemIndex(returnPasteParam);
         uint256 _copyByteIndex = copyByteIndex(returnPasteParam);
         uint256 _pasteByteIndex = pasteByteIndex(returnPasteParam);
-        console.log(_returnDataItemIndex);
-        console.log(_copyByteIndex);
-        console.log(_pasteByteIndex);
         require(C.SLOT_SIZE <= _pasteByteIndex, "RP: _pasteByteIndex too small");
         require(_pasteByteIndex <= data.length, "RP: _pasteByteIndex too large");
         require(C.SLOT_SIZE <= _copyByteIndex, "RP: _copyByteIndex too small");
-        require(_copyByteIndex <= data.length, "RP: _copyByteIndex too large");
+        require(
+            _copyByteIndex <= returnData[_returnDataItemIndex].length,
+            "RP: _copyByteIndex too large"
+        );
         require(_returnDataItemIndex < returnData.length, "RP: _returnDataItemIndex too large");
         LibFunction.paste32Bytes(
             returnData[_returnDataItemIndex], // isolate returnDataItemIndex

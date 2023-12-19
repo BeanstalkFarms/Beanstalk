@@ -5,9 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-// TODO rm
-import "forge-std/console.sol";
-
 import {C} from "contracts/C.sol";
 import {LibBytes} from "./LibBytes.sol";
 import {LibFunction} from "./LibFunction.sol";
@@ -86,45 +83,31 @@ library LibOperatorPasteInstr {
      * @param operatorData The callData provided by thee operator. Copy from location.
      * @param callData The data from blueprint. Paste to location.
      **/
-    //  TODO return pastedData the calldata for the next function call with bytes pasted from returnData ?
     function pasteBytes(
         bytes32 operatorPasteInstr,
         bytes memory operatorData,
         bytes memory callData
     ) internal view returns (bytes memory) {
-        console.log("HERE-PB-0");
-        console.logBytes32(operatorPasteInstr);
-        console.logBytes(callData);
         (uint80 _copyByteIndex, , uint80 _pasteByteIndex) = decode(operatorPasteInstr);
-        console.log("HERE-PB-1");
 
-        console.log(callData.length);
-        console.log(_pasteByteIndex);
         // _pasteByteIndex must have 32 bytes of available space and not write into the length data.
         require(C.SLOT_SIZE <= _pasteByteIndex, "OP: _pasteByteIndex too small");
         require(_pasteByteIndex <= callData.length, "OP: _pasteByteIndex too large");
 
-        console.log(_copyByteIndex);
         bytes memory copyData;
         if (_copyByteIndex == C.PUBLISHER_COPY_INDEX) {
-            console.log("HERE-PB-P-0");
             copyData = abi.encodePacked(
                 uint256(uint160(LibTractor._tractorStorage().activePublisher))
             );
             // Skip length data.
             _copyByteIndex = C.SLOT_SIZE;
-            console.log("HERE-PB-P-1");
         } else if (_copyByteIndex == C.OPERATOR_COPY_INDEX) {
-            console.log("HERE-PB-O-0");
             copyData = abi.encodePacked(uint256(uint160(msg.sender)));
             // Skip length data.
             _copyByteIndex = C.SLOT_SIZE;
         } else {
-            console.log("HERE-PB-C-0");
             copyData = operatorData;
         }
-        console.log(_copyByteIndex);
-        console.logBytes(copyData);
         // _copyByteIndex must have 32 bytes of available space and not write into the length data.
         require(C.SLOT_SIZE <= _copyByteIndex, "OP: _copyByteIndex too small");
         require(_copyByteIndex <= callData.length, "OP: _copyByteIndex too large");
@@ -136,9 +119,6 @@ library LibOperatorPasteInstr {
         //     _pasteByteIndex
         // );
         LibFunction.paste32Bytes(copyData, callData, uint256(_copyByteIndex), _pasteByteIndex);
-        console.logBytes(callData);
-        // NOTE is this necessary, or can we rely on pass by reference for internal memory lib functions?
-        console.log("HERE-PB-9");
         return callData;
     }
 }

@@ -140,7 +140,7 @@ contract TractorTest is TestHelper {
     }
 }
 
-// TODO how to encode dynamically sized data? Not possible, without either:
+// NOTE how to encode dynamically sized data? Not possible, without either:
 //    1. Telling the contract how to extract data (i.e. unique functions for each call type)
 //    2. Using a fixed size data structure (i.e. uint256[10] instead of uint256[]) with all possible types (ew)
 //    3. Manually composing the data? by pasting the location, length, and then each item individually.....

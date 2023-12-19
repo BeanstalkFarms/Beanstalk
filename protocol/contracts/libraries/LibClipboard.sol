@@ -5,9 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-// TODO rm
-import "forge-std/console.sol";
-
 import {LibBytes} from "./LibBytes.sol";
 import {LibTractor} from "./LibTractor.sol";
 import {LibFunction} from "./LibFunction.sol";
@@ -125,16 +122,11 @@ library LibClipboard {
         bytes memory clipboard,
         bytes[] memory returnData
     ) internal view returns (bytes memory data) {
-        console.log("useClipboard-0");
-        console.logBytes(clipboard);
-        console.logBytes(callData);
         (bytes1 typeId, , bytes32[] memory returnPasteParams) = decode(clipboard);
         require(typeId == 0x01 || typeId == 0x02, "Clipboard: Type not supported");
         data = callData;
         for (uint256 i; i < returnPasteParams.length; i++) {
             data = LibReturnPasteParam.pasteBytes(returnPasteParams[i], returnData, data);
         }
-        console.log("useClipboard-9");
-        console.logBytes(data);
     }
 }

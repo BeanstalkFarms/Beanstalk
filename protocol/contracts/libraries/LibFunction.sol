@@ -5,9 +5,6 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-// TODO rm
-import "forge-std/console.sol";
-
 import {LibDiamond} from "./LibDiamond.sol";
 import {AdvancedFarmCall} from "./LibFarm.sol";
 
@@ -59,27 +56,8 @@ library LibFunction {
         uint256 copyIndex,
         uint256 pasteIndex
     ) internal view {
-        // returns (bytes memory pastedData) {
-        console.log("paste32Bytes");
-        console.log(copyIndex);
-        console.log(pasteIndex);
-        console.logBytes(copyData);
-        console.logBytes(pasteData);
-
-        // bytes32 mload_;
-
         assembly {
-            // // Skip length (32 bytes).
-            // mload_ := mload(add(add(copyData, 0x20), copyIndex))
             mstore(add(pasteData, pasteIndex), mload(add(copyData, copyIndex)))
-            // mstore(
-            //     add(add(pasteData, 0x20), pasteIndex),
-            //     mload(add(add(copyData, 0x20), copyIndex))
-            // )
         }
-        console.logBytes(pasteData);
-        // console.log("mload_");
-        // console.logBytes32(mload_);
-        // pastedData = pasteData;
     }
 }
