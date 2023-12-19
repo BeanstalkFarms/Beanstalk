@@ -102,6 +102,7 @@ describe("Tractor", function () {
     await this.bean.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
     await this.weth.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
 
+    // P > 1.
     await this.well
       .connect(owner)
       .addLiquidity([to6("1000000"), to18("2000")], 0, owner.address, ethers.constants.MaxUint256);
@@ -146,7 +147,6 @@ describe("Tractor", function () {
     await revertToSnapshot(snapshotId);
   });
 
-  /*
   describe("Publish Blueprint", function () {
     it("should fail when signature is invalid #1", async function () {
       this.requisition.signature = "0x0000";
@@ -357,7 +357,6 @@ describe("Tractor", function () {
       expect(operatorPaid, "unpaid operator").to.be.gt(0);
     });
   });
-  */
 
   describe("Bi-directional unripe convert of publisher", async function () {
     // before(async function () {
@@ -422,6 +421,10 @@ describe("Tractor", function () {
       deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
       expect(deposit[0], "initial publisher urLP deposit amount").to.eq("0");
       expect(deposit[1], "initial publisher urLP deposit BDV").to.eq("0");
+    });
+
+    afterEach(async function () {
+      await revertToSnapshot(snapshotId);
     });
 
     it("Convert urBean to urLP", async function () {
@@ -500,10 +503,9 @@ describe("Tractor", function () {
         ["int96", "uint8"], // stem, convertKind
         [0, ConvertKind.UNRIPE_BEANS_TO_LP]
       );
-
       await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
 
-      // Confirm final state.
+      // Confirm mid state.
       expect(
         await this.siloFacet.getTotalDeposited(this.unripeBean.address),
         "mid totalDeposited urBean"
@@ -515,7 +517,7 @@ describe("Tractor", function () {
       expect(
         await this.siloFacet.getTotalDeposited(this.unripeLP.address),
         "mid totalDeposited urLP"
-      ).to.gt("0");
+      ).to.gt("1");
       expect(
         await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
         "mid totalDepositedBDV urLP"
@@ -525,13 +527,53 @@ describe("Tractor", function () {
         await this.siloFacet.balanceOfStalk(publisher.address),
         "mid publisher balanceOfStalk"
       ).to.gt(toStalk("2000"));
-
       let deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 0);
       expect(deposit[0], "mid publisher urBean deposit amount").to.eq("0");
       expect(deposit[1], "mid publisher urBean deposit BDV").to.eq("0");
       deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
       expect(deposit[0], "mid publisher urLP deposit amount").to.gt("0");
       expect(deposit[1], "mid publisher urLP deposit BDV").to.eq(to6("2000"));
+
+      // Make P < 1.
+      await this.well
+        .connect(owner)
+        .addLiquidity([to6("3000000"), to18("0")], 0, owner.address, ethers.constants.MaxUint256);
+
+      // Convert in other direction (LP->Bean).
+      operatorData = ethers.utils.defaultAbiCoder.encode(
+        ["int96", "uint8"], // stem, convertKind
+        [0, ConvertKind.UNRIPE_LP_TO_BEANS]
+      );
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // Confirm final state.
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeBean.address),
+        "final totalDeposited urBean"
+      ).to.gte(to6("2000"));
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeBean.address),
+        "final totalDepositedBDV urBean"
+      ).to.gt("0");
+      expect(
+        await this.siloFacet.getTotalDeposited(this.unripeLP.address),
+        "final totalDeposited urLP"
+      ).to.eq("1"); // rounding quirk
+      expect(
+        await this.siloFacet.getTotalDepositedBdv(this.unripeLP.address),
+        "final totalDepositedBDV urLP"
+      ).to.gte("1"); // rounding quirk
+      expect(await this.siloFacet.totalStalk(), "final totalStalk").to.gt(toStalk("2000"));
+      expect(
+        await this.siloFacet.balanceOfStalk(publisher.address),
+        "final publisher balanceOfStalk"
+      ).to.gt(toStalk("2000"));
+      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeBean.address, 3);
+      expect(deposit[0], "final publisher urBean deposit amount").to.gt(to6("2000"));
+      expect(deposit[1], "final publisher urBean deposit BDV").to.gt(to6("2000"));
+      deposit = await this.siloFacet.getDeposit(publisher.address, this.unripeLP.address, 0);
+      expect(deposit[0], "final publisher urLP deposit amount").to.eq("1"); // rounding quirk
+      expect(deposit[1], "final publisher urLP deposit BDV").to.gte("1"); // rounding quirk
     });
   });
 });
