@@ -18,6 +18,7 @@ import { SeriesPoint } from '@visx/shape/lib/types';
 import { TickFormatter } from '@visx/axis';
 import { localPoint } from '@visx/event';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import { ERC20Token } from '~/classes/Token';
 
 // -------------------------------------------------------------------------
 // --------------------------------- TYPES ---------------------------------
@@ -139,6 +140,8 @@ export type BaseChartProps = {
   scale?: keyof typeof SCALES;
   pegLine?: boolean;
   isTWAP?: boolean;
+  useCustomTokenList?: ERC20Token[];
+  tokenPerSeasonFilter?: { [key: string]: { from: number, to: number } };
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;

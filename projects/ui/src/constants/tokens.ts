@@ -41,6 +41,7 @@ import {
   UNRIPE_BEAN_WETH_ADDRESSES,
   BEAN_ADDRESSES,
   BEAN_ETH_WELL_ADDRESSES,
+  BEAN_CRV3_V1_ADDRESSES,
 } from './addresses';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
@@ -234,7 +235,7 @@ export const BEAN_ETH_UNIV2_LP = {
     18,
     {
       name: 'BEAN:ETH LP',
-      symbol: 'BEAN:ETH',
+      symbol: 'Old BEANETH',
       logo: beanEthLpLogoUrl,
       displayDecimals: 9,
       isLP: true,
@@ -252,7 +253,7 @@ export const BEAN_LUSD_LP = {
     18,
     {
       name: 'BEAN:LUSD LP',
-      symbol: 'BEAN:LUSD',
+      symbol: 'Old BEANLUSD',
       logo: beanLusdLogoUrl,
       isLP: true,
     },
@@ -295,6 +296,25 @@ export const BEAN_ETH_WELL_LP = {
       name: 'BEAN:ETH Well LP',
       symbol: 'BEANETH',
       logo: beanEthWellLpLogoUrl,
+      isLP: true,
+      color: '#DFB385',
+    },
+    {
+      stalk: 1,
+      seeds: 4.5,
+    }
+  ),
+};
+
+export const BEAN_CRV3_V1_LP = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    BEAN_CRV3_V1_ADDRESSES,
+    6,
+    {
+      name: 'BEAN:CRV3 V1 LP',
+      symbol: 'Old BEAN3CRV',
+      logo: beanCrv3LpLogoUrl,
       isLP: true,
       color: '#DFB385',
     },
