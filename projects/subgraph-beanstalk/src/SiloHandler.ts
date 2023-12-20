@@ -921,7 +921,7 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
 
   siloSettings.milestoneSeason = event.params.season.toI32();
-  siloSettings.stalkEarnedPerSeason;
+  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.updatedAt = event.block.timestamp;
   siloSettings.save();
 
