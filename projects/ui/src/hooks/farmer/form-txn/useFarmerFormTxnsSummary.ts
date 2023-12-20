@@ -193,7 +193,7 @@ export default function useFarmerFormTxnsSummary(mode?: 'plantToggle') {
       [FormTxn.ENROOT]: {
         title: 'Enroot',
         tooltip: tooltips.enroot,
-        enabled: revitalizedSeeds.gt(0) && revitalizedStalk.gt(0),
+        enabled: revitalizedSeeds.gt(0) || revitalizedStalk.gt(0),
         summary: [
           {
             description: 'Revitalized Seeds',

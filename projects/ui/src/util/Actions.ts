@@ -357,10 +357,10 @@ export const parseActionMessage = (a: Action) => {
         a.bean.gt(1) ? 's' : ''
       }, ${displayFullBN(a.stalk, 2)} Stalk, and ${displayFullBN(a.seeds, 2)} Seeds.`;
     case ActionType.ENROOT:
-      return `Enroot revitalized ${displayFullBN(
+      return `Enroot ${displayFullBN(
         a.stalk,
         2
-      )} Stalk and ${displayFullBN(a.seeds, 2)} Seeds.`;
+      )} Revitalized Stalk and ${displayFullBN(a.seeds, 2)} Revitalized Seeds.`;
 
     /// FIELD
     case ActionType.BUY_BEANS:
