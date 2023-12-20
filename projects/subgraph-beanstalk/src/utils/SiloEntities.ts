@@ -12,7 +12,7 @@ import {
   WhitelistTokenSetting,
   TokenYield
 } from "../../generated/schema";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk } from "./Beanstalk";
@@ -183,6 +183,17 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     setting.milestoneSeason = 0;
     setting.updatedAt = ZERO_BI;
     setting.save();
+
+    // Check token addresses and set replant seeds/stalk for Unripe due to event timing.
+    if (token == UNRIPE_BEAN) {
+      setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
+      setting.stalkEarnedPerSeason = BigInt.fromI32(2000000);
+      setting.save();
+    } else if (token == UNRIPE_BEAN_3CRV) {
+      setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
+      setting.stalkEarnedPerSeason = BigInt.fromI32(4000000);
+      setting.save();
+    }
   }
   return setting as WhitelistTokenSetting;
 }

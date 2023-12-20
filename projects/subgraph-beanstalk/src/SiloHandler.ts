@@ -888,20 +888,10 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   if (currentList.length == 0) {
     // Push unripe bean and unripe bean:3crv upon the initial whitelisting.
     currentList.push(UNRIPE_BEAN.toHexString());
-
-    let setting = loadWhitelistTokenSetting(UNRIPE_BEAN);
-    setting.selector = event.params.selector;
-    setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
-    setting.stalkEarnedPerSeason = BigInt.fromI32(2000000);
-    setting.save();
+    loadWhitelistTokenSetting(UNRIPE_BEAN);
 
     currentList.push(UNRIPE_BEAN_3CRV.toHexString());
-
-    setting = loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
-    setting.selector = event.params.selector;
-    setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
-    setting.stalkEarnedPerSeason = BigInt.fromI32(4000000);
-    setting.save();
+    loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
   }
   currentList.push(event.params.token.toHexString());
   silo.whitelistedTokens = currentList;
