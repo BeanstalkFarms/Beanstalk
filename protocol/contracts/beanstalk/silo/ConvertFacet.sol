@@ -76,18 +76,12 @@ contract ConvertFacet is ReentrancyGuard {
     {
         address toToken; address fromToken; uint256 grownStalk; address account;
 
-        /** @dev account and decreaseBDV are initialized at the start of LibConvert.convert()
-        * as address(0) and false respectively and remain that way if a convert is not anti-lambda-lambda
-        * If it is anti-lambda, account is the address of the account to update the deposit
-        * and decreaseBDV is true */
-        (toToken, fromToken, toAmount, fromAmount, account, decreaseBDV) = LibConvert.convert(convertData);
+        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
-        if(account == address(0)) account = msg.sender;
-
-        LibSilo._mow(account, fromToken);
-        LibSilo._mow(account, toToken);
+        LibSilo._mow(msg.sender, fromToken);
+        LibSilo._mow(msg.sender, toToken);
 
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
@@ -98,17 +92,12 @@ contract ConvertFacet is ReentrancyGuard {
 
         // calculate the bdv of the new deposit
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
-        // if we have used the anti-lambda-lamda convert, 
-        // we need to decrease the bdv of the new deposit
-        if(decreaseBDV) {
-	        toBdv = newBdv;
-        } else {
-	        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
-        }
+
+        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
 
-        emit Convert(account, fromToken, toToken, fromAmount, toAmount);
+        emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
 
     function _withdrawTokens(

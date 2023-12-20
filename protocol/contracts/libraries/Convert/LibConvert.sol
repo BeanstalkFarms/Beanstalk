@@ -33,14 +33,10 @@ library LibConvert {
             address tokenOut,
             address tokenIn,
             uint256 amountOut,
-            uint256 amountIn,
-            address account
+            uint256 amountIn
         )
     {
         LibConvertData.ConvertKind kind = convertData.convertKind();
-
-        bool decreaseBDV = false;
-        address account = address(0);
 
         if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
@@ -66,11 +62,6 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
                 .convertUnripeToRipe(convertData);
-        // Anti-Lambda -> Lambda
-        } else if (kind == LibConvertData.ConvertKind.ANTI_LAMDA_LAMDA) {
-	        (tokenOut, tokenIn, amountOut, amountIn, account) = LibLambdaConvert
-                .convert(convertData);
-	        decreaseBDV = true;
         } else {
             revert("Convert: Invalid payload");
         }
@@ -90,7 +81,6 @@ library LibConvert {
             return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
         // Lambda -> Lambda
-        // Anti-Lambda -> Lambda
         if (tokenIn == tokenOut) 
             return type(uint256).max;
 
@@ -147,7 +137,6 @@ library LibConvert {
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
         // Lambda -> Lambda
-        // Anti-Lambda -> Lambda
         if (tokenIn == tokenOut)
             return amountIn;
 
