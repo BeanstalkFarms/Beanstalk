@@ -17,7 +17,8 @@ library LibConvertData {
         LAMBDA_LAMBDA,
         BEANS_TO_WELL_LP,
         WELL_LP_TO_BEANS,
-        UNRIPE_TO_RIPE
+        UNRIPE_TO_RIPE,
+        ANTI_LAMBDA_LAMBDA
     }
 
     /// @notice Decoder for the Convert Enum
@@ -57,11 +58,12 @@ library LibConvertData {
         );
     }
 
+    /// @notice Decoder for the lambdaConvert
     function lambdaConvert(bytes memory self)
         internal
         pure
-        returns (uint256 amount, address token)
+        returns (uint256 amount, address token , address account)
     {
-        (, amount, token) = abi.decode(self, (ConvertKind, uint256, address));
+        (, amount, token , account) = abi.decode(self, (ConvertKind, uint256, address, address));
     }
 }
