@@ -675,7 +675,7 @@ export function addDepositToSiloAsset(
   let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
-  let newGrownStalk = bdv.div(BigInt.fromI32(1000000)).times(tokenSettings.stalkEarnedPerSeason);
+  let newGrownStalk = bdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
   asset.depositedBDV = asset.depositedBDV.plus(bdv);
   asset.depositedAmount = asset.depositedAmount.plus(amount);
@@ -713,7 +713,7 @@ function removeDepositFromSiloAsset(
   let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
-  let removedGrownStalk = bdv.div(BigInt.fromI32(1000000)).times(tokenSettings.stalkEarnedPerSeason);
+  let removedGrownStalk = bdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
   asset.depositedBDV = asset.depositedBDV.minus(bdv);
   asset.depositedAmount = asset.depositedAmount.minus(amount);
@@ -937,7 +937,7 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
     let asset = loadSiloAsset(BEANSTALK, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
 
     newGrownStalkAmount = newGrownStalkAmount.plus(
-      asset.depositedBDV.div(BigInt.fromI32(1000000)).times(siloSettings.stalkEarnedPerSeason)
+      asset.depositedBDV.times(siloSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
     );
   }
 
@@ -956,7 +956,7 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
       let asset = loadSiloAsset(account, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
 
       newGrownStalkAmount = newGrownStalkAmount.plus(
-        asset.depositedBDV.div(BigInt.fromI32(1000000)).times(siloSettings.stalkEarnedPerSeason)
+        asset.depositedBDV.times(siloSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
       );
     }
 
