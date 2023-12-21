@@ -29,7 +29,7 @@ describe('Convert', function () {
 
 
 
-    //test setup includes making 2 deposits, one at stem of 1, and another deposit at 2
+    // test setup includes making 2 deposits, one at stem of 1, and another deposit at 2
 
     await this.bean.mint(userAddress, '1000000000');
     await this.bean.mint(user2Address, '1000000000');
