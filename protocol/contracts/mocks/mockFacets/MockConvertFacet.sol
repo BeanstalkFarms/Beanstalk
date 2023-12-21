@@ -49,10 +49,12 @@ contract MockConvertFacet is ConvertFacet {
         address toToken,
         address fromToken,
         uint256 toAmount,
-        uint256 fromAmount
+        uint256 fromAmount,
+        address account,
+        bool decreaseBDV
     ) {
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
-        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(
+        (toToken, fromToken, toAmount, fromAmount , account , decreaseBDV) = LibConvert.convert(
             convertData
         );
         IERC20(toToken).safeTransfer(msg.sender, toAmount);

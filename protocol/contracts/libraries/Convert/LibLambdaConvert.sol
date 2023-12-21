@@ -26,4 +26,20 @@ library LibLambdaConvert {
         tokenOut = tokenIn;
         amountOut = amountIn;
     }
+
+    function antiConvert(bytes memory convertData)
+        internal
+        pure
+        returns (
+            address tokenOut,
+            address tokenIn,
+            uint256 amountOut,
+            uint256 amountIn,
+            address account
+        )
+    {
+        (amountIn, tokenIn , account) = convertData.antiLambdaConvert();
+        tokenOut = tokenIn;
+        amountOut = amountIn;
+    }
 }
