@@ -74,7 +74,7 @@ contract ConvertFacet is ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        address toToken; address fromToken; uint256 grownStalk; address account;
+        address toToken; address fromToken; uint256 grownStalk;
 
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
         
