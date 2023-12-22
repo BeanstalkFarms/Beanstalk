@@ -181,10 +181,10 @@ const chartPadding = {
   right: 17,
 };
 
-const chartColors = BeanstalkPalette.theme.spring.chart;
+const chartColors = BeanstalkPalette.theme.winter.chart;
 const defaultChartStyles: ChartMultiStyles = {
   0: {
-    stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
+    stroke: BeanstalkPalette.theme.winter.primary,
     fillPrimary: chartColors.primaryLight,
     strokeWidth: 2,
   },
