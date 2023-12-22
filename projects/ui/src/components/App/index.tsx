@@ -41,7 +41,7 @@ import GovernanceUpdater from '~/state/beanstalk/governance/updater';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
 
-import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
+import pageBackground from '~/img/beanstalk/interface/bg/winter.png';
 
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -60,6 +60,7 @@ import FarmerDelegationsUpdater from '~/state/farmer/delegations/updater';
 import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
+import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
 
@@ -136,7 +137,7 @@ export default function App() {
       <CustomToaster navHeight={navHeight} />
       {account && <NewProposalsDialog />}
       {/* <Leaves /> */}
-      {/* <Snowflakes /> */}
+      <Snowflakes />
       <Box
         sx={{
           bgcolor: 'background.default',
