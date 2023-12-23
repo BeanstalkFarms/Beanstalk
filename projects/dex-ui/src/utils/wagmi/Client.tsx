@@ -4,7 +4,7 @@ import { CoinbaseWalletConnector } from "wagmi/connectors/coinbaseWallet";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 
-// import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
+import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 
@@ -81,13 +81,13 @@ export const client: any = createClient({
         shimDisconnect: true
       }
     }),
-    // new WalletConnectConnector({
-    //   chains,
-    //   options: {
-    //     projectId: "TODO",
-    //     showQrModal: true
-    //   }
-    // }),
+    new WalletConnectConnector({
+      chains,
+      options: {
+        projectId: import.meta.env.VITE_CONNECT_KIT_PROJECT_ID,
+        showQrModal: true
+      }
+    }),
     new CoinbaseWalletConnector({
       chains,
       options: {
