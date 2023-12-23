@@ -15,6 +15,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
+import "hardhat/console.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking
@@ -81,33 +82,46 @@ contract ConvertFacet is ReentrancyGuard {
         * If it is anti-lambda, account is the address of the account to update the deposit
         * and decreaseBDV is true */
         (toToken, fromToken, toAmount, fromAmount, account, decreaseBDV) = LibConvert.convert(convertData);
+
+        console.log("decreaseBDV: %s", decreaseBDV);
+        console.log("account convert is called on: %s", account);
         
         require(fromAmount > 0, "Convert: From amount is 0.");
 
+        // replace account with msg.sender if no account is specified
         if(account == address(0)) account = msg.sender;
 
         LibSilo._mow(account, fromToken);
         LibSilo._mow(account, toToken);
 
+        // withdraw the tokens from the deposit 
+        // calls LibTokenSilo.removeDepositFromAccount()
+        // removeDepositFromAccount subtracts the amount and bdv from the deposit
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
             amounts,
-            fromAmount
+            fromAmount,
+            account
         );
 
         // calculate the bdv of the new deposit
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
+
+        console.log("fromBdv: %s", fromBdv);
 
         // if we have used the anti-lambda-lamda convert, 
         // we need to decrease the bdv of the new deposit
         if(decreaseBDV) {
 	        toBdv = newBdv;
         } else {
+        // else keep the max of the two bdvs
 	        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
         }
 
-        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
+        console.log("toBdv Final: %s", toBdv);
+
+        toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk, account);
 
         emit Convert(account, fromToken, toToken, fromAmount, toAmount);
     }
@@ -116,12 +130,15 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         int96[] memory stems,
         uint256[] memory amounts,
-        uint256 maxTokens
+        uint256 maxTokens,
+        address account
     ) internal returns (uint256, uint256) {
         require(
             stems.length == amounts.length,
             "Convert: stems, amounts are diff lengths."
         );
+        console.log("Inside _withdrawTokens");
+        console.log("BDV not yet updated");
         LibSilo.AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
@@ -134,7 +151,7 @@ contract ConvertFacet is ReentrancyGuard {
                     //keeping track of stalk removed must happen before we actually remove the deposit
                     //this is because LibTokenSilo.grownStalkForDeposit() uses the current deposit info
                     depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        account,
                         token,
                         stems[i],
                         amounts[i]
@@ -152,7 +169,7 @@ contract ConvertFacet is ReentrancyGuard {
                     amounts[i] = maxTokens.sub(a.tokensRemoved);
                     
                     depositBDV = LibTokenSilo.removeDepositFromAccount(
-                        msg.sender,
+                        account,
                         token,
                         stems[i],
                         amounts[i]
@@ -181,7 +198,7 @@ contract ConvertFacet is ReentrancyGuard {
             for (i; i < stems.length; ++i) amounts[i] = 0;
             
             emit RemoveDeposits(
-                msg.sender,
+                account,
                 token,
                 stems,
                 amounts,
@@ -190,8 +207,8 @@ contract ConvertFacet is ReentrancyGuard {
             );
 
             emit LibSilo.TransferBatch(
-                msg.sender, 
-                msg.sender,
+                account, 
+                account,
                 address(0), 
                 depositIds, 
                 amounts
@@ -203,8 +220,10 @@ contract ConvertFacet is ReentrancyGuard {
             "Convert: Not enough tokens removed."
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
+        console.log("withdrawTokens: bdv removed %s", a.bdvRemoved);
+        console.log("withdrawTokens: tokens removed %s", a.tokensRemoved);
         LibSilo.burnStalk(
-            msg.sender,
+            account,
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
         );
         return (a.stalkRemoved, a.bdvRemoved);
@@ -215,9 +234,16 @@ contract ConvertFacet is ReentrancyGuard {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk // stalk grown previously by this deposit
+        uint256 grownStalk, // stalk grown previously by this deposit
+        address account // account to update the deposit (used in bdv decrease)
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
+       
+        console.log("Inside ConverFacet: _depositTokensForConvert");
+        console.log("Account to deposit: %s", account);
+        console.log("bdv to re add: %s", bdv);
+        console.log("amount of tokens to re add: %s", amount);
+
 
         //calculate stem index we need to deposit at from grownStalk and bdv
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
@@ -230,11 +256,13 @@ contract ConvertFacet is ReentrancyGuard {
 
         (grownStalk, stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
 
-        LibSilo.mintStalk(msg.sender, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
+        console.log("grownStalk: %s", grownStalk);
+
+        LibSilo.mintStalk(account, bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
         LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
         LibTokenSilo.addDepositToAccount(
-            msg.sender, 
+            account, 
             token, 
             stem, 
             amount, 

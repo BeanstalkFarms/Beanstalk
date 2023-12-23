@@ -42,6 +42,14 @@ contract MockSiloFacet is SiloFacet {
         return amount - 10;
     }
 
+    function newMockBDV() external pure returns (uint256) {
+        return 1e6;
+    }
+
+    function newMockBDVDecrease() external pure returns (uint256) {
+        return 0.9e6;
+    }
+
     /// @dev changes bdv selector of token
     function mockChangeBDVSelector(address token, bytes4 selector) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
