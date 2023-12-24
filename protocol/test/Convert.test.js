@@ -40,25 +40,9 @@ describe('Convert', function () {
 
     this.season.deployStemsUpgrade();
 
-    /**
-     * @notice Describes the settings for each Token that is Whitelisted in the Silo.
-     * @param selector The encoded BDV function selector for the token that pertains to 
-     * an external view Beanstalk function with the following signature:
-     * ```
-     * function tokenToBdv(uint256 amount) external view returns (uint256);
-     * --> CAN BE FOUND AT THE BDV FACET FOR SEVERAL WHITELISTED TOKENS IE CURVE, ETH...
-     * ```
-     * It is called by `LibTokenSilo` through the use of `delegatecall`
-     * to calculate a token's BDV at the time of Deposit.
-     * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
-     * previously called stalk.
-    */
-
     await this.silo.mockWhitelistToken(
       this.siloToken.address, // token                         
-      this.silo.interface.getSighash("mockBDV(uint256 amount)"), // selector --> how you will calculate the bdv. see LibTokenSilo.sol beandenominatedvalue function
-      // SINCE THE EXTERNAL FUNCTION USED TO CALC THE BDV OF THE SILO TOKEN IS THE MOCKBDV THAT JUST RETURNS THE AMOUNT
-      // THE BDV IS JUST THE INPUT AMOUNT SO 1 SILO TOKEN = 1 BDV
+      this.silo.interface.getSighash("mockBDV(uint256 amount)"), // selector for bdv calculation
       '10000', // stalkIssuedPerBdv
       1e6 //aka "1 seed" // stalkEarnedPerSeason
     );
@@ -77,7 +61,7 @@ describe('Convert', function () {
     await this.silo.mockWhitelistToken(
       this.newSiloToken.address, // token                        
       this.silo.interface.getSighash("newMockBDV()"), // selector (returns 1e6)
-      '10000', // stalkIssuedPerBdv
+      '1', // stalkIssuedPerBdv
       1e6 //aka "1 seed" // stalkEarnedPerSeason
     );
   
@@ -91,7 +75,7 @@ describe('Convert', function () {
   afterEach(async function () {
     await revertToSnapshot(snapshotId);
   });
-  //  -------------------------------- OLD TESTS --------------------------------
+
   describe('Withdraw For Convert', async function () {
     describe("Revert", async function () {
       it('diff lengths', async function () {
@@ -401,23 +385,11 @@ describe('Convert', function () {
   })
 
 //  ------------------------------ ANTI LAMBDA CONVERT ----------------------------------
-// FOR BDV OF INDIVIDUAL DEPOSIT? (SiloExit.sol)
-//   /**
-//      * @notice Return the balance of Deposited BDV of `token` for a given `account`.
-//      */
-//   function balanceOfDepositedBdv(address account, address token)
-//   external
-//   view
-//   returns (uint256 depositedBdv)
-// {
-//   depositedBdv = s.a[account].mowStatuses[token].bdv;
-// }
-
-// GET DEPOSIT --> (LibTokenSilo.sol)
 
   describe("anti lambda convert bdv decrease", async function () {
     
     beforeEach(async function () {
+      // ----------------------- SETUP ------------------------
       // user deposits 100 new silo token at stem 0 so 1000000 bdv
       await this.newSiloToken.mint(userAddress, '10000000');
       await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
@@ -426,9 +398,9 @@ describe('Convert', function () {
       // simulate deposit bdv decrease for user by changing bdv selector to newMockBDVDecrease ie 0.9e6
       await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVDecrease()"))
       console.log("Selector changed to newMockBDVDecrease")
-      currentBdv = await this.silo.newMockBDVDecrease()
-      let depositBdv = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
-      depositBdv = depositBdv[1]
+      const currentBdv = await this.silo.newMockBDVDecrease()
+      let depositResult = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
+      const depositBdv = depositResult[1]
       console.log("Deposit BDV: " + depositBdv)
       console.log("Current BDV: " + currentBdv)
 
@@ -443,25 +415,34 @@ describe('Convert', function () {
         ['100']
       )
       // Result returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+      console.log("Result: " + this.result + " " + this.result.fromAmount + " " + this.result.toAmount + " " + this.result.fromBdv + " " + this.result.toBdv)
     })
 
-    it('correctly updates deposit stats', async function () {
+    it('Correctly updates deposit stats', async function () {
       let deposit = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0);
       expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
       expect(deposit[1]).to.eq('900000');  // deposit[1] = bdv
     })
 
-    it('correctly updates totals', async function () {
+    it('Correctly updates totals', async function () {
       expect(await this.silo.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
       expect(await this.silo.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('900000');
+      // 100000 stalk removed = 1 stalk/bdv  for newSiloToken * 100000 bdv removed from convert
+      expect(await this.silo.totalStalk()).to.equal('2900100');
+    })
+
+    it('Emits events', async function () {
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [0], ['100'], '100', ['1000000']);
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, 0, '100', '900000'); // last param = updated bdv
+      await expect(this.result).to.emit(this.convert, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
     })
   
   })
 
-
   describe("anti lambda convert bdv increase", async function () {
     
     beforeEach(async function () {
+      // ----------------------- SETUP ------------------------
       // user deposits 100 new silo token at stem 0 so 1000000 bdv
       await this.newSiloToken.mint(userAddress, '10000000');
       await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
@@ -471,8 +452,8 @@ describe('Convert', function () {
       await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVIncrease()"))
       console.log("Selector changed to newMockBDVIncrease")
       currentBdv = await this.silo.newMockBDVIncrease()
-      let depositBdv = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
-      depositBdv = depositBdv[1]
+      let depositResult = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
+      const depositBdv = depositResult[1]
       console.log("Deposit BDV: " + depositBdv)
       console.log("Current BDV: " + currentBdv)
 
@@ -489,15 +470,23 @@ describe('Convert', function () {
       // Result returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     })
 
-    it('correctly updates deposit stats', async function () {
+    it('Correctly updates deposit stats', async function () {
       let deposit = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0);
       expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
       expect(deposit[1]).to.eq('1100000');  // deposit[1] = bdv
     })
 
-    it('correctly updates totals', async function () {
+    it('Correctly updates totals', async function () {
       expect(await this.silo.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
       expect(await this.silo.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('1100000');
+      // 100000 stalk added = 1 stalk/bdv for newSiloToken * 100000 bdv removed from convert
+      expect(await this.silo.totalStalk()).to.equal('3100100');
+    })
+
+    it('Emits events', async function () {
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [0], ['100'], '100', ['1000000']);
+      await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, 0, '100', '1100000'); // last param = updated bdv
+      await expect(this.result).to.emit(this.convert, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
     })
   
   })
