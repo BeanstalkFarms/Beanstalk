@@ -42,10 +42,12 @@ contract MockSiloFacet is SiloFacet {
         return amount - 10;
     }
 
+    /// @dev Mocks a constant BDV of 1e6
     function newMockBDV() external pure returns (uint256) {
         return 1e6;
     }
 
+    /// @dev Mocks a decrease in constant BDV of 
     function newMockBDVDecrease() external pure returns (uint256) {
         return 0.9e6;
     }

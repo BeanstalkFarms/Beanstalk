@@ -90,7 +90,6 @@ library LibTokenSilo {
         console.log("Inside LibTokenSilo: incrementTotalDeposited");
         console.log("total token balance in silo: %s", s.siloBalances[token].deposited);
         console.log("total bdv balance in silo of token: %s", s.siloBalances[token].depositedBdv);
-
     }
 
     /**
@@ -186,7 +185,7 @@ library LibTokenSilo {
         uint256 bdv,
         Transfer transferType
     ) internal {
-        console.log("Inside LibTokenSilo: addDepositToAccount last step");
+        console.log("Inside LibTokenSilo: addDepositToAccount");
         console.log("account: %s", account);
         console.log("token: %s", token);
         console.log("amount: %s", amount);
@@ -203,9 +202,9 @@ library LibTokenSilo {
         s.a[account].deposits[depositId].bdv = 
             s.a[account].deposits[depositId].bdv.add(bdv.toUint128());
 
-        console.log("Inside LibTokenSilo: addDepositToAccount DEPOSIT ID FINAL VALUES");
-        console.log("amount: %s", s.a[account].deposits[depositId].amount);
-        console.log("bdv: %s", s.a[account].deposits[depositId].bdv);
+        console.log("Inside LibTokenSilo: addDepositToAccount DEPOSIT ID FINAL VALUES FROM STORAGE");
+        console.log("new deposit amount: %s", s.a[account].deposits[depositId].amount);
+        console.log("new depsosit bdv: %s", s.a[account].deposits[depositId].bdv);
         
         // update the mow status (note: mow status is per token, not per depositId)
         // SafeMath not necessary as the bdv is already checked to be <= type(uint128).max
@@ -285,7 +284,6 @@ library LibTokenSilo {
         // deletes the deposit from storage
         if (crateAmount > 0) delete s.a[account].deposits[depositId];
         console.log("LibTokenSilo: Deposit Removed fully");
-
         // SafeMath unnecessary b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
             uint128(crateBDV)

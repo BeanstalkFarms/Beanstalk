@@ -41,12 +41,6 @@ library LibConvert {
     {
         LibConvertData.ConvertKind kind = convertData.convertKind();
 
-        // added return values initialization
-        // may not be necessary and cause compiler to 'lock' them to false and 0
-        // decleared in return params 
-        // bool decreaseBDV = false;
-        // address account = address(0);
-
         if (kind == LibConvertData.ConvertKind.BEANS_TO_CURVE_LP) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibCurveConvert
                 .convertBeansToLP(convertData);
@@ -73,7 +67,7 @@ library LibConvert {
                 .convertUnripeToRipe(convertData);
         // Anti-Lambda -> Lambda
         } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
-            console.log("Anti-Lambda -> Lambda Triggered");
+            console.log("Anti-Lambda -> Lambda Triggered In LibConvert");
 	        (tokenOut, tokenIn, amountOut, amountIn, account) = LibLambdaConvert
                 .antiConvert(convertData);
 	        decreaseBDV = true;

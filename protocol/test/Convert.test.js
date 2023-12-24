@@ -69,22 +69,18 @@ describe('Convert', function () {
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
     
     // ------------------------------ NEW CHANGES ------------------------------
-
+    // To isolate the anti lamda functionality, we will create and whitelist a new silo token
     this.newSiloToken = await ethers.getContractFactory("MockToken");
     this.newSiloToken = await this.newSiloToken.deploy("Silo2", "SILO2")
     await this.newSiloToken.deployed()
 
     await this.silo.mockWhitelistToken(
       this.newSiloToken.address, // token                        
-      this.silo.interface.getSighash("newMockBDV()"), // selector
+      this.silo.interface.getSighash("newMockBDV()"), // selector (returns 1e6)
       '10000', // stalkIssuedPerBdv
       1e6 //aka "1 seed" // stalkEarnedPerSeason
     );
-    
-    // // user deposits 100 new silo token at stem 2
-    // await this.newSiloToken.mint(userAddress, '100000000000000');
-    // await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
-    // await this.silo.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+  
 
   });
 
@@ -417,94 +413,53 @@ describe('Convert', function () {
 //   depositedBdv = s.a[account].mowStatuses[token].bdv;
 // }
 
-// GET DEPOSIT (LibTokenSilo.sol)
-  /**
-     * @dev Locate the `amount` and `bdv` for a user's Deposit in storage.
-     * 
-     * Silo V3 Deposits are stored within each {Account} as a mapping of:
-     *  `uint256 DepositID => { uint128 amount, uint128 bdv }`
-     *  The DepositID is the concatination of the token address and the stem.
-     * 
-     * Silo V2 deposits are only usable after a successful migration, see
-     * mowAndMigrate within the Migration facet.
-     *
-     */
-      //function getDeposit(
-      //     address account,
-      //     address token,
-      //     int96 stem
-      // ) internal view returns (uint256 amount, uint256 bdv) {
-      //     AppStorage storage s = LibAppStorage.diamondStorage();
-      //     uint256 depositId = LibBytes.packAddressAndStem(
-      //         token,
-      //         stem
-      //     );
-      //     amount = s.a[account].deposits[depositId].amount;
-      //     bdv = s.a[account].deposits[depositId].bdv;
-      // }
+// GET DEPOSIT --> (LibTokenSilo.sol)
 
-    // CONVERT FACET CONVERT FUNCTION
-    //   function convert(
-    //     bytes calldata convertData,
-    //     int96[] memory stems,
-    //     uint256[] memory amounts
-    // )
-
-  // describe("anti lambda convert", async function () {
-  //   // Implement a new Convert type that allows any user to decrease a Deposit’s BDV if the Recorded BDV 
-  //   // (the BDV stored on-chain with the Deposit) (storage.depositID.bdv) is greater than the Current BDV 
-  //   // (the number of tokens in the Deposit * the current BDV of that token).
+  describe("anti lambda convert bdv decrease", async function () {
+    // Implement a new Convert type that allows any user to decrease a Deposit’s BDV if the Recorded BDV 
+    // (the BDV stored on-chain with the Deposit) (storage.depositID.bdv) is greater than the Current BDV 
+    // (the number of tokens in the Deposit * the current BDV of that token).
     
-  //   beforeEach(async function () {
-  //     // --------------------- USER2 DEPOSIT ----------------------
-  //     console.log("-------------------------- START DEPOSIT PRINTS --------------------------")
-  //     // also mint some silo tokens for user2
-  //     await this.siloToken.mint(user2Address, '10000');
-  //     // approve the silo to spend the silo token for user2 as well
-  //     await this.siloToken.connect(user2).approve(this.silo.address, '100000000000');
-  //     // user2 should also make a deposit of 100 at stem 2
-  //     await this.silo.connect(user2).deposit(this.siloToken.address, '100', EXTERNAL);
-  //     console.log("-------------------------- END DEPOSIT PRINTS --------------------------")
-  //     // ------------------ USER2 DEPOSIT INFO ---------------------
-  //     let user2deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 2)
-  //     const amount = user2deposit[0]
-  //     const recordedBdv = user2deposit[1]
-  //     console.log("------------------------USER2 DEPOSIT BEFORE CONVERT WITH ORIGINAL SELECTOR----------------------------")
-  //     console.log("Recorded BDV: " + recordedBdv + " Amount: " + amount)
-  //     // SIMULATE DEPOSIT BDV DECREASE FOR USER2 BY CHANGING BDV SELECTOR TO MOCKBDVDECREASE
-  //     this.silo.mockChangeBDVSelector(this.siloToken.address, this.silo.interface.getSighash("mockBDVDecrease(uint256 amount)"))
-  //     console.log("Selector changed")
-  //     currentBdv = await this.silo.mockBDVDecrease(amount)
-  //     console.log("Current BDV: " + currentBdv)
-  //     // ----------------------- CONVERT ------------------------
-  //     console.log("User calls anti lambda convert on user2 to decrease user2's deposit bdv to current bdv")
-  //     console.log("User2 address: " + user2Address)
-  //     console.log("Silo token address: " + this.siloToken.address)
-  //     console.log("-------------------------- END TEST PRINTS --------------------------")
-  //     // MockConvertFacet.sol
-  //     this.result = await this.convert.connect(user).callStatic.convert(
-  //       // CALLDATA                              // amount, token ,account
-  //       ConvertEncoder.convertAntiLambdaToLambda('100', this.siloToken.address , user2Address),
-  //       // STEMS []
-  //       ['2'],
-  //       // AMOUNTS []
-  //       ['100']
-  //     )
-  //     // Result returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
-  //     console.log("Result: toStem: " + this.result.toStem + " fromAmount: " + this.result.fromAmount + " toAmount: " + this.result.toAmount + " fromBdv: " + this.result.fromBdv + " toBdv: " + this.result.toBdv)
-  //   })
+    beforeEach(async function () {
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, '10000000');
+      await this.newSiloToken.connect(user).approve(this.silo.address, '1000000000');
+      await this.silo.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
 
-  //   it('correctly updates deposit stats', async function () {
-  //                                       // account ,    token,      stem
-  //     let deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 3);
-  //     expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
-  //     expect(deposit[1]).to.eq('90');  // deposit[1] = bdv
-  //   })
+      // SIMULATE DEPOSIT BDV DECREASE FOR USER2 BY CHANGING BDV SELECTOR TO MOCKBDVDECREASE
+      await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVDecrease()"))
+      console.log("Selector changed to newMockBDVDecrease")
+      currentBdv = await this.silo.newMockBDVDecrease()
+      let depositBdv = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
+      depositBdv = depositBdv[1]
+      console.log("Deposit BDV: " + depositBdv)
+      console.log("Current BDV: " + currentBdv)
 
-  //   it('correctly updates totals', async function () {
-  //     expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
-  //     expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('290');
-  //   })
+      // ----------------------- CONVERT ------------------------
+      console.log("User2 calls anti lambda convert on user to decrease user's recorded deposit bdv to current bdv")
+      this.result = await this.convert.connect(user).convert(
+        // CALLDATA                              // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        // STEMS []
+        ['0'],
+        // AMOUNTS []
+        ['100']
+      )
+      // Result returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
+      console.log("Convert Result: toStem: " + this.result.toStem + " fromAmount: " + this.result.fromAmount + " toAmount: " + this.result.toAmount + " fromBdv: " + this.result.fromBdv + " toBdv: " + this.result.toBdv)
+
+    })
+
+    it('correctly updates deposit stats', async function () {
+      let deposit = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0);
+      expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq('900000');  // deposit[1] = bdv
+    })
+
+    it('correctly updates totals', async function () {
+      expect(await this.silo.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
+      expect(await this.silo.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('900000');
+    })
   
-  // })
+  })
 });
