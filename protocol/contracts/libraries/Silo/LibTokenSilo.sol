@@ -14,7 +14,6 @@ import "contracts/libraries/LibSafeMath128.sol";
 import "contracts/libraries/LibSafeMathSigned128.sol";
 import "contracts/libraries/LibSafeMathSigned96.sol";
 import "contracts/libraries/LibBytes.sol";
-import "hardhat/console.sol";
 
 
 /**
@@ -76,10 +75,6 @@ library LibTokenSilo {
      * @dev Increment the total amount and bdv of `token` deposited in the Silo.
      */
     function incrementTotalDeposited(address token, uint256 amount, uint256 bdv) internal {
-        console.log("Inside LibTokenSilo: incrementTotalDeposited");
-        console.log("to add token: %s", token);
-        console.log("to add amount: %s", amount);
-        console.log("to add bdv: %s", bdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.siloBalances[token].deposited = s.siloBalances[token].deposited.add(
             amount.toUint128()
@@ -87,9 +82,6 @@ library LibTokenSilo {
         s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.add(
             bdv.toUint128()
         );
-        console.log("Inside LibTokenSilo: incrementTotalDeposited");
-        console.log("total token balance in silo: %s", s.siloBalances[token].deposited);
-        console.log("total bdv balance in silo of token: %s", s.siloBalances[token].depositedBdv);
     }
 
     /**
@@ -103,9 +95,6 @@ library LibTokenSilo {
         s.siloBalances[token].depositedBdv = s.siloBalances[token].depositedBdv.sub(
             bdv.toUint128()
         );
-        console.log("Inside LibTokenSilo: decrementTotalDeposited");
-        console.log("total token balance in silo: %s", s.siloBalances[token].deposited);
-        console.log("total bdv balance in silo of token: %s", s.siloBalances[token].depositedBdv);
     }
 
     /**
@@ -185,11 +174,6 @@ library LibTokenSilo {
         uint256 bdv,
         Transfer transferType
     ) internal {
-        console.log("Inside LibTokenSilo: addDepositToAccount");
-        console.log("account: %s", account);
-        console.log("token: %s", token);
-        console.log("amount: %s", amount);
-        console.log("bdv: %s", bdv);
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(
             token,
@@ -201,10 +185,6 @@ library LibTokenSilo {
             s.a[account].deposits[depositId].amount.add(amount.toUint128());
         s.a[account].deposits[depositId].bdv = 
             s.a[account].deposits[depositId].bdv.add(bdv.toUint128());
-
-        console.log("Inside LibTokenSilo: addDepositToAccount DEPOSIT ID FINAL VALUES FROM STORAGE");
-        console.log("new deposit amount: %s", s.a[account].deposits[depositId].amount);
-        console.log("new depsosit bdv: %s", s.a[account].deposits[depositId].bdv);
         
         // update the mow status (note: mow status is per token, not per depositId)
         // SafeMath not necessary as the bdv is already checked to be <= type(uint128).max
@@ -276,14 +256,11 @@ library LibTokenSilo {
             s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
                 removedBDV.toUint128()
             );
-            console.log("LibTokenSilo: Deposit Removed Partially");
-            console.log("LibTokenSilo: removedBDV: %s", removedBDV);
             return removedBDV;
         }
         // Full remove
         // deletes the deposit from storage
         if (crateAmount > 0) delete s.a[account].deposits[depositId];
-        console.log("LibTokenSilo: Deposit Removed fully");
         // SafeMath unnecessary b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
             uint128(crateBDV)

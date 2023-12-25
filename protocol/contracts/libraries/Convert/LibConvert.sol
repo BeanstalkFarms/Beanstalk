@@ -12,11 +12,10 @@ import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibConvert
- * @author Publius
+ * @author Publius, deadmanwalking
  */
 library LibConvert {
     using SafeMath for uint256;
@@ -65,9 +64,7 @@ library LibConvert {
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
                 .convertUnripeToRipe(convertData);
-        // Anti-Lambda -> Lambda
         } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
-            console.log("Anti-Lambda -> Lambda Triggered In LibConvert");
 	        (tokenOut, tokenIn, amountOut, amountIn, account) = LibLambdaConvert
                 .antiConvert(convertData);
 	        decreaseBDV = true;
@@ -89,7 +86,7 @@ library LibConvert {
         if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
             return LibCurveConvert.beansToPeg(C.CURVE_BEAN_METAPOOL);
         
-        // Lambda -> Lambda
+        // Lambda -> Lambda &
         // Anti-Lambda -> Lambda
         if (tokenIn == tokenOut) 
             return type(uint256).max;
@@ -146,7 +143,7 @@ library LibConvert {
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
-        // Lambda -> Lambda
+        // Lambda -> Lambda &
         // Anti-Lambda -> Lambda
         if (tokenIn == tokenOut)
             return amountIn;

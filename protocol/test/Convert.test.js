@@ -41,11 +41,12 @@ describe('Convert', function () {
     this.season.deployStemsUpgrade();
 
     await this.silo.mockWhitelistToken(
-      this.siloToken.address, // token                         
-      this.silo.interface.getSighash("mockBDV(uint256 amount)"), // selector for bdv calculation
-      '10000', // stalkIssuedPerBdv
-      1e6 //aka "1 seed" // stalkEarnedPerSeason
+      this.siloToken.address,                   
+      this.silo.interface.getSighash("mockBDV(uint256 amount)"),
+      '10000',
+      1e6 //aka "1 seed"
     );
+
     // user1 deposits 2 times at stem 1 and 2 100 silo tokens , so 100 bdv for each deposit
     await this.season.siloSunrise(0);
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL);
@@ -65,7 +66,6 @@ describe('Convert', function () {
       1e6 //aka "1 seed" // stalkEarnedPerSeason
     );
   
-
   });
 
   beforeEach(async function () {
@@ -414,8 +414,6 @@ describe('Convert', function () {
         // AMOUNTS []
         ['100']
       )
-      // Result returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
-      console.log("Result: " + this.result + " " + this.result.fromAmount + " " + this.result.toAmount + " " + this.result.fromBdv + " " + this.result.toBdv)
     })
 
     it('Correctly updates deposit stats', async function () {
@@ -427,7 +425,7 @@ describe('Convert', function () {
     it('Correctly updates totals', async function () {
       expect(await this.silo.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
       expect(await this.silo.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('900000');
-      // 100000 stalk removed = 1 stalk/bdv  for newSiloToken * 100000 bdv removed from convert
+      // 100000 stalk removed = 1 stalk/bdv for newSiloToken * 100000 bdv removed from convert
       expect(await this.silo.totalStalk()).to.equal('2900100');
     })
 
@@ -467,7 +465,6 @@ describe('Convert', function () {
         // AMOUNTS []
         ['100']
       )
-      // Result returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     })
 
     it('Correctly updates deposit stats', async function () {
@@ -479,7 +476,7 @@ describe('Convert', function () {
     it('Correctly updates totals', async function () {
       expect(await this.silo.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
       expect(await this.silo.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('1100000');
-      // 100000 stalk added = 1 stalk/bdv for newSiloToken * 100000 bdv removed from convert
+      // 100000 stalk added = 1 stalk/bdv for newSiloToken * 100000 bdv added from convert
       expect(await this.silo.totalStalk()).to.equal('3100100');
     })
 

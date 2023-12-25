@@ -15,10 +15,9 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
-import "hardhat/console.sol";
 
 /**
- * @author Publius, Brean, DeadManWalking
+ * @author Publius, Brean, deadmanwalking
  * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
 contract ConvertFacet is ReentrancyGuard {
@@ -83,15 +82,6 @@ contract ConvertFacet is ReentrancyGuard {
         * and decreaseBDV is true */
         (toToken, fromToken, toAmount, fromAmount, account, decreaseBDV) = LibConvert.convert(convertData);
 
-        console.log("Inside ConvertFacet");
-        console.log("Convert decoded");
-        console.log("toToken: %s", toToken);
-        console.log("fromToken: %s", fromToken);
-        console.log("toAmount: %s", toAmount);
-        console.log("fromAmount: %s", fromAmount);
-        console.log("decreaseBDV: %s", decreaseBDV);
-        console.log("account convert is called on: %s", account);
-        
         require(fromAmount > 0, "Convert: From amount is 0.");
 
         // replace account with msg.sender if no account is specified
@@ -101,8 +91,6 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo._mow(account, toToken);
 
         // withdraw the tokens from the deposit 
-        // calls LibTokenSilo.removeDepositFromAccount()
-        // removeDepositFromAccount subtracts the amount and bdv from the deposit
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
@@ -115,17 +103,13 @@ contract ConvertFacet is ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
 
         // if we have used the anti-lambda-lamda convert, 
-        // we need to decrease the bdv of the new deposit
+        // we need to update the bdv of the new deposit
         if(decreaseBDV) {
 	        toBdv = newBdv;
         } else {
         // else keep the max of the two bdvs
 	        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
         }
-
-        console.log("withdrawTokensCompleted. Results:");
-        console.log("fromBdv: %s", fromBdv);
-        console.log("toBdv Final: %s", toBdv);
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk, account);
 
@@ -143,7 +127,6 @@ contract ConvertFacet is ReentrancyGuard {
             stems.length == amounts.length,
             "Convert: stems, amounts are diff lengths."
         );
-        console.log("Inside ConvertFacet _withdrawTokens");
         LibSilo.AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
@@ -225,8 +208,7 @@ contract ConvertFacet is ReentrancyGuard {
             "Convert: Not enough tokens removed."
         );
         LibTokenSilo.decrementTotalDeposited(token, a.tokensRemoved, a.bdvRemoved);
-        console.log("withdrawTokens: bdv removed %s", a.bdvRemoved);
-        console.log("withdrawTokens: tokens removed %s", a.tokensRemoved);
+
         LibSilo.burnStalk(
             account,
             a.stalkRemoved.add(a.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv))
@@ -244,12 +226,6 @@ contract ConvertFacet is ReentrancyGuard {
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
        
-        console.log("Inside ConverFacet: _depositTokensForConvert");
-        console.log("Account to deposit to: %s", account);
-        console.log("bdv to re add: %s", bdv);
-        console.log("amount of tokens to re add: %s", amount);
-
-
         //calculate stem index we need to deposit at from grownStalk and bdv
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
         //then in affect we lose that partial season's worth of stalk when we deposit

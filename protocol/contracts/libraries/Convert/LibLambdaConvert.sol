@@ -7,11 +7,15 @@ import {LibConvertData} from "./LibConvertData.sol";
 
 /**
  * @title LibLambdaConvert
- * @author Publius
+ * @author Publius, deadmanwalking
  */
 library LibLambdaConvert {
     using LibConvertData for bytes;
-    
+
+    /**
+     * @notice This function returns the full input for use in lambda convert
+     * In lambda convert, the account converts from and to the same token.
+     */
     function convert(bytes memory convertData)
         internal
         pure
@@ -27,6 +31,12 @@ library LibLambdaConvert {
         amountOut = amountIn;
     }
 
+    /** 
+     * @notice This function returns the full input for use in anti-lamda convert
+     * In anti lamda convert, any user can convert on behalf of an account 
+     * to update a dedposit's bdv.
+     * This is why the additional account parameter is returned.
+     */
     function antiConvert(bytes memory convertData)
         internal
         pure

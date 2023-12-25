@@ -417,9 +417,6 @@ contract TokenSilo is Silo {
      * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
      */
     function getTotalDeposited(address token) external view returns (uint256) {
-        console.log("getTotalDeposited");
-        console.log(token);
-        console.log(s.siloBalances[token].deposited);
         return s.siloBalances[token].deposited;
     }
 
@@ -427,9 +424,6 @@ contract TokenSilo is Silo {
      * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
      */
     function getTotalDepositedBdv(address token) external view returns (uint256) {
-        console.log("getTotalDepositedBdv");
-        console.log(token);
-        console.log(s.siloBalances[token].depositedBdv);
         return s.siloBalances[token].depositedBdv;
     }
 
