@@ -214,6 +214,7 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
         "WhitelistFacet", // update whitelist abilities.
         "MetadataFacet", // update metadata
         "BDVFacet", // update bdv functions
+        "SiloGettersFacet", // add silo getters
       ],
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],

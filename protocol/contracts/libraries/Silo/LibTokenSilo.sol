@@ -14,9 +14,9 @@ import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibSafeMathSigned128} from "contracts/libraries/LibSafeMathSigned128.sol";
 import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
-import {LibBitMask} from "contracts/libraries/Silo/LibBitMask.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import "hardhat/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -247,8 +247,7 @@ library LibTokenSilo {
             stem,
             amount,
             bdv,
-            Transfer.emitTransferSingle,
-            germ
+            Transfer.emitTransferSingle
         );
 
         stalk = bdv.mul(s.ss[token].stalkIssuedPerBdv);
@@ -276,8 +275,7 @@ library LibTokenSilo {
         int96 stem,
         uint256 amount,
         uint256 bdv,
-        Transfer transferType,
-        LibGerminate.Germinate germ
+        Transfer transferType
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
@@ -289,43 +287,12 @@ library LibTokenSilo {
         s.a[account].deposits[depositId].bdv = s.a[account].deposits[depositId].bdv.add(
             bdv.toUint128()
         );
-        
-        // if the deposit is germinating, update farmer bitmask and germinating bdv.
-        // germinating bdv is used when calculating the farmers newly grown stalk and earned beans.
-        // update farmer bitmask to include token:
-        if (germ != LibGerminate.Germinate.NOT_GERMINATING) {
 
-            // determine whether the deposit is odd or even germinating.
-            Account.FarmerGerminating storage germinate;
-            if (germ == LibGerminate.Germinate.ODD) {
-                // odd farmer germinating
-                germinate = s.a[account].oddGerminating;
-            } else {
-                // even farmer germinating
-                germinate = s.a[account].evenGerminating;
-            }
-
-            address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
-            for(uint256 i; i < tokens.length; i++) {
-                if (tokens[i] == token) {
-                    // update farmer bitmask to include token
-                    germinate.germinatingTokenMask = LibBitMask.setBit(
-                        germinate.germinatingTokenMask,
-                        i
-                    );
-                    break;
-                }
-            }
-            // increment germination.
-            germinate.bdv[token] = germinate.bdv[token].add(bdv);
-        } else {
-            // if the deposit is not germinating, update mow status bdv.
-            // this occurs when a farmer is converting,
-            // or migrating from siloV2 to V3.
-            s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(
-                bdv.toUint128()
-            );
-        }
+        // SafeMath unnecessary b/c crateBDV <= type(uint128).max
+        console.log("bdv: ", bdv);
+        s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(
+            bdv.toUint128()
+        );
 
         /**
          *  {addDepositToAccount} is used for both depositing and transferring deposits.
@@ -370,8 +337,7 @@ library LibTokenSilo {
         address account,
         address token,
         int96 stem,
-        uint256 amount,
-        LibGerminate.Germinate germ
+        uint256 amount
     ) internal returns (uint256 crateBDV) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
@@ -391,26 +357,6 @@ library LibTokenSilo {
             // which are both <= type(uint128).max
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
-
-            // if the deposit is germinating, update germinating bdv.
-            if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                // remove from the mow status bdv amount, which keeps track of total token deposited per farmer
-                s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
-                    removedBDV.toUint128()
-                );
-            } else {
-                // remove from the germinating bdv amount, which keeps track of total token germinating per farmer
-                if (germ == LibGerminate.Germinate.ODD) {
-                    // odd farmer germinating
-                    s.a[account].oddGerminating.bdv[token] = 
-                        s.a[account].oddGerminating.bdv[token].sub(removedBDV.toUint128());
-                } else {
-                    // even farmer germinating
-                    s.a[account].evenGerminating.bdv[token] = 
-                        s.a[account].evenGerminating.bdv[token].sub(removedBDV.toUint128());
-                }
-                
-            }
             
             return removedBDV;
         }
@@ -514,22 +460,26 @@ library LibTokenSilo {
      */
     function stemTipForTokenUntruncated(
         address token
-    ) internal view returns (int96 _stemTipForToken) {
+    ) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // SafeCast unnecessary because all casted variables are types smaller that int96.
-        _stemTipForToken =
+        _stemTip =
             s.ss[token].milestoneStem +
             int96(s.ss[token].stalkEarnedPerSeason).mul(
                 int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
             );
     }
 
+    function truncateStem(int96 stemTip) internal pure returns (int96) {
+        return stemTip.div(1e6);
+    }
+
     /**
      * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
      */
-    function stemTipForToken(address token) internal view returns (int96 _stemTipForToken) {
-        return stemTipForTokenUntruncated(token).div(1e6);
+    function stemTipForToken(address token) internal view returns (int96 stemTip) {
+        return truncateStem(stemTipForTokenUntruncated(token));
     }
 
     /**

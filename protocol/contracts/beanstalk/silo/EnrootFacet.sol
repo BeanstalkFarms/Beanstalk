@@ -18,6 +18,7 @@ import "../ReentrancyGuard.sol";
  **/
 contract EnrootFacet is ReentrancyGuard {
     using SafeMath for uint256;
+    using SafeCast for uint256;
 
     event RemoveDeposit(
         address indexed account,
@@ -69,6 +70,8 @@ contract EnrootFacet is ReentrancyGuard {
      * enough balance of `token` to remove.
      * Because the amount and the stem of an Deposit does not change, 
      * an ERC1155 event does not need to be emitted.
+     * 
+     * newly issued bdv and stalk should be germinating.
      */
     function enrootDeposit(
         address token,
@@ -76,17 +79,13 @@ contract EnrootFacet is ReentrancyGuard {
         uint256 amount
     ) external payable nonReentrant mowSender(token) {
         require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
-        
-        // get germination state.
-        (LibGerminate.Germinate germ, int96 stemTip) = LibGerminate.getGerminationState(token, stem);
 
         // remove Deposit and Redeposit with new BDV
         uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
             msg.sender,
             token,
             stem,
-            amount,
-            germ
+            amount
         );
         // Remove Deposit does not emit an event, while Add Deposit does.
         emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); 
@@ -100,20 +99,23 @@ contract EnrootFacet is ReentrancyGuard {
             stem, 
             amount, 
             newBDV,
-            LibTokenSilo.Transfer.noEmitTransferSingle,
-            germ
+            LibTokenSilo.Transfer.noEmitTransferSingle
         ); // emits AddDeposit event
 
         // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
         uint256 deltaBDV = newBDV.sub(ogBDV);
+
+        // get the germination state for the current season.
+        LibGerminate.Germinate germ = LibGerminate.getSeasonGerminationState();
+
         LibTokenSilo.incrementTotalGerminatingBdv(token, deltaBDV, germ);
 
-        // Mint Stalk associated with the new BDV.
+        // Mint Germinating Stalk associated with the new BDV.
         uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
-            LibSilo.stalkReward(stem, stemTip, uint128(deltaBDV))
+            LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
         );
 
-        LibSilo.mintStalk(msg.sender, deltaStalk, germ);
+        LibSilo.mintGerminatingStalk(msg.sender, deltaStalk.toUint128(), germ);
     }
 
     /** 
@@ -173,9 +175,9 @@ contract EnrootFacet is ReentrancyGuard {
             enrootData.bdvAdded = enrootData.bdvAdded.add(depositBdv);
         }
 
-        // note: we include the germinating bdv and stalk
-        // to get the change in stalk from enrooting.
-        incrementTotalGerminatingBdvAndMintStalk(
+        // Increment total germinating bdv and mint germinating stalk.
+        // the bdv is the bdvAdded minus the bdvRemoved from all states.
+        incrementTotalGerminatingBdvAndMintGerminatingStalk(
             token,
             enrootData.bdvAdded.sub(
                 ar.bdvRemoved
@@ -202,6 +204,7 @@ contract EnrootFacet is ReentrancyGuard {
         enrootData.germStem = LibGerminate.getGerminatingStem(token);
         enrootData.stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
     }
+    
     /**
      * @notice Adds a deposit to the account and calculates the stalk added.
      * @dev Placed in a function for stack overflow reasons.
@@ -214,22 +217,21 @@ contract EnrootFacet is ReentrancyGuard {
         EnrootData memory enrootData
     ) private returns (uint256 stalkAdded) {
         LibTokenSilo.addDepositToAccount(
-                msg.sender,
-                token,
-                stem,
-                amount,
-                bdv,
-                LibTokenSilo.Transfer.noEmitTransferSingle,
-                LibGerminate._getGerminationState(stem, enrootData.germStem)
-            );
+            msg.sender,
+            token,
+            stem,
+            amount,
+            bdv,
+            LibTokenSilo.Transfer.noEmitTransferSingle
+        );
 
-            return bdv.mul(enrootData.stalkPerBdv).add(
-                LibSilo.stalkReward(
-                    stem,
-                    enrootData.germStem.stemTip,
-                    uint128(bdv) // safeCast not needed because bdv is already uint128.
-                )
-            );
+        return bdv.mul(enrootData.stalkPerBdv).add(
+            LibSilo.stalkReward(
+                stem,
+                enrootData.germStem.stemTip,
+                uint128(bdv) // safeCast not needed because bdv is already uint128.
+            )
+        );
     }
     /**
      * @notice Increments total germinating bdv and mints germinating stalk,
@@ -240,7 +242,7 @@ contract EnrootFacet is ReentrancyGuard {
      * @param bdvChange The change in bdv from enrooting.
      * @param stalkChange The change in stalk from enrooting.
      */
-    function incrementTotalGerminatingBdvAndMintStalk(
+    function incrementTotalGerminatingBdvAndMintGerminatingStalk(
         address token,
         uint256 bdvChange,
         uint256 stalkChange
@@ -249,13 +251,13 @@ contract EnrootFacet is ReentrancyGuard {
         
         LibTokenSilo.incrementTotalGerminatingBdv(
             token, 
-            bdvChange,
+            bdvChange.toUint128(),
             _germ
         );
 
-        LibSilo.mintStalk(
+        LibSilo.mintGerminatingStalk(
             msg.sender,
-            stalkChange,
+            stalkChange.toUint128(),
             _germ
         );
     }

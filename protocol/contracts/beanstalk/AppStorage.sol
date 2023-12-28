@@ -60,19 +60,13 @@ contract Account {
     }
     
     /**
-     * @notice Stores a Farmer's germinating assets.
-     * @param stalk germinating stalk - stalk from assets deposited in the last two seasons.
-     * @param roots germinating roots - roots from assets deposited in the last two seasons.
-     * @param germinatingTokenMask - a bitmask of all the tokens that are germinating.
-     * @param germinatingBdv - a mapping of token address to germinating bdv.
-     * 
-     * @dev germinatingTokenMask limits the amount of whitelisted silo assets to 32.
+     * @notice Stores a Farmer's germinating stalk.
+     * @param odd - stalk from assets deposited in odd seasons.
+     * @param even - stalk from assets deposited in even seasons.
      */
-    struct FarmerGerminating {
-        uint112 stalk;
-        uint112 roots;
-        bytes4 germinatingTokenMask;
-        mapping(address => uint256) bdv;
+    struct FarmerGerminatingStalk {
+        uint128 odd;
+        uint128 even;
     }
     
     /**
@@ -175,8 +169,7 @@ contract Account {
         mapping(uint256 => Deposit) deposits; // SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
         mapping(address => MowStatus) mowStatuses; // Store a MowStatus for each Whitelisted Silo token
         mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping 
-        FarmerGerminating oddGerminating; // A Farmer's germinating assets from odd seasons.
-        FarmerGerminating evenGerminating; // A Farmer's germinating assets from even seasons.
+        FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating assets from odd seasons.
     }
 }
 
@@ -483,9 +476,12 @@ contract Storage {
      * @notice Stores the system level germination data.
      */
     struct TotalGerminating {
-        uint128 stalk;
-        uint128 roots;
         mapping(address => Deposited) deposited;
+    }
+
+    struct Sr {
+	    uint128 stalk;
+	    uint128 roots;
     }
 }
 
@@ -620,4 +616,7 @@ struct AppStorage {
     // Germination
     Storage.TotalGerminating oddGerminating;
     Storage.TotalGerminating evenGerminating;
+
+    // mapping from season => unclaimed germinating stalk and roots 
+    mapping(uint32 => Storage.Sr) unclaimedGerminating;
 }

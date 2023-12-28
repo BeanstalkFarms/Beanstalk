@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import "./Silo.sol";
+import "hardhat/console.sol";
 
 /**
  * @title TokenSilo
@@ -164,20 +165,40 @@ contract TokenSilo is Silo {
      */
     function _withdrawDeposit(address account, address token, int96 stem, uint256 amount) internal {
         // Remove the Deposit from `account`.
-        (uint256 stalkRemoved, uint256 bdvRemoved, LibGerminate.Germinate germinate) = LibSilo
-            ._removeDepositFromAccount(
+        (
+            uint256 initalStalkRemoved, 
+            uint256 grownStalkRemoved, 
+            uint256 bdvRemoved, 
+            LibGerminate.Germinate germinate
+        ) = LibSilo._removeDepositFromAccount(
                 account,
                 token,
                 stem,
                 amount,
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-
-        // remove the deposit from totals, depending on whether it is germinating or not.
         if (germinate == LibGerminate.Germinate.NOT_GERMINATING) {
-            _withdraw(account, token, amount, bdvRemoved, stalkRemoved);
+            // remove the deposit from totals
+            _withdraw(account, token, amount, bdvRemoved, initalStalkRemoved.add(grownStalkRemoved));
         } else {
-            _withdrawGerminating(account, token, amount, bdvRemoved, stalkRemoved, germinate);
+            // remove deposit from germination, and burn the grown stalk.
+            // grown stalk does not germinate and is not counted in germinating totals.
+            _withdrawGerminating(
+                account,
+                token,
+                amount,
+                bdvRemoved,
+                initalStalkRemoved, 
+                germinate
+            );
+
+            if(grownStalkRemoved > 0) {
+                LibSilo.burnStalk(
+                    account, 
+                    grownStalkRemoved, 
+                    LibGerminate.Germinate.NOT_GERMINATING
+                ); 
+            }
         }
     }
 
@@ -290,8 +311,9 @@ contract TokenSilo is Silo {
         uint256 amount
     ) internal returns (uint256) {
         (
-            uint256 stalk, 
-            uint256 bdv, 
+            uint256 initalStalk,
+            uint256 grownStalk,
+            uint256 bdv,
             LibGerminate.Germinate germ
         ) = LibSilo._removeDepositFromAccount(
                 sender,
@@ -307,14 +329,20 @@ contract TokenSilo is Silo {
             stem,
             amount,
             bdv,
-            LibTokenSilo.Transfer.noEmitTransferSingle,
-            germ
+            LibTokenSilo.Transfer.noEmitTransferSingle
         );
 
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            LibSilo.transferStalk(sender, recipient, stalk);
+            LibSilo.transferStalk(sender, recipient, initalStalk.add(grownStalk));
         } else {
-            LibSilo.transferGerminatingStalk(sender, recipient, stalk, germ);
+            LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, germ);
+            if(grownStalk > 0) {
+                LibSilo.transferStalk(
+                    sender,
+                    recipient, 
+                    grownStalk
+                ); 
+            }
         }
 
         /**
@@ -367,8 +395,7 @@ contract TokenSilo is Silo {
                 sender,
                 token,
                 stems[i],
-                amounts[i],
-                germ
+                amounts[i]
             );
             LibTokenSilo.addDepositToAccount(
                 recipient,
@@ -376,8 +403,7 @@ contract TokenSilo is Silo {
                 stems[i],
                 amounts[i],
                 crateBdv,
-                LibTokenSilo.Transfer.noEmitTransferSingle,
-                germ
+                LibTokenSilo.Transfer.noEmitTransferSingle
             );
             uint256 crateStalk = LibSilo.stalkReward(
                 stems[i],

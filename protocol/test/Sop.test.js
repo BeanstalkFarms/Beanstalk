@@ -19,6 +19,7 @@ describe('Sop', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
@@ -73,7 +74,7 @@ describe('Sop', function () {
       expect(season.raining).to.be.equal(true)
       expect(rain.pods).to.be.equal(await this.field.totalPods())
       expect(rain.roots).to.be.equal('20000000000000000000000000')
-      const userRain = await this.silo.balanceOfSop(userAddress);
+      const userRain = await this.siloGetters.balanceOfSop(userAddress);
       expect(userRain.lastRain).to.be.equal(season.rainStart);
       expect(userRain.roots).to.be.equal('10000000000000000000000000');
     })
@@ -86,7 +87,7 @@ describe('Sop', function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
       const season = await this.seasonGetter.time()
       expect(season.rainStart).to.be.equal(season.current - 1)
-      const userRain = await this.silo.balanceOfSop(userAddress);
+      const userRain = await this.siloGetters.balanceOfSop(userAddress);
       expect(userRain.lastRain).to.be.equal(0);
     })
   })
@@ -134,7 +135,7 @@ describe('Sop', function () {
 
     it('tracks user plenty after update', async function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
-      const userSop = await this.silo.balanceOfSop(userAddress);
+      const userSop = await this.siloGetters.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(3)
       expect(userSop.lastSop).to.be.equal(3)
       expect(userSop.roots).to.be.equal('10000000000000000000000000')
@@ -149,7 +150,7 @@ describe('Sop', function () {
     it('tracks user2 plenty after update', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       // await this.silo.mow(user2Address, this.bean.address); //with this one uncommented it's 10002000000000000000000000
-      const userSop = await this.silo.balanceOfSop(user2Address);
+      const userSop = await this.siloGetters.balanceOfSop(user2Address);
       expect(userSop.lastRain).to.be.equal(3)
       expect(userSop.lastSop).to.be.equal(3)
       expect(userSop.roots).to.be.equal('10000000000000000000000000')
@@ -160,7 +161,7 @@ describe('Sop', function () {
     it('claims user plenty', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.connect(user2).claimPlenty();
-      expect(await this.silo.balanceOfPlenty(user2Address)).to.be.equal('0')
+      expect(await this.siloGetters.balanceOfPlenty(user2Address)).to.be.equal('0')
       expect(await this.threeCurve.balanceOf(user2Address)).to.be.equal('50208107346352812150')
     })
   })
@@ -192,7 +193,7 @@ describe('Sop', function () {
 
     it('tracks user plenty after update', async function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
-      const userSop = await this.silo.balanceOfSop(userAddress);
+      const userSop = await this.siloGetters.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(6)
       expect(userSop.lastSop).to.be.equal(6)
       expect(userSop.roots).to.be.equal('10000000000000000000000000')
@@ -207,7 +208,7 @@ describe('Sop', function () {
     it('tracks user2 plenty after update', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.mow(user2Address, this.bean.address);
-      const userSop = await this.silo.balanceOfSop(user2Address);
+      const userSop = await this.siloGetters.balanceOfSop(user2Address);
       expect(userSop.lastRain).to.be.equal(6)
       expect(userSop.lastSop).to.be.equal(6)
       expect(userSop.roots).to.be.equal('10002000000000000000000000')

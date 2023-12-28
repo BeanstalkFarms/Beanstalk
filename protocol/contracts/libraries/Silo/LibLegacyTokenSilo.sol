@@ -294,10 +294,9 @@ library LibLegacyTokenSilo {
 
         // do a legacy mow using the old silo seasons deposits (this only mints stalk up to stemStartSeason)
         // should not germinate since all siloV2 deposits were deposited for > 2 seasons.
-        LibSilo.mintStalk(
+        LibSilo.mintActiveStalk(
             account, 
-            balanceOfGrownStalkUpToStemsDeployment(account),
-            LibGerminate.Germinate.NOT_GERMINATING
+            balanceOfGrownStalkUpToStemsDeployment(account)
         );
 
         updateLastUpdateToNow(account);
@@ -351,8 +350,7 @@ library LibLegacyTokenSilo {
                     ),
                     perDepositData.amount, 
                     crateBDV,
-                    LibTokenSilo.Transfer.emitTransferSingle,
-                    LibGerminate.Germinate.NOT_GERMINATING
+                    LibTokenSilo.Transfer.emitTransferSingle
                 );
  
                 // add to running total of seeds
@@ -367,7 +365,7 @@ library LibLegacyTokenSilo {
         }
  
         // user deserves non germinating stalk grown between stemStartSeason and now
-        LibSilo.mintStalk(account, migrateData.totalGrownStalk, LibGerminate.Germinate.NOT_GERMINATING);
+        LibSilo.mintActiveStalk(account, migrateData.totalGrownStalk);
 
         //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
         return balanceOfSeeds(account).sub(migrateData.totalSeeds);

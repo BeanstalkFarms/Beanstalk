@@ -361,9 +361,9 @@ describe('Gauge', function () {
       // stalkIssuedPerBeanBDV =  ~3_487_101/1e10 * 0.948683 = ~3_308_153/1e10
       // stalkIssuedPerBeanETH = ~3_487_101/1e10 * 1.51789 = ~5_293_035/1e10
       // stalkIssuedPerBean3CRV = ~3_487_101/1e10 * 0.0632455 = ~220543/1e10
-      expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(2771461); // 2.77 seeds per BDV
-      expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(3695281); // 3.69 seeds per BDV
-      expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(2665987); // 2.66 seeds per BDV
+      expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(2771461); // 2.77 seeds per BDV
+      expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(3695281); // 3.69 seeds per BDV
+      expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(2665987); // 2.66 seeds per BDV
     })
     
     it('emits events', async function () {
@@ -445,9 +445,9 @@ describe('Gauge', function () {
     expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2250'));
     expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1625'));
 
-    expect((await this.silo.tokenSettings(BEAN))[1]).to.be.eq(to6('2'));
-    expect((await this.silo.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'));
-    expect((await this.silo.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(to6('4'));
+    expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'));
+    expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'));
+    expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(to6('4'));
 
   })
   

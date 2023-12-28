@@ -453,8 +453,8 @@ describe('Curve', function () {
 
     it('add lp and deposit', async function () {
       const season = await this.seasonGetter.season()
-      const stemBean = await this.silo.seasonToStem(this.beanMetapool.address, season);
-      const dep = await this.silo.getDeposit(user2Address, this.beanMetapool.address, stemBean)
+      const stemBean = await this.silo.mockSeasonToStem(this.beanMetapool.address, season);
+      const dep = await this.siloGetters.getDeposit(user2Address, this.beanMetapool.address, stemBean)
       expect(dep[0]).to.be.equal(to18('1000'))
       expect(dep[1]).to.be.equal(to6('1000'))
     })

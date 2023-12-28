@@ -286,7 +286,7 @@ contract MockSiloFacet is SiloFacet {
         addDepositToAccountLegacy(account, token, season, amount, bdv); // Add to Account
 
         return (
-            bdv.mul(getSeedsPerToken(token)), //for adequate testing may need to grab seeds per token
+            bdv.mul(mockGetSeedsPerToken(token)), //for adequate testing may need to grab seeds per token
             bdv.mul(s.ss[token].stalkIssuedPerBdv)
         );
     }
@@ -347,7 +347,19 @@ contract MockSiloFacet is SiloFacet {
         // emit WhitelistToken(token, selector, stalkEarnedPerSeason, stalkIssuedPerBdv);
     }
 
-    function getSeedsPerToken(address token) public pure returns (uint256) {
+    /**
+     * @notice given the season/token, returns the stem assoicated with that deposit.
+     * kept for legacy reasons. 
+     */
+    function mockSeasonToStem(address token, uint32 season)
+        external
+        view
+        returns (int96 stem)
+    {
+        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token), season);
+    }
+
+    function mockGetSeedsPerToken(address token) public pure returns (uint256) {
         if (token == C.BEAN) {
             return 2;
         } else if (token == C.UNRIPE_BEAN) {

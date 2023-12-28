@@ -115,7 +115,7 @@ contract Silo is ReentrancyGuard {
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
-        beans = LibSilo._balanceOfEarnedBeans(account, accountStalk);
+        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.a[account].roots);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
         if (beans == 0) return (0, stemTip);
         
@@ -130,8 +130,7 @@ contract Silo is ReentrancyGuard {
             stemTip,
             beans, // amount
             beans, // bdv
-            LibTokenSilo.Transfer.emitTransferSingle,
-            LibGerminate.getSeasonGerminationState()
+            LibTokenSilo.Transfer.emitTransferSingle
         );
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).

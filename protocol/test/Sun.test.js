@@ -45,6 +45,7 @@ describe('Sun', function () {
     await this.threePool.set_virtual_price(to18('1'));
     this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
     this.uniswapV3EthUsdc = await ethers.getContractAt('MockUniswapV3Pool', ETH_USDC_UNISWAP_V3);
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     await this.beanThreeCurve.set_supply(toBean('100000'));
     await this.beanThreeCurve.set_A_precise('1000');
     await this.beanThreeCurve.set_virtual_price(to18('1'));
@@ -124,8 +125,8 @@ describe('Sun', function () {
     this.result = await this.season.sunSunrise('100', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '0', '100', '0');
-    expect(await this.silo.totalStalk()).to.be.equal('1000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('100');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('1000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('100');
   })
 
   it("some harvestable", async function () {
@@ -137,8 +138,8 @@ describe('Sun', function () {
     expect(await this.field.totalSoil()).to.be.equal('9900');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '10000', '10000', '0');
     expect(await this.field.totalHarvestable()).to.be.equal('10000');
-    expect(await this.silo.totalStalk()).to.be.equal('100000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('10000');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('100000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('10000');
   })
 
   it("all harvestable", async function () {
@@ -151,8 +152,8 @@ describe('Sun', function () {
     expect(await this.field.totalSoil()).to.be.equal('4950');
     await expect(this.result).to.emit(this.season, 'Reward').withArgs(3, '5000', '10000', '0');
     expect(await this.field.totalHarvestable()).to.be.equal('5000');
-    expect(await this.silo.totalStalk()).to.be.equal('100000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('10000');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('100000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('10000');
   })
 
   it("all harvestable and all fertilizable", async function () {
@@ -173,8 +174,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal(to6('50'));
 
-    expect(await this.silo.totalStalk()).to.be.equal(toStalk('100'));
-    expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('100'));
+    expect(await this.siloGetters.totalStalk()).to.be.equal(toStalk('100'));
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal(to6('100'));
   })
 
   it("all harvestable, some fertilizable", async function () {
@@ -194,8 +195,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal('500');
 
-    expect(await this.silo.totalStalk()).to.be.equal('8340000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('834');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('8340000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('834');
   })
 
   it("some harvestable, some fertilizable", async function () {
@@ -223,8 +224,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal('500');
 
-    expect(await this.silo.totalStalk()).to.be.equal('5000000');
-    expect(await this.silo.totalEarnedBeans()).to.be.equal('500');
+    expect(await this.siloGetters.totalStalk()).to.be.equal('5000000');
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal('500');
   })
 
   it("1 all and 1 some fertilizable", async function () {
@@ -243,8 +244,8 @@ describe('Sun', function () {
 
     expect(await this.field.totalHarvestable()).to.be.equal(to6('200'));
 
-    expect(await this.silo.totalStalk()).to.be.equal(toStalk('200'));
-    expect(await this.silo.totalEarnedBeans()).to.be.equal(to6('200'));
+    expect(await this.siloGetters.totalStalk()).to.be.equal(toStalk('200'));
+    expect(await this.siloGetters.totalEarnedBeans()).to.be.equal(to6('200'));
   })
 
   it("sunrise reward", async function() {

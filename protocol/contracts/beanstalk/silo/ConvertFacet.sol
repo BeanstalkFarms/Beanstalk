@@ -119,6 +119,7 @@ contract ConvertFacet is ReentrancyGuard {
         LibSilo.AssetsRemoved memory a;
         uint256 depositBDV;
         uint256 i = 0;
+
         // a bracket is included here to avoid the "stack too deep" error.
         {
             uint256[] memory bdvsRemoved = new uint256[](stems.length);
@@ -128,7 +129,8 @@ contract ConvertFacet is ReentrancyGuard {
             LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
 
             while ((i < stems.length) && (a.tokensRemoved < maxTokens)) {
-                // skip any stems that are germinating.
+                // skip any stems that are germinating, due to the ability to 
+                // circumvent the germination process.
                 if (germStem.germinatingStem <= stems[i]) {
                     i++;
                     continue;
@@ -139,8 +141,7 @@ contract ConvertFacet is ReentrancyGuard {
                         msg.sender,
                         token,
                         stems[i],
-                        amounts[i],
-                        LibGerminate.Germinate.NOT_GERMINATING
+                        amounts[i]
                     );
                 bdvsRemoved[i] = depositBDV;
                 a.stalkRemoved = a.stalkRemoved.add(
@@ -195,30 +196,42 @@ contract ConvertFacet is ReentrancyGuard {
         return (a.stalkRemoved, a.bdvRemoved);
     }
 
-    //this is only used internal to the convert facet
+    /**
+     * @notice deposits token into the silo with the given grown stalk.
+     * @param token the token to deposit
+     * @param amount the amount of tokens to deposit
+     * @param bdv the bean denominated value of the deposit
+     * @param grownStalk the amount of grown stalk retained to issue to the new deposit.
+     * 
+     * @dev there are cases where a convert may cause the new deposit to be partially germinating, 
+     * if the convert goes from a token with a lower amount of seeds to a higher amount of seeds.
+     * We accept this as a tradeoff to avoid additional complexity.
+     */
     function _depositTokensForConvert(
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk // stalk grown previously by this deposit
+        uint256 grownStalk
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
-        // TODO: add increment TotalGerminating logic
-        // 1: check whether the stem is a germinating stem. If so,
-        // increment the total germinating amount.
         
         LibGerminate.Germinate germ;
+        // calculate the grownStalk, stem, and the germination state for the new deposit.
         (grownStalk, stem, germ) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
         
+        // mint stalk for the new deposit.
+        // note: if the new deposit is germinating, 
+        // the stalk is minted as germinating.
         LibSilo.mintStalk(
-            msg.sender, 
+            msg.sender,
             bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk),
             germ
         );
         
-        // if the new stem is germinating, increment total germinating.
-        // else increment total deposited.
+        // if the new stem is germinating, 
+        // increment total germinating amounts and bdv.
+        // otherwise, increment total deposited amounts and bdv.
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
         } else {
@@ -230,8 +243,7 @@ contract ConvertFacet is ReentrancyGuard {
             stem, 
             amount,
             bdv,
-            LibTokenSilo.Transfer.emitTransferSingle,
-            germ
+            LibTokenSilo.Transfer.emitTransferSingle
         );
     }
 }

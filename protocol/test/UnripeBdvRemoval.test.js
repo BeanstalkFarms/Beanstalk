@@ -104,7 +104,7 @@ describe("Silo Enroot", function () {
 
             this.season.deployStemsUpgrade();
             
-            this.stem = await this.silo.seasonToStem(UNRIPE_BEAN, season);
+            this.stem = await this.silo.mockSeasonToStem(UNRIPE_BEAN, season);
             await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[season]], [[158328]], 0, 0, []);
 
             await this.beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, '158327', EXTERNAL);

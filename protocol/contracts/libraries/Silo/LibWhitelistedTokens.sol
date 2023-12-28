@@ -15,8 +15,6 @@ import {C} from "../../C.sol";
  * as a gas optimization.
  * 
  * This library should be updated when new tokens are added to silo.
- * This library should retain the order of the tokens 
- * (see {LibGerminate.endGerminatingBdv} and {LibTokenSilo.addDepositToAccount}})
  */
 library LibWhitelistedTokens {
     /**

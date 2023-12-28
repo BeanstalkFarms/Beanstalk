@@ -183,8 +183,7 @@ contract Sun is Oracle {
         // Beans that are allocated to the Silo will receive Stalk.
         // Constant is used here rather than s.ss[BEAN].stalkIssuedPerBdv
         // for gas savings.
-        uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
-        s.s.stalk = s.s.stalk.add(seasonStalk);
+        s.s.stalk = s.s.stalk.add(amount.mul(C.STALK_PER_BEAN));
 
         // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].deposited = s

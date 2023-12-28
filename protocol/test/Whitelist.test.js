@@ -36,7 +36,8 @@ describe('Whitelist', function () {
     this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.gaugePoint = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
+    this.seasonGetters = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
 
@@ -79,7 +80,7 @@ describe('Whitelist', function () {
         this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256 currentGaugePoints,uint256 optimalPercentDepositedBdv,uint256 percentOfDepositedBdv)"),
         '0',
         '0')
-      const settings = await this.silo.tokenSettings(this.well.address)
+      const settings = await this.siloGetters.tokenSettings(this.well.address)
 
       expect(settings[0]).to.equal(this.bdv.interface.getSighash('wellBdv'))
 
@@ -204,10 +205,10 @@ describe('Whitelist', function () {
         this.well.address, 
         '50000'
       )
-      const settings = await this.silo.tokenSettings(this.well.address)
+      const settings = await this.siloGetters.tokenSettings(this.well.address)
 
       expect(settings[1]).to.equal(50000)
-      const currentSeason = await this.seasonGetter.season()
+      const currentSeason = await this.seasonGetters.season()
       await expect(this.result).to.emit(this.whitelist, 'UpdatedStalkPerBdvPerSeason').withArgs(this.well.address, 50000, currentSeason)
     })
 
@@ -241,7 +242,7 @@ describe('Whitelist', function () {
         '0',
         '0')
       this.result = await this.whitelist.connect(owner).dewhitelistToken(this.well.address)
-      const settings = await this.silo.tokenSettings(this.well.address)
+      const settings = await this.siloGetters.tokenSettings(this.well.address)
       expect(settings[0]).to.equal('0x00000000')
       expect(settings[1]).to.equal(0)
       expect(settings[2]).to.equal(0)

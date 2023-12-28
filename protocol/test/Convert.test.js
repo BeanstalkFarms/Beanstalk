@@ -89,23 +89,23 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('100');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('100');
-        expect(await this.silo.totalStalk()).to.equal('1000100');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('100');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('100');
+        expect(await this.siloGetters.totalStalk()).to.equal('1000100');
         //expect(await this.silo.totalSeeds()).to.equal('100');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.equal('1000100');
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.equal('100');
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.equal('1000100');
+        //expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.equal('100');
       })
 
       it('properly removes the crate', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
+        let deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 1);
 
         expect(deposit[0]).to.eq('100');
         expect(deposit[1]).to.eq('100');
-        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 2);
 
         expect(deposit[0]).to.eq('0');
         expect(deposit[1]).to.eq('0');
@@ -124,22 +124,22 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('100');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('100');
-        expect(await this.silo.totalStalk()).to.equal('1000100');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('100');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('100');
+        expect(await this.siloGetters.totalStalk()).to.equal('1000100');
         //expect(await this.silo.totalSeeds()).to.equal('100');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.equal('1000100');
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.equal('100');
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.equal('1000100');
+        //expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.equal('100');
       })
 
       it('properly removes the crate', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
+        let deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('100');
         expect(deposit[1]).to.eq('100');
-        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 2);
         expect(deposit[0]).to.eq('0');
         expect(deposit[1]).to.eq('0');
       })
@@ -158,22 +158,22 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('50');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('50');
-        expect(await this.silo.totalStalk()).to.equal('500000');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('50');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('50');
+        expect(await this.siloGetters.totalStalk()).to.equal('500000');
         //expect(await this.silo.totalSeeds()).to.equal('50');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.equal('500000');
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.equal('50');
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.equal('500000');
+        //expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.equal('50');
       })
 
       it('properly removes the crate', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
+        let deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('0');
         expect(deposit[1]).to.eq('0');
-        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 2);
         expect(deposit[0]).to.eq('50');
         expect(deposit[1]).to.eq('50');
       })
@@ -190,22 +190,22 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('50');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('50');
-        expect(await this.silo.totalStalk()).to.equal('500000');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('50');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('50');
+        expect(await this.siloGetters.totalStalk()).to.equal('500000');
         //expect(await this.silo.totalSeeds()).to.equal('50');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.equal('500000');
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.equal('50');
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.equal('500000');
+        //expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.equal('50');
       })
 
       it('properly removes the crate', async function () {
-        let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
+        let deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('0');
         expect(deposit[1]).to.eq('0');
-        deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+        deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 2);
         expect(deposit[0]).to.eq('50');
         expect(deposit[1]).to.eq('50');
       })
@@ -233,19 +233,19 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
-        expect(await this.silo.totalStalk()).to.equal('3000100');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('300');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
+        expect(await this.siloGetters.totalStalk()).to.equal('3000100');
         //expect(await this.silo.totalSeeds()).to.equal('300');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(user2Address)).to.equal('1000000');
-        //expect(await this.silo.balanceOfSeeds(user2Address)).to.equal('100');
+        expect(await this.siloGetters.balanceOfStalk(user2Address)).to.equal('1000000');
+        //expect(await this.siloGetters.balanceOfSeeds(user2Address)).to.equal('100');
       })
 
       it('properly removes the crate', async function () {
-        const deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 2);
+        const deposit = await this.siloGetters.getDeposit(user2Address, this.siloToken.address, 2);
         expect(deposit[0]).to.eq('100');
         expect(deposit[1]).to.eq('100');
       })
@@ -265,19 +265,19 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
-        expect(await this.silo.totalStalk()).to.equal('3000200');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('300');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
+        expect(await this.siloGetters.totalStalk()).to.equal('3000200');
         //expect(await this.silo.totalSeeds()).to.equal('300');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(user2Address)).to.equal('1000100');
-        //expect(await this.silo.balanceOfSeeds(user2Address)).to.equal('100');
+        expect(await this.siloGetters.balanceOfStalk(user2Address)).to.equal('1000100');
+        //expect(await this.siloGetters.balanceOfSeeds(user2Address)).to.equal('100');
       })
 
       it('properly removes the crate', async function () {
-        const deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 1);
+        const deposit = await this.siloGetters.getDeposit(user2Address, this.siloToken.address, 1);
         expect(deposit[0]).to.eq('100');
         expect(deposit[1]).to.eq('100');
       })
@@ -296,19 +296,19 @@ describe('Convert', function () {
       })
 
       it('Decrements totals', async function () {
-        expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('300');
-        expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
-        expect(await this.silo.totalStalk()).to.equal('3000300');
+        expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('300');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('300');
+        expect(await this.siloGetters.totalStalk()).to.equal('3000300');
         //expect(await this.silo.totalSeeds()).to.equal('300');
       })
 
       it('Decrements balances', async function () {
-        expect(await this.silo.balanceOfStalk(user2Address)).to.equal('1000200');
-        //expect(await this.silo.balanceOfSeeds(user2Address)).to.equal('100');
+        expect(await this.siloGetters.balanceOfStalk(user2Address)).to.equal('1000200');
+        //expect(await this.siloGetters.balanceOfSeeds(user2Address)).to.equal('100');
       })
 
       it('properly removes the crate', async function () {
-        const deposit = await this.silo.getDeposit(user2Address, this.siloToken.address, 0);
+        const deposit = await this.siloGetters.getDeposit(user2Address, this.siloToken.address, 0);
         expect(deposit[0]).to.eq('100');
         expect(deposit[1]).to.eq('100');
       })
@@ -341,24 +341,24 @@ describe('Convert', function () {
     })
 
     it('removes and adds deposit', async function () {
-      let deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 1);
+      let deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 1);
       expect(deposit[0]).to.eq('0');
       expect(deposit[1]).to.eq('0');
 
-      deposit = await this.silo.getDeposit(userAddress, this.siloToken.address, 2);
+      deposit = await this.siloGetters.getDeposit(userAddress, this.siloToken.address, 2);
       expect(deposit[0]).to.eq('200');
       expect(deposit[1]).to.eq('200');
     })
 
     it('Decrements balances', async function () {
-      expect(await this.silo.balanceOfStalk(userAddress)).to.equal('2000000');
-      //expect(await this.silo.balanceOfSeeds(userAddress)).to.equal('200');
+      expect(await this.siloGetters.balanceOfStalk(userAddress)).to.equal('2000000');
+      //expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.equal('200');
     })
 
     it('Decrements totals', async function () {
-      expect(await this.silo.getTotalDeposited(this.siloToken.address)).to.equal('200');
-      expect(await this.silo.getTotalDepositedBdv(this.siloToken.address)).to.eq('200');
-      expect(await this.silo.totalStalk()).to.equal('2000000');
+      expect(await this.siloGetters.getTotalDeposited(this.siloToken.address)).to.equal('200');
+      expect(await this.siloGetters.getTotalDepositedBdv(this.siloToken.address)).to.eq('200');
+      expect(await this.siloGetters.totalStalk()).to.equal('2000000');
       //expect(await this.silo.totalSeeds()).to.equal('200');
     })
 

@@ -73,6 +73,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
+        LibGerminate.endTotalGermination(s.season.current);
         mockStepSilo(amount);
     }
 
@@ -164,6 +165,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
+        LibGerminate.endTotalGermination(s.season.current);
     }
 
     function farmSunrises(uint256 number) public {
