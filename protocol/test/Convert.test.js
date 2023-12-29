@@ -53,7 +53,6 @@ describe('Convert', function () {
     await this.season.siloSunrise(0);
     await this.silo.connect(user).deposit(this.siloToken.address, '100', EXTERNAL); //something about this deposit adds extra stalk
     
-    // ------------------------------ NEW CHANGES ------------------------------
     // To isolate the anti lamda functionality, we will create and whitelist a new silo token
     this.newSiloToken = await ethers.getContractFactory("MockToken");
     this.newSiloToken = await this.newSiloToken.deploy("Silo2", "SILO2")
@@ -397,15 +396,11 @@ describe('Convert', function () {
 
       // simulate deposit bdv decrease for user by changing bdv selector to newMockBDVDecrease ie 0.9e6
       await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVDecrease()"))
-      console.log("Selector changed to newMockBDVDecrease")
       const currentBdv = await this.silo.newMockBDVDecrease()
       let depositResult = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
       const depositBdv = depositResult[1]
-      console.log("Deposit BDV: " + depositBdv)
-      console.log("Current BDV: " + currentBdv)
 
       // ----------------------- CONVERT ------------------------
-      console.log("User2 calls anti lambda convert on user to decrease user's recorded deposit bdv to current bdv")
       this.result = await this.convert.connect(user2).convert(
         // CALLDATA                              // amount, token ,account
         ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
@@ -448,15 +443,11 @@ describe('Convert', function () {
 
       // simulate deposit bdv decrease for user2 by changing bdv selector to mockBdvIncrease ie 1.1e6
       await this.silo.mockChangeBDVSelector(this.newSiloToken.address, this.silo.interface.getSighash("newMockBDVIncrease()"))
-      console.log("Selector changed to newMockBDVIncrease")
       currentBdv = await this.silo.newMockBDVIncrease()
       let depositResult = await this.silo.getDeposit(userAddress, this.newSiloToken.address, 0)
       const depositBdv = depositResult[1]
-      console.log("Deposit BDV: " + depositBdv)
-      console.log("Current BDV: " + currentBdv)
 
       // ----------------------- CONVERT ------------------------
-      console.log("User2 calls anti lambda convert on user to increase user's recorded deposit bdv to current bdv")
       this.result = await this.convert.connect(user2).convert(
         // CALLDATA                              // amount, token ,account
         ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
