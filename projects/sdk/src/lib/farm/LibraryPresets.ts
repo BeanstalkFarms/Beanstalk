@@ -43,6 +43,8 @@ export class LibraryPresets {
   public readonly usdt2beaneth;
   public readonly dai2beaneth;
 
+  public readonly uniswapV3Swap;
+
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
    * @param _permit provide a permit directly, or provide a function to extract it from `context`.
@@ -330,6 +332,51 @@ export class LibraryPresets {
 
       result.push(transfer);
       advancedPipe.add(addLiquidity, { tag: "amountToDeposit" });
+      if (transferBack) {
+        advancedPipe.add(approveBack);
+        advancedPipe.add(transferToBeanstalk);
+      }
+
+      result.push(advancedPipe);
+
+      return result;
+    };
+
+    this.uniswapV3Swap = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
+      const result = [];
+      const advancedPipe = sdk.farm.createAdvancedPipe("uniswapV3Swap");
+
+      const transferBack = to === FarmToMode.INTERNAL;
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
+
+      // Transfer fromToken to Pipeline
+      const transfer = new sdk.farm.actions.TransferToken(fromToken.address, sdk.contracts.pipeline.address, from, FarmToMode.EXTERNAL);
+
+      // Approve Uniswap V3 to use fromToken
+      const approveUniswap = new sdk.farm.actions.ApproveERC20(fromToken, sdk.contracts.uniswapV3Router.address);
+
+      // Swap tokens
+      const swap = new sdk.farm.actions.UniswapV3Swap(fromToken, toToken, recipient);
+
+      // This approves the transferToBeanstalk operation.
+      const approveClipboard = {
+        tag: "uniswapV3Swap", 
+        copySlot: 0, 
+        pasteSlot: 1
+      }
+      const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, approveClipboard);
+
+      // Transfers the output token back to Beanstalk, from PIPELINE.
+      const transferClipboard = {
+        tag: "uniswapV3Swap", 
+        copySlot: 0, 
+        pasteSlot: 2
+      }
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
+
+      result.push(transfer);
+      advancedPipe.add(approveUniswap);
+      advancedPipe.add(swap, { tag: "uniswapV3Swap" });
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);

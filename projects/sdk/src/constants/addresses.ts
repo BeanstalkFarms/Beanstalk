@@ -105,6 +105,12 @@ export const addresses = {
   // zap
   CURVE_ZAP: Address.make("0xA79828DF1850E8a3A3064576f380D90aECDD3359"),
 
+  // Uniswap V3 Router
+  UNISWAP_V3_ROUTER: Address.make("0xE592427A0AEce92De3Edee1F18E0157C05861564"),
+
+  // Uniswap V3 Quoter V2
+  UNISWAP_V3_QUOTER_V2: Address.make("0x61fFE014bA17989E743c5F6cB21bF9697530B21e"),
+
   // BEAN_ETH_UNIV2_LP !! Deprecated
   BEAN_ETH_UNIV2_LP: Address.make("0x87898263B6C5BABe34b4ec53F22d98430b91e371"),
 

@@ -124,6 +124,36 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "BEAN"
   });
 
+  // USDC<>WETH via Uniswap V3
+  graph.setEdge("USDC", "WETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.WETH, account, from, to),
+    from: "USDC",
+    to: "WETH"
+  });
+
+  graph.setEdge("WETH", "USDC", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.USDC, account, from, to),
+    from: "WETH",
+    to: "USDC"
+  });
+
+  // DAI<>WETH via Uniswap V3
+  graph.setEdge("DAI", "WETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniswapV3Swap(sdk.tokens.DAI, sdk.tokens.WETH, account, from, to),
+    from: "DAI",
+    to: "WETH"
+  });
+
+  graph.setEdge("WETH", "DAI", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.DAI, account, from, to),
+    from: "WETH",
+    to: "DAI"
+  });
+
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
 
   // HEADS UP: the ordering of these tokens needs to match their indexing in the 3CRV LP token.
