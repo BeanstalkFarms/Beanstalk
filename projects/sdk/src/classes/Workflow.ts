@@ -287,7 +287,7 @@ export abstract class Workflow<
         this.add(elem, options); // recurse
       }
     } else {
-      Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
+
       if (input instanceof StepClass) {
         input.setSDK(Workflow.sdk);
       }
@@ -298,14 +298,14 @@ export abstract class Workflow<
       switch (input.name) {
         case "pipelineDeposit":
           pipelineOptions = { tag: `deposit${filteredOptions.length + 1}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] pipelineOptions: `, pipelineOptions);
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineBeanWethSwap":
           pipelineOptions = { tag: `beanWethSwap${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] pipelineOptions: `, pipelineOptions);
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         default:
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] Not a bundle of Pipeline operations`);
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
       }
       
       this._generators.push(input);

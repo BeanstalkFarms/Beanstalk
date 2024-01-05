@@ -31,24 +31,13 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
     const quoter = UniswapV3Swap.sdk.contracts.uniswapV3QuoterV2;
     
     let estimate: any;
-    if (reversed) {
-        estimate = await quoter.callStatic.quoteExactOutputSingle({
-            tokenIn: tokenIn.address,
-            tokenOut: tokenOut.address,
-            amount: _amountInStep,
-            fee: 500,
-            sqrtPriceLimitX96: 0,
-        });
-    } else {
-        estimate = await quoter.callStatic.quoteExactInputSingle({
-            tokenIn: tokenIn.address,
-            tokenOut: tokenOut.address,
-            amountIn: _amountInStep,
-            fee: 500,
-            sqrtPriceLimitX96: 0,
-        });
-    };
-
+    estimate = await quoter.callStatic.quoteExactInputSingle({
+        tokenIn: tokenIn.address,
+        tokenOut: tokenOut.address,
+        amountIn: _amountInStep,
+        fee: 500,
+        sqrtPriceLimitX96: 0,
+    });
 
     return {
       name: this.name,
