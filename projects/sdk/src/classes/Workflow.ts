@@ -304,6 +304,10 @@ export abstract class Workflow<
           pipelineOptions = { tag: `beanWethSwap${filteredOptions.length}Amount` };
           Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
+        case "pipelineUniswapV3Swap":
+          pipelineOptions = { tag: `uniswapV3Swap${filteredOptions.length}Amount` };
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
+          break;
         default:
           Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
       }

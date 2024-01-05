@@ -344,7 +344,7 @@ export class LibraryPresets {
 
     this.uniswapV3Swap = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       const result = [];
-      const advancedPipe = sdk.farm.createAdvancedPipe("uniswapV3Swap");
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineUniswapV3Swap");
 
       const transferBack = to === FarmToMode.INTERNAL;
       const recipient = transferBack ? sdk.contracts.pipeline.address : account;
@@ -360,7 +360,7 @@ export class LibraryPresets {
 
       // This approves the transferToBeanstalk operation.
       const approveClipboard = {
-        tag: "uniswapV3Swap", 
+        tag: "uniV3SwapAmount", 
         copySlot: 0, 
         pasteSlot: 1
       }
@@ -368,7 +368,7 @@ export class LibraryPresets {
 
       // Transfers the output token back to Beanstalk, from PIPELINE.
       const transferClipboard = {
-        tag: "uniswapV3Swap", 
+        tag: "uniV3SwapAmount", 
         copySlot: 0, 
         pasteSlot: 2
       }
@@ -376,7 +376,7 @@ export class LibraryPresets {
 
       result.push(transfer);
       advancedPipe.add(approveUniswap);
-      advancedPipe.add(swap, { tag: "uniswapV3Swap" });
+      advancedPipe.add(swap, { tag: "uniV3SwapAmount" });
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);
