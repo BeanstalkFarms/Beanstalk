@@ -935,9 +935,10 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
 
   for (let i = 0; i < beanstalkSilo.whitelistedTokens.length; i++) {
     let asset = loadSiloAsset(BEANSTALK, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
+    let assetSettings = loadWhitelistTokenSetting(Address.fromString(beanstalkSilo.whitelistedTokens[i]));
 
     newGrownStalkAmount = newGrownStalkAmount.plus(
-      asset.depositedBDV.times(siloSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
+      asset.depositedBDV.times(assetSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
     );
   }
 
@@ -954,9 +955,10 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
 
     for (let i = 0; i < beanstalkSilo.whitelistedTokens.length; i++) {
       let asset = loadSiloAsset(account, Address.fromString(beanstalkSilo.whitelistedTokens[i]));
+      let assetSettings = loadWhitelistTokenSetting(Address.fromString(beanstalkSilo.whitelistedTokens[i]));
 
       newGrownStalkAmount = newGrownStalkAmount.plus(
-        asset.depositedBDV.times(siloSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
+        asset.depositedBDV.times(assetSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000))
       );
     }
 
