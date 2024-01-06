@@ -73,7 +73,11 @@ library LibGauge {
             uint256 totalGaugePoints,
             uint256 totalLpBdv
         ) = updateGaugePoints();
+
+        // if totalLpBdv is max, it means that the gauge points has failed, 
+        // and the gauge system should be skipped.
         if (totalLpBdv == type(uint256).max) return;
+
         updateGrownStalkEarnedPerSeason(maxLpGpPerBdv, lpGpData, totalGaugePoints, totalLpBdv);
     }
 
@@ -93,14 +97,21 @@ library LibGauge {
         AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         lpGpData = new LpGaugePointData[](whitelistedLpTokens.length);
-
         // if there is only one pool, there is no need to update the gauge points.
         if (whitelistedLpTokens.length == 1) {
+
+            // if the usd price oracle failed, skip gauge point update.
             // Assumes that only Wells use USD price oracles.
             if (LibWell.isWell(whitelistedLpTokens[0]) && s.usdTokenPrice[whitelistedLpTokens[0]] == 0) {
+
                 return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
             }
             uint256 gaugePoints = s.ss[whitelistedLpTokens[0]].gaugePoints;
+
+            lpGpData[0].lpToken = whitelistedLpTokens[0];
+            // if nothing has been deposited, skip gauge point update.
+            uint128 depositedBdv = s.siloBalances[whitelistedLpTokens[0]].depositedBdv;
+            if(depositedBdv == 0) return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
             lpGpData[0].gpPerBdv = gaugePoints.mul(BDV_PRECISION).div(
                 s.siloBalances[whitelistedLpTokens[0]].depositedBdv
             );
@@ -122,7 +133,7 @@ library LibGauge {
         }
 
         // if nothing has been deposited, skip gauge point update.
-        if (totalLpBdv == 0) return (maxLpGpPerBdv, lpGpData, totalGaugePoints, totalLpBdv);
+        if (totalLpBdv == 0) return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
 
         // calculate and update the gauge points for each LP.
         for (uint256 i; i < whitelistedLpTokens.length; ++i) {
@@ -163,7 +174,8 @@ library LibGauge {
     /**
      * @notice calculates the new gauge points for the given token.
      * @dev function calls the selector of the token's gauge point function.
-     * See {GaugePointFacet.defaultGaugePointFunction()}
+     * Currently all assets uses the default GaugePoint Function.
+     * {GaugePointFacet.defaultGaugePointFunction()}
      */
     function calcGaugePoints(
         bytes4 gpSelector,
@@ -295,12 +307,14 @@ library LibGauge {
      * @notice returns the total BDV in beanstalk.
      * @dev the total BDV may differ from the instaneous BDV,
      * as BDV is asyncronous.
+     * Note we get the silo Tokens, not the whitelisted tokens 
+     * to account for grown stalk from dewhitelisted tokens.
      */
     function getTotalBdv() internal view returns (uint256 totalBdv) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address[] memory whitelistedSiloTokens = LibWhitelistedTokens.getWhitelistedTokens();
-        for (uint256 i; i < whitelistedSiloTokens.length; ++i) {
-            totalBdv = totalBdv.add(s.siloBalances[whitelistedSiloTokens[i]].depositedBdv);
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
+        for (uint256 i; i < siloTokens.length; ++i) {
+            totalBdv = totalBdv.add(s.siloBalances[siloTokens[i]].depositedBdv);
         }
     }
 

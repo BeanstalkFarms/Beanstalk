@@ -30,7 +30,7 @@ describe('SeedGauge Init Test', function () {
           {
             forking: {
               jsonRpcUrl: process.env.FORKING_RPC,
-              blockNumber: 18467677 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+              blockNumber: 18696041 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
             },
           },
         ],
@@ -59,33 +59,41 @@ describe('SeedGauge Init Test', function () {
 
     // TODO: add check once un-migrated bdvs are verified.
     it('totalDepositedBDV', async function () {
-      console.log(await this.beanstalk.getTotalDepositedBdv(BEAN));
-      console.log(await this.beanstalk.getTotalDepositedBdv(BEAN_3_CURVE));
-      console.log(await this.beanstalk.getTotalDepositedBdv(BEAN_ETH_WELL));
-      console.log(await this.beanstalk.getTotalDepositedBdv(UNRIPE_BEAN));
-      console.log(await this.beanstalk.getTotalDepositedBdv(UNRIPE_LP));
+      console.log("total deposited BDV")
+      console.log("BEAN:", await this.beanstalk.getTotalDepositedBdv(BEAN));
+      console.log("Bean3crv:", await this.beanstalk.getTotalDepositedBdv(BEAN_3_CURVE));
+      console.log("BeanETH:", await this.beanstalk.getTotalDepositedBdv(BEAN_ETH_WELL));
+      console.log("Unripe Bean:", await this.beanstalk.getTotalDepositedBdv(UNRIPE_BEAN));
+      console.log("Unripe LP:", await this.beanstalk.getTotalDepositedBdv(UNRIPE_LP));
+      
+      console.log("amount migrated since BIP-38:")
+      console.log("BEAN:", await this.beanstalk.totalMigratedBdv(BEAN));
+      console.log("BEAN3CRV:", await this.beanstalk.totalMigratedBdv(BEAN_3_CURVE));
+      console.log("BeanETH:", await this.beanstalk.totalMigratedBdv(BEAN_ETH_WELL));
+      console.log("Unripe Bean:", await this.beanstalk.totalMigratedBdv(UNRIPE_BEAN));
+      console.log("Unripe LP:", await this.beanstalk.totalMigratedBdv(UNRIPE_LP));
     })
 
     it('average grown stalk per BDV per Season', async function () {
-      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.204861'));
+      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.291203'));
     })
 
     it('average Grown Stalk Per BDV', async function() {
-      // average is 2.07 grown stalk per BDV
+      // average is 2.3839 grown stalk per BDV
       // note: should change with updated BDVs
-      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22485);
+      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22858);
     })
 
     it('totalBDV', async function () {
-      // ~41m total BDV
-      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('41000000'), to6('42000000'));
+      // ~40m total BDV
+      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('42000000'), to6('43000000'));
     })
 
     it('L2SR', async function () {
       // the L2SR may differ during testing, due to the fact 
       // that the L2SR is calculated on twa reserves, and thus may slightly differ due to 
       // timestamp differences.
-      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('1.14'), to18('1.15'));
+      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('1.01'), to18('1.03'));
     })
     
     it('bean To MaxLPGpRatio', async function () {
@@ -95,21 +103,18 @@ describe('SeedGauge Init Test', function () {
 
     it('lockedBeans', async function () {
       // ~25.5m locked beans, ~35.8m total beans
-      expect(await this.beanstalk.getLockedBeans()).to.be.within(to6('25600000.000000'), to6('25700000.000000'));
+      expect(await this.beanstalk.getLockedBeans()).to.be.within(to6('25100000.000000'), to6('25300000.000000'));
     })
 
     it('usd Liquidity', async function () {
-      // ~10.8m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('12350000'), to18('12450000'));
-      // ~111k usd liquidity in bean3crv 
-      expect(await this.beanstalk.getBean3CRVLiquidity()).to.be.within(to18('111000'), to18('112000'))
-    // ~11.13m usd liquidity total
-      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('12400000'), to18('12500000'));
+      // ~13.2m usd liquidity in Bean:Eth
+      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('13200000'), to18('13400000'));
+      // ~13.2m usd liquidity in Bean:Eth
+      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('13200000'), to18('13400000'));
     })
 
     it('gaugePoints', async function () {
-      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('8968.63725'));
-      expect(await this.beanstalk.getGaugePoints(BEAN_3_CURVE)).to.be.equal(to18('1625'));
+      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('1000'));
     })
   })
 

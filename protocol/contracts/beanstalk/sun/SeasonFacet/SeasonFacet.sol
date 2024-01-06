@@ -109,9 +109,6 @@ contract SeasonFacet is Weather {
             LibWell.resetTwaReservesForWell(whitelistedWells[i]);
         }
 
-        // set twaReserves for the bean:3crv pool
-        LibMetaCurve.resetTwaReservesForPool(C.CURVE_BEAN_METAPOOL);
-
         uint256 incentiveAmount = LibIncentive.determineReward(
             initialGasLeft,
             blocksLate,

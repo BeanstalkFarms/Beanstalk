@@ -93,13 +93,17 @@ describe('BDV', function () {
       ]);
     });
 
-    it("properly checks bdv", async function () {
-      expect(await this.siloGetters.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
+    it.skip("properly checks bdv", async function () {
+      expect(await this.silo.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
     })
 
-    it("properly checks bdv", async function () {
+    it.skip("properly checks bdv", async function () {
       await this.threePool.set_virtual_price(to18('1.02'));
       expect(await this.siloGetters.bdv(BEAN_3_CURVE, to18('2'))).to.equal('1998191');
+    })
+
+    it("properly reverts", async function () {
+      await expect(this.silo.bdv(BEAN_3_CURVE, to18('200'))).to.be.revertedWith("Silo: Token not whitelisted");
     })
   })
 

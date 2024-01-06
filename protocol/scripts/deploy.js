@@ -107,7 +107,7 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
 
   // A list of public libraries that need to be deployed separately.
   const libraryNames = [
-    'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting'
+    'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting'
   ]
 
   // A mapping of facet to public library names that will be linked to it.
@@ -116,11 +116,9 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'LibGauge',
       'LibIncentive',
       'LibLockedUnderlying',
-      'LibCurveMinting'
     ],
     'MockSeasonFacet': [
       'LibGauge',
-      'LibIncentive',
       'LibLockedUnderlying',
       'LibCurveMinting'
     ],
@@ -166,7 +164,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     whitelistFacet,
     metadataFacet,
     gaugePointFacet,
-    siloGettersFacet
+    siloGettersFacet,
+    liquidityWeightFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -191,10 +190,11 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'TokenFacet',
       'TokenSupportFacet',
       'MockUnripeFacet',
-      'WhitelistFacet',
+      'MockWhitelistFacet',
       'MetadataFacet',
       'GaugePointFacet',
-      'SiloGettersFacet'
+      'SiloGettersFacet',
+      'LiquidityWeightFacet'
     ],
     libraryNames,
     facetLibraries
@@ -225,7 +225,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'WhitelistFacet',
       'MetadataFacet',
       'GaugePointFacet',
-      'SiloGettersFacet'
+      'SiloGettersFacet',
+      'LiquidityWeightFacet'
     ],
     libraryNames,
     facetLibraries
@@ -278,7 +279,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['WhitelistFacet', whitelistFacet],
       ['MetadataFacet', metadataFacet],
       ['GaugePointFacet', gaugePointFacet],
-      ['SiloGettersFacet', siloGettersFacet]
+      ['SiloGettersFacet', siloGettersFacet],
+      ['LiquidityWeightFacet', liquidityWeightFacet]
     ],
     owner: account,
     args: args,
@@ -329,7 +331,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     metadataFacet,
     gaugePointFacet,
-    siloGettersFacet
+    siloGettersFacet,
+    liquidityWeightFacet
   }
 }
 

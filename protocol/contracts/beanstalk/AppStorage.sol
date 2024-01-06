@@ -379,6 +379,9 @@ contract Storage {
      * ```
      * It is called by `LibTokenSilo` through the use of `delegatecall`
      * to calculate a token's BDV at the time of Deposit.
+     * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
+     * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
+     * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
      * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
      * previously called stalk.
      * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
@@ -386,11 +389,6 @@ contract Storage {
      * @param encodeType determine the encoding type of the selector.
      * a encodeType of 0x00 means the selector takes an input amount.
      * 0x01 means the selector takes an input amount and a token.
-     * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
-     * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
-     * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
-     * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
-     * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
      * @param gpSelector The encoded gaugePoint function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature:
      * ```
@@ -400,8 +398,12 @@ contract Storage {
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
-     * @param optimalPercentDepositedBdv The target percentage 
-     * of the total LP deposited BDV for this token.
+     * @param gpSelector The encoded liquidityWeight function selector for the token that pertains to 
+     * an external view Beanstalk function with the following signature `function liquidityWeight()`
+     * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token.
+     * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
+     * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
+
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
      */
     struct SiloSettings {
@@ -412,9 +414,10 @@ contract Storage {
         int96 milestoneStem; //                 │ 12 (28)
         bytes1 encodeType; //                   │ 1  (29)
         int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
-        uint128 gaugePoints; //   ──────────────┐ 16  
-        bytes4 gpSelector; //                   │ 4   (20)
-        uint96 optimalPercentDepositedBdv; // ──┘ 12  (32)
+        bytes4 gpSelector; //    ────────────────┐ 4  
+        bytes4 lwSelector; //                    │ 4  (8)
+        uint128 gaugePoints; //                  │ 16 (24)
+        uint64 optimalPercentDepositedBdv; //  ──┘ 8  (32)
     }
 
     /**

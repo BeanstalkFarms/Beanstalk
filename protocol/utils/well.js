@@ -213,6 +213,7 @@ async function whitelistWell(wellAddress, stalk, stalkEarnedPerSeason) {
         stalkEarnedPerSeason,
         '0x01',
         beanstalk.interface.getSighash('defaultGaugePointFunction(uint256,uint256,uint256)'),
+        beanstalk.interface.getSighash('maxWeight()'),
         '0',
         '0'
     )

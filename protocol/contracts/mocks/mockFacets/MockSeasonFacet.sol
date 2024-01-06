@@ -56,9 +56,10 @@ contract MockSeasonFacet is SeasonFacet  {
     event Incentivization(address indexed account, uint256 beans);
     event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
     event UpdateGaugeSettings(
-        address indexed token, 
-        bytes4 selector,
-        uint96 optimalPercentDepositedBdv
+        address indexed token,
+        bytes4 gpSelector,
+        bytes4 lwSelector,
+        uint64 optimalPercentDepositedBdv
     );
 
     function reentrancyGuardTest() public nonReentrant {
@@ -462,14 +463,15 @@ contract MockSeasonFacet is SeasonFacet  {
     function mockInitalizeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
-        uint128 gaugePoints,
-        uint96 optimalPercentDepositedBdv
+        bytes4 liquidityWeightSelector,
+        uint96 gaugePoints,
+        uint64 optimalPercentDepositedBdv
     ) external {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit UpdateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
+        emit UpdateGaugeSettings(token, gaugePointSelector, liquidityWeightSelector, optimalPercentDepositedBdv);
     }
 
     function mockSetBean3CrvOracle(

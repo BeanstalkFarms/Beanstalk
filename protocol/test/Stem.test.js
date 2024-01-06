@@ -50,7 +50,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet', 'SiloGettersFacet'],
         initFacetName: 'InitBipNewSilo',
         libraryNames: [
-          'LibGauge', 'LibConvert', 'LibIncentive', 'LibLockedUnderlying', 'LibCurveMinting'
+          'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting'
         ],
         facetLibraries: {
           'MockSeasonFacet': [
@@ -529,7 +529,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await this.beanMetapool.connect(threecrvSigner).add_liquidity([to6('0'), to18('10000000')], to18('150'));
         const depositorSigner = await impersonateSigner(depositorAddress, true);
         await this.silo.connect(depositorSigner);
-        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertBeansToCurveLP(to6('345000'), to6('340000'), this.beanMetapool.address), [stem], [to6('345000')])).to.be.revertedWith('Silo: Migration needed')
+        await expect(this.convert.connect(depositorSigner).convert(ConvertEncoder.convertBeansToCurveLP(to6('345000'), to6('340000'), this.beanMetapool.address), [stem], [to6('345000')])).to.be.revertedWith("Convert: Invalid payload")
       });
 
       it('attempt to convert unripe LP before migrating', async function () {
