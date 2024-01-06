@@ -26,7 +26,6 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
       this.tokenOut,
       context.runMode !== RunMode.EstimateReversed // _forward
     );
-    const reversed = context.runMode === RunMode.EstimateReversed;
 
     const quoter = UniswapV3Swap.sdk.contracts.uniswapV3QuoterV2;
     

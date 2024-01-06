@@ -35,11 +35,18 @@ export class Swap {
     let useAdvancedFarm = false;
 
     for (let i = 0; i < route.length; i++) {
-      if (route.getStep(i - 1)) {
-        if (route.getStep(i - 1).from === "BEAN" && route.getStep(i - 1).to === "WETH" &&
-            route.getStep(i).from === "WETH" && route.getStep(i).to === "ETH") {
-              useAdvancedFarm = true;
-              break;
+      const from = route.getStep(i).from;
+      const to = route.getStep(i).to;
+
+      if (from === "WETH") {
+        if (to === "USDC" || to === "DAI" || to === "BEAN") {
+          useAdvancedFarm = true;
+          break;
+        };
+      } else if (from === "USDC" || from === "DAI" || from === "BEAN") {
+        if (to === "WETH") {
+          useAdvancedFarm = true;
+          break;
         };
       };
     };
