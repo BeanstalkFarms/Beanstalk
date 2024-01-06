@@ -359,9 +359,9 @@ contract MockSiloFacet is SiloFacet {
     }
 
     function mockUpdateLiquidityWeight(address token, bytes4 selector) external {
-    }
         s.ss[token].lwSelector = selector;
-
+    }
+       
     /**
      * @notice given the season/token, returns the stem assoicated with that deposit.
      * kept for legacy reasons. 

@@ -206,7 +206,7 @@ contract SeasonGettersFacet {
 
     /**
      * gets the Gauge Points per BDV for a given well.
-     * @param well 
+     * @param well The well to get the Gauge Points per BDV for.
      */
     function getGaugePointsPerBdvForWell(address well) public view returns (uint256) {
         if (LibWell.isWell(well)) {

@@ -434,7 +434,7 @@ library LibGerminate {
     /**
      * @notice returns whether `season` is odd.
      */
-    function isSeasonOdd(uint32 season) internal view returns (bool) {
+    function isSeasonOdd(uint32 season) internal pure returns (bool) {
         return season.mod(2) == 0 ? false : true;
     }
 }
