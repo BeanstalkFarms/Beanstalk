@@ -318,7 +318,7 @@ describe("Root", function () {
         1
       );
 
-      await this.season.fastForward(48);
+      await this.season.teleportSunrise(48);
       await this.season.siloSunrise(100);
       await mineUpTo((await ethers.provider.getBlockNumber()) + 25 + 1);
       await this.rootToken.connect(user).earn();
@@ -369,7 +369,7 @@ describe("Root", function () {
         1
       );
 
-      await this.season.fastForward(48);
+      await this.season.teleportSunrise(48);
       await this.season.siloSunrise(100);
     });
 
@@ -814,7 +814,7 @@ describe("Root", function () {
             this.signature.split.s
           );
 
-          await this.season.fastForward(100);
+          await this.season.teleportSunrise(100);
 
           await this.silo
             .connect(user2)
@@ -1194,7 +1194,7 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.rootToken.connect(user).redeem(
               [
@@ -1259,7 +1259,7 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            await this.season.fastForward(100);
+            await this.season.teleportSunrise(100);
 
             await this.silo
               .connect(user2)
@@ -1453,7 +1453,7 @@ describe("Root", function () {
               this.signature.split.s
             );
 
-            await this.season.fastForward(100);
+            await this.season.teleportSunrise(100);
 
             await this.silo
               .connect(user)
@@ -1516,7 +1516,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(100);
+            await this.season.teleportSunrise(100);
             await this.silo
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
@@ -1598,7 +1598,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(100);
+            await this.season.teleportSunrise(100);
 
             await this.silo
               .connect(user)
@@ -2023,7 +2023,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(5);
+            await this.season.teleportSunrise(5);
 
             await this.silo
               .connect(user)
@@ -2140,7 +2140,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
@@ -2207,7 +2207,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
@@ -2274,13 +2274,13 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user3)
@@ -2364,13 +2364,13 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user3)
@@ -2884,7 +2884,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(5);
+            await this.season.teleportSunrise(5);
 
             await this.silo
               .connect(user)
@@ -3026,7 +3026,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
@@ -3109,7 +3109,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
@@ -3191,13 +3191,13 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user3)
@@ -3305,13 +3305,13 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user3)
@@ -3921,7 +3921,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(5);
+            await this.season.teleportSunrise(5);
 
             await this.silo
               .connect(user)
@@ -4072,7 +4072,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
@@ -4159,7 +4159,7 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
@@ -4245,13 +4245,13 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user3)
@@ -4365,13 +4365,13 @@ describe("Root", function () {
               .connect(user)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user2)
               .deposit(this.siloToken.address, "1000", EXTERNAL);
 
-            await this.season.fastForward(10);
+            await this.season.teleportSunrise(10);
 
             await this.silo
               .connect(user3)

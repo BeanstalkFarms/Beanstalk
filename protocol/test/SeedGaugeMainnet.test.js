@@ -67,18 +67,18 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('average grown stalk per BDV per Season', async function () {
-      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.390509'));
+      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.204861'));
     })
 
     it('average Grown Stalk Per BDV', async function() {
       // average is 2.07 grown stalk per BDV
       // note: should change with updated BDVs
-      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(23287);
+      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22485);
     })
 
     it('totalBDV', async function () {
-      // ~40m total BDV
-      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('40500000'), to6('41000000'));
+      // ~41m total BDV
+      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('41000000'), to6('42000000'));
     })
 
     it('L2SR', async function () {
@@ -108,7 +108,7 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('gaugePoints', async function () {
-      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('8981.27775'));
+      expect(await this.beanstalk.getGaugePoints(BEAN_ETH_WELL)).to.be.equal(to18('8968.63725'));
       expect(await this.beanstalk.getGaugePoints(BEAN_3_CURVE)).to.be.equal(to18('1625'));
     })
   })

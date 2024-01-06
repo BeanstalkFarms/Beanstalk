@@ -25,6 +25,7 @@ describe('Unripe Convert', function () {
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
     this.weth = await ethers.getContractAt('MockToken', WETH);
 
@@ -180,37 +181,58 @@ describe('Unripe Convert', function () {
           user.address,
           ethers.constants.MaxUint256
         );
+        // call sunrise twice to finish germination.
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
         this.result = await this.convert.connect(user).convert(
           ConvertEncoder.convertUnripeBeansToLP(to6('1000'), '0'), ['0'], [to6('2000')]
         )
       });
 
+      // with the germination update, this converts from an active deposit, 
+      // to a deposit that is germinating.
       it('properly updates total values', async function () {
+        // updates unripeBean.
         expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1000'));
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('100'));
-        expect(await this.siloGetters.getTotalDeposited(this.unripeLP.address)).to.eq('4711829');
-        const bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
-        expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq(bdv);
-        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('100').add(bdv.mul(to6('0.01'))));
+        
+        // updates unripeLP (active and germinating).
+        expect(await this.siloGetters.getTotalDeposited(this.unripeLP.address)).to.eq('0');
+        expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq('0');
+        expect(await this.siloGetters.getGerminatingTotalDeposited(this.unripeLP.address)).to.eq('4711829');
+        let bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
+        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.unripeLP.address)).to.eq(bdv);
+
+        // the total stalk should be the grown stalk from the deposit.
+        // note that 0.04 stalk has grown due to the 2 seasons elasping.     
+        // the germinating stalk should be the bdv from the deposit.
+        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('100.04').add(bdv));
+        expect(await this.siloGetters.getTotalGerminatingStalk()).to.eq(bdv.mul(to6('0.01')));
       });
 
       it('properly updates user values -test', async function () {
         const bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
-        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('100').add(bdv.mul(to6('0.01'))));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('100.04').add(bdv));
+        expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(bdv.mul(to6('0.01')));
       });
 
       it('properly updates user deposits', async function () {
         expect((await this.siloGetters.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('1000'));
-        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, 0);
+        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, 3);
         expect(deposit[0]).to.eq('4711829');
         expect(deposit[1]).to.eq(await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
 
       it('emits events', async function () {
+        // dev note: 
+        // prior to converting, the deposit had grown 0.04 stalk, and the bdv was 100.
+        // after converting, the bdv is now ~297. 
+        // this decreases the grown stalk per BDV from 0.0004 to ~0.000134. gspBDV has a precision 
+        // of 10^-4, so the value is rounded to 0.0001. this results in a stem of (current season - 1).
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, 0, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
+          .withArgs(userAddress, this.unripeLP.address, 3, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
     });
 
@@ -267,7 +289,6 @@ describe('Unripe Convert', function () {
 //           .withArgs(userAddress, this.unripeLP.address, 4, '2008324306', toBean('200'));
 //       });
 //     });
-//     //TODOSEEDS maybe write some tests that are not right on the zero index of grown stalk per bdv?
 //     describe("bean more vested", async function () {
 //       beforeEach(async function () {
 //         await this.season.teleportSunrise(10);
@@ -397,6 +418,9 @@ describe('Unripe Convert', function () {
           ethers.constants.MaxUint256
         );
         await this.silo.connect(user).deposit(this.unripeLP.address, to6('3'), EXTERNAL);
+        // call sunrise twice to finish germination.
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
         this.bdv = await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address);
         this.result = await this.convert.connect(user).convert(ConvertEncoder.convertUnripeLPToBeans(to6('3'), toBN('0')), ['0'], [to6('1000')])
       });
@@ -407,13 +431,17 @@ describe('Unripe Convert', function () {
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeBean.address)).to.eq(this.bdv);
         expect(await this.siloGetters.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));
-        //expect(await this.silo.totalSeeds()).to.eq(to6('201.236334'));
-        expect(await this.siloGetters.totalStalk()).to.eq(this.bdv.mul('10000'));
+
+        expect(await this.siloGetters.getGerminatingTotalDeposited(this.unripeBean.address)).to.eq('0');
+        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.unripeBean.address)).to.eq('0');
+        expect(await this.siloGetters.getGerminatingTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
+        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));
+
+        expect(await this.siloGetters.totalStalk()).to.eq(this.bdv.mul('10004'));
       });
 
       it('properly updates user values', async function () {
-        //expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.eq(to6('201.236334'));
-        expect(await this.siloGetters.totalStalk()).to.eq(this.bdv.mul('10000'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(this.bdv.mul('10004'));
       });
     });
 
@@ -542,8 +570,10 @@ describe('Unripe Convert', function () {
 
         // user deposits 200 UrBEAN to the silo from external account
         await this.silo.connect(user).deposit(this.unripeBean.address, to6('200'), EXTERNAL);
-        // GO FORWARD 1 SEASON AND DONT DISTRIBUTE ANY REWARDS TO SILO
+        // GO FORWARD 3 SEASONs AND DONT DISTRIBUTE ANY REWARDS TO SILO
         // season 11
+        await this.season.siloSunrise(0);
+        await this.season.siloSunrise(0);
         await this.season.siloSunrise(0);
         // SET FERT PARAMS
         await this.fertilizer.connect(owner).setPenaltyParams(to6('100'), to6('100'))
@@ -570,7 +600,8 @@ describe('Unripe Convert', function () {
         // RIPE BEAN CONVERTED TEST
         expect(await this.siloGetters.getTotalDeposited(this.bean.address)).to.eq(to6('0.1'));
         // TOTAL STALK TEST
-        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('20.004'));
+        // 0.004 * 3 seasons = 0.012
+        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('20.012'));
         // VERIFY urBEANS ARE BURNED
         expect(await this.unripeBean.totalSupply()).to.be.equal(to6('9900'))
       });
@@ -580,9 +611,9 @@ describe('Unripe Convert', function () {
         // USER STALK TEST
         // 1 urBEAN yields 2/10000 grown stalk every season witch is claimable with mow()
         // after every silo interaction(here --> convert).
-        // Since we go forward a season after the deposit, the user should now have 400/10000 grown stalk 
+        // Since we go forward 3 seasons after the deposit, the user should now have 1200/10000 grown stalk 
         // not affected by the unripe --> ripe convert
-        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('20.004'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('20.012'));
       });
 
       // USER DEPOSITS TEST

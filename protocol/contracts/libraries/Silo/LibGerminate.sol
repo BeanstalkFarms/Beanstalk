@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibAppStorage, Storage, AppStorage, Account} from "../LibAppStorage.sol";
-import {LibWhitelistedTokens} from "./LibWhitelistedTokens.sol";
 import {LibSafeMath128} from "../LibSafeMath128.sol";
 import {LibSafeMath32} from "../LibSafeMath32.sol";
 import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
@@ -12,8 +11,6 @@ import {LibSilo} from "./LibSilo.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "../../C.sol";
-
-import "hardhat/console.sol";
 
 /**
  * @title LibGerminate
@@ -56,23 +53,28 @@ library LibGerminate {
      * as the roots of the stalk should be calculated based on the total stalk
      * when germination finishes, rather than when germination starts.
      */
-    function endTotalGermination(uint32 season) internal {
+    function endTotalGermination(uint32 season, address[] memory tokens) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // calculate the unclaimed germinating roots 2 seasons ago, using
-        // the current stalk and roots.
-        s.unclaimedGerminating[season.sub(2)].roots = s
-            .s
-            .roots
-            .mul(s.unclaimedGerminating[season.sub(2)].stalk)
-            .div(s.s.stalk)
-            .toUint128();
 
+        // base roots are used if there are no roots in the silo.
+        // root calculation is skipped if no deposits have been made 
+        // in the season.
+        if (s.s.roots == 0) {
+            s.unclaimedGerminating[season.sub(2)].roots = 
+                s.unclaimedGerminating[season.sub(2)].stalk
+                .mul(uint128(C.getRootsBase()));
+        } else if (s.unclaimedGerminating[season.sub(2)].stalk > 0) {
+            s.unclaimedGerminating[season.sub(2)].roots = s
+            .s.roots
+            .mul(s.unclaimedGerminating[season.sub(2)].stalk)
+            .div(s.s.stalk) 
+            .toUint128();
+        }
         // increment total stalk and roots based on unclaimed values.
         s.s.stalk = s.s.stalk.add(s.unclaimedGerminating[season.sub(2)].stalk);
         s.s.roots = s.s.roots.add(s.unclaimedGerminating[season.sub(2)].roots);
 
-        // increment total deposited and amounts for each whitelisted token.
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        // increment total deposited and amounts for each token.
         Storage.TotalGerminating storage totalGerm;
         if (getSeasonGerminationState() == Germinate.ODD) {
             totalGerm = s.oddGerminating;
@@ -80,6 +82,10 @@ library LibGerminate {
             totalGerm = s.evenGerminating;
         }
         for (uint i; i < tokens.length; ++i) {
+            // if the token has no deposits, skip.
+            if(totalGerm.deposited[tokens[i]].amount == 0) {
+                continue;
+            }
             LibTokenSilo.incrementTotalDeposited(
                 tokens[i],
                 totalGerm.deposited[tokens[i]].amount,
@@ -103,7 +109,6 @@ library LibGerminate {
         uint32 lastMowedSeason,
         uint32 currentSeason
     ) internal {
-        console.log("got into end Account germination state:");
         // 2) end germination for stalk and roots, if the last updated season
         // is less than the current season - 1 (in other words, 2 seasons elapsed).
         endGerminatingStalk(account, lastMowedSeason, currentSeason);
@@ -128,28 +133,31 @@ library LibGerminate {
         bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
         (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
         uint128 roots;
+        uint128 germinatingStalk;
 
         // check to end germination for first stalk.
         // if last mowed season is the same as the current season - 1,
         if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
+            germinatingStalk = firstStalk;
             roots = getGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
         }
 
         // check to end germination for second stalk.
         if (secondStalk > 0) {
+            germinatingStalk = germinatingStalk.add(secondStalk);
             roots = roots.add(
                 getGerminatingRoots(account, lastMowedSeason.sub(1), secondStalk, !lastUpdateOdd)
             );
         }
 
         // increment users stalk and roots.
-        s.a[account].s.stalk = s.a[account].s.stalk.add(firstStalk.add(secondStalk));
+        s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
         s.a[account].roots = s.a[account].roots.add(roots);
 
-        // emit event
+        // emit event.
         emit LibSilo.StalkBalanceChanged(
             account,
-            int256(firstStalk.add(secondStalk)),
+            int256(germinatingStalk),
             int256(roots)
         );
     }
@@ -171,7 +179,7 @@ library LibGerminate {
     ) private returns (uint128 roots) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        roots = calculateGerminatingRoots(account, season, stalk);
+        roots = calculateGerminatingRoots(season, stalk);
 
         if (clearOdd) {
             delete s.a[account].farmerGerminating.odd;
@@ -186,12 +194,10 @@ library LibGerminate {
 
     /**
      * @notice calculates the germinating roots for a given stalk and season.
-     * @param account address of the account to end germination for.
      * @param season the season to use when calculating the germinating roots.
      * @param stalk the stalk to calculate the germinating roots for.
      */
     function calculateGerminatingRoots(
-        address account,
         uint32 season,
         uint128 stalk
     ) private view returns (uint128 roots) {
@@ -237,24 +243,33 @@ library LibGerminate {
         uint32 lastMowedSeason,
         uint32 currentSeason
     ) internal view returns (uint256 germinatingStalk, uint256 germinatingRoots) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
-        (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
+
+        // if user has mowed already, 
+        // then there are no germinating stalk and roots to finish.
+        if(lastMowedSeason == currentSeason) {
+            return (0, 0);
+        }
+
+        (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(
+            account, 
+            isSeasonOdd(lastMowedSeason)
+        );
 
         // check to end germination for first stalk.
-        // if last mowed season is the same as the current season - 1,
+        // if last mowed season is the greater or equal than (currentSeason - 1),
         // then the first stalk is still germinating.
-        if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
-            germinatingRoots = calculateGerminatingRoots(account, lastMowedSeason, firstStalk);
+        if (firstStalk > 0 && lastMowedSeason < currentSeason.sub(1)) {
+            germinatingStalk = firstStalk;
+            germinatingRoots = calculateGerminatingRoots(lastMowedSeason, firstStalk);
         }
 
         // check to end germination for second stalk.
         if (secondStalk > 0) {
+            germinatingStalk = germinatingStalk.add(secondStalk);
             germinatingRoots = germinatingRoots.add(
-                calculateGerminatingRoots(account, lastMowedSeason.sub(1), secondStalk)
+            calculateGerminatingRoots(lastMowedSeason.sub(1), secondStalk)
             );
         }
-        germinatingStalk = firstStalk.add(secondStalk);
     }
 
     /**
@@ -269,16 +284,18 @@ library LibGerminate {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // if the last mowed season is less than the current season - 1,
-        // then there are no germinating stalk and roots.
-        if (lastMowedSeason < s.season.current - 1) {
+        // then there are no germinating stalk and roots (as all germinating assets have finished).
+        if (lastMowedSeason < s.season.current.sub(1)) {
             return (0, 0);
         } else {
-            uint128 firstStalk = s.a[account].farmerGerminating.odd;
-            germinatingRoots = calculateGerminatingRoots(account, lastMowedSeason, firstStalk);
-            uint128 secondStalk = s.a[account].farmerGerminating.even;
+            (
+                uint128 firstStalk,
+                uint128 secondStalk
+            ) = getGerminatingStalk(account, isSeasonOdd(lastMowedSeason));
+            germinatingRoots = calculateGerminatingRoots(lastMowedSeason, firstStalk);
             germinatingStalk = firstStalk.add(secondStalk);
             germinatingRoots = germinatingRoots.add(
-                calculateGerminatingRoots(account, lastMowedSeason, firstStalk)
+                calculateGerminatingRoots(lastMowedSeason.sub(1), secondStalk)
             );
         }
     }
@@ -300,7 +317,6 @@ library LibGerminate {
         address token
     ) internal view returns (uint256 bdv, uint256 amount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
         return (s.oddGerminating.deposited[token].bdv.add(
             s.evenGerminating.deposited[token].bdv
         ), s.oddGerminating.deposited[token].amount.add(

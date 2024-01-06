@@ -50,9 +50,10 @@ contract SeasonFacet is Weather {
         uint32 season = stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
-        LibGerminate.endTotalGermination(season);
+        LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
+        // germination should end after beans are issued.
 
         return incentivize(account, initialGasLeft, mode);
     }

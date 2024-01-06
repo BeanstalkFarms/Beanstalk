@@ -34,7 +34,8 @@ describe('Gauge', function () {
     this.gauge = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
+    this.seasonGetters = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
@@ -108,7 +109,7 @@ describe('Gauge', function () {
     describe('L2SR > excessively high L2SR % + P > 1', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 108);
-        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('51'));
+        expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('51'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3,     // season
@@ -121,7 +122,7 @@ describe('Gauge', function () {
     describe('moderately high L2SR % < L2SR < excessively high L2SR % + P < 1', async function () {
       it("decreases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 75);
-        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('49'));
+        expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('49'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3, // season
@@ -134,7 +135,7 @@ describe('Gauge', function () {
     describe('moderately low L2SR % < L2SR < moderately high L2SR %, excessively low podRate', async function () {
       it("increases Bean to maxLP ratio", async function () {
         this.result = await this.season.seedGaugeSunSunrise('0', 36);
-        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('0'));
+        expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('0'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3, // season
@@ -148,7 +149,7 @@ describe('Gauge', function () {
       it("massively decreases Bean to maxLP ratio", async function () {
         await this.season.setBeanToMaxLpGpPerBdvRatio(to18('51'));
         this.result = await this.season.seedGaugeSunSunrise('0', 0);
-        expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('1'));
+        expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('1'));
         await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
           .withArgs(
             3, // season
@@ -161,7 +162,7 @@ describe('Gauge', function () {
     it("Bean to maxLP ratio cannot go under 0%", async function () {
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('0.5'));
       this.result = await this.season.seedGaugeSunSunrise('0', 111);
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal('0');
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal('0');
       await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
         .withArgs(
           3,     // season
@@ -173,7 +174,7 @@ describe('Gauge', function () {
     it("Bean to maxLP ratio can increase from 0%", async function () {
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('0'));
       this.result = await this.season.seedGaugeSunSunrise('0', 72);
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('1'));
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('1'));
       await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
         .withArgs(
           3,     // season
@@ -185,7 +186,7 @@ describe('Gauge', function () {
     it("Bean to maxLP ratio cannot go above 100%", async function () {
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('99.9'));
       this.result = await this.season.seedGaugeSunSunrise('0', 54);
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('100'));
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('100'));
       await expect(this.result).to.emit(this.season, 'BeanToMaxLpGpPerBdvRatioChange')
         .withArgs(
           3,     // season
@@ -197,23 +198,23 @@ describe('Gauge', function () {
     it("Bean to maxLP ratio properly scales", async function () {
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('50'));
       // 0.50 * (1 - 0.5) + 0.5 = 0.75
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('75'));
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('75'));
 
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('51'));
      // 0.51 * (1 - 0.5) + 0.5 = 75.5
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('75.5'))
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('75.5'))
     })    
 
     it("Bean to maxLP ratio cannot decrease below min %", async function () {
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('0'));
       // 0 * (1 - 0.5) + 0.5 = .5
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('50'));
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('50'));
     })
 
     it("Bean to maxLP ratio cannot exceed max %", async function () {
       await this.season.setBeanToMaxLpGpPerBdvRatio(to18('100'));
       // 100 * (1 - 0.5) + 0.5 = 1
-      expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('100'));
+      expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatioScaled()).to.be.equal(to18('100'));
     })
 
   })
@@ -228,7 +229,7 @@ describe('Gauge', function () {
         // total non-bean liquidity is 2m.
         await this.bean.mint(ownerAddress, to6('2000000'));
         expect(
-          await this.seasonGetter.getLiquidityToSupplyRatio()
+          await this.seasonGetters.getLiquidityToSupplyRatio()
           ).to.be.equal(to18('1'));
       })
 
@@ -239,23 +240,23 @@ describe('Gauge', function () {
         await this.season.mockSetBean3CrvOracle([to6('1000000'), to18('1000000')]);
 
         expect(
-          await this.seasonGetter.getLiquidityToSupplyRatio()
+          await this.seasonGetters.getLiquidityToSupplyRatio()
         ).to.be.equal(0);
       })
 
       it('returns 0 if no supply', async function () {
         this.beanSupply = await this.bean.totalSupply();
-        this.result = await this.seasonGetter.getLiquidityToSupplyRatio();
+        this.result = await this.seasonGetters.getLiquidityToSupplyRatio();
         await expect(this.beanSupply).to.be.equal(0);
         await expect(this.result).to.be.equal(0);
       }) 
 
       it('decreases', async function () {
         await this.bean.mint(ownerAddress, to6('2000000'));
-        initalL2SR = await this.seasonGetter.getLiquidityToSupplyRatio();
+        initalL2SR = await this.seasonGetters.getLiquidityToSupplyRatio();
         
         await this.bean.mint(ownerAddress, to6('2000000'));
-        newL2SR = await this.seasonGetter.getLiquidityToSupplyRatio();
+        newL2SR = await this.seasonGetters.getLiquidityToSupplyRatio();
 
         expect(newL2SR).to.be.equal(to18('0.5'));
         expect(newL2SR).to.be.lt(initalL2SR);
@@ -264,10 +265,10 @@ describe('Gauge', function () {
 
       it('increases', async function () {
         await this.bean.mint(ownerAddress, to6('2000000'));
-        initalL2SR = await this.seasonGetter.getLiquidityToSupplyRatio();
+        initalL2SR = await this.seasonGetters.getLiquidityToSupplyRatio();
 
         await this.bean.connect(owner).burn(to6('1000000'));
-        newL2SR = await this.seasonGetter.getLiquidityToSupplyRatio();
+        newL2SR = await this.seasonGetters.getLiquidityToSupplyRatio();
 
         expect(newL2SR).to.be.equal(to18('2'));
         expect(newL2SR).to.be.gt(initalL2SR);
@@ -309,7 +310,7 @@ describe('Gauge', function () {
         expect(await this.unripe.getLockedBeans()).to.be.eq(to6('872.66421'));
         console.log(await this.bean.totalSupply());
         expect(
-          await this.seasonGetter.getLiquidityToSupplyRatio()
+          await this.seasonGetters.getLiquidityToSupplyRatio()
           ).to.be.eq(to18('1.000436522573813512'));
       })
 
@@ -323,8 +324,8 @@ describe('Gauge', function () {
 
   describe('GaugePoints', async function () {
     beforeEach(async function () {
-      beanETHGaugePoints = await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)
-      bean3crvGaugePoints = await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)
+      beanETHGaugePoints = await this.seasonGetters.getGaugePoints(BEAN_ETH_WELL)
+      bean3crvGaugePoints = await this.seasonGetters.getGaugePoints(BEAN_3_CURVE)
       // deposit half beanETH, half bean3crv:
       await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL);
       await this.bean.mint(userAddress, to6('10000'))
@@ -339,12 +340,15 @@ describe('Gauge', function () {
       await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL);
       // deposit beans: 
       await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL);
+      // 2 sunrises need to occur due to germination update. 
+      await this.season.siloSunrise(0);
+      await this.season.siloSunrise(0);
       this.result = (await this.season.mockStepGauge());
     })
 
     it('updates gauge points', async function () {
-      expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2251'));
-      expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1624'));
+      expect(await this.seasonGetters.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2251'));
+      expect(await this.seasonGetters.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1624'));
     })
 
     it('update seeds values', async function () {
@@ -368,12 +372,12 @@ describe('Gauge', function () {
     
     it('emits events', async function () {
       await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
-        2,  // season
+        await this.seasonGetters.season(),  // season
         BEAN_ETH_WELL,  // token
         to18('2251') // new gauge points
       );
       await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
-        2,  // season
+        await this.seasonGetters.season(),  // season
         BEAN_3_CURVE,  // token
         to18('1624') // new gauge points
       );
@@ -388,31 +392,32 @@ describe('Gauge', function () {
       this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     })
     it('getter', async function (){
-      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
-      expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
+      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
     })
 
     it('increases after some seasons pass', async function () {
-      await this.season.teleportSunrise(4322)
-      // season 4322 (user does not gain any stalk until season 2)
+      await this.season.fastForward(4320)
       await this.silo.mow(userAddress, this.bean.address)
-      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0);
-      expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0);
+      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
       await this.season.updateAverageStalkPerBdvPerSeason();
-      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
     })
 
     it('decreases after a new deposit', async function() {
-      await this.season.teleportSunrise(4322)
+      await this.season.fastForward(4320)
       await this.silo.mow(userAddress, this.bean.address)
       await this.season.updateAverageStalkPerBdvPerSeason();
-      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
       this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
-      expect(await this.seasonGetter.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'));
+      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'));
+      await this.season.fastForward(2)
+      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'));
     })
 
     it('updates averageGrownStalkPerBDVPerSeason if a week has elapsed', async function () {
-      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'));
       // deposit half beanETH, half bean3crv:
       await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL);
       await this.bean.mint(userAddress, to6('10000'))
@@ -425,15 +430,15 @@ describe('Gauge', function () {
         EXTERNAL
       );
       await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL);
-      // deposit beans: 
+      // deposit beans:
       await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL);
-      await this.season.teleportSunrise(168);
+      await this.season.fastForward(168);
       await this.silo.mow(userAddress, this.bean.address)
       await this.silo.mow(userAddress, BEAN_ETH_WELL)
       await this.silo.mow(userAddress, BEAN_3_CURVE)
       await this.season.mockStepGauge();
 
-      expect(await this.seasonGetter.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(84722);
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(85648);
     });
   })
 
@@ -441,9 +446,9 @@ describe('Gauge', function () {
     await setOracleFailure(true, ETH_USDT_UNISWAP_V3);
     await this.season.stepGauge();
     // verify state is same
-    expect(await this.seasonGetter.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'));
-    expect(await this.seasonGetter.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2250'));
-    expect(await this.seasonGetter.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1625'));
+    expect(await this.seasonGetters.getBeanToMaxLpGpPerBdvRatio()).to.be.equal(to18('50'));
+    expect(await this.seasonGetters.getGaugePoints(BEAN_ETH_WELL)).to.be.eq(to18('2250'));
+    expect(await this.seasonGetters.getGaugePoints(BEAN_3_CURVE)).to.be.eq(to18('1625'));
 
     expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(to6('2'));
     expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(to6('4'));

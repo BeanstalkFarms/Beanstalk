@@ -16,8 +16,6 @@ import {LibSafeMath32} from "../LibSafeMath32.sol";
 import {LibSafeMathSigned96} from "../LibSafeMathSigned96.sol";
 import {LibGerminate} from "./LibGerminate.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @title LibSilo
  * @author Publius
@@ -100,16 +98,28 @@ library LibSilo {
         uint256[] bdvs
     );
 
+    /**
+     * AssetsRemoved contains the assets removed 
+     * during a withdraw or convert. 
+     * 
+     * @dev seperated into 3 catagories:
+     * active: non-germinating assets.
+     * odd: odd germinating assets.
+     * even: even germinating assets.
+     * grownStalk from germinating depoists are seperated 
+     * as that stalk is not germinating.
+     */
     struct AssetsRemoved {
-        uint256 tokensRemoved;
-        uint256 stalkRemoved;
-        uint256 bdvRemoved;
-        uint256 oddTokensRemoved;
-        uint256 oddStalkRemoved;
-        uint256 oddBdvRemoved;
-        uint256 evenTokensRemoved;
-        uint256 evenStalkRemoved;
-        uint256 evenBdvRemoved;
+        Removed active;
+        Removed odd; 
+        Removed even;
+        uint256 grownStalkFromGermDeposits;
+    }
+
+    struct Removed {
+        uint256 tokens;
+        uint256 stalk;
+        uint256 bdv;
     }
 
     /**
@@ -148,8 +158,6 @@ library LibSilo {
      * as the stalk is germinating and not immediately active.
      */
     function mintStalk(address account, uint256 stalk, LibGerminate.Germinate germ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
         // if the stalk is not germinating, use the normal minting logic.
         // else, mint using germinating logic.
         if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
@@ -164,7 +172,6 @@ library LibSilo {
      */
     function mintActiveStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
         uint256 roots;
         if (s.s.roots == 0) {
             roots = uint256(stalk.mul(C.getRootsBase()));
@@ -252,7 +259,7 @@ library LibSilo {
     /**
      * @notice Burns stalk and roots from an account.
      */
-    function burnActiveStalk(address account, uint256 stalk) private returns (uint256 roots) {
+    function burnActiveStalk(address account, uint256 stalk) internal returns (uint256 roots) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (stalk == 0) return 0;
 
@@ -280,7 +287,7 @@ library LibSilo {
         address account,
         uint128 stalk,
         LibGerminate.Germinate germ
-    ) private {
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         if (germ == LibGerminate.Germinate.ODD) {
@@ -338,21 +345,15 @@ library LibSilo {
         LibGerminate.Germinate GermState
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint128 senderGerminatingStalk;
-        uint128 recipientGerminatingStalk;
+         // Subtract Germinating Stalk from the 'sender' balance, 
+         // and Add to the 'recipient' balance.
         if (GermState == LibGerminate.Germinate.ODD) {
-            senderGerminatingStalk = s.a[sender].farmerGerminating.odd;
-            recipientGerminatingStalk = s.a[recipient].farmerGerminating.odd;
+            s.a[sender].farmerGerminating.odd = s.a[sender].farmerGerminating.odd.sub(stalk.toUint128());
+            s.a[recipient].farmerGerminating.odd = s.a[recipient].farmerGerminating.odd.add(stalk.toUint128());
         } else {
-            senderGerminatingStalk = s.a[sender].farmerGerminating.even;
-            recipientGerminatingStalk = s.a[recipient].farmerGerminating.even;
+            s.a[sender].farmerGerminating.even = s.a[sender].farmerGerminating.even.sub(stalk.toUint128());
+            s.a[recipient].farmerGerminating.even = s.a[recipient].farmerGerminating.even.add(stalk.toUint128());
         }
-
-        // Subtract Germinating Stalk from the 'sender' balance.
-        senderGerminatingStalk = senderGerminatingStalk.sub(stalk.toUint128());
-
-        // Add Germinating Stalk to the 'recipient' balance.
-        recipientGerminatingStalk = recipientGerminatingStalk.add(stalk.toUint128());
     }
 
     /**
@@ -367,27 +368,27 @@ library LibSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
-        if (ar.stalkRemoved > 0) {
-            ar.stalkRemoved = ar.stalkRemoved.add(ar.bdvRemoved.mul(stalkPerBDV));
-            transferStalk(sender, recipient, ar.stalkRemoved);
+        if (ar.active.stalk > 0) {
+            ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
+            transferStalk(sender, recipient, ar.active.stalk);
         }
 
-        if (ar.oddStalkRemoved > 0) {
-            ar.oddStalkRemoved = ar.oddStalkRemoved.add(ar.oddBdvRemoved.mul(stalkPerBDV));
+        if (ar.odd.stalk > 0) {
+            ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
                 recipient,
-                ar.oddStalkRemoved,
+                ar.odd.stalk,
                 LibGerminate.Germinate.ODD
             );
         }
 
-        if (ar.evenStalkRemoved > 0) {
-            ar.evenStalkRemoved = ar.evenStalkRemoved.add(ar.evenBdvRemoved.mul(stalkPerBDV));
+        if (ar.even.stalk > 0) {
+            ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
                 recipient,
-                ar.evenStalkRemoved,
+                ar.even.stalk,
                 LibGerminate.Germinate.EVEN
             );
         }
@@ -450,23 +451,14 @@ library LibSilo {
         int96 _lastStem = s.a[account].mowStatuses[token].lastStem;
         uint128 _bdv = s.a[account].mowStatuses[token].bdv;
 
-        console.logInt(_stemTip);
-        console.logInt(_lastStem);
-        console.log("_bdv: ", uint256(_bdv));
-
-        // if
+        // if:
         // 1: account has no bdv (new token deposit)
         // 2: the lastStem is the same as the stemTip (implying that a user has mowed),
         // then skip calculations to save gas.
-        console.log("MOWWWWW?");
         if (_bdv > 0) {
             if (_lastStem == _stemTip) {
                 return;
             }
-            console.log("mow stuff:");
-            console.log("lastStem: ", uint256(_lastStem));
-            console.log("stemTip: ", uint256(_stemTip));
-            console.log("bdv: ", _bdv);
 
             // end germination (only occurs once per season)
             LibGerminate.endAccountGermination(account, lastSeasonUpdate, currentSeason);
@@ -532,8 +524,7 @@ library LibSilo {
         int96 lastStem,
         int96 latestStem,
         uint128 bdv
-    ) internal view returns (uint256) {
-        console.log("stalk reward:", uint256(stalkReward(lastStem, latestStem, bdv)));
+    ) internal pure returns (uint256) {
         return stalkReward(lastStem, latestStem, bdv);
     }
 
@@ -600,7 +591,6 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         int96 stemTip;
         (germ, stemTip) = LibGerminate.getGerminationState(token, stem);
-        console.log("remove deposit from account, germ state is:", uint256(germ));
         bdvRemoved = LibTokenSilo.removeDepositFromAccount(account, token, stem, amount);
 
         // the inital and grown stalk are as there are instances where the inital stalk is
@@ -608,8 +598,6 @@ library LibSilo {
         initalStalkRemoved = bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv);
 
         grownStalkRemoved = stalkReward(stem, stemTip, bdvRemoved.toUint128());
-        console.log("initalStalk removed:, ", initalStalkRemoved);
-        console.log("grownStalk removed:, ", grownStalkRemoved);
         /**
          *  {_removeDepositFromAccount} is used for both withdrawing and transferring deposits.
          *  In the case of a withdraw, only the {TransferSingle} Event needs to be emitted.
@@ -669,44 +657,52 @@ library LibSilo {
 
             // if the deposit is germinating, decrement germinating values,
             // otherwise increment deposited values.
-            // token is added to `ar.tokensRemoved` regardless of germination state.
-
             if (germState == LibGerminate.Germinate.NOT_GERMINATING) {
-                ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
-                ar.stalkRemoved = ar.stalkRemoved.add(crateStalk);
-                ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
+                ar.active.bdv = ar.active.bdv.add(crateBdv);
+                ar.active.stalk = ar.active.stalk.add(crateStalk);
+                ar.active.tokens = ar.active.tokens.add(amounts[i]);
             } else {
                 if (germState == LibGerminate.Germinate.ODD) {
-                    ar.oddBdvRemoved = ar.oddBdvRemoved.add(crateBdv);
-                    ar.oddStalkRemoved = ar.oddStalkRemoved.add(crateStalk);
-                    ar.oddTokensRemoved = ar.oddTokensRemoved.add(amounts[i]);
+                    ar.odd.bdv = ar.odd.bdv.add(crateBdv);
+                    ar.odd.tokens = ar.odd.tokens.add(amounts[i]);
                 } else {
-                    ar.evenBdvRemoved = ar.evenBdvRemoved.add(crateBdv);
-                    ar.evenStalkRemoved = ar.evenStalkRemoved.add(crateStalk);
-                    ar.evenTokensRemoved = ar.evenTokensRemoved.add(amounts[i]);
+                    ar.even.bdv = ar.even.bdv.add(crateBdv);
+                    ar.even.tokens = ar.even.tokens.add(amounts[i]);
                 }
+                // grown stalk from germinating deposits do not germinate,
+                // and thus must be added to the grown stalk.
+                ar.grownStalkFromGermDeposits = ar.grownStalkFromGermDeposits.add(
+                    crateStalk
+                );
             }
         }
 
-        if (ar.stalkRemoved > 0) {
-            ar.stalkRemoved = ar.stalkRemoved.add(ar.bdvRemoved.mul(s.ss[token].stalkIssuedPerBdv));
-        }
+        // add inital stalk deposit to all stalk removed.
+        {
+            uint256 stalkIssuedPerBdv = s.ss[token].stalkIssuedPerBdv;
+            if (ar.active.tokens > 0) {
+                ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkIssuedPerBdv));
+            }
 
-        if (ar.oddStalkRemoved > 0) {
-            ar.oddStalkRemoved = ar.oddStalkRemoved.add(
-                ar.oddBdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
-            );
-        }
+            if (ar.odd.tokens > 0) {
+                ar.odd.stalk = ar.odd.bdv.mul(stalkIssuedPerBdv);
+            }
 
-        if (ar.evenStalkRemoved > 0) {
-            ar.evenStalkRemoved = ar.evenStalkRemoved.add(
-                ar.evenBdvRemoved.mul(s.ss[token].stalkIssuedPerBdv)
-            );
+            if (ar.even.tokens > 0) {
+                ar.even.stalk = ar.even.bdv.mul(stalkIssuedPerBdv);
+            }
         }
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
         emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
-        emit RemoveDeposits(account, token, stems, amounts, ar.tokensRemoved, bdvsRemoved);
+        emit RemoveDeposits(
+            account, 
+            token, 
+            stems, 
+            amounts, 
+            ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens), 
+            bdvsRemoved
+        );
     }
 
     //////////////////////// UTILITIES ////////////////////////
@@ -751,7 +747,6 @@ library LibSilo {
         uint256 accountStalk,
         uint256 accountRoots
     ) internal view returns (uint256 beans) {
-        console.log("in balance of earned beans internal");
         AppStorage storage s = LibAppStorage.diamondStorage();
         // There will be no Roots before the first Deposit is made.
         if (s.s.roots == 0) return 0;

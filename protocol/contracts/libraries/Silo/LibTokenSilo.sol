@@ -16,7 +16,6 @@ import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -289,7 +288,6 @@ library LibTokenSilo {
         );
 
         // SafeMath unnecessary b/c crateBDV <= type(uint128).max
-        console.log("bdv: ", bdv);
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.add(
             bdv.toUint128()
         );
@@ -344,7 +342,6 @@ library LibTokenSilo {
 
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
-
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove
@@ -358,6 +355,10 @@ library LibTokenSilo {
             s.a[account].deposits[depositId].amount = uint128(updatedAmount);
             s.a[account].deposits[depositId].bdv = uint128(updatedBDV);
             
+            s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
+                uint128(removedBDV)
+            );
+
             return removedBDV;
         }
         // Full remove
@@ -496,6 +497,8 @@ library LibTokenSilo {
         // The check in the above line guarantees that subtraction result is positive
         // and thus the cast to `uint256` is safe.
         uint deltaStemTip = uint256(_stemTip.sub(stem));
+        // no stalk has grown if the stem is equal to the stemTip.
+        if(deltaStemTip == 0) return 0;
         (, uint bdv) = getDeposit(account, token, stem);
 
         grownStalk = deltaStemTip.mul(bdv);

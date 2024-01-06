@@ -16,7 +16,6 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {C} from "contracts/C.sol";
 
-import "hardhat/console.sol";
 /**
  * @author Brean
  * @title SiloGettersFacet contains view functions related to the silo.
@@ -83,19 +82,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice returns the germinating deposited amount of `token` for the current season.
      */
-    function getGerminatingTotalDeposited(address token) external view returns (uint256) {
-        return s.oddGerminating.deposited[token].amount.add(
-            s.evenGerminating.deposited[token].amount
-        );
+    function getGerminatingTotalDeposited(address token) external view returns (uint256 amount) {
+        ( , amount) = LibGerminate.getTotalGerminatingForToken(token);
     }
 
     /**
      * @notice returns the germinating deposited bdv of `token` for the current season.
      */
-    function getGerminatingTotalDepositedBdv(address token) external view returns (uint256) {
-        return s.oddGerminating.deposited[token].bdv.add(
-            s.evenGerminating.deposited[token].bdv
-        );
+    function getGerminatingTotalDepositedBdv(address token) external view returns (uint256 _bdv) {
+        (_bdv, ) = LibGerminate.getTotalGerminatingForToken(token);
     }
 
     /**
@@ -175,10 +170,19 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the total germinating stalk for a season.
+     * @notice Returns the unclaimed germinating stalk for a season.
      */
     function getGerminatingStalkForSeason(uint32 season) external view returns (uint256) {
         return s.unclaimedGerminating[season].stalk;
+    }
+
+    /**
+     * @notice returns the stalk that is currently in the germination process.
+     */
+    function getTotalGerminatingStalk() external view returns (uint256) {
+        return s.unclaimedGerminating[s.season.current].stalk.add(
+            s.unclaimedGerminating[s.season.current - 1].stalk
+        );
     }
 
     /**
@@ -222,9 +226,6 @@ contract SiloGettersFacet is ReentrancyGuard {
             s.a[account].lastUpdate,
             s.season.current
         );
-        console.log("s.a[account].s.stalk:", s.a[account].s.stalk);
-        console.log("balanceOfEarnedStalk(account):", balanceOfEarnedStalk(account));
-        console.log("germinatingStalk:", germinatingStalk);
         return s.a[account].s.stalk
             .add(germinatingStalk)
             .add(balanceOfEarnedStalk(account));
@@ -265,21 +266,6 @@ contract SiloGettersFacet is ReentrancyGuard {
         );
         return s.a[account].roots.add(germinatingRoots);
     }
-
-    /**
-     * @notice Returns the balance of Germinating Roots for `account`.
-     * @dev Germinating Roots that will finish germination upon a silo interaction
-     * is not included.
-     */
-    function balanceOfGerminatingRoots(address account) external view returns (uint256) {
-        (, uint256 germinatingRoots) = LibGerminate.getCurrentGerminatingStalkAndRoots(
-            account,
-            s.a[account].lastUpdate
-        );
-        return germinatingRoots;
-    }
-
-
 
     /**
      * @notice Returns the balance of Grown Stalk for `account`. Grown Stalk is 
@@ -329,21 +315,14 @@ contract SiloGettersFacet is ReentrancyGuard {
         view
         returns (uint256 beans)
     {
-        console.log("balanceOfEarnedBeans public is called");
-    
+
         (uint256 germinatingStalk, uint256 germinatingRoots) = LibGerminate.getFinishedGerminatingStalkAndRoots(
             account,
             s.a[account].lastUpdate,
             s.season.current
         );
-        console.log("accountStalk initally:", s.a[account].s.stalk);
-        console.log("accountRoots initally:", s.a[account].roots);
         uint256 accountStalk = s.a[account].s.stalk.add(germinatingStalk);
         uint256 accountRoots = s.a[account].roots.add(germinatingRoots);
-        console.log("germinatingStalk:", germinatingStalk);
-        console.log("germinatingRoots:", germinatingRoots);
-        console.log("new accountStalk:", accountStalk);
-        console.log("new accountRoots:", accountRoots);
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, accountRoots);
     }
 

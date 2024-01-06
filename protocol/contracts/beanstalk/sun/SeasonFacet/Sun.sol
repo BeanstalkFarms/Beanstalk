@@ -175,7 +175,7 @@ contract Sun is Oracle {
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
         // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
-        s.earnedBeans = s.earnedBeans.add(uint128(amount));
+        s.earnedBeans = s.earnedBeans.add(amount.toUint128());
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //

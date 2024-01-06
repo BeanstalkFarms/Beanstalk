@@ -20,11 +20,11 @@ function pruneToSeeds(value, seeds = 2) {
 }
 
 function pruneToStalk(value) {
-  return prune(toBN(value).mul(toBN("10000")));
+  return prune(value).mul(toBN("10000"));
 }
 
 function prune(value) {
-  return value.mul(toBN(pru)).div(to18("1"));
+  return toBN(value).mul(toBN(pru)).div(to18("1"));
 }
 
 describe("Silo Enroot", function () {
@@ -121,20 +121,14 @@ describe("Silo Enroot", function () {
       })
 
       it('properly updates the total balances', async function () {
-        // the gain in bdv and stalk is stored in germination.
         expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.siloGetters.getGerminatingTotalDeposited(UNRIPE_BEAN)).to.eq('0');
-        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).div('10000'));
-        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(UNRIPE_BEAN)).to.eq(toStalk('0.5').div('10000'));
-
-        expect(await this.siloGetters.totalStalk()).to.eq(pruneToStalk(to6('10')));
-        expect(await this.siloGetters.totalGerminatingStalk()).to.eq(toStalk('0.5'));
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')).div('10000'));
+        expect(await this.siloGetters.totalStalk()).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
       });
 
       it('properly updates the user balance', async function () {
-        // new stalk should be germinating.
-        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(pruneToStalk(to6('10')));
-        expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(toStalk('0.5'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
+        expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq('0');
       });
 
       it('properly removes the crate', async function () {
@@ -152,7 +146,7 @@ describe("Silo Enroot", function () {
       });
     });
 
-    describe.only("1 deposit after 1 season, all", async function () {
+    describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
         this.season.deployStemsUpgrade();
 
@@ -174,17 +168,13 @@ describe("Silo Enroot", function () {
       })
 
       it('properly updates the total balances', async function () {
-        // deposited bdv and stalk will have the prune amt, and the germinating will have the remainder.
         expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
         expect(await this.siloGetters.getGerminatingTotalDeposited(UNRIPE_BEAN)).to.eq('0');
 
-        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).div('10000'));
-        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(UNRIPE_BEAN)).to.eq(
-          to6('5').sub(pruneToStalk(to6('10')).div('10000'))
-        );
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
+        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(UNRIPE_BEAN)).to.eq('0');
         
-        expect(await this.siloGetters.totalStalk()).to.eq(pruneToStalk(to6('10')));
-        expect(await this.siloGetters.totalGerminatingStalk()).to.eq(toStalk('5.001').sub(pruneToStalk(to6('10'))));
+        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('5.001'));
       });
 
       it('properly updates the user balance', async function () {
@@ -273,12 +263,12 @@ describe("Silo Enroot", function () {
       it('properly updates the total balances', async function () {
         expect(await this.siloGetters.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
         expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
-        expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.eq('0');
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the user balance', async function () {
         expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
-        expect(await this.siloGetters.balanceOfSeeds(userAddress)).to.eq('0');
+        expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the crate', async function () {

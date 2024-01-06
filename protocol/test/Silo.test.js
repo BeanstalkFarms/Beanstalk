@@ -28,9 +28,6 @@ describe('Silo', function () {
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
 
-    // await this.season.teleportSunrise(10);
-    // this.season.deployStemsUpgrade();
-
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
     this.metadata = await ethers.getContractAt('MetadataFacet', this.diamond.address);
     this.diamondLoupe = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address);
@@ -180,7 +177,6 @@ describe('Silo', function () {
   describe("ERC1155 Deposits", async function () {
     beforeEach(async function () {
       await this.bean.mint(user3Address, to6('10000'));
-      await this.bean.connect(user3).approve(this.silo.address, '100000000000');
 
       // deposit 1000 beans at season 3.
       await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
@@ -236,9 +232,8 @@ describe('Silo', function () {
     });
 
     it('transfers an ERC1155 deposit', async function () {
-      // transfering a deposit from user 1, to user 3
+      // transfering the most recent deposit from user 1, to user 3
       // user 1 currently has 2000.4 stalk (1000 stalk, 1000 germinating stalk, and 0.4 grown stalk),
-      // user 3 currently has 0 stalk. 
       season = this.seasonGetter.season()
       stem = this.silo.mockSeasonToStem(this.bean.address, season)
       depositID = await this.siloGetters.getDepositId(this.bean.address, stem)
@@ -246,12 +241,13 @@ describe('Silo', function () {
       expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.4'));
       expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(toStalk('1000'));
       expect(await this.siloGetters.balanceOfStalk(user3Address)).to.eq(to6('0'));
+      expect(await this.siloGetters.balanceOfGerminatingStalk(user3Address)).to.eq(toStalk('0'));
+
       
-      // get roots
+      // get roots (note that germinating roots cannot be calculated until 2 gms have passed, and thus do
+      // not exist/have a view function).
       expect(await this.siloGetters.balanceOfRoots(userAddress)).to.eq(toStalk('1000400000000000'));
-      expect(await this.siloGetters.balanceOfGerminatingRoots(userAddress)).to.eq(toStalk('1000000000000000'));
       expect(await this.siloGetters.balanceOfRoots(user3Address)).to.eq('0');
-      expect(await this.siloGetters.balanceOfGerminatingRoots(user3Address)).to.eq('0');
 
 
 
@@ -270,10 +266,10 @@ describe('Silo', function () {
       expect(await this.siloGetters.balanceOfStalk(user3Address)).to.eq(toStalk('0'));
       expect(await this.siloGetters.balanceOfGerminatingStalk(user3Address)).to.eq(toStalk('1000'));
 
+      // user 1 should still have 1000.4 roots.
+      // user 3 should not have any roots, as the deposit has not been in the silo for 2 seasons.
       expect(await this.siloGetters.balanceOfRoots(userAddress)).to.eq(toStalk('1000400000000000'));
-      expect(await this.siloGetters.balanceOfGerminatingRoots(userAddress)).to.eq(toStalk('0'));
       expect(await this.siloGetters.balanceOfRoots(user3Address)).to.eq(toStalk('0'));
-      expect(await this.siloGetters.balanceOfGerminatingRoots(user3Address)).to.eq(toStalk('1000000000000000'));
 
       expect(await this.siloGetters.balanceOf(userAddress, depositID)).to.eq(to6('0'));
       expect(await this.siloGetters.balanceOf(user3Address, depositID)).to.eq(to6('1000'));
@@ -308,8 +304,8 @@ describe('Silo', function () {
       expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(toStalk('1000'));
 
       this.result = await this.silo.connect(user).deposit(
-        this.bean.address, 
-        to6('1000'), 
+        this.bean.address,
+        to6('1000'),
         EXTERNAL
       )
 
@@ -329,15 +325,15 @@ describe('Silo', function () {
         0x00
       )
 
+      // after the transfer, user 1 should have 1000.6 stalk and no germinating stalk.
+      // user 3 should have 0.2 stalk and 2000 germinating stalk.
       expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('1000.6'));
       expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(toStalk('0'));
       expect(await this.siloGetters.balanceOfStalk(user3Address)).to.eq(toStalk('.2'));
       expect(await this.siloGetters.balanceOfGerminatingStalk(user3Address)).to.eq(toStalk('2000'));
       
       expect(await this.siloGetters.balanceOfRoots(userAddress)).to.eq(toStalk("1000600000000000"));
-      expect(await this.siloGetters.balanceOfGerminatingRoots(userAddress)).to.eq(toStalk("0"));
       expect(await this.siloGetters.balanceOfRoots(user3Address)).to.eq(toStalk("200000000000"));
-      expect(await this.siloGetters.balanceOfGerminatingRoots(user3Address)).to.eq(toStalk("2000000000000000"));
 
 
       expect(await this.siloGetters.balanceOf(userAddress, depositID0)).to.eq(to6('0'));
@@ -444,7 +440,7 @@ describe('Silo', function () {
    * 
    * @dev the user may lose 1 micro bean due to rounding.
    */
-  describe.skip("Earned Beans issuance germination", async function () {
+  describe("Earned Beans issuance germination", async function () {
     
     before(async function () {
       await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
@@ -458,527 +454,188 @@ describe('Silo', function () {
     });
     
     // tests a farmers deposit that has no earned bean prior
-    describe("No Earned Beans prior to plant", async function() {
+    describe("Germination", async function() {
       
       beforeEach(async function () {
         await this.season.siloSunrise(to6('100'))
         // after this sunrise, user 3 and 4 have currently halfway done with
         // the germination process.
+        // user 1 and 2 should have 50 earned beans.
         season = await this.seasonGetter.season();
       })
 
-      describe("With Multiple Users", async function () {
-        it('a single farmer plants during and after vesting period', async function () {
+      it('a single farmer germination', async function () {
 
-          // user 1 and 2 should have 50% of the earned beans.
-          console.log("PRE PLANT SEASON 2")
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(50000000);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(50000000);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-          
-          await this.silo.connect(user).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-
-          expect(earned_beans[0]).to.eq(49999999);
-          // user 1 should now have 0 earned beans.
-          console.log("POST PLANT SEASON 2")
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(50000000);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-          
-          // advance to the next season.
-          await this.season.farmSunrise()
-
-          season = await this.seasonGetter.season();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          console.log("PRE PLANT SEASON 3")
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(25003570);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25003570);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25003570);
-          
-          await this.silo.connect(user2).plant();
-          await this.silo.connect(user3).plant();
-          await this.silo.connect(user4).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans2 = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
-          earned_beans3 = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
-          earned_beans4 = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
-          expect(earned_beans2[0]).to.eq(25003570);
-          expect(earned_beans3[0]).to.eq(24996431);
-          expect(earned_beans4[0]).to.eq(0);
-
-
-
-          await this.silo.connect(user).plant();
-          console.log("POST PLANT SEASON 3")
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address, stem);
-          expect(earned_beans[0]).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-        });
-  
-        it('multiple farmers plants during and after vesting period', async function () {
-         
-          await this.silo.connect(user).plant();
-          await this.silo.connect(user2).plant();
-          await this.silo.connect(user3).plant();
-          await this.silo.connect(user4).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-  
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant();
-          await this.silo.connect(user2).plant();
-          earned_beans = await this.siloGetters.getDeposit(user4Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(25e6);
-          earned_beans = await this.siloGetters.getDeposit(user3Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(user2Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(25e6);
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(0);
-        });
-  
-        it('some farmers plants during, some farmers plant after vesting period', async function () {
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-    
-         
-          await this.silo.connect(user).plant();
-          await this.silo.connect(user2).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-
-  
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant();
-          await this.silo.connect(user3).plant();
-          earned_beans = await this.siloGetters.getDeposit(user4Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(24999999);
-          earned_beans = await this.siloGetters.getDeposit(user3Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(25e6);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(25e6);
-  
-        });
-
-        it("Some Earned Beans Prior to plant, some earned beans after plant", async function () {
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user).plant(); // root increased by X, stalk increased by 2
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-  
-          expect(earned_beans[0]).to.eq(24999999);
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-  
-          // call sunrise, plant again
-          await time.increase(3600)
-          await this.season.siloSunrise(to6('100'));
-          season = await this.seasonGetter.season();
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0); // harvested last season 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(25e6); // not harvested yet 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6); // 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
+        // user 1 and 2 should have 50% of the earned beans.
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(50000000);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(50000000);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
         
-          await this.silo.connect(user).plant(); // root increased by Y, stalk increased by 2
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(user2Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(0);
+        // user 1 plants, and should have 50 beans deposited this season.
+        await this.silo.connect(user).plant();
+        stem = await this.silo.mockSeasonToStem(this.bean.address, season);
+        earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(49999999);
 
-          await this.silo.connect(user2).plant(); // root increased by Y, stalk increased by 4
-          earned_beans = await this.siloGetters.getDeposit(user2Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(25e6);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0); // harvested 25 beans from previous season
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(0); // just harvested
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-  
-
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          
-          //  user has more as he mowed grown stalk from previous season
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(25003659); 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(24998780);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(49998780);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(49998780);
-
-          await this.silo.connect(user3).plant();
-          await this.silo.connect(user4).plant(); 
-  
-          earned_beans = await this.siloGetters.getDeposit(user3Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(49998780);
-          earned_beans = await this.siloGetters.getDeposit(user4Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(49998780);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(25003659); 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(24998780);
-  
-        });
-
-        it('farmer plants in vesting period, then plants again in the following season', async function () {
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          season = await this.seasonGetter.season();
-          expect(await this.silo.connect(user2).balanceOfEarnedBeans(userAddress)).to.eq(0);
-          await this.silo.connect(user).plant();
-
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-            
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(24999999);
-
-          // sunrise again 
-          await this.season.siloSunrise(to6('100'))
-          season = await this.seasonGetter.season();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(24999999); 
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0)
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-
-          await this.silo.connect(user).plant();
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(50003658); // user gets the earned beans from the previous season + the beans from the current season
-          // user gets slightly more since they mowed last season. 
-        });
-
-        it('farmer partial withdraws during vesting period', async function () {
-          // 100 beans are given to silo holders:  
-          // user 1-4 own 25% of the silo each (1000/4000)
-          
-          // allocation after user 1 withdraws 500 beans (50% of their allocation): 
-          // user 1 = 14.28% (500/3500)
-          // user 2,3,4 = 28.57% (1000/3500)
-
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-
-          await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL);
-          await this.silo.connect(user).plant();
-          
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0); 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-  
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(14284400);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(28571866);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(28571866);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(28571866);
-        })
-
-        it('farmer partially transfers Deposit prior to plant', async function(){
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());    
-          
-          await this.silo.connect(user).transferDeposit(
-            userAddress,
-            user2Address,
-            this.bean.address,
-            '2',
-            to6('500')
-            )
-          await this.silo.connect(user).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-
-          expect(earned_beans[0]).to.eq(0); // 50 earned beans - 25 from this season 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-
-
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-  
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-
-          expect(earned_beans[0]).to.eq(12498750); // ~12.5 beans were transferred 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(37501249);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-
-        })
-
-        it('farmer fully transfers Deposit prior to plant', async function(){
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());    
-          
-          await this.silo.connect(user).transferDeposit(
-            userAddress,
-            user2Address,
-            this.bean.address,
-            '2',
-            to6('1000')
-            )
-          await this.silo.connect(user).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-
-          expect(earned_beans[0]).to.eq(0); // earned beans were transferred to user2
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
-  
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-  
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-
-          expect(earned_beans[0]).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(49999999);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-
-
-        })
-      })
-    })
-
-    describe("Some Earned Beans Prior to plant", async function () {
-      
-      beforeEach(async function () {
-        await this.season.siloSunrise(to6('100'))
-        await time.increase(3600) // 1800 + 1800 = 60 minutes = all beans issued
-        await this.season.siloSunrise(to6('100'))
-        season = await this.seasonGetter.season()
-      })
-
-      describe("With Multiple Users", async function () {
+        // user 1 should now have 0 earned beans.
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(50000000);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
         
-        it('a single farmer plants during and after vesting period', async function () {
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          
-          await this.silo.connect(user).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
+        // advance to the next season.
+        await this.season.farmSunrise()
 
-          expect(earned_beans[0]).to.eq(24999999); // 50 earned beans - 25 from this season 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-  
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-  
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(1);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(50000000);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
+        
+        await this.silo.connect(user2).plant();
+        await this.silo.connect(user3).plant();
+        await this.silo.connect(user4).plant();
 
-          expect(earned_beans[0]).to.eq(49999999);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(50e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(50e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(50e6);
-        });
-  
-        it('multiple farmers plants during and after vesting period', async function () {
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
+        season = await this.seasonGetter.season();
+        stem = await this.silo.mockSeasonToStem(this.bean.address, season);
+        earned_beans2 = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
+        earned_beans3 = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
+        earned_beans4 = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
+        expect(earned_beans2[0]).to.eq(50000000);
+        expect(earned_beans3[0]).to.eq(0);
+        expect(earned_beans4[0]).to.eq(0);
 
-          await this.silo.connect(user).plant();
-          await this.silo.connect(user3).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-
-  
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24999999);
-          earned_beans = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          earned_beans = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24999999);
-          earned_beans = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(0);
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant();
-          await this.silo.connect(user2).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem);
-          expect(earned_beans[0]).to.eq(24999999);
-          earned_beans = await this.siloGetters.getDeposit(user2Address,this.bean.address, stem);
-          expect(earned_beans[0]).to.eq(50e6);
-          earned_beans = await this.siloGetters.getDeposit(user3Address,this.bean.address, stem);
-          expect(earned_beans[0]).to.eq(24999999);
-          earned_beans = await this.siloGetters.getDeposit(user4Address,this.bean.address, stem);
-          expect(earned_beans[0]).to.eq(49999999);
-          
-        });
-  
-        it('some farmers plants during, some farmers plant after vesting period', async function () {
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-    
-          await this.silo.connect(user).plant();
-          await this.silo.connect(user2).plant();
-  
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24999999);
-          earned_beans = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24999999);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-          await this.silo.connect(user4).plant();
-          await this.silo.connect(user3).plant();
-          earned_beans = await this.siloGetters.getDeposit(user4Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(49999999);
-          earned_beans = await this.siloGetters.getDeposit(user3Address,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(50e6);
-  
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(25000001);
-          expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(25000001);
-  
-        });
-
-        it('farmer partial withdraws during vesting period', async function () {
-          // in this test, 100 beans are given to silo holders 
-          // in the previous and current season. 
-          // for the previous season, user 1-4 own 25% of the silo each (1000/4000).
-          // they each are allocated 25 beans.
-          
-          // in this current season, user 1 withdraws 50% of his deposit.
-          // thus, the new allocation for the current season is:
-          // user 1 = 14.58% (525/3600), 14.58 beans, 39.58 beans in total.
-          // user 2,3,4 = 28.47% (1025/3600), 28.47 beans, 53.47 beans in total.
-
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-
-          await this.silo.connect(user).withdrawDeposit(this.bean.address, '2', to6('500'), EXTERNAL);
-          await this.silo.connect(user).plant();
-          
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-          expect(earned_beans[0]).to.eq(24996230);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(24999669);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(24999669);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(24999669);
-  
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11);
-          
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-          expect(earned_beans[0]).to.eq(39580737);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(53473087);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(53473087);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(53473087);
-        })
-
-        it('farmer partially transfers Deposit prior to plant', async function(){
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());    
-          
-          await this.silo.connect(user).transferDeposit(
-            userAddress,
-            user2Address,
-            this.bean.address,
-            '2',
-            to6('500')
-            )
-          await this.silo.connect(user).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-
-          expect(earned_beans[0]).to.eq(24997561); // 50 earned beans - 25 from this season 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(24997676);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-
-
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-  
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-
-          expect(earned_beans[0]).to.eq(37802380); // ~12.5 beans were transferred 
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(62197619);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(50e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(50e6);
-
-
-        })
-
-        it('farmer fully transfers Deposit prior to plant', async function(){
-          await this.season.setSunriseBlock(await ethers.provider.getBlockNumber());    
-          
-          await this.silo.connect(user).transferDeposit(
-            userAddress,
-            user2Address,
-            this.bean.address,
-            '2',
-            to6('1000')
-            )
-          await this.silo.connect(user).plant();
-          stem = await this.silo.mockSeasonToStem(this.bean.address, season);
-          earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
-
-          expect(earned_beans[0]).to.eq(0); // earned beans were transferred to user2
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(49990476);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(25e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(25e6);
-  
-          
-          // skip to after the vesting period:
-          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
-  
-          await this.silo.connect(user).plant();
-          earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
-
-          expect(earned_beans[0]).to.eq(0);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(99999999);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(50e6);
-          expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(50e6);
-
-
-        })
+        await this.silo.connect(user).plant();
+        earned_beans = await this.siloGetters.getDeposit(userAddress,this.bean.address, stem);
+        expect(earned_beans[0]).to.eq(1);
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
       });
-    });
+
+      it('multiple farmers germination', async function () {
+        
+        await this.silo.connect(user).plant();
+        await this.silo.connect(user2).plant();
+        await this.silo.connect(user3).plant();
+        await this.silo.connect(user4).plant();
+        stem = await this.silo.mockSeasonToStem(this.bean.address, season);
+
+        earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(49999999);
+        earned_beans = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(50000000);
+        earned_beans = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(0);
+        earned_beans = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(0);
+        
+        // advance to the next season.
+        // user 3 and 4 should not have any earned beans, 
+        // as the germination period has just ended.
+        await this.season.siloSunrise(0);
+        season = await this.seasonGetter.season();
+        stem = await this.silo.mockSeasonToStem(this.bean.address, season);
+
+        await this.silo.connect(user3).plant();
+        await this.silo.connect(user4).plant();
+        earned_beans1 = await this.siloGetters.getDeposit(userAddress,this.bean.address,stem);
+        expect(earned_beans1[0]).to.eq(0);
+        earned_beans2 = await this.siloGetters.getDeposit(user2Address,this.bean.address,stem);
+        expect(earned_beans2[0]).to.eq(0);
+        earned_beans3 = await this.siloGetters.getDeposit(user3Address,this.bean.address,stem);
+        expect(earned_beans3[0]).to.eq(0);
+        earned_beans3 = await this.siloGetters.getDeposit(user4Address,this.bean.address,stem);
+        expect(earned_beans3[0]).to.eq(0);
+      });
+
+      it('beans are minted midway and post germination', async function () {
+        // call a sunrise with 100 beans.  
+        await this.season.siloSunrise(to6('100'));
+        // after this sunrise, user 3 and 4 have finished the germination process. 
+        // they should not have any earned beans at this moment.
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(100000000);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(100000000);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(0);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(0);
+
+        // call a sunrise with 100 beans.
+        await this.season.siloSunrise(to6('100'));
+
+        // user 1 and 2 should have slightly higher earned beans due to previous earned beans.
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(126190476);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(126190476);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(23809523);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(23809523);
+
+        await this.silo.connect(user).plant();
+        await this.silo.connect(user2).plant();
+        await this.silo.connect(user3).plant();
+        await this.silo.connect(user4).plant();
+        season = await this.seasonGetter.season();
+        stem = await this.silo.mockSeasonToStem(this.bean.address, season);
+        earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
+        earned_beans2 = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
+        earned_beans3 = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
+        earned_beans4 = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(126190476);
+        expect(earned_beans2[0]).to.eq(126190476);
+        expect(earned_beans3[0]).to.eq(23809523);
+        expect(earned_beans4[0]).to.eq(23809523);
+      });
+
+      it("beans are issued with grown stalk from germinating assets", async function () {
+        // user 3 and 4 mows their grown stalk. 
+        await this.silo.mow(user3Address, this.bean.address);
+        await this.silo.mow(user4Address, this.bean.address);
+        // user 3 and 4 should have 0 stalk and 0 germinating stalk.
+        
+        expect(await this.siloGetters.balanceOfStalk(user3Address)).to.eq(toStalk('0.2'));
+        expect(await this.siloGetters.balanceOfStalk(user4Address)).to.eq(toStalk('0.2'));
+
+        // call a sunrise with 100 beans.  
+        await this.season.siloSunrise(to6('100'));
+        
+        // after this sunrise, user 3 and 4 should have 0.2 stalk worth of earned beans:
+        // 0.2/2100.4 * 100 
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(9521);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(9521);
+
+        // user 1 and 2 should have slightly less than 100 beans each. 
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(to6('99.990478'));
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(to6('99.990478'));
+
+      })
+
+      it("correct earned beans values after multiple seasons elapsed", async function () {
+        // verify whether the users get a correct amount of earned beans after multiple seasons elapsed.
+        await this.season.siloSunrise(to6('100'));
+        await this.season.siloSunrise(to6('100'));
+        await this.season.farmSunrises(100);
+
+        expect(await this.siloGetters.balanceOfEarnedBeans(userAddress)).to.eq(126190476);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user2Address)).to.eq(126190476);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user3Address)).to.eq(23809523);
+        expect(await this.siloGetters.balanceOfEarnedBeans(user4Address)).to.eq(23809523);
+        
+        await this.silo.connect(user).plant();
+        await this.silo.connect(user2).plant();
+        await this.silo.connect(user3).plant();
+        await this.silo.connect(user4).plant();
+        season = await this.seasonGetter.season();
+        stem = await this.silo.mockSeasonToStem(this.bean.address, season);
+        earned_beans = await this.siloGetters.getDeposit(userAddress, this.bean.address, stem)
+        earned_beans2 = await this.siloGetters.getDeposit(user2Address, this.bean.address, stem)
+        earned_beans3 = await this.siloGetters.getDeposit(user3Address, this.bean.address, stem)
+        earned_beans4 = await this.siloGetters.getDeposit(user4Address, this.bean.address, stem)
+        expect(earned_beans[0]).to.eq(126190476);
+        expect(earned_beans2[0]).to.eq(126190476);
+        expect(earned_beans3[0]).to.eq(23809523);
+        expect(earned_beans4[0]).to.eq(23809523);
+      })
+
+    })
   });
 });
 

@@ -37,7 +37,7 @@ describe('Curve', function () {
     this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
-    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address)
+    this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
     this.farm = await ethers.getContractAt('FarmFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('IERC20', USDC)
 
@@ -425,7 +425,8 @@ describe('Curve', function () {
     })
   })
 
-  describe("farm LP and Deposit", async function () {
+  // skipped due to curve dewhitelisting.
+  describe.skip("farm LP and Deposit", async function () {
     beforeEach('add LP and Deposits', async function () {
       await this.season.teleportSunrise(10);
       this.season.deployStemsUpgrade();

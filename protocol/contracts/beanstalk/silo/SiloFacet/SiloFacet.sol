@@ -249,7 +249,6 @@ contract SiloFacet is TokenSilo {
         address token;
         int96 stem;
         for(uint i; i < depositIds.length; ++i) {
-            console.log("transfer deposit i", i);
             (token, stem) = 
                 LibBytes.unpackAddressAndStem(depositIds[i]);
             transferDeposit(

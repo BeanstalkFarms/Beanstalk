@@ -6,7 +6,6 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import "./Silo.sol";
-import "hardhat/console.sol";
 
 /**
  * @title TokenSilo
@@ -193,10 +192,9 @@ contract TokenSilo is Silo {
             );
 
             if(grownStalkRemoved > 0) {
-                LibSilo.burnStalk(
+                LibSilo.burnActiveStalk(
                     account, 
-                    grownStalkRemoved, 
-                    LibGerminate.Germinate.NOT_GERMINATING
+                    grownStalkRemoved
                 ); 
             }
         }
@@ -228,37 +226,44 @@ contract TokenSilo is Silo {
         );
 
         // withdraw deposits that are not germinating.
-        if (ar.bdvRemoved > 0) {
-            _withdraw(account, token, ar.tokensRemoved, ar.bdvRemoved, ar.stalkRemoved);
+        if (ar.active.tokens > 0) {
+            _withdraw(account, token, ar.active.tokens, ar.active.bdv, ar.active.stalk);
         }
        
         // withdraw Germinating deposits from odd seasons
-        if (ar.oddTokensRemoved > 0) {
+        if (ar.odd.tokens > 0) {
             _withdrawGerminating(
                 account,
                 token,
-                ar.oddTokensRemoved,
-                ar.oddStalkRemoved,
-                ar.oddBdvRemoved,
+                ar.odd.tokens,
+                ar.odd.bdv,
+                ar.odd.stalk,
                 LibGerminate.Germinate.ODD
             );
         }
 
         // withdraw Germinating deposits from even seasons
-        if (ar.evenTokensRemoved > 0) {
+        if (ar.even.tokens > 0) {
             _withdrawGerminating(
                 account,
                 token,
-                ar.evenTokensRemoved,
-                ar.evenStalkRemoved,
-                ar.evenBdvRemoved,
+                ar.even.tokens,
+                ar.even.bdv,
+                ar.even.stalk,
                 LibGerminate.Germinate.EVEN
             );
         }
 
-        // we return the total tokens removed from the deposits,
+        if(ar.grownStalkFromGermDeposits > 0) {
+            LibSilo.burnActiveStalk(
+                account, 
+                ar.grownStalkFromGermDeposits
+            ); 
+        }
+
+        // we return the summation of all tokens removed from the silo.
         // to be used in {SiloFacet.withdrawDeposits}.
-        return ar.tokensRemoved;
+        return ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens);
     }
 
     /**
@@ -274,7 +279,7 @@ contract TokenSilo is Silo {
         // Decrement total deposited in the silo.
         LibTokenSilo.decrementTotalDeposited(token, amount, bdv);
         // Burn stalk and roots associated with the stalk.
-        LibSilo.burnStalk(account, stalk, LibGerminate.Germinate.NOT_GERMINATING); 
+        LibSilo.burnActiveStalk(account, stalk); 
     }
 
     /**
@@ -291,7 +296,7 @@ contract TokenSilo is Silo {
     ) private {
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, germinateState); // Decrement total Germinating in the silo.
-        LibSilo.burnStalk(account, stalk, germinateState); // Burn stalk and roots associated with the stalk.
+        LibSilo.burnGerminatingStalk(account, uint128(stalk), germinateState); // Burn stalk and roots associated with the stalk.
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -413,17 +418,17 @@ contract TokenSilo is Silo {
 
             // if the deposit is germinating, increment germinating bdv and stalk,
             // otherwise increment deposited values.
-            ar.tokensRemoved = ar.tokensRemoved.add(amounts[i]);
+            ar.active.tokens = ar.active.tokens.add(amounts[i]);
             if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-                ar.bdvRemoved = ar.bdvRemoved.add(crateBdv);
-                ar.stalkRemoved = ar.stalkRemoved.add(crateStalk);
+                ar.active.bdv = ar.active.bdv.add(crateBdv);
+                ar.active.stalk = ar.active.stalk.add(crateStalk);
             } else {
                 if (germ == LibGerminate.Germinate.ODD) {
-                    ar.oddBdvRemoved = ar.oddBdvRemoved.add(crateBdv);
-                    ar.oddStalkRemoved = ar.oddStalkRemoved.add(crateStalk);
+                    ar.odd.bdv = ar.odd.bdv.add(crateBdv);
+                    ar.odd.stalk = ar.odd.stalk.add(crateStalk);
                 } else {
-                    ar.evenBdvRemoved = ar.evenBdvRemoved.add(crateBdv);
-                    ar.evenStalkRemoved = ar.evenStalkRemoved.add(crateStalk);
+                    ar.even.bdv = ar.even.bdv.add(crateBdv);
+                    ar.even.stalk = ar.even.stalk.add(crateStalk);
                 }
             }
             bdvs[i] = crateBdv;
@@ -440,7 +445,15 @@ contract TokenSilo is Silo {
          *  which is used here.
          */
         emit LibSilo.TransferBatch(msg.sender, sender, recipient, removedDepositIDs, amounts);
-        emit RemoveDeposits(sender, token, stems, amounts, ar.tokensRemoved, bdvs);
+        // emit RemoveDeposits event (tokens removed are summation).
+        emit RemoveDeposits(
+            sender,
+            token,
+            stems, 
+            amounts,
+            ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens), 
+            bdvs
+        );
 
         return bdvs;
     }
