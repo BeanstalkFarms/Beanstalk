@@ -95,20 +95,20 @@ library LibConvert {
         // urBEANETH Convert
         if (tokenIn == C.UNRIPE_LP){
             // UrBEANETH -> urBEAN
-            if(tokenOut == C.UNRIPE_BEAN)
+            if (tokenOut == C.UNRIPE_BEAN)
                 return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
-            if(tokenOut == C.BEAN_ETH_WELL)
+            if (tokenOut == C.BEAN_ETH_WELL)
                 return type(uint256).max;
         }
 
         // urBEAN Convert
         if (tokenIn == C.UNRIPE_BEAN){
             // urBEAN -> urBEANETH LP
-            if(tokenOut == C.UNRIPE_LP)
+            if (tokenOut == C.UNRIPE_LP)
                 return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
-            if(tokenOut == C.BEAN)
+            if (tokenOut == C.BEAN)
                 return type(uint256).max;
         }
 

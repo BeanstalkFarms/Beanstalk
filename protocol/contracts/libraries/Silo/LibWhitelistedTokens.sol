@@ -13,6 +13,8 @@ import {C} from "../../C.sol";
  * @notice LibWhitelistedTokens returns the current Whitelisted tokens.
  * @dev a library is used, rather than keeping the addresses in storages,
  * as a gas optimization.
+ * 
+ * This library should be updated when new tokens are added to silo.
  */
 library LibWhitelistedTokens {
     /**

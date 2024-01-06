@@ -103,8 +103,14 @@ describe("Silo Enroot", function () {
             await this.silo.connect(user).mockUnripeBeanDeposit(season, '158328')
 
             this.season.deployStemsUpgrade();
-            
-            this.stem = await this.silo.seasonToStem(UNRIPE_BEAN, season);
+            this.stem = await this.silo.mockSeasonToStem(UNRIPE_BEAN, season);
+
+            // call sunrise twice to avoid germination error. 
+            // note that `mockUnripeBeanDeposit` increments correctly,
+            // and the error is only thrown due to the stem being a germinating stem.
+            await this.season.siloSunrise(0);
+            await this.season.siloSunrise(0);
+
             await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[season]], [[158328]], 0, 0, []);
 
             await this.beanstalk.connect(user).withdrawDeposit(UNRIPE_BEAN, this.stem, '158327', EXTERNAL);
@@ -116,8 +122,9 @@ describe("Silo Enroot", function () {
         });
 
         it("removes all stalk", async function () {
+          // 0.0004 stalk is added due to 2 season added from germination update.
             const stalk = await this.beanstalk.balanceOfStalk(userAddress)
-            expect(stalk).to.equal('10000')
+            expect(stalk).to.equal('10004')
         })
 
     })

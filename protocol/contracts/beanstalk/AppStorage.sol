@@ -58,7 +58,17 @@ contract Account {
         uint256 stalk;
         uint256 seeds;
     }
-
+    
+    /**
+     * @notice Stores a Farmer's germinating stalk.
+     * @param odd - stalk from assets deposited in odd seasons.
+     * @param even - stalk from assets deposited in even seasons.
+     */
+    struct FarmerGerminatingStalk {
+        uint128 odd;
+        uint128 even;
+    }
+    
     /**
      * @notice This struct stores the mow status for each Silo-able token, for each farmer. 
      * This gets updated each time a farmer mows, or adds/removes deposits.
@@ -93,6 +103,7 @@ contract Account {
      * @param lastUpdate The Season in which the Farmer last updated their Silo.
      * @param lastSop The last Season that a SOP occured at the time the Farmer last updated their Silo.
      * @param lastRain The last Season that it started Raining at the time the Farmer last updated their Silo.
+     * @param deprecated_deltaRoots DEPRECATED – BIP-39 introduced germination.
      * @param deprecated_lastSIs DEPRECATED – In Silo V1.2, the Silo reward mechanism was updated to no longer need to store the number of the Supply Increases at the time the Farmer last updated their Silo.
      * @param deprecated_proposedUntil DEPRECATED – Replant removed on-chain governance including the ability to propose BIPs.
      * @param deprecated_sop DEPRECATED – Replant reset the Season of Plenty mechanism
@@ -105,6 +116,8 @@ contract Account {
      * @param tokenAllowances Internal balance token allowances.
      * @param depositPermitNonces A Farmer's current deposit permit nonce
      * @param tokenPermitNonces A Farmer's current token permit nonce
+     * @param oddGerminating A Farmer's germinating assets during odd seasons.
+     * @param evenGerminating A Farmer's germinating assets during even seasons.
      */
     struct State {
         Field field; // A Farmer's Field storage.
@@ -142,7 +155,7 @@ contract Account {
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint128 deltaRoots; // the number of roots to add, in the case where a farmer has mowed in the morning
+        uint128 depreciated_deltaRoots; // DEPRECATED - BIP-39 introduced germination. 
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
@@ -156,6 +169,7 @@ contract Account {
         mapping(uint256 => Deposit) deposits; // SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
         mapping(address => MowStatus) mowStatuses; // Store a MowStatus for each Whitelisted Silo token
         mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping 
+        FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating assets from odd seasons.
     }
 }
 
@@ -391,16 +405,16 @@ contract Storage {
      * @dev A Token is considered Whitelisted if there exists a non-zero {SiloSettings} selector.
      */
     struct SiloSettings {
-        bytes4 selector; // ─────────────┐ 4
-        uint32 stalkEarnedPerSeason; //  │ 4  (16)
-        uint32 stalkIssuedPerBdv; //     │ 4  (8)
-        uint32 milestoneSeason; //       │ 4  (12)
-        int96 milestoneStem; //          │ 12 (28)
-        bytes1 encodeType; // ───────────┘ 1  (29)
-        // 3 bytes are left here.
-        uint128 gaugePoints; //   ────--------───┐ 16  
-        bytes4 gpSelector; //                    │ 4   (20)
-        uint96 optimalPercentDepositedBdv; // ───┘ 12  (32)
+        bytes4 selector; // ────────────────────┐ 4
+        uint32 stalkEarnedPerSeason; //         │ 4  (16)
+        uint32 stalkIssuedPerBdv; //            │ 4  (8)
+        uint32 milestoneSeason; //              │ 4  (12)
+        int96 milestoneStem; //                 │ 12 (28)
+        bytes1 encodeType; //                   │ 1  (29)
+        int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
+        uint128 gaugePoints; //   ──────────────┐ 16  
+        bytes4 gpSelector; //                   │ 4   (20)
+        uint96 optimalPercentDepositedBdv; // ──┘ 12  (32)
     }
 
     /**
@@ -442,9 +456,32 @@ contract Storage {
         uint32 lastStalkGrowthUpdate;
     }
 
+    /**
+     * @notice Stores the twaReserves for each well during the sunrise function.
+     */
     struct TwaReserves {
         uint128 reserve0;
         uint128 reserve1;
+    }
+
+    /**
+     * @notice Stores the total germination amounts for each whitelisted token.
+     */
+    struct Deposited {
+        uint128 amount;
+        uint128 bdv;
+    }
+
+    /** 
+     * @notice Stores the system level germination data.
+     */
+    struct TotalGerminating {
+        mapping(address => Deposited) deposited;
+    }
+
+    struct Sr {
+	    uint128 stalk;
+	    uint128 roots;
     }
 }
 
@@ -478,7 +515,7 @@ contract Storage {
  * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
  * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
  * @param deprecated2 DEPRECATED - 2 slots that used to store state variables which have been depreciated through various updates. Storage slots can be left alone or reused.
- * @param newEarnedStalk the amount of earned stalk issued this season. Since 1 stalk = 1 bean, it represents the earned beans as well.
+ * @param depreciated_newEarnedStalk the amount of earned stalk issued this season. Since 1 stalk = 1 bean, it represents the earned beans as well.
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param internalTokenBalance A mapping from Farmer address to Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
@@ -491,7 +528,7 @@ contract Storage {
  * @param fFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
  * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
- * @param vestingPeriodRoots the number of roots to add to the global roots, in the case the user plants in the morning. // placed here to save a storage slot.s
+ * @param depreciated_vestingPeriodRoots DEPRECIATED - removed in BIP-39 in favor of germination.
  * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
@@ -501,6 +538,8 @@ contract Storage {
  * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
  * @param seedGauge Stores the seedGauge.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
+ * @param oddGerminating Stores germinating data during odd seasons.
+ * @param evenGerminating Stores germinating data during even seasons.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -530,8 +569,8 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     uint256[2] deprecated2;
-    uint128 newEarnedStalk; // ──────┐ 16
-    uint128 vestingPeriodRoots; // ──┘ 16 (32/32)
+    uint128 depreciated_newEarnedStalk; // ──────┐ 16
+    uint128 depreciated_vestingPeriodRoots; // ──┘ 16 (32/32)
     mapping (uint32 => uint256) sops;
 
     // Internal Balances
@@ -572,5 +611,12 @@ struct AppStorage {
 
     // Seed Gauge
     Storage.SeedGauge seedGauge;
-    bytes32[144] casesV2; 
+    bytes32[144] casesV2;
+
+    // Germination
+    Storage.TotalGerminating oddGerminating;
+    Storage.TotalGerminating evenGerminating;
+
+    // mapping from season => unclaimed germinating stalk and roots 
+    mapping(uint32 => Storage.Sr) unclaimedGerminating;
 }

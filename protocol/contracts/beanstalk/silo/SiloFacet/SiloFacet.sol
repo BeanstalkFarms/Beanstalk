@@ -247,15 +247,15 @@ contract SiloFacet is TokenSilo {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         address token;
-        int96 cumulativeGrownStalkPerBDV;
+        int96 stem;
         for(uint i; i < depositIds.length; ++i) {
-            (token, cumulativeGrownStalkPerBDV) = 
+            (token, stem) = 
                 LibBytes.unpackAddressAndStem(depositIds[i]);
             transferDeposit(
                 sender, 
                 recipient,
                 token, 
-                cumulativeGrownStalkPerBDV, 
+                stem, 
                 amounts[i]
             );
         }
@@ -303,14 +303,6 @@ contract SiloFacet is TokenSilo {
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
-    }
-
-    function bdv(address token, uint256 amount)
-        external
-        view
-        returns (uint256 _bdv)
-    {
-        _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
     }
 
 }

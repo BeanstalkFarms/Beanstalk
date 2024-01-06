@@ -5,9 +5,18 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./SiloExit.sol";
-
+import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {C} from "contracts/C.sol";
 /**
  * @title Silo
  * @author Publius, Pizzaman1337, Brean
@@ -21,7 +30,7 @@ import "./SiloExit.sol";
  * "Season of Plenty".
  */
  
-contract Silo is SiloExit {
+contract Silo is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
@@ -96,20 +105,14 @@ contract Silo is SiloExit {
     function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans.
-        
-        // per the zero withdraw update, planting is handled differently 
-        // depending whether or not the user plants during the vesting period of beanstalk. 
-        // during the vesting period, the earned beans are not issued to the user.
-        // thus, the roots calculated for a given user is different. 
-        // This is handled by the super mow function, which stores the difference in roots.
+    
         LibSilo._mow(account, C.BEAN);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
-        beans = _balanceOfEarnedBeans(account, accountStalk);
+        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.a[account].roots);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
-        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
-        if (beans == 0) return (0,stemTip);
+        if (beans == 0) return (0, stemTip);
         
         // Reduce the Silo's supply of Earned Beans.
         // SafeCast unnecessary because beans is <= s.earnedBeans.
@@ -124,7 +127,6 @@ contract Silo is SiloExit {
             beans, // bdv
             LibTokenSilo.Transfer.emitTransferSingle
         );
-        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
@@ -134,7 +136,6 @@ contract Silo is SiloExit {
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
         s.a[account].s.stalk = accountStalk.add(stalk);
-
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);

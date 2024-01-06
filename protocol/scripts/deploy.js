@@ -165,7 +165,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     unripeFacet,
     whitelistFacet,
     metadataFacet,
-    gaugePointFacet
+    gaugePointFacet,
+    siloGettersFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -192,7 +193,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'MockUnripeFacet',
       'WhitelistFacet',
       'MetadataFacet',
-      'GaugePointFacet'
+      'GaugePointFacet',
+      'SiloGettersFacet'
     ],
     libraryNames,
     facetLibraries
@@ -222,7 +224,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'UnripeFacet',
       'WhitelistFacet',
       'MetadataFacet',
-      'GaugePointFacet'
+      'GaugePointFacet',
+      'SiloGettersFacet'
     ],
     libraryNames,
     facetLibraries
@@ -274,7 +277,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet],
       ['MetadataFacet', metadataFacet],
-      ['GaugePointFacet', gaugePointFacet]
+      ['GaugePointFacet', gaugePointFacet],
+      ['SiloGettersFacet', siloGettersFacet]
     ],
     owner: account,
     args: args,
@@ -324,7 +328,8 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     tokenSupportFacet,
     unripeFacet,
     metadataFacet,
-    gaugePointFacet
+    gaugePointFacet,
+    siloGettersFacet
   }
 }
 

@@ -10,6 +10,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibMetaCurve} from "contracts/libraries/Curve/LibMetaCurve.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title SeasonFacet
@@ -46,11 +47,13 @@ contract SeasonFacet is Weather {
 
         require(!s.paused, "Season: Paused.");
         require(seasonTime() > s.season.current, "Season: Still current Season.");
-        stepSeason();
+        uint32 season = stepSeason();
         int256 deltaB = stepOracle();
         uint256 caseId = calcCaseIdandUpdate(deltaB);
+        LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
+        // germination should end after beans are issued.
 
         return incentivize(account, initialGasLeft, mode);
     }
@@ -70,10 +73,11 @@ contract SeasonFacet is Weather {
     /**
      * @dev Moves the Season forward by 1.
      */
-    function stepSeason() private {
+    function stepSeason() private returns (uint32 season) {
         s.season.current += 1;
+        season = s.season.current;
         s.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
-        emit Sunrise(s.season.current);
+        emit Sunrise(season);
     }
 
     /**

@@ -17,8 +17,9 @@ describe('Sop', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
-    this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address)
+    this.seasonGetters = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
@@ -47,6 +48,16 @@ describe('Sop', function () {
     await this.beanMetapool.connect(user).add_liquidity([to6('1000'), to18('1000')], to18('2000'))
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
+
+    // call sunrise twice to skip germination. 
+    await this.season.siloSunrise(0)
+    await this.season.siloSunrise(0)
+
+    // update user 1 and 2's deposit so that they have roots. (users do not get roots until 
+    // they have updated their deposit at least once after silo sunrise)
+    await this.silo.mow(userAddress, this.bean.address);
+    await this.silo.mow(user2Address, this.bean.address);
+
   })
 
   beforeEach(async function () {
@@ -59,34 +70,36 @@ describe('Sop', function () {
 
   describe("Rain", async function () {
     it("Not raining", async function () {
-      const season = await this.seasonGetter.time()
+      const season = await this.seasonGetters.time()
       expect(season.raining).to.be.equal(false)
     })
 
     it("Raining", async function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
-      await this.silo.mow(userAddress, this.beanMetapool.address);
-      const rain = await this.seasonGetter.rain()
-      const season = await this.seasonGetter.time()
+      await this.silo.mow(userAddress, this.bean.address);
+      const rain = await this.seasonGetters.rain()
+      const season = await this.seasonGetters.time()
       expect(season.rainStart).to.be.equal(season.current)
       expect(season.raining).to.be.equal(true)
       expect(rain.pods).to.be.equal(await this.field.totalPods())
-      expect(rain.roots).to.be.equal('20000000000000000000000000')
-      const userRain = await this.silo.balanceOfSop(userAddress);
+      // roots are slightly higher than 2 as 2 seasons need to pass
+      // until the roots are accounted for.
+      expect(rain.roots).to.be.equal('20008000000000000000000000')
+      const userRain = await this.siloGetters.balanceOfSop(userAddress);
       expect(userRain.lastRain).to.be.equal(season.rainStart);
-      expect(userRain.roots).to.be.equal('10000000000000000000000000');
+      expect(userRain.roots).to.be.equal('10004000000000000000000000');
     })
 
     it("Stops raining", async function () {
       await this.field.incrementTotalPodsE(to18('100'))
       await this.season.rainSunrise()
-      await this.silo.mow(userAddress, this.beanMetapool.address);
+      await this.silo.mow(userAddress, this.bean.address);
       await this.season.droughtSunrise()
-      await this.silo.mow(userAddress, this.beanMetapool.address);
-      const season = await this.seasonGetter.time()
+      await this.silo.mow(userAddress, this.bean.address);
+      const season = await this.seasonGetters.time()
       expect(season.rainStart).to.be.equal(season.current - 1)
-      const userRain = await this.silo.balanceOfSop(userAddress);
+      const userRain = await this.siloGetters.balanceOfSop(userAddress);
       expect(userRain.lastRain).to.be.equal(0);
     })
   })
@@ -94,8 +107,8 @@ describe('Sop', function () {
   describe('Sop when P <= 1', async function () {
     it('sops p = 1', async function () {
       await this.season.rainSunrises(25);
-      const season = await this.seasonGetter.time();
-      const rain = await this.seasonGetter.rain()
+      const season = await this.seasonGetters.time();
+      const rain = await this.seasonGetters.rain()
       expect(season.lastSop).to.be.equal(0);
       expect(season.lastSopSeason).to.be.equal(0);
     })
@@ -103,8 +116,8 @@ describe('Sop', function () {
     it('sops p < 1', async function () {
       await this.beanMetapool.connect(user).add_liquidity([to6('100'), to18('0')], to18('50'))
       await this.season.rainSunrises(25);
-      const season = await this.seasonGetter.time();
-      const rain = await this.seasonGetter.rain()
+      const season = await this.seasonGetters.time();
+      const rain = await this.seasonGetters.rain()
       expect(season.lastSop).to.be.equal(0);
       expect(season.lastSopSeason).to.be.equal(0);
     })
@@ -119,49 +132,49 @@ describe('Sop', function () {
     })
 
     it('sops p > 1', async function () {
-      const season = await this.seasonGetter.time();
+      const season = await this.seasonGetters.time();
       const balances = await this.beanMetapool.get_balances()
       const scaledBalance1 = balances[1].div(ethers.utils.parseEther('0.000001'));
       expect(balances[0]).to.be.within(scaledBalance1.sub(1),scaledBalance1.add(1))
       expect(season.lastSop).to.be.equal(season.rainStart);
-      expect(season.lastSopSeason).to.be.equal(await this.seasonGetter.season());
+      expect(season.lastSopSeason).to.be.equal(await this.seasonGetters.season());
       expect(await this.threeCurve.balanceOf(this.silo.address)).to.be.equal('100416214692705624318')
     })
 
     it('tracks user plenty before update', async function () {
-      expect(await this.silo.connect(user).balanceOfPlenty(userAddress)).to.be.equal('50208107346352812150')
+      expect(await this.siloGetters.connect(user).balanceOfPlenty(userAddress)).to.be.equal('50208107346352812154')
     })
 
     it('tracks user plenty after update', async function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
-      const userSop = await this.silo.balanceOfSop(userAddress);
-      expect(userSop.lastRain).to.be.equal(3)
-      expect(userSop.lastSop).to.be.equal(3)
-      expect(userSop.roots).to.be.equal('10000000000000000000000000')
-      expect(userSop.plenty).to.be.equal('50208107346352812150')
-      expect(userSop.plentyPerRoot).to.be.equal('5020810734635281215')
+      const userSop = await this.siloGetters.balanceOfSop(userAddress);
+      expect(userSop.lastRain).to.be.equal(5)
+      expect(userSop.lastSop).to.be.equal(5)
+      expect(userSop.roots).to.be.equal('10004000000000000000000000')
+      expect(userSop.plenty).to.be.equal('50208107346352812154')
+      expect(userSop.plentyPerRoot).to.be.equal('5018803213349941239')
     })
 
     it('tracks user2 plenty', async function () {
-      expect(await this.silo.connect(user).balanceOfPlenty(user2Address)).to.be.equal('50208107346352812150')
+      expect(await this.siloGetters.connect(user).balanceOfPlenty(user2Address)).to.be.equal('50208107346352812154')
     })
 
     it('tracks user2 plenty after update', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       // await this.silo.mow(user2Address, this.bean.address); //with this one uncommented it's 10002000000000000000000000
-      const userSop = await this.silo.balanceOfSop(user2Address);
-      expect(userSop.lastRain).to.be.equal(3)
-      expect(userSop.lastSop).to.be.equal(3)
-      expect(userSop.roots).to.be.equal('10000000000000000000000000')
-      expect(userSop.plenty).to.be.equal('50208107346352812150')
-      expect(userSop.plentyPerRoot).to.be.equal('5020810734635281215')
+      const userSop = await this.siloGetters.balanceOfSop(user2Address);
+      expect(userSop.lastRain).to.be.equal(5)
+      expect(userSop.lastSop).to.be.equal(5)
+      expect(userSop.roots).to.be.equal('10004000000000000000000000')
+      expect(userSop.plenty).to.be.equal('50208107346352812154')
+      expect(userSop.plentyPerRoot).to.be.equal('5018803213349941239')
     })
 
     it('claims user plenty', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.connect(user2).claimPlenty();
-      expect(await this.silo.balanceOfPlenty(user2Address)).to.be.equal('0')
-      expect(await this.threeCurve.balanceOf(user2Address)).to.be.equal('50208107346352812150')
+      expect(await this.siloGetters.balanceOfPlenty(user2Address)).to.be.equal('0')
+      expect(await this.threeCurve.balanceOf(user2Address)).to.be.equal('50208107346352812154')
     })
   })
 
@@ -177,42 +190,42 @@ describe('Sop', function () {
     })
 
     it('sops p > 1', async function () {
-      const season = await this.seasonGetter.time();
+      const season = await this.seasonGetters.time();
       const balances = await this.beanMetapool.get_balances()
       const scaledBalance1 = balances[1].div(ethers.utils.parseEther('0.000001'));
       expect(balances[0]).to.be.within(scaledBalance1.sub(1),scaledBalance1.add(1))
       expect(season.lastSop).to.be.equal(season.rainStart);
-      expect(season.lastSopSeason).to.be.equal(await this.seasonGetter.season());
+      expect(season.lastSopSeason).to.be.equal(await this.seasonGetters.season());
       expect(await this.threeCurve.balanceOf(this.silo.address)).to.be.equal('200797438285419950779')
     })
 
     it('tracks user plenty before update', async function () {
-      expect(await this.silo.connect(user).balanceOfPlenty(userAddress)).to.be.equal('100393700583386272030')
+      expect(await this.siloGetters.connect(user).balanceOfPlenty(userAddress)).to.be.equal('100393702589806791251')
     })
 
     it('tracks user plenty after update', async function () {
       await this.silo.mow(userAddress, this.beanMetapool.address);
-      const userSop = await this.silo.balanceOfSop(userAddress);
-      expect(userSop.lastRain).to.be.equal(6)
-      expect(userSop.lastSop).to.be.equal(6)
-      expect(userSop.roots).to.be.equal('10000000000000000000000000')
-      expect(userSop.plenty).to.be.equal('100393700583386272030')
-      expect(userSop.plentyPerRoot).to.be.equal('10039370058338627203')
+      const userSop = await this.siloGetters.balanceOfSop(userAddress);
+      expect(userSop.lastRain).to.be.equal(8)
+      expect(userSop.lastSop).to.be.equal(8)
+      expect(userSop.roots).to.be.equal('10004000000000000000000000')
+      expect(userSop.plenty).to.be.equal('100393702589806791251')
+      expect(userSop.plentyPerRoot).to.be.equal('10035356116534065499')
     })
 
     it('tracks user2 plenty', async function () {
-      expect(await this.silo.connect(user).balanceOfPlenty(user2Address)).to.be.equal('100403737702033678721')
+      expect(await this.siloGetters.connect(user).balanceOfPlenty(user2Address)).to.be.equal('100403735695613159499')
     })
 
     it('tracks user2 plenty after update', async function () {
       await this.silo.mow(user2Address, this.beanMetapool.address);
       await this.silo.mow(user2Address, this.bean.address);
-      const userSop = await this.silo.balanceOfSop(user2Address);
-      expect(userSop.lastRain).to.be.equal(6)
-      expect(userSop.lastSop).to.be.equal(6)
-      expect(userSop.roots).to.be.equal('10002000000000000000000000')
-      expect(userSop.plenty).to.be.equal('100403737702033678721')
-      expect(userSop.plentyPerRoot).to.be.equal('10039370058338627203')
+      const userSop = await this.siloGetters.balanceOfSop(user2Address);
+      expect(userSop.lastRain).to.be.equal(8)
+      expect(userSop.lastSop).to.be.equal(8)
+      expect(userSop.roots).to.be.equal('10006000000000000000000000')
+      expect(userSop.plenty).to.be.equal('100403735695613159499')
+      expect(userSop.plentyPerRoot).to.be.equal('10035356116534065499')
     })
   })
 })

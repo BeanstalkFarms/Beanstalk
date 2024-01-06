@@ -19,6 +19,7 @@ import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @author Publius
@@ -74,6 +75,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
     }
 
     function mockStepSilo(uint256 amount) public {
@@ -150,8 +152,17 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function fastForward(uint32 _s) public {
-        s.season.current += _s;
-        s.season.sunriseBlock = uint32(block.number);
+        // teleport current sunrise 2 seasons ahead,
+        // end germination, 
+        // then teleport remainder of seasons.
+        if(_s >= 2) {
+            s.season.current += 2;
+            LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
+            s.season.current += _s - 2;
+            
+        } else {
+            s.season.current += _s;
+        }
     }
 
     function teleportSunrise(uint32 _s) public {
@@ -164,6 +175,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
     }
 
     function farmSunrises(uint256 number) public {
@@ -171,6 +183,7 @@ contract MockSeasonFacet is SeasonFacet  {
         for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
+            LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
         }
         s.season.sunriseBlock = uint32(block.number);
     }
@@ -259,7 +272,7 @@ contract MockSeasonFacet is SeasonFacet  {
         // 3 = exs high, 1 = rea high, 2 = rea low, 3 = exs low
         uint256[] memory reserves = new uint256[](2);
         uint256 totalSupply = C.bean().totalSupply();
-        if(L2SRState == 3) {
+        if (L2SRState == 3) {
             // reserves[1] = 0.8e18;
             reserves[1] = uint256(800);
         } else if (L2SRState == 2) {
@@ -463,5 +476,23 @@ contract MockSeasonFacet is SeasonFacet  {
         uint256[2] memory reserves
     ) external {
         s.co.balances = reserves;
+    }
+
+    function mockEndTotalGerminationForToken(
+        address token
+    ) external {
+        // increment total deposited and amounts for each token.
+        Storage.TotalGerminating storage totalGerm;
+        if (LibGerminate.getSeasonGerminationState() == LibGerminate.Germinate.ODD) {
+            totalGerm = s.oddGerminating;
+        } else {
+            totalGerm = s.evenGerminating;
+        }
+        LibTokenSilo.incrementTotalDeposited(
+            token,
+            totalGerm.deposited[token].amount,
+            totalGerm.deposited[token].bdv
+        );
+        delete totalGerm.deposited[token];
     }
 }
