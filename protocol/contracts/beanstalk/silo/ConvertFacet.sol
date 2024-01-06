@@ -97,7 +97,6 @@ contract ConvertFacet is ReentrancyGuard {
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);
-
         emit Convert(msg.sender, fromToken, toToken, fromAmount, toAmount);
     }
 

@@ -266,7 +266,7 @@ describe('Whitelist', function () {
         to6('1')
       );
       this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE)
-      const settings = await this.silo.tokenSettings(BEAN_3_CURVE)
+      const settings = await this.siloGetters.tokenSettings(BEAN_3_CURVE)
       // milestone season, stem, or stalkIssuedPerBDV should not be cleared.
       expect(settings[0]).to.equal('0x00000000')
       expect(settings[1]).to.equal(0)

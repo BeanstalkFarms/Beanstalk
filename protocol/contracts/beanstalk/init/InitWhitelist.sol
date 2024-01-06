@@ -23,20 +23,20 @@ contract InitWhitelist {
     uint32 private constant BEAN_SEEDS = 2; //seeds per bdv of bean (1e6 is one bean)
 
     function whitelistPools() internal {
-        // whitelistBean3Crv();
+        whitelistBean3Crv();
         whitelistBean();
         whitelistUnripeBean();
         whitelistUnripeLP();
     }
 
-    // function whitelistBean3Crv() internal {
-    //     LibLegacyWhitelist.whitelistToken(
-    //         C.CURVE_BEAN_METAPOOL,
-    //         BDVFacet.curveToBDV.selector,
-    //         BEAN_3CRV_STALK,
-    //         BEAN_3CRV_SEEDS * 1e6 //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
-    //     );
-    // }
+    function whitelistBean3Crv() internal {
+        LibLegacyWhitelist.whitelistToken(
+            C.CURVE_BEAN_METAPOOL,
+            BDVFacet.curveToBDV.selector,
+            BEAN_3CRV_STALK,
+            BEAN_3CRV_SEEDS * 1e6 //stalkEarnedPerSeason stored as 1e6, but each old seed yielded 1e4 stalk every season
+        );
+    }
 
     function whitelistBean() internal {
         LibLegacyWhitelist.whitelistToken(

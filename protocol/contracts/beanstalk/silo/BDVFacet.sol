@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "contracts/C.sol";
+import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibUnripe.sol";
 import "contracts/libraries/Well/LibWellBdv.sol";
 
@@ -17,6 +18,9 @@ import "contracts/libraries/Well/LibWellBdv.sol";
 contract BDVFacet {
     using SafeMath for uint256;
 
+    function curveToBDV(uint256 amount) public view returns (uint256) {
+        return LibBeanMetaCurve.bdv(amount);
+    }
     /**
      * @dev Returns the BDV of a given `amount` of Beans.
      */

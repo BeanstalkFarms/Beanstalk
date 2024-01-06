@@ -4171,93 +4171,6 @@
     "type": "function"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "DewhitelistToken",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
-      }
-    ],
-    "name": "UpdatedStalkPerBdvPerSeason",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "stalkIssuedPerBdv",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "gpSelector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
-      }
-    ],
-    "name": "WhitelistToken",
-    "type": "event"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -4283,9 +4196,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint96",
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
+        "type": "uint64"
       }
     ],
     "name": "updateGaugeForToken",
@@ -4339,14 +4257,19 @@
         "type": "bytes4"
       },
       {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
       },
       {
-        "internalType": "uint96",
+        "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
+        "type": "uint64"
       }
     ],
     "name": "whitelistToken",
@@ -4387,14 +4310,19 @@
         "type": "bytes4"
       },
       {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
       },
       {
-        "internalType": "uint96",
+        "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
+        "type": "uint64"
       }
     ],
     "name": "whitelistTokenWithEncodeType",
@@ -4831,25 +4759,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "curveToBDV",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -5997,19 +5906,24 @@
             "type": "int24"
           },
           {
-            "internalType": "uint128",
-            "name": "gaugePoints",
-            "type": "uint128"
-          },
-          {
             "internalType": "bytes4",
             "name": "gpSelector",
             "type": "bytes4"
           },
           {
-            "internalType": "uint96",
+            "internalType": "bytes4",
+            "name": "lwSelector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "uint128",
+            "name": "gaugePoints",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint64",
             "name": "optimalPercentDepositedBdv",
-            "type": "uint96"
+            "type": "uint64"
           }
         ],
         "internalType": "struct Storage.SiloSettings",
@@ -6635,6 +6549,75 @@
         "internalType": "address",
         "name": "token",
         "type": "address"
+      }
+    ],
+    "name": "DewhitelistToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "gpSelector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "lwSelector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "UpdateGaugeSettings",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
+    "name": "UpdatedStalkPerBdvPerSeason",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -6644,12 +6627,42 @@
       },
       {
         "indexed": false,
-        "internalType": "uint96",
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stalkIssuedPerBdv",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "gpSelector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes4",
+        "name": "lwSelector",
+        "type": "bytes4"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
-        "type": "uint96"
+        "type": "uint64"
       }
     ],
-    "name": "UpdateGaugeSettings",
+    "name": "WhitelistToken",
     "type": "event"
   },
   {
@@ -6828,41 +6841,6 @@
   },
   {
     "inputs": [],
-    "name": "curveOracle",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "initialized",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint32",
-            "name": "startSeason",
-            "type": "uint32"
-          },
-          {
-            "internalType": "uint256[2]",
-            "name": "balances",
-            "type": "uint256[2]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Storage.CurveMetapoolOracle",
-        "name": "co",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getAverageGrownStalkPerBdv",
     "outputs": [
       {
@@ -6889,11 +6867,11 @@
   },
   {
     "inputs": [],
-    "name": "getBean3CRVLiquidity",
+    "name": "getBeanEthGaugePointsPerBdv",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "usdLiquidity",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -6903,6 +6881,19 @@
   {
     "inputs": [],
     "name": "getBeanEthTwaUsdLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBeanGaugePointsPerBdv",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6961,6 +6952,57 @@
       }
     ],
     "name": "getGaugePoints",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getGaugePointsPerBdvForToken",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getGaugePointsPerBdvForWell",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getGrownStalkIssuedPerSeason",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7068,6 +7110,19 @@
   },
   {
     "inputs": [],
+    "name": "getStalkPerGp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getTotalBdv",
     "outputs": [
       {
@@ -7082,6 +7137,32 @@
   {
     "inputs": [],
     "name": "getTotalUsdLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWeightedBeanEthTwaUsdLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWeightedTotalLiquidity",
     "outputs": [
       {
         "internalType": "uint256",

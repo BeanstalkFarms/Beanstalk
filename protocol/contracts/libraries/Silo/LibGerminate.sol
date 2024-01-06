@@ -375,11 +375,11 @@ library LibGerminate {
             int24 deltaStalkEarnedPerSeason = s.ss[token].deltaStalkEarnedPerSeason;
             if (deltaStalkEarnedPerSeason >= 0) {
                 prevStalkEarnedPerSeason =
-                    s.ss[token].stalkEarnedPerSeason +
+                    s.ss[token].stalkEarnedPerSeason -
                     uint32(deltaStalkEarnedPerSeason);
             } else {
                 prevStalkEarnedPerSeason =
-                    s.ss[token].stalkEarnedPerSeason -
+                    s.ss[token].stalkEarnedPerSeason +
                     uint32(-deltaStalkEarnedPerSeason);
             }
         }

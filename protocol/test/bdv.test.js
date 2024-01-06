@@ -94,7 +94,7 @@ describe('BDV', function () {
     });
 
     it.skip("properly checks bdv", async function () {
-      expect(await this.silo.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
+      expect(await this.siloGetters.bdv(BEAN_3_CURVE, to18('200'))).to.equal(to6('200'));
     })
 
     it.skip("properly checks bdv", async function () {
@@ -103,7 +103,7 @@ describe('BDV', function () {
     })
 
     it("properly reverts", async function () {
-      await expect(this.silo.bdv(BEAN_3_CURVE, to18('200'))).to.be.revertedWith("Silo: Token not whitelisted");
+      await expect(this.siloGetters.bdv(BEAN_3_CURVE, to18('200'))).to.be.revertedWith("Silo: Token not whitelisted");
     })
   })
 

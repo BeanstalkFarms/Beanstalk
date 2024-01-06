@@ -328,8 +328,6 @@ contract MockSiloFacet is SiloFacet {
         return s.s.deprecated_seeds;
     }
 
-    //function not needed because we'll manually setup these initial values from the bip script?
-    //however it's referenced in the InitWhitelist.sol code
     function whitelistTokenLegacy(
         address token,
         bytes4 selector,
