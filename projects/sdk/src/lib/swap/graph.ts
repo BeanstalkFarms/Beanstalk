@@ -154,6 +154,36 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
     to: "DAI"
   });
 
+  //BEAN<>USDC via Pipeline
+  graph.setEdge("USDC", "BEAN", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.USDC, sdk.tokens.BEAN, from, to),
+    from: "USDC",
+    to: "BEAN"
+  });
+
+  graph.setEdge("BEAN", "USDC", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.USDC, from, to),
+    from: "BEAN",
+    to: "USDC"
+  });
+
+  //BEAN<>DAI via Pipeline
+  graph.setEdge("DAI", "BEAN", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.DAI, sdk.tokens.BEAN, from, to),
+    from: "DAI",
+    to: "BEAN"
+  });
+
+  graph.setEdge("BEAN", "DAI", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.DAI, from, to),
+    from: "BEAN",
+    to: "DAI"
+  });
+
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
 
   // HEADS UP: the ordering of these tokens needs to match their indexing in the 3CRV LP token.

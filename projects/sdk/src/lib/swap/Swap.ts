@@ -43,8 +43,13 @@ export class Swap {
           useAdvancedFarm = true;
           break;
         };
-      } else if (from === "USDC" || from === "DAI" || from === "BEAN") {
-        if (to === "WETH") {
+      } else if (from === "USDC" || from === "DAI") {
+        if (to === "WETH" || to === "BEAN") {
+          useAdvancedFarm = true;
+          break;
+        };
+      } else if (from === "BEAN") {
+        if (to === "USDC" || to === "DAI" || to === "WETH") {
           useAdvancedFarm = true;
           break;
         };

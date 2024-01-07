@@ -312,6 +312,14 @@ export abstract class Workflow<
           pipelineOptions = { tag: `uniswapV3Swap${filteredOptions.length}Amount` };
           Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
+        case "pipelineUniV3WellSwap":
+          pipelineOptions = { tag: `uniV3WellSwap${filteredOptions.length}Amount` };
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
+          break;
+        case "pipelineWellSwapUniV3":
+          pipelineOptions = { tag: `wellSwapUniV3${filteredOptions.length}Amount` };
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
+          break;
         default:
           Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
       }

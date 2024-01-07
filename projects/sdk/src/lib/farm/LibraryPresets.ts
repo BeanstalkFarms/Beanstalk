@@ -45,6 +45,8 @@ export class LibraryPresets {
 
   public readonly uniswapV3Swap;
   public readonly uniV3AddLiquidity;
+  public readonly uniV3WellSwap;
+  public readonly wellSwapUniV3;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -425,6 +427,117 @@ export class LibraryPresets {
       advancedPipe.add(addLiquidity, { tag: "amountToDeposit" });
       advancedPipe.add(approveBack);
       advancedPipe.add(transferToBeanstalk);
+
+      result.push(advancedPipe);
+      return result;
+    };
+
+    this.uniV3WellSwap = (well: BasinWell, account: string, tokenIn: ERC20Token, tokenOut: ERC20Token, fromMode?: FarmFromMode, toMode?: FarmToMode) => {
+      const result = [];
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineUniV3WellSwap");
+
+      const transferBack = toMode === FarmToMode.INTERNAL;
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
+
+      // Transfer Input Token to Pipeline
+      const transfer = new sdk.farm.actions.TransferToken(tokenIn.address, sdk.contracts.pipeline.address, fromMode, FarmToMode.EXTERNAL);
+
+      // Approve Uniswap V3 to use fromToken
+      const approveUniswap = new sdk.farm.actions.ApproveERC20(tokenIn, sdk.contracts.uniswapV3Router.address);
+
+      // Swap tokens, output result to Pipeline
+      const swap = new sdk.farm.actions.UniswapV3Swap(tokenIn, sdk.tokens.WETH, sdk.contracts.pipeline.address);
+
+      // Approve Well to use intermediary token
+      const approveWell = new sdk.farm.actions.ApproveERC20(sdk.tokens.WETH, well.address);
+
+      // Swap tokens on Well
+      const wellSwap = new sdk.farm.actions.WellSwap(well.address, sdk.tokens.WETH, tokenOut, recipient);
+
+      // This approves the transferToBeanstalk operation.
+      const approveClipboard = {
+        tag: "swapOutput", 
+        copySlot: 0, 
+        pasteSlot: 1
+      }
+      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, approveClipboard);
+
+      // Transfers the output token back to Beanstalk, from Pipeline.
+      const transferClipboard = {
+        tag: "swapOutput", 
+        copySlot: 0, 
+        pasteSlot: 2
+      }
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
+      
+      result.push(transfer);
+
+      advancedPipe.add(approveUniswap);
+      advancedPipe.add(swap);
+      advancedPipe.add(approveWell);
+      advancedPipe.add(wellSwap, { tag: "swapOutput" });
+      if (transferBack) {
+        advancedPipe.add(approveBack);
+        advancedPipe.add(transferToBeanstalk);
+      };
+
+      result.push(advancedPipe);
+      return result;
+    };
+
+    this.wellSwapUniV3 = (well: BasinWell, account: string, tokenIn: ERC20Token, tokenOut: ERC20Token, fromMode?: FarmFromMode, toMode?: FarmToMode) => {
+      const result = [];
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineWellSwapUniV3");
+
+      const transferBack = toMode === FarmToMode.INTERNAL;
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
+
+      // Transfer Input Token to Pipeline
+      const transfer = new sdk.farm.actions.TransferToken(tokenIn.address, sdk.contracts.pipeline.address, fromMode, FarmToMode.EXTERNAL);
+
+      // Approve Well to use input token
+      const approveWell = new sdk.farm.actions.ApproveERC20(tokenIn, well.address);
+
+      // Swap tokens on Well, send output back to Pipeline
+      const wellSwap = new sdk.farm.actions.WellSwap(well.address, tokenIn, sdk.tokens.WETH, sdk.contracts.pipeline.address);
+
+      // Approve Uniswap V3 to use output of swap
+      const uniApproveClipboard = {
+        tag: "swapOutput", 
+        copySlot: 0, 
+        pasteSlot: 1
+      }
+      const approveUniswap = new sdk.farm.actions.ApproveERC20(sdk.tokens.WETH, sdk.contracts.uniswapV3Router.address, uniApproveClipboard);
+
+      // Swap tokens, send output to recipient
+      const swap = new sdk.farm.actions.UniswapV3Swap(sdk.tokens.WETH, tokenOut, recipient);
+
+      // This approves the transferToBeanstalk operation.
+      const transferApproveClipboard = {
+        tag: "uniV3Output", 
+        copySlot: 0, 
+        pasteSlot: 1
+      }
+      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, transferApproveClipboard);
+
+      // Transfers the output token back to Beanstalk, from Pipeline.
+      const transferClipboard = {
+        tag: "uniV3Output", 
+        copySlot: 0, 
+        pasteSlot: 2
+      }
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
+      
+      result.push(transfer);
+
+      advancedPipe.add(approveWell);
+      advancedPipe.add(wellSwap, { tag: "swapOutput" });
+      advancedPipe.add(approveUniswap);
+      advancedPipe.add(swap, { tag: "uniV3Output" });
+      if (transferBack) {
+        advancedPipe.add(approveBack);
+        advancedPipe.add(transferToBeanstalk);
+      };
 
       result.push(advancedPipe);
       return result;
