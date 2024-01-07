@@ -230,7 +230,7 @@ export class LibraryPresets {
 
     ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
     this.usdc2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.usdc2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.WETH, account, fromMode, FarmToMode.INTERNAL),
       this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
     ];
 
@@ -240,7 +240,7 @@ export class LibraryPresets {
     ];
 
     this.dai2beaneth = (well: BasinWell, account: string, fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.dai2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+      this.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.DAI, account, fromMode, FarmToMode.INTERNAL),
       this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
     ];
 
