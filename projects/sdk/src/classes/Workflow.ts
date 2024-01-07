@@ -297,7 +297,11 @@ export abstract class Workflow<
 
       switch (input.name) {
         case "pipelineDeposit":
-          pipelineOptions = { tag: `deposit${filteredOptions.length + 1}Amount` };
+          pipelineOptions = { tag: `deposit${filteredOptions.length}Amount` };
+          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
+          break;
+        case "pipelineUniV3Deposit":
+          pipelineOptions = { tag: `depositUniV3${filteredOptions.length}Amount` };
           Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineBeanWethSwap":

@@ -21,13 +21,25 @@ export class Deposit extends StepClass<BasicPreparedResult> {
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
     // Checking if the user isn't directly depositing BEANETH
     const indirectBeanEth = this.token.symbol === "BEANETH" && context.step.index > 0;
-    const beanEthClipboard = {
-      tag: `deposit${context.step.index}Amount`, 
-      copySlot: 6, 
-      pasteSlot: 1
+
+    const pipeDepositIndex = context.steps.findIndex(step => step.name === "pipelineBeanWethSwap");
+    const pipeUniDepositIndex = context.steps.findIndex(step => step.name === "pipelineUniV3Deposit");
+
+    if (indirectBeanEth && !this.clipboard) {
+      if (pipeDepositIndex > 0) {
+        this.clipboard = {
+          tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipeDepositIndex)!, 
+          copySlot: 6, 
+          pasteSlot: 1
+        };
+      } else if (pipeUniDepositIndex > 0) {
+        this.clipboard = {
+          tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipeUniDepositIndex)!, 
+          copySlot: 12, 
+          pasteSlot: 1
+        };
+      };
     };
-    
-    if (indirectBeanEth && !this.clipboard) this.clipboard = beanEthClipboard;
 
     return {
       name: this.name,
