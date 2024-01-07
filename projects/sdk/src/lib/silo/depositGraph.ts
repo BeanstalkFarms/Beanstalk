@@ -230,17 +230,19 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     });
 
     graph.setEdge("USDC", "WETH", {
-      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdc2weth(from, to),
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.WETH, account, from, to),
       from: "USDC",
       to: "WETH",
-      label: "exchange"
+      label: "uniswapV3Swap"
     });
 
     graph.setEdge("DAI", "WETH", {
-      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.dai2weth(from, to),
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniswapV3Swap(sdk.tokens.DAI, sdk.tokens.WETH, account, from, to),
       from: "DAI",
       to: "WETH",
-      label: "exchange"
+      label: "uniswapV3Swap"
     });
   }
 
