@@ -15,6 +15,7 @@ import {
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useAccount } from 'wagmi';
 import { Pool, Token } from '~/classes';
 import { AppState } from '~/state';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -43,6 +44,7 @@ import useAPY from '~/hooks/beanstalk/useAPY';
 import stalkIconBlue from '~/img/beanstalk/stalk-icon-blue.svg';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
+import logo from '~/img/tokens/bean-logo.svg';
 
 /**
  * Display a pseudo-table of Whitelisted Silo Tokens.
@@ -70,6 +72,7 @@ const Whitelist: FC<{
 }> = ({ farmerSilo, config }) => {
   /// Settings
   const [denomination] = useSetting('denomination');
+  const account = useAccount();
 
   /// Chain
   const getChainToken = useGetChainToken();
@@ -487,242 +490,349 @@ const Whitelist: FC<{
                     </Tooltip>
                   </Grid>
 
-                  {/**
-                   * Cell: Deposited Amount
-                   */}
-                  <Grid
-                    item
-                    md={3.5}
-                    xs={0}
-                    display={{ xs: 'none', md: 'block' }}
-                  >
-                    <Typography color="text.primary">
-                      {/* If this is the entry for Bean deposits,
-                       * display Earned Beans and Deposited Beans separately.
-                       * Internally they are both considered "Deposited". */}
-                        <Tooltip
-                          placement="right"
-                          title={
-                            token.equals(Bean) && farmerSilo.beans.earned.gt(0) ? (
-                            <>
-                              {displayFullBN(
-                                deposited?.amount || ZERO_BN,
-                                token.displayDecimals
-                              )}{' '}
-                              Deposited BEAN
-                              <br />
-                              +&nbsp;
-                              <Typography display="inline" color="primary">
-                                {displayFullBN(
-                                  farmerSilo.beans.earned || ZERO_BN,
-                                  token.displayDecimals
-                                )}
-                              </Typography>{' '}
-                              Earned BEAN
-                              <br />
-                              <Divider
-                                sx={{
-                                  my: 0.5,
-                                  opacity: 0.7,
-                                  borderBottomWidth: 0,
-                                  borderColor: 'divider',
-                                }}
-                              />
-                              ={' '}
-                              {displayFullBN(
-                                farmerSilo.beans.earned.plus(
-                                  deposited?.amount || ZERO_BN
-                                ),
-                                token.displayDecimals
-                              )}{' '}
-                              BEAN
-                              <br />
-                            </>
-                            ) : !token.equals(Bean) && deposited?.amount.gt(0) && 
-                              <Stack gap={0.5}>
-                                <StatHorizontal label="Current BDV:">
-                                  {displayFullBN(deposited?.amount.multipliedBy(getBDV(token)) || ZERO_BN, token.displayDecimals)}
-                                </StatHorizontal>
-                                <StatHorizontal label="Recorded BDV:">
-                                  {displayFullBN(deposited?.bdv || ZERO_BN,token.displayDecimals)}
-                                </StatHorizontal>
-                              </Stack>
-                          }
-                        >
-                          <span>
-                            {displayFullBN(
-                              deposited?.amount || ZERO_BN,
-                              token.displayDecimals
-                            )}
-                            {token.equals(Bean) && farmerSilo.beans.earned.gt(0) ? (
-                              <Typography component="span" color="primary.main">
-                                {' + '}
-                                {displayFullBN(
-                                  farmerSilo.beans.earned,
-                                  token.displayDecimals
-                                )}
-                              </Typography>
-                            ) : null}
-                            &nbsp;{token.symbol}
-                          </span>
-                        </Tooltip>
-                    </Typography>
-                  </Grid>
-
-                  {/**
-                   * Cell: My Deposits
-                   */}
-                  <Grid item md={1.5} xs={5}>
-                    <Row justifyContent="flex-end">
-                      <Tooltip
-                        placement="left"
-                        componentsProps={TOOLTIP_COMPONENT_PROPS}
-                        title={
-                          isUnripe ? (
-                            <Stack
-                              direction={{ xs: 'column', md: 'row' }}
-                              gap={{ xs: 0, md: 1 }}
-                              alignItems="stretch"
-                            >
-                              <Box sx={{ px: 1, py: 0.5 }}>
-                                <Stat
-                                  title={
-                                    <Row gap={0.5}>
-                                      <TokenIcon token={token} /> {token.symbol}
-                                    </Row>
-                                  }
-                                  gap={0.25}
-                                  variant="h4"
-                                  amount={displayTokenAmount(
-                                    deposited?.amount || ZERO_BN,
-                                    token,
-                                    { showName: false }
-                                  )}
-                                  subtitle={
-                                    <>
-                                      The number of {token.symbol}
-                                      <br />
-                                      you have Deposited in the Silo.
-                                    </>
-                                  }
-                                />
-                              </Box>
-                              <Row>×</Row>
-                              <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
-                                <Stat
-                                  title="Chop Rate"
-                                  gap={0.25}
-                                  variant="h4"
-                                  amount={`1 - ${(
-                                    unripeTokens[token.address]?.chopPenalty ||
-                                    ZERO_BN
-                                  ).toFixed(4)}%`}
-                                  subtitle={
-                                    <>
-                                      The current penalty for chopping
-                                      <br />
-                                      {token.symbol} for{' '}
-                                      {
-                                        unripeUnderlyingTokens[token.address]
-                                          .symbol
-                                      }
-                                      .{' '}
-                                      <Link
-                                        href="https://docs.bean.money/almanac/farm/barn#chopping"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        underline="hover"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                        }}
-                                      >
-                                        Learn more
-                                      </Link>
-                                    </>
-                                  }
-                                />
-                              </Box>
-                              <Row>×</Row>
-                              <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
-                                <Stat
-                                  title={`${
-                                    unripeUnderlyingTokens[token.address]
-                                  } Price`}
-                                  gap={0.25}
-                                  variant="h4"
-                                  amount={
-                                    <Fiat
-                                      token={
-                                        unripeUnderlyingTokens[token.address]
-                                      }
-                                      amount={ONE_BN}
-                                      chop={false}
-                                    />
-                                  }
-                                  subtitle={`The current price of ${
-                                    unripeUnderlyingTokens[token.address].symbol
-                                  }.`}
-                                />
-                              </Box>
-                              <Stack
-                                display={{ xs: 'none', md: 'flex' }}
-                                alignItems="center"
-                                justifyContent="center"
-                              >
-                                =
-                              </Stack>
-                            </Stack>
-                          ) : (
-                            ''
-                          )
-                        }
+                  {farmerSilo.error ? (
+                    <Grid item md={5}>
+                      <Typography color="error.main">
+                        {farmerSilo.error}
+                      </Typography>
+                    </Grid>
+                  ) : (
+                    <>
+                      {/**
+                       * Cell: Deposited Amount
+                       */}
+                      <Grid
+                        item
+                        md={3.5}
+                        xs={0}
+                        display={{ xs: 'none', md: 'block' }}
                       >
                         <Typography color="text.primary">
-                          <Row gap={0.3}>
+                          {/* If this is the entry for Bean deposits,
+                           * display Earned Beans and Deposited Beans separately.
+                           * Internally they are both considered "Deposited". */}
+                          <Tooltip
+                            placement="right"
+                            title={
+                              token.equals(Bean) &&
+                              farmerSilo.beans.earned.gt(0) ? (
+                                <>
+                                  {displayFullBN(
+                                    deposited?.amount || ZERO_BN,
+                                    token.displayDecimals
+                                  )}{' '}
+                                  Deposited BEAN
+                                  <br />
+                                  +&nbsp;
+                                  <Typography display="inline" color="primary">
+                                    {displayFullBN(
+                                      farmerSilo.beans.earned || ZERO_BN,
+                                      token.displayDecimals
+                                    )}
+                                  </Typography>{' '}
+                                  Earned BEAN
+                                  <br />
+                                  <Divider
+                                    sx={{
+                                      my: 0.5,
+                                      opacity: 0.7,
+                                      borderBottomWidth: 0,
+                                      borderColor: 'divider',
+                                    }}
+                                  />
+                                  ={' '}
+                                  {displayFullBN(
+                                    farmerSilo.beans.earned.plus(
+                                      deposited?.amount || ZERO_BN
+                                    ),
+                                    token.displayDecimals
+                                  )}{' '}
+                                  BEAN
+                                  <br />
+                                </>
+                              ) : (
+                                !token.equals(Bean) &&
+                                deposited?.amount.gt(0) && (
+                                  <Stack gap={0.5}>
+                                    <StatHorizontal label="Current BDV:">
+                                      {displayFullBN(
+                                        deposited?.amount.multipliedBy(
+                                          getBDV(token)
+                                        ) || ZERO_BN,
+                                        token.displayDecimals
+                                      )}
+                                    </StatHorizontal>
+                                    <StatHorizontal label="Recorded BDV:">
+                                      {displayFullBN(
+                                        deposited?.bdv || ZERO_BN,
+                                        token.displayDecimals
+                                      )}
+                                    </StatHorizontal>
+                                  </Stack>
+                                )
+                              )
+                            }
+                          >
+                            {/*
+                             * There are multiple states here:
+                             * - No wallet connected. Show Zero
+                             * - Wallet connected, but we haven't even started loading, ie deposited.amount is undefined. Show Loader
+                             * - Loading: farmerSilo.loading. Show Loader
+                             * - We have data: deposited.amount is defined. Show value
+                             */}
+
                             {farmerSilo.loading ? (
                               <BeanProgressIcon
                                 size={10}
                                 enabled
                                 variant="indeterminate"
                               />
-                            ) : (
-                              <>
-                                {deposited?.amount ? (
-                                  <>
-                                    <Fiat
-                                      token={token}
-                                      amount={deposited?.amount}
-                                    />
-                                    {isUnripe ? (
-                                      <Typography
-                                        display="inline"
-                                        color={
-                                          BeanstalkPalette.theme.winter.red
-                                        }
-                                      >
-                                        *
-                                      </Typography>
-                                    ) : null}
-                                  </>
-                                ) : (
-                                  <div>?</div>
+                            ) : deposited?.amount ? (
+                              <span>
+                                {displayFullBN(
+                                  deposited?.amount || ZERO_BN,
+                                  token.displayDecimals
                                 )}
+                                {token.equals(Bean) &&
+                                farmerSilo.beans.earned.gt(0) ? (
+                                  <Typography
+                                    component="span"
+                                    color="primary.main"
+                                  >
+                                    {' + '}
+                                    {displayFullBN(
+                                      farmerSilo.beans.earned,
+                                      token.displayDecimals
+                                    )}
+                                  </Typography>
+                                ) : null}
+                                &nbsp;{token.symbol}
+                              </span>
+                            ) : // Connected but haven't started loading. Show loader anyway
+                            account.isConnected ? (
+                              <BeanProgressIcon
+                                size={10}
+                                enabled
+                                variant="indeterminate"
+                              />
+                            ) : // Not connected. Show Zero in the correct denomination.
+                            denomination === 'bdv' ? (
+                              <>
+                                <Box
+                                  component="img"
+                                  src={logo}
+                                  alt="BEAN"
+                                  sx={{
+                                    height: '1em',
+                                    marginRight: '0.25em',
+                                    display: 'inline',
+                                    position: 'relative',
+                                    top: 0,
+                                    left: 0,
+                                  }}
+                                />
+                                <span>0</span>
                               </>
+                            ) : (
+                              <span>$0</span>
                             )}
-                          </Row>
+                          </Tooltip>
                         </Typography>
-                      </Tooltip>
-                      <Stack
-                        display={{ xs: 'none', md: 'block' }}
-                        sx={{ width: ARROW_CONTAINER_WIDTH }}
-                        alignItems="center"
-                      >
-                        <ArrowRightIcon
-                          sx={{ color: 'secondary.main', marginTop: '3px' }}
-                        />
-                      </Stack>
-                    </Row>
-                  </Grid>
+                      </Grid>
+
+                      {/**
+                       * Cell: My Deposits
+                       */}
+                      <Grid item md={1.5} xs={5}>
+                        <Row justifyContent="flex-end">
+                          <Tooltip
+                            placement="left"
+                            componentsProps={TOOLTIP_COMPONENT_PROPS}
+                            title={
+                              isUnripe ? (
+                                <Stack
+                                  direction={{ xs: 'column', md: 'row' }}
+                                  gap={{ xs: 0, md: 1 }}
+                                  alignItems="stretch"
+                                >
+                                  <Box sx={{ px: 1, py: 0.5 }}>
+                                    <Stat
+                                      title={
+                                        <Row gap={0.5}>
+                                          <TokenIcon token={token} />{' '}
+                                          {token.symbol}
+                                        </Row>
+                                      }
+                                      gap={0.25}
+                                      variant="h4"
+                                      amount={displayTokenAmount(
+                                        deposited?.amount || ZERO_BN,
+                                        token,
+                                        { showName: false }
+                                      )}
+                                      subtitle={
+                                        <>
+                                          The number of {token.symbol}
+                                          <br />
+                                          you have Deposited in the Silo.
+                                        </>
+                                      }
+                                    />
+                                  </Box>
+                                  <Row>×</Row>
+                                  <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
+                                    <Stat
+                                      title="Chop Rate"
+                                      gap={0.25}
+                                      variant="h4"
+                                      amount={`1 - ${(
+                                        unripeTokens[token.address]
+                                          ?.chopPenalty || ZERO_BN
+                                      ).toFixed(4)}%`}
+                                      subtitle={
+                                        <>
+                                          The current penalty for chopping
+                                          <br />
+                                          {token.symbol} for{' '}
+                                          {
+                                            unripeUnderlyingTokens[
+                                              token.address
+                                            ].symbol
+                                          }
+                                          .{' '}
+                                          <Link
+                                            href="https://docs.bean.money/almanac/farm/barn#chopping"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            underline="hover"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                            }}
+                                          >
+                                            Learn more
+                                          </Link>
+                                        </>
+                                      }
+                                    />
+                                  </Box>
+                                  <Row>×</Row>
+                                  <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
+                                    <Stat
+                                      title={`${
+                                        unripeUnderlyingTokens[token.address]
+                                      } Price`}
+                                      gap={0.25}
+                                      variant="h4"
+                                      amount={
+                                        <Fiat
+                                          token={
+                                            unripeUnderlyingTokens[
+                                              token.address
+                                            ]
+                                          }
+                                          amount={ONE_BN}
+                                          chop={false}
+                                        />
+                                      }
+                                      subtitle={`The current price of ${
+                                        unripeUnderlyingTokens[token.address]
+                                          .symbol
+                                      }.`}
+                                    />
+                                  </Box>
+                                  <Stack
+                                    display={{ xs: 'none', md: 'flex' }}
+                                    alignItems="center"
+                                    justifyContent="center"
+                                  >
+                                    =
+                                  </Stack>
+                                </Stack>
+                              ) : (
+                                ''
+                              )
+                            }
+                          >
+                            <Typography color="text.primary">
+                              <Row gap={0.3}>
+                                {/*
+                                 * There are multiple states here:
+                                 * - No wallet connected. Show Zero
+                                 * - Wallet connected, but we haven't even started loading, ie deposited.amount is undefined. Show Loader
+                                 * - Loading: farmerSilo.loading. Show Loader
+                                 * - We have data: deposited.amount is defined. Show value
+                                 */}
+                                {farmerSilo.loading ? (
+                                  <BeanProgressIcon
+                                    size={10}
+                                    enabled
+                                    variant="indeterminate"
+                                  />
+                                ) : (
+                                  <>
+                                    {deposited?.amount ? (
+                                      <>
+                                        <Fiat
+                                          token={token}
+                                          amount={deposited?.amount}
+                                        />
+                                        {isUnripe ? (
+                                          <Typography
+                                            display="inline"
+                                            color={
+                                              BeanstalkPalette.theme.winter.red
+                                            }
+                                          >
+                                            *
+                                          </Typography>
+                                        ) : null}
+                                      </>
+                                    ) : account.isConnected ? (
+                                      // Connected but haven't started loading. Show loader anyway
+                                      <BeanProgressIcon
+                                        size={10}
+                                        enabled
+                                        variant="indeterminate"
+                                      />
+                                    ) : // Not connected. Show Zero in the correct denomination.
+                                    denomination === 'bdv' ? (
+                                      <>
+                                        <Box
+                                          component="img"
+                                          src={logo}
+                                          alt="BEAN"
+                                          sx={{
+                                            height: '1em',
+                                            marginRight: '0.25em',
+                                            display: 'inline',
+                                            position: 'relative',
+                                            top: 0,
+                                            left: 0,
+                                          }}
+                                        />
+                                        <span>0</span>
+                                      </>
+                                    ) : (
+                                      <span>$0</span>
+                                    )}
+                                  </>
+                                )}
+                              </Row>
+                            </Typography>
+                          </Tooltip>
+                          <Stack
+                            display={{ xs: 'none', md: 'block' }}
+                            sx={{ width: ARROW_CONTAINER_WIDTH }}
+                            alignItems="center"
+                          >
+                            <ArrowRightIcon
+                              sx={{ color: 'secondary.main', marginTop: '3px' }}
+                            />
+                          </Stack>
+                        </Row>
+                      </Grid>
+                    </>
+                  )}
                 </Grid>
               </Button>
             </Box>
