@@ -17,7 +17,7 @@ import { useWellReserves } from "src/wells/useWellReserves";
 import { Checkbox } from "../Checkbox";
 import { size } from "src/breakpoints";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
-import { ActionWalletButtonWrapper } from "src/components/ActionWalletButtonWrapper";
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
 
 type BaseAddLiquidityProps = {
   slippage: number;

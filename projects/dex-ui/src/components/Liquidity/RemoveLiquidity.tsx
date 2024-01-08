@@ -23,7 +23,7 @@ import { size } from "src/breakpoints";
 import { displayTokenSymbol } from "src/utils/format";
 import { LoadingTemplate } from "../LoadingTemplate";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-import { ActionWalletButtonWrapper } from "../ActionWalletButtonWrapper";
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
 
 type BaseRemoveLiquidityProps = {
   slippage: number;
