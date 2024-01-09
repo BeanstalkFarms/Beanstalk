@@ -15,7 +15,7 @@ import QuoteDetails from "../Liquidity/QuoteDetails";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { size } from "src/breakpoints";
-import { ActionWalletButtonWrapper } from "src/components/ActionWalletButtonWrapper";
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
 import { Button } from "./Button";
 
 const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";

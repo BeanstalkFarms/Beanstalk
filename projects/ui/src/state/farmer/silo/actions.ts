@@ -28,3 +28,7 @@ export const updateFarmerSiloBalanceSdk = createAction<
 export const updateFarmerSiloLoading = createAction<boolean>(
   'farmer/silo/loading'
 );
+
+export const updateFarmerSiloError = createAction<string | undefined>(
+  'farmer/silo/error'
+);
