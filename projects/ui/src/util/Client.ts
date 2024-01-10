@@ -4,7 +4,7 @@ import {
   Chain,
 } from 'wagmi';
 // import { alchemyProvider } from 'wagmi/providers/alchemy';
-import { publicProvider } from 'wagmi/providers/public';
+// import { publicProvider } from 'wagmi/providers/public';
 import { providers } from 'ethers';
 import { mainnet, localhost } from 'wagmi/chains';
 
@@ -123,9 +123,11 @@ const { chains, provider } = configureChains(baseChains, [
       return { http: TESTNET_RPC_ADDRESSES[_chain.id] };
     },
   }),
-  publicProvider({
-    priority: 2,
-  }),
+  // Commented out (temporarily?) as it appears to not be able to handle
+  // the amount of requests the UI needs to work
+  // publicProvider({
+  //   priority: 2,
+  // }),
 ]);
 
 const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
