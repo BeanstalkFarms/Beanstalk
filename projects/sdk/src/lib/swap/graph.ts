@@ -157,14 +157,14 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   //BEAN<>USDC via Pipeline
   graph.setEdge("USDC", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.USDC, sdk.tokens.BEAN, from, to),
+      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.USDC, sdk.tokens.WETH, sdk.tokens.BEAN, from, to),
     from: "USDC",
     to: "BEAN"
   });
 
   graph.setEdge("BEAN", "USDC", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.USDC, from, to),
+      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.WETH, sdk.tokens.USDC, from, to),
     from: "BEAN",
     to: "USDC"
   });
@@ -172,14 +172,14 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   //BEAN<>DAI via Pipeline
   graph.setEdge("DAI", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.DAI, sdk.tokens.BEAN, from, to),
+      sdk.farm.presets.uniV3WellSwap(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.DAI, sdk.tokens.WETH, sdk.tokens.BEAN, from, to),
     from: "DAI",
     to: "BEAN"
   });
 
   graph.setEdge("BEAN", "DAI", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.DAI, from, to),
+      sdk.farm.presets.wellSwapUniV3(sdk.pools.BEAN_ETH_WELL, account, sdk.tokens.BEAN, sdk.tokens.WETH, sdk.tokens.DAI, from, to),
     from: "BEAN",
     to: "DAI"
   });
