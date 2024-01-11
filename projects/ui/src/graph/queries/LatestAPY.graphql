@@ -1,18 +1,12 @@
 query LatestAPY {
-  siloYields(first: 1, orderBy: season, orderDirection:desc) {
+  siloYields(first: 1, orderBy: season, orderDirection: desc) {
     id
     season
-    zeroSeedBeanAPY
-    twoSeedBeanAPY
-    twoSeedStalkAPY
-    fourSeedBeanAPY
-    fourSeedStalkAPY
-    threeSeedBeanAPY
-    threeSeedStalkAPY
-    threePointTwoFiveSeedBeanAPY
-    threePointTwoFiveSeedStalkAPY
-    fourPointFiveSeedBeanAPY
-    fourPointFiveSeedStalkAPY
     beansPerSeasonEMA
+    tokenAPYS {
+      token
+      beanAPY
+      stalkAPY
+    }
   }
 }
