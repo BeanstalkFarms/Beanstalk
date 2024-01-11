@@ -1,11 +1,11 @@
 overwrite: true
 schema:
   [
-    "https://graph.node.bean.money/subgraphs/name/beanstalk-dev",
-    "https://graph.node.bean.money/subgraphs/name/bean-dev",
+    "https://graph.node.bean.money/subgraphs/name/beanstalk",
+    "https://graph.node.bean.money/subgraphs/name/bean",
     "https://hub.snapshot.org/graphql",
     "https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot",
-    "https://graph.node.bean.money/subgraphs/name/beanft-dev"
+    "https://graph.node.bean.money/subgraphs/name/beanft"
   ]
 documents: "src/**/*.graphql"
 generates:

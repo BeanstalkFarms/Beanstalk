@@ -37,18 +37,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
   const Bean = useChainConstant(BEAN);
   const isBean = metric === 'bean';
 
-  const seeds = token.getSeeds();
-  const apys = latestYield
-    ? seeds.eq(0)
-      ? latestYield.bySeeds['0']
-      : seeds.eq(3)
-      ? latestYield.bySeeds['3']
-      : seeds.eq(3.25)
-      ? latestYield.bySeeds['3.25']
-      : seeds.eq(4.5)
-      ? latestYield.bySeeds['4.5']
-      : null
-    : null;
+  const apys = latestYield ? latestYield.byToken[token.address] : null;
 
   const tokenProps = isBean
     ? Bean
