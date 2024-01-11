@@ -245,6 +245,7 @@ export class LibraryPresets {
       this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, fromMode)
     ];
 
+    ///////// BEAN <> BEANETH ///////////
     this.wellWethBean = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       const WELL_ADDRESS = sdk.addresses.BEANWETH_WELL.get(sdk.chainId);
       const result = [];
@@ -302,6 +303,7 @@ export class LibraryPresets {
       return result;
     };
 
+    ///////// [ BEAN, WETH ] -> BEANETH ///////////
     this.wellAddLiquidity = (well: BasinWell, tokenIn: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       const result = [];
       const advancedPipe = sdk.farm.createAdvancedPipe("pipelineDeposit");
@@ -364,7 +366,7 @@ export class LibraryPresets {
         tag: "uniV3SwapAmount", 
         copySlot: 0, 
         pasteSlot: 1
-      }
+      };
       const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, approveClipboard);
 
       // Transfers toToken back to Beanstalk, from Pipeline.
@@ -372,7 +374,7 @@ export class LibraryPresets {
         tag: "uniV3SwapAmount", 
         copySlot: 0, 
         pasteSlot: 2
-      }
+      };
       const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
 
       result.push(transfer);
@@ -409,7 +411,7 @@ export class LibraryPresets {
         tag: "amountToDeposit", 
         copySlot: 0, 
         pasteSlot: 1
-      }
+      };
       const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, approveClipboard);
 
       // Transfers the output token back to Beanstalk, from Pipeline.
@@ -417,7 +419,7 @@ export class LibraryPresets {
         tag: "amountToDeposit", 
         copySlot: 0, 
         pasteSlot: 2
-      }
+      };
       const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
       
       result.push(transfer);
@@ -449,17 +451,27 @@ export class LibraryPresets {
       const swap = new sdk.farm.actions.UniswapV3Swap(fromToken, thruToken, sdk.contracts.pipeline.address);
 
       // Approve Well to use thruToken
-      const approveWell = new sdk.farm.actions.ApproveERC20(thruToken, well.address);
+      const wellApproveClipboard = {
+        tag: "uniV3Output", 
+        copySlot: 0, 
+        pasteSlot: 1
+      };
+      const approveWell = new sdk.farm.actions.ApproveERC20(thruToken, well.address, wellApproveClipboard);
 
       // Swap thruToken -> toToken on Well, send output to recipient
-      const wellSwap = new sdk.farm.actions.WellSwap(well.address, thruToken, toToken, recipient);
+      const wellClipboard = {
+        tag: "uniV3Output",
+        copySlot: 0,
+        pasteSlot: 3
+      };
+      const wellSwap = new sdk.farm.actions.WellSwap(well.address, thruToken, toToken, recipient, undefined, wellClipboard);
 
       // This approves the transferToBeanstalk operation.
       const approveClipboard = {
         tag: "swapOutput", 
         copySlot: 0, 
         pasteSlot: 1
-      }
+      };
       const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, approveClipboard);
 
       // Transfers toToken back to Beanstalk, from Pipeline.
@@ -467,13 +479,13 @@ export class LibraryPresets {
         tag: "swapOutput", 
         copySlot: 0, 
         pasteSlot: 2
-      }
+      };
       const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
       
       result.push(transfer);
 
       advancedPipe.add(approveUniswap);
-      advancedPipe.add(swap);
+      advancedPipe.add(swap, { tag: "uniV3Output" });
       advancedPipe.add(approveWell);
       advancedPipe.add(wellSwap, { tag: "swapOutput" });
       if (transferBack) {
@@ -506,18 +518,23 @@ export class LibraryPresets {
         tag: "swapOutput", 
         copySlot: 0, 
         pasteSlot: 1
-      }
+      };
       const approveUniswap = new sdk.farm.actions.ApproveERC20(thruToken, sdk.contracts.uniswapV3Router.address, uniApproveClipboard);
 
       // Swap thruToken -> toToken on Uniswap V3, send output to recipient
-      const swap = new sdk.farm.actions.UniswapV3Swap(thruToken, toToken, recipient);
+      const uniClipboard = {
+        tag: "swapOutput", 
+        copySlot: 0, 
+        pasteSlot: 5
+      };
+      const swap = new sdk.farm.actions.UniswapV3Swap(thruToken, toToken, recipient, undefined, uniClipboard);
 
       // This approves the transferToBeanstalk operation.
       const transferApproveClipboard = {
         tag: "uniV3Output", 
         copySlot: 0, 
         pasteSlot: 1
-      }
+      };
       const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, transferApproveClipboard);
 
       // Transfers toToken back to Beanstalk, from Pipeline.
@@ -525,7 +542,7 @@ export class LibraryPresets {
         tag: "uniV3Output", 
         copySlot: 0, 
         pasteSlot: 2
-      }
+      };
       const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
       
       result.push(transfer);

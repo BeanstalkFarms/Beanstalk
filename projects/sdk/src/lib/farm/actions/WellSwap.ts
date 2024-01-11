@@ -3,13 +3,15 @@ import { BigNumberish, ethers } from "ethers";
 import { Token } from "src/classes/Token";
 import { RunContext, RunMode, Step, StepClass, Workflow } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
+import { Clipboard } from "src/lib/depot";
+import { ClipboardSettings } from "src/types";
 import { deadlineSecondsToBlockchain } from "src/utils";
 
 export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "wellSwap";
   private transactionDeadline: BigNumberish;
 
-  constructor(public wellAddress: string, public fromToken: Token, public toToken: Token, public recipient: string, deadline?: number) {
+  constructor(public wellAddress: string, public fromToken: Token, public toToken: Token, public recipient: string, deadline?: number, public clipboard?: ClipboardSettings) {
     super();
     if (deadline !== null && deadline !== undefined && deadline <= 0) {
       throw new Error("Deadline must be greater than 0");
@@ -94,7 +96,8 @@ export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
 
         return {
           target: this.wellAddress,
-          callData: callData
+          callData: callData,
+          clipboard: this.clipboard ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot) : undefined
         };
       },
       decode: (data: string) => well.contract.interface.decodeFunctionData(wellFunctionName, data),
