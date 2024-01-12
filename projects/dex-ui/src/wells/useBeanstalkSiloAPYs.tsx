@@ -3,7 +3,6 @@ import { loadSiloAPYData } from "./apyFetcher";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
 
-// TODO: BIP39 will change the APYs we get from the subgraph
 export const useBeanstalkSiloAPYs = () => {
   const query = useQuery(
     ["wells", "APYs"],
