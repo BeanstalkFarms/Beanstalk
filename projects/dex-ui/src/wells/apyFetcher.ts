@@ -6,24 +6,14 @@ import { fetchFromSubgraphRequest } from "./subgraphFetch";
 export type SiloAPYResult = {
   id: string;
   season: number;
-  zeroSeedBeanAPY: TokenValue;
-  twoSeedBeanAPY: TokenValue;
-  threeSeedBeanAPY: TokenValue;
-  threePointTwoFiveSeedBeanAPY: TokenValue;
-  fourSeedBeanAPY: TokenValue;
-  fourPointFiveSeedBeanAPY: TokenValue;
+  tokenAPYs: Record<string, TokenValue>;
   beansPerSeasonEMA: TokenValue;
 };
 
 const defaultResult: SiloAPYResult = {
   id: "",
   season: 0,
-  zeroSeedBeanAPY: TokenValue.ZERO,
-  twoSeedBeanAPY: TokenValue.ZERO,
-  fourSeedBeanAPY: TokenValue.ZERO,
-  threeSeedBeanAPY: TokenValue.ZERO,
-  threePointTwoFiveSeedBeanAPY: TokenValue.ZERO,
-  fourPointFiveSeedBeanAPY: TokenValue.ZERO,
+  tokenAPYs: {},
   beansPerSeasonEMA: TokenValue.ZERO
 };
 
@@ -41,16 +31,17 @@ const fetchAPYFromSubgraph = async () => {
 
       return response.siloYields.reduce<SiloAPYResult>(
         (_, datum) => {
+          const tokenYields: SiloAPYResult["tokenAPYs"] = {};
+
+          datum.tokenAPYS.forEach((result) => {
+            tokenYields[result.token] = normalise(result.beanAPY);
+          });
+
           return {
             id: datum.id,
             season: datum.season,
-            zeroSeedBeanAPY: normalise(datum.zeroSeedBeanAPY),
-            twoSeedBeanAPY: normalise(datum.twoSeedBeanAPY),
-            fourSeedBeanAPY: normalise(datum.fourSeedBeanAPY),
-            threeSeedBeanAPY: normalise(datum.threeSeedBeanAPY),
-            threePointTwoFiveSeedBeanAPY: normalise(datum.threePointTwoFiveSeedBeanAPY),
-            fourPointFiveSeedBeanAPY: normalise(datum.fourPointFiveSeedBeanAPY),
-            beansPerSeasonEMA: normalise(datum.beansPerSeasonEMA)
+            beansPerSeasonEMA: normalise(datum.beansPerSeasonEMA),
+            tokenAPYs: tokenYields
           };
         },
         { ...defaultResult }
