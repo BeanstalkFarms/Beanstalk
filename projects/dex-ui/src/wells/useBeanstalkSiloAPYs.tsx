@@ -2,12 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { loadSiloAPYData } from "./apyFetcher";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
-import { useBeanstalkSiloWhitelist } from "./useBeanstalkSiloWhitelist";
 
-// TODO: BIP39 will change the APYs we get from the subgraph
 export const useBeanstalkSiloAPYs = () => {
-  const { getSeedsWithWell } = useBeanstalkSiloWhitelist();
-
   const query = useQuery(
     ["wells", "APYs"],
     async () => {
@@ -22,30 +18,12 @@ export const useBeanstalkSiloAPYs = () => {
 
   const getSiloAPYWithWell = useCallback(
     (well: Well | undefined) => {
-      const seeds = getSeedsWithWell(well);
-      if (!query.data || !seeds) return undefined;
+      const lpToken = well?.lpToken;
+      if (!query.data || !lpToken?.address) return undefined;
 
-      const seedsStr = parseFloat(seeds.toHuman()).toString();
-      const d = query.data;
-
-      switch (seedsStr) {
-        case "0":
-          return d.zeroSeedBeanAPY;
-        case "2":
-          return d.twoSeedBeanAPY;
-        case "3":
-          return d.threeSeedBeanAPY;
-        case "3.5":
-          return d.threePointTwoFiveSeedBeanAPY;
-        case "4":
-          return d.fourSeedBeanAPY;
-        case "4.5":
-          return d.fourPointFiveSeedBeanAPY;
-        default:
-          return undefined;
-      }
+      return query.data.tokenAPYs[lpToken.address];
     },
-    [getSeedsWithWell, query.data]
+    [query.data]
   );
 
   return {
