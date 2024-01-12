@@ -462,7 +462,7 @@ export class LibraryPresets {
       const wellClipboard = {
         tag: "uniV3Output",
         copySlot: 0,
-        pasteSlot: 3
+        pasteSlot: 2
       };
       const wellSwap = new sdk.farm.actions.WellSwap(well.address, thruToken, toToken, recipient, undefined, wellClipboard);
 
