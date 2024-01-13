@@ -23,11 +23,6 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    const [tokenIn, tokenOut] = Workflow.direction(
-      this.tokenIn,
-      this.tokenOut,
-      context.runMode !== RunMode.EstimateReversed // _forward
-    );
 
     if (!this.clipboard) {
       const pipelineBeanWethSwapIndex = context.steps.findIndex(step => step.name === "pipelineBeanWethSwap");
@@ -44,40 +39,75 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
     };
 
     const quoter = UniswapV3Swap.sdk.contracts.uniswapV3QuoterV2;
+    const reversed = context.runMode === RunMode.EstimateReversed;
+    let estimate: any;
 
-    const estimate = await quoter.callStatic.quoteExactInputSingle({
-        tokenIn: tokenIn.address,
-        tokenOut: tokenOut.address,
-        amountIn: _amountInStep,
-        fee: 500,
-        sqrtPriceLimitX96: 0,
-    });
+    if (!reversed) {
+      estimate = await quoter.callStatic.quoteExactInputSingle({
+          tokenIn: this.tokenIn.address,
+          tokenOut: this.tokenOut.address,
+          amountIn: _amountInStep,
+          fee: 500,
+          sqrtPriceLimitX96: 0,
+      });
+    } else {
+      estimate = await quoter.callStatic.quoteExactOutputSingle({
+          tokenIn: this.tokenIn.address,
+          tokenOut: this.tokenOut.address,
+          amount: _amountInStep,
+          fee: 500,
+          sqrtPriceLimitX96: 0,
+      });
+    };
+
+    const swapFunctionName = reversed ? "exactOutputSingle" : "exactInputSingle";
 
     return {
       name: this.name,
       amountOut: estimate[0],
       prepare: () => {
+
         if (context.data.slippage === undefined) throw new Error("Exchange: slippage required");
-        const minAmountOut = Workflow.slip(estimate[0], context.data.slippage);
+        let callData;
+        const estimatedOutput = TokenValue.fromBlockchain(estimate[0].toString(), this.tokenOut.decimals);
         const sqrtPriceX96After = estimate[1];
-        if (!minAmountOut) throw new Error("Exhange: missing minAmountOut");
-        return {
-          target: UniswapV3Swap.sdk.contracts.uniswapV3Router.address,
-          callData: UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactInputSingle", [{
-            tokenIn: tokenIn.address,
-            tokenOut: tokenOut.address,
+        if (!reversed) {
+          const minAmountOut = estimatedOutput.subSlippage(context.data.slippage);
+          if (!minAmountOut) throw new Error("UniswapV3Swap: missing minAmountOut");
+          callData = UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactInputSingle", [{
+              tokenIn: this.tokenIn.address,
+              tokenOut: this.tokenOut.address,
+              fee: 500,
+              recipient: this.recipient,
+              deadline: this.transactionDeadline,
+              amountIn: _amountInStep,
+              amountOutMinimum: minAmountOut.toBlockchain().toString(),
+              sqrtPriceLimitX96: sqrtPriceX96After
+            }]);
+        } else {
+          const maxAmountIn = estimatedOutput.addSlippage(context.data.slippage);
+          if (!maxAmountIn) throw new Error("UniswapV3Swap: missing maxAmountOut");
+          callData = UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactOutputSingle", [{
+            tokenIn: this.tokenIn.address,
+            tokenOut: this.tokenOut.address,
             fee: 500,
             recipient: this.recipient,
             deadline: this.transactionDeadline,
-            amountIn: _amountInStep,
-            amountOutMinimum: minAmountOut,
+            amountOut: _amountInStep,
+            amountInMaximum: maxAmountIn.toBlockchain().toString(),
             sqrtPriceLimitX96: sqrtPriceX96After
-          }]),
+          }]);
+        };
+        
+        return {
+          target: UniswapV3Swap.sdk.contracts.uniswapV3Router.address,
+          callData: callData,
           clipboard: this.clipboard ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot) : undefined
         };
       },
-      decode: (data: string) => UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.decodeFunctionData("exactInputSingle", data),
-      decodeResult: (result: string) => UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.decodeFunctionResult("exactInputSingle", result)
+      decode: (data: string) => UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.decodeFunctionData(swapFunctionName, data),
+      // @ts-ignore
+      decodeResult: (result: string) => UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.decodeFunctionResult(swapFunctionName, result)
     };
   }
 }
