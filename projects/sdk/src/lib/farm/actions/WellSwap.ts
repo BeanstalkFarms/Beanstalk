@@ -72,6 +72,9 @@ export class WellSwap extends StepClass<AdvancedPipePreparedResult> {
           ]);
         } else {
           const maxAmountIn = estimate.addSlippage(context.data.slippage);
+          if (this.clipboard) {
+            this.clipboard.pasteSlot = 3;
+          };
           WellSwap.sdk.debug(`>[${this.name}.prepare()]`, {
             well: well.name,
             tokenIn: this.fromToken.symbol,
