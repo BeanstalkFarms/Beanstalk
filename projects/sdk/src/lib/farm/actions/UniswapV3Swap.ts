@@ -15,6 +15,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
     public readonly tokenIn: Token,
     public readonly tokenOut: Token,
     public readonly recipient: string,
+    public readonly feeTier: number,
     public readonly deadline?: number,
     public clipboard?: ClipboardSettings
   ) {
@@ -47,7 +48,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
           tokenIn: this.tokenIn.address,
           tokenOut: this.tokenOut.address,
           amountIn: _amountInStep,
-          fee: 500,
+          fee: this.feeTier,
           sqrtPriceLimitX96: 0,
       });
     } else {
@@ -55,7 +56,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
           tokenIn: this.tokenIn.address,
           tokenOut: this.tokenOut.address,
           amount: _amountInStep,
-          fee: 500,
+          fee: this.feeTier,
           sqrtPriceLimitX96: 0,
       });
     };
@@ -77,7 +78,7 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
           callData = UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactInputSingle", [{
               tokenIn: this.tokenIn.address,
               tokenOut: this.tokenOut.address,
-              fee: 500,
+              fee: this.feeTier,
               recipient: this.recipient,
               deadline: this.transactionDeadline,
               amountIn: _amountInStep,
@@ -88,15 +89,15 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
           const maxAmountIn = estimatedOutput.addSlippage(context.data.slippage);
           if (!maxAmountIn) throw new Error("UniswapV3Swap: missing maxAmountOut");
           callData = UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactOutputSingle", [{
-            tokenIn: this.tokenIn.address,
-            tokenOut: this.tokenOut.address,
-            fee: 500,
-            recipient: this.recipient,
-            deadline: this.transactionDeadline,
-            amountOut: _amountInStep,
-            amountInMaximum: maxAmountIn.toBlockchain().toString(),
-            sqrtPriceLimitX96: sqrtPriceX96After
-          }]);
+              tokenIn: this.tokenIn.address,
+              tokenOut: this.tokenOut.address,
+              fee: this.feeTier,
+              recipient: this.recipient,
+              deadline: this.transactionDeadline,
+              amountOut: _amountInStep,
+              amountInMaximum: maxAmountIn.toBlockchain().toString(),
+              sqrtPriceLimitX96: sqrtPriceX96After
+            }]);
         };
         
         return {
