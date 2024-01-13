@@ -72,9 +72,25 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
         let callData;
         const estimatedOutput = TokenValue.fromBlockchain(estimate[0].toString(), this.tokenOut.decimals);
         const sqrtPriceX96After = estimate[1];
+        
         if (!reversed) {
           const minAmountOut = estimatedOutput.subSlippage(context.data.slippage);
           if (!minAmountOut) throw new Error("UniswapV3Swap: missing minAmountOut");
+
+          UniswapV3Swap.sdk.debug(`>[${this.name}.prepare()]`, {
+            tokenIn: this.tokenIn.symbol,
+            tokenOut: this.tokenOut.symbol,
+            fee: this.feeTier,
+            recipient: this.recipient,
+            deadline: this.transactionDeadline,
+            amountIn: _amountInStep,
+            amountOutMinimum: minAmountOut.toBlockchain().toString(),
+            sqrtPriceLimitX96: sqrtPriceX96After,
+            reversed,
+            method: "exactInputSingle",
+            context
+          });
+
           callData = UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactInputSingle", [{
               tokenIn: this.tokenIn.address,
               tokenOut: this.tokenOut.address,
@@ -85,9 +101,25 @@ export class UniswapV3Swap extends StepClass<AdvancedPipePreparedResult> {
               amountOutMinimum: minAmountOut.toBlockchain().toString(),
               sqrtPriceLimitX96: sqrtPriceX96After
             }]);
+
         } else {
           const maxAmountIn = estimatedOutput.addSlippage(context.data.slippage);
           if (!maxAmountIn) throw new Error("UniswapV3Swap: missing maxAmountOut");
+
+          UniswapV3Swap.sdk.debug(`>[${this.name}.prepare()]`, {
+            tokenIn: this.tokenIn.symbol,
+            tokenOut: this.tokenOut.symbol,
+            fee: this.feeTier,
+            recipient: this.recipient,
+            deadline: this.transactionDeadline,
+            amountOut: _amountInStep,
+            amountInMaximum: maxAmountIn.toBlockchain().toString(),
+            sqrtPriceLimitX96: sqrtPriceX96After,
+            reversed,
+            method: "exactOutputSingle",
+            context
+          });
+
           callData = UniswapV3Swap.sdk.contracts.uniswapV3Router.interface.encodeFunctionData("exactOutputSingle", [{
               tokenIn: this.tokenIn.address,
               tokenOut: this.tokenOut.address,
