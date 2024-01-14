@@ -102,17 +102,16 @@ describe('BeanstalkPrice', function () {
     await revertToSnapshot(snapshotId);
   });
 
-  // Note: some tests are skipped with the dewhitelisting of bean3CRV.
   describe("Price", async function () {
     it('deltaB = 0', async function () {      
       const p = await this.beanstalkPrice.price()
       // price is within +/- 1 due to rounding
       expect(p.price).to.equal('999999');
-      expect(p.liquidity).to.equal('1999998000000');
+      expect(p.liquidity).to.equal('3999997000000');
       expect(p.deltaB).to.be.eq('0');
     })
 
-    it.skip('deltaB > 0, curve only', async function () {
+    it('deltaB > 0, curve only', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
@@ -152,23 +151,23 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      // const c = await this.beanstalkPrice.getCurve()
+      const c = await this.beanstalkPrice.getCurve()
       const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
 
-      expect(p.price).to.equal('1999996');
-      expect(p.liquidity).to.equal('1999996000000');
+      expect(p.price).to.equal('1499997');
+      expect(p.liquidity).to.equal('3999995000000');
       expect(p.deltaB).to.equal('207106781186');
 
-      // expect(c.price).to.equal('999999');
-      // expect(c.liquidity).to.equal('1999999000000');
-      // expect(c.deltaB).to.equal('0');
+      expect(c.price).to.equal('999999');
+      expect(c.liquidity).to.equal('1999999000000');
+      expect(c.deltaB).to.equal('0');
 
       expect(w.price).to.equal('1999996');
       expect(w.liquidity).to.equal('1999996000000');
       expect(w.deltaB).to.equal('207106781186');
     })
 
-    it.skip('deltaB > 0, wells and curve', async function () {
+    it('deltaB > 0, wells and curve', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
@@ -190,23 +189,23 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      // const c = await this.beanstalkPrice.getCurve()
+      const c = await this.beanstalkPrice.getCurve()
       const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
 
       expect(p.price).to.equal('1491246');
       expect(p.liquidity).to.equal('4108725000000');
       expect(p.deltaB).to.equal('256998342188');
 
-      // expect(c.price).to.equal('1008729');
-      // expect(c.liquidity).to.equal('2108729000000');
-      // expect(c.deltaB).to.equal('49891561002');
+      expect(c.price).to.equal('1008729');
+      expect(c.liquidity).to.equal('2108729000000');
+      expect(c.deltaB).to.equal('49891561002');
 
       expect(w.price).to.equal('1999996');
       expect(w.liquidity).to.equal('1999996000000');
       expect(w.deltaB).to.equal('207106781186');
     })
 
-    it.skip('deltaB < 0, curve only', async function () {
+    it('deltaB < 0, curve only', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
@@ -249,23 +248,23 @@ describe('BeanstalkPrice', function () {
       })
 
       const p = await this.beanstalkPrice.price()
-      // const c = await this.beanstalkPrice.getCurve()
+      const c = await this.beanstalkPrice.getCurve()
       const w = await this.beanstalkPrice.getConstantProductWell(this.well.address)
 
-      expect(p.price).to.equal('499999');
-      expect(p.liquidity).to.equal('1999996000000');
+      expect(p.price).to.equal('749999');
+      expect(p.liquidity).to.equal('3999995000000');
       expect(p.deltaB).to.equal('-585786437627');
 
-      // expect(c.price).to.equal('999999');
-      // expect(c.liquidity).to.equal('1999999000000');
-      // expect(c.deltaB).to.equal('0');
+      expect(c.price).to.equal('999999');
+      expect(c.liquidity).to.equal('1999999000000');
+      expect(c.deltaB).to.equal('0');
 
       expect(w.price).to.equal('499999');
       expect(w.liquidity).to.equal('1999996000000');
       expect(w.deltaB).to.equal('-585786437627');
     })
 
-    it.skip('deltaB < 0, wells and curve', async function () {
+    it('deltaB < 0, wells and curve', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
@@ -303,7 +302,7 @@ describe('BeanstalkPrice', function () {
       expect(w.deltaB).to.equal('-585786437627');
     })
 
-    it.skip('well deltaB > 0, curve deltaB < 0', async function () {
+    it('well deltaB > 0, curve deltaB < 0', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,
@@ -341,7 +340,7 @@ describe('BeanstalkPrice', function () {
       expect(w.deltaB).to.be.eq('207106781186');
     })
 
-    it.skip('well deltaB < 0, curve deltaB > 0', async function () {
+    it('well deltaB < 0, curve deltaB > 0', async function () {
       this.result = await this.curve.connect(user).addLiquidity(
         BEAN_3_CURVE,
         STABLE_FACTORY,

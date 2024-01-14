@@ -214,7 +214,6 @@ library LibTokenSilo {
         uint256 amount
     ) internal returns (uint256, LibGerminate.Germinate) {
         uint256 bdv = beanDenominatedValue(token, amount);
-
         return depositWithBDV(account, token, stem, amount, bdv);
     }
 
@@ -463,7 +462,6 @@ library LibTokenSilo {
         address token
     ) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
         // SafeCast unnecessary because all casted variables are types smaller that int96.
         _stemTip =
             s.ss[token].milestoneStem +

@@ -88,6 +88,8 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
+        // update last snapshot in beanstalk. 
+        stepOracle();
         handleRain(3);
     }
 
@@ -95,6 +97,7 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
+            stepOracle();
             handleRain(3);
         }
         s.season.sunriseBlock = uint32(block.number);
@@ -104,6 +107,8 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
+        // update last snapshot in beanstalk. 
+        stepOracle();
         handleRain(2);
     }
 
@@ -111,6 +116,8 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
+        // update last snapshot in beanstalk. 
+        stepOracle();
         handleRain(3);
         mockStepSilo(amount);
     }
@@ -119,6 +126,8 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
+        // update last snapshot in beanstalk. 
+        stepOracle();
         handleRain(3);
         mockStepSilo(amount);
     }

@@ -274,11 +274,12 @@ describe('Whitelist', function () {
       expect(settings[3]).to.equal(1)
       expect(settings[4]).to.equal(0)
       expect(settings[5]).to.equal('0x00')
-      expect(settings[6]).to.equal('0x00000000')
+      expect(settings[6]).to.equal(-1000000)
       expect(settings[7]).to.equal('0x00000000')
-      expect(settings[8]).to.equal(0)
+      expect(settings[8]).to.equal('0x00000000')
       expect(settings[9]).to.equal(0)
-
+      expect(settings[10]).to.equal(0)
+      
       await expect(this.result).to.emit(this.whitelist, 'DewhitelistToken').withArgs(BEAN_3_CURVE)
     })
   })

@@ -52,13 +52,17 @@ contract InitBipSeedGauge is Weather {
     // gauge point factor is used to scale up the gauge points of the bean and bean3crv pools.
     uint128 internal constant BEAN_ETH_INITIAL_GAUGE_POINTS = 1000e18;
 
-    // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
 
-        // dewhitelist bean3crv.
+        // Update milestone season decimal precision 
+        // prior to dewhitelisting Bean3CRV.
+        s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem = 
+            int96(s.ss[C.CURVE_BEAN_METAPOOL].milestoneStem.mul(1e6));
+
         LibWhitelist.dewhitelistToken(C.CURVE_BEAN_METAPOOL);
 
-        // update depositedBDV for bean, bean3crv, urBean, and urBeanETH.
+
+        // Update depositedBDV for bean, bean3crv, urBean, and urBeanETH.
         LibTokenSilo.incrementTotalDepositedBdv(
             C.BEAN,
             BEAN_UNMIGRATED_BDV - s.migratedBdvs[C.BEAN] + SILO_V2_EARNED_BEANS
@@ -76,15 +80,15 @@ contract InitBipSeedGauge is Weather {
             UNRIPE_LP_UNMIGRATED_BDV - s.migratedBdvs[C.UNRIPE_LP]
         );
 
-        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
+        address[] memory siloTokens = LibWhitelistedTokens.getWhitelistedTokens();
 
         bytes4 gpSelector = IGaugePointFacet.defaultGaugePointFunction.selector;
         bytes4 lwSelector = ILiquidityWeightFacet.maxWeight.selector;
         
-        bytes4[5] memory gpSelectors = [bytes4(0), gpSelector, 0, 0, 0];
-        bytes4[5] memory lwSelectors = [bytes4(0), lwSelector, 0, 0, 0];
-        uint128[5] memory gaugePoints = [uint128(0), BEAN_ETH_INITIAL_GAUGE_POINTS, 0, 0, 0];
-        uint64[5] memory optimalPercentDepositedBdv = [uint64(0), 100e6, 0, 0, 0];
+        bytes4[4] memory gpSelectors = [bytes4(0), gpSelector, 0, 0];
+        bytes4[4] memory lwSelectors = [bytes4(0), lwSelector, 0, 0];
+        uint128[4] memory gaugePoints = [uint128(0), BEAN_ETH_INITIAL_GAUGE_POINTS, 0, 0];
+        uint64[4] memory optimalPercentDepositedBdv = [uint64(0), 100e6, 0, 0];
         
         uint128 totalBdv;
         for (uint i = 0; i < siloTokens.length; i++) {

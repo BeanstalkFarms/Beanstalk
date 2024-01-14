@@ -149,9 +149,9 @@ contract Silo is ReentrancyGuard {
      * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
-        // Plenty is earned in the form of 3Crv.
+        // Plenty is earned in the form of weth.
         uint256 plenty = s.a[account].sop.plenty;
-        C.threeCrv().safeTransfer(account, plenty);
+        C.weth().safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
 
         emit ClaimPlenty(account, plenty);

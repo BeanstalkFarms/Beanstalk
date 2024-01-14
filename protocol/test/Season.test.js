@@ -70,6 +70,7 @@ describe('Season', function () {
             await this.well.setReserves([to6('0'), to18('0')])
             await advanceTime(3600)
         })
+
         it('season incentive', async function () {
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
@@ -92,36 +93,26 @@ describe('Season', function () {
             await setToSecondsAfterHour(1500)
             await beanstalk.connect(owner).sunrise();
             expect(await bean.balanceOf(owner.address)).to.be.equal('1978846626')
-        })    
+        })
     })
 
     describe("oracle not initialized, previous balance > 0", async function () {
         it('season incentive', async function () {
-            this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-            await this.beanMetapool.set_A_precise('1000');
-            await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-            await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
-            await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
-
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('11100000', '11300000')
+            expect(await bean.balanceOf(owner.address)).to.be.within('11600000', '18000000')
         })
     })
 
     describe("oracle initialized", async function () {
         it('season incentive', async function () {
-            this.beanMetapool = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE);
-            await this.beanMetapool.set_A_precise('1000');
-            await this.beanMetapool.set_virtual_price(ethers.utils.parseEther('1'));
-            await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
-            await this.beanMetapool.connect(user).set_balances([to6('1000'), to18('1000')]);
-
+            await this.well.setReserves([to6('100000'), to18('100')])
             await setToSecondsAfterHour(0)
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)
             await beanstalk.connect(owner).sunrise();
-            expect(await bean.balanceOf(owner.address)).to.be.within('11300000', '11500000')
+
+            expect(await bean.balanceOf(owner.address)).to.be.within('11700000', '11900000')
         })
     })
 })

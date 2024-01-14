@@ -390,6 +390,18 @@ describe('Silo', function () {
       expect(await this.approval.isApprovedForAll(userAddress, user2Address)).to.eq(true);
     });
 
+    it("properly gives the correct ERC-165 identifier", async function () {
+      expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(true);
+      expect(await this.diamondLoupe.supportsInterface("0x0e89341c")).to.eq(true);
+    });
+  });
+
+  describe("ERC1155 Metadata", async function () {
+    beforeEach(async function () {
+      // 2 seasons were added in before. (998 + 2 = 1000)
+      await this.season.farmSunrises(998);
+    })
+
     it('is a valid json', async function () {
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
       const depositmetadata = await this.metadata.uri(depositID1);
@@ -398,40 +410,60 @@ describe('Silo', function () {
       expect(await tryParseJSONObject(depositMetadataString) == true);
     })
 
-    it("properly gives an URI", async function () {
-      // 2 seasons were added in before. (998 + 2 = 1000)
-      await this.season.farmSunrises(998); 
-
-      // bean token
+    // bean token
+    it('returns correct URI for bean', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
       depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
+    })
 
-      // bean3crv token
+    // bean3crv token
+    it('returns correct URI for bean3crv', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3Crv.txt', 'utf-8');
       depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000200';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+    })
 
-      // beanEthToken
+    // beanEthToken
+    it('returns correct URI for beanEth', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
       depositID3 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF00000000002';
       expect(await this.metadata.uri(depositID3)).to.eq(depositmetadata);
-      // urBean token
+    })
+      
+    // urBean token
+    it('returns correct URI for urBean', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
       depositID4 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
       expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
+    })
 
-      // urBeanEth token
+    // urBeanEth token
+    it('returns correct URI for urBeanEth', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBeanEth.txt', 'utf-8');
       depositID5 = '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716DFFFFFFFFFFFFFFFFFFFFF97C';
       expect(await this.metadata.uri(depositID5)).to.eq(depositmetadata);
-
     });
 
-    it("properly gives the correct ERC-165 identifier", async function () {
-      expect(await this.diamondLoupe.supportsInterface("0xd9b67a26")).to.eq(true);
-      expect(await this.diamondLoupe.supportsInterface("0x0e89341c")).to.eq(true);
-    });
+    it('returns correct URI for urBean3Crv once dewhitelisted', async function () {
+      await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
+
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3CrvDewhitelisted.txt', 'utf-8');
+      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000200';
+      expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
+    })
+
+    it('reverts if the depositID is invalid', async function () {
+      depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
+      // invalid due to token
+      invalidID0 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efac000000000000000000000002';
+      // invalid due to high stem value.
+      invalidID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab100000000000000000000002';
+
+      await expect(this.metadata.uri(invalidID0)).to.be.revertedWith("Silo: metadata does not exist");
+      await expect(this.metadata.uri(invalidID1)).to.be.revertedWith("Silo: metadata does not exist");
+    })
+
   });
 
 

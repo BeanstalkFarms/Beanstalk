@@ -130,11 +130,11 @@ library LibConvert {
         // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
         //     return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
-        /// urBEAN:3CRV LP -> urBEAN
+        /// urBEANETH LP -> urBEAN
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
         
-        /// urBEAN -> urBEAN:3CRV LP
+        /// urBEAN -> urBEANETH LP
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         
