@@ -170,14 +170,17 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         );
     }
 
-    // Note: Does this have decimal places?
-    // formatBpfRemaining returns a string representation of the bpfRemaining
+    // formatBpfRemaining returns a string representation of the bpfRemaining with 2 decimal places
     function formatBpfRemaining(uint256 bpfRemaining)
         private
         pure
         returns (string memory)
     {
         string memory bpfString = StringsUpgradeable.toString(bpfRemaining);
+        // add a . after the first character and concat the first 2 decimals
+        bpfString = string(
+            abi.encodePacked(substring(bpfString, 0, 1), ".", substring(bpfString, 1, 3))
+        );
         return bpfString;
     }
 
