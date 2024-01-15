@@ -486,15 +486,7 @@ const SwapForm: FC<
                 />
               ),
             }}
-            disabled={
-              /// Disable while quoting an `amount` for the output.
-              quotingOut ||
-              /// Can't type into the output field if
-              /// user has no balance of the input.
-              noBalance
-              /// No way to quote for this pathway
-              // || !pathwayCheck
-            }
+            disabled
             quote={quotingIn ? Quoting : undefined}
             onChange={handleChangeAmountOut}
           />
