@@ -459,7 +459,7 @@ export class LibraryPresets {
         copySlot: 0, 
         pasteSlot: 1
       };
-      const approveBack = new sdk.farm.actions.ApproveERC20(well.lpToken, sdk.contracts.beanstalk.address, approveClipboard);
+      const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, approveClipboard);
 
       // Transfers toToken back to Beanstalk, from Pipeline.
       const transferClipboard = {
@@ -467,7 +467,7 @@ export class LibraryPresets {
         copySlot: 0, 
         pasteSlot: 2
       };
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(well.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
       
       result.push(transfer);
 
