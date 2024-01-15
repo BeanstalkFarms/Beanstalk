@@ -286,7 +286,7 @@ export class LibraryPresets {
       // Approve WELL to spend PIPELINE's input token
       const approve = new sdk.farm.actions.ApproveERC20(fromToken, WELL_ADDRESS);
 
-      // Swap opration executed on WELL, by PIPELINE
+      // Swap operation executed on WELL, by PIPELINE
       const swap = new sdk.farm.actions.WellSwap(WELL_ADDRESS, fromToken, toToken, recipient);
 
       // Compose the steps
