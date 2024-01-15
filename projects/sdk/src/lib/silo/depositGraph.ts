@@ -246,6 +246,29 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     });
   }
 
+  
+  /**
+   * [ USDC, DAI ] => BEAN
+   */
+  {
+    const well = sdk.pools.BEAN_ETH_WELL;
+    graph.setEdge("USDC", "BEAN", {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniV3WellSwap(well, account, sdk.tokens.USDC, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+      from: "USDC",
+      to: "BEAN",
+      label: "uniV3WellSwap"
+    });
+
+    graph.setEdge("DAI", "BEAN", {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniV3WellSwap(well, account, sdk.tokens.DAI, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+      from: "DAI",
+      to: "BEAN",
+      label: "uniV3WellSwap"
+    });
+  }
+
   /**
    * Well Swap: WETH => BEAN
    */
