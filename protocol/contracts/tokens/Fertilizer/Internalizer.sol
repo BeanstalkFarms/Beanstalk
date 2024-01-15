@@ -13,6 +13,8 @@ import "./Fertilizer1155.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/LibSafeMath128.sol";
 import "base64-sol/base64.sol";
+import "hardhat/console.sol";
+import {LibStrings} from "contracts/libraries/LibStrings.sol";
 
 /**
  * @author publius
@@ -21,11 +23,9 @@ import "base64-sol/base64.sol";
 
 // interface to interact with the Beanstalk contract
 interface IBeanstalk {
-    function beansPerFertilizer() external view returns (uint128); 
-    //  return s.bpf = The cumulative Beans Per Fertilizer (bfp) minted over all Season.
-
+    function beansPerFertilizer() external view returns (uint128); //  return s.bpf = The cumulative Beans Per Fertilizer (bfp) minted over all Season.
     function getEndBpf() external view returns (uint128);
-
+    function remainingRecapitalization() external view returns (uint256);
     function getFertilizer(uint128) external view returns (uint256);
 }
 
@@ -33,6 +33,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     using SafeERC20Upgradeable for IERC20;
     using LibSafeMath128 for uint128;
+    using LibStrings for uint256;
 
     struct Balance {
         uint128 amount;
@@ -49,7 +50,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private _uri;
 
-    // ------------------ NEW CONSTANTS TO ASSEMBLE SVG ------------------
+    // -------------------------- NEW CONSTANTS TO ASSEMBLE SVG --------------------------------
 
     string private constant BASE_JSON_URI = "data:application/json;base64,";
 
@@ -77,19 +78,8 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         " BPF Remaining </tspan></text></svg>";
 
 
-    function svgToImageURI(string memory svg)
-        internal
-        pure
-        returns (string memory)
-    {
-        string memory baseURL = "data:image/svg+xml;base64,";
-        string memory svgBase64Encoded = Base64.encode(
-            bytes(string(abi.encodePacked(svg)))
-        );
-        return string(abi.encodePacked(baseURL, svgBase64Encoded));
-    }
+    // ---------------------------- OLD URI FUNCTIONS -----------------------------
 
-    // ------------------ OLD URI FUNCTIONS ------------------
                                                     // ovveride because it indirectly inherits from ERC1155
     // function uri(uint256 _id) external view virtual override returns (string memory) {
     //     return string(abi.encodePacked(_uri, StringsUpgradeable.toString(_id)));
@@ -99,7 +89,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     // }
 
 
-    // ------------------ NEW URI FUNCTIONS ------------------
+    // ----------------------------- NEW URI FUNCTIONS ----------------------------
     function uri(uint256 _id)
         external
         view
@@ -107,42 +97,23 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         override
         returns (string memory)
     {
+
         // bpf can be computed given a Fertilizer id:
         // uint128 bpfRemaining = IBeanstalk(BEANSTALK).bpf() - id;
-        uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() -
-            uint128(_id);
+        uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(_id);
 
-        uint256 endBpf = IBeanstalk(BEANSTALK).getEndBpf();
+        console.log("bpfValue From storage: ", bpfRemaining);
 
-        uint256 fertilizerSupply = IBeanstalk(BEANSTALK).getFertilizer(
-            uint128(_id)
+        // get the svg status
+        string memory fertilizerStatusSvg = getFertilizerStatusSvg(
+            uint128(_id),
+            bpfRemaining
         );
 
-        string memory fertilizerStatusSvg = BASE_SVG_AVAILIBLE;
-
-        if (fertilizerSupply > 0) {
-            fertilizerStatusSvg = endBpf > bpfRemaining
-                ? BASE_SVG_ACTIVE
-                : BASE_SVG_USED;
-        }
-
-        // assemble the svg
-        // 1. BASE SVG START 
-        // 2. fertilizerStatus
-        // 3. BASE SVG PRE NUMBER FOR BPF REMAINING
-        // 4. bpfRemaining
-        // 5. BASE SVG END
-        string memory svg = string(
-            abi.encodePacked(
-                BASE_SVG_START,
-                fertilizerStatusSvg,
-                BASE_SVG_PRE_NUMBER,
-                StringsUpgradeable.toString(bpfRemaining),
-                BASE_SVG_END
-            )
-        );
-
-        string memory imageUri = svgToImageURI(svg);
+        // we now have all the svg components, we can assemble the image URI
+        
+        // generate the image URI
+        string memory imageUri = generateImageURI(bpfRemaining, fertilizerStatusSvg);
 
         // assemble and return the json URI
         return (
@@ -170,34 +141,82 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         );
     }
 
-    // formatBpfRemaining returns a string representation of the bpfRemaining with 2 decimal places
+    /// @dev returns the base svg for the Fertilizer
+    function getFertilizerStatusSvg(uint128 _id, uint128 bpfRemaining) internal view returns (string memory) {
+
+        uint256 endBpf = IBeanstalk(BEANSTALK).getEndBpf();
+
+        uint256 fertilizerSupply = IBeanstalk(BEANSTALK).getFertilizer(
+            uint128(_id)
+        );
+
+        string memory fertilizerStatusSvg = BASE_SVG_AVAILIBLE;
+
+        if (fertilizerSupply > 0) {
+            fertilizerStatusSvg = endBpf > bpfRemaining
+                ? BASE_SVG_ACTIVE
+                : BASE_SVG_USED;
+        }
+
+        return fertilizerStatusSvg;
+    }
+
+    /// @dev assemble the svg for the Fertilizer and return the image URI representation
+    // assemble the svg
+    // 1. BASE SVG START 
+    // 2. fertilizerStatus
+    // 3. BASE SVG PRE NUMBER FOR BPF REMAINING
+    // 4. bpfRemaining with 2 decimal places
+    // 5. BASE SVG END
+    function generateImageURI(uint256 bpfRemaining, string memory fertilizerStatusSvg) internal pure returns (string memory) {
+        string memory svg = string(
+            abi.encodePacked(
+                BASE_SVG_START,
+                fertilizerStatusSvg,
+                BASE_SVG_PRE_NUMBER,
+                formatBpfRemaining(bpfRemaining),
+                BASE_SVG_END
+            )
+        );
+
+        return svgToImageURI(svg);
+    }
+
+    // ----------------------- HELPER FUNCTIONS --------------------------------
+
+    /// @dev converts an svg to a bade64 encoded image URI
+    function svgToImageURI(string memory svg)
+        internal
+        pure
+        returns (string memory)
+    {
+        string memory baseURL = "data:image/svg+xml;base64,";
+        string memory svgBase64Encoded = Base64.encode(
+            bytes(string(abi.encodePacked(svg)))
+        );
+        return string(abi.encodePacked(baseURL, svgBase64Encoded));
+    }
+
+    /// @dev formatBpfRemaining returns a string representation 
+    /// of the bpfRemaining with 2 decimal places
+    // @note in tests, if the second decimal is a 0, it will not show up
     function formatBpfRemaining(uint256 bpfRemaining)
         private
         pure
         returns (string memory)
     {
-        string memory bpfString = StringsUpgradeable.toString(bpfRemaining);
+        // calls LibStrings.toString(uint256)
+        string memory bpfString = bpfRemaining.toString();
+
         // add a . after the first character and concat the first 2 decimals
         bpfString = string(
-            abi.encodePacked(substring(bpfString, 0, 1), ".", substring(bpfString, 1, 3))
+            abi.encodePacked(LibStrings.substring(bpfString, 0, 1), ".", LibStrings.substring(bpfString, 1, 3))
         );
+
         return bpfString;
     }
 
-    // extract a portion of a string, starting from startIndex and ending at endIndex
-    // uses bytes because solidity doesn't support string manipulation
-    function substring(
-        string memory str,
-        uint startIndex,
-        uint endIndex
-    ) private pure returns (string memory) {
-        bytes memory strBytes = bytes(str);
-        bytes memory result = new bytes(endIndex - startIndex);
-        for (uint i = startIndex; i < endIndex; i++) {
-            result[i - startIndex] = strBytes[i];
-        }
-        return string(result);
-    }
+    // ----------------------- END NEW URI FUNCTIONS ----------------------------
 
     function name() public pure returns (string memory) {
         return "Fertilizer";

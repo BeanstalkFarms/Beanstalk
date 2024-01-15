@@ -62,4 +62,20 @@ library LibStrings {
             return string(abi.encodePacked("-", toString(uint256(-value))));
         }
     }
+
+    // extract a portion of a string, starting from startIndex and ending at endIndex
+    // uses bytes because solidity doesn't support string manipulation
+    // https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
+    function substring(
+        string memory str,
+        uint startIndex,
+        uint endIndex
+    ) internal pure returns (string memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory result = new bytes(endIndex - startIndex);
+        for (uint i = startIndex; i < endIndex; i++) {
+            result[i - startIndex] = strBytes[i];
+        }
+        return string(result);
+    }
 }
