@@ -7,6 +7,7 @@ const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_L
 const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { deployBasin } = require('../scripts/basin.js');
+const axios = require("axios");
 let user,user2,owner,fert
 let userAddress, ownerAddress, user2Address
 
@@ -819,5 +820,65 @@ describe('Fertilize', function () {
         expect(b[3]).to.be.equal('150')
       })
     })
+
+// ----------------- ON-CHAIN FERT METADATA -----------------------
+
+    // describe("2 mints with different ids and uris", async function () {
+    //   let mintOneReceipt, mintTwoReceipt;
+    //   beforeEach(async function () {
+    //     await this.season.teleportSunrise("6074");
+    //     const mintOneTx = await this.fertilizer
+    //       .connect(user)
+    //       .mintFertilizer("100", "0", EXTERNAL);
+    //     mintOneReceipt = await mintOneTx.wait();
+    //     await this.season.rewardToFertilizerE(to6("50"));
+    //     await this.season.teleportSunrise("6174");
+    //     await this.fertilizer
+    //       .connect(user)
+    //       .claimFertilized([to6("3.5")], INTERNAL);
+    //     const mintTwoTx = await this.fertilizer
+    //       .connect(user)
+    //       .mintFertilizer("25", "0", EXTERNAL);
+    //     mintTwoReceipt = await mintTwoTx.wait();
+    //   });
+  
+    //   it("sets on-chain metadata and token URIs", async function () {
+    //     const tokenId = ethers.BigNumber.from(
+    //       mintTwoReceipt.events[15].data.substring(0, 66)
+    //     ).toString();
+  
+    //     const uri = await this.fert.uri(tokenId);
+    //     const response = await axios.get(uri);
+    //     jsonResponse = JSON.parse(response.data.toString());
+  
+    //     expect(jsonResponse.name).to.be.equal(`Fertilizer - ${tokenId}`);
+    //     expect(jsonResponse.image).to.be.equal(dataImage);
+    //   });
+    // });
+
+    describe.only('uri test', async function () {
+      beforeEach(async function () {
+        console.log('before each')
+      })
+
+      it("returns uri", async function () {
+        const dataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MUwyOC42MjQ3IDQwNS43NjhMMjcuNzQ3MSAxODQuMjE3TDE2My41OTYgMTA1LjY1OEwxNjQuNDcgMzI3LjI0MVoiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJNMTE4LjA1OSAzNTQuMDc3TDc2Ljk1NzQgMzc3LjgyM0w3Ni4wODMgMTU2LjI3MkwxMTcuMTg0IDEzMi40OTRMMTE4LjA1OSAzNTQuMDc3WiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Ik0yNi44MjQ3IDE4NC4yNDJMMjcuNjk1OCA0MDUuODA5TDEyMS4wNjIgNDYwLjE0OEwxMjAuMTkxIDIzOC41ODRMMjYuODI0NyAxODQuMjQyWiIgZmlsbD0iIzNEQjU0MiIvPjxwYXRoIGQ9Ik0xNjMuMjU3IDEwNS45OEwxNjQuMTI4IDMyNy41NDhMMjU3LjQ5NSAzODEuODg2TDI1Ni42MjQgMTYwLjMyMkwxNjMuMjU3IDEwNS45OFoiIGZpbGw9IiMzREI1NDIiLz48cGF0aCBkPSJNMjU2Ljg5OCAzODEuNjA5TDEyMS4wNTIgNDYwLjEzNkwxMjAuMTc1IDIzOC41ODVMMjU2LjAyNCAxNjAuMDI1TDI1Ni44OTggMzgxLjYwOVoiIGZpbGw9IiM2RENCNjAiLz48cGF0aCBkPSJNMjEwLjQ4NiA0MDguNDQ1TDE2OS4zODUgNDMyLjE5TDE2OC41MSAyMTAuNjM5TDIwOS42MTIgMTg2Ljg2MUwyMTAuNDg2IDQwOC40NDVaIiBmaWxsPSIjM0RBQTQ3Ii8+PHBhdGggZD0iTTI0MC45MDEgMzY0Ljk0OUwxMzYuNDk0IDQyNS4zMzdMMTM2LjE3MSAyNjcuODU5TDI0MC41NzkgMjA3LjUwOEwyNDAuOTAxIDM2NC45NDlaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0xOTUuNzg5IDI2OC4wMjVDMjE4LjkyNiAyNjEuMzExIDIzMi42NjQgMjc4LjY1NiAyMjguMDk1IDMwMy4yNThDMjI0LjA3NSAzMjQuOTEgMjA2Ljc0MyAzNDYuMTAzIDE4OC4zMjYgMzUzLjA3OUMxNjkuMTU1IDM2MC4zMzkgMTUyLjYwOSAzNTAuODExIDE1Mi4wMjkgMzI5LjExM0MxNTEuMzY0IDMwNC4xOTEgMTcxLjQ0MiAyNzUuMDkyIDE5NS43ODkgMjY4LjAyNVoiIGZpbGw9IiM0NkI5NTUiLz48cGF0aCBkPSJNMjA2LjQxNyAyNzUuNjE1TDE3OC4zMzcgMzQ5LjE5MkMxNzguMzM3IDM0OS4xOTIgMTUzLjc2OCAzMTMuNzk1IDIwNi40MTcgMjc1LjYxNVoiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTE4My4zOSAzNDMuOTc3TDIwMi45NTEgMjkzLjA2MUMyMDIuOTUxIDI5My4wNjEgMjI2Ljc4MiAzMTAuMjUgMTgzLjM5IDM0My45NzdaIiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHdpZHRoPSI3OC4zMjg0IiBoZWlnaHQ9IjY4LjQ3NjgiIHRyYW5zZm9ybT0ibWF0cml4KDAuOTk2NzMxIDAuMDgwNzk3NiAtMC4wODA1NjI3IDAuOTk2NzUgMTU0LjIxNiAzMzYuMTY2KSIgZmlsbD0idXJsKCNwYXR0ZXJuMCkiLz48ZGVmcz48cGF0dGVybiBpZD0icGF0dGVybjAiIHBhdHRlcm5Db250ZW50VW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiB3aWR0aD0iMSIgaGVpZ2h0PSIxIj48dXNlIHhsaW5rOmhyZWY9IiNpbWFnZTBfMTAzNDlfMTA1MDMxIiB0cmFuc2Zvcm09InNjYWxlKDAuMDAzMjU3MzMgMC4wMDM3MzEzNCkiLz48L3BhdHRlcm4+PC9kZWZzPjx0ZXh0IGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiB4PSIyMCIgeT0iNDkwIiBmaWxsPSJibGFjayIgPjx0c3BhbiBkeT0iMCIgeD0iMjAiPiAzNDAyODIzNjY5MjA5Mzg0NjM0NjMzNzQ2MDc0MzE3NjUyMTE0NTYgQlBGIFJlbWFpbmluZyA8L3RzcGFuPjwvdGV4dD48L3N2Zz4=";
+        const tokenId = '1';
+        const uri = await this.fert.uri(tokenId);
+        console.log("------------------ URI RETURNED BY CONTRACT ------------------")
+        console.log(uri)
+        console.log("------------------ HTTP RESPONSE TO URI TO GET JSON OBJ ------------------")
+        const response = await axios.get(uri);
+        let jsonResponse = JSON.parse(response.data.toString());
+        console.log(jsonResponse)
+  
+        expect(jsonResponse.name).to.be.equal(`Fertilizer - ${tokenId}`);
+        expect(jsonResponse.image).to.be.equal(dataImage);
+
+        
+      })
+    })
+
+
   })
 })

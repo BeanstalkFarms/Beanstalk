@@ -51,6 +51,7 @@
     "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.3",
+    "axios": "1.6.5",
     "base64-sol": "1.1.0",
     "csv-parser": "3.0.0",
     "dotenv": "^10.0.0",

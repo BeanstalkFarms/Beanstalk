@@ -34,6 +34,7 @@ library LibFertilizer {
     uint128 private constant RESTART_HUMIDITY = 2500;
     uint128 private constant END_DECREASE_SEASON = REPLANT_SEASON + 461;
 
+    // calcultes and returns a fertilizer id
     function addFertilizer(
         uint128 season,
         uint256 fertilizerAmount,
