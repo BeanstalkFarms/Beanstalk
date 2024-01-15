@@ -487,7 +487,7 @@ const DepositPropProvider: FC<{
           throw new Error('Only one token supported at this time');
         }
 
-        const { BEAN, BEAN_ETH_WELL_LP } = sdk.tokens;
+        const { BEAN } = sdk.tokens;
 
         const formData = values.tokens[0];
         const claimData = values.claimableBeans;

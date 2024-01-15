@@ -23,14 +23,21 @@ export class WellShift extends StepClass<AdvancedPipePreparedResult> {
 
     const reversed = context.runMode === RunMode.EstimateReversed;
 
-    if (reversed) {
-      throw new Error("Reverse direction is not supported by shift()");
-    }
-    const estimate = await well.swapFromQuote(
-      this.fromToken, 
-      this.toToken, 
-      TokenValue.fromBlockchain(_amountInStep.toString(), this.fromToken.decimals)
-    );
+    let estimate: any;
+
+    if (!reversed) {
+      estimate = await well.swapFromQuote(
+        this.fromToken, 
+        this.toToken, 
+        TokenValue.fromBlockchain(_amountInStep.toString(), this.fromToken.decimals)
+      );
+    } else {
+      estimate = await well.swapToQuote(
+        this.fromToken, 
+        this.toToken, 
+        TokenValue.fromBlockchain(_amountInStep.toString(), this.toToken.decimals)
+      );
+    };
 
     return {
       name: this.name,
