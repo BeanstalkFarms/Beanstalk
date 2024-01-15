@@ -542,8 +542,8 @@ const DepositPropProvider: FC<{
           depositTxn,
           amountIn,
           values.settings.slippage,
-          target.equals(BEAN_ETH_WELL_LP) ? 1.2 : undefined,
-          tokenIn.symbol !== "BEANETH" && target.equals(BEAN_ETH_WELL_LP)
+          1.2,
+          true
         );
 
         const txn = await execute();
