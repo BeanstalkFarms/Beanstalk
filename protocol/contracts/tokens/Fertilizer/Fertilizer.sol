@@ -17,6 +17,8 @@ interface IBS {
     function remainingRecapitalization() external view returns (uint256);
 }
 
+// inherits Internalizer thus inherits ERC1155Upgradeable and the uri function
+// the end Fert Facet only gets the interface of this contract
 contract Fertilizer is Internalizer {
 
     event ClaimFertilizer(uint256[] ids, uint256 beans);
