@@ -13,14 +13,14 @@ export class UnwrapEth extends StepClass<BasicPreparedResult> {
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
     if (!this.clipboard) {
-      const pipelineBeanWethSwapIndex = context.steps.findIndex(step => step.name === "pipelineBeanWethSwap");
+      const pipelineWellSwapIndex = context.steps.findIndex(step => step.name === "pipelineWellSwap");
       // If the action before (happens when reverse estimating) or after this one is a BEAN -> WETH swap through Pipeline...
-      if (pipelineBeanWethSwapIndex >= 0 && Math.abs(pipelineBeanWethSwapIndex - context.step.index) === 1) {
+      if (pipelineWellSwapIndex >= 0 && Math.abs(pipelineWellSwapIndex - context.step.index) === 1) {
         // We use clipboard...
         this.clipboard = {
           // Then find the correct tag in the tag map
-          tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipelineBeanWethSwapIndex)!, 
-          copySlot: 9, 
+          tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipelineWellSwapIndex)!, 
+          copySlot: 6, 
           pasteSlot: 0
         };
       };

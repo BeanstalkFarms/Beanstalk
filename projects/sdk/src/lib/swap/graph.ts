@@ -112,14 +112,14 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   // BEAN<>WETH via Basin Well
   graph.setEdge("BEAN", "WETH", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellWethBean(sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+      sdk.farm.presets.wellSwap(sdk.pools.BEAN_ETH_WELL, sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
     from: "BEAN",
     to: "WETH"
   });
 
   graph.setEdge("WETH", "BEAN", {
     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellWethBean(sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+      sdk.farm.presets.wellSwap(sdk.pools.BEAN_ETH_WELL, sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
     from: "WETH",
     to: "BEAN"
   });

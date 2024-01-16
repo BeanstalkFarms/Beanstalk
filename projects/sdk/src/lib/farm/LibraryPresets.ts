@@ -23,8 +23,6 @@ export class LibraryPresets {
   public readonly weth2bean: ActionBuilder;
   public readonly bean2weth: ActionBuilder;
   public readonly weth2bean3crv: ActionBuilder;
-  public readonly wellWethBean;
-  public readonly wellAddLiquidity;
 
   public readonly usdc2bean: ActionBuilder;
   public readonly bean2usdc: ActionBuilder;
@@ -43,6 +41,8 @@ export class LibraryPresets {
   public readonly usdt2beaneth;
   public readonly dai2beaneth;
 
+  public readonly wellSwap;
+  public readonly wellAddLiquidity;
   public readonly uniswapV3Swap;
   public readonly uniV3AddLiquidity;
   public readonly uniV3WellSwap;
@@ -245,59 +245,53 @@ export class LibraryPresets {
       this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, 500, fromMode)
     ];
 
-    ///////// BEAN <> BEANETH ///////////
-    this.wellWethBean = (fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
-      const WELL_ADDRESS = sdk.addresses.BEANWETH_WELL.get(sdk.chainId);
+    ///////// BEAN <> WETH ///////////
+    this.wellSwap = (well: BasinWell, fromToken: ERC20Token, toToken: ERC20Token, account: string, from?: FarmFromMode, to?: FarmToMode) => {
       const result = [];
+
+      // Set up the AdvancedPipe workflow that will call Wells via Pipeline
+      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineWellSwap");
 
       // If the TO mode is INTERNAL that means this is not the last step of a swap/workflow.
       // We must transfer result of the swap back to User's INTERNAL balance on Beanstalk.
-      // This means setting the swap recipient to PIPELINE, have PIPELINE approve Beanstalk to spend
-      // the output token, then transfer the output token from PIPELINE's external balance to USER's internal balance
+      // This means setting the swap recipient to Pipeline, have Pipeline approve Beanstalk to spend
+      // the output token, then transfer the output token from Pipeline's external balance to User's INTERNAL balance
       const transferBack = to === FarmToMode.INTERNAL;
 
-      // Transfer input token to PIPELINE (via Beanstalk, so a beanstalk approval will be required, but
-      // that is a separate transaction, not part of this workflow)
-      const transfer = new sdk.farm.actions.TransferToken(fromToken.address, sdk.contracts.pipeline.address, from, FarmToMode.EXTERNAL);
+      // When transferBack is true, we tell Wells to send the swap result to Pipeline, otherwise
+      // send it directly to the User
+      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
 
-      // This transfers the output token back to Beanstalk, from PIPELINE. Used when transferBack == true
-      const transferClipboard = {
-        tag: "swap", 
-        copySlot: 0, 
-        pasteSlot: 2
-      }
-      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
+      // Transfer input token to Well
+      const transfer = new sdk.farm.actions.TransferToken(fromToken.address, well.address, from, FarmToMode.EXTERNAL);
+
+      // Swap fromToken -> toToken on Well, send output back to recipient (either the User or Pipeline)
+      const swap = new sdk.farm.actions.WellShift(well.address, fromToken, toToken, recipient);
 
       // This approves the transferToBeanstalk operation. Used when transferBack == true
       const approveClipboard = {
         tag: "swap", 
         copySlot: 0, 
         pasteSlot: 1
-      }
+      };
       const approveBack = new sdk.farm.actions.ApproveERC20(toToken, sdk.contracts.beanstalk.address, approveClipboard);
 
-      // When transferBack is true, we tell Wells to send the swap result to PIPELINE, otherwise
-      // send it directly to the user
-      const recipient = transferBack ? sdk.contracts.pipeline.address : account;
 
-      // Set up the AdvancedPipe workflow that will call Wells via PIPELINE
-      const advancedPipe = sdk.farm.createAdvancedPipe("pipelineBeanWethSwap");
-
-      // Approve WELL to spend PIPELINE's input token
-      const approve = new sdk.farm.actions.ApproveERC20(fromToken, WELL_ADDRESS);
-
-      // Swap operation executed on WELL, by PIPELINE
-      const swap = new sdk.farm.actions.WellSwap(WELL_ADDRESS, fromToken, toToken, recipient);
+      // This transfers the output token back to Beanstalk, from Pipeline. Used when transferBack == true
+      const transferClipboard = {
+        tag: "swap", 
+        copySlot: 0, 
+        pasteSlot: 2
+      };
+      const transferToBeanstalk = new sdk.farm.actions.TransferToken(toToken.address, account, FarmFromMode.EXTERNAL, FarmToMode.INTERNAL, transferClipboard);
 
       // Compose the steps
-      advancedPipe.add(approve);
+      result.push(transfer);
       advancedPipe.add(swap, { tag: "swap" });
       if (transferBack) {
         advancedPipe.add(approveBack);
         advancedPipe.add(transferToBeanstalk);
       }
-
-      result.push(transfer);
       result.push(advancedPipe);
 
       return result;

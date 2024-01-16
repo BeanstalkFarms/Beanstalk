@@ -23,7 +23,7 @@ export class Deposit extends StepClass<BasicPreparedResult> {
     const indirectDeposit = (this.token.symbol === "BEAN" || this.token.symbol === "BEANETH") && context.step.index > 0;
 
     const pipeDepositIndex = context.steps.findIndex(step => step.name === "pipelineDeposit");
-    const pipeBeanWethDepositIndex = context.steps.findIndex(step => step.name === "pipelineBeanWethSwap");
+    const pipeWellSwapDepositIndex = context.steps.findIndex(step => step.name === "pipelineWellSwap");
     const pipeUniV3DepositIndex = context.steps.findIndex(step => step.name === "pipelineUniV3Deposit");
     const pipeUniV3WellSwapIndex = context.steps.findIndex(step => step.name === "pipelineUniV3WellSwap");
 
@@ -34,10 +34,10 @@ export class Deposit extends StepClass<BasicPreparedResult> {
           copySlot: 6, 
           pasteSlot: 1
         };
-      } else if (pipeBeanWethDepositIndex > 0) {
+      } else if (pipeWellSwapDepositIndex > 0) {
         this.clipboard = {
-          tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipeBeanWethDepositIndex)!, 
-          copySlot: 9, 
+          tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipeWellSwapDepositIndex)!, 
+          copySlot: 6, 
           pasteSlot: 1
         };
       } else if (pipeUniV3DepositIndex > 0) {
