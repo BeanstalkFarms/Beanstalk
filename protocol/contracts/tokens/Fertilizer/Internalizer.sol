@@ -25,7 +25,6 @@ import {LibStrings} from "contracts/libraries/LibStrings.sol";
 interface IBeanstalk {
     function beansPerFertilizer() external view returns (uint128); //  return s.bpf = The cumulative Beans Per Fertilizer (bfp) minted over all Season.
     function getEndBpf() external view returns (uint128);
-    function remainingRecapitalization() external view returns (uint256);
     function getFertilizer(uint128) external view returns (uint256);
 }
 
@@ -54,13 +53,8 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private constant BASE_JSON_URI = "data:application/json;base64,";
 
-    string private constant BASE_IMAGE_URI = "data:image/svg+xml;base64,";
-
     address private constant BEANSTALK =
         0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
-
-    string private constant BASE_SVG_START =
-        '<svg width="294" height="512" viewBox="0 0 294 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="';
 
     string private constant BASE_SVG_ACTIVE =
         'M164.47 327.241L28.6247 405.768L27.7471 184.217L163.596 105.658L164.47 327.241Z" fill="#3DAA47"/><path d="M118.059 354.077L76.9574 377.823L76.083 156.272L117.184 132.494L118.059 354.077Z" fill="#3DAA47"/><ellipse cx="113.247" cy="220.688" rx="38.7172" ry="38.7739" fill="#7F5533"/><ellipse cx="113.247" cy="220.688" rx="38.7172" ry="38.7739" fill="#7F5533"/><ellipse cx="70.0135" cy="236.844" rx="38.7172" ry="38.7739" fill="#7F5533"/><path d="M26.8247 184.242L27.6958 405.809L121.062 460.148L120.191 238.584L26.8247 184.242Z" fill="#3DB542"/><path d="M163.257 105.98L164.128 327.548L257.495 381.886L256.624 160.322L163.257 105.98Z" fill="#3DB542"/><ellipse cx="156.805" cy="198.715" rx="38.7172" ry="38.7739" fill="#7F5533"/><ellipse cx="198.103" cy="189.668" rx="38.7172" ry="38.7739" fill="#7F5533"/><path d="M256.898 381.609L121.052 460.136L120.175 238.585L256.024 160.025L256.898 381.609Z" fill="#6DCB60"/><path d="M210.486 408.445L169.385 432.19L168.51 210.639L209.612 186.861L210.486 408.445Z" fill="#3DAA47"/><path d="M240.901 364.949L136.494 425.337L136.171 267.859L240.579 207.508L240.901 364.949Z" fill="white"/><path d="M195.789 268.025C218.926 261.311 232.664 278.656 228.095 303.258C224.075 324.91 206.743 346.103 188.326 353.079C169.155 360.339 152.609 350.811 152.029 329.113C151.364 304.191 171.442 275.092 195.789 268.025Z" fill="#46B955"/><path d="M206.417 275.615L178.337 349.192C178.337 349.192 153.768 313.795 206.417 275.615Z" fill="white"/><path d="M183.39 343.977L202.951 293.061C202.951 293.061 226.782 310.25 183.39 343.977Z" fill="white"/><rect width="78.3284" height="68.4768" transform="matrix(0.996731 0.0807976 -0.0805627 0.99675 154.216 336.166)" fill="url(#pattern0)"/><defs><pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1"><use xlink:href="#image0_10349_104998" transform="scale(0.00325733 0.00373134)"/';
@@ -70,13 +64,6 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private constant BASE_SVG_USED =
         'M164.47 327.241L28.6247 405.768L27.7471 184.217L163.596 105.658L164.47 327.241Z" fill="#3DAA47"/><path d="M118.059 354.077L76.9574 377.823L76.083 156.272L117.184 132.494L118.059 354.077Z" fill="#3DAA47"/><path d="M26.8247 184.242L27.6958 405.809L121.062 460.148L120.191 238.584L26.8247 184.242Z" fill="#3DB542"/><path d="M163.257 105.98L164.128 327.548L257.495 381.886L256.624 160.322L163.257 105.98Z" fill="#3DB542"/><path d="M256.898 381.609L121.052 460.136L120.175 238.585L256.024 160.025L256.898 381.609Z" fill="#6DCB60"/><path d="M210.486 408.445L169.385 432.19L168.51 210.639L209.612 186.861L210.486 408.445Z" fill="#3DAA47"/><path d="M240.901 364.949L136.494 425.337L136.171 267.859L240.579 207.508L240.901 364.949Z" fill="white"/><path d="M195.789 268.025C218.926 261.311 232.664 278.656 228.095 303.258C224.075 324.91 206.743 346.103 188.326 353.079C169.155 360.339 152.609 350.811 152.029 329.113C151.364 304.191 171.442 275.092 195.789 268.025Z" fill="#46B955"/><path d="M206.417 275.615L178.337 349.192C178.337 349.192 153.768 313.795 206.417 275.615Z" fill="white"/><path d="M183.39 343.977L202.951 293.061C202.951 293.061 226.782 310.25 183.39 343.977Z" fill="white"/><rect width="78.3284" height="68.4768" transform="matrix(0.996731 0.0807976 -0.0805627 0.99675 154.216 336.166)" fill="url(#pattern0)"/><defs><pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1"><use xlink:href="#image0_10349_105031" transform="scale(0.00325733 0.00373134)"/';
-
-    string private constant BASE_SVG_PRE_NUMBER =
-        '></pattern></defs><text font-family="sans-serif" font-size="20" x="20" y="490" fill="black" ><tspan dy="0" x="20"> ';
-
-    string private constant BASE_SVG_END =
-        " BPF Remaining </tspan></text></svg>";
-
 
     // ---------------------------- OLD URI FUNCTIONS -----------------------------
 
@@ -97,23 +84,14 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         override
         returns (string memory)
     {
-
         // bpf can be computed given a Fertilizer id:
         // uint128 bpfRemaining = IBeanstalk(BEANSTALK).bpf() - id;
         uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(_id);
 
-        console.log("bpfValue From storage: ", bpfRemaining);
+        console.log("bpfRemaining: ", bpfRemaining);
 
-        // get the svg status
-        string memory fertilizerStatusSvg = getFertilizerStatusSvg(
-            uint128(_id),
-            bpfRemaining
-        );
-
-        // we now have all the svg components, we can assemble the image URI
-        
         // generate the image URI
-        string memory imageUri = generateImageURI(bpfRemaining, fertilizerStatusSvg);
+        string memory imageUri = generateImageURI(_id , bpfRemaining);
 
         // assemble and return the json URI
         return (
@@ -141,8 +119,41 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         );
     }
 
-    /// @dev returns the base svg for the Fertilizer
-    function getFertilizerStatusSvg(uint128 _id, uint128 bpfRemaining) internal view returns (string memory) {
+    /**
+        * @dev generateImageURI assembles the needed components for the Fertilizer svg
+         and returns the base64 encoded image URI representation for use in the json metadata
+        * @param _id - the id of the Fertilizer
+        * @param bpfRemaining - the bpfRemaining of the Fertilizer
+        * @return imageUri - the image URI representation of the Fertilizer
+     */
+    function generateImageURI(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
+        string memory svg = string(
+            abi.encodePacked(
+                base(), // BASE SVG START
+                getFertilizerStatusSvg(_id, bpfRemaining), // fertilizerStatus
+                preNumber(), // BASE SVG PRE NUMBER FOR BPF REMAINING
+                formatBpfRemaining(bpfRemaining), // bpfRemaining with 2 decimal places
+                end() // BASE SVG END
+            )
+        );
+
+        return svgToImageURI(svg);
+    }
+
+    /// @dev returns the start of the svg format for the Fertilizer
+    function base() internal pure returns(string memory) {
+        return string(abi.encodePacked(
+            '<svg width="294" height="512" viewBox="0 0 294 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="'
+        ));
+    }
+
+    /**
+        * @dev returns the correct svg for the Fertilizer status based on the bpfRemaining
+        * @param _id - the id of the Fertilizer
+        * @param bpfRemaining - the bpfRemaining of the Fertilizer
+        * @return fertilizerStatusSvg an svg for the correct Fertilizer status
+     */
+    function getFertilizerStatusSvg(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
 
         uint256 endBpf = IBeanstalk(BEANSTALK).getEndBpf();
 
@@ -161,26 +172,20 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         return fertilizerStatusSvg;
     }
 
-    /// @dev assemble the svg for the Fertilizer and return the image URI representation
-    // assemble the svg
-    // 1. BASE SVG START 
-    // 2. fertilizerStatus
-    // 3. BASE SVG PRE NUMBER FOR BPF REMAINING
-    // 4. bpfRemaining with 2 decimal places
-    // 5. BASE SVG END
-    function generateImageURI(uint256 bpfRemaining, string memory fertilizerStatusSvg) internal pure returns (string memory) {
-        string memory svg = string(
-            abi.encodePacked(
-                BASE_SVG_START,
-                fertilizerStatusSvg,
-                BASE_SVG_PRE_NUMBER,
-                formatBpfRemaining(bpfRemaining),
-                BASE_SVG_END
-            )
-        );
-
-        return svgToImageURI(svg);
+    /// @dev returns the preNumber formatting for the Fertilizer
+    function preNumber() internal pure returns(string memory) {
+        return string(abi.encodePacked(
+            '></pattern></defs><text font-family="sans-serif" font-size="20" x="20" y="490" fill="black" ><tspan dy="0" x="20"> '
+        ));
     }
+
+    /// @dev returns the end of the svg for the Fertilizer containing the bpfRemaining
+    function end() internal pure returns(string memory) {
+        return string(abi.encodePacked(
+            " BPF Remaining </tspan></text></svg>"
+        ));
+    }
+
 
     // ----------------------- HELPER FUNCTIONS --------------------------------
 
