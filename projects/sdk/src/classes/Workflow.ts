@@ -298,31 +298,26 @@ export abstract class Workflow<
       switch (input.name) {
         case "pipelineDeposit":
           pipelineOptions = { tag: `deposit${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineUniV3Deposit":
           pipelineOptions = { tag: `depositUniV3${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineWellSwap":
           pipelineOptions = { tag: `wellSwap${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineUniswapV3Swap":
           pipelineOptions = { tag: `uniswapV3Swap${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineUniV3WellSwap":
           pipelineOptions = { tag: `uniV3WellSwap${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         case "pipelineWellSwapUniV3":
           pipelineOptions = { tag: `wellSwapUniV3${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions);
           break;
         default:
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
-      }
+      };
+
+      Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions || '');
       
       this._generators.push(input);
       this._options.push(pipelineOptions || options || null); // null = no options set
