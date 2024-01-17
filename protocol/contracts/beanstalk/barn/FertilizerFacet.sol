@@ -16,6 +16,7 @@ import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import 'hardhat/console.sol';
 
 /**
  * @author Publius
@@ -89,6 +90,9 @@ contract FertilizerFacet {
             fertilizerAmountOut,
             minLPTokensOut
         );
+
+        console.log("FertilizerFacet.mintFertilizer: id: %s", id);
+
         C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 

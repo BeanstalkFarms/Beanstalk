@@ -78,4 +78,23 @@ library LibStrings {
         }
         return string(result);
     }
+
+    /// @dev returns a string representation 
+    /// of a uint with 2 decimal places
+    // @note in tests, if the second decimal is a 0, it will not show up
+    function toStringWith2Decimals(uint256 number)
+        internal
+        pure
+        returns (string memory)
+    {
+        // calls LibStrings.toString(uint256)
+        string memory numberStr = toString(number);
+
+        // add a . after the first character and concat the first 2 decimals
+        numberStr = string(
+            abi.encodePacked(LibStrings.substring(numberStr, 0, 1), ".", LibStrings.substring(numberStr, 1, 3))
+        );
+
+        return numberStr;
+    }
 }
