@@ -41,24 +41,14 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private _uri;
 
-    // ---------------------------- OLD URI FUNCTIONS -----------------------------
-
-                                                    // ovveride because it indirectly inherits from ERC1155
-    // function uri(uint256 _id) external view virtual override returns (string memory) {
-    //     return string(abi.encodePacked(_uri, StringsUpgradeable.toString(_id)));
-    // }
-    // function setURI(string calldata newuri) public onlyOwner {
-    //     _uri = newuri;
-    // }
-
-
     // ----------------------------- NEW URI FUNCTION ----------------------------
 
+    // ovveride because it indirectly inherits from ERC1155
     function uri(uint256 _id)
         external
         view
         virtual
-        override
+        override 
         returns (string memory)
     {
         // bpf can be computed given a Fertilizer id:
