@@ -91,10 +91,6 @@ contract FertilizerImage {
                 ? BASE_SVG_ACTIVE
                 : BASE_SVG_USED;
         }
-        
-        console.log("BpfRemaining: ", bpfRemaining);
-        console.log("endBpf: ", endBpf);
-        console.log("fertilizerSupply: ", fertilizerSupply);
 
         return fertilizerStatusSvg;
     }

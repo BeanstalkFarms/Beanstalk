@@ -41,4 +41,9 @@ contract MockFertilizerFacet is FertilizerFacet {
         s.season.fertilizing = fertilizing;
         s.unfertilizedIndex = unfertilized;
     }
+
+    function setBpf(uint128 bpf) external {
+        s.bpf = bpf;
+    }
+
 }
