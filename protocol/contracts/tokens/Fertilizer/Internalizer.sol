@@ -53,7 +53,12 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     {
         // bpf can be computed given a Fertilizer id:
         // uint128 bpfRemaining = IBeanstalk(BEANSTALK).bpf() - id;
-        uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(_id);
+        // uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(_id);
+
+        uint128 bpfRemaining = calculateBpfRemaining(_id);
+
+        console.log("Fertilizer: uri: bpfRemaining: " , bpfRemaining);
+        console.log("BPF REMAINING AFTER FORMAT: " , LibStrings.formatBpfRemaining(bpfRemaining));
 
         // generate the image URI
         string memory imageUri = imageURI(_id , bpfRemaining);
@@ -74,7 +79,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
                                 '"description": "A trusty constituent of any Farmers toolbox, ERC-1155 FERT has been known to spur new growth on seemingly dead farms. Once purchased and deployed into fertile ground by Farmers, Fertilizer generates new Sprouts: future Beans yet to be repaid by Beanstalk in exchange for doing the work of Replanting the protocol.", "image": "',
                                 imageUri,
                                 '", "attributes": [{ "trait_type": "BPF Remaining","display_type": "boost_number","value": ',
-                                LibStrings.toStringWith2Decimals(bpfRemaining),
+                                LibStrings.formatBpfRemaining(bpfRemaining),
                                 " }]}"
                             )
                         )
@@ -82,6 +87,21 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
                 )
             )
         );
+    }
+
+    /**
+        * @notice Returns the beans per fertilizer remaining for a given fertilizer Id.
+        * @param id - the id of the fertilizer
+        * Calculated here to avoid uint underflow
+     */
+    function calculateBpfRemaining(uint256 id) internal view returns (uint128) {
+        // make sure it does not underflow
+        if (IBeanstalk(BEANSTALK).beansPerFertilizer() >= uint128(id)) {
+            return IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(id);
+        } else {
+            console.log("Fertilizer: calculateBpfRemaining: underflow ------> returning 0");
+            return 0;
+        } 
     }
 
     function name() public pure returns (string memory) {

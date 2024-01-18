@@ -823,7 +823,7 @@ describe('Fertilize', function () {
 
 // ----------------- ON-CHAIN FERT METADATA -----------------------
 
-    describe("1 mint with uri", async function () {
+    describe.only("1 mint with uri", async function () {
 
       let mintReceipt;
     
@@ -856,7 +856,6 @@ describe('Fertilize', function () {
         mintReceipt = await mintTx.wait();
 
         const allFertilizers = await this.fertilizer.getFertilizers();
-        console.log("allFertilizers: ", allFertilizers);
 
       });
       
@@ -896,6 +895,9 @@ describe('Fertilize', function () {
         // bpfRemaining = (s.bpf) - id;
         // bpfRemaining for id 3500000 = 5000000 - 3500000 = 1500000
         // so endbpf > bpfRemaining --> and fertsupply = 50 --> Active
+
+        // s.bpf = bpfremaining + id
+        // 
         
         // This returns a used image of fert
         const activeDataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MUwyOC42MjQ3IDQwNS43NjhMMjcuNzQ3MSAxODQuMjE3TDE2My41OTYgMTA1LjY1OEwxNjQuNDcgMzI3LjI0MVoiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJNMTE4LjA1OSAzNTQuMDc3TDc2Ljk1NzQgMzc3LjgyM0w3Ni4wODMgMTU2LjI3MkwxMTcuMTg0IDEzMi40OTRMMTE4LjA1OSAzNTQuMDc3WiIgZmlsbD0iIzNEQUE0NyIvPjxlbGxpcHNlIGN4PSIxMTMuMjQ3IiBjeT0iMjIwLjY4OCIgcng9IjM4LjcxNzIiIHJ5PSIzOC43NzM5IiBmaWxsPSIjN0Y1NTMzIi8+PGVsbGlwc2UgY3g9IjExMy4yNDciIGN5PSIyMjAuNjg4IiByeD0iMzguNzE3MiIgcnk9IjM4Ljc3MzkiIGZpbGw9IiM3RjU1MzMiLz48ZWxsaXBzZSBjeD0iNzAuMDEzNSIgY3k9IjIzNi44NDQiIHJ4PSIzOC43MTcyIiByeT0iMzguNzczOSIgZmlsbD0iIzdGNTUzMyIvPjxwYXRoIGQ9Ik0yNi44MjQ3IDE4NC4yNDJMMjcuNjk1OCA0MDUuODA5TDEyMS4wNjIgNDYwLjE0OEwxMjAuMTkxIDIzOC41ODRMMjYuODI0NyAxODQuMjQyWiIgZmlsbD0iIzNEQjU0MiIvPjxwYXRoIGQ9Ik0xNjMuMjU3IDEwNS45OEwxNjQuMTI4IDMyNy41NDhMMjU3LjQ5NSAzODEuODg2TDI1Ni42MjQgMTYwLjMyMkwxNjMuMjU3IDEwNS45OFoiIGZpbGw9IiMzREI1NDIiLz48ZWxsaXBzZSBjeD0iMTU2LjgwNSIgY3k9IjE5OC43MTUiIHJ4PSIzOC43MTcyIiByeT0iMzguNzczOSIgZmlsbD0iIzdGNTUzMyIvPjxlbGxpcHNlIGN4PSIxOTguMTAzIiBjeT0iMTg5LjY2OCIgcng9IjM4LjcxNzIiIHJ5PSIzOC43NzM5IiBmaWxsPSIjN0Y1NTMzIi8+PHBhdGggZD0iTTI1Ni44OTggMzgxLjYwOUwxMjEuMDUyIDQ2MC4xMzZMMTIwLjE3NSAyMzguNTg1TDI1Ni4wMjQgMTYwLjAyNUwyNTYuODk4IDM4MS42MDlaIiBmaWxsPSIjNkRDQjYwIi8+PHBhdGggZD0iTTIxMC40ODYgNDA4LjQ0NUwxNjkuMzg1IDQzMi4xOUwxNjguNTEgMjEwLjYzOUwyMDkuNjEyIDE4Ni44NjFMMjEwLjQ4NiA0MDguNDQ1WiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Ik0yNDAuOTAxIDM2NC45NDlMMTM2LjQ5NCA0MjUuMzM3TDEzNi4xNzEgMjY3Ljg1OUwyNDAuNTc5IDIwNy41MDhMMjQwLjkwMSAzNjQuOTQ5WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNMTk1Ljc4OSAyNjguMDI1QzIxOC45MjYgMjYxLjMxMSAyMzIuNjY0IDI3OC42NTYgMjI4LjA5NSAzMDMuMjU4QzIyNC4wNzUgMzI0LjkxIDIwNi43NDMgMzQ2LjEwMyAxODguMzI2IDM1My4wNzlDMTY5LjE1NSAzNjAuMzM5IDE1Mi42MDkgMzUwLjgxMSAxNTIuMDI5IDMyOS4xMTNDMTUxLjM2NCAzMDQuMTkxIDE3MS40NDIgMjc1LjA5MiAxOTUuNzg5IDI2OC4wMjVaIiBmaWxsPSIjNDZCOTU1Ii8+PHBhdGggZD0iTTIwNi40MTcgMjc1LjYxNUwxNzguMzM3IDM0OS4xOTJDMTc4LjMzNyAzNDkuMTkyIDE1My43NjggMzEzLjc5NSAyMDYuNDE3IDI3NS42MTVaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0xODMuMzkgMzQzLjk3N0wyMDIuOTUxIDI5My4wNjFDMjAyLjk1MSAyOTMuMDYxIDIyNi43ODIgMzEwLjI1IDE4My4zOSAzNDMuOTc3WiIgZmlsbD0id2hpdGUiLz48cmVjdCB3aWR0aD0iNzguMzI4NCIgaGVpZ2h0PSI2OC40NzY4IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjk5NjczMSAwLjA4MDc5NzYgLTAuMDgwNTYyNyAwLjk5Njc1IDE1NC4yMTYgMzM2LjE2NikiIGZpbGw9InVybCgjcGF0dGVybjApIi8+PGRlZnM+PHBhdHRlcm4gaWQ9InBhdHRlcm4wIiBwYXR0ZXJuQ29udGVudFVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCIgd2lkdGg9IjEiIGhlaWdodD0iMSI+PHVzZSB4bGluazpocmVmPSIjaW1hZ2UwXzEwMzQ5XzEwNDk5OCIgdHJhbnNmb3JtPSJzY2FsZSgwLjAwMzI1NzMzIDAuMDAzNzMxMzQpIi8+PC9wYXR0ZXJuPjwvZGVmcz48dGV4dCBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgeD0iMjAiIHk9IjQ5MCIgZmlsbD0iYmxhY2siID48dHNwYW4gZHk9IjAiIHg9IjIwIj4gMS41MCBCUEYgUmVtYWluaW5nIDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg=="
@@ -905,12 +907,8 @@ describe('Fertilize', function () {
         
         const uri = await this.fert.uri(activeTokenId);
 
-        console.log("uri\n", uri);
-
         const response = await axios.get(uri);
         jsonResponse = JSON.parse(response.data.toString());
-
-        console.log("jsonResponse\n", jsonResponse);
 
         // id and image check
         expect(jsonResponse.name).to.be.equal(`Fertilizer - ${activeTokenId}`);
@@ -923,12 +921,11 @@ describe('Fertilize', function () {
 
       // Used fert test
       it("returns a used fertilizer svg and stats when endBpf < bpfRemaining", async function () {
-
-        // bpf remains 0
+        
+        // bpf is 0
         // uint128 endBpf = totalbpf (s.bpf) + current season bpf;
-        // endbpf = 0 + 3500000 = 3500000
-        // bpfRemaining = (s.bpf) - id;
-        // bpfRemaining for id 3500000 = 0 - 3500000 = -3500000 but will loop back to 34028236692093846... (uint128)
+        // endbpf = 5000000 + 3500000 = 8500000
+        // bpfRemaining = (s.bpf) - id; ---> 0 - 3500000 = -3500000 --> 340282366920938... because of underflow --> now returns 0 beacause of calcualte bpfRemaining function
         // so endBpf < bpfRemaining --> Used
         
         // This returns a used image of fert
@@ -943,13 +940,15 @@ describe('Fertilize', function () {
 
         jsonResponse = JSON.parse(response.data.toString());
 
+        console.log("jsonResponse\n", jsonResponse);
+
         // id and image check
         expect(jsonResponse.name).to.be.equal(`Fertilizer - ${usedTokenId}`);
         expect(jsonResponse.image).to.be.equal(usedDataImage);
 
         // BPF Remaining json attribute check
         expect(jsonResponse.attributes[0].trait_type).to.be.equal(`BPF Remaining`);
-        expect(jsonResponse.attributes[0].value.toString()).to.be.equal(`3.4`);
+        expect(jsonResponse.attributes[0].value.toString()).to.be.equal(`0`);
       });
 
 

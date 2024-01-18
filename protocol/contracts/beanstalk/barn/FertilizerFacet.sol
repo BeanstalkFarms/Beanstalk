@@ -91,8 +91,6 @@ contract FertilizerFacet {
             minLPTokensOut
         );
 
-        console.log("FertilizerFacet.mintFertilizer: id: %s", id);
-
         C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 

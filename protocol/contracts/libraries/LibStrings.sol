@@ -80,21 +80,23 @@ library LibStrings {
     }
 
     /// @dev returns a string representation 
-    /// of a uint with 2 decimal places
     // @note in tests, if the second decimal is a 0, it will not show up
-    function toStringWith2Decimals(uint256 number)
-        internal
+    // formatBpfRemaining returns a string representation 
+    //of the bpfRemaining with 2 decimal places
+    // used in fertilizer metadata 
+    function formatBpfRemaining(uint128 bpfRemaining)
+        internal 
         pure
         returns (string memory)
     {
-        // calls LibStrings.toString(uint256)
-        string memory numberStr = toString(number);
+        string memory bpfString = toString(uint256(bpfRemaining));
 
-        // add a . after the first character and concat the first 2 decimals
-        numberStr = string(
-            abi.encodePacked(LibStrings.substring(numberStr, 0, 1), ".", LibStrings.substring(numberStr, 1, 3))
-        );
-
-        return numberStr;
+        if (bpfRemaining > 0) {
+            // add a . after the first index and keep the first 2 decimals
+            bpfString = string(
+                abi.encodePacked(substring(bpfString, 0, 1), ".", substring(bpfString, 1, 3))
+            );
+        }
+        return bpfString;
     }
 }

@@ -55,7 +55,7 @@ contract FertilizerImage {
                 base(), // BASE SVG START
                 getFertilizerStatusSvg(_id, bpfRemaining), // fertilizerStatus
                 preNumber(), // BASE SVG PRE NUMBER FOR BPF REMAINING
-                LibStrings.toStringWith2Decimals(bpfRemaining), // bpfRemaining with 2 decimal places
+                LibStrings.formatBpfRemaining(bpfRemaining), // bpfRemaining with 2 decimal places
                 end() // BASE SVG END
             )
         );
@@ -85,6 +85,10 @@ contract FertilizerImage {
         );
 
         string memory fertilizerStatusSvg = BASE_SVG_AVAILIBLE;
+
+        console.log("Fertilizer: getFertilizerStatusSvg: bpfRemaining: " , bpfRemaining);
+        console.log("Fertilizer: getFertilizerStatusSvg: endBpf: " , endBpf);
+        console.log("Fertilizer: getFertilizerStatusSvg: fertilizerSupply: " , fertilizerSupply);
 
         if (fertilizerSupply > 0) {
             fertilizerStatusSvg = endBpf > bpfRemaining
