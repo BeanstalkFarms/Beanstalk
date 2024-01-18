@@ -120,6 +120,8 @@ contract FertilizerFacet {
         ).div(FERTILIZER_AMOUNT_PRECISION);
     }
 
+    ///////////////////////////// Fertilizer Getters //////////////////////////////
+
     function totalFertilizedBeans() external view returns (uint256 beans) {
         return s.fertilizedIndex;
     }

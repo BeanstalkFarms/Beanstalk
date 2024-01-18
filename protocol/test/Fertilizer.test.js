@@ -923,7 +923,7 @@ describe('Fertilize', function () {
         
         // bpf is 0
         // uint128 endBpf = totalbpf (s.bpf) + current season bpf;
-        // endbpf = 5000000 + 3500000 = 8500000
+        // endbpf = 0 + 3500000 = 3500000
         // bpfRemaining = (s.bpf) - id; ---> 0 - 3500000 = -3500000 --> 340282366920938... because of underflow
         // bpfremaining --> now returns 0 beacause of calcualte bpfRemaining function check
         // so bpfRemaining = 0 --> Used
@@ -986,20 +986,6 @@ describe('Fertilize', function () {
     //     console.log("mintOneReceipt\n", mintOneReceipt);
     //     console.log("mintTwoReceipt\n", mintTwoReceipt);
     //   });
-  
-    //   it("sets on-chain metadata and token URIs", async function () {
-    //     const tokenId = ethers.BigNumber.from(
-    //       mintTwoReceipt.events[15].data.substring(0, 66)
-    //     ).toString();
-  
-    //     const uri = await this.fert.uri(tokenId);
-    //     const response = await axios.get(uri);
-    //     jsonResponse = JSON.parse(response.data.toString());
-  
-    //     expect(jsonResponse.name).to.be.equal(`Fertilizer - ${tokenId}`);
-    //     expect(jsonResponse.image).to.be.equal(dataImage);
-    //   });
-    // });
 
   })
 })

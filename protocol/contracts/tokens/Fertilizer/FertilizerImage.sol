@@ -8,9 +8,14 @@ import "base64-sol/base64.sol";
 import "contracts/libraries/LibStrings.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
 
+/**
+ * @title FertilizerImage
+ * @author deadmanwalking
+ */
+
 // interface to interact with the Beanstalk contract
 interface IBeanstalk {
-    function beansPerFertilizer() external view returns (uint128); //  return s.bpf = The cumulative Beans Per Fertilizer (bfp) minted over all Season.
+    function beansPerFertilizer() external view returns (uint128);
     function getEndBpf() external view returns (uint128);
     function getFertilizer(uint128) external view returns (uint256);
 }
@@ -18,7 +23,7 @@ contract FertilizerImage {
 
     address internal constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
 
-    // -------------------------- NEW CONSTANTS TO ASSEMBLE SVG --------------------------------
+    // -------------------------- CONSTANTS TO ASSEMBLE SVG --------------------------------
 
     string internal constant BASE_JSON_URI = "data:application/json;base64,";
 
@@ -59,7 +64,6 @@ contract FertilizerImage {
                 end() // BASE SVG END
             )
         );
-
         return svg;
     }
 
@@ -78,7 +82,7 @@ contract FertilizerImage {
      */
     function getFertilizerStatusSvg(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
 
-        uint256 endBpf = IBeanstalk(BEANSTALK).getEndBpf();
+        // uint256 endBpf = IBeanstalk(BEANSTALK).getEndBpf();
 
         uint256 fertilizerSupply = IBeanstalk(BEANSTALK).getFertilizer(
             uint128(_id)
@@ -87,7 +91,7 @@ contract FertilizerImage {
         string memory fertilizerStatusSvg = BASE_SVG_AVAILIBLE;
 
         console.log("Fertilizer: getFertilizerStatusSvg: bpfRemaining: " , bpfRemaining);
-        console.log("Fertilizer: getFertilizerStatusSvg: endBpf: " , endBpf);
+        // console.log("Fertilizer: getFertilizerStatusSvg: endBpf: " , endBpf);
         console.log("Fertilizer: getFertilizerStatusSvg: fertilizerSupply: " , fertilizerSupply);
 
         if (fertilizerSupply > 0) {

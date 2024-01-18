@@ -52,7 +52,6 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         returns (string memory)
     {
         // bpf can be computed given a Fertilizer id:
-        // uint128 bpfRemaining = IBeanstalk(BEANSTALK).bpf() - id;
         // uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(_id);
 
         uint128 bpfRemaining = calculateBpfRemaining(_id);

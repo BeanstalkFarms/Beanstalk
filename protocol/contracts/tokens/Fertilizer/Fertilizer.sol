@@ -27,6 +27,13 @@ contract Fertilizer is Internalizer {
     using SafeMathUpgradeable for uint256;
     using LibSafeMath128 for uint128;
 
+
+    /**
+        * @notice Updates beanstalk's state for a fertilizer owner
+        * @param account - the user to update
+        * @param ids - an array of fertilizer ids 
+        * @param bpf - the current beans per fertilizer
+    */
     function beanstalkUpdate(
         address account,
         uint256[] memory ids,
@@ -35,6 +42,13 @@ contract Fertilizer is Internalizer {
         return __update(account, ids, uint256(bpf));
     }
 
+    /**
+        * @notice Mints a fertilizer to an account using the users beanstalk internal balance
+        * @param account - the account to mint to
+        * @param id - the id of the fertilizer to mint
+        * @param amount - the amount of fertilizer to mint
+        * @param bpf - the current beans per fertilizer
+     */
     function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
         if (_balances[id][account].amount > 0) {
             uint256[] memory ids = new uint256[](1);
@@ -50,6 +64,7 @@ contract Fertilizer is Internalizer {
         );
     }
 
+    /// @notice hadles state updates before a fertilizer transfer
     function _beforeTokenTransfer(
         address, // operator,
         address from,
@@ -63,6 +78,12 @@ contract Fertilizer is Internalizer {
         _update(to, ids, bpf);
     }
 
+    /**
+        * @notice Updates and pays the beanstalk balance of a fertilizer owner
+        * @param account - the user to update
+        * @param ids - an array of fertilizer ids 
+        * @param bpf - the beans per fertilizer
+     */
     function _update(
         address account,
         uint256[] memory ids,
@@ -72,6 +93,14 @@ contract Fertilizer is Internalizer {
         if (amount > 0) IBS(owner()).payFertilizer(account, amount);
     }
 
+    /**
+        * @notice Updates the internal beanstalk balance of a fertilizer owner
+         given a set of fertilizer ids
+        * @param account - the user to update
+        * @param ids - the fertilizer ids to update
+        * @param bpf - the current beans per fertilizer
+        * @return beans - the amount of beans to reward the fertilizer owner
+     */
     function __update(
         address account,
         uint256[] memory ids,
@@ -88,6 +117,13 @@ contract Fertilizer is Internalizer {
         emit ClaimFertilizer(ids, beans);
     }
 
+    /**
+        * @notice Returns the balance of fertilized beans of a fertilizer owner given
+         a set of fertilizer ids
+        * @param account - the fertilizer owner
+        * @param ids - the fertilizer ids 
+        * @return beans - the amount of fertilized beans the fertilizer owner has
+     */
     function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
@@ -97,6 +133,13 @@ contract Fertilizer is Internalizer {
         }
     }
 
+    /**
+        * @notice Returns the balance of unfertilized beans of a fertilizer owner given
+         a set of fertilizer ids
+        * @param account - the fertilizer owner
+        * @param ids - the fertilizer ids 
+        * @return beans - the amount of unfertilized beans the fertilizer owner has
+     */
     function balanceOfUnfertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBS(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
@@ -104,10 +147,16 @@ contract Fertilizer is Internalizer {
         }
     }
 
+    /**
+     @notice Returns the value remaining to recapitalize beanstalk
+     */
     function remaining() public view returns (uint256) {
         return IBS(owner()).remainingRecapitalization();
     }
 
+    /**
+     @notice Returns the id a fertilizer will receive when minted
+    */
     function getMintId() public view returns (uint256) {
         return uint256(IBS(owner()).getEndBpf());
     }

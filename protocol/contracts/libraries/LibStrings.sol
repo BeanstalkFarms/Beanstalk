@@ -63,9 +63,13 @@ library LibStrings {
         }
     }
 
-    // extract a portion of a string, starting from startIndex and ending at endIndex
-    // uses bytes because solidity doesn't support string manipulation
-    // https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
+    /**
+    * @notice returns a substring of a string starting from startIndex and ending at endIndex
+    * @param str - the string to extract from
+    * @param startIndex - the index to start at
+    * @param endIndex - the index to end at
+    * insired from: // https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
+    */
     function substring(
         string memory str,
         uint startIndex,
@@ -79,18 +83,21 @@ library LibStrings {
         return string(result);
     }
 
-    /// @dev returns a string representation 
-    // @note in tests, if the second decimal is a 0, it will not show up
-    // formatBpfRemaining returns a string representation 
-    //of the bpfRemaining with 2 decimal places
-    // used in fertilizer metadata 
+    /**
+        * @notice returns a string representation of the bpfRemaining with 2 decimal places
+        * @param bpfRemaining - the beans per fertilizer remaining
+        * note in tests, if the second decimal is a 0, it will not show up
+        * used in fertilizer metadata
+     */
     function formatBpfRemaining(uint128 bpfRemaining)
         internal 
         pure
         returns (string memory)
-    {
+    {                                       
+                            // cast to uint256 to be compatible with toString  
         string memory bpfString = toString(uint256(bpfRemaining));
 
+        // if the bpfRemaining is 0 just return '0'
         if (bpfRemaining > 0) {
             // add a . after the first index and keep the first 2 decimals
             bpfString = string(
