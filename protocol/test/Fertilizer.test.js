@@ -832,7 +832,6 @@ describe('Fertilize', function () {
         await this.season.teleportSunrise("6074");
         
         // The Humidity was 500% prior to Replant, after which it dropped to 250% (Season 6074)
-        // Humidity is now 2500
 
         // getFertilizers returns array with [fertid, supply] values
         // before mint 2500000,100 so only 1 fert has been minted before this test
@@ -847,8 +846,8 @@ describe('Fertilize', function () {
 
         // Svg choice:
         // If Fertilizer is not sold yet (fertilizer[id] == getFertilizer(id) == default == 0), it’s Available.
-        // If Fertilizer still has Sprouts (is owed Bean mints), it’s Active. endBpf > bpfRemaining
-        // If Fertilizer has no more Sprouts (is done earning Bean mints), it’s Used. endBpf < bpfRemaining
+        // If Fertilizer still has Sprouts (is owed Bean mints), it’s Active. bpfRemaining > 0
+        // If Fertilizer has no more Sprouts (is done earning Bean mints), it’s Used. bpfRemaining = 0
 
         // mint fert with id 3500000 and supply 50
         mintTx = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
@@ -885,7 +884,7 @@ describe('Fertilize', function () {
       });
 
       // Active fert test
-      it("returns an active fertilizer svg and stats when endBpf > bpfRemaining", async function () {
+      it("returns an active fertilizer svg and stats when bpfRemaining > 0 and fert supply > 0", async function () {
 
         // Manipulate bpf to 5000000
         await this.fertilizer.setBpf(5000000);
@@ -894,7 +893,7 @@ describe('Fertilize', function () {
         // So endbpf = 5000000 + 3500000 = 8500000
         // bpfRemaining = (s.bpf) - id;
         // bpfRemaining for id 3500000 = 5000000 - 3500000 = 1500000
-        // so endbpf > bpfRemaining --> and fertsupply = 50 --> Active
+        // so bpfRemaining > 0 --> and fertsupply = 50 --> Active
 
         // s.bpf = bpfremaining + id
         // 
@@ -920,16 +919,17 @@ describe('Fertilize', function () {
       });
 
       // Used fert test
-      it("returns a used fertilizer svg and stats when endBpf < bpfRemaining", async function () {
+      it("returns a used fertilizer svg and stats when bpfRemaining = 0", async function () {
         
         // bpf is 0
         // uint128 endBpf = totalbpf (s.bpf) + current season bpf;
         // endbpf = 5000000 + 3500000 = 8500000
-        // bpfRemaining = (s.bpf) - id; ---> 0 - 3500000 = -3500000 --> 340282366920938... because of underflow --> now returns 0 beacause of calcualte bpfRemaining function
-        // so endBpf < bpfRemaining --> Used
+        // bpfRemaining = (s.bpf) - id; ---> 0 - 3500000 = -3500000 --> 340282366920938... because of underflow
+        // bpfremaining --> now returns 0 beacause of calcualte bpfRemaining function check
+        // so bpfRemaining = 0 --> Used
         
         // This returns a used image of fert
-        const usedDataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MUwyOC42MjQ3IDQwNS43NjhMMjcuNzQ3MSAxODQuMjE3TDE2My41OTYgMTA1LjY1OEwxNjQuNDcgMzI3LjI0MVoiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJNMTE4LjA1OSAzNTQuMDc3TDc2Ljk1NzQgMzc3LjgyM0w3Ni4wODMgMTU2LjI3MkwxMTcuMTg0IDEzMi40OTRMMTE4LjA1OSAzNTQuMDc3WiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Ik0yNi44MjQ3IDE4NC4yNDJMMjcuNjk1OCA0MDUuODA5TDEyMS4wNjIgNDYwLjE0OEwxMjAuMTkxIDIzOC41ODRMMjYuODI0NyAxODQuMjQyWiIgZmlsbD0iIzNEQjU0MiIvPjxwYXRoIGQ9Ik0xNjMuMjU3IDEwNS45OEwxNjQuMTI4IDMyNy41NDhMMjU3LjQ5NSAzODEuODg2TDI1Ni42MjQgMTYwLjMyMkwxNjMuMjU3IDEwNS45OFoiIGZpbGw9IiMzREI1NDIiLz48cGF0aCBkPSJNMjU2Ljg5OCAzODEuNjA5TDEyMS4wNTIgNDYwLjEzNkwxMjAuMTc1IDIzOC41ODVMMjU2LjAyNCAxNjAuMDI1TDI1Ni44OTggMzgxLjYwOVoiIGZpbGw9IiM2RENCNjAiLz48cGF0aCBkPSJNMjEwLjQ4NiA0MDguNDQ1TDE2OS4zODUgNDMyLjE5TDE2OC41MSAyMTAuNjM5TDIwOS42MTIgMTg2Ljg2MUwyMTAuNDg2IDQwOC40NDVaIiBmaWxsPSIjM0RBQTQ3Ii8+PHBhdGggZD0iTTI0MC45MDEgMzY0Ljk0OUwxMzYuNDk0IDQyNS4zMzdMMTM2LjE3MSAyNjcuODU5TDI0MC41NzkgMjA3LjUwOEwyNDAuOTAxIDM2NC45NDlaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0xOTUuNzg5IDI2OC4wMjVDMjE4LjkyNiAyNjEuMzExIDIzMi42NjQgMjc4LjY1NiAyMjguMDk1IDMwMy4yNThDMjI0LjA3NSAzMjQuOTEgMjA2Ljc0MyAzNDYuMTAzIDE4OC4zMjYgMzUzLjA3OUMxNjkuMTU1IDM2MC4zMzkgMTUyLjYwOSAzNTAuODExIDE1Mi4wMjkgMzI5LjExM0MxNTEuMzY0IDMwNC4xOTEgMTcxLjQ0MiAyNzUuMDkyIDE5NS43ODkgMjY4LjAyNVoiIGZpbGw9IiM0NkI5NTUiLz48cGF0aCBkPSJNMjA2LjQxNyAyNzUuNjE1TDE3OC4zMzcgMzQ5LjE5MkMxNzguMzM3IDM0OS4xOTIgMTUzLjc2OCAzMTMuNzk1IDIwNi40MTcgMjc1LjYxNVoiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTE4My4zOSAzNDMuOTc3TDIwMi45NTEgMjkzLjA2MUMyMDIuOTUxIDI5My4wNjEgMjI2Ljc4MiAzMTAuMjUgMTgzLjM5IDM0My45NzdaIiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHdpZHRoPSI3OC4zMjg0IiBoZWlnaHQ9IjY4LjQ3NjgiIHRyYW5zZm9ybT0ibWF0cml4KDAuOTk2NzMxIDAuMDgwNzk3NiAtMC4wODA1NjI3IDAuOTk2NzUgMTU0LjIxNiAzMzYuMTY2KSIgZmlsbD0idXJsKCNwYXR0ZXJuMCkiLz48ZGVmcz48cGF0dGVybiBpZD0icGF0dGVybjAiIHBhdHRlcm5Db250ZW50VW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiB3aWR0aD0iMSIgaGVpZ2h0PSIxIj48dXNlIHhsaW5rOmhyZWY9IiNpbWFnZTBfMTAzNDlfMTA1MDMxIiB0cmFuc2Zvcm09InNjYWxlKDAuMDAzMjU3MzMgMC4wMDM3MzEzNCkiLz48L3BhdHRlcm4+PC9kZWZzPjx0ZXh0IGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiB4PSIyMCIgeT0iNDkwIiBmaWxsPSJibGFjayIgPjx0c3BhbiBkeT0iMCIgeD0iMjAiPiAzLjQwIEJQRiBSZW1haW5pbmcgPC90c3Bhbj48L3RleHQ+PC9zdmc+"
+        const usedDataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MUwyOC42MjQ3IDQwNS43NjhMMjcuNzQ3MSAxODQuMjE3TDE2My41OTYgMTA1LjY1OEwxNjQuNDcgMzI3LjI0MVoiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJNMTE4LjA1OSAzNTQuMDc3TDc2Ljk1NzQgMzc3LjgyM0w3Ni4wODMgMTU2LjI3MkwxMTcuMTg0IDEzMi40OTRMMTE4LjA1OSAzNTQuMDc3WiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Ik0yNi44MjQ3IDE4NC4yNDJMMjcuNjk1OCA0MDUuODA5TDEyMS4wNjIgNDYwLjE0OEwxMjAuMTkxIDIzOC41ODRMMjYuODI0NyAxODQuMjQyWiIgZmlsbD0iIzNEQjU0MiIvPjxwYXRoIGQ9Ik0xNjMuMjU3IDEwNS45OEwxNjQuMTI4IDMyNy41NDhMMjU3LjQ5NSAzODEuODg2TDI1Ni42MjQgMTYwLjMyMkwxNjMuMjU3IDEwNS45OFoiIGZpbGw9IiMzREI1NDIiLz48cGF0aCBkPSJNMjU2Ljg5OCAzODEuNjA5TDEyMS4wNTIgNDYwLjEzNkwxMjAuMTc1IDIzOC41ODVMMjU2LjAyNCAxNjAuMDI1TDI1Ni44OTggMzgxLjYwOVoiIGZpbGw9IiM2RENCNjAiLz48cGF0aCBkPSJNMjEwLjQ4NiA0MDguNDQ1TDE2OS4zODUgNDMyLjE5TDE2OC41MSAyMTAuNjM5TDIwOS42MTIgMTg2Ljg2MUwyMTAuNDg2IDQwOC40NDVaIiBmaWxsPSIjM0RBQTQ3Ii8+PHBhdGggZD0iTTI0MC45MDEgMzY0Ljk0OUwxMzYuNDk0IDQyNS4zMzdMMTM2LjE3MSAyNjcuODU5TDI0MC41NzkgMjA3LjUwOEwyNDAuOTAxIDM2NC45NDlaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0xOTUuNzg5IDI2OC4wMjVDMjE4LjkyNiAyNjEuMzExIDIzMi42NjQgMjc4LjY1NiAyMjguMDk1IDMwMy4yNThDMjI0LjA3NSAzMjQuOTEgMjA2Ljc0MyAzNDYuMTAzIDE4OC4zMjYgMzUzLjA3OUMxNjkuMTU1IDM2MC4zMzkgMTUyLjYwOSAzNTAuODExIDE1Mi4wMjkgMzI5LjExM0MxNTEuMzY0IDMwNC4xOTEgMTcxLjQ0MiAyNzUuMDkyIDE5NS43ODkgMjY4LjAyNVoiIGZpbGw9IiM0NkI5NTUiLz48cGF0aCBkPSJNMjA2LjQxNyAyNzUuNjE1TDE3OC4zMzcgMzQ5LjE5MkMxNzguMzM3IDM0OS4xOTIgMTUzLjc2OCAzMTMuNzk1IDIwNi40MTcgMjc1LjYxNVoiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTE4My4zOSAzNDMuOTc3TDIwMi45NTEgMjkzLjA2MUMyMDIuOTUxIDI5My4wNjEgMjI2Ljc4MiAzMTAuMjUgMTgzLjM5IDM0My45NzdaIiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHdpZHRoPSI3OC4zMjg0IiBoZWlnaHQ9IjY4LjQ3NjgiIHRyYW5zZm9ybT0ibWF0cml4KDAuOTk2NzMxIDAuMDgwNzk3NiAtMC4wODA1NjI3IDAuOTk2NzUgMTU0LjIxNiAzMzYuMTY2KSIgZmlsbD0idXJsKCNwYXR0ZXJuMCkiLz48ZGVmcz48cGF0dGVybiBpZD0icGF0dGVybjAiIHBhdHRlcm5Db250ZW50VW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiB3aWR0aD0iMSIgaGVpZ2h0PSIxIj48dXNlIHhsaW5rOmhyZWY9IiNpbWFnZTBfMTAzNDlfMTA1MDMxIiB0cmFuc2Zvcm09InNjYWxlKDAuMDAzMjU3MzMgMC4wMDM3MzEzNCkiLz48L3BhdHRlcm4+PC9kZWZzPjx0ZXh0IGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiB4PSIyMCIgeT0iNDkwIiBmaWxsPSJibGFjayIgPjx0c3BhbiBkeT0iMCIgeD0iMjAiPiAwIEJQRiBSZW1haW5pbmcgPC90c3Bhbj48L3RleHQ+PC9zdmc+"
         
         // FertilizerFacet.mintFertilizer: id: 3500000
         const usedTokenId = 3500000

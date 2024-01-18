@@ -91,7 +91,7 @@ contract FertilizerImage {
         console.log("Fertilizer: getFertilizerStatusSvg: fertilizerSupply: " , fertilizerSupply);
 
         if (fertilizerSupply > 0) {
-            fertilizerStatusSvg = endBpf > bpfRemaining
+            fertilizerStatusSvg = bpfRemaining > 0
                 ? BASE_SVG_ACTIVE
                 : BASE_SVG_USED;
         }
