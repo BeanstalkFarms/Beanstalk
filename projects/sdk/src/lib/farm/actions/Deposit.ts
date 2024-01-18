@@ -19,15 +19,12 @@ export class Deposit extends StepClass<BasicPreparedResult> {
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
-    // Checking if the user isn't directly depositing BEAN or BEANETH
-    const indirectDeposit = (this.token.symbol === "BEAN" || this.token.symbol === "BEANETH") && context.step.index > 0;
-
     const pipeDepositIndex = context.steps.findIndex(step => step.name === "pipelineDeposit");
     const pipeWellSwapDepositIndex = context.steps.findIndex(step => step.name === "pipelineWellSwap");
     const pipeUniV3DepositIndex = context.steps.findIndex(step => step.name === "pipelineUniV3Deposit");
     const pipeUniV3WellSwapIndex = context.steps.findIndex(step => step.name === "pipelineUniV3WellSwap");
 
-    if (indirectDeposit && !this.clipboard) {
+    if (!this.clipboard) {
       if (pipeDepositIndex > 0) {
         this.clipboard = {
           tag: Object.keys(context.tagMap).find(tag => context.tagMap[tag] === pipeDepositIndex)!, 
