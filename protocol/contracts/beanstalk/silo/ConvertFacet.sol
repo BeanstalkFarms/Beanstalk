@@ -219,8 +219,9 @@ contract ConvertFacet is ReentrancyGuard {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
         
         LibGerminate.Germinate germ;
-        // calculate the grownStalk, stem, and the germination state for the new deposit.
-        (grownStalk, stem, germ) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalk, bdv);
+
+        // calculate the stem and germination state for the new deposit.
+        (stem, germ) = LibTokenSilo.calculateStemForTokenFromGrownStalk(token, grownStalk, bdv);
         
         // increment totals based on germination state, 
         // as well as issue stalk to the user.

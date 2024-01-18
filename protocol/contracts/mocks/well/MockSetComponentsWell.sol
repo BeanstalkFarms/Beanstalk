@@ -108,7 +108,7 @@ contract MockSetComponentsWell is MockToken {
         uint256 amountIn,
         uint256 minAmountOut,
         address recipient,
-        uint256 deadline
+        uint256
     ) external returns (uint256 amountOut) {
         fromToken.safeTransferFrom(msg.sender, address(this), amountIn);
         amountOut = _swapFrom(fromToken, toToken, amountIn, minAmountOut, recipient);

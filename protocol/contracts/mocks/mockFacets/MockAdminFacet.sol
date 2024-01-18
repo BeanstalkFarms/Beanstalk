@@ -65,4 +65,21 @@ contract MockAdminFacet is Sun {
     function update3CRVOracle() public {
         LibCurveMinting.updateOracle();
     }
+
+    function updateStemScaleSeason(uint16 season) public {
+        s.season.stemScaleSeason = season;
+    }
+
+    function updateStems() public { 
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
+        for (uint256 i = 0; i < siloTokens.length; i++) {
+            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem * 1e6);
+        }
+    }
+
+    function upgradeStems() public { 
+        updateStemScaleSeason(uint16(s.season.current));
+        updateStems();
+    }
+
 }

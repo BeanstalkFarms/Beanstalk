@@ -61,6 +61,8 @@ contract InitBipSeedGauge is Weather {
 
         LibWhitelist.dewhitelistToken(C.CURVE_BEAN_METAPOOL);
 
+        // set s.stemScaleSeason for silo v3.1.
+        s.season.stemStartSeason = uint16(s.season.current);
 
         // Update depositedBDV for bean, bean3crv, urBean, and urBeanETH.
         LibTokenSilo.incrementTotalDepositedBdv(

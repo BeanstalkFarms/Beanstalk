@@ -205,8 +205,8 @@ contract MockSiloFacet is SiloFacet {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.a[account].legacyDeposits[token][season].amount += uint128(amount);
-        s.a[account].legacyDeposits[token][season].bdv += uint128(bdv);
+        s.a[account].legacyV2Deposits[token][season].amount += uint128(amount);
+        s.a[account].legacyV2Deposits[token][season].bdv += uint128(bdv);
 
         emit AddDeposit(account, token, season, amount, bdv);
     }
@@ -369,7 +369,7 @@ contract MockSiloFacet is SiloFacet {
         view
         returns (int96 stem)
     {
-        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token), season);
+        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token).mul(1e6), season);
     }
 
     function mockGetSeedsPerToken(address token) public pure returns (uint256) {

@@ -477,8 +477,8 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice returns whether an account needs to migrate to siloV3.
      */
-    function migrationNeeded(address account) external view returns (bool) {
-        return LibSilo.migrationNeeded(account);
+    function migrationNeeded(address account) external view returns (bool hasMigrated) {
+        (hasMigrated, ) = LibSilo.migrationNeeded(account);
     }
 
     //////////////////////// INTERNAL ////////////////////////

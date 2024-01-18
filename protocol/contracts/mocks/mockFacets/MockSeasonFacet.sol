@@ -193,7 +193,10 @@ contract MockSeasonFacet is SeasonFacet  {
         for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
-            LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
+            // ending germination only needs to occur for the first two loops.
+            if(i < 2) { 
+                LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
+            }
         }
         s.season.sunriseBlock = uint32(block.number);
     }
