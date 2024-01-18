@@ -65,31 +65,6 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
         existing.length - 1 // clamp to last index
       );
 
-      console.debug('[apollo/client/read@seasons] READ:');
-      console.debug(
-        `| left:  index = ${left}, season = ${readField(
-          'season',
-          existing[left]
-        )}`
-      );
-      console.debug(
-        `| right: index = ${right}, season = ${readField(
-          'season',
-          existing[right]
-        )}`
-      );
-      console.debug(`| existing.length = ${existing.length}`);
-      console.debug(
-        `| existing[0] = ${readField('season', existing[0])}`,
-        existing
-      );
-      console.debug(
-        `| existing[${existing.length - 1}] = ${readField(
-          'season',
-          existing[existing.length - 1]
-        )}`
-      );
-
       // If one of the endpoints is missing, force refresh
       if (!existing[left] || !existing[right]) return;
 
