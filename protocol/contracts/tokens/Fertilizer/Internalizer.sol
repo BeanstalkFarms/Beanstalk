@@ -51,13 +51,8 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         override 
         returns (string memory)
     {
-        // bpf can be computed given a Fertilizer id:
-        // uint128 bpfRemaining = IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(_id);
 
         uint128 bpfRemaining = calculateBpfRemaining(_id);
-
-        console.log("Fertilizer: uri: bpfRemaining: " , bpfRemaining);
-        console.log("BPF REMAINING AFTER FORMAT: " , LibStrings.formatBpfRemaining(bpfRemaining));
 
         // generate the image URI
         string memory imageUri = imageURI(_id , bpfRemaining);
@@ -91,7 +86,9 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     /**
         * @notice Returns the beans per fertilizer remaining for a given fertilizer Id.
         * @param id - the id of the fertilizer
-        * Calculated here to avoid uint underflow
+        * Formula: bpfRemaining = s.bpf - id
+        * Calculated here to avoid uint underflow 
+        * Solidity 0.8.0 has underflow protection and would revert but we are using 0.7.6
      */
     function calculateBpfRemaining(uint256 id) internal view returns (uint128) {
         // make sure it does not underflow

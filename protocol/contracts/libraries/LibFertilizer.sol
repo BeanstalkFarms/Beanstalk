@@ -34,7 +34,7 @@ library LibFertilizer {
     uint128 private constant RESTART_HUMIDITY = 2500;
     uint128 private constant END_DECREASE_SEASON = REPLANT_SEASON + 461;
 
-    // calcultes and returns a fertilizer id
+    /// @dev calcultes and returns a fertilizer id
     function addFertilizer(
         uint128 season,
         uint256 fertilizerAmount,
@@ -63,10 +63,24 @@ library LibFertilizer {
         emit SetFertilizer(id, bpf);
     }
 
+    /**
+     * @dev Calculates the Beans Per Fertilizer for a given season.
+     * Forluma is bpf = Humidity + 1000 * 1,000
+     * @param id The id of the Fertilizer.
+     * @return bpf The Beans Per Fertilizer.
+     */
     function getBpf(uint128 id) internal pure returns (uint128 bpf) {
         bpf = getHumidity(id).add(1000).mul(PADDING);
     }
 
+    /**
+     * @dev Calculates the Humidity for a given season.
+     * The Humidity was 500% prior to Replant, after which it dropped to 250% (Season 6074)
+     * and then decreased by an additional 0.5% each Season until it reached 20%.
+     * The Humidity will remain at 20% until all Available Fertilizer is purchased.
+     * @param id The season.
+     * @return humidity The corresponding Humidity.
+     */
     function getHumidity(uint128 id) internal pure returns (uint128 humidity) {
         if (id == 0) return 5000;
         if (id >= END_DECREASE_SEASON) return 200;
@@ -124,6 +138,14 @@ library LibFertilizer {
         s.recapitalized = s.recapitalized.add(usdAmount);
     }
 
+    /**
+     * @dev Adds a fertilizer id in the queue.
+     * fFirst is the lowest active Fertilizer Id (see AppStorage)
+     * (start of linked list that is stored by nextFid).
+     *  The highest active Fertilizer Id 
+     * (end of linked list that is stored by nextFid). 
+     * @param id The id of the fertilizer.
+     */
     function push(uint128 id) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.fFirst == 0) {
@@ -153,6 +175,10 @@ library LibFertilizer {
         }
     }
 
+    /**
+     * @dev Returns the dollar amount remaining for beanstalk to recapitalize.
+     * @return remaining The dollar amount remaining.
+     */
     function remainingRecapitalization()
         internal
         view
@@ -168,6 +194,13 @@ library LibFertilizer {
         return totalDollars.sub(s.recapitalized);
     }
 
+
+    /**
+     * @dev Removes the first fertilizer id in the queue.
+     * fFirst is the lowest active Fertilizer Id (see AppStorage)
+     * (start of linked list that is stored by nextFid).
+     * @return bool Whether the queue is empty.
+     */
     function pop() internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint128 first = s.fFirst;
@@ -185,16 +218,31 @@ library LibFertilizer {
         return true;
     }
 
+    /**
+     * @dev Returns the amount (supply) of fertilizer for a given id.
+     * @param id The id of the fertilizer.
+     */
     function getAmount(uint128 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.fertilizer[id];
     }
 
+    /**
+     * @dev Returns the next fertilizer id in the list given a fertilizer id.
+     * nextFid is a linked list of Fertilizer Ids ordered by Id number. (See AppStorage)
+     * @param id The id of the fertilizer.
+     */
     function getNext(uint128 id) internal view returns (uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return s.nextFid[id];
     }
 
+    /**
+     * @dev Sets the next fertilizer id in the list given a fertilizer id.
+     * nextFid is a linked list of Fertilizer Ids ordered by Id number. (See AppStorage)
+     * @param id The id of the fertilizer.
+     * @param next The id of the next fertilizer.
+     */
     function setNext(uint128 id, uint128 next) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.nextFid[id] = next;

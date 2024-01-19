@@ -82,17 +82,11 @@ contract FertilizerImage {
      */
     function getFertilizerStatusSvg(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
 
-        // uint256 endBpf = IBeanstalk(BEANSTALK).getEndBpf();
-
         uint256 fertilizerSupply = IBeanstalk(BEANSTALK).getFertilizer(
             uint128(_id)
         );
 
         string memory fertilizerStatusSvg = BASE_SVG_AVAILIBLE;
-
-        console.log("Fertilizer: getFertilizerStatusSvg: bpfRemaining: " , bpfRemaining);
-        // console.log("Fertilizer: getFertilizerStatusSvg: endBpf: " , endBpf);
-        console.log("Fertilizer: getFertilizerStatusSvg: fertilizerSupply: " , fertilizerSupply);
 
         if (fertilizerSupply > 0) {
             fertilizerStatusSvg = bpfRemaining > 0
