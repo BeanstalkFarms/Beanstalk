@@ -16,15 +16,20 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
+import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
+import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
+import "hardhat/console.sol";
 
 /**
- * @author Publius, Brean, DeadManWalking
+ * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
  * @title ConvertFacet handles converting Deposited assets within the Silo.
  **/
 contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
+    address internal constant PIPELINE = 0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa; //import this from C.sol?
 
     event Convert(
         address indexed account,
@@ -97,6 +102,126 @@ contract ConvertFacet is ReentrancyGuard {
 
         emit Convert(LibTractor._getUser(), fromToken, toToken, fromAmount, toAmount);
     }
+
+
+    /**
+     * A farm convert needs to be able to take in:
+     * 1. A list of tokens, stems, and amounts for input
+     * 2. An output token address
+     * 3. Output stems will be calculated, but we want to allow combining of crates. I'm thinking maybe a 2-d array of grouped stems, i.e. [[1,2,3], [4,5,6]], assuming your input deposits are of stems 1,2,3,4,5,6.
+     * 4. A farm function that does a swap, somehow we have to pass all the input tokens and amounts to this function
+     */
+
+
+    function pipelineConvert(
+        address inputToken, 
+        uint96[] calldata stems, //array of stems to convert
+        uint256[] calldata amounts, //amount from each crate to convert
+        address outputToken,
+        bytes calldata farmData
+    )
+        external
+        payable
+        nonReentrant
+        returns (
+            uint256 amountOut
+        )
+    {   
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // require(s.ss[outputToken].milestoneSeason != 0, "Token not whitelisted");
+
+
+        //pull out the deposits for each stem so we can get total amount
+        //all the crates passed to this function will be combined into one,
+        //so if a user wants to do special combining of crates, this function can be called multiple times
+
+        
+        uint256 totalAmountIn = 0;
+        for (uint256 i = 0; i < stems.length; i++) {
+            totalAmountIn = totalAmountIn.add(amounts[i]);
+        }
+
+        //todo: actually withdraw crates
+
+        console.log('totalAmountIn: ', totalAmountIn);
+
+        // Transfer tokenIn from beanstalk to pipeline
+        IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
+
+        // FIXME: probably better to call an pipe/AdvancePipe here, rather than using .call()
+        // convertData is used again to save an instantiation. Can be instanteated again if needed.
+        // perform advanced farm operations.
+
+        //log farmData length
+        console.log('farmData length: ', farmData.length);
+
+        console.log('going to call advancedFarm yo');
+
+        bytes memory sliced = LibBytes.sliceFrom(farmData, 4);
+        console.log('sliced length: ', farmData.length);
+
+        // Decode and execute advanced farm calls.
+        // Cut out blueprint calldata selector.
+        AdvancedFarmCall[] memory calls = abi.decode(
+            LibBytes.sliceFrom(farmData, 4),
+            (AdvancedFarmCall[])
+        );
+
+        console.log('decoded into calls');
+
+        bytes[] memory results = new bytes[](calls.length);
+        for (uint256 i = 0; i < calls.length; ++i) {
+            console.log('calling advancedFarmMem');
+            require(calls[i].callData.length != 0, "Tractor: empty AdvancedFarmCall");
+            results[i] = LibFarm._advancedFarmMem(calls[i], results);
+        }
+
+
+        // assume last value is the amountOut
+        // todo: for full functionality, we should instead have the user specify the index of the amountOut
+        // in the farmCallResult.
+        amountOut = abi.decode(results[results.length - 1], (uint256));
+
+        console.log('amountOut: ', amountOut);
+
+        
+
+
+        // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
+        transferTokensFromPipeline(outputToken, amountOut);
+
+        //emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
+
+    }
+
+
+    function transferTokensFromPipeline(address tokenOut, uint256 userReturnedConvertValue) private {
+        // todo investigate not using the entire interface but just using the function selector here
+        PipeCall memory p;
+        p.target = address(tokenOut); //contract that pipeline will call
+        p.data = abi.encodeWithSignature(
+            "transfer(address,uint256)",
+            address(this),
+            userReturnedConvertValue
+        );
+
+        //todo: see if we can find a way to spit out a custom error saying it failed here, rather than a generic ERC20 revert
+        // (success, result) = p.target.staticcall(p.data);
+        // LibFunction.checkReturn(success, result);
+
+        IPipeline(PIPELINE).pipe(p);
+    }
+
+    // todo: implement oracle
+    function getOracleprice() internal returns (uint256) {
+        return 1e6;
+    }
+
+    function _bdv(address token, uint256 amount) internal returns (uint256) {
+        return LibTokenSilo.beanDenominatedValue(token, amount);
+    }
+
 
     function _withdrawTokens(
         address token,

@@ -1,8 +1,8 @@
 const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
-const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP } = require("./constants.js");
-const { to6, to18 } = require("./helpers.js");
+const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, PIPELINE, BEAN_ETH_WELL } = require("./constants.js");
+const { to6, to18 ,toBean } = require("./helpers.js");
 
 // const ARRAY_LENGTH = 5;
 const SLOT_SIZE = 32;
@@ -929,5 +929,6 @@ module.exports = {
   draftConvert,
   draftDepositInternalBeansWithLimit,
   RATIO_FACTOR,
-  ConvertKind
+  ConvertKind,
+  wrapExternalCall
 };
