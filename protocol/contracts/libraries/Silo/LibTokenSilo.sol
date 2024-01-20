@@ -62,6 +62,17 @@ library LibTokenSilo {
         uint256 bdv
     );
 
+    /**
+     * @dev IMPORTANT: copy of {TokenSilo-RemoveDeposit}, check there for details.
+     */
+    event RemoveDeposit(
+        address indexed account,
+        address indexed token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
+    );
+
     // added as the ERC1155 deposit upgrade
     event TransferSingle(
         address indexed operator,
