@@ -34,6 +34,9 @@ library LibTokenSilo {
     using SafeCast for uint256;
     using LibSafeMathSigned96 for int96;
 
+    uint256 constant PRECISION = 1e6; // increased precision from to silo v3.1.
+
+
     //////////////////////// ENUM ////////////////////////
     /**
      * @dev when a user deposits or withdraws a deposit, the
@@ -52,6 +55,17 @@ library LibTokenSilo {
      * @dev IMPORTANT: copy of {TokenSilo-AddDeposit}, check there for details.
      */
     event AddDeposit(
+        address indexed account,
+        address indexed token,
+        int96 stem,
+        uint256 amount,
+        uint256 bdv
+    );
+
+    /**
+     * @dev IMPORTANT: copy of {TokenSilo-RemoveDeposit}, check there for details.
+     */
+    event RemoveDeposit(
         address indexed account,
         address indexed token,
         int96 stem,
@@ -303,7 +317,7 @@ library LibTokenSilo {
                 msg.sender, // operator
                 address(0), // from
                 account, // to
-                uint256(depositId), // depositID
+                depositId, // depositID
                 amount // token amount
             );
         }
@@ -341,6 +355,21 @@ library LibTokenSilo {
 
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
+        // if amount is > crateAmount, check if user has a legacy deposit:
+        if (amount > crateAmount) { 
+            // get the absolute stem value.
+            uint256 absStem = stem > 0 ? uint256(stem) : uint256(-stem);
+            // only stems with modulo 1e6 can have a legacy deposit.
+            if (absStem.mod(1e6) == 0) {
+                (crateAmount, crateBDV) = migrateLegacyStemDeposit(
+                    account,
+                    token,
+                    stem,
+                    crateAmount,
+                    crateBDV
+                );
+            }
+        }
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove
@@ -456,9 +485,8 @@ library LibTokenSilo {
 
     /**
      * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
-     * Does not truncate the value, i.e. divide by 1e6
      */
-    function stemTipForTokenUntruncated(
+    function stemTipForToken(
         address token
     ) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -468,17 +496,6 @@ library LibTokenSilo {
             int96(s.ss[token].stalkEarnedPerSeason).mul(
                 int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
             );
-    }
-
-    function truncateStem(int96 stemTip) internal pure returns (int96) {
-        return stemTip.div(1e6);
-    }
-
-    /**
-     * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
-     */
-    function stemTipForToken(address token) internal view returns (int96 stemTip) {
-        return truncateStem(stemTipForTokenUntruncated(token));
     }
 
     /**
@@ -499,7 +516,7 @@ library LibTokenSilo {
         if(deltaStemTip == 0) return 0;
         (, uint bdv) = getDeposit(account, token, stem);
 
-        grownStalk = deltaStemTip.mul(bdv);
+        grownStalk = deltaStemTip.mul(bdv).div(PRECISION);
     }
 
     /**
@@ -519,19 +536,14 @@ library LibTokenSilo {
     /**
      * @notice returns the grown stalk and germination state of a deposit,
      * based on the amount of grown stalk it has earned.
-     * 
-     * @dev if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
-     * the user loses that partial season's worth of stalk. Grown stalk will need to be updated if so.
-     * 
      */
-    function calculateGrownStalkAndStem(
+    function calculateStemForTokenFromGrownStalk(
         address token,
         uint256 grownStalk,
         uint256 bdv
-    ) internal view returns (uint256 _grownStalk, int96 stem, LibGerminate.Germinate germ) {
+    ) internal view returns (int96 stem, LibGerminate.Germinate germ) {
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
-        stem = germStem.stemTip.sub(toInt96(grownStalk.div(bdv)));
-        _grownStalk = uint256(germStem.stemTip.sub(stem).mul(toInt96(bdv)));
+        stem = germStem.stemTip.sub(toInt96(grownStalk.mul(PRECISION).div(bdv)));
         germ = LibGerminate._getGerminationState(stem, germStem);
     }
 
@@ -551,10 +563,67 @@ library LibTokenSilo {
         // end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
 
         // prevent divide by zero error
-        int96 grownStalkPerBdv = bdv > 0 ? toInt96(grownStalk.div(bdv)) : 0;
+        int96 grownStalkPerBdv = bdv > 0 ? toInt96(grownStalk.mul(PRECISION).div(bdv)) : 0;
 
         // subtract from the current latest index, so we get the index the deposit should have happened at
         return _stemTipForToken.sub(grownStalkPerBdv);
+    }
+
+    /**
+     * @notice internal logic for migrating a legacy deposit.
+     * @dev 
+     */
+    function migrateLegacyStemDeposit(
+        address account, 
+        address token,
+        int96 newStem,
+        uint256 crateAmount,
+        uint256 crateBdv
+    ) internal returns (uint256, uint256) { 
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        // divide the newStem by 1e6 to get the legacy stem.
+        uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
+        uint256 legacyAmount = s.a[account].legacyV3Deposits[legacyDepositId].amount;
+        uint256 legacyBdv = s.a[account].legacyV3Deposits[legacyDepositId].bdv;
+        crateAmount = crateAmount.add(legacyAmount);
+        crateBdv = crateBdv.add(legacyBdv);
+        delete s.a[account].legacyV3Deposits[legacyDepositId];
+
+        // Emit burn events.
+        emit TransferSingle(
+            msg.sender,
+            account,
+            address(0),
+            legacyDepositId,
+            legacyAmount
+        );
+
+        emit RemoveDeposit(
+            account,
+            token,
+            newStem.div(1e6),
+            legacyAmount,
+            legacyBdv
+        );
+
+        // Emit mint events.
+        emit TransferSingle(
+            msg.sender,
+            address(0),
+            account,
+            LibBytes.packAddressAndStem(token, newStem),
+            legacyAmount
+        );
+
+        emit AddDeposit(
+            account,
+            token,
+            newStem,
+            legacyAmount,
+            legacyBdv
+        );
+
+        return (crateAmount, crateBdv);
     }
 
     function toInt96(uint256 value) internal pure returns (int96) {

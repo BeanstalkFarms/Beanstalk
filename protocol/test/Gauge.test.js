@@ -363,15 +363,6 @@ describe('Gauge', function () {
       // deposit beanETH:
       await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL)
       await this.bean.mint(userAddress, to6('10000'))
-      // await this.curve.connect(user).addLiquidity(
-      //   BEAN_3_CURVE,
-      //   STABLE_FACTORY,
-      //   [to6('1000'), to18('1000')],
-      //   to18('2000'),
-      //   EXTERNAL,
-      //   EXTERNAL
-      // )
-      // await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL)
       // deposit beans:
       await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL)
 
@@ -404,7 +395,7 @@ describe('Gauge', function () {
       expect(await this.seasonGetters.getStalkPerGp()).to.be.eq(('224048'))
       expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(2656883) // 2.65 seeds per BDV
       expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(3542510) // 3.54 seeds per BDV
-      expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(0) // 0 seeds
+      expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(1) // 1 seeds
     })
     
     // note: with dewhitelisting bean3crv, only one LP pool is active and thus 

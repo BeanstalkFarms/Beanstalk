@@ -138,7 +138,7 @@ contract Account {
          * Previously held the V1 Silo Deposits/Withdrawals for BEAN:ETH Uniswap v2 LP Tokens.
          * 
          * BEAN:3CRV and BEAN:LUSD tokens prior to Replant were stored in the Silo V2
-         * format in the `s.a[account].legacyDeposits` mapping.
+         * format in the `s.a[account].legacyV2Deposits` mapping.
          *
          * NOTE: While the Silo V1 format is now deprecated, unmigrated Silo V1 deposits are still
          * stored in this storage slot. See {LibUnripeSilo} for more.
@@ -159,17 +159,22 @@ contract Account {
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
-        mapping(address => mapping(uint32 => Deposit)) legacyDeposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
+        mapping(address => mapping(uint32 => Deposit)) legacyV2Deposits; // Legacy Silo V2 Deposits stored as a map from Token address to Season of Deposit to Deposit. NOTE: While the Silo V2 format is now deprecated, unmigrated Silo V2 deposits are still stored in this mapping.
         mapping(address => mapping(uint32 => uint256)) withdrawals; // DEPRECATED - Zero withdraw eliminates a need for withdraw mapping
         SeasonOfPlenty sop; // A Farmer's Season Of Plenty storage.
         mapping(address => mapping(address => uint256)) depositAllowances; // Spender => Silo Token
         mapping(address => mapping(IERC20 => uint256)) tokenAllowances; // Token allowances
         uint256 depositPermitNonces; // A Farmer's current deposit permit nonce
         uint256 tokenPermitNonces; // A Farmer's current token permit nonce
-        mapping(uint256 => Deposit) deposits; // SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit, and a hash for an ERC721/1155 deposit.
+        mapping(uint256 => Deposit) legacyV3Deposits; // NOTE: Legacy SiloV3 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the CGSPBDV for a ERC20 deposit.
         mapping(address => MowStatus) mowStatuses; // Store a MowStatus for each Whitelisted Silo token
         mapping(address => bool) isApprovedForAll; // ERC1155 isApprovedForAll mapping 
-        FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating assets from odd seasons.
+        
+        // Germination
+        FarmerGerminatingStalk farmerGerminating; // A Farmer's germinating stalk.
+
+        // Silo v3.1
+        mapping(uint256 => Deposit) deposits; // Silo v3.1 Deposits stored as a map from uint256 to Deposit. This is an concat of the token address and the stem for a ERC20 deposit.
     }
 }
 
@@ -317,22 +322,25 @@ contract Storage {
      * @param fertilizing True if Beanstalk has Fertilizer left to be paid off.
      * @param sunriseBlock The block of the start of the current Season.
      * @param abovePeg Boolean indicating whether the previous Season was above or below peg.
-     * @param stemStartSeason // season in which the stem storage method was introduced
+     * @param stemStartSeason // season in which the stem storage method was introduced.
+     * @param stemScaleSeason // season in which the stem v1.1 was introduced, where stems are not truncated anymore.
+     * This allows for greater precision of stems, and requires a soft migration (see {LibTokenSilo.removeDepositFromAccount})
      * @param start The timestamp of the Beanstalk deployment rounded down to the nearest hour.
      * @param period The length of each season in Beanstalk in seconds.
      * @param timestamp The timestamp of the start of the current Season.
      */
     struct Season {
-        uint32 current; // ────────┐ 4  
-        uint32 lastSop; //         │ 4 (8)
-        uint8 withdrawSeasons; //  │ 1 (9)
-        uint32 lastSopSeason; //   │ 4 (13)
-        uint32 rainStart; //       │ 4 (17)
-        bool raining; //           │ 1 (18)
-        bool fertilizing; //       │ 1 (19)
-        uint32 sunriseBlock; //    │ 4 (23)
-        bool abovePeg; //          | 1 (24)
-        uint16 stemStartSeason; // ┘ 2 (26/32)
+        uint32 current; // ─────────────────┐ 4  
+        uint32 lastSop; //                  │ 4 (8)
+        uint8 withdrawSeasons; //           │ 1 (9)
+        uint32 lastSopSeason; //            │ 4 (13)
+        uint32 rainStart; //                │ 4 (17)
+        bool raining; //                    │ 1 (18)
+        bool fertilizing; //                │ 1 (19)
+        uint32 sunriseBlock; //             │ 4 (23)
+        bool abovePeg; //                   | 1 (24)
+        uint16 stemStartSeason; //          | 2 (26)
+        uint16 stemScaleSeason; //──────────┘ 2 (28/32)
         uint256 start;
         uint256 period;
         uint256 timestamp;

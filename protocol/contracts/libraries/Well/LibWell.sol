@@ -81,7 +81,7 @@ library LibWell {
 
     /**
      * @dev Returns the non-Bean token within a Well.
-     * Assumes a well with 2 tokens only.
+     * Assumes a well with 2 tokens only, with Bean being one of them.
      * Cannot fail (and thus revert), as wells cannot have 2 of the same tokens as the pairing.
      */
     function getNonBeanTokenAndIndexFromWell(

@@ -5814,7 +5814,7 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "",
+        "name": "hasMigrated",
         "type": "bool"
       }
     ],
@@ -7353,6 +7353,11 @@
           {
             "internalType": "uint16",
             "name": "stemStartSeason",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stemScaleSeason",
             "type": "uint16"
           },
           {

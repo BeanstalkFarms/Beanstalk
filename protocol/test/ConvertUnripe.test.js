@@ -191,7 +191,13 @@ describe('Unripe Convert', function () {
 
       // with the germination update, this converts from an active deposit, 
       // to a deposit that is germinating.
+      // dev note: 
+      // prior to converting, the deposit had grown 0.04 stalk, and the bdv was 100.
+      // after converting, the bdv is now ~297. 
+      // this decreases the grown stalk per BDV from 0.0004 to ~0.000134.
+      // 0.0004 - ~0.000134 = ~ 0.000265
       it('properly updates total values', async function () {
+        
         // updates unripeBean.
         expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq(to6('1000'));
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeBean.address)).to.eq(to6('100'));
@@ -201,38 +207,34 @@ describe('Unripe Convert', function () {
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq('0');
         expect(await this.siloGetters.getGerminatingTotalDeposited(this.unripeLP.address)).to.eq('4711829');
         let bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
+        await console.log('bdv', bdv.toString())
         expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.unripeLP.address)).to.eq(bdv);
 
-        // the total stalk should be the grown stalk from the deposit.
+        // the total stalk should increase by 0.04, the grown stalk from the deposit.
         // note that 0.04 stalk has grown due to the 2 seasons elasping.     
         // the germinating stalk should be the bdv from the deposit.
-        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('100.04').add(bdv));
+        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('100.04').add(toStalk('0.04')));
         expect(await this.siloGetters.getTotalGerminatingStalk()).to.eq(bdv.mul(to6('0.01')));
       });
 
       it('properly updates user values -test', async function () {
         const bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
-        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('100.04').add(bdv));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('100.04').add(toStalk('0.04')));
         expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(bdv.mul(to6('0.01')));
       });
 
       it('properly updates user deposits', async function () {
         expect((await this.siloGetters.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('1000'));
-        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, 3);
+        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, to6('2.656387'));
         expect(deposit[0]).to.eq('4711829');
         expect(deposit[1]).to.eq(await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
 
       it('emits events', async function () {
-        // dev note: 
-        // prior to converting, the deposit had grown 0.04 stalk, and the bdv was 100.
-        // after converting, the bdv is now ~297. 
-        // this decreases the grown stalk per BDV from 0.0004 to ~0.000134. gspBDV has a precision 
-        // of 10^-4, so the value is rounded to 0.0001. this results in a stem of (current season - 1).
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, 3, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
+          .withArgs(userAddress, this.unripeLP.address, 2656387, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
     });
 

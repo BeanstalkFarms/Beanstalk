@@ -90,7 +90,7 @@ library LibLegacyTokenSilo {
      * @dev Remove `amount` of `token` from a user's Deposit in `season`.
      *
      * A "Crate" refers to the existing Deposit in storage at:
-     *  `s.a[account].legacyDeposits[token][season]`
+     *  `s.a[account].legacyV2Deposits[token][season]`
      *
      * Partially removing a Deposit should scale its BDV proportionally. For ex.
      * removing 80% of the tokens from a Deposit should reduce its BDV by 80%.
@@ -113,8 +113,8 @@ library LibLegacyTokenSilo {
 
         uint256 crateAmount;
         (crateAmount, crateBDV) = (
-            s.a[account].legacyDeposits[token][season].amount,
-            s.a[account].legacyDeposits[token][season].bdv
+            s.a[account].legacyV2Deposits[token][season].amount,
+            s.a[account].legacyV2Deposits[token][season].bdv
         );
 
         // If amount to remove is greater than the amount in the Deposit, migrate legacy Deposit to new Deposit
@@ -140,14 +140,14 @@ library LibLegacyTokenSilo {
                 "Silo: uint128 overflow."
             );
 
-            s.a[account].legacyDeposits[token][season].amount = uint128(updatedAmount);
-            s.a[account].legacyDeposits[token][season].bdv = uint128(updatedBDV);
+            s.a[account].legacyV2Deposits[token][season].amount = uint128(updatedAmount);
+            s.a[account].legacyV2Deposits[token][season].bdv = uint128(updatedBDV);
 
             return removedBDV;
         }
 
         // Full Remove
-        delete s.a[account].legacyDeposits[token][season];
+        delete s.a[account].legacyV2Deposits[token][season];
     }
 
     //////////////////////// GETTERS ////////////////////////
@@ -229,8 +229,8 @@ library LibLegacyTokenSilo {
     function _migrateNoDeposits(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(s.a[account].s.seeds == 0, "only for zero seeds");
-
-        require(LibSilo.migrationNeeded(account), "no migration needed");
+        (bool needsMigration, ) = LibSilo.migrationNeeded(account);
+        require(needsMigration, "no migration needed");
 
         s.a[account].lastUpdate = s.season.stemStartSeason;
     }
@@ -259,13 +259,9 @@ library LibLegacyTokenSilo {
         uint32[][] calldata seasons,
         uint256[][] calldata amounts
     ) internal returns (uint256) {
-        // The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
-        // in the same Season as BIP execution. Such that s.a[account].lastUpdate == s.season.stemStartSeason,
-        // but they have not migrated yet
-        require(
-            (LibSilo.migrationNeeded(account) || balanceOfSeeds(account) > 0),
-            "no migration needed"
-        );
+        
+        // Validates whether a user needs to perform migration.
+        checkForMigration(account);
 
         // do a legacy mow using the old silo seasons deposits (this only mints stalk up to stemStartSeason)
         // should not germinate since all siloV2 deposits were deposited for > 2 seasons.
@@ -300,7 +296,7 @@ library LibLegacyTokenSilo {
                     perDepositData.amount
                 );
 
-                //calculate how much stalk has grown for this deposit
+                // calculate how much stalk has grown for this deposit
                 perDepositData.grownStalk = _calcGrownStalkForDeposit(
                     crateBDV.mul(getSeedsPerToken(address(perTokenData.token))),
                     perDepositData.season
@@ -552,5 +548,21 @@ library LibLegacyTokenSilo {
     function incrementMigratedBdv(address token, uint256 bdv) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.migratedBdvs[token] = s.migratedBdvs[token].add(bdv);
+    }
+
+    /**
+     * @notice internal logic for validating migration
+     * @dev placed in seperate function to avoid stack errors.
+     */
+    function checkForMigration(address account) internal view {
+
+        // The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
+        // in the same Season as BIP execution. Such that s.a[account].lastUpdate == s.season.stemStartSeason,
+        // but they have not migrated yet
+        (bool needsMigration, ) = LibSilo.migrationNeeded(account);
+        require(
+            (needsMigration || balanceOfSeeds(account) > 0),
+            "no migration needed"
+        );
     }
 }

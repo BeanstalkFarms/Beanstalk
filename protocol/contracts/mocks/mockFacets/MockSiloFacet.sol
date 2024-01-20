@@ -56,7 +56,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
         uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         // not germinating because this is a old deposit.
-        LibSilo.mintStalk(msg.sender, stalk, LibGerminate.Germinate.NOT_GERMINATING);
+        LibSilo.mintActiveStalk(msg.sender, stalk);
         mintSeeds(msg.sender, seeds);
         LibTransfer.receiveToken(IERC20(C.UNRIPE_LP), unripeLP, msg.sender, LibTransfer.From.EXTERNAL);
     }
@@ -74,7 +74,7 @@ contract MockSiloFacet is SiloFacet {
         uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_BEAN));
         uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         
-        LibSilo.mintStalk(msg.sender, stalk, LibGerminate.Germinate.NOT_GERMINATING);
+        LibSilo.mintActiveStalk(msg.sender, stalk);
         mintSeeds(msg.sender, seeds);
         LibTransfer.receiveToken(IERC20(C.UNRIPE_BEAN), amount, msg.sender, LibTransfer.From.EXTERNAL);
     }
@@ -123,7 +123,7 @@ contract MockSiloFacet is SiloFacet {
     function __mowLegacy(address account) private {
         // If this `account` has no Seeds, skip to save gas.
         if (s.a[account].s.seeds == 0) return;
-        LibSilo.mintStalk(account, balanceOfGrownStalkLegacy(account), LibGerminate.Germinate.NOT_GERMINATING);
+        LibSilo.mintActiveStalk(account, balanceOfGrownStalkLegacy(account));
     }
 
     function handleRainAndSopsLegacy(address account, uint32 _lastUpdate) private {
@@ -205,8 +205,8 @@ contract MockSiloFacet is SiloFacet {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.a[account].legacyDeposits[token][season].amount += uint128(amount);
-        s.a[account].legacyDeposits[token][season].bdv += uint128(bdv);
+        s.a[account].legacyV2Deposits[token][season].amount += uint128(amount);
+        s.a[account].legacyV2Deposits[token][season].bdv += uint128(bdv);
 
         emit AddDeposit(account, token, season, amount, bdv);
     }
@@ -257,7 +257,7 @@ contract MockSiloFacet is SiloFacet {
             s.season.current,
             amount
         );
-        LibSilo.mintStalk(account, stalk, LibGerminate.Germinate.NOT_GERMINATING);
+        LibSilo.mintActiveStalk(account, stalk);
         mintSeeds(account, seeds);
     }
 
@@ -369,7 +369,7 @@ contract MockSiloFacet is SiloFacet {
         view
         returns (int96 stem)
     {
-        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token), season);
+        stem = LibLegacyTokenSilo.seasonToStem(mockGetSeedsPerToken(token).mul(1e6), season);
     }
 
     function mockGetSeedsPerToken(address token) public pure returns (uint256) {

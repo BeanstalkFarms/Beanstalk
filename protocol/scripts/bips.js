@@ -220,11 +220,12 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       initFacetName: "InitBipSeedGauge",
       selectorsToRemove: [],
       libraryNames: [
-        'LibGauge', 'LibConvert', 'LibLockedUnderlying',
+        'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive'
       ],
       facetLibraries: {
         'SeasonFacet': [
           'LibGauge',
+          'LibIncentive',
           'LibLockedUnderlying',
         ],
         'SeasonGettersFacet': [

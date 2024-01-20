@@ -103,7 +103,6 @@ library LibGauge {
             // if the usd price oracle failed, skip gauge point update.
             // Assumes that only Wells use USD price oracles.
             if (LibWell.isWell(whitelistedLpTokens[0]) && s.usdTokenPrice[whitelistedLpTokens[0]] == 0) {
-
                 return (maxLpGpPerBdv, lpGpData, totalGaugePoints, type(uint256).max);
             }
             uint256 gaugePoints = s.ss[whitelistedLpTokens[0]].gaugePoints;
