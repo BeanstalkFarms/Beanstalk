@@ -176,7 +176,7 @@ library LibWhitelist {
         if(stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
 
         // update milestone stem and season.
-        s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); 
+        s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); 
         s.ss[token].milestoneSeason = s.season.current;
        
         // stalkEarnedPerSeason is set to int32 before casting down.

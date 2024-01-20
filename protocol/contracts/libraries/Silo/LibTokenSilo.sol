@@ -474,9 +474,8 @@ library LibTokenSilo {
 
     /**
      * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
-     * Does not truncate the value, i.e. divide by 1e6
      */
-    function stemTipForTokenUntruncated(
+    function stemTipForToken(
         address token
     ) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -486,17 +485,6 @@ library LibTokenSilo {
             int96(s.ss[token].stalkEarnedPerSeason).mul(
                 int96(s.season.current).sub(int96(s.ss[token].milestoneSeason))
             );
-    }
-
-    function truncateStem(int96 stemTip) internal pure returns (int96) {
-        return stemTip.div(1e6);
-    }
-
-    /**
-     * @dev returns the cumulative stalk per BDV (stemTip) for a whitelisted token.
-     */
-    function stemTipForToken(address token) internal view returns (int96 stemTip) {
-        return stemTipForTokenUntruncated(token);
     }
 
     /**

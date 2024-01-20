@@ -154,12 +154,12 @@ describe('SeedGauge Init Test', function () {
       const settings = await this.beanstalk.tokenSettings(BEAN_3_CURVE)
       // milestone season, stem, or stalkIssuedPerBDV should not be cleared.
       expect(settings[0]).to.equal('0x00000000') // BDV selector
-      expect(settings[1]).to.equal(0) // stalkEarnedPerSeason
+      expect(settings[1]).to.equal(1) // stalkEarnedPerSeason
       expect(settings[2]).to.equal(10000) // StalkIssuedPerBDV
       expect(settings[3]).to.equal(17653) // milestoneSeason
       expect(settings[4]).to.equal(12089750000) // milestoneStem
       expect(settings[5]).to.equal('0x00') // encodeType
-      expect(settings[6]).to.equal(-3250000) // deltaStalkEarnedPerSeason
+      expect(settings[6]).to.equal(-3249999) // deltaStalkEarnedPerSeason
       expect(settings[7]).to.equal('0x00000000') // gp Selector
       expect(settings[8]).to.equal('0x00000000') // lw Selector
       expect(settings[9]).to.equal(0) // gaugePoints
@@ -199,11 +199,28 @@ describe('SeedGauge Init Test', function () {
   })
 
   // verify silov3.1 migration. 
-  describe('silo v3.1 migration', async function () {
-    // deletes old ERC1155, mints a new one
-    // `delete` refers to 2 things:
-    // 1: old silo balance is deleted (amt + bdv)
-    // 2: old silo erc1155 is transferred to 0 address (emitted)
+  describe.only('silo v3.1 migration', async function () {
+    
+    it('correctly updates lastStem for a user', async function () {
+      const testAccount = '0x43a9dA9bAde357843fBE7E5ee3Eedd910F9fAC1e'
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN)).to.equal('6459')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_3_CURVE)).to.equal('5927')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_ETH_WELL)).to.equal('6088')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_BEAN)).to.equal('0')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_LP)).to.equal('0')
+
+      await this.beanstalk.mow(
+        '0x43a9dA9bAde357843fBE7E5ee3Eedd910F9fAC1e',
+        BEAN
+      )
+
+      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, BEAN))).to.equal(to6('9129'))
+      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, BEAN_3_CURVE))).to.equal(to6('5927'))
+      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, BEAN_ETH_WELL))).to.equal(to6('6088'))
+      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_BEAN))).to.equal('0')
+      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_LP))).to.equal('0')
+    })
+    
   })
 
 })

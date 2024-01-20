@@ -251,6 +251,22 @@ describe('Whitelist', function () {
         '0'
       )).to.revertedWith('Silo: Invalid encodeType');
     });
+
+    it('cannot whitelist with 0 seeds (sets to 1)', async function () {
+      this.whitelist.connect(owner).whitelistTokenWithEncodeType(
+        this.well.address, 
+        this.bdv.interface.getSighash('wellBdv'),
+        '10000',
+        '0',
+        1,
+        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
+        this.liquidityWeight.interface.getSighash("maxWeight()"),
+        '0',
+        '0')
+      const settings = await this.siloGetters.tokenSettings(this.well.address)
+
+      expect(settings[1]).to.equal(1)
+    });
   })
 
   describe('dewhitelist', async function () {
@@ -269,12 +285,12 @@ describe('Whitelist', function () {
       const settings = await this.siloGetters.tokenSettings(BEAN_3_CURVE)
       // milestone season, stem, or stalkIssuedPerBDV should not be cleared.
       expect(settings[0]).to.equal('0x00000000')
-      expect(settings[1]).to.equal(0)
+      expect(settings[1]).to.equal(1)
       expect(settings[2]).to.equal(10000)
       expect(settings[3]).to.equal(1)
       expect(settings[4]).to.equal(0)
       expect(settings[5]).to.equal('0x00')
-      expect(settings[6]).to.equal(-1000000)
+      expect(settings[6]).to.equal(-999999)
       expect(settings[7]).to.equal('0x00000000')
       expect(settings[8]).to.equal('0x00000000')
       expect(settings[9]).to.equal(0)
