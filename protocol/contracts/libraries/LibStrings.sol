@@ -84,26 +84,28 @@ library LibStrings {
     }
 
     /**
-        * @notice returns a string representation of the bpfRemaining with 2 decimal places
-        * @param bpfRemaining - the beans per fertilizer remaining
-        * note in tests, if the second decimal is a 0, it will not show up
-        * used in fertilizer metadata
+     * @notice formats a uint128 number with 6 decimals to a string with 2 decimals
+     * @param number - the number to format
+     * @return string - the formatted string
      */
-    function formatBpfRemaining(uint128 bpfRemaining)
+    function formatUintWith6DecimalsTo2(uint128 number)
         internal 
         pure
         returns (string memory)
     {                                       
-                            // cast to uint256 to be compatible with toString  
-        string memory bpfString = toString(uint256(bpfRemaining));
+                         // cast to uint256 to be compatible with toString  
+        string memory numString = toString(uint256(number));
 
-        // if the bpfRemaining is 0 just return '0'
-        if (bpfRemaining > 0) {
-            // add a . after the first index and keep the first 2 decimals
-            bpfString = string(
-                abi.encodePacked(substring(bpfString, 0, 1), ".", substring(bpfString, 1, 3))
-            );
+        // If the number has fewer than 6 decimals, add trailing zeros
+        while (bytes(numString).length < 7) {
+            numString = string(abi.encodePacked("0", numString));
         }
-        return bpfString;
+
+        // Extract the integer part and the first 2 decimal places
+        string memory integerPart = substring(numString, 0, bytes(numString).length - 6);
+        string memory decimalPart = substring(numString, bytes(numString).length - 6, bytes(numString).length - 4);
+
+        // Concatenate the integer part and the decimal part with a dot in between
+        return string(abi.encodePacked(integerPart, ".", decimalPart));
     }
 }

@@ -59,7 +59,7 @@ contract FertilizerImage {
                 base(), // BASE SVG START
                 getFertilizerStatusSvg(_id, bpfRemaining), // fertilizerStatus
                 preNumber(), // BASE SVG PRE NUMBER FOR BPF REMAINING
-                LibStrings.formatBpfRemaining(bpfRemaining), // bpfRemaining with 2 decimal places
+                LibStrings.formatUintWith6DecimalsTo2(bpfRemaining), // bpfRemaining with 2 decimal places
                 end() // BASE SVG END
             )
         );

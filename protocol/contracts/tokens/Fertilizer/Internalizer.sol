@@ -79,7 +79,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
                                 '"description": "A trusty constituent of any Farmers toolbox, ERC-1155 FERT has been known to spur new growth on seemingly dead farms. Once purchased and deployed into fertile ground by Farmers, Fertilizer generates new Sprouts: future Beans yet to be repaid by Beanstalk in exchange for doing the work of Replanting the protocol.", "image": "',
                                 imageUri,
                                 '", "attributes": [{ "trait_type": "BPF Remaining","display_type": "boost_number","value": ',
-                                LibStrings.formatBpfRemaining(bpfRemaining),
+                                LibStrings.formatUintWith6DecimalsTo2(bpfRemaining),
                                 " }]}"
                             )
                         )
