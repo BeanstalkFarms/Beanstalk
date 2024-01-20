@@ -1,4 +1,4 @@
-const { BEAN, BEAN_3_CURVE, STABLE_FACTORY, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL } = require('./utils/constants.js');
+const { BEAN, BEAN_3_CURVE, STABLE_FACTORY, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, ZERO_ADDRESS } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js');
 const { time, mine } = require("@nomicfoundation/hardhat-network-helpers");
@@ -33,7 +33,7 @@ describe('SeedGauge Init Test', function () {
           {
             forking: {
               jsonRpcUrl: process.env.FORKING_RPC,
-              blockNumber: 18696041 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
+              blockNumber: 19049520 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
             },
           },
         ],
@@ -79,25 +79,25 @@ describe('SeedGauge Init Test', function () {
     })
 
     it('average grown stalk per BDV per Season', async function () {
-      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.324305'));
+      expect(await this.beanstalk.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('5.343518'));
     })
 
     it('average Grown Stalk Per BDV', async function() {
-      // average is 2.3839 grown stalk per BDV
+      // average is 2.2939 grown stalk per BDV
       // note: should change with updated BDVs
-      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22858);
+      expect(await this.beanstalk.getAverageGrownStalkPerBdv()).to.be.equal(22957);
     })
 
     it('totalBDV', async function () {
-      // ~40m total BDV
-      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('42000000'), to6('43000000'));
+      // ~44m total BDV
+      expect(await this.beanstalk.getTotalBdv()).to.be.within(to6('43000000'), to6('44000000'));
     })
 
     it('L2SR', async function () {
       // the L2SR may differ during testing, due to the fact 
       // that the L2SR is calculated on twa reserves, and thus may slightly differ due to 
       // timestamp differences.
-      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('1.01'), to18('1.03'));
+      expect(await this.beanstalk.getLiquidityToSupplyRatio()).to.be.within(to18('0.93'), to18('0.94'));
     })
     
     it('bean To MaxLPGpRatio', async function () {
@@ -107,14 +107,14 @@ describe('SeedGauge Init Test', function () {
 
     it('lockedBeans', async function () {
       // ~25.5m locked beans, ~35.8m total beans
-      expect(await this.beanstalk.getLockedBeans()).to.be.within(to6('25100000.000000'), to6('25300000.000000'));
+      expect(await this.beanstalk.getLockedBeans()).to.be.within(to6('25900000.000000'), to6('26000000.000000'));
     })
 
     it('usd Liquidity', async function () {
       // ~13.2m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('13200000'), to18('13400000'));
+      expect(await this.beanstalk.getBeanEthTwaUsdLiquidity()).to.be.within(to18('13100000'), to18('13300000'));
       // ~13.2m usd liquidity in Bean:Eth
-      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('13200000'), to18('13400000'));
+      expect(await this.beanstalk.getTotalUsdLiquidity()).to.be.within(to18('13100000'), to18('13300000'));
     })
 
     it('gaugePoints', async function () {
@@ -156,8 +156,8 @@ describe('SeedGauge Init Test', function () {
       expect(settings[0]).to.equal('0x00000000') // BDV selector
       expect(settings[1]).to.equal(1) // stalkEarnedPerSeason
       expect(settings[2]).to.equal(10000) // StalkIssuedPerBDV
-      expect(settings[3]).to.equal(17653) // milestoneSeason
-      expect(settings[4]).to.equal(12089750000) // milestoneStem
+      expect(settings[3]).to.equal(18843) // milestoneSeason
+      expect(settings[4]).to.equal(15957250000) // milestoneStem
       expect(settings[5]).to.equal('0x00') // encodeType
       expect(settings[6]).to.equal(-3249999) // deltaStalkEarnedPerSeason
       expect(settings[7]).to.equal('0x00000000') // gp Selector
@@ -199,13 +199,13 @@ describe('SeedGauge Init Test', function () {
   })
 
   // verify silov3.1 migration. 
-  describe.only('silo v3.1 migration', async function () {
-    
+  describe('silo v3.1 migration', async function () {
+    // mow active user, verify stem has increased by >1e6.
     it('correctly updates lastStem for a user', async function () {
       const testAccount = '0x43a9dA9bAde357843fBE7E5ee3Eedd910F9fAC1e'
-      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN)).to.equal('6459')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN)).to.equal('12648')
       expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_3_CURVE)).to.equal('5927')
-      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_ETH_WELL)).to.equal('6088')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_ETH_WELL)).to.equal('15372')
       expect(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_BEAN)).to.equal('0')
       expect(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_LP)).to.equal('0')
 
@@ -214,11 +214,59 @@ describe('SeedGauge Init Test', function () {
         BEAN
       )
 
-      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, BEAN))).to.equal(to6('9129'))
-      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, BEAN_3_CURVE))).to.equal(to6('5927'))
-      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, BEAN_ETH_WELL))).to.equal(to6('6088'))
-      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_BEAN))).to.equal('0')
-      expect(await console.log(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_LP))).to.equal('0')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN)).to.equal(to6('12699'))
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_3_CURVE)).to.equal(to6('5927'))
+      expect(await this.beanstalk.getLastMowedStem(testAccount, BEAN_ETH_WELL)).to.equal(to6('15372'))
+      expect(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_BEAN)).to.equal('0')
+      expect(await this.beanstalk.getLastMowedStem(testAccount, UNRIPE_LP)).to.equal('0')
+    })
+
+    // transfer deposit of user, verify event emitted and stem updated.
+    it('correctly updates a deposit for user', async function () {
+      const account = await impersonateSigner('0x43a9dA9bAde357843fBE7E5ee3Eedd910F9fAC1e', true);
+      // siloV3 stem is 12648, silo v3.1 is 12648000000
+      this.result = await this.beanstalk.connect(account).transferDeposit(
+        account.address,
+        user.address,
+        BEAN,
+        12648000000,
+        to6('1')
+      )
+
+      // verify original deposit was burnt, and new deposit is issued.
+      // note that the entire value of the legacy deposit is migrated.
+      await expect(this.result).to.emit(this.beanstalk, 'TransferSingle').withArgs(
+        account.address,
+        account.address,
+        ethers.constants.AddressZero,
+        '86222136765574173060614435565272314060287402959945907944589542953252986827112',
+        '130214066'
+      )
+
+      await expect(this.result).to.emit(this.beanstalk, 'RemoveDeposit').withArgs(
+        account.address,
+        BEAN,
+        '12648',
+        '130214066',
+        '130214066'
+      )
+
+      await expect(this.result).to.emit(this.beanstalk, 'TransferSingle').withArgs(
+        account.address,
+        ethers.constants.AddressZero,
+        account.address,
+        '86222136765574173060614435565272314060287402959945907944589542953265634814464',
+        '130214066'
+      )
+
+      await expect(this.result).to.emit(this.beanstalk, 'AddDeposit').withArgs(
+        account.address,
+        BEAN,
+        '12648000000',
+        '130214066',
+        '130214066'
+      )
+      
     })
     
   })

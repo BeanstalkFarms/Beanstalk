@@ -363,15 +363,6 @@ describe('Gauge', function () {
       // deposit beanETH:
       await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL)
       await this.bean.mint(userAddress, to6('10000'))
-      // await this.curve.connect(user).addLiquidity(
-      //   BEAN_3_CURVE,
-      //   STABLE_FACTORY,
-      //   [to6('1000'), to18('1000')],
-      //   to18('2000'),
-      //   EXTERNAL,
-      //   EXTERNAL
-      // )
-      // await this.silo.connect(user).deposit(BEAN_3_CURVE, to18('63.245537'), EXTERNAL)
       // deposit beans:
       await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL)
 

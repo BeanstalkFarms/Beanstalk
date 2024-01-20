@@ -573,11 +573,12 @@ library LibTokenSilo {
         // divide the newStem by 1e6 to get the legacy stem.
         uint256 legacyDepositId = LibBytes.packAddressAndStem(token, newStem.div(1e6));
         uint256 legacyAmount = s.a[account].legacyV3Deposits[legacyDepositId].amount;
+        uint256 legacyBdv = s.a[account].legacyV3Deposits[legacyDepositId].bdv;
         crateAmount = crateAmount.add(legacyAmount);
-        crateBdv = crateBdv.add(s.a[account].legacyV3Deposits[legacyDepositId].bdv);
+        crateBdv = crateBdv.add(legacyBdv);
         delete s.a[account].legacyV3Deposits[legacyDepositId];
 
-        // 'burn' the legacy deposit, and 'mint' a new deposit.
+        // Emit burn events.
         emit TransferSingle(
             msg.sender,
             account,
@@ -586,12 +587,29 @@ library LibTokenSilo {
             legacyAmount
         );
 
+        emit RemoveDeposit(
+            account,
+            token,
+            newStem.div(1e6),
+            legacyAmount,
+            legacyBdv
+        );
+
+        // Emit mint events.
         emit TransferSingle(
             msg.sender,
             address(0),
             account,
             LibBytes.packAddressAndStem(token, newStem),
             legacyAmount
+        );
+
+        emit AddDeposit(
+            account,
+            token,
+            newStem,
+            legacyAmount,
+            legacyBdv
         );
 
         return (crateAmount, crateBdv);
