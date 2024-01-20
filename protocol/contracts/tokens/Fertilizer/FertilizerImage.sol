@@ -3,7 +3,6 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "hardhat/console.sol";
 import "base64-sol/base64.sol";
 import "contracts/libraries/LibStrings.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
@@ -23,7 +22,7 @@ contract FertilizerImage {
 
     address internal constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
 
-    // -------------------------- CONSTANTS TO ASSEMBLE SVG --------------------------------
+    /////////////////////   CONSTANTS TO ASSEMBLE SVG   ////////////////////////////
 
     string internal constant BASE_JSON_URI = "data:application/json;base64,";
 
@@ -111,9 +110,7 @@ contract FertilizerImage {
         ));
     }
 
-    // ----------------------- HELPER FUNCTIONS --------------------------------
-
-    /// @dev converts an svg to a bade64 encoded image URI
+    /// @dev helper function that converts an svg to a bade64 encoded image URI
     function svgToImageURI(string memory svg)
         internal
         pure

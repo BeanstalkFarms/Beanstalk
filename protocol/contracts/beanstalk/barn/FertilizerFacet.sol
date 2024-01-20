@@ -16,7 +16,6 @@ import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import 'hardhat/console.sol';
 
 /**
  * @author Publius

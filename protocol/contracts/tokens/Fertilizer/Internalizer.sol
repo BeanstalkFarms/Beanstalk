@@ -14,10 +14,9 @@ import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/LibSafeMath128.sol";
 import "base64-sol/base64.sol";
 import "./FertilizerImage.sol";
-import "hardhat/console.sol";
 
 /**
- * @author publius
+ * @author publius, deadmanwalking
  * @title Fertilizer before the Unpause
  */
 contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155, FertilizerImage {
@@ -43,7 +42,14 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     // ----------------------------- NEW URI FUNCTION ----------------------------
 
-    // ovveride because it indirectly inherits from ERC1155
+    /**
+        * @notice Assembles and returns a base64 encoded json metadata
+        * URI for a given fertilizer ID.
+        * need to ovveride because the contract indirectly
+        * inherits from ERC1155
+        * @param _id - the id of the fertilizer
+        * @return - the json metadata URI
+     */
     function uri(uint256 _id)
         external
         view
@@ -88,14 +94,13 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         * @param id - the id of the fertilizer
         * Formula: bpfRemaining = s.bpf - id
         * Calculated here to avoid uint underflow 
-        * Solidity 0.8.0 has underflow protection and would revert but we are using 0.7.6
+        * Solidity 0.8.0 has underflow protection and the tx would revert but we are using 0.7.6
      */
     function calculateBpfRemaining(uint256 id) internal view returns (uint128) {
         // make sure it does not underflow
         if (IBeanstalk(BEANSTALK).beansPerFertilizer() >= uint128(id)) {
             return IBeanstalk(BEANSTALK).beansPerFertilizer() - uint128(id);
         } else {
-            console.log("Fertilizer: calculateBpfRemaining: underflow ------> returning 0");
             return 0;
         } 
     }

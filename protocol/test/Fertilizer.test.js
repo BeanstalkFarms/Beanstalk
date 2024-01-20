@@ -828,11 +828,10 @@ describe('Fertilize', function () {
       let mintReceipt;
     
       beforeEach(async function () {
-
+        
+        // Humidity 25000  
         await this.season.teleportSunrise("6074");
         
-        // The Humidity was 500% prior to Replant, after which it dropped to 250% (Season 6074)
-
         // getFertilizers returns array with [fertid, supply] values
         // before mint 2500000,100 so only 1 fert has been minted before this test
 
@@ -853,8 +852,6 @@ describe('Fertilize', function () {
         mintTx = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
 
         mintReceipt = await mintTx.wait();
-
-        const allFertilizers = await this.fertilizer.getFertilizers();
 
       });
       
@@ -894,7 +891,6 @@ describe('Fertilize', function () {
         // bpfRemaining = (s.bpf) - id;
         // bpfRemaining for id 3500000 = 5000000 - 3500000 = 1500000
         // so bpfRemaining > 0 --> and fertsupply = 50 --> Active
-
         // s.bpf = bpfremaining + id
         
         // This returns a used image of fert
@@ -948,8 +944,6 @@ describe('Fertilize', function () {
         expect(jsonResponse.attributes[0].value.toString()).to.be.equal(`0`);
       });
 
-
-    // END DESCRIBE
     });
 
   })
