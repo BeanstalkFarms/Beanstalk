@@ -62,7 +62,7 @@ contract InitBipSeedGauge is Weather {
         LibWhitelist.dewhitelistToken(C.CURVE_BEAN_METAPOOL);
 
         // set s.stemScaleSeason for silo v3.1.
-        s.season.stemStartSeason = uint16(s.season.current);
+        s.season.stemScaleSeason = uint16(s.season.current);
 
         // Update depositedBDV for bean, bean3crv, urBean, and urBeanETH.
         LibTokenSilo.incrementTotalDepositedBdv(
@@ -106,6 +106,11 @@ contract InitBipSeedGauge is Weather {
             s.ss[siloTokens[i]].gaugePoints = gaugePoints[i];
             s.ss[siloTokens[i]].optimalPercentDepositedBdv = optimalPercentDepositedBdv[i];
 
+            // if the silo token has a stalkEarnedPerSeason of 0, 
+            // update to 1.
+            if (s.ss[siloTokens[i]].stalkEarnedPerSeason == 0) {
+                LibWhitelist.updateStalkPerBdvPerSeasonForToken(siloTokens[i], 1);
+            }
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
 

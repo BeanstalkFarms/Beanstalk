@@ -83,7 +83,6 @@ contract ConvertFacet is ReentrancyGuard {
 
         LibSilo._mow(msg.sender, fromToken);
         LibSilo._mow(msg.sender, toToken);
-        
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
@@ -246,6 +245,6 @@ contract ConvertFacet is ReentrancyGuard {
             amount,
             bdv,
             LibTokenSilo.Transfer.emitTransferSingle
-        );
+        );        
     }
 }

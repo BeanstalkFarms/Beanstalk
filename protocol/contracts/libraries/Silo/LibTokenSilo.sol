@@ -344,7 +344,6 @@ library LibTokenSilo {
 
         uint256 crateAmount = s.a[account].deposits[depositId].amount;
         crateBDV = s.a[account].deposits[depositId].bdv;
-
         // if amount is > crateAmount, check if user has a legacy deposit:
         if (amount > crateAmount) { 
             // get the absolute stem value.
@@ -518,7 +517,7 @@ library LibTokenSilo {
         if(deltaStemTip == 0) return 0;
         (, uint bdv) = getDeposit(account, token, stem);
 
-        grownStalk = deltaStemTip.mul(bdv);
+        grownStalk = deltaStemTip.mul(bdv).div(PRECISION);
     }
 
     /**

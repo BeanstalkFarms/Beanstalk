@@ -136,7 +136,7 @@ library LibGerminate {
         uint128 germinatingStalk;
 
         // check to end germination for first stalk.
-        // if last mowed season is the same as the current season - 1,
+        // if last mowed season is not equal to current season - 1,
         if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
             germinatingStalk = firstStalk;
             roots = getGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
@@ -355,8 +355,7 @@ library LibGerminate {
      * equal or higher than this value are germinating.
      */
     function _getGerminatingStem(address token, int96 stemTip) internal view returns (int96 stem) {
-        return
-            LibTokenSilo.truncateStem(stemTip.mul(1e6) - int96(getPrevStalkEarnedPerSeason(token)));
+        return stemTip - int96(getPrevStalkEarnedPerSeason(token));
     }
 
     /**

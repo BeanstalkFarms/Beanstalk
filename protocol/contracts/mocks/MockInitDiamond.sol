@@ -50,6 +50,7 @@ contract MockInitDiamond is InitWhitelist, Weather {
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;
 
         s.season.stemStartSeason = uint16(s.season.current);
+        s.season.stemScaleSeason = uint16(s.season.current);
         s.seedGauge.beanToMaxLpGpPerBdvRatio = 50e18; // 50%
         s.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 

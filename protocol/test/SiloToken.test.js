@@ -1320,7 +1320,6 @@ describe("Silo Token", function () {
       await this.silo.connect(flashLoanExploiter).withdrawDeposit(this.siloToken.address, stem, '1000', EXTERNAL)
       await network.provider.send("evm_mine");
       await network.provider.send("evm_setAutomine", [true]);
-      getStartTime = await time.latest();
     });
 
     it('does not allocate bean mints to the user', async function () {

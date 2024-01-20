@@ -453,7 +453,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         view
         returns (int96 stem)
     {
-        uint256 seedsPerBdv = getSeedsPerToken(token);
+        uint256 seedsPerBdv = getSeedsPerToken(token).mul(1e6);
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 

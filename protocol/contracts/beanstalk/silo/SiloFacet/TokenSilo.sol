@@ -146,7 +146,7 @@ contract TokenSilo is Silo {
             stem = LibTokenSilo.stemTipForToken(token),
             amount
         );
-        LibSilo.mintStalk(account, stalk, germ);
+        LibSilo.mintGerminatingStalk(account, uint128(stalk), germ);
     }
 
     //////////////////////// WITHDRAW ////////////////////////
@@ -187,7 +187,7 @@ contract TokenSilo is Silo {
                 token,
                 amount,
                 bdvRemoved,
-                initalStalkRemoved, 
+                initalStalkRemoved,
                 germinate
             );
 
@@ -327,7 +327,6 @@ contract TokenSilo is Silo {
                 amount,
                 LibTokenSilo.Transfer.noEmitTransferSingle
             );
-
         LibTokenSilo.addDepositToAccount(
             recipient,
             token,

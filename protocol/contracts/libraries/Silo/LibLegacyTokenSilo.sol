@@ -229,8 +229,8 @@ library LibLegacyTokenSilo {
     function _migrateNoDeposits(address account) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(s.a[account].s.seeds == 0, "only for zero seeds");
-        (bool migrationNeeded, ) = LibSilo.migrationNeeded(account);
-        require(migrationNeeded, "no migration needed");
+        (bool needsMigration, ) = LibSilo.migrationNeeded(account);
+        require(needsMigration, "no migration needed");
 
         s.a[account].lastUpdate = s.season.stemStartSeason;
     }
@@ -559,9 +559,9 @@ library LibLegacyTokenSilo {
         // The balanceOfSeeds(account) > 0 check is necessary if someone updates their Silo
         // in the same Season as BIP execution. Such that s.a[account].lastUpdate == s.season.stemStartSeason,
         // but they have not migrated yet
-        (bool migrationNeeded, ) = LibSilo.migrationNeeded(account);
+        (bool needsMigration, ) = LibSilo.migrationNeeded(account);
         require(
-            (migrationNeeded || balanceOfSeeds(account) > 0),
+            (needsMigration || balanceOfSeeds(account) > 0),
             "no migration needed"
         );
     }

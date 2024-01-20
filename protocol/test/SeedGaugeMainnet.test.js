@@ -24,7 +24,7 @@ describe('SeedGauge Init Test', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()
-    owner = await impersonateBeanstalkOwner();
+    
 
     try {
       await network.provider.request({
@@ -127,6 +127,9 @@ describe('SeedGauge Init Test', function () {
 
     beforeEach(async function () {
       // deploy mockAdminFacet to mint beans.
+      owner = await impersonateBeanstalkOwner();
+      await mintEth(owner.address);
+      
       await upgradeWithNewFacets({
         diamondAddress: BEANSTALK,
         facetNames: ['MockAdminFacet'],
@@ -180,19 +183,27 @@ describe('SeedGauge Init Test', function () {
     // mow arbitrary address that contains a bean3crv deposit.
     it('allows legacy bean3crv to be mown', async function () {
       initalStalk = await this.beanstalk.balanceOfStalk(
-        '0xb0B822e1c3995503442682CaEea1b6c683169D2e'
+        '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7'
       )
       await this.beanstalk.mow(
-        '0xb0B822e1c3995503442682CaEea1b6c683169D2e',
+        '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7',
         BEAN_3_CURVE
       )
       newStalk = await this.beanstalk.balanceOfStalk(
-        '0xb0B822e1c3995503442682CaEea1b6c683169D2e'
+        '0x1B7eA7D42c476A1E2808f23e18D850C5A4692DF7'
       )
 
       await expect(newStalk).to.be.above(initalStalk)
     })
     
+  })
+
+  // verify silov3.1 migration. 
+  describe('silo v3.1 migration', async function () {
+    // deletes old ERC1155, mints a new one
+    // `delete` refers to 2 things:
+    // 1: old silo balance is deleted (amt + bdv)
+    // 2: old silo erc1155 is transferred to 0 address (emitted)
   })
 
 })

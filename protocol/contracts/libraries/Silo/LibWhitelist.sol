@@ -109,10 +109,12 @@ library LibWhitelist {
         }
 
         require(s.ss[token].milestoneSeason == 0, "Whitelist: Token already whitelisted");
-
+        // beanstalk requires all whitelisted assets to have a minimum stalkEarnedPerSeeason
+        // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
+        if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
         s.ss[token].selector = selector;
-        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason; // previously called "seeds"
-        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv; // previously just called "stalk"
+        s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
+        s.ss[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
         s.ss[token].milestoneSeason = uint32(s.season.current);
         s.ss[token].encodeType = encodeType;
         s.ss[token].gpSelector = gaugePointSelector;
@@ -170,8 +172,13 @@ library LibWhitelist {
 
         require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
 
-        s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); // store grown stalk milestone
-        s.ss[token].milestoneSeason = s.season.current; // update milestone season as this season
+        // beanstalk requires a min. stalkEarnedPerSeason of 1.
+        if(stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
+
+        // update milestone stem and season.
+        s.ss[token].milestoneStem = LibTokenSilo.stemTipForTokenUntruncated(token); 
+        s.ss[token].milestoneSeason = s.season.current;
+       
         // stalkEarnedPerSeason is set to int32 before casting down.
         s.ss[token].deltaStalkEarnedPerSeason = int24(int32(stalkEarnedPerSeason) - int32(s.ss[token].stalkEarnedPerSeason)); // calculate delta
         s.ss[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
@@ -189,8 +196,9 @@ library LibWhitelist {
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
         verifyTokenNotInLibWhitelistedTokens(token, s.ss[token].selector);
         
-        // set the stalkEarnedPer season to 0 and update milestone stem.
-        updateStalkPerBdvPerSeasonForToken(token, 0);
+        // set the stalkEarnedPerSeason to 1 and update milestone stem.
+        // stalkEarnedPerSeason requires a min value of 1.
+        updateStalkPerBdvPerSeasonForToken(token, 1);
 
         // delete the selector and encodeType.
         delete s.ss[token].selector;

@@ -137,6 +137,7 @@ library LibSilo {
 
     //////////////////////// MINT ////////////////////////
 
+   
     /**
      * @dev Mints Stalk and Roots to `account`.
      *
@@ -151,25 +152,10 @@ library LibSilo {
      *
      * @param account the address to mint Stalk and Roots to
      * @param stalk the amount of stalk to mint
-     * @param germ the germination state of the stalk being minted.
      *
-     * @dev if germinating stalk are minted, roots are not calculated.
-     * instead, unclaimedGerminating stalk is incremented.
-     * Additionally, the stalk balance change event is not emitted,
-     * as the stalk is germinating and not immediately active.
-     */
-    function mintStalk(address account, uint256 stalk, LibGerminate.Germinate germ) internal {
-        // if the stalk is not germinating, use the normal minting logic.
-        // else, mint using germinating logic.
-        if (germ == LibGerminate.Germinate.NOT_GERMINATING) {
-            mintActiveStalk(account, stalk);
-        } else {
-            mintGerminatingStalk(account, uint128(stalk), germ);
-        }
-    }
-
-    /**
-     * @notice mintActiveStalk contains logic for minting stalk that is not germinating.
+     * @dev Stalk that is not germinating are `active`, meaning that they 
+     * are eligible for bean mints. To mint germinating stalk, use 
+     * `mintGerminatingStalk`.
      */
     function mintActiveStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -221,9 +207,8 @@ library LibSilo {
         if (LibGerminate.getSeasonGerminationState() == germ) {
             s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.add(stalk);
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = s
-                .unclaimedGerminating[season.sub(1)]
-                .stalk
+            s.unclaimedGerminating[season.sub(1)].stalk = 
+                s.unclaimedGerminating[season.sub(1)].stalk
                 .add(stalk);
         }
     }
@@ -411,8 +396,8 @@ library LibSilo {
         AppStorage storage s = LibAppStorage.diamondStorage();
         
         // if the user has not migrated from siloV2, revert.
-        (bool hasNotMigrated, uint32 lastUpdate) = migrationNeeded(account);
-        require(!hasNotMigrated, "Silo: Migration needed");
+        (bool needsMigration, uint32 lastUpdate) = migrationNeeded(account);
+        require(!needsMigration, "Silo: Migration needed");
 
         // if the user hasn't updated prior to the seedGauge/siloV3.1 update,
         // perform a one time `lastStem` scale.
@@ -433,13 +418,16 @@ library LibSilo {
                 handleRainAndSops(account, lastUpdate);
             }
         }
-
+        
+        // End account germination.
+        if (lastUpdate < currentSeason) {
+            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
+        }
         // Calculate the amount of Grown Stalk claimable by `account`.
         // Increase the account's balance of Stalk and Roots.
-        __mow(account, token, lastUpdate, currentSeason);
+        __mow(account, token);
 
-        // Reset timer so that Grown Stalk for a particular Season can only be
-        // claimed one time.
+        // update lastUpdate for sop and germination calculations.
         s.a[account].lastUpdate = currentSeason;
     }
 
@@ -449,9 +437,7 @@ library LibSilo {
      */
     function __mow(
         address account,
-        address token,
-        uint32 lastSeasonUpdate,
-        uint32 currentSeason
+        address token
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -468,14 +454,11 @@ library LibSilo {
                 return;
             }
 
-            // end germination (only occurs once per season).
-            LibGerminate.endAccountGermination(account, lastSeasonUpdate, currentSeason);
-
             // grown stalk does not germinate and is immediately included for bean mints.
             mintActiveStalk(account, _balanceOfGrownStalk(_lastStem, _stemTip, _bdv));
         }
 
-        // If this `account` has no BDV, skip to save gas. Still need to update lastStem
+        // If this `account` has no BDV, skip to save gas. Update lastStem.
         // (happen on initial deposit, since mow is called before any deposit)
         s.a[account].mowStatuses[token].lastStem = _stemTip;
         return;
@@ -736,10 +719,10 @@ library LibSilo {
     /**
      * @dev check whether the account needs to be migrated.
      */
-    function migrationNeeded(address account) internal view returns (bool hasNotMigrated, uint32 lastUpdate) {
+    function migrationNeeded(address account) internal view returns (bool needsMigration, uint32 lastUpdate) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         lastUpdate = s.a[account].lastUpdate;
-        hasNotMigrated = lastUpdate > 0 && lastUpdate < s.season.stemStartSeason;
+        needsMigration = lastUpdate > 0 && lastUpdate < s.season.stemStartSeason;
     }
 
     /**
@@ -804,7 +787,6 @@ library LibSilo {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         // for each silo token, divide the stemTip of the token with the users last stem.
         // if the answer is 1e6 or greater, the user has not updated.
-        bool hasNotUpdated;
         for(uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if(lastStem > 0) {
@@ -813,6 +795,6 @@ library LibSilo {
                 }
             }
         }
-        return hasNotUpdated;
+        return false;
     }
 }

@@ -538,9 +538,7 @@ describe('Curve Convert', function () {
             [this.stem], 
             [to18('100')]
           )
-          // bean3CRV had 4 seeds, meaning in 2 seasons, this deposit has grown 8 micro stalk.
-          // with bean having 2 seeds, it would take 4 seasons to grow 8 micro stalk.
-          this.beanStem = '-3'
+          this.beanStem = -3950850
         });
 
         it('properly updates total values', async function () {
@@ -548,12 +546,11 @@ describe('Curve Convert', function () {
           expect(await this.siloGetters.getTotalDepositedBdv(this.bean.address)).to.eq('100618167');
           expect(await this.siloGetters.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
           expect(await this.siloGetters.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('900'));
-          // some stalk is lost due to precision.
-          expect(await this.siloGetters.totalStalk()).to.eq('10014085997169');
+          expect(await this.siloGetters.totalStalk()).to.eq('10014181670000');
         });
 
         it('properly updates user values', async function () {
-          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10014085997169');
+          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10014181670000');
         });
 
         it('properly updates user deposits', async function () {
@@ -609,9 +606,7 @@ describe('Curve Convert', function () {
             [this.stem], 
             [to18('300')]
           )
-          // bean3CRV had 4 seeds, meaning in 2 seasons, this deposit has grown 8 micro stalk.
-          // with bean having 2 seeds, it would take 4 seasons to grow 8 micro stalk.
-          this.beanStem = '-3'
+          this.beanStem = -3966705
         });
 
         it('properly updates total values', async function () {
@@ -619,11 +614,11 @@ describe('Curve Convert', function () {
           expect(await this.siloGetters.getTotalDepositedBdv(this.bean.address)).to.eq('200018189');
           expect(await this.siloGetters.getTotalDeposited(this.beanMetapool.address)).to.eq('800814241685186471402');
           expect(await this.siloGetters.getTotalDepositedBdv(this.beanMetapool.address)).to.eq('800814242');
-          expect(await this.siloGetters.totalStalk()).to.eq('10016130951259');
+          expect(await this.siloGetters.totalStalk()).to.eq('10016324310000');
         });
 
         it('properly updates user values', async function () {
-          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10016130951259');
+          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10016324310000');
         });
 
         it('properly updates user deposits', async function () {
@@ -674,7 +669,7 @@ describe('Curve Convert', function () {
               [this.stem, this.stem2], 
               [to18('50'), to18('50')]
             )
-          this.beanStem = '-3';
+          this.beanStem = -3938563;
         });
 
         it('properly updates total values', async function () {
@@ -682,11 +677,11 @@ describe('Curve Convert', function () {
           expect(await this.siloGetters.getTotalDepositedBdv(this.bean.address)).to.eq('100618167');
           expect(await this.siloGetters.getTotalDeposited(this.beanMetapool.address)).to.eq(to18('900'));
           expect(await this.siloGetters.getTotalDepositedBdv(this.beanMetapool.address)).to.eq(to6('900'));
-          expect(await this.siloGetters.totalStalk()).to.eq('10016087233503');
+          expect(await this.siloGetters.totalStalk()).to.eq('10016181670000');
         });
 
         it('properly updates user values', async function () {
-          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10016087233503');
+          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10016181670000');
         });
 
         it('properly updates user deposits', async function () {
