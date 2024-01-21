@@ -179,11 +179,14 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
+        uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
-            if (sender != msg.sender) {
-                LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amounts[i]);
-            }
+            totalAmount = totalAmount.add(amounts[i]);
+        }
+
+        if (sender != msg.sender) {
+            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, totalAmount);
         }
        
         LibSilo._mow(sender, token);
