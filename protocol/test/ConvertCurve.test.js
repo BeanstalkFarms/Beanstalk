@@ -613,12 +613,12 @@ describe('Curve Convert', function () {
           expect(await this.siloGetters.getTotalDeposited(this.bean.address)).to.eq('200018189');
           expect(await this.siloGetters.getTotalDepositedBdv(this.bean.address)).to.eq('200018189');
           expect(await this.siloGetters.getTotalDeposited(this.beanMetapool.address)).to.eq('800814241685186471402');
-          expect(await this.siloGetters.getTotalDepositedBdv(this.beanMetapool.address)).to.eq('800814242');
-          expect(await this.siloGetters.totalStalk()).to.eq('10016324310000');
+          expect(await this.siloGetters.getTotalDepositedBdv(this.beanMetapool.address)).to.eq('800814241');
+          expect(await this.siloGetters.totalStalk()).to.eq('10016324300000');
         });
 
         it('properly updates user values', async function () {
-          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10016324310000');
+          expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq('10016324300000');
         });
 
         it('properly updates user deposits', async function () {
@@ -627,12 +627,12 @@ describe('Curve Convert', function () {
           expect(deposit[1]).to.eq('200018189');
           deposit = await this.siloGetters.getDeposit(userAddress, this.beanMetapool.address, this.stem);
           expect(deposit[0]).to.eq('800814241685186471402');
-          expect(deposit[1]).to.eq('800814242');
+          expect(deposit[1]).to.eq('800814241');
         });
 
         it('emits events', async function () {
           await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
-            .withArgs(userAddress, this.beanMetapool.address, [this.stem], ['199185758314813528598'], '199185758314813528598', ['199185758']);
+            .withArgs(userAddress, this.beanMetapool.address, [this.stem], ['199185758314813528598'], '199185758314813528598', ['199185759']);
           await expect(this.result).to.emit(this.silo, 'AddDeposit')
             .withArgs(userAddress, this.bean.address, this.beanStem, '200018189', '200018189');
         });

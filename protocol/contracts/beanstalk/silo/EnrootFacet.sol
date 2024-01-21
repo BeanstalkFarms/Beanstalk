@@ -72,7 +72,6 @@ contract EnrootFacet is ReentrancyGuard {
      * Because the amount and the stem of an Deposit does not change, 
      * an ERC1155 event does not need to be emitted.
      * 
-     * newly issued bdv and stalk should be germinating.
      */
     function enrootDeposit(
         address token,
@@ -88,6 +87,7 @@ contract EnrootFacet is ReentrancyGuard {
             stem,
             amount
         );
+
         // Remove Deposit does not emit an event, while Add Deposit does.
         emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); 
 
@@ -98,7 +98,7 @@ contract EnrootFacet is ReentrancyGuard {
             msg.sender, 
             token, 
             stem, 
-            amount, 
+            amount,
             newBDV,
             LibTokenSilo.Transfer.noEmitTransferSingle
         ); // emits AddDeposit event
@@ -146,6 +146,7 @@ contract EnrootFacet is ReentrancyGuard {
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
+
             uint256 depositBdv;
             if (i+1 == stems.length) {
                 // Ensure that a rounding error does not occur by using the
@@ -185,7 +186,8 @@ contract EnrootFacet is ReentrancyGuard {
                     .add(ar.odd.bdv)
             )
         );
-        LibSilo.mintActiveStalk(msg.sender, 
+        LibSilo.mintActiveStalk(
+        msg.sender, 
             enrootData.stalkAdded.sub(
                 ar.active.stalk
                 .add(ar.even.stalk)
@@ -251,32 +253,5 @@ contract EnrootFacet is ReentrancyGuard {
             )
         );
     }
-    /**
-     * @notice Increments total germinating bdv and mints germinating stalk,
-     * allocated to the current season.
-     * 
-     * @dev Placed in an function for stack overflow reasons.
-     * @param token The token to increment total germinating bdv for.
-     * @param bdvChange The change in bdv from enrooting.
-     * @param stalkChange The change in stalk from enrooting.
-     */
-    function incrementTotalGerminatingBdvAndMintGerminatingStalk(
-        address token,
-        uint256 bdvChange,
-        uint256 stalkChange
-    ) private {
-        LibGerminate.Germinate _germ = LibGerminate.getSeasonGerminationState();
-        
-        LibTokenSilo.incrementTotalGerminatingBdv(
-            token, 
-            bdvChange.toUint128(),
-            _germ
-        );
 
-        LibSilo.mintGerminatingStalk(
-            msg.sender,
-            stalkChange.toUint128(),
-            _germ
-        );
-    }
 }

@@ -871,6 +871,61 @@ describe("Silo Token", function () {
         await expect(this.result).to.emit(this.enroot, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
+
+      it('audit small unripe bean withdrawals dont decrease BDV and Stalks', async function () {
+        // dev: call sunrise twice to finish germination. In practice, deposits from migration 
+        // can never be germinating, but tests are set up such that they are deposited in the same season as migration.
+        await this.season.siloSunrise('0');
+        await this.season.siloSunrise('0');
+
+        await this.silo.mow(user.address, UNRIPE_BEAN);
+
+        let initialUnripeBeanDeposited    = to6('10');
+        let initialUnripeBeanDepositedBdv = '2355646';
+        let initialTotalStalk = pruneToStalk(initialUnripeBeanDeposited).add(toStalk('0.5')).mul(toBN(10004)).div(toBN(10000));
+        
+        // verify initial state
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(initialUnripeBeanDeposited);
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(initialUnripeBeanDepositedBdv);
+        expect(await this.siloGetters.totalStalk()).to.eq(initialTotalStalk);        
+        
+        // snapshot EVM state as we want to restore it after testing the normal
+        // case works as expected
+        let snapshotId = await network.provider.send('evm_snapshot');        
+        
+        // normal case: withdrawing total UNRIPE_BEAN correctly decreases BDV & removes stalks
+        const stem = await this.siloGetters.seasonToStem(UNRIPE_BEAN, '10');
+        await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, stem, initialUnripeBeanDeposited, EXTERNAL);
+        
+        // verify UNRIPE_BEAN totalDeposited == 0
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq('0');
+        // verify UNRIPE_BEAN totalDepositedBDV == 0
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq('0');
+        // verify silo.totalStalk() == 0
+        expect(await this.siloGetters.totalStalk()).to.eq('0');
+        
+        // restore EVM state to snapshot prior to testing normal case
+        await network.provider.send("evm_revert", [snapshotId]);
+        
+        // re-verify initial state
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(initialUnripeBeanDeposited);
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(initialUnripeBeanDepositedBdv);
+        expect(await this.siloGetters.totalStalk()).to.eq(initialTotalStalk);
+        
+        // attacker case: withdrawing small amounts of UNRIPE_BEAN doesn't decrease
+        // BDV and doesn't remove stalks. This lets an attacker withdraw their deposits
+        // without losing Stalks & breaks the invariant that the totalDepositedBDV should
+        // equal the sum of the BDV of all individual deposits
+        let smallWithdrawAmount = '4';
+        await this.silo.connect(user).withdrawDeposit(UNRIPE_BEAN, stem, smallWithdrawAmount, EXTERNAL);
+        
+        // verify UNRIPE_BEAN totalDeposited has been correctly decreased
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(initialUnripeBeanDeposited.sub(smallWithdrawAmount));
+        // verify unripeBean totalDepositedBDV decreases.
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(toBN(initialUnripeBeanDepositedBdv).sub(1));
+        // verify silo.totalStalk() decreases.
+        expect(await this.siloGetters.totalStalk()).to.lt(toBN(initialTotalStalk));
+      });
     });
 
     describe("1 deposit after 1 season, all", async function () {

@@ -83,7 +83,7 @@ library LibGerminate {
         }
         for (uint i; i < tokens.length; ++i) {
             // if the token has no deposits, skip.
-            if(totalGerm.deposited[tokens[i]].amount == 0) {
+            if (totalGerm.deposited[tokens[i]].amount == 0) {
                 continue;
             }
             LibTokenSilo.incrementTotalDeposited(
@@ -155,11 +155,7 @@ library LibGerminate {
         s.a[account].roots = s.a[account].roots.add(roots);
 
         // emit event.
-        emit LibSilo.StalkBalanceChanged(
-            account,
-            int256(germinatingStalk),
-            int256(roots)
-        );
+        emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
     }
 
     /**
@@ -243,15 +239,14 @@ library LibGerminate {
         uint32 lastMowedSeason,
         uint32 currentSeason
     ) internal view returns (uint256 germinatingStalk, uint256 germinatingRoots) {
-
-        // if user has mowed already, 
+        // if user has mowed already,
         // then there are no germinating stalk and roots to finish.
-        if(lastMowedSeason == currentSeason) {
+        if (lastMowedSeason == currentSeason) {
             return (0, 0);
         }
 
         (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(
-            account, 
+            account,
             isSeasonOdd(lastMowedSeason)
         );
 
@@ -267,7 +262,7 @@ library LibGerminate {
         if (secondStalk > 0) {
             germinatingStalk = germinatingStalk.add(secondStalk);
             germinatingRoots = germinatingRoots.add(
-            calculateGerminatingRoots(lastMowedSeason.sub(1), secondStalk)
+                calculateGerminatingRoots(lastMowedSeason.sub(1), secondStalk)
             );
         }
     }
@@ -288,10 +283,10 @@ library LibGerminate {
         if (lastMowedSeason < s.season.current.sub(1)) {
             return (0, 0);
         } else {
-            (
-                uint128 firstStalk,
-                uint128 secondStalk
-            ) = getGerminatingStalk(account, isSeasonOdd(lastMowedSeason));
+            (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(
+                account,
+                isSeasonOdd(lastMowedSeason)
+            );
             germinatingRoots = calculateGerminatingRoots(lastMowedSeason, firstStalk);
             germinatingStalk = firstStalk.add(secondStalk);
             germinatingRoots = germinatingRoots.add(
@@ -310,18 +305,17 @@ library LibGerminate {
         unclaimed = s.unclaimedGerminating[season];
     }
 
-    /** 
+    /**
      * @notice returns the total germinating bdv and amount for a token.
      */
     function getTotalGerminatingForToken(
         address token
     ) internal view returns (uint256 bdv, uint256 amount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return (s.oddGerminating.deposited[token].bdv.add(
-            s.evenGerminating.deposited[token].bdv
-        ), s.oddGerminating.deposited[token].amount.add(
-            s.evenGerminating.deposited[token].amount
-        ));
+        return (
+            s.oddGerminating.deposited[token].bdv.add(s.evenGerminating.deposited[token].bdv),
+            s.oddGerminating.deposited[token].amount.add(s.evenGerminating.deposited[token].amount)
+        );
     }
 
     /**
@@ -329,7 +323,7 @@ library LibGerminate {
      * If germinating, determines whether the deposit should be set to even or odd.
      *
      * @dev `getGerminationState` should be used if the stemTip and germinatingStem
-     * have not been caluculated yet. Otherwise, use `_getGerminationState` for gas effiecnecy.
+     * have not been calculated yet. Otherwise, use `_getGerminationState` for gas effiecnecy.
      */
     function getGerminationState(
         address token,
@@ -355,7 +349,20 @@ library LibGerminate {
      * equal or higher than this value are germinating.
      */
     function _getGerminatingStem(address token, int96 stemTip) internal view returns (int96 stem) {
-        return stemTip - int96(getPrevStalkEarnedPerSeason(token));
+        return __getGerminatingStem(stemTip, getPrevStalkEarnedPerSeason(token));
+    }
+
+    /**
+     * @notice Gas efficent version of `_getGerminatingStem`.
+     *
+     * @dev use when the stemTip and germinatingStem have already been calculated.
+     * Assumes the same token is used.
+     */
+    function __getGerminatingStem(
+        int96 stemTip,
+        int96 prevStalkEarnedPerSeason
+    ) internal pure returns (int96 stem) {
+        return stemTip - prevStalkEarnedPerSeason;
     }
 
     /**
