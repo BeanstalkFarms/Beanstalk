@@ -774,7 +774,7 @@ library LibSilo {
             // scale lastStem by 1e6, if the user has a lastStem.
             if(s.a[account].mowStatuses[siloTokens[i]].lastStem > 0) { 
                 s.a[account].mowStatuses[siloTokens[i]].lastStem = 
-                    s.a[account].mowStatuses[siloTokens[i]].lastStem.mul(PRECISION);
+                    s.a[account].mowStatuses[siloTokens[i]].lastStem.mul(int96(PRECISION));
             }
         }
     }
@@ -794,7 +794,7 @@ library LibSilo {
         for(uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if(lastStem > 0) {
-                if(LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= PRECISION) {
+                if(LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(PRECISION)) {
                     return true;
                 }
             }
