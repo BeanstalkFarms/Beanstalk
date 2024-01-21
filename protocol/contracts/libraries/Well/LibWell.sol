@@ -184,8 +184,8 @@ library LibWell {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // if the length of twaReserves is 0, then return 0.
         // the length of twaReserves should never be 1, but
-        // is added for safety.
-        if (twaReserves.length < 1) {
+        // is added to prevent revert.
+        if (twaReserves.length <= 1) {
             delete s.twaReserves[well].reserve0;
             delete s.twaReserves[well].reserve1;
         } else {
@@ -223,7 +223,7 @@ library LibWell {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.twaReserve[well] should be set prior to this function being called.
         // 'price' is in terms of reserve0:reserve1.
-        if (s.twaReserves[well].reserve0 == 0) {
+        if (s.twaReserves[well].reserve0 == 0 || s.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
             price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
