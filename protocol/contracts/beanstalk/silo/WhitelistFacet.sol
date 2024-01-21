@@ -118,7 +118,8 @@ contract WhitelistFacet {
     }
 
     /**
-     * @notice updates the GaugePoint selector, the LiquidityWeight selector, or the optimal lp deposited BDV of a token
+     * @notice Updates gauge settings for token.
+     * @dev {LibWhitelistedTokens} must be updated to include the new token.
      */
     function updateGaugeForToken(
         address token,

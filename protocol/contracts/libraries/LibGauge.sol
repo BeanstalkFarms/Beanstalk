@@ -160,7 +160,7 @@ library LibGauge {
             // deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
             uint256 gpPerBdv = newGaugePoints.mul(BDV_PRECISION).div(depositedBdv);
 
-            // gpPerBdv has 6 decimal precision.
+            // gpPerBdv has 18 decimal precision.
             if (gpPerBdv > maxLpGpPerBdv) maxLpGpPerBdv = gpPerBdv;
             _lpGpData.gpPerBdv = gpPerBdv;
             lpGpData[i] = _lpGpData;
@@ -219,12 +219,13 @@ library LibGauge {
         if (totalGaugeBdv == 0) return;
 
         // calculate the ratio between the bean and the max LP gauge points per BDV.
-        // 6 decimal precision
+        // 18 decimal precision.
         uint256 beanToMaxLpGpPerBdvRatio = getBeanToMaxLpGpPerBdvRatioScaled(
             s.seedGauge.beanToMaxLpGpPerBdvRatio
         );
-        // get the GaugePoints and GPperBDV for bean
-        // beanGpPerBdv has 6 decimal precision, beanToMaxLpGpPerBdvRatio has 18.
+
+        // Get the GaugePoints and GPperBDV for bean
+        // BeanGpPerBdv and beanToMaxLpGpPerBdvRatio has 18 decimal precision.
         uint256 beanGpPerBdv = maxLpGpPerBdv.mul(beanToMaxLpGpPerBdvRatio).div(100e18);
 
         totalGaugePoints = totalGaugePoints.add(
