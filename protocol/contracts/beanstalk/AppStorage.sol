@@ -416,9 +416,9 @@ contract Storage {
      */
     struct SiloSettings {
         bytes4 selector; // ────────────────────┐ 4
-        uint32 stalkEarnedPerSeason; //         │ 4  (16)
-        uint32 stalkIssuedPerBdv; //            │ 4  (8)
-        uint32 milestoneSeason; //              │ 4  (12)
+        uint32 stalkEarnedPerSeason; //         │ 4  (8)
+        uint32 stalkIssuedPerBdv; //            │ 4  (12)
+        uint32 milestoneSeason; //              │ 4  (16)
         int96 milestoneStem; //                 │ 12 (28)
         bytes1 encodeType; //                   │ 1  (29)
         int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
