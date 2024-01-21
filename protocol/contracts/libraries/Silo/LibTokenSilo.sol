@@ -375,6 +375,7 @@ library LibTokenSilo {
         // Partial remove
         if (amount < crateAmount) {
             uint256 removedBDV = amount.mul(crateBDV).div(crateAmount);
+            require(removedBDV > 0, "Silo: No BDV under Deposit.");
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
 
