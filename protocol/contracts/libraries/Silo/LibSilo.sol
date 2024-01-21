@@ -43,6 +43,7 @@ library LibSilo {
     using LibSafeMath32 for uint32;
     using SafeCast for uint256;
 
+    uint128 internal constant PRECISION = 1e6;
     //////////////////////// EVENTS ////////////////////////
 
     /**
@@ -699,21 +700,24 @@ library LibSilo {
     //////////////////////// UTILITIES ////////////////////////
 
     /**
-     * @dev Calculates the Stalk reward based on the start and end
+     * @notice Calculates the Stalk reward based on the start and end
      * stems, and the amount of BDV deposited. Stems represent the
      * amount of grown stalk per BDV, so the difference between the
      * start index and end index (stem) multiplied by the amount of
      * bdv deposited will give the amount of stalk earned.
      * formula: stalk = bdv * (ΔstalkPerBdv)
+     * 
+     * @dev endStem must be larger than startStem.
+     * 
      */
     function stalkReward(
         int96 startStem,
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        int96 reward = endStem.sub(startStem).mul(int96(bdv)).div(1e6);
+        uint128 reward = uint128(endStem.sub(startStem)).mul(bdv).div(PRECISION);
 
-        return uint128(reward);
+        return reward;
     }
 
     /**
@@ -770,7 +774,7 @@ library LibSilo {
             // scale lastStem by 1e6, if the user has a lastStem.
             if(s.a[account].mowStatuses[siloTokens[i]].lastStem > 0) { 
                 s.a[account].mowStatuses[siloTokens[i]].lastStem = 
-                    s.a[account].mowStatuses[siloTokens[i]].lastStem.mul(1e6);
+                    s.a[account].mowStatuses[siloTokens[i]].lastStem.mul(PRECISION);
             }
         }
     }
@@ -790,7 +794,7 @@ library LibSilo {
         for(uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
             if(lastStem > 0) {
-                if(LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= 1e6) {
+                if(LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= PRECISION) {
                     return true;
                 }
             }
