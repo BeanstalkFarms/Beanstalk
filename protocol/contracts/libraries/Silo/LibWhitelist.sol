@@ -135,7 +135,7 @@ library LibWhitelist {
     }
 
     /**
-     * @notice Adds an ERC-20 token to the Seed Gauge Whitelist.
+     * @notice Updates gauge settings for token.
      * @dev {LibWhitelistedTokens} must be updated to include the new token.
      */
     function updateGaugeForToken(
@@ -294,7 +294,10 @@ library LibWhitelist {
         // verify that the token is in the array.
         bool success;
         for (uint i; i < array.length; i++) {
-            if (token == array[i]) success = true;
+            if (token == array[i]) {
+                success = true; 
+                break;
+            }   
         }
         require(success, "Whitelist: Token not in whitelisted token array");
     }
@@ -306,7 +309,10 @@ library LibWhitelist {
         // verify that the token is not in the array.
         bool success = true;
         for (uint i; i < array.length; i++) {
-            if (token == array[i]) success = false;
+            if (token == array[i]) {
+                success = false; 
+                break;
+            }
         }
         require(success, "Whitelist: Token in incorrect whitelisted token array");
     }
