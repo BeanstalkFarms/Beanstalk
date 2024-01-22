@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import Vote from '~/components/Governance/Actions/Vote';
 import {
   Module,
@@ -10,19 +10,26 @@ import { Proposal } from '~/util/Governance';
 
 import { FC } from '~/types';
 import useProposalBlockData from '~/hooks/beanstalk/useProposalBlockData';
+import ListOfVotes from './ListOfVotes';
 
 const GovernanceActions: FC<{
   proposal: Proposal;
   quorum: ReturnType<typeof useProposalBlockData>;
+  votes?: any;
 }> = (props) => (
-  <Module sx={{ position: 'sticky', top: 120 }}>
-    <ModuleHeader>
-      <Typography variant="h4">Vote</Typography>
-    </ModuleHeader>
-    <ModuleContent>
-      <Vote proposal={props.proposal} quorum={props.quorum} />
-    </ModuleContent>
-  </Module>
+  <Box sx={{ position: 'sticky', top: 120 }}>
+    <Module>
+      <ModuleHeader>
+        <Typography variant="h4">Vote</Typography>
+      </ModuleHeader>
+      <ModuleContent>
+        <Vote proposal={props.proposal} quorum={props.quorum} />
+      </ModuleContent>
+    </Module>
+    <Module sx={{ marginTop: 2 }}>
+      <ListOfVotes proposal={props.proposal} quorum={props.quorum} votes={props.votes} />
+    </Module>
+  </Box>
 );
 
 export default GovernanceActions;
