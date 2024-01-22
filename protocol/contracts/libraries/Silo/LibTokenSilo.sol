@@ -469,8 +469,8 @@ library LibTokenSilo {
     }
 
     /**
-     * @dev Get the number of Stalk per BDV per Season for a whitelisted token. Formerly just seeds.
-     * Note this is stored as 1e6, i.e. 1_000_000 units of this is equal to 1 old seed.
+     * @dev Get the number of Stalk per BDV per Season for a whitelisted token.
+     * 6 decimal precision: 1e10 units = 1 stalk per season
      */
     function stalkEarnedPerSeason(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
