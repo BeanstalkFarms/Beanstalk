@@ -184,8 +184,8 @@ library LibWell {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // if the length of twaReserves is 0, then return 0.
         // the length of twaReserves should never be 1, but
-        // is added for safety.
-        if (twaReserves.length < 1) {
+        // is added to prevent revert.
+        if (twaReserves.length <= 1) {
             delete s.twaReserves[well].reserve0;
             delete s.twaReserves[well].reserve1;
         } else {
@@ -196,7 +196,7 @@ library LibWell {
     }
 
     /**
-     * @notice Returns the USD / TKN price stored in {AppStorage.usdTokenPrice}.
+     * @notice Returns the TKN / USD price stored in {AppStorage.usdTokenPrice}.
      * @dev assumes TKN has 18 decimals.
      */
     function getTwaReservesForWell(
@@ -223,7 +223,7 @@ library LibWell {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.twaReserve[well] should be set prior to this function being called.
         // 'price' is in terms of reserve0:reserve1.
-        if (s.twaReserves[well].reserve0 == 0) {
+        if (s.twaReserves[well].reserve0 == 0 || s.twaReserves[well].reserve1 == 0) {
             price = 0;
         } else {
             price = s.twaReserves[well].reserve0.mul(1e18).div(s.twaReserves[well].reserve1);
@@ -243,18 +243,22 @@ library LibWell {
      * @notice gets the TwaReserves of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
      * the inital timestamp and reserves is the timestamp of the start
-     * of the last season.
+     * of the last season. wrapped in try/catch to return gracefully.
      */
     function getTwaReservesFromBeanstalkPump(
         address well
-    ) internal view returns (uint256[] memory twaReserves) {
+    ) internal view returns (uint256[] memory) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        (twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+        try ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
             well,
             s.wellOracleSnapshots[well],
-            s.season.timestamp,
+            uint40(s.season.timestamp),
             C.BYTES_ZERO
-        );
+        ) returns (uint[] memory twaReserves, bytes memory) {
+            return twaReserves;
+        } catch {
+            return (new uint256[](2));
+        }
     }
 
     /**
@@ -269,12 +273,16 @@ library LibWell {
     ) internal view returns (uint256 usdLiquidity) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-        (uint256[] memory twaReserves, ) = ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
+        try ICumulativePump(C.BEANSTALK_PUMP).readTwaReserves(
             well,
             s.wellOracleSnapshots[well],
-            s.season.timestamp,
+            uint40(s.season.timestamp),
             C.BYTES_ZERO
-        );
-        usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
+        ) returns (uint[] memory twaReserves, bytes memory) {
+            usdLiquidity = tokenUsdPrice.mul(twaReserves[j]).div(1e6);
+        } catch {
+            // if pump fails to return a value, return 0.
+            usdLiquidity = 0;
+        }
     }
 }

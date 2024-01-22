@@ -25,7 +25,7 @@ contract MetadataImage {
     string constant LEAF_COLOR_0 = '#A8C83A';
     string constant LEAF_COLOR_1 = '#89A62F';
     uint256 constant NUM_PLOTS = 21;
-    uint256 constant STALK_GROWTH = 2e2;
+    uint256 constant STALK_GROWTH = 2e8;
 
     function imageURI(address token, int96 stem, int96 stemTip) public pure returns (string memory) {
         return string(
@@ -286,7 +286,7 @@ contract MetadataImage {
         bytes memory _plot;
 
         (, uint256 numPlotsToFill) = getNumStemsAndPlots(stalkPerBDV);
-        
+
         // first plot should always be planted fully, and every 2% stalk adds a sprout to the next plot.
         for(uint256 i = 0; i < NUM_PLOTS; ++i) {
             uint256 plotNo = order[i];

@@ -115,8 +115,9 @@ describe("Silo Enroot", function () {
         )
 
         const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
+        // migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON]], [[to6('10')]], 0, 0, []);
+        // call sunrise twice to finish germination process.
         this.result = await this.enroot.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
 

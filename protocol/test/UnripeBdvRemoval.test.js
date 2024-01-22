@@ -117,14 +117,14 @@ describe("Silo Enroot", function () {
         })
         it("should remove most of the deposit", async function () {
             const deposit = await this.beanstalk.connect(user).getDeposit(userAddress, UNRIPE_BEAN, this.stem)
-            expect(deposit[0]).to.equal('1')
-            expect(deposit[1]).to.equal('1')
+            // bdv != amt due to bdv removals rounding up. acceptable.
+            expect(deposit[0]).to.equal('1') // amt 
+            expect(deposit[1]).to.equal('0') // bdv
         });
 
         it("removes all stalk", async function () {
-          // 0.0004 stalk is added due to 2 season added from germination update.
             const stalk = await this.beanstalk.balanceOfStalk(userAddress)
-            expect(stalk).to.equal('10004')
+            expect(stalk).to.equal('0')
         })
 
     })

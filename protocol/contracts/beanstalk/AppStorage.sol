@@ -408,7 +408,7 @@ contract Storage {
      * ```
      * @param gpSelector The encoded liquidityWeight function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature `function liquidityWeight()`
-     * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token.
+     * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
      * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
      * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
 
@@ -416,9 +416,9 @@ contract Storage {
      */
     struct SiloSettings {
         bytes4 selector; // ────────────────────┐ 4
-        uint32 stalkEarnedPerSeason; //         │ 4  (16)
-        uint32 stalkIssuedPerBdv; //            │ 4  (8)
-        uint32 milestoneSeason; //              │ 4  (12)
+        uint32 stalkEarnedPerSeason; //         │ 4  (8)
+        uint32 stalkIssuedPerBdv; //            │ 4  (12)
+        uint32 milestoneSeason; //              │ 4  (16)
         int96 milestoneStem; //                 │ 12 (28)
         bytes1 encodeType; //                   │ 1  (29)
         int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
@@ -501,7 +501,7 @@ contract Storage {
  * @author Publius
  * @notice Defines the state object for Beanstalk.
  * @param deprecated_index DEPRECATED: Was the index of the BEAN token in the BEAN:ETH Uniswap V2 pool.
- * @param cases The 24 Weather cases (array has 32 items, but caseId = 3 (mod 4) are not cases)
+ * @param deprecated_cases DEPRECATED: The 24 Weather cases used in cases V1 (array has 32 items, but caseId = 3 (mod 4) are not cases)
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param season Storage.Season
@@ -544,7 +544,8 @@ contract Storage {
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param wellOracleSnapshots A mapping from Well Oracle address to the Well Oracle Snapshot.
- * @param TwaReserves A mapping from well to its twaReserves. Stores twaReserves during the sunrise function. Returns 1 otherwise for each asset. Currently supports 2 token wells.
+ * @param deprecated_beanEthPrice DEPRECATED - The price of bean:eth, originally used to calculate the incentive reward. Deprecated in favor of calculating using twaReserves.
+ * @param twaReserves A mapping from well to its twaReserves. Stores twaReserves during the sunrise function. Returns 1 otherwise for each asset. Currently supports 2 token wells.
  * @param migratedBdvs Stores the total migrated BDV since the implementation of the migrated BDV counter. See {LibLegacyTokenSilo.incrementMigratedBdv} for more info.
  * @param usdEthPrice  Stores the usdEthPrice during the sunrise() function. Returns 1 otherwise.
  * @param seedGauge Stores the seedGauge.
@@ -554,7 +555,7 @@ contract Storage {
  */
 struct AppStorage {
     uint8 deprecated_index;
-    int8[32] cases; 
+    int8[32] deprecated_cases; 
     bool paused; // ────────┐ 1 
     uint128 pausedAt; // ───┘ 16 (17/32)
     Storage.Season season;

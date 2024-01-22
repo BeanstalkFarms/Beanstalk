@@ -396,14 +396,14 @@ describe('Silo', function () {
     });
   });
 
-  describe.skip("ERC1155 Metadata", async function () {
+  describe("ERC1155 Metadata", async function () {
     beforeEach(async function () {
       // 2 seasons were added in before. (998 + 2 = 1000)
       await this.season.farmSunrises(998);
     })
 
     it('is a valid json', async function () {
-      depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
+      depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab0000000000000000001E8480';
       const depositmetadata = await this.metadata.uri(depositID1);
       depositMetadataString = atob(depositmetadata.substring(29))
       // verify that depositMetadataString is a json:
@@ -413,28 +413,28 @@ describe('Silo', function () {
     // bean token
     it('returns correct URI for bean', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean.txt', 'utf-8');
-      depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000000002';
+      depositID1 = '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab0000000000000000001E8480';
       expect(await this.metadata.uri(depositID1)).to.eq(depositmetadata);
     })
 
     // bean3crv token
     it('returns correct URI for bean3crv', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3Crv.txt', 'utf-8');
-      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000200';
+      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE4900000000000000001E848000';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
     })
 
     // beanEthToken
     it('returns correct URI for beanEth', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBeanEth.txt', 'utf-8');
-      depositID3 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF00000000002';
+      depositID3 = '0xBEA0e11282e2bB5893bEcE110cF199501e872bAdFFFFFFFFFFFFF000001E8480';
       expect(await this.metadata.uri(depositID3)).to.eq(depositmetadata);
     })
       
     // urBean token
     it('returns correct URI for urBean', async function () {
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageUrBean.txt', 'utf-8');
-      depositID4 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449000000000000000000000400';
+      depositID4 = '0x1BEA0050E63e05FBb5D8BA2f10cf5800B62244490000000000000000003D0900';
       expect(await this.metadata.uri(depositID4)).to.eq(depositmetadata);
     })
 
@@ -449,7 +449,7 @@ describe('Silo', function () {
       await this.whitelist.connect(owner).dewhitelistToken(this.beanMetapool.address);
 
       depositmetadata = await fs.readFileSync(__dirname + '/data/base64EncodedImageBean3CrvDewhitelisted.txt', 'utf-8');
-      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE49000000000000000000000200';
+      depositID2 = '0xC9C32CD16BF7EFB85FF14E0C8603CC90F6F2EE4900000000000000001E848000';
       expect(await this.metadata.uri(depositID2)).to.eq(depositmetadata);
     })
 
