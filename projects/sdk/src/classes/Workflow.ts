@@ -287,7 +287,7 @@ export abstract class Workflow<
         this.add(elem, options); // recurse
       }
     } else {
-      Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
+
       if (input instanceof StepClass) {
         input.setSDK(Workflow.sdk);
       }
@@ -297,16 +297,27 @@ export abstract class Workflow<
 
       switch (input.name) {
         case "pipelineDeposit":
-          pipelineOptions = { tag: `deposit${filteredOptions.length + 1}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] pipelineOptions: `, pipelineOptions);
+          pipelineOptions = { tag: `deposit${filteredOptions.length}Amount` };
           break;
-        case "pipelineBeanWethSwap":
-          pipelineOptions = { tag: `beanWethSwap${filteredOptions.length}Amount` };
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] pipelineOptions: `, pipelineOptions);
+        case "pipelineUniV3Deposit":
+          pipelineOptions = { tag: `depositUniV3${filteredOptions.length}Amount` };
+          break;
+        case "pipelineWellSwap":
+          pipelineOptions = { tag: `wellSwap${filteredOptions.length}Amount` };
+          break;
+        case "pipelineUniswapV3Swap":
+          pipelineOptions = { tag: `uniswapV3Swap${filteredOptions.length}Amount` };
+          break;
+        case "pipelineUniV3WellSwap":
+          pipelineOptions = { tag: `uniV3WellSwap${filteredOptions.length}Amount` };
+          break;
+        case "pipelineWellSwapUniV3":
+          pipelineOptions = { tag: `wellSwapUniV3${filteredOptions.length}Amount` };
           break;
         default:
-          Workflow.sdk.debug(`[Workflow][${this.name}][add] Not a bundle of Pipeline operations`);
-      }
+      };
+
+      Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions || '');
       
       this._generators.push(input);
       this._options.push(pipelineOptions || options || null); // null = no options set

@@ -16,7 +16,8 @@ import { ExchangeUnderlying } from "./ExchangeUnderlying";
 import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
 import { WellSwap } from "./WellSwap";
 import { WellShift } from "./WellShift";
-import { WellSync } from "./WellSync"; 
+import { WellSync } from "./WellSync";
+import { UniswapV3Swap } from "./UniswapV3Swap"; 
 import { DevDebug } from "./_DevDebug";
 
 export {
@@ -50,6 +51,9 @@ export {
   WellSwap,
   WellShift,
   WellSync,
+
+  // DEX: Uniswap V3
+  UniswapV3Swap,
 
   // Developers
   DevDebug

@@ -230,37 +230,63 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
     });
 
     graph.setEdge("USDC", "WETH", {
-      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.usdc2weth(from, to),
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.WETH, account, 500, from, to),
       from: "USDC",
       to: "WETH",
-      label: "exchange"
+      label: "uniswapV3Swap"
     });
 
     graph.setEdge("DAI", "WETH", {
-      build: (_: string, from: FarmFromMode, to: FarmToMode) => sdk.farm.presets.dai2weth(from, to),
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniswapV3Swap(sdk.tokens.DAI, sdk.tokens.WETH, account, 500, from, to),
       from: "DAI",
       to: "WETH",
-      label: "exchange"
+      label: "uniswapV3Swap"
+    });
+  }
+
+  
+  /**
+   * [ USDC, DAI ] => BEAN
+   */
+  {
+    const well = sdk.pools.BEAN_ETH_WELL;
+    graph.setEdge("USDC", "BEAN", {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniV3WellSwap(well, account, sdk.tokens.USDC, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+      from: "USDC",
+      to: "BEAN",
+      label: "uniV3WellSwap"
+    });
+
+    graph.setEdge("DAI", "BEAN", {
+      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+        sdk.farm.presets.uniV3WellSwap(well, account, sdk.tokens.DAI, sdk.tokens.WETH, sdk.tokens.BEAN, 500, from, to),
+      from: "DAI",
+      to: "BEAN",
+      label: "uniV3WellSwap"
     });
   }
 
   /**
-   * Well Swap: WETH => BEAN
+   * Well Swap: WETH <> BEAN
    */
   {
+    const well = sdk.pools.BEAN_ETH_WELL;
     graph.setEdge("WETH", "BEAN", {
       build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.wellWethBean(sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
+        sdk.farm.presets.wellSwap(well, sdk.tokens.WETH, sdk.tokens.BEAN, account, from, to),
       from: "WETH",
       to: "BEAN",
-      label: "wellWethBean"
+      label: "wellSwap"
     });
     graph.setEdge("BEAN", "WETH", {
       build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.wellWethBean(sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
+        sdk.farm.presets.wellSwap(well, sdk.tokens.BEAN, sdk.tokens.WETH, account, from, to),
       from: "BEAN",
       to: "WETH",
-      label: "wellWethBean"
+      label: "wellSwap"
     });
   }
 
