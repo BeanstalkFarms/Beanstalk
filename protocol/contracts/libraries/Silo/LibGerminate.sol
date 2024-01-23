@@ -96,25 +96,6 @@ library LibGerminate {
     }
 
     /**
-     * @notice ends the germination process for a given account.
-     * @param account address of the account to end germination for.
-     * @dev the germination process:
-     * - increments the assoicated values (bdv, stalk, roots)
-     * - clears the germination struct for the account.
-     *
-     * returns seasonGerm for gas effciency.
-     */
-    function endAccountGermination(
-        address account,
-        uint32 lastMowedSeason,
-        uint32 currentSeason
-    ) internal {
-        // 2) end germination for stalk and roots, if the last updated season
-        // is less than the current season - 1 (in other words, 2 seasons elapsed).
-        endGerminatingStalk(account, lastMowedSeason, currentSeason);
-    }
-
-    /**
      * @notice contains logic for ending germination for stalk and roots.
      * @param account address of the account to end germination for.
      * @param lastMowedSeason the last season the account mowed.
@@ -123,8 +104,12 @@ library LibGerminate {
      * and roots created in the season closest to the current season.
      * i.e if a user deposited in season 10 and 11, the `first` stalk
      * would be season 11.
+     * 
+     * the germination process:
+     * - increments the assoicated values (bdv, stalk, roots)
+     * - clears the germination struct for the account.
      */
-    function endGerminatingStalk(
+    function endAccountGermination(
         address account,
         uint32 lastMowedSeason,
         uint32 currentSeason
