@@ -34,6 +34,7 @@ import {
   UniswapV3Router,
   UniswapV3QuoterV2__factory,
   UniswapV3QuoterV2,
+  
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
 
@@ -57,6 +58,7 @@ export class Contracts {
   static sdk: BeanstalkSDK;
 
   public readonly beanstalk: Beanstalk;
+  public readonly beanstalkRead: Beanstalk;
   public readonly beanstalkPrice: BeanstalkPrice;
   public readonly fertilizer: BeanstalkFertilizer;
 
@@ -100,6 +102,7 @@ export class Contracts {
 
     // Instances
     this.beanstalk = Beanstalk__factory.connect(beanstalkAddress, sdk.providerOrSigner);
+    this.beanstalkRead = Beanstalk__factory.connect(beanstalkAddress, sdk.readProvider ?? sdk.providerOrSigner);
     this.beanstalkPrice = BeanstalkPrice__factory.connect(beanstalkPriceAddress, sdk.providerOrSigner);
     this.fertilizer = BeanstalkFertilizer__factory.connect(beanstalkFertilizerAddress, sdk.providerOrSigner);
 
