@@ -55,12 +55,14 @@ import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 
 /// ---------------------------------------------------------------
 
 type SwapFormValues = {
   /** Multiple tokens can (eventually) be swapped into tokenOut */
   tokensIn: FormTokenState[];
+  balanceFrom: BalanceFrom;
   modeIn: FarmFromMode.INTERNAL | FarmFromMode.EXTERNAL;
   /** One output token can be selected */
   tokenOut: FormTokenState;
@@ -113,6 +115,10 @@ const SwapForm: FC<
   const account = useAccount();
   const sdk = useSdk();
 
+  const [fromOptions, setFromOptions] = useState<BalanceFrom[]>([
+    BalanceFrom.TOTAL,
+  ]);
+
   /// Derived values
   const stateIn = values.tokensIn[0];
   const tokenIn = stateIn.token;
@@ -122,7 +128,6 @@ const SwapForm: FC<
   const tokenOut = stateOut.token;
   const modeOut = values.modeOut;
   const amountOut = stateOut.amount;
-
   const tokensMatch = tokenIn === tokenOut;
   const noBalancesFound = useMemo(
     () => Object.keys(balances).length === 0,
@@ -137,6 +142,26 @@ const SwapForm: FC<
     }
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
   }, [balances, modeIn, tokenIn.address, tokensMatch]);
+
+  useEffect(() => {
+    // if tokens match, then we want to allow picking different balanceFrom options
+    if (tokensMatch) {
+      setFromOptions([
+        modeIn === FarmFromMode.INTERNAL
+          ? BalanceFrom.INTERNAL
+          : BalanceFrom.EXTERNAL,
+      ]);
+      setFieldValue(
+        'balanceFrom',
+        modeIn === FarmFromMode.INTERNAL
+          ? BalanceFrom.INTERNAL
+          : BalanceFrom.EXTERNAL
+      );
+    } else {
+      setFromOptions([BalanceFrom.TOTAL]);
+      setFieldValue('balanceFrom', BalanceFrom.TOTAL);
+    }
+  }, [tokensMatch, modeIn, modeOut, setFieldValue]);
 
   const noBalance = !balanceInMax?.gt(0);
   const expectedFromMode = balanceIn
@@ -229,6 +254,8 @@ const SwapForm: FC<
     setFieldValue('modeOut', defaultValues.modeOut);
     setFieldValue('tokensIn.0', { ...defaultValues.tokensIn[0] });
     setFieldValue('tokenOut', { ...defaultValues.tokenOut });
+    setFieldValue('balanceFrom', BalanceFrom.TOTAL);
+    setFromOptions([BalanceFrom.TOTAL]);
   }, [defaultValues, setFieldValue]);
 
   /// reset to default values when user switches wallet addresses or disconnects
@@ -422,6 +449,8 @@ const SwapForm: FC<
         handleSubmit={handleTokenSelectSubmit} //
         selected={selectedTokens}
         balances={balances}
+        balanceFrom={values.balanceFrom}
+        balanceFromOptions={fromOptions}
         tokenList={tokenList}
         mode={TokenSelectMode.SINGLE}
       />
@@ -436,6 +465,7 @@ const SwapForm: FC<
             InputProps={{
               endAdornment: (
                 <TokenAdornment
+                  balanceFrom={values.balanceFrom}
                   token={tokenIn}
                   onClick={handleShowTokenSelect('tokensIn')}
                 />
@@ -683,6 +713,7 @@ const Swap: FC<{}> = () => {
         },
       ],
       modeIn: FarmFromMode.EXTERNAL,
+      balanceFrom: BalanceFrom.TOTAL,
       tokenOut: {
         token: Bean,
         amount: undefined,

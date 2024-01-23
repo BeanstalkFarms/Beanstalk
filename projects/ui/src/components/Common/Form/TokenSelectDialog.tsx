@@ -55,6 +55,8 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   description?: string | JSX.Element;
   /** the balance (circulating |farm | combined) being used */
   balanceFrom?: BalanceFrom;
+  /** custom set of options to filter the balance from selection */
+  balanceFromOptions?: BalanceFrom[];
   /** set the balance (circulating |farm | combined) to use */
   setBalanceFrom?: (v: BalanceFrom) => void;
   /**
@@ -92,6 +94,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     title,
     description,
     balanceFrom = BalanceFrom.TOTAL,
+    balanceFromOptions,
     setBalanceFrom,
     // Balances
     balancesType = 'farm',
@@ -182,7 +185,8 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     );
 
     if (!selectedInternal) return null;
-
+    // console.log('balanceFrom',balanceFrom);
+    // // console.log(_balances);
     return (
       <StyledDialog
         onClose={handleClose}
@@ -210,6 +214,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
               <BalanceFromRow
                 balanceFrom={balanceFrom}
                 setBalanceFrom={setBalanceFrom}
+                customOptions={balanceFromOptions}
               />
               <Box
                 pt={2}
