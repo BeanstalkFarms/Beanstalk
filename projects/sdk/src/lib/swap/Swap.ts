@@ -29,26 +29,10 @@ export class Swap {
   }
 
   public buildSwap(tokenIn: Token, tokenOut: Token, account: string, _from?: FarmFromMode, _to?: FarmToMode) {
+    
     const route = this.router.getRoute(tokenIn.symbol, tokenOut.symbol);
+    const workflow = Swap.sdk.farm.createAdvancedFarm(`Swap ${tokenIn.symbol}->${tokenOut.symbol}`);
 
-    let workflow;
-    let useAdvancedFarm = false;
-
-    for (let i = 0; i < route.length; i++) {
-      if (route.getStep(i - 1)) {
-        if (route.getStep(i - 1).from === "BEAN" && route.getStep(i - 1).to === "WETH" &&
-            route.getStep(i).from === "WETH" && route.getStep(i).to === "ETH") {
-              useAdvancedFarm = true;
-              break;
-        };
-      };
-    };
-
-    if (useAdvancedFarm) {
-      workflow = Swap.sdk.farm.createAdvancedFarm(`Swap ${tokenIn.symbol}->${tokenOut.symbol}`);
-    } else {
-      workflow = Swap.sdk.farm.create(`Swap ${tokenIn.symbol}->${tokenOut.symbol}`);
-    }
     // Handle Farm Modes
     // For a single step swap (ex, ETH > WETH, or BEAN > BEAN), use the passed modes, if available
     if (route.length === 1) {

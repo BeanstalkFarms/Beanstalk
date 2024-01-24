@@ -62,18 +62,18 @@ export class EventManager {
     const toBlock = opts.toBlock ?? "latest";
 
     return Promise.all([
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.AddDeposit(account, opts.token?.address),
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters.AddDeposit(account, opts.token?.address),
         fromBlock,
         toBlock
       ),
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.RemoveDeposit(account, opts.token?.address),
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters.RemoveDeposit(account, opts.token?.address),
         fromBlock,
         toBlock
       ),
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.RemoveDeposits(account, opts.token?.address),
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters.RemoveDeposits(account, opts.token?.address),
         fromBlock,
         toBlock
       )
@@ -87,19 +87,19 @@ export class EventManager {
     const toBlock = opts.toBlock ?? "latest";
 
     return Promise.all([
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters["Sow(address,uint256,uint256,uint256)"](account),
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters["Sow(address,uint256,uint256,uint256)"](account),
         fromBlock,
         toBlock
       ),
-      this.sdk.contracts.beanstalk.queryFilter(this.sdk.contracts.beanstalk.filters.Harvest(account), fromBlock, toBlock),
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.PlotTransfer(account, null), // from
+      this.sdk.contracts.beanstalkRead.queryFilter(this.sdk.contracts.beanstalkRead.filters.Harvest(account), fromBlock, toBlock),
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters.PlotTransfer(account, null), // from
         fromBlock,
         toBlock
       ),
-      this.sdk.contracts.beanstalk.queryFilter(
-        this.sdk.contracts.beanstalk.filters.PlotTransfer(null, account), // to
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters.PlotTransfer(null, account), // to
         fromBlock,
         toBlock
       )

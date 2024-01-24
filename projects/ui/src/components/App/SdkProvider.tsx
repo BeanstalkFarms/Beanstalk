@@ -54,6 +54,7 @@ const useBeanstalkSdkContext = () => {
 
     const _sdk = new BeanstalkSDK({
       provider: provider as any,
+      readProvider: provider as any,
       signer: signer ?? undefined,
       source: datasource,
       DEBUG: IS_DEVELOPMENT_ENV,
