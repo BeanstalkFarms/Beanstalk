@@ -154,6 +154,7 @@ export default function useProposalBlockData(
       pctOfQuorum,
       // Account
       votingPower,
+      // Votes
       votes: voteData?.votes as VoteData[] || undefined
     },
   };
