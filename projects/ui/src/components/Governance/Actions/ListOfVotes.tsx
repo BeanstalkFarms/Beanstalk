@@ -22,13 +22,13 @@ import FolderMenu from '~/components/Nav/FolderMenu';
 const VotesTable: FC<{
   proposal: Proposal;
   quorum: ReturnType<typeof useProposalBlockData>;
-  votes: any;
 }> = (props) => {
   const proposal = props.proposal;
   const proposalType = props.quorum.data.type;
   const choices = props.proposal.choices
     ? [...props.proposal.choices]
     : undefined;
+  const votes = props.quorum.data.votes;
 
   const [tab, handleChangeTab] = useTabs();
 
@@ -63,8 +63,8 @@ const VotesTable: FC<{
   //
   // In multiple-choice proposals, we duplicate votes across
   // choices if necessary
-  if (props.votes) {
-    props.votes.forEach((vote: any) => {
+  if (votes) {
+    votes.forEach((vote: any) => {
       if (proposal.type === 'approval') {
         vote.choice.forEach((option: any) => {
           if (!votesPerChoice[option - 1]) {
@@ -98,7 +98,7 @@ const VotesTable: FC<{
 
   return (
     <>
-      {props.votes && (
+      {votes && (
         <Box>
           <Row
             justifyContent="space-between"
@@ -204,11 +204,9 @@ const VotesTable: FC<{
 const ListOfVotes: FC<{
   proposal: Proposal;
   quorum: ReturnType<typeof useProposalBlockData>;
-  votes: any;
 }> = (props) => {
   const proposal = props.proposal;
   const quorum = props.quorum;
-  const votes = props.votes;
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -217,13 +215,13 @@ const ListOfVotes: FC<{
     <FolderMenu
       buttonContent={<>See List of Votes</>}
       drawerContent={
-        <VotesTable proposal={proposal} quorum={quorum} votes={votes} />
+        <VotesTable proposal={proposal} quorum={quorum} />
       }
       hotkey=""
       sx={{ width: '100%' }}
     />
   ) : (
-    <VotesTable proposal={proposal} quorum={quorum} votes={votes} />
+    <VotesTable proposal={proposal} quorum={quorum} />
   );
 };
 

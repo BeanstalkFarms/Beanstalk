@@ -11,7 +11,7 @@ import {
 import { useParams } from 'react-router-dom';
 import GovernanceActions from '~/components/Governance/Actions';
 import ProposalContent from '~/components/Governance/Proposal';
-import { useAllVotesQuery, useProposalQuery } from '~/generated/graphql';
+import { useProposalQuery } from '~/generated/graphql';
 import { Proposal } from '~/util/Governance';
 import PageNotFound from '~/pages/error/404';
 
@@ -31,15 +31,6 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
 
   /// Query: Quorum
   const quorum = useProposalBlockData(proposal, account);
-
-  const { data: voteData } = useAllVotesQuery({
-    variables: {
-      proposal_id: proposal?.id.toLowerCase()
-    },
-    context: { subgraph: 'snapshot' },
-    fetchPolicy: 'cache-and-network',
-    nextFetchPolicy: 'network-only',
-  });
 
   return (
     <Container maxWidth="lg">
@@ -65,7 +56,7 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
             <ProposalContent proposal={proposal} quorum={quorum} />
           </Grid>
           <Grid item xs={12} md={4} maxWidth="100%">
-            <GovernanceActions proposal={proposal} quorum={quorum} votes={voteData?.votes} />
+            <GovernanceActions proposal={proposal} quorum={quorum} />
           </Grid>
         </Grid>
       </Stack>

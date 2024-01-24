@@ -15,7 +15,6 @@ import ListOfVotes from './ListOfVotes';
 const GovernanceActions: FC<{
   proposal: Proposal;
   quorum: ReturnType<typeof useProposalBlockData>;
-  votes?: any;
 }> = (props) => (
   <Box sx={{ position: 'sticky', top: 120 }}>
     <Module>
@@ -27,7 +26,7 @@ const GovernanceActions: FC<{
       </ModuleContent>
     </Module>
     <Module sx={{ marginTop: 2 }}>
-      <ListOfVotes proposal={props.proposal} quorum={props.quorum} votes={props.votes} />
+      <ListOfVotes proposal={props.proposal} quorum={props.quorum} />
     </Module>
   </Box>
 );
