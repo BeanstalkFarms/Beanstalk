@@ -84,7 +84,7 @@ const VotesTable: FC<{
   }
 
   // Pagination
-  const votesPerPage = 10;
+  const votesPerPage = 8;
   const totalVotes = votesPerChoice[tab]?.length || 0;
   const totalPages = Math.ceil(totalVotes / votesPerPage);
   const [currentPage, setCurrentPage] = useState(1);
@@ -106,7 +106,7 @@ const VotesTable: FC<{
               ))}
             </Tabs>
           </Row>
-          <Box sx={{ px: 2, pt: 2, pb: 1, minHeight: '390px' }}>
+          <Box sx={{ px: 2, pt: 2, pb: 1, height: '330px' }}>
             {votesPerChoice[tab] && votesPerChoice[tab].length > 0 ? (
               <>
                 <Row
@@ -211,7 +211,7 @@ const VotesTable: FC<{
               </>
             ) : (
               <Box
-                height={310}
+                height={250}
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
