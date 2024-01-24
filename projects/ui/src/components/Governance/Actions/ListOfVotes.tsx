@@ -3,12 +3,12 @@ import {
   Box,
   Link,
   Tab,
+  TablePagination,
   Tabs,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import BigNumber from 'bignumber.js';
 import { FC } from '~/types';
 import Row from '~/components/Common/Row';
@@ -86,10 +86,15 @@ const VotesTable: FC<{
   // Pagination
   const votesPerPage = 8;
   const totalVotes = votesPerChoice[tab]?.length || 0;
-  const totalPages = Math.ceil(totalVotes / votesPerPage);
-  const [currentPage, setCurrentPage] = useState(1);
-  const firstVoteOnPage = votesPerPage * currentPage - votesPerPage;
-  const lastVoteOnPage = votesPerPage * currentPage - 1;
+  const [currentPage, setCurrentPage] = useState(0);
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number,
+  ) => {
+    setCurrentPage(newPage);
+  };
+  const firstVoteOnPage = votesPerPage * (currentPage + 1) - votesPerPage;
+  const lastVoteOnPage = votesPerPage * (currentPage + 1) - 1;
 
   return (
     <>
@@ -163,50 +168,18 @@ const VotesTable: FC<{
                       </Row>
                     )
                 )}
-                {totalPages > 1 && (
-                  <Row position="absolute" bottom="10px" right="20px" gap={0.5}>
-                    <Box
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() =>
-                        setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)
-                      }
-                    >
-                      <ArrowBackIosNew
-                        sx={{
-                          color:
-                            currentPage === 1
-                              ? 'text.disabled'
-                              : 'text.primary',
-                          fontSize: 14,
-                        }}
-                      />
-                    </Box>
-                    <Box
-                      display="flex"
-                      justifyContent="center"
-                      sx={{ width: '80px' }}
-                    >{`${currentPage} of ${totalPages}`}</Box>
-                    <Box
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() =>
-                        setCurrentPage(
-                          currentPage < totalPages
-                            ? currentPage + 1
-                            : totalPages
-                        )
-                      }
-                    >
-                      <ArrowForwardIos
-                        sx={{
-                          color:
-                            currentPage === totalPages
-                              ? 'text.disabled'
-                              : 'text.primary',
-                          fontSize: 14,
-                        }}
-                      />
-                    </Box>
-                  </Row>
+                {totalVotes > votesPerPage && (
+                  <TablePagination
+                    component="div"
+                    count={totalVotes}
+                    page={currentPage}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={votesPerPage}
+                    rowsPerPageOptions={[]}
+                    backIconButtonProps={{ sx: { padding: "4px" } }}
+                    nextIconButtonProps={{ sx: { padding: "4px" } }}
+                    sx={{ position: "absolute", bottom: "-8px", right: "4px" }}
+                  />
                 )}
               </>
             ) : (
