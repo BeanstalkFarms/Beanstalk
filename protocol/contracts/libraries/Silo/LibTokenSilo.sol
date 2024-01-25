@@ -258,8 +258,7 @@ library LibTokenSilo {
             );
             return removedBDV;
         }
-        // Full remove
-        // deletes the deposit from storage
+        // Full remove, deletes the deposit from storage
         if (crateAmount > 0) delete s.a[account].deposits[depositId];
         // SafeMath unnecessary b/c crateBDV <= type(uint128).max
         s.a[account].mowStatuses[token].bdv = s.a[account].mowStatuses[token].bdv.sub(
