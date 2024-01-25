@@ -2,11 +2,17 @@ import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
-import { useProposalVotingPowerQuery } from '~/generated/graphql';
+import { useAllVotesQuery, useProposalVotingPowerQuery } from '~/generated/graphql';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { GovSpace, getQuorumPct } from '~/lib/Beanstalk/Governance';
 import { getProposalTag, getProposalType, Proposal, tokenResult } from '~/util';
 import useTotalBeaNFTsMintedAtBlock from './useTotalBeaNFTsMintedAtBlock';
+
+type VoteData = {
+  voter: string; 
+  choice: any; 
+  vp?: number | undefined | null
+};
 
 export type ProposalBlockData = {
   /** The proposal tag (BIP-0) */
@@ -25,6 +31,8 @@ export type ProposalBlockData = {
   pctOfQuorum: number | undefined;
   /** The voting power (in Stalk / BeaNFTs) of `account` at the proposal block. */
   votingPower: BigNumber | undefined;
+  /** All votes cast in this proposal. */
+  votes: VoteData[] | undefined;
 };
 
 function useTotalOutstandingAtBlock(proposal: Proposal) {
@@ -121,6 +129,17 @@ export default function useProposalBlockData(
   const pctOfQuorum =
     score && totalForQuorum ? score.div(totalForQuorum).toNumber() : undefined;
 
+  /// Votes
+  const { data: voteData } = useAllVotesQuery({
+    variables: {
+      proposal_id: proposal?.id.toLowerCase()
+    },
+    skip: !proposal?.id,
+    context: { subgraph: 'snapshot' },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'network-only',
+  });
+
   return {
     loading: isLoading,
     data: {
@@ -135,6 +154,8 @@ export default function useProposalBlockData(
       pctOfQuorum,
       // Account
       votingPower,
+      // Votes
+      votes: voteData?.votes as VoteData[] || undefined
     },
   };
 }
