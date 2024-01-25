@@ -97,7 +97,7 @@ const TokenBalanceTable: React.FC<{
       ) : (
         <Stack height="100%" alignItems="center" justifyContent="center" pb={2}>
           <Typography color="text.tertiary">
-            {`You don't have any tokens in your ${pageName} Balance`}
+            {`You don't have any tokens in your ${pageName} Balance.`}
           </Typography>
         </Stack>
       )}

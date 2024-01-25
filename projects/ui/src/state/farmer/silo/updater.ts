@@ -16,6 +16,7 @@ import {
   updateLegacyFarmerSiloRewards,
   updateFarmerSiloBalanceSdk,
   updateFarmerSiloLoading,
+  updateFarmerSiloError,
 } from './actions';
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -113,10 +114,10 @@ export const useFetchFarmerSilo = () => {
         // Get the mowStatus struct for each whitelisted token
         Promise.all(
           [...sdk.tokens.siloWhitelist].map((token) =>
-             sdk.contracts.beanstalk
-               .getMowStatus(account, token.address)
-               .then((status) => [token, status] as const)
-           )
+            sdk.contracts.beanstalk
+              .getMowStatus(account, token.address)
+              .then((status) => [token, status] as const)
+          )
         ).then(
           (statuses) =>
             new Map<
@@ -335,20 +336,32 @@ const FarmerSiloUpdater = () => {
   }, [account]);
 
   useEffect(() => {
-    if (account && initialized)
+    if (account && initialized) {
+      dispatch(updateFarmerSiloError(undefined));
       fetch()
         .catch((err) => {
           if ((err as Error).message.includes('limit the query')) {
+            dispatch(
+              updateFarmerSiloError(
+                'Error while loading Silo data. RPC query limit exceeded.'
+              )
+            );
             console.log(
               'Failed to fetch Silo events: RPC query limit exceeded'
             );
           } else {
-            console.log('Failed to fetch Silo events: ', err.message);
+            dispatch(
+              updateFarmerSiloError(
+                'Error loading silo data. Check console for details.'
+              )
+            );
+            console.log('Error loading silo data: ', err.message);
           }
         })
         .finally(() => {
           dispatch(updateFarmerSiloLoading(false));
         });
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, chainId, initialized]);

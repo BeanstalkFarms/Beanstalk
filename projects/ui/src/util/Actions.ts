@@ -4,7 +4,7 @@ import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
-import { BEAN, PODS, SPROUTS } from '../constants/tokens';
+import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
 export enum ActionType {
@@ -25,7 +25,7 @@ export enum ActionType {
 
   /// FIELD
   BUY_BEANS,
-  BURN_BEANS,
+  SOW_BEANS,
   RECEIVE_PODS,
   HARVEST,
   RECEIVE_BEANS,
@@ -158,8 +158,8 @@ export type BuyBeansAction = {
   tokenAmount: BigNumber;
 };
 
-export type BurnBeansAction = FieldAction & {
-  type: ActionType.BURN_BEANS;
+export type SowBeansAction = FieldAction & {
+  type: ActionType.SOW_BEANS;
   amount: BigNumber;
 };
 
@@ -227,6 +227,7 @@ export type RinseAction = {
 export type FertilizerBuyAction = {
   type: ActionType.BUY_FERTILIZER;
   amountIn: BigNumber;
+  amountOut: BigNumber;
   humidity: BigNumber;
 };
 
@@ -256,7 +257,7 @@ export type Action =
   | PlantAction
   | MowAction
   /// FIELD
-  | BurnBeansAction
+  | SowBeansAction
   | ReceivePodsAction
   | FieldHarvestAction
   | ReceiveBeansAction
@@ -280,6 +281,18 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
+      if (a.tokenOut.isLP && a.tokenOut.symbol !== CRV3[1].symbol && !a.tokenOut.isUnripe) {
+        return `Add ${displayTokenAmount(
+          a.amountIn,
+          a.tokenIn
+        )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      }
+      if (a.tokenIn.isLP && a.tokenIn.symbol !== CRV3[1].symbol && !a.tokenIn.isUnripe) {
+        return `Burn ${displayTokenAmount(
+          a.amountIn,
+          a.tokenIn
+        )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
+      }
       return `Swap ${displayTokenAmount(
         a.amountIn,
         a.tokenIn
@@ -319,7 +332,7 @@ export const parseActionMessage = (a: Action) => {
         a.token
       )} from the Silo.`;
     case ActionType.IN_TRANSIT:
-      return `Receive ${displayTokenAmount(a.amount.abs(), a.token)} to your ${copy.MODES[a.destination]}.`;
+      return `Receive ${displayTokenAmount(a.amount.abs(), a.token)} in your ${copy.MODES[a.destination]}.`;
     case ActionType.UPDATE_SILO_REWARDS: // FIXME: don't like "update" here
       return `${a.stalk.lt(0) ? 'Burn' : 'Receive'} ${displayFullBN(
         a.stalk.abs(),
@@ -342,15 +355,12 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.PLANT:
       return `Plant ${displayFullBN(a.bean, 2)} Bean${
         a.bean.gt(1) ? 's' : ''
-      }, ${displayFullBN(a.seeds, 2)} Seeds, and ${displayFullBN(
-        a.stalk,
-        2
-      )} Stalk.`;
+      }, ${displayFullBN(a.stalk, 2)} Stalk, and ${displayFullBN(a.seeds, 2)} Seeds.`;
     case ActionType.ENROOT:
-      return `Enroot revitalized ${displayFullBN(
+      return `Enroot ${displayFullBN(
         a.stalk,
         2
-      )} Stalk and ${displayFullBN(a.seeds, 2)} Seeds.`;
+      )} Revitalized Stalk and ${displayFullBN(a.seeds, 2)} Revitalized Seeds.`;
 
     /// FIELD
     case ActionType.BUY_BEANS:
@@ -362,8 +372,8 @@ export const parseActionMessage = (a: Action) => {
       )} Beans with ${displayFullBN(a.tokenAmount, a.token.displayDecimals)} ${
         a.token.name
       } for ~$${displayFullBN(a.beanPrice, BEAN[1].displayDecimals)} each.`;
-    case ActionType.BURN_BEANS:
-      return `Burn ${displayFullBN(a.amount, BEAN[1].displayDecimals)} ${
+    case ActionType.SOW_BEANS:
+      return `Sow ${displayFullBN(a.amount, BEAN[1].displayDecimals)} ${
         a.amount.eq(new BigNumber(1)) ? 'Bean' : 'Beans'
       }.`;
     case ActionType.RECEIVE_PODS:
@@ -394,10 +404,10 @@ export const parseActionMessage = (a: Action) => {
         SPROUTS.displayDecimals
       )} Sprouts${a.destination ? ` and send to your ${copy.MODES[a.destination]}.` : `.`}`;
     case ActionType.BUY_FERTILIZER:
-      return `Buy ${displayFullBN(a.amountIn, 2)} Fertilizer at ${displayFullBN(
+      return `Buy ${displayFullBN(a.amountOut, 2)} Fertilizer at ${displayFullBN(
         a.humidity.multipliedBy(100),
         1
-      )}% Humidity.`;
+      )}% Humidity with ${displayFullBN(a.amountIn, 2)} Wrapped Ether.`;
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
 

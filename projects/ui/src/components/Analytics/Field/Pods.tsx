@@ -17,7 +17,7 @@ const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {
   title: 'Pods',
-  titleTooltip: 'The total number of Pods at the end of each Season.',
+  titleTooltip: 'The total number of Unharvestable Pods at the beginning of every Season.',
   gap: 0.5,
 };
 const lineChartProps: Partial<LineChartProps> = {

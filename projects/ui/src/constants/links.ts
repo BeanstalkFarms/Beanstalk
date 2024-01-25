@@ -19,7 +19,7 @@ export const OPENSEA_LINK_COLLECTION =
   'https://opensea.io/collection/beanft-collection';
 export const REDDIT_LINK = 'https://www.reddit.com/r/BeanstalkProtocol/';
 export const TELEGRAM_LINK = 'https://t.me/joinchat/OdWoJSyPVsRhYzgx';
-export const TWITTER_LINK = 'https://twitter.com/BeanstalkFarms';
+export const TWITTER_LINK = 'https://twitter.com/beanstalkmoney';
 export const LICENSE_LINK =
   'https://github.com/BeanstalkFarms/Beanstalk/blob/master/LICENSE.txt';
 export const CODE_OF_CONDUCT_LINK =

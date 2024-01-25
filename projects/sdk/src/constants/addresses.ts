@@ -15,6 +15,7 @@ export const addresses = {
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
+  USD_ORACLE: Address.make("0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"),
 
   // ----------------------------------------
   // BeaNFT Contracts
@@ -104,9 +105,18 @@ export const addresses = {
   // zap
   CURVE_ZAP: Address.make("0xA79828DF1850E8a3A3064576f380D90aECDD3359"),
 
+  // Uniswap V3 Router
+  UNISWAP_V3_ROUTER: Address.make("0xE592427A0AEce92De3Edee1F18E0157C05861564"),
+
+  // Uniswap V3 Quoter V2
+  UNISWAP_V3_QUOTER_V2: Address.make("0x61fFE014bA17989E743c5F6cB21bF9697530B21e"),
+
   // BEAN_ETH_UNIV2_LP !! Deprecated
   BEAN_ETH_UNIV2_LP: Address.make("0x87898263B6C5BABe34b4ec53F22d98430b91e371"),
 
   // BEAN_LUSD_LP !! Deprecated
-  BEAN_LUSD_LP: Address.make("0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D")
+  BEAN_LUSD_LP: Address.make("0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D"),
+
+  // BEAN_CRV3_V1_LP !! Deprecated
+  BEAN_CRV3_V1_LP: Address.make("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD")
 };

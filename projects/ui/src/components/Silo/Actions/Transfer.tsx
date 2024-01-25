@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { Box, Divider, Stack } from '@mui/material';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import {
@@ -26,6 +26,7 @@ import {
   displayFullBN,
   displayTokenAmount,
   tokenValueToBN,
+  transform,
   trimAddress,
 } from '~/util';
 import { FontSize } from '~/components/App/muiTheme';
@@ -50,6 +51,7 @@ import {
   WithdrawFarmStep,
 } from '~/lib/Txn';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -78,15 +80,45 @@ const TransferForm: FC<
   plantAndDoX,
 }) => {
   const sdk = useSdk();
+  const [migrationNeeded, setMigrationNeeded] = React.useState(false);
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
+  // Check address on change
+
+  useEffect(() => {
+    const check = async (address: string) => {
+      try {
+        const needed = await sdk.contracts.beanstalk.migrationNeeded(
+          address.toLocaleLowerCase()
+        );
+        setMigrationNeeded(needed);
+      } catch (err) {
+        console.error(
+          'Error while checking if address needs migration: ',
+          address,
+          err
+        );
+      }
+    };
+
+    if (values.to.length === 42) {
+      check(values.to);
+    } else {
+      setMigrationNeeded(false);
+    }
+  }, [sdk.contracts.beanstalk, values.to]);
+
   /// Claim and Plant
-  const txnActions = useFarmerFormTxnsActions();
+  const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       BEAN.equals(whitelistedToken) &&
       plantAndDoX
   );
+  const farmerSilo = useFarmerSilo();
+  const earnedBeans = transform(farmerSilo.beans.earned, 'tokenValue', BEAN);
+  const earnedStalk = transform(farmerSilo.stalk.earned, 'tokenValue', STALK);
+  const earnedSeeds = transform(farmerSilo.seeds.earned, 'tokenValue', SEEDS);
 
   // Results
   const withdrawResult = useMemo(() => {
@@ -146,21 +178,27 @@ const TransferForm: FC<
       <TokenOutput>
         <TokenOutput.Row
           token={whitelistedToken}
-          amount={withdrawResult.amount.mul(-1)}
+          amount={(isUsingPlant
+            ? withdrawResult.amount.add(earnedBeans)
+            : withdrawResult.amount
+          ).mul(-1)}
         />
         <TokenOutput.Row
           token={STALK}
-          amount={withdrawResult.stalk.mul(-1)}
+          amount={(isUsingPlant
+            ? withdrawResult.stalk.add(earnedStalk)
+            : withdrawResult.stalk
+          ).mul(-1)}
           amountTooltip={
             <>
               <div>
-                Withdrawing from {withdrawResult.crates.length} Deposit
+                Transferring from {withdrawResult.crates.length} Deposit
                 {withdrawResult.crates.length === 1 ? '' : 's'}:
               </div>
               <Divider sx={{ opacity: 0.2, my: 1 }} />
               {withdrawResult.crates.map((_crate, i) => (
                 <div key={i}>
-                  Season {_crate.stem.toString()}:{' '}
+                  Stem {_crate.stem.toString()}:{' '}
                   {displayFullBN(_crate.bdv, whitelistedToken.displayDecimals)}{' '}
                   BDV,{' '}
                   {displayFullBN(_crate.stalk.total, STALK.displayDecimals)}{' '}
@@ -171,7 +209,13 @@ const TransferForm: FC<
             </>
           }
         />
-        <TokenOutput.Row token={SEEDS} amount={withdrawResult.seeds.mul(-1)} />
+        <TokenOutput.Row
+          token={SEEDS}
+          amount={(isUsingPlant
+            ? withdrawResult.seeds.add(earnedSeeds)
+            : withdrawResult.seeds
+          ).mul(-1)}
+        />
       </TokenOutput>
     );
   };
@@ -188,78 +232,141 @@ const TransferForm: FC<
           balanceLabel="Deposited Balance"
           InputProps={InputProps}
         />
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText="Transfer" />
         {depositedBalance?.gt(0) && (
           <>
             <FieldWrapper label="Transfer to">
               <AddressInputField name="to" />
             </FieldWrapper>
-            {values.to !== '' && withdrawResult?.amount.abs().gt(0) && (
-              <>
-                <TxnSeparator />
-                <TokenOutputs />
-                <WarningAlert>
-                  More recent Deposits are Transferred first.
-                </WarningAlert>
-                <AdditionalTxnsAccordion filter={disabledActions} />
-                <Box>
-                  <TxnAccordion>
-                    <TxnPreview
-                      actions={[
-                        {
-                          type: ActionType.TRANSFER,
-                          amount: withdrawResult
-                            ? toBN(withdrawResult.amount.abs())
-                            : ZERO_BN,
-                          token: getNewToOldToken(whitelistedToken),
-                          stalk: withdrawResult
-                            ? toBN(withdrawResult.stalk.abs())
-                            : ZERO_BN,
-                          seeds: withdrawResult
-                            ? toBN(withdrawResult?.seeds.abs())
-                            : ZERO_BN,
-                          to: values.to,
-                        },
-                        {
-                          type: ActionType.BASE,
-                          message: (
-                            <>
-                              The following Deposits will be used:
-                              <br />
-                              <ul
-                                css={{
-                                  paddingLeft: '25px',
-                                  marginTop: '10px',
-                                  marginBottom: 0,
-                                  fontSize: FontSize.sm,
-                                }}
-                              >
-                                {withdrawResult.crates.map((crate, index) => (
-                                  <li key={index}>
-                                    {displayTokenAmount(
-                                      crate.amount,
-                                      whitelistedToken
-                                    )}{' '}
-                                    from Deposits at Stem{' '}
-                                    {crate.stem.toString()}
-                                  </li>
-                                ))}
-                              </ul>
-                            </>
-                          ),
-                        },
-                        {
-                          type: ActionType.END_TOKEN,
-                          token: getNewToOldToken(whitelistedToken),
-                        },
-                      ]}
-                      {...txnActions}
-                    />
-                  </TxnAccordion>
-                </Box>
-              </>
-            )}
+            {values.to !== '' &&
+              withdrawResult?.amount.add(earnedBeans).abs().gt(0) && (
+                <>
+                  <TxnSeparator />
+                  <TokenOutputs />
+                  {withdrawResult?.amount.abs().gt(0) && (
+                    <WarningAlert>
+                      More recent Deposits are Transferred first.
+                    </WarningAlert>
+                  )}
+                  <AdditionalTxnsAccordion filter={disabledActions} />
+                  <Box>
+                    <TxnAccordion>
+                      <TxnPreview
+                        actions={[
+                          {
+                            type: ActionType.TRANSFER,
+                            amount: withdrawResult
+                              ? toBN(
+                                  (isUsingPlant
+                                    ? withdrawResult.amount.add(earnedBeans)
+                                    : withdrawResult.amount
+                                  ).abs()
+                                )
+                              : ZERO_BN,
+                            token: getNewToOldToken(whitelistedToken),
+                            stalk: withdrawResult
+                              ? toBN(
+                                  (isUsingPlant
+                                    ? withdrawResult.stalk.add(earnedStalk)
+                                    : withdrawResult.stalk
+                                  ).abs()
+                                )
+                              : ZERO_BN,
+                            seeds: withdrawResult
+                              ? toBN(
+                                  (isUsingPlant
+                                    ? withdrawResult.seeds.add(earnedSeeds)
+                                    : withdrawResult.seeds
+                                  ).abs()
+                                )
+                              : ZERO_BN,
+                            to: values.to,
+                          },
+                          withdrawResult?.amount.abs().gt(0)
+                            ? {
+                                type: ActionType.BASE,
+                                message: (
+                                  <>
+                                    The following Deposits will be used:
+                                    <br />
+                                    <ul
+                                      css={{
+                                        paddingLeft: '25px',
+                                        marginTop: '10px',
+                                        marginBottom: 0,
+                                        fontSize: FontSize.sm,
+                                      }}
+                                    >
+                                      {isUsingPlant && (
+                                        <li key="earnedBeanCrate">
+                                          {`${displayTokenAmount(
+                                            earnedBeans,
+                                            sdk.tokens.BEAN,
+                                            { showName: false }
+                                          )} Earned Beans`}
+                                        </li>
+                                      )}
+                                      {withdrawResult.crates.map(
+                                        (crate, index) => (
+                                          <li key={index}>
+                                            {displayTokenAmount(
+                                              crate.amount,
+                                              whitelistedToken
+                                            )}{' '}
+                                            from Deposits at Stem{' '}
+                                            {crate.stem.toString()}
+                                          </li>
+                                        )
+                                      )}
+                                    </ul>
+                                  </>
+                                ),
+                              }
+                            : undefined,
+                          {
+                            type: ActionType.END_TOKEN,
+                            token: getNewToOldToken(whitelistedToken),
+                          },
+                        ]}
+                        {...txnActions}
+                      />
+                    </TxnAccordion>
+                  </Box>
+                </>
+              )}
           </>
+        )}
+        {migrationNeeded && (
+          // <Box>
+          //   <Typography variant="body1" color="error.main">
+          //     Migration Needed
+          //   </Typography>
+          //   <Typography variant="body1" color="text.primary">
+          //     Transfers can only be made to accounts that have migrated to Silo
+          //     v3. The account you are trying to transfer to has not migrated
+          //     yet.
+          //   </Typography>
+          // </Box>
+          <Grid
+            container
+            spacing={0}
+            direction="column"
+            alignItems="center"
+            sx={{ background: '#fdf4e7' }}
+          >
+            <Box component="section" sx={{ p: 2, minWidth: '400px' }}>
+              <Typography variant="h3" align="center">
+                Migration Required
+              </Typography>
+              <br />
+              <Typography variant="body1" align="center">
+                Transfers can only be made to accounts that have migrated to
+                Silo v3. The account you are trying to transfer to has not
+                migrated yet.
+              </Typography>
+              <br />
+            </Box>
+          </Grid>
         )}
         <SmartSubmitButton
           loading={isSubmitting}
@@ -268,7 +375,8 @@ const TransferForm: FC<
             !depositedBalance ||
             depositedBalance.eq(0) ||
             isSubmitting ||
-            values.to === ''
+            values.to === '' ||
+            migrationNeeded === true
           }
           type="submit"
           variant="contained"

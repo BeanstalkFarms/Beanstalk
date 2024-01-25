@@ -37,6 +37,8 @@ export enum RunMode {
 export type RunContext<RunData extends Record<string, any> = { [key: string]: any } & { slippage?: number }> = {
   // Provided by Workflow
   runMode: RunMode;
+  steps: Step<any>[];
+  tagMap: { [key: string]: number };
   step: {
     index: number;
     findTag: (tag: string) => number;
@@ -285,17 +287,40 @@ export abstract class Workflow<
         this.add(elem, options); // recurse
       }
     } else {
-      Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`);
+
       if (input instanceof StepClass) {
         input.setSDK(Workflow.sdk);
       }
 
-      const isPipelineDeposit = input.name === "pipelineDeposit";
       const filteredOptions = this._options.filter((option) => !(option && option.onlyLocal));
-      const pipelineDepositOptions = { tag: `deposit${filteredOptions.length + 1}Amount` };
+      let pipelineOptions;
 
+      switch (input.name) {
+        case "pipelineDeposit":
+          pipelineOptions = { tag: `deposit${filteredOptions.length}Amount` };
+          break;
+        case "pipelineUniV3Deposit":
+          pipelineOptions = { tag: `depositUniV3${filteredOptions.length}Amount` };
+          break;
+        case "pipelineWellSwap":
+          pipelineOptions = { tag: `wellSwap${filteredOptions.length}Amount` };
+          break;
+        case "pipelineUniswapV3Swap":
+          pipelineOptions = { tag: `uniswapV3Swap${filteredOptions.length}Amount` };
+          break;
+        case "pipelineUniV3WellSwap":
+          pipelineOptions = { tag: `uniV3WellSwap${filteredOptions.length}Amount` };
+          break;
+        case "pipelineWellSwapUniV3":
+          pipelineOptions = { tag: `wellSwapUniV3${filteredOptions.length}Amount` };
+          break;
+        default:
+      };
+
+      Workflow.sdk.debug(`[Workflow][${this.name}][add] ${input.name || "<unknown>"}`, pipelineOptions || '');
+      
       this._generators.push(input);
-      this._options.push(isPipelineDeposit ? pipelineDepositOptions : options || null); // null = no options set
+      this._options.push(pipelineOptions || options || null); // null = no options set
     }
     return this; // allow chaining
   }
@@ -439,6 +464,8 @@ export abstract class Workflow<
       //
       const context: RunContext = {
         ..._context,
+        steps: this._steps,
+        tagMap: this._tagMap,
         step: {
           index: stepIndex,
           findTag: (tag: string) => this.findTag(tag)
@@ -518,6 +545,8 @@ export abstract class Workflow<
     return this.buildSteps(amountIn instanceof TokenValue ? amountIn.toBigNumber() : amountIn, {
       // If we're propagating from Workflow -> Workflow, inherit the RunMode
       // and propagate data; otherwise, this is a top-level estimate().
+      steps: context?.steps || [],
+      tagMap: context?.tagMap || {},
       runMode: context?.runMode || RunMode.Estimate,
       data: context?.data || {}
     });
@@ -534,6 +563,8 @@ export abstract class Workflow<
     return this.buildSteps(
       desiredAmountOut instanceof TokenValue ? desiredAmountOut.toBigNumber() : desiredAmountOut,
       {
+        steps: [],
+        tagMap: {},
         runMode: RunMode.EstimateReversed,
         data: {}
       } // FIXME
@@ -548,7 +579,7 @@ export abstract class Workflow<
    */
   protected async estimateAndEncodeSteps(amountIn: ethers.BigNumber | TokenValue, runMode: RunMode, data: RunData) {
     Workflow.sdk.debug(`[Workflow][${this.name}][estimateAndEncodeSteps] building...`, { amountIn, runMode, data });
-    await this.buildSteps(amountIn instanceof TokenValue ? amountIn.toBigNumber() : amountIn, { runMode, data });
+    await this.buildSteps(amountIn instanceof TokenValue ? amountIn.toBigNumber() : amountIn, { runMode, data, steps: this._steps, tagMap: this._tagMap });
     Workflow.sdk.debug(`[Workflow][${this.name}][estimateAndEncodeSteps] encoding...`, { count: this._steps.length });
     return this.encodeSteps();
   }

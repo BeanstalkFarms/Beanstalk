@@ -5,12 +5,13 @@ const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE } = require('./utils/constan
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to18, toBean, toStalk, to6 } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { impersonateCurveMetapool } = require('../scripts/impersonate.js');
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 
 describe('Curve Convert', function () {
   before(async function () {
-    [owner, user, user2] = await ethers.getSigners();
+    [owner, user, user2, fakeMetapoolAccount] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
     const contracts = await deploy("Test", false, true);
@@ -25,6 +26,9 @@ describe('Curve Convert', function () {
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
+
+    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
+    this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
 
     await this.threeCurve.mint(userAddress, to18('100000'));
     await this.threePool.set_virtual_price(to18('1'));
@@ -103,6 +107,16 @@ describe('Curve Convert', function () {
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('190'), this.beanMetapool.address), ['1'], ['1000']))
           .to.be.revertedWith('Convert: P must be >= 1.');
       });
+
+      it('Not whitelisted pool', async function () {
+        const convertData = ConvertEncoder.convertBeansToCurveLP(toBean('200'), to18('190'), this.fakeMetapool.address)
+        await expect(this.convert.connect(owner).convert(
+          convertData,
+          [],
+          []
+        )).to.be.revertedWith("Convert: Not a whitelisted Curve pool.")
+      })
+
 
     });
 
@@ -409,6 +423,15 @@ describe('Curve Convert', function () {
         await expect(this.convert.connect(user).convert(ConvertEncoder.convertCurveLPToBeans(to18('200'), toBean('190'), this.beanMetapool.address), [stemMetapool], ['1000']))
           .to.be.revertedWith('Convert: P must be < 1.');
       });
+
+      it('Not whitelisted pool', async function () {
+        const convertData = ConvertEncoder.convertCurveLPToBeans(to18('100'), toBean('99'), this.fakeMetapool.address)
+        await expect(this.convert.connect(owner).convert(
+          convertData,
+          [],
+          []
+        )).to.be.revertedWith("Convert: Not a whitelisted Curve pool.")
+      })
     });
 
     describe('below max', function () {

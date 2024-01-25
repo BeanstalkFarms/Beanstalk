@@ -149,7 +149,7 @@ const ConvertForm: FC<
   let deltaSeedsPerBDV; // change in seeds per BDV for this pathway. ex: bean (2 seeds) -> bean:3crv (4 seeds) = +2 seeds.
   let deltaSeeds; // the change in seeds during the convert.
 
-  const txnActions = useFarmerFormTxnsActions();
+  const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
 
   /// Change button state and prepare outputs
   if (depositedAmount.eq(0)) {
@@ -166,15 +166,16 @@ const ConvertForm: FC<
     // buttonContent = 'Pathway unavailable';
   } else {
     buttonContent = 'Convert';
-    if (tokenOut && amountOut?.gt(0) && amountIn?.gt(0)) {
+    if (
+      tokenOut &&
+      (amountOut?.gt(0) || isUsingPlanted) &&
+      totalAmountIn?.gt(0)
+    ) {
       isReady = true;
-      bdvOut = getBDV(tokenOut).times(amountOut);
-      bdvIn = getBDV(tokenIn).times(amountIn);
+      bdvOut = getBDV(tokenOut).times(amountOut || ZERO_BN);
+      bdvIn = getBDV(tokenIn).times(totalAmountIn || ZERO_BN);
       depositsBDV = transform(conversion.bdv.abs(), 'bnjs');
-      deltaBDV = MaxBN(
-        bdvOut.minus(depositsBDV),
-        ZERO_BN
-      );
+      deltaBDV = MaxBN(bdvOut.minus(depositsBDV), ZERO_BN);
       deltaStalk = MaxBN(
         tokenValueToBN(tokenOut.getStalk(bnToTokenValue(tokenOut, deltaBDV))),
         ZERO_BN
@@ -193,18 +194,18 @@ const ConvertForm: FC<
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
       <Stack gap={0.5}>
-        <StatHorizontal label="Instantaneous BDV:">
+        <StatHorizontal label="Current BDV:">
           ~{displayFullBN(instantBDV, 2, 2)}
         </StatHorizontal>
-        <StatHorizontal label="BDV of Deposits:">
+        <StatHorizontal label="Recorded BDV:">
           ~{displayFullBN(depositBDV, 2, 2)}
         </StatHorizontal>
       </Stack>
-    )
+    );
   }
 
   function showOutputBDV() {
-    return MaxBN(depositsBDV, bdvOut);
+    return MaxBN(depositsBDV || ZERO_BN, bdvOut || ZERO_BN);
   }
 
   /// When a new output token is selected, reset maxAmountIn.
@@ -259,11 +260,15 @@ const ConvertForm: FC<
 
   const getConvertWarning = () => {
     let pool = tokenIn.isLP ? tokenIn.symbol : tokenOut!.symbol;
-    pool += ' pool';
+    if (tokenOut && !tokenOut.equals(sdk.tokens.BEAN_CRV3_LP)) {
+      pool += ' Well';
+    } else {
+      pool += ' pool';
+    }
     if (['urBEANETH', 'urBEAN'].includes(tokenIn.symbol)) pool = 'BEANETH Well';
 
     const lowerOrGreater =
-      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'lower' : 'greater';
+      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'less' : 'greater';
 
     const message = `${tokenIn.symbol} can only be Converted to ${tokenOut?.symbol} when deltaB in the ${pool} is ${lowerOrGreater} than 0.`;
 
@@ -293,24 +298,24 @@ const ConvertForm: FC<
           displayQuote={(_amountOut) =>
             _amountOut &&
             deltaBDV && (
-            <Tooltip
-              title={getBDVTooltip(bdvIn, depositsBDV)}
-              placement='top'
-            >
-              <Box display="flex" text-align="center" gap={0.25}>
-                <Typography variant="body1">
-                  ~{displayFullBN(depositsBDV, 2)} BDV
-                </Typography>
-                <HelpOutlineIcon
-                  sx={{
-                    color: 'text.secondary',
-                    display: 'inline-block',
-                    margin: 'auto',
-                    fontSize: '14px',
-                  }}
-                />
-              </Box>
-            </Tooltip>
+              <Tooltip
+                title={getBDVTooltip(bdvIn, depositsBDV)}
+                placement="top"
+              >
+                <Box display="flex" text-align="center" gap={0.25}>
+                  <Typography variant="body1">
+                    ~{displayFullBN(depositsBDV, 2)} BDV
+                  </Typography>
+                  <HelpOutlineIcon
+                    sx={{
+                      color: 'text.secondary',
+                      display: 'inline-block',
+                      margin: 'auto',
+                      fontSize: '14px',
+                    }}
+                  />
+                </Box>
+              </Tooltip>
             )
           }
           tokenSelectLabel={tokenIn.symbol}
@@ -321,7 +326,7 @@ const ConvertForm: FC<
           params={quoteHandlerParams}
         />
         {!canConvert && tokenOut && maxAmountIn ? null : (
-          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} />
+          <AddPlantTxnToggle plantAndDoX={plantAndDoX.plantAction} actionText='Convert' />
         )}
 
         {/* User Input: destination token */}
@@ -347,14 +352,21 @@ const ConvertForm: FC<
         ) : null}
 
         {/* Outputs */}
-        {totalAmountIn && tokenOut && maxAmountIn && amountOut?.gt(0) ? (
+        {totalAmountIn &&
+        tokenOut &&
+        maxAmountIn &&
+        (amountOut?.gt(0) || isUsingPlanted) ? (
           <>
             <TxnSeparator mt={-1} />
             <TokenOutput>
               <TokenOutput.Row
                 token={tokenOut}
                 amount={amountOut || ZERO_BN}
-                delta={showOutputBDV() ? `~${displayFullBN(showOutputBDV(), 2)} BDV` : undefined}
+                delta={
+                  showOutputBDV()
+                    ? `~${displayFullBN(showOutputBDV(), 2)} BDV`
+                    : undefined
+                }
               />
               <TokenOutput.Row
                 token={sdk.tokens.STALK}
@@ -419,7 +431,7 @@ const ConvertForm: FC<
                         totalAmountIn,
                         tokenIn.displayDecimals
                       )} ${tokenIn.name} to ${displayFullBN(
-                        amountOut,
+                        amountOut || ZERO_BN,
                         tokenIn.displayDecimals
                       )} ${tokenOut.name}.`,
                     },
@@ -551,7 +563,7 @@ const ConvertPropProvider: FC<{
           farmerBalances.deposits,
           tokenIn,
           tokenOut,
-          tokenIn.amount(_amountIn.toString()),
+          tokenIn.amount(_amountIn.toString() || '0'),
           season.toNumber(),
           slippage,
           includePlant ? plantAction : undefined
@@ -586,7 +598,6 @@ const ConvertPropProvider: FC<{
         /// Validation
         if (!account) throw new Error('Wallet connection required');
         if (!slippage) throw new Error('No slippage value set.');
-        if (!_amountIn) throw new Error('No amount input');
         if (!tokenOut) throw new Error('Conversion pathway not set');
         if (!farmerBalances) throw new Error('No balances found');
 
@@ -597,7 +608,7 @@ const ConvertPropProvider: FC<{
 
         const { plantAction } = plantAndDoX;
 
-        const amountIn = tokenIn.amount(_amountIn.toString()); // amount of from token
+        const amountIn = tokenIn.amount(_amountIn?.toString() || '0'); // amount of from token
         const isPlanting =
           plantAndDoX && values.farmActions.primary?.includes(FormTxn.PLANT);
 

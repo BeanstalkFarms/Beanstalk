@@ -24,6 +24,8 @@ const TokenRow: FC<{
   amount?: string | JSX.Element;
   /* Display a tooltip when hovering over the amount */
   amountTooltip?: string | JSX.Element;
+  /* Override the default tooltip location */
+  amountTooltipLocation?: any;
   /* The USD value of the amount of Token */
   value?: string | JSX.Element;
   /* Fade this row out when others are selected */
@@ -42,6 +44,7 @@ const TokenRow: FC<{
   token,
   amount,
   amountTooltip,
+  amountTooltipLocation,
   value,
   isFaded = false,
   isSelected = false,
@@ -90,7 +93,7 @@ const TokenRow: FC<{
         </Tooltip>
       )}
     </Row>
-    <Tooltip title={amountTooltip || ''} placement="top-end">
+    <Tooltip title={amountTooltip || ''} placement={amountTooltipLocation || "top-end"}>
       <div>
         <Row gap={0.5}>
           {token && <TokenIcon token={token} />}

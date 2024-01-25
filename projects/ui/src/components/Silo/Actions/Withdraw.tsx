@@ -151,7 +151,7 @@ const WithdrawForm: FC<
   );
 
   // claim and plant
-  const txActions = useFarmerFormTxnsActions();
+  const txActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
     values.farmActions.primary?.includes(FormTxn.PLANT) &&
       sdk.tokens.BEAN.equals(whitelistedToken)
@@ -279,7 +279,7 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} />
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -297,7 +297,7 @@ const WithdrawForm: FC<
                     {withdrawResult.crates.map((_crate, i) => (
                       // FIXME: same as convert
                       <div key={i}>
-                        Season {_crate.stem.toString()}:{' '}
+                        Stem {_crate.stem.toString()}:{' '}
                         {displayFullBN(
                           _crate.bdv,
                           whitelistedToken.displayDecimals
@@ -324,11 +324,17 @@ const WithdrawForm: FC<
             <Box>
               <TxnAccordion>
                 <TxnPreview
+                  customOrder
                   actions={[
                     {
                       type: ActionType.WITHDRAW,
                       amount: toBN(withdrawResult.amount),
                       token: getNewToOldToken(whitelistedToken),
+                    },
+                    {
+                      type: ActionType.UPDATE_SILO_REWARDS,
+                      stalk: toBN(withdrawResult.stalk.mul(-1)),
+                      seeds: toBN(withdrawResult.seeds.mul(-1)),
                     },
                     removingLiquidity && amountOut && values.tokenOut
                       ? {
@@ -340,14 +346,9 @@ const WithdrawForm: FC<
                         }
                       : undefined,
                     {
-                      type: ActionType.UPDATE_SILO_REWARDS,
-                      stalk: toBN(withdrawResult.stalk.mul(-1)),
-                      seeds: toBN(withdrawResult.seeds.mul(-1)),
-                    },
-                    {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(whitelistedToken),
+                      token: getNewToOldToken(values.tokenOut || whitelistedToken),
                       destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
@@ -368,7 +369,7 @@ const WithdrawForm: FC<
           tokens={[]}
           mode="auto"
         >
-          Withdraw
+          {values.destination ? 'Withdraw' : 'Select Destination'}
         </SmartSubmitButton>
       </Stack>
     </Form>

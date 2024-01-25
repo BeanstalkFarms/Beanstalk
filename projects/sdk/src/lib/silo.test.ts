@@ -4,7 +4,6 @@ import { getTestUtils } from "../utils/TestUtils/provider";
 
 import { Token } from "../classes/Token";
 import { TokenSiloBalance } from "./silo/types";
-import { calculateGrownStalkSeeds } from "./silo/utils";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BF_MULTISIG } from "src/utils/TestUtils/addresses";
 import { Silo } from "src/lib/silo";
@@ -19,29 +18,37 @@ const timer = async (fn: Promise<any>, label: string) => {
 };
 
 /// Constants
-const account1 = "0x9a00beffa3fc064104b71f6b7ea93babdc44d9da"; // whale
-const account2 = "0x0"; // zero addy
+// const account1 = "0x9a00beffa3fc064104b71f6b7ea93babdc44d9da"; // whale
+const account2 = "0x0000000000000000000000000000000000000000"; // zero addy
 
 /// Setup
-const { sdk, account } = getTestUtils();
+const { sdk, account, utils } = getTestUtils();
 
 /// Tests
+beforeAll(async () => {
+  await utils.resetFork();
+  const amount = sdk.tokens.BEAN.amount("100000");
+  await utils.setBalance(sdk.tokens.BEAN, account, amount);
+  await sdk.tokens.BEAN.approveBeanstalk(amount);
+
+  await sdk.silo.deposit(sdk.tokens.BEAN, sdk.tokens.BEAN, amount, 0.1, account);
+});
 describe("Silo Balance loading", () => {
   describe("getBalance", function () {
     it("returns an empty object", async () => {
-      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, { source: DataSource.SUBGRAPH });
+      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account2, { source: DataSource.LEDGER });
       chaiExpect(balance.amount.eq(0)).to.be.true;
     });
     it("loads an account with deposits (fuzzy)", async () => {
-      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, BF_MULTISIG, { source: DataSource.SUBGRAPH });
-      chaiExpect(balance.amount.gt(10_000)).to.be.true; // FIXME
+      const balance = await sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER });
+      chaiExpect(balance.amount.toHuman()).to.eq("100000");
     });
 
     // FIX: discrepancy in graph results
     it.skip("source: ledger === subgraph", async function () {
       const [ledger, subgraph]: TokenSiloBalance[] = await Promise.all([
-        timer(sdk.silo.getBalance(sdk.tokens.BEAN, account1, { source: DataSource.LEDGER }), "Ledger result time"),
-        timer(sdk.silo.getBalance(sdk.tokens.BEAN, account1, { source: DataSource.SUBGRAPH }), "Subgraph result time")
+        timer(sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.LEDGER }), "Ledger result time"),
+        timer(sdk.silo.getBalance(sdk.tokens.BEAN, account, { source: DataSource.SUBGRAPH }), "Subgraph result time")
       ]);
 
       // We cannot compare .deposited.bdv as the ledger results come from prod
@@ -59,8 +66,8 @@ describe("Silo Balance loading", () => {
     // @todo pick several accounts and loop
     beforeAll(async () => {
       [ledger, subgraph] = await Promise.all([
-        timer(sdk.silo.getBalances(account1, { source: DataSource.LEDGER }), "Ledger result time"),
-        timer(sdk.silo.getBalances(account1, { source: DataSource.SUBGRAPH }), "Subgraph result time")
+        timer(sdk.silo.getBalances(account, { source: DataSource.LEDGER }), "Ledger result time"),
+        timer(sdk.silo.getBalances(account, { source: DataSource.SUBGRAPH }), "Subgraph result time")
       ]);
     });
 
@@ -170,7 +177,6 @@ describe("Deposit Permits", function () {
 });
 
 describe("Silo mowMultiple", () => {
-  const account = account1;
   const whitelistedToken = sdk.tokens.BEAN;
   const whitelistedToken2 = sdk.tokens.BEAN_CRV3_LP;
   const nonWhitelistedToken = sdk.tokens.DAI;

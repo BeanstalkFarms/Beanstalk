@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FC } from "src/types";
 import styled from "styled-components";
-import { ConnectKitButton } from "connectkit";
 import { Footer } from "./Footer";
 import { Window } from "./Window";
 import { Settings } from "src/settings";
@@ -11,21 +10,12 @@ import CustomToaster from "../TxnToast/CustomToaster";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
-import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X } from "../Icons";
+import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
 import { size } from "src/breakpoints";
 import { useNetwork } from "wagmi";
 import { Title } from "../PageComponents/Title";
 import { TokenMarquee } from "./TokenMarquee";
-
-export const BasinConnectButton = () => {
-  return (
-    <ConnectKitButton.Custom>
-      {({ isConnected, show, truncatedAddress, ensName }) => {
-        return <StyledConnectButton onClick={show}>{isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}</StyledConnectButton>;
-      }}
-    </ConnectKitButton.Custom>
-  );
-};
+import { WalletButton } from "src/components/Wallet";
 
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
@@ -57,7 +47,7 @@ export const Frame: FC<{}> = ({ children }) => {
           </NavLinks>
         </RightSide>
         <StyledConnectContainer>
-          <BasinConnectButton />
+          <WalletButton />
         </StyledConnectContainer>
         <DropdownMenu open={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X /> : <BurgerMenuIcon />}
@@ -92,19 +82,32 @@ export const Frame: FC<{}> = ({ children }) => {
               <Box href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
                 <Github width={20} />
               </Box>
+              <Box href="https://bean.money" rel="noopener noreferrer" target="_blank">
+                <BeanstalkLogoBlack width={20} />
+              </Box>
             </MobileLargeNavRow>
-            <MobileNavRow href="https://immunefi.com/bounty/beanstalk/" rel="noopener noreferrer" target="_blank" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavRow
+              href="https://immunefi.com/bounty/beanstalk/"
+              rel="noopener noreferrer"
+              target="_blank"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Bug Bounty Program
             </MobileNavRow>
-            <MobileNavRow href="https://docs.basin.exchange/" rel="noopener noreferrer" target="_blank" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavRow
+              href="https://docs.basin.exchange/"
+              rel="noopener noreferrer"
+              target="_blank"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Documentation
             </MobileNavRow>
           </MobileNavLinkContainer>
           <MobileConnectContainer>
-            <BasinConnectButton />
+            <WalletButton />
           </MobileConnectContainer>
         </BurgerMenu>
-        {chain?.unsupported ? <Title title="Unsupported Chain"/> : children}
+        {chain?.unsupported ? <Title title="Unsupported Chain" /> : children}
       </Window>
       <Footer />
     </Container>
@@ -228,23 +231,6 @@ const StyledConnectContainer = styled.div`
     align-self: stretch;
     align-items: center;
     justify-content: center;
-  }
-`;
-
-const StyledConnectButton = styled.button`
-  display: flex;
-  direction: row;
-  flex: 1;
-  align-self: stretch;
-  align-items: center;
-  justify-content: center;
-  border: 1px dotted red;
-  cursor: pointer;
-  border: 0px;
-  color: #000;
-  background: #fff;
-  :hover {
-    background-color: #f0fdf4;
   }
 `;
 

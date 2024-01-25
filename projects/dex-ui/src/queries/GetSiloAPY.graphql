@@ -1,0 +1,12 @@
+query BeanstalkSiloLatestAPY {
+  siloYields(first: 1, orderBy: season, orderDirection: desc) {
+    id
+    season
+    beansPerSeasonEMA
+    tokenAPYS {
+      token
+      beanAPY
+      stalkAPY
+    }
+  }
+}

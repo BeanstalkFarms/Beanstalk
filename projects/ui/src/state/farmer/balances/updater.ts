@@ -83,6 +83,9 @@ export const useFetchFarmerBalances = () => {
         const balances = await promises;
         console.debug('[farmer/updater/useFetchBalances] RESULT: ', balances);
 
+        const localBalances = balances.reduce((obj, elem) => Object.assign(obj, { [elem.token.address]: elem.balance }), {});
+        localStorage.setItem('farmerBalances', JSON.stringify(localBalances));
+        
         dispatch(updateBalances(balances));
         return promises;
       }
