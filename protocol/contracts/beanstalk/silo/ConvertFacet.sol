@@ -84,10 +84,10 @@ contract ConvertFacet is ReentrancyGuard {
         if(account == address(0)) account = msg.sender;
 
         LibSilo._mow(account, fromToken);
-        // if the fromToken and toToken are different, mow the toToken as well
+        // If the fromToken and toToken are different, mow the toToken as well.
         if (fromToken != toToken) LibSilo._mow(account, toToken);
 
-        // withdraw the tokens from the deposit 
+        // Withdraw the tokens from the deposit.
         (grownStalk, fromBdv) = _withdrawTokens(
             fromToken,
             stems,
@@ -96,10 +96,10 @@ contract ConvertFacet is ReentrancyGuard {
             account
         );
 
-        // calculate the bdv of the new deposit
+        // Calculate the bdv of the new deposit.
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
 
-        // if `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs
+        // If `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs.
         toBdv = (newBdv > fromBdv || decreaseBDV)  ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk, account);
