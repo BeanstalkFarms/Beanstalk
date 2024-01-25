@@ -76,19 +76,16 @@ contract ConvertFacet is ReentrancyGuard {
     {
         address toToken; address fromToken; uint256 grownStalk; address account; bool decreaseBDV;
 
-        /** @dev account and decreaseBDV are initialized at the start of LibConvert.convert()
-        * as address(0) and false respectively and remain that way if a convert is not anti-lambda-lambda
-        * If it is anti-lambda, account is the address of the account to update the deposit
-        * and decreaseBDV is true */
         (toToken, fromToken, toAmount, fromAmount, account, decreaseBDV) = LibConvert.convert(convertData);
 
         require(fromAmount > 0, "Convert: From amount is 0.");
 
-        // replace account with msg.sender if no account is specified
+        // Replace account with msg.sender if no account is specified.
         if(account == address(0)) account = msg.sender;
 
         LibSilo._mow(account, fromToken);
-        LibSilo._mow(account, toToken);
+        // if the fromToken and toToken are different, mow the toToken as well
+        if (fromToken != toToken) LibSilo._mow(account, toToken);
 
         // withdraw the tokens from the deposit 
         (grownStalk, fromBdv) = _withdrawTokens(
@@ -102,14 +99,8 @@ contract ConvertFacet is ReentrancyGuard {
         // calculate the bdv of the new deposit
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
 
-        // if we have used the anti-lambda-lamda convert, 
-        // we need to update the bdv of the new deposit
-        if(decreaseBDV) {
-	        toBdv = newBdv;
-        } else {
-        // else keep the max of the two bdvs
-	        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
-        }
+        // if `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs
+        toBdv = (newBdv > fromBdv || decreaseBDV)  ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk, account);
 
@@ -173,7 +164,7 @@ contract ConvertFacet is ReentrancyGuard {
                     );
                     
                 }
-                
+
                 a.tokensRemoved = a.tokensRemoved.add(amounts[i]);
                 a.bdvRemoved = a.bdvRemoved.add(depositBDV);
                 
@@ -184,7 +175,7 @@ contract ConvertFacet is ReentrancyGuard {
                 i++;
             }
             for (i; i < stems.length; ++i) amounts[i] = 0;
-            
+
             emit RemoveDeposits(
                 account,
                 token,
@@ -225,12 +216,12 @@ contract ConvertFacet is ReentrancyGuard {
         address account // account to update the deposit (used in bdv decrease)
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
-       
+
         //calculate stem index we need to deposit at from grownStalk and bdv
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
         //then in affect we lose that partial season's worth of stalk when we deposit
         //so here we need to update grownStalk to be the amount you'd have with the above deposit
-        
+
         /// @dev the two functions were combined into one function to save gas.
         // _stemTip = LibTokenSilo.grownStalkAndBdvToStem(IERC20(token), grownStalk, bdv);
         // grownStalk = uint256(LibTokenSilo.calculateStalkFromStemAndBdv(IERC20(token), _stemTip, bdv));
