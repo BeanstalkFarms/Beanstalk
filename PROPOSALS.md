@@ -47,6 +47,7 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-36](https://bean.money/bip-36): Silo V3
 * [BIP-37](https://bean.money/bip-37): Basin Integration
 * [BIP-38](https://bean.money/bip-38): Migrate urBEAN3CRV to urBEANETH
+* [BIP-39](https://bean.money/bip-39): Beanstalk Farms 2024 Development Budget
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
