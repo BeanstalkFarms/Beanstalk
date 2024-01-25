@@ -107,7 +107,7 @@ const VotesTable: FC<{
           >
             <Tabs value={tab} onChange={handleChangeTab} sx={{ minHeight: 0 }}>
               {choices?.map((choice: any) => (
-                <Tab label={choice} />
+                <Tab key={choice} label={choice} />
               ))}
             </Tabs>
           </Row>
@@ -145,6 +145,7 @@ const VotesTable: FC<{
                       <Row
                         justifyContent="space-between"
                         alignItems="center"
+                        key={vote.voter}
                         sx={{ pb: 1 }}
                       >
                         <Box display="flex" flexDirection="row" flexGrow={1}>
