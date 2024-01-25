@@ -28,7 +28,7 @@ const VotesTable: FC<{
   const choices = props.proposal.choices
     ? [...props.proposal.choices]
     : undefined;
-  const votes = props.quorum.data.votes;
+  const votes = props.quorum.data.votes || [];
 
   const [tab, handleChangeTab] = useTabs();
 
