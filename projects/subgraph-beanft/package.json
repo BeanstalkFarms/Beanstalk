@@ -1,0 +1,24 @@
+{
+  "name": "beanft",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "rm -rf ./generated && graph codegen",
+    "build": "yarn codegen && graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ beanft",
+    "create-local": "graph create --node http://localhost:8020/ beanft",
+    "remove-local": "graph remove --node http://localhost:8020/ beanft",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 beanft",
+    "create-hosted": "graph create --node http://graph.node.bean.money:8020/ beanft",
+    "remove-hosted": "graph remove --node http://graph.node.bean.money:8020/ beanft",
+    "deploy-hosted": "graph deploy --node http://graph.node.bean.money:8020/ --ipfs http://graph.node.bean.money:5001 beanft",
+    "test": "graph test"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.46.1",
+    "@graphprotocol/graph-ts": "^0.29.1",
+    "ethers": "^6.3.0"
+  },
+  "devDependencies": {
+    "matchstick-as": "0.5.0"
+  }
+}

@@ -75,7 +75,10 @@ contract ConvertFacet is ReentrancyGuard {
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         address toToken; address fromToken; uint256 grownStalk;
+
         (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
+        
+        require(fromAmount > 0, "Convert: From amount is 0.");
 
         LibSilo._mow(msg.sender, fromToken);
         LibSilo._mow(msg.sender, toToken);
@@ -87,7 +90,9 @@ contract ConvertFacet is ReentrancyGuard {
             fromAmount
         );
 
+        // calculate the bdv of the new deposit
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
+
         toBdv = newBdv > fromBdv ? newBdv : fromBdv;
 
         toStem = _depositTokensForConvert(toToken, toAmount, toBdv, grownStalk);

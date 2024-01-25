@@ -35,11 +35,10 @@ contract InitBipSeedGauge is Weather {
     uint256 private constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 private constant PRECISION = 1e6;
 
-    // TODO : update these values, once the beanEthMigration BIP has executed.
-    uint256 internal constant BEAN_UNMIGRATED_BDV = 816_105_148629; // 816k BDV
-    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 53_419_468565; // 53k BDV
-    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 4_946_644_852785; // 4.9m BDV
-    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 7_774_709_273192; // 7.7m BDV
+    uint256 internal constant BEAN_UNMIGRATED_BDV = 304_630_107407; // ~300k BDV
+    uint256 internal constant BEAN_3CRV_UNMIGRATED_BDV = 26_212_521946; // ~26k BDV
+    uint256 internal constant UNRIPE_BEAN_UNMIGRATED_BDV = 3_209_210_313166; // 3.2m BDV
+    uint256 internal constant UNRIPE_LP_UNMIGRATED_BDV = 6_680_992_571569; // 6.68m BDV
 
     // assumption is that unripe assets has been migrated to the bean-eth Wells.
     function init() external {
@@ -95,7 +94,7 @@ contract InitBipSeedGauge is Weather {
 
             // get depositedBDV to use later:
             totalBdv += s.siloBalances[siloTokens[i]].depositedBdv;
-            
+
             // emit event
             emit LibWhitelist.UpdateGaugeSettings(siloTokens[i], gpSelectors[i], optimalPercentDepositedBdv[i]);
         }
