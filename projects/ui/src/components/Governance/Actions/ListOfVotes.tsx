@@ -98,7 +98,7 @@ const VotesTable: FC<{
 
   return (
     <>
-      {votes && (
+      {votes && choices && (
         <Box>
           <Row
             justifyContent="space-between"
