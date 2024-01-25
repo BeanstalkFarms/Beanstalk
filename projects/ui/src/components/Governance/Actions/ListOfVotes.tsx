@@ -111,7 +111,7 @@ const VotesTable: FC<{
               ))}
             </Tabs>
           </Row>
-          <Box sx={{ px: 2, pt: 2, pb: 1, height: '330px' }}>
+          <Box sx={{ px: 2, pt: 2, height: '340px' }}>
             {votesPerChoice[tab] && votesPerChoice[tab].length > 0 ? (
               <>
                 <Row
@@ -176,15 +176,13 @@ const VotesTable: FC<{
                     onPageChange={handleChangePage}
                     rowsPerPage={votesPerPage}
                     rowsPerPageOptions={[]}
-                    backIconButtonProps={{ sx: { padding: "4px" } }}
-                    nextIconButtonProps={{ sx: { padding: "4px" } }}
-                    sx={{ position: "absolute", bottom: "-8px", right: "4px" }}
+                    sx={{ position: "absolute", bottom: "0px", right: "0px" }}
                   />
                 )}
               </>
             ) : (
               <Box
-                height={250}
+                height={260}
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
