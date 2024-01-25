@@ -34,8 +34,8 @@ library LibLambdaConvert {
     /** 
      * @notice This function returns the full input for use in anti-lamda convert
      * In anti lamda convert, any user can convert on behalf of an account 
-     * to update a dedposit's bdv.
-     * This is why the additional account parameter is returned.
+     * to update a deposit's bdv.
+     * This is why the additional 'account' parameter is returned.
      */
     function antiConvert(bytes memory convertData)
         internal
@@ -45,10 +45,11 @@ library LibLambdaConvert {
             address tokenIn,
             uint256 amountOut,
             uint256 amountIn,
-            address account
+            address account,
+            bool decreaseBDV
         )
     {
-        (amountIn, tokenIn , account) = convertData.antiLambdaConvert();
+        (amountIn, tokenIn, account, decreaseBDV) = convertData.antiLambdaConvert();
         tokenOut = tokenIn;
         amountOut = amountIn;
     }

@@ -26,6 +26,10 @@ library LibConvert {
      * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
      * a specified pool and returns the in and out convert amounts and token addresses and bdv
      * @param convertData Contains convert input parameters for a specified convert
+     * note account and decreaseBDV variables are initialized at the start
+     * as address(0) and false respectively and remain that way if a convert is not anti-lambda-lambda
+     * If it is anti-lambda, account is the address of the account to update the deposit
+     * and decreaseBDV is true
      */
     function convert(bytes calldata convertData)
         external
@@ -65,9 +69,8 @@ library LibConvert {
             (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert
                 .convertUnripeToRipe(convertData);
         } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
-	        (tokenOut, tokenIn, amountOut, amountIn, account) = LibLambdaConvert
+	        (tokenOut, tokenIn, amountOut, amountIn, account, decreaseBDV) = LibLambdaConvert
                 .antiConvert(convertData);
-	        decreaseBDV = true;
         } else {
             revert("Convert: Invalid payload");
         }
