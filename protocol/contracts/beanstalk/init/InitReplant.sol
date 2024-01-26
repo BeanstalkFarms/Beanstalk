@@ -32,7 +32,8 @@ contract InitReplant {
             C.fertilizerAddress(), 
             fertilizerImplementation
         );
-        // Not needed since fert metadata is moved fully on-chain.
+        // The setURI function is removed because of the
+        // fertilizer on-chain metadata update.
         // C.fertilizer().setURI('https://fert.bean.money/');
     }
 }
