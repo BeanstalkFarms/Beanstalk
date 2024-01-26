@@ -6,6 +6,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
+import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {C} from "contracts/C.sol";
 
@@ -35,6 +36,11 @@ library LibUsdOracle {
             uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
             if (ethUsdPrice == 0) return 0;
             return uint256(1e24).div(ethUsdPrice);
+        }
+        if (token == C.WSTETH) {
+            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(lookback);
+            if (wstethUsdPrice == 0) return 0;
+            return uint256(1e24).div(wstethUsdPrice);
         }
         revert("Oracle: Token not supported.");
     }

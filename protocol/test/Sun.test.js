@@ -6,7 +6,7 @@ const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRAC
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
 const { deployMockWell, setReserves } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
+const { setEthUsdChainlinkPrice, setEthUsdcPrice } = require('../utils/oracle.js');
 const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { advanceTime } = require('../utils/helpers.js');
@@ -67,7 +67,7 @@ describe('Sun', function () {
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-    await setEthUsdPrice('999.998018');
+    await setEthUsdChainlinkPrice('999.998018');
     await setEthUsdcPrice('1000');
 
     this.well = await deployBasin(true, undefined, false, true)

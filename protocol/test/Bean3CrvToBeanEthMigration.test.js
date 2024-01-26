@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL, BCM, STABLE_FACTORY, PUBLIUS } = require('./utils/constants.js');
-const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
+const { setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { getBeanstalk } = require('../utils/contracts.js');

@@ -5,7 +5,7 @@ const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, WET
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdcPrice, setEthUsdPrice, setEthUsdtPrice, setOracleFailure, printPrices } = require('../utils/oracle.js');
+const { setEthUsdcPrice, setEthUsdChainlinkPrice, setEthUsdtPrice, setOracleFailure, printPrices } = require('../utils/oracle.js');
 const { deployBasin } = require('../scripts/basin.js');
 const { toBN } = require('../utils/helpers.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -33,7 +33,7 @@ describe('Unripe Convert', function () {
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
 
-    await setEthUsdPrice('999.998018')
+    await setEthUsdChainlinkPrice('999.998018')
     await setEthUsdcPrice('1000')
 
     await this.season.siloSunrise(0);

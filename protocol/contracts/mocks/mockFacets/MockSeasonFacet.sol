@@ -13,6 +13,8 @@ import "contracts/libraries/LibBytes.sol";
 import {LibUniswapOracle} from "contracts/libraries/Oracle/LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
+import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage, Storage} from "contracts/libraries/LibAppStorage.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
@@ -402,6 +404,10 @@ contract MockSeasonFacet is SeasonFacet  {
         return LibEthUsdOracle.getEthUsdPrice();
     }
 
+    function getEthUsdTwap(uint256 lookback) external view returns (uint256) {
+        return LibEthUsdOracle.getEthUsdPrice(lookback);
+    }
+
     function getChainlinkEthUsdPrice() external view returns (uint256) {
         return LibChainlinkOracle.getPrice(
             LibEthUsdOracle.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
@@ -415,6 +421,22 @@ contract MockSeasonFacet is SeasonFacet  {
             LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
             lookback
         );
+    }
+
+    function getWstethUsdPrice() external view returns (uint256) {
+        return LibWstethUsdOracle.getWstethUsdPrice(0);
+    }
+
+    function getWstethUsdTwap(uint256 lookback) external view returns (uint256) {
+        return LibWstethUsdOracle.getWstethUsdPrice(lookback);
+    }
+
+    function getWstethEthPrice() external view returns (uint256) {
+        return LibWstethEthOracle.getWstethEthPrice(0);
+    }
+
+    function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
+        return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
 
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external {

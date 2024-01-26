@@ -8,7 +8,7 @@ const { ethers } = require('hardhat');
 const { advanceTime } = require('../utils/helpers.js');
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
 const { initalizeGaugeForToken } = require('../utils/gauge.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { setOracleFailure } = require('../utils/oracle.js');
 
@@ -70,7 +70,7 @@ describe('Gauge', function () {
     await this.season.siloSunrise(0)
     await this.season.captureWellE(this.well.address);
 
-    await setEthUsdPrice('999.998018')
+    await setEthUsdChainlinkPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
 

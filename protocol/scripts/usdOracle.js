@@ -7,7 +7,7 @@ async function setEthUsdcPrice(price) {
     await ethUsdcUniswapPool.setOraclePrice(to6(price), 18);
 }
 
-async function setEthUsdPrice(price) {
+async function setEthUsdChainlinkPrice(price) {
     const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     const block = await ethers.provider.getBlock("latest");
     await ethUsdChainlinkAggregator.addRound(to6(price), block.timestamp, block.timestamp, '1')
@@ -19,5 +19,5 @@ async function setEthUsdtPrice(price) {
 }
 
 exports.setEthUsdcPrice = setEthUsdcPrice;
-exports.setEthUsdPrice = setEthUsdPrice;
+exports.setEthUsdChainlinkPrice = setEthUsdChainlinkPrice;
 exports.setEthUsdtPrice = setEthUsdtPrice;

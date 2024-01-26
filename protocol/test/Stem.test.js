@@ -4,7 +4,7 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
 const { mintEth } = require('../utils/mint.js')
-const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE } = require('./utils/constants')
+const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
@@ -13,7 +13,7 @@ const { BigNumber } = require('ethers');
 const { deployBasin } = require('../scripts/basin.js');
 const { setReserves } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
-const { impersonateEthUsdChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
+const { impersonateChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
 const { toBN } = require('../utils/helpers.js');
@@ -90,7 +90,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.well = await deployBasin(true, undefined, false, true)
       this.season
 
-      await impersonateEthUsdChainlinkAggregator()
+      await impersonateChainlinkAggregator(ETH_USD_CHAINLINK_AGGREGATOR)
       await impersonateEthUsdcUniswap()
 
       await setEthUsdPrice('999.998018')

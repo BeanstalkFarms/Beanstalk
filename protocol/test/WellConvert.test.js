@@ -7,7 +7,7 @@ const { BEAN, BEAN_ETH_WELL, WETH } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -33,7 +33,7 @@ describe('Well Convert', function () {
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
 
-    await setEthUsdPrice('999.998018')
+    await setEthUsdChainlinkPrice('999.998018')
     await setEthUsdcPrice('1000')
     await setEthUsdtPrice('1000')
 
