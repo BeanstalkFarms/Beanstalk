@@ -17,8 +17,8 @@ interface IBS {
     function remainingRecapitalization() external view returns (uint256);
 }
 
-// inherits Internalizer thus inherits ERC1155Upgradeable and the uri function
-// the end Fert Facet only gets the interface of this contract
+// Inherits Internalizer thus inherits ERC1155Upgradeable and the uri function
+// The end Fert Facet only gets the interface of this contract
 contract Fertilizer is Internalizer {
 
     event ClaimFertilizer(uint256[] ids, uint256 beans);
@@ -29,7 +29,8 @@ contract Fertilizer is Internalizer {
 
 
     /**
-        * @notice Updates beanstalk's state for a fertilizer owner
+        * @notice Calculates and updates the amount of beans a user should receive
+        * given a set of fertilizer ids. Callable only by the Beanstalk contract.
         * @param account - the user to update
         * @param ids - an array of fertilizer ids 
         * @param bpf - the current beans per fertilizer
@@ -43,7 +44,8 @@ contract Fertilizer is Internalizer {
     }
 
     /**
-        * @notice Mints a fertilizer to an account using the users beanstalk internal balance
+        * @notice Mints a fertilizer to an account using a users specified balance
+        * Called from FertilizerFacet.mintFertilizer()
         * @param account - the account to mint to
         * @param id - the id of the fertilizer to mint
         * @param amount - the amount of fertilizer to mint
@@ -64,7 +66,12 @@ contract Fertilizer is Internalizer {
         );
     }
 
-    /// @notice hadles state updates before a fertilizer transfer
+    /** 
+        * @notice hadles state updates before a fertilizer transfer
+        * @param from - the account to transfer from
+        * @param to - the account to transfer to
+        * @param ids - an array of fertilizer ids 
+     */
     function _beforeTokenTransfer(
         address, // operator,
         address from,
@@ -79,9 +86,10 @@ contract Fertilizer is Internalizer {
     }
 
     /**
-        * @notice Updates and pays the beanstalk balance of a fertilizer owner
+        * @notice Calculates and transfers the rewarded beans
+        * from a set of fertilizer ids to an account's internal balance
         * @param account - the user to update
-        * @param ids - an array of fertilizer ids 
+        * @param ids - an array of fertilizer ids
         * @param bpf - the beans per fertilizer
      */
     function _update(
@@ -94,10 +102,10 @@ contract Fertilizer is Internalizer {
     }
 
     /**
-        * @notice Updates the internal beanstalk balance of a fertilizer owner
-         given a set of fertilizer ids
+        * @notice Calculates and updates the amount of beans a user should receive
+        * given a set of fertilizer ids and the current outstanding total beans per fertilizer
         * @param account - the user to update
-        * @param ids - the fertilizer ids to update
+        * @param ids - the fertilizer ids
         * @param bpf - the current beans per fertilizer
         * @return beans - the amount of beans to reward the fertilizer owner
      */
