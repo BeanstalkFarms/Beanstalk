@@ -126,10 +126,10 @@ contract ConvertFacet is ReentrancyGuard {
         payable
         nonReentrant
         returns (
-            uint256 amountOut
+            uint256 amountOut, int96 toStem
         )
     {   
-        AppStorage storage s = LibAppStorage.diamondStorage();
+        // AppStorage storage s = LibAppStorage.diamondStorage();
 
         // require(s.ss[outputToken].milestoneSeason != 0, "Token not whitelisted");
 
@@ -145,24 +145,24 @@ contract ConvertFacet is ReentrancyGuard {
         // }
 
         //todo: actually withdraw crates
-        // uint256 grownStalk;
+        uint256 grownStalk;
         // uint256 fromBdv;
 
-        // (grownStalk, fromBdv) = _withdrawTokens(
-        //     inputToken,
-        //     stems,
-        //     amounts,
-        //     totalAmountIn
-        // );
+        (grownStalk, ) = _withdrawTokens(
+            inputToken,
+            stems,
+            amounts,
+            totalAmountIn
+        );
 
         // console.log('fromBdv: ', fromBdv);
         // console.log('grownStalk: ', grownStalk);
         // console.log('totalAmountIn: ', totalAmountIn);
 
         // Transfer tokenIn from beanstalk to pipeline
-        console.log('transferring input token to pipeline');
-        console.log('inputToken:');
-        console.log(inputToken);
+        // console.log('transferring input token to pipeline');
+        // console.log('inputToken:');
+        // console.log(inputToken);
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
 
         // FIXME: probably better to call an pipe/AdvancePipe here, rather than using .call()
@@ -170,9 +170,9 @@ contract ConvertFacet is ReentrancyGuard {
         // perform advanced farm operations.
 
         //log farmData length
-        console.log('farmData length: ', farmData.length);
+        // console.log('farmData length: ', farmData.length);
 
-        console.log('going to call advancedFarm yo');
+        // console.log('going to call advancedFarm yo');
 
 
         // Decode and execute advanced farm calls.
@@ -182,29 +182,31 @@ contract ConvertFacet is ReentrancyGuard {
             (AdvancedFarmCall[])
         );
 
-        console.log('decoded into calls');
+        // console.log('decoded into calls');
 
         bytes[] memory results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
-            console.log('pipelineConvert calling advancedFarmMem');
-            require(calls[i].callData.length != 0, "Tractor: empty AdvancedFarmCall");
+            // console.log('pipelineConvert calling advancedFarmMem');
+            require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
-            console.log('pipelineConvert results for that call in bytes:');
-            console.logBytes(results[i]);
+            // console.log('pipelineConvert results for that call in bytes:');
+            // console.logBytes(results[i]);
         }
 
-        bytes memory lastBytes = results[results.length - 1];
-        //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
-        bytes memory lastSlot = LibBytes.sliceFrom(lastBytes, 64);
+        // bytes memory lastBytes = results[results.length - 1];
+        // //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
+        // bytes memory lastSlot = LibBytes.sliceFrom(lastBytes, 64);
+
+        // bytes memory lastSlot = getLastSlot(results[results.length - 1]);
 
 
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut
         // in the farmCallResult.
-        amountOut = abi.decode(lastSlot, (uint256));
+        
 
-        console.log('amountOut: ', amountOut);
-
+        // console.log('amountOut: ', amountOut);
+        amountOut = getAmountOut(results[results.length - 1]);
         
 
 
@@ -212,8 +214,24 @@ contract ConvertFacet is ReentrancyGuard {
         //this also let's us know how many assets to attempt to pull out of the final type
         transferTokensFromPipeline(outputToken, amountOut);
 
+
+        uint256 newBdv = LibTokenSilo.beanDenominatedValue(outputToken, amountOut);
+        //note bdv could decrease here, by a lot, esp because you can deposit only a fraction
+        //of what you withdrew
+
+        //TODO: grownStalk should be lost as % of bdv decrease?
+        //use current bdv of in tokens or bdv at time of previous deposit?
+
+        toStem = _depositTokensForConvert(outputToken, amountOut, newBdv, grownStalk);
+
         //emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
 
+        //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
+        emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
+    }
+
+    function getAmountOut(bytes memory data) internal pure returns (uint256 amountOut) {
+        amountOut = abi.decode(LibBytes.sliceFrom(data, 64), (uint256));
     }
 
 
@@ -228,16 +246,16 @@ contract ConvertFacet is ReentrancyGuard {
         );
 
         //todo: see if we can find a way to spit out a custom error saying it failed here, rather than a generic ERC20 revert
-        bool success;
-        bytes memory result;
-        (success, result) = p.target.staticcall(p.data);
-        if (!success) {
-            revert("Failed to transfer tokens from pipeline");
-        }
+        // bool success;
+        // bytes memory result;
+        // (success, result) = p.target.staticcall(p.data);
+        // if (!success) {
+        //     revert("Failed to transfer tokens from pipeline");
+        // }
         //I don't think calling checkReturn here is necessary if success is false?
-        LibFunction.checkReturn(success, result);
+        // LibFunction.checkReturn(success, result);
 
-        // IPipeline(PIPELINE).pipe(p);
+        IPipeline(PIPELINE).pipe(p);
     }
 
     // todo: implement oracle

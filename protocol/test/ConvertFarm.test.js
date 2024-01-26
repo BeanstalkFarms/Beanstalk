@@ -160,8 +160,9 @@ describe('Farm Convert', function () {
         await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
-        await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
-
+        //get stem tip for token
+        const stemTip = await this.silo.stemTipForToken(this.bean.address);
+        // console.log('stemTip: ', stemTip.toString());
 
         console.log('calling draftConvertBeanToBeanEthWell');
 
@@ -169,31 +170,20 @@ describe('Farm Convert', function () {
 
         console.log('advancedFarmCalls: ', advancedFarmCalls);
 
-
         const encodedFunctionCall = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
           advancedFarmCalls
         ]);
 
         console.log('encodedFunctionCall: ', encodedFunctionCall);
 
-
         const farmData = encodedFunctionCall;
 
-        console.log('user.address: ', user.address);
-
-        console.log('farmData: ', farmData);
-        console.log('this.convert.connect(user).pipelineConvert: ', this.convert.connect(user).pipelineConvert);
-        console.log('this.bean.address: ', this.bean.address);
-        console.log('this.well.address: ', this.well.address);
-
         console.log('going to call pipeline convert');
-
         console.log('toBean(\'200\'): ', toBean('200'));
-
 
         // await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, PIPELINE, ethers.constants.MaxUint256);
 
-        await this.convert.connect(user).pipelineConvert(this.bean.address, ['2'], ['200000000'], 200000000, this.well.address, farmData);
+        await this.convert.connect(user).pipelineConvert(this.bean.address, [stemTip], [toBean('200')], toBean('200'), this.well.address, farmData);
 
         console.log('done calling pipeline convert');
 
