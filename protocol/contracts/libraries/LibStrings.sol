@@ -64,11 +64,11 @@ library LibStrings {
     }
 
     /**
-    * @notice returns a substring of a string starting from startIndex and ending at endIndex
-    * @param str - the string to extract from
-    * @param startIndex - the index to start at
-    * @param endIndex - the index to end at
-    * insired from: // https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
+    * @notice Returns a substring of a string starting from startIndex and ending at endIndex.
+    * @param str - The string to extract from.
+    * @param startIndex - The index to start at.
+    * @param endIndex - The index to end at.
+    * Inspired by: https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
     */
     function substring(
         string memory str,
@@ -84,16 +84,16 @@ library LibStrings {
     }
 
     /**
-     * @notice formats a uint128 number with 6 decimals to a string with 2 decimals
-     * @param number - the number to format
-     * @return string - the formatted string
+     * @notice Formats a uint128 number with 6 decimals to a string with 2 decimals.
+     * @param number - The number to format.
+     * @return string - The formatted string.
      */
     function formatUintWith6DecimalsTo2(uint128 number)
         internal 
         pure
         returns (string memory)
     {                                       
-                         // cast to uint256 to be compatible with toString  
+                        // Cast to uint256 to be compatible with toString  
         string memory numString = toString(uint256(number));
 
         // If the number has fewer than 6 decimals, add trailing zeros
