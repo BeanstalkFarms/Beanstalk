@@ -12,8 +12,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
 import "contracts/libraries/LibSafeMath32.sol";
 import "contracts/libraries/LibSafeMath128.sol";
-import "base64-sol/base64.sol";
 import "./FertilizerImage.sol";
+import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
+
 
 /**
  * @author publius, deadmanwalking
@@ -40,13 +41,13 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private _uri;
 
-    // ----------------------------- NEW URI FUNCTION ----------------------------
+    ///////////////////// NEW URI FUNCTION ///////////////////////
 
     /**
         * @notice Assembles and returns a base64 encoded json metadata
         * URI for a given fertilizer ID.
-        * need to ovveride because the contract indirectly
-        * inherits from ERC1155
+        * Need to ovveride because the contract indirectly
+        * inherits from ERC1155.
         * @param _id - the id of the fertilizer
         * @return - the json metadata URI
      */
@@ -68,7 +69,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
             string(
                 abi.encodePacked(
                     BASE_JSON_URI,
-                    Base64.encode(
+                    LibBytes64.encode(
                         bytes(
                             abi.encodePacked(
                                 '{"name": "Fertilizer - ',

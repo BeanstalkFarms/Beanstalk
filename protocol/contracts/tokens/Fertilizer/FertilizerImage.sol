@@ -3,9 +3,9 @@
 pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "base64-sol/base64.sol";
 import "contracts/libraries/LibStrings.sol";
 import {LibStrings} from "contracts/libraries/LibStrings.sol";
+import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 
 /**
  * @title FertilizerImage
@@ -47,34 +47,26 @@ contract FertilizerImage {
     }
 
     /**
-        * @dev generateImageURI assembles the needed components for the Fertilizer svg
-          and returns the base64 encoded image URI representation for use in the json metadata
+        * @dev generateImageSvg assembles the needed components for the Fertilizer svg
+        * for use in the json fertilizer metadata
         * @param _id - the id of the Fertilizer
         * @param bpfRemaining - the bpfRemaining of the Fertilizer
         * @return imageUri - the image URI representation of the Fertilizer
      */
     function generateImageSvg(uint256 _id, uint128 bpfRemaining) internal view returns (string memory) {
-        string memory svg = string(
+        return string(
             abi.encodePacked(
-                base(), // BASE SVG START
+                '<svg width="294" height="512" viewBox="0 0 294 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="', // BASE SVG START
                 getFertilizerStatusSvg(_id, bpfRemaining), // fertilizerStatus
-                preNumber(), // BASE SVG PRE NUMBER FOR BPF REMAINING
+                '></pattern></defs><text font-family="sans-serif" font-size="20" x="20" y="490" fill="black" ><tspan dy="0" x="20"> ', // BASE SVG PRE NUMBER FOR BPF REMAINING
                 LibStrings.formatUintWith6DecimalsTo2(bpfRemaining), // bpfRemaining with 2 decimal places
-                end() // BASE SVG END
+                " BPF Remaining </tspan></text></svg>" // BASE SVG END
             )
         );
-        return svg;
-    }
-
-    /// @dev returns the start of the svg format for the Fertilizer
-    function base() internal pure returns(string memory) {
-        return string(abi.encodePacked(
-            '<svg width="294" height="512" viewBox="0 0 294 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="'
-        ));
     }
 
     /**
-        * @dev returns the correct svg for the Fertilizer status based on the bpfRemaining
+        * @dev Returns the correct svg for the Fertilizer status based on the bpfRemaining.
         * @param _id - the id of the Fertilizer
         * @param bpfRemaining - the bpfRemaining of the Fertilizer
         * @return fertilizerStatusSvg an svg for the correct Fertilizer status
@@ -96,31 +88,15 @@ contract FertilizerImage {
         return fertilizerStatusSvg;
     }
 
-    /// @dev returns the preNumber formatting for the Fertilizer
-    function preNumber() internal pure returns(string memory) {
-        return string(abi.encodePacked(
-            '></pattern></defs><text font-family="sans-serif" font-size="20" x="20" y="490" fill="black" ><tspan dy="0" x="20"> '
-        ));
-    }
-
-    /// @dev returns the end of the svg for the Fertilizer containing the bpfRemaining
-    function end() internal pure returns(string memory) {
-        return string(abi.encodePacked(
-            " BPF Remaining </tspan></text></svg>"
-        ));
-    }
-
-    /// @dev helper function that converts an svg to a bade64 encoded image URI
+    /// @dev Helper function that converts an svg to a bade64 encoded image URI.
     function svgToImageURI(string memory svg)
         internal
         pure
         returns (string memory)
     {
-        string memory baseURL = "data:image/svg+xml;base64,";
-        string memory svgBase64Encoded = Base64.encode(
-            bytes(string(abi.encodePacked(svg)))
+        return string(
+            abi.encodePacked("data:image/svg+xml;base64,", LibBytes64.encode(bytes(string(abi.encodePacked(svg)))))
         );
-        return string(abi.encodePacked(baseURL, svgBase64Encoded));
     }
 
 }
