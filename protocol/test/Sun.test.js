@@ -5,8 +5,7 @@ const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js');
 const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN,ETH_USDC_UNISWAP_V3, BASE_FEE_CONTRACT, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, WETH, BEANSTALK_PUMP } = require('./utils/constants.js');
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js');
 const { ethers } = require('hardhat');
-const { deployMockWell, setReserves } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice, setEthUsdcPrice } = require('../utils/oracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { deployBasin, deployBasinWithMockPump } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { advanceTime } = require('../utils/helpers.js');
@@ -68,8 +67,7 @@ describe('Sun', function () {
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-    await setEthUsdChainlinkPrice('999.998018');
-    await setEthUsdcPrice('1000');
+    await setEthUsdChainlinkPrice('1000');
 
     this.well = await deployBasinWithMockPump(true, undefined, false, true)
     this.pump = await ethers.getContractAt('MockPump', BEANSTALK_PUMP);

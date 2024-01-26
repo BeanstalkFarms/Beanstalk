@@ -7,7 +7,7 @@ const { BEAN, BEAN_ETH_WELL, WETH } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -33,9 +33,7 @@ describe('Well Convert', function () {
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
 
-    await setEthUsdChainlinkPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
 
     await setReserves(
       owner,
@@ -168,7 +166,7 @@ describe('Well Convert', function () {
       })
 
       it('reverts when USD oracle is broken', async function () {
-        await setEthUsdPrice('0')
+        await setEthUsdChainlinkPrice('0')
         const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.well.address)
         await expect(this.convert.connect(owner).callStatic.convertInternalE(
           this.bean.address,
@@ -262,7 +260,7 @@ describe('Well Convert', function () {
       })
 
       it('reverts when USD oracle is broken', async function () {
-        await setEthUsdPrice('0')
+        await setEthUsdChainlinkPrice('0')
         const convertData = ConvertEncoder.convertWellLPToBeans('3018239549693752550560', to6('200000'), this.well.address)
         await expect(this.convert.connect(owner).callStatic.convertInternalE(
           this.well.address,

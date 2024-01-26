@@ -6,7 +6,7 @@ const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 let user, user2, owner;
@@ -52,9 +52,7 @@ describe('Season', function () {
         await this.well.connect(user).mint(user.address, to18('1000'))
 
         // init eth/usd oracles
-        await setEthUsdPrice('999.998018')
-        await setEthUsdcPrice('1000')
-        await setEthUsdtPrice('1000')
+        await setEthUsdChainlinkPrice('1000')
     })
 
     beforeEach(async function () {

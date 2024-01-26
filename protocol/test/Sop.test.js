@@ -4,7 +4,7 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { BEAN, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH, MAX_UINT256 } = require('./utils/constants')
 const { to18, to6, toStalk, advanceTime } = require('./utils/helpers.js')
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 
 let user,user2,owner;
@@ -49,9 +49,7 @@ describe('Sop', function () {
     await this.season.siloSunrise(0)
     await this.season.captureWellE(this.well.address);
 
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
 
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)

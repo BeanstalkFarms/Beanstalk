@@ -14,7 +14,9 @@ describe('Curve Convert', function () {
     [owner, user, user2, fakeMetapoolAccount] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
+    console.log(3);
     const contracts = await deploy("Test", false, true);
+    console.log(2);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
@@ -30,7 +32,7 @@ describe('Curve Convert', function () {
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
     this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
     this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address);
-    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
+    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE', BEAN);
     this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
 
     await this.threeCurve.mint(userAddress, to18('100000'));

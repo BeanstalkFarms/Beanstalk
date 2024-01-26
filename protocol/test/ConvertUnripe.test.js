@@ -34,8 +34,7 @@ describe('Unripe Convert', function () {
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
 
-    await setEthUsdChainlinkPrice('999.998018')
-    await setEthUsdcPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
 
     await this.season.siloSunrise(0);
     await this.bean.mint(userAddress, toBean('10000000000'));

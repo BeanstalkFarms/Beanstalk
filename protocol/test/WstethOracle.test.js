@@ -134,7 +134,9 @@ describe('wStEth Oracle', function () {
             expect(await season.getWstethUsdTwap('900')).to.be.equal(to6('10000'))
         })
     })
+})
 
+describe('wStEth Oracle with Forking', function () {
     it("Returns correct value when forking", async function () {
         try {
             await network.provider.request({
@@ -160,7 +162,7 @@ describe('wStEth Oracle', function () {
         expect(await season.getWstethEthPrice()).to.be.equal('1154105')
         expect(await season.getWstethEthTwap('500000')).to.be.equal('1154095')
         expect(await season.getWstethUsdPrice()).to.be.equal('2580422122')
-        expect(await season.getWstethUsdTwap('500000')).to.be.equal('2744262839')
+        expect(await season.getWstethUsdTwap('500000')).to.be.equal('2744261803')
         expect(await season.getUsdPrice(WSTETH)).to.be.equal('387533493638216')
     })
 })

@@ -4,7 +4,7 @@ const { impersonateFertilizer } = require('../scripts/deployFertilizer.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK } = require('./utils/constants.js');
-const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { deployBasin } = require('../scripts/basin.js');
 let user,user2,owner,fert
@@ -66,8 +66,7 @@ describe('Fertilize', function () {
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
 
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
 
     console.log(`Well Address: ${this.well.address}`)
 

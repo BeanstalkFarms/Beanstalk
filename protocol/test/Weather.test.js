@@ -4,7 +4,7 @@ const { parseJson, to6, to18 } = require('./utils/helpers.js')
 const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN} = require('./utils/constants.js')
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js');
-const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 
 const { advanceTime } = require('../utils/helpers.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -60,9 +60,7 @@ describe('Complex Weather', function () {
     await whitelistWell(this.well.address, '10000', to6('4'))
     await this.season.captureWellE(this.well.address);
 
-    await setEthUsdChainlinkPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
   });
 
   [...Array(numberTests).keys()].map(i => i + startTest).forEach(function(v) {

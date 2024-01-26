@@ -4,7 +4,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { to18, to6 } = require('./utils/helpers.js');
 const { getBeanstalk, getBean } = require('../utils/contracts.js');
 const { whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../utils/oracle.js');
 const { advanceTime } = require('../utils/helpers.js');
 const { ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants.js');
 let user,user2,owner;
@@ -27,9 +27,7 @@ describe('Well Minting', function () {
     ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
     await this.bean.mint(userAddress, to18('1'));
     [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
     await whitelistWell(this.well.address, '10000', to6('4'))
     await this.season.captureWellE(this.well.address)
   
@@ -129,7 +127,7 @@ describe('Well Minting', function () {
 
   describe('it reverts on broken USD Oracle', async function () {
     it("Broken Chainlink Oracle", async function () {
-      await setEthUsdPrice('0')
+      await setEthUsdChainlinkPrice('0')
       await advanceTime(3600)
       await user.sendTransaction({
         to: beanstalk.address,

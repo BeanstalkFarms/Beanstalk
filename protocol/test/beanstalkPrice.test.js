@@ -5,7 +5,7 @@ const { to18, to6, advanceTime } = require('./utils/helpers.js')
 const { BEAN, BEANSTALK, BEAN_3_CURVE, THREE_CURVE, THREE_POOL, WETH, STABLE_FACTORY, BEAN_ETH_WELL } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { deployWell, setReserves, whitelistWell } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { getBeanstalk } = require('../utils/contracts.js');
 const { impersonateBeanEthWell } = require('../utils/well.js')
 const fs = require('fs');
@@ -68,9 +68,7 @@ describe('BeanstalkPrice', function () {
       EXTERNAL
     )
 
-    await setEthUsdChainlinkPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
+    await setEthUsdChainlinkPrice('1000')
     
     await setReserves(
       owner,

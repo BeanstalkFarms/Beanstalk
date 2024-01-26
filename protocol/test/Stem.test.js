@@ -12,7 +12,7 @@ const { ConvertEncoder } = require('./utils/encoder.js');
 const { BigNumber } = require('ethers');
 const { deployBasin } = require('../scripts/basin.js');
 const { setReserves } = require('../utils/well.js');
-const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { impersonateChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
@@ -94,8 +94,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       await impersonateChainlinkAggregator(ETH_USD_CHAINLINK_AGGREGATOR)
       await impersonateEthUsdcUniswap()
 
-      await setEthUsdPrice('999.998018')
-      await setEthUsdcPrice('1000')
+      await setEthUsdChainlinkPrice('1000')
 
       await impersonateBean()
       await impersonateWeth()
