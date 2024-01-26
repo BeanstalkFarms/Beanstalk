@@ -34,7 +34,14 @@ library LibFertilizer {
     uint128 private constant RESTART_HUMIDITY = 2500;
     uint128 private constant END_DECREASE_SEASON = REPLANT_SEASON + 461;
 
-    /// @dev calcultes and returns a fertilizer id
+    /**
+     * @dev Adds a new fertilizer to Beanstalk, updates global state,
+     * the season queue, and returns the corresponding fertilizer id.  
+     * @param season The season the fertilizer is added.
+     * @param fertilizerAmount The amount of Fertilizer to add.
+     * @param minLP The minimum amount of LP to add.
+     * @return id The id of the Fertilizer.
+     */
     function addFertilizer(
         uint128 season,
         uint256 fertilizerAmount,
