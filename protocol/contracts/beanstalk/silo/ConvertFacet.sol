@@ -19,6 +19,7 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
+import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import "hardhat/console.sol";
 
 /**
@@ -29,7 +30,7 @@ contract ConvertFacet is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
-    address internal constant PIPELINE = 0xb1bE0000bFdcDDc92A8290202830C4Ef689dCeaa; //import this from C.sol?
+    address internal constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423; //import this from C.sol?
 
     event Convert(
         address indexed account,
@@ -115,8 +116,9 @@ contract ConvertFacet is ReentrancyGuard {
 
     function pipelineConvert(
         address inputToken, 
-        uint96[] calldata stems, //array of stems to convert
+        int96[] calldata stems, //array of stems to convert
         uint256[] calldata amounts, //amount from each crate to convert
+        uint256 totalAmountIn, //passed in rather than calculated to save gas (don't worry, will fail if it's wrong)
         address outputToken,
         bytes calldata farmData
     )
@@ -137,16 +139,30 @@ contract ConvertFacet is ReentrancyGuard {
         //so if a user wants to do special combining of crates, this function can be called multiple times
 
         
-        uint256 totalAmountIn = 0;
-        for (uint256 i = 0; i < stems.length; i++) {
-            totalAmountIn = totalAmountIn.add(amounts[i]);
-        }
+        // uint256 totalAmountIn = 0;
+        // for (uint256 i = 0; i < stems.length; i++) {
+        //     totalAmountIn = totalAmountIn.add(amounts[i]);
+        // }
 
         //todo: actually withdraw crates
+        // uint256 grownStalk;
+        // uint256 fromBdv;
 
-        console.log('totalAmountIn: ', totalAmountIn);
+        // (grownStalk, fromBdv) = _withdrawTokens(
+        //     inputToken,
+        //     stems,
+        //     amounts,
+        //     totalAmountIn
+        // );
+
+        // console.log('fromBdv: ', fromBdv);
+        // console.log('grownStalk: ', grownStalk);
+        // console.log('totalAmountIn: ', totalAmountIn);
 
         // Transfer tokenIn from beanstalk to pipeline
+        console.log('transferring input token to pipeline');
+        console.log('inputToken:');
+        console.log(inputToken);
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
 
         // FIXME: probably better to call an pipe/AdvancePipe here, rather than using .call()
@@ -158,8 +174,6 @@ contract ConvertFacet is ReentrancyGuard {
 
         console.log('going to call advancedFarm yo');
 
-        bytes memory sliced = LibBytes.sliceFrom(farmData, 4);
-        console.log('sliced length: ', farmData.length);
 
         // Decode and execute advanced farm calls.
         // Cut out blueprint calldata selector.
@@ -172,23 +186,30 @@ contract ConvertFacet is ReentrancyGuard {
 
         bytes[] memory results = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; ++i) {
-            console.log('calling advancedFarmMem');
+            console.log('pipelineConvert calling advancedFarmMem');
             require(calls[i].callData.length != 0, "Tractor: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
+            console.log('pipelineConvert results for that call in bytes:');
+            console.logBytes(results[i]);
         }
+
+        bytes memory lastBytes = results[results.length - 1];
+        //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
+        bytes memory lastSlot = LibBytes.sliceFrom(lastBytes, 64);
 
 
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut
         // in the farmCallResult.
-        amountOut = abi.decode(results[results.length - 1], (uint256));
+        amountOut = abi.decode(lastSlot, (uint256));
 
         console.log('amountOut: ', amountOut);
 
         
 
 
-        // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
+        //user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
+        //this also let's us know how many assets to attempt to pull out of the final type
         transferTokensFromPipeline(outputToken, amountOut);
 
         //emit convert event, but do we want a new event definition? the old one can't handle multiple input tokens nor the combining of stems/etc
@@ -207,10 +228,16 @@ contract ConvertFacet is ReentrancyGuard {
         );
 
         //todo: see if we can find a way to spit out a custom error saying it failed here, rather than a generic ERC20 revert
-        // (success, result) = p.target.staticcall(p.data);
-        // LibFunction.checkReturn(success, result);
+        bool success;
+        bytes memory result;
+        (success, result) = p.target.staticcall(p.data);
+        if (!success) {
+            revert("Failed to transfer tokens from pipeline");
+        }
+        //I don't think calling checkReturn here is necessary if success is false?
+        LibFunction.checkReturn(success, result);
 
-        IPipeline(PIPELINE).pipe(p);
+        // IPipeline(PIPELINE).pipe(p);
     }
 
     // todo: implement oracle

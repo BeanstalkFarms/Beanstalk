@@ -14,13 +14,15 @@ const fs = require('fs');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
 const { draftConvertBeanToBeanEthWell } = require('./utils/pipelineconvert.js');
+const { deployBasin } = require("../scripts/basin.js");
+const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
 
 
 const BASE_STRING = './node_modules/@beanstalk/wells/out';
 
 describe('Farm Convert', function () {
   before(async function () {
-    [owner, user, user2] = await ethers.getSigners();
+    [owner, user, user2, publisher] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
     const contracts = await deploy("Test", false, true);
@@ -30,15 +32,37 @@ describe('Farm Convert', function () {
     this.diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
-    console.log('BEAN address: ', BEAN);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.weth = await ethers.getContractAt("MockToken", WETH);
     this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL);
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
     this.beanMetapool = await ethers.getContractAt('IMockCurvePool', BEAN_3_CURVE);
     this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
-    
 
-    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+
+    // const pipelineAccount = impersonateSigner(PIPELINE);
+    this.pipeline = await deployPipeline();
+    // this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+
+    this.well = await deployBasin(true, undefined, false, true);
+
+    await this.bean.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.weth.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.bean.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.weth.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
+
+
+    await this.bean.mint(owner.address, to6("10000000000"));
+    await this.weth.mint(owner.address, to18("1000000000"));
+    await this.bean.mint(publisher.address, to6("20000"));
+    await this.bean.mint(user.address, to6("2000000"));
+
+
+    // P > 1.
+    await this.well
+      .connect(owner)
+      .addLiquidity([to6("1000000"), to18("2000")], 0, owner.address, ethers.constants.MaxUint256);
+
 
     // this.well = await deployWell([BEAN, WETH]);
     // console.log('this.well.address: ', this.well.address);
@@ -97,12 +121,6 @@ describe('Farm Convert', function () {
     //whitelist bean
     // await this.silo.mockWhitelistToken(this.bean.address, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", 1e6);
     // console.log('whitelisted bean');
-    console.log('going to upgrade new facets');
-
-
-
-      // libraryNames: ['LibConvert'],
-      // initFacetName: 'InitBipNewSilo',
 
     const beanstalkOwner = await impersonateBeanstalkOwner();
     await upgradeWithNewFacets({
@@ -117,7 +135,6 @@ describe('Farm Convert', function () {
       verbose: false,
       account: beanstalkOwner
     });
-    console.log('upgraded facets?');
   });
 
   beforeEach(async function () {
@@ -135,53 +152,23 @@ describe('Farm Convert', function () {
       
       it.only('does the most basic possible convert', async function () {
 
+        //get amount of bean held by user
+        // const beanBalance = await this.bean.balanceOf(user.address);
+        // console.log('beanBalance: ', beanBalance);
+
+        //user needs to approve bean to well
+        await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         await this.beanMetapool.connect(user).add_liquidity([toBean('0'), to18('200')], to18('150'));
 
-        //setup the AdvancedFarmCall data
-        //add_liquidity
-        // const selector = this.threeCurve.interface.encodeFunctionData('add_liquidity', [toBean('200'), to18('0')], to18('150'));
-
-        
-        // let advancedFarmCalls = [];
-
-
-        //beans are provided, we need to convert them to lp, so find the selector needed to add liquidity to the well
-        //args are tokenAmountsIn, minLpAmountOut, recipient, deadline
-        // const encodedFunctionCall = this.well.interface.encodeFunctionData('addLiquidity', [[toBean('200')], 0, PIPELINE, ethers.constants.MaxUint256]);
-
-        // const calls = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
-          // advancedFarmCalls
-        // ]);
 
         console.log('calling draftConvertBeanToBeanEthWell');
 
         let advancedFarmCalls = await draftConvertBeanToBeanEthWell();
 
-        // advancedFarmCalls = [
-        //   {
-        //     callData: '0x8a65d2e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bea0000029ad1c77d3d5d23ba2d8893db9d1efab',
-        //     clipboard: '0x000000'
-        //   }
-        // ];
-
-        // function flattenAndExtractArguments(advancedFarmCalls) {
-        //   // Flatten the array and map each object to its properties
-        //   const flattenedArgs = advancedFarmCalls.flat().map(obj => [obj.callData, obj.clipboard]);
-         
-        //   // Return the flattened array of arguments
-        //   return flattenedArgs;
-        //  }
-
-        //  const flattenedAdvancedFarmCalls = flattenAndExtractArguments(advancedFarmCalls);
-
-
-        // console.log('this.farmFacet.interface: ', this.farmFacet.interface);
-
         console.log('advancedFarmCalls: ', advancedFarmCalls);
 
-        // console.log('flattenedAdvancedFarmCalls: ', flattenedAdvancedFarmCalls);
 
         const encodedFunctionCall = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
           advancedFarmCalls
@@ -189,18 +176,10 @@ describe('Farm Convert', function () {
 
         console.log('encodedFunctionCall: ', encodedFunctionCall);
 
-        return;
-
-        // const amounts = [toBean('200'), to18('0')];
-        // const min_mint_amount = to18('150');
-
-        // const data = encodeAdvancedData(2, web3.utils.toBN('0'), [
-        //   [0, 32, amounts[0]],
-        //   [0, 32, amounts[1]],
-        //   [1, 32, min_mint_amount],
-        // ]);
 
         const farmData = encodedFunctionCall;
+
+        console.log('user.address: ', user.address);
 
         console.log('farmData: ', farmData);
         console.log('this.convert.connect(user).pipelineConvert: ', this.convert.connect(user).pipelineConvert);
@@ -210,9 +189,11 @@ describe('Farm Convert', function () {
         console.log('going to call pipeline convert');
 
         console.log('toBean(\'200\'): ', toBean('200'));
-        console.log('[farmData]: ', [farmData]);
 
-        await this.convert.connect(user).pipelineConvert(this.bean.address, ['2'], ['200000000'], this.well.address, farmData);
+
+        // await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, PIPELINE, ethers.constants.MaxUint256);
+
+        await this.convert.connect(user).pipelineConvert(this.bean.address, ['2'], ['200000000'], 200000000, this.well.address, farmData);
 
         console.log('done calling pipeline convert');
 
@@ -222,6 +203,11 @@ describe('Farm Convert', function () {
       
       
     });
+
+    //need a test that leaves fewer amount of erc20 in the pipeline than is returned by the final function
+    //(aka you try to pull out of pipeline more than you put in, it should fail)
+    //"ERC20: transfer amount exceeds balance"
+
 
   });
 });
