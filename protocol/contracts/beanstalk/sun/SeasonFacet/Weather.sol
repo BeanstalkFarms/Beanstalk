@@ -3,11 +3,15 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {Sun, SafeMath, C} from "./Sun.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
+import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 
 /**
  * @title Weather
@@ -136,7 +140,7 @@ contract Weather is Sun {
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
     function handleRain(uint256 caseId) internal {
-        // cases 3-8 represent the case where the pod rate is less than 5% and P > 1.
+        // cases % 36  3-8 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
             if (s.season.raining) {
                 s.season.raining = false;
@@ -160,7 +164,7 @@ contract Weather is Sun {
      * @dev Flood was previously called a "Season of Plenty" (SOP for short).
      * When Beanstalk has been Oversaturated for a Season, Beanstalk returns the
      * Bean price to its peg by minting additional Beans and selling them directly
-     * on Curve. Proceeds  from the sale in the form of 3CRV are distributed to
+     * on the BEANETH well. Proceeds from the sale in the form of WETH are distributed to
      * Stalkholders at the beginning of a Season in proportion to their Stalk
      * ownership when the Farm became Oversaturated. Also, at the beginning of the
      * Flood, all Pods that were minted before the Farm became Oversaturated Ripen
@@ -168,8 +172,11 @@ contract Weather is Sun {
      * For more information On Oversaturation see {Weather.handleRain}.
      */
     function sop() private {
-        int256 newBeans = LibBeanMetaCurve.getDeltaB();
-        if (newBeans <= 0) return;
+        // calculate the beans from a sop.
+        // sop beans uses the instantaneous reserves of the beaneth well,
+        // rather than the twaReserves in order to get bean back to peg.
+        uint256 newBeans = calculateSop();
+        if (newBeans == 0) return;
 
         uint256 sopBeans = uint256(newBeans);
         uint256 newHarvestable;
@@ -183,15 +190,22 @@ contract Weather is Sun {
             C.bean().mint(address(this), sopBeans);
         }
 
-        // Swap Beans for 3CRV.
-        uint256 amountOut = C.curveMetapool().exchange(0, 1, sopBeans, 0);
-
+        // Approve and Swap Beans for WETH.
+        C.bean().approve(C.BEAN_ETH_WELL, sopBeans);
+        uint256 amountOut = IWell(C.BEAN_ETH_WELL).swapFrom(
+            C.bean(),
+            C.weth(), 
+            sopBeans, 
+            0,
+            address(this),
+            type(uint256).max
+        );
         rewardSop(amountOut);
         emit SeasonOfPlenty(s.season.current, amountOut, newHarvestable);
     }
 
     /**
-     * @dev Allocate 3CRV during a Season of Plenty.
+     * @dev Allocate WETH during a Season of Plenty.
      */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
@@ -199,5 +213,37 @@ contract Weather is Sun {
         );
         s.season.lastSop = s.season.rainStart;
         s.season.lastSopSeason = s.season.current;
+    }
+    
+    /**
+     * Calculates the amount of beans that should be minted in a sop. 
+     * @dev the instanteous EMA reserves are used rather than the twa reserves
+     * as the twa reserves are not indiciative of the current deltaB in the pool.
+     * 
+     * Generalized for a single well. Sop does not support multiple wells.
+     */
+    function calculateSop() private view returns (uint256 sopBeans){
+        IWell sopWell = IWell(C.BEAN_ETH_WELL);
+        IERC20[] memory tokens = sopWell.tokens();
+        uint256[] memory reserves = IInstantaneousPump(C.BEANSTALK_PUMP)
+            .readInstantaneousReserves(C.BEAN_ETH_WELL, C.BYTES_ZERO);
+        Call memory wellFunction = sopWell.wellFunction();
+        uint256[] memory ratios; bool success;
+        (ratios, , success) = LibWell.getRatiosAndBeanIndex(tokens);
+        // If the USD Oracle oracle call fails, the convert should not be allowed.
+        require(success, "Convert: USD Oracle failed");
+
+        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target)
+            .calcReserveAtRatioSwap(
+                reserves,
+                C.BEAN_INDEX,
+                ratios,
+                wellFunction.data
+            );
+        // return 0 if the calculated beans at peg is less than the current bean reserves
+        // (i.e deltaB is negative)
+        if (beansAtPeg <= reserves[C.BEAN_INDEX]) return (0);
+        // SafeMath is unnecessary as above line performs the check
+        sopBeans = beansAtPeg - reserves[C.BEAN_INDEX];
     }
 }

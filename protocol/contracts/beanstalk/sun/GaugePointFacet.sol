@@ -22,17 +22,20 @@ contract GaugePointFacet {
      * @notice DefaultGaugePointFunction
      * is the default function to calculate the gauge points
      * of an LP asset.
+     * 
+     * @dev if % of deposited BDV is .01% within range of optimal,
+     * keep gauge points the same.
      */
     function defaultGaugePointFunction(
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
     ) external pure returns (uint256 newGaugePoints) {
-        if (percentOfDepositedBdv > optimalPercentDepositedBdv) {
+        if (percentOfDepositedBdv > optimalPercentDepositedBdv.mul(10001).div(10000)) {
             // gauge points cannot go below 0.
             if (currentGaugePoints <= ONE_POINT) return 0;
             newGaugePoints = currentGaugePoints.sub(ONE_POINT);
-        } else {
+        } else if (percentOfDepositedBdv < optimalPercentDepositedBdv.mul(9999).div(10000)) {
             newGaugePoints = currentGaugePoints.add(ONE_POINT);
         }
     }

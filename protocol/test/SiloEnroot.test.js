@@ -40,6 +40,7 @@ describe("Silo Enroot", function () {
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);
+    this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address);
     this.convert = await ethers.getContractAt('ConvertFacet', this.diamond.address);
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address);
     this.migrate = await ethers.getContractAt('MigrationFacet', this.diamond.address);
@@ -113,33 +114,34 @@ describe("Silo Enroot", function () {
           to6('1000')
         )
 
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        //migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        // migrate to new deposit system since the mock stuff deposits in old one (still useful to test)
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON]], [[to6('10')]], 0, 0, []);
-        
+        // call sunrise twice to finish germination process.
         this.result = await this.enroot.connect(user).enrootDeposit(UNRIPE_BEAN, stem10, to6('5'));
       })
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')).div('10000'));
-        expect(await this.silo.totalStalk()).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')).div('10000'));
+        expect(await this.siloGetters.totalStalk()).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
       });
 
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(pruneToStalk(to6('10')).add(toStalk('0.5')));
+        expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq('0');
       });
 
       it('properly removes the crate', async function () {
-        const stem10 = await this.silo.seasonToStem(this.siloToken.address, ENROOT_FIX_SEASON);
-        let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
+        const stem10 = await this.silo.mockSeasonToStem(this.siloToken.address, ENROOT_FIX_SEASON);
+        let dep = await this.siloGetters.getDeposit(userAddress, UNRIPE_BEAN, stem10);
         
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(prune(to6('10')).add(to6('0.5')))
       });
 
       it('emits Remove and Add Deposit event', async function () {
-        const stem10 = await this.silo.seasonToStem(this.siloToken.address, ENROOT_FIX_SEASON);
+        const stem10 = await this.silo.mockSeasonToStem(this.siloToken.address, ENROOT_FIX_SEASON);
         await expect(this.result).to.emit(this.enroot, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), '927823');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), prune(to6('5')).add(to6('0.5')));
       });
@@ -147,7 +149,6 @@ describe("Silo Enroot", function () {
 
     describe("1 deposit after 1 season, all", async function () {
       beforeEach(async function () {
-        await this.season.teleportSunrise(ENROOT_FIX_SEASON);
         this.season.deployStemsUpgrade();
 
         await this.silo.connect(user).depositLegacy(UNRIPE_BEAN, to6('5'), EXTERNAL) //need to do legacy deposit to simulate pre-stems upgrade
@@ -160,7 +161,7 @@ describe("Silo Enroot", function () {
           to6('5000').sub(to6('10000').mul(toBN(pru)).div(to18('1')))
         )
 
-        // const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, '10');
+        // const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, '10');
 
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON]], [[to6('10')]], 0, 0, []);
 
@@ -168,24 +169,28 @@ describe("Silo Enroot", function () {
       })
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
-        expect(await this.silo.totalStalk()).to.eq(toStalk('5.001'));
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.siloGetters.getGerminatingTotalDeposited(UNRIPE_BEAN)).to.eq('0');
+
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
+        expect(await this.siloGetters.getGerminatingTotalDepositedBdv(UNRIPE_BEAN)).to.eq('0');
+        
+        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('5.001'));
       });
 
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('5.001'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('5.001'));
       });
 
       it('properly removes the crate', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        let dep = await this.siloGetters.getDeposit(userAddress, UNRIPE_BEAN, stem10);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(to6('5'))
       });
 
       it('emits Remove and Add Deposit event', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
         await expect(this.result).to.emit(this.enroot, 'RemoveDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), '1855646');
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('10'), to6('5'));
       });
@@ -208,34 +213,32 @@ describe("Silo Enroot", function () {
 
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_BEAN], [[ENROOT_FIX_SEASON, ENROOT_FIX_SEASON+1]], [[to6('5'), to6('5')]], 0, 0, []);
 
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
 
-        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
+        const stem11 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
         this.result = await this.enroot.connect(user).enrootDeposits(UNRIPE_BEAN, [stem10, stem11], [to6('5'), to6('5')]);
       })
 
       it('properly updates the total balances', async function () {
-        expect(await this.silo.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
-        expect(await this.silo.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
-        expect(await this.silo.totalStalk()).to.eq(toStalk('5.0005'));
-        //expect(await this.silo.totalSeeds()).to.eq(to6('10'));
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6('10'));
+        expect(await this.siloGetters.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(to6('5'));
+        expect(await this.siloGetters.totalStalk()).to.eq(toStalk('5.0005'));
       });
 
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('5.0005'));
-        //expect(await this.silo.balanceOfSeeds(userAddress)).to.eq(to6('10'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('5.0005'));
       });
 
       it('properly removes the crate', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        let dep = await this.silo.getDeposit(userAddress, UNRIPE_BEAN, stem10);
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        let dep = await this.siloGetters.getDeposit(userAddress, UNRIPE_BEAN, stem10);
         expect(dep[0]).to.equal(to6('5'))
         expect(dep[1]).to.equal(to6('2.5'))
       });
 
       it('emits Remove and Add Deposits event', async function () {
-        const stem10 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
-        const stem11 = await this.silo.seasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON);
+        const stem11 = await this.silo.mockSeasonToStem(UNRIPE_BEAN, ENROOT_FIX_SEASON+1);
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(userAddress, UNRIPE_BEAN, [stem10,stem11], [to6('5'), to6('5')], to6('10'), ['927823', '927823']);
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem10, to6('5'), to6('2.5'));
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(userAddress, UNRIPE_BEAN, stem11, to6('5'), to6('2.5'));
@@ -253,30 +256,30 @@ describe("Silo Enroot", function () {
         this.season.deployStemsUpgrade();
         await this.migrate.mowAndMigrate(user.address, [UNRIPE_LP], [[ENROOT_FIX_SEASON, ENROOT_FIX_SEASON+1]], [[to6('10'), to6('10')]], 0, 0, []);
 
-        const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
-        const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        const stem11 = await this.silo.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
         this.result = await this.enroot.connect(user).enrootDeposits(UNRIPE_LP, [stem10, stem11], [to6('10'), to6('10')]);
       })
   
       it('properly updates the total balances', async function () {
-        expect(await this.silo.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
+        expect(await this.siloGetters.getTotalDeposited(UNRIPE_LP)).to.eq(to6('20'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the user balance', async function () {
-        expect(await this.silo.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
+        expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('234.7639163944'));
         expect(await this.silo.balanceOfSeeds(userAddress)).to.eq('0');
       });
   
       it('properly updates the crate', async function () {
-        const bdv = await this.silo.bdv(UNRIPE_LP, to6('20'))
-        const stem10 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
-        let dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem10);
+        const bdv = await this.siloGetters.bdv(UNRIPE_LP, to6('20'))
+        const stem10 = await this.silo.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON);
+        let dep = await this.siloGetters.getDeposit(userAddress, UNRIPE_LP, stem10);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(bdv.div('2'))
-        const stem11 = await this.silo.seasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
-        dep = await this.silo.getDeposit(userAddress, UNRIPE_LP, stem11);
+        const stem11 = await this.silo.mockSeasonToStem(UNRIPE_LP, ENROOT_FIX_SEASON+1);
+        dep = await this.siloGetters.getDeposit(userAddress, UNRIPE_LP, stem11);
         expect(dep[0]).to.equal(to6('10'))
         expect(dep[1]).to.equal(bdv.sub('1').div('2').add('1'))
       });

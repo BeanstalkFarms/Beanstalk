@@ -184,6 +184,10 @@ library LibUnripe {
         uint256[] memory reserves
     ) internal view returns (uint256 lockedBeanAmount) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        
+        // if reserves return 0, then skip calculations.
+        if(reserves[0] == 0) return 0;
+        
         uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
             C.UNRIPE_LP,
             getRecapPaidPercentAmount(1e6)
