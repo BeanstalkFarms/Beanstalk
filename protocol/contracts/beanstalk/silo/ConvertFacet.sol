@@ -155,61 +155,12 @@ contract ConvertFacet is ReentrancyGuard {
             totalAmountIn
         );
 
-        // console.log('fromBdv: ', fromBdv);
-        // console.log('grownStalk: ', grownStalk);
-        // console.log('totalAmountIn: ', totalAmountIn);
-
-        // Transfer tokenIn from beanstalk to pipeline
-        // console.log('transferring input token to pipeline');
-        // console.log('inputToken:');
-        // console.log(inputToken);
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
 
-        // FIXME: probably better to call an pipe/AdvancePipe here, rather than using .call()
-        // convertData is used again to save an instantiation. Can be instanteated again if needed.
-        // perform advanced farm operations.
 
-        //log farmData length
-        // console.log('farmData length: ', farmData.length);
+        amountOut = executeAdvancedFarmCalls(farmData);
 
-        // console.log('going to call advancedFarm yo');
-
-
-        // Decode and execute advanced farm calls.
-        // Cut out blueprint calldata selector.
-        AdvancedFarmCall[] memory calls = abi.decode(
-            LibBytes.sliceFrom(farmData, 4),
-            (AdvancedFarmCall[])
-        );
-
-        // console.log('decoded into calls');
-
-        bytes[] memory results = new bytes[](calls.length);
-        for (uint256 i = 0; i < calls.length; ++i) {
-            // console.log('pipelineConvert calling advancedFarmMem');
-            require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
-            results[i] = LibFarm._advancedFarmMem(calls[i], results);
-            // console.log('pipelineConvert results for that call in bytes:');
-            // console.logBytes(results[i]);
-        }
-
-        // bytes memory lastBytes = results[results.length - 1];
-        // //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
-        // bytes memory lastSlot = LibBytes.sliceFrom(lastBytes, 64);
-
-        // bytes memory lastSlot = getLastSlot(results[results.length - 1]);
-
-
-        // assume last value is the amountOut
-        // todo: for full functionality, we should instead have the user specify the index of the amountOut
-        // in the farmCallResult.
         
-
-        // console.log('amountOut: ', amountOut);
-        amountOut = getAmountOut(results[results.length - 1]);
-        
-
-
         //user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         //this also let's us know how many assets to attempt to pull out of the final type
         transferTokensFromPipeline(outputToken, amountOut);
@@ -230,8 +181,29 @@ contract ConvertFacet is ReentrancyGuard {
         emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
     }
 
-    function getAmountOut(bytes memory data) internal pure returns (uint256 amountOut) {
-        amountOut = abi.decode(LibBytes.sliceFrom(data, 64), (uint256));
+    function executeAdvancedFarmCalls(bytes calldata farmData)
+        internal
+        returns (
+            uint256 amountOut
+        )
+    {
+        // bytes memory lastBytes = results[results.length - 1];
+        //at this point lastBytes is 3 slots long, we just need the last slot (first two slots contain 0x2 for some reason)
+        bytes[] memory results;
+        AdvancedFarmCall[] memory calls = abi.decode(
+            LibBytes.sliceFrom(farmData, 4),
+            (AdvancedFarmCall[])
+        );
+
+        results = new bytes[](calls.length);
+        for (uint256 i = 0; i < calls.length; ++i) {
+            require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
+            results[i] = LibFarm._advancedFarmMem(calls[i], results);
+        }
+        // assume last value is the amountOut
+        // todo: for full functionality, we should instead have the user specify the index of the amountOut
+        // in the farmCallResult.
+        amountOut = abi.decode(LibBytes.sliceFrom(results[results.length-1], 64), (uint256));
     }
 
 

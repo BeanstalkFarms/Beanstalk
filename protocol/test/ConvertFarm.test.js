@@ -8,7 +8,7 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
 const { toBN, encodeAdvancedData, signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require('../utils/index.js');
-const { deployWell, setReserves, whitelistWell } = require('../utils/well.js');
+const { deployWell, setReserves, whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 const fs = require('fs');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
