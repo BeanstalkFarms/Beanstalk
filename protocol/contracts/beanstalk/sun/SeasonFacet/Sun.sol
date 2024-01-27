@@ -7,6 +7,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {Oracle, C} from "./Oracle.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 
 /**
  * @title Sun
@@ -228,19 +229,26 @@ contract Sun is Oracle {
         setSoil(newSoil);
     }
 
-
-    function setSoilBelowPeg(int preDeltaB) internal {
+    /**
+     * @param twaDeltaB The time weighted average precalculated deltaB 
+     * from {Oracle.stepOracle} at the start of the season.
+     * @dev When below peg, Beanstalk wants to issue dept for beans to be sown(burned),
+     * and removed from the supply, pushing the price up. To avoid soil over issuance,
+     * Beanstalk can read inter-block MEV manipulation resistant instantaneous reserves
+     * for whitelisted Well LP tokens via Multi Flow, compare it to the twaDeltaB calculated
+     * at the start of the season, and pick the minimum of the two.
+     */
+    function setSoilBelowPeg(int twaDeltaB) internal {
         
         // calculate deltaB from instantenious reserves
-        int256 deltaBFromInstanteniousReserves = LibWellMinting.instanteniousDeltaB(C.BEAN_ETH_WELL);
+        (int256 instDeltaB, ,) = LibWellMinting.instanteniousDeltaB(C.BEAN_ETH_WELL);
 
-        //  When below peg, change Soil issued at gm to be the minimum of (1) -preDeltaB
+        // When below peg, change Soil issued at gm to be the minimum of (1) -twaDeltaB
         // and (2) the -deltaB calculated using the instantaneous reserves from Multi Flow
-
-        int256 newSoil = min(-preDeltaB, -deltaBFromInstanteniousReserves);
+        int256 newSoil = -twaDeltaB < -instDeltaB ? -twaDeltaB : -instDeltaB;
 
         // set new soil
-        setSoil(newSoil);
+        setSoil(uint256(newSoil));
     }
 
     

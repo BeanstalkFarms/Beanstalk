@@ -198,17 +198,15 @@ library LibWellMinting {
     }
 
 
-
     /**
-     * @dev Calculates the instatenious delta B since the input snapshot for
-     * a given Well address.
+     * @dev Calculates the instatenious delta B for a given Well address.
+     * @param well The address of the Well
+     * @return deltaB The instatenious delta B balance since the last `capture` call.
      */
     function instanteniousDeltaB(address well) internal view returns 
-        (int256, bytes memory, uint256[] memory, uint256[] memory) {
+        (int256, uint256[] memory, uint256[] memory) {
 
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // Try to call `readInstantaneousReserves` and handle failure gracefully, so Sunrise does not revert.
-        // On failure, reset the Oracle by returning an empty snapshot and a delta B of 0.
 
                                                                         // well address , data[]
         try IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, C.BYTES_ZERO) returns (uint[] memory instReserves) {
@@ -240,7 +238,7 @@ library LibWellMinting {
             Call memory wellFunction = IWell(well).wellFunction();
 
             // Delta B is the difference between the target Bean reserve at the peg price
-            // and the time instantenious Bean balance in the Well.
+            // and the instantenious Bean balance in the Well.
             int256 deltaB = int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
                 instReserves,
                 beanIndex,
