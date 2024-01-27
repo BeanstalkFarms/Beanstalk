@@ -70,6 +70,8 @@ contract Sun is Oracle {
 
         // Below peg
         else {
+            // setSoilBelowPeg();
+            // ....
             setSoil(uint256(-deltaB));
             s.season.abovePeg = false;
         }
@@ -225,6 +227,16 @@ contract Sun is Oracle {
         }
         setSoil(newSoil);
     }
+
+    
+    // function setSoilBelowPeg(uint256 newSoil) internal {
+    //     // get instatenous reserves
+    //     uint256[] memory reserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(C.BEANSTALK, C.BYTES_ZERO);
+    //     // calclulate delta b from reserves
+    //     int256 reserveDeltaB = calcDeltaB(reserves, s.season.timestamp);
+    //     // get the min 
+    //     setSoil(newSoil);
+    // }
 
     
     function setSoil(uint256 amount) internal {
