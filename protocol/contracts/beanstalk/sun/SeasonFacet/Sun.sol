@@ -70,9 +70,9 @@ contract Sun is Oracle {
 
         // Below peg
         else {
-            // setSoilBelowPeg();
-            // ....
-            setSoil(uint256(-deltaB));
+            setSoilBelowPeg(deltaB);
+            // OLD
+            // setSoil(uint256(-deltaB));
             s.season.abovePeg = false;
         }
     }
@@ -228,15 +228,20 @@ contract Sun is Oracle {
         setSoil(newSoil);
     }
 
-    
-    // function setSoilBelowPeg(uint256 newSoil) internal {
-    //     // get instatenous reserves
-    //     uint256[] memory reserves = IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(C.BEANSTALK, C.BYTES_ZERO);
-    //     // calclulate delta b from reserves
-    //     int256 reserveDeltaB = calcDeltaB(reserves, s.season.timestamp);
-    //     // get the min 
-    //     setSoil(newSoil);
-    // }
+
+    function setSoilBelowPeg(int preDeltaB) internal {
+        
+        // calculate deltaB from instantenious reserves
+        int256 deltaBFromInstanteniousReserves = LibWellMinting.instanteniousDeltaB(C.BEAN_ETH_WELL);
+
+        //  When below peg, change Soil issued at gm to be the minimum of (1) -preDeltaB
+        // and (2) the -deltaB calculated using the instantaneous reserves from Multi Flow
+
+        int256 newSoil = min(-preDeltaB, -deltaBFromInstanteniousReserves);
+
+        // set new soil
+        setSoil(newSoil);
+    }
 
     
     function setSoil(uint256 amount) internal {
