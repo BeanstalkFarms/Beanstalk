@@ -240,10 +240,10 @@ contract Sun is Oracle {
      */
     function setSoilBelowPeg(int256 twaDeltaB) internal {
         
-        // calculate deltaB from instantenious reserves
+        // Calculate deltaB from instantaneous reserves
         // NOTE: deltaB is calculated only from the Bean:ETH Well at this time
         // If more wells are added, this will need to be updated
-        (int256 instDeltaB, ,) = LibWellMinting.instanteniousDeltaB(C.BEAN_ETH_WELL);
+        (int256 instDeltaB, ,) = LibWellMinting.instantaneousDeltaB(C.BEAN_ETH_WELL);
         
         console.log("/////////// setSoilBelowPeg ///////////");
 
@@ -255,8 +255,6 @@ contract Sun is Oracle {
 
         // When below peg, change Soil issued at gm to be the minimum of (1) -twaDeltaB
         // and (2) the -deltaB calculated using the instantaneous reserves from Multi Flow
-
-        // int256 newSoil = -twaDeltaB < -instDeltaB ? -twaDeltaB : -instDeltaB;
 
         uint256 newSoil = Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
 

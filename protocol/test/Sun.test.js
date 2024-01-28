@@ -76,9 +76,9 @@ describe('Sun', function () {
     await this.season.siloSunrise(0);
 
     ///////////////////////////  SOIL FIX ///////////////////////////
-    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
-    await whitelistWell(this.well.address, '10000', to6('4'))
-    await this.season.captureWellE(this.well.address)
+    [this.well2, this.wellFunction, this.pump] = await deployMockBeanEthWell()
+    await whitelistWell(this.well2.address, '10000', to6('4'))
+    await this.season.captureWellE(this.well2.address)
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
 
   })
@@ -91,51 +91,55 @@ describe('Sun', function () {
     await revertToSnapshot(snapshotId)
   })
 
-
   ///////////////////////////  SOIL FIX ///////////////////////////
-  it("delta B < 1", async function () {
-                                            // DELTA B, CASE ID
-    this.result = await this.season.sunSunrise('-100', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100');
-  })
+  describe.only("deltaB < 0", async function () {
 
-  it.only( "deltaB < 1, using insatenious pump reserves", async function () {
-
-    //////////////// Setup for deltaB<0 from well minting tests ///////////////////////////
-
-    // go forward 1800 blocks
-    await advanceTime(1800)
-    // set reserves to 2M Beans and 1000 Eth
-    await this.well.setReserves([to6('2000000'), to18('1000')])
-    // go forward 1800 blocks
-    await advanceTime(1800)
-    // send 0 eth to beanstalk
-    await user.sendTransaction({
-      to: beanstalk.address,
-      value: 0
+    beforeEach(async function () {
+      // Setup for deltaB<0 from well minting tests
+      // go forward 1800 blocks
+      await advanceTime(1800)
+      // set reserves to 2M Beans and 1000 Eth
+      await this.well2.setReserves([to6('2000000'), to18('1000')])
+      // go forward 1800 blocks
+      await advanceTime(1800)
+      // send 0 eth to beanstalk
+      await user.sendTransaction({
+        to: beanstalk.address,
+        value: 0
+      })
+      // // Get the current block timestamp as the start time
+      // let START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
+      // // Advance time 1 hour
+      // await timeSkip(START_TIME + 60*60);
     })
 
-    // Get the current block timestamp as the start time
-    let START_TIME = (await ethers.provider.getBlock('latest')).timestamp;
+    it("Gets the min of -twaDeltaB and instantaneous deltaB", async function () {
+      // twaDeltaB = -100000000
+      // instantenousDeltaB = -585786437627
+                                              // twaDeltaB, case ID
+      this.result = await this.season.sunSunrise('-100000000', 8);
+      await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+      await expect(await this.field.totalSoil()).to.be.equal('100000000');
+    })
 
-    // Advance time 1 hour
-    await timeSkip(START_TIME + 60*60);
-    
-    // twaDeltaB = -100000000
-    expect(await this.season.callStatic.captureWellE(this.well.address)).to.be.equal('-100000000')
+    it("captures state, using insatenious and cummulative pump reserves", async function () {
 
-    // instantenousDeltaB = -585786437627
-    expect(await this.season.callStatic.captureWellEInstantenous(this.well.address)).to.be.equal('-585786437627')
+      // twaDeltaB = -100000000
+      expect(await this.season.callStatic.captureWellE(this.well2.address)).to.be.equal('-100000000');
 
-    // poolDeltaB = -100000000 --> calls check() that returns the time weighted average delta B in a given Well --> so twaDeltaB
-    expect(await this.seasonGetter.poolDeltaB(this.well.address)).to.be.equal('-100000000')
+      // instantenousDeltaB = -585786437627
+      expect(await this.season.callStatic.captureWellEInstantaneous(this.well2.address)).to.be.equal('-585786437627');
 
-    // Call sunrise
-    // this.result = await this.season.gm(owner.address, EXTERNAL);
-    this.result = await this.season.sunSunrise('-100', 8);
+      // poolDeltaB = -100000000 --> calls check() that returns the time weighted average delta B in a given Well --> so twaDeltaB
+      expect(await this.seasonGetter.poolDeltaB(this.well2.address)).to.be.equal('-100000000');
+    })
 
-    // check deltaB
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100');
+    // Fails
+    it("rewards more than type(uint128).max Soil below peg", async function () {
+      // twadeltaB,                        CASE ID
+      await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '8')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+    })
+
   })
 
   /////////////////////////// END  SOIL FIX ///////////////////////////
@@ -390,17 +394,6 @@ describe('Sun', function () {
   it("rewards more than type(uint128).max/10000 to silo", async function () {
     await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
-
-
-
-  // /////////////////////////// FAILS BEACAUSE OF SOIL FIX ///////////////////////////
-  // it("rewards more than type(uint128).max Soil below peg", async function () {
-  //                                           // delta B,                        CASE ID
-  //   await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '0')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
-  // })
-
-
-
 })
 
 function viewGenericUint256Logs(logs) {
