@@ -4,10 +4,12 @@ pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {Math} from "@openzeppelin/contracts/math/Math.sol";
 import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Sun
@@ -72,8 +74,6 @@ contract Sun is Oracle {
         // Below peg
         else {
             setSoilBelowPeg(deltaB);
-            // OLD
-            // setSoil(uint256(-deltaB));
             s.season.abovePeg = false;
         }
     }
@@ -232,26 +232,45 @@ contract Sun is Oracle {
     /**
      * @param twaDeltaB The time weighted average precalculated deltaB 
      * from {Oracle.stepOracle} at the start of the season.
-     * @dev When below peg, Beanstalk wants to issue dept for beans to be sown(burned),
+     * @dev When below peg, Beanstalk wants to issue debt for beans to be sown(burned),
      * and removed from the supply, pushing the price up. To avoid soil over issuance,
      * Beanstalk can read inter-block MEV manipulation resistant instantaneous reserves
      * for whitelisted Well LP tokens via Multi Flow, compare it to the twaDeltaB calculated
      * at the start of the season, and pick the minimum of the two.
      */
-    function setSoilBelowPeg(int twaDeltaB) internal {
+    function setSoilBelowPeg(int256 twaDeltaB) internal {
         
         // calculate deltaB from instantenious reserves
+        // NOTE: deltaB is calculated only from the Bean:ETH Well at this time
+        // If more wells are added, this will need to be updated
         (int256 instDeltaB, ,) = LibWellMinting.instanteniousDeltaB(C.BEAN_ETH_WELL);
+        
+        console.log("/////////// setSoilBelowPeg ///////////");
+
+        console.log("twaDeltaB");
+        console.logInt(twaDeltaB);
+
+        console.log("instDeltaB");
+        console.logInt(instDeltaB);
 
         // When below peg, change Soil issued at gm to be the minimum of (1) -twaDeltaB
         // and (2) the -deltaB calculated using the instantaneous reserves from Multi Flow
-        int256 newSoil = -twaDeltaB < -instDeltaB ? -twaDeltaB : -instDeltaB;
+
+        // int256 newSoil = -twaDeltaB < -instDeltaB ? -twaDeltaB : -instDeltaB;
+
+        uint256 newSoil = Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
+
+        console.log("newSoil");
+        console.log(newSoil);
 
         // set new soil
-        setSoil(uint256(newSoil));
+        setSoil(newSoil);
     }
 
-    
+    /**
+     * @param amount The new amount of Soil available.
+     * @dev Sets the amount of Soil available and emits a Soil event.
+     */
     function setSoil(uint256 amount) internal {
         s.f.soil = amount.toUint128();
         emit Soil(s.season.current, amount.toUint128());

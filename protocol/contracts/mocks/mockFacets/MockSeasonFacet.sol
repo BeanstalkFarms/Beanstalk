@@ -314,6 +314,12 @@ contract MockSeasonFacet is SeasonFacet  {
         emit DeltaB(deltaB);
     }
 
+    function captureWellEInstantenous(address well) external returns (int256 instDeltaB) {
+        (instDeltaB, ,) = LibWellMinting.instanteniousDeltaB(well);
+        s.season.timestamp = block.timestamp;
+        emit DeltaB(instDeltaB);
+    }
+
     function updateTWAPCurveE() external returns (uint256[2] memory balances) {
         (balances, s.co.balances) = LibCurveMinting.twaBalances();
         s.season.timestamp = block.timestamp;
