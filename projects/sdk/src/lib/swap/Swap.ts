@@ -65,7 +65,7 @@ export class Swap {
       }
     }
 
-    const op = new SwapOperation(Swap.sdk, tokenIn, tokenOut, workflow, route);
+    const op = new SwapOperation(Swap.sdk, tokenIn, tokenOut, workflow, route, _from, _to);
 
     return op;
   }

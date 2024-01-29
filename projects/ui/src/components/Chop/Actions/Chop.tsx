@@ -58,6 +58,7 @@ import TransactionToast from '~/components/Common/TxnToast';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import useBDV from '~/hooks/beanstalk/useBDV';
+import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 
 type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
@@ -76,7 +77,11 @@ const ChopForm: FC<
   const unripeUnderlying = useUnripeUnderlyingMap();
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
   const [quoteBdv, setQuoteBdv] = useState<BigNumber>(new BigNumber(0));
-
+  const [balanceFromIn, setBalanceFromIn] = useState<BalanceFrom>(
+    values.destination === FarmToMode.EXTERNAL
+      ? BalanceFrom.EXTERNAL
+      : BalanceFrom.INTERNAL
+  );
   /// Derived values
   const state = values.tokens[0];
   const inputToken = state.token;
@@ -147,6 +152,14 @@ const ChopForm: FC<
 
   const isSubmittable = quote?.gt(0) && values.destination;
 
+  const changeDestination = (v) => {
+    setBalanceFromIn(v);
+    setFieldValue(
+      'destination',
+      v === BalanceFrom.EXTERNAL ? FarmToMode.EXTERNAL : FarmToMode.INTERNAL
+    );
+  };
+
   return (
     <Form autoComplete="off">
       <TokenSelectDialog
@@ -157,6 +170,9 @@ const ChopForm: FC<
         balances={balances}
         tokenList={Object.values(erc20TokenMap)}
         mode={TokenSelectMode.SINGLE}
+        balanceFrom={balanceFromIn}
+        setBalanceFrom={changeDestination}
+        balanceFromOptions={[BalanceFrom.INTERNAL, BalanceFrom.EXTERNAL]}
       />
       <Stack gap={1}>
         <TokenInputField
@@ -167,7 +183,11 @@ const ChopForm: FC<
           fullWidth
           InputProps={{
             endAdornment: (
-              <TokenAdornment token={inputToken} onClick={showTokenSelect} />
+              <TokenAdornment
+                balanceFrom={balanceFromIn}
+                token={inputToken}
+                onClick={showTokenSelect}
+              />
             ),
           }}
         />

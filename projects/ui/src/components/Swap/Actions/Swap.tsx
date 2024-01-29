@@ -56,13 +56,13 @@ import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+// import { Balance } from '@mui/icons-material';
 
 /// ---------------------------------------------------------------
 
 type SwapFormValues = {
   /** Multiple tokens can (eventually) be swapped into tokenOut */
   tokensIn: FormTokenState[];
-  balanceFrom: BalanceFrom;
   modeIn: FarmFromMode.INTERNAL | FarmFromMode.EXTERNAL;
   /** One output token can be selected */
   tokenOut: FormTokenState;
@@ -115,9 +115,18 @@ const SwapForm: FC<
   const account = useAccount();
   const sdk = useSdk();
 
+  // This controls what options are show on the tokenin picker (All Balances, circulating, farm).
   const [fromOptions, setFromOptions] = useState<BalanceFrom[]>([
     BalanceFrom.TOTAL,
   ]);
+  // This controls the actual value chosen for tokenIn
+  const [balanceFromIn, setBalanceFromIn] = useState<BalanceFrom>(
+    BalanceFrom.TOTAL
+  );
+  // This controls the actual value chosen for tokenOut
+  const [balanceFromOut, setBalanceFromOut] = useState<BalanceFrom>(
+    BalanceFrom.EXTERNAL
+  );
 
   /// Derived values
   const stateIn = values.tokensIn[0];
@@ -143,23 +152,19 @@ const SwapForm: FC<
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
   }, [balances, modeIn, tokenIn.address, tokensMatch]);
 
+  // Control what balances are shown in the token selector (internal/external/total)
   useEffect(() => {
     // if tokens match, then we want to allow picking different balanceFrom options
     if (tokensMatch) {
-      setFromOptions([
-        modeIn === FarmFromMode.INTERNAL
-          ? BalanceFrom.INTERNAL
-          : BalanceFrom.EXTERNAL,
-      ]);
-      setFieldValue(
-        'balanceFrom',
+      setFromOptions([BalanceFrom.INTERNAL, BalanceFrom.EXTERNAL]);
+      setBalanceFromIn(
         modeIn === FarmFromMode.INTERNAL
           ? BalanceFrom.INTERNAL
           : BalanceFrom.EXTERNAL
       );
     } else {
       setFromOptions([BalanceFrom.TOTAL]);
-      setFieldValue('balanceFrom', BalanceFrom.TOTAL);
+      setBalanceFromIn(BalanceFrom.TOTAL);
     }
   }, [tokensMatch, modeIn, modeOut, setFieldValue]);
 
@@ -187,6 +192,8 @@ const SwapForm: FC<
       farmFrom: FarmFromMode,
       farmTo: FarmToMode
     ) => {
+      console.log('Build Swap with: ', farmFrom, farmTo);
+
       const sdkTokenIn = sdk.tokens.findByAddress(uiTokenIn.address);
       if (!sdkTokenIn) {
         throw new Error(
@@ -224,10 +231,13 @@ const SwapForm: FC<
     [balanceIn, amountIn]
   );
 
-  const swapOperation = useMemo(
-    () => buildSwapHelper(tokenIn, tokenOut, optimizedFromMode, modeOut),
-    [buildSwapHelper, optimizedFromMode, tokenIn, tokenOut, modeOut]
-  );
+  const swapOperation = useMemo(() => {
+    // If we are swapping the same token (ie, transfering between farm and circulating)
+    // then we don't want to use the optimizedFromMode, we want to use the modeIn
+    // that the user selected.
+    const from = tokenIn.equals(tokenOut) ? modeIn : optimizedFromMode;
+    return buildSwapHelper(tokenIn, tokenOut, from, modeOut);
+  }, [buildSwapHelper, optimizedFromMode, tokenIn, tokenOut, modeIn, modeOut]);
 
   /// Memoize to prevent infinite loop on useQuote
   const handleBackward = useMemo(
@@ -254,7 +264,7 @@ const SwapForm: FC<
     setFieldValue('modeOut', defaultValues.modeOut);
     setFieldValue('tokensIn.0', { ...defaultValues.tokensIn[0] });
     setFieldValue('tokenOut', { ...defaultValues.tokenOut });
-    setFieldValue('balanceFrom', BalanceFrom.TOTAL);
+    setBalanceFromIn(BalanceFrom.TOTAL);
     setFromOptions([BalanceFrom.TOTAL]);
   }, [defaultValues, setFieldValue]);
 
@@ -275,14 +285,26 @@ const SwapForm: FC<
     setFieldValue('tokenOut.amount', resultOut?.amountOut);
   }, [setFieldValue, resultOut]);
 
-  const handleChangeModeIn = useCallback(
-    (v: FarmFromMode) => {
-      const newModeOut =
-        v === FarmFromMode.INTERNAL ? FarmToMode.EXTERNAL : FarmToMode.INTERNAL;
-      setFieldValue('modeOut', newModeOut);
+  //
+  const handleInputFromMode = useCallback(
+    (v: BalanceFrom) => {
+      console.log('change');
+      // Picked Farm balance
+      if (v === BalanceFrom.INTERNAL) {
+        setFieldValue('modeIn', FarmToMode.INTERNAL);
+        setFieldValue('modeOut', FarmToMode.EXTERNAL);
+        setBalanceFromOut(BalanceFrom.EXTERNAL);
+      }
+      // Picked Ciruclating
+      else if (v === BalanceFrom.EXTERNAL) {
+        setFieldValue('modeIn', FarmToMode.EXTERNAL);
+        setFieldValue('modeOut', FarmToMode.INTERNAL);
+        setBalanceFromOut(BalanceFrom.INTERNAL);
+      }
     },
     [setFieldValue]
   );
+
   const handleChangeModeOut = useCallback(
     (v: FarmToMode) => {
       const newModeIn =
@@ -290,6 +312,9 @@ const SwapForm: FC<
           ? FarmFromMode.EXTERNAL
           : FarmFromMode.INTERNAL;
       setFieldValue('modeIn', newModeIn);
+      setBalanceFromOut(
+        v === FarmToMode.INTERNAL ? BalanceFrom.INTERNAL : BalanceFrom.EXTERNAL
+      );
     },
     [setFieldValue]
   );
@@ -344,12 +369,20 @@ const SwapForm: FC<
     /// If user has an INTERNAL balance of the selected token,
     /// or if they have no balance at all, always show INTERNAL->EXTERNAL.
     /// Otherwise show the reverse.
-    const [newModeIn, newModeOut] =
-      !balanceIn || balanceIn.internal.gt(0) || balanceIn.total.eq(0)
-        ? [FarmFromMode.INTERNAL, FarmToMode.EXTERNAL]
-        : [FarmFromMode.EXTERNAL, FarmToMode.INTERNAL];
-    setFieldValue('modeIn', newModeIn);
-    setFieldValue('modeOut', newModeOut);
+    if (modeIn.toString() === modeOut.toString()) {
+      // const [newModeIn, newModeOut] =
+      //   !balanceIn || balanceIn.internal.gt(0) || balanceIn.total.eq(0)
+      //     ? [FarmFromMode.INTERNAL, FarmToMode.EXTERNAL]
+      //     : [FarmFromMode.EXTERNAL, FarmToMode.INTERNAL];
+
+      // // maybe here
+      // setFieldValue('modeIn', newModeIn);
+      // setFieldValue('modeOut', newModeOut);
+      setFieldValue('modeIn', FarmFromMode.EXTERNAL);
+      setFieldValue('modeOut', FarmFromMode.INTERNAL);
+      setBalanceFromOut(BalanceFrom.INTERNAL);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [balanceIn, setFieldValue]);
 
   const handleReverse = useCallback(() => {
@@ -439,18 +472,27 @@ const SwapForm: FC<
   return (
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
       <TokenSelectDialog
-        title={
-          tokenSelect === 'tokensIn'
-            ? 'Select Input Token'
-            : 'Select Output Token'
-        }
-        open={tokenSelect !== null} // 'tokensIn' | 'tokensOut'
+        title="Select Input Token"
+        open={tokenSelect === 'tokensIn'} // only open for the TokenIn input
         handleClose={handleCloseTokenSelect} //
         handleSubmit={handleTokenSelectSubmit} //
         selected={selectedTokens}
         balances={balances}
-        balanceFrom={values.balanceFrom}
+        balanceFrom={balanceFromIn}
+        setBalanceFrom={handleInputFromMode}
         balanceFromOptions={fromOptions}
+        tokenList={tokenList}
+        mode={TokenSelectMode.SINGLE}
+      />
+      <TokenSelectDialog
+        title="Select Output Token"
+        open={tokenSelect === 'tokenOut'}
+        handleClose={handleCloseTokenSelect} //
+        handleSubmit={handleTokenSelectSubmit} //
+        selected={selectedTokens}
+        balances={balances}
+        balanceFrom={balanceFromOut}
+        balanceFromOptions={[BalanceFrom.EXTERNAL, BalanceFrom.INTERNAL]}
         tokenList={tokenList}
         mode={TokenSelectMode.SINGLE}
       />
@@ -465,7 +507,7 @@ const SwapForm: FC<
             InputProps={{
               endAdornment: (
                 <TokenAdornment
-                  balanceFrom={values.balanceFrom}
+                  balanceFrom={balanceFromIn}
                   token={tokenIn}
                   onClick={handleShowTokenSelect('tokensIn')}
                 />
@@ -487,14 +529,6 @@ const SwapForm: FC<
             onChange={handleChangeAmountIn}
             error={!noBalance && !enoughBalanceCheck}
           />
-          {tokensMatch ? (
-            <FarmModeField
-              name="modeIn"
-              label="Source"
-              baseMode={FarmFromMode}
-              onChange={handleChangeModeIn}
-            />
-          ) : null}
         </>
         <Row justifyContent="center" mt={-1}>
           <IconButton onClick={handleReverse} size="small">
@@ -512,6 +546,7 @@ const SwapForm: FC<
               endAdornment: (
                 <TokenAdornment
                   token={tokenOut}
+                  balanceFrom={balanceFromOut}
                   onClick={handleShowTokenSelect('tokenOut')}
                 />
               ),
@@ -550,9 +585,6 @@ const SwapForm: FC<
             </Link>
           </Alert>
         ) : null}
-        {/**
-         * After the upgrade to `handleChangeModeIn` / `handleChangeModeOut`
-         * this should never be true. */}
         {diffModeCheck === false ? (
           <Alert variant="standard" color="warning" icon={<WarningIcon />}>
             Please choose a different source or destination.
@@ -713,7 +745,6 @@ const Swap: FC<{}> = () => {
         },
       ],
       modeIn: FarmFromMode.EXTERNAL,
-      balanceFrom: BalanceFrom.TOTAL,
       tokenOut: {
         token: Bean,
         amount: undefined,
@@ -803,6 +834,7 @@ const Swap: FC<{}> = () => {
             (err as unknown as Error).message
           );
         }
+        console.log(values.swapOperation.from, values.swapOperation.to);
         const txn = await values.swapOperation.execute(
           amountIn,
           values.settings.slippage,
