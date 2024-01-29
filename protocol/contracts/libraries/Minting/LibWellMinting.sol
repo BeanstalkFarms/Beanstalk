@@ -15,6 +15,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
+import 'hardhat/console.sol';   
 
 /**
  * @title Well Minting Oracle Library
@@ -224,6 +225,7 @@ library LibWellMinting {
 
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                console.log("BEAN BALANCE BELOW MIN ---> INSTANTANEOUS DELTA B = 0");
                 return (0, new uint256[](0), new uint256[](0));
             }
 

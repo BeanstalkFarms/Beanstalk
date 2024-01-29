@@ -253,10 +253,11 @@ contract Sun is Oracle {
         console.log("instDeltaB");
         console.logInt(instDeltaB);
 
-        // When below peg, change Soil issued at gm to be the minimum of (1) -twaDeltaB
+        // When below peg, Soil issued at gm is the minimum of (1) -twaDeltaB
         // and (2) the -deltaB calculated using the instantaneous reserves from Multi Flow
 
-        uint256 newSoil = Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
+        // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used
+        uint256 newSoil = instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
 
         console.log("newSoil");
         console.log(newSoil);
