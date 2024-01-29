@@ -192,8 +192,6 @@ const SwapForm: FC<
       farmFrom: FarmFromMode,
       farmTo: FarmToMode
     ) => {
-      console.log('Build Swap with: ', farmFrom, farmTo);
-
       const sdkTokenIn = sdk.tokens.findByAddress(uiTokenIn.address);
       if (!sdkTokenIn) {
         throw new Error(
@@ -304,7 +302,6 @@ const SwapForm: FC<
     },
     [setFieldValue]
   );
-
   const handleChangeModeOut = useCallback(
     (v: FarmToMode) => {
       const newModeIn =
@@ -370,14 +367,6 @@ const SwapForm: FC<
     /// or if they have no balance at all, always show INTERNAL->EXTERNAL.
     /// Otherwise show the reverse.
     if (modeIn.toString() === modeOut.toString()) {
-      // const [newModeIn, newModeOut] =
-      //   !balanceIn || balanceIn.internal.gt(0) || balanceIn.total.eq(0)
-      //     ? [FarmFromMode.INTERNAL, FarmToMode.EXTERNAL]
-      //     : [FarmFromMode.EXTERNAL, FarmToMode.INTERNAL];
-
-      // // maybe here
-      // setFieldValue('modeIn', newModeIn);
-      // setFieldValue('modeOut', newModeOut);
       setFieldValue('modeIn', FarmFromMode.EXTERNAL);
       setFieldValue('modeOut', FarmFromMode.INTERNAL);
       setBalanceFromOut(BalanceFrom.INTERNAL);
@@ -834,7 +823,7 @@ const Swap: FC<{}> = () => {
             (err as unknown as Error).message
           );
         }
-        console.log(values.swapOperation.from, values.swapOperation.to);
+
         const txn = await values.swapOperation.execute(
           amountIn,
           values.settings.slippage,
