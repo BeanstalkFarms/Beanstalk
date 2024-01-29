@@ -185,8 +185,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     );
 
     if (!selectedInternal) return null;
-    // console.log('balanceFrom',balanceFrom);
-    // // console.log(_balances);
+
     return (
       <StyledDialog
         onClose={handleClose}

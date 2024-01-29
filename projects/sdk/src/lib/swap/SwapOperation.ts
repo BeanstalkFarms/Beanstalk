@@ -19,9 +19,7 @@ export class SwapOperation {
     readonly tokenIn: Token,
     readonly tokenOut: Token,
     private readonly workflow: AdvancedFarmWorkflow | Workflow,
-    private readonly route: Route,
-    readonly from?: FarmFromMode,
-    readonly to?: FarmToMode
+    private readonly route: Route
   ) {
     SwapOperation.sdk = sdk;
     sdk.debug(`new SwapOperation(): ${this.getDisplay()}`);

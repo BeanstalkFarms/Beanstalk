@@ -29,7 +29,6 @@ export class Swap {
   }
 
   public buildSwap(tokenIn: Token, tokenOut: Token, account: string, _from?: FarmFromMode, _to?: FarmToMode) {
-    
     const route = this.router.getRoute(tokenIn.symbol, tokenOut.symbol);
     const workflow = Swap.sdk.farm.createAdvancedFarm(`Swap ${tokenIn.symbol}->${tokenOut.symbol}`);
 
@@ -65,7 +64,7 @@ export class Swap {
       }
     }
 
-    const op = new SwapOperation(Swap.sdk, tokenIn, tokenOut, workflow, route, _from, _to);
+    const op = new SwapOperation(Swap.sdk, tokenIn, tokenOut, workflow, route);
 
     return op;
   }
