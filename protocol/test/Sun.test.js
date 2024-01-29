@@ -72,16 +72,9 @@ describe('Sun', function () {
     await setEthUsdPrice('999.998018');
     await setEthUsdcPrice('1000');
 
-    // for some reason this breaks the fertilizer tests if it's not here
     this.well = await deployBasin(true, undefined, false, true);
 
     await this.season.siloSunrise(0);
-
-    ///////////////////////////  SOIL FIX ///////////////////////////
-    // [this.well2, this.wellFunction, this.pump] = await deployMockBeanEthWell()
-    // await whitelistWell(this.well.address, '10000', to6('4'))
-    // await this.season.captureWellE(this.well.address)
-    // this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
 
   })
 
@@ -93,32 +86,7 @@ describe('Sun', function () {
     await revertToSnapshot(snapshotId)
   })
 
-  ///////////////////////////  SOIL FIX ///////////////////////////
-
-  it("When deltaB < 0, it captures state, using insatenious and cummulative pump reserves", async function () {
-
-    // go fo forward 1800 blocks
-    await advanceTime(1800)
-    // set reserves to 2M Beans and 1000 Eth
-    // await this.well.setReserves([to6('2000000'), to18('1000')])
-    await setReserves(owner, this.well, [to6('2000000'), to18('1000')]);
-    await setReserves(owner, this.well, [to6('2000000'), to18('1000')]);
-    // go forward 1800 blocks
-    await advanceTime(1800)
-    // send 0 eth to beanstalk
-    await user.sendTransaction({
-      to: this.diamond.address,
-      value: 0
-    })
-
-    // twaDeltaB = -100000000
-    expect(await this.season.captureWellE(this.well.address)).to.emit('-100000000');
-    // instantenousDeltaB = -585786437627
-    expect(await this.season.captureWellEInstantaneous(this.well.address)).to.emit('-585786437627');
-  })
-
   it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB", async function () {
-
     // go fo forward 1800 blocks
     await advanceTime(1800)
     // set reserves to 2M Beans and 1000 Eth
@@ -134,7 +102,7 @@ describe('Sun', function () {
     })
 
     // twaDeltaB = -100000000
-    // instantenousDeltaB = -585786437627
+    // instantaneousDeltaB = -585786437627
                                             // twaDeltaB, case ID
     this.result = await this.season.sunSunrise('-100000000', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
@@ -148,7 +116,6 @@ describe('Sun', function () {
     // set reserves to 1 Bean and 1 Eth
     // If the Bean reserve is less than the minimum of 1000 beans,
     // LibWellMinting.instantaneousDeltaB returns a deltaB of 0
-    // 
     await setReserves(owner, this.well, [to6('1'), to18('1')]);
     await setReserves(owner, this.well, [to6('1'), to18('1')]);
     // go forward 1800 blocks
@@ -166,16 +133,13 @@ describe('Sun', function () {
   })
 
   it("rewards more than type(uint128).max Soil below peg", async function () {
-    // Here, since we havent changed the reserves the instantaneous deltaB is 0
+    // Here, since we haven't changed the reserves the instantaneous deltaB is 0
     // And we maniuplate the twaDeltaB to be a number that is greater than type(uint128).max
     // Because we consider that a value of 0 returned by the oracle to be a failure, we set the soil to be the twaDeltaB
     // which is greater than type(uint128).max and therefore reverts
                                             // twadeltaB,                        CASE ID
     await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '8')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
-
-  /////////////////////////// END  SOIL FIX ///////////////////////////
-
 
   it("delta B == 1", async function () {
     this.result = await this.season.sunSunrise('0', 8);

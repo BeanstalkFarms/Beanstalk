@@ -9,7 +9,6 @@ import {LibFertilizer, SafeMath} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
-import "hardhat/console.sol";
 
 /**
  * @title Sun
@@ -240,29 +239,15 @@ contract Sun is Oracle {
      */
     function setSoilBelowPeg(int256 twaDeltaB) internal {
         
-        // Calculate deltaB from instantaneous reserves
+        // Calculate deltaB from instantaneous reserves.
         // NOTE: deltaB is calculated only from the Bean:ETH Well at this time
-        // If more wells are added, this will need to be updated
+        // If more wells are added, this will need to be updated.
         (int256 instDeltaB, ,) = LibWellMinting.instantaneousDeltaB(C.BEAN_ETH_WELL);
-        
-        console.log("/////////// setSoilBelowPeg ///////////");
 
-        console.log("twaDeltaB");
-        console.logInt(twaDeltaB);
-
-        console.log("instDeltaB");
-        console.logInt(instDeltaB);
-
-        // When below peg, Soil issued at gm is the minimum of (1) -twaDeltaB
-        // and (2) the -deltaB calculated using the instantaneous reserves from Multi Flow
-
-        // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used
+        // If the inst delta b is 0 it means that the oracle failed so the twa delta b is used.
         uint256 newSoil = instDeltaB == 0 ? uint256(-twaDeltaB) : Math.min(uint256(-twaDeltaB), uint256(-instDeltaB));
 
-        console.log("newSoil");
-        console.log(newSoil);
-
-        // set new soil
+        // Set new soil.
         setSoil(newSoil);
     }
 

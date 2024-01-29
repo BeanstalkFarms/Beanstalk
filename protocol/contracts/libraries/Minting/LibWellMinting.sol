@@ -15,7 +15,6 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
-import 'hardhat/console.sol';   
 
 /**
  * @title Well Minting Oracle Library
@@ -173,6 +172,7 @@ library LibWellMinting {
                 bool success
             ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
 
+            // HANDLE FAILURE
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (twaReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
                 return (0, snapshot, new uint256[](0), new uint256[](0));
@@ -201,7 +201,7 @@ library LibWellMinting {
 
     /**
      * @dev Calculates the instantaneous delta B for a given Well address.
-     * @param well The address of the Well
+     * @param well The address of the Well.
      * @return deltaB The instantaneous delta B balance since the last `capture` call.
      */
     function instantaneousDeltaB(address well) internal view returns 
@@ -211,21 +211,19 @@ library LibWellMinting {
 
                                                                         // well address , data[]
         try IInstantaneousPump(C.BEANSTALK_PUMP).readInstantaneousReserves(well, C.BYTES_ZERO) returns (uint[] memory instReserves) {
-            // get well tokens
+            // Get well tokens
             IERC20[] memory tokens = IWell(well).tokens();
 
-            // get ratios and bean index
+            // Get ratios and bean index
             (
                 uint256[] memory ratios,
                 uint256 beanIndex,
                 bool success
             ) = LibWell.getRatiosAndBeanIndex(tokens, block.timestamp.sub(s.season.timestamp));
 
-            /////////////////////////// HANDLE FAILURE ///////////////////////////
-
+            // HANDLE FAILURE
             // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
             if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-                console.log("BEAN BALANCE BELOW MIN ---> INSTANTANEOUS DELTA B = 0");
                 return (0, new uint256[](0), new uint256[](0));
             }
 
@@ -234,9 +232,7 @@ library LibWellMinting {
                 return (0, instReserves, new uint256[](0));
             }
 
-            /////////////////////////// CONTINUE ///////////////////////////
-
-            // get well function
+            // Get well function
             Call memory wellFunction = IWell(well).wellFunction();
 
             // Delta B is the difference between the target Bean reserve at the peg price
