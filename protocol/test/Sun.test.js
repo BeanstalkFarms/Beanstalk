@@ -10,6 +10,8 @@ const { setEthUsdPrice, setEthUsdcPrice } = require('../utils/oracle.js');
 const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { advanceTime } = require('../utils/helpers.js');
+const { whitelistWell, deployMockBeanEthWell } = require('../utils/well.js');
+const { check } = require('prettier');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -70,8 +72,10 @@ describe('Sun', function () {
     await setEthUsdPrice('999.998018');
     await setEthUsdcPrice('1000');
 
-    this.well = await deployBasin(true, undefined, false, true)
-    await this.season.siloSunrise(0)
+    this.well = await deployBasin(true, undefined, false, true);
+
+    await this.season.siloSunrise(0);
+
   })
 
   beforeEach(async function () {
@@ -82,9 +86,59 @@ describe('Sun', function () {
     await revertToSnapshot(snapshotId)
   })
 
-  it("delta B < 1", async function () {
-    this.result = await this.season.sunSunrise('-100', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100');
+  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB", async function () {
+    // go fo forward 1800 blocks
+    await advanceTime(1800)
+    // set reserves to 2M Beans and 1000 Eth
+    // await this.well.setReserves([to6('2000000'), to18('1000')])
+    await setReserves(owner, this.well, [to6('2000000'), to18('1000')]);
+    await setReserves(owner, this.well, [to6('2000000'), to18('1000')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+
+    // twaDeltaB = -100000000
+    // instantaneousDeltaB = -585786437627
+                                            // twaDeltaB, case ID
+    this.result = await this.season.sunSunrise('-100000000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000');
+  })
+
+
+  it("When deltaB < 0 it sets the correct soil if the instantanious deltaB oracle fails", async function () {
+    // go fo forward 1800 blocks
+    await advanceTime(1800)
+    // set reserves to 1 Bean and 1 Eth
+    // If the Bean reserve is less than the minimum of 1000 beans,
+    // LibWellMinting.instantaneousDeltaB returns a deltaB of 0
+    await setReserves(owner, this.well, [to6('1'), to18('1')]);
+    await setReserves(owner, this.well, [to6('1'), to18('1')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+
+    // twadeltaB,                        CASE ID
+    this.result = await this.season.sunSunrise('-100000000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000');
+  })
+
+  it("rewards more than type(uint128).max Soil below peg", async function () {
+    // Here, since we haven't changed the reserves the instantaneous deltaB is 0
+    // And we maniuplate the twaDeltaB to be a number that is greater than type(uint128).max
+    // Because we consider that a value of 0 returned by the oracle to be a failure, we set the soil to be the twaDeltaB
+    // which is greater than type(uint128).max and therefore reverts
+                                            // twadeltaB,                        CASE ID
+    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '8')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
 
   it("delta B == 1", async function () {
@@ -335,10 +389,6 @@ describe('Sun', function () {
 
   it("rewards more than type(uint128).max/10000 to silo", async function () {
     await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
-  })
-
-  it("rewards more than type(uint128).max Soil below peg", async function () {
-    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '0')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
 })
 
