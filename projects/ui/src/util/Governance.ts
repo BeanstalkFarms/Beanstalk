@@ -66,13 +66,13 @@ export const getProposalType = (tag: string) => {
 
 /// Governance Space Slugs / Tabs / Labels utils
 
-export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'bean-sprout', 'beanft'];
+export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'beanft', 'archive'];
 
 export const GOV_SLUGS_TAB_MAP = {
   0: GovSpace.BeanstalkDAO,
   1: GovSpace.BeanstalkFarms,
-  2: GovSpace.BeanSprout,
-  3: GovSpace.BeanNFT,
+  2: GovSpace.BeanNFT,
+  3: GovSpace.BeanstalkFarms,
 };
 
 export const getGovSpaceWithTab = (tab: number) =>
@@ -91,10 +91,10 @@ export const getGovSpaceLabel = (space: GovSpace) => {
       return 'DAO';
     case GovSpace.BeanstalkFarms:
       return 'Beanstalk Farms';
-    case GovSpace.BeanSprout:
-      return 'Bean Sprout';
-    default: {
+    case GovSpace.BeanNFT:
       return 'BeanNFT DAO';
+    default: {
+      return 'Archive';
     }
   }
 };

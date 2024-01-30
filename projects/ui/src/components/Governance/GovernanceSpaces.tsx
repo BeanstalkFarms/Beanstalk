@@ -32,19 +32,33 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const filterBySpace = useCallback(
     (t: number) => {
       if (!loading && data?.proposals) {
-        return data.proposals.filter(
-          (p) =>
-            p !== null &&
-            p?.space?.id === SNAPSHOT_SPACES[t] &&
-            (((p.title.startsWith('BIP') || p.title.startsWith('BOP')) &&
-              p.space.id === 'beanstalkdao.eth') ||
-              ((p.title.startsWith('Temp-Check') ||
-                p.title.startsWith('BFCP')) &&
-                p.space.id === 'beanstalkfarms.eth') ||
-              (p.title.startsWith('BSP') &&
-                p.space.id === 'wearebeansprout.eth') ||
-              (p.title.startsWith('BNP') && p.space.id === 'beanft.eth'))
-        ) as Proposal[];
+        if (t < 3) {
+          return data.proposals.filter(
+            (p) =>
+              p !== null &&
+              p?.space?.id === SNAPSHOT_SPACES[t] &&
+              (((p.title.startsWith('BIP') || p.title.startsWith('BOP')) &&
+                p.space.id === 'beanstalkdao.eth') ||
+                ((p.title.startsWith('Temp-Check') ||
+                  p.title.startsWith('BFCP')) &&
+                  p.space.id === 'beanstalkfarms.eth') ||
+                (p.title.startsWith('BSP') &&
+                  p.space.id === 'wearebeansprout.eth') ||
+                (p.title.startsWith('BNP') && p.space.id === 'beanft.eth'))
+          ) as Proposal[];
+        }
+
+        if (t === 3) {
+          return data.proposals.filter(
+            (p) =>
+              p !== null &&
+              !p.title.startsWith('BIP') &&
+              !p.title.startsWith('BOP') &&
+              !p.title.startsWith('BFCP') &&
+              !p.title.startsWith('Temp-Check') &&
+              !p.title.startsWith('BNP')
+          ) as Proposal[];
+        }
       }
       return [];
     },
@@ -90,8 +104,8 @@ const GovernanceSpaces: React.FC<{}> = () => {
 
   const daoProposals = filterProposals(0);
   const beanstalkFarmsProposals = filterProposals(1);
-  const beanSproutProposals = filterProposals(2);
-  const beaNFTDaoProposals = filterProposals(3);
+  const beaNFTDaoProposals = filterProposals(2);
+  const archiveProposals = filterProposals(3);
 
   return (
     <Module>
@@ -112,15 +126,15 @@ const GovernanceSpaces: React.FC<{}> = () => {
         />
         <StyledTab
           label={
-            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanSprout)}>
-              {beanSproutProposals.activeProposals || null}
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanNFT)}>
+              {beaNFTDaoProposals.activeProposals || null}
             </ChipLabel>
           }
         />
         <StyledTab
           label={
-            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanNFT)}>
-              {beaNFTDaoProposals.activeProposals || null}
+            <ChipLabel name="Archive">
+              {archiveProposals.activeProposals || null}
             </ChipLabel>
           }
         />
@@ -167,7 +181,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             tab={2}
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={beanSproutProposals.allProposals}
+            proposals={beaNFTDaoProposals.allProposals}
           />
         )}
         {tab === 3 && (
@@ -175,7 +189,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             tab={3}
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
-            proposals={beaNFTDaoProposals.allProposals}
+            proposals={archiveProposals.allProposals}
           />
         )}
       </ModuleContent>
