@@ -152,7 +152,7 @@ const ChopForm: FC<
 
   const isSubmittable = quote?.gt(0) && values.destination;
 
-  const changeDestination = (v) => {
+  const changeDestination = (v: BalanceFrom) => {
     setBalanceFromIn(v);
     setFieldValue(
       'destination',
