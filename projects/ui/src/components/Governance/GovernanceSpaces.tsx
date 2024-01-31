@@ -32,7 +32,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const filterBySpace = useCallback(
     (t: number) => {
       if (!loading && data?.proposals) {
-        if (t < 6) {
+        if (t < 999) {
           return data.proposals.filter(
             (p) =>
               p !== null &&
@@ -50,7 +50,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
           ) as Proposal[];
         }
 
-        if (t === 6) {
+        if (t === 999) {
           return data.proposals.filter(
             (p) =>
               p !== null &&
@@ -108,10 +108,10 @@ const GovernanceSpaces: React.FC<{}> = () => {
 
   const daoProposals = filterProposals(0);
   const beanstalkFarmsProposals = filterProposals(1);
-  const beaNFTDaoProposals = filterProposals(2);
+  const beaNFTDaoProposals = filterProposals(3);
   const budgetProposals = filterProposals(4);
   const bugBountyProposals = filterProposals(5);
-  const archiveProposals = filterProposals(6);
+  const archiveProposals = filterProposals(999);
 
   return (
     <Module>

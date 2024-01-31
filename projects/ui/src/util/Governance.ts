@@ -93,6 +93,8 @@ export const getGovSpaceLabel = (space: GovSpace) => {
       return 'DAO';
     case GovSpace.BeanstalkFarms:
       return 'Beanstalk Farms';
+    case GovSpace.BeanSprout:
+      return 'Bean Sprout';
     case GovSpace.BeanNFT:
       return 'BeanNFT DAO';
     case GovSpace.BeanstalkBugBounty:
