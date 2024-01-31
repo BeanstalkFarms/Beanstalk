@@ -207,24 +207,18 @@ const GovernanceSpaces: React.FC<{}> = () => {
         {tab === 3 && (
           <ProposalList
             tab={3}
-            votingPower={votingPower.votingPower}
-            farmerDelegations={farmerDelegations}
             proposals={budgetProposals.allProposals}
           />
         )}
         {tab === 4 && (
           <ProposalList
             tab={4}
-            votingPower={votingPower.votingPower}
-            farmerDelegations={farmerDelegations}
             proposals={bugBountyProposals.allProposals}
           />
         )}
         {tab === 5 && (
           <ProposalList
             tab={5}
-            votingPower={votingPower.votingPower}
-            farmerDelegations={farmerDelegations}
             proposals={archiveProposals.allProposals}
           />
         )}
