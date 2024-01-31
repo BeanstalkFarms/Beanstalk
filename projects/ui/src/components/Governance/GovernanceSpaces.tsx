@@ -32,7 +32,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const filterBySpace = useCallback(
     (t: number) => {
       if (!loading && data?.proposals) {
-        if (t < 3) {
+        if (t < 6) {
           return data.proposals.filter(
             (p) =>
               p !== null &&
@@ -44,11 +44,13 @@ const GovernanceSpaces: React.FC<{}> = () => {
                   p.space.id === 'beanstalkfarms.eth') ||
                 (p.title.startsWith('BSP') &&
                   p.space.id === 'wearebeansprout.eth') ||
-                (p.title.startsWith('BNP') && p.space.id === 'beanft.eth'))
+                (p.title.startsWith('BNP') && p.space.id === 'beanft.eth') ||
+                (p.title.startsWith('BFBP') && p.space.id === 'beanstalkfarmsbudget.eth') ||
+                (p.title.startsWith('BIR') && p.space.id === 'beanstalkbugbounty.eth'))
           ) as Proposal[];
         }
 
-        if (t === 3) {
+        if (t === 6) {
           return data.proposals.filter(
             (p) =>
               p !== null &&
@@ -56,7 +58,9 @@ const GovernanceSpaces: React.FC<{}> = () => {
               !p.title.startsWith('BOP') &&
               !p.title.startsWith('BFCP') &&
               !p.title.startsWith('Temp-Check') &&
-              !p.title.startsWith('BNP')
+              !p.title.startsWith('BNP') &&
+              !p.title.startsWith('BFBP') &&
+              !p.title.startsWith('BIR')
           ) as Proposal[];
         }
       }
@@ -105,7 +109,9 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const daoProposals = filterProposals(0);
   const beanstalkFarmsProposals = filterProposals(1);
   const beaNFTDaoProposals = filterProposals(2);
-  const archiveProposals = filterProposals(3);
+  const budgetProposals = filterProposals(4);
+  const bugBountyProposals = filterProposals(5);
+  const archiveProposals = filterProposals(6);
 
   return (
     <Module>
@@ -128,6 +134,20 @@ const GovernanceSpaces: React.FC<{}> = () => {
           label={
             <ChipLabel name={getGovSpaceLabel(GovSpace.BeanNFT)}>
               {beaNFTDaoProposals.activeProposals || null}
+            </ChipLabel>
+          }
+        />
+        <StyledTab
+          label={
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanstalkFarmsBudget)}>
+              {budgetProposals.activeProposals || null}
+            </ChipLabel>
+          }
+        />
+        <StyledTab
+          label={
+            <ChipLabel name={getGovSpaceLabel(GovSpace.BeanstalkBugBounty)}>
+              {bugBountyProposals.activeProposals || null}
             </ChipLabel>
           }
         />
@@ -187,6 +207,22 @@ const GovernanceSpaces: React.FC<{}> = () => {
         {tab === 3 && (
           <ProposalList
             tab={3}
+            votingPower={votingPower.votingPower}
+            farmerDelegations={farmerDelegations}
+            proposals={budgetProposals.allProposals}
+          />
+        )}
+        {tab === 4 && (
+          <ProposalList
+            tab={4}
+            votingPower={votingPower.votingPower}
+            farmerDelegations={farmerDelegations}
+            proposals={bugBountyProposals.allProposals}
+          />
+        )}
+        {tab === 5 && (
+          <ProposalList
+            tab={5}
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
             proposals={archiveProposals.allProposals}

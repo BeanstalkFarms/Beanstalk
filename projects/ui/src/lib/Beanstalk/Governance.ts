@@ -5,6 +5,8 @@ export enum GovSpace {
   BeanstalkFarms = 'beanstalkfarms.eth',
   BeanNFT = 'beanft.eth',
   BeanSprout = 'wearebeansprout.eth',
+  BeanstalkFarmsBudget = 'beanstalkfarmsbudget.eth',
+  BeanstalkBugBounty = 'beanstalkbugbounty.eth'
 }
 
 export enum GovProposalType {
