@@ -79,6 +79,7 @@ const VoteForm: FC<
 
   /// Derived
   const isNFT = proposal.space.id === GovSpace.BeanNFT;
+  const isViewOnly = proposal.space.id === GovSpace.BeanstalkBugBounty || proposal.space.id === GovSpace.BeanstalkFarmsBudget;
   const canVote = farmerVP.votingPower.total.gt(0);
   const isClosed = differenceInTime <= 0;
 
@@ -103,6 +104,7 @@ const VoteForm: FC<
   );
 
   const createVoteButtons = () => {
+    if (isViewOnly) return null;
     switch (proposal.type) {
       case 'single-choice': {
         /// Option isn't selected or the voting period has ended
@@ -239,7 +241,7 @@ const VoteForm: FC<
          * Progress by choice
          */}
         <Stack px={1} pb={1} gap={1.5}>
-          {votingPower && totalOutstanding && (
+          {votingPower && totalOutstanding && !isViewOnly && (
             <StatHorizontal
               label="Voting Power"
               labelTooltip={
@@ -255,7 +257,7 @@ const VoteForm: FC<
               {displayBN(votingPower.div(totalOutstanding).multipliedBy(100))}%
             </StatHorizontal>
           )}
-          {quorumPct && totalForQuorum && (
+          {quorumPct && totalForQuorum && !isViewOnly && (
             <StatHorizontal
               label={
                 <>
@@ -350,7 +352,7 @@ const VoteForm: FC<
                     0,
                     0
                   )}{' '}
-                  {isNFT ? 'BEANFT' : 'STALK'}
+                  {isViewOnly ? 'VOTE' : isNFT ? 'BEANFT' : 'STALK'}
                   <Typography
                     display={proposal.scores_total > 0 ? 'inline' : 'none'}
                   >
