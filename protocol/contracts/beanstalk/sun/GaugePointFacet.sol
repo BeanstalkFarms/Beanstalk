@@ -17,6 +17,7 @@ contract GaugePointFacet {
     using SafeMath for uint256;
 
     uint256 private constant ONE_POINT = 1e18;
+    uint256 private constant MAX_GAUGE_POINTS = 1000e18;
 
     /**
      * @notice DefaultGaugePointFunction
@@ -25,6 +26,8 @@ contract GaugePointFacet {
      * 
      * @dev if % of deposited BDV is .01% within range of optimal,
      * keep gauge points the same.
+     * 
+     * Cap gaugePoints to MAX_GAUGE_POINTS to avoid runaway gaugePoints.
      */
     function defaultGaugePointFunction(
         uint256 currentGaugePoints,
@@ -37,6 +40,9 @@ contract GaugePointFacet {
             newGaugePoints = currentGaugePoints.sub(ONE_POINT);
         } else if (percentOfDepositedBdv < optimalPercentDepositedBdv.mul(9999).div(10000)) {
             newGaugePoints = currentGaugePoints.add(ONE_POINT);
+
+            // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
+            if (newGaugePoints > MAX_GAUGE_POINTS) return MAX_GAUGE_POINTS;
         }
     }
 }

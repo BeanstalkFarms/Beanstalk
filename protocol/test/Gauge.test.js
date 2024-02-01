@@ -41,23 +41,11 @@ describe('Gauge', function () {
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
     this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
+    this.gaugePoint = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
-
+    
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.bean.connect(user).approve(this.diamond.address, to6('100000000'));
-
-    // // set balances to bean3crv
-    // this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
-    // this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
-    // this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
-    // await this.threeCurve.mint(userAddress, to18('1000'))
-    // await this.beanThreeCurve.connect(owner).approve(this.diamond.address, to18('100000000'))
-    // await this.beanThreeCurve.connect(user).approve(this.diamond.address, to18('100000000'))
-    // await this.threeCurve.connect(user).approve(this.diamond.address, to18('100000000000'))
-    // await this.threeCurve.connect(user).approve(this.beanThreeCurve.address, to18('100000000000'))
-
-    // // bean3crv set at parity, 1,000,000 on each side.
-    // await this.beanThreeCurve.set_balances([to6('1000000'), to18('1000000')])
    
     // init wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
@@ -92,9 +80,6 @@ describe('Gauge', function () {
 
     // initalize gauge parameters for lp:
     await initalizeGaugeForToken(BEAN_ETH_WELL, to18('1000'), to6('100'))
-    
-    // disabled due to bean3crv dewhitelisting.
-    // await initalizeGaugeForToken(BEAN_3_CURVE, to18('1625'), to6('1'))
 
     await this.season.updateTWAPCurveE()
   })
@@ -387,7 +372,7 @@ describe('Gauge', function () {
       // total GP = 1000 + (11.858544*100) = 2185.8544
       // stalkPerGp = 489_750_000 / 2185.8544 = ~224_054/1e10 stalk per GP
       // stalkPerGp * GpPerBDV = stalkIssuedPerBDV
-      // stalkIssuedPerBeanBDV =  ~224_054 * 11.858544 = ~2_656_954s
+      // stalkIssuedPerBeanBDV =  ~224_054 * 11.858544 = ~2_656_954
       // stalkIssuedPerBeanETH = ~224_054 * 15.811392 = ~3_542_605
       expect(await this.seasonGetters.getBeanEthGaugePointsPerBdv()).to.be.eq(to18('15.811392351684831136'))
       expect(await this.seasonGetters.getBeanGaugePointsPerBdv()).to.be.eq(to18('11.858544263763623352'))
@@ -398,21 +383,19 @@ describe('Gauge', function () {
       expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(1) // 1 seeds
     })
     
-    // note: with dewhitelisting bean3crv, only one LP pool is active and thus 
-    // the gauge points are not updated.
-    // it('emits events', async function () {
-    //   await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
-    //     2,  // season
-    //     BEAN_ETH_WELL,  // token
-    //     to18('2251') // new gauge points
-    //   )
-    //   await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
-    //     2,  // season
-    //     BEAN_3_CURVE,  // token
-    //     to18('1624') // new gauge points
-    //   )
-    // })
+    it('Cannot exceed the maximum gauge points', async function () {
+      expect(await this.gaugePoint.defaultGaugePointFunction(
+        to18('1000'),
+        50e6,
+        49e6
+      )).to.be.eq(to18('1000'))
 
+      expect(await this.gaugePoint.defaultGaugePointFunction(
+        to18('1001'),
+        50e6,
+        49e6
+      )).to.be.eq(to18('1000'))
+    })
   })
 
   describe('averageGrownStalkPerBdvPerSeason', async function () {
