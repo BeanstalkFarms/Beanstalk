@@ -55,7 +55,7 @@ const ProposalPageInner: FC<{ proposal: Proposal }> = ({ proposal }) => {
           <Grid item xs={12} md={8} maxWidth="100% !important">
             <ProposalContent proposal={proposal} quorum={quorum} />
           </Grid>
-          <Grid item xs={12} md={4} maxWidth="100%">
+          <Grid item xs={12} md={4} zeroMinWidth>
             <GovernanceActions proposal={proposal} quorum={quorum} />
           </Grid>
         </Grid>
