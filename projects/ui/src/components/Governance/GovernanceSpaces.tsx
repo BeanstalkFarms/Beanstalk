@@ -140,21 +140,21 @@ const GovernanceSpaces: React.FC<{}> = () => {
         <StyledTab
           label={
             <ChipLabel name={getGovSpaceLabel(GovSpace.BeanstalkFarmsBudget)}>
-              {budgetProposals.activeProposals || null}
+              {null}
             </ChipLabel>
           }
         />
         <StyledTab
           label={
             <ChipLabel name={getGovSpaceLabel(GovSpace.BeanstalkBugBounty)}>
-              {bugBountyProposals.activeProposals || null}
+              {null}
             </ChipLabel>
           }
         />
         <StyledTab
           label={
             <ChipLabel name="Archive">
-              {archiveProposals.activeProposals || null}
+              {null}
             </ChipLabel>
           }
         />
