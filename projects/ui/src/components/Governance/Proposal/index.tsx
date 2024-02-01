@@ -26,15 +26,6 @@ const ProposalContent: FC<{
     'https://cf-ipfs.com/ipfs/'
   );
 
-  const title = props.proposal.title;
-
-  const showQuorum =
-    title.startsWith('BIP') ||
-    title.startsWith('BOP') ||
-    title.startsWith('BFCP') ||
-    title.startsWith('Temp-Check') ||
-    title.startsWith('BNP');
-
   return (
     <Card sx={{ p: 2 }}>
       <Row justifyContent="space-between">
@@ -46,7 +37,7 @@ const ProposalContent: FC<{
             showLink
           />
         </Stack>
-        {showQuorum && pctOfQuorum && pctOfQuorum > 0 && (
+        {pctOfQuorum && pctOfQuorum > 0 && (
           <Tooltip
             title={`${props.quorum.data.tag} is ~${(pctOfQuorum * 100).toFixed(
               1

@@ -32,7 +32,6 @@ const QUORUM = {
   [GovProposalType.BFCP_B]: 0.35,
   [GovProposalType.BFCP_C]: 0.25,
   [GovProposalType.BFCP_D]: 0.25,
-  [GovProposalType.BSP]: 0.1,
   [GovProposalType.BNP]: 0.15,
   [GovProposalType.FILL]: -1,
 };
@@ -45,7 +44,6 @@ const GovProposalTypeMap = {
   'BFCP-B': GovProposalType.BFCP_B,
   'BFCP-C': GovProposalType.BFCP_C,
   'BFCP-D': GovProposalType.BFCP_D,
-  BSP: GovProposalType.BSP,
   BNP: GovProposalType.BNP,
   CHECK: GovProposalType.FILL,
 };
