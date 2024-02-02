@@ -24,7 +24,7 @@ contract GaugePointFacet {
      * is the default function to calculate the gauge points
      * of an LP asset.
      * 
-     * @dev if % of deposited BDV is .01% within range of optimal,
+     * @dev If % of deposited BDV is .01% within range of optimal,
      * keep gauge points the same.
      * 
      * Cap gaugePoints to MAX_GAUGE_POINTS to avoid runaway gaugePoints.

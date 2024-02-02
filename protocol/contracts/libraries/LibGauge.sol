@@ -238,12 +238,12 @@ library LibGauge {
             beanGpPerBdv.mul(beanDepositedBdv).div(BDV_PRECISION)
         );
 
-        // Check if one week elapsed since the last seedGauge update.
-        // If so, update the average grown stalk per BDV per Season.
-        // safemath not needed
-        if (s.season.current - s.seedGauge.lastStalkGrowthUpdate >= 168) {
+        // update the average grown stalk per BDV per Season.
+        // beanstalk must exist for a minimum of the catchup season in order to update the average.
+        if(s.season.current > TARGET_SEASONS_TO_CATCHUP) {
             updateAverageStalkPerBdvPerSeason();
         }
+
         // Calculate grown stalk issued this season and GrownStalk Per GaugePoint.
         uint256 newGrownStalk = uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
             .mul(totalGaugeBdv)
@@ -289,15 +289,11 @@ library LibGauge {
 
     /**
      * @notice Updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
-     * @dev Anyone can call this function to update. Currently, the function
-     * Updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     *
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
+     * @dev The function updates the targetGrownStalkPerBdvPerSeason such that 
+     * it will take 6 months for the average new depositer to catch up to the current
+     * average grown stalk per BDV.
      */
-    function updateAverageStalkPerBdvPerSeason() public {
+    function updateAverageStalkPerBdvPerSeason() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Will overflow if the average grown stalk per BDV exceeds 1.4e36,
         // which is highly improbable assuming consistent new deposits.
@@ -305,7 +301,6 @@ library LibGauge {
         s.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(TARGET_SEASONS_TO_CATCHUP)
         );
-        s.seedGauge.lastStalkGrowthUpdate = s.season.current;
         emit UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
     }
 

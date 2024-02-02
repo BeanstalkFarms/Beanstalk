@@ -450,7 +450,6 @@ contract MockSeasonFacet is SeasonFacet  {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = price;
     }
 
-    // stepGauge without verifying oracle success.
     function mockStepGauge() external {
         (
             uint256 maxLpGpPerBdv,
