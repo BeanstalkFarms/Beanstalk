@@ -158,7 +158,7 @@ contract Account {
         uint32 lastUpdate; // The Season in which the Farmer last updated their Silo.
         uint32 lastSop; // The last Season that a SOP occured at the time the Farmer last updated their Silo.
         uint32 lastRain; // The last Season that it started Raining at the time the Farmer last updated their Silo.
-        uint128 depreciated_deltaRoots; // DEPRECATED - BIP-39 introduced germination. 
+        uint128 deprecated_deltaRoots; // DEPRECATED - BIP-39 introduced germination. 
         SeasonOfPlenty deprecated; // DEPRECATED – Replant reset the Season of Plenty mechanism
         uint256 roots; // A Farmer's Root balance.
         uint256 deprecated_wrappedBeans; // DEPRECATED – Replant generalized Internal Balances. Wrapped Beans are now stored at the AppStorage level.
@@ -526,8 +526,8 @@ contract Storage {
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
  * @param siloBalances A mapping from Token address to Silo Balance storage (amount deposited and withdrawn).
  * @param ss A mapping from Token address to Silo Settings for each Whitelisted Token. If a non-zero storage exists, a Token is whitelisted.
- * @param deprecated2 DEPRECATED - 2 slots that used to store state variables which have been depreciated through various updates. Storage slots can be left alone or reused.
- * @param depreciated_newEarnedStalk the amount of earned stalk issued this season. Since 1 stalk = 1 bean, it represents the earned beans as well.
+ * @param deprecated2 DEPRECATED - 2 slots that used to store state variables which have been deprecated through various updates. Storage slots can be left alone or reused.
+ * @param deprecated_newEarnedStalk the amount of earned stalk issued this season. Since 1 stalk = 1 bean, it represents the earned beans as well.
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param internalTokenBalance A mapping from Farmer address to Token address to Internal Balance. It stores the amount of the Token that the Farmer has stored as an Internal Balance in Beanstalk.
  * @param unripeClaimed True if a Farmer has Claimed an Unripe Token. A mapping from Farmer to Unripe Token to its Claim status.
@@ -540,7 +540,7 @@ contract Storage {
  * @param fFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid). 
  * @param fLast The highest active Fertilizer Id (end of linked list that is stored by nextFid). 
  * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
- * @param depreciated_vestingPeriodRoots DEPRECIATED - removed in BIP-39 in favor of germination.
+ * @param deprecated_vestingPeriodRoots deprecated - removed in BIP-39 in favor of germination.
  * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
  * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
@@ -582,8 +582,8 @@ struct AppStorage {
     mapping(address => Storage.AssetSilo) siloBalances;
     mapping(address => Storage.SiloSettings) ss;
     uint256[2] deprecated2;
-    uint128 depreciated_newEarnedStalk; // ──────┐ 16
-    uint128 depreciated_vestingPeriodRoots; // ──┘ 16 (32/32)
+    uint128 deprecated_newEarnedStalk; // ──────┐ 16
+    uint128 deprecated_vestingPeriodRoots; // ──┘ 16 (32/32)
     mapping (uint32 => uint256) sops;
 
     // Internal Balances
