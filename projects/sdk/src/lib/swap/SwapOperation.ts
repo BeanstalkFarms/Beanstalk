@@ -4,7 +4,7 @@ import { TokenValue } from "src/TokenValue";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { Route } from "src/classes/Router";
-import { AdvancedFarmWorkflow } from "../farm";
+import { AdvancedFarmWorkflow, FarmFromMode, FarmToMode } from "../farm";
 
 type PathSegment = {
   from: string;
@@ -18,7 +18,7 @@ export class SwapOperation {
     sdk: BeanstalkSDK,
     readonly tokenIn: Token,
     readonly tokenOut: Token,
-    private readonly workflow: AdvancedFarmWorkflow|Workflow,
+    private readonly workflow: AdvancedFarmWorkflow | Workflow,
     private readonly route: Route
   ) {
     SwapOperation.sdk = sdk;
