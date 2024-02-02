@@ -218,4 +218,10 @@ export const BEAN_CRV3_V1_ADDRESSES = {
     '0x3a70DfA7d2262988064A2D051dd47521E43c9BdD'.toLowerCase(),
 }
 
+/// ENS Reverse Records
+export const ENS_REVERSE_RECORDS = {
+  [SupportedChainId.MAINNET]:
+    '0x3671ae578e63fdf66ad4f3e12cc0c0d71ac7510c'.toLowerCase(),
+}
+
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';

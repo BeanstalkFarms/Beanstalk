@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 import { useAllVotesQuery, useProposalVotingPowerQuery } from '~/generated/graphql';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import { useBeanstalkContract, useEnsReverseRecords } from '~/hooks/ledger/useContract';
 import { GovSpace, getQuorumPct } from '~/lib/Beanstalk/Governance';
 import { getProposalTag, getProposalType, Proposal, tokenResult } from '~/util';
 import useTotalBeaNFTsMintedAtBlock from './useTotalBeaNFTsMintedAtBlock';
@@ -140,8 +140,30 @@ export default function useProposalBlockData(
     nextFetchPolicy: 'network-only',
   });
 
+  const votes = voteData?.votes as VoteData[];
+
+  const ens = useEnsReverseRecords()
+  const [votesWithEns, setVotesWithEns] = useState<Array<VoteData & { ens: string }>>([]);
+  const [loadingEns, setLoadingEns] = useState(true);
+
+  useMemo(() => {
+      (async () => {
+        if (!votes) return
+        const voterAddresses = votes.map((vote) => vote.voter);
+        const names = voterAddresses ? await ens.getNames(voterAddresses) : undefined;
+        if (names) {
+          const votesEns = votes.map((vote, index) => ({
+            ...vote,
+            ens: names[index] 
+          }))
+          setVotesWithEns(votesEns);
+          setLoadingEns(false);
+        };
+      })()
+  }, [ens, votes]);
+
   return {
-    loading: isLoading,
+    loading: isLoading || loadingEns,
     data: {
       // Metadata
       tag,
@@ -155,7 +177,7 @@ export default function useProposalBlockData(
       // Account
       votingPower,
       // Votes
-      votes: voteData?.votes as VoteData[] || undefined
+      votes: votesWithEns || undefined
     },
   };
 }

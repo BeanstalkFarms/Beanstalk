@@ -183,7 +183,7 @@ const VotesTable: FC<{
                                 color="text.secondary"
                                 sx={{ fontWeight: 400 }}
                               >
-                                {trimAddress(vote.voter)}
+                                {vote.ens || trimAddress(vote.voter)}
                               </Typography>
                             </Box>
                           </Link>
