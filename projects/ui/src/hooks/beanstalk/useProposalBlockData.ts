@@ -151,14 +151,20 @@ export default function useProposalBlockData(
         if (!votes) return
         const voterAddresses = votes.map((vote) => vote.voter);
         const names = voterAddresses ? await ens.getNames(voterAddresses) : undefined;
+        let votesEns;
         if (names) {
-          const votesEns = votes.map((vote, index) => ({
+          votesEns = votes.map((vote, index) => ({
             ...vote,
             ens: names[index] 
           }))
-          setVotesWithEns(votesEns);
-          setLoadingEns(false);
+        } else {
+          votesEns = votes.map((vote) => ({
+            ...vote,
+            ens: '' 
+          }))
         };
+        setVotesWithEns(votesEns);
+        setLoadingEns(false);
       })()
   }, [ens, votes]);
 
