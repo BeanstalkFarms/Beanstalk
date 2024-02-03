@@ -293,7 +293,7 @@ library LibLegacyTokenSilo {
 
 
         //do a legacy mow using the old silo seasons deposits
-        LibSilo.mintGrownStalk(account, balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
+        LibSilo.mintStalk(account, balanceOfGrownStalkUpToStemsDeployment(account)); //should only mint stalk up to stemStartSeason
         updateLastUpdateToNow(account);
         //at this point we've completed the guts of the old mow function, now we need to do the migration
  
@@ -364,7 +364,7 @@ library LibLegacyTokenSilo {
         }
  
         // user deserves stalk grown between stemStartSeason and now
-        LibSilo.mintGrownStalk(account, migrateData.totalGrownStalk);
+        LibSilo.mintStalk(account, migrateData.totalGrownStalk);
 
         //return seeds diff for checking in the "part 2" of this function (stack depth kept it from all fitting in one)
         return balanceOfSeeds(account).sub(migrateData.totalSeeds);

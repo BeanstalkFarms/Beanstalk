@@ -84,6 +84,19 @@ contract Silo is SiloExit {
         _;
     }
 
+    //////////////////////// INTERNAL: VESTING ////////////////////////
+
+    /**
+     * @notice Verifies that the function is not called in the vesting period.
+     * @dev Added with ebip-13. Will be removed upon seed gauge BIP.
+     * This modifier is added to the following functions:
+     * {SiloFacet.withdrawDeposit(s)}
+     */
+    modifier checkVesting() {
+        require(!LibSilo.inVestingPeriod(), "Silo: In vesting period");
+        _;
+    }
+
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**
@@ -96,12 +109,6 @@ contract Silo is SiloExit {
     function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans.
-        
-        // per the zero withdraw update, planting is handled differently 
-        // depending whether or not the user plants during the vesting period of beanstalk. 
-        // during the vesting period, the earned beans are not issued to the user.
-        // thus, the roots calculated for a given user is different. 
-        // This is handled by the super mow function, which stores the difference in roots.
         LibSilo._mow(account, C.BEAN);
         uint256 accountStalk = s.a[account].s.stalk;
 

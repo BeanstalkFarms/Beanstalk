@@ -222,6 +222,7 @@ describe("Silo Token", function () {
       await this.season.teleportSunrise(10);
       // this.season.deployStemsUpgrade();
       await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
+      await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
     })
     describe('reverts', function () {
       it('reverts if amount is 0', async function () {
@@ -318,6 +319,7 @@ describe("Silo Token", function () {
           await this.season.siloSunrise(0);
           await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
           userBalanceBefore = await this.siloToken.balanceOf(userAddress);
+          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
           this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [0,1],['500','1000'], EXTERNAL);
         });
     
@@ -352,6 +354,7 @@ describe("Silo Token", function () {
           await this.season.siloSunrise(0);
           await this.silo.connect(user).deposit(this.siloToken.address, '1000', EXTERNAL);
           userBalanceBefore = await this.siloToken.balanceOf(userAddress);
+          await mineUpTo((await ethers.provider.getBlockNumber()) + 11 + 1);
           this.result = await this.silo.connect(user).withdrawDeposits(this.siloToken.address, [0,1],['1000','1000'], EXTERNAL);
         });
     
@@ -1638,7 +1641,10 @@ describe("Silo Token", function () {
     });
   });
 
-  describe("flash loan exploit", async function () {
+  /**
+   * Vesting period now reverts and thus tests are skipped/invalid.
+   */
+  describe.skip("flash loan exploit", async function () {
     before(async function () {
       await this.siloToken.mint(flashLoanExploiterAddress, '1000');
       await this.siloToken.connect(flashLoanExploiter).approve(this.silo.address, '100000000000'); 
