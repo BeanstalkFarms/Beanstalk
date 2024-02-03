@@ -171,3 +171,4 @@ exports.ebip9 = ebip9;
 exports.ebip10 = ebip10;
 exports.ebip11 = ebip11;
 exports.ebip13 = ebip13;
+exports.ebip14 = ebip14;
