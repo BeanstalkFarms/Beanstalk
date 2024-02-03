@@ -1,5 +1,13 @@
 # BIP-11: Farmers Market
 
+Proposed: February 2, 2022
+
+Status: Passed
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/44), [Arweave](https://arweave.net/4Ltm8q74VIobeQ9dRB8wSYR7wWpCbe6vX0TaQhpIMnE)
+
+---
+
 - [Proposer](#proposer)
 - [Summary](#summary)
 - [Problem](#problem)
@@ -8,16 +16,19 @@
 - [Effective](#effective)
 - [Award](#award)
 
-## Proposer:
-Beanstalk Farms
+## Proposer
 
-## Summary:
+Beanstalk Farms
+## Summary
+
 - Launch the Farmers Market as a decentralized way to buy and sell Pods through Beanstalk.
 
-## Problem:
+## Problem
+
 Currently, there is no way to exchange Pods in a decentralized fashion. Accordingly, there is little liquidity around Pods, and trades require trusting a third party. 
 
-## Proposed Solution:
+## Proposed Solution
+
 We propose the Farmers Market, a decentralized Pod exchange. The Farmers market will support Pod Orders to purchase Pods and Pod Listings to sell Pods. 
 
 ### *Pod Orders*
@@ -42,11 +53,14 @@ An outstanding Pod Order can be entirely or partially Filled at any time by a se
 
 In instances where $0 < h_t$ causes a Pod Order and Pod Listing that previously were not overlapping to overlap, either the buyer or seller can Fill their order at their preferred price.
 
-## Economic Rationale:
+## Economic Rationale
+
 Liquidity and price discovery for Pods is an important step in the evolution of the Beanstalk ecosystem. 
 
-## Effective:
+## Effective
+
 Immediately upon commitment.
 
-## Award:
+## Award
+
 4000 Beans to Beanstalk Farms and 1000 Beans to Dumpling to cover deployment costs.

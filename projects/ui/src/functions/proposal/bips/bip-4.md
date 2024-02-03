@@ -1,5 +1,13 @@
 # BIP-4: Trail of Bits Audit and Fundraisers
 
+Proposed: November 27, 2021
+
+Status: Passed
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/9), [Arweave](https://arweave.net/Msk8Mbz7CPDN8vmQmMI8dtqCr4ydTZ8jN1jpPFqQ9lM)
+
+---
+
 - [Summary](#summary)
 - [Problem](#problem)
 - [Proposed Solution](#proposed-solution)
@@ -7,13 +15,13 @@
 - [Fundraiser Rationale](#fundraiser-rationale)
 - [User Interface](#user-interface)
  
-## Summary:
+## Summary
 
 - Hire Trail of Bits to perform a code audit on Beanstalk.
 - Establish a "Fundraiser" process that allows Beanstalk to efficiently raise capital in a decentralized manner to make payments in another stablecoin.
 - Mint 347,440 Beans and create the first Fundraiser to raise 347,440 USDC in exchange for the 347,440 Beans to pay for the Trail of Bits audit.
 
-## Problem:
+## Problem
 
 ### Audit
 
@@ -25,7 +33,7 @@ In addition, there are regular updates to the code through BIPs. It is important
 
 Until Beanstalk has sufficiently established Beans as a reliable stablecoin such that Beanstalk can make all payments in Beans, Beanstalk needs a way to pay for things (including this audit) in other stablecoins. Thus, Beanstalk needs a way to convert Beans to a traditional stablecoin without having to sell a large amount of Beans in the Uniswap pool.
 
-## Proposed Solution:
+## Proposed Solution
 
 ### Audit
 
@@ -49,7 +57,7 @@ Fundraisers allow any farmer to convert the desired stablecoin for Beans at a 1:
 
 Anyone can participate in a Fundraiser by sending up to X of Y to the FundraiserFacet. No other contributions to the Fundraiser other than the first X of Y will receive Pods. 
 
-## Payment:
+## Payment
 
 The cost of the contract (initial audit, and then reviewal of BIPs for a period of time) is 320,000 USDC, paid upfront. 24,000 USDC are paid in the future, after the first 8 engineer-weeks have been used. There is a 1% payment fee added on top, because Trail of Bits requires payment through BitPay.
 
@@ -57,10 +65,10 @@ Upon approval, this BIP will mint 347,440 Beans to fund the Trail of Bits audit.
 
 Upon completion of the sale of all 347,440 Beans for 347,440 USDC, Publius will submit the initial 320,000 USDC payment to Trail of Bits. Publius will make the final payment when appropriate.
 
-## Fundraiser Rationale:
+## Fundraiser Rationale
 
 347,440 Beans may seem like a lot of money for an audit, but we have been told explicitly from larger potential investors that a Trail of Bits audit goes a long way. Furthermore, the Bean farmer that connected us with Trail of Bits have stated they are willing to fill the entire Fundraiser for 347,440 USDC. However, given that we want Beanstalk to operate in the most decentralized way possible, we do not want to give any particular investor priority in supplying funds. Therefore, anyone can supply USDC to the Fundraiser in exchange for a sown Bean. 
 
-## User Interface:
+## User Interface
 
 The website will feature a new "Fundraiser" page that will allow users to participate in active Fundraisers.

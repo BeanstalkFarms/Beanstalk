@@ -1,5 +1,13 @@
 ﻿# BIP-1: Beanstalk Farms Q4 2021 Dev and Marketing Budget
 
+Proposed: October 13, 2021
+
+Status: Passed
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/3), [Arweave](https://arweave.net/1AmOuiXLc6Dk1a00JYeosUh2Myvkkqx5Qkxbf0kl12g)
+
+---
+
  - [Summary](#summary)
  - [Problem](#problem)
  - [Proposed Solution](#proposed-solution)
@@ -14,18 +22,18 @@
  - [BIP Economic Rationale](#bip-economic-rationale)
  - [Effective](#effective)
 
-## Summary:
+## Summary
 
 - Mint 120,000 Beans to an initial development budget.
 - Mint 80,000 Beans to an initial marketing budget.
 - Establish a process for specific allocations of each budget leveraging Snapshot.
 - Fund initial proposals to hire a full-time front-end dev and a part-time community organizer.
 
-## Problem:
+## Problem
 
 As the Beanstalk community expands, the Silo should start coordinating continued development of Beanstalk and the Beanstalk community. Beginning the process of establishing long term support for the Beanstalk ecosystem independent of Publius is essential to the long-term success of Beanstalk.
 
-## Proposed Solution:
+## Proposed Solution
 
 We propose Beanstalk mints and allocates 200,000 Beans to start this process. This budget should fund dev and marketing needs through the end of 2021. 
 
@@ -34,7 +42,7 @@ We propose minting 120,000 Beans and allocating them to a dev budget to fund a c
 We propose minting 80,000 Beans to establish a well-funded public relations operation for Beanstalk.
 
 
-## Proposed Uses of Dev Budget:
+## Proposed Uses of Dev Budget
 
 The initial dev budget should be used to attract quality developers to Beanstalk on both the front and back ends. 
 
@@ -48,7 +56,7 @@ Additionally, community members are welcome to propose allotments from the budge
 
 Upon passage, we will open a #dev-budget channel in the Beanstalk Discord to facilitate discussion on potential proposals.
 
-## Proposed Uses of Marketing Budget:
+## Proposed Uses of Marketing Budget
 
 This initial marketing budget should be used to attract quality eyes to Beanstalk.
 
@@ -62,33 +70,31 @@ We welcome the entire community to discuss and propose allotments of the marketi
 
 Upon passage, we will open a #marketing-budget channel in the Beanstalk Discord to facilitate discussion on potential proposals.
 
-
-## Budget Allocation Details:
+## Budget Allocation Details
 
 To ensure widespread and inexpensive participation in allocation of the budgets, we propose leveraging Snapshot (https://snapshot.org/#/beanstalkfarms.eth) to vote on specific allocations of the budgets.
 
 We propose the following rules for Snapshot voting on allocating funds from either budget, which have been designed to best complement the on-chain governance structure for approving BIPs:
 
-### Proposing:
+### Proposing
 
 - Anyone with more than 2,500 Stalk can make a budget proposal. We want proposing allocations of the budget to be widely accessible to Farmers of all sizes.
 - Proposition must be made on the official Beanstalk Farms Snapshot group, and must use the recent Ethereum block as the Snapshot block.
 - Proposals to allocate funds must include the recipient, amount, duration of the payments, what is expected to be covered by the allocation and any other relevant details. 
 
-### Voting:
+### Voting
 
 - Any Stalk holder can vote for or against any of the Snapshot proposals. In all instances, 1 Stalk equals 1 vote.
 - The amount of Stalk each account has is determined at the time a proposal is submitted.
 - In order to be counted, votes must be placed before the proposal ends.
 
-### Passing:
+### Passing
 
 - In order to pass, a proposal must receive a quorum of 1/3 of all Stalk at the time the proposal is submitted.
 - In order to pass, a proposal must receive > 50% of votes in favor at the time it ends.
 - If > 50% of all Stalk at the time of submission votes in favor of a proposal it instantly passes.
 
-
-## Budget Structural Details:
+## Budget Structural Details
 
 Upon commit, Beanstalk will mint and send 120,000 Beans to the Development Budget smart contract and 80,000 Beans to the Marketing Budget smart contract. 
 
@@ -104,8 +110,7 @@ These contracts are intended to hold the funds for the corresponding budgets and
 
 Publius will custody the budget contracts and will be responsible for sending the payments determined by the proposals. In instances where the intended recipient of a previously allocated portion of a budget is not able to meet their expectations as outlined in the proposal, Publius has discretion to withhold payments. Our goal is to further decentralize this process for future budgets over time.
 
-
-## BIP Technical Rationale:
+## BIP Technical Rationale
 
 The proposal to use off-chain voting for allocating these budgets is to make participation free for Farmers. Voting on-chain on Ethereum costs money and can get expensive. Given that there may be numerous and frequent proposals to spend these funds, we don’t want Farmers to be deterred by the cost of voting repeatedly. Accordingly, we decided to propose a single BIP to mint the funds to the first budget contracts and then allow for the funds to be allocated via Snapshot. 
 
@@ -117,7 +122,7 @@ The proposed budget contract is upgradable so in the case we find a better solut
 
 The budget contracts were deployed ahead of time by Publius and will therefore not be directly deployed by the BIP. Because the Bean contract was deployed through the Beanstalk diamond and not directly from Publius, Etherscan has given us a hard time getting ownership of the Bean contract to properly update the contract page. We don’t want to have this problem happen here. By deploying from a wallet, we can easily have control of it on Etherscan. There is no advantage to having the budgets deployed directly through the BIP.
 
-## BIP Economic Rationale:
+## BIP Economic Rationale
 
 In general, we are opposed to creating a large omnibus Beanstalk treasury. We believe a default treasury that is funded through a portion of all Bean mints is a) an inefficient use of capital, and b) a permanent tax on every member of the Beanstalk ecosystem. This is unattractive. Proposing one-time Bean mints to target specific causes is a preferred cost-effective alternative. 
 
@@ -125,6 +130,6 @@ This proposal will mint 200,000 Beans that will be spend over the next 3 months.
 
 The Weather will adjust such that the TWAP = 1 and the Pod Rate = 15%. Beanstalk does not care what the Weather is. In theory, this additional spending will slightly raise the Weather necessary to have the TWAP = 1 and the Pod Rate = 15%, but is not otherwise expected to affect Beanstalk in any way. Given that Beanstalk is generally in a period of rising Weather, this slight raise of the necessary Weather will not have a meaningful effect on the state of Beanstalk.
 
-### Effective
+## Effective
 
 Effective immediately upon commit. 

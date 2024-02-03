@@ -1,4 +1,12 @@
-# BIP-14: Beanstalk Q2 2022 Budget
+# BIP-14: Beanstalk Farms Q2 2022 Budget
+
+Proposed: April 3, 2022
+
+Status: Passed
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/61), [Arweave](https://arweave.net/98qesR53_wxLYZl5I_0mCncc7SdiMzbIxiM-prBrgFc)
+
+---
 
 - [Proposer](#proposer)
 - [Summary](#summary)
@@ -14,7 +22,7 @@
 - [Competitive Pay](#competitive-pay)
 - [Effective](#effective)
 
-## Proposer:
+## Proposer
 
 Beanstalk Farms
 

@@ -1,5 +1,13 @@
 # BIP-16: Whitelist BEAN:LUSD Curve Pool
 
+Proposed: April 5, 2022
+
+Status: Passed
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/66), [Arweave](https://arweave.net/xhve4hJiCIePeIxqjKMAG7YtUEosltdlB25a4vB8k7M)
+
+---
+
 - [Proposer](#proposer)
 - [Summary](#summary)
 - [Proposal](#proposal)
@@ -7,15 +15,15 @@
 - [Technical Rationale](#technical-rationale)
 - [Effective](#effective)
 
-## Proposer:
+## Proposer
 
 Beanstalk Farms
 
-## Summary:
+## Summary
 
 Add the BEAN:LUSD Curve pool to the Silo whitelist for 1 Stalk and 3 Seeds per flash-loan-resistant Bean denominated value (BDV) Deposited.
 
-## Proposal:
+## Proposal
 
 Add LP tokens for the BEAN:LUSD Curve pool (X) to the Silo whitelist.
 
@@ -23,17 +31,16 @@ Add LP tokens for the BEAN:LUSD Curve pool (X) to the Silo whitelist.
 
 **BDV function:** The BDV of BEAN:LUSD LP tokens is calculated from the virtual price of X, the LUSD price in 3CRV derived from the LUSD:3CRV pool (lusd3CrvPrice), and the BEAN price in 3CRV derived from the BEAN:3CRV pool (bean3CrvPrice).
 
-Both lusd3CrvPrice and bean3CrvPrice are calculated using the getY() function in the curve metapool contract using the reserves in the pools in the last block ($\Xi - 1$). 
+Both lusd3CrvPrice and bean3CrvPrice are calculated using the getY() function in the curve metapool contract using the reserves in the pools in the last block $\Xi-1$. 
 
 We propose the BDV function for X is:
-$$
-BDV(x) = x * \text{virtual_price}(X) * \text{min}(1, \text{lusd3CrvPrice} / \text{bean3CrvPrice})
-$$
+$BDV(x)=x*\{virtualPrice}(X)*\{min}(1,\{lusd3CrvPrice}/\{bean3CrvPrice})$
+
 **Stalk per BDV:** 1 Stalk per BDV.
 
 **Seeds per BDV:** 3 Seeds per BDV.
 
-## Economic Rationale:
+## Economic Rationale
 
 Adding the BEAN:LUSD Curve pool to the Silo whitelist is beneficial to the success of both Beanstalk and Liquity. While the Silo’s yield should attract initial capital to the pool, the Stalk and Seed system incentivizes long-term liquidity that helps to further stabilize the prices of both BEAN and LUSD.
 
@@ -45,14 +52,14 @@ The pool is likely to attract capital from both BEAN holders and LUSD holders. T
 
 The BEAN:LUSD Curve pool was launched on March 24, 2022, and currently holds over $500,000 in BEAN and LUSD. There is no capital requirement for a pool to be added to the Silo whitelist—the pool will be whitelisted upon the passage of this BIP.
 
-## Technical Rationale:
+## Technical Rationale
 
 By using the virtual price and the reserves in the last block, the BDV function is flash-loan-resistant.
 
-## Effective:
+## Effective
 
 Effective immediately upon commit.
 
-## Reward:
+## Reward
 
 5,000 Beans to Beanstalk Farms.

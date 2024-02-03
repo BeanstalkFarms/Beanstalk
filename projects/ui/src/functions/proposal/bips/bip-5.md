@@ -1,5 +1,13 @@
 # BIP-5: Omnisca Audit
 
+Proposed: November 27, 2021
+
+Status: Passed
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/10), [Arweave](https://arweave.net/EGXO6x0ko5mAaT45G22Sq4Gfh5qMi9KgM1zzRlQedLA)
+
+---
+
 - [Summary](#summary)
 - [Problem](#problem)
 - [Proposed Solution](#proposed-solution)
@@ -7,13 +15,13 @@
 - [Fundraiser Rationale](#fundraiser-rationale)
 - [User Interface](#user-interface)
 
-## Summary:
+## Summary
 
 - Hire Omniscia to perform a code audit on Beanstalk.
 - Leverage the "Fundraiser" process proposed in BIP-4 to mint the Beans and raise the USDC necessary to pay for the Omniscia audit.
 - Mint 155,000 Beans and create a Fundraiser to raise 140,000 USDC in exchange for 140,000 Bean. Pay Omniscia 140,000 USDC + 15,000 Beans for the audit.
 
-## Problem:
+## Problem
 
 ### Audit
 
@@ -25,7 +33,7 @@ There are regular updates to the code through BIPs. It is important to have an a
 
 Until Beanstalk has sufficiently established Beans as a reliable stablecoin such that Beanstalk can make all payments in Beans, Beanstalk needs a way to pay for things (including this audit) in other stablecoins. Thus, Beanstalk needs a way to convert Beans to a traditional stablecoin without having to sell a large amount of Beans in the Uniswap pool.
 
-## Proposed Solution:
+## Proposed Solution
 
 ### Audit
 
@@ -39,7 +47,7 @@ Upon passage of this BIP, Omniscia will perform an initial audit for Beanstalk.
 
 This BIP leverages the "Fundraiser" standard proposed in BIP-4 that allows Beanstalk to raise money to pay for things in other stablecoins.
 
-## Payment:
+## Payment
 
 The cost of the contract (initial audit) is 140,000 USDC and 15,000 Beans, paid in 3 payments.
 
@@ -47,10 +55,10 @@ Upon approval, this BIP will mint 155,000 Beans to fund the Omniscia audit and s
 
 Upon completion of the sale of the first 55,000 Beans for 55,000 USDC, Publius will submit the first payment to Omniscia, and make subsequent payments as appropriate.
 
-## Fundraiser Rationale:
+## Fundraiser Rationale
 
 Having multiple auditors working on Beanstalk is fundamental to developing Beanstalk in a decentralized capacity. Omniscia is highly qualified to perform an audit on Beanstalk, and a good firm to continue auditing Beanstalk as it grows.
 
-## User Interface:
+## User Interface
 
 The Fundraiser will leverage the new "Fundraiser" page proposed in BIP-4 that will allow anyone to participate in active Fundraisers.

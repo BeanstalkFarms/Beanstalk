@@ -1,21 +1,27 @@
 # BIP-17: Bean Sprout Q2 2022 Budget Proposal
 
-_**Note: BIP-17 did not pass. The [Beanstalk governance exploit](https://bean.money/blog/beanstalk-governance-exploit) occured during the Voting Period.**_
+Proposed: April 14, 2022
+
+Status: Failed (the [governance exploit](https://bean.money/blog/beanstalk-governance-exploit) occurred during the Voting Period)
+
+Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/69), [Arweave](https://arweave.net/QXiE8hnJII-miqeLrEPmDES_kVd3CqiZ1UIf9v8dsTk)
+
+---
 
 - [Proposer](#proposer)
 - [Summary](#summary)
 - [Goals](#goals)
-- [Q1 Budget Recap:](#q1-budget-recap)
-- [Anticipated Q2 Bean Sprout Output:](#anticipated-q2-bean-sprout-output)
-- [Q2 2022 Current Staffing & New Hires:](#q2-2022-current-staffing--new-hires)
-- [Amounts:](#amounts)
-- [Custody:](#custody)
-- [Snapshot Processes:](#snapshot-processes)
-- [Incentive Alignment:](#incentive-alignment)
-- [Competitive Pay:](#competitive-pay)
-- [Effective:](#effective)
+- [Q1 Budget Recap](#q1-budget-recap)
+- [Anticipated Q2 Bean Sprout Output](#anticipated-q2-bean-sprout-output)
+- [Q2 2022 Current Staffing & New Hires](#q2-2022-current-staffing--new-hires)
+- [Amounts](#amounts)
+- [Custody](#custody)
+- [Snapshot Processes](#snapshot-processes)
+- [Incentive Alignment](#incentive-alignment)
+- [Competitive Pay](#competitive-pay)
+- [Effective](#effective)
 
-## Proposer:
+## Proposer
 
 Bean Sprout
 
@@ -32,7 +38,7 @@ We designed the Q2 2022 budget to enable Bean Sprout to support the Beanstalk ec
 - Strategically acquire assets such as CVX to promote Beanstalk’s market positioning
 - Attract, support and retain talent to operate Bean Sprout
 
-## Q1 Budget Recap:
+## Q1 Budget Recap
 
 The Q1 2022 budget minted 2,000,000 Beans to fund protocol development. It also restructured the Beanstalk development community into two independent, symbiotic organizations with distinct mandates: Beanstalk Farms and Bean Sprout (a Beanstalk accelerator program).
 
@@ -45,7 +51,7 @@ The Q1 2022 budget minted 2,000,000 Beans to fund protocol development. It also 
 - Originating and preparing to seed new Bean stableswap pools
 - Building a deep network within DeFi to source numerous near-term protocol integrations
 
-## Anticipated Q2 Bean Sprout Output:
+## Anticipated Q2 Bean Sprout Output
 
 - Prepare for a Bean-denominated 4pool
 - Launch Root Finance, a fixed income product and liquidity aggregator built on top of Beanstalk
@@ -58,7 +64,7 @@ The Q1 2022 budget minted 2,000,000 Beans to fund protocol development. It also 
 - Hire 1-3 additional full-time contributors
 - Continue seeding projects interested in building on top of Beanstalk
 
-## Q2 2022 Current Staffing & New Hires:
+## Q2 2022 Current Staffing & New Hires
 
 Current Bean Sprout Core Staff
 
@@ -86,11 +92,11 @@ Anticipated Q2 2022 Bean Sprout Hires
     - Liasing between Bean Sprout and Beanstalk Farms teams to facilitate clear and efficient cross-organizational workstreams
     - Managing internal Bean Sprout processes
 
-## Amounts:
+## Amounts
 
 We propose a total of 3,000,000 Beans are minted to fund Bean Sprout through the end of Q2 2022. 698,050 Beans remain unspent by Bean Sprout in Q1. These Beans will be rolled over into Q2, resulting in a total budget allocation of 3,698,050 Beans.
 
-## Custody:
+## Custody
 
 In Q2, the funds for Bean Sprout will be custodied by a multi-sig wallet with keys held by various community members and Publius. We propose the following keyholder designations for Q2.
 
@@ -104,27 +110,27 @@ In Q2, the funds for Bean Sprout will be custodied by a multi-sig wallet with ke
 - Publius
 - Publius
 
-## Snapshot Processes:
+## Snapshot Processes
 
 As was the case in Q1, we will continue utilizing the following processes for Bean Sprout Proposal votes via Snapshot:
 
 - Optimistic approvals
 - Tiered quorum
 
-For more information on each process, please refer to the Q1 budget [here](https://github.com/BeanstalkFarms/Beanstalk/pull/34).
+For more information on each process, please refer to the Q1 budget [here](https://github.com/BeanstalkFarms/Beanstalk/pull/34).
 
 Bean Sprout’s Snapshot process is subject to change via a vote of the DAO.
 
-## Incentive Alignment:
+## Incentive Alignment
 
 The Beanstalk community has decided to disallow core contributors from receiving any portion of their compensation in Pods. Beginning in Q2 2022, contributors will receive 100% of compensation in Beans.
 
 In the future, whenever Deposits become transferrable, Beanstalk Sprout will try to offer the ability to Deposit all or a portion of ones Bean allocation upon approval of their Snapshot proposal, and then make payment in the form of Deposited Beans.
 
-## Competitive Pay:
+## Competitive Pay
 
 Bean Sprout recognizes that its ability to pay contributors competitive wages is essential to Beanstalk’s long-term success and will ensure that it meets or exceeds market rates.
 
-## Effective:
+## Effective
 
 Effective immediately upon passage.
