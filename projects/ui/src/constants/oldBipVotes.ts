@@ -4237,11 +4237,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0x483CDC51a29Df38adeC82e1bb3f0AE197142a351",
-            "roots": "221176939.065335884235799363",
-            "vote": true
-        },
-        {
             "account": "0xE7003d4f740D6bBc2Bb0f057D41Df36085d8CbA8",
             "roots": "85003780.694361054654122586",
             "vote": true
@@ -4285,11 +4280,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "account": "0x15390A3C98fa5Ba602F1B428bC21A3059362AFAF",
             "roots": "825742032.72724083040191209",
             "vote": true
-        },
-        {
-            "account": "0x483CDC51a29Df38adeC82e1bb3f0AE197142a351",
-            "roots": "221176939.065335884235799363",
-            "vote": false
         },
         {
             "account": "0x468325e9Ed9bbEF9e0B61F15BFfa3A349bf11719",
@@ -4364,11 +4354,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
         {
             "account": "0xC3853C3A8fC9c454f59c9aeD2Fc6cfa1a41eB20E",
             "roots": "1318268463.829609391589665752",
-            "vote": true
-        },
-        {
-            "account": "0x36998Db3F9d958F0Ebaef7b0B6Bf11F3441b216F",
-            "roots": "30672794.383597312202496893",
             "vote": true
         },
         {
@@ -4450,11 +4435,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "account": "0x434252f52cE25DA0e64f0C38EBC65258AABB2844",
             "roots": "924398766.706201020388629007",
             "vote": true
-        },
-        {
-            "account": "0x36998Db3F9d958F0Ebaef7b0B6Bf11F3441b216F",
-            "roots": "30672794.383597312202496893",
-            "vote": false
         },
         {
             "account": "0xe1d045be479CE7127186896A0149aaC7137b455E",
@@ -4919,11 +4899,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0x36998Db3F9d958F0Ebaef7b0B6Bf11F3441b216F",
-            "roots": "30672794.383597312202496893",
-            "vote": true
-        },
-        {
             "account": "0xcA210D9D38247495886a99034DdFF2d3312DA4e3",
             "roots": "51444603.839540523684846075",
             "vote": true
@@ -5002,11 +4977,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "account": "0x434252f52cE25DA0e64f0C38EBC65258AABB2844",
             "roots": "924398766.706201020388629007",
             "vote": true
-        },
-        {
-            "account": "0x36998Db3F9d958F0Ebaef7b0B6Bf11F3441b216F",
-            "roots": "30672794.383597312202496893",
-            "vote": false
         },
         {
             "account": "0x8fE8686b254E6685d38eaBdC88235d74bF0cbeaD",
@@ -6238,11 +6208,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0",
-            "roots": "6674173.597105167299394885",
-            "vote": true
-        },
-        {
             "account": "0x4Ca3E5bDf3823fEBbE18F9664cdEd14b7243971C",
             "roots": "287884671.154891161743137957",
             "vote": true
@@ -6331,11 +6296,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "account": "0x202eCa424A8Db90924a4DaA3e6BCECd9311F668e",
             "roots": "34179618.133684180317071997",
             "vote": true
-        },
-        {
-            "account": "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0",
-            "roots": "6697176.863325657720312811",
-            "vote": false
         },
         {
             "account": "0x3D138E67dFaC9a7AF69d2694470b0B6D37721B06",
@@ -6455,16 +6415,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0x4465c4474703BB199c6ed15C97b6E32BD211Cf9d",
-            "roots": "670488.903870272683986383",
-            "vote": true
-        },
-        {
-            "account": "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0",
-            "roots": "6674173.597105167299394885",
-            "vote": true
-        },
-        {
             "account": "0xaF616dABa40f81b75aF5373294d4dBE29DD0E0f6",
             "roots": "25005342.097848750581322325",
             "vote": true
@@ -6485,11 +6435,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0x4465c4474703BB199c6ed15C97b6E32BD211Cf9d",
-            "roots": "670488.903870272683986383",
-            "vote": false
-        },
-        {
             "account": "0xD93cA8A20fE736C1a258134840b47526686D7307",
             "roots": "46795279.85470005365221584",
             "vote": true
@@ -6503,11 +6448,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "account": "0x202eCa424A8Db90924a4DaA3e6BCECd9311F668e",
             "roots": "34179618.133684180317071997",
             "vote": true
-        },
-        {
-            "account": "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0",
-            "roots": "6697176.863325657720312811",
-            "vote": false
         },
         {
             "account": "0xB4B04564f56f4795EA4e14d566aF78dA54a99980",
@@ -6547,16 +6487,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0x4465c4474703BB199c6ed15C97b6E32BD211Cf9d",
-            "roots": "670488.903870272683986383",
-            "vote": true
-        },
-        {
-            "account": "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0",
-            "roots": "6674173.597105167299394885",
-            "vote": true
-        },
-        {
             "account": "0xaF616dABa40f81b75aF5373294d4dBE29DD0E0f6",
             "roots": "25005342.097848750581322325",
             "vote": true
@@ -6577,11 +6507,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "vote": true
         },
         {
-            "account": "0x4465c4474703BB199c6ed15C97b6E32BD211Cf9d",
-            "roots": "670488.903870272683986383",
-            "vote": false
-        },
-        {
             "account": "0xD93cA8A20fE736C1a258134840b47526686D7307",
             "roots": "46795279.85470005365221584",
             "vote": true
@@ -6595,11 +6520,6 @@ export const OLD_ONCHAIN_BIP_VOTES = [
             "account": "0x202eCa424A8Db90924a4DaA3e6BCECd9311F668e",
             "roots": "34179618.133684180317071997",
             "vote": true
-        },
-        {
-            "account": "0xce66C6A88bD7BEc215Aa04FDa4CF7C81055521D0",
-            "roots": "6697176.863325657720312811",
-            "vote": false
         },
         {
             "account": "0xB4B04564f56f4795EA4e14d566aF78dA54a99980",
