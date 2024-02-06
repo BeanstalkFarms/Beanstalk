@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   CircularProgress,
   Divider,
@@ -243,12 +244,10 @@ const VoteForm: FC<
             <StatHorizontal
               label="Voting Power"
               labelTooltip={
-                <div>
-                  <Typography>
-                    A snapshot of your active {isNFT ? 'BeaNFTs' : 'Stalk'} when
-                    voting on {tag} began.
-                  </Typography>
-                </div>
+                <>
+                  A snapshot of your active {isNFT ? 'BeaNFTs' : 'Stalk'} when
+                  voting on {tag} began.
+                </>
               }
             >
               {displayBN(votingPower)} {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
@@ -330,7 +329,7 @@ const VoteForm: FC<
                 flexWrap="wrap"
                 justifyContent="space-between"
               >
-                <Typography variant="body1">
+                <Box>
                   {isClosed &&
                   existingChoice !== undefined &&
                   existingChoice === index + 1 ? (
@@ -343,8 +342,8 @@ const VoteForm: FC<
                     </Tooltip>
                   ) : null}
                   {choice}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
+                </Box>
+                <Box color="text.secondary">
                   {displayFullBN(
                     new BigNumber(proposal.scores[index] || 0),
                     0,
@@ -362,7 +361,7 @@ const VoteForm: FC<
                     ).toFixed(2)}
                     %
                   </Typography>
-                </Typography>
+                </Box>
               </Row>
               <LinearProgress
                 variant="determinate"
