@@ -181,8 +181,7 @@ contract Sun is Oracle {
         // `s.earnedBeans` is an accounting mechanism that tracks the total number
         // of Earned Beans that are claimable by Stalkholders. When claimed via `plant()`,
         // it is decremented. See {Silo.sol:_plant} for more details.
-        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
-        s.earnedBeans = s.earnedBeans.add(uint128(amount));
+        s.earnedBeans = s.earnedBeans.add(amount);
 
         // Mint Stalk (as Earned Stalk). Farmers can claim their Earned Stalk via {SiloFacet.sol:plant}.
         //
@@ -192,19 +191,17 @@ contract Sun is Oracle {
         // for gas savings.
         uint256 seasonStalk = amount.mul(C.STALK_PER_BEAN);
         s.s.stalk = s.s.stalk.add(seasonStalk);
-        // `s.newEarnedStalk` is an accounting mechanism that tracks the  number
-        // of Earned stalk that is allocated during the season. 
-        // This is used in _balanceOfEarnedBeans() to linearly distrubute 
-        // beans over the course of the season.
-        s.newEarnedStalk = seasonStalk.toUint128();
-        s.vestingPeriodRoots = 0;
 
-        // SafeCast not necessary as `seasonStalk.toUint128();` will fail if amount > type(uint128).max.
+        // removed at ebip-13. Will be replaced upon seed gauge BIP.
+        // s.newEarnedStalk = seasonStalk.toUint128();
+        // s.vestingPeriodRoots = 0;
+
         s.siloBalances[C.BEAN].deposited = s
             .siloBalances[C.BEAN]
             .deposited
-            .add(uint128(amount));
+            .add(amount.toUint128());
 
+        // SafeCast not necessary as the block above will fail if amount > type(uint128).max.
         s.siloBalances[C.BEAN].depositedBdv = s
             .siloBalances[C.BEAN]
             .depositedBdv

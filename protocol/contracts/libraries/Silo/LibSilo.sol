@@ -164,67 +164,10 @@ library LibSilo {
         emit StalkBalanceChanged(account, int256(stalk), int256(roots));
     }
 
-
-    /**
-     * @dev mints grownStalk to `account`.
-     * 
-     * per the zero-withdraw update, if a user plants during the vesting period (see constant),
-     * the earned beans of the current season is deferred until the non vesting period.
-     * However, this causes a slight mismatch in the amount of roots to properly allocate to the user.
-     * 
-     * The formula for calculating the roots is:
-     * GainedRoots = TotalRoots * GainedStalk / TotalStalk.
-     * 
-     * Roots are utilized in {SiloExit.balanceOfEarnedBeans} to calculate the earned beans as such: 
-     * EarnedBeans = (TotalStalk * userRoots / TotalRoots) - userStalk  
-     * 
-     * Because TotalStalk increments when there are new beans issued (at sunrise), 
-     * the amount of roots issued without the earned beans are:
-     * GainedRoots = TotalRoots * GainedStalk / (TotalStalk - NewEarnedStalk)
-     * 
-     * since newEarnedStalk is always equal or greater than 0, the gained roots calculated without the earned beans
-     * will always be equal or larger than the gained roots calculated with the earned beans.
-     * 
-     * @param account the address to mint Stalk and Roots to
-     * @param stalk the amount of stalk to mint
-     */
-    function mintGrownStalk(address account, uint256 stalk) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        uint256 roots;
-        if (s.s.roots == 0) {
-            roots = stalk.mul(C.getRootsBase());
-        } else {
-            roots = s.s.roots.mul(stalk).div(s.s.stalk);
-            if (inVestingPeriod()) {
-                // Safe Math is unnecessary for because total Stalk > new Earned Stalk
-                uint256 rootsWithoutEarned = s.s.roots.add(s.vestingPeriodRoots).mul(stalk).div(s.s.stalk - s.newEarnedStalk);
-                // Safe Math is unnecessary for because rootsWithoutEarned >= roots
-                uint128 deltaRoots = (rootsWithoutEarned - roots).toUint128();
-                s.vestingPeriodRoots = s.vestingPeriodRoots.add(deltaRoots);
-                s.a[account].deltaRoots = deltaRoots;
-            }
-        }
-
-        // increment user and total stalk
-        s.s.stalk = s.s.stalk.add(stalk);
-        s.a[account].s.stalk = s.a[account].s.stalk.add(stalk);
-
-        // increment user and total roots
-        s.s.roots = s.s.roots.add(roots);
-        s.a[account].roots = s.a[account].roots.add(roots);
-
-        emit StalkBalanceChanged(account, int256(stalk), int256(roots));
-    }
-
     //////////////////////// BURN ////////////////////////
 
     /**
      * @dev Burns Stalk and Roots from `account`.
-     *
-     * if the user withdraws in the vesting period, 
-     * they forfeit their earned beans for that season, 
-     * distrubuted to the other users.
      */
     function burnStalk(address account, uint256 stalk) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -233,26 +176,11 @@ library LibSilo {
         uint256 roots;
         // Calculate the amount of Roots for the given amount of Stalk.
         // We round up as it prevents an account having roots but no stalk.
-        
-        // if the user withdraws in the vesting period, they forfeit their earned beans for that season
-        // this is distributed to the other users.
-        if(inVestingPeriod()){
-            roots = s.s.roots.mulDiv(
-                stalk,
-                s.s.stalk-s.newEarnedStalk,
-                LibPRBMath.Rounding.Up
-            );
-            // cast to uint256 to prevent overflow
-            uint256 deltaRootsRemoved = uint256(s.a[account].deltaRoots)
-                .mul(stalk)
-                .div(s.a[account].s.stalk);
-            s.a[account].deltaRoots = s.a[account].deltaRoots.sub(deltaRootsRemoved.toUint128());
-        } else {
-            roots = s.s.roots.mulDiv(
+        roots = s.s.roots.mulDiv(
             stalk,
             s.s.stalk,
-            LibPRBMath.Rounding.Up);
-        }
+            LibPRBMath.Rounding.Up
+        );
 
         if (roots > s.a[account].roots) roots = s.a[account].roots;
 
@@ -282,15 +210,6 @@ library LibSilo {
     /**
      * @notice Decrements the Stalk and Roots of `sender` and increments the Stalk
      * and Roots of `recipient` by the same amount.
-     * 
-     * If the transfer is done during the vesting period, the earned beans are still
-     * defered until after the vesting period has elapsed. 
-     * @dev There may be cases where more than the earned beans 
-     * of the current season is vested, but can be claimed after the v.e has ended.
-     * We accept this inefficency due to 
-     * 1) the short vesting period.
-     * 2) math complexity/gas costs needed to implement a correct solution.
-     * 3) security risks.
      */
     function transferStalk(
         address sender,
@@ -299,26 +218,9 @@ library LibSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 roots;
-        if(inVestingPeriod()){
-            // transferring all stalk means that the earned beans is transferred.
-            // deltaRoots cannot be transferred as it is calculated on an account basis. 
-            if(stalk == s.a[sender].s.stalk){
-                s.a[sender].deltaRoots = 0;
-            } else {
-                // partial transfer
-                uint256 deltaRootsRemoved = uint256(s.a[sender].deltaRoots)
-                    .mul(stalk)
-                    .div(s.a[sender].s.stalk);
-                s.a[sender].deltaRoots = s.a[sender].deltaRoots.sub(deltaRootsRemoved.toUint128());
-            }
-            roots = stalk == s.a[sender].s.stalk
-                ? s.a[sender].roots
-                : s.s.roots.sub(1).mul(stalk).div(s.s.stalk - s.newEarnedStalk).add(1);
-        } else {
-            roots = stalk == s.a[sender].s.stalk
-            ? s.a[sender].roots
-            : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
-        }
+        roots = stalk == s.a[sender].s.stalk
+        ? s.a[sender].roots
+        : s.s.roots.sub(1).mul(stalk).div(s.s.stalk).add(1);
 
         // Subtract Stalk and Roots from the 'sender' balance.        
         s.a[sender].s.stalk = s.a[sender].s.stalk.sub(stalk);
@@ -392,7 +294,7 @@ library LibSilo {
                 return;
             }
 
-            mintGrownStalk(
+            mintStalk(
                 account,
                 _balanceOfGrownStalk(
                     _lastStem,

@@ -396,14 +396,9 @@ describe('Silo', function () {
 
 
   /**
-   * These sets of tests handle the issuance of beans during the vesting period, the first n (n = 10) 
-   * blocks of the season. In this period, the farmer is not allocated the earned beans until after the vesting period.
-   * Withdrawing during this period will forfeit the earned beans, distrubuted to the other farmers.
-   * 
-   * @dev due to integer division, there are cases where the user may get 1 less micro bean (~1e-6) than expected.
-   * we accept this error in favor of security.
+   * Vesting period now reverts and thus tests are skipped/invalid.
    */
-  describe("Earned Beans issuance during vesting period", async function () {
+  describe.skip("Earned Beans issuance during vesting period", async function () {
     before(async function () {
       this.result = await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
       this.result = await this.silo.connect(user4).deposit(this.bean.address, to6('1000'), EXTERNAL)
@@ -898,6 +893,22 @@ describe('Silo', function () {
 
         })
       });
+    });
+  });
+
+  describe("Withdrawing during vesting period", async function () {
+    it('properly reverts', async function () {
+      await this.season.teleportSunrise(10);
+      await this.silo.connect(user).deposit(this.bean.address, '1000', EXTERNAL);
+      const stem = await this.silo.seasonToStem(this.bean.address, '10');
+
+      await expect(
+        this.silo.connect(user).withdrawDeposit(this.bean.address, stem, '1000', EXTERNAL)
+      ).to.be.revertedWith('Silo: In vesting period')
+      await expect(
+        this.silo.connect(user).withdrawDeposits(this.bean.address, [stem], ['1000'], EXTERNAL)
+      ).to.be.revertedWith('Silo: In vesting period')
+
     });
   });
 });

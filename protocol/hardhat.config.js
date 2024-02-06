@@ -37,7 +37,7 @@ const { to6 } = require("./test/utils/helpers.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, mockBeanstalkAdmin } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -222,6 +222,10 @@ task("migrate-bip38", async function () {
   await finishBeanEthMigration();
 });
 
+task("ebip14", async function () {
+  await ebip14();
+})
+
 task("ebip13", async function () {
   await ebip13();
 })
@@ -303,7 +307,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 100
           }
         }
       },
