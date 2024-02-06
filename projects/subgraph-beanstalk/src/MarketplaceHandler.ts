@@ -748,14 +748,16 @@ function updateMarketListingBalances(
   let marketHourly = loadPodMarketplaceHourlySnapshot(marketAddress, market.season, timestamp);
   let marketDaily = loadPodMarketplaceDailySnapshot(marketAddress, timestamp);
 
+  let marketIndexes = market.listingIndexes;
+
   // Update Listing indexes
   if (newPodAmount > ZERO_BI) {
-    market.listingIndexes.push(plotIndex);
-    market.listingIndexes.sort();
+    marketIndexes.push(plotIndex);
+    marketIndexes.sort();
   }
   if (cancelledPodAmount > ZERO_BI || filledPodAmount > ZERO_BI) {
     let listingIndex = market.listingIndexes.indexOf(plotIndex);
-    market.listingIndexes.splice(listingIndex, 1);
+    marketIndexes.splice(listingIndex, 1);
   }
   market.listedPods = market.listedPods.plus(newPodAmount);
   market.availableListedPods = market.availableListedPods.plus(newPodAmount).minus(cancelledPodAmount).minus(filledPodAmount);
@@ -763,6 +765,7 @@ function updateMarketListingBalances(
   market.filledListedPods = market.filledListedPods.plus(filledPodAmount);
   market.podVolume = market.podVolume.plus(filledPodAmount);
   market.beanVolume = market.beanVolume.plus(filledBeanAmount);
+  market.listingIndexes = marketIndexes;
   market.save();
 
   marketHourly.season = market.season;
