@@ -22,6 +22,11 @@ import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {LibFunction} from "contracts/libraries/LibFunction.sol";
 import "hardhat/console.sol";
 
+interface IBeanstalk {
+    function bdv(address token, uint256 amount) external view returns (uint256);
+    function poolDeltaB(address pool) external view returns (int256);
+}
+
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
  * @title ConvertFacet handles converting Deposited assets within the Silo.
@@ -31,6 +36,7 @@ contract ConvertFacet is ReentrancyGuard {
     using SafeCast for uint256;
     using LibSafeMath32 for uint32;
     address internal constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423; //import this from C.sol?
+    IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
 
     event Convert(
         address indexed account,
@@ -155,6 +161,9 @@ contract ConvertFacet is ReentrancyGuard {
             totalAmountIn
         );
 
+        storePoolDeltaB(inputToken, outputToken);
+
+
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
 
 
@@ -170,7 +179,13 @@ contract ConvertFacet is ReentrancyGuard {
         //note bdv could decrease here, by a lot, esp because you can deposit only a fraction
         //of what you withdrew
 
+
+        //stalk bonus/penalty will be applied here
+
+        storePoolDeltaB(inputToken, outputToken);
+
         //TODO: grownStalk should be lost as % of bdv decrease?
+        //grownstalk recieved as a bonus should be deposited evenly across all deposits
         //use current bdv of in tokens or bdv at time of previous deposit?
 
         toStem = _depositTokensForConvert(outputToken, amountOut, newBdv, grownStalk);
@@ -179,6 +194,26 @@ contract ConvertFacet is ReentrancyGuard {
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
+    }
+
+    function storePoolDeltaB(address inputToken, address outputToken) internal {
+                //get deltaB of input/output tokens for comparison later
+        int256 inputTokenDeltaB = getDeltaBIfNotBean(inputToken);
+        int256 outputTokenDeltaB = getDeltaBIfNotBean(outputToken);
+
+        console.log('inputTokenDeltaB: ');
+        console.logInt(inputTokenDeltaB);
+        console.log('outputTokenDeltaB: ');
+        console.logInt(outputTokenDeltaB);
+    }
+
+    //may not be best use of gas to have this as different function?
+    function getDeltaBIfNotBean(address token) internal returns (int256) {
+        console.log('getDeltaBIfNotBean token: ', token);
+        if (token == address(C.bean())) {
+            return 0;
+        }
+        return BEANSTALK.poolDeltaB(token);
     }
 
     function executeAdvancedFarmCalls(bytes calldata farmData)

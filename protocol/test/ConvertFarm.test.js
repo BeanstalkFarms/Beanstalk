@@ -38,6 +38,7 @@ describe('Farm Convert', function () {
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     await this.bean.mint(ownerAddress, to18('1000000000'))
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
@@ -58,7 +59,7 @@ describe('Farm Convert', function () {
       [to6('1000000'), to18('1000')]
     );
     await whitelistWell(this.well.address, '10000', to6('4'))
-
+    await this.season.captureWellE(this.well.address); //inits well oracle price
 
 
     this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
@@ -154,8 +155,6 @@ describe('Farm Convert', function () {
         //get amount out that we should recieve for depositing 200 beans
         const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
         await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
-
-        const bdvOfWellAmountOut = await this.silo.bdv(this.well.address, wellAmountOut);
 
         //alright now if we removed that well amount, how many bean would we expect to get?
         const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
