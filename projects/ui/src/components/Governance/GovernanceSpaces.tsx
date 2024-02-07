@@ -29,13 +29,17 @@ const GovernanceSpaces: React.FC<{}> = () => {
   });
 
   const [oldBips, setOldBips] = useState<Proposal[]>([]);
+  const [ebips, setEbips] = useState<Proposal[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
         const getOldBips = await fetch(`/.netlify/functions/proposal?getOldBip=all`)
           .then((response) => response.json())
+        const getEbips = await fetch(`/.netlify/functions/proposal?getEbip=all`)
+          .then((response) => response.json())
         setOldBips(getOldBips);
+        setEbips(getEbips);
       } catch (err) {
         console.error(err);
       };
@@ -71,6 +75,12 @@ const GovernanceSpaces: React.FC<{}> = () => {
             return withOldBips as Proposal[];
           };
 
+          if (t === 99 && ebips) {
+            const ebipList = [...ebips];
+            ebipList.reverse();
+            return ebipList as Proposal[];
+          };
+
           return output as Proposal[];
         }
 
@@ -90,7 +100,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
       }
       return [];
     },
-    [data, oldBips, loading]
+    [data, oldBips, ebips, loading]
   );
 
   const hasActive = (proposals: Proposal[]) => {
@@ -135,6 +145,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
   const beaNFTDaoProposals = filterProposals(3);
   const budgetProposals = filterProposals(4);
   const bugBountyProposals = filterProposals(5);
+  const ebipProposals = filterProposals(99);
   const archiveProposals = filterProposals(999);
 
   return (
@@ -177,32 +188,41 @@ const GovernanceSpaces: React.FC<{}> = () => {
         />
         <StyledTab
           label={
+            <ChipLabel name="EBIP">
+              {null}
+            </ChipLabel>
+          }
+        />
+        <StyledTab
+          label={
             <ChipLabel name="Archive">
               {null}
             </ChipLabel>
           }
         />
       </ModuleTabs>
-      <Box
-        sx={({ breakpoints: bp }) => ({
-          position: 'absolute',
-          top: '15px',
-          right: '20px',
-          [bp.down('md')]: {
-            display: 'none',
-          },
-        })}
-      >
-        <Link
-          component="a"
-          variant="subtitle1"
-          href={getSnapshotLink()}
-          target="_blank"
-          rel="noreferrer"
+      {tab !== 5 && (
+        <Box
+          sx={({ breakpoints: bp }) => ({
+            position: 'absolute',
+            top: '15px',
+            right: '20px',
+            [bp.down('md')]: {
+              display: 'none',
+            },
+          })}
         >
-          View on Snapshot
-        </Link>
-      </Box>
+          <Link
+            component="a"
+            variant="subtitle1"
+            href={getSnapshotLink()}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View on Snapshot
+          </Link>
+        </Box>
+      )}
       <ModuleContent>
         {tab === 0 && (
           <ProposalList
@@ -243,6 +263,12 @@ const GovernanceSpaces: React.FC<{}> = () => {
         {tab === 5 && (
           <ProposalList
             tab={5}
+            proposals={ebipProposals.allProposals}
+          />
+        )}
+        {tab === 6 && (
+          <ProposalList
+            tab={6}
             proposals={archiveProposals.allProposals}
           />
         )}

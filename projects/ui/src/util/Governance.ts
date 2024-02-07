@@ -66,7 +66,7 @@ export const getProposalType = (tag: string) => {
 
 /// Governance Space Slugs / Tabs / Labels utils
 
-export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'beanft', 'farms-budget', 'bug-bounty', 'archive'];
+export const GOV_SLUGS = ['dao', 'beanstalk-farms', 'beanft', 'farms-budget', 'bug-bounty', 'ebip', 'archive'];
 
 export const GOV_SLUGS_TAB_MAP = {
   0: GovSpace.BeanstalkDAO,
@@ -74,7 +74,8 @@ export const GOV_SLUGS_TAB_MAP = {
   2: GovSpace.BeanNFT,
   3: GovSpace.BeanstalkFarmsBudget,
   4: GovSpace.BeanstalkBugBounty,
-  5: GovSpace.BeanstalkDAO,
+  5: GovSpace.BeanstalkCommunityMultisig,
+  6: GovSpace.BeanstalkDAO,
 };
 
 export const getGovSpaceWithTab = (tab: number) =>
@@ -101,6 +102,8 @@ export const getGovSpaceLabel = (space: GovSpace) => {
       return 'Bug Bounty';
     case GovSpace.BeanstalkFarmsBudget:
       return 'BF Budget';
+    case GovSpace.BeanstalkCommunityMultisig:
+      return 'EBIPs';
     default: {
       return 'Archive';
     }
@@ -118,6 +121,7 @@ export const GOV_SPACE_BY_ID: { [key in GovSpace]: string } = {
     '0x6265616e66742e65746800000000000000000000000000000000000000000000',
   [GovSpace.BeanstalkBugBounty]: '',
   [GovSpace.BeanstalkFarmsBudget]: '',
+  [GovSpace.BeanstalkCommunityMultisig]: ''
 };
 
 ///
