@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box, Link } from '@mui/material';
 import { useProposalsQuery } from '~/generated/graphql';
 import useTabs from '~/hooks/display/useTabs';
@@ -28,12 +28,26 @@ const GovernanceSpaces: React.FC<{}> = () => {
     context: { subgraph: 'snapshot' },
   });
 
+  const [oldBips, setOldBips] = useState<Proposal[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const getOldBips = await fetch(`/.netlify/functions/proposal?getProposals=all`)
+          .then((response) => response.json())
+        setOldBips(getOldBips);
+      } catch (err) {
+        console.error(err);
+      };
+    })();
+  }, []);
+
   /// Helpers
   const filterBySpace = useCallback(
     (t: number) => {
       if (!loading && data?.proposals) {
         if (t < 999) {
-          return data.proposals.filter(
+          const output = data.proposals.filter(
             (p) =>
               p !== null &&
               p?.space?.id === SNAPSHOT_SPACES[t] &&
@@ -47,7 +61,16 @@ const GovernanceSpaces: React.FC<{}> = () => {
                 (p.title.startsWith('BNP') && p.space.id === 'beanft.eth') ||
                 (p.title.startsWith('BFBP') && p.space.id === 'beanstalkfarmsbudget.eth') ||
                 (p.title.startsWith('BIR') && p.space.id === 'beanstalkbugbounty.eth'))
-          ) as Proposal[];
+          );
+
+          if (t === 0 && oldBips) {
+            const onchainBips = oldBips.toReversed();
+            const withOldBips = output.concat(onchainBips);
+
+            return withOldBips as Proposal[];
+          };
+
+          return output as Proposal[];
         }
 
         if (t === 999) {
@@ -66,7 +89,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
       }
       return [];
     },
-    [data, loading]
+    [data, oldBips, loading]
   );
 
   const hasActive = (proposals: Proposal[]) => {
