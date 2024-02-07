@@ -18,6 +18,9 @@ const GovernanceActions: FC<{
 }> = (props) => {
 
   const isOldBip = props.proposal.id.startsWith("bip-");
+  const isEbip = props.proposal.id.startsWith("ebip-");
+
+  if (isEbip) return null;
 
   return (
   <Box sx={{ position: 'sticky', top: 120 }}>

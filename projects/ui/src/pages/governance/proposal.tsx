@@ -69,7 +69,8 @@ const ProposalPage: FC<{}> = () => {
   const { id } = useParams<{ id: string }>();
 
   const oldBip = id?.startsWith('bip-');
-  const bipNumber = oldBip ? id?.replace('bip-', '') : null;
+  const ebip = id?.startsWith('ebip-');
+  const bipNumber = oldBip ? id?.replace('bip-', '') : ebip ? id?.replace('ebip-', '') : null;
 
   /// Query: Proposal
   const { loading, error, data } = useProposalQuery({
@@ -77,30 +78,36 @@ const ProposalPage: FC<{}> = () => {
     context: { subgraph: 'snapshot' },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'network-only',
-    skip: oldBip,
+    skip: oldBip || ebip,
   });
 
-  const [oldBipData, setOldBipData] = useState<Proposal>();
-  const [loadingOldBip, setLoadingOldBip] = useState<boolean>(true);
+  const [bipData, setBipData] = useState<Proposal>();
+  const [loadingBipData, setLoadingBipData] = useState<boolean>(true);
   useEffect(() => {
     (async () => {
       try {
         if (oldBip) {
           const bip = await fetch(`/.netlify/functions/proposal?getOldBip=${bipNumber}`)
             .then((response) => response.json())
-          setOldBipData(bip);
-          setLoadingOldBip(false);
+          setBipData(bip);
+          setLoadingBipData(false);
+        }
+        if (ebip) {
+          const fetchEbip = await fetch(`/.netlify/functions/proposal?getEbip=${bipNumber}`)
+            .then((response) => response.json())
+          setBipData(fetchEbip);
+          setLoadingBipData(false);
         }
       } catch (err) {
         console.error(err);
       }
     })();
-  }, [oldBip, bipNumber]);
+  }, [oldBip, ebip, bipNumber]);
 
-  const proposal = (oldBip ? oldBipData : data?.proposal) as Proposal;
+  const proposal = ((oldBip || ebip) ? bipData : data?.proposal) as Proposal;
 
   /// Loading or Error
-  if ((oldBip ? loadingOldBip : loading) || error) {
+  if (((oldBip || ebip) ? loadingBipData : loading) || error) {
     return (
       <>
         {error ? (
@@ -129,7 +136,7 @@ const ProposalPage: FC<{}> = () => {
   }
 
   /// Finished loading but no proposal
-  if (((oldBip ? !loading : !loadingOldBip) && data?.proposal === null) || !id) {
+  if ((((oldBip || ebip) ? !loadingBipData : !loading) && data?.proposal === null ) || !id) {
     return <PageNotFound />;
   }
 
