@@ -35,7 +35,7 @@ const _handler: Handler = async (event) => {
 
     const output = {
       ...oldBipList[bipNumber],
-      body: JSON.stringify(proposalBody),
+      body: proposalBody,
       votes: oldBipVoteData[bipNumber]
     };
 
