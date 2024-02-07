@@ -147,15 +147,17 @@ export default function useProposalBlockData(
   useEffect(() => {
     (async () => {
       try {
+        if (oldBip) {
         const getOldBips = await fetch(`/.netlify/functions/proposal?bip=${bipNumber}`)
           .then((response) => response.json())
           setOldBipVotes(getOldBips.votes);
           setLoadingOldBipVotes(false);
+        };
       } catch (err) {
         console.error(err);
       };
     })();
-  }, [bipNumber]);
+  }, [oldBip, bipNumber]);
 
   const votes = oldBip ? oldBipVotes : voteData?.votes as VoteData[];
 

@@ -85,7 +85,7 @@ const ProposalPage: FC<{}> = () => {
   useEffect(() => {
     (async () => {
       try {
-        if (bipNumber) {
+        if (oldBip) {
           const bip = await fetch(`/.netlify/functions/proposal?bip=${bipNumber}`)
             .then((response) => response.json())
           setOldBipData(bip);
@@ -95,7 +95,7 @@ const ProposalPage: FC<{}> = () => {
         console.error(err);
       }
     })();
-  }, [bipNumber]);
+  }, [oldBip, bipNumber]);
 
   const proposal = (oldBip ? oldBipData : data?.proposal) as Proposal;
 
