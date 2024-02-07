@@ -15,8 +15,13 @@ import ListOfVotes from './ListOfVotes';
 const GovernanceActions: FC<{
   proposal: Proposal;
   quorum: ReturnType<typeof useProposalBlockData>;
-}> = (props) => (
+}> = (props) => {
+
+  const isOldBip = props.proposal.id.startsWith("bip-");
+
+  return (
   <Box sx={{ position: 'sticky', top: 120 }}>
+    {!isOldBip &&
     <Module>
       <ModuleHeader>
         <Typography variant="h4">Vote</Typography>
@@ -25,10 +30,12 @@ const GovernanceActions: FC<{
         <Vote proposal={props.proposal} quorum={props.quorum} />
       </ModuleContent>
     </Module>
-    <Module sx={{ marginTop: 2 }}>
+    }
+    <Module sx={{ marginTop: isOldBip ? 0 : 2 }}>
       <ListOfVotes proposal={props.proposal} quorum={props.quorum} />
     </Module>
   </Box>
-);
+  )
+};
 
 export default GovernanceActions;

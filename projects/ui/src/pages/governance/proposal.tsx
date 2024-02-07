@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
@@ -68,18 +68,39 @@ const ProposalPage: FC<{}> = () => {
   /// Routing
   const { id } = useParams<{ id: string }>();
 
+  const oldBip = id?.startsWith('bip-');
+  const bipNumber = oldBip ? id?.replace('bip-', '') : null;
+
   /// Query: Proposal
   const { loading, error, data } = useProposalQuery({
     variables: { proposal_id: id || '' },
     context: { subgraph: 'snapshot' },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'network-only',
-    skip: !id,
+    skip: oldBip,
   });
-  const proposal = data?.proposal as Proposal;
+
+  const [oldBipData, setOldBipData] = useState<Proposal>();
+  const [loadingOldBip, setLoadingOldBip] = useState<boolean>(true);
+  useEffect(() => {
+    (async () => {
+      try {
+        if (bipNumber) {
+          const bip = await fetch(`/.netlify/functions/proposal?bip=${bipNumber}`)
+            .then((response) => response.json())
+          setOldBipData(bip);
+          setLoadingOldBip(false);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, [bipNumber]);
+
+  const proposal = (oldBip ? oldBipData : data?.proposal) as Proposal;
 
   /// Loading or Error
-  if (loading || error) {
+  if ((oldBip ? loadingOldBip : loading) || error) {
     return (
       <>
         {error ? (
@@ -108,7 +129,7 @@ const ProposalPage: FC<{}> = () => {
   }
 
   /// Finished loading but no proposal
-  if ((!loading && data?.proposal === null) || !id) {
+  if (((oldBip ? !loading : !loadingOldBip) && data?.proposal === null) || !id) {
     return <PageNotFound />;
   }
 
