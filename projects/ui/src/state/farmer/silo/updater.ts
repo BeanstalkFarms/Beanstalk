@@ -17,6 +17,7 @@ import {
   updateFarmerSiloBalanceSdk,
   updateFarmerSiloLoading,
   updateFarmerSiloError,
+  updateFarmerSiloRan,
 } from './actions';
 import useSdk from '~/hooks/sdk';
 import { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -360,6 +361,7 @@ const FarmerSiloUpdater = () => {
         })
         .finally(() => {
           dispatch(updateFarmerSiloLoading(false));
+          dispatch(updateFarmerSiloRan(true));
         });
     }
 

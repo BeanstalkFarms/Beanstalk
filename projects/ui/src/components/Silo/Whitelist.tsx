@@ -608,8 +608,11 @@ const Whitelist: FC<{
                                 ) : null}
                                 &nbsp;{token.symbol}
                               </span>
-                            ) : // Connected but haven't started loading. Show loader anyway
-                            account.isConnected ? (
+                            ) : // Connected and fetcher ran. We must have undefined. Show zero
+                            account.isConnected && farmerSilo.ran ? (
+                              <>0 {token.symbol}</>
+                            ) : // Connected but fetcher hasn't run yet. Show loader preemptively
+                            account.isConnected && !farmerSilo.ran ? (
                               <BeanProgressIcon
                                 size={10}
                                 enabled
@@ -763,12 +766,14 @@ const Whitelist: FC<{
                                  * - We have data: deposited.amount is defined. Show value
                                  */}
                                 {farmerSilo.loading ? (
+                                  // Data is loading, show spinner
                                   <BeanProgressIcon
                                     size={10}
                                     enabled
                                     variant="indeterminate"
                                   />
                                 ) : (
+                                  // Data is not loading. Note: this could be either before it starts loading, or after
                                   <>
                                     {deposited?.amount ? (
                                       <>
@@ -787,7 +792,13 @@ const Whitelist: FC<{
                                           </Typography>
                                         ) : null}
                                       </>
-                                    ) : account.isConnected ? (
+                                    ) : account.isConnected &&
+                                      farmerSilo.ran ? (
+                                      // Connected, the fetch() ran, but we have no data. (usually we have 0 as a default)
+                                      // But in this case we must have undefined or null. Show zero
+                                      <Fiat token={token} amount={ZERO_BN} />
+                                    ) : account.isConnected &&
+                                      !farmerSilo.ran ? (
                                       // Connected but haven't started loading. Show loader anyway
                                       <BeanProgressIcon
                                         size={10}
