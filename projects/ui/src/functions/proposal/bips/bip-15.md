@@ -1,21 +1,8 @@
-# BIP-15: Demand for Soil Improvement
-
 Proposed: April 3, 2022
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/62), [Arweave](https://arweave.net/UJvtzOz35HwJkzOyvRvlD07mzsGy1I9xi5ZgZDTpUjU)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Technical Rationale](#technical-rationale)
-- [Economic Rationale](#economic-rationale)
-- [Effective](#effective)
-- [Glossary Terms](#glossary-terms)
 
 ## Proposer
 

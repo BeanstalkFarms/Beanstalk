@@ -1,20 +1,8 @@
-# BIP-6: Soil Efficiency
-
 Proposed: December 2, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/14), [Arweave](https://arweave.net/31Mo38aJmBIMxH47fS3YKOK97wuHxrbsev7x7lUBDfc)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Economic Rationale](#economic-rationale)
-- [Effective](#effective)
-
 
 ## Proposer
 

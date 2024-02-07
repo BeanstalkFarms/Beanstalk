@@ -1,19 +1,8 @@
-# BIP-16: Whitelist BEAN:LUSD Curve Pool
-
 Proposed: April 5, 2022
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/66), [Arweave](https://arweave.net/xhve4hJiCIePeIxqjKMAG7YtUEosltdlB25a4vB8k7M)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Proposal](#proposal)
-- [Economic Rationale](#economic-rationale)
-- [Technical Rationale](#technical-rationale)
-- [Effective](#effective)
 
 ## Proposer
 

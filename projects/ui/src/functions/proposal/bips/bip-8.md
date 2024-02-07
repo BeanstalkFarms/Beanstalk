@@ -1,24 +1,8 @@
-# BIP-8: Beanstalk Q1 Budget
-
 Proposed: December 29, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/34), [Arweave](https://arweave.net/Vtb-iyAivnnWqFO3g_DuAVurxEA0CFSYzOMcOpsXwkM)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Goals](#goals)
-- [Structure](#structure)
-- [Dividing Line](#dividing-line)
-- [Amounts](#amounts)
-- [Optimistic Approvals](#optimistic-approvals)
-- [Tiered Quorum](#tiered-quorum)
-- [Custody](#custody)
-- [Initial Allocations](#initial-allocations)
-- [Effective](#effective)
 
 ## Proposer
 

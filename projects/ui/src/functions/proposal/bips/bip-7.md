@@ -1,20 +1,8 @@
-# BIP-7: Expanded Convert
-
 Proposed: December 11, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/19), [Arweave](https://arweave.net/ixYmHgocGz9idIlswTqvbZAjWh8OibGL--D1mgojlwg)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Economic Rationale](#economic-rationale)
-- [Effective](#effective)
-- [Award](#award)
 
 ## Proposer
 

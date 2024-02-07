@@ -1,26 +1,8 @@
-﻿# BIP-1: Beanstalk Farms Q4 2021 Dev and Marketing Budget
-
-Proposed: October 13, 2021
+﻿Proposed: October 13, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/3), [Arweave](https://arweave.net/1AmOuiXLc6Dk1a00JYeosUh2Myvkkqx5Qkxbf0kl12g)
-
----
-
- - [Summary](#summary)
- - [Problem](#problem)
- - [Proposed Solution](#proposed-solution)
- - [Proposed Uses of Dev Budget](#proposed-uses-of-dev-budget)
- - [Proposed Uses of Marketing Budget](#proposed-uses-of-marketing-budget)
- - [Budget Allocation Details](#budget-allocation-details)
-     - [Proposing](#proposing)
-     - [Voting](#voting)
-     - [Passing](#passing)
- - [Budget Structural Details](#budget-structural-details)
- - [BIP Technical Rationale](#bip-technical-rationale)
- - [BIP Economic Rationale](#bip-economic-rationale)
- - [Effective](#effective)
 
 ## Summary
 

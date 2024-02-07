@@ -1,21 +1,8 @@
-# BIP-3: Beanstalk Farms Capital Formation Advisor Budget
-
 Proposed: November 18, 2021
 
 Status: Failed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/6), [Arweave](https://arweave.net/7pjSPpz8NOoqG4aFkB6M1rWn4tPzjr0o7Z41t4kPd9g)
-
----
-
-- [Summary](#summary)
-- [Proposer](#proposer)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [DAO Responsibilities](#dao-responsibilities)
-- [Resume](#resume)
-- [Payment](#payment)
-- [Effective](#effective)
 
 ## Summary
 

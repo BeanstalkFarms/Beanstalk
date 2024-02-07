@@ -1,21 +1,8 @@
-# BIP-10: Omniscia Retainer
-
 Proposed: January 27, 2022
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/42), [Arweave](https://arweave.net/izFa9sQuKdca-fUj3YXcUk7HTapCrNGqb7y_7IFPCHM)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Payment](#payment)
-- [Fundraiser Rationale](#fundraiser-rationale)
-- [User Interface](#user-interface)
-- [Effective](#effective)
 
 ## Proposer
 

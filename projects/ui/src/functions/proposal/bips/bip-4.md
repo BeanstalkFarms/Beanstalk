@@ -1,20 +1,9 @@
-# BIP-4: Trail of Bits Audit and Fundraisers
-
 Proposed: November 27, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/9), [Arweave](https://arweave.net/Msk8Mbz7CPDN8vmQmMI8dtqCr4ydTZ8jN1jpPFqQ9lM)
 
----
-
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Payment](#payment)
-- [Fundraiser Rationale](#fundraiser-rationale)
-- [User Interface](#user-interface)
- 
 ## Summary
 
 - Hire Trail of Bits to perform a code audit on Beanstalk.

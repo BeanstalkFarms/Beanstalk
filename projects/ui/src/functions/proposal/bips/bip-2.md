@@ -1,19 +1,8 @@
-# BIP-2: Capital Gains Tax Efficiency Improvement and Adjustment to Weather Changes
-
 Proposed: November 4, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/4), [Arweave](https://arweave.net/CoqappwrTQJ3Q9y6Zi0QHKFlCxZBfm6RMxXeHvgvkag)
-
----
-
- - [Summary](#summary)
- - [Problem](#problem)
- - [Proposed Solution](#proposed-solution)
- - [BIP Technical Rationale](#bip-technical-rationale)
- - [BIP Economic Rationale](#bip-economic-rationale)
- - [Effective](#effective)
 
 ## Summary
 

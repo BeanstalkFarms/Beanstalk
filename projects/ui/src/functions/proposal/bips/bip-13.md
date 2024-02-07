@@ -1,20 +1,8 @@
-# BIP-13: Adjustment to Weather Changes
-
 Proposed: March 4, 2022
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/52), [Arweave](https://arweave.net/zNCjOLd4j_Gq9USzW84AkPExJPPfGJJnuqWxHwp9lXE)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Economic Rationale](#economic-rationale)
-- [Technical Rationale](#technical-rationale)
-- [Effective](#effective)
 
 ## Proposer
 

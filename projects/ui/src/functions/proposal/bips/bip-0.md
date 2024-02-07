@@ -1,23 +1,8 @@
-﻿# BIP-0: Silo Refactor
-
-Proposed: August 18, 2021
+﻿Proposed: August 18, 2021
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/1), [Arweave](https://arweave.net/cBvmRC2xNv9pWvT_e-0xkhTIpZc6PPtNqPNzO3c2H5I)
-
----
-
- - [Problem](#problem)
- - [Proposed Solution](#proposed-solution)
- - [Proposed Functional Changes](#proposed-functional-changes)
- - [BIP Specific Notes](#bip-specific-notes)
- - [Analysis](#analysis)
- - [Proposed Technical Changes](#proposed-technical-changes)
- - [Proposed Function Changes](#proposed-function-changes)
-	 - [Functions to be Added](#functions-to-be-added)
-	 - [Functions to be Removed](#functions-to-be-removed)
- - [Effective](#effective)
 
 ## Problem
 

@@ -1,24 +1,13 @@
-# BIP-11: Farmers Market
-
 Proposed: February 2, 2022
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/44), [Arweave](https://arweave.net/4Ltm8q74VIobeQ9dRB8wSYR7wWpCbe6vX0TaQhpIMnE)
 
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Economic Rationale](#economic-rationale)
-- [Effective](#effective)
-- [Award](#award)
-
 ## Proposer
 
 Beanstalk Farms
+
 ## Summary
 
 - Launch the Farmers Market as a decentralized way to buy and sell Pods through Beanstalk.

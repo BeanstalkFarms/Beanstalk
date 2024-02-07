@@ -1,25 +1,8 @@
-# BIP-17: Bean Sprout Q2 2022 Budget Proposal
-
 Proposed: April 14, 2022
 
 Status: Failed (the [governance exploit](https://bean.money/blog/beanstalk-governance-exploit) occurred during the Voting Period)
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/69), [Arweave](https://arweave.net/QXiE8hnJII-miqeLrEPmDES_kVd3CqiZ1UIf9v8dsTk)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Goals](#goals)
-- [Q1 Budget Recap](#q1-budget-recap)
-- [Anticipated Q2 Bean Sprout Output](#anticipated-q2-bean-sprout-output)
-- [Q2 2022 Current Staffing & New Hires](#q2-2022-current-staffing--new-hires)
-- [Amounts](#amounts)
-- [Custody](#custody)
-- [Snapshot Processes](#snapshot-processes)
-- [Incentive Alignment](#incentive-alignment)
-- [Competitive Pay](#competitive-pay)
-- [Effective](#effective)
 
 ## Proposer
 

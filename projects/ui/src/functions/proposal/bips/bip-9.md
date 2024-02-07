@@ -1,21 +1,8 @@
-# BIP-9: Various Efficiency Improvements
-
 Proposed: January 4, 2022
 
 Status: Passed
 
 Link: [GitHub PR](https://github.com/BeanstalkFarms/Beanstalk/pull/32), [Arweave](https://arweave.net/bvq3Hyql5eBesBZGSy5GGdiz0bkkk2dxXIpcO2MiusM)
-
----
-
-- [Proposer](#proposer)
-- [Summary](#summary)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Economic Rationale](#economic-rationale)
-- [Technical Rationale](#technical-rationale)
-- [Effective](#effective)
-- [Award](#award)
 
 ## Proposer
 
