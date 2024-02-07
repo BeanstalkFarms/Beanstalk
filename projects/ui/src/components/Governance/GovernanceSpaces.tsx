@@ -64,7 +64,8 @@ const GovernanceSpaces: React.FC<{}> = () => {
           );
 
           if (t === 0 && oldBips) {
-            const onchainBips = oldBips.toReversed();
+            const onchainBips = [...oldBips];
+            onchainBips.reverse();
             const withOldBips = output.concat(onchainBips);
 
             return withOldBips as Proposal[];
