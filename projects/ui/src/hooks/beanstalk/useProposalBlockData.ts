@@ -148,7 +148,7 @@ export default function useProposalBlockData(
     (async () => {
       try {
         if (oldBip) {
-        const getOldBips = await fetch(`/.netlify/functions/proposal?bip=${bipNumber}`)
+        const getOldBips = await fetch(`/.netlify/functions/proposal?getOldBip=${bipNumber}`)
           .then((response) => response.json())
           setOldBipVotes(getOldBips.votes);
           setLoadingOldBipVotes(false);

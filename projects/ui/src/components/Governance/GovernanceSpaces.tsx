@@ -33,7 +33,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
   useEffect(() => {
     (async () => {
       try {
-        const getOldBips = await fetch(`/.netlify/functions/proposal?getProposals=all`)
+        const getOldBips = await fetch(`/.netlify/functions/proposal?getOldBip=all`)
           .then((response) => response.json())
         setOldBips(getOldBips);
       } catch (err) {

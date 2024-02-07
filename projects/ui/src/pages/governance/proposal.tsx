@@ -86,7 +86,7 @@ const ProposalPage: FC<{}> = () => {
     (async () => {
       try {
         if (oldBip) {
-          const bip = await fetch(`/.netlify/functions/proposal?bip=${bipNumber}`)
+          const bip = await fetch(`/.netlify/functions/proposal?getOldBip=${bipNumber}`)
             .then((response) => response.json())
           setOldBipData(bip);
           setLoadingOldBip(false);
