@@ -1,44 +1,66 @@
 import { Handler } from '@netlify/functions';
+import * as fs from 'fs';
+import middy from 'middy';
+import path from 'path';
+import { cors, rateLimit } from '../middleware';
+import { oldBipList } from './oldBipList';
+import { oldBipVoteData } from './oldBipVoteData';
 
 /**
  * Return BIP content for prior on-chain BIPs.
- * @unused
  */
-const handler: Handler = async () => ({
-  statusCode: 404,
-});
+const _handler: Handler = async (event) => {
+  try {
 
-// try {
-//   const proposal = await new Promise((resolve, reject) => {
-//     /// FIXME: may need to bundle these bips with function code,
-//     /// and/or use a dynamic import instead of readFile. to research
-//     fs.readFile(path.join(__dirname, './bips/bip-0.md'), 'utf8', (err, data) => {
-//       if (err) {
-//         return reject(err);
-//       }
-//       resolve(data);
-//     });
-//   });
+    if (event.queryStringParameters?.getProposals === 'all') {
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(oldBipList),
+      };
+    };
 
-//   if (!proposal) {
-//     return {
-//       statusCode: 404,
-//     };
-//   }
+    const bipNumber = Number(event.queryStringParameters?.bip);
 
-//   return {
-//     statusCode: 200,
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify(proposal),
-//   };
-// } catch (err) {
-//   console.error(err);
-//   return {
-//     statusCode: 403,
-//   };
-// }
-// ;
+    const proposalBody = await new Promise((resolve, reject) => {
+      fs.readFile(path.join(__dirname, `./bips/bip-${bipNumber}.md`), 'utf8', (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(data);
+      });
+    });
 
-export { handler };
+    const output = {
+      ...oldBipList[bipNumber],
+      body: JSON.stringify(proposalBody),
+      votes: oldBipVoteData[bipNumber]
+    };
+
+    if (!proposalBody) {
+      return {
+        statusCode: 404,
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(output),
+    };
+
+  } catch (err) {
+    console.error(err);
+    return {
+      statusCode: 403,
+    };
+  }
+};
+
+export const handler = middy(_handler)
+  .use(cors({ origin: '*.bean.money' }))
+  .use(rateLimit());
