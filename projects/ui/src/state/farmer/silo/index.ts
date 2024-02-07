@@ -151,4 +151,5 @@ export type FarmerSilo = FarmerSiloBalances &
     balancesSdk: Map<Token, TokenSiloBalance>;
     loading?: boolean;
     error?: string;
+    ran: boolean;
   };
