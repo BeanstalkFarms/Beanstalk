@@ -9,6 +9,7 @@
 
 [functions]
   directory = "src/functions"
+  included_files = ["./src/functions/proposal/bips/**"]
 
 [[redirects]]
   from = "/*"
