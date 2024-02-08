@@ -30,7 +30,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
 
   const [oldBips, setOldBips] = useState<Proposal[]>([]);
   const [ebips, setEbips] = useState<Proposal[]>([]);
-
+  const [loadingOtherBips, setLoadingOtherBips] = useState(true);
   useEffect(() => {
     (async () => {
       try {
@@ -40,6 +40,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
           .then((response) => response.json())
         setOldBips(getOldBips);
         setEbips(getEbips);
+        setLoadingOtherBips(false);
       } catch (err) {
         console.error(err);
       };
@@ -230,6 +231,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
             proposals={daoProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
         {tab === 1 && (
@@ -238,6 +240,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
             proposals={beanstalkFarmsProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
         {tab === 2 && (
@@ -246,30 +249,35 @@ const GovernanceSpaces: React.FC<{}> = () => {
             votingPower={votingPower.votingPower}
             farmerDelegations={farmerDelegations}
             proposals={beaNFTDaoProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
         {tab === 3 && (
           <ProposalList
             tab={3}
             proposals={budgetProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
         {tab === 4 && (
           <ProposalList
             tab={4}
             proposals={bugBountyProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
         {tab === 5 && (
           <ProposalList
             tab={5}
             proposals={ebipProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
         {tab === 6 && (
           <ProposalList
             tab={6}
             proposals={archiveProposals.allProposals}
+            isLoading={loading || loadingOtherBips}
           />
         )}
       </ModuleContent>
