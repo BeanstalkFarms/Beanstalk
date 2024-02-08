@@ -14,9 +14,7 @@ describe('Curve Convert', function () {
     [owner, user, user2, fakeMetapoolAccount] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    console.log(3);
     const contracts = await deploy("Test", false, true);
-    console.log(2);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);

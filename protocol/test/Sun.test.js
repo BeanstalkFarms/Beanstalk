@@ -64,10 +64,10 @@ describe('Sun', function () {
     await setEthUsdChainlinkPrice('1000');
     await setWstethUsdPrice('1000');
 
-    let c = await deployBasin(true, undefined, true, true)
+    let c = await deployBasin(true, undefined, false, true)
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
-    c = await deployBasinV1_1Upgrade(c, true, undefined, true, true, mockPump=true)
+    c = await deployBasinV1_1Upgrade(c, true, undefined, false, true, mockPump=true)
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     this.pump = c.multiFlowPump;

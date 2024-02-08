@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const { deployFertilizer } = require('../scripts/deployFertilizer.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
+const { testIfRpcSet } = require("./utils/test.js");
 require('dotenv').config();
 
 let user, user2;
@@ -27,8 +28,7 @@ async function reset() {
   });
 }
 
-describe("PreFertilizer", function () {
-  if (!!process.env.FORKING_RPC) {
+testIfRpcSet("PreFertilizer", function () {
     before(async function () {
       try {
         await reset();
@@ -143,9 +143,4 @@ describe("PreFertilizer", function () {
       })
 
     })
-  } else {
-    it('skip', async function () { 
-      console.log('Set FORKING_RPC in .env file to run tests')
-    })
-  }
 })

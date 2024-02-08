@@ -6,6 +6,7 @@ const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require('../utils/helpers.js');
 const { setOracleFailure, setStethEthChainlinkPrice, setWstethEthUniswapPrice, setWstethStethRedemptionPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { testIfRpcSet } = require('./utils/test.js');
 
 let user, user2, owner;
 
@@ -136,7 +137,7 @@ describe('wStEth Oracle', function () {
     })
 })
 
-describe('wStEth Oracle with Forking', function () {
+testIfRpcSet('wStEth Oracle with Forking', function () {
     it("Returns correct value when forking", async function () {
         try {
             await network.provider.request({

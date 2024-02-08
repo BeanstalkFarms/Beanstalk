@@ -5,6 +5,7 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, STABLE_FACTORY, USDC } = require('./utils/constants')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
+const { testIfRpcSet } = require('./utils/test.js')
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
@@ -21,7 +22,7 @@ async function reset() {
   });
 }
 
-describe('Curve', function () {
+testIfRpcSet('Curve', function () {
   before(async function () {
     [owner,user,user2] = await ethers.getSigners()
     userAddress = user.address;

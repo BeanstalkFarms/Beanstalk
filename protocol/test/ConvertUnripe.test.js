@@ -232,7 +232,7 @@ describe('Unripe Convert', function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, 2656240, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
+          .withArgs(userAddress, this.unripeLP.address, '2656240', '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
     });
 
