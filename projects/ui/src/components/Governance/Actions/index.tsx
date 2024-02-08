@@ -20,11 +20,10 @@ const GovernanceActions: FC<{
   const isOldBip = props.proposal.id.startsWith("bip-");
   const isEbip = props.proposal.id.startsWith("ebip-");
 
-  if (isEbip) return null;
+  if (isEbip || isOldBip) return null;
 
   return (
   <Box sx={{ position: 'sticky', top: 120 }}>
-    {!isOldBip &&
     <Module>
       <ModuleHeader>
         <Typography variant="h4">Vote</Typography>
@@ -33,7 +32,6 @@ const GovernanceActions: FC<{
         <Vote proposal={props.proposal} quorum={props.quorum} />
       </ModuleContent>
     </Module>
-    }
     <Module sx={{ marginTop: isOldBip ? 0 : 2 }}>
       <ListOfVotes proposal={props.proposal} quorum={props.quorum} />
     </Module>

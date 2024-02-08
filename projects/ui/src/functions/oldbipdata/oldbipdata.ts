@@ -4,7 +4,7 @@ import middy from 'middy';
 import path from 'path';
 import { cors, rateLimit } from '../middleware';
 import { oldBipList } from './oldBipList';
-import { oldBipVoteData } from './oldBipVoteData';
+// import { oldBipVoteData } from './oldBipVoteData';
 
 /**
  * Return BIP content for prior on-chain BIPs.
@@ -37,7 +37,7 @@ const _handler: Handler = async (event) => {
         const output = {
           ...oldBipList[bipNumber],
           body: proposalBody,
-          votes: oldBipVoteData[bipNumber]
+          // votes: oldBipVoteData[bipNumber]
         };
 
         if (!proposalBody) {

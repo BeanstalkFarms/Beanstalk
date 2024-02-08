@@ -93,8 +93,6 @@ export default function useProposalBlockData(
   const tag = getProposalTag(proposal.title);
   const type = getProposalType(tag);
   const pctNeededForQuorum = getQuorumPct(type); // undefined if there is no set quorum
-  const oldBip = proposal.id?.startsWith('bip-');
-  const bipNumber = oldBip ? Number(proposal.id?.replace('bip-', '')) : null;
 
   const score =
     proposal.space.id === GovSpace.BeanSprout
@@ -110,7 +108,7 @@ export default function useProposalBlockData(
       proposal_id: proposal?.id.toLowerCase() || '',
       space: proposal?.space?.id?.toLowerCase() || '',
     },
-    skip: !account || !proposal?.id || !proposal?.space?.id || oldBip,
+    skip: !account || !proposal?.id || !proposal?.space?.id,
     context: { subgraph: 'snapshot' },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'cache-only',
@@ -136,30 +134,13 @@ export default function useProposalBlockData(
     variables: {
       proposal_id: proposal?.id.toLowerCase()
     },
-    skip: !proposal?.id || oldBip,
+    skip: !proposal?.id,
     context: { subgraph: 'snapshot' },
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'network-only',
   });
 
-  const [oldBipVotes, setOldBipVotes] = useState<VoteData[]>([]);
-  const [loadingOldBipVotes, setLoadingOldBipVotes] = useState(true);
-  useEffect(() => {
-    (async () => {
-      try {
-        if (oldBip) {
-        const getOldBips = await fetch(`/.netlify/functions/oldbipdata?getOldBip=${bipNumber}`)
-          .then((response) => response.json())
-          setOldBipVotes(getOldBips.votes);
-          setLoadingOldBipVotes(false);
-        };
-      } catch (err) {
-        console.error(err);
-      };
-    })();
-  }, [oldBip, bipNumber]);
-
-  const votes = oldBip ? oldBipVotes : voteData?.votes as VoteData[];
+  const votes = voteData?.votes as VoteData[];
 
   const ens = useEnsReverseRecords()
   const [votesWithEns, setVotesWithEns] = useState<Array<VoteData & { ens: string }>>([]);
@@ -188,7 +169,7 @@ export default function useProposalBlockData(
   }, [ens, votes]);
 
   return {
-    loading: (oldBip ? loadingOldBipVotes : isLoading) || loadingEns,
+    loading: isLoading || loadingEns,
     data: {
       // Metadata
       tag,
