@@ -25,7 +25,7 @@ const _handler: Handler = async (event) => {
       };
 
       const ebipNumber = Number(event.queryStringParameters?.getEbip);
-      if (ebipNumber) {
+      if (ebipNumber >= 0) {
         const ebipBody = await new Promise((resolve, reject) => {
           fs.readFile(path.join(__dirname, `./ebips/ebip-${ebipNumber}.md`), 'utf8', (err, data) => {
             if (err) {
@@ -68,7 +68,7 @@ const _handler: Handler = async (event) => {
       };
 
       const bipNumber = Number(event.queryStringParameters?.getOldBip);
-      if (bipNumber) {
+      if (bipNumber >= 0) {
         const proposalBody = await new Promise((resolve, reject) => {
           fs.readFile(path.join(__dirname, `./bips/bip-${bipNumber}.md`), 'utf8', (err, data) => {
             if (err) {
