@@ -241,9 +241,8 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           maxWidth="sm"
         >
           <Link
-            href="#"
             onClick={toggleDisplayedPools}
-            sx={{ color: '#647265' }}
+            sx={{ color: '#647265', cursor: 'pointer' }}
           >
             {showDeprecated
               ? 'Show only whitelisted'
