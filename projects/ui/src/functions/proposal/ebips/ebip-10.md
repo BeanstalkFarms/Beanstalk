@@ -1,16 +1,4 @@
-# EBIP-10: Fix Bean to LP Well Convert
-
 Committed: October 23, 2023
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Effective](#effective)
 
 ## Submitter
 

@@ -1,17 +1,4 @@
-# EBIP-11: Upgrade Minting Oracle to 60 Minute TWA ETH/USD Price
-
 Committed: October 30, 2023
-
----
-
-- [Submitter](#submitter)
-- [Summary](#summary)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Beans Minted](#beans-minted)
-- [Effective](#effective)
 
 ## Submitter
 

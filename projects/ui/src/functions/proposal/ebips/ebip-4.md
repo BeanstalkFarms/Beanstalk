@@ -1,16 +1,4 @@
-# EBIP-4: Remove V1 Pod Order Functions
-
 Committed: November 12, 2022
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Effective](#effective)
 
 ## Submitter
 

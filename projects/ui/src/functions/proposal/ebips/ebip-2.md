@@ -1,19 +1,4 @@
-# EBIP-2: deltaB Cap
-
 Committed: September 13, 2022
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-    - [Rationale](#rationale)
-- [Remaining Vulnerability](#remaining-vulnerability)
-- [Effective](#effective)
-- [Functions to Change](#functions-to-change)
-- [Issue](#issue)
 
 ## Submitter
 

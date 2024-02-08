@@ -1,17 +1,4 @@
-# EBIP-13: Re-Add Convert
-
 Committed: November 9, 2023
-
----
-
-- [Submitter](#submitter)
-- [Summary](#summary)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Beans Minted](#beans-minted)
-- [Effective](#effective)
 
 ## Submitter
 

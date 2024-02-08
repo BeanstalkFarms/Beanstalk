@@ -1,17 +1,4 @@
-# EBIP-8: Enroot BDV Rounding
-
 Committed: May 13, 2023
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Problem](#problem)
-- [Impact](#impact)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Effective](#effective)
 
 ## Submitter
 

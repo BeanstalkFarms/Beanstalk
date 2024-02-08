@@ -1,16 +1,4 @@
-# EBIP-5: Remove transferTokenFrom Function
-
 Committed: November 14, 2022
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Effective](#effective)
 
 ## Submitter
 

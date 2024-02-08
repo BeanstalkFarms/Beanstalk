@@ -1,17 +1,4 @@
-# EBIP-1: Remove Chop
-
 Committed: September 5, 2022
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Problem](#problem)
-- [Proposed Solution](#proposed-solution)
-- [Rationale](#rationale)
-- [Effective](#effective)
-- [Functions to Change](#functions-to-change)
 
 ## Submitter
 

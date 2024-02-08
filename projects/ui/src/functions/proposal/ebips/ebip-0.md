@@ -1,15 +1,4 @@
-# EBIP-0: Earned Beans Forfeiture
-
 Committed: August 9, 2022
-
----
-
-- [Submitter](#submitter)
-- [Emergency Process Note](#emergency-process-note)
-- [Links](#links)
-- [Issue](#issue)
-- [Fix](#fix)
-- [Magnitude](#magnitude)
 
 ## Submitter
 

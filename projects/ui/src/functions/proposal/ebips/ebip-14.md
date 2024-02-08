@@ -1,16 +1,4 @@
-# EBIP-14: Remove Vesting Period
-
 Committed: February 5, 2024
-
----
-
-- [Submitter](#submitter)
-- [Summary](#summary)
-- [Links](#links)
-- [Problem](#problem)
-- [Solution](#solution)
-- [Contract Changes](#contract-changes)
-- [Effective](#effective)
 
 ## Submitter
 
