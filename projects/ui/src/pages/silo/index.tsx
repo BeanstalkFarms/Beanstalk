@@ -587,7 +587,7 @@ const RewardsBar: FC<{
               </Grid>
               <Grid item xs={12} md={4}>
                 <Stack spacing={1}>
-                  <TokenOutput>
+                  <TokenOutput danger={false}>
                     {empty && (
                       <Centered>
                         <Typography variant="body1" color="text.secondary">
