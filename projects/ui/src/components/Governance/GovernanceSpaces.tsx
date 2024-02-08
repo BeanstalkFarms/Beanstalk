@@ -34,9 +34,9 @@ const GovernanceSpaces: React.FC<{}> = () => {
   useEffect(() => {
     (async () => {
       try {
-        const getOldBips = await fetch(`/.netlify/functions/proposal?getOldBip=all`)
+        const getOldBips = await fetch(`/.netlify/functions/oldbipdata?getOldBip=all`)
           .then((response) => response.json())
-        const getEbips = await fetch(`/.netlify/functions/proposal?getEbip=all`)
+        const getEbips = await fetch(`/.netlify/functions/ebipdata?getEbip=all`)
           .then((response) => response.json())
         setOldBips(getOldBips);
         setEbips(getEbips);

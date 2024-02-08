@@ -87,13 +87,13 @@ const ProposalPage: FC<{}> = () => {
     (async () => {
       try {
         if (oldBip) {
-          const bip = await fetch(`/.netlify/functions/proposal?getOldBip=${bipNumber}`)
+          const fetchOldBip = await fetch(`/.netlify/functions/oldbipdata?getOldBip=${bipNumber}`)
             .then((response) => response.json())
-          setBipData(bip);
+          setBipData(fetchOldBip);
           setLoadingBipData(false);
         }
         if (ebip) {
-          const fetchEbip = await fetch(`/.netlify/functions/proposal?getEbip=${bipNumber}`)
+          const fetchEbip = await fetch(`/.netlify/functions/ebipdata?getEbip=${bipNumber}`)
             .then((response) => response.json())
           setBipData(fetchEbip);
           setLoadingBipData(false);
