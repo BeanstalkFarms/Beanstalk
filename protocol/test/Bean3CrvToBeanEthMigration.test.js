@@ -13,6 +13,7 @@ const { ConvertEncoder } = require('./utils/encoder.js');
 const { setReserves } = require('../utils/well.js');
 const { toBN } = require('../utils/helpers.js');
 const { impersonateBean } = require('../scripts/impersonate.js');
+
 let user,user2,owner;
 let publius;
 
@@ -20,8 +21,8 @@ let underlyingBefore
 let beanEthUnderlying
 let snapshotId
 
-
-describe('Bean:3Crv to Bean:Eth Migration', function () {
+// Skipping because this migration already occured.
+describe.skip('Bean:3Crv to Bean:Eth Migration', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()
