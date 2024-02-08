@@ -1,6 +1,6 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Stack } from '@mui/material';
+import { Link, useParams } from 'react-router-dom';
+import { Chip, Container, Stack } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -84,6 +84,26 @@ const TokenPage: FC<{}> = () => {
               title="The Farmers' Almanac: Silo Guides"
               guides={guides}
             />
+          }
+        />
+        <Chip
+          sx={{
+            border: '1px solid #ae2d20',
+            color: '#647265',
+            backgroundColor: '#fbeaeb',
+            marginTop: '5px',
+            padding: '15px 10px',
+          }}
+          label={
+            <span>
+              This token was removed from the Deposit Whitelist in{' '}
+              <Link to="/governance/0x83227d95ec06039a920583b1002588efa89fa079692d8c4aebe097bbcc2aaea8">
+                BIP-40
+              </Link>
+              . Farmers may no longer Deposit this token into the Silo. Any
+              Deposits before the upgrade can be Converted, Transfered or
+              Withdrawn.{' '}
+            </span>
           }
         />
         <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
