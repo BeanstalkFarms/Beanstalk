@@ -32,7 +32,7 @@ const GovernanceActions: FC<{
         <Vote proposal={props.proposal} quorum={props.quorum} />
       </ModuleContent>
     </Module>
-    <Module sx={{ marginTop: isOldBip ? 0 : 2 }}>
+    <Module sx={{ marginTop: 2 }}>
       <ListOfVotes proposal={props.proposal} quorum={props.quorum} />
     </Module>
   </Box>
