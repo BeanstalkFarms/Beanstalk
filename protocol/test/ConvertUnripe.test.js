@@ -1,13 +1,14 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK, BEAN_ETH_WELL } = require('./utils/constants')
+const { BEAN, BARN_RAISE_WELL, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK, BARN_RAISE_TOKEN } = require('./utils/constants')
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to6, to18, toBean, toStalk } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { setEthUsdcPrice, setEthUsdChainlinkPrice, setEthUsdtPrice, setOracleFailure, printPrices } = require('../utils/oracle.js');
+const { setEthUsdcPrice, setEthUsdChainlinkPrice, setEthUsdtPrice, setOracleFailure, printPrices, setWstethEthUniswapPrice, setWstethUsdPrice } = require('../utils/oracle.js');
 const { deployBasin } = require('../scripts/basin.js');
 const { toBN } = require('../utils/helpers.js');
+const { deployBasinV1_1 } = require('../scripts/basinV1_1.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -27,27 +28,26 @@ describe('Unripe Convert', function () {
     this.convertGet = await ethers.getContractAt('ConvertGettersFacet', this.diamond.address);
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address);
     this.bean = await ethers.getContractAt('MockToken', BEAN);
-    this.weth = await ethers.getContractAt('MockToken', WETH);
-
-    this.well = await deployBasin(true, undefined, false, true)
+    this.barnRaiseToken = await ethers.getContractAt('MockToken', BARN_RAISE_TOKEN);
+    
+    await setWstethUsdPrice('1000')
+    this.well = (await deployBasinV1_1(true, undefined, false, false)).well
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
 
-    await setEthUsdChainlinkPrice('1000')
-
     await this.season.siloSunrise(0);
     await this.bean.mint(userAddress, toBean('10000000000'));
     await this.bean.mint(user2Address, toBean('10000000000'));
-    await this.weth.mint(userAddress, to18('1000000000'));
-    await this.weth.mint(user2Address, to18('1000000000'));
+    await this.barnRaiseToken.mint(userAddress, to18('1000000000'));
+    await this.barnRaiseToken.mint(user2Address, to18('1000000000'));
   
     await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
     await this.bean.connect(user2).approve(this.well.address, ethers.constants.MaxUint256);
     await this.bean.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
-    await this.weth.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
-    await this.weth.connect(user2).approve(this.well.address, ethers.constants.MaxUint256);
-    await this.weth.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.barnRaiseToken.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.barnRaiseToken.connect(user2).approve(this.well.address, ethers.constants.MaxUint256);
+    await this.barnRaiseToken.connect(owner).approve(this.well.address, ethers.constants.MaxUint256);
     await this.bean.connect(user).approve(this.silo.address, ethers.constants.MaxUint256);
     await this.bean.connect(user2).approve(this.silo.address, ethers.constants.MaxUint256);
     await this.wellToken.connect(user).approve(this.silo.address, ethers.constants.MaxUint256);
@@ -70,7 +70,7 @@ describe('Unripe Convert', function () {
     await this.unripeLP.connect(user).approve(this.diamond.address, to18('100000000'))
     await this.fertilizer.setFertilizerE(true, to6('10000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
-    await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES)
+    await this.unripe.addUnripeToken(UNRIPE_LP, BARN_RAISE_WELL, ZERO_BYTES)
     await this.bean.mint(ownerAddress, to6('5000'))
     await this.fertilizer.setPenaltyParams(to6('500'), '0')
     await this.unripe.connect(owner).addUnderlying(
@@ -139,7 +139,7 @@ describe('Unripe Convert', function () {
         user.address, 
        ethers.constants.MaxUint256
       );
-      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal(to6('31.606981'));
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal(to6('31.606999'));
     });
   })
 
@@ -206,7 +206,6 @@ describe('Unripe Convert', function () {
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq('0');
         expect(await this.siloGetters.getGerminatingTotalDeposited(this.unripeLP.address)).to.eq('4711829');
         let bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
-        await console.log('bdv', bdv.toString())
         expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.unripeLP.address)).to.eq(bdv);
 
         // the total stalk should increase by 0.04, the grown stalk from the deposit.
@@ -216,7 +215,7 @@ describe('Unripe Convert', function () {
         expect(await this.siloGetters.getTotalGerminatingStalk()).to.eq(bdv.mul(to6('0.01')));
       });
 
-      it('properly updates user values -test', async function () {
+      it('properly updates user values', async function () {
         const bdv = await this.siloGetters.bdv(this.unripeLP.address, '4711829')
         expect(await this.siloGetters.balanceOfStalk(userAddress)).to.eq(toStalk('100.04').add(toStalk('0.04')));
         expect(await this.siloGetters.balanceOfGerminatingStalk(userAddress)).to.eq(bdv.mul(to6('0.01')));
@@ -224,7 +223,7 @@ describe('Unripe Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect((await this.siloGetters.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('1000'));
-        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, to6('2.656387'));
+        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, to6('2.656240'));
         expect(deposit[0]).to.eq('4711829');
         expect(deposit[1]).to.eq(await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
@@ -233,7 +232,7 @@ describe('Unripe Convert', function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, 2656387, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
+          .withArgs(userAddress, this.unripeLP.address, 2656240, '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
     });
 
@@ -427,8 +426,8 @@ describe('Unripe Convert', function () {
       });
 
       it('properly updates total values', async function () {
-        const bdv = await this.siloGetters.bdv(this.unripeBean.address, '636776401')
-        expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq('636776401');
+        const bdv = await this.siloGetters.bdv(this.unripeBean.address, '636776360')
+        expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq('636776360');
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeBean.address)).to.eq(this.bdv);
         expect(await this.siloGetters.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));

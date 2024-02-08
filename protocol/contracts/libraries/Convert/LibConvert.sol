@@ -99,7 +99,7 @@ library LibConvert {
             if (tokenOut == C.UNRIPE_BEAN)
                 return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
-            if (tokenOut == C.BEAN_ETH_WELL)
+            if (tokenOut == C.BARN_RAISE_WELL)
                 return type(uint256).max;
         }
 
@@ -155,7 +155,7 @@ library LibConvert {
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         // UrBEANETH -> BEANETH
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.BEAN_ETH_WELL)
+        if (tokenIn == C.UNRIPE_LP && tokenOut == C.BARN_RAISE_WELL)
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");

@@ -151,7 +151,7 @@ contract Silo is ReentrancyGuard {
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of weth.
         uint256 plenty = s.a[account].sop.plenty;
-        C.weth().safeTransfer(account, plenty);
+        IERC20(C.SOP_TOKEN).safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
 
         emit ClaimPlenty(account, plenty);

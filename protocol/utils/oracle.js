@@ -34,12 +34,12 @@ async function setStethEthChainlinkPrice(price, secondsAgo = 900) {
     await ethUsdChainlinkAggregator.addRound(to6(price), block.timestamp-secondsAgo, block.timestamp-secondsAgo, '1')
 }
 
-async function printPrices() {
-    const season = await ethers.getContractAt('MockSeasonFacet', BEANSTALK);
-    console.log(`CUSD Price: ${await season.getChainlinkEthUsdPrice()}`)
-    console.log(`USDT Price: ${await season.getEthUsdtPrice()}`)
-    console.log(`USDC Price: ${await season.getEthUsdcPrice()}`)
-    console.log(`USD Price: ${await season.getEthUsdPrice()}`)
+async function setWstethUsdPrice(price) {
+    await setStethEthChainlinkPrice(price);
+    await setWstethEthUniswapPrice(price);
+    await setWstethStethRedemptionPrice('1');
+    await setEthUsdChainlinkPrice(price);
+
 }
 
 async function setOracleFailure(bool, poolAddress) {
@@ -50,8 +50,8 @@ async function setOracleFailure(bool, poolAddress) {
 exports.setEthUsdcPrice = setEthUsdcPrice;
 exports.setEthUsdChainlinkPrice = setEthUsdChainlinkPrice;
 exports.setEthUsdtPrice = setEthUsdtPrice;
-exports.printPrices = printPrices;
 exports.setOracleFailure  = setOracleFailure;
 exports.setWstethEthUniswapPrice = setWstethEthUniswapPrice
 exports.setStethEthChainlinkPrice = setStethEthChainlinkPrice
 exports.setWstethStethRedemptionPrice = setWstethStethRedemptionPrice
+exports.setWstethUsdPrice = setWstethUsdPrice;

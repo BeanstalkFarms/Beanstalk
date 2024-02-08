@@ -3,10 +3,11 @@ const { deploy } = require('../scripts/deploy.js')
 const { impersonateFertilizer } = require('../scripts/deployFertilizer.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK } = require('./utils/constants.js');
-const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { BEAN, USDC, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK, BARN_RAISE_TOKEN } = require('./utils/constants.js');
+const { setWstethUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
-const { deployBasin } = require('../scripts/basin.js');
+const { deployBasinV1_1 } = require('../scripts/basinV1_1.js');
+
 let user,user2,owner,fert
 let userAddress, ownerAddress, user2Address
 
@@ -43,30 +44,30 @@ describe('Fertilize', function () {
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('IBean', USDC)
     this.bean = await ethers.getContractAt('IBean', BEAN)
-    this.weth = await ethers.getContractAt('IBean', WETH)
+    this.barnRaiseToken = await ethers.getContractAt('IBean', BARN_RAISE_TOKEN)
 
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeBean.mint(user2.address, to6('1000'))
     await this.unripeLP.mint(user2.address, to6('942.297473'))
 
-    this.weth = await ethers.getContractAt('IBean', WETH)
-
     await this.bean.mint(owner.address, to18('1000000000'));
-    await this.weth.mint(owner.address, to18('1000000000'));
-    await this.weth.mint(user.address, to18('1000000000'));
-    await this.weth.mint(user2.address, to18('1000000000'));
+    await this.barnRaiseToken.mint(owner.address, to18('1000000000'));
+    await this.barnRaiseToken.mint(user.address, to18('1000000000'));
+    await this.barnRaiseToken.mint(user2.address, to18('1000000000'));
     await this.bean.connect(owner).approve(this.diamond.address, to18('1000000000'));
-    await this.weth.connect(owner).approve(this.diamond.address, to18('1000000000'));
-    await this.weth.connect(user).approve(this.diamond.address, to18('1000000000'));
-    await this.weth.connect(user2).approve(this.diamond.address, to18('1000000000'));
+    await this.barnRaiseToken.connect(owner).approve(this.diamond.address, to18('1000000000'));
+    await this.barnRaiseToken.connect(user).approve(this.diamond.address, to18('1000000000'));
+    await this.barnRaiseToken.connect(user2).approve(this.diamond.address, to18('1000000000'));
 
-    this.well = await deployBasin(true, undefined, false, true)
+    await setWstethUsdPrice('1000')
+
+    this.well = (await deployBasinV1_1(true, undefined, false, true)).well
+    
+
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
-
-    await setEthUsdChainlinkPrice('1000')
 
     console.log(`Well Address: ${this.well.address}`)
 
@@ -138,7 +139,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('2'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('29438342344636187')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.001'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.001'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(lpBeansForUsdc('1'))
       })
 
@@ -180,7 +181,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('3.999999'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('58876684689272374')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.002'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.002'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(lpBeansForUsdc('2'))
       })
 
@@ -214,7 +215,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('11.999999'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('176630054067817122')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.006'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.006'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -294,7 +295,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('200'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('2943834234463618707')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -341,7 +342,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal('199999999') // Rounds down
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('2943834234463618707')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -391,7 +392,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('450'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('5887668468927237414')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -446,7 +447,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('450'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('5887668468927237414')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 

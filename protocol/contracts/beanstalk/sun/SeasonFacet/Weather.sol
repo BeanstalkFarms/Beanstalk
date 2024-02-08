@@ -191,10 +191,10 @@ contract Weather is Sun {
         }
 
         // Approve and Swap Beans for WETH.
-        C.bean().approve(C.BEAN_ETH_WELL, sopBeans);
-        uint256 amountOut = IWell(C.BEAN_ETH_WELL).swapFrom(
+        C.bean().approve(C.SOP_WELL, sopBeans);
+        uint256 amountOut = IWell(C.SOP_WELL).swapFrom(
             C.bean(),
-            C.weth(), 
+            IERC20(C.SOP_TOKEN), 
             sopBeans, 
             0,
             address(this),
@@ -223,10 +223,11 @@ contract Weather is Sun {
      * Generalized for a single well. Sop does not support multiple wells.
      */
     function calculateSop() private view returns (uint256 sopBeans){
-        IWell sopWell = IWell(C.BEAN_ETH_WELL);
+        IWell sopWell = IWell(C.SOP_WELL);
         IERC20[] memory tokens = sopWell.tokens();
-        uint256[] memory reserves = IInstantaneousPump(C.BEANSTALK_PUMP)
-            .readInstantaneousReserves(C.BEAN_ETH_WELL, C.BYTES_ZERO);
+        Call[] memory pumps = IWell(C.SOP_WELL).pumps();
+        uint256[] memory reserves = IInstantaneousPump(pumps[0].target)
+            .readInstantaneousReserves(C.SOP_WELL, pumps[0].data);
         Call memory wellFunction = sopWell.wellFunction();
         uint256[] memory ratios; bool success;
         (ratios, , success) = LibWell.getRatiosAndBeanIndex(tokens);

@@ -3,11 +3,10 @@ const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { to18, to6 , toStalk } = require('./utils/helpers.js')
 const { toBN } = require('../utils/helpers.js');
-const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, THREE_POOL } = require('./utils/constants')
+const { BEAN, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
-const { whitelistWell, deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
+const { whitelistWell, deployMockBeanWell } = require('../utils/well.js');
 const fs = require('fs');
 
 let user, user2, owner;
@@ -38,7 +37,7 @@ describe('Silo', function () {
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
-    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH)
     await whitelistWell(this.well.address, '10000', to6('4'))
     await this.season.captureWellE(this.well.address)
     

@@ -14,7 +14,6 @@ import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
-
 /**
  * @author Publius
  * @title Fertilizer
@@ -74,7 +73,7 @@ library LibFertilizer {
     }
 
     /**
-     * @dev Any WETH contributions should already be transferred to the Bean:Eth Well to allow for a gas efficient liquidity
+     * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
      * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
      */
     function addUnderlying(uint256 usdAmount, uint256 minAmountOut) internal {
@@ -107,11 +106,11 @@ library LibFertilizer {
 
         // Mint the LP Beans to the Well to sync.
         C.bean().mint(
-            address(C.BEAN_ETH_WELL),
+            address(C.BARN_RAISE_WELL),
             newDepositedLPBeans
         );
 
-        uint256 newLP = IWell(C.BEAN_ETH_WELL).sync(
+        uint256 newLP = IWell(C.BARN_RAISE_WELL).sync(
             address(this),
             minAmountOut
         );

@@ -21,7 +21,9 @@ contract Oracle is ReentrancyGuard {
     //////////////////// ORACLE INTERNAL ////////////////////
 
     function stepOracle() internal returns (int256 deltaB) {
-        deltaB = LibWellMinting.capture(C.BEAN_ETH_WELL);
+        deltaB = LibWellMinting.capture(C.BEAN_ETH_WELL).add(
+            LibWellMinting.capture(C.BEAN_WSTETH_WELL)
+        );
         s.season.timestamp = block.timestamp;
     }
 }

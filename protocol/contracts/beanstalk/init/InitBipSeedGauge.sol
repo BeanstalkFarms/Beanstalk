@@ -16,19 +16,8 @@ import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-
-
-interface IGaugePointFacet {
-    function defaultGaugePointFunction(
-        uint256 currentGaugePoints,
-        uint256 optimalPercentDepositedBdv,
-        uint256 percentOfDepositedBdv
-    ) external pure returns (uint256 newGaugePoints);
-}
-
-interface ILiquidityWeightFacet {
-    function maxWeight() external pure returns (uint256);
-}
+import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 
 /**
  * @author Brean

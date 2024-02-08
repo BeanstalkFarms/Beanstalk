@@ -20,12 +20,14 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
      * Bean in the following liquidity pools:
      * - Curve Bean:3Crv Metapool
      * - Constant Product Bean:Eth Well
+     * - Constant Product Bean:Wsteth Well
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
     **/
     function price() external view returns (Prices memory p) {
-        p.ps = new P.Pool[](2);
+        p.ps = new P.Pool[](3);
         p.ps[0] = getCurve();
         p.ps[1] = getConstantProductWell(C.BEAN_ETH_WELL);
+        p.ps[2] = getConstantProductWell(C.BEAN_WSTETH_WELL);
 
         // assumes that liquidity and prices on all pools uses the same precision.
         for (uint256 i = 0; i < p.ps.length; i++) {

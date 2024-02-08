@@ -40,7 +40,7 @@ library LibUnripeConvert {
         ) = LibWellConvert._wellRemoveLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, lp, IBean(C.UNRIPE_LP).totalSupply()),
                 minAmountOut,
-                C.BEAN_ETH_WELL
+                C.BARN_RAISE_WELL
             );
 
         amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
@@ -77,7 +77,7 @@ library LibUnripeConvert {
         ) = LibWellConvert._wellAddLiquidityTowardsPeg(
                 LibUnripe.unripeToUnderlying(tokenIn, beans, IBean(C.UNRIPE_BEAN).totalSupply()),
                 minAmountOut,
-                C.BEAN_ETH_WELL
+                C.BARN_RAISE_WELL
             );
 
         amountIn = LibUnripe.underlyingToUnripe(tokenIn, inUnderlyingAmount);
@@ -94,7 +94,7 @@ library LibUnripeConvert {
 
     function beansToPeg() internal view returns (uint256 beans) {
         uint256 underlyingBeans = LibWellConvert.beansToPeg(
-            C.BEAN_ETH_WELL
+            C.BARN_RAISE_WELL
         );
         beans = LibUnripe.underlyingToUnripe(
             C.UNRIPE_BEAN,
@@ -104,7 +104,7 @@ library LibUnripeConvert {
 
     function lpToPeg() internal view returns (uint256 lp) {
         uint256 underlyingLP = LibWellConvert.lpToPeg(
-            C.BEAN_ETH_WELL
+            C.BARN_RAISE_WELL
         );
         lp = LibUnripe.underlyingToUnripe(C.UNRIPE_LP, underlyingLP);
     }
@@ -119,7 +119,7 @@ library LibUnripeConvert {
             amountIn,
             IBean(C.UNRIPE_BEAN).totalSupply()
         );
-        lp = LibWellConvert.getLPAmountOut(C.BEAN_ETH_WELL, beans);
+        lp = LibWellConvert.getLPAmountOut(C.BARN_RAISE_WELL, beans);
         lp = LibUnripe
             .underlyingToUnripe(C.UNRIPE_LP, lp)
             .mul(LibUnripe.percentLPRecapped())
@@ -136,7 +136,7 @@ library LibUnripeConvert {
             amountIn,
             IBean(C.UNRIPE_BEAN).totalSupply()
         );
-        bean = LibWellConvert.getBeanAmountOut(C.BEAN_ETH_WELL, lp);
+        bean = LibWellConvert.getBeanAmountOut(C.BARN_RAISE_WELL, lp);
         bean = LibUnripe
             .underlyingToUnripe(C.UNRIPE_BEAN, bean)
             .mul(LibUnripe.percentBeansRecapped())

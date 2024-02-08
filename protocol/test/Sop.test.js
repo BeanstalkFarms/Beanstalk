@@ -1,14 +1,28 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH, MAX_UINT256 } = require('./utils/constants')
+const { BEAN, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH, MAX_UINT256, BEAN_WSTETH_WELL, WSTETH } = require('./utils/constants')
 const { to18, to6, toStalk, advanceTime } = require('./utils/helpers.js')
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
+
+async function initWell(diamond, season, address, token1) {
+  const [well, wellFunction, pump] = await deployMockWellWithMockPump(address, token1)
+  await well.connect(owner).approve(diamond.address, to18('100000000'))
+  await well.connect(user).approve(diamond.address, to18('100000000'))
+
+  // set reserves at a 1000:1 ratio.
+  await pump.setCumulativeReserves([to6('1000000'), to18('1000')])
+  await well.mint(ownerAddress, to18('500'))
+  await well.mint(userAddress, to18('500'))
+  await whitelistWell(well.address, '10000', to6('4'));
+
+  return [well, pump]
+}
 
 describe('Sop', function () {
   before(async function () {
@@ -24,7 +38,7 @@ describe('Sop', function () {
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('Bean', BEAN)
-    this.weth = await ethers.getContractAt('MockToken', WETH)
+    this.wsteth = await ethers.getContractAt('MockToken', WSTETH)
 
     this.season.deployStemsUpgrade();
     
@@ -37,19 +51,18 @@ describe('Sop', function () {
     await this.bean.mint(user2Address, to6('10000'));
 
     // init wells
-    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
-    await this.well.connect(owner).approve(this.diamond.address, to18('100000000'))
-    await this.well.connect(user).approve(this.diamond.address, to18('100000000'))
+    ///////////////////////////
 
-    // set reserves at a 1000:1 ratio.
-    await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
-    await this.well.mint(ownerAddress, to18('500'))
-    await this.well.mint(userAddress, to18('500'))
-    await whitelistWell(this.well.address, '10000', to6('4'));
+    [this.beanWstethWell, this.beanWstethPump] = await initWell(this.diamond, this.season, BEAN_WSTETH_WELL, WSTETH);
+    [this.beanEthWell, this.beanEthPump] = await initWell(this.diamond, this.season, BEAN_ETH_WELL, WETH);
     await this.season.siloSunrise(0)
-    await this.season.captureWellE(this.well.address);
+    await this.season.captureWellE(this.beanWstethWell.address);
+    await this.season.captureWellE(this.beanEthWell.address);
+
+    /////////////
 
     await setEthUsdChainlinkPrice('1000')
+    await setWstethUsdPrice('1000')
 
     this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
     this.result = await this.silo.connect(user2).deposit(this.bean.address, to6('1000'), EXTERNAL)
@@ -120,7 +133,7 @@ describe('Sop', function () {
 
     it('sops p < 1', async function () {
       // set reserves st p < 1, elapse time for pump to update.
-      await this.well.setReserves([to6('1100000'), to18('1000')])
+      await this.beanWstethWell.setReserves([to6('1100000'), to18('1000')])
       await advanceTime(3600)
       await this.season.rainSunrises(25);
       const season = await this.seasonGetters.time();
@@ -135,8 +148,8 @@ describe('Sop', function () {
       // set reserves/pump P > 1.
       // `setReserves` updates the values in the well,
       // `setInstantaneousReserves` updates the values in the pump.
-      await this.well.setReserves([to6('1000000'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1000000'), to18('1100')])
+      await this.beanWstethWell.setReserves([to6('1000000'), to18('1100')])
+      await this.beanWstethPump.setInstantaneousReserves([to6('1000000'), to18('1100')])
       await this.season.rainSunrise();
       await this.silo.mow(user2Address, this.bean.address);
       await this.season.rainSunrise();
@@ -144,11 +157,11 @@ describe('Sop', function () {
 
     it('sops p > 1', async function () {
       const season = await this.seasonGetters.time();
-      const reserves = await this.well.getReserves();
+      const reserves = await this.beanWstethWell.getReserves();
 
       expect(season.lastSop).to.be.equal(season.rainStart);
       expect(season.lastSopSeason).to.be.equal(await this.seasonGetters.season());
-      expect(await this.weth.balanceOf(this.silo.address)).to.be.equal(to18('51.191151829696906017'))
+      expect(await this.wsteth.balanceOf(this.silo.address)).to.be.equal(to18('51.191151829696906017'))
       // after the swap, the composition of the pools are
       expect(reserves[0]).to.be.equal(to6('1048808.848170'))
       expect(reserves[1]).to.be.equal(to18('1048.808848170303093983'))
@@ -160,7 +173,7 @@ describe('Sop', function () {
     })
 
     it('tracks user plenty after update', async function () {
-      await this.silo.mow(userAddress, this.well.address);
+      await this.silo.mow(userAddress, this.beanWstethWell.address);
       const userSop = await this.siloGetters.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(6)
       expect(userSop.lastSop).to.be.equal(6)
@@ -175,7 +188,7 @@ describe('Sop', function () {
     })
 
     it('tracks user2 plenty after update', async function () {
-      await this.silo.mow(user2Address, this.well.address);
+      await this.silo.mow(user2Address, this.beanWstethWell.address);
       const userSop = await this.siloGetters.balanceOfSop(user2Address);
       expect(userSop.lastRain).to.be.equal(6)
       expect(userSop.lastSop).to.be.equal(6)
@@ -185,32 +198,32 @@ describe('Sop', function () {
     })
 
     it('claims user plenty', async function () {
-      await this.silo.mow(user2Address, this.well.address);
+      await this.silo.mow(user2Address, this.beanWstethWell.address);
       await this.silo.connect(user2).claimPlenty();
       expect(await this.siloGetters.balanceOfPlenty(user2Address)).to.be.equal('0')
-      expect(await this.weth.balanceOf(user2Address)).to.be.equal(to18('25.595575914848452999'))
+      expect(await this.wsteth.balanceOf(user2Address)).to.be.equal(to18('25.595575914848452999'))
     })
   })
 
   describe('multiple sop', async function () {
     beforeEach(async function () {
-      await this.well.setReserves([to6('1000000'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1000000'), to18('1100')])
+      await this.beanWstethWell.setReserves([to6('1000000'), to18('1100')])
+      await this.beanWstethPump.setInstantaneousReserves([to6('1000000'), to18('1100')])
       await this.season.rainSunrise();
       await this.silo.mow(user2Address, this.bean.address);
       await this.season.rainSunrise();
       await this.season.droughtSunrise();
-      await this.well.setReserves([to6('1048808.848170'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1048808.848170'), to18('1100')])
+      await this.beanWstethWell.setReserves([to6('1048808.848170'), to18('1100')])
+      await this.beanWstethPump.setInstantaneousReserves([to6('1048808.848170'), to18('1100')])
       await this.season.rainSunrises(2);
     })
 
     it('sops p > 1', async function () {
       const season = await this.seasonGetters.time();
-      const reserves = await this.well.getReserves();
+      const reserves = await this.beanWstethWell.getReserves();
       expect(season.lastSop).to.be.equal(season.rainStart);
       expect(season.lastSopSeason).to.be.equal(await this.seasonGetters.season());
-      expect(await this.weth.balanceOf(this.silo.address)).to.be.equal('77091653184968908600')
+      expect(await this.wsteth.balanceOf(this.silo.address)).to.be.equal('77091653184968908600')
       // after the swap, the composition of the pools are
       expect(reserves[0]).to.be.equal(to6('1074099.498643'))
       expect(reserves[1]).to.be.equal(to18('1074.099498644727997417'))
@@ -221,7 +234,7 @@ describe('Sop', function () {
     })
 
     it('tracks user plenty after update', async function () {
-      await this.silo.mow(userAddress, this.well.address);
+      await this.silo.mow(userAddress, this.beanWstethWell.address);
       const userSop = await this.siloGetters.balanceOfSop(userAddress);
       expect(userSop.lastRain).to.be.equal(9)
       expect(userSop.lastSop).to.be.equal(9)
@@ -235,7 +248,7 @@ describe('Sop', function () {
     })
 
     it('tracks user2 plenty after update', async function () {
-      await this.silo.mow(user2Address, this.well.address);
+      await this.silo.mow(user2Address, this.beanWstethWell.address);
       await this.silo.mow(user2Address, this.bean.address);
       const userSop = await this.siloGetters.balanceOfSop(user2Address);
       expect(userSop.lastRain).to.be.equal(9)

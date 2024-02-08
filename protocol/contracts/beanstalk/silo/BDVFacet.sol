@@ -37,7 +37,7 @@ contract BDVFacet {
             amount, 
             IBean(C.UNRIPE_LP).totalSupply()
         );
-        amount = LibWellBdv.bdv(C.BEAN_ETH_WELL, amount);
+        amount = LibWellBdv.bdv(C.BARN_RAISE_WELL, amount);
         return amount;
     }
 

@@ -22,23 +22,25 @@ library LibWhitelistedTokens {
      * including Unripe tokens.
      */
     function getSiloTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](5);
+        tokens = new address[](6);
         tokens[0] = C.BEAN;
         tokens[1] = C.BEAN_ETH_WELL;
         tokens[2] = C.CURVE_BEAN_METAPOOL;
         tokens[3] = C.UNRIPE_BEAN;
         tokens[4] = C.UNRIPE_LP;
+        tokens[5] = C.BEAN_WSTETH_WELL;
     }
 
     /**
      * @notice Returns the current Whitelisted tokens, including Unripe tokens.
      */
     function getWhitelistedTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](4);
+        tokens = new address[](5);
         tokens[0] = C.BEAN;
         tokens[1] = C.BEAN_ETH_WELL;
         tokens[2] = C.UNRIPE_BEAN;
         tokens[3] = C.UNRIPE_LP;
+        tokens[4] = C.BEAN_WSTETH_WELL;
     }
 
     /**
@@ -46,15 +48,17 @@ library LibWhitelistedTokens {
      * @dev Unripe LP is not an LP token.
      */
     function getWhitelistedLpTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](1);
+        tokens = new address[](2);
         tokens[0] = C.BEAN_ETH_WELL;
+        tokens[1] = C.BEAN_WSTETH_WELL;
     }
 
     /**
      * @notice Returns the list of Whitelisted Well LP tokens.
      */
     function getWhitelistedWellLpTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](1);
+        tokens = new address[](2);
         tokens[0] = C.BEAN_ETH_WELL;
+        tokens[1] = C.BEAN_WSTETH_WELL;
     }
 }

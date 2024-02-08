@@ -327,6 +327,7 @@ contract Storage {
      * @param abovePeg Boolean indicating whether the previous Season was above or below peg.
      * @param stemStartSeason // season in which the stem storage method was introduced.
      * @param stemScaleSeason // season in which the stem v1.1 was introduced, where stems are not truncated anymore.
+     * @param beanEthStartMintingSeason // Season to start minting in Bean:Eth pool after migrating liquidity out of the pool to protect against Pump failure.
      * This allows for greater precision of stems, and requires a soft migration (see {LibTokenSilo.removeDepositFromAccount})
      * @param start The timestamp of the Beanstalk deployment rounded down to the nearest hour.
      * @param period The length of each season in Beanstalk in seconds.
@@ -344,6 +345,7 @@ contract Storage {
         bool abovePeg; //                   | 1 (24)
         uint16 stemStartSeason; //          | 2 (26)
         uint16 stemScaleSeason; //──────────┘ 2 (28/32)
+        uint32 beanEthStartMintingSeason; //──────────┘ 2 (28/32) NOTE: Reset and delete after Bean:wStEth migration has been completed.
         uint256 start;
         uint256 period;
         uint256 timestamp;

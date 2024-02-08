@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL } = require('../test/utils/constants');
+const { BEAN, WETH, BEANSTALK_PUMP, BEAN_ETH_WELL, BEAN_WSTETH_WELL, WSTETH } = require('../test/utils/constants');
 const { to6, to18 } = require('../test/utils/helpers');
 const { getBeanstalk } = require('./contracts');
 const { impersonateBeanstalkOwner } = require('./signer');
@@ -7,9 +7,11 @@ const { increaseToNonce } = require('../scripts/contracts');
 const { impersonateContract } = require('../scripts/impersonate');
 
 const BASE_STRING = './node_modules/@beanstalk/wells/out';
+const BASE_STRINGV1_1 = './node_modules/@beanstalk/wells1.1/out';
 
-async function getWellContractFactory(name, account = undefined) {
-    const contractJson = JSON.parse(await fs.readFileSync(`${BASE_STRING}/${name}.sol/${name}.json`))
+async function getWellContractFactory(name, account = undefined, version = "1.0") {
+    const baseString = (version == "1.1") ? BASE_STRINGV1_1 : BASE_STRING
+    const contractJson = JSON.parse(await fs.readFileSync(`${baseString}/${name}.sol/${name}.json`))
     return await ethers.getContractFactory(
         contractJson.abi,
         contractJson.bytecode.object,
@@ -17,21 +19,22 @@ async function getWellContractFactory(name, account = undefined) {
     );
 }
 
-async function getWellContractAt(name, address) {
-    const contractJson = JSON.parse(await fs.readFileSync(`${BASE_STRING}/${name}.sol/${name}.json`))
+async function getWellContractAt(name, address, version = "1.0") {
+    const baseString = (version == "1.1") ? BASE_STRINGV1_1 : BASE_STRING
+    const contractJson = JSON.parse(await fs.readFileSync(`${baseString}/${name}.sol/${name}.json`))
     return await ethers.getContractAt(
         contractJson.abi,
         address
     );
 }
 
-async function deployWellContractAtNonce(name, nonce, arguments = [], account = undefined, verbose = false) {
+async function deployWellContractAtNonce(name, nonce, arguments = [], account = undefined, verbose = false, version = "1.0") {
     await increaseToNonce(account, nonce)
-    return await deployWellContract(name, arguments, account, verbose)
+    return await deployWellContract(name, arguments, account, verbose, version)
 }
 
-async function deployWellContract(name, arguments = [], account = undefined, verbose = false) {
-    const Contract = await getWellContractFactory(name, account);
+async function deployWellContract(name, arguments = [], account = undefined, verbose = false, version = "1.0") {
+    const Contract = await getWellContractFactory(name, account, version);
     const contract = await Contract.deploy(...arguments);
     await contract.deployed();
     if (verbose) console.log(`${name} deployed at ${contract.address}`)
@@ -181,6 +184,15 @@ async function setReserves(account, well, amounts) {
     }
 }
 
+async function impersonateBeanWstethWell() {
+    const well = await deployWell([BEAN, WSTETH]);
+    const bytecode = await ethers.provider.getCode(well.address)
+    await network.provider.send("hardhat_setCode", [
+        BEAN_WSTETH_WELL,
+        bytecode,
+    ]);
+}
+
 async function impersonateBeanEthWell() {
     const well = await deployWell([BEAN, WETH]);
     const bytecode = await ethers.provider.getCode(well.address)
@@ -190,15 +202,15 @@ async function impersonateBeanEthWell() {
     ]);
 }
 
-async function impersonateMockWell(pumpBalances = [to18('1'), to18('1')]) {
-    well = await impersonateContract('MockSetComponentsWell', BEAN_ETH_WELL)
+async function impersonateMockWell(well, pumpBalances = [to18('1'), to18('1')]) {
+    well = await impersonateContract('MockSetComponentsWell', well)
     pump = await deployMockPump()
     wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
-    await well.setPumps([[this.pump.address, '0x']])
-    await well.setWellFunction([this.wellFunction.address, '0x'])
+    await well.setPumps([[pump.address, '0x']])
+    await well.setWellFunction([wellFunction.address, '0x'])
     await well.setTokens([BEAN, WETH])
     pump.setInstantaneousReserves(pumpBalances)
-    await whitelistWell(this.well.address, '10000', to6('4'))
+    await whitelistWell(well.address, '10000', to6('4'))
     return [well, pump, wellFunction]
 }
 
@@ -220,14 +232,14 @@ async function whitelistWell(wellAddress, stalk, stalkEarnedPerSeason) {
 
 }
 
-async function deployMockPump() {
+async function deployMockPump(address=BEANSTALK_PUMP) {
     pump = await (await ethers.getContractFactory('MockPump')).deploy()
     await pump.deployed()
     await network.provider.send("hardhat_setCode", [
-        BEANSTALK_PUMP,
+        address,
         await ethers.provider.getCode(pump.address),
     ]);
-    return await ethers.getContractAt('MockPump', BEANSTALK_PUMP)
+    return await ethers.getContractAt('MockPump', address)
 }
 
 async function deployMultiFlowPump() {
@@ -246,7 +258,7 @@ async function deployMultiFlowPump() {
     return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
 
-async function deployMockBeanEthWell() {
+async function deployMockBeanWell(address, token1) {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
@@ -254,17 +266,17 @@ async function deployMockBeanEthWell() {
     let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
     await network.provider.send("hardhat_setCode", [
-        BEAN_ETH_WELL,
+        address,
         await ethers.provider.getCode(well.address),
     ]);
-    well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
+    well = await ethers.getContractAt('MockSetComponentsWell', address)
     await well.init()
 
     pump = await deployMultiFlowPump()
 
     await well.setPumps([[pump.address, '0x']])
     await well.setWellFunction([wellFunction.address, '0x'])
-    await well.setTokens([BEAN, WETH])
+    await well.setTokens([BEAN, token1])
 
     await well.setReserves([to6('1000000'), to18('1000')])
     await well.setReserves([to6('1000000'), to18('1000')])
@@ -295,7 +307,7 @@ async function deployMockWell() {
 
 
 
-async function deployMockWellWithMockPump() {
+async function deployMockWellWithMockPump(address = BEAN_ETH_WELL, token1 = WETH) {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
@@ -303,17 +315,17 @@ async function deployMockWellWithMockPump() {
     let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
     await well.deployed()
     await network.provider.send("hardhat_setCode", [
-        BEAN_ETH_WELL,
+        address,
         await ethers.provider.getCode(well.address),
       ]);
-    well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
+    well = await ethers.getContractAt('MockSetComponentsWell', address)
     await well.init()
 
     pump = await deployMockPump()
 
     await well.setPumps([[pump.address, '0x']])
     await well.setWellFunction([wellFunction.address, '0x'])
-    await well.setTokens([BEAN, WETH])
+    await well.setTokens([BEAN, token1])
 
     await well.setReserves([to6('1000000'), to18('1000')])
     await well.setReserves([to6('1000000'), to18('1000')])
@@ -330,7 +342,7 @@ exports.deployWell = deployWell;
 exports.setReserves = setReserves;
 exports.whitelistWell = whitelistWell;
 exports.getWellContractAt = getWellContractAt
-exports.deployMockBeanEthWell = deployMockBeanEthWell
+exports.deployMockBeanWell = deployMockBeanWell
 exports.deployMockWell = deployMockWell
 exports.deployMockPump = deployMockPump
 exports.deployWellContract = deployWellContract
@@ -338,4 +350,5 @@ exports.deployWellContractAtNonce = deployWellContractAtNonce
 exports.encodeWellImmutableData = encodeWellImmutableData
 exports.impersonateMockWell = impersonateMockWell
 exports.impersonateBeanEthWell = impersonateBeanEthWell
+exports.impersonateBeanWstethWell = impersonateBeanWstethWell
 exports.deployMockWellWithMockPump = deployMockWellWithMockPump

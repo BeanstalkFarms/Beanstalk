@@ -16,18 +16,18 @@ contract MockFertilizerFacet is FertilizerFacet {
 
     function addFertilizerOwner(
         uint128 id,
-        uint128 wethAmountIn,
+        uint128 tokenAmountIn,
         uint256 minLPOut
     ) external payable {
         LibDiamond.enforceIsContractOwner();
-        // Transfer the WETH directly to the Well for gas efficiency purposes. The WETH is later synced in {LibFertilizer.addUnderlying}.
-        IERC20(C.WETH).transferFrom(
+        // Transfer the WSTETH directly to the Well for gas efficiency purposes. The WSTETH is later synced in {LibFertilizer.addUnderlying}.
+        IERC20(C.BARN_RAISE_TOKEN).transferFrom(
             msg.sender,
-            C.BEAN_ETH_WELL,
-            uint256(wethAmountIn)
+            C.BARN_RAISE_WELL,
+            uint256(tokenAmountIn)
         );
 
-        uint256 fertilizerAmount = getMintFertilizerOut(wethAmountIn);
+        uint256 fertilizerAmount = getMintFertilizerOut(tokenAmountIn);
 
         LibFertilizer.addFertilizer(id, fertilizerAmount, minLPOut);
     }
