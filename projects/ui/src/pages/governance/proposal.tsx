@@ -136,7 +136,7 @@ const ProposalPage: FC<{}> = () => {
   }
 
   /// Finished loading but no proposal
-  if ((((oldBip || ebip) ? !loadingBipData : !loading) && data?.proposal === null ) || !id) {
+  if ((((oldBip || ebip) ? !loadingBipData : !loading) && proposal === null) || !id) {
     return <PageNotFound />;
   }
 
