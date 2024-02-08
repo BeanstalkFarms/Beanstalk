@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box,
+  CircularProgress,
   Link,
   Tab,
   TablePagination,
@@ -29,6 +30,7 @@ const VotesTable: FC<{
     ? [...props.proposal.choices]
     : undefined;
   const votes = props.quorum.data.votes || [];
+  const isLoading = props.quorum.loading;
 
   const [tab, handleChangeTab] = useTabs();
 
@@ -121,7 +123,16 @@ const VotesTable: FC<{
 
   return (
     <>
-      {votes && choices && (
+      {isLoading ? (
+        <Box
+          height={340}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <CircularProgress variant="indeterminate" />
+        </Box>
+      ) : votes && choices && (
         <Box>
           <Row
             justifyContent="space-between"
