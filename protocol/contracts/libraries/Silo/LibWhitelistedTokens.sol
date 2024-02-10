@@ -189,10 +189,7 @@ library LibWhitelistedTokens {
     function removeWhitelistStatus(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 tokenStatusIndex = findWhitelistStatusIndex(token);
-        s.whitelistStatuses[tokenStatusIndex].token = s.whitelistStatuses[s.whitelistStatuses.length - 1].token;
-        s.whitelistStatuses[tokenStatusIndex].isWhitelisted = s.whitelistStatuses[s.whitelistStatuses.length - 1].isWhitelisted;
-        s.whitelistStatuses[tokenStatusIndex].isWhitelistedLp = s.whitelistStatuses[s.whitelistStatuses.length - 1].isWhitelistedLp;
-        s.whitelistStatuses[tokenStatusIndex].isWhitelistedWell = s.whitelistStatuses[s.whitelistStatuses.length - 1].isWhitelistedWell;
+        s.whitelistStatuses[tokenStatusIndex] = s.whitelistStatuses[s.whitelistStatuses.length - 1];
         s.whitelistStatuses.pop();
 
         emit RemoveWhitelistStatus(token, tokenStatusIndex);
