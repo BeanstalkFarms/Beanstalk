@@ -15,12 +15,6 @@ import {C} from "contracts/C.sol";
 
 contract InitWhitelistStatuses {
 
-    uint32 private constant BEAN_3CRV_STALK = 10000;
-    uint32 private constant BEAN_3CRV_SEEDS = 4;
-
-    uint32 private constant BEAN_STALK = 10000; //stalk per bdv (bdv is 6, stalk is 10, so need 4 here)
-    uint32 private constant BEAN_SEEDS = 2; //seeds per bdv of bean (1e6 is one bean)
-
     function addWhitelistStatuses(bool beanEth) internal {
         addBeanStatus();
         if (beanEth) addBeanEthStatus();
