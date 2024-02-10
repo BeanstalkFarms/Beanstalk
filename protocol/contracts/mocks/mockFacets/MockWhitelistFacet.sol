@@ -5,7 +5,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import "contracts/beanstalk/silo/WhitelistFacet.sol";
+import "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @author Brean
@@ -62,10 +63,52 @@ contract MockWhitelistFacet is WhitelistFacet {
         uint32 season
     );
 
+    /** 
+     * @notice Emitted when a Whitelis Status is added.
+     */
+    event AddWhitelistStatus(
+        address token,
+        uint256 index,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
+    );
+
+    /**
+     * @notice Emitted when a Whitelist Status is removed.
+     */
+    event RemoveWhitelistStatus(
+        address token,
+        uint256 index
+    );
+
+    /**
+     * @notice Emitted when a Whitelist Status is updated.
+     */
+    event UpdateWhitelistStatus(
+        address token,
+        uint256 index,
+        bool isWhitelisted,
+        bool isWhitelistedLp,
+        bool isWhitelistedWell
+    );
+
     /**
      * @notice Emitted when a token is removed from the Silo Whitelist.
      * @param token ERC-20 token being removed from the Silo Whitelist.
      */
     event DewhitelistToken(address indexed token);
+
+    function updateWhitelistStatus(address token, bool isWhitelisted, bool isWhitelistedLp, bool isWhitelistedWell) external {
+        LibWhitelistedTokens.updateWhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell);
+    }
+
+    function removeWhitelistStatus(address token) external {
+        LibWhitelistedTokens.removeWhitelistStatus(token);
+    }
+
+    function addWhitelistStatus(address token, bool isWhitelisted, bool isWhitelistedLp, bool isWhitelistedWell) external {
+        LibWhitelistedTokens.addWhitelistStatus(token, isWhitelisted, isWhitelistedLp, isWhitelistedWell);
+    }
 
 }

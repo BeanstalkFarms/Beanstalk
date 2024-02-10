@@ -40,6 +40,8 @@ describe('Season', function () {
         await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
         await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
+        this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
+        this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE);
 
         // add wells
         [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()

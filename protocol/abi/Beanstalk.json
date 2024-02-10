@@ -4174,166 +4174,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "dewhitelistToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      }
-    ],
-    "name": "updateGaugeForToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      }
-    ],
-    "name": "updateStalkPerBdvPerSeasonForToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint16",
-        "name": "stalkIssuedPerBdv",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      }
-    ],
-    "name": "whitelistToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint32",
-        "name": "stalkIssuedPerBdv",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes1",
-        "name": "encodeType",
-        "type": "bytes1"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      }
-    ],
-    "name": "whitelistTokenWithEncodeType",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "account",
         "type": "address"
       }
@@ -5176,6 +5016,294 @@
     "name": "setApprovalForAll",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "dewhitelistToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSiloTokens",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getWhitelistStatus",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isWhitelisted",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isWhitelistedLp",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isWhitelistedWell",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct Storage.WhitelistStatus",
+        "name": "_whitelistStatuses",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWhitelistStatuses",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isWhitelisted",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isWhitelistedLp",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isWhitelistedWell",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct Storage.WhitelistStatus[]",
+        "name": "_whitelistStatuses",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWhitelistedLpTokens",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWhitelistedTokens",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWhitelistedWellLpTokens",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "updateGaugeForToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      }
+    ],
+    "name": "updateStalkPerBdvPerSeasonForToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint16",
+        "name": "stalkIssuedPerBdv",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "whitelistToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkIssuedPerBdv",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes1",
+        "name": "encodeType",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "whitelistTokenWithEncodeType",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -7034,46 +7162,7 @@
   },
   {
     "inputs": [],
-    "name": "getLastStalkGrowthRateUpdate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getLiquidityToSupplyRatio",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getNewAverageGrownStalkPerBdvPerSeason",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getNextStalkGrowthRateUpdate",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7112,11 +7201,6 @@
             "internalType": "uint128",
             "name": "beanToMaxLpGpPerBdvRatio",
             "type": "uint128"
-          },
-          {
-            "internalType": "uint32",
-            "name": "lastStalkGrowthUpdate",
-            "type": "uint32"
           }
         ],
         "internalType": "struct Storage.SeedGauge",
@@ -7642,13 +7726,6 @@
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "updateAverageStalkPerBdvPerSeason",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

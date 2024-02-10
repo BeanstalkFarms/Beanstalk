@@ -7,6 +7,7 @@ const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js')
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 
 const { advanceTime } = require('../utils/helpers.js');
+const { impersonateBeanstalkOwner } = require('../utils/signer.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 // // Set the test data
@@ -47,6 +48,9 @@ describe('Complex Weather', function () {
     await this.fertilizer.setFertilizerE(true, to6('10000'))
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
+
+    const whitelist = await ethers.getContractAt('WhitelistFacet', contracts.beanstalkDiamond.address);
+    await whitelist.connect(await impersonateBeanstalkOwner()).dewhitelistToken(BEAN_3_CURVE);
 
     // wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()

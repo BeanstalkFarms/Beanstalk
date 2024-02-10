@@ -7,7 +7,8 @@ pragma experimental ABIEncoderV2;
 
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
-import {AppStorage} from "../AppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/AppStorage.sol";
+import {WhitelistedTokens} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistedTokens.sol";
 
 /**
  * @author Publius
@@ -15,7 +16,7 @@ import {AppStorage} from "../AppStorage.sol";
  * @notice Manages the Silo Whitelist including Adding to, Updating
  * and Removing from the Silo Whitelist
  **/
-contract WhitelistFacet {
+contract WhitelistFacet is WhitelistedTokens {
     /**
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
@@ -135,4 +136,5 @@ contract WhitelistFacet {
             optimalPercentDepositedBdv
         );
     }
+    
 }

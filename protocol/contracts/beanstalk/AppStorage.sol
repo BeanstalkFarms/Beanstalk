@@ -274,6 +274,21 @@ contract Storage {
     }
 
     /**
+     * @notice Whitelist Status a token that has been Whitelisted before.
+     * @param token the address of the token.
+     * @param a whether the address is whitelisted.
+     * @param isWhitelistedLp whether the address is a whitelisted LP token.
+     * @param isWhitelistedWell whether the address is a whitelisted Well token.
+     */
+
+    struct WhitelistStatus {
+        address token;
+        bool isWhitelisted;
+        bool isWhitelistedLp;
+        bool isWhitelistedWell;
+    }
+
+    /**
      * @notice System-level Silo state variables.
      * @param stalk The total amount of active Stalk (including Earned Stalk, excluding Grown Stalk).
      * @param deprecated_seeds DEPRECATED: The total amount of active Seeds (excluding Earned Seeds).
@@ -553,6 +568,7 @@ contract Storage {
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
  * @param oddGerminating Stores germinating data during odd seasons.
  * @param evenGerminating Stores germinating data during even seasons.
+ * @param whitelistedStatues Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -632,4 +648,6 @@ struct AppStorage {
 
     // mapping from season => unclaimed germinating stalk and roots 
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
+
+    Storage.WhitelistStatus[] whitelistStatuses;
 }
