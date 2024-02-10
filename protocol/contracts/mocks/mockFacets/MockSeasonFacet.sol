@@ -508,4 +508,8 @@ contract MockSeasonFacet is SeasonFacet  {
         );
         delete totalGerm.deposited[token];
     }
+
+    function mockUpdateAverageStalkPerBdvPerSeason() external {
+        LibGauge.updateAverageStalkPerBdvPerSeason();
+    }
 }
