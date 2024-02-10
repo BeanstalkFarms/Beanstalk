@@ -2,13 +2,13 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
 const { to6, toStalk, toBean, to18 } = require('./utils/helpers.js')
-const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY, ETH_USDT_UNISWAP_V3 } = require('./utils/constants.js')
+const { USDC, UNRIPE_BEAN, UNRIPE_LP, BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, BEAN_ETH_WELL, BEANSTALK_PUMP, STABLE_FACTORY, ETH_USDT_UNISWAP_V3, BEAN_WSTETH_WELL, WSTETH } = require('./utils/constants.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { ethers } = require('hardhat')
 const { advanceTime } = require('../utils/helpers.js')
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js')
 const { initalizeGaugeForToken } = require('../utils/gauge.js')
-const { setEthUsdChainlinkPrice } = require('../utils/oracle.js')
+const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js')
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers")
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { setOracleFailure } = require('../utils/oracle.js')
@@ -23,6 +23,20 @@ async function setToSecondsAfterHour(seconds = 0) {
   await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
 }
 
+async function initWell(season, diamond, wellAddress, token0) {
+  const [well, wellFunction, pump] = await deployMockWellWithMockPump(wellAddress, token0)
+  await well.connect(owner).approve(diamond.address, to18('100000000'))
+  await well.connect(user).approve(diamond.address, to18('100000000'))
+
+  await well.setReserves([to6('1000000'), to18('1000')])
+  await pump.setCumulativeReserves([to6('1000000'), to18('1000')])
+  await well.mint(ownerAddress, to18('500'))
+  await well.mint(userAddress, to18('500'))
+  await whitelistWell(well.address, '10000', to6('4'))
+  await season.siloSunrise(0)
+  await season.captureWellE(well.address)
+  return well;
+}
 
 describe('Gauge', function () {
   before(async function () {
@@ -46,19 +60,11 @@ describe('Gauge', function () {
     await this.bean.connect(user).approve(this.diamond.address, to6('100000000'));
    
     // init wells
-    [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
-    await this.well.connect(owner).approve(this.diamond.address, to18('100000000'))
-    await this.well.connect(user).approve(this.diamond.address, to18('100000000'))
-
-    await this.well.setReserves([to6('1000000'), to18('1000')])
-    await this.pump.setCumulativeReserves([to6('1000000'), to18('1000')])
-    await this.well.mint(ownerAddress, to18('500'))
-    await this.well.mint(userAddress, to18('500'))
-    await whitelistWell(this.well.address, '10000', to6('4'))
-    await this.season.siloSunrise(0)
-    await this.season.captureWellE(this.well.address)
-
+    this.beanEthWell = await initWell(this.season, this.diamond, BEAN_ETH_WELL, BEAN)
     await setEthUsdChainlinkPrice('1000')
+
+    this.beanWstethWell = await initWell(this.season, this.diamond, BEAN_WSTETH_WELL, WSTETH)
+    await setWstethUsdPrice('1000')
 
     // add unripe
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
@@ -320,7 +326,7 @@ describe('Gauge', function () {
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
         expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
         expect(await this.unripe.getLockedBeans()).to.be.eq(to6('872.66421'))
         expect(
           await this.seasonGetters.getLiquidityToSupplyRatio()
@@ -328,11 +334,11 @@ describe('Gauge', function () {
       })
 
       it('is MEV resistant', async function () {
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'))
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
 
-        await this.well.mint(ownerAddress, to18('1000'))
-        
-        expect(await this.unripe.getLockedBeansUnderlyingUnripeBeanEth()).to.be.eq(to6('436.332105'))
+        await this.beanEthWell.mint(ownerAddress, to18('1000'))
+
+        expect(await this.unripe.getLockedBeansUnderlyingUnripeLP()).to.be.eq(to6('436.332105'))
       })
     })
   })

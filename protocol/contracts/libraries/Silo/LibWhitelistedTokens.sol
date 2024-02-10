@@ -55,16 +55,6 @@ library LibWhitelistedTokens {
      * including Unripe tokens.
      * @dev includes Dewhitelisted tokens with existing Deposits.
      */
-<<<<<<< HEAD
-    function getSiloTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](6);
-        tokens[0] = C.BEAN;
-        tokens[1] = C.BEAN_ETH_WELL;
-        tokens[2] = C.CURVE_BEAN_METAPOOL;
-        tokens[3] = C.UNRIPE_BEAN;
-        tokens[4] = C.UNRIPE_LP;
-        tokens[5] = C.BEAN_WSTETH_WELL;
-=======
     function getSiloTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
@@ -74,21 +64,11 @@ library LibWhitelistedTokens {
         for (uint256 i = 0; i < numberOfSiloTokens; i++) {
             tokens[i] = s.whitelistStatuses[i].token;
         }
->>>>>>> add-steth-oracle
     }
 
     /**
      * @notice Returns the current Whitelisted tokens, including Unripe tokens.
      */
-<<<<<<< HEAD
-    function getWhitelistedTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](5);
-        tokens[0] = C.BEAN;
-        tokens[1] = C.BEAN_ETH_WELL;
-        tokens[2] = C.UNRIPE_BEAN;
-        tokens[3] = C.UNRIPE_LP;
-        tokens[4] = C.BEAN_WSTETH_WELL;
-=======
     function getWhitelistedTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
@@ -104,19 +84,12 @@ library LibWhitelistedTokens {
         assembly {
             mstore(tokens, tokensLength)
         }
->>>>>>> add-steth-oracle
     }
 
     /**
      * @notice Returns the current Whitelisted LP tokens. 
      * @dev Unripe LP is not an LP token.
      */
-<<<<<<< HEAD
-    function getWhitelistedLpTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](2);
-        tokens[0] = C.BEAN_ETH_WELL;
-        tokens[1] = C.BEAN_WSTETH_WELL;
-=======
     function getWhitelistedLpTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
@@ -135,18 +108,11 @@ library LibWhitelistedTokens {
         assembly {
             mstore(tokens, tokensLength)
         }
->>>>>>> add-steth-oracle
     }
 
     /**
      * @notice Returns the current Whitelisted Well LP tokens.
      */
-<<<<<<< HEAD
-    function getWhitelistedWellLpTokens() internal pure returns (address[] memory tokens) {
-        tokens = new address[](2);
-        tokens[0] = C.BEAN_ETH_WELL;
-        tokens[1] = C.BEAN_WSTETH_WELL;
-=======
     function getWhitelistedWellLpTokens() internal view returns (address[] memory tokens) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 numberOfSiloTokens = s.whitelistStatuses.length;
@@ -241,6 +207,5 @@ library LibWhitelistedTokens {
             }
         }
         return i;
->>>>>>> add-steth-oracle
     }
 }
