@@ -8,8 +8,6 @@ pragma experimental ABIEncoderV2;
 import {C} from "../../C.sol";
 import {AppStorage, Storage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 
-import {console} from "hardhat/console.sol";
-
 /**
  * @title LibWhitelistedTokens
  * @author Brean, Brendan
