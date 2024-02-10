@@ -11,6 +11,7 @@ import {MockToken} from "../mocks/MockToken.sol";
 import {AppStorage, Storage} from "../beanstalk/AppStorage.sol";
 import {C} from "../C.sol";
 import {InitWhitelist} from "contracts/beanstalk/init/InitWhitelist.sol";
+import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibCases} from "../libraries/LibCases.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
@@ -20,7 +21,7 @@ import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
  * @author Publius
  * @title Mock Init Diamond
 **/
-contract MockInitDiamond is InitWhitelist, Weather {
+contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
 
     function init() external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -58,6 +59,7 @@ contract MockInitDiamond is InitWhitelist, Weather {
         emit LibGauge.UpdateAverageStalkPerBdvPerSeason(s.seedGauge.averageGrownStalkPerBdvPerSeason);
 
         whitelistPools();
+        addWhitelistStatuses(false);
     }
 
 }
