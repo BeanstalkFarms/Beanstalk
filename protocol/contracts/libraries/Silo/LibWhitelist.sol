@@ -99,7 +99,8 @@ library LibWhitelist {
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
         // add whitelist status
-        LibWhitelistedTokens.addWhitelistStatus(token,
+        LibWhitelistedTokens.addWhitelistStatus(
+            token,
             true, // Whitelisted by default.
             token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
             selector == LibWell.WELL_BDV_SELECTOR
@@ -244,34 +245,5 @@ library LibWhitelist {
         (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector));
         require(success, "Whitelist: Invalid LiquidityWeight selector");
     }
-
-    /**
-     * @notice Checks whether a token is in an array.
-     */
-    function checkTokenInArray(address token, address[] memory array) private pure {
-        // verify that the token is in the array.
-        bool success;
-        for (uint i; i < array.length; i++) {
-            if (token == array[i]) {
-                success = true; 
-                break;
-            }   
-        }
-        require(success, "Whitelist: Token not in whitelisted token array");
-    }
-
-    /**
-     * @notice Checks whether a token is in an array.
-     */
-    function checkTokenNotInArray(address token, address[] memory array) private pure {
-        // verify that the token is not in the array.
-        bool success = true;
-        for (uint i; i < array.length; i++) {
-            if (token == array[i]) {
-                success = false; 
-                break;
-            }
-        }
-        require(success, "Whitelist: Token in incorrect whitelisted token array");
-    }
+    
 }
