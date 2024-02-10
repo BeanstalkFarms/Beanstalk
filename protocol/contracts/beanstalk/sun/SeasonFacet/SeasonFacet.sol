@@ -119,18 +119,4 @@ contract SeasonFacet is Weather {
         emit LibIncentive.Incentivization(account, incentiveAmount);
         return incentiveAmount;
     }
-
-    /**
-     * @notice updates the UpdateAverageStalkPerBdvPerSeason in the seed gauge.
-     * @dev anyone can call this function to update. Currently, the function
-     * updates the targetGrownStalkPerBdvPerSeason such that it will take 6 months
-     * for the average new depositer to catch up to the average grown stalk per BDV.
-     *
-     * The expectation is that actors will call this function on their own as it benefits them.
-     * Newer depositers will call it if the value increases to catch up to the average faster,
-     * Older depositers will call it if the value decreases to slow down their rate of dilution.
-     */
-    function updateAverageStalkPerBdvPerSeason() external {
-        LibGauge.updateAverageStalkPerBdvPerSeason();
-    }
 }
