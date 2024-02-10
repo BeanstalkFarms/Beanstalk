@@ -45,6 +45,9 @@ describe('Sun', function () {
     await this.beanThreeCurve.set_balances([toBean('10000'), to18('10000')]);
     await this.beanThreeCurve.reset_cumulative();
 
+    this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
+    this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE);
+
     await this.usdc.mint(owner.address, to6('10000'))
     await this.bean.mint(owner.address, to6('10000'))
     await this.wsteth.mint(owner.address, to18('10000'))

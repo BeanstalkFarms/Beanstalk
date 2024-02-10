@@ -35,29 +35,15 @@ describe('Gauge', function () {
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address)
     this.gauge = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
-    this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     this.seasonGetters = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)
-    this.curve = await ethers.getContractAt('CurveFacet', this.diamond.address)
+    this.gaugePoint = await ethers.getContractAt('GaugePointFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
-
+    
     await this.bean.connect(owner).approve(this.diamond.address, to6('100000000'))
     await this.bean.connect(user).approve(this.diamond.address, to6('100000000'));
-
-    // // set balances to bean3crv
-    // this.threePool = await ethers.getContractAt('Mock3Curve', THREE_POOL)
-    // this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)
-    // this.beanThreeCurve = await ethers.getContractAt('MockMeta3Curve', BEAN_3_CURVE)
-    // await this.threeCurve.mint(userAddress, to18('1000'))
-    // await this.beanThreeCurve.connect(owner).approve(this.diamond.address, to18('100000000'))
-    // await this.beanThreeCurve.connect(user).approve(this.diamond.address, to18('100000000'))
-    // await this.threeCurve.connect(user).approve(this.diamond.address, to18('100000000000'))
-    // await this.threeCurve.connect(user).approve(this.beanThreeCurve.address, to18('100000000000'))
-
-    // // bean3crv set at parity, 1,000,000 on each side.
-    // await this.beanThreeCurve.set_balances([to6('1000000'), to18('1000000')])
    
     // init wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
@@ -90,9 +76,6 @@ describe('Gauge', function () {
 
     // initalize gauge parameters for lp:
     await initalizeGaugeForToken(BEAN_ETH_WELL, to18('1000'), to6('100'))
-    
-    // disabled due to bean3crv dewhitelisting.
-    // await initalizeGaugeForToken(BEAN_3_CURVE, to18('1625'), to6('1'))
 
     await this.season.updateTWAPCurveE()
   })
@@ -368,7 +351,7 @@ describe('Gauge', function () {
       await this.season.siloSunrise(0)
       await this.season.siloSunrise(0)
 
-      this.result = (await this.season.mockStepGauge())
+      this.result = await this.season.mockStepGauge()
     })
 
     it('updates gauge points', async function () {
@@ -385,7 +368,7 @@ describe('Gauge', function () {
       // total GP = 1000 + (11.858544*100) = 2185.8544
       // stalkPerGp = 489_750_000 / 2185.8544 = ~224_054/1e10 stalk per GP
       // stalkPerGp * GpPerBDV = stalkIssuedPerBDV
-      // stalkIssuedPerBeanBDV =  ~224_054 * 11.858544 = ~2_656_954s
+      // stalkIssuedPerBeanBDV =  ~224_054 * 11.858544 = ~2_656_954
       // stalkIssuedPerBeanETH = ~224_054 * 15.811392 = ~3_542_605
       expect(await this.seasonGetters.getBeanEthGaugePointsPerBdv()).to.be.eq(to18('15.811392351684831136'))
       expect(await this.seasonGetters.getBeanGaugePointsPerBdv()).to.be.eq(to18('11.858544263763623352'))
@@ -396,77 +379,94 @@ describe('Gauge', function () {
       expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(1) // 1 seeds
     })
     
-    // note: with dewhitelisting bean3crv, only one LP pool is active and thus 
-    // the gauge points are not updated.
-    // it('emits events', async function () {
-    //   await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
-    //     2,  // season
-    //     BEAN_ETH_WELL,  // token
-    //     to18('2251') // new gauge points
-    //   )
-    //   await expect(this.result).to.emit(this.season, 'GaugePointChange').withArgs(
-    //     2,  // season
-    //     BEAN_3_CURVE,  // token
-    //     to18('1624') // new gauge points
-    //   )
-    // })
+    it('Cannot exceed the maximum gauge points', async function () {
+      expect(await this.gaugePoint.defaultGaugePointFunction(
+        to18('1000'),
+        50e6,
+        49e6
+      )).to.be.eq(to18('1000'))
 
+      expect(await this.gaugePoint.defaultGaugePointFunction(
+        to18('1001'),
+        50e6,
+        49e6
+      )).to.be.eq(to18('1000'))
+    })
   })
 
   describe('averageGrownStalkPerBdvPerSeason', async function () {
     before(async function() {
       await this.season.mockSetAverageGrownStalkPerBdvPerSeason(to6('0'))
       await this.bean.mint(userAddress, to6('2000'))
-      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
+      this.result = await this.silo.connect(user).deposit(BEAN, to6('1000'), EXTERNAL)
     })
 
     it('getter', async function (){
       expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'))
-      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'))
     })
 
     it('increases after some seasons pass', async function () {
       await this.season.fastForward(4320)
-      await this.silo.mow(userAddress, this.bean.address)
-
+      await this.silo.mow(userAddress, BEAN)
       expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0)
-      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'))
-
-      await this.season.updateAverageStalkPerBdvPerSeason()
+      await this.season.mockUpdateAverageStalkPerBdvPerSeason()
 
       expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'))
     })
 
     it('decreases after a new deposit', async function() {
       await this.season.fastForward(4320)
-      await this.silo.mow(userAddress, this.bean.address)
-      await this.season.updateAverageStalkPerBdvPerSeason()
+      await this.silo.mow(userAddress, BEAN)
+      await this.season.mockUpdateAverageStalkPerBdvPerSeason()
 
       expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'))
 
-      this.result = await this.silo.connect(user).deposit(this.bean.address, to6('1000'), EXTERNAL)
+      this.result = await this.silo.connect(user).deposit(BEAN, to6('1000'), EXTERNAL)
 
-      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('2'))
-
+      // fast forward 2 seasons to end germination.
       await this.season.fastForward(2)
+      await this.season.mockUpdateAverageStalkPerBdvPerSeason()
 
-      expect(await this.seasonGetters.getNewAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'))
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('1'))
     })
 
-    it('updates averageGrownStalkPerBDVPerSeason if a week has elapsed', async function () {
+    it('does not update averageGrownStalkPerBDVPerSeason if less than catchup season', async function () {
       expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'))
-      // deposit beanETH:
+     
+      // deposit beanETH (the gauge system will skip if there is no liquidity):
       await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL)
-      await this.bean.mint(userAddress, to6('10000'))
 
-      // deposit beans:
-      await this.silo.connect(user).deposit(BEAN, to6('100'), EXTERNAL)
+      // fast forward (any arbitary value between 0 < s < CATCHUP_SEASON).
       await this.season.fastForward(168)
-      await this.silo.mow(userAddress, this.bean.address)
+
+      // step through the gauge system (mow addresses such that stalk increases).
+      await this.silo.mow(userAddress, BEAN)
       await this.silo.mow(userAddress, BEAN_ETH_WELL)
       await this.season.mockStepGauge()
 
-      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(81944)
+      // verify gauge system does change value.
+      expect(await this.seasonGetters.season()).to.be.equal(170)
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(0)
+    })
+
+    it('updates averageGrownStalkPerBDVPerSeason if the current season is above threshold', async function () {
+      await this.season.fastForward(4320)
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(to6('0'))
+
+      // deposit beanETH (the gauge system will skip if there is no liquidity):
+      await this.silo.connect(user).deposit(BEAN_ETH_WELL, to18('1'), EXTERNAL)
+
+      // fast forward to end germination.
+      await this.season.fastForward(2)
+
+      // step through the gauge system (mow addresses such that stalk increases).
+      await this.silo.mow(userAddress, BEAN)
+      await this.silo.mow(userAddress, BEAN_ETH_WELL)
+      await this.season.mockStepGauge()
+
+      // verify gauge system does change value.
+      expect(await this.seasonGetters.season()).to.be.equal(4324)
+      expect(await this.seasonGetters.getAverageGrownStalkPerBdvPerSeason()).to.be.equal(1881944)
     })
   })
 

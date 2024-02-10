@@ -98,8 +98,13 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
 
-        // verify the token is in its corresponding array in {LibWhitelistedTokens}.
-        verifyTokenInLibWhitelistedTokens(token, selector);
+        // add whitelist status
+        LibWhitelistedTokens.addWhitelistStatus(
+            token,
+            true, // Whitelisted by default.
+            token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+            selector == LibWell.WELL_BDV_SELECTOR
+        );
 
         // If an LP token, initialize oracle storage variables.
         if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
@@ -206,7 +211,7 @@ library LibWhitelist {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
-        verifyTokenNotInLibWhitelistedTokens(token, s.ss[token].selector);
+        LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false);
         
         // set the stalkEarnedPerSeason to 1 and update milestone stem.
         // stalkEarnedPerSeason requires a min value of 1.
@@ -252,81 +257,5 @@ library LibWhitelist {
         (bool success, ) = address(this).staticcall(abi.encodeWithSelector(selector));
         require(success, "Whitelist: Invalid LiquidityWeight selector");
     }
-
-    /**
-     * @notice Verifies whether a token is NOT in the arrays.
-     * @param token `token` that is being whitelisted.
-     * @param selector The BDV function thats being whitelisted with the token.
-     */
-    function verifyTokenNotInLibWhitelistedTokens(address token, bytes4 selector) internal view {
-        // future whitelisted functions will need to be added to the arrays in
-        checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedTokens());
-        
-        // however, all whitelisted tokens 
-        // or previously whitelisted tokens should still be in getSiloTokens.
-        checkTokenInArray(token, LibWhitelistedTokens.getSiloTokens());
-        
-        // The gauge system assumes all Whitelisted tokens that are not Unripe tokens
-        // or Bean are LP tokens. Revisit below block if this changes.
-        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
-        }
-        if (selector == LibWell.WELL_BDV_SELECTOR) {
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());
-        }
-    }
-
-    /**
-     * @notice Verifies whether a token is in the required arrays.
-     * @param token `token` that is being whitelisted.
-     * @param selector The BDV function thats being whitelisted with the token.
-     */
-    function verifyTokenInLibWhitelistedTokens(address token, bytes4 selector) internal view {
-        // future whitelisted functions will need to be added to the arrays in
-        // {LibWhitelistedTokens}.
-        checkTokenInArray(token, LibWhitelistedTokens.getWhitelistedTokens());
-        // The gauge system assumes all Whitelisted tokens that are not Unripe tokens
-        // or Bean are LP tokens. Revisit below block if this changes.
-        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
-            checkTokenInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
-        } else {
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedLpTokens());
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());
-        }
-        if (selector == LibWell.WELL_BDV_SELECTOR) {
-            checkTokenInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());
-        } else {
-            checkTokenNotInArray(token, LibWhitelistedTokens.getWhitelistedWellLpTokens());
-        }
-    }
-
-    /**
-     * @notice Checks whether a token is in an array.
-     */
-    function checkTokenInArray(address token, address[] memory array) private pure {
-        // verify that the token is in the array.
-        bool success;
-        for (uint i; i < array.length; i++) {
-            if (token == array[i]) {
-                success = true; 
-                break;
-            }   
-        }
-        require(success, "Whitelist: Token not in whitelisted token array");
-    }
-
-    /**
-     * @notice Checks whether a token is in an array.
-     */
-    function checkTokenNotInArray(address token, address[] memory array) private pure {
-        // verify that the token is not in the array.
-        bool success = true;
-        for (uint i; i < array.length; i++) {
-            if (token == array[i]) {
-                success = false; 
-                break;
-            }
-        }
-        require(success, "Whitelist: Token in incorrect whitelisted token array");
-    }
+    
 }

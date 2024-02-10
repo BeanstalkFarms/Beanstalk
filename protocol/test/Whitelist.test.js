@@ -125,45 +125,6 @@ describe('Whitelist', function () {
           '0')).to.be.revertedWith("Whitelist: Token already whitelisted");
     })
 
-    it('reverts on whitelisting a token not in the whitelistTokenArray', async function() {
-      await expect(this.whitelist.connect(owner).whitelistToken(
-          this.siloToken.address, 
-          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-          '10000',
-          '1',
-          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
-          this.liquidityWeight.interface.getSighash("maxWeight()"),
-          '0',
-          '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
-    });
-
-    it('reverts on whitelisting a well not in the whitelistTokenArray', async function() {
-      // create a mockWellToken 
-      this.mockWellToken = await deployMockWell();
-      
-      await expect(this.whitelist.connect(owner).whitelistToken(
-          this.mockWellToken.address, 
-          this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-          '10000',
-          '1',
-          this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
-          this.liquidityWeight.interface.getSighash("maxWeight()"),
-          '0',
-          '0')).to.be.revertedWith("Whitelist: Token not in whitelisted token array");
-    });
-
-    it('reverts on whitelisting a token in a array incorrectly', async function(){
-      await expect(this.whitelist.connect(owner).whitelistToken(
-        this.well.address, 
-        this.silo.interface.getSighash("mockBDV(uint256 amount)"), 
-        '10000',
-        '1',
-        this.gaugePoint.interface.getSighash("defaultGaugePointFunction(uint256,uint256,uint256)"),
-        this.liquidityWeight.interface.getSighash("maxWeight()"),
-        '0',
-        '0')).to.be.revertedWith("Whitelist: Token in incorrect whitelisted token array");
-    })
-
     it('reverts on updating stalk per bdv per season for token that is not whitelisted', async function () {
       await expect(this.whitelist.connect(owner).updateStalkPerBdvPerSeasonForToken(this.well.address, 1)).to.be.revertedWith("Token not whitelisted");
     });
