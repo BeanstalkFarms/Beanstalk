@@ -239,4 +239,12 @@ contract FertilizerFacet {
             idx = LibFertilizer.getNext(idx);
         }
     }
+
+    function getBarnRaiseWell() external view returns (address) {
+        return LibBarnRaise.getBarnRaiseWell();
+    }
+
+    function getBarnRaiseToken() external view returns (address) {
+        return LibBarnRaise.getBarnRaiseToken();
+    }
 }

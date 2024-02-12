@@ -60,7 +60,7 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
       aquifer: await getWellContractAt('Aquifer', '0xBA51AAAA95aeEFc1292515b36D86C51dC7877773')
     }
 
-    c = await deployBasinV1_1Upgrade(c, true, undefined, true, false, mockPump=true)
+    c = await deployBasinV1_1Upgrade(c, true, undefined, false, false, mockPump=true)
 
     await bipSeedGauge(true, undefined, false)
 
@@ -96,7 +96,11 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
 
   describe('Initializes migration', async function () {
     it('Changings underlying token', async function () {
-      expect(await this.beanstalk.getUnderlyingToken(UNRIPE_LP)).to.be.equal(BEAN_WSTETH_WELL)
+      expect(await this.beanstalk.getBarnRaiseToken()).to.be.equal(WSTETH)
+    })
+
+    it('Barn Raise Token', async function () {
+      expect(await this.beanstalk.getBarnRaiseWell()).to.be.equal(BEAN_WSTETH_WELL)
     })
   
     it('Removes underlying balance', async function () { 
@@ -135,6 +139,7 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
       })
 
       it('convert Unripe LP to Bean fails', async function () {
+        const liquidityAdder = await impersonateSigner('0x7eaE23DD0f0d8289d38653BCE11b92F7807eFB64', true);
         await expect(this.beanstalk.connect(publius).convert(ConvertEncoder.convertUnripeLPToBeans(to6('200'), '0'), ['-56836000000'], [to6('200')])).to.be.revertedWith('SafeMath: division by zero');
       })
     })

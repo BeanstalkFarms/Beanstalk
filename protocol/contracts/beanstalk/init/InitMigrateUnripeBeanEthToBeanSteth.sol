@@ -64,5 +64,7 @@ contract InitMigrateUnripeBeanEthToBeanSteth {
         );
         LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
         LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, C.BEAN_WSTETH_WELL);
+
+        s.barnRaiseWell = C.BEAN_WSTETH_WELL;
     }
 }
