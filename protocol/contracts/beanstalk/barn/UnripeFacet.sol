@@ -18,6 +18,7 @@ import {C} from "contracts/C.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 /**
  * @title UnripeFacet
@@ -354,7 +355,7 @@ contract UnripeFacet is ReentrancyGuard {
      * Tokens.
      */
     function getLockedBeans() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BARN_RAISE_TOKEN);
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
         return LibUnripe.getLockedBeans(twaReserves);
     }
 
@@ -372,7 +373,7 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
      */
     function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BARN_RAISE_WELL);
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
         return LibUnripe.getLockedBeansFromLP(twaReserves);
     }
 }

@@ -84,10 +84,6 @@ library C {
     uint256 internal constant BEAN_INDEX = 0;
     uint256 internal constant ETH_INDEX = 1;
 
-    //////////////////// Barn Raise ////////////////////
-    address internal constant BARN_RAISE_WELL = BEAN_WSTETH_WELL;
-    address internal constant BARN_RAISE_TOKEN = WSTETH;
-
     //////////////////// Season of Plenty ////////////////////
     address internal constant SOP_WELL = BEAN_WSTETH_WELL;
     address internal constant SOP_TOKEN = WSTETH;

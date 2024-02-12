@@ -4,7 +4,7 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
 const { mintEth } = require('../utils/mint.js')
-const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, ETH_USD_CHAINLINK_AGGREGATOR, STETH_ETH_CHAINLINK_PRICE_AGGREGATOR, WSTETH_ETH_UNIV3_01_POOL, WSTETH, WETH } = require('./utils/constants')
+const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, ETH_USD_CHAINLINK_AGGREGATOR, BEAN_ETH_WELL } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
@@ -12,26 +12,25 @@ const { ConvertEncoder } = require('./utils/encoder.js');
 const { BigNumber } = require('ethers');
 const { deployBasin } = require('../scripts/basin.js');
 const { setReserves } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
-const { impersonateChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth, impersonateWsteth, impersonateUniswapV3 } = require('../scripts/impersonate.js');
+const { setEthUsdPrice, setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { impersonateChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
-const { toBN } = require('../utils/helpers.js'); 
-const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
-const { testIfRpcSet } = require('./utils/test.js');
+const { toBN } = require('../utils/helpers.js');
+const { mockBipAddConvertDataFacet } = require('../utils/gauge.js'); 
 require('dotenv').config();
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 
 
-testIfRpcSet('Silo V3: Grown Stalk Per Bdv deployment', function () {
+describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
     before(async function () {
       try {
         await network.provider.request({
           method: "hardhat_reset",
           params: [
-            {
+          {
               forking: {
                 jsonRpcUrl: process.env.FORKING_RPC,
                 blockNumber: 16664100 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
@@ -89,8 +88,7 @@ testIfRpcSet('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
       this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
       this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
-      this.c = await deployBasin(true, undefined, false, true)
-      this.well = this.c.well;
+      this.well = (await deployBasin(true, undefined, false, true)).well
       this.season
 
       await impersonateChainlinkAggregator(ETH_USD_CHAINLINK_AGGREGATOR)
@@ -105,14 +103,6 @@ testIfRpcSet('Silo V3: Grown Stalk Per Bdv deployment', function () {
 
       await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
       await finishBeanEthMigration()
-
-      await impersonateWsteth()
-      await impersonateChainlinkAggregator(STETH_ETH_CHAINLINK_PRICE_AGGREGATOR);
-      await impersonateUniswapV3(WSTETH_ETH_UNIV3_01_POOL, WSTETH, WETH, 100)
-      await setWstethUsdPrice('1000')
-      const c = await deployBasinV1_1Upgrade(this.c, true, undefined, false, false)
-      this.beanWstethWell = c.well;
-      await setReserves(owner, this.beanWstethWell, [to6('100001'), to18('100')])
     });
   
     beforeEach(async function () {
@@ -554,8 +544,8 @@ testIfRpcSet('Silo V3: Grown Stalk Per Bdv deployment', function () {
       });
 
       it('attempt to convert unripe bean before migrating', async function () {
-        const reserves = await this.beanWstethWell.getReserves();
-        await setReserves(owner, this.beanWstethWell, [reserves[0], reserves[1].add(to18('50'))])
+        const reserves = await this.well.getReserves();
+        await setReserves(owner, this.well, [reserves[0], reserves[1].add(to18('50'))])
 
         const urBean = '0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449';
         const stem =  await this.silo.mockSeasonToStem(urBean, 6074);

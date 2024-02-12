@@ -16,6 +16,8 @@ import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {C} from "contracts/C.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 /**
  * @author Publius
@@ -67,16 +69,17 @@ contract FertilizerFacet {
         LibTransfer.From mode
     ) external payable returns (uint256 fertilizerAmountOut) {
         // Transfer Barn Raise tokens directly to the Well for gas efficiency purposes. The tokens are later synced in {LibFertilizer.addUnderlying}.
+        address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
         tokenAmountIn = LibTransfer.transferToken(
-            IERC20(C.BARN_RAISE_TOKEN),
+            IERC20(barnRaiseToken),
             msg.sender,
-            C.BARN_RAISE_WELL,
+            LibBarnRaise.getBarnRaiseWell(),
             uint256(tokenAmountIn),
             mode,
             LibTransfer.To.EXTERNAL
         );
 
-        fertilizerAmountOut = getMintFertilizerOut(tokenAmountIn);
+        fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, barnRaiseToken);
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
         require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
@@ -110,11 +113,21 @@ contract FertilizerFacet {
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
      * `tokenAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
-    function getMintFertilizerOut(
-        uint256 tokenAmountIn
+    function getMintFertilizerOut(uint256 tokenAmountIn)
+        external
+        view
+        returns (uint256 fertilizerAmountOut)
+    {
+        address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
+        return _getMintFertilizerOut(tokenAmountIn, barnRaiseToken);
+    }
+
+    function _getMintFertilizerOut(
+        uint256 tokenAmountIn,
+        address barnRaiseToken
     ) public view returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = tokenAmountIn.div(
-            LibUsdOracle.getUsdPrice(C.BARN_RAISE_TOKEN)
+            LibUsdOracle.getUsdPrice(barnRaiseToken)
         );
     }
 

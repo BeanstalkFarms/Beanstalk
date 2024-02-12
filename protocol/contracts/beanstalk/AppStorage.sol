@@ -652,4 +652,6 @@ struct AppStorage {
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
 
     Storage.WhitelistStatus[] whitelistStatuses;
+
+    address barnRaiseWell;
 }

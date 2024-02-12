@@ -11,6 +11,7 @@ import {LibConvertData} from "./LibConvertData.sol";
 import {LibWellConvert} from "./LibWellConvert.sol";
 import {LibChopConvert} from "./LibChopConvert.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -99,7 +100,7 @@ library LibConvert {
             if (tokenOut == C.UNRIPE_BEAN)
                 return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
-            if (tokenOut == C.BARN_RAISE_WELL)
+            if (tokenOut == LibBarnRaise.getBarnRaiseWell())
                 return type(uint256).max;
         }
 
@@ -155,7 +156,7 @@ library LibConvert {
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         // UrBEANETH -> BEANETH
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.BARN_RAISE_WELL)
+        if (tokenIn == C.UNRIPE_LP && tokenOut == LibBarnRaise.getBarnRaiseWell())
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");

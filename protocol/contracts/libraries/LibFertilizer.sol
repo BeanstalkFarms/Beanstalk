@@ -13,6 +13,7 @@ import {LibSafeMath128} from "./LibSafeMath128.sol";
 import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibBarnRaise} from "./LibBarnRaise.sol";
 
 /**
  * @author Publius
@@ -105,12 +106,14 @@ library LibFertilizer {
         );
 
         // Mint the LP Beans to the Well to sync.
+        address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
+
         C.bean().mint(
-            address(C.BARN_RAISE_WELL),
+            barnRaiseWell,
             newDepositedLPBeans
         );
 
-        uint256 newLP = IWell(C.BARN_RAISE_WELL).sync(
+        uint256 newLP = IWell(barnRaiseWell).sync(
             address(this),
             minAmountOut
         );
