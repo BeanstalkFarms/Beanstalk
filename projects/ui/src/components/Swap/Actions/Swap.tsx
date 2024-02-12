@@ -415,12 +415,10 @@ const SwapForm: FC<
       if (tokenSelect === 'tokenOut') {
         const newTokenOut = Array.from(_tokens)[0];
         setFieldValue('tokenOut.token', newTokenOut);
-        // setFieldValue('tokensIn.0.amount', undefined);
         if (tokenIn === newTokenOut) handleTokensEqual();
       } else if (tokenSelect === 'tokensIn') {
         const newTokenIn = Array.from(_tokens)[0];
-        setFieldValue('tokensIn.0.token', newTokenIn)
-        // setFieldValue('tokenOut.amount', undefined);
+        setFieldValue('tokensIn.0.token', newTokenIn);
         if (newTokenIn === tokenOut) handleTokensEqual();
       }
     },
