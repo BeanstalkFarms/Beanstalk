@@ -32,7 +32,7 @@ library LibWellBdv {
         uint beanIndex = LibWell.getBeanIndexFromWell(well);
 
         // For now, assume Beanstalk should always use the first pump and given that the Well has been whitelisted, it should be assumed
-        // that the first Pump has been validated by the DAO.
+        // that the first Pump has been verified when the Well was whitelisted.
         Call[] memory pumps = IWell(well).pumps();
         uint[] memory reserves = IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data);
         // If the Bean reserve is beneath the minimum balance, the oracle should be considered as off.

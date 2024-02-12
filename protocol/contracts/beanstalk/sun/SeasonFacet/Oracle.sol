@@ -21,6 +21,7 @@ contract Oracle is ReentrancyGuard {
     //////////////////// ORACLE INTERNAL ////////////////////
 
     function stepOracle() internal returns (int256 deltaB) {
+        // TODO: Make more dynamic if becomes a bottleneck. Potentially use LibWhitelistedTokens.
         deltaB = LibWellMinting.capture(C.BEAN_ETH_WELL).add(
             LibWellMinting.capture(C.BEAN_WSTETH_WELL)
         );

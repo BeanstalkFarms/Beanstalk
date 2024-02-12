@@ -87,7 +87,6 @@ library C {
     //////////////////// Season of Plenty ////////////////////
     address internal constant SOP_WELL = BEAN_WSTETH_WELL;
     address internal constant SOP_TOKEN = WSTETH;
-    
 
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
