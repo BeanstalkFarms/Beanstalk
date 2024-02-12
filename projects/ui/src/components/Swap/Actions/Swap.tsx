@@ -127,6 +127,8 @@ const SwapForm: FC<
   const [balanceFromOut, setBalanceFromOut] = useState<BalanceFrom>(
     BalanceFrom.EXTERNAL
   );
+  // Controls whether this is an exact input or exact output swap 
+  const [userInputMode, setUserInputMode] = useState<string>('');
 
   /// Derived values
   const stateIn = values.tokensIn[0];
@@ -264,6 +266,7 @@ const SwapForm: FC<
     setFieldValue('tokenOut', { ...defaultValues.tokenOut });
     setBalanceFromIn(BalanceFrom.TOTAL);
     setFromOptions([BalanceFrom.TOTAL]);
+    setUserInputMode('');
   }, [defaultValues, setFieldValue]);
 
   /// reset to default values when user switches wallet addresses or disconnects
@@ -327,6 +330,7 @@ const SwapForm: FC<
       } else {
         setFieldValue('tokenOut.amount', undefined);
       }
+      setUserInputMode('exact-input');
     },
     [tokenIn, getAmountOut, setFieldValue]
   );
@@ -342,6 +346,7 @@ const SwapForm: FC<
       } else {
         setFieldValue('tokensIn.0.amount', undefined);
       }
+      setUserInputMode('exact-output');
     },
     [tokenOut, getMinAmountIn, setFieldValue]
   );
@@ -409,24 +414,28 @@ const SwapForm: FC<
     (_tokens: Set<Token>) => {
       if (tokenSelect === 'tokenOut') {
         const newTokenOut = Array.from(_tokens)[0];
-        setFieldValue('tokenOut', {
-          token: newTokenOut,
-          amount: undefined,
-        });
-        setFieldValue('tokensIn.0.amount', undefined);
+        setFieldValue('tokenOut.token', newTokenOut);
+        // setFieldValue('tokensIn.0.amount', undefined);
         if (tokenIn === newTokenOut) handleTokensEqual();
       } else if (tokenSelect === 'tokensIn') {
         const newTokenIn = Array.from(_tokens)[0];
-        setFieldValue('tokensIn.0', {
-          token: newTokenIn,
-          amount: undefined,
-        });
-        setFieldValue('tokenOut.amount', undefined);
+        setFieldValue('tokensIn.0.token', newTokenIn)
+        // setFieldValue('tokenOut.amount', undefined);
         if (newTokenIn === tokenOut) handleTokensEqual();
       }
     },
     [setFieldValue, handleTokensEqual, tokenSelect, tokenIn, tokenOut]
   );
+
+  // If tokenIn or tokenOut changes, recalculate the user's desired input/output
+  useEffect(() => {
+    if (userInputMode === 'exact-input' && amountIn) {
+      getAmountOut(tokenIn, amountIn);
+    } else if (userInputMode === 'exact-output' && amountOut) {
+      getMinAmountIn(tokenOut, amountOut);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenIn, tokenOut])
 
   const handleMax = useCallback(() => {
     setFieldValue('tokensIn.0.amount', balanceInMax);
