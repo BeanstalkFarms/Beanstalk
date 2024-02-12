@@ -252,7 +252,7 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
   if (account == undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
-  }
+}
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
@@ -260,6 +260,7 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
       "BDVFacet",
       "ConvertFacet",
       "ConvertGettersFacet",
+      "EnrootFacet",
       "FertilizerFacet",
       "MetadataFacet",
       "MigrationFacet",

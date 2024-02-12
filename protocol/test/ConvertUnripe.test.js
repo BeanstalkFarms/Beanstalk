@@ -53,13 +53,6 @@ describe('Unripe Convert', function () {
     await this.wellToken.connect(user).approve(this.silo.address, ethers.constants.MaxUint256);
     await this.wellToken.connect(user2).approve(this.silo.address, ethers.constants.MaxUint256);
   
-    await this.well.connect(user).addLiquidity(
-      [toBean('1000000'), to18('1000')],
-      0,
-      owner.address,
-      ethers.constants.MaxUint256
-    );
-
     this.unripe = await ethers.getContractAt('MockUnripeFacet', this.diamond.address)
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
@@ -139,7 +132,7 @@ describe('Unripe Convert', function () {
         user.address, 
        ethers.constants.MaxUint256
       );
-      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal(to6('31.606999'));
+      expect(await this.convertGet.getMaxAmountIn(UNRIPE_LP, UNRIPE_BEAN)).to.be.equal(to6('31.606981'));
     });
   })
 
@@ -223,7 +216,7 @@ describe('Unripe Convert', function () {
 
       it('properly updates user deposits', async function () {
         expect((await this.siloGetters.getDeposit(userAddress, this.unripeBean.address, 0))[0]).to.eq(to6('1000'));
-        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, to6('2.656240'));
+        const deposit = await this.siloGetters.getDeposit(userAddress, this.unripeLP.address, to6('2.656364'));
         expect(deposit[0]).to.eq('4711829');
         expect(deposit[1]).to.eq(await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
@@ -232,7 +225,7 @@ describe('Unripe Convert', function () {
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits')
           .withArgs(userAddress, this.unripeBean.address, [0], [to6('1000')], to6('1000'), [to6('100')]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit')
-          .withArgs(userAddress, this.unripeLP.address, '2656240', '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
+          .withArgs(userAddress, this.unripeLP.address, '2656364', '4711829', await this.siloGetters.bdv(this.unripeLP.address, '4711829'));
       });
     });
 
@@ -427,7 +420,7 @@ describe('Unripe Convert', function () {
 
       it('properly updates total values', async function () {
         const bdv = await this.siloGetters.bdv(this.unripeBean.address, '636776360')
-        expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq('636776360');
+        expect(await this.siloGetters.getTotalDeposited(this.unripeBean.address)).to.eq('636776401');
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeBean.address)).to.eq(this.bdv);
         expect(await this.siloGetters.getTotalDeposited(this.unripeLP.address)).to.eq(to6('0'));
         expect(await this.siloGetters.getTotalDepositedBdv(this.unripeLP.address)).to.eq(to6('0'));

@@ -354,7 +354,7 @@ contract UnripeFacet is ReentrancyGuard {
      * Tokens.
      */
     function getLockedBeans() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BEAN_WSTETH_WELL);
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(C.BARN_RAISE_TOKEN);
         return LibUnripe.getLockedBeans(twaReserves);
     }
 

@@ -16,24 +16,9 @@ import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
 import {LibSafeMathSigned96} from "contracts/libraries/LibSafeMathSigned96.sol";
 import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
-<<<<<<< HEAD
 import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
-=======
 import {InitWhitelistStatuses} from "contracts/beanstalk/init/InitWhitelistStatuses.sol";
-
-interface IGaugePointFacet {
-    function defaultGaugePointFunction(
-        uint256 currentGaugePoints,
-        uint256 optimalPercentDepositedBdv,
-        uint256 percentOfDepositedBdv
-    ) external pure returns (uint256 newGaugePoints);
-}
-
-interface ILiquidityWeightFacet {
-    function maxWeight() external pure returns (uint256);
-}
->>>>>>> add-steth-oracle
 
 /**
  * @author Brean, Brendan

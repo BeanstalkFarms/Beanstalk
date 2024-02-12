@@ -1,4 +1,4 @@
-const { BEAN, WETH, WSTETH, STETH_ETH_CHAINLINK_PRICE_AGGREGATOR, BEAN_WSTETH_WELL } = require("../test/utils/constants");
+const { BEAN, WETH, WSTETH, STETH_ETH_CHAINLINK_PRICE_AGGREGATOR, BEAN_WSTETH_WELL, ETH_USD_CHAINLINK_AGGREGATOR } = require("../test/utils/constants");
 const { toX } = require("../test/utils/helpers");
 const { getBean, toBN } = require("../utils");
 const { deployWellContractAtNonce, encodeWellImmutableData, getWellContractAt, deployMockPump } = require("../utils/well");
@@ -27,13 +27,20 @@ async function deployBasinV1_1(mock=true, accounts = undefined, verbose = true, 
 
 }
 
-async function deployBasinV1_1Upgrade(c, mock=true, accounts = undefined, verbose = true, justDeploy = false, mockPump=false) {
+async function deployBasinV1_1Upgrade(c, mock=true, accounts = undefined, verbose = true, justDeploy = false, mockPump=false, Wsteth = undefined) {
+    if (c == undefined) {
+        c = {
+            aquifer: await getWellContractAt('Aquifer', '0xBA51AAAA95aeEFc1292515b36D86C51dC7877773'),
+            wellImplementation: await getWellContractAt('Well', '0xBA510e11eEb387fad877812108a3406CA3f43a4B')
+        }
+    }
     account = await getAccount(accounts, 'constantProduct2', CONSTANT_PRODUCT_2_DEPLOYER);
     c.constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, verbose, version = "1.1");
 
     account = await getAccount(accounts, 'multiFlowPump', MULTI_FLOW_PUMP_DEPLOYER);
     if (mockPump) {
         c.multiFlowPump = await deployMockPump('0xE42Df68A4c9Ba63A536523F5cd1c1e9214Ae8568')
+        if (verbose) console.log("MultiFlowPump mocked at: 0xE42Df68A4c9Ba63A536523F5cd1c1e9214Ae8568")
     } else {
         c.multiFlowPump = await deployWellContractAtNonce('MultiFlowPump', MULTI_FLOW_PUMP_DEPLOY_NONCE, [], account, verbose, version = "1.1");
     }
@@ -77,15 +84,19 @@ async function deployBasinV1_1Upgrade(c, mock=true, accounts = undefined, verbos
     if (verbose) console.log("Adding Liquidity to Well...")
 
     const bean = await getBean();
-    const wsteth = await ethers.getContractAt("IWETH", WSTETH);
+    const wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
 
-    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', STETH_ETH_CHAINLINK_PRICE_AGGREGATOR)
-    const beanWstethPrice = (await ethUsdChainlinkAggregator.latestRoundData()).answer;
-    if (verbose) console.log("Bean:Wsteth Price:", beanWstethPrice.toString());
+    const ethUsdChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', ETH_USD_CHAINLINK_AGGREGATOR)
+    const stEthEthChainlinkAggregator = await ethers.getContractAt('MockChainlinkAggregator', STETH_ETH_CHAINLINK_PRICE_AGGREGATOR)
+    const usdPerEth = (await ethUsdChainlinkAggregator.latestRoundData()).answer;
+    const ethPerSteth = (await stEthEthChainlinkAggregator.latestRoundData()).answer;
+    const stethPerWsteth = await wsteth.stEthPerToken();
+
+    const usdPerWsteth = usdPerEth.mul(ethPerSteth).mul(stethPerWsteth).div(toX('1', 36));
 
     const amounts = [
         toBN(INITIAL_BEAN_LIQUIDITY),
-        toBN(INITIAL_BEAN_LIQUIDITY).mul(toX('1', 18)).div(beanWstethPrice)
+        toBN(INITIAL_BEAN_LIQUIDITY).mul(toX('1', 20)).div(usdPerWsteth)
     ]
 
     if (verbose) console.log("Bean Amount:", amounts[0].toString());
