@@ -138,10 +138,6 @@ library C {
         return IERC20(USDC);
     }
 
-    function weth() internal pure returns (IERC20) {
-        return IERC20(WETH);
-    }
-
     function curveMetapool() internal pure returns (ICurvePool) {
         return ICurvePool(CURVE_BEAN_METAPOOL);
     }

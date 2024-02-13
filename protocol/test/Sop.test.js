@@ -266,7 +266,7 @@ describe('Sop', function () {
       // depending on which one issues less beans.
       // this test confirms the current reserves are used.
       await this.well.setReserves([to6('1000000'), to18('1100')])
-      await this.pump.setInstantaneousReserves([to6('1100000'), to18('1100')])
+      await this.pump.setInstantaneousReserves([to6('900000'), to18('1100')])
       await this.season.rainSunrise();
       await this.silo.mow(user2Address, this.bean.address);
       await this.season.rainSunrise();
