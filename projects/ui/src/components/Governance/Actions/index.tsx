@@ -24,9 +24,20 @@ const GovernanceActions: FC<{
   <Box sx={{ position: 'sticky', top: 120 }}>
     {isEbip || isOldBip ? (
       <Module sx={{ p: 2 }}>
-        <Typography variant="h4">Beanstalk governance was on-chain before the April 2022 Governance exploit.</Typography>
-          <br/>
-        <Typography variant="h4">Read more <Link underline="hover" href="https://bean.money/beanstalk.pdf#subsection.14.3">here</Link>.</Typography>
+        {isOldBip && 
+        <>
+          <Typography variant="h4">Beanstalk governance was on-chain before the April 2022 Governance exploit.</Typography>
+            <br/>
+          <Typography variant="h4">Read more <Link underline="hover" href="https://bean.money/beanstalk.pdf#subsection.14.3">here</Link>.</Typography>
+        </>
+        }
+        {isEbip && 
+        <>
+          <Typography variant="h4">EBIPs are emergency upgrades to Beanstalk to address a bug or vulnerability.</Typography>
+            <br/>
+          <Typography variant="h4">Read more <Link underline="hover" href="https://docs.bean.money/almanac/governance/beanstalk/bcm-process#emergency-response-procedures">here</Link>.</Typography>
+        </>
+        }
       </Module>
     ) : (
       <>
