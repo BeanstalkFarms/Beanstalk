@@ -270,8 +270,6 @@ describe('Sop', function () {
       await this.season.rainSunrise();
       await this.silo.mow(user2Address, this.bean.address);
       await this.season.rainSunrise();
-
-      
     })
 
     it('sops p > 1', async function () {
