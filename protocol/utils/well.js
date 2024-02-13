@@ -246,7 +246,7 @@ async function deployMultiFlowPump() {
     return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
 
-async function deployMockBeanEthWell() {
+async function deployMockBeanEthWell(symbol = 'MOCK') {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
@@ -268,6 +268,7 @@ async function deployMockBeanEthWell() {
 
     await well.setReserves([to6('1000000'), to18('1000')])
     await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setSymbol(symbol)
 
     return [well, wellFunction, pump]
 }
