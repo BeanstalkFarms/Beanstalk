@@ -3,7 +3,8 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracle, LibEthUsdOracle, LibWstethUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 
 /**
  * @title UsdOracle
@@ -12,16 +13,54 @@ import {LibUsdOracle, LibEthUsdOracle} from "contracts/libraries/Oracle/LibUsdOr
  */
 contract UsdOracle {
     
-    function getUsdPrice(address token) external view returns (uint256) {
+    // USD : Token
+
+    function getUsdTokenPrice(address token) external view returns (uint256) {
         return LibUsdOracle.getUsdPrice(token);
     }
+
+    function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256) {
+        return LibUsdOracle.getUsdPrice(token, lookback);
+    }
+
+    // Token : USD
+
+    function getTokenUsdPrice(address token) external view returns (uint256) {
+        return LibUsdOracle.getTokenPrice(token);
+    }
+
+    function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256) {
+        return LibUsdOracle.getTokenPrice(token, lookback);
+    }
+
+    // ETH : USD
 
     function getEthUsdPrice() external view returns (uint256) {
         return LibEthUsdOracle.getEthUsdPrice();
     }
 
-    function getEthUsdTwa(uint256 lookback) external view returns (uint256) {
+    function getEthUsdTwap(uint256 lookback) external view returns (uint256) {
         return LibEthUsdOracle.getEthUsdPrice(lookback);
+    }
+
+    // WstETH : USD
+
+    function getWstethUsdPrice() external view returns (uint256) {
+        return LibWstethUsdOracle.getWstethUsdPrice();
+    }
+
+    function getWstethUsdTwap(uint256 lookback) external view returns (uint256) {
+        return LibWstethUsdOracle.getWstethUsdPrice(lookback);
+    }
+
+    // WstETH : ETH
+
+    function getWstethEthPrice() external view returns (uint256) {
+        return LibWstethEthOracle.getWstethEthPrice();
+    }
+
+    function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
+        return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
 
 }

@@ -121,7 +121,7 @@ contract Account {
      * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
      * @param farmerGerminating A Farmer's germinating stalk. Seperated into odd and even stalk.
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
-     * @param barnRaiseWell The Well that the Barn Raise adds liquidity to
+     * @param barnRaiseWell The Well that the Barn Raise adds liquidity to.
      */
     struct State {
         Field field; // A Farmer's Field storage.

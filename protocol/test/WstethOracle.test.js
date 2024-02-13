@@ -157,13 +157,20 @@ testIfRpcSet('wStEth Oracle with Forking', function () {
             return
         }
 
-        const contracts = await deploy("Test", false, true, false);
-        season = await ethers.getContractAt('MockSeasonFacet', contracts.beanstalkDiamond.address)
+        // const MockSeasonFacet = await ethers.getContractFactory('MockSeasonFacet');
+        // const season = await MockSeasonFacet.deploy({
+
+        // });
+        // await season.deployed();
+
+        const UsdOracle = await ethers.getContractFactory('UsdOracle');
+        const usdOracle = await UsdOracle.deploy();
+        await usdOracle.deployed();
     
-        expect(await season.getWstethEthPrice()).to.be.equal('1154105')
-        expect(await season.getWstethEthTwap('500000')).to.be.equal('1154095')
-        expect(await season.getWstethUsdPrice()).to.be.equal('2580422122')
-        expect(await season.getWstethUsdTwap('500000')).to.be.equal('2744261803')
-        expect(await season.getUsdPrice(WSTETH)).to.be.equal('387533493638216')
+        expect(await usdOracle.getWstethEthPrice()).to.be.equal('1154105')
+        expect(await usdOracle.getWstethEthTwap('500000')).to.be.equal('1154095')
+        expect(await usdOracle.getWstethUsdPrice()).to.be.equal('2580422122')
+        expect(await usdOracle.getWstethUsdTwap('5000')).to.be.equal('2571912837')
+        expect(await usdOracle.getUsdTokenPrice(WSTETH)).to.be.equal('387533493638216')
     })
 })

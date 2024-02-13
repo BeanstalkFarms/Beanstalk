@@ -136,7 +136,7 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracle.getUsdPrice(token).mul(twaReserves[j]).div(1e6);
+        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
     }
 
     /**

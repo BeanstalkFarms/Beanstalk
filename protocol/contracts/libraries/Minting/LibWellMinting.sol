@@ -56,7 +56,7 @@ library LibWellMinting {
      */
     function check(
         address well
-    ) internal view returns (int256 deltaB) {
+    ) external view returns (int256 deltaB) {
         bytes memory lastSnapshot = LibAppStorage
             .diamondStorage()
             .wellOracleSnapshots[well];
@@ -78,7 +78,7 @@ library LibWellMinting {
      */
     function capture(
         address well
-    ) internal returns (int256 deltaB) {
+    ) external returns (int256 deltaB) {
         bytes memory lastSnapshot = LibAppStorage
             .diamondStorage()
             .wellOracleSnapshots[well];
