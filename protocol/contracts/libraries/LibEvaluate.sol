@@ -63,8 +63,6 @@ library LibEvaluate {
 
     uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
-    event sopWell(address well, uint256 season);
-
     /**
      * @notice evaluates the pod rate and returns the caseId
      * @param podRate the length of the podline (debt), divided by the bean supply.
@@ -219,9 +217,11 @@ library LibEvaluate {
         uint256[] memory twaReserves;
         uint256 totalUsdLiquidity;
         uint256 largestLiq;
+        uint256 wellLiquidity;
+        uint256 liquidityWeight;
         for (uint256 i; i < pools.length; i++) {
             // get the liquidity weight.
-            uint256 liquidityWeight = getLiquidityWeight(s.ss[pools[i]].lwSelector);
+            liquidityWeight = getLiquidityWeight(s.ss[pools[i]].lwSelector);
             
             // get the non-bean value in an LP.
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(
@@ -229,7 +229,7 @@ library LibEvaluate {
             );
 
             // calculate the non-bean liqudity in the pool.
-            uint256 wellLiquidity = liquidityWeight.mul(
+            wellLiquidity = liquidityWeight.mul(
                 LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)
             ).div(1e18);
 

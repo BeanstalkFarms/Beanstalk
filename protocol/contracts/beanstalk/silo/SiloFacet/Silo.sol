@@ -17,6 +17,8 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+
 /**
  * @title Silo
  * @author Publius, Pizzaman1337, Brean
@@ -151,7 +153,10 @@ contract Silo is ReentrancyGuard {
     function _claimPlenty(address account) internal {
         // Plenty is earned in the form of weth.
         uint256 plenty = s.a[account].sop.plenty;
-        C.weth().safeTransfer(account, plenty);
+        IWell well = IWell(s.sopWell);
+        IERC20[] memory tokens = well.tokens();
+        IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
+        sopToken.safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
 
         emit ClaimPlenty(account, plenty);
