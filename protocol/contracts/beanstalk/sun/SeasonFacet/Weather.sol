@@ -60,7 +60,7 @@ contract Weather is Sun {
      * mechanism can be found in the Beanstalk whitepaper.
      * An explanation of state variables can be found in {AppStorage}.
      */
-    function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256 caseId) {
+    function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
@@ -68,9 +68,9 @@ contract Weather is Sun {
             return 9; // Reasonably low
         }
         // Calculate Case Id
-        caseId = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
+        (uint256 caseId, address sopWell) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
-        handleRain(caseId);
+        handleRain(caseId, sopWell);
     }
 
     /**
@@ -139,7 +139,7 @@ contract Weather is Sun {
      * Pod Rate is less than 5%, the Farm is Oversaturated. If it is Oversaturated
      * for a Season, each Season in which it continues to be Oversaturated, it Floods.
      */
-    function handleRain(uint256 caseId) internal {
+    function handleRain(uint256 caseId, address well) internal {
         // cases % 36  3-8 represent the case where the pod rate is less than 5% and P > 1.
         if (caseId.mod(36) < 3 || caseId.mod(36) > 8) {
             if (s.season.raining) {
@@ -155,6 +155,8 @@ contract Weather is Sun {
             s.r.roots = s.s.roots;
         } else {
             if (s.r.roots > 0) {
+                // initalize sopWell if it is not already set.
+                if (s.sopWell == address(0)) s.sopWell = well;
                 sop();
             }
         }
@@ -175,7 +177,8 @@ contract Weather is Sun {
         // calculate the beans from a sop.
         // sop beans uses the instantaneous reserves of the beaneth well,
         // rather than the twaReserves in order to get bean back to peg.
-        uint256 newBeans = calculateSop();
+        address sopWell = s.sopWell;
+        (uint256 newBeans, IERC20 sopToken) = calculateSop(sopWell);
         if (newBeans == 0) return;
 
         uint256 sopBeans = uint256(newBeans);
@@ -190,11 +193,11 @@ contract Weather is Sun {
             C.bean().mint(address(this), sopBeans);
         }
 
-        // Approve and Swap Beans for WETH.
-        C.bean().approve(C.BEAN_ETH_WELL, sopBeans);
-        uint256 amountOut = IWell(C.BEAN_ETH_WELL).swapFrom(
+        // Approve and Swap Beans for the non-bean token of the SOP well.
+        C.bean().approve(sopWell, sopBeans);
+        uint256 amountOut = IWell(sopWell).swapFrom(
             C.bean(),
-            C.weth(), 
+            sopToken, 
             sopBeans, 
             0,
             address(this),
@@ -222,28 +225,31 @@ contract Weather is Sun {
      * 
      * Generalized for a single well. Sop does not support multiple wells.
      */
-    function calculateSop() private view returns (uint256 sopBeans){
-        IWell sopWell = IWell(C.BEAN_ETH_WELL);
+    function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken){
+        IWell sopWell = IWell(well);
         IERC20[] memory tokens = sopWell.tokens();
-        uint256[] memory reserves = IInstantaneousPump(C.BEANSTALK_PUMP)
-            .readInstantaneousReserves(C.BEAN_ETH_WELL, C.BYTES_ZERO);
+        Call[] memory pumps = sopWell.pumps();
+        uint256[] memory reserves = IInstantaneousPump(pumps[0].target)
+            .readInstantaneousReserves(well, pumps[0].data);
         Call memory wellFunction = sopWell.wellFunction();
-        uint256[] memory ratios; bool success;
-        (ratios, , success) = LibWell.getRatiosAndBeanIndex(tokens);
+        uint256[] memory ratios; bool success; uint256 beanIndex;
+        (ratios, beanIndex, success) = LibWell.getRatiosAndBeanIndex(tokens);
         // If the USD Oracle oracle call fails, the convert should not be allowed.
         require(success, "Convert: USD Oracle failed");
 
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target)
             .calcReserveAtRatioSwap(
                 reserves,
-                C.BEAN_INDEX,
+                beanIndex,
                 ratios,
                 wellFunction.data
             );
         // return 0 if the calculated beans at peg is less than the current bean reserves
         // (i.e deltaB is negative)
-        if (beansAtPeg <= reserves[C.BEAN_INDEX]) return (0);
+        if (beansAtPeg <= reserves[beanIndex]) return (0, IERC20(0));
         // SafeMath is unnecessary as above line performs the check
-        sopBeans = beansAtPeg - reserves[C.BEAN_INDEX];
+        sopBeans = beansAtPeg - reserves[beanIndex];
+        // the sopToken is the non sopToken
+        sopToken = beanIndex == 0 ? tokens[1] : tokens[0];
     }
 }

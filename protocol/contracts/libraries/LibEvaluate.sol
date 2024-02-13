@@ -63,6 +63,8 @@ library LibEvaluate {
 
     uint256 internal constant LIQUIDITY_PRECISION = 1e12;
 
+    event sopWell(address well, uint256 season);
+
     /**
      * @notice evaluates the pod rate and returns the caseId
      * @param podRate the length of the podline (debt), divided by the bean supply.
@@ -231,8 +233,11 @@ library LibEvaluate {
                 LibWell.getWellTwaUsdLiquidityFromReserves(pools[i], twaReserves)
             ).div(1e18);
 
-            // if the liquidity is the largest, update the largestLiqWell, and 
-            // add the liquidity to the total.
+            // if the liquidity is the largest, update `largestLiqWell`,  
+            // and add the liquidity to the total.
+            // `largestLiqWell` is only used to initalize `s.sopWell` upon a sop,
+            // but a hot storage load to skip the block below 
+            // is significantly more expensive than performing the logic on every sunrise.
             if(wellLiquidity > largestLiq) largestLiqWell = pools[i];
             totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
             
@@ -295,7 +300,8 @@ library LibEvaluate {
     function evaluateBeanstalk(
         int256 deltaB,
         uint256 beanSupply
-    ) internal returns (uint256 caseId) {
+    ) internal returns (uint256 caseId, address largestLiqWell) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         (
             Decimal.D256 memory deltaPodDemand,
             Decimal.D256 memory lpToSupplyRatio,
