@@ -238,7 +238,10 @@ library LibEvaluate {
             // `largestLiqWell` is only used to initalize `s.sopWell` upon a sop,
             // but a hot storage load to skip the block below 
             // is significantly more expensive than performing the logic on every sunrise.
-            if(wellLiquidity > largestLiq) largestLiqWell = pools[i];
+            if(wellLiquidity > largestLiq) {
+                largestLiq = wellLiquidity;
+                largestLiqWell = pools[i];
+            }
             totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
             
             if (pools[i] == C.BEAN_ETH_WELL) {
