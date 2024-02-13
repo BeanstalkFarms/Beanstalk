@@ -308,4 +308,8 @@ contract SeasonGettersFacet {
         (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return well;
     }
+
+    function getSopWell() external view returns (address) {
+        return s.sopWell;
+    }
 }

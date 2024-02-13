@@ -71,6 +71,7 @@ contract Weather is Sun {
         (uint256 caseId, address sopWell) = LibEvaluate.evaluateBeanstalk(deltaB, beanSupply);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId);
         handleRain(caseId, sopWell);
+        return caseId;
     }
 
     /**
@@ -226,17 +227,27 @@ contract Weather is Sun {
      * Generalized for a single well. Sop does not support multiple wells.
      */
     function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken){
+
+        // if the sopWell was not initalized, the should not occur.
+        if(well == address(0)) return (0, IERC20(0));
         IWell sopWell = IWell(well);
         IERC20[] memory tokens = sopWell.tokens();
         Call[] memory pumps = sopWell.pumps();
-        uint256[] memory reserves = IInstantaneousPump(pumps[0].target)
-            .readInstantaneousReserves(well, pumps[0].data);
+        IInstantaneousPump pump = IInstantaneousPump(pumps[0].target);
+        uint256[] memory reserves = pump.readInstantaneousReserves(well, pumps[0].data);
+        uint256[] memory cReserves = sopWell.getReserves();
         Call memory wellFunction = sopWell.wellFunction();
-        uint256[] memory ratios; bool success; uint256 beanIndex;
-        (ratios, beanIndex, success) = LibWell.getRatiosAndBeanIndex(tokens);
-        // If the USD Oracle oracle call fails, the convert should not be allowed.
-        require(success, "Convert: USD Oracle failed");
+        (
+            uint256[] memory ratios, 
+            uint256 beanIndex, 
+            bool success
+        ) = LibWell.getRatiosAndBeanIndex(tokens);
+    // If the USD Oracle oracle call fails, the sop should not occur.
+        // return 0 rather than revert to prevent sunrise from failing.
+        if (!success) return (0, IERC20(0));
 
+        // compare the beans at peg using the instantaneous reserves,
+        // and the current reserves.
         uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target)
             .calcReserveAtRatioSwap(
                 reserves,
@@ -244,12 +255,27 @@ contract Weather is Sun {
                 ratios,
                 wellFunction.data
             );
+        
+        uint256 beansAtPegCReserves = IBeanstalkWellFunction(wellFunction.target)
+            .calcReserveAtRatioSwap(
+                cReserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            );
+        
+        // use the minimum of the two.
+        if(beansAtPegCReserves < beansAtPeg) {
+            beansAtPeg = beansAtPegCReserves;
+            reserves = cReserves;
+        }
+        
         // return 0 if the calculated beans at peg is less than the current bean reserves
         // (i.e deltaB is negative)
         if (beansAtPeg <= reserves[beanIndex]) return (0, IERC20(0));
         // SafeMath is unnecessary as above line performs the check
         sopBeans = beansAtPeg - reserves[beanIndex];
         // the sopToken is the non bean token in the well.
-        sopToken = beanIndex == 0 ? tokens[1] : tokens[0];
+        sopToken = tokens[beanIndex == 0 ? 1 : 0];
     }
 }

@@ -303,18 +303,18 @@ library LibEvaluate {
     function evaluateBeanstalk(
         int256 deltaB,
         uint256 beanSupply
-    ) internal returns (uint256 caseId, address largestLiqWell) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
+    ) internal returns (uint256, address) {
         (
             Decimal.D256 memory deltaPodDemand,
             Decimal.D256 memory lpToSupplyRatio,
             Decimal.D256 memory podRate,
             address largestLiqWell
         ) = getBeanstalkState(beanSupply);
-        caseId = evalPodRate(podRate) // Evaluate Pod Rate
+        uint256 caseId = evalPodRate(podRate) // Evaluate Pod Rate
         .add(evalPrice(deltaB, podRate, largestLiqWell)) // Evaluate Price
         .add(evalDeltaPodDemand(deltaPodDemand)) // Evaluate Delta Soil Demand 
         .add(evalLpToSupplyRatio(lpToSupplyRatio)); // Evaluate LP to Supply Ratio
+        return(caseId, largestLiqWell);
     }
 
     /**
