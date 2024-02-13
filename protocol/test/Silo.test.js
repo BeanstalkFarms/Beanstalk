@@ -38,7 +38,7 @@ describe('Silo', function () {
     this.siloGetters = await ethers.getContractAt('SiloGettersFacet', this.diamond.address)
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES)
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_3_CURVE, ZERO_BYTES);
-    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell('BEANWETHCP2w')
     await whitelistWell(this.well.address, '10000', to6('4'))
     await this.season.captureWellE(this.well.address)
     
