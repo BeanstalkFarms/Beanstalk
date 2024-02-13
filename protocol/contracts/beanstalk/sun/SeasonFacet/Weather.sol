@@ -249,7 +249,7 @@ contract Weather is Sun {
         if (beansAtPeg <= reserves[beanIndex]) return (0, IERC20(0));
         // SafeMath is unnecessary as above line performs the check
         sopBeans = beansAtPeg - reserves[beanIndex];
-        // the sopToken is the non sopToken
+        // the sopToken is the non bean token in the well.
         sopToken = beanIndex == 0 ? tokens[1] : tokens[0];
     }
 }
