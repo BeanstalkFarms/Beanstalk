@@ -62,6 +62,7 @@ contract Silo is ReentrancyGuard {
      */
     event ClaimPlenty(
         address indexed account,
+        address token,
         uint256 plenty
     );
 
@@ -159,6 +160,6 @@ contract Silo is ReentrancyGuard {
         sopToken.safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
 
-        emit ClaimPlenty(account, plenty);
+        emit ClaimPlenty(account, address(sopToken), plenty);
     }
 }
