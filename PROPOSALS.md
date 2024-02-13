@@ -47,6 +47,8 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-36](https://bean.money/bip-36): Silo V3
 * [BIP-37](https://bean.money/bip-37): Basin Integration
 * [BIP-38](https://bean.money/bip-38): Migrate urBEAN3CRV to urBEANETH
+* [BIP-39](https://bean.money/bip-39): Beanstalk Farms 2024 Development Budget
+* [BIP-40](https://bean.money/bip-40): Beanstalk Farms 2024 Development Budget
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
@@ -63,6 +65,12 @@ You can read about the BCM's Emergency Response Procedures [here](https://docs.b
 * [EBIP-6](https://bean.money/ebip-6): Resolve EBIP-4 and EBIP-5
 * [EBIP-7](https://bean.money/ebip-7): Enroot BDV Update
 * [EBIP-8](https://bean.money/ebip-8): Enroot BDV Rounding
+* [EBIP-9](https://bean.money/ebip-9): Temporarily Disable the Well Minting Oracle
+* [EBIP-10](https://bean.money/ebip-10): Fix Bean to LP Well Convert
+* [EBIP-11](https://bean.money/ebip-11): Upgrade Minting Oracle to 60 Minute TWA ETH/USD Price
+* [EBIP-12](https://bean.money/ebip-12): Remove Convert
+* [EBIP-13](https://bean.money/ebip-13): Re-Add Convert
+* [EBIP-14](https://bean.money/ebip-14): Remove Vesting Period
 
 ## Beanstalk Operations Proposal (BOP)
 
@@ -73,3 +81,4 @@ You can read more about BOPs [here](https://docs.bean.money/almanac/governance/p
 * [BOP-1](https://bean.money/bop-1): Ratify Disclosures Statement
 * [BOP-2](https://bean.money/bop-2): Increase and Revisit Bounty for April Governance Exploit
 * [BOP-3](https://bean.money/bop-3): Form the BeaNFT DAO
+* [BOP-4](https://bean.money/bop-4): Formalize BFC Reporting
