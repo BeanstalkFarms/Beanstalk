@@ -164,7 +164,7 @@ library LibGauge {
 
             // Gauge points has 18 decimal precision (GP_PRECISION = 1%)
             // Deposited BDV has 6 decimal precision (1e6 = 1 unit of BDV)
-            uint256 gpPerBdv = newGaugePoints.mul(BDV_PRECISION).div(depositedBdv);
+            uint256 gpPerBdv = depositedBdv > 0 ? newGaugePoints.mul(BDV_PRECISION).div(depositedBdv) : 0;
 
             // gpPerBdv has 18 decimal precision.
             if (gpPerBdv > maxLpGpPerBdv) maxLpGpPerBdv = gpPerBdv;
