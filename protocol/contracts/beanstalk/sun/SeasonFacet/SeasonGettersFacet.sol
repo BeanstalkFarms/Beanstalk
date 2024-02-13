@@ -250,7 +250,8 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
+        (Decimal.D256 memory l2sr, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        return l2sr.value;
     }
 
     /**
@@ -300,5 +301,15 @@ contract SeasonGettersFacet {
      */
     function getGaugePoints(address token) external view returns (uint256) {
         return s.ss[token].gaugePoints;
+    }
+
+    function getLargestLiqWell() external view returns (address) {
+       uint256 beanSupply = C.bean().totalSupply();
+        (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        return well;
+    }
+
+    function getSopWell() external view returns (address) {
+        return s.sopWell;
     }
 }

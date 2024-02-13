@@ -569,6 +569,7 @@ contract Storage {
  * @param oddGerminating Stores germinating data during odd seasons.
  * @param evenGerminating Stores germinating data during even seasons.
  * @param whitelistedStatues Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
+ * @param sopWell Stores the well that will be used upon a SOP. Unintialized until a SOP occurs, and is kept constant afterwards.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -650,4 +651,6 @@ struct AppStorage {
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
 
     Storage.WhitelistStatus[] whitelistStatuses;
+
+    address sopWell;
 }
