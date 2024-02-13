@@ -268,7 +268,7 @@ contract SeasonGettersFacet {
     function getBeanEthTwaUsdLiquidity() public view returns (uint256) {
         return LibWell.getTwaLiquidityFromBeanstalkPump(
             C.BEAN_ETH_WELL,
-            LibUsdOracle.getTokenPrice(C.WETH)
+            LibUsdOracle.getUsdPrice(C.WETH)
         );
     }
     

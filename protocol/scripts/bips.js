@@ -264,9 +264,14 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
       "FertilizerFacet",
       "MetadataFacet",
       "MigrationFacet",
+      "SeasonFacet",
+      "SeasonGettersFacet",
       "UnripeFacet",
+      "WhitelistFacet" // update whitelist abilities.
     ],
     libraryNames: [
+      'LibGauge',
+      'LibIncentive',
       'LibConvert',
       'LibLockedUnderlying',
     ],
@@ -276,7 +281,15 @@ async function bipMigrateUnripeBeanEthToBeanSteth(mock = true, account = undefin
       ],
       'UnripeFacet': [
         'LibLockedUnderlying'
-      ]
+      ],
+      'SeasonFacet': [
+        'LibGauge',
+        'LibIncentive',
+        'LibLockedUnderlying',
+      ],
+      'SeasonGettersFacet': [
+        'LibLockedUnderlying'
+      ],
     },
     initFacetName: "InitMigrateUnripeBeanEthToBeanSteth",
     selectorsToRemove: [],

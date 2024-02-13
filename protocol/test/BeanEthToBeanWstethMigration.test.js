@@ -25,6 +25,12 @@ let underlyingBefore
 let beanEthUnderlying
 let snapshotId
 
+async function fastForwardHour() {
+  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+}
+
 // Skipping because this migration already occured.
 testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
   before(async function () {
@@ -95,6 +101,36 @@ testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
   });
 
   describe('Initializes migration', async function () {
+
+    describe("Bean Eth minting", async function () {
+      it('resets well oracle snapshot', async function () {
+        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
+      })
+
+      it('doesn\'t start the oracle next season well oracle snapshot', async function () {
+        await fastForwardHour();
+        await this.beanstalk.sunrise();
+        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
+      })
+
+      it('doesn\'t start the oracle after 24 season well oracle snapshot', async function () {
+        for (let i = 0; i < 23; i++) {
+          await fastForwardHour();
+          await this.beanstalk.sunrise();
+        }
+        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.equal('0x')
+      })
+
+      it('starts the oracle after 24 season well oracle snapshot', async function () {
+        for (let i = 0; i < 24; i++) {
+          await fastForwardHour();
+          await this.beanstalk.sunrise();
+        }
+        expect(await this.beanstalk.wellOracleSnapshot(BEAN_ETH_WELL)).to.be.not.equal('0x')
+      })
+
+    })
+
     it('Changings underlying token', async function () {
       expect(await this.beanstalk.getBarnRaiseToken()).to.be.equal(WSTETH)
     })
