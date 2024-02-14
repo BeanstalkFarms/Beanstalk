@@ -52,24 +52,24 @@ library LibCases {
     // BeantoMaxLPGaugePointPerBdvRatio is decrement by 50%.
     //                                                                     bT
     //////////////////////////////////////////////////////////     [  mT  ][][       mL         ][       BL         ][    null    ]
-    bytes32 internal constant   T_PLUS_3_L_MINUS_FIFTY = bytes32(0x05F5E1000300056BC75E2D63100000FFFD4A1C50E94E78000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv set to 10% of current value.
-    bytes32 internal constant   T_PLUS_1_L_MINUS_FIFTY = bytes32(0x05F5E1000100056BC75E2D63100000FFFD4A1C50E94E78000000000000000000);
-    bytes32 internal constant   T_PLUS_0_L_MINUS_FIFTY = bytes32(0x05F5E1000000056BC75E2D63100000FFFD4A1C50E94E78000000000000000000);
-    bytes32 internal constant  T_MINUS_1_L_MINUS_FIFTY = bytes32(0x05F5E100FF00056BC75E2D63100000FFFD4A1C50E94E78000000000000000000);
-    bytes32 internal constant  T_MINUS_3_L_MINUS_FIFTY = bytes32(0x05F5E100FD00056BC75E2D63100000FFFD4A1C50E94E78000000000000000000);
+    bytes32 internal constant   T_PLUS_3_L_MINUS_FIFTY = bytes32(0x05F5E1000300056BC75E2D63100000FFFD4A1C50E94E78000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv decreased by 50.
+    bytes32 internal constant   T_PLUS_1_L_MINUS_FIFTY = bytes32(0x05F5E1000100056BC75E2D63100000FFFD4A1C50E94E78000000000000000000); // temperature increased by 1%, Bean2maxLpGpPerBdv decreased by 50.
+    bytes32 internal constant   T_PLUS_0_L_MINUS_FIFTY = bytes32(0x05F5E1000000056BC75E2D63100000FFFD4A1C50E94E78000000000000000000); // temperature increased by 0%, Bean2maxLpGpPerBdv decreased by 50.
+    bytes32 internal constant  T_MINUS_1_L_MINUS_FIFTY = bytes32(0x05F5E100FF00056BC75E2D63100000FFFD4A1C50E94E78000000000000000000); // temperature decreased by 1%, Bean2maxLpGpPerBdv decreased by 50.
+    bytes32 internal constant  T_MINUS_3_L_MINUS_FIFTY = bytes32(0x05F5E100FD00056BC75E2D63100000FFFD4A1C50E94E78000000000000000000); // temperature decreased by 3%, Bean2maxLpGpPerBdv decreased by 50.
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
-    bytes32 internal constant   T_PLUS_1_L_PLUS_ONE = bytes32(0x05F5E1000100056BC75E2D6310000000000DE0B6B3A764000000000000000000);
-    bytes32 internal constant   T_PLUS_3_L_PLUS_ONE = bytes32(0x05F5E1000300056BC75E2D6310000000000DE0B6B3A764000000000000000000);
-    bytes32 internal constant   T_PLUS_0_L_PLUS_ONE = bytes32(0x05F5E1000000056BC75E2D6310000000000DE0B6B3A764000000000000000000);
+    bytes32 internal constant   T_PLUS_3_L_PLUS_ONE = bytes32(0x05F5E1000300056BC75E2D6310000000000DE0B6B3A764000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv increased by 1.
+    bytes32 internal constant   T_PLUS_1_L_PLUS_ONE = bytes32(0x05F5E1000100056BC75E2D6310000000000DE0B6B3A764000000000000000000); // temperature increased by 1%, Bean2maxLpGpPerBdv increased by 1.
+    bytes32 internal constant   T_PLUS_0_L_PLUS_ONE = bytes32(0x05F5E1000000056BC75E2D6310000000000DE0B6B3A764000000000000000000); // temperature increased by 0%, Bean2maxLpGpPerBdv increased by 1.
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
-    bytes32 internal constant   T_PLUS_1_L_PLUS_TWO = bytes32(0x05F5E1000100056BC75E2D6310000000001BC16D674EC8000000000000000000);
-    bytes32 internal constant   T_PLUS_3_L_PLUS_TWO = bytes32(0x05F5E1000300056BC75E2D6310000000001BC16D674EC8000000000000000000);
+    bytes32 internal constant   T_PLUS_3_L_PLUS_TWO = bytes32(0x05F5E1000300056BC75E2D6310000000001BC16D674EC8000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv increased by 2.
+    bytes32 internal constant   T_PLUS_1_L_PLUS_TWO = bytes32(0x05F5E1000100056BC75E2D6310000000001BC16D674EC8000000000000000000); // temperature increased by 1%, Bean2maxLpGpPerBdv increased by 2.
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
-    bytes32 internal constant T_MINUS_1_L_MINUS_ONE = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFF21F494C589C000000000000000000);
-    bytes32 internal constant T_MINUS_3_L_MINUS_ONE = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFF21F494C589C000000000000000000);
-    bytes32 internal constant  T_PLUS_3_L_MINUS_ONE = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF21F494C589C000000000000000000);
-    bytes32 internal constant  T_PLUS_1_L_MINUS_ONE = bytes32(0x05F5E1000100056BC75E2D63100000FFFFF21F494C589C000000000000000000);
-    bytes32 internal constant  T_PLUS_0_L_MINUS_ONE = bytes32(0x05F5E1000000056BC75E2D63100000FFFFF21F494C589C000000000000000000);
+    bytes32 internal constant  T_PLUS_3_L_MINUS_ONE = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv decreased by 1.
+    bytes32 internal constant  T_PLUS_1_L_MINUS_ONE = bytes32(0x05F5E1000100056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature increased by 1%, Bean2maxLpGpPerBdv decreased by 1.
+    bytes32 internal constant  T_PLUS_0_L_MINUS_ONE = bytes32(0x05F5E1000000056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature increased by 0%, Bean2maxLpGpPerBdv decreased by 1.
+    bytes32 internal constant T_MINUS_1_L_MINUS_ONE = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature decreased by 1%, Bean2maxLpGpPerBdv decreased by 1.
+    bytes32 internal constant T_MINUS_3_L_MINUS_ONE = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature decreased by 3%, Bean2maxLpGpPerBdv decreased by 1.
 
     /**
      * @notice given a caseID (0-144), return the caseData.

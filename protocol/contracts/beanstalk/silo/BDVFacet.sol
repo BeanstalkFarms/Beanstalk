@@ -24,7 +24,6 @@ contract BDVFacet {
     function curveToBDV(uint256 amount) public view returns (uint256) {
         return LibBeanMetaCurve.bdv(amount);
     }
-
     /**
      * @dev Returns the BDV of a given `amount` of Beans.
      */

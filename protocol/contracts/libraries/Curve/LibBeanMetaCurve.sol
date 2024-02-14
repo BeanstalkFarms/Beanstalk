@@ -45,20 +45,6 @@ library LibBeanMetaCurve {
         return beanValue.add(curveValue);
     }
 
-    /**
-     * @notice calculates the total USD liquidity in the BEAN:3CRV
-     * Metapool. NOTE: assumes that `balances[0]` is BEAN.
-     * 
-     * @dev 18 decimal precision.
-     */
-    function totalLiquidityUsd() internal view returns (uint256) {
-        // use the value stored in `twaReserves` for gas effiency.
-        uint256[2] memory balances = LibMetaCurve.getReservesFromStorageOrTwaOrPrevBalances(
-            C.CURVE_BEAN_METAPOOL
-        );
-        return balances[1].mul(C.curve3Pool().get_virtual_price()).div(PRECISION);
-    }
-
     function getDeltaB() internal view returns (int256 deltaB) {
         uint256[2] memory balances = C.curveMetapool().get_balances();
         uint256 d = getDFroms(balances);

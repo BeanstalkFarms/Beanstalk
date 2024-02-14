@@ -8,14 +8,12 @@ import {C} from "../../../C.sol";
 import {Decimal, SafeMath} from "contracts/libraries/Decimal.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
-import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
-import {LibBeanMetaCurve} from "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 
 /**
@@ -28,8 +26,6 @@ contract SeasonGettersFacet {
     using SignedSafeMath for int256;
 
     AppStorage internal s;
-
-    uint256 constant ONE_WEEK = 168;
 
     //////////////////// SEASON GETTERS ////////////////////
 
@@ -98,14 +94,13 @@ contract SeasonGettersFacet {
      * - the Bean:ETH Well
      */
     function totalDeltaB() external view returns (int256 deltaB) {
-        deltaB = LibCurveMinting.check().add(LibWellMinting.check(C.BEAN_ETH_WELL));
+        deltaB = LibWellMinting.check(C.BEAN_ETH_WELL);
     }
 
     /**
      * @notice Returns the Time Weighted Average Delta B since the start of the Season for the requested pool.
      */
     function poolDeltaB(address pool) external view returns (int256) {
-        if (pool == C.CURVE_BEAN_METAPOOL) return LibCurveMinting.check();
         if (LibWell.isWell(pool)) return LibWellMinting.check(pool);
         revert("Oracle: Pool not supported");
     }
@@ -116,15 +111,6 @@ contract SeasonGettersFacet {
      */
     function wellOracleSnapshot(address well) external view returns (bytes memory snapshot) {
         snapshot = s.wellOracleSnapshots[well];
-    }
-
-    /**
-     * @notice Returns the last Curve Oracle data snapshot for the Bean:3Crv Pool.
-     * @return co The last Curve Oracle data snapshot.
-     */
-    function curveOracle() external view returns (Storage.CurveMetapoolOracle memory co) {
-        co = s.co;
-        co.timestamp = s.season.timestamp; // use season timestamp for oracle
     }
 
     //////////////////// SEED GAUGE GETTERS ////////////////////
@@ -162,19 +148,6 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice Returns the new average grown stalk per BDV per season,
-     * if UpdateAverageStalkPerBdvPerSeason() is called.
-     * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
-     * note that stalk has 10 decimals.
-     */
-    function getNewAverageGrownStalkPerBdvPerSeason() external view returns (uint256) {
-        return
-            getAverageGrownStalkPerBdv().mul(LibGauge.BDV_PRECISION).div(
-                LibGauge.TARGET_SEASONS_TO_CATCHUP
-            );
-    }
-
-    /**
      * @notice Returns the ratio between bean and max LP gp Per BDV, unscaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
@@ -186,22 +159,82 @@ contract SeasonGettersFacet {
      * @notice Returns the ratio between bean and max LP gp Per BDV, scaled.
      * @dev 6 decimal precision (1% = 1e6)
      */
-    function getBeanToMaxLpGpPerBdvRatioScaled() external view returns (uint256) {
+    function getBeanToMaxLpGpPerBdvRatioScaled() public view returns (uint256) {
         return LibGauge.getBeanToMaxLpGpPerBdvRatioScaled(s.seedGauge.beanToMaxLpGpPerBdvRatio);
     }
 
     /**
-     * @notice returns the season in which the stalk growth rate was last updated.
+     * @notice returns the Gauge Points per BDV for a given token.
+     * @param token The token to get the Gauge Points per BDV for.
      */
-    function getLastStalkGrowthRateUpdate() external view returns (uint256) {
-        return s.seedGauge.lastStalkGrowthUpdate;
+    function getGaugePointsPerBdvForToken(address token) public view returns (uint256) {
+        if (token == C.BEAN) {
+            return getBeanGaugePointsPerBdv();
+        } else {
+            return getGaugePointsPerBdvForWell(token);
+        }
     }
 
     /**
-     * @notice returns the next season in that beanstalk will update the stalk growth rate.
+     * gets the Gauge Points per BDV for a given well.
+     * @param well The well to get the Gauge Points per BDV for.
      */
-    function getNextStalkGrowthRateUpdate() external view returns (uint256) {
-        return uint256(s.seedGauge.lastStalkGrowthUpdate).add(ONE_WEEK);
+    function getGaugePointsPerBdvForWell(address well) public view returns (uint256) {
+        if (LibWell.isWell(well)) {
+            uint256 wellGaugePoints = s.ss[well].gaugePoints;
+            uint256 wellDepositedBdv = s.siloBalances[well].depositedBdv;
+            return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
+        } else {
+            revert ("Token not supported");
+        }
+    }
+
+    /**
+     * @notice calculates the BEANETH Gauge Points (GP) per BDV.
+     */
+    function getBeanEthGaugePointsPerBdv() public view returns (uint256) {
+        return getGaugePointsPerBdvForWell(C.BEAN_ETH_WELL);
+    }
+
+    /**
+     * @notice calculates the BEAN Gauge Points (GP) per BDV.
+     */
+    function getBeanGaugePointsPerBdv() public view returns (uint256) {
+        uint256 beanToMaxLpGpPerBdvRatio = getBeanToMaxLpGpPerBdvRatioScaled();
+        return getBeanEthGaugePointsPerBdv().mul(beanToMaxLpGpPerBdvRatio).div(100e18);
+    }
+
+    /**
+     * @notice calculates the grown stalk issued per season.
+     */
+    function getGrownStalkIssuedPerSeason() public view returns (uint256) {
+        address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        uint256 totalLpBdv;
+        for(uint i; i < lpGaugeTokens.length; i++) {
+            totalLpBdv = totalLpBdv.add(s.siloBalances[lpGaugeTokens[i]].depositedBdv);
+        }
+        return uint256(s.seedGauge.averageGrownStalkPerBdvPerSeason)
+            .mul(totalLpBdv.add(s.siloBalances[C.BEAN].depositedBdv))
+            .div(LibGauge.BDV_PRECISION);
+    }
+
+    /**
+     * @notice Gets the stalk per Gauge Point. Used In gauge system.
+     */
+    function getGrownStalkIssuedPerGp() external view returns (uint256) {
+        address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        uint256 totalGaugePoints;
+        for(uint i; i < lpGaugeTokens.length; i++) {
+            totalGaugePoints = totalGaugePoints.add(s.ss[lpGaugeTokens[i]].gaugePoints);
+        }
+        uint256 newGrownStalk = getGrownStalkIssuedPerSeason();
+        totalGaugePoints = totalGaugePoints
+            .add(
+                getBeanGaugePointsPerBdv()
+                    .mul(s.siloBalances[C.BEAN].depositedBdv)
+                    .div(LibGauge.BDV_PRECISION)
+                );
+        return newGrownStalk.mul(1e18).div(totalGaugePoints);
     }
 
     /**
@@ -217,7 +250,8 @@ contract SeasonGettersFacet {
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
         uint256 beanSupply = C.bean().totalSupply();
-        return LibEvaluate.calcLPToSupplyRatio(beanSupply).value;
+        (Decimal.D256 memory l2sr, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        return l2sr.value;
     }
 
     /**
@@ -230,29 +264,46 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the MEV manipulatation resistant non-bean liqudity
-     * from the bean:3CRV factory pool. 
+     * @notice returns the twa liquidity for a well, using the values stored in beanstalk.
      */
-    function getBean3CRVLiquidity() public view returns (uint256 usdLiquidity) {
-        return LibBeanMetaCurve.totalLiquidityUsd();
-    }
-
-    /**
-     * @notice returns the twa beanEth liquidity, using the values stored in beanstalk.
-     */
-    function getBeanEthTwaUsdLiquidity() public view returns (uint256) {
+    function getTwaLiquidityForWell(address well) public view returns (uint256) {
+        (address token, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
         return LibWell.getTwaLiquidityFromBeanstalkPump(
-            C.BEAN_ETH_WELL,
-            LibUsdOracle.getTokenPrice(C.WETH)
+            well,
+            LibUsdOracle.getTokenPrice(token)
         );
     }
 
-    
     /**
-     * @notice returns the non-bean usd total liquidity of bean.
+     * @notice returns the twa liquidity for a well, using the values stored in beanstalk.
+     * @dev This is the liquidity used in the gauge system.
      */
-    function getTotalUsdLiquidity() external view returns (uint256) {
-        return getBean3CRVLiquidity().add(getBeanEthTwaUsdLiquidity());
+    function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
+        return LibEvaluate.getLiquidityWeight(s.ss[well].lwSelector)
+            .mul(getTwaLiquidityForWell(well))
+            .div(1e18);
+    }
+
+    /**
+     * @notice Returns the total twa liquidity of beanstalk.
+     */
+    function getTotalUsdLiquidity() external view returns (uint256 totalLiquidity) {
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint i; i < wells.length; i++) {
+            totalLiquidity = totalLiquidity.add(getTwaLiquidityForWell(wells[i]));
+        }
+    }
+
+    /** 
+     * @notice returns the total weighted liquidity of beanstalk.
+     */
+    function getTotalWeightedUsdLiquidity() external view returns (uint256 totalWeightedLiquidity) {
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint i; i < wells.length; i++) {
+            totalWeightedLiquidity = totalWeightedLiquidity.add(
+                getWeightedTwaLiquidityForWell(wells[i])
+            );
+        }
     }
 
     /**
@@ -260,5 +311,15 @@ contract SeasonGettersFacet {
      */
     function getGaugePoints(address token) external view returns (uint256) {
         return s.ss[token].gaugePoints;
+    }
+
+    function getLargestLiqWell() external view returns (address) {
+       uint256 beanSupply = C.bean().totalSupply();
+        (, address well) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
+        return well;
+    }
+
+    function getSopWell() external view returns (address) {
+        return s.sopWell;
     }
 }

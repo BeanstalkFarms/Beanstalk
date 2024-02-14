@@ -19,6 +19,7 @@ import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
 import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 
 /**
  * @author Publius
@@ -55,9 +56,10 @@ contract MockSeasonFacet is SeasonFacet  {
     event Incentivization(address indexed account, uint256 beans);
     event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
     event UpdateGaugeSettings(
-        address indexed token, 
-        bytes4 selector,
-        uint96 optimalPercentDepositedBdv
+        address indexed token,
+        bytes4 gpSelector,
+        bytes4 lwSelector,
+        uint64 optimalPercentDepositedBdv
     );
 
     function reentrancyGuardTest() public nonReentrant {
@@ -74,6 +76,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
         mockStepSilo(amount);
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
     }
 
     function mockStepSilo(uint256 amount) public {
@@ -85,14 +88,17 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(3);
+        // update last snapshot in beanstalk. 
+        stepOracle();
+        mockStartSop();
     }
 
     function rainSunrises(uint256 amount) public {
         require(!s.paused, "Season: Paused.");
         for (uint256 i; i < amount; ++i) {
             s.season.current += 1;
-            handleRain(3);
+            stepOracle();
+            mockStartSop();
         }
         s.season.sunriseBlock = uint32(block.number);
     }
@@ -101,14 +107,18 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(2);
+        // update last snapshot in beanstalk. 
+        stepOracle();
+        handleRain(2, C.BEAN_ETH_WELL);
     }
 
     function rainSiloSunrise(uint256 amount) public {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(3);
+        // update last snapshot in beanstalk. 
+        stepOracle();
+        mockStartSop();
         mockStepSilo(amount);
     }
 
@@ -116,7 +126,9 @@ contract MockSeasonFacet is SeasonFacet  {
         require(!s.paused, "Season: Paused.");
         s.season.current += 1;
         s.season.sunriseBlock = uint32(block.number);
-        handleRain(3);
+        // update last snapshot in beanstalk. 
+        stepOracle();
+        mockStartSop();
         mockStepSilo(amount);
     }
 
@@ -150,8 +162,17 @@ contract MockSeasonFacet is SeasonFacet  {
     }
 
     function fastForward(uint32 _s) public {
-        s.season.current += _s;
-        s.season.sunriseBlock = uint32(block.number);
+        // teleport current sunrise 2 seasons ahead,
+        // end germination, 
+        // then teleport remainder of seasons.
+        if(_s >= 2) {
+            s.season.current += 2;
+            LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
+            s.season.current += _s - 2;
+            
+        } else {
+            s.season.current += _s;
+        }
     }
 
     function teleportSunrise(uint32 _s) public {
@@ -164,6 +185,7 @@ contract MockSeasonFacet is SeasonFacet  {
         s.season.current += 1;
         s.season.timestamp = block.timestamp;
         s.season.sunriseBlock = uint32(block.number);
+        LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
     }
 
     function farmSunrises(uint256 number) public {
@@ -171,6 +193,10 @@ contract MockSeasonFacet is SeasonFacet  {
         for (uint256 i; i < number; ++i) {
             s.season.current += 1;
             s.season.timestamp = block.timestamp;
+            // ending germination only needs to occur for the first two loops.
+            if(i < 2) { 
+                LibGerminate.endTotalGermination(s.season.current, LibWhitelistedTokens.getWhitelistedTokens());
+            }
         }
         s.season.sunriseBlock = uint32(block.number);
     }
@@ -259,7 +285,7 @@ contract MockSeasonFacet is SeasonFacet  {
         // 3 = exs high, 1 = rea high, 2 = rea low, 3 = exs low
         uint256[] memory reserves = new uint256[](2);
         uint256 totalSupply = C.bean().totalSupply();
-        if(L2SRState == 3) {
+        if (L2SRState == 3) {
             // reserves[1] = 0.8e18;
             reserves[1] = uint256(800);
         } else if (L2SRState == 2) {
@@ -424,7 +450,6 @@ contract MockSeasonFacet is SeasonFacet  {
         s.usdTokenPrice[C.BEAN_ETH_WELL] = price;
     }
 
-    // stepGauge without verifying oracle success.
     function mockStepGauge() external {
         (
             uint256 maxLpGpPerBdv,
@@ -449,19 +474,64 @@ contract MockSeasonFacet is SeasonFacet  {
     function mockInitalizeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
-        uint128 gaugePoints,
-        uint96 optimalPercentDepositedBdv
+        bytes4 liquidityWeightSelector,
+        uint96 gaugePoints,
+        uint64 optimalPercentDepositedBdv
     ) external {
         Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
         ss.gpSelector = gaugePointSelector;
         ss.gaugePoints = gaugePoints;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit UpdateGaugeSettings(token, gaugePointSelector, optimalPercentDepositedBdv);
+        emit UpdateGaugeSettings(token, gaugePointSelector, liquidityWeightSelector, optimalPercentDepositedBdv);
     }
 
     function mockSetBean3CrvOracle(
         uint256[2] memory reserves
     ) external {
         s.co.balances = reserves;
+    }
+
+    function mockEndTotalGerminationForToken(
+        address token
+    ) external {
+        // increment total deposited and amounts for each token.
+        Storage.TotalGerminating storage totalGerm;
+        if (LibGerminate.getSeasonGerminationState() == LibGerminate.Germinate.ODD) {
+            totalGerm = s.oddGerminating;
+        } else {
+            totalGerm = s.evenGerminating;
+        }
+        LibTokenSilo.incrementTotalDeposited(
+            token,
+            totalGerm.deposited[token].amount,
+            totalGerm.deposited[token].bdv
+        );
+        delete totalGerm.deposited[token];
+    }
+
+    function mockUpdateAverageStalkPerBdvPerSeason() external {
+        LibGauge.updateAverageStalkPerBdvPerSeason();
+    }
+
+    function mockStartSop() internal {
+        handleRain(3, C.BEAN_ETH_WELL);
+    }
+
+    function mockSetSopWell(address well) external {
+        s.sopWell = well;
+    }
+
+    function mockIncrementGermination(
+        address token,
+        uint128 amount,
+        uint128 bdv,
+        LibGerminate.Germinate germ
+    ) external {
+        LibTokenSilo.incrementTotalGerminating(
+            token,
+            amount,
+            bdv,
+            germ
+        );
     }
 }

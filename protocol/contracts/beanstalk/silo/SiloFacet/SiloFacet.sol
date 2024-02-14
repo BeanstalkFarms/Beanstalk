@@ -179,11 +179,14 @@ contract SiloFacet is TokenSilo {
         uint256[] calldata amounts
     ) public payable nonReentrant returns (uint256[] memory bdvs) {
         require(amounts.length > 0, "Silo: amounts array is empty");
+        uint256 totalAmount;
         for (uint256 i = 0; i < amounts.length; ++i) {
             require(amounts[i] > 0, "Silo: amount in array is 0");
-            if (sender != msg.sender) {
-                LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, amounts[i]);
-            }
+            totalAmount = totalAmount.add(amounts[i]);
+        }
+
+        if (sender != msg.sender) {
+            LibSiloPermit._spendDepositAllowance(sender, msg.sender, token, totalAmount);
         }
        
         LibSilo._mow(sender, token);
@@ -247,15 +250,15 @@ contract SiloFacet is TokenSilo {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         address token;
-        int96 cumulativeGrownStalkPerBDV;
+        int96 stem;
         for(uint i; i < depositIds.length; ++i) {
-            (token, cumulativeGrownStalkPerBDV) = 
+            (token, stem) = 
                 LibBytes.unpackAddressAndStem(depositIds[i]);
             transferDeposit(
                 sender, 
                 recipient,
                 token, 
-                cumulativeGrownStalkPerBDV, 
+                stem, 
                 amounts[i]
             );
         }
@@ -303,14 +306,6 @@ contract SiloFacet is TokenSilo {
      */
     function claimPlenty() external payable {
         _claimPlenty(msg.sender);
-    }
-
-    function bdv(address token, uint256 amount)
-        external
-        view
-        returns (uint256 _bdv)
-    {
-        _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
     }
 
 }

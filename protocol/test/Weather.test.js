@@ -7,6 +7,7 @@ const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js')
 const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts/usdOracle.js');
 
 const { advanceTime } = require('../utils/helpers.js');
+const { impersonateBeanstalkOwner } = require('../utils/signer.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 
 // // Set the test data
@@ -48,6 +49,9 @@ describe('Complex Weather', function () {
     await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
     await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
+    const whitelist = await ethers.getContractAt('WhitelistFacet', contracts.beanstalkDiamond.address);
+    await whitelist.connect(await impersonateBeanstalkOwner()).dewhitelistToken(BEAN_3_CURVE);
+
     // wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
     await this.well.setReserves([to6('1000000'), to18('1000')])
@@ -58,6 +62,7 @@ describe('Complex Weather', function () {
     await this.well.connect(user).mint(user.address, to18('1000'))
     await beanstalk.connect(user).sunrise();
     await whitelistWell(this.well.address, '10000', to6('4'))
+    await this.season.mockSetSopWell(this.well.address)
     await this.season.captureWellE(this.well.address);
 
     await setEthUsdPrice('999.998018')

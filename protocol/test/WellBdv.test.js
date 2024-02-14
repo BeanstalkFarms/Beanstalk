@@ -20,6 +20,7 @@ describe('Well BDV', function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
     this.beanstalk = await getBeanstalk(this.diamond.address);
+    this.bdv = await ethers.getContractAt('BDVFacet', this.diamond.address);
 
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump();
     this.pump.setInstantaneousReserves([to18('1'), to18('1')])
@@ -36,6 +37,7 @@ describe('Well BDV', function () {
 
   it("get BDV at 1:1", async function () {
     expect(await this.beanstalk.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
+    expect(await this.bdv.wellBdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
     expect(await this.beanstalk.bdv(this.well.address, to6('1000000'))).to.be.within('1999999', '2000001')
   })
 
