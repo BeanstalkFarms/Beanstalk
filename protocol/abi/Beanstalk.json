@@ -5878,7 +5878,7 @@
   },
   {
     "inputs": [],
-    "name": "getNewAndPartiallyGerminatedTotalStalk",
+    "name": "getYoungAndMatureGerminatingTotalStalk",
     "outputs": [
       {
         "internalType": "uint256",

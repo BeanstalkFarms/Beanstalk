@@ -177,6 +177,20 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice Returns the unclaimed germinating stalk and roots for a season.
+     */
+    function getGerminatingStalkForSeason(uint32 season) external view returns (uint256) {
+        return (s.unclaimedGerminating[season].stalk);
+    }
+
+    /**
+     * @notice Returns the unclaimed germinating stalk and roots for a season.
+     */
+    function getGerminatingRootsForSeason(uint32 season) external view returns (uint256) {
+        return (s.unclaimedGerminating[season].roots);
+    }
+
+    /**
      * @notice returns the stalk that is currently in the germination process.
      */
     function getTotalGerminatingStalk() external view returns (uint256) {
@@ -186,12 +200,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice returns the newly and partially germinating stalk. 
-     * partially germinated stalk will finish germinating after 1 `sunrise` call.
-     * newly germinated stalk will finish germinating after 2 `sunrise` calls.
+     * @notice returns the young and mature germinating stalk. 
+     * `young` germinating stalk are stalk that recently started the germination process.
+     * (created in the current season)
+     * `mature` germinating stalk are stalk that are paritially germinated,
+     * and will finish germinating upon the next sunrise call.
+     * (created in the previous season)
      */
-    function getNewAndPartiallyGerminatedTotalStalk() external view returns (
-        uint256 partiallyGerminatedStalk, uint256 newlyGerminatedStalk
+    function getYoungAndMatureGerminatingTotalStalk() external view returns (
+        uint256 matureGerminatingStalk, uint256 youngGerminatingStalk
     ) {
         return (
             s.unclaimedGerminating[s.season.current - 1].stalk, 
@@ -302,19 +319,21 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice returns the amount of newly and partially germinated stalk that an account has.
-     * @dev stalk here may have already finished the germination process but needs a silo 
-     * interaction to update.
+     * @notice returns the amount of young and mature germinating stalk that an account has.
+     * `young` germinating stalk are the most recent germinating stalk issued to `account`.
+     * `mature` germinating stalk are germinating stalk that are paritially germinated.
+     * @dev both `young` and `old stalk here may have already finished the germination process
+     * but require a silo interaction to update.
      */
-    function balanceOfNewAndPartiallyGerminatedStalk(
+    function balanceOfYoungAndMatureGerminatingStalk(
         address account
-    ) external view returns (uint256 paritallyGerminatedStalk, uint256 newlyGerminatedStalk) {
+    ) external view returns (uint256 matureGerminatingStalk, uint256 youngGerminatingStalk) {
         // if the last mowed season is less than the current season - 1,
         // then there are no germinating stalk and roots (as all germinating assets have finished).
         if (s.a[account].lastUpdate < s.season.current - 1) {
             return (0, 0);
         } else {
-            (newlyGerminatedStalk, paritallyGerminatedStalk) = LibGerminate.getGerminatingStalk(
+            (youngGerminatingStalk, matureGerminatingStalk) = LibGerminate.getGerminatingStalk(
                 account,
                 LibGerminate.isSeasonOdd(s.a[account].lastUpdate)
             );
