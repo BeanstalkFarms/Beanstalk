@@ -170,12 +170,14 @@ library LibGerminate {
         }
 
         // increment users stalk and roots.
-        s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
-        s.a[account].roots = s.a[account].roots.add(roots);
+        if (germinatingStalk > 0) {
+            s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
+            s.a[account].roots = s.a[account].roots.add(roots);
 
-        // emit events. Active stalk is incremented, germinating stalk is decremented.
-        emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
-        emit FarmerGerminatingStalkBalanceChanged(account, -int256(germinatingStalk));
+            // emit events. Active stalk is incremented, germinating stalk is decremented.
+            emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
+            emit FarmerGerminatingStalkBalanceChanged(account, -int256(germinatingStalk));
+        }
     }
 
     /**
