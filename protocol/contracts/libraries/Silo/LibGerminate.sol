@@ -241,7 +241,7 @@ library LibGerminate {
     function getGerminatingStalk(
         address account,
         bool lastUpdateOdd
-    ) private view returns (uint128 firstStalk, uint128 secondStalk) {
+    ) internal view returns (uint128 firstStalk, uint128 secondStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (lastUpdateOdd) {
             firstStalk = s.a[account].farmerGerminating.odd;

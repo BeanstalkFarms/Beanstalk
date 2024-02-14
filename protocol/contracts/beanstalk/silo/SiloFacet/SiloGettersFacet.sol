@@ -186,12 +186,17 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice gets the total amount of bdv germinating for a given `token`.
+     * @notice returns the newly and partially germinating stalk. 
+     * partially germinated stalk will finish germinating after 1 `sunrise` call.
+     * newly germinated stalk will finish germinating after 2 `sunrise` calls.
      */
-    function getTotalGerminatingBdv(address token) external view returns (uint256) {
-        return s.oddGerminating.deposited[token].bdv.add(
-            s.evenGerminating.deposited[token].bdv
-        );
+    function getNewAndPartiallyGerminatedTotalStalk() external view returns (
+        uint256 partiallyGerminatedStalk, uint256 newlyGerminatedStalk
+    ) {
+        return (
+            s.unclaimedGerminating[s.season.current - 1].stalk, 
+            s.unclaimedGerminating[s.season.current].stalk
+        ) ;
     }
 
     /**
@@ -200,6 +205,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     function getTotalGerminatingAmount(address token) external view returns (uint256) {
         return s.oddGerminating.deposited[token].amount.add(
             s.evenGerminating.deposited[token].amount
+        );
+    }
+
+    /**
+     * @notice gets the total amount of bdv germinating for a given `token`.
+     */
+    function getTotalGerminatingBdv(address token) external view returns (uint256) {
+        return s.oddGerminating.deposited[token].bdv.add(
+            s.evenGerminating.deposited[token].bdv
         );
     }
     
@@ -214,6 +228,16 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice gets the even germinating amount and bdv for a given `token`.
+     */
+    function getEvenGerminating(address token) external view returns (uint256, uint256) {
+        return(
+            s.evenGerminating.deposited[token].amount, 
+            s.evenGerminating.deposited[token].bdv
+        );
+    }
+
+    /**
      * @notice returns the amount of stalk that will finish germinating upon a silo interaction.
      */
     function balanceOfFinishedGerminatingStalkAndRoots(
@@ -223,16 +247,6 @@ contract SiloGettersFacet is ReentrancyGuard {
             account,
             s.a[account].lastUpdate,
             s.season.current
-        );
-    }
-
-    /**
-     * @notice gets the even germinating amount and bdv for a given `token`.
-     */
-    function getEvenGerminating(address token) external view returns (uint256, uint256) {
-        return(
-            s.evenGerminating.deposited[token].amount, 
-            s.evenGerminating.deposited[token].bdv
         );
     }
 
@@ -286,6 +300,26 @@ contract SiloGettersFacet is ReentrancyGuard {
             s.a[account].lastUpdate
         );
         return germinatingStalk;
+    }
+
+    /**
+     * @notice returns the amount of newly and partially germinated stalk that an account has.
+     * @dev stalk here may have already finished the germination process but needs a silo 
+     * interaction to update.
+     */
+    function balanceOfNewAndPartiallyGerminatedStalk(
+        address account
+    ) external view returns (uint256 paritallyGerminatedStalk, uint256 newlyGerminatedStalk) {
+        // if the last mowed season is less than the current season - 1,
+        // then there are no germinating stalk and roots (as all germinating assets have finished).
+        if (s.a[account].lastUpdate < s.season.current - 1) {
+            return (0, 0);
+        } else {
+            (newlyGerminatedStalk, paritallyGerminatedStalk) = LibGerminate.getGerminatingStalk(
+                account,
+                LibGerminate.isSeasonOdd(s.a[account].lastUpdate)
+            );
+        }
     }
 
     /**
