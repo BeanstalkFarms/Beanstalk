@@ -496,7 +496,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         view
         returns (int96 stem)
     {
-        uint256 seedsPerBdv = getSeedsPerToken(token).mul(1e6);
+        uint256 seedsPerBdv = getLegacySeedsPerToken(token).mul(1e6);
         stem = LibLegacyTokenSilo.seasonToStem(seedsPerBdv, season);
     }
 
@@ -506,8 +506,8 @@ contract SiloGettersFacet is ReentrancyGuard {
      * even after the token is whitelisted.
      * kept for legacy reasons. 
      */
-    function getSeedsPerToken(address token) public view virtual returns (uint256) {
-        return LibLegacyTokenSilo.getSeedsPerToken(token);
+    function getLegacySeedsPerToken(address token) public view virtual returns (uint256) {
+        return LibLegacyTokenSilo.getLegacySeedsPerToken(token);
     }
 
     /**
