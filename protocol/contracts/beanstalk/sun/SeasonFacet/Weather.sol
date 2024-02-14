@@ -171,7 +171,7 @@ contract Weather is Sun {
      * @dev Flood was previously called a "Season of Plenty" (SOP for short).
      * When Beanstalk has been Oversaturated for a Season, Beanstalk returns the
      * Bean price to its peg by minting additional Beans and selling them directly
-     * on the BEANETH well. Proceeds from the sale in the form of WETH are distributed to
+     * on the sop well. Proceeds from the sale in the form of WETH are distributed to
      * Stalkholders at the beginning of a Season in proportion to their Stalk
      * ownership when the Farm became Oversaturated. Also, at the beginning of the
      * Flood, all Pods that were minted before the Farm became Oversaturated Ripen
@@ -180,7 +180,7 @@ contract Weather is Sun {
      */
     function sop() private {
         // calculate the beans from a sop.
-        // sop beans uses the instantaneous reserves of the beaneth well,
+        // sop beans uses the min of the current and instantaneous reserves of the sop well,
         // rather than the twaReserves in order to get bean back to peg.
         address sopWell = s.sopWell;
         (uint256 newBeans, IERC20 sopToken) = calculateSop(sopWell);
