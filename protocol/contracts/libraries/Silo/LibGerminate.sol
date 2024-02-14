@@ -32,6 +32,26 @@ library LibGerminate {
     using LibSafeMath128 for uint128;
     using LibSafeMathSigned96 for int96;
 
+    //////////////////////// EVENTS ////////////////////////    
+
+    /**
+     * @notice emitted when the farmers germinating stalk changes.
+     */
+    event FarmerGerminatingStalkBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    /**
+     * @notice emitted when the total germinating amount/bdv changes.
+     */
+    event TotalGerminatingBalanceChanged(
+        uint256 season,
+        address indexed token,
+        int256 delta,
+        int256 deltaBdv
+    );
+
     struct GermStem {
         int96 germinatingStem;
         int96 stemTip;
@@ -86,11 +106,22 @@ library LibGerminate {
             if (totalGerm.deposited[tokens[i]].amount == 0) {
                 continue;
             }
+
             LibTokenSilo.incrementTotalDeposited(
                 tokens[i],
                 totalGerm.deposited[tokens[i]].amount,
                 totalGerm.deposited[tokens[i]].bdv
             );
+
+            // emit events.
+            emit TotalGerminatingBalanceChanged(
+                season,
+                tokens[i],
+                -int256(totalGerm.deposited[tokens[i]].amount),
+                -int256(totalGerm.deposited[tokens[i]].bdv)
+            );
+
+            // clear deposited values.
             delete totalGerm.deposited[tokens[i]];
         }
     }
@@ -139,8 +170,9 @@ library LibGerminate {
         s.a[account].s.stalk = s.a[account].s.stalk.add(germinatingStalk);
         s.a[account].roots = s.a[account].roots.add(roots);
 
-        // emit event.
+        // emit events. Active stalk is incremented, germinating stalk is decremented.
         emit LibSilo.StalkBalanceChanged(account, int256(germinatingStalk), int256(roots));
+        emit FarmerGerminatingStalkBalanceChanged(account, -int256(germinatingStalk));
     }
 
     /**

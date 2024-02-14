@@ -118,6 +118,14 @@ library LibTokenSilo {
             amount.toUint128()
         );
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.add(bdv.toUint128());
+
+        // emit event.
+        emit LibGerminate.TotalGerminatingBalanceChanged(
+            s.season.current,
+            token,
+            int256(amount),
+            int256(bdv)
+        );
     }
 
     /**
@@ -148,6 +156,15 @@ library LibTokenSilo {
             amount.toUint128()
         );
         germinate.deposited[token].bdv = germinate.deposited[token].bdv.sub(bdv.toUint128());
+
+        emit LibGerminate.TotalGerminatingBalanceChanged(
+            LibGerminate.getSeasonGerminationState() == germ ? 
+                s.season.current : 
+                s.season.current - 1,
+            token,
+            -int256(amount),
+            -int256(bdv)
+        );
     }
 
     /**
@@ -173,6 +190,15 @@ library LibTokenSilo {
         } else {
             revert("invalid germinationMode"); // should not ever get here
         }
+
+        emit LibGerminate.TotalGerminatingBalanceChanged(
+            LibGerminate.getSeasonGerminationState() == germ ? 
+                s.season.current : 
+                s.season.current - 1,
+            token,
+            0,
+            int256(bdv)
+        );
     }
 
     //////////////////////// ACCOUNTING: TOTALS ////////////////////////

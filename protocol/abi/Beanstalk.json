@@ -7162,6 +7162,19 @@
   },
   {
     "inputs": [],
+    "name": "getLargestLiqWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getLiquidityToSupplyRatio",
     "outputs": [
       {
@@ -7206,6 +7219,19 @@
         "internalType": "struct Storage.SeedGauge",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSopWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

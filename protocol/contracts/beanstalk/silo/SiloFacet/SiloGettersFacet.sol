@@ -186,6 +186,44 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice gets the total amount of bdv germinating for a given `token`.
+     */
+    function getTotalGerminatingBdv(address token) external view returns (uint256) {
+        return s.oddGerminating.deposited[token].bdv.add(
+            s.evenGerminating.deposited[token].bdv
+        );
+    }
+
+    /**
+     * @notice gets the total amount germinating for a given `token`.
+     */
+    function getTotalGerminatingAmount(address token) external view returns (uint256) {
+        return s.oddGerminating.deposited[token].amount.add(
+            s.evenGerminating.deposited[token].amount
+        );
+    }
+    
+    /**
+     * @notice gets the odd germinating amount and bdv for a given `token`.
+     */
+    function getOddGerminating(address token) external view returns (uint256, uint256) {
+        return(
+            s.oddGerminating.deposited[token].amount, 
+            s.oddGerminating.deposited[token].bdv
+        );
+    }
+
+    /**
+     * @notice gets the even germinating amount and bdv for a given `token`.
+     */
+    function getEvenGerminating(address token) external view returns (uint256, uint256) {
+        return(
+            s.evenGerminating.deposited[token].amount, 
+            s.evenGerminating.deposited[token].bdv
+        );
+    }
+
+    /**
      * @notice Returns the total supply of Roots.
      */
     function totalRoots() external view returns (uint256) {
