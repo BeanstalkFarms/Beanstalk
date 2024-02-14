@@ -7027,7 +7027,7 @@
   },
   {
     "inputs": [],
-    "name": "getBeanEthTwaUsdLiquidity",
+    "name": "getTwaLiquidityForWell",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7239,7 +7239,7 @@
   },
   {
     "inputs": [],
-    "name": "getStalkPerGp",
+    "name": "",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7278,7 +7278,7 @@
   },
   {
     "inputs": [],
-    "name": "getWeightedBeanEthTwaUsdLiquidity",
+    "name": "getWeightedTwaLiquidityForWell",
     "outputs": [
       {
         "internalType": "uint256",

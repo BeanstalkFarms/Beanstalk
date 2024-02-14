@@ -221,7 +221,7 @@ contract SeasonGettersFacet {
     /**
      * @notice Gets the stalk per Gauge Point. Used In gauge system.
      */
-    function getStalkPerGp() external view returns (uint256) {
+    function getGrownStalkIssuedPerGp() external view returns (uint256) {
         address[] memory lpGaugeTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
         uint256 totalGaugePoints;
         for(uint i; i < lpGaugeTokens.length; i++) {
@@ -264,36 +264,47 @@ contract SeasonGettersFacet {
     }
 
     /**
-     * @notice returns the twa beanEth liquidity, using the values stored in beanstalk.
+     * @notice returns the twa liquidity for a well, using the values stored in beanstalk.
      */
-    function getBeanEthTwaUsdLiquidity() public view returns (uint256) {
+    function getTwaLiquidityForWell(address well) public view returns (uint256) {
+        (address token, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
         return LibWell.getTwaLiquidityFromBeanstalkPump(
-            C.BEAN_ETH_WELL,
-            LibUsdOracle.getTokenPrice(C.WETH)
+            well,
+            LibUsdOracle.getTokenPrice(token)
         );
-    }
-    
-    /**
-     * @notice returns the non-bean usd total liquidity of bean.
-     */
-    function getTotalUsdLiquidity() external view returns (uint256) {
-        return getBeanEthTwaUsdLiquidity();
     }
 
     /**
-     * @notice returns the weighted beanEth liquidity used in Gauge calculations.
+     * @notice returns the twa liquidity for a well, using the values stored in beanstalk.
+     * @dev This is the liquidity used in the gauge system.
      */
-    function getWeightedBeanEthTwaUsdLiquidity() public view returns (uint256) {
-        return LibEvaluate.getLiquidityWeight(s.ss[C.BEAN_ETH_WELL].lwSelector)
-            .mul(getBeanEthTwaUsdLiquidity())
+    function getWeightedTwaLiquidityForWell(address well) public view returns (uint256) {
+        return LibEvaluate.getLiquidityWeight(s.ss[well].lwSelector)
+            .mul(getTwaLiquidityForWell(well))
             .div(1e18);
     }
 
     /**
-     * @notice returns the total weighted liquidity used in Gauge calculations.
+     * @notice Returns the total twa liquidity of beanstalk.
      */
-    function getWeightedTotalLiquidity() external view returns (uint256) {
-        return getWeightedBeanEthTwaUsdLiquidity();
+    function getTotalLiquidity() external view returns (uint256 totalLiquidity) {
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint i; i < wells.length; i++) {
+            totalLiquidity = totalLiquidity.add(getTwaLiquidityForWell(wells[i]));
+        }
+    }
+
+    /** 
+     * @notice returns the total weighted liquidity of beanstalk.
+     * @dev this is the liquidity 
+     */
+    function getTotalWeightedLiquidity() external view returns (uint256 totalWeightedLiquidity) {
+        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint i; i < wells.length; i++) {
+            totalWeightedLiquidity = totalWeightedLiquidity.add(
+                getWeightedTwaLiquidityForWell(wells[i])
+            );
+        }
     }
 
     /**
