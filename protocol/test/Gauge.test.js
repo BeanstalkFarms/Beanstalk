@@ -218,10 +218,10 @@ describe('Gauge', function () {
     describe("getter", function () {
       
       it('outputs correct liquidity values:', async function (){
-        expect(await this.seasonGetters.getBeanEthTwaUsdLiquidity()).to.be.equal(to18('1000000'))
+        expect(await this.seasonGetters.getTwaLiquidityForWell(BEAN_ETH_WELL)).to.be.equal(to18('1000000'))
         expect(await this.seasonGetters.getTotalUsdLiquidity()).to.be.equal(to18('1000000'))
-        expect(await this.seasonGetters.getWeightedBeanEthTwaUsdLiquidity()).to.be.equal(to18('1000000'))
-        expect(await this.seasonGetters.getWeightedTotalLiquidity()).to.be.equal(to18('1000000'))
+        expect(await this.seasonGetters.getWeightedTwaLiquidityForWell(BEAN_ETH_WELL)).to.be.equal(to18('1000000'))
+        expect(await this.seasonGetters.getTotalWeightedUsdLiquidity()).to.be.equal(to18('1000000'))
       })
 
       it('inital state', async function () {
@@ -373,7 +373,7 @@ describe('Gauge', function () {
       expect(await this.seasonGetters.getBeanEthGaugePointsPerBdv()).to.be.eq(to18('15.811392351684831136'))
       expect(await this.seasonGetters.getBeanGaugePointsPerBdv()).to.be.eq(to18('11.858544263763623352'))
       expect(await this.seasonGetters.getGrownStalkIssuedPerSeason()).to.be.eq(to6('489.736611'))
-      expect(await this.seasonGetters.getStalkPerGp()).to.be.eq(('224048'))
+      expect(await this.seasonGetters.getGrownStalkIssuedPerGp()).to.be.eq(('224048'))
       expect((await this.siloGetters.tokenSettings(BEAN))[1]).to.be.eq(2656883) // 2.65 seeds per BDV
       expect((await this.siloGetters.tokenSettings(BEAN_ETH_WELL))[1]).to.be.eq(3542510) // 3.54 seeds per BDV
       expect((await this.siloGetters.tokenSettings(BEAN_3_CURVE))[1]).to.be.eq(1) // 1 seeds

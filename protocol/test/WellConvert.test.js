@@ -29,6 +29,7 @@ describe('Well Convert', function () {
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
     this.bean = await ethers.getContractAt("MockToken", BEAN);
+    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address)
     await this.bean.mint(ownerAddress, to18('1000000000'))
     await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
@@ -156,12 +157,15 @@ describe('Well Convert', function () {
         const convertData = ConvertEncoder.convertBeansToWellLP(to6('100000'), '1338505354221892343955', this.well.address)
         await this.bean.connect(owner).approve(this.beanstalk.address, to6('100000'))
         await this.beanstalk.connect(owner).deposit(BEAN, to6('100000'), 0)
+        // call sunrise twice to finish germination (germinating deposits cannot convert).
+        await this.season.siloSunrise('0')
+        await this.season.siloSunrise('0')
         await this.convert.connect(owner).convert(
           convertData,
           ['0'],
           [to6('100000')]
         )
-        deposit = await this.beanstalk.getDeposit(owner.address, this.well.address, '0')
+        deposit = await this.beanstalk.getDeposit(owner.address, this.well.address, '4141449')
         expect(deposit[0]).to.be.equal('1715728752538099023967')
       })
 
@@ -250,12 +254,15 @@ describe('Well Convert', function () {
       it('deposit and convert below max', async function () {
         const convertData = ConvertEncoder.convertWellLPToBeans(to18('2000'), to6('100000'), this.well.address)
         await this.beanstalk.connect(owner).deposit(this.well.address, to18('2000'), 0)
+         // call sunrise twice to finish germination (germinating deposits cannot convert).
+        await this.season.siloSunrise('0')
+        await this.season.siloSunrise('0')
         await this.convert.connect(owner).convert(
           convertData,
           ['0'],
           [to18('2000')]
         )
-        deposit = await this.beanstalk.getDeposit(owner.address, BEAN, '0')
+        deposit = await this.beanstalk.getDeposit(owner.address, BEAN, '-3588917')
         expect(deposit[0]).to.be.equal('134564064605')
       })
 
