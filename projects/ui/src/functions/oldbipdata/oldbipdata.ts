@@ -55,13 +55,13 @@ const _handler: Handler = async (event) => {
     };
 
     return {
-      statusCode: 404
+      statusCode: 400
     };
 
   } catch (err) {
     console.error(err);
     return {
-      statusCode: 403,
+      statusCode: 500,
     };
   }
 };
