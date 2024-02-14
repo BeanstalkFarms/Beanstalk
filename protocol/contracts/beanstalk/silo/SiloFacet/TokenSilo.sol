@@ -450,7 +450,7 @@ contract TokenSilo is Silo {
             token,
             stems, 
             amounts,
-            ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens), 
+            ar.active.tokens, 
             bdvs
         );
 
