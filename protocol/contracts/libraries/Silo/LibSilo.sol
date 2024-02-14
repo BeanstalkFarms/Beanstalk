@@ -376,12 +376,15 @@ library LibSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
+
+        // a germinating deposit may have active grown stalk,
+        // but no active stalk from bdv.
         if (ar.active.stalk > 0) {
             ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
             transferStalk(sender, recipient, ar.active.stalk);
         }
 
-        if (ar.odd.stalk > 0) {
+        if (ar.odd.bdv > 0) {
             ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
@@ -391,7 +394,7 @@ library LibSilo {
             );
         }
 
-        if (ar.even.stalk > 0) {
+        if (ar.even.bdv > 0) {
             ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
