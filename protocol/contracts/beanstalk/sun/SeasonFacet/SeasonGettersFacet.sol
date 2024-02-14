@@ -287,7 +287,7 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the total twa liquidity of beanstalk.
      */
-    function getTotalLiquidity() external view returns (uint256 totalLiquidity) {
+    function getTotalUsdLiquidity() external view returns (uint256 totalLiquidity) {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint i; i < wells.length; i++) {
             totalLiquidity = totalLiquidity.add(getTwaLiquidityForWell(wells[i]));
@@ -298,7 +298,7 @@ contract SeasonGettersFacet {
      * @notice returns the total weighted liquidity of beanstalk.
      * @dev this is the liquidity 
      */
-    function getTotalWeightedLiquidity() external view returns (uint256 totalWeightedLiquidity) {
+    function getTotalWeightedUsdLiquidity() external view returns (uint256 totalWeightedLiquidity) {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint i; i < wells.length; i++) {
             totalWeightedLiquidity = totalWeightedLiquidity.add(
