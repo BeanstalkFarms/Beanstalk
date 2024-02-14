@@ -25,6 +25,24 @@ contract MockSiloFacet is SiloFacet {
     using LibSafeMath128 for uint128;
     using SafeMath for uint256;
 
+    /**
+     * @notice emitted when the farmers germinating stalk changes.
+     */
+    event FarmerGerminatingStalkBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    /**
+     * @notice emitted when the total germinating amount/bdv changes.
+     */
+    event TotalGerminatingBalanceChanged(
+        uint256 season,
+        address indexed token,
+        int256 delta,
+        int256 deltaBdv
+    );
+
     function mockWhitelistToken(address token, bytes4 selector, uint16 stalk, uint24 stalkEarnedPerSeason) external {
        whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
     }

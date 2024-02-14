@@ -520,4 +520,18 @@ contract MockSeasonFacet is SeasonFacet  {
     function mockSetSopWell(address well) external {
         s.sopWell = well;
     }
+
+    function mockIncrementGermination(
+        address token,
+        uint128 amount,
+        uint128 bdv,
+        LibGerminate.Germinate germ
+    ) external {
+        LibTokenSilo.incrementTotalGerminating(
+            token,
+            amount,
+            bdv,
+            germ
+        );
+    }
 }

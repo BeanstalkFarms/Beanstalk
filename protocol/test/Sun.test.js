@@ -339,7 +339,32 @@ describe('Sun', function () {
           .withArgs(owner.address, Math.round(rewardAmount * Math.pow(10, 6)));
       await revertToSnapshot(snapshotId);
     }
+
   })
+
+  it('ends germination', async function () {
+
+    await this.season.teleportSunrise(5);
+    await this.season.mockIncrementGermination(
+      BEAN,
+      to6('1000'),
+      to6('1000'),
+      1
+    );
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('1000'));
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('1000'));
+    this.result = await this.season.siloSunrise(0);
+    
+    await expect(this.result).to.emit(this.silo, 'TotalGerminatingBalanceChanged')
+      .withArgs(
+        '6',
+        BEAN, 
+        to6('-1000'), 
+        to6('-1000')
+      );
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[0]).to.be.equal(to6('0'));
+    expect((await this.siloGetters.getEvenGerminating(BEAN))[1]).to.be.equal(to6('0'));
+  });
 
   it("rewards more than type(uint128).max/10000 to silo", async function () {
     await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');

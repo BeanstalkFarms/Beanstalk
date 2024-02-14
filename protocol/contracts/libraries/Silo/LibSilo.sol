@@ -202,7 +202,7 @@ library LibSilo {
             s.a[account].farmerGerminating.even = s.a[account].farmerGerminating.even.add(stalk);
         }
 
-        // minted stalk are either newly germinating, or partially germinated (from converts)
+        // germinating stalk are either newly germinating, or partially germinated.
         // Thus they can only be incremented in the latest or previous season.
         uint32 season = s.season.current;
         if (LibGerminate.getSeasonGerminationState() == germ) {
@@ -212,6 +212,12 @@ library LibSilo {
                 s.unclaimedGerminating[season.sub(1)].stalk
                 .add(stalk);
         }
+
+        // emit event.
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            account,
+            stalk
+        );
     }
 
     //////////////////////// BURN ////////////////////////
@@ -289,11 +295,16 @@ library LibSilo {
         if (LibGerminate.getSeasonGerminationState() == germ) {
             s.unclaimedGerminating[season].stalk = s.unclaimedGerminating[season].stalk.sub(stalk);
         } else {
-            s.unclaimedGerminating[season.sub(1)].stalk = s
-                .unclaimedGerminating[season.sub(1)]
-                .stalk
+            s.unclaimedGerminating[season.sub(1)].stalk = 
+                s.unclaimedGerminating[season.sub(1)].stalk
                 .sub(stalk);
         }
+
+        // emit events.
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            account,
+            -int256(stalk)
+        );
     }
 
     //////////////////////// TRANSFER ////////////////////////
@@ -341,6 +352,16 @@ library LibSilo {
             s.a[sender].farmerGerminating.even = s.a[sender].farmerGerminating.even.sub(stalk.toUint128());
             s.a[recipient].farmerGerminating.even = s.a[recipient].farmerGerminating.even.add(stalk.toUint128());
         }
+
+        // emit events.
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            sender,
+            -int256(stalk)
+        );
+        emit LibGerminate.FarmerGerminatingStalkBalanceChanged(
+            recipient,
+            int256(stalk)
+        );
     }
 
     /**
