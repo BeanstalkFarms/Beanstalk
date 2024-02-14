@@ -158,14 +158,14 @@ library LibGerminate {
         // if last mowed season is not equal to current season - 1,
         if (firstStalk > 0 && lastMowedSeason != currentSeason.sub(1)) {
             germinatingStalk = firstStalk;
-            roots = getGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
+            roots = claimGerminatingRoots(account, lastMowedSeason, firstStalk, lastUpdateOdd);
         }
 
         // check to end germination for second stalk.
         if (secondStalk > 0) {
             germinatingStalk = germinatingStalk.add(secondStalk);
             roots = roots.add(
-                getGerminatingRoots(account, lastMowedSeason.sub(1), secondStalk, !lastUpdateOdd)
+                claimGerminatingRoots(account, lastMowedSeason.sub(1), secondStalk, !lastUpdateOdd)
             );
         }
 
@@ -179,7 +179,7 @@ library LibGerminate {
     }
 
     /**
-     * @notice returns the germinating roots of an account,
+     * @notice Claims the germinating roots of an account,
      * as well as clears the germinating stalk and roots.
      *
      * @param account address of the account to end germination for.
@@ -187,7 +187,7 @@ library LibGerminate {
      * @param stalk the stalk to calculate the germinating roots for.
      * @param clearOdd whether to clear the odd or even germinating stalk.
      */
-    function getGerminatingRoots(
+    function claimGerminatingRoots(
         address account,
         uint32 season,
         uint128 stalk,

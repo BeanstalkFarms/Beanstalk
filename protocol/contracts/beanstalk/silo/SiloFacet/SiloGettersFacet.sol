@@ -233,7 +233,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice Returns the total germinating roots for a season.
      */
-    function getGerminatingRootsForSeason(uint32 season) external view returns (uint256) {
+    function claimGerminatingRootsForSeason(uint32 season) external view returns (uint256) {
         return s.unclaimedGerminating[season].roots;
     }
 
