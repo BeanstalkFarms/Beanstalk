@@ -213,7 +213,7 @@ contract Weather is Sun {
     }
 
     /**
-     * @dev Allocate WETH during a Season of Plenty.
+     * @dev Allocate `sop token` during a Season of Plenty.
      */
     function rewardSop(uint256 amount) private {
         s.sops[s.season.rainStart] = s.sops[s.season.lastSop].add(
