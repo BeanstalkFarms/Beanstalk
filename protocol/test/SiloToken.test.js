@@ -311,7 +311,9 @@ describe("Silo Token", function () {
           expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq('500');
           // no stalk is active as the deposit is in the germinating period.
           expect(await this.siloGetters.totalStalk()).to.eq('0');
-          expect(await this.siloGetters.getGerminatingStalkForSeason(await this.seasonGetters.season())).to.eq('5000000');
+          expect((await this.siloGetters.getGerminatingStalkAndRootsForSeason(
+            await this.seasonGetters.season()
+          ))[0]).to.eq('5000000');
         });
 
         it('properly updates the user balance', async function () {
@@ -360,9 +362,9 @@ describe("Silo Token", function () {
           expect(await this.siloGetters.getGerminatingTotalDeposited(this.siloToken.address)).to.eq('500');
           expect(await this.siloGetters.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq('500');
           expect(await this.siloGetters.totalStalk()).to.eq('500');
-          expect(await this.siloGetters.getGerminatingStalkForSeason(
+          expect((await this.siloGetters.getGerminatingStalkAndRootsForSeason(
             toBN(await this.seasonGetters.season()).sub('1')
-          )).to.eq('5000000');
+          ))[0]).to.eq('5000000');
         });
         it('properly updates the user balance', async function () {
           // the user should have 500 microStalk, and 5e6 germinating stalk.

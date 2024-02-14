@@ -376,12 +376,15 @@ library LibSilo {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.ss[token].stalkIssuedPerBdv;
+
+        // a germinating deposit may have active grown stalk,
+        // but no active stalk from bdv.
         if (ar.active.stalk > 0) {
             ar.active.stalk = ar.active.stalk.add(ar.active.bdv.mul(stalkPerBDV));
             transferStalk(sender, recipient, ar.active.stalk);
         }
 
-        if (ar.odd.stalk > 0) {
+        if (ar.odd.bdv > 0) {
             ar.odd.stalk = ar.odd.stalk.add(ar.odd.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
@@ -391,7 +394,7 @@ library LibSilo {
             );
         }
 
-        if (ar.even.stalk > 0) {
+        if (ar.even.bdv > 0) {
             ar.even.stalk = ar.even.stalk.add(ar.even.bdv.mul(stalkPerBDV));
             transferGerminatingStalk(
                 sender,
@@ -423,7 +426,7 @@ library LibSilo {
 
         // if the user hasn't updated prior to the seedGauge/siloV3.1 update,
         // perform a one time `lastStem` scale.
-        if(
+        if (
             (lastUpdate < s.season.stemScaleSeason && lastUpdate > 0) || 
             (lastUpdate == s.season.stemScaleSeason && checkStemEdgeCase(account))
         ) {
@@ -793,7 +796,7 @@ library LibSilo {
         address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
         for(uint i; i < siloTokens.length; i++) {
             // scale lastStem by 1e6, if the user has a lastStem.
-            if(s.a[account].mowStatuses[siloTokens[i]].lastStem > 0) { 
+            if (s.a[account].mowStatuses[siloTokens[i]].lastStem > 0) { 
                 s.a[account].mowStatuses[siloTokens[i]].lastStem = 
                     s.a[account].mowStatuses[siloTokens[i]].lastStem.mul(int96(PRECISION));
             }
@@ -814,8 +817,8 @@ library LibSilo {
         // if the answer is 1e6 or greater, the user has not updated.
         for(uint i; i < siloTokens.length; i++) {
             int96 lastStem = s.a[account].mowStatuses[siloTokens[i]].lastStem;
-            if(lastStem > 0) {
-                if(LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(PRECISION)) {
+            if (lastStem > 0) {
+                if (LibTokenSilo.stemTipForToken(siloTokens[i]).div(lastStem) >= int96(PRECISION)) {
                     return true;
                 }
             }

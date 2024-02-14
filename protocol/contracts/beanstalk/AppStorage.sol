@@ -424,7 +424,7 @@ contract Storage {
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
-     * @param gpSelector The encoded liquidityWeight function selector for the token that pertains to 
+     * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature `function liquidityWeight()`
      * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
      * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.

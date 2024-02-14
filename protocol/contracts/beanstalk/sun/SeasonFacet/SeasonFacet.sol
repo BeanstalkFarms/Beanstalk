@@ -52,7 +52,6 @@ contract SeasonFacet is Weather {
         LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
-        // germination should end after beans are issued.
 
         return incentivize(account, initialGasLeft, mode);
     }
