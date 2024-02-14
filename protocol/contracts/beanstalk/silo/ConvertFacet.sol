@@ -132,9 +132,7 @@ contract ConvertFacet is ReentrancyGuard {
             while ((i < stems.length) && (a.active.tokens < maxTokens)) {
                 // skip any stems that are germinating, due to the ability to 
                 // circumvent the germination process.
-                // subtract amount from maxTokens.
                 if (germStem.germinatingStem <= stems[i]) {
-                    maxTokens = maxTokens <= amounts[i] ? 0 : maxTokens.sub(amounts[i]);
                     i++;
                     continue;
                 }

@@ -298,7 +298,7 @@ library LibLegacyTokenSilo {
 
                 // calculate how much stalk has grown for this deposit
                 perDepositData.grownStalk = _calcGrownStalkForDeposit(
-                    crateBDV.mul(getSeedsPerToken(address(perTokenData.token))),
+                    crateBDV.mul(getLegacySeedsPerToken(address(perTokenData.token))),
                     perDepositData.season
                 );
 
@@ -329,7 +329,7 @@ library LibLegacyTokenSilo {
 
                 // add to running total of seeds
                 migrateData.totalSeeds = migrateData.totalSeeds.add(
-                    crateBDV.mul(getSeedsPerToken(address(perTokenData.token))).toUint128()
+                    crateBDV.mul(getLegacySeedsPerToken(address(perTokenData.token))).toUint128()
                 );
 
                 // emit legacy RemoveDeposit event
@@ -462,7 +462,7 @@ library LibLegacyTokenSilo {
      *
      * constants are used in favor of reading from storage for gas savings.
      */
-    function getSeedsPerToken(address token) internal pure returns (uint256) {
+    function getLegacySeedsPerToken(address token) internal pure returns (uint256) {
         if (token == C.BEAN) {
             return 2;
         } else if (token == C.UNRIPE_BEAN) {

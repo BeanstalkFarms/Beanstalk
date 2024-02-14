@@ -427,7 +427,7 @@ contract Storage {
      *  uint256 percentOfDepositedBdv
      *  ) external view returns (uint256);
      * ```
-     * @param gpSelector The encoded liquidityWeight function selector for the token that pertains to 
+     * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to 
      * an external view Beanstalk function with the following signature `function liquidityWeight()`
      * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
      * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
@@ -572,6 +572,8 @@ contract Storage {
  * @param oddGerminating Stores germinating data during odd seasons.
  * @param evenGerminating Stores germinating data during even seasons.
  * @param whitelistedStatues Stores a list of Whitelist Statues for all tokens that have been Whitelisted and have not had their Whitelist Status manually removed.
+ * @param sopWell Stores the well that will be used upon a SOP. Unintialized until a SOP occurs, and is kept constant afterwards.
+ * @param barnRaiseWell Stores the well that the Barn Raise adds liquidity to.
  */
 struct AppStorage {
     uint8 deprecated_index;
@@ -653,6 +655,8 @@ struct AppStorage {
     mapping(uint32 => Storage.Sr) unclaimedGerminating;
 
     Storage.WhitelistStatus[] whitelistStatuses;
+
+    address sopWell;
 
     address barnRaiseWell;
 }

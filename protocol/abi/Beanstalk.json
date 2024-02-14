@@ -5474,6 +5474,30 @@
         "type": "address"
       }
     ],
+    "name": "balanceOfFinishedGerminatingStalkAndRoots",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "gStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "gRoots",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
     "name": "balanceOfGerminatingStalk",
     "outputs": [
       {
@@ -5503,6 +5527,30 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOfNewAndPartiallyGerminatedStalk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "paritallyGerminatedStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newlyGerminatedStalk",
         "type": "uint256"
       }
     ],
@@ -5716,13 +5764,18 @@
   {
     "inputs": [
       {
-        "internalType": "uint32",
-        "name": "season",
-        "type": "uint32"
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
       }
     ],
-    "name": "getGerminatingRootsForSeason",
+    "name": "getEvenGerminating",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "",
@@ -5740,8 +5793,13 @@
         "type": "uint32"
       }
     ],
-    "name": "getGerminatingStalkForSeason",
+    "name": "getGerminatingStalkAndRootsForSeason",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "",
@@ -5817,6 +5875,25 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getLegacySeedsPerToken",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "account",
         "type": "address"
       },
@@ -5850,6 +5927,24 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getYoungAndMatureGerminatingTotalStalk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "partiallyGerminatedStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newlyGerminatedStalk",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -5857,8 +5952,13 @@
         "type": "address"
       }
     ],
-    "name": "getSeedsPerToken",
+    "name": "getOddGerminating",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "",
@@ -5896,6 +5996,44 @@
       }
     ],
     "name": "getTotalDepositedBdv",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getTotalGerminatingAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getTotalGerminatingBdv",
     "outputs": [
       {
         "internalType": "uint256",
@@ -6214,6 +6352,12 @@
         "indexed": true,
         "internalType": "address",
         "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
         "type": "address"
       },
       {
@@ -7077,19 +7221,6 @@
   },
   {
     "inputs": [],
-    "name": "getBeanEthTwaUsdLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getBeanGaugePointsPerBdv",
     "outputs": [
       {
@@ -7199,12 +7330,38 @@
   },
   {
     "inputs": [],
+    "name": "getGrownStalkIssuedPerGp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getGrownStalkIssuedPerSeason",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLargestLiqWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -7263,12 +7420,12 @@
   },
   {
     "inputs": [],
-    "name": "getStalkPerGp",
+    "name": "getSopWell",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "address",
         "name": "",
-        "type": "uint256"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -7293,7 +7450,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "totalLiquidity",
         "type": "uint256"
       }
     ],
@@ -7302,7 +7459,26 @@
   },
   {
     "inputs": [],
-    "name": "getWeightedBeanEthTwaUsdLiquidity",
+    "name": "getTotalWeightedUsdLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalWeightedLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getTwaLiquidityForWell",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7314,8 +7490,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getWeightedTotalLiquidity",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getWeightedTwaLiquidityForWell",
     "outputs": [
       {
         "internalType": "uint256",
@@ -7659,6 +7841,18 @@
         "internalType": "uint256",
         "name": "season",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
       },
       {
         "indexed": false,

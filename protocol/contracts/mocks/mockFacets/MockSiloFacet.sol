@@ -25,6 +25,24 @@ contract MockSiloFacet is SiloFacet {
     using LibSafeMath128 for uint128;
     using SafeMath for uint256;
 
+    /**
+     * @notice emitted when the farmers germinating stalk changes.
+     */
+    event FarmerGerminatingStalkBalanceChanged(
+        address indexed account,
+        int256 delta
+    );
+
+    /**
+     * @notice emitted when the total germinating amount/bdv changes.
+     */
+    event TotalGerminatingBalanceChanged(
+        uint256 season,
+        address indexed token,
+        int256 delta,
+        int256 deltaBdv
+    );
+
     function mockWhitelistToken(address token, bytes4 selector, uint16 stalk, uint24 stalkEarnedPerSeason) external {
        whitelistTokenLegacy(token, selector, stalk, stalkEarnedPerSeason);
     }
@@ -53,7 +71,7 @@ contract MockSiloFacet is SiloFacet {
         // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
         incrementTotalDepositedBDV(C.UNRIPE_LP, bdv);
         
-        uint256 seeds = bdv.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_LP));
+        uint256 seeds = bdv.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_LP));
         uint256 stalk = bdv.mul(s.ss[C.UNRIPE_LP].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         // not germinating because this is a old deposit.
         LibSilo.mintActiveStalk(msg.sender, stalk);
@@ -71,7 +89,7 @@ contract MockSiloFacet is SiloFacet {
         // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
         incrementTotalDepositedBDV(C.UNRIPE_BEAN, partialAmount);
         
-        uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getSeedsPerToken(C.UNRIPE_BEAN));
+        uint256 seeds = partialAmount.mul(LibLegacyTokenSilo.getLegacySeedsPerToken(C.UNRIPE_BEAN));
         uint256 stalk = partialAmount.mul(s.ss[C.UNRIPE_BEAN].stalkIssuedPerBdv).add(stalkRewardLegacy(seeds, s.season.current - _s));
         
         LibSilo.mintActiveStalk(msg.sender, stalk);

@@ -64,6 +64,7 @@ describe('Complex Weather', function () {
     await this.well.connect(user).mint(user.address, to18('1000'))
     await beanstalk.connect(user).sunrise();
     await whitelistWell(this.well.address, '10000', to6('4'))
+    await this.season.mockSetSopWell(this.well.address)
     await this.season.captureWellE(this.well.address);
     await this.season.captureWellE(this.beanWstethWell.address);
 

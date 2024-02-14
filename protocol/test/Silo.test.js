@@ -467,15 +467,13 @@ describe('Silo', function () {
 
 
   /**
-   * These sets of tests handle the issuance of beans regarding the germination process.
-   * 
-   * @dev the user may lose 1 micro bean due to rounding.
+   * These sets of tests handle the germination process and the planting of beans.
    */
-  describe("Earned Beans issuance germination", async function () {
+  describe("germination", async function () {
     
     before(async function () {
       await this.silo.connect(user3).deposit(this.bean.address, to6('1000'), EXTERNAL)
-      await this.silo.connect(user4).deposit(this.bean.address, to6('1000'), EXTERNAL)
+      this.result = await this.silo.connect(user4).deposit(this.bean.address, to6('1000'), EXTERNAL)
       
       // after these deposits, the state is currently: 
       // user 1: 1000 stalk, 0 germinating stalk (0.4 pending grown stalk).
@@ -483,9 +481,58 @@ describe('Silo', function () {
       // user 3: 0 stalk, 1000 germinating stalk.
       // user 4: 0 stalk, 1000 germinating stalk.
     });
+
+    describe("deposits", async function () {
+      it('properly updates the user balances', async function () {
+        expect(await this.siloGetters.balanceOfGerminatingStalk(user3.address)).to.eq(toStalk('1000'));
+        expect(await this.siloGetters.balanceOfGerminatingStalk(user4.address)).to.eq(toStalk('1000'));
+      });
+
+      it('emit events', async function () {
+        expect(this.result).to.emit(this.silo, 'FarmerGerminatingStalkBalanceChanged').withArgs(
+          user4.address,
+          toStalk('1000')
+        );
+        expect(this.result).to.emit(this.silo, 'TotalGerminatingBalanceChanged')
+        .withArgs(
+          '3',
+          BEAN, 
+          to6('1000'), 
+          to6('1000')
+        );
+      });
+    });
+
+    describe("withdraw", async function () {
+      beforeEach(async function () {
+        this.result = await this.silo.connect(user4).withdrawDeposit(
+          this.bean.address,
+          to6('6'),
+          to6('1000'),
+          EXTERNAL
+        );
+      });
+      it('properly updates the user balances', async function () {
+        expect(await this.siloGetters.balanceOfGerminatingStalk(user4.address)).to.eq(0);
+      });
+
+      it('emit events', async function () {
+        expect(this.result).to.emit(this.silo, 'FarmerGerminatingStalkBalanceChanged').withArgs(
+          user4.address,
+          toStalk('-1000')
+        );
+        expect(this.result).to.emit(this.silo, 'TotalGerminatingBalanceChanged')
+        .withArgs(
+          '3',
+          BEAN, 
+          to6('-1000'), 
+          to6('-1000')
+        );
+      });
+    });
     
     // tests a farmers deposit that has no earned bean prior
-    describe("Germination", async function() {
+    describe("Earned beans Germination", async function() {
       
       beforeEach(async function () {
         await this.season.siloSunrise(to6('100'))
@@ -665,7 +712,6 @@ describe('Silo', function () {
         expect(earned_beans3[0]).to.eq(23809523);
         expect(earned_beans4[0]).to.eq(23809523);
       })
-
     })
   });
 });

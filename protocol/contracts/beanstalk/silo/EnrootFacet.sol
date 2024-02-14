@@ -187,7 +187,7 @@ contract EnrootFacet is ReentrancyGuard {
             )
         );
         LibSilo.mintActiveStalk(
-        msg.sender, 
+            msg.sender, 
             enrootData.stalkAdded.sub(
                 ar.active.stalk
                 .add(ar.even.stalk)
