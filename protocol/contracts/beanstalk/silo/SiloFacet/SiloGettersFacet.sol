@@ -170,17 +170,10 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the unclaimed germinating stalk for a season.
+     * @notice Returns the unclaimed germinating stalk and roots for a season.
      */
-    function getGerminatingStalkForSeason(uint32 season) external view returns (uint256) {
-        return s.unclaimedGerminating[season].stalk;
-    }
-
-    /**
-     * @notice Returns the total germinating roots for a season.
-     */
-    function getGerminatingRootsForSeason(uint32 season) external view returns (uint256) {
-        return s.unclaimedGerminating[season].roots;
+    function getGerminatingStalkAndRootsForSeason(uint32 season) external view returns (uint256, uint256) {
+        return (s.unclaimedGerminating[season].stalk, s.unclaimedGerminating[season].roots);
     }
 
     /**
