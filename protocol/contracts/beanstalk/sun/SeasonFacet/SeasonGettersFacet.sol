@@ -296,7 +296,6 @@ contract SeasonGettersFacet {
 
     /** 
      * @notice returns the total weighted liquidity of beanstalk.
-     * @dev this is the liquidity 
      */
     function getTotalWeightedUsdLiquidity() external view returns (uint256 totalWeightedLiquidity) {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
