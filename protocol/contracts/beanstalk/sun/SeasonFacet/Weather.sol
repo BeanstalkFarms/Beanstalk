@@ -233,7 +233,7 @@ contract Weather is Sun {
     function calculateSop(address well) private view returns (uint256 sopBeans, IERC20 sopToken){
 
         // if the sopWell was not initalized, the should not occur.
-        if(well == address(0)) return (0, IERC20(0));
+        if (well == address(0)) return (0, IERC20(0));
         IWell sopWell = IWell(well);
         IERC20[] memory tokens = sopWell.tokens();
         Call[] memory pumps = sopWell.pumps();

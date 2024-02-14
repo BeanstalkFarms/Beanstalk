@@ -240,7 +240,7 @@ library LibGauge {
 
         // update the average grown stalk per BDV per Season.
         // beanstalk must exist for a minimum of the catchup season in order to update the average.
-        if(s.season.current > TARGET_SEASONS_TO_CATCHUP) {
+        if (s.season.current > TARGET_SEASONS_TO_CATCHUP) {
             updateAverageStalkPerBdvPerSeason();
         }
 

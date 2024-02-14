@@ -191,7 +191,7 @@ contract TokenSilo is Silo {
                 germinate
             );
 
-            if(grownStalkRemoved > 0) {
+            if (grownStalkRemoved > 0) {
                 LibSilo.burnActiveStalk(
                     account, 
                     grownStalkRemoved
@@ -254,7 +254,7 @@ contract TokenSilo is Silo {
             );
         }
 
-        if(ar.grownStalkFromGermDeposits > 0) {
+        if (ar.grownStalkFromGermDeposits > 0) {
             LibSilo.burnActiveStalk(
                 account, 
                 ar.grownStalkFromGermDeposits
@@ -340,7 +340,7 @@ contract TokenSilo is Silo {
             LibSilo.transferStalk(sender, recipient, initalStalk.add(grownStalk));
         } else {
             LibSilo.transferGerminatingStalk(sender, recipient, initalStalk, germ);
-            if(grownStalk > 0) {
+            if (grownStalk > 0) {
                 LibSilo.transferStalk(
                     sender,
                     recipient, 

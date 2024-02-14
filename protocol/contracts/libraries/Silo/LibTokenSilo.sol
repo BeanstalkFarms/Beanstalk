@@ -541,7 +541,7 @@ library LibTokenSilo {
         // and thus the cast to `uint256` is safe.
         uint deltaStemTip = uint256(_stemTip.sub(stem));
         // no stalk has grown if the stem is equal to the stemTip.
-        if(deltaStemTip == 0) return 0;
+        if (deltaStemTip == 0) return 0;
         (, uint bdv) = getDeposit(account, token, stem);
 
         grownStalk = deltaStemTip.mul(bdv).div(PRECISION);

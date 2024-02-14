@@ -77,7 +77,7 @@ library LibGerminate {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // germination can only occur after season 3.
-        if(season < 2) return;
+        if (season < 2) return;
 
         // base roots are used if there are no roots in the silo.
         // root calculation is skipped if no deposits have been made 

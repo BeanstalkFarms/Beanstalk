@@ -178,7 +178,7 @@ library LibWhitelist {
         require(s.ss[token].milestoneSeason != 0, "Token not whitelisted");
 
         // beanstalk requires a min. stalkEarnedPerSeason of 1.
-        if(stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
+        if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
 
         // update milestone stem and season.
         s.ss[token].milestoneStem = LibTokenSilo.stemTipForToken(token); 
