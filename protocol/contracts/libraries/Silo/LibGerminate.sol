@@ -290,30 +290,26 @@ library LibGerminate {
     }
 
     /**
-     * @notice returns the stalk and roots currently germinating.
-     * Does not include germinating stalk and roots that will finish germinating
+     * @notice returns the stalk currently germinating for an account.
+     * Does not include germinating stalk that will finish germinating
      * upon an interaction with the silo.
      */
-    function getCurrentGerminatingStalkAndRoots(
+    function getCurrentGerminatingStalk(
         address account,
         uint32 lastMowedSeason
-    ) internal view returns (uint256 germinatingStalk, uint256 germinatingRoots) {
+    ) internal view returns (uint256 germinatingStalk) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // if the last mowed season is less than the current season - 1,
         // then there are no germinating stalk and roots (as all germinating assets have finished).
         if (lastMowedSeason < s.season.current.sub(1)) {
-            return (0, 0);
+            return 0;
         } else {
             (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(
                 account,
                 isSeasonOdd(lastMowedSeason)
             );
-            germinatingRoots = calculateGerminatingRoots(lastMowedSeason, firstStalk);
             germinatingStalk = firstStalk.add(secondStalk);
-            germinatingRoots = germinatingRoots.add(
-                calculateGerminatingRoots(lastMowedSeason.sub(1), secondStalk)
-            );
         }
     }
 

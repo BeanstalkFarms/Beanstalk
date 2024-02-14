@@ -295,11 +295,10 @@ contract SiloGettersFacet is ReentrancyGuard {
      * is not included.
      */
     function balanceOfGerminatingStalk(address account) external view returns (uint256) {
-        (uint256 germinatingStalk, ) = LibGerminate.getCurrentGerminatingStalkAndRoots(
+        return LibGerminate.getCurrentGerminatingStalk(
             account,
             s.a[account].lastUpdate
         );
-        return germinatingStalk;
     }
 
     /**
