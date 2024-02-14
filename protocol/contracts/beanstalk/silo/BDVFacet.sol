@@ -18,6 +18,9 @@ import "contracts/libraries/Well/LibWellBdv.sol";
 contract BDVFacet {
     using SafeMath for uint256;
 
+    /**
+     * @dev Returns the BDV of a given `amount` of Bean:3Crv LP tokens.
+     */
     function curveToBDV(uint256 amount) public view returns (uint256) {
         return LibBeanMetaCurve.bdv(amount);
     }
