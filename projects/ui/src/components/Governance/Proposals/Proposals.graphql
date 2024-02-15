@@ -3,8 +3,7 @@ query Proposals($space_in: [String!]!, $state: String) {
   proposals (
     where: {
       space_in: $space_in,
-      state: $state,
-      start_gte: 1660292003,
+      state: $state
     },
     orderBy: "created",
     orderDirection: desc,
