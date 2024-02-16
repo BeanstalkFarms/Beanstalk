@@ -64,9 +64,8 @@ library LibCases {
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
     bytes32 internal constant   T_PLUS_3_L_PLUS_TWO = bytes32(0x05F5E1000300056BC75E2D6310000000001BC16D674EC8000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv increased by 2.
     bytes32 internal constant   T_PLUS_1_L_PLUS_TWO = bytes32(0x05F5E1000100056BC75E2D6310000000001BC16D674EC8000000000000000000); // temperature increased by 1%, Bean2maxLpGpPerBdv increased by 2.
+    bytes32 internal constant   T_PLUS_0_L_PLUS_TWO = bytes32(0x05F5E1000000056BC75E2D6310000000001BC16D674EC8000000000000000000); // temperature increased by 0%, Bean2maxLpGpPerBdv increased by 2.
     //////////////////////////////////////////////////////////  [  mT  ][][       mL         ][       BL         ][    null    ]
-    bytes32 internal constant  T_PLUS_3_L_MINUS_ONE = bytes32(0x05F5E1000300056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature increased by 3%, Bean2maxLpGpPerBdv decreased by 1.
-    bytes32 internal constant  T_PLUS_1_L_MINUS_ONE = bytes32(0x05F5E1000100056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature increased by 1%, Bean2maxLpGpPerBdv decreased by 1.
     bytes32 internal constant  T_PLUS_0_L_MINUS_ONE = bytes32(0x05F5E1000000056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature increased by 0%, Bean2maxLpGpPerBdv decreased by 1.
     bytes32 internal constant T_MINUS_1_L_MINUS_ONE = bytes32(0x05F5E100FF00056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature decreased by 1%, Bean2maxLpGpPerBdv decreased by 1.
     bytes32 internal constant T_MINUS_3_L_MINUS_ONE = bytes32(0x05F5E100FD00056BC75E2D63100000FFFFF21F494C589C000000000000000000); // temperature decreased by 3%, Bean2maxLpGpPerBdv decreased by 1.
@@ -105,55 +104,55 @@ function setCasesV2() internal {
         s.casesV2 = [
         //               Dsc soil demand,  Steady soil demand  Inc soil demand
                     /////////////////////// Exremely Low L2SR ///////////////////////
-            bytes32(T_PLUS_3_L_MINUS_FIFTY),    T_PLUS_1_L_MINUS_FIFTY,    T_PLUS_0_L_MINUS_FIFTY, // Exs Low: P < 1
+            bytes32(T_PLUS_3_L_MINUS_FIFTY),    T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY, // Exs Low: P < 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY,    T_PLUS_0_L_MINUS_FIFTY, // Rea Low: P < 1
+                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY, // Rea Low: P < 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY, // Rea Hgh: P < 1
+                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY,    T_PLUS_0_L_MINUS_FIFTY, // Rea Hgh: P < 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY, // Exs Hgh: P < 1
+                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY,    T_PLUS_0_L_MINUS_FIFTY, // Exs Hgh: P < 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
                     /////////////////////// Reasonably Low L2SR ///////////////////////
-                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY,    T_PLUS_0_L_MINUS_FIFTY, // Exs Low: P < 1
+                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY, // Exs Low: P < 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY,    T_PLUS_0_L_MINUS_FIFTY, // Rea Low: P < 1
+                     T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_3_L_MINUS_FIFTY,    T_PLUS_1_L_MINUS_FIFTY, // Rea Low: P < 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Rea Hgh: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Rea Hgh: P < 1
                        T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Exs Hgh: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Exs Hgh: P < 1
                        T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
                     /////////////////////// Reasonably High L2SR ///////////////////////
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Exs Low: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Exs Low: P < 1
                       T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Rea Low: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Rea Low: P < 1
                       T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Rea Hgh: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Rea Hgh: P < 1
                        T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Exs Hgh: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Exs Hgh: P < 1
                        T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
                     /////////////////////// Extremely High L2SR ///////////////////////
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Exs Low: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Exs Low: P < 1
                       T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE,       T_PLUS_0_L_PLUS_ONE, // Rea Low: P < 1
+                        T_PLUS_3_L_PLUS_ONE,       T_PLUS_3_L_PLUS_ONE,       T_PLUS_1_L_PLUS_ONE, // Rea Low: P < 1
                       T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                     T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_TWO,       T_PLUS_3_L_PLUS_TWO,       T_PLUS_1_L_PLUS_TWO, // Rea Hgh: P < 1
+                        T_PLUS_3_L_PLUS_TWO,       T_PLUS_1_L_PLUS_TWO,       T_PLUS_0_L_PLUS_TWO, // Rea Hgh: P < 1
                        T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY, //          P > Q
-                        T_PLUS_3_L_PLUS_TWO,       T_PLUS_3_L_PLUS_TWO,       T_PLUS_1_L_PLUS_TWO, // Exs Hgh: P < 1
+                        T_PLUS_3_L_PLUS_TWO,       T_PLUS_1_L_PLUS_TWO,       T_PLUS_0_L_PLUS_TWO, // Exs Hgh: P < 1
                        T_PLUS_0_L_MINUS_ONE,     T_MINUS_1_L_MINUS_ONE,     T_MINUS_3_L_MINUS_ONE, //          P > 1
                      T_PLUS_0_L_MINUS_FIFTY,   T_MINUS_1_L_MINUS_FIFTY,   T_MINUS_3_L_MINUS_FIFTY  //          P > Q
         ];
