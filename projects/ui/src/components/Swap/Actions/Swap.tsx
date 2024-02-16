@@ -387,14 +387,11 @@ const SwapForm: FC<
     } else {
       setFieldValue('tokensIn.0', {
         token: tokenOut,
-        amount: undefined,
-      } as SwapFormValues['tokensIn'][number]);
-      setFieldValue('tokenOut', {
-        token: tokenIn,
-        amount: undefined,
+        amount: amountOut,
       });
+      setFieldValue('tokenOut.token', tokenIn);
     }
-  }, [modeIn, modeOut, setFieldValue, tokenIn, tokenOut, tokensMatch]);
+  }, [modeIn, modeOut, setFieldValue, tokenIn, tokenOut, amountOut, tokensMatch]);
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
