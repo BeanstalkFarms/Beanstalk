@@ -111,13 +111,14 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(
       new Set<Token>()
     );
+    const [balanceFromInternal, setBalanceFromInternal] = useState<BalanceFrom>(BalanceFrom.TOTAL);
 
     const getBalance = useCallback(
       (addr: string) => {
         if (!_balances) return ZERO_BN;
         if (balancesType === 'farm')
           return (
-            (_balances as TokenBalanceMode['farm'])?.[addr]?.[balanceFrom] ||
+            (_balances as TokenBalanceMode['farm'])?.[addr]?.[balanceFromInternal] ||
             ZERO_BN
           );
         return (
@@ -125,7 +126,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
             ?.amount || ZERO_BN
         );
       },
-      [_balances, balancesType, balanceFrom]
+      [_balances, balancesType, balanceFromInternal]
     );
 
     // Toggle the selection state of a token.
@@ -158,10 +159,12 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
       if (open) {
         console.debug('[TokenSelectDialog] resetting _selected');
         setSelectedInternal(new Set(selected.map(({ token }) => token)));
+        setBalanceFromInternal(balanceFrom);
       } else {
         setSelectedInternal(new Set());
+        setBalanceFromInternal(BalanceFrom.TOTAL);
       }
-    }, [open, selected]);
+    }, [open, selected, balanceFrom]);
 
     // Submit the newSelection and close the dialog.
     // Accepts a param _newSelection instead of using
@@ -170,9 +173,12 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     const onClickSubmit = useCallback(
       (_newSelection: Set<Token>) => () => {
         handleSubmit(_newSelection); // update form state
+        if (setBalanceFrom) {
+          setBalanceFrom(balanceFromInternal);
+        };
         handleClose(); // hide dialog
       },
-      [handleSubmit, handleClose]
+      [handleSubmit, handleClose, setBalanceFrom, balanceFromInternal]
     );
 
     // Click an item in the token list.
@@ -211,8 +217,8 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
           {setBalanceFrom ? (
             <Stack pt={1.5} pb={2}>
               <BalanceFromRow
-                balanceFrom={balanceFrom}
-                setBalanceFrom={setBalanceFrom}
+                balanceFrom={balanceFromInternal}
+                setBalanceFrom={setBalanceFromInternal}
                 customOptions={balanceFromOptions}
               />
               <Box

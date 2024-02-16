@@ -150,10 +150,7 @@ const TransferForm: FC<
     (_tokens: Set<Token>) => {
       if (tokenSelect === 'tokensIn') {
         const newTokenIn = Array.from(_tokens)[0];
-        setFieldValue('tokensIn.0', {
-          token: newTokenIn,
-          amount: undefined,
-        });
+        setFieldValue('tokensIn.0.token', newTokenIn);
       }
     },
     [setFieldValue, tokenSelect]
