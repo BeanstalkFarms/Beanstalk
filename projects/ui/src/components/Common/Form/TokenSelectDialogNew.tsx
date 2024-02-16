@@ -173,6 +173,14 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
       }
     }, [open, selected, balanceFrom]);
 
+    // Set balanceFrom before closing the dialog.
+    const setBalanceFromAndClose = useCallback(() => {
+      if (setBalanceFrom) {
+        setBalanceFrom(balanceFromInternal);
+      };
+      handleClose(); // hide dialog
+    }, [handleClose, setBalanceFrom, balanceFromInternal]);
+
     // Submit the newSelection and close the dialog.
     // Accepts a param _newSelection instead of using
     // the newSelection state variable so the handler can
@@ -180,12 +188,8 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
     const onClickSubmit = useCallback(
       (_newSelection: Set<Token>) => () => {
         handleSubmit(_newSelection); // update form state
-        if (setBalanceFrom) {
-          setBalanceFrom(balanceFromInternal);
-        };
-        handleClose(); // hide dialog
-      },
-      [handleSubmit, handleClose, setBalanceFrom, balanceFromInternal]
+        setBalanceFromAndClose();
+      }, [handleSubmit, setBalanceFromAndClose]
     );
 
     // Click an item in the token list.
@@ -201,7 +205,7 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
 
     return (
       <StyledDialog
-        onClose={handleClose}
+        onClose={setBalanceFromAndClose}
         aria-labelledby="customized-dialog-title"
         open={open}
         transitionDuration={0}
@@ -209,7 +213,7 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
       >
         <StyledDialogTitle
           id="customized-dialog-title"
-          onClose={handleClose}
+          onClose={setBalanceFromAndClose}
           sx={{ pb: 0.5 }}
         >
           {title ||
