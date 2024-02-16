@@ -13,8 +13,7 @@ enum EnrootType {
 }
 
 export class EnrootFarmStep extends FarmStep implements EstimatesGas {
-
-  _crates: Record<string, LegacyDepositCrate[]>
+  _crates: Record<string, LegacyDepositCrate[]>;
 
   constructor(
     _sdk: BeanstalkSDK,
@@ -113,7 +112,10 @@ export class EnrootFarmStep extends FarmStep implements EstimatesGas {
             urToken.fromHuman(crates[0].amount.toString()).toBlockchain(),
           ]
         );
-        callData[EnrootType.DEPOSIT] = [...[EnrootType.DEPOSIT], encoded];
+        callData[EnrootType.DEPOSIT] = [
+          ...callData[EnrootType.DEPOSIT],
+          encoded,
+        ];
       } else if (crates?.length > 1) {
         const encoded = beanstalk.interface.encodeFunctionData(
           'enrootDeposits',

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box,
+  CircularProgress,
   Link,
   Tab,
   TablePagination,
@@ -29,6 +30,7 @@ const VotesTable: FC<{
     ? [...props.proposal.choices]
     : undefined;
   const votes = props.quorum.data.votes || [];
+  const isLoading = props.quorum.loading;
 
   const [tab, handleChangeTab] = useTabs();
 
@@ -52,6 +54,29 @@ const VotesTable: FC<{
         const remove2 = remove1.replace("'s term", '');
         const remove3 = remove2.replace("' term", '');
         choices[index] = remove3;
+      } else if (proposalType === 'FILL') {
+        if (proposal.title.startsWith('BFRPP-1')) {
+          const choiceArray = choice.split(' ');
+          choices[index] = choiceArray.slice(0, -2).slice(1).join(' ');
+        } else if (
+          choice.startsWith('Approve') ||
+          choice.startsWith('Set') ||
+          choice.startsWith('For') ||
+          choice.startsWith('Yes, ') ||
+          choice.startsWith('Proceed ')
+        ) {
+          choices[index] = 'For';
+        } else if (choice.startsWith('Do nothing')) {
+          choices[index] = 'Abstain';
+        } else if (
+          choice.startsWith('Do not ') ||
+          choice.startsWith('Do Not ') ||
+          choice.startsWith('Against') ||
+          choice.startsWith('Reject') ||
+          choice.startsWith('No, ')
+        ) {
+          choices[index] = 'Against';
+        }
       }
     });
   }
@@ -89,7 +114,7 @@ const VotesTable: FC<{
   const [currentPage, setCurrentPage] = useState(0);
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
-    newPage: number,
+    newPage: number
   ) => {
     setCurrentPage(newPage);
   };
@@ -98,7 +123,16 @@ const VotesTable: FC<{
 
   return (
     <>
-      {votes && choices && (
+      {isLoading ? (
+        <Box
+          height={340}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <CircularProgress variant="indeterminate" />
+        </Box>
+      ) : votes && choices && (
         <Box>
           <Row
             justifyContent="space-between"
@@ -160,7 +194,7 @@ const VotesTable: FC<{
                                 color="text.secondary"
                                 sx={{ fontWeight: 400 }}
                               >
-                                {trimAddress(vote.voter)}
+                                {vote.ens || trimAddress(vote.voter)}
                               </Typography>
                             </Box>
                           </Link>
@@ -177,7 +211,7 @@ const VotesTable: FC<{
                     onPageChange={handleChangePage}
                     rowsPerPage={votesPerPage}
                     rowsPerPageOptions={[]}
-                    sx={{ position: "absolute", bottom: "0px", right: "0px" }}
+                    sx={{ position: 'absolute', bottom: '0px', right: '0px' }}
                   />
                 )}
               </>
@@ -213,9 +247,7 @@ const ListOfVotes: FC<{
   return isMobile ? (
     <FolderMenu
       buttonContent={<>See List of Votes</>}
-      drawerContent={
-        <VotesTable proposal={proposal} quorum={quorum} />
-      }
+      drawerContent={<VotesTable proposal={proposal} quorum={quorum} />}
       hotkey=""
       sx={{ width: '100%' }}
     />
