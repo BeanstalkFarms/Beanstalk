@@ -127,7 +127,7 @@ const SwapForm: FC<
   const [balanceFromOut, setBalanceFromOut] = useState<BalanceFrom>(
     BalanceFrom.EXTERNAL
   );
-  // Controls whether this is an exact input or exact output swap 
+  // This tracks whether this is an exact input or an exact output swap 
   const [userInputMode, setUserInputMode] = useState<string>('');
 
   /// Derived values
