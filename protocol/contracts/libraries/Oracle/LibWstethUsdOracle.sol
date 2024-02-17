@@ -5,12 +5,9 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibWstethEthOracle, SafeMath} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
+import {IWsteth, LibWstethEthOracle, SafeMath} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 
-interface IWsteth {
-    function stEthPerToken() external view returns (uint256);
-}
 
 /**
  * @title Wsteth USD Oracle Library

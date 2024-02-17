@@ -77,6 +77,7 @@ library LibWstethEthOracle {
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
 
+        // Uniswap V3 only supports a uint32 lookback.
         if (lookback > type(uint32).max) return 0;
         uint256 uniswapPrice = LibUniswapOracle.getTwap(
             lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES :
