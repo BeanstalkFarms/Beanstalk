@@ -203,7 +203,7 @@ const VoteForm: FC<
                 ? alreadyVotedThisChoice
                   ? 'Already Voted'
                   : 'Vote'
-                : `Need ${isNFT ? 'Stalk' : 'BeaNFTs'} to Vote`}
+                : `Need ${isNFT ? 'BeaNFTs' : 'Stalk'} to Vote`}
             </LoadingButton>
           </>
         ) : (
