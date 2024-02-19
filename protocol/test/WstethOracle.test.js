@@ -167,10 +167,10 @@ testIfRpcSet('wStEth Oracle with Forking', function () {
         const usdOracle = await UsdOracle.deploy();
         await usdOracle.deployed();
     
-        expect(await usdOracle.getWstethEthPrice()).to.be.equal('1154105')
-        expect(await usdOracle.getWstethEthTwap('500000')).to.be.equal('1154095')
-        expect(await usdOracle.getWstethUsdPrice()).to.be.equal('2580422122')
-        expect(await usdOracle.getWstethUsdTwap('5000')).to.be.within('2571910000', '2571920000')
-        expect(await usdOracle.getUsdTokenPrice(WSTETH)).to.be.equal('387533493638216')
+        expect(await season.getWstethEthPrice()).to.be.equal(to6('1.154105'))
+        expect(await season.getWstethEthTwap('500000')).to.be.equal(to6('1.154095'))
+        expect(await season.getWstethUsdPrice()).to.be.equal(to6('2580.422122'))
+        expect(await season.getWstethUsdTwap('500000')).to.be.equal(to6('2744.261803'))
+        expect(await season.getUsdPrice(WSTETH)).to.be.equal(to18('0.000387533493638216'))
     })
 })

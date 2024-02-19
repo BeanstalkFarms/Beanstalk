@@ -18,15 +18,18 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 library LibChainlinkOracle {
     using SafeMath for uint256;
 
-    // Uses the same timeout as Liquity's Chainlink timeout.
-    uint256 public constant CHAINLINK_TIMEOUT = 14400; // 4 hours: 60 * 60 * 4
-
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 
     // timeout for Oracles with a 1 hour heartbeat.
     uint256 constant FOUR_HOUR_TIMEOUT = 14400;
     // timeout for Oracles with a 1 day heartbeat.
     uint256 constant FOUR_DAY_TIMEOUT = 345600;
+
+    struct TwapVariables {
+        uint256 cumulativePrice;
+        uint256 endTimestamp;
+        uint256 lastTimestamp;
+    }
 
     /**
      * @dev Returns the price of a given `priceAggregator`
@@ -67,14 +70,6 @@ library LibChainlinkOracle {
             // If call to Chainlink aggregator reverts, return a price of 0 indicating failure
             return 0;
         }
-    }
-
-    struct TwapVariables {
-        uint256 cumulativePrice;
-        uint256 endTimestamp;
-        uint256 lastTimestamp;
-        uint256 timestamp;
-        int256 answer;
     }
 
     /**
@@ -171,7 +166,7 @@ library LibChainlinkOracle {
         int256 answer,
         uint256 currentTimestamp,
         uint256 maxTimeout
-    ) private view returns (bool) {
+    ) private pure returns (bool) {
         // Check for an invalid timeStamp that is 0, or in the future
         if (timestamp == 0 || timestamp > currentTimestamp) return true;
         // Check if Chainlink's price feed has timed out
