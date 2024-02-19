@@ -36,13 +36,13 @@ describe('USD Oracle', function () {
         await revertToSnapshot(snapshotId);
     });
 
-    it("it gets the USD price when Chainlink = USDC", async function () {
+    it("it gets the USD price", async function () {
         expect(await season.getEthUsdPrice()).to.be.equal(to6('10000')) // About 1e14
         expect(await season.getEthUsdTwap(900)).to.be.equal(to6('10000')) // About 1e14
         expect(await season.getUsdPrice(WETH)).to.be.equal(to18('0.0001')) // About 1e14
     })
 
-    it("it gets the USD price when Chainlink = USDC", async function () {
+    it("it gets the USD TWA", async function () {
         await setEthUsdChainlinkPrice('20000', lookback = 449)
         expect(await season.getEthUsdTwap(900)).to.be.equal(to6('15000')) // About 1e14
 
