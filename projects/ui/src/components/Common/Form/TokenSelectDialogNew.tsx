@@ -153,11 +153,11 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
 
     // ETH can only be used from EXTERNAL balance
     const filteredTokenList = useMemo(() => {
-      if (balanceFrom === BalanceFrom.INTERNAL) {
+      if (balanceFromInternal === BalanceFrom.INTERNAL) {
         return tokenList.filter((tk) => tk.symbol !== sdk.tokens.ETH.symbol);
       }
       return tokenList;
-    }, [balanceFrom, sdk.tokens.ETH, tokenList]);
+    }, [balanceFromInternal, sdk.tokens.ETH, tokenList]);
 
     // Whenever the Dialog opens, store a temporary copy of the currently
     // selected tokens so we can manipulate them quickly here without

@@ -21,7 +21,7 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP, CRV3, DAI, USDC, USDT, WETH } from '~/constants/tokens';
+import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP, CRV3, DAI, USDC, USDT, WETH, ETH } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -256,12 +256,17 @@ const TransferForm: FC<
 
   const internalExternalCheck = fromMode === FarmFromMode.INTERNAL_EXTERNAL;
 
+  const ethTransferCheck = tokenIn.address === 'eth';
+  
+  const ethTransferModeCheck = ethTransferCheck && toMode === FarmToMode.EXTERNAL;
+
   const isValid =
     amountsCheck &&
     enoughBalanceCheck &&
     addressCheck &&
     modeCheck &&
-    (sameAddressCheck ? !internalExternalCheck : true);
+    (sameAddressCheck ? !internalExternalCheck : true) &&
+    (ethTransferCheck ? ethTransferModeCheck : true);
 
   return (
     <Form autoComplete="off" onSubmit={handleSubmitWrapper}>
@@ -344,17 +349,24 @@ const TransferForm: FC<
             </Accordion>
           </Box>
         ) : null}
-        {sameAddressCheck && internalExternalCheck ? (
+        {sameAddressCheck && ethTransferCheck ? (
+          <Warning color="error">
+            You cannot send ETH to yourself.
+          </Warning>
+        ) : toMode === FarmToMode.INTERNAL && ethTransferCheck ? (
+          <Warning color="error">
+            ETH can only be delivered to a Circulating Balance.
+          </Warning>
+        ) : sameAddressCheck && internalExternalCheck ? (
           <Warning>
             You cannot use Combined Balance when transferring to yourself.
           </Warning>
-        ) : null}
-        {amount?.gt(balanceInMax) ? (
+        ) : amount?.gt(balanceInMax) && (
           <Warning>
             {`Transfer amount higher than your ${copy.MODES[values.fromMode]}.`}
           </Warning>
-        ) : null}
-        {toMode === FarmToMode.INTERNAL && (
+        )}
+        {toMode === FarmToMode.INTERNAL && !ethTransferCheck && (
           <Warning color="error">
             If you send assets to the Farm Balance of contracts, centralized
             exchanges, etc. that don&apos;t support Farm Balances, the assets
@@ -386,7 +398,7 @@ const TransferForm: FC<
 
 // ---------------------------------------------------
 
-const SUPPORTED_TOKENS = [BEAN, WETH, BEAN_ETH_WELL_LP, BEAN_CRV3_LP, CRV3, DAI, USDC, USDT];
+const SUPPORTED_TOKENS = [BEAN, ETH, WETH, BEAN_ETH_WELL_LP, BEAN_CRV3_LP, CRV3, DAI, USDC, USDT];
 
 const Transfer: FC<{}> = () => {
   /// Ledger
@@ -452,6 +464,7 @@ const Transfer: FC<{}> = () => {
         if (!tokenAmount) throw new Error('No input amount set.');
         if (!account) throw new Error('Connect a wallet first.');
         if (!recipient) throw new Error('Enter an address to transfer to.');
+        if (!signer) throw new Error('Signer not found.')
         if (approving) return;
 
         txToast = new TransactionToast({
@@ -459,13 +472,21 @@ const Transfer: FC<{}> = () => {
           success: 'Transfer successful..',
         });
 
-        const txn = await beanstalk.transferToken(
-          tokenAddress,
-          recipient,
-          amount,
-          fromMode,
-          toMode
-        );
+        let txn;
+        if (tokenAddress === "eth") {
+          txn = await signer.sendTransaction({
+            to: recipient,
+            value: amount
+          });
+        } else {
+          txn = await beanstalk.transferToken(
+            tokenAddress,
+            recipient,
+            amount,
+            fromMode,
+            toMode
+          );
+        };
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -486,7 +507,7 @@ const Transfer: FC<{}> = () => {
         formActions.setSubmitting(false);
       }
     },
-    [account, refetchFarmerBalances, beanstalk, middleware]
+    [account, refetchFarmerBalances, beanstalk, middleware, signer]
   );
 
   return (
