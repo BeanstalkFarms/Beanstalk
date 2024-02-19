@@ -51,7 +51,7 @@ export const STATE_CONFIG = {
     'Ripe',
     colors.primary,
     (name: string) =>
-      `${name} minted as the percentage of Fertilizer sold increases. Ripe ${name} are the ${name} underlying Unripe ${name}. ${
+      `${name} minted when Fertilizer is sold. Ripe ${name} are the ${name} underlying Unripe ${name}. ${
         name === 'Beans'
           ? 'Does not include Beans that make up Ripe BEANETH.'
           : ''

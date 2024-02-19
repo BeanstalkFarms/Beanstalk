@@ -72,11 +72,11 @@ const ChopConditions: FC<{}> = () => {
           <Grid item xs={6} md={3.7}>
             <Stack gap={0.5}>
               <Tooltip
-                title="The percentage of Fertilizer sold out of the total Available Fertilizer."
+                title="The ratio of Ripe to Unripe assets."
                 placement="top"
               >
                 <Typography variant="body1">
-                  Fertilizer Sold&nbsp;
+                  Recapitalized&nbsp;
                   <HelpOutlineIcon
                     sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
                   />
