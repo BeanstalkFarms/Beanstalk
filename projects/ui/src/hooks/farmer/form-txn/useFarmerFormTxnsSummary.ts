@@ -37,9 +37,9 @@ const tooltips = {
   claimableBeans:
     'Beans that have been withdrawn from the silo and are ready to be claimed.',
   revitalizedSeeds:
-    'Seeds that have vested for pre-exploit Silo Members. Revitalized Seeds are minted as the percentage of Fertilizer sold increases. Revitalized Seeds do not generate Stalk until Enrooted.',
+    'Seeds that have vested for Unripe holders. Revitalized Seeds are minted as the BDV of Unripe assets increases. Revitalized Seeds do not generate Stalk until Enrooted.',
   revitalizedStalk:
-    'Stalk that have vested for pre-exploit Silo Members. Revitalized Stalk are minted as the percentage of Fertilizer sold increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted.',
+    'Stalk that have vested for Unripe holders. Revitalized Stalk are minted as the BDV of Unripe assets increases. Revitalized Stalk does not contribute to Stalk ownership until Enrooted.',
 };
 
 type TXActionParams = {
