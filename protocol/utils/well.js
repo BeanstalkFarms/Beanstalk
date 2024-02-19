@@ -270,6 +270,7 @@ async function deployMockBeanWell(address, token1) {
         await ethers.provider.getCode(well.address),
     ]);
     well = await ethers.getContractAt('MockSetComponentsWell', address)
+    token1contract = await ethers.getContractAt('MockToken', token1)
     await well.init()
 
     pump = await deployMultiFlowPump()
@@ -280,6 +281,8 @@ async function deployMockBeanWell(address, token1) {
 
     await well.setReserves([to6('1000000'), to18('1000')])
     await well.setReserves([to6('1000000'), to18('1000')])
+    let symbol = 'BEAN' + await token1contract.symbol() + await wellFunction.symbol() + 'w'
+    await well.setSymbol(symbol)
 
     return [well, wellFunction, pump]
 }

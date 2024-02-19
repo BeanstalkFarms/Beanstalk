@@ -94,6 +94,7 @@ async function weth() {
     WETH
   )
   const weth = await ethers.getContractAt("MockToken", WETH);
+  await weth.setSymbol('WETH');
   await weth.setDecimals(18);
 }
 
@@ -103,6 +104,7 @@ async function wsteth() {
     WSTETH
   )
   const wsteth = await ethers.getContractAt('MockWsteth', WSTETH);
+  await wsteth.setSymbol('wstETH');
   await wsteth.setStEthPerToken(to18('1'))
 }
 
