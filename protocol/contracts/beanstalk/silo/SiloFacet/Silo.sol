@@ -96,6 +96,19 @@ contract Silo is ReentrancyGuard {
         _;
     }
 
+    //////////////////////// INTERNAL: VESTING ////////////////////////
+
+    /**
+     * @notice Verifies that the function is not called in the vesting period.
+     * @dev Added with ebip-13. Will be removed upon seed gauge BIP.
+     * This modifier is added to the following functions:
+     * {SiloFacet.withdrawDeposit(s)}
+     */
+    modifier checkVesting() {
+        require(!LibSilo.inVestingPeriod(), "Silo: In vesting period");
+        _;
+    }
+
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**

@@ -15,6 +15,7 @@ import {
 } from '~/lib/Txn/FormTxn/types';
 import { FormTxnBundlerPresets as presets } from '~/lib/Txn/FormTxn/presets';
 import { BigNumber } from 'ethers';
+import { Token } from '@beanstalk/sdk-core';
 
 type FormTxnFarmStep =
   | MowFarmStep
@@ -44,7 +45,7 @@ type FormTxnFarmStep =
  *        - it is intended for this to be called in an 'onSubmit' function where the user
  *          has confirmed which FarmSteps they want to perform.
  *        - setFarmSteps() deduplicates any FarmSteps that are implied by other FarmSteps
- *          as welll as any FarmSteps that are excluded by the form.
+ *          as well as any FarmSteps that are excluded by the form.
  *
  *    3. Call build() to perform the bundling of FarmSteps into a single, executable Workflow.
  *        - It is assumed every FarmStep added to have previous been 'built'.
@@ -152,13 +153,55 @@ export class FormTxnBundler {
       farm.add(_input.input, _input.options);
     });
 
-    Object.entries(this.after).forEach(([step, farmStep]) => {
+    // Here we build a map of tokens that will be mown taking into account
+    // internal mow calls inside Plant and Enroot
+    const allSteps = Object.entries(this.after);
+    let tokensToMow: Map<Token, TokenValue> = new Map();
+    let tokensToRemove: string[] = []; 
+    allSteps.forEach((farmOp) => {
+      if (farmOp[1] instanceof MowFarmStep) {  
+        // Create map of tokens to Mow
+        tokensToMow = farmOp[1]._tokensToMow;
+      } else if (farmOp[1] instanceof PlantFarmStep) {
+        // If there's a Plant step, add Bean to the list of tokens to remove
+        tokensToRemove.push(this._sdk.tokens.BEAN.address);
+      } else if (farmOp[1] instanceof EnrootFarmStep) {
+        // If there's an Enroot step, add token(s) to the list of tokens to remove
+        const tokensEnrooted = Object.keys(farmOp[1]._crates);
+        tokensToRemove = tokensToRemove.concat(tokensEnrooted);
+      };
+    });
+
+    // Remove tokens from map of tokens to Mow.
+    // We separate this logic from the forEach loop so
+    // we aren't forced into a strict input order
+    const tokenMap = this._sdk.tokens.getMap();
+    tokensToRemove.forEach((token) => {
+      const tokenToDelete = tokenMap.get(token);
+      if (tokenToDelete) tokensToMow.delete(tokenToDelete);
+    }); 
+
+    allSteps.forEach(([step, farmStep]) => {
       const farmInput = farmStep.getFarmInput();
       if (!farmInput.length) {
         throw new Error(`Expected FarmStep ${step.toLowerCase()} to be built`);
       }
+
       farmInput.forEach(({ input, options }) => {
-        farm.add(input, options);
+        // If the current step is a Mow operation
+        if (farmStep instanceof MowFarmStep) {
+          // We check if there's any tokens in the map of tokens to Mow
+          // and build the Mow step if necessary
+          if (tokensToMow.size > 0) {
+            const newFarmStep = new MowFarmStep(this._sdk, farmStep._account, tokensToMow).build();
+            const newFarmInput = newFarmStep.getFarmInput();
+            const newInput = newFarmInput[0].input;
+            const newOptions = newFarmInput[0].options;
+            farm.add(newInput, newOptions);
+          };
+        } else {
+          farm.add(input, options);
+        };
       });
     });
 
@@ -189,38 +232,19 @@ export class FormTxnBundler {
 
   /**
    * @param data
-   * deduplicate farm steps & remove implicit actions.
+   * deduplicate farm steps.
    */
   private static deduplicateFarmSteps(data: FormTxnBundlerInterface) {
     const before = new Set(data.primary || []);
     const after = new Set(data.secondary || []);
 
     const allActions = new Set([...before, ...after]);
-
     /// deduplicate
     // if an action is in both primary and secondary, remove it from secondary
     [...before].forEach((action) => {
       if (after.has(action)) {
         after.delete(action);
       }
-    });
-
-    /// deduplicate implied actions
-    [...allActions].forEach((action) => {
-      const implied = FormTxnBundler.implied[action];
-      if (implied) {
-        allActions.has(implied) && allActions.delete(implied);
-        before.has(implied) && before.delete(implied);
-        after.has(implied) && after.delete(implied);
-      }
-    });
-
-    const removeItems = [...(data.exclude || []), ...(data.implied || [])];
-
-    removeItems.forEach((toRemove) => {
-      allActions.has(toRemove) && allActions.delete(toRemove);
-      before.has(toRemove) && before.delete(toRemove);
-      after.has(toRemove) && after.delete(toRemove);
     });
 
     return {

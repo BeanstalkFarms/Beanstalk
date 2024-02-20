@@ -62,7 +62,7 @@ const FieldStats: React.FC<{}> = () => {
           amount={displayFullBN(normalizeBN(podLine), 0)}
           subtitle={
             <Typography color="text.secondary">
-              The total number of outstanding Pods.
+              The total number of Unharvestable Pods.
             </Typography>
           }
         />

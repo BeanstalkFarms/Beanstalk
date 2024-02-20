@@ -33,6 +33,9 @@ describe('Curve Convert', function () {
     await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
     this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
 
+    await impersonateCurveMetapool(fakeMetapoolAccount.address, 'FAKE');
+    this.fakeMetapool = await ethers.getContractAt('IMockCurvePool', fakeMetapoolAccount.address);
+
     await this.threeCurve.mint(userAddress, to18('100000'));
     await this.threePool.set_virtual_price(to18('1'));
     await this.threeCurve.connect(user).approve(this.beanMetapool.address, to18('100000000000'));

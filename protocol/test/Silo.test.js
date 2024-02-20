@@ -715,6 +715,22 @@ describe('Silo', function () {
       })
     })
   });
+
+  describe("Withdrawing during vesting period", async function () {
+    it('properly reverts', async function () {
+      await this.season.teleportSunrise(10);
+      await this.silo.connect(user).deposit(this.bean.address, '1000', EXTERNAL);
+      const stem = await this.silo.seasonToStem(this.bean.address, '10');
+
+      await expect(
+        this.silo.connect(user).withdrawDeposit(this.bean.address, stem, '1000', EXTERNAL)
+      ).to.be.revertedWith('Silo: In vesting period')
+      await expect(
+        this.silo.connect(user).withdrawDeposits(this.bean.address, [stem], ['1000'], EXTERNAL)
+      ).to.be.revertedWith('Silo: In vesting period')
+
+    });
+  });
 });
 
 function tryParseJSONObject (jsonString){
