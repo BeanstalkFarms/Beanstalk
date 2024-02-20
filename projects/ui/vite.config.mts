@@ -68,7 +68,7 @@ const CSP = buildCSP({
 
 // https://vitejs.dev/config/
 export default defineConfig(
-  ({ command, mode }) =>
+  ({ command }) =>
     ({
       test: {
         globals: true,
