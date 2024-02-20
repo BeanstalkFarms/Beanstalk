@@ -115,10 +115,8 @@ contract ConvertFacet is ReentrancyGuard {
      * A farm convert needs to be able to take in:
      * 1. A list of tokens, stems, and amounts for input
      * 2. An output token address
-     * 3. Output stems will be calculated, but we want to allow combining of crates. I'm thinking maybe a 2-d array of grouped stems, i.e. [[1,2,3], [4,5,6]], assuming your input deposits are of stems 1,2,3,4,5,6.
-     * 4. A farm function that does a swap, somehow we have to pass all the input tokens and amounts to this function
+     * 3. A farm function that does a swap, somehow we have to pass all the input tokens and amounts to this function
      */
-
 
     function pipelineConvert(
         address inputToken, 
@@ -161,12 +159,11 @@ contract ConvertFacet is ReentrancyGuard {
             totalAmountIn
         );
 
-        storePoolDeltaB(inputToken, outputToken);
+        // storePoolDeltaB(inputToken, outputToken);
+        int256 combinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
 
 
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
-
-
         amountOut = executeAdvancedFarmCalls(farmData);
 
         
@@ -182,7 +179,10 @@ contract ConvertFacet is ReentrancyGuard {
 
         //stalk bonus/penalty will be applied here
 
-        storePoolDeltaB(inputToken, outputToken);
+        combinedDeltaB = combinedDeltaB + getCombinedDeltaBForTokens(inputToken, outputToken);
+
+        console.log('updatedCombinedDeltaB');
+        console.logInt(combinedDeltaB);
 
         //TODO: grownStalk should be lost as % of bdv decrease?
         //grownstalk recieved as a bonus should be deposited evenly across all deposits
@@ -194,6 +194,18 @@ contract ConvertFacet is ReentrancyGuard {
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
+    }
+
+    //note we need a way to get insta version of this
+    function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal
+        returns (int256 combinedDeltaB) {
+                //get deltaB of input/output tokens for comparison later
+        int256 inputTokenDeltaB = getDeltaBIfNotBean(inputToken);
+        int256 outputTokenDeltaB = getDeltaBIfNotBean(outputToken);
+
+        combinedDeltaB = inputTokenDeltaB + outputTokenDeltaB;
+        console.log('getCombinedDeltaBForTokens');
+        console.logInt(combinedDeltaB);
     }
 
     function storePoolDeltaB(address inputToken, address outputToken) internal {
@@ -208,7 +220,7 @@ contract ConvertFacet is ReentrancyGuard {
     }
 
     //may not be best use of gas to have this as different function?
-    function getDeltaBIfNotBean(address token) internal returns (int256) {
+    function getDeltaBIfNotBean(address token) internal view returns (int256) {
         console.log('getDeltaBIfNotBean token: ', token);
         if (token == address(C.bean())) {
             return 0;
