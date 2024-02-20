@@ -68,18 +68,7 @@ contract FertilizerFacet {
         uint256 minLPTokensOut,
         LibTransfer.From mode
     ) external payable returns (uint256 fertilizerAmountOut) {
-        // Transfer Barn Raise tokens directly to the Well for gas efficiency purposes. The tokens are later synced in {LibFertilizer.addUnderlying}.
-        address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
-        tokenAmountIn = LibTransfer.transferToken(
-            IERC20(barnRaiseToken),
-            msg.sender,
-            LibBarnRaise.getBarnRaiseWell(),
-            uint256(tokenAmountIn),
-            mode,
-            LibTransfer.To.EXTERNAL
-        );
-
-        fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, barnRaiseToken);
+        fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
         require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
@@ -89,6 +78,7 @@ contract FertilizerFacet {
 
         uint128 id = LibFertilizer.addFertilizer(
             uint128(s.season.current),
+            tokenAmountIn,
             fertilizerAmountOut,
             minLPTokensOut
         );

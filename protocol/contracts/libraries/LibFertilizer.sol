@@ -39,6 +39,7 @@ library LibFertilizer {
 
     function addFertilizer(
         uint128 season,
+        uint256 tokenAmountIn,
         uint256 fertilizerAmount,
         uint256 minLP
     ) internal returns (uint128 id) {
@@ -57,7 +58,7 @@ library LibFertilizer {
         s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
         s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
-        addUnderlying(fertilizerAmount.mul(DECIMALS), minLP);
+        addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
         if (s.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
@@ -80,7 +81,7 @@ library LibFertilizer {
      * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
      * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
      */
-    function addUnderlying(uint256 usdAmount, uint256 minAmountOut) internal {
+    function addUnderlying(uint256 tokenAmountIn, uint256 usdAmount, uint256 minAmountOut) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
         uint256 percentToFill = usdAmount.mul(C.precision()).div(
@@ -110,15 +111,31 @@ library LibFertilizer {
 
         // Mint the LP Beans to the Well to sync.
         address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
+        address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
 
         C.bean().mint(
-            barnRaiseWell,
+            address(this),
             newDepositedLPBeans
         );
 
-        uint256 newLP = IWell(barnRaiseWell).sync(
+        IERC20(barnRaiseToken).transferFrom(
+            msg.sender,
             address(this),
-            minAmountOut
+            uint256(tokenAmountIn)
+        );
+
+        IERC20(barnRaiseToken).approve(barnRaiseWell, uint256(tokenAmountIn));
+        C.bean().approve(barnRaiseWell, newDepositedLPBeans);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = newDepositedLPBeans;
+        tokenAmountsIn[1] = tokenAmountIn;
+
+        uint256 newLP = IWell(barnRaiseWell).addLiquidity(
+            tokenAmountsIn,
+            minAmountOut,
+            address(this),
+            type(uint256).max
         );
 
         // Increment underlying balances of Unripe Tokens
