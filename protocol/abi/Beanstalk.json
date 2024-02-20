@@ -5491,30 +5491,6 @@
         "type": "address"
       }
     ],
-    "name": "balanceOfNewAndPartiallyGerminatedStalk",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "paritallyGerminatedStalk",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newlyGerminatedStalk",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
     "name": "balanceOfPlenty",
     "outputs": [
       {
@@ -5623,6 +5599,30 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOfYoungAndMatureGerminatingStalk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "matureGerminatingStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "youngGerminatingStalk",
         "type": "uint256"
       }
     ],
@@ -5743,6 +5743,25 @@
         "type": "uint32"
       }
     ],
+    "name": "getGerminatingRootsForSeason",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
     "name": "getGerminatingStalkAndRootsForSeason",
     "outputs": [
       {
@@ -5750,6 +5769,25 @@
         "name": "",
         "type": "uint256"
       },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
+    "name": "getGerminatingStalkForSeason",
+    "outputs": [
       {
         "internalType": "uint256",
         "name": "",
@@ -5877,24 +5915,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getYoungAndMatureGerminatingTotalStalk",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "partiallyGerminatedStalk",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newlyGerminatedStalk",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -6001,6 +6021,24 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getYoungAndMatureGerminatingTotalStalk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "matureGerminatingStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "youngGerminatingStalk",
         "type": "uint256"
       }
     ],
