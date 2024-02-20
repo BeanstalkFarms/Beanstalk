@@ -7,7 +7,7 @@ import {C} from "contracts/C.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
-
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title Oracle
@@ -21,10 +21,10 @@ contract Oracle is ReentrancyGuard {
     //////////////////// ORACLE INTERNAL ////////////////////
 
     function stepOracle() internal returns (int256 deltaB) {
-        // TODO: Make more dynamic if becomes a bottleneck. Potentially use LibWhitelistedTokens.
-        deltaB = LibWellMinting.capture(C.BEAN_ETH_WELL).add(
-            LibWellMinting.capture(C.BEAN_WSTETH_WELL)
-        );
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            deltaB = deltaB.add(LibWellMinting.capture(tokens[i]));
+        }
         s.season.timestamp = block.timestamp;
     }
 }
