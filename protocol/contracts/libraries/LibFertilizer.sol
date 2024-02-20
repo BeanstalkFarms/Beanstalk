@@ -14,6 +14,8 @@ import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "./LibBarnRaise.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /**
  * @author Publius
@@ -24,6 +26,7 @@ library LibFertilizer {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
     using SafeCast for uint256;
+    using SafeERC20 for IERC20;
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
@@ -199,5 +202,18 @@ library LibFertilizer {
     function setNext(uint128 id, uint128 next) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.nextFid[id] = next;
+    }
+
+    function switchBarnRaiseWell(address well) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 balanceOfUnderlying = s.u[C.UNRIPE_LP].balanceOfUnderlying;
+        IERC20(s.u[C.UNRIPE_LP].underlyingToken).safeTransfer(
+            LibDiamond.diamondStorage().contractOwner,
+            balanceOfUnderlying
+        );
+        LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
+        LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
+
+        s.barnRaiseWell = well;
     }
 }
