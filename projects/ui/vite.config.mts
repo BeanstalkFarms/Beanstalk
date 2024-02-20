@@ -1,5 +1,4 @@
-import { splitVendorChunkPlugin, UserConfig } from 'vite';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, splitVendorChunkPlugin, UserConfig } from 'vite';
 import path from 'path';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import react from '@vitejs/plugin-react';
@@ -66,65 +65,67 @@ const CSP = buildCSP({
   'frame-src': ['https://verify.walletconnect.com/'], // for walletconnect
 });
 
-// https://vitejs.dev/config/
-export default defineConfig(
-  ({ command }) =>
-    ({
-      test: {
-        globals: true,
+// @ts-ignore
+export default defineConfig(({ command }) => ({
+  test: {
+    globals: true,
+  },
+  server: {
+    hmr: {
+      overlay: true,
+    },
+  },
+  plugins: [
+    react({
+      // This definition ensures that the `css` prop from Emotion
+      // works at build time. The one in tsconfig.json ensures that
+      // the IDE doesn't throw errors when using the prop.
+      jsxImportSource: '@emotion/react',
+      babel: {
+        compact: false,
       },
-      server: {
-        hmr: {
-          overlay: true,
+    }),
+    createHtmlPlugin({
+      minify: true,
+      inject: {
+        data: {
+          csp:
+            process.env.NODE_ENV === 'production' && !process.env.DISABLE_CSP
+              ? `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`
+              : '',
         },
       },
+    }),
+    splitVendorChunkPlugin(),
+    process.env.NODE_ENV === 'production' && analyze({ limit: 10 }),
+    process.env.NODE_ENV === 'production' &&
+      // There is a bug with this pluin's ESM imports, need to get the function off of .default
+      // @ts-ignore
+      removeHTMLAttributes.default({
+        include: ['**/*.tsx', '**/*.jsx'],
+        attributes: ['data-cy'],
+        exclude: 'node_modules',
+      }),
+  ],
+  resolve: {
+    alias: [
+      {
+        find: '~',
+        replacement: path.resolve(__dirname, 'src'),
+      },
+    ],
+  },
+  build: {
+    sourcemap: command === 'serve',
+    reportCompressedSize: true,
+    rollupOptions: {
       plugins: [
-        react({
-          // This definition ensures that the `css` prop from Emotion
-          // works at build time. The one in tsconfig.json ensures that
-          // the IDE doesn't throw errors when using the prop.
-          jsxImportSource: '@emotion/react',
+        // @ts-ignore
+        strip({
+          functions: ['console.debug'],
+          include: '**/*.(ts|tsx)',
         }),
-        createHtmlPlugin({
-          minify: true,
-          inject: {
-            data: {
-              csp:
-                process.env.NODE_ENV === 'production' &&
-                !process.env.DISABLE_CSP
-                  ? `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`
-                  : '',
-            },
-          },
-        }),
-        splitVendorChunkPlugin(),
-        process.env.NODE_ENV === 'production' && analyze({ limit: 10 }),
-        process.env.NODE_ENV === 'production' &&
-          removeHTMLAttributes({
-            include: ['**/*.tsx', '**/*.jsx'],
-            attributes: ['data-cy'],
-            exclude: 'node_modules',
-          }),
       ],
-      resolve: {
-        alias: [
-          {
-            find: '~',
-            replacement: path.resolve(__dirname, 'src'),
-          },
-        ],
-      },
-      build: {
-        sourcemap: command === 'serve',
-        reportCompressedSize: true,
-        rollupOptions: {
-          plugins: [
-            strip({
-              functions: ['console.debug'],
-              include: '**/*.(ts|tsx)',
-            }),
-          ],
-        },
-      },
-    } as UserConfig)
-);
+    },
+  },
+})); 
