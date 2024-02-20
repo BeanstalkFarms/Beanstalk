@@ -11,15 +11,15 @@
     "utils"
   ],
   "devDependencies": {
-    "@types/prettier": "^2",
-    "husky": "8.0.1",
+    "@types/prettier": "^2.7.3",
+    "husky": "8.0.3",
     "jest": "29.2.2",
     "jest-serial-runner": "1.2.1",
-    "lint-staged": "13.1.0",
-    "prettier": "2.7.1",
-    "ts-jest": "29.0.3",
-    "ts-node": "10.9.1",
-    "typescript": "4.8.4"
+    "lint-staged": "13.3.0",
+    "prettier": "3.2.5",
+    "ts-jest": "29.1.2",
+    "ts-node": "10.9.2",
+    "typescript": "4.9.5"
   },
   "scripts": {
     "bootstrap": "yarn husky install && yarn generate",
