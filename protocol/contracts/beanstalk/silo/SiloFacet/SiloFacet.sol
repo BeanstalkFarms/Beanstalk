@@ -92,7 +92,7 @@ contract SiloFacet is TokenSilo {
         int96 stem,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable mowSender(token) nonReentrant checkVesting {
+    ) external payable mowSender(token) nonReentrant {
         _withdrawDeposit(msg.sender, token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
@@ -116,7 +116,7 @@ contract SiloFacet is TokenSilo {
         int96[] calldata stems,
         uint256[] calldata amounts,
         LibTransfer.To mode
-    ) external payable mowSender(token) nonReentrant checkVesting {
+    ) external payable mowSender(token) nonReentrant {
         uint256 amount = _withdrawDeposits(msg.sender, token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
     }
