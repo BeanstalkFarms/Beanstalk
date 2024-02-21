@@ -25,7 +25,7 @@ import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
 contract InitMigrateUnripeBeanEthToBeanSteth {
 
     // The initial gauge points for Bean:WstETH.
-    uint128 internal constant BEAN_WSTETH_INITIAL_GAUGE_POINTS = 1000e18;
+    uint128 internal constant BEAN_WSTETH_INITIAL_GAUGE_POINTS = 100e18;
 
     // The amount of Seasons that Bean:Eth Minting will be off.
     uint32 constant BEAN_ETH_PUMP_CATCH_UP_SEASONS = 24;
