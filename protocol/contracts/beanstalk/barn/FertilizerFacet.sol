@@ -89,6 +89,7 @@ contract FertilizerFacet {
             fertilizerAmountOut,
             minLPTokensOut
         );
+
         C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 
@@ -117,6 +118,8 @@ contract FertilizerFacet {
             LibEthUsdOracle.getEthUsdPrice()
         ).div(FERTILIZER_AMOUNT_PRECISION);
     }
+
+    ///////////////////////////// Fertilizer Getters //////////////////////////////
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
         return s.fertilizedIndex;
