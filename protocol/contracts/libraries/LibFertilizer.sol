@@ -109,7 +109,7 @@ library LibFertilizer {
             newDepositedBeans
         );
 
-        // Mint the LP Beans to the Well to sync.
+        // Mint the LP Beans and add liquidity to the well.
         address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
 
