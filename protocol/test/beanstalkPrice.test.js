@@ -105,7 +105,7 @@ describe('BeanstalkPrice', function () {
   describe("Price", async function () {
     it('deltaB = 0', async function () {      
       const p = await this.beanstalkPrice.price()
-      // price is within +/- 1 due to curve rounding
+      // price is within +/- 1 due to rounding
       expect(p.price).to.equal('999999');
       expect(p.liquidity).to.equal('3999997000000');
       expect(p.deltaB).to.be.eq('0');

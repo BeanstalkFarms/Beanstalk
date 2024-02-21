@@ -12,10 +12,9 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP 38 migration ----
-const { bipMigrateUnripeBean3CrvToBeanEth } = require("./scripts/bips.js");
-const { finishBeanEthMigration } = require("./scripts/beanEthMigration.js");
-// ----
+// BIP 39 
+const { bipSeedGauge } = require("./scripts/bips.js");
+//
 
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
@@ -114,7 +113,7 @@ task("sunrise2", async function () {
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
-  console.log("Current time: ", await this.season.time());
+  console.log("Current time: ", await this.seasonGetter.time());
 });
 
 /*task('replant', async () => {
@@ -148,7 +147,12 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   modules.forEach((module) => {
     const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
     const files = glob.sync(pattern);
-
+    if (module == "silo") {
+      // Manually add in libraries that emit events
+      files.push("contracts/libraries/Silo/LibWhitelist.sol")
+      files.push("contracts/libraries/LibGauge.sol")
+      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
+    }
     files.forEach((file) => {
       const facetName = getFacetName(file);
       const jsonFileName = `${facetName}.json`;
@@ -217,9 +221,8 @@ task("beanstalkAdmin", async function () {
   await mockBeanstalkAdmin();
 });
 
-task("migrate-bip38", async function () {
-  await bipMigrateUnripeBean3CrvToBeanEth();
-  await finishBeanEthMigration();
+task("deployBip39", async function () {
+  await bipSeedGauge();
 });
 
 task("ebip14", async function () {

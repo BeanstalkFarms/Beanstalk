@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {P} from "./P.sol";
-import "contracts/libraries/Curve/LibMetaCurve.sol";
+import "contracts/interfaces/ICurve.sol";
 import "contracts/libraries/Curve/LibCurve.sol";
 
 interface IERC20D {

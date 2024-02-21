@@ -35,7 +35,7 @@ describe('Token', function () {
         await this.token2.connect(this.user).mint(this.user.address, '1000')
         await this.token2.connect(this.user).approve(this.tokenFacet.address, to18('1000000000000000'))
 
-        this.weth = await ethers.getContractAt('IWETH', WETH)
+        this.weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH)
         await this.weth.connect(this.user).approve(this.tokenFacet.address, to18('1000000000000000'))
 
         const MockERC1155Token = await ethers.getContractFactory("MockERC1155");

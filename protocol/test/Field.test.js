@@ -246,30 +246,30 @@
 //     it("Does not set thisSowTime if Soil > 1", async function () {
 //       this.season.setSoilE(to6('3'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       expect(weather.thisSowTime).to.be.equal(parseInt(MAX_UINT32))
 //     })
 
 //     it("Does set thisSowTime if Soil = 1", async function () {
 //       this.season.setSoilE(to6('1'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32))
 //     })
 
 //     it("Does set thisSowTime if Soil < 1", async function () {
 //       this.season.setSoilE(to6('1.5'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32))
 //     })
 
 //     it("Does not set thisSowTime if Soil already < 1", async function () {
 //       this.season.setSoilE(to6('1.5'));
 //       await this.field.connect(user).sow(to6('1'), EXTERNAL)
-//       const weather = await this.season.weather()
+//       const weather = await this.seasonGetter.weather()
 //       await this.field.connect(user).sow(to6('0.5'), EXTERNAL)
-//       const weather2 = await this.season.weather()
+//       const weather2 = await this.seasonGetter.weather()
 //       expect(weather2.thisSowTime).to.be.equal(weather.thisSowTime)
 //     })
 //   })

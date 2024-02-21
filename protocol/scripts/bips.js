@@ -162,6 +162,18 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
       "MigrationFacet",
       "UnripeFacet",
     ],
+    libraryNames: [
+      'LibConvert',
+      'LibLockedUnderlying',
+    ],
+    facetLibraries: {
+      'ConvertFacet': [
+        'LibConvert'
+      ],
+      'UnripeFacet': [
+        'LibLockedUnderlying'
+      ]
+    },
     initFacetName: "InitMigrateUnripeBean3CrvToBeanEth",
     selectorsToRemove: [
       '0x0bfca7e3',
@@ -183,10 +195,63 @@ async function bipMigrateUnripeBean3CrvToBeanEth(mock = true, account = undefine
 
 }
 
+async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
+    if (account == undefined) {
+      account = await impersonateBeanstalkOwner();
+      await mintEth(account.address);
+    }
+  
+    await upgradeWithNewFacets({
+      diamondAddress: BEANSTALK,
+      facetNames: [
+        "SeasonFacet", // Add Seed Gauge system
+        "SeasonGettersFacet", // season getters
+        "GaugePointFacet", // gauge point function caller
+        "UnripeFacet", // new view functions
+        "SiloFacet", // new view functions
+        "ConvertFacet", // add unripe convert
+        "ConvertGettersFacet", // add unripe convert getters
+        "WhitelistFacet", // update whitelist abilities.
+        "MetadataFacet", // update metadata
+        "BDVFacet", // update bdv functions
+        "SiloGettersFacet", // add silo getters
+        "LiquidityWeightFacet" // add liquidity weight facet
+      ],
+      initFacetName: "InitBipSeedGauge",
+      selectorsToRemove: [],
+      libraryNames: [
+        'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibIncentive', 'LibGerminate'
+      ],
+      facetLibraries: {
+        'SeasonFacet': [
+          'LibGauge',
+          'LibIncentive',
+          'LibLockedUnderlying',
+          'LibGerminate'
+        ],
+        'SeasonGettersFacet': [
+          'LibLockedUnderlying'
+        ],
+        'ConvertFacet': [
+          'LibConvert'
+        ],
+        'UnripeFacet': [
+          'LibLockedUnderlying'
+        ]
+      },
+      bip: false,
+      object: !mock,
+      verbose: verbose,
+      account: account,
+      verify: false
+    });
+  }
+
 exports.bip29 = bip29
 exports.bip30 = bip30
 exports.bip34 = bip34
 exports.bipNewSilo = bipNewSilo
 exports.bipBasinIntegration = bipBasinIntegration
+exports.bipSeedGauge = bipSeedGauge
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin
 exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth

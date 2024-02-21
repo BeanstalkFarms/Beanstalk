@@ -211,7 +211,11 @@ async function whitelistWell(wellAddress, stalk, stalkEarnedPerSeason) {
         beanstalk.interface.getSighash('wellBdv(address,uint256)'),
         stalk,
         stalkEarnedPerSeason,
-        '0x01'
+        '0x01',
+        beanstalk.interface.getSighash('defaultGaugePointFunction(uint256,uint256,uint256)'),
+        beanstalk.interface.getSighash('maxWeight()'),
+        '0',
+        '0'
     )
 
 }
@@ -242,7 +246,7 @@ async function deployMultiFlowPump() {
     return await getWellContractAt('MultiFlowPump', BEANSTALK_PUMP)
 }
 
-async function deployMockWell() {
+async function deployMockBeanEthWell(symbol = 'MOCK') {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
     await wellFunction.deployed()
@@ -264,6 +268,56 @@ async function deployMockWell() {
 
     await well.setReserves([to6('1000000'), to18('1000')])
     await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setSymbol(symbol)
+
+    return [well, wellFunction, pump]
+}
+
+async function deployMockWell() {
+
+    let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
+    await wellFunction.deployed()
+
+    let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
+    await well.deployed()
+    well = await ethers.getContractAt('MockSetComponentsWell', well.address)
+    await well.init()
+
+    pump = await deployMultiFlowPump()
+
+    await well.setWellFunction([wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+
+    await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setReserves([to6('1000000'), to18('1000')])
+
+    return well
+}
+
+
+
+async function deployMockWellWithMockPump() {
+
+    let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()
+    await wellFunction.deployed()
+
+    let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
+    await well.deployed()
+    await network.provider.send("hardhat_setCode", [
+        BEAN_ETH_WELL,
+        await ethers.provider.getCode(well.address),
+      ]);
+    well = await ethers.getContractAt('MockSetComponentsWell', BEAN_ETH_WELL)
+    await well.init()
+
+    pump = await deployMockPump()
+
+    await well.setPumps([[pump.address, '0x']])
+    await well.setWellFunction([wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+
+    await well.setReserves([to6('1000000'), to18('1000')])
+    await well.setReserves([to6('1000000'), to18('1000')])
 
     return [well, wellFunction, pump]
 }
@@ -277,6 +331,7 @@ exports.deployWell = deployWell;
 exports.setReserves = setReserves;
 exports.whitelistWell = whitelistWell;
 exports.getWellContractAt = getWellContractAt
+exports.deployMockBeanEthWell = deployMockBeanEthWell
 exports.deployMockWell = deployMockWell
 exports.deployMockPump = deployMockPump
 exports.deployWellContract = deployWellContract
@@ -284,3 +339,4 @@ exports.deployWellContractAtNonce = deployWellContractAtNonce
 exports.encodeWellImmutableData = encodeWellImmutableData
 exports.impersonateMockWell = impersonateMockWell
 exports.impersonateBeanEthWell = impersonateBeanEthWell
+exports.deployMockWellWithMockPump = deployMockWellWithMockPump

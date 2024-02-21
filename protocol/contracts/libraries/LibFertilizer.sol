@@ -14,6 +14,7 @@ import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
+
 /**
  * @author Publius
  * @title Fertilizer
@@ -82,6 +83,7 @@ library LibFertilizer {
         uint256 percentToFill = usdAmount.mul(C.precision()).div(
             remainingRecapitalization()
         );
+
         uint256 newDepositedBeans;
         if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
             newDepositedBeans = (C.unripeBean().totalSupply()).sub(

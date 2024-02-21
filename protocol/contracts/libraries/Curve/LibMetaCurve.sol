@@ -3,8 +3,11 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
+import {AppStorage, LibAppStorage, Storage} from "../LibAppStorage.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
 import {LibCurve} from "./LibCurve.sol";
+import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 import "../../C.sol";
 
 /**
@@ -20,10 +23,12 @@ interface IMeta3Curve {
  * @title LibMetaCurve
  * @author Publius
  * @notice Wraps {LibCurve} with metadata about Curve Metapools, including the
- * `A` parameter and virtual price.
+ * `A` parameter and virtual price. Additionally hosts logic regarding setting
+ * retrieving, and resetting the bean3crv twa reserves.
  */
 library LibMetaCurve {
     using SafeMath for uint256;
+    using SafeCast for uint256;
     
     /**
      * @dev Used in {LibBeanMetaCurve}.
@@ -52,4 +57,5 @@ library LibMetaCurve {
             IMeta3Curve(pool).A_precise()
         );
     }
+
 }

@@ -16,6 +16,6 @@ contract InitBip2 {
     AppStorage internal s;
 
     function init() external {
-        s.cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,-1,-3,0,3,3,1,0,1,-1,-3,0];
+        s.deprecated_cases = [int8(3),1,0,0,-1,-3,-3,0,3,1,0,0,-1,-3,-3,0,3,3,1,0,0,-1,-3,0,3,3,1,0,1,-1,-3,0];
     }
 }

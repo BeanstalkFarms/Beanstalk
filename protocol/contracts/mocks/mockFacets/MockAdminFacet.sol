@@ -7,6 +7,8 @@ pragma experimental ABIEncoderV2;
 import "contracts/C.sol";
 import "contracts/libraries/Token/LibTransfer.sol";
 import "contracts/beanstalk/sun/SeasonFacet/SeasonFacet.sol";
+import "contracts/beanstalk/sun/SeasonFacet/Sun.sol";
+import {LibCurveMinting} from "contracts/libraries/Minting/LibCurveMinting.sol";
 
 /**
  * @author Publius
@@ -56,7 +58,28 @@ contract MockAdminFacet is Sun {
 
     function updateStart() private {
         SeasonFacet sf = SeasonFacet(address(this));
-        int256 sa = sf.season() - sf.seasonTime();
+        int256 sa = s.season.current - sf.seasonTime();
         if (sa >= 0) s.season.start -= 3600 * (uint256(sa)+1);
     }
+
+    function update3CRVOracle() public {
+        LibCurveMinting.updateOracle();
+    }
+
+    function updateStemScaleSeason(uint16 season) public {
+        s.season.stemScaleSeason = season;
+    }
+
+    function updateStems() public { 
+        address[] memory siloTokens = LibWhitelistedTokens.getSiloTokens();
+        for (uint256 i = 0; i < siloTokens.length; i++) {
+            s.ss[siloTokens[i]].milestoneStem = int96(s.ss[siloTokens[i]].milestoneStem * 1e6);
+        }
+    }
+
+    function upgradeStems() public { 
+        updateStemScaleSeason(uint16(s.season.current));
+        updateStems();
+    }
+
 }

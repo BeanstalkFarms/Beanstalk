@@ -161,26 +161,26 @@ describe('Depot', function () {
                 user.address,
                 PIPELINE,
                 BEAN,
-                [0,2],
+                [to6('0'), to6('2')],
                 [to6('1'), to6('1')]
             ])
             await this.depot.connect(user).farm([permit, transfer])
         })
 
         it('pipeline has deposits', async function () {
-            const deposit = await this.beanstalk.getDeposit(PIPELINE, BEAN, 0)
+            const deposit = await this.beanstalk.getDeposit(PIPELINE, BEAN, to6('0'))
             expect(deposit[0]).to.be.equal(to6('1'))
             expect(deposit[1]).to.be.equal(to6('1'))
-            const deposit2 = await this.beanstalk.getDeposit(PIPELINE, BEAN, 2)
+            const deposit2 = await this.beanstalk.getDeposit(PIPELINE, BEAN, to6('2'))
             expect(deposit2[0]).to.be.equal(to6('1'))
             expect(deposit2[1]).to.be.equal(to6('1'))
         })
 
         it('user does not have deposits', async function () {
-            const deposit = await this.beanstalk.getDeposit(user.address, BEAN, 0)
+            const deposit = await this.beanstalk.getDeposit(user.address, BEAN, to6('0'))
             expect(deposit[0]).to.be.equal(to6('0'))
             expect(deposit[1]).to.be.equal(to6('0'))
-            const deposit2 = await this.beanstalk.getDeposit(user.address, BEAN, 2)
+            const deposit2 = await this.beanstalk.getDeposit(user.address, BEAN, to6('2'))
             expect(deposit2[0]).to.be.equal(to6('0'))
             expect(deposit2[1]).to.be.equal(to6('0'))
         })
@@ -207,7 +207,7 @@ describe('Depot', function () {
                 user.address,
                 PIPELINE,
                 BEAN,
-                0,
+                to6('0'),
                 to6('1')
             ])
 
@@ -215,7 +215,7 @@ describe('Depot', function () {
                 user.address,
                 PIPELINE,
                 this.siloToken.address,
-                0,
+                to6('0'),
                 to6('1')
             ])
             await this.depot.connect(user).farm([permit, transfer, transfer2])
@@ -256,7 +256,7 @@ describe('Depot', function () {
                 user.address,
                 PIPELINE,
                 this.siloToken.address,
-                [0],
+                [to6('0')],
                 [to6('1')]
             )).to.be.revertedWith("invalid sender")
         })

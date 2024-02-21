@@ -30,17 +30,15 @@ library LibUnripeConvert {
         tokenOut = C.UNRIPE_BEAN;
         tokenIn = C.UNRIPE_LP;
         (uint256 lp, uint256 minBeans) = convertData.basicConvert();
-
         uint256 minAmountOut = LibUnripe
-            .unripeToUnderlying(tokenOut, minBeans)
+            .unripeToUnderlying(tokenOut, minBeans, IBean(C.UNRIPE_BEAN).totalSupply())
             .mul(LibUnripe.percentLPRecapped())
             .div(LibUnripe.percentBeansRecapped());
-
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
         ) = LibWellConvert._wellRemoveLiquidityTowardsPeg(
-                LibUnripe.unripeToUnderlying(tokenIn, lp),
+                LibUnripe.unripeToUnderlying(tokenIn, lp, IBean(C.UNRIPE_LP).totalSupply()),
                 minAmountOut,
                 C.BEAN_ETH_WELL
             );
@@ -69,17 +67,15 @@ library LibUnripeConvert {
         tokenIn = C.UNRIPE_BEAN;
         tokenOut = C.UNRIPE_LP;
         (uint256 beans, uint256 minLP) = convertData.basicConvert();
-
         uint256 minAmountOut = LibUnripe
-            .unripeToUnderlying(tokenOut, minLP)
+            .unripeToUnderlying(tokenOut, minLP, IBean(C.UNRIPE_LP).totalSupply())
             .mul(LibUnripe.percentBeansRecapped())
             .div(LibUnripe.percentLPRecapped());
-
         (
             uint256 outUnderlyingAmount,
             uint256 inUnderlyingAmount
         ) = LibWellConvert._wellAddLiquidityTowardsPeg(
-                LibUnripe.unripeToUnderlying(tokenIn, beans),
+                LibUnripe.unripeToUnderlying(tokenIn, beans, IBean(C.UNRIPE_BEAN).totalSupply()),
                 minAmountOut,
                 C.BEAN_ETH_WELL
             );
@@ -120,7 +116,8 @@ library LibUnripeConvert {
     {
         uint256 beans = LibUnripe.unripeToUnderlying(
             C.UNRIPE_BEAN,
-            amountIn
+            amountIn,
+            IBean(C.UNRIPE_BEAN).totalSupply()
         );
         lp = LibWellConvert.getLPAmountOut(C.BEAN_ETH_WELL, beans);
         lp = LibUnripe
@@ -136,7 +133,8 @@ library LibUnripeConvert {
     {
         uint256 lp = LibUnripe.unripeToUnderlying(
             C.UNRIPE_LP,
-            amountIn
+            amountIn,
+            IBean(C.UNRIPE_BEAN).totalSupply()
         );
         bean = LibWellConvert.getBeanAmountOut(C.BEAN_ETH_WELL, lp);
         bean = LibUnripe

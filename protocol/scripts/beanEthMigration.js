@@ -13,7 +13,7 @@ async function finishBeanEthMigration(verbose = false) {
     const bean3CrvToken = await ethers.getContractAt('IERC20', BEAN_3_CURVE);
     const threeCrvToken = await ethers.getContractAt('IERC20', THREE_CURVE);
     const bean = await ethers.getContractAt('IERC20', BEAN);
-    const weth = await ethers.getContractAt('IWETH', WETH);
+    const weth = await ethers.getContractAt('contracts/interfaces/IWETH.sol:IWETH', WETH);
     const beanEthToken = await ethers.getContractAt('IERC20', BEAN_ETH_WELL);
     const usdt = await ethers.getContractAt('IERC20', USDT);
     let balance = await beanstalk.getExternalBalance(owner.address, BEAN_3_CURVE)
@@ -29,6 +29,8 @@ async function finishBeanEthMigration(verbose = false) {
     )
 
     let balances = await well.getReserves();
+    if (verbose) console.log(`Well Bean Balance before: ${balances[0]}`);
+    if (verbose) console.log(`Well WETH Balance before: ${balances[1]}`)
     const beanBalance = await beanstalk.getExternalBalance(owner.address, BEAN)
     const wethBalance = balances[1].div(balances[0]).mul(beanBalance)
     await weth.connect(owner).deposit({value: wethBalance})
@@ -47,13 +49,13 @@ async function finishBeanEthMigration(verbose = false) {
     if (verbose) console.log(`Unripe LP Underlying Balance: ${await beanstalk.getTotalUnderlying(UNRIPE_LP)}`)
 
     balances = await well.getReserves();
-    if (verbose) console.log(`Well Bean Balance: ${balances[0]}`);
-    if (verbose) console.log(`Well WETH Balance: ${balances[1]}`);
+    if (verbose) console.log(`Well Bean Balance after: ${balances[0]}`);
+    if (verbose) console.log(`Well WETH Balance after: ${balances[1]}`);
 }
 
 async function migrateBean3CrvToBeanEth() {
-    await bipMigrateUnripeBean3CrvToBeanEth()
-    await finishBeanEthMigration()
+    await bipMigrateUnripeBean3CrvToBeanEth(true, undefined, false)
+    await finishBeanEthMigration(false)
 }
 
 exports.finishBeanEthMigration = finishBeanEthMigration;

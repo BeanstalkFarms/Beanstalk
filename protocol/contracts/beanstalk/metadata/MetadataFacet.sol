@@ -34,7 +34,11 @@ contract MetadataFacet is MetadataImage {
     function uri(uint256 depositId) external view returns (string memory) {
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositId);
         int96 stemTip = LibTokenSilo.stemTipForToken(token);
-        require(token != address(0), "Silo: metadata does not exist");
+        // validate the uri
+        // the deposit id must return 
+        // 1) a token in the silo whitelist (by checking milestone season)
+        // 2) a stem that is less than or equal to the stem tip
+        require(s.ss[token].milestoneSeason != 0 && stemTip >= stem, "Silo: metadata does not exist");
         bytes memory attributes = abi.encodePacked(
             ', "attributes": [ { "trait_type": "Token", "value": "', getTokenName(token),
             '"}, { "trait_type": "Token Address", "value": "', LibStrings.toHexString(uint256(token), 20),
@@ -49,7 +53,7 @@ contract MetadataFacet is MetadataImage {
                     '"name": "Beanstalk Silo Deposits", "description": "An ERC1155 representing an asset deposited in the Beanstalk Silo. Silo Deposits gain stalk and bean seignorage. ',
                     '\\n\\nDISCLAIMER: Due diligence is imperative when assessing this NFT. Opensea and other NFT marketplaces cache the svg output and thus, may require the user to refresh the metadata to properly show the correct values."',                    
                     attributes,
-                    string(abi.encodePacked(', "image": "', imageURI(token, stem, stemTip), '"')),
+                    string(abi.encodePacked(' }], "image": "', imageURI(token, stem, stemTip), '"')),
                 '}'
             ))
         ));

@@ -12,7 +12,8 @@ const {
   impersonateBlockBasefee,
   impersonateEthUsdcUniswap,
   impersonateEthUsdtUniswap,
-  impersonateEthUsdChainlinkAggregator
+  impersonateEthUsdChainlinkAggregator,
+  impersonateBeanEthWell
 } = require('./impersonate.js')
 
 function addCommas(nStr) {
@@ -103,6 +104,44 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     }
     return instances
   }
+
+  // A list of public libraries that need to be deployed separately.
+  const libraryNames = [
+    'LibGauge', 'LibIncentive', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibGerminate'
+  ]
+
+  // A mapping of facet to public library names that will be linked to it.
+  const facetLibraries = {
+    'SeasonFacet': [
+      'LibGauge',
+      'LibIncentive',
+      'LibLockedUnderlying',
+      'LibGerminate'
+    ],
+    'MockSeasonFacet': [
+      'LibGauge',
+      'LibIncentive',
+      'LibLockedUnderlying',
+      'LibCurveMinting',
+      'LibGerminate'
+    ],
+    'SeasonGettersFacet': [
+      'LibLockedUnderlying'
+    ],
+    'ConvertFacet': [
+      'LibConvert'
+    ],
+    'MockConvertFacet': [
+      'LibConvert'
+    ],
+    'MockUnripeFacet': [
+      'LibLockedUnderlying'
+    ],
+    'UnripeFacet': [
+      'LibLockedUnderlying'
+    ]
+  }
+
   let [
     bdvFacet,
     curveFacet,
@@ -119,13 +158,17 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
+    seasonGettersFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     tokenSupportFacet,
     unripeFacet,
     whitelistFacet,
-    metadataFacet
+    metadataFacet,
+    gaugePointFacet,
+    siloGettersFacet,
+    liquidityWeightFacet
   ] = mock ? await deployFacets(
     verbose,
     [ 
@@ -143,15 +186,21 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'MockSeasonFacet',
+      'SeasonGettersFacet',
       'MockSiloFacet',
       'MockFertilizerFacet',
       'OwnershipFacet',
       'TokenFacet',
       'TokenSupportFacet',
       'MockUnripeFacet',
-      'WhitelistFacet',
-      'MetadataFacet'
+      'MockWhitelistFacet',
+      'MetadataFacet',
+      'GaugePointFacet',
+      'SiloGettersFacet',
+      'LiquidityWeightFacet'
     ],
+    libraryNames,
+    facetLibraries
   ) : await deployFacets(
     verbose,
     [ 
@@ -170,14 +219,20 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       'PauseFacet',
       'DepotFacet',
       'SeasonFacet',
+      'SeasonGettersFacet',
       'SiloFacet',
       'FertilizerFacet',
       'TokenFacet',
       'TokenSupportFacet',
       'UnripeFacet',
       'WhitelistFacet',
-      'MetadataFacet'
+      'MetadataFacet',
+      'GaugePointFacet',
+      'SiloGettersFacet',
+      'LiquidityWeightFacet'
     ],
+    libraryNames,
+    facetLibraries
   )
   const initDiamondArg = mock ? 'contracts/mocks/MockInitDiamond.sol:MockInitDiamond' : 'contracts/farm/init/InitDiamond.sol:InitDiamond'
   // eslint-disable-next-line no-unused-vars
@@ -218,13 +273,17 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
       ['PauseFacet', pauseFacet],
       ['DepotFacet', depotFacet],
       ['SeasonFacet', seasonFacet],
+      ['SeasonGettersFacet', seasonGettersFacet],
       ['SiloFacet', siloFacet],
       ['FertilizerFacet', fertilizerFacet],
       ['TokenFacet', tokenFacet],
       ['TokenSupportFacet', tokenSupportFacet],
       ['UnripeFacet', unripeFacet],
       ['WhitelistFacet', whitelistFacet],
-      ['MetadataFacet', metadataFacet]
+      ['MetadataFacet', metadataFacet],
+      ['GaugePointFacet', gaugePointFacet],
+      ['SiloGettersFacet', siloGettersFacet],
+      ['LiquidityWeightFacet', liquidityWeightFacet]
     ],
     owner: account,
     args: args,
@@ -267,11 +326,16 @@ async function main(scriptName, verbose = true, mock = false, reset = true) {
     pauseFacet,
     depotFacet,
     seasonFacet,
+    seasonGettersFacet,
     siloFacet,
     fertilizerFacet,
     tokenFacet,
     tokenSupportFacet,
-    unripeFacet
+    unripeFacet,
+    metadataFacet,
+    gaugePointFacet,
+    siloGettersFacet,
+    liquidityWeightFacet
   }
 }
 

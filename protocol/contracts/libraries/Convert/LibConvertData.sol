@@ -16,7 +16,8 @@ library LibConvertData {
         UNRIPE_LP_TO_UNRIPE_BEANS,
         LAMBDA_LAMBDA,
         BEANS_TO_WELL_LP,
-        WELL_LP_TO_BEANS
+        WELL_LP_TO_BEANS,
+        UNRIPE_TO_RIPE
     }
 
     /// @notice Decoder for the Convert Enum
@@ -56,6 +57,7 @@ library LibConvertData {
         );
     }
 
+    /// @notice Decoder for the lambdaConvert
     function lambdaConvert(bytes memory self)
         internal
         pure

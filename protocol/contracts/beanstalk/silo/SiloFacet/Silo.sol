@@ -5,8 +5,19 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "./SiloExit.sol";
+import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {LibSafeMath32} from "contracts/libraries/LibSafeMath32.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {C} from "contracts/C.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
 /**
  * @title Silo
@@ -21,7 +32,7 @@ import "./SiloExit.sol";
  * "Season of Plenty".
  */
  
-contract Silo is SiloExit {
+contract Silo is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using LibSafeMath128 for uint128;
@@ -51,6 +62,7 @@ contract Silo is SiloExit {
      */
     event ClaimPlenty(
         address indexed account,
+        address token,
         uint256 plenty
     );
 
@@ -84,19 +96,6 @@ contract Silo is SiloExit {
         _;
     }
 
-    //////////////////////// INTERNAL: VESTING ////////////////////////
-
-    /**
-     * @notice Verifies that the function is not called in the vesting period.
-     * @dev Added with ebip-13. Will be removed upon seed gauge BIP.
-     * This modifier is added to the following functions:
-     * {SiloFacet.withdrawDeposit(s)}
-     */
-    modifier checkVesting() {
-        require(!LibSilo.inVestingPeriod(), "Silo: In vesting period");
-        _;
-    }
-
     //////////////////////// INTERNAL: PLANT ////////////////////////
 
     /**
@@ -109,14 +108,14 @@ contract Silo is SiloExit {
     function _plant(address account) internal returns (uint256 beans, int96 stemTip) {
         // Need to Mow for `account` before we calculate the balance of 
         // Earned Beans.
+    
         LibSilo._mow(account, C.BEAN);
         uint256 accountStalk = s.a[account].s.stalk;
 
         // Calculate balance of Earned Beans.
-        beans = _balanceOfEarnedBeans(account, accountStalk);
+        beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.a[account].roots);
         stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
-        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
-        if (beans == 0) return (0,stemTip);
+        if (beans == 0) return (0, stemTip);
         
         // Reduce the Silo's supply of Earned Beans.
         // SafeCast unnecessary because beans is <= s.earnedBeans.
@@ -131,7 +130,6 @@ contract Silo is SiloExit {
             beans, // bdv
             LibTokenSilo.Transfer.emitTransferSingle
         );
-        s.a[account].deltaRoots = 0; // must be 0'd, as calling balanceOfEarnedBeans would give a invalid amount of beans. 
 
         // Earned Stalk associated with Earned Beans generate more Earned Beans automatically (i.e., auto compounding).
         // Earned Stalk are minted when Earned Beans are minted during Sunrise. See {Sun.sol:rewardToSilo} for details.
@@ -141,7 +139,6 @@ contract Silo is SiloExit {
         // for gas savings.
         uint256 stalk = beans.mul(C.STALK_PER_BEAN);
         s.a[account].s.stalk = accountStalk.add(stalk);
-
 
         emit StalkBalanceChanged(account, int256(stalk), 0);
         emit Plant(account, beans);
@@ -155,11 +152,14 @@ contract Silo is SiloExit {
      * with an amount of 0.
      */
     function _claimPlenty(address account) internal {
-        // Plenty is earned in the form of 3Crv.
+        // Plenty is earned in the form of the sop token.
         uint256 plenty = s.a[account].sop.plenty;
-        C.threeCrv().safeTransfer(account, plenty);
+        IWell well = IWell(s.sopWell);
+        IERC20[] memory tokens = well.tokens();
+        IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
+        sopToken.safeTransfer(account, plenty);
         delete s.a[account].sop.plenty;
 
-        emit ClaimPlenty(account, plenty);
+        emit ClaimPlenty(account, address(sopToken), plenty);
     }
 }
