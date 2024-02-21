@@ -16,6 +16,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "./LibBarnRaise.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @author Publius
@@ -27,6 +28,7 @@ library LibFertilizer {
     using LibSafeMath128 for uint128;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
+    using LibWell for address;
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
@@ -223,6 +225,7 @@ library LibFertilizer {
 
     function switchBarnRaiseWell(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        require(well.isWell(), "Fertilizer: Not a Whitelisted Well.");
         uint256 balanceOfUnderlying = s.u[C.UNRIPE_LP].balanceOfUnderlying;
         IERC20(s.u[C.UNRIPE_LP].underlyingToken).safeTransfer(
             LibDiamond.diamondStorage().contractOwner,
