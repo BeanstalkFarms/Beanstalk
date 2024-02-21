@@ -360,7 +360,7 @@ contract Storage {
         bool abovePeg; //                   | 1 (24)
         uint16 stemStartSeason; //          | 2 (26)
         uint16 stemScaleSeason; //          | 2 (28/32)
-        uint32 beanEthStartMintingSeason; //┘ 2 (28/32) NOTE: Reset and delete after Bean:wStEth migration has been completed.
+        uint32 beanEthStartMintingSeason; //┘ 4 (32/32) NOTE: Reset and delete after Bean:wStEth migration has been completed.
         uint256 start;
         uint256 period;
         uint256 timestamp;
