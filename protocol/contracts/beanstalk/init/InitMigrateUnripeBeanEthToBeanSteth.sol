@@ -64,7 +64,7 @@ contract InitMigrateUnripeBeanEthToBeanSteth {
             MAX_PERCENT_DEPOSITED_BDV - OPTIMAL_PERCENT_DEPOSITED_BDV
         );
 
-        LibFertilizer.switchBarnRaiseWell(C.BEAN_WSTETH_WELL);
+        LibFertilizer.beginBarnRaiseMigration(C.BEAN_WSTETH_WELL);
 
     }
 }

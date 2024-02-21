@@ -237,4 +237,20 @@ contract FertilizerFacet {
     function getBarnRaiseToken() external view returns (address) {
         return LibBarnRaise.getBarnRaiseToken();
     }
+
+    /**
+     * @notice Begins the process of Migration the Barn Raise to a new Well.
+     * @param well The address of the Well to migrate to.
+     * @dev
+     * Withdraws all underlying Unripe LP tokens to the owner contract.
+     * Converting, chopping and purchasing Fertilizer will be disabled until the migration is complete.
+     * The migration process is completed by calling {UnripeFacet.addMigratedUnderlying}.
+     * After migration, Unripe liquidity will be added into `well`. and Fertilizer purchases can only happen
+     * with the non-Bean token in `well`.
+     *
+     */
+    function beginBarnRaiseMigration(address well) external {
+        LibDiamond.enforceIsOwnerOrContract();
+        LibFertilizer.beginBarnRaiseMigration(well);
+    }
 }

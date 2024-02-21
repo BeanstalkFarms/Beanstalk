@@ -17,6 +17,7 @@ import {LibBarnRaise} from "./LibBarnRaise.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @author Publius
@@ -130,8 +131,10 @@ library LibFertilizer {
         C.bean().approve(barnRaiseWell, newDepositedLPBeans);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
-        tokenAmountsIn[0] = newDepositedLPBeans;
-        tokenAmountsIn[1] = tokenAmountIn;
+        IERC20[] memory tokens = IWell(barnRaiseWell).tokens();
+        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean() ?
+            (newDepositedLPBeans, tokenAmountIn) :
+            (tokenAmountIn, newDepositedLPBeans);
 
         uint256 newLP = IWell(barnRaiseWell).addLiquidity(
             tokenAmountsIn,
@@ -223,9 +226,21 @@ library LibFertilizer {
         s.nextFid[id] = next;
     }
 
-    function switchBarnRaiseWell(address well) internal {
+    function beginBarnRaiseMigration(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(well.isWell(), "Fertilizer: Not a Whitelisted Well.");
+
+        // The Barn Raise only supports 2 token Wells where 1 token is Bean and the
+        // other is supported by the Lib Usd Oracle.
+        IERC20[] memory tokens = IWell(well).tokens();
+        require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
+        require(
+            tokens[0] == C.bean() || tokens[1] == C.bean(),
+            "Fertilizer: Well must have BEAN."
+        );
+        // Check that Lib Usd Oracle supports the non-Bean token in the Well.
+        LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
+
         uint256 balanceOfUnderlying = s.u[C.UNRIPE_LP].balanceOfUnderlying;
         IERC20(s.u[C.UNRIPE_LP].underlyingToken).safeTransfer(
             LibDiamond.diamondStorage().contractOwner,
