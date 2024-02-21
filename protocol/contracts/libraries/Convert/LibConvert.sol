@@ -94,7 +94,7 @@ library LibConvert {
         if (tokenIn.isWell() && tokenOut == C.BEAN)
             return LibWellConvert.lpToPeg(tokenIn);
 
-        // urBEANETH Convert
+        // urLP Convert
         if (tokenIn == C.UNRIPE_LP){
             // UrBEANETH -> urBEAN
             if (tokenOut == C.UNRIPE_BEAN)
@@ -106,7 +106,7 @@ library LibConvert {
 
         // urBEAN Convert
         if (tokenIn == C.UNRIPE_BEAN){
-            // urBEAN -> urBEANETH LP
+            // urBEAN -> urLP
             if (tokenOut == C.UNRIPE_LP)
                 return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
@@ -131,11 +131,11 @@ library LibConvert {
         // if (tokenIn == C.BEAN && tokenOut == C.CURVE_BEAN_METAPOOL)
         //     return LibCurveConvert.getLPAmountOut(C.CURVE_BEAN_METAPOOL, amountIn);
 
-        /// urBEANETH LP -> urBEAN
+        /// urLP -> urBEAN
         if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
         
-        /// urBEAN -> urBEANETH LP
+        /// urBEAN -> urLP
         if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(amountIn);
         

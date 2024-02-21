@@ -317,8 +317,8 @@ describe('Gauge', function () {
       it('getters', async function () {
         // urBean supply * 10% recapitalization (underlyingBean/UrBean) * 10% (fertilizerIndex/totalFertilizer)
         // = 10000 urBEAN * 10% = 1000 BEAN * (100-10%) = 900 beans locked.
-        // urBEANETH supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
-        // urBEANETH supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
+        // urLP supply * 0.1% recapitalization (underlyingBEANETH/UrBEANETH) * 10% (fertilizerIndex/totalFertilizer)
+        // urLP supply * 0.1% recapitalization * (100-10%) = 0.9% BEANETHLP locked.
         // 1m beans underlay all beanETHLP tokens.
         // 1m * 0.9% = 900 beans locked.
         expect(await this.unripe.getLockedBeansUnderlyingUnripeBean()).to.be.eq(to6('436.332105'))

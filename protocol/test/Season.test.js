@@ -40,7 +40,9 @@ describe('Season', function () {
         await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
         await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-        this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
+        this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address);
+        await this.whitelist.connect(owner).addWhitelistStatus(BEAN_ETH_WELL, true, true, true);
+        await this.whitelist.connect(owner).addWhitelistStatus(BEAN_WSTETH_WELL, true, true, true);
         this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE);
 
         // add wells

@@ -177,11 +177,11 @@ async function unripe() {
   await unripeLP.setSymbol('urBEAN3CRV');
 }
 
-async function price() {
+async function price(beanstalk = BEANSTALK) {
   const priceDeployer = await impersonateSigner(PRICE_DEPLOYER)
   await mintEth(PRICE_DEPLOYER)
   const Price = await ethers.getContractFactory('BeanstalkPrice')
-  const price = await Price.connect(priceDeployer).deploy()
+  const price = await Price.connect(priceDeployer).deploy(beanstalk)
   await price.deployed()
 }
 

@@ -121,7 +121,6 @@ contract Account {
      * @param isApprovedForAll A mapping of ERC1155 operator to approved status. ERC1155 compatability.
      * @param farmerGerminating A Farmer's germinating stalk. Seperated into odd and even stalk.
      * @param deposits SiloV3.1 deposits. A mapping from depositId to Deposit. SiloV3.1 introduces greater precision for deposits.
-     * @param barnRaiseWell The Well that the Barn Raise adds liquidity to.
      */
     struct State {
         Field field; // A Farmer's Field storage.
@@ -360,8 +359,8 @@ contract Storage {
         uint32 sunriseBlock; //             │ 4 (23)
         bool abovePeg; //                   | 1 (24)
         uint16 stemStartSeason; //          | 2 (26)
-        uint16 stemScaleSeason; //──────────┘ 2 (28/32)
-        uint32 beanEthStartMintingSeason; //──────────┘ 2 (28/32) NOTE: Reset and delete after Bean:wStEth migration has been completed.
+        uint16 stemScaleSeason; //          | 2 (28/32)
+        uint32 beanEthStartMintingSeason; //┘ 4 (32/32) NOTE: Reset and delete after Bean:wStEth migration has been completed.
         uint256 start;
         uint256 period;
         uint256 timestamp;

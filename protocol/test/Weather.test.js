@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson, to6, to18 } = require('./utils/helpers.js')
-const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN, BEAN_WSTETH_WELL, WSTETH} = require('./utils/constants.js')
+const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN, BEAN_WSTETH_WELL, WSTETH, BEANSTALK_PUMP} = require('./utils/constants.js')
 const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
 const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js');
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
@@ -105,6 +105,7 @@ describe('Complex Weather', function () {
           this.testData.rainStalk,
           this.aboveQ, // aboveQ
           this.L2SRState, // L2SR
+          BEANSTALK_PUMP
         )
       })
       it('Checks New Weather', async function () {

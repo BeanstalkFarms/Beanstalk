@@ -94,7 +94,7 @@ describe('BeanstalkPrice', function () {
     await initWell(owner, this.beanWstethWell, this.season)
 
     const BeanstalkPrice = await ethers.getContractFactory('BeanstalkPrice');
-    const _beanstalkPrice = await BeanstalkPrice.deploy();
+    const _beanstalkPrice = await BeanstalkPrice.deploy(this.diamond.address);
     await _beanstalkPrice.deployed();
     this.beanstalkPrice = await ethers.getContractAt('BeanstalkPrice', _beanstalkPrice.address);
 
