@@ -67,15 +67,17 @@ library LibWstethEthOracle {
      **/
     function getWstethEthPrice(uint256 lookback) internal view returns (uint256 wstethEthPrice) {
 
-        uint256 stethPerWsteth = IWsteth(C.WSTETH).stEthPerToken();
         uint256 chainlinkPrice = lookback == 0 ? 
             LibChainlinkOracle.getPrice(WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT) :
             LibChainlinkOracle.getTwap(WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_DAY_TIMEOUT, lookback);
 
-        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
-
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
+
+        uint256 stethPerWsteth = IWsteth(C.WSTETH).stEthPerToken();
+        
+        chainlinkPrice = chainlinkPrice.mul(stethPerWsteth).div(CHAINLINK_DENOMINATOR);
+
 
         // Uniswap V3 only supports a uint32 lookback.
         if (lookback > type(uint32).max) return 0;
