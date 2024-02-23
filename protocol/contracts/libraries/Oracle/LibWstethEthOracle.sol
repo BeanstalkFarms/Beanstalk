@@ -23,14 +23,14 @@ interface IWsteth {
  * @dev
  * The oracle reads from 4 data sources:
  * a. wstETH:stETH Redemption Rate: (0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0)
- * b. stETH:USD Chainlink Oralce: (0xCfE54B5cD566aB89272946F602D76Ea879CAb4a8)
- * c. wstETH:ETH Uniswap Pool: (0xDC24316b9AE028F1497c275EB9192a3Ea0f67022)
- * d. stETH:ETH Redemption: ()
+ * b. stETH:ETH Chainlink Oracle: (0x86392dC19c0b719886221c78AB11eb8Cf5c52812)
+ * c. wstETH:ETH Uniswap Pool: (0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa)
+ * d. stETH:ETH Redemption: (1:1)
  *
  * It then computes the wstETH:ETH price in 3 ways:
- * 1. wstETH -> ETH via Chainlink: c * a
- * 2. wstETH -> ETH via stETH:ETH Curve Pool: c * b
- * 3. wstETH -> ETH via stETH redemption: c * 1
+ * 1. wstETH -> ETH via Chainlink: a * b
+ * 2. wstETH -> ETH via wstETH:ETH Uniswap Pool: c * 1
+ * 3. wstETH -> ETH via stETH redemption: a * d
  *
  * It then computes a wstETH:ETH price by taking the minimum of (3) and either the average of (1) and (2)
  * if (1) and (2) are within `MAX_DIFFERENCE` from each other or (1).
