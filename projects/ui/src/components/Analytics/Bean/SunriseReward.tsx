@@ -1,5 +1,5 @@
 import React from 'react';
-import { tickFormatPercentage } from '~/components/Analytics/formatters';
+import { tickFormatLocale } from '~/components/Analytics/formatters';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import SeasonPlot, {
   SeasonPlotBaseProps,
@@ -28,7 +28,7 @@ const queryConfig = {
   context: { subgraph: 'beanstalk' },
 };
 const lineChartProps: Partial<LineChartProps> = {
-  yTickFormat: tickFormatPercentage,
+  yTickFormat: tickFormatLocale,
 };
 
 const SunriseReward: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
