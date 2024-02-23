@@ -5,11 +5,7 @@
 pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
-import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {C} from "contracts/C.sol";
 /**
  * @title Oracle Helpers Library
  * @author brendan
