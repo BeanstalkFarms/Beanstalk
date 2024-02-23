@@ -140,6 +140,18 @@ library LibWhitelist {
     }
 
     /**
+     * @notice Updates optimalPercentDepositedBdv token.
+     * @dev {LibWhitelistedTokens} must be updated to include the new token.
+     */
+    function updateOptimalPercentDepositedBdvForToken(
+        address token,
+        uint64 optimalPercentDepositedBdv
+    ) internal {
+        Storage.SiloSettings storage ss = LibAppStorage.diamondStorage().ss[token];
+        updateGaugeForToken(token, ss.gpSelector, ss.lwSelector, optimalPercentDepositedBdv);
+    }
+
+    /**
      * @notice Updates gauge settings for token.
      * @dev {LibWhitelistedTokens} must be updated to include the new token.
      */

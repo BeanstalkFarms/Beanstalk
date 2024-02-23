@@ -1,10 +1,10 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
-const { BEAN_3_CURVE, ETH_USDC_UNISWAP_V3, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, MAX_UINT256 } = require('./utils/constants.js');
+const { getAltBeanstalk } = require('../utils/contracts.js');
+const { BEAN_3_CURVE, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { deployMockWell, deployMockBeanEthWell } = require('../utils/well.js');
+const { deployMockBeanWell } = require('../utils/well.js');
 const { advanceTime } = require('../utils/helpers.js');
 const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
@@ -40,18 +40,22 @@ describe('Season', function () {
         await this.unripe.addUnripeToken(UNRIPE_BEAN, BEAN, ZERO_BYTES);
         await this.unripe.addUnripeToken(UNRIPE_LP, BEAN_ETH_WELL, ZERO_BYTES);
 
-        this.whitelist = await ethers.getContractAt('WhitelistFacet', this.diamond.address);
+        this.whitelist = await ethers.getContractAt('MockWhitelistFacet', this.diamond.address);
+        await this.whitelist.connect(owner).addWhitelistStatus(BEAN_ETH_WELL, true, true, true);
+        await this.whitelist.connect(owner).addWhitelistStatus(BEAN_WSTETH_WELL, true, true, true);
         this.result = await this.whitelist.connect(owner).dewhitelistToken(BEAN_3_CURVE);
 
         // add wells
-        [this.well, this.wellFunction, this.pump] = await deployMockBeanEthWell()
-        await this.well.setReserves([to6('1000000'), to18('1000')])
+        [this.beanEthWell, this.beanEthWellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH);
+        [this.beanWstethWell, this.beanEthWellFunction1, this.pump1] = await deployMockBeanWell(BEAN_WSTETH_WELL, WETH);
+        await this.beanEthWell.setReserves([to6('1000000'), to18('1000')])
+        await this.beanWstethWell.setReserves([to6('1000000'), to18('1000')])
         await advanceTime(3600)
         await owner.sendTransaction({to: user.address, value: 0});
         await setToSecondsAfterHour(0)
         await owner.sendTransaction({to: user.address, value: 0});
         await beanstalk.connect(user).sunrise();
-        await this.well.connect(user).mint(user.address, to18('1000'))
+        await this.beanEthWell.connect(user).mint(user.address, to18('1000'))
 
         // init eth/usd oracles
         await setEthUsdChainlinkPrice('1000')
@@ -67,7 +71,7 @@ describe('Season', function () {
 
     describe("previous balance = 0", async function () {
         beforeEach(async function () {
-            await this.well.setReserves([to6('0'), to18('0')])
+            await this.beanEthWell.setReserves([to6('0'), to18('0')])
             await advanceTime(3600)
         })
 
@@ -106,7 +110,7 @@ describe('Season', function () {
 
     describe("oracle initialized", async function () {
         it('season incentive', async function () {
-            await this.well.setReserves([to6('100000'), to18('100')])
+            await this.beanEthWell.setReserves([to6('100000'), to18('100')])
             await setToSecondsAfterHour(0)
             await beanstalk.connect(user).sunrise();
             await setToSecondsAfterHour(0)

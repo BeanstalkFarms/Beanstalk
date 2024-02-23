@@ -277,7 +277,8 @@ contract MockSeasonFacet is SeasonFacet  {
         bool raining,
         bool rainRoots,
         bool aboveQ,
-        uint256 L2SRState
+        uint256 L2SRState,
+        address pump
     ) public {
         s.season.raining = raining;
         s.r.roots = rainRoots ? 1 : 0;
@@ -308,7 +309,7 @@ contract MockSeasonFacet is SeasonFacet  {
             .mul(LibEvaluate.LIQUIDITY_PRECISION)
             .div(1000) // eth price
             .div(1000); // reserve[1] / 1000 = %
-        IMockPump(C.BEANSTALK_PUMP).update(reserves, new bytes(0));
+        IMockPump(pump).update(reserves, new bytes(0));
         s.twaReserves[C.BEAN_ETH_WELL].reserve0 = uint128(reserves[0]);
         s.twaReserves[C.BEAN_ETH_WELL].reserve1 = uint128(reserves[1]);
         if(aboveQ) {

@@ -1,5 +1,6 @@
 const { BEAN, WETH, BEANSTALK_FARMS, ETH_USD_CHAINLINK_AGGREGATOR, PRICE_DEPLOYER } = require("../test/utils/constants");
 const { toX } = require("../test/utils/helpers");
+const { defaultAbiCoder } = require('@ethersproject/abi');
 const { impersonateSigner, toBN, getBean, impersonateBeanstalkOwner } = require("../utils");
 const { deployWellContractAtNonce, encodeWellImmutableData, getWellContractAt, deployMockPump } = require("../utils/well");
 const { bipBasinIntegration } = require("./bips");
@@ -37,50 +38,53 @@ async function deployBasinAndIntegrationBip(mock, bipAccount = undefined, basinA
     await bipBasinIntegration(mock, bipAccount);
 }
 
-async function deployBasin(mock = true, accounts = undefined, verbose = true, justDeploy = false) {
+async function deployBasin(mock = true, accounts = undefined, verbose = true, justDeploy = false, mockPump = false) {
+    
+    let c = {}
 
     if (verbose) console.log("Deploying Basin...")
 
-    let account = await getAccount(accounts, 'aquifer', AQUIFER_DEPLOYER);
-    const aquifer = await deployWellContractAtNonce('Aquifer', AQUIFER_DEPLOY_NONCE, [], account, verbose);
+    c.aquifer = await deployAquifer(accounts, verbose);
 
     account = await getAccount(accounts, 'constantProduct2', CONSTANT_PRODUCT_2_DEPLOYER);
-    const constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, verbose);
+    c.constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, verbose);
 
     account = await getAccount(accounts, 'multiFlowPump', MULTI_FLOW_PUMP_DEPLOYER);
-    let multiFlowPump = await deployWellContractAtNonce('MultiFlowPump', MULTI_FLOW_PUMP_DEPLOY_NONCE, [
-        MULTI_FLOW_PUMP_MAX_PERCENT_INCREASE,
-        MULTI_FLOW_PUMP_MAX_PERCENT_DECREASE,
-        MULTI_FLOW_PUMP_CAP_INTERVAL,
-        MULTI_FLOW_PUMP_ALPHA
-    ], account, verbose);
-
-    account = await getAccount(accounts, 'wellImplementation', WELL_IMPLEMENTATION_DEPLOYER);
-    const wellImplementation = await deployWellContractAtNonce('Well', WELL_IMPLEMENTATION_DEPLOY_NONCE, [], account, false);
-    if (verbose) console.log("Well Implementation Deployed at", wellImplementation.address);
+    if (mockPump) {
+        c.multiFlowPump = await deployMockPump()
+    } else {
+        c.multiFlowPump = await deployWellContractAtNonce('MultiFlowPump', MULTI_FLOW_PUMP_DEPLOY_NONCE, [
+            MULTI_FLOW_PUMP_MAX_PERCENT_INCREASE,
+            MULTI_FLOW_PUMP_MAX_PERCENT_DECREASE,
+            MULTI_FLOW_PUMP_CAP_INTERVAL,
+            MULTI_FLOW_PUMP_ALPHA
+        ], account, verbose);
+    }
+    
+    c.wellImplementation = await deployWellImplementation(accounts, verbose);
 
     account = await getAccount(accounts, 'well', WELL_DEPLOYER);
     const immutableData = encodeWellImmutableData(
-        aquifer.address,
+        c.aquifer.address,
         [BEAN, WETH],
-        { target: constantProduct2.address, data: '0x', length: 0 },
-        [{ target: multiFlowPump.address, data: '0x', length: 0 }]
+        { target: c.constantProduct2.address, data: '0x', length: 0 },
+        [{ target: c.multiFlowPump.address, data: '0x', length: 0 }]
     );
 
-    const initData = wellImplementation.interface.encodeFunctionData('init', [WELL_NAME, WELL_SYMBOL]);
+    const initData = c.wellImplementation.interface.encodeFunctionData('init', [WELL_NAME, WELL_SYMBOL]);
 
-    const well = await getWellContractAt(
+    c.well = await getWellContractAt(
         'Well',
-        await aquifer.connect(account).callStatic.boreWell(
-            wellImplementation.address,
+        await c.aquifer.connect(account).callStatic.boreWell(
+            c.wellImplementation.address,
             immutableData,
             initData,
             WELL_DEPLOY_SALT
         )
     );
 
-    const wellTxn = await aquifer.connect(account).boreWell(
-        wellImplementation.address,
+    const wellTxn = await c.aquifer.connect(account).boreWell(
+        c.wellImplementation.address,
         immutableData,
         initData,
         WELL_DEPLOY_SALT
@@ -88,9 +92,9 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
 
     await wellTxn.wait();
 
-    if (justDeploy) return well;
+    if (justDeploy) return c;
 
-    if (verbose) console.log("Bean:Eth Well Deployed at:", well.address);
+    if (verbose) console.log("Bean:Eth Well Deployed at:", c.well.address);
 
     if (verbose) console.log("");
 
@@ -116,47 +120,60 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
 
     if (verbose) console.log(account.address)
 
-    if (verbose) onsole.log("Approving..");
-    await bean.connect(account).approve(well.address, amounts[0]);
-    await weth.connect(account).approve(well.address, amounts[1]);
+    if (verbose) console.log("Approving..");
+    await bean.connect(account).approve(c.well.address, amounts[0]);
+    await weth.connect(account).approve(c.well.address, amounts[1]);
 
     if (verbose) console.log("Wrapping Eth..");
     await weth.connect(account).deposit({ value: amounts[1] });
 
     if (verbose) console.log('Adding Liquidity..')
-    const lpAmountOut = well.getAddLiquidityOut(amounts);
-    let txn = await well.connect(account).addLiquidity(amounts, lpAmountOut, account.address, ethers.constants.MaxUint256);
+    const lpAmountOut = c.well.getAddLiquidityOut(amounts);
+    let txn = await c.well.connect(account).addLiquidity(amounts, lpAmountOut, account.address, ethers.constants.MaxUint256);
     await txn.wait();
-    txn = await well.connect(account).addLiquidity([toBN('0'), toBN('0')], '0', account.address, ethers.constants.MaxUint256);
+    txn = await c.well.connect(account).addLiquidity([toBN('0'), toBN('0')], '0', account.address, ethers.constants.MaxUint256);
     await txn.wait();
 
     if (verbose) console.log('')
 
-    const reserves = await well.getReserves();
+    const reserves = await c.well.getReserves();
     if (verbose) console.log("Well Statistics:")
     if (verbose) console.log("Bean Reserve:", reserves[0].toString());
     if (verbose) console.log("Eth Reserve:", reserves[1].toString());
-    if (verbose) console.log("LP Token Total Supply:", (await well.totalSupply()).toString());
+    if (verbose) console.log("LP Token Total Supply:", (await c.well.totalSupply()).toString());
 
     if (verbose) console.log('')
 
     if (verbose) console.log("Pump Statistics:")
     const instantaneousReserves = await multiFlowPump.readInstantaneousReserves(
-        well.address,
+        c.well.address,
         "0x"
     );
     if (verbose) console.log("Instantaneous Bean Reserve:", instantaneousReserves[0].toString());
     if (verbose) console.log("Instantaneous WETH Reserve:", instantaneousReserves[1].toString());
 
     if (verbose) console.log('')
+
+    return c
+}
+
+async function deployAquifer(accounts = undefined, verbose = true) {
+    let account = await getAccount(accounts, 'aquifer', AQUIFER_DEPLOYER);
+    return await deployWellContractAtNonce('Aquifer', AQUIFER_DEPLOY_NONCE, [], account, verbose);
+}
+
+async function deployWellImplementation(accounts = undefined, verbose = true) {
+    account = await getAccount(accounts, 'wellImplementation', WELL_IMPLEMENTATION_DEPLOYER);
+    const wellImplementation = await deployWellContractAtNonce('Well', WELL_IMPLEMENTATION_DEPLOY_NONCE, [], account, false);
+    if (verbose) console.log("Well Implementation Deployed at", wellImplementation.address);
+    return wellImplementation;
 }
 
 async function deployBasinWithMockPump(mock = true, accounts = undefined, verbose = true, justDeploy = false) {
 
     if (verbose) console.log("Deploying Basin...")
 
-    let account = await getAccount(accounts, 'aquifer', AQUIFER_DEPLOYER);
-    const aquifer = await deployWellContractAtNonce('Aquifer', AQUIFER_DEPLOY_NONCE, [], account, verbose);
+    const aquifer = await deployAquifer(accounts, verbose);
 
     account = await getAccount(accounts, 'constantProduct2', CONSTANT_PRODUCT_2_DEPLOYER);
     const constantProduct2 = await deployWellContractAtNonce('ConstantProduct2', CONSTANT_PRODUCT_2_DEPLOY_NONCE, [], account, verbose);
@@ -164,9 +181,7 @@ async function deployBasinWithMockPump(mock = true, accounts = undefined, verbos
     account = await getAccount(accounts, 'multiFlowPump', MULTI_FLOW_PUMP_DEPLOYER);
     let mockPump = await deployMockPump()
 
-    account = await getAccount(accounts, 'wellImplementation', WELL_IMPLEMENTATION_DEPLOYER);
-    const wellImplementation = await deployWellContractAtNonce('Well', WELL_IMPLEMENTATION_DEPLOY_NONCE, [], account, false);
-    if (verbose) console.log("Well Implementation Deployed at", wellImplementation.address);
+    const wellImplementation = await deployWellImplementation(accounts, verbose);
 
     account = await getAccount(accounts, 'well', WELL_DEPLOYER);
     const immutableData = encodeWellImmutableData(
@@ -271,3 +286,6 @@ async function getAccount(accounts, key, mockAddress) {
 exports.deployBasin = deployBasin;
 exports.deployBasinWithMockPump = deployBasinWithMockPump;
 exports.deployBasinAndIntegrationBip = deployBasinAndIntegrationBip;
+exports.getAccount = getAccount
+exports.deployAquifer = deployAquifer
+exports.deployWellImplementation = deployWellImplementation

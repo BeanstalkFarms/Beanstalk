@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN, } = require("../utils");
 const { EXTERNAL } = require("./utils/balances.js");
-const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH } = require("./utils/constants");
+const { BEAN, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require("./utils/constants");
 const { to18, to6, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { impersonateMockWell } = require("../utils/well.js");
@@ -48,7 +48,7 @@ describe("Silo Enroot", function () {
 
     await this.season.teleportSunrise(ENROOT_FIX_SEASON)
 
-    const [well, pump, wellFunction] = await impersonateMockWell(pumpBalances = [to6('10000'), to18('10')]);
+    const [well, pump, wellFunction] = await impersonateMockWell(BEAN_WSTETH_WELL, pumpBalances = [to6('10000'), to18('10')]);
     this.well = well; this.pump = pump; this.wellFunction = wellFunction;
 
     const SiloToken = await ethers.getContractFactory("MockToken");

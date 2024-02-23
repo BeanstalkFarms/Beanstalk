@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@beanstalk/wells": "0.4.1",
+    "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease0",
     "@ethereum-waffle/chai": "4.0.10",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@openzeppelin/contracts": "^3.4.0",
@@ -51,6 +52,7 @@
     "@openzeppelin/contracts-upgradeable-8": "npm:@openzeppelin/contracts-upgradeable@^4.7.3",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.3",
+    "axios": "1.6.7",
     "csv-parser": "3.0.0",
     "dotenv": "^10.0.0",
     "eth-gas-reporter": "0.2.25",

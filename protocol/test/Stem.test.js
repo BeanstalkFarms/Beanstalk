@@ -4,7 +4,7 @@ const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
 const { mintEth } = require('../utils/mint.js')
-const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, ETH_USD_CHAINLINK_AGGREGATOR } = require('./utils/constants')
+const { BEAN, BEANSTALK, BCM, BEAN_3_CURVE, UNRIPE_BEAN, UNRIPE_LP, THREE_CURVE, ETH_USD_CHAINLINK_AGGREGATOR, BEAN_ETH_WELL } = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { time, mineUpTo, mine } = require("@nomicfoundation/hardhat-network-helpers");
@@ -12,7 +12,7 @@ const { ConvertEncoder } = require('./utils/encoder.js');
 const { BigNumber } = require('ethers');
 const { deployBasin } = require('../scripts/basin.js');
 const { setReserves } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { setEthUsdPrice, setEthUsdcPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { impersonateChainlinkAggregator, impersonateEthUsdcUniswap, impersonateBean, impersonateWeth } = require('../scripts/impersonate.js');
 const { bipMigrateUnripeBean3CrvToBeanEth } = require('../scripts/bips.js');
 const { finishBeanEthMigration } = require('../scripts/beanEthMigration.js');
@@ -30,7 +30,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         await network.provider.request({
           method: "hardhat_reset",
           params: [
-            {
+          {
               forking: {
                 jsonRpcUrl: process.env.FORKING_RPC,
                 blockNumber: 16664100 //a random semi-recent block close to Grown Stalk Per Bdv pre-deployment
@@ -50,14 +50,15 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
         facetNames: ['EnrootFacet', 'ConvertFacet', 'WhitelistFacet', 'MockSiloFacet', 'MockSeasonFacet', 'MigrationFacet', 'SiloGettersFacet'],
         initFacetName: 'InitBipNewSilo',
         libraryNames: [
-          'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibIncentive'
+          'LibGauge', 'LibConvert', 'LibLockedUnderlying', 'LibCurveMinting', 'LibIncentive', 'LibWellMinting'
         ],
         facetLibraries: {
           'MockSeasonFacet': [
             'LibGauge', 
             'LibIncentive',
             'LibLockedUnderlying',
-            'LibCurveMinting'
+            'LibCurveMinting',
+            'LibWellMinting',
           ],
           'ConvertFacet': [
             'LibConvert'
@@ -88,7 +89,7 @@ describe('Silo V3: Grown Stalk Per Bdv deployment', function () {
       this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
       this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
       this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE);
-      this.well = await deployBasin(true, undefined, false, true)
+      this.well = (await deployBasin(true, undefined, false, true)).well
       this.season
 
       await impersonateChainlinkAggregator(ETH_USD_CHAINLINK_AGGREGATOR)

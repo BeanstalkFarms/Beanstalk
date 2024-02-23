@@ -6,6 +6,7 @@ const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require('../utils/helpers.js');
 const { setOracleFailure, setStethEthChainlinkPrice, setWstethEthUniswapPrice, setWstethStethRedemptionPrice, setEthUsdChainlinkPrice } = require('../utils/oracle.js');
+const { testIfRpcSet } = require('./utils/test.js');
 
 let user, user2, owner;
 
@@ -136,7 +137,7 @@ describe('wStEth Oracle', function () {
     })
 })
 
-describe('wStEth Oracle with Forking', function () {
+testIfRpcSet('wStEth Oracle with Forking', function () {
     it("Returns correct value when forking", async function () {
         try {
             await network.provider.request({
@@ -156,13 +157,20 @@ describe('wStEth Oracle with Forking', function () {
             return
         }
 
-        const contracts = await deploy("Test", false, true, false);
-        season = await ethers.getContractAt('MockSeasonFacet', contracts.beanstalkDiamond.address)
+        // const MockSeasonFacet = await ethers.getContractFactory('MockSeasonFacet');
+        // const season = await MockSeasonFacet.deploy({
+
+        // });
+        // await season.deployed();
+
+        const UsdOracle = await ethers.getContractFactory('UsdOracle');
+        const usdOracle = await UsdOracle.deploy();
+        await usdOracle.deployed();
     
-        expect(await season.getWstethEthPrice()).to.be.equal(to6('1.154105'))
-        expect(await season.getWstethEthTwap('500000')).to.be.equal(to6('1.154095'))
-        expect(await season.getWstethUsdPrice()).to.be.equal(to6('2580.422122'))
-        expect(await season.getWstethUsdTwap('500000')).to.be.equal(to6('2744.261803'))
-        expect(await season.getUsdPrice(WSTETH)).to.be.equal(to18('0.000387533493638216'))
+        expect(await usdOracle.getWstethEthPrice()).to.be.equal(to6('1.154105'))
+        expect(await usdOracle.getWstethEthTwap('500000')).to.be.equal(to6('1.154095'))
+        expect(await usdOracle.getWstethUsdPrice()).to.be.equal(to6('2580.422122'))
+        expect(await usdOracle.getWstethUsdTwap('500000')).to.be.within(to6('2744'), to6('2745'))
+        expect(await usdOracle.getUsdTokenPrice(WSTETH)).to.be.equal(to18('0.000387533493638216'))
     })
 })

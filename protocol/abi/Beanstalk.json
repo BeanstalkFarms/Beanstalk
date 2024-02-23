@@ -298,7 +298,7 @@
   },
   {
     "inputs": [],
-    "name": "getLockedBeansUnderlyingUnripeBeanEth",
+    "name": "getLockedBeansUnderlyingUnripeLP",
     "outputs": [
       {
         "internalType": "uint256",
@@ -595,6 +595,30 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "tokenAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "barnRaiseToken",
+        "type": "address"
+      }
+    ],
+    "name": "_getMintFertilizerOut",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "fertilizerAmountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
         "name": "accounts",
         "type": "address[]"
@@ -758,6 +782,32 @@
   },
   {
     "inputs": [],
+    "name": "getBarnRaiseToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBarnRaiseWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getCurrentHumidity",
     "outputs": [
       {
@@ -875,7 +925,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wethAmountIn",
+        "name": "tokenAmountIn",
         "type": "uint256"
       }
     ],
@@ -926,7 +976,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "wethAmountIn",
+        "name": "tokenAmountIn",
         "type": "uint256"
       },
       {
@@ -5491,30 +5541,6 @@
         "type": "address"
       }
     ],
-    "name": "balanceOfNewAndPartiallyGerminatedStalk",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "paritallyGerminatedStalk",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newlyGerminatedStalk",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
     "name": "balanceOfPlenty",
     "outputs": [
       {
@@ -5623,6 +5649,30 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOfYoungAndMatureGerminatingStalk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "matureGerminatingStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "youngGerminatingStalk",
         "type": "uint256"
       }
     ],
@@ -5743,6 +5793,25 @@
         "type": "uint32"
       }
     ],
+    "name": "getGerminatingRootsForSeason",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
     "name": "getGerminatingStalkAndRootsForSeason",
     "outputs": [
       {
@@ -5750,6 +5819,25 @@
         "name": "",
         "type": "uint256"
       },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "season",
+        "type": "uint32"
+      }
+    ],
+    "name": "getGerminatingStalkForSeason",
+    "outputs": [
       {
         "internalType": "uint256",
         "name": "",
@@ -5877,24 +5965,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getYoungAndMatureGerminatingTotalStalk",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "partiallyGerminatedStalk",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newlyGerminatedStalk",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -6001,6 +6071,24 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getYoungAndMatureGerminatingTotalStalk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "matureGerminatingStalk",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "youngGerminatingStalk",
         "type": "uint256"
       }
     ],
@@ -7625,6 +7713,11 @@
             "internalType": "uint16",
             "name": "stemScaleSeason",
             "type": "uint16"
+          },
+          {
+            "internalType": "uint32",
+            "name": "beanEthStartMintingSeason",
+            "type": "uint32"
           },
           {
             "internalType": "uint256",

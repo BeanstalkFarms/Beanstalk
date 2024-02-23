@@ -1,11 +1,11 @@
 const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH, MAX_UINT256, ZERO_ADDRESS } = require('./utils/constants')
-const { to18, to6, toStalk, advanceTime } = require('./utils/helpers.js')
+const { BEAN, THREE_CURVE, THREE_POOL, BEAN_ETH_WELL, WETH, MAX_UINT256, ZERO_ADDRESS, BEAN_WSTETH_WELL, WSTETH } = require('./utils/constants')
+const { to18, to6, advanceTime } = require('./utils/helpers.js')
 const { deployMockWell, whitelistWell, deployMockWellWithMockPump } = require('../utils/well.js');
-const { setEthUsdChainlinkPrice } = require('../utils/oracle.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
+const { setEthUsdChainlinkPrice } = require('../utils/oracle.js')
 
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
@@ -38,6 +38,7 @@ describe('Sop', function () {
 
     // init wells
     [this.well, this.wellFunction, this.pump] = await deployMockWellWithMockPump()
+    await deployMockWellWithMockPump(BEAN_WSTETH_WELL, WSTETH)
     await this.well.connect(owner).approve(this.diamond.address, to18('100000000'))
     await this.well.connect(user).approve(this.diamond.address, to18('100000000'))
 
