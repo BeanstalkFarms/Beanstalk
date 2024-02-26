@@ -42444,7 +42444,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "utils@workspace:utils"
   dependencies:
-    "@beanstalk/wells": "npm:0.4.1"
     "@octokit/rest": "npm:19.0.5"
     zx: "npm:7.2.3"
   languageName: unknown

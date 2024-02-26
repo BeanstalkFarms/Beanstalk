@@ -10,7 +10,6 @@
     "zx": "7.2.3"
   },
   "dependencies": {
-    "@beanstalk/wells": "0.4.1",
     "@octokit/rest": "19.0.5"
   }
 }
