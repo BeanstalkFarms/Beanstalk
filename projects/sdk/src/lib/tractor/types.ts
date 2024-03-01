@@ -1,26 +1,34 @@
 import { ethers } from "ethers";
 
-export type Bytes = string;
-export type Bytes32 = string;
-export type uint80 = string;
+export type uint80 = number;
 
 export type Blueprint = {
-    publisher: string;
-    data: Bytes;
-    operatorPasteInstrs: Bytes32[];
-    maxNonce: number;
-    startTime: number;
-    endTime: number;
-}
-
+  publisher: string;
+  data: ethers.Bytes;
+  operatorPasteInstrs?: ethers.Bytes;
+  maxNonce: ethers.BigNumber;
+  startTime: ethers.BigNumber;
+  endTime: ethers.BigNumber;
+};
 
 export type Requisition = {
-    blueprint: Blueprint;
-    blueprintHash: Bytes32;
-    signature: Bytes;
-}
+  blueprint: Blueprint;
+  blueprintHash: ethers.Bytes;
+  signature: ethers.Bytes;
+};
 
+export type Draft = {
+  advFarmCalls: AdvancedFarmCall[];
+  operatorPasteInstrs: OperatorPasteInstr[];
+};
 
-function toBytes32(data: number) {
-    return ethers.utils.hexlify(ethers.utils.zeroPad(data.toString(), 32));
-}
+export type AdvancedFarmCall = {
+  callData: ethers.Bytes;
+  clipboard: ethers.Bytes;
+};
+
+export type OperatorPasteInstr = {
+  copyByteIndex: uint80;
+  pasteCallIndex: uint80;
+  pasteByteIndex: uint80;
+};
