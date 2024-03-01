@@ -1,10 +1,12 @@
 const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
-const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, PIPELINE, TRI_CRYPTO_POOL, WETH, BEAN_3_CURVE, BEAN_METAPOOL, USDT } = require("./constants.js");
+const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, PIPELINE, TRI_CRYPTO_POOL, WETH, BEAN_3_CURVE, BEAN_METAPOOL, USDT, BEANSTALK } = require("./constants.js");
 const { to6, to18, toBean } = require("./helpers.js");
 const { wrapExternalCall, encodeBlueprintData } = require("./tractor.js");
+const { packAdvanced, encodeAdvancedData, decodeAdvancedData } = require('../../utils/function.js')
 const curveABI = require("../../abi/curve.json");
+const { getBeanstalk } = require('../../utils/contracts.js');
 
 //putting these constants here in case tractor is merged later
 //once this and tractor are merged, we can combine these and stick them together somewhere (like constants)
@@ -151,6 +153,8 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     this.weth = await ethers.getContractAt('IWETH', WETH)
     this.curveTricryptoPool = await ethers.getContractAt(curveABI, TRI_CRYPTO_POOL);
     this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
+    this.pipeline = await ethers.getContractAt("Pipeline", PIPELINE);
+    this.beanstalk = await getBeanstalk(BEANSTALK);
     console.log('done setting up contracts');
     // console.log('this.curveBean3crvPool: ', this.curveBean3crvPool);
     let advancedFarmCalls = [];
@@ -222,7 +226,11 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
         clipboard: await drafter().then(
             async (drafter) =>
               await drafter.encodeClipboard(0, [
-                await drafter.encodeLibReturnPasteParam(2, SLOT_SIZE+PIPE_RETURN_BYTE_OFFSET, EXTERNAL_ARGS_START_INDEX + SLOT_SIZE*2)
+                await drafter.encodeLibReturnPasteParam(
+                    2, 
+                    SLOT_SIZE+PIPE_RETURN_BYTE_OFFSET, 
+                    EXTERNAL_ARGS_START_INDEX + SLOT_SIZE*2
+                    )
               ])
           )
     });
@@ -262,9 +270,87 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     // console.log('call 2 done');
     //final return amount is beans returned
   
-    return advancedFarmCalls;
-  };
 
+    // BREAN:
+    advancedFarm0 = this.beanstalk.interface.encodeFunctionData(
+        "transferToken",
+        [
+            this.well.address,
+            PIPELINE,
+            amountOfLpToRemove,
+            EXTERNAL,
+            EXTERNAL
+        ]
+    )
+
+    selector0 = this.weth.interface.encodeFunctionData(
+        "approve", 
+        [this.curveTricryptoPool.address, ethers.constants.MaxUint256]
+    );
+    
+    approveUSDT = this.weth.interface.encodeFunctionData(
+        "approve", 
+        [this.curveBean3crvPool.address, ethers.constants.MaxUint256]
+    );
+
+    selector1 = this.well.interface.encodeFunctionData(
+        "removeLiquidityOneToken", 
+        [amountOfLpToRemove, WETH, minTokenAmountOut, PIPELINE, ethers.constants.MaxUint256]
+    );
+
+    selector2 = this.curveTricryptoPool.interface.encodeFunctionData(
+        "exchange(uint256,uint256,uint256,uint256)", 
+        [2, 0, amountIn, minAmountOut]
+    );
+
+    selector3 = this.curveTricryptoPool.interface.encodeFunctionData(
+        "exchange_underlying(int128,int128,uint256,uint256)", 
+        [3, 0, amountIn, minAmountOut]
+    );
+
+    // no data clipboard
+    noData = encodeAdvancedData(0)
+   
+    // approve WETH
+    pipe0 = [this.weth.address, selector0, noData]
+
+    // approve USDT
+    pipe1 = [USDT, approveUSDT, noData]
+
+    // remove Liq
+    pipe2 = [this.well.address, selector1, noData]
+
+    // from the 3rd call, take 0th (1st) param, 
+    // put into 2nd (3rd) param
+    pipelineData = encodeAdvancedData(1, 0, [2, 32, 100]) 
+
+    // exchange WETH -> USDT
+    pipe3 = [this.curveTricryptoPool.address, selector2, pipelineData]
+
+    // from the 4th call, take 0th (1st) param, 
+    // put into 2nd (3rd) param
+    pipelineData2 = encodeAdvancedData(1, 0, [3, 32, 100])
+
+    // exchange USDT -> BEAN
+    pipe4 = [this.curveBean3crvPool.address, selector3, pipelineData2]
+    
+    // pipeline construction
+    advancedFarm1 = await this.beanstalk.interface.encodeFunctionData(
+        "advancedPipe",
+        [
+            [pipe0, pipe1, pipe2, pipe3, pipe4],
+            0
+        ]
+    )
+    await console.log('advancedFarm1: ', advancedFarm1)
+
+    output = [
+        // [advancedFarm0, noData], // transfer BEAN/WETH into pipeline
+        [advancedFarm1, noData] // pipeline call
+    ]
+    await console.log('advancedFarmCalls output: ', output)
+    return output;
+  };
 
 module.exports = {
     initContracts,

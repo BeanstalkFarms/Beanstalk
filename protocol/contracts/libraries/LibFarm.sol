@@ -52,6 +52,8 @@ library LibFarm {
         // 0x00 -> Static Call - Execute static call
         // else > Advanced Call - Use clipboard on and execute call
         if (pipeType == 0x00) {
+            console.log('data.callData: ');
+            console.logBytes(data.callData);
             result = _farmMem(data.callData);
         } else {
             console.log('data.callData: ');
@@ -151,9 +153,9 @@ library LibFarm {
         assembly {
             selector := mload(add(data, 32))
         }
-        address facet = LibFunction.facetForSelector(selector);
         console.log('_farmMem selector: ');
         console.logBytes4(selector);
+        address facet = LibFunction.facetForSelector(selector);
         console.log('_farmMem facet: ', facet);
         console.log('_farmMem data: ');
         console.logBytes(data);

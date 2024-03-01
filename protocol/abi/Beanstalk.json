@@ -1543,6 +1543,25 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "counterId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getCounter",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "components": [
@@ -1673,6 +1692,35 @@
       }
     ],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "counterId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum LibTractor.CounterUpdateType",
+        "name": "updateType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCounter",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -5170,6 +5218,74 @@
         "internalType": "uint256",
         "name": "toBdv",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "logResultBySlot",
+    "outputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "args",
+        "type": "bytes[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "inputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "int96[]",
+        "name": "stems",
+        "type": "int96[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalAmountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "outputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "farmData",
+        "type": "bytes"
+      }
+    ],
+    "name": "pipelineConvert",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int96",
+        "name": "toStem",
+        "type": "int96"
       }
     ],
     "stateMutability": "payable",
