@@ -130,6 +130,8 @@ const wrapExternalCall = async (target, callData) => {
     target: target,
     data: callData
   };
+  console.log('warpping external call');
+  console.log('pipeCall: ', pipeCall);
   return (await pipelineInterface()).encodeFunctionData("pipe", [pipeCall]);
 };
 

@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "contracts/interfaces/IPipeline.sol";
 import "contracts/libraries/LibFunction.sol";
 import "contracts/libraries/Token/LibEth.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Depot Facet
@@ -32,8 +33,36 @@ contract DepotFacet {
         payable
         returns (bytes memory result)
     {
+        console.log('pipe: calling pipe in depot facet');
         result = IPipeline(PIPELINE).pipe(p);
+        console.log('pipe: got result:');
+        console.logBytes(result);
     }
+
+    // function pipe(PipeCall calldata p)
+    //     external
+    //     payable
+    //     returns (bytes memory result)
+    // {
+    //     console.log('pipe: calling pipe in depot facet with try catch');
+    //     try IPipeline(PIPELINE).pipe(p) returns (bytes memory pipeResult) {
+    //         result = pipeResult;
+    //         console.log('pipe: got result');
+    //     } catch Error(string memory reason) {
+    //         console.log('pipe: error occurred', reason);
+    //         // Handle the error as needed, e.g., revert or return a specific error message
+    //         revert(reason);
+    //     } catch (bytes memory lowLevelData) {
+    //         // This catches all errors that don't match the previous catch block
+    //         console.log('pipe: low-level error occurred, data:');
+    //         console.logBytes(lowLevelData);
+    //         // Handle the low-level error as needed, e.g., revert or return a specific error message
+    //         revert("Low-level error occurred");
+    //     }
+    // }
+
+
+
 
     /**
      * @notice Pipe multiple PipeCalls through Pipeline.
@@ -59,6 +88,7 @@ contract DepotFacet {
         payable
         returns (bytes[] memory results)
     {
+        console.log('calling advancedPipe in depot facet');
         results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }

@@ -13,7 +13,7 @@ const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts
 const fs = require('fs');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
-const { draftConvertBeanToBeanEthWell, draftConvertBeanEthWellToBean } = require('./utils/pipelineconvert.js');
+const { draftConvertBeanToBeanEthWell, draftConvertBeanEthWellToBean, initContracts } = require('./utils/pipelineconvert.js');
 const { deployBasin } = require("../scripts/basin.js");
 const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
 const { getBeanstalk } = require('../utils/contracts.js');
@@ -85,6 +85,8 @@ describe('Farm Convert', function () {
 
     this.pipeline = await deployPipeline();
 
+    await initContracts(); //deploys drafter contract
+
 
     await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
     await this.bean.connect(user).approve(this.silo.address, ethers.constants.MaxUint256);
@@ -92,16 +94,18 @@ describe('Farm Convert', function () {
     await this.wellToken.connect(user).approve(this.silo.address, ethers.constants.MaxUint256)
   });
 
-  beforeEach(async function () {
-    snapshotId = await takeSnapshot();
-  });
-
-  afterEach(async function () {
-    await revertToSnapshot(snapshotId);
-  });
-
 
   describe('generalized convert tests', async function () {
+
+  
+    beforeEach(async function () {
+      snapshotId = await takeSnapshot();
+    });
+  
+    afterEach(async function () {
+      await revertToSnapshot(snapshotId);
+    });
+
     describe('basic convert', async function () {
       it('does the most basic possible convert Bean to LP', async function () {
 
@@ -148,7 +152,7 @@ describe('Farm Convert', function () {
         return depositedBdv;
       }
 
-      it.only('does the most basic possible convert LP to Bean', async function () {
+      it('does the most basic possible convert LP to Bean', async function () {
 
         //first deposit 200 bean into bean:eth well
         await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
@@ -179,11 +183,12 @@ describe('Farm Convert', function () {
         await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
         await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
         await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
+        console.log('updated yo');
       });
 
-    //need a test that leaves fewer amount of erc20 in the pipeline than is returned by the final function
-    //(aka you try to pull out of pipeline more than you put in, it should fail)
-    //"ERC20: transfer amount exceeds balance"
+      //need a test that leaves fewer amount of erc20 in the pipeline than is returned by the final function
+      //(aka you try to pull out of pipeline more than you put in, it should fail)
+      //"ERC20: transfer amount exceeds balance"
 
 
     });

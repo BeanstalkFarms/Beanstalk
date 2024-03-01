@@ -7,6 +7,7 @@ import "../libraries/LibFunction.sol";
 import "../libraries/LibClipboard.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Pipeline
@@ -31,6 +32,70 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         return "1.0.1";
     }
 
+    function extractData(bytes memory data) public view returns (bytes4 selector, bytes[] memory args) {
+        // Extract the selector
+
+        
+        // assembly {
+        //     selector := mload(add(data, 32))
+        // }
+
+
+        // selector = bytes4(uint32(uint256(data[0])));
+
+        // console.log('init array');
+        
+        // Initialize an array to hold the arguments
+        args = new bytes[]((data.length - 4) / 32);
+
+        // console.log('extract args');
+        
+        // Extract each argument
+        for (uint i = 4; i < data.length; i += 32) {
+            // console.log('here');
+            bytes memory arg = new bytes(32);
+            for (uint j = 0; j < 32; j++) {
+                // console.log('here 2');
+                // Check if we're within the bounds of the data array
+                if (i + j < data.length) {
+                    // console.log('good length');
+                    arg[j] = data[i + j];
+                } else {
+                    console.log('bad length');
+                    // If we're out of bounds, fill the rest of the argument with zeros
+                    arg[j] = byte(0);
+                    console.log('hm we went out of bounds uh oh');
+                }
+            }
+            // console.log('here 3');
+            
+            uint index = (i - 4) / 32;
+            // Check if the index is within bounds
+            if (index < args.length) {
+                args[index] = arg;
+            } else {
+                console.log('index was out of bounds');
+                console.log('index: ', index);
+                console.log('args.length: ', args.length);
+                // Handle the case where the index is out of bounds
+                // This should not happen if the calculation is correct, but it's good to have a safeguard
+                // revert("Index out of bounds");
+            }
+        }
+        
+        // Print the selector
+        // console.log('extractData printing selector');
+        // console.logBytes4(selector);
+
+        console.log('pipeline.sol print args');
+        
+        // Print each argument
+        for (uint i = 0; i < args.length; i++) {
+            console.log('extractData printing arg: ');
+            console.logBytes(args[i]);
+        }
+    }
+
     /**
      * @notice Execute a single PipeCall.
      * Supports sending Ether through msg.value
@@ -43,6 +108,12 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         override
         returns (bytes memory result)
     {
+        console.log('pipe in Pipeline.sol');
+        console.log('pipe target: ', p.target);
+        console.log('pipe data:');
+        console.logBytes(p.data);
+        extractData(p.data);
+        
         result = _pipe(p.target, p.data, msg.value);
     }
     
@@ -86,7 +157,14 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         uint256 value
     ) private returns (bytes memory result) {
         bool success;
+        console.log('doing _pipe');   
+        console.log('target: ', target);
+        console.log('data:');
+        console.logBytes(data);
         (success, result) = target.call{value: value}(data);
+        console.log('_pipe: ', success);
+        console.log('_pipe result: ');
+        console.logBytes(result);
         LibFunction.checkReturn(success, result);
     }
 
@@ -97,6 +175,10 @@ contract Pipeline is IPipeline, ERC1155Holder, ERC721Holder {
         uint256 value
     ) private returns (bytes memory result) {
         bool success;
+        console.log('doing _pipeMem');   
+        console.log('_pipeMem target: ', target);
+        console.log('_pipeMem data:');
+        console.logBytes(data);
         (success, result) = target.call{value: value}(data);
         LibFunction.checkReturn(success, result);
     }

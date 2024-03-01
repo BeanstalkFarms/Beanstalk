@@ -116,6 +116,9 @@ contract ConvertFacet is ReentrancyGuard {
      * 1. A list of tokens, stems, and amounts for input
      * 2. An output token address
      * 3. A farm function that does a swap, somehow we have to pass all the input tokens and amounts to this function
+     * 
+     * I was considering adding an allowConvertPastPeg bool, which if false, would rever the txn.
+     * This functionality can be achieve by baking it into the pipeline calls however.
      */
 
     function pipelineConvert(
@@ -160,7 +163,7 @@ contract ConvertFacet is ReentrancyGuard {
         );
 
         // storePoolDeltaB(inputToken, outputToken);
-        int256 combinedDeltaB = getCombinedDeltaBForTokens(inputToken, outputToken);
+        // int256 (combinedDeltaBtwa, combinedDeltaBinsta) = getCombinedDeltaBForTokens(inputToken, outputToken);
 
 
         IERC20(inputToken).transfer(PIPELINE, totalAmountIn);
@@ -179,10 +182,9 @@ contract ConvertFacet is ReentrancyGuard {
 
         //stalk bonus/penalty will be applied here
 
-        combinedDeltaB = combinedDeltaB + getCombinedDeltaBForTokens(inputToken, outputToken);
-
-        console.log('updatedCombinedDeltaB');
-        console.logInt(combinedDeltaB);
+        // combinedDeltaB = combinedDeltaB + getCombinedDeltaBForTokens(inputToken, outputToken);
+        // console.log('updatedCombinedDeltaB');
+        // console.logInt(combinedDeltaB);
 
         //TODO: grownStalk should be lost as % of bdv decrease?
         //grownstalk recieved as a bonus should be deposited evenly across all deposits
@@ -196,36 +198,110 @@ contract ConvertFacet is ReentrancyGuard {
         emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
     }
 
+    //for finding the before/after deltaB difference, we need to use the min of
+    //the inst and the twa deltaB
+
     //note we need a way to get insta version of this
-    function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal
-        returns (int256 combinedDeltaB) {
-                //get deltaB of input/output tokens for comparison later
-        int256 inputTokenDeltaB = getDeltaBIfNotBean(inputToken);
-        int256 outputTokenDeltaB = getDeltaBIfNotBean(outputToken);
+    // function getCombinedDeltaBForTokens(address inputToken, address outputToken) internal
+    //     returns (int256 combinedDeltaBtwa, int256 combinedDeltaBinsta) {
+    //     //get deltaB of input/output tokens for comparison later
+    //     combinedDeltaBtwa = getDeltaBIfNotBean(inputToken) + getDeltaBIfNotBean(outputToken);
+    //     console.log('getCombinedDeltaBForTokens');
+    //     console.logInt(combinedDeltaB);
 
-        combinedDeltaB = inputTokenDeltaB + outputTokenDeltaB;
-        console.log('getCombinedDeltaBForTokens');
-        console.logInt(combinedDeltaB);
-    }
+    //     combinedDeltaBinsta = getDeltaBIfNotBeanInsta(inputToken) + getDeltaBIfNotBeanInsta(outputToken);
+    // }
 
-    function storePoolDeltaB(address inputToken, address outputToken) internal {
-                //get deltaB of input/output tokens for comparison later
-        int256 inputTokenDeltaB = getDeltaBIfNotBean(inputToken);
-        int256 outputTokenDeltaB = getDeltaBIfNotBean(outputToken);
+    // function storePoolDeltaB(address inputToken, address outputToken) internal {
+    //             //get deltaB of input/output tokens for comparison later
+    //     int256 inputTokenDeltaB = getDeltaBIfNotBean(inputToken);
+    //     int256 outputTokenDeltaB = getDeltaBIfNotBean(outputToken);
 
-        console.log('inputTokenDeltaB: ');
-        console.logInt(inputTokenDeltaB);
-        console.log('outputTokenDeltaB: ');
-        console.logInt(outputTokenDeltaB);
-    }
+    //     console.log('inputTokenDeltaB: ');
+    //     console.logInt(inputTokenDeltaB);
+    //     console.log('outputTokenDeltaB: ');
+    //     console.logInt(outputTokenDeltaB);
+    // }
 
     //may not be best use of gas to have this as different function?
-    function getDeltaBIfNotBean(address token) internal view returns (int256) {
+    function getDeltaBIfNotBeanTwa(address token) internal view returns (int256) {
         console.log('getDeltaBIfNotBean token: ', token);
         if (token == address(C.bean())) {
             return 0;
         }
         return BEANSTALK.poolDeltaB(token);
+    }
+
+    // function getDeltaBIfNotBeanInsta(address token) internal view returns (int256) {
+    //     console.log('getDeltaBIfNotBean token: ', token);
+    //     if (token == address(C.bean())) {
+    //         return 0;
+    //     }
+    //     return LibWellMinting.instantaneousDeltaB(token);
+    // }
+
+    function logResultBySlot(bytes memory data) public view returns (bytes[] memory args) {
+        // Extract the selector
+
+        
+        // assembly {
+        //     selector := mload(add(data, 32))
+        // }
+
+
+        // selector = bytes4(uint32(uint256(data[0])));
+
+        // console.log('init array');
+        
+        // Initialize an array to hold the arguments
+        args = new bytes[]((data.length) / 32);
+
+        // console.log('extract args');
+        
+        // Extract each argument
+        for (uint i = 0; i < data.length; i += 32) {
+            // console.log('here');
+            bytes memory arg = new bytes(32);
+            for (uint j = 0; j < 32; j++) {
+                // console.log('here 2');
+                // Check if we're within the bounds of the data array
+                if (i + j < data.length) {
+                    // console.log('good length');
+                    arg[j] = data[i + j];
+                } else {
+                    console.log('bad length');
+                    // If we're out of bounds, fill the rest of the argument with zeros
+                    arg[j] = byte(0);
+                    console.log('hm we went out of bounds uh oh');
+                }
+            }
+            // console.log('here 3');
+            
+            uint index = i / 32;
+            // Check if the index is within bounds
+            if (index < args.length) {
+                args[index] = arg;
+            } else {
+                console.log('index was out of bounds');
+                console.log('index: ', index);
+                console.log('args.length: ', args.length);
+                // Handle the case where the index is out of bounds
+                // This should not happen if the calculation is correct, but it's good to have a safeguard
+                // revert("Index out of bounds");
+            }
+        }
+        
+        // Print the selector
+        // console.log('extractData printing selector');
+        // console.logBytes4(selector);
+
+        console.log('print cargs');
+        
+        // Print each argument
+        for (uint i = 0; i < args.length; i++) {
+            console.log('logResultBySlot printing slot: ');
+            console.logBytes(args[i]);
+        }
     }
 
     function executeAdvancedFarmCalls(bytes calldata farmData)
@@ -246,6 +322,10 @@ contract ConvertFacet is ReentrancyGuard {
         for (uint256 i = 0; i < calls.length; ++i) {
             require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
+
+            //log result
+            console.log('results[i]: ', i);
+            console.logBytes(results[i]);
         }
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut
