@@ -11,6 +11,7 @@ import Supply from '~/components/Analytics/Bean/Supply';
 import VolumeChart from '~/components/Analytics/Bean/VolumeChart';
 import useTabs from '~/hooks/display/useTabs';
 import LiquiditySupplyRatio from './LiquiditySupplyRatio';
+import SunriseReward from './SunriseReward';
 
 const SLUGS = [
   'price',
@@ -20,7 +21,8 @@ const SLUGS = [
   'supply',
   'crosses',
   'delta_b',
-  'liquiditysupplyratio'
+  'liquiditysupplyratio',
+  'gmreward'
 ];
 
 const BeanAnalytics: FC<{}> = () => {
@@ -41,6 +43,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Crosses" />
         <Tab label="deltaB" />
         <Tab label="L2SR" />
+        <Tab label="gm Reward" />
       </Tabs>
       {/* 
         TODO: The height prop currently *only* reflects in the chart height. However, the full component
@@ -56,6 +59,7 @@ const BeanAnalytics: FC<{}> = () => {
       {tab === 5 && <Crosses height={CHART_HEIGHT} />}
       {tab === 6 && <DeltaB height={CHART_HEIGHT} />}
       {tab === 7 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
+      {tab === 8 && <SunriseReward height={CHART_HEIGHT} />}
     </Card>
   );
 };

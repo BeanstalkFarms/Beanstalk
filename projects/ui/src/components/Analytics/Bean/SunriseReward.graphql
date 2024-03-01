@@ -1,0 +1,13 @@
+query SunriseReward($season_lte: Int, $first: Int, $season_gt: Int) {
+  seasons: seasons(
+    first: $first
+    where: { season_lte: $season_lte, season_gte: $season_gt }
+    orderBy: season
+    orderDirection: desc
+  ) {
+    id
+    season
+    createdAt
+    incentiveBeans
+  }
+}
