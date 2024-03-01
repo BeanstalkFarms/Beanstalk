@@ -327,18 +327,23 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     // exchange WETH -> USDT
     pipe3 = [this.curveTricryptoPool.address, selector2, pipelineData]
 
-    // from the 4th call, take 0th (1st) param, 
+    // get balance of USDT
+    usdtPipe = [USDT, this.usdt.interface.encodeFunctionData("balanceOf", [PIPELINE]), noData]
+
+    // from the 5th call, take 0th (1st) param, 
     // put into 2nd (3rd) param
-    pipelineData2 = encodeAdvancedData(1, 0, [3, 32, 100])
+    pipelineData2 = encodeAdvancedData(1, 0, [4, 32, 100])
 
     // exchange USDT -> BEAN
     pipe4 = [this.curveBean3crvPool.address, selector3, pipelineData2]
+
+    // get balance of USDT
     
     // pipeline construction
     advancedFarm1 = await this.beanstalk.interface.encodeFunctionData(
         "advancedPipe",
         [
-            [pipe0, pipe1, pipe2, pipe3, pipe4],
+            [pipe0, pipe1, pipe2, pipe3, usdtPipe, pipe4],
             0
         ]
     )

@@ -136,6 +136,8 @@ contract ConvertFacet is ReentrancyGuard {
             uint256 amountOut, int96 toStem
         )
     {   
+        LibTractor._setPublisher(msg.sender);
+        
         // AppStorage storage s = LibAppStorage.diamondStorage();
 
         // require(s.ss[outputToken].milestoneSeason != 0, "Token not whitelisted");
@@ -196,6 +198,7 @@ contract ConvertFacet is ReentrancyGuard {
 
         //there's nothing about total BDV in this event, but it can be derived from the AddDeposit events
         emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, amountOut);
+        LibTractor._resetPublisher();
     }
 
     //for finding the before/after deltaB difference, we need to use the min of
@@ -405,7 +408,6 @@ contract ConvertFacet is ReentrancyGuard {
                     
                 } else {
                     amounts[i] = maxTokens.sub(a.tokensRemoved);
-                    
                     depositBDV = LibTokenSilo.removeDepositFromAccount(
                         LibTractor._getUser(),
                         token,

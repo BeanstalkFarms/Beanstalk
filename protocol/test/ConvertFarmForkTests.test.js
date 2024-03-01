@@ -53,55 +53,14 @@ describe('Farm Convert', function () {
     [owner, user, user2] = await ethers.getSigners();
     userAddress = user.address;
     user2Address = user2.address;
-    const contracts = await deploy("Test", false, true);
-    ownerAddress = contracts.account;
-    this.diamond = contracts.beanstalkDiamond;
-    this.beanstalk = await getBeanstalk(this.diamond.address);
-    impersonateBeanEthWell();
-    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
-    this.fakeWell = await deployWell([BEAN, WETH]);
-    this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
-    this.convert = await ethers.getContractAt("MockConvertFacet", this.diamond.address)
-    this.bean = await ethers.getContractAt("MockToken", BEAN);
-    this.usdt = await ethers.getContractAt("MockToken", USDT);
-    this.weth = await ethers.getContractAt("MockToken", WETH);
-    this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
-    this.curveTricryptoPool = await ethers.getContractAt(curveABI, TRI_CRYPTO_POOL);
-    this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
-    await this.bean.mint(ownerAddress, to18('1000000000'))
-    await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
-    await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
+    // const contracts = await deploy("Test", false, true);
 
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-    await setEthUsdtPrice('1000')
-
-    await setReserves(
-      owner,
-      this.well,
-      [to6('1000000'), to18('1000')]
-    );
-
-    await setReserves(
-      owner,
-      this.well,
-      [to6('1000000'), to18('1000')]
-    );
-    await whitelistWell(this.well.address, '10000', to6('4'))
-    await this.season.captureWellE(this.well.address); //inits well oracle price
-
-
-    this.silo = await ethers.getContractAt('SiloFacet', this.diamond.address);
-    this.farmFacet = await ethers.getContractAt("FarmFacet", this.diamond.address);
-
-
-    await this.bean.mint(userAddress, toBean('1000000000'));
-    await this.bean.mint(user2Address, toBean('1000000000'));
-
+    // upgrade beanstalk with convert and mockAdminFacet:
     const beanstalkOwner = await impersonateBeanstalkOwner();
     await upgradeWithNewFacets({
       diamondAddress: BEANSTALK,
-      facetNames: ['ConvertFacet'],
+      facetNames: ['ConvertFacet', 'MockAdminFacet'],
+      initFacetName: "InitTractor",
       libraryNames: [ 'LibConvert' ],
       facetLibraries: {
         'ConvertFacet': [ 'LibConvert' ]
@@ -112,7 +71,68 @@ describe('Farm Convert', function () {
       account: beanstalkOwner
     });
 
-    this.pipeline = await deployPipeline();
+    
+    // ownerAddress = contracts.account;
+    // this.diamond = contracts.beanstalkDiamond
+    ownerAddress = beanstalkOwner.address;
+    this.beanstalk = await getBeanstalk(BEANSTALK);
+    impersonateBeanEthWell();
+    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+    this.fakeWell = await deployWell([BEAN, WETH]);
+    this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
+    this.convert = await ethers.getContractAt("MockConvertFacet", BEANSTALK)
+    this.admin = await ethers.getContractAt("MockAdminFacet", BEANSTALK)
+    this.bean = await ethers.getContractAt("MockToken", BEAN);
+    this.usdt = await ethers.getContractAt("MockToken", USDT);
+    this.weth = await ethers.getContractAt("MockToken", WETH);
+    this.season = await ethers.getContractAt('MockSeasonFacet', BEANSTALK);
+    this.curveTricryptoPool = await ethers.getContractAt(curveABI, TRI_CRYPTO_POOL);
+    this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
+    await this.admin.mintBeans(ownerAddress, to18('1000000000'))
+    await this.wellToken.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
+    await this.bean.connect(owner).approve(this.beanstalk.address, ethers.constants.MaxUint256)
+
+    // await setEthUsdPrice('999.998018')
+    // await setEthUsdcPrice('1000')
+    // await setEthUsdtPrice('1000')
+
+    // await setReserves(
+    //   owner,
+    //   this.well,
+    //   [to6('1000000'), to18('1000')]
+    // );
+
+    // await setReserves(
+    //   owner,
+    //   this.well,
+    //   [to6('1000000'), to18('1000')]
+    // );
+    // await whitelistWell(this.well.address, '10000', to6('4'))
+    // await this.season.captureWellE(this.well.address); //inits well oracle price
+
+
+    this.silo = await ethers.getContractAt('SiloFacet', BEANSTALK);
+    this.farmFacet = await ethers.getContractAt("FarmFacet", BEANSTALK);
+
+
+    await this.admin.mintBeans(userAddress, toBean('1000000000'));
+    await this.admin.mintBeans(user2Address, toBean('1000000000'));
+
+    // const beanstalkOwner = await impersonateBeanstalkOwner();
+    // await upgradeWithNewFacets({
+    //   diamondAddress: BEANSTALK,
+    //   facetNames: ['ConvertFacet'],
+    //   libraryNames: [ 'LibConvert' ],
+    //   facetLibraries: {
+    //     'ConvertFacet': [ 'LibConvert' ]
+    //   },
+    //   bip: false,
+    //   object: false,
+    //   verbose: false,
+    //   account: beanstalkOwner
+    // });
+
+    this.pipeline = await impersonatePipeline();
 
     await initContracts(); //deploys drafter contract
 
@@ -168,6 +188,7 @@ describe('Farm Convert', function () {
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
       //get amount out that we should recieve for depositing 200 beans
       const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+      console.log('wellAmountOut', wellAmountOut);
       console.log('spot 1');
 
 
@@ -185,16 +206,14 @@ describe('Farm Convert', function () {
       console.log('spot 4');
       const stemTip = await this.silo.stemTipForToken(this.well.address);
       console.log('spot 4');
-      console.log("balanceOf", await this.weth.balanceOf(TRI_CRYPTO_POOL));
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv(wellAmountOut, 0);
       console.log('advancedFarmCalls: ', advancedFarmCalls);
       const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls
       ]);
 
-      // approve well for beanstalk: 
-      await this.wellToken.connect(user).approve(BEANSTALK, ethers.constants.MaxUint256);
       console.log('calling pipeline convert yo');
+      console.log("balanceOf", await this.weth.balanceOf(TRI_CRYPTO_POOL));
       this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
 
       // verify events
