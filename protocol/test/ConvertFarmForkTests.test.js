@@ -173,52 +173,34 @@ describe('Farm Convert', function () {
     //test that does a tricrypto and 3crv swap
     it.only('does a tricrypto and 3crv swap', async function () {
 
-      //do a bunch of approvals
-      // const approvals = await draftPipelineApprovals();
-      // console.log('approvals: ', approvals);
-      // //run approvals through pipeline
-      // console.log('this.pipeline: ', this.pipeline);
-      // console.log('running approvals through pipeline');
-      // const result = await this.pipeline.advancedPipe(approvals);
-      // console.log('result: ', result);
-
-
-
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
       //get amount out that we should recieve for depositing 200 beans
       const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
-      console.log('wellAmountOut', wellAmountOut);
-      console.log('spot 1');
-
 
       await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
 
-      //alright now if we removed that well amount, how many bean would we expect to get?
+      // if we removed that well amount, how many bean would we expect to get?
       const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
-      console.log('spot 2');
-      //deposit the bean:eth
+
+      // deposit the bean:eth
       const siloResult = await this.silo.connect(user).deposit(this.well.address, wellAmountOut, EXTERNAL);
-      console.log('spot 3');
-      //get event logs and see how much the actual bdv was
+
+      // get event logs and see how much the actual bdv was
       const siloReceipt = await siloResult.wait();
-      // const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
-      console.log('spot 4');
+      const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
       const stemTip = await this.silo.stemTipForToken(this.well.address);
-      console.log('spot 4');
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv(wellAmountOut, 0);
-      console.log('advancedFarmCalls: ', advancedFarmCalls);
       const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls
       ]);
 
-      console.log('calling pipeline convert yo');
-      console.log("balanceOf", await this.weth.balanceOf(TRI_CRYPTO_POOL));
+
       this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
 
       // verify events
       // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
-      // await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
       // await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
     });
   });

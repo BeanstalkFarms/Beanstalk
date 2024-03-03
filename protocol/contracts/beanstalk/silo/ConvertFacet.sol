@@ -125,7 +125,7 @@ contract ConvertFacet is ReentrancyGuard {
         address inputToken, 
         int96[] calldata stems, //array of stems to convert
         uint256[] calldata amounts, //amount from each crate to convert
-        uint256 totalAmountIn, //passed in rather than calculated to save gas (don't worry, will fail if it's wrong)
+        uint256 totalAmountIn, //passed in rather than calculated to save gas (should fail if it's wrong)
         address outputToken,
         bytes calldata farmData
     )
@@ -327,8 +327,8 @@ contract ConvertFacet is ReentrancyGuard {
             results[i] = LibFarm._advancedFarmMem(calls[i], results);
 
             //log result
-            console.log('results[i]: ', i);
-            console.logBytes(results[i]);
+            // console.log('results[i]: ', i);
+            // console.logBytes(results[i]);
         }
         // assume last value is the amountOut
         // todo: for full functionality, we should instead have the user specify the index of the amountOut

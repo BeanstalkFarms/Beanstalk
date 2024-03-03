@@ -33,10 +33,7 @@ contract DepotFacet {
         payable
         returns (bytes memory result)
     {
-        console.log('pipe: calling pipe in depot facet');
         result = IPipeline(PIPELINE).pipe(p);
-        console.log('pipe: got result:');
-        console.logBytes(result);
     }
 
     // function pipe(PipeCall calldata p)
