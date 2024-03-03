@@ -1,7 +1,18 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
-const { BEAN, THREE_CURVE, THREE_POOL, BEAN_3_CURVE, PIPELINE, WETH, BEAN_ETH_WELL, BEANSTALK, TRI_CRYPTO_POOL, USDT } = require('./utils/constants')
+const {
+  BEAN,
+  THREE_CURVE,
+  THREE_POOL,
+  BEAN_3_CURVE,
+  PIPELINE,
+  WETH,
+  BEAN_ETH_WELL,
+  BEANSTALK,
+  TRI_CRYPTO_POOL,
+  USDT
+} = require("./utils/constants");
 const { ConvertEncoder } = require('./utils/encoder.js')
 const { to18, toBean, toStalk, to6 } = require('./utils/helpers.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -13,7 +24,12 @@ const { setEthUsdPrice, setEthUsdcPrice, setEthUsdtPrice } = require('../scripts
 const fs = require('fs');
 const { upgradeWithNewFacets } = require("../scripts/diamond");
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
-const { draftConvertBeanToBeanEthWell, draftConvertBeanEthWellToBean, initContracts, draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv, curveABI, draftPipelineApprovals } = require('./utils/pipelineconvert.js');
+const {
+  initContracts,
+  draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv,
+  curveABI,
+  draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv
+} = require("./utils/pipelineconvert.js");
 const { deployBasin } = require("../scripts/basin.js");
 const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
 const { getBeanstalk } = require('../utils/contracts.js');
@@ -171,7 +187,7 @@ describe('Farm Convert', function () {
 
 
     //test that does a tricrypto and 3crv swap
-    it.only('does a tricrypto and 3crv swap', async function () {
+    it('does a tricrypto and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
@@ -191,6 +207,39 @@ describe('Farm Convert', function () {
       const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
       const stemTip = await this.silo.stemTipForToken(this.well.address);
       let advancedFarmCalls = await draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv(wellAmountOut, 0);
+      const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+
+
+      this.result = await this.convert.connect(user).pipelineConvert(this.well.address, [stemTip], [wellAmountOut], wellAmountOut, this.bean.address, farmData);
+
+      // verify events
+      // await expect(this.result).to.emit(this.convert, 'Convert').withArgs(user.address, this.well.address, this.bean.address, wellAmountOut, beanAmountOut);
+      await expect(this.result).to.emit(this.silo, 'RemoveDeposits').withArgs(user.address, this.well.address, [stemTip], [wellAmountOut], wellAmountOut, [depositedBdv]);
+      // await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
+    });
+
+    it.only('does a uniswap and 3crv swap', async function () {
+
+      //first deposit 200 bean into bean:eth well
+      await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);
+      //get amount out that we should recieve for depositing 200 beans
+      const wellAmountOut = await this.well.getAddLiquidityOut([toBean('200'), to18("0")]);
+
+      await this.well.connect(user).addLiquidity([toBean('200'), to18("0")], ethers.constants.Zero, user.address, ethers.constants.MaxUint256);
+
+      // if we removed that well amount, how many bean would we expect to get?
+      const beanAmountOut = await this.well.getRemoveLiquidityOneTokenOut(wellAmountOut, BEAN);
+
+      // deposit the bean:eth
+      const siloResult = await this.silo.connect(user).deposit(this.well.address, wellAmountOut, EXTERNAL);
+
+      // get event logs and see how much the actual bdv was
+      const siloReceipt = await siloResult.wait();
+      const depositedBdv = getBdvFromAddDepositReceipt(this.silo, siloReceipt);
+      const stemTip = await this.silo.stemTipForToken(this.well.address);
+      let advancedFarmCalls = await draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv(wellAmountOut, 0);
       const farmData = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
         advancedFarmCalls
       ]);

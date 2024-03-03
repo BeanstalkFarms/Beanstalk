@@ -1,11 +1,12 @@
 const { ethers } = require("hardhat");
 
 const { EXTERNAL, INTERNAL } = require("./balances.js");
-const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, PIPELINE, TRI_CRYPTO_POOL, WETH, BEAN_3_CURVE, BEAN_METAPOOL, USDT, BEANSTALK } = require("./constants.js");
+const { BEAN, ZERO_ADDRESS, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, PIPELINE, TRI_CRYPTO_POOL, WETH, BEAN_3_CURVE, BEAN_METAPOOL, USDT, USDC, BEANSTALK, UNISWAP_ROUTER, MAX_UINT256 } = require("./constants.js");
 const { to6, to18, toBean } = require("./helpers.js");
 const { wrapExternalCall, encodeBlueprintData } = require("./tractor.js");
 const { packAdvanced, encodeAdvancedData, decodeAdvancedData } = require('../../utils/function.js')
 const curveABI = require("../../abi/curve.json");
+const uniswapABI = require("../../abi/Uniswap.json");
 const { getBeanstalk } = require('../../utils/contracts.js');
 
 //putting these constants here in case tractor is merged later
@@ -160,8 +161,6 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     let minAmountOut = 100; //in theory we should use another call here to setup minAmount out in realtime (or pre-
     //set it up beforehand if we want it to act like a fill-or-kill order when the txn gets into a block)
 
-
-    // BREAN:
     advancedFarm0 = this.beanstalk.interface.encodeFunctionData(
         "transferToken",
         [
@@ -178,7 +177,7 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
         [this.curveTricryptoPool.address, ethers.constants.MaxUint256]
     );
     
-    approveUSDT = this.weth.interface.encodeFunctionData(
+    approveUSDT = this.usdt.interface.encodeFunctionData(
         "approve", 
         [this.curveBean3crvPool.address, ethers.constants.MaxUint256]
     );
@@ -195,7 +194,7 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     );
 
     // USDT -> BEAN
-    selector3 = this.curveTricryptoPool.interface.encodeFunctionData(
+    selector3 = this.curveBean3crvPool.interface.encodeFunctionData(
         "exchange_underlying(int128,int128,uint256,uint256)", 
         [3, 0, amountIn, minAmountOut]
     );
@@ -212,10 +211,12 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     // remove Liq
     pipe2 = [this.well.address, selector1, noData]
 
+
+    // first param 1 means type of pipe call, 1 meaning just one set of param to copy/paste
     // from the 3rd call, take 0th (1st) param, 
     // put into 2nd (3rd) param
-    // 32 is param to take it from (start of output data from previous call starts 32 bytes in)
-    // 100 is 4+32*3. First 4 bytes are selector, then each param is 32 bytes.
+    // SLOT_SIZE (32) is param to take it from (start of output data from previous call starts 32 bytes in)
+    // SELECTOR_SIZE+SLOT_SIZE*3 is 100 is 4+32*3. First 4 bytes are selector, then each param is 32 bytes.
     pipelineData = encodeAdvancedData(1, 0, [2, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
 
     // exchange WETH -> USDT
@@ -251,11 +252,123 @@ const draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv = async (a
     return output;
   };
 
+
+const draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv = async (amountOfLpToRemove, minTokenAmountOut) => {
+    console.log('setup contracts');
+    this.well = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
+    this.bean = await ethers.getContractAt('MockToken', BEAN);
+    this.usdc = await ethers.getContractAt('MockToken', USDC);
+    this.weth = await ethers.getContractAt('IWETH', WETH)
+    this.uniswapRouter = await ethers.getContractAt(uniswapABI, UNISWAP_ROUTER);
+    this.curveBean3crvPool = await ethers.getContractAt(curveABI, BEAN_3_CURVE);
+    this.pipeline = await ethers.getContractAt("Pipeline", PIPELINE);
+    this.beanstalk = await getBeanstalk(BEANSTALK);
+
+    let amountIn = 0; //this will come from clipboard
+    let minAmountOut = 100; //in theory we should use another call here to setup minAmount out in realtime (or pre-
+    //set it up beforehand if we want it to act like a fill-or-kill order when the txn gets into a block)
+
+    // advancedFarm0 = this.beanstalk.interface.encodeFunctionData(
+    //     "transferToken",
+    //     [
+    //         this.well.address,
+    //         PIPELINE,
+    //         amountOfLpToRemove,
+    //         EXTERNAL,
+    //         EXTERNAL
+    //     ]
+    // )
+
+    approveWETH = this.weth.interface.encodeFunctionData(
+        "approve", 
+        [this.uniswapRouter.address, ethers.constants.MaxUint256]
+    );
+    
+    approveUSDC = this.usdc.interface.encodeFunctionData(
+        "approve", 
+        [this.curveBean3crvPool.address, ethers.constants.MaxUint256]
+    );
+
+    removeLiquidity = this.well.interface.encodeFunctionData(
+        "removeLiquidityOneToken", 
+        [amountOfLpToRemove, WETH, minTokenAmountOut, PIPELINE, ethers.constants.MaxUint256]
+    );
+
+    // WETH -> USDC
+    // params are recievers address, bool for direction (true in this case means to swap to usdc), amountIn, sqrtPriceLimitX96 (like min amount out), and other data
+    selector2 = this.uniswapRouter.interface.encodeFunctionData(
+        "swapExactTokensForTokens",
+        [amountIn, minAmountOut, [this.weth.address, this.usdc.address], PIPELINE, 1709441472206]
+    );
+
+    // USDC -> BEAN
+    exchangeCurve = this.curveBean3crvPool.interface.encodeFunctionData(
+        "exchange_underlying(int128,int128,uint256,uint256)", 
+        [2, 0, amountIn, minAmountOut]
+    );
+
+    // no data clipboard
+    noData = encodeAdvancedData(0)
+   
+    // approve WETH
+    pipe0 = [this.weth.address, approveWETH, noData]
+
+    // approve USDC
+    pipe1 = [USDC, approveUSDC, noData]
+
+    // remove Liq
+    pipe2 = [this.well.address, removeLiquidity, noData]
+
+    //[returnDataIndex, copyIndex, pasteIndex]
+    // from the 3rd call, take 0th (1st) param, 
+    // put into 2nd (3rd) param
+    // SLOT_SIZE (32) is param to take it from (start of output data from previous call starts 32 bytes in)
+    // SELECTOR_SIZE+SLOT_SIZE*3 is 100 is 4+32*3. First 4 bytes are selector, then each param is 32 bytes.
+    pipelineData = encodeAdvancedData(1, 0, [2, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*1])
+
+    // exchange WETH -> USDC
+    pipe3 = [this.uniswapRouter.address, selector2, pipelineData]
+
+    // get balance of USDC
+    usdcPipe = [USDC, this.usdc.interface.encodeFunctionData("balanceOf", [PIPELINE]), noData]
+
+    // from the 5th call, take 0th (1st) param, 
+    // put into 2nd (3rd) param
+
+    // type 1
+    // copy from index zero param
+    // from call result at index 4
+    pipelineData2 = encodeAdvancedData(1, 0, [4, SLOT_SIZE, SELECTOR_SIZE+SLOT_SIZE*3])
+
+    // exchange USDC -> BEAN
+    pipe4 = [this.curveBean3crvPool.address, exchangeCurve, pipelineData2]
+
+    // get balance of USDC
+    
+    // pipeline construction. Beanstalk has it's own pipeline function, 2 params, the pipe calls themselves and second is value (if eth amount needed).
+    advancedFarm1 = await this.beanstalk.interface.encodeFunctionData(
+        "advancedPipe",
+        [
+            [pipe0, pipe1, pipe2, pipe3, usdcPipe, pipe4],
+            0
+        ]
+    )
+    await console.log('advancedFarm1: ', advancedFarm1)
+
+    output = [
+        // [advancedFarm0, noData], // transfer BEAN/WETH into pipeline
+        [advancedFarm1, noData] // pipeline call
+    ]
+    await console.log('advancedFarmCalls output: ', output)
+    return output;
+  };
+
 module.exports = {
     initContracts,
     draftConvertBeanToBeanEthWell,
     draftConvertBeanEthWellToBean,
     draftConvertBeanEthWellToUDSTViaCurveTricryptoThenToBeanVia3Crv,
+    draftConvertBeanEthWellToUDSCViaUniswapThenToBeanVia3Crv,
     draftPipelineApprovals,
     curveABI
 };
