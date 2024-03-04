@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
 
-export type uint80 = number;
+export type uint80 = ethers.BigNumber;
 
 export type Blueprint = {
   publisher: string;
   data: ethers.Bytes;
-  operatorPasteInstrs?: ethers.Bytes;
+  operatorPasteInstrs: ethers.Bytes;
   maxNonce: ethers.BigNumber;
   startTime: ethers.BigNumber;
   endTime: ethers.BigNumber;
@@ -13,18 +13,22 @@ export type Blueprint = {
 
 export type Requisition = {
   blueprint: Blueprint;
-  blueprintHash: ethers.Bytes;
-  signature: ethers.Bytes;
+  blueprintHash: string;
+  signature: string;
 };
 
-export type Draft = {
-  advFarmCalls: AdvancedFarmCall[];
+// export type Draft = {
+//   actions: DraftAction[];
+// };
+
+export type DraftAction = {
+  farmCall: AdvancedFarmCall;
   operatorPasteInstrs: OperatorPasteInstr[];
 };
 
 export type AdvancedFarmCall = {
   callData: ethers.Bytes;
-  clipboard: ethers.Bytes;
+  clipboard: string;
 };
 
 export type OperatorPasteInstr = {

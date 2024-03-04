@@ -9,7 +9,7 @@ const RATIO_FACTOR = ethers.BigNumber.from(10).pow(18);
 
 // Create a Blueprint to Mow the publishers stalk.
 // This function represents only one approach to implement a Mow Blueprint and is inherently biased.
-function createBlueprint_mow(publisher: string) {
+export function createBlueprint_mow(publisher: string) {
   const rewardRatio = RATIO_FACTOR.div(100); // 1%
 
   const blueprint: Blueprint = <Blueprint>{
