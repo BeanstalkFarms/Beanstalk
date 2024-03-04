@@ -2,12 +2,7 @@ import { ethers, BigNumber } from "ethers";
 
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { Clipboard } from "../depot/clipboard";
-import {
-  Blueprint,
-  DraftAction,
-  AdvancedFarmCall,
-  OperatorPasteInstr
-} from "./types";
+import { Blueprint, DraftAction, AdvancedFarmCall, OperatorPasteInstr } from "./types";
 import { FarmFromMode, FarmToMode } from "src/lib/farm/types";
 import { addresses } from "src/constants/addresses";
 
@@ -57,8 +52,8 @@ export class Drafter {
 
   // static decodeBlueprintData
 
-  static encodeOperatorPasteInstrs(instrs: OperatorPasteInstr[]): ethers.Bytes {
-    return ethers.utils.concat(instrs.map((instr) => Drafter.encodeOperatorPasteInstr(instr)));
+  static encodeOperatorPasteInstrs(instrs: OperatorPasteInstr[]): ethers.Bytes[] {
+    return instrs.map((instr) => Drafter.encodeOperatorPasteInstr(instr));
   }
 
   // Returns Bytes32
@@ -160,7 +155,7 @@ export class Drafter {
   ): DraftAction {
     return {
       farmCall: {
-        callData: Drafter.sdk.contracts.junction.interface.encodeFunctionData("muldiv", [
+        callData: Drafter.sdk.contracts.junction.interface.encodeFunctionData("mulDiv", [
           0,
           mul,
           div
@@ -177,11 +172,11 @@ export class Drafter {
     return {
       farmCall: {
         callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("transferToken", [
-          addresses.BEAN,
+          addresses.BEAN.toString(),
           ethers.constants.AddressZero,
           0,
-          FarmFromMode.EXTERNAL,
-          FarmToMode.EXTERNAL
+          0, // EXTERNAL
+          0 // EXTERNAL
         ]),
         clipboard: Clipboard.encode([
           [returnDataIndex, copyIndex, EXTERNAL_ARGS_START_INDEX.add(SLOT_SIZE.mul(2)).toNumber()]
