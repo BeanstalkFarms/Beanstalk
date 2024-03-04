@@ -78,7 +78,7 @@ library LibCurveMinting {
      * since the last Sunrise and snapshots the current cumulative reserves.
      * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
-    function capture() external returns (int256 deltaB) {
+    function capture() internal returns (int256 deltaB) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (s.co.initialized) {
             deltaB = updateOracle();

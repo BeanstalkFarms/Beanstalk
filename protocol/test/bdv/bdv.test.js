@@ -1,10 +1,10 @@
 const { expect } = require('chai');
-const { deploy } = require('../scripts/deploy.js')
-const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH, BEAN_WSTETH_WELL } = require('./utils/constants');
-const { to18, to6 } = require('./utils/helpers.js');
-const { deployMockPump, getWellContractFactory, whitelistWell } = require('../utils/well.js');
-const { impersonateContract } = require('../scripts/impersonate.js');
+const { deploy } = require('../../scripts/deploy.js')
+const { takeSnapshot, revertToSnapshot } = require("../utils/snapshot");
+const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, ZERO_ADDRESS, WETH, BEAN_WSTETH_WELL } = require('../utils/constants');
+const { to18, to6 } = require('../utils/helpers.js');
+const { deployMockPump, getWellContractFactory, whitelistWell } = require('../../utils/well.js');
+const { impersonateContract } = require('../../scripts/impersonate.js');
 let user,user2,owner;
 let userAddress, ownerAddress, user2Address;
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
