@@ -1,15 +1,24 @@
-import { ethers } from "ethers";
+import { ethers, BigNumber } from "ethers";
 
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { Clipboard } from "../depot/clipboard";
-import { Blueprint, Requisition, Draft, AdvancedFarmCall, OperatorPasteInstr } from "./types";
+import {
+  Blueprint,
+  DraftAction,
+  AdvancedFarmCall,
+  OperatorPasteInstr
+} from "./types";
+import { FarmFromMode, FarmToMode } from "src/lib/farm/types";
+import { addresses } from "src/constants/addresses";
 
-const SELECTOR_SIZE = 4;
-const SLOT_SIZE = 32;
-const ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
-const ADDR_SLOT_OFFSET = 12;
-const PUBLISHER_COPY_INDEX = 2 ** 80 - 1;
-const OPERATOR_COPY_INDEX = 2 ** 80 - 2;
+const SELECTOR_SIZE = BigNumber.from(4);
+const SLOT_SIZE = BigNumber.from(32);
+const ARGS_START_INDEX = SELECTOR_SIZE.add(SLOT_SIZE);
+const ADDR_SLOT_OFFSET = BigNumber.from(12);
+const PUBLISHER_COPY_INDEX = BigNumber.from(2).pow(80).sub(1); // uint80.max;
+const OPERATOR_COPY_INDEX = PUBLISHER_COPY_INDEX.sub(1); // uint80.max - 1;
+const EXTERNAL_ARGS_START_INDEX = SELECTOR_SIZE.mul(2).add(SLOT_SIZE.mul(4)).add(SLOT_SIZE);
+const PIPE_RETURN_BYTE_OFFSET = BigNumber.from(64);
 
 export class Drafter {
   static sdk: BeanstalkSDK;
@@ -18,24 +27,32 @@ export class Drafter {
     Drafter.sdk = sdk;
   }
 
-  static embedDraft(blueprint: Blueprint, draft: Draft) {
-    blueprint.data = Drafter.encodeBlueprintData(draft.advFarmCalls);
-    blueprint.operatorPasteInstrs = Drafter.encodeOperatorPasteInstrs(draft.operatorPasteInstrs);
+  static embedDraft(blueprint: Blueprint, draft: DraftAction[]) {
+    let farmCalls: AdvancedFarmCall[] = [];
+    let operatorPasteInstrs: OperatorPasteInstr[] = [];
+    for (let i = 0; i < draft.length; i++) {
+      farmCalls.push(draft[i].farmCall);
+      operatorPasteInstrs.concat(draft[i].operatorPasteInstrs);
+    }
+    blueprint.data = Drafter.encodeBlueprintData(farmCalls);
+    blueprint.operatorPasteInstrs = Drafter.encodeOperatorPasteInstrs(operatorPasteInstrs);
   }
 
-  static concatDrafts(firstDraft: Draft, secondDraft: Draft): Draft {
-    let draft = <Draft>{};
-    draft.advFarmCalls = firstDraft.advFarmCalls.concat(secondDraft.advFarmCalls);
-    draft.operatorPasteInstrs = firstDraft.operatorPasteInstrs.concat(
-      secondDraft.operatorPasteInstrs
-    );
-    return draft;
-  }
+  // static concatDrafts(firstDraft: Draft, secondDraft: Draft): Draft {
+  //   let draft = <Draft>{};
+  //   draft.farmCalls = firstDraft.farmCalls.concat(secondDraft.farmCalls);
+  //   draft.operatorPasteInstrs = firstDraft.operatorPasteInstrs.concat(
+  //     secondDraft.operatorPasteInstrs
+  //   );
+  //   return draft;
+  // }
 
   // encodeAdvancedFarmCalls
   static encodeBlueprintData(calls: AdvancedFarmCall[]): ethers.Bytes {
     // sdk.contracts.farmFacet.interface.encodeFunctionData("advancedFarm", [
-    return Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("advancedFarm", [calls]);
+    return ethers.utils.arrayify(
+      Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("advancedFarm", [calls])
+    );
   }
 
   // static decodeBlueprintData
@@ -60,9 +77,9 @@ export class Drafter {
       throw TypeError("OperatorPasteInstr must be 32 bytes");
     }
     return {
-      copyByteIndex: ethers.BigNumber.from(ethers.utils.hexDataSlice(instr, 0, 9)).toNumber(),
-      pasteCallIndex: ethers.BigNumber.from(ethers.utils.hexDataSlice(instr, 10, 19)).toNumber(),
-      pasteByteIndex: ethers.BigNumber.from(ethers.utils.hexDataSlice(instr, 20, 29)).toNumber()
+      copyByteIndex: BigNumber.from(ethers.utils.hexDataSlice(instr, 0, 9)),
+      pasteCallIndex: BigNumber.from(ethers.utils.hexDataSlice(instr, 10, 19)),
+      pasteByteIndex: BigNumber.from(ethers.utils.hexDataSlice(instr, 20, 29))
     };
 
     // encodeLibReturnPasteParam(returnDataItemIndex : uint80, copyByteIndex: uint80, pasteByteIndex: uint80): (bytes32) {}
@@ -71,49 +88,106 @@ export class Drafter {
     // decodeClipboard(clipboard : Clipboard): (bytes1, uint256, bytes32[]) {}
   }
 
-  static balanceOfStalkDraft(callIndex: number): Draft {
+  static balanceOfStalkDraft(callIndex: number): DraftAction {
     return {
-      advFarmCalls: [
-        {
-          callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("balanceOfStalk", [
-            ethers.constants.AddressZero
-          ]),
-          clipboard: ethers.utils.arrayify("0x000000")
-        }
-      ],
+      farmCall: {
+        callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("balanceOfStalk", [
+          ethers.constants.AddressZero
+        ]),
+        clipboard: "0x000000"
+      },
       operatorPasteInstrs: [
         {
           copyByteIndex: PUBLISHER_COPY_INDEX,
-          pasteCallIndex: callIndex,
+          pasteCallIndex: BigNumber.from(callIndex),
           pasteByteIndex: ARGS_START_INDEX
         }
       ]
     };
   }
 
-  static mowDraft(callIndex: number): Draft {
+  static mowDraft(callIndex: number): DraftAction {
     return {
-      advFarmCalls: [
-        {
-          callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("mow", [
-            ethers.constants.AddressZero,
-            ethers.constants.AddressZero
-          ]),
-          clipboard: ethers.utils.arrayify("0x000000")
-        }
-      ],
+      farmCall: {
+        callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("mow", [
+          ethers.constants.AddressZero,
+          ethers.constants.AddressZero
+        ]),
+        clipboard: "0x000000"
+      },
       operatorPasteInstrs: [
         {
           copyByteIndex: PUBLISHER_COPY_INDEX,
-          pasteCallIndex: callIndex,
+          pasteCallIndex: BigNumber.from(callIndex),
           pasteByteIndex: ARGS_START_INDEX
         },
         {
           copyByteIndex: PUBLISHER_COPY_INDEX,
-          pasteCallIndex: callIndex,
-          pasteByteIndex: ARGS_START_INDEX + SLOT_SIZE
+          pasteCallIndex: BigNumber.from(callIndex),
+          pasteByteIndex: ARGS_START_INDEX.add(SLOT_SIZE)
         }
       ]
+    };
+  }
+
+  static subReturnsDraft(
+    leftReturnDataIndex: number,
+    rightReturnDataIndex: number,
+    leftCopyIndex: number = 0,
+    rightCopyIndex: number = 0
+  ): DraftAction {
+    return {
+      farmCall: {
+        callData: Drafter.sdk.contracts.junction.interface.encodeFunctionData("sub", [0, 0]),
+        clipboard: Clipboard.encode([
+          [leftReturnDataIndex, leftCopyIndex, EXTERNAL_ARGS_START_INDEX.toNumber()],
+          [
+            rightReturnDataIndex,
+            rightCopyIndex,
+            EXTERNAL_ARGS_START_INDEX.add(SLOT_SIZE).toNumber()
+          ]
+        ])
+      },
+      operatorPasteInstrs: []
+    };
+  }
+
+  static scaleReturnDraft(
+    returnDataIndex: number,
+    mul: BigNumber,
+    div: BigNumber,
+    copyIndex: number = 0
+  ): DraftAction {
+    return {
+      farmCall: {
+        callData: Drafter.sdk.contracts.junction.interface.encodeFunctionData("muldiv", [
+          0,
+          mul,
+          div
+        ]),
+        clipboard: Clipboard.encode([
+          [returnDataIndex, copyIndex, EXTERNAL_ARGS_START_INDEX.toNumber()]
+        ])
+      },
+      operatorPasteInstrs: []
+    };
+  }
+
+  static transferBeansReturnDraft(returnDataIndex: number, copyIndex: number = 0): DraftAction {
+    return {
+      farmCall: {
+        callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("transferToken", [
+          addresses.BEAN,
+          ethers.constants.AddressZero,
+          0,
+          FarmFromMode.EXTERNAL,
+          FarmToMode.EXTERNAL
+        ]),
+        clipboard: Clipboard.encode([
+          [returnDataIndex, copyIndex, EXTERNAL_ARGS_START_INDEX.add(SLOT_SIZE.mul(2)).toNumber()]
+        ])
+      },
+      operatorPasteInstrs: []
     };
   }
 }
