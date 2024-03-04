@@ -3,27 +3,26 @@ import { useEffect, useState } from 'react';
 import { useSigner as useWagmiSigner } from 'wagmi';
 import useChainId from '~/hooks/chain/useChainId';
 import { TESTNET_CHAINS, TESTNET_RPC_ADDRESSES } from '~/constants';
+import useSetting from '../app/useSetting';
+
 
 export let useSigner = useWagmiSigner;
 
-if (import.meta.env.DEV && import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT) {
-  console.warn(
-    `Using overridden Farmer account: ${
-      import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT
-    }`
-  );
+
 
   // @ts-ignore
   useSigner = () => {
     const [signer, setSigner] = useState<ethers.Signer | undefined>(undefined);
     const chainId = useChainId();
     const wagmiSigner = useWagmiSigner();
-    const account = { address: import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT };
     const isTestnet = TESTNET_CHAINS.has(chainId);
+
+    const impersonatedAccount = useSetting('impersonatedAccount')[0];
+    const account = { address: impersonatedAccount };
 
     useEffect(() => {
       (async () => {
-        if (account.address && isTestnet) {
+        if (account.address) {
           try {
             const provider = new ethers.providers.JsonRpcProvider(
               TESTNET_RPC_ADDRESSES[chainId]
@@ -60,4 +59,3 @@ if (import.meta.env.DEV && import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT) {
       status: null,
     };
   };
-}

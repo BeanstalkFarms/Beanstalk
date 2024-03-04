@@ -38,15 +38,19 @@ import FolderMenu from '~/components/Nav/FolderMenu';
 
 import { FC } from '~/types';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import useSetting from '~/hooks/app/useSetting';
 
 const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
   ...props
 }) => {
   const account = useAccount();
+  const impersonatedAccount = useSetting('impersonatedAccount')[0];
   const { address } = useWagmiAccount();
   const { chain: _chain } = useNetwork();
   const { disconnect } = useDisconnect();
   const chain = useChainConstant(CHAIN_INFO);
+
+  console.log("impeersst: ", impersonatedAccount)
 
   /// Theme
   const theme = useTheme();
@@ -130,7 +134,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
       </MenuItem> */}
       <MenuItem
         component="a"
-        href={`${chain.explorer}/address/${account}`}
+        href={`${chain.explorer}/address/${impersonatedAccount || account}`}
         target="_blank"
         rel="noreferrer"
       >
@@ -212,7 +216,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
           >
             {/* Use `accountRaw` to match capitalization of wallet provider
              * assert existence of accountRaw.address since we check `account` prior. */}
-            {trimAddress(IMPERSONATED_ACCOUNT || address || '')}
+            {trimAddress(impersonatedAccount || address || '')}
           </Typography>
         }
         startIcon={<AddressIcon address={account} />}
@@ -225,7 +229,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
         popoverPlacement="bottom-end"
         zeroTopRightRadius
         sx={
-          import.meta.env.VITE_OVERRIDE_FARMER_ACCOUNT
+          impersonatedAccount
             ? {
                 color: 'text.primary',
                 borderBottomColor: 'red',

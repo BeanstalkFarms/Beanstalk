@@ -2,9 +2,11 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Input,
   MenuItem,
   Select,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import { DateTime } from 'luxon';
@@ -29,6 +31,7 @@ import {
 import { clearApolloCache } from '~/util';
 
 import { FC } from '~/types';
+import { ethers } from 'ethers';
 
 const Split: FC<{}> = ({ children }) => (
   <Row justifyContent="space-between" gap={1}>
@@ -70,8 +73,21 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [denomination, setDenomination] = useSetting('denomination');
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
+  const [impersonatedAcc, setImpersonatedAcct] = useSetting('impersonatedAccount');
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
+
+  // TODO IMPERSONATION
+  const checkAddress = useCallback((address: string) => {
+    if (address) {
+      const isValid = ethers.utils.isAddress(address);
+      if (isValid) {
+        setImpersonatedAcct(address);
+      };
+    };
+  }, [setImpersonatedAcct]);
+
+  console.log("impersonated: ", impersonatedAcc)
 
   /// Cache
   const clearCache = useCallback(() => {
@@ -196,6 +212,10 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                   Subgraph
                 </Button>
               </ButtonGroup>
+            </Split>
+            <Split>
+              <Typography color="text.secondary">Impersonate Account</Typography>
+              <TextField size='small' color='primary' onChange={(e) => {checkAddress(e.target.value)}} />
             </Split>
             <Split>
               <Typography color="text.secondary">Clear cache</Typography>
