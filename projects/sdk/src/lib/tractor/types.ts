@@ -5,7 +5,7 @@ export type uint80 = ethers.BigNumber;
 export type Blueprint = {
   publisher: string;
   data: ethers.Bytes;
-  operatorPasteInstrs: ethers.Bytes;
+  operatorPasteInstrs: ethers.Bytes[];
   maxNonce: ethers.BigNumber;
   startTime: ethers.BigNumber;
   endTime: ethers.BigNumber;
@@ -27,7 +27,7 @@ export type DraftAction = {
 };
 
 export type AdvancedFarmCall = {
-  callData: ethers.Bytes;
+  callData: string;
   clipboard: string;
 };
 

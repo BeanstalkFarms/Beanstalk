@@ -19,6 +19,8 @@ describe("tractor mow", async () => {
       signature: await publisher.signMessage(blueprintHash)
     };
 
-    await sdk.contracts.beanstalk.runBlueprint(requisition).then((txn) => txn.wait());
+    const operatorData: ethers.Bytes = ethers.utils.arrayify("");
+
+    await sdk.contracts.beanstalk.tractor(requisition, operatorData).then((txn) => txn.wait());
   });
 });

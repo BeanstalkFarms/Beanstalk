@@ -17,7 +17,7 @@ export class Tractor {
   }
 
   static async getBlueprintHash(blueprint: Blueprint): Promise<string> {
-    return Tractor.sdk.contracts.beanstalk.interface.getBlueprintHash(blueprint);
+    return Tractor.sdk.contracts.beanstalk.getBlueprintHash(blueprint);
   }
 
   // async signRequisition(requisition: Requisition, signer: ethers.Signer) {
@@ -37,7 +37,10 @@ export class Tractor {
 
   // async encodeOperatorData() {}
 
-  async tractor(requisition: Requisition, operatorData: Bytes): Promise<ContractTransaction> {
+  async tractor(
+    requisition: Requisition,
+    operatorData: ethers.Bytes
+  ): Promise<ContractTransaction> {
     return Tractor.sdk.contracts.beanstalk.tractor(requisition, operatorData);
   }
 }
