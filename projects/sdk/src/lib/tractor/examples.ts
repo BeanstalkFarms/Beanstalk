@@ -1,19 +1,17 @@
 // This test uses the Tractor SDK and core Tractor code. It represents how an end user would interact with Tractor.
 
 import { ethers } from "ethers";
-import {
-  AdvancedFarmCall,
-  Blueprint,
-  Draft,
-  OperatorPasteInstr,
-  encodeBlueprintData,
-  encodeOperatorPasteInstrs
-} from "./types";
+import { Blueprint, DraftAction } from "./types";
 import { Drafter } from "./drafter";
+
+// TODO use whatever SDK standard is.
+const RATIO_FACTOR = ethers.BigNumber.from(10).pow(18);
 
 // Create a Blueprint to Mow the publishers stalk.
 // This function represents only one approach to implement a Mow Blueprint and is inherently biased.
 function createBlueprint_mow(publisher: string) {
+  const rewardRatio = RATIO_FACTOR.div(100); // 1%
+
   const blueprint: Blueprint = <Blueprint>{
     publisher: publisher,
     maxNonce: ethers.constants.MaxUint256,
@@ -21,13 +19,15 @@ function createBlueprint_mow(publisher: string) {
     endTime: ethers.constants.MaxUint256
   };
 
-  let draft: Draft;
+  // Sequence of actions.
+  let draft: DraftAction[] = [];
+  draft.push(Drafter.balanceOfStalkDraft(0));
+  draft.push(Drafter.mowDraft(1));
+  draft.push(Drafter.balanceOfStalkDraft(2));
+  draft.push(Drafter.subReturnsDraft(2, 0));
+  draft.push(Drafter.scaleReturnDraft(3, rewardRatio, RATIO_FACTOR));
+  draft.push(Drafter.transferBeansReturnDraft(4));
 
-  draft = Drafter.balanceOfStalkDraft(0);
-  draft = Drafter.concatDrafts(draft, Drafter.mowDraft(1));
-  draft = Drafter.concatDrafts(draft, Drafter.balanceOfStalkDraft(2));
-  draft = // need to use clipboard
-
-  Drafter.embedDraft(blueprint, encodeBlueprintData(blueprint, draft));
+  Drafter.embedDraft(blueprint, draft);
   return blueprint;
 }
