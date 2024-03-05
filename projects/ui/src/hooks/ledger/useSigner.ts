@@ -22,7 +22,7 @@ export let useSigner = useWagmiSigner;
 
     useEffect(() => {
       (async () => {
-        if (account.address) {
+        if (account.address && isTestnet) {
           try {
             const provider = new ethers.providers.JsonRpcProvider(
               TESTNET_RPC_ADDRESSES[chainId]
@@ -38,9 +38,9 @@ export let useSigner = useWagmiSigner;
       })();
     }, [account?.address, chainId, isTestnet]);
 
-    /// If we're on a development machine but not connected to a testnet,
-    /// we can't impersonate addresses. Just use the normal signer.
-    if (!isTestnet) return wagmiSigner;
+    /// If we're not connected to a testnet and 
+    /// not impersonating an address, use the normal signer.
+    if (!isTestnet && !impersonatedAccount) return wagmiSigner;
 
     return {
       data: signer,
