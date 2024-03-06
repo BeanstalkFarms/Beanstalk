@@ -16,7 +16,7 @@ export class Tractor {
     // this.publisher = new Publisher(sdk);
   }
 
-  static async getBlueprintHash(blueprint: Blueprint): Promise<string> {
+  async getBlueprintHash(blueprint: Blueprint): Promise<string> {
     return Tractor.sdk.contracts.beanstalk.getBlueprintHash(blueprint);
   }
 

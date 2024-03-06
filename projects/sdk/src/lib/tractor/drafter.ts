@@ -22,18 +22,18 @@ export class Drafter {
     Drafter.sdk = sdk;
   }
 
-  static embedDraft(blueprint: Blueprint, draft: DraftAction[]) {
+  embedDraft(blueprint: Blueprint, draft: DraftAction[]) {
     let farmCalls: AdvancedFarmCall[] = [];
     let operatorPasteInstrs: OperatorPasteInstr[] = [];
     for (let i = 0; i < draft.length; i++) {
       farmCalls.push(draft[i].farmCall);
       operatorPasteInstrs.concat(draft[i].operatorPasteInstrs);
     }
-    blueprint.data = Drafter.encodeBlueprintData(farmCalls);
-    blueprint.operatorPasteInstrs = Drafter.encodeOperatorPasteInstrs(operatorPasteInstrs);
+    blueprint.data = this.encodeBlueprintData(farmCalls);
+    blueprint.operatorPasteInstrs = this.encodeOperatorPasteInstrs(operatorPasteInstrs);
   }
 
-  // static concatDrafts(firstDraft: Draft, secondDraft: Draft): Draft {
+  // concatDrafts(firstDraft: Draft, secondDraft: Draft): Draft {
   //   let draft = <Draft>{};
   //   draft.farmCalls = firstDraft.farmCalls.concat(secondDraft.farmCalls);
   //   draft.operatorPasteInstrs = firstDraft.operatorPasteInstrs.concat(
@@ -43,21 +43,21 @@ export class Drafter {
   // }
 
   // encodeAdvancedFarmCalls
-  static encodeBlueprintData(calls: AdvancedFarmCall[]): ethers.Bytes {
+  encodeBlueprintData(calls: AdvancedFarmCall[]): ethers.Bytes {
     // sdk.contracts.farmFacet.interface.encodeFunctionData("advancedFarm", [
     return ethers.utils.arrayify(
       Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("advancedFarm", [calls])
     );
   }
 
-  // static decodeBlueprintData
+  // decodeBlueprintData
 
-  static encodeOperatorPasteInstrs(instrs: OperatorPasteInstr[]): ethers.Bytes[] {
-    return instrs.map((instr) => Drafter.encodeOperatorPasteInstr(instr));
+  encodeOperatorPasteInstrs(instrs: OperatorPasteInstr[]): ethers.Bytes[] {
+    return instrs.map((instr) => this.encodeOperatorPasteInstr(instr));
   }
 
   // Returns Bytes32
-  static encodeOperatorPasteInstr(instr: OperatorPasteInstr): ethers.Bytes {
+  encodeOperatorPasteInstr(instr: OperatorPasteInstr): ethers.Bytes {
     return ethers.utils.concat([
       ethers.utils.zeroPad(ethers.utils.hexValue(instr.copyByteIndex), 10),
       ethers.utils.zeroPad(ethers.utils.hexValue(instr.copyByteIndex), 10),
@@ -66,7 +66,7 @@ export class Drafter {
     ]);
   }
 
-  static decodeOperatorPasteInstr(instr: ethers.Bytes): OperatorPasteInstr {
+  decodeOperatorPasteInstr(instr: ethers.Bytes): OperatorPasteInstr {
     // const instrBytes: ethers.Bytes = ethers.utils.arrayify(instr);
     if (instr.length != 32) {
       throw TypeError("OperatorPasteInstr must be 32 bytes");
@@ -83,7 +83,7 @@ export class Drafter {
     // decodeClipboard(clipboard : Clipboard): (bytes1, uint256, bytes32[]) {}
   }
 
-  static balanceOfStalkDraft(callIndex: number): DraftAction {
+  balanceOfStalkDraft(callIndex: number): DraftAction {
     return {
       farmCall: {
         callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("balanceOfStalk", [
@@ -101,7 +101,7 @@ export class Drafter {
     };
   }
 
-  static mowDraft(callIndex: number): DraftAction {
+  mowDraft(callIndex: number): DraftAction {
     return {
       farmCall: {
         callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("mow", [
@@ -125,7 +125,7 @@ export class Drafter {
     };
   }
 
-  static subReturnsDraft(
+  subReturnsDraft(
     leftReturnDataIndex: number,
     rightReturnDataIndex: number,
     leftCopyIndex: number = 0,
@@ -147,7 +147,7 @@ export class Drafter {
     };
   }
 
-  static scaleReturnDraft(
+  scaleReturnDraft(
     returnDataIndex: number,
     mul: BigNumber,
     div: BigNumber,
@@ -168,11 +168,11 @@ export class Drafter {
     };
   }
 
-  static transferBeansReturnDraft(returnDataIndex: number, copyIndex: number = 0): DraftAction {
+  transferBeansReturnDraft(returnDataIndex: number, copyIndex: number = 0): DraftAction {
     return {
       farmCall: {
         callData: Drafter.sdk.contracts.beanstalk.interface.encodeFunctionData("transferToken", [
-          addresses.BEAN.toString(),
+          addresses.BEAN.get(Drafter.sdk.chainId),
           ethers.constants.AddressZero,
           0,
           0, // EXTERNAL

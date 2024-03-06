@@ -12,6 +12,8 @@ import { Permit } from "./permit";
 import { Root } from "./root";
 import { Sdk as Queries, getSdk as getQueries } from "../constants/generated-gql/graphql";
 import { Swap } from "src/lib/swap/Swap";
+import { Tractor } from "src/lib/tractor/tractor";
+import { Drafter } from "src/lib/tractor/drafter";
 import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
@@ -60,6 +62,8 @@ export class BeanstalkSDK {
   public readonly permit: Permit;
   public readonly root: Root;
   public readonly swap: Swap;
+  public readonly tractor: Tractor;
+  public readonly drafter: Drafter;
   public readonly bean: Bean;
   public readonly wells: WellsSDK;
 
@@ -92,6 +96,8 @@ export class BeanstalkSDK {
     // Ecosystem
     this.root = new Root(this);
     this.swap = new Swap(this);
+    this.tractor = new Tractor(this);
+    this.drafter = new Drafter(this);
 
     // Wells
     this.wells = new WellsSDK(config);
