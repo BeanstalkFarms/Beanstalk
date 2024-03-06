@@ -15,6 +15,8 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @author Publius, Brean
  * @title InitalizeDiamond 
@@ -29,7 +31,7 @@ contract InitalizeDiamond {
     uint128 constant INIT_AVG_GSPBDV = 3e6;
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;
-    uint32 constant INIT_STALK_EARNED_PER_SEASON = 1e4;
+    uint32 constant INIT_STALK_ISSUED_PER_BDV = 1e4;
     uint32 constant INIT_TOKEN_G_POINTS = 100e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
 
@@ -58,7 +60,7 @@ contract InitalizeDiamond {
         siloSettings[0] = Storage.SiloSettings({
                 selector: BDVFacet.beanToBDV.selector,
                 stalkEarnedPerSeason: INIT_BEAN_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_EARNED_PER_SEASON,
+                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
                 milestoneSeason: s.season.current,
                 milestoneStem: 0,
                 encodeType: 0x00,
@@ -72,7 +74,7 @@ contract InitalizeDiamond {
         siloSettings[1] = Storage.SiloSettings({
                 selector: BDVFacet.beanToBDV.selector,
                 stalkEarnedPerSeason: INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_EARNED_PER_SEASON,
+                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
                 milestoneSeason: s.season.current,
                 milestoneStem: 0,
                 encodeType: 0x01,
@@ -178,7 +180,6 @@ contract InitalizeDiamond {
         address[] memory tokens,
         Storage.SiloSettings[] memory siloSettings
     ) internal {
-
         for(uint256 i = 0; i < tokens.length; i++) {
             // note: no error checking.
             s.ss[tokens[i]] = siloSettings[i];

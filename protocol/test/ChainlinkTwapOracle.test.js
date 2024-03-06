@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
+const { getBeanstalk, getBean } = require('../utils/contracts.js');
 const { to6 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 const { toBN } = require('../utils/helpers.js');
@@ -29,7 +29,7 @@ describe('TWAP Chainlink Oracle', function () {
         [owner, user, user2] = await ethers.getSigners();
         const contracts = await deploy("Test", false, true);
         season = await ethers.getContractAt('MockSeasonFacet', contracts.beanstalkDiamond.address)
-        beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
+        beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address)
         bean = await getBean()
         await setToSecondsAfterHour(0)
         await owner.sendTransaction({to: user.address, value: 0})

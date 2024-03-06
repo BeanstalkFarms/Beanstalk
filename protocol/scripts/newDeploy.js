@@ -6,7 +6,9 @@ const {
   STETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
   WETH,
   WSTETH,
-  WSTETH_ETH_UNIV3_01_POOL
+  WSTETH_ETH_UNIV3_01_POOL,
+  BEANSTALK,
+  UNRIPE_BEAN
 } = require("../test/utils/constants.js");
 const diamond = require("./diamond.js");
 const {
@@ -26,7 +28,8 @@ const {
   impersonateToken
 } = require("./impersonate.js");
 
-const { deployBasin } = require("./basin.js");
+const { deployBasin } = require("./basin");
+const { whitelistWell } = require("../utils/well");
 
 /**
  * @notice deploys a new instance of beanstalk. 
@@ -44,7 +47,7 @@ async function main(
   oracle = true, // if true, deploy and impersonate oracles
   curve = true, // if true, deploy and impersonate curve
   basin = true, // if true, deploy and impersonate basin
-  mockPump = true // if true, deploy a mockPump rather than multiFlow pump.
+  mockPump = true, // if true, deploy a mockPump rather than multiFlow pump.
 ) {
   if (verbose) {
     console.log("MOCKS ENABLED: ", mock);
@@ -84,19 +87,26 @@ async function main(
   
   // Fetch init diamond contract
   const initDiamondArg = mock
-    ? "contracts/mocks/MockInitDiamond.sol:MockInitDiamond"
-    : "contracts/beanstalk/init/InitDiamond.sol:InitDiamond";
+    ? "contracts/mocks/newMockInitDiamond.sol:MockInitDiamond"
+    : "contracts/beanstalk/init/NewInitDiamond.sol:InitDiamond";
   // eslint-disable-next-line no-unused-vars
   
 
   // Impersonate various contracts that beanstalk interacts with.
   // These should be impersonated on a fresh network state.
+  let basinComponents = []
   if (reset) {
-    await impersonateBlockBasefee(); // Block fee contract (sunrise)
-    await impersonatePrice(); // BeanstalkPrice contract (frontend price)
-    await impersonatePipeline(); // Pipeline contract (Depot)
-    await deployBasin(true, undefined, verbose, true, mockPump); // Basin deployment.
-    await impersonateUnripe(); // Unripe
+    await impersonateBlockBasefee() // Block fee contract (sunrise)
+    await impersonatePrice() // BeanstalkPrice contract (frontend price)
+    await impersonatePipeline() // Pipeline contract (Depot)
+    basinComponents = await deployBasin(
+      true, // mock
+      undefined, // account
+      verbose, 
+      true, // just deploys the well (does not add liquidity)
+      mockPump // deploys a regular or mock multiFlow Pump.
+    ) // Basin deployment. Also deploys a bean-eth Well.
+    await impersonateUnripe() // Unripe
   }
 
   // Impersonate various ERC20s, if enabled.
@@ -144,9 +154,116 @@ async function main(
   return {
     account: account,
     beanstalkDiamond: beanstalkDiamond,
+    basinComponents: basinComponents
   };
 }
 
+/**
+ * @notice performs actions related to unripe:
+ * - adds underlying assets to unripe assets.
+ * - mints and approves unripe tokens for an address.
+ */
+async function addUnderlyingToUnripe(
+  address = undefined,
+  contract = BEANSTALK,
+  amount = [0,0],
+) {
+  if(address == undefined) { 
+    address = await this.beanstalk.owner();
+  }
+
+  const beanstalk = getBeanstalk(contract);
+  const unripe = await ethers.getContractAt('MockUnripeFacet', this.beanstalk.address)
+  const unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
+  
+  // mint 'amount' of the underlying token for the unripeLP.
+  // add to underlying.
+  await ethers.getContractAt(
+    'MockToken',
+    await this.beanstalk.getUnderlyingToken(UNRIPE_LP)
+  ).mint(address, amount[0])
+  
+  await this.unripe.connect(address).addUnderlying(
+    UNRIPE_LP,
+    amount[0]
+  )
+
+  await ethers.getContractAt(
+    'MockToken',
+    await this.beanstalk.getUnderlyingToken(UNRIPE_BEAN)
+  ).mint(address, amount[1])
+
+  await this.unripe.connect(address).addUnderlying(
+    UNRIPE_BEAN,
+    to6('1000')
+  )
+}
+
+/**
+ * @notice intializes a bean well. 
+ * settings:
+ * - wellAddress: address of the well to impersonate to.
+ * - token: the token to use for the well.
+ * - basinComponents: the basin components that the well will use.
+ * - whitelist: if true, whitelists the well to beanstalk.
+ * - siloSettings: if whitelist is true, initalizes seed values.
+ */
+async function deployAndInitalizeMockBeanWell(
+  wellAddress = undefined,
+  token = undefined,
+  wellComponents = undefined,
+  whitelist = false,
+  siloSettings = ['10000', '4e6'],
+  initalReserves = [to6('1000000'), to18('1000')]
+) {
+
+  let well = await (await ethers.getContractFactory('MockSetComponentsWell', await getWellDeployer())).deploy()
+  await well.deployed()
+  await network.provider.send("hardhat_setCode", [
+    wellAddress,
+    await ethers.provider.getCode(well.address),
+  ]);
+  well = await ethers.getContractAt('MockSetComponentsWell', address)
+  tokenContract = await ethers.getContractAt('MockToken', token)
+  await well.setPumps([[wellComponents.pump, '0x']])
+  await well.setWellFunction([wellComponents.wellFunction, '0x'])
+  await well.setTokens([BEAN, tokenContract.address])
+
+  // set reserves twice to iniralize oracle.
+  await well.setReserves(initalReserves)
+  await well.setReserves(initalReserves)
+
+  // set symbol.
+  let symbol = 
+    'BEAN' + 
+    await tokenContract.symbol() + 
+    await wellComponents.wellFunction.symbol() + 
+    'w'
+  
+  // initalize instanteous reserves.
+  await wellComponents.pump.setInstantaneousReserves(pumpBalances)
+  await well.setSymbol(symbol)
+  
+  // whitelist token.
+  if (whitelist) {
+    await whitelistWell(well.address, siloSettings[0], siloSettings[1])
+  }
+
+  return [well, wellComponents.wellFunction, wellComponents.pump]
+}
+
+async function impersonateBeanEthWell(
+    mock = true,
+    basinComponents
+) {
+    well = await impersonateContract('MockSetComponentsWell', well)
+    wellFunction = await (await getWellContractFactory('ConstantProduct2')).deploy()
+    await well.setPumps([[pump.address, '0x']])
+    await well.setWellFunction([wellFunction.address, '0x'])
+    await well.setTokens([BEAN, WETH])
+    pump.setInstantaneousReserves(pumpBalances)
+    return [well, pump, wellFunction]
+}
 // Deploy all facets and libraries.
 // if mock is enabled, deploy "Mock" versions of the facets.
 async function deployFacets(

@@ -12,7 +12,7 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP 39 
+// BIP 39
 const { bipSeedGauge } = require("./scripts/bips.js");
 //
 
@@ -29,7 +29,12 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./test/utils/balances.js");
+const {
+  EXTERNAL,
+  INTERNAL,
+  INTERNAL_EXTERNAL,
+  INTERNAL_TOLERANT
+} = require("./test/utils/balances.js");
 const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, BEAN_ETH_WELL } = require("./test/utils/constants.js");
 const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
@@ -57,7 +62,9 @@ task("buyBeans")
     await mintUsdc(PUBLIUS, args.amount);
     const signer = await impersonateSigner(PUBLIUS);
     await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
-    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const txn = await (await getBeanMetapool())
+      .connect(signer)
+      .exchange_underlying("2", "0", args.amount, "0");
     const result = await txn.wait();
     console.log("Done", result);
   });
@@ -103,13 +110,13 @@ task("sunrise", async function () {
 });
 
 task("sunrise2", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
+  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
 
-  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
+  season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   await season.sunrise();
-})
+});
 
 task("getTime", async function () {
   this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
@@ -126,7 +133,7 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun"];
+  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -151,7 +158,6 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
       // Manually add in libraries that emit events
       files.push("contracts/libraries/Silo/LibWhitelist.sol")
       files.push("contracts/libraries/LibGauge.sol")
-      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -181,6 +187,54 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
 
   console.log("ABI written to abi/Beanstalk.json");
 });
+
+/**
+ * @notice generates mock diamond ABI.
+ */
+task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
+  // The path (relative to the root of `protocol` directory) where all modules sit.
+  const modulesDir = path.join("contracts", "mocks", "mockFacets");
+
+  // The glob returns the full file path like this:
+  // contracts/beanstalk/barn/UnripeFacet.sol
+  // We want the "UnripeFacet" part.
+  const getFacetName = (file) => {
+    return file.split("/").pop().split(".")[0];
+  };
+
+  // Load files across all modules
+  const filesInModule = fs.readdirSync(path.join(".", modulesDir));
+  console.log(filesInModule)
+
+  // Build ABI
+  let abi = [];
+  filesInModule.forEach((module) => {
+    const file = path.join(".", modulesDir, module); 
+    const facetName = getFacetName(file);
+    const jsonFileName = `${facetName}.json`;
+    const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
+    const json = JSON.parse(fs.readFileSync(jsonFileLoc));
+
+    // Log what's being included
+    console.log(`${module}:`.padEnd(10), file);
+    json.abi.forEach((item) => console.log(``.padEnd(10), item.type, item.name));
+    console.log("");
+
+    abi.push(...json.abi);
+  });
+
+  const names = abi.map((a) => a.name);
+  fs.writeFileSync(
+    "./abi/MockBeanstalk.json",
+    JSON.stringify(
+      abi.filter((item, pos) => names.indexOf(item.name) == pos),
+      null,
+      2
+    )
+  );
+
+  console.log("ABI written to abi/MockBeanstalk.json");
+})
 
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
@@ -231,15 +285,15 @@ task("ebip13", async function () {
 
 task("ebip11", async function () {
   await ebip11();
-})
+});
 
 task("ebip10", async function () {
   await ebip10();
-})
+});
 
 task("ebip9", async function () {
   await ebip9();
-})
+});
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 

@@ -3,7 +3,7 @@ const { defaultAbiCoder } = require('ethers/lib/utils.js');
 const { deploy } = require('../scripts/deploy.js');
 const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
 const { deployContract } = require('../scripts/contracts.js');
-const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
+const { getBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
 const { signERC2612Permit } = require("eth-permit");
 const { toBN, encodeAdvancedData, signSiloDepositTokenPermit, signSiloDepositTokensPermit, signTokenPermit } = require('../utils/index.js');
 const { impersonateSigner } = require('../utils/signer.js');
@@ -19,7 +19,7 @@ describe('Depot', function () {
     before(async function () {
         [owner, user, user2] = await ethers.getSigners();
         const contracts = await deploy("Test", false, true);
-        this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
+        this.beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address)
         this.mockSilo = await ethers.getContractAt('MockSiloFacet', contracts.beanstalkDiamond.address);
         this.approval = await ethers.getContractAt('ApprovalFacet', contracts.beanstalkDiamond.address);
         this.bean = await getBean()

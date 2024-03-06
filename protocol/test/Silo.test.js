@@ -417,7 +417,7 @@ describe('Silo', function () {
     it('returns correct json values', async function () {
       SiloTokens = await this.whitelist.getSiloTokens();
       // iterate through silo tokens:
-      stem = '0000000000000000001E8480'
+      stem = '000000000000000000000000'
       for (let i = 0; i < SiloTokens.length; i++) {
         console.log(SiloTokens[i])
         depositID = SiloTokens[i] + stem;

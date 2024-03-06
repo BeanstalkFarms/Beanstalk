@@ -12,6 +12,7 @@ import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
 
+import "hardhat/console.sol";
 /**
  * @author Publius, Brean
  * @title MockInitDiamond 
@@ -24,19 +25,14 @@ contract MockInitDiamond is InitalizeDiamond {
 
     uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 0;
 
-    /**
-     * @param initalizeUnripe if true, initalizes the unripe assets.
-     */
-    function init(
-        bool initalizeUnripe
-    ) external {
+    function init() external {
         // initalize the default state of the diamond.
         // {see. InitalizeDiamond.initalizeDiamond()}
         initalizeDiamond(C.BEAN, C.BEAN_ETH_WELL);
 
-        if(initalizeUnripe) {
-            initalizeUnripeAssets();
-        }
+        // initalizes unripe assets.
+        // sets the underlying LP token of unripeLP to the Bean:wstETH well.
+        initalizeUnripeAssets();
     }
 
     function initalizeUnripeAssets() internal {
@@ -51,7 +47,6 @@ contract MockInitDiamond is InitalizeDiamond {
             underlyingTokens,
             underlyingTokens[1]
         );
-        
         // whitelist the unripe assets into the silo.
         whitelistUnripeAssets(
             unripeTokens,
@@ -104,10 +99,11 @@ contract MockInitDiamond is InitalizeDiamond {
     function initalUnripeSiloSettings() internal view returns (
         Storage.SiloSettings[] memory siloSettings
     ){
+        siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
                 selector: BDVFacet.unripeLPToBDV.selector,
                 stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
-                stalkIssuedPerBdv: INIT_STALK_EARNED_PER_SEASON,
+                stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
                 milestoneSeason: s.season.current,
                 milestoneStem: 0,
                 encodeType: 0x00,
@@ -129,6 +125,8 @@ contract MockInitDiamond is InitalizeDiamond {
         address[] memory unripeTokens,
         address[] memory underlyingTokens
     ) {
+        unripeTokens = new address[](2);
+        underlyingTokens = new address[](2);
         unripeTokens[0] = C.UNRIPE_BEAN;
         unripeTokens[1] = C.UNRIPE_LP;
         underlyingTokens[0] = C.BEAN;

@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
+const { getBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
 const { signERC2612Permit } = require("eth-permit");
 const { BEAN_3_CURVE, THREE_POOL, THREE_CURVE, PIPELINE, BEANSTALK } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
@@ -12,7 +12,7 @@ describe('External Token', function () {
     before(async function () {
         [owner, user, user2] = await ethers.getSigners();
         const contracts = await deploy("Test", false, true);
-        this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
+        this.beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address)
 
         const Token = await ethers.getContractFactory("MockToken");
         this.token = await Token.deploy("Silo", "SILO")

@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { deploy } = require("../scripts/deploy.js");
 const { readPrune, toBN, signSiloDepositTokenPermit, signSiloDepositTokensPermit, getBean } = require("../utils");
-const { getAltBeanstalk } = require("../utils/contracts.js");
+const { getBeanstalk } = require("../utils/contracts.js");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const { BEAN, THREE_POOL, BEAN_3_CURVE, UNRIPE_LP, UNRIPE_BEAN, THREE_CURVE } = require("./utils/constants");
 const { to18, to6, toStalk, toBean } = require("./utils/helpers.js");
@@ -34,7 +34,7 @@ describe("Silo Enroot", function () {
     const contracts = await deploy("Test", false, true);
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    this.beanstalk = await getAltBeanstalk(this.diamond.address);
+    this.beanstalk = await getBeanstalk(this.diamond.address);
     this.season = await ethers.getContractAt('MockSeasonFacet', this.diamond.address);
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.silo = await ethers.getContractAt('MockSiloFacet', this.diamond.address);

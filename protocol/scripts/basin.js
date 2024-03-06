@@ -91,14 +91,14 @@ async function deployBasin(mock = true, accounts = undefined, verbose = true, ju
 
     await wellTxn.wait();
 
-    if (justDeploy) return c;
-
     if (verbose) console.log("Bean:Eth Well Deployed at:", c.well.address);
-
+    
+    if (justDeploy) return c;
+    
     if (verbose) console.log("");
-
+    
     if (verbose) console.log("Adding Liquidity to Well...")
-
+    
     account = await getAccount(accounts, 'addLiquidity', ADD_LIQUIDITY_ADDRESS);
 
     const bean = await getBean();

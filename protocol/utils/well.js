@@ -308,8 +308,6 @@ async function deployMockWell() {
     return well
 }
 
-
-
 async function deployMockWellWithMockPump(address = BEAN_ETH_WELL, token1 = WETH) {
 
     let wellFunction = await (await getWellContractFactory('ConstantProduct2', await getWellDeployer())).deploy()

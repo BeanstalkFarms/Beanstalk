@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { deploy } = require('../scripts/deploy.js');
-const { getAltBeanstalk } = require('../utils/contracts.js');
+const { getBeanstalk } = require('../utils/contracts.js');
 const { BEAN_3_CURVE, BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, WETH, BEAN_WSTETH_WELL } = require('./utils/constants.js');
 const { to6, to18 } = require('./utils/helpers.js');
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -22,7 +22,7 @@ describe('Season', function () {
         [owner, user, user2] = await ethers.getSigners();
         const contracts = await deploy("Test", false, true);
         this.diamond = contracts.beanstalkDiamond;
-        beanstalk = await getAltBeanstalk(this.diamond.address)
+        beanstalk = await getBeanstalk(this.diamond.address)
         
         // add unripe
         this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)

@@ -2,7 +2,7 @@ const { expect } = require('chai')
 const { deploy } = require('../scripts/deploy.js')
 const { parseJson, to6, to18 } = require('./utils/helpers.js')
 const { MAX_UINT32, UNRIPE_BEAN, UNRIPE_LP, BEAN_3_CURVE, BEAN_ETH_WELL, BEAN, BEAN_WSTETH_WELL, WSTETH, BEANSTALK_PUMP} = require('./utils/constants.js')
-const { getAltBeanstalk, getBean } = require('../utils/contracts.js');
+const { getBeanstalk, getBean } = require('../utils/contracts.js');
 const { deployMockWellWithMockPump, whitelistWell} = require('../utils/well.js');
 const { setEthUsdChainlinkPrice, setWstethUsdPrice } = require('../utils/oracle.js');
 
@@ -34,7 +34,7 @@ describe('Complex Weather', function () {
     this.seasonGetter = await ethers.getContractAt('SeasonGettersFacet', this.diamond.address)
     this.field = await ethers.getContractAt('MockFieldFacet', this.diamond.address)
     this.bean = await ethers.getContractAt('MockToken', BEAN)
-    beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address);
+    beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address);
 
     // add unripe
     this.fertilizer = await ethers.getContractAt('MockFertilizerFacet', this.diamond.address)

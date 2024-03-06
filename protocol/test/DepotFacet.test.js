@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { defaultAbiCoder } = require('ethers/lib/utils.js');
 const { deploy } = require('../scripts/deploy.js');
 const { deployPipeline, impersonatePipeline } = require('../scripts/pipeline.js');
-const { getAltBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
+const { getBeanstalk, getBean, getUsdc } = require('../utils/contracts.js');
 const { toBN, encodeAdvancedData } = require('../utils/index.js');
 const { impersonateSigner } = require('../utils/signer.js');
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js');
@@ -16,7 +16,7 @@ describe('Depot Facet', function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
     const contracts = await deploy("Test", false, true);
-    this.beanstalk = await getAltBeanstalk(contracts.beanstalkDiamond.address)
+    this.beanstalk = await getBeanstalk(contracts.beanstalkDiamond.address)
     this.bean = await getBean()
     this.usdc = await getUsdc()
     this.threeCurve = await ethers.getContractAt('MockToken', THREE_CURVE)

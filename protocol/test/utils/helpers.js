@@ -42,6 +42,10 @@ function toX(amount, x) {
   return ethers.utils.parseUnits(amount,x);
 }
 
+function toBN(a) {
+  return ethers.BigNumber.from(a)
+}
+
 async function advanceTime(time) {
   let timestamp = (await ethers.provider.getBlock('latest')).timestamp;
   timestamp += time
@@ -62,3 +66,4 @@ exports.getEthSpentOnGas = getEthSpentOnGas
 exports.incrementTime = incrementTime
 exports.advanceTime = advanceTime
 exports.toX = toX
+exports.toBN = toBN
