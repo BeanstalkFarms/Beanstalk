@@ -2,13 +2,19 @@ import {
   Box,
   Button,
   ButtonGroup,
-  Input,
+  IconButton,
+  Link,
   MenuItem,
   Select,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import { FC } from '~/types';
+import { ethers } from 'ethers';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { DateTime } from 'luxon';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
@@ -28,10 +34,10 @@ import {
   setNextSunrise,
   setRemainingUntilSunrise,
 } from '~/state/beanstalk/sun/actions';
-import { clearApolloCache } from '~/util';
-
-import { FC } from '~/types';
-import { ethers } from 'ethers';
+import { clearApolloCache, trimAddress } from '~/util';
+import useChainId from '~/hooks/chain/useChainId';
+import { CHAIN_INFO } from '~/constants';
+import OutputField from '../Common/Form/OutputField';
 
 const Split: FC<{}> = ({ children }) => (
   <Row justifyContent="space-between" gap={1}>
@@ -70,6 +76,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   open,
   onClose,
 }) => {
+  const chainId = useChainId();
   const [denomination, setDenomination] = useSetting('denomination');
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
@@ -86,6 +93,48 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
       };
     };
   }, [setImpersonatedAcct]);
+
+  function ImpersonateAddress() {
+    if (impersonatedAcc) {
+      return (
+        <OutputField size="small">
+          <Row spacing={1}>
+            <CheckIcon
+              sx={{ height: 20, width: 20, fontSize: '100%' }}
+              color="primary"
+            />
+            <Typography>
+              <Tooltip title="View on Etherscan">
+                <Link
+                  underline="hover"
+                  color="text.primary"
+                  href={`${CHAIN_INFO[chainId].explorer}/address/${impersonatedAcc}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {trimAddress(impersonatedAcc)}
+                </Link>
+              </Tooltip>
+            </Typography>
+          </Row>
+          <Box>
+            <IconButton onClick={() => {setImpersonatedAcct('')}}>
+              <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
+            </IconButton>
+          </Box>
+        </OutputField>
+      )
+    }
+    return (
+      <TextField 
+        sx={{ width: 180 }}
+        placeholder="0x0000" 
+        size='small' 
+        color='primary'
+        onChange={(e) => {checkAddress(e.target.value)}} 
+      />
+    )
+  }
 
   console.log("impersonated: ", impersonatedAcc)
 
@@ -215,7 +264,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
             </Split>
             <Split>
               <Typography color="text.secondary">Impersonate Account</Typography>
-              <TextField size='small' color='primary' onChange={(e) => {checkAddress(e.target.value)}} />
+              <ImpersonateAddress />
             </Split>
             <Split>
               <Typography color="text.secondary">Clear cache</Typography>
