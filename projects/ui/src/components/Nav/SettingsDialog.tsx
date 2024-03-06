@@ -3,6 +3,7 @@ import {
   Button,
   ButtonGroup,
   IconButton,
+  InputAdornment,
   Link,
   MenuItem,
   Select,
@@ -81,7 +82,8 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
   const [impersonatedAccount, setImpersonatedAccount] = useSetting('impersonatedAccount');
-  const [internalAccount, setInternalAccount] = useState(impersonatedAccount)
+  const [internalAccount, setInternalAccount] = useState(impersonatedAccount);
+  const [isAddressValid, setIsAddressValid] = useState<boolean | undefined>(undefined);
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
@@ -92,50 +94,11 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
       if (isValid) {
         setInternalAccount(address);
       };
-    };
-  }, [setInternalAccount]);
-
-  function ImpersonateAddress() {
-    if (internalAccount) {
-      return (
-        <OutputField size="small">
-          <Row spacing={1}>
-            <CheckIcon
-              sx={{ height: 20, width: 20, fontSize: '100%' }}
-              color="primary"
-            />
-            <Typography>
-              <Tooltip title="View on Etherscan">
-                <Link
-                  underline="hover"
-                  color="text.primary"
-                  href={`${CHAIN_INFO[chainId].explorer}/address/${internalAccount}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {trimAddress(internalAccount)}
-                </Link>
-              </Tooltip>
-            </Typography>
-          </Row>
-          <Box>
-            <IconButton onClick={() => {setInternalAccount('')}}>
-              <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
-            </IconButton>
-          </Box>
-        </OutputField>
-      )
+      setIsAddressValid(isValid);
+    } else {
+      setIsAddressValid(undefined);
     }
-    return (
-      <TextField 
-        sx={{ width: 180 }}
-        placeholder="0x0000" 
-        size='small' 
-        color='primary'
-        onChange={(e) => {checkAddress(e.target.value)}} 
-      />
-    )
-  }
+  }, [setInternalAccount]);
 
   /// Cache
   const clearCache = useCallback(() => {
@@ -270,7 +233,50 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
             </Split>
             <Split>
               <Typography color="text.secondary">Impersonate Account</Typography>
-              <ImpersonateAddress />
+              {internalAccount ?
+                <OutputField size="small">
+                  <Row spacing={1}>
+                    <CheckIcon
+                      sx={{ height: 20, width: 20, fontSize: '100%' }}
+                      color="primary"
+                    />
+                    <Typography>
+                      <Tooltip title="View on Etherscan">
+                        <Link
+                          underline="hover"
+                          color="text.primary"
+                          href={`${CHAIN_INFO[chainId].explorer}/address/${internalAccount}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {trimAddress(internalAccount)}
+                        </Link>
+                      </Tooltip>
+                    </Typography>
+                  </Row>
+                  <Box>
+                    <IconButton onClick={() => {setInternalAccount('')}}>
+                      <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
+                    </IconButton>
+                  </Box>
+                </OutputField>
+              :
+                <TextField 
+                  sx={{ width: 180 }}
+                  placeholder="0x0000" 
+                  size='small' 
+                  color='primary'
+                  InputProps={{
+                    startAdornment:  (
+                      isAddressValid === false &&
+                        <InputAdornment position="start" sx={{ ml: -1, mr: 0 }}>
+                          <CloseIcon color="warning" sx={{ scale: '80%' }} />
+                        </InputAdornment>
+                    ),
+                  }}
+                  onChange={(e) => {checkAddress(e.target.value)}} 
+                />
+              }
             </Split>
             <Split>
               <Typography color="text.secondary">Clear cache</Typography>
