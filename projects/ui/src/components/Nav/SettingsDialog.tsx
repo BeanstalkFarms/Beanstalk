@@ -16,7 +16,7 @@ import { ethers } from 'ethers';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { DateTime } from 'luxon';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { DataSource } from '@beanstalk/sdk';
 import { FontSize } from '~/components/App/muiTheme';
@@ -81,6 +81,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
   const [impersonatedAcc, setImpersonatedAcct] = useSetting('impersonatedAccount');
+  const [internalAccount, setInternalAccount] = useState(impersonatedAcc[0])
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
@@ -89,13 +90,13 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
     if (address) {
       const isValid = ethers.utils.isAddress(address);
       if (isValid) {
-        setImpersonatedAcct(address);
+        setInternalAccount(address);
       };
     };
-  }, [setImpersonatedAcct]);
+  }, [setInternalAccount]);
 
   function ImpersonateAddress() {
-    if (impersonatedAcc) {
+    if (internalAccount) {
       return (
         <OutputField size="small">
           <Row spacing={1}>
@@ -108,17 +109,17 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                 <Link
                   underline="hover"
                   color="text.primary"
-                  href={`${CHAIN_INFO[chainId].explorer}/address/${impersonatedAcc}`}
+                  href={`${CHAIN_INFO[chainId].explorer}/address/${internalAccount}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  {trimAddress(impersonatedAcc)}
+                  {trimAddress(internalAccount)}
                 </Link>
               </Tooltip>
             </Typography>
           </Row>
           <Box>
-            <IconButton onClick={() => {setImpersonatedAcct('')}}>
+            <IconButton onClick={() => {setInternalAccount('')}}>
               <CloseIcon sx={{ height: 20, width: 20, fontSize: '100%' }} />
             </IconButton>
           </Box>
@@ -194,9 +195,16 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
     );
   }, [siloBalances]);
 
+  const closeDialog = () => {
+    if (impersonatedAcc !== internalAccount) {
+      setImpersonatedAcct(internalAccount);
+    };
+    onClose && onClose();
+  };
+
   return (
-    <StyledDialog open={open} onClose={onClose}>
-      <StyledDialogTitle onClose={onClose}>Settings</StyledDialogTitle>
+    <StyledDialog open={open} onClose={closeDialog}>
+      <StyledDialogTitle onClose={closeDialog}>Settings</StyledDialogTitle>
       <StyledDialogContent sx={{ px: 2, pb: 2 }}>
         <Stack gap={2}>
           <Stack gap={1}>
