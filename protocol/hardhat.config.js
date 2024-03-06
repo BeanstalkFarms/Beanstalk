@@ -188,6 +188,35 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   console.log("ABI written to abi/Beanstalk.json");
 });
 
+// Used for testing Tractor.
+task("tractor_sdk_test_init", async function () {
+  await network.provider.request({
+    method: "hardhat_reset",
+    params: [
+      {
+        forking: {
+          jsonRpcUrl: process.env.FORKING_RPC,
+          blockNumber: parseInt(process.env.BLOCK_NUMBER),
+        },
+      },
+    ],
+  });
+
+  const owner = await impersonateBeanstalkOwner();
+  await mintEth(owner.address);
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["TractorFacet"],
+    bip: false,
+    verbose: false,
+    account: owner
+  });
+  console.log("TractorFacet cut");
+
+  const tractor = await ethers.deployContract("Junction", [], owner);
+  console.log("Junctions deployed to ", tractor.address);
+});
+
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
