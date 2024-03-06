@@ -81,7 +81,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
   const [impersonatedAccount, setImpersonatedAccount] = useSetting('impersonatedAccount');
-  const [internalAccount, setInternalAccount] = useState(impersonatedAccount[0])
+  const [internalAccount, setInternalAccount] = useState(impersonatedAccount)
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
