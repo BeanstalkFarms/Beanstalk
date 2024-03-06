@@ -80,8 +80,8 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const [denomination, setDenomination] = useSetting('denomination');
   const [subgraphEnv, setSubgraphEnv] = useSetting('subgraphEnv');
   const [datasource, setDataSource] = useSetting('datasource');
-  const [impersonatedAcc, setImpersonatedAcct] = useSetting('impersonatedAccount');
-  const [internalAccount, setInternalAccount] = useState(impersonatedAcc[0])
+  const [impersonatedAccount, setImpersonatedAccount] = useSetting('impersonatedAccount');
+  const [internalAccount, setInternalAccount] = useState(impersonatedAccount[0])
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
 
@@ -136,8 +136,6 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
       />
     )
   }
-
-  console.log("impersonated: ", impersonatedAcc)
 
   /// Cache
   const clearCache = useCallback(() => {
@@ -196,8 +194,8 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   }, [siloBalances]);
 
   const closeDialog = () => {
-    if (impersonatedAcc !== internalAccount) {
-      setImpersonatedAcct(internalAccount);
+    if (impersonatedAccount !== internalAccount) {
+      setImpersonatedAccount(internalAccount);
     };
     onClose && onClose();
   };
