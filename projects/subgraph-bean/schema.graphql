@@ -25,6 +25,9 @@ type Bean @entity {
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
 
+  "Instantaneous deltaB across all pools"
+  instantaneousDeltaB: BigInt!
+
   "Cumulative volume of beans traded"
   volume: BigInt!
 
@@ -71,6 +74,9 @@ type BeanHourlySnapshot @entity {
 
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
+
+  "Instantaneous deltaB across all pools"
+  instantaneousDeltaB: BigInt!
 
   "Cumulative volume in BEAN"
   volume: BigInt!
@@ -123,6 +129,8 @@ type BeanDailySnapshot @entity {
 
   "Percent of supply in LP used for peg maintenance"
   supplyInPegLP: BigDecimal!
+  "Instantaneous deltaB across all pools"
+  instantaneousDeltaB: BigInt!
   volume: BigInt!
   volumeUSD: BigDecimal!
   liquidityUSD: BigDecimal!
