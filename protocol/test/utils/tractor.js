@@ -77,15 +77,6 @@ const signRequisition = async (requisition, signer) => {
   );
 };
 
-const getNormalBlueprintData = (data) => {
-  const blueprintData = ethers.utils.defaultAbiCoder.encode(["bytes[]"], [data]);
-  return ethers.utils.hexlify(new Uint8Array([0, ...ethers.utils.arrayify(blueprintData)]));
-};
-
-const getAdvancedBlueprintData = (data) => {
-  const blueprintData = ethers.utils.defaultAbiCoder.encode(["(bytes,bytes)[]"], [data]);
-  return ethers.utils.hexlify(new Uint8Array([1, ...ethers.utils.arrayify(blueprintData)]));
-};
 
 const generateCalldataCopyParams = (info) => {
   return info.map(([copyIndex, pasteIndex, length]) => {
@@ -103,17 +94,6 @@ const generateCalldataCopyParams = (info) => {
 
     return copyParams;
   });
-};
-
-const encodeBlueprintData = async (advancedFarmCalls) => {
-  return ethers.utils.solidityPack(
-    ["bytes1", "bytes"],
-    [
-      0, // data type
-      (await farmFacetInterface()).encodeFunctionData("advancedFarm", [advancedFarmCalls])
-      // await farmFacetInterface().then((interface) => { interface.encodeFunctionData("advancedFarm", [advancedFarmCalls]) })
-    ]
-  );
 };
 
 // Shape:
@@ -921,7 +901,6 @@ module.exports = {
   getNormalBlueprintData,
   getAdvancedBlueprintData,
   generateCalldataCopyParams,
-  encodeBlueprintData,
   draftDepositInternalBeanBalance,
   draftMow,
   draftPlant,
