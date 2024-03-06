@@ -220,7 +220,7 @@ describe('Farm Convert', function () {
       // await expect(this.result).to.emit(this.silo, 'AddDeposit').withArgs(user.address, this.bean.address, stemTip, beanAmountOut, beanAmountOut);
     });
 
-    it.only('does a uniswap and 3crv swap', async function () {
+    it('does a uniswap and 3crv swap', async function () {
 
       //first deposit 200 bean into bean:eth well
       await this.bean.connect(user).approve(this.well.address, ethers.constants.MaxUint256);

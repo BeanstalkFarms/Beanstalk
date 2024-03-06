@@ -107,7 +107,7 @@ describe('Farm Convert', function () {
     });
 
     describe('basic convert', async function () {
-      it('does the most basic possible convert Bean to LP', async function () {
+      it.only('does the most basic possible convert Bean to LP', async function () {
 
         await this.silo.connect(user).deposit(this.bean.address, toBean('200'), EXTERNAL);
         //user needs to approve bean to well

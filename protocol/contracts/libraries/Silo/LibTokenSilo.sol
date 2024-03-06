@@ -197,7 +197,7 @@ library LibTokenSilo {
          *  Event is emitted in {TokenSilo._transferDeposit(s)}, 
          *  and thus, this event is ommited.
          */
-        if(transferType == Transfer.emitTransferSingle){
+        if(transferType == Transfer.emitTransferSingle) {
             emit TransferSingle(
                 msg.sender, // operator
                 address(0), // from

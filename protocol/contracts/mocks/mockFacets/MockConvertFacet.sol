@@ -26,7 +26,7 @@ contract MockConvertFacet is ConvertFacet {
         uint256[] memory amounts,
         uint256 maxTokens
     ) external {
-        (uint256 stalkRemoved, uint256 bdvRemoved) = _withdrawTokens(token, stems, amounts, maxTokens);
+        (uint256 stalkRemoved, uint256 bdvRemoved, , ) = _withdrawTokens(token, stems, amounts, maxTokens);
         
         
         emit MockConvert(stalkRemoved, bdvRemoved);
