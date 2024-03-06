@@ -233,7 +233,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
             </Split>
             <Split>
               <Typography color="text.secondary">Impersonate Account</Typography>
-              {internalAccount ?
+              {internalAccount ? (
                 <OutputField size="small">
                   <Row spacing={1}>
                     <CheckIcon
@@ -260,7 +260,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                     </IconButton>
                   </Box>
                 </OutputField>
-              :
+              ) : (
                 <TextField 
                   sx={{ width: 180 }}
                   placeholder="0x0000" 
@@ -276,7 +276,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                   }}
                   onChange={(e) => {checkAddress(e.target.value)}} 
                 />
-              }
+              )}
             </Split>
             <Split>
               <Typography color="text.secondary">Clear cache</Typography>
