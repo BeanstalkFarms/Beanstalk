@@ -21,7 +21,7 @@ const formatValue = (value: number) =>
 const statProps = {
   title: 'deltaB',
   titleTooltip:
-    'The instaneous excess or shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include BEAN3CRV and BEANLUSD, although they were not including in minting.',
+    'The cumulative instantaneous shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include deltaB in pools on the Deposit Whitelist.',
   gap: 0.25,
 };
 
