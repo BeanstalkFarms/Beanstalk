@@ -19,7 +19,7 @@ const SLUGS = [
   'mktcap',
   'supply',
   'crosses',
-  'delta_b',
+  'inst_delta_b',
   'liquiditysupplyratio'
 ];
 
@@ -39,7 +39,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Market Cap" />
         <Tab label="Supply" />
         <Tab label="Crosses" />
-        <Tab label="deltaB" />
+        <Tab label="Inst. deltaB" />
         <Tab label="L2SR" />
       </Tabs>
       {/* 

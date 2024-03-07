@@ -19,7 +19,7 @@ const getValue = (season: SnapshotData<SeasonalDeltaBQuery>) =>
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-us', { maximumFractionDigits: 2 })}`;
 const statProps = {
-  title: 'deltaB',
+  title: 'Cumulative Instantaneous deltaB',
   titleTooltip:
     'The cumulative instantaneous shortage of Beans in liquidity pools on the Minting Whitelist at the beginning of every Season. Pre-exploit values include deltaB in pools on the Deposit Whitelist.',
   gap: 0.25,
