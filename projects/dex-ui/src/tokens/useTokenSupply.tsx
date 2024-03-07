@@ -28,7 +28,6 @@ export const useTokenSupplyMany = (tokens: ERC20Token[]) => {
   const { data, isLoading, error, refetch, isFetching } = useQuery<TokenValue[], Error>(
     ["well", sdk, tokens, "totalSupply"],
     async () => {
-      console.log("[useTokensSupply/FETCH]");
       let tokenTotalSupplies = await Promise.all(tokens.map((token) => token.getTotalSupply()));
       return tokenTotalSupplies;
     },

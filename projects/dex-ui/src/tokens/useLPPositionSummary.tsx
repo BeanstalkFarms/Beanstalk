@@ -1,16 +1,18 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { erc20ABI, useAccount, useQueryClient } from "wagmi";
+import { useAccount } from "wagmi";
+import { erc20Abi } from "viem";
 
 import useSdk from "src/utils/sdk/useSdk";
 import { Log } from "src/utils/logger";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BigNumber as EthersBN } from "ethers";
 import { multicall } from "@wagmi/core";
 import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
 import { useSiloBalanceMany } from "./useSiloBalance";
 import { useWells } from "src/wells/useWells";
+import { config } from "src/utils/wagmi/config";
 
 export type LPBalanceSummary = {
   silo: TokenValue;
@@ -65,7 +67,7 @@ export const useLPPositionSummary = () => {
     for (const t of lpTokens) {
       contractCalls.push({
         address: t.address as `0x{string}`,
-        abi: erc20ABI,
+        abi: erc20Abi,
         functionName: "balanceOf",
         args: [address]
       });
@@ -93,9 +95,9 @@ export const useLPPositionSummary = () => {
       const balances: Record<string, Omit<LPBalanceSummary, "silo">> = {};
       if (!address || !lpTokens.length) return balances;
 
-      const res = (await multicall({
+      const res = (await multicall(config, {
         contracts: calls,
-        allowFailure: true
+        allowFailure: false
       })) as unknown as EthersBN[];
 
       for (let i = 0; i < res.length; i++) {
