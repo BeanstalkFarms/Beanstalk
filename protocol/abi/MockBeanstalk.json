@@ -1220,6 +1220,64 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "initalTemp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "delta",
+        "type": "uint256"
+      }
+    ],
+    "name": "mockGetMorningTemp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "scaledTemperature",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "beans",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_morningTemperature",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "maxTemperature",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bool",
+        "name": "abovePeg",
+        "type": "bool"
+      }
+    ],
+    "name": "mockSow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "pods",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -1265,6 +1323,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "t",
+        "type": "uint32"
+      }
+    ],
+    "name": "setMaxTemp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1402,6 +1473,25 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "morningTemperature",
+        "type": "uint256"
+      }
+    ],
+    "name": "totalSoilAtMorningTemp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalSoil",
         "type": "uint256"
       }
     ],

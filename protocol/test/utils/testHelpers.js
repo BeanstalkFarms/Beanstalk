@@ -7,14 +7,15 @@ const { to6 } = require('./helpers');
  * @notice initalizes the array of users. 
  * @dev 
  * - approves beanstalk to use all beans.
- * - mints 10,000 beans to each user.
+ * - mints `amount` to `users`.
  */
-async function initalizeUsersForToken(token, users, amount) {
-    const bean = await ethers.getContractAt('MockToken', token);
+async function initalizeUsersForToken(tokenAddress, users, amount) {
+    const token = await ethers.getContractAt('MockToken', tokenAddress);
   for (let i = 0; i < users.length; i++) {
-    await bean.connect(users[i]).approve(BEANSTALK, MAX_UINT256);
-    await bean.mint(users[i].address, amount);
+    await token.connect(users[i]).approve(BEANSTALK, MAX_UINT256);
+    await token.mint(users[i].address, amount);
   }
+  return token;
 }
 
 /**
