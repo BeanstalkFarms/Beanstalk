@@ -1,9 +1,7 @@
 import { providers } from "ethers";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Account, Chain, Client, Transport } from "viem";
 import { Config, useClient, useConnectorClient } from "wagmi";
-import { getWalletClient } from "@wagmi/core";
-import { config } from "./config";
 
 function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client;

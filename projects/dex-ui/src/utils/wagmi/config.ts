@@ -1,5 +1,5 @@
 import { http, createConfig } from "wagmi";
-import { Chain, mainnet } from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 import { localFork, anvil1 } from "./chains";
 import { Settings } from "src/settings";
 import { getDefaultConfig } from "connectkit";
