@@ -8,6 +8,7 @@ import { TokenValue } from "@beanstalk/sdk";
 import { useQuery } from "@tanstack/react-query";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
+import { config } from "src/utils/wagmi/config";
 
 export const useMultiFlowPumpTWAReserves = () => {
   const { data: wells } = useWells();
@@ -37,7 +38,7 @@ export const useMultiFlowPumpTWAReserves = () => {
         return prev;
       }, []);
 
-      const twaReservesResult: any[] = await multicall({ contracts: calls });
+      const twaReservesResult: any[] = await multicall(config, { contracts: calls });
 
       const mapping: Record<string, TokenValue[]> = {};
       let index = 0;
