@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 
-const { deploy } = require("../scripts/deploy.js");
+const { deploy } = require("../scripts/newDeploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { EXTERNAL } = require("./utils/balances.js");
 
@@ -65,10 +65,10 @@ const initializeMerkleTree = async () => {
   });
 };
 
-describe("UnripeClaim", function () {
+describe.only("UnripeClaim", function () {
   before(async function () {
     [owner, user, user2, user3, user4, user5] = await ethers.getSigners();
-    const contracts = await deploy("Test", false, true);
+    const contracts = await deploy(verbose=false, mock=true, reset=true);
     this.diamond = contracts.beanstalkDiamond;
     this.unripeClaim = await ethers.getContractAt(
       "MockUnripeFacet",

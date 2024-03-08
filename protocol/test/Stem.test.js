@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const { deploy } = require('../scripts/deploy.js')
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require('./utils/balances.js')
 const { to18, to6, toStalk } = require('./utils/helpers.js')
 const { impersonateBeanstalkOwner, impersonateSigner } = require('../utils/signer.js')
