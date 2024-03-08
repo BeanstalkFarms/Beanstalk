@@ -4444,7 +4444,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "stalk",
+        "name": "stalkIssuedPerBdv",
         "type": "uint16"
       },
       {
@@ -4454,6 +4454,59 @@
       }
     ],
     "name": "mockWhitelistToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint16",
+        "name": "stalkIssuedPerBdv",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint24",
+        "name": "stalkEarnedPerSeason",
+        "type": "uint24"
+      },
+      {
+        "internalType": "bytes1",
+        "name": "encodeType",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint128",
+        "name": "gaugePoints",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "mockWhitelistTokenWithGauge",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

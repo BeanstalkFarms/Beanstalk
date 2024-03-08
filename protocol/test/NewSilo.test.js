@@ -5,7 +5,7 @@ const { EXTERNAL } = require('./utils/balances.js')
 const { to18, to6 , toStalk, toBN } = require('./utils/helpers.js')
 const { BEAN, ZERO_ADDRESS} = require('./utils/constants')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot")
-const { initalizeUsers, endGermination } = require('./utils/testHelpers.js')
+const { initalizeUsersForToken, endGermination } = require('./utils/testHelpers.js')
 const axios = require("axios")
 const fs = require('fs')
 
@@ -28,7 +28,11 @@ describe('newSilo', function () {
     )
 
     // initalize users - mint bean and approve beanstalk to use all beans.
-    await initalizeUsers([user, user2, user3, user4], true, true)
+    await initalizeUsersForToken(
+      BEAN, 
+      [user, user2, user3, user4], 
+      to6('10000')
+    )
 
     // deposit 1000 beans from 2 users.
     await beanstalk.connect(user).deposit(BEAN, to6('1000'), EXTERNAL)

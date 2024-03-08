@@ -66,6 +66,14 @@ describe("Silo Token", function () {
       );
 
     await this.season.siloSunrise(0);
+
+    // initalize users - mint bean and approve beanstalk to use all siloTokens.
+    await initalizeUsersForToken(
+      this.siloToken.address, 
+      [user, user2, user3, user4], 
+      true, 
+      true
+    )
     await this.siloToken.connect(user).approve(this.silo.address, "100000000000");
     await this.siloToken.connect(user2).approve(this.silo.address, "100000000000");
     await this.siloToken.connect(flashLoanExploiter).approve(this.silo.address, '100000000000'); 

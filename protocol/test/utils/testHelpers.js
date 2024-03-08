@@ -9,15 +9,11 @@ const { to6 } = require('./helpers');
  * - approves beanstalk to use all beans.
  * - mints 10,000 beans to each user.
  */
-async function initalizeUsers(users, approve=true, mint=true) {
-    const bean = await ethers.getContractAt('MockToken', BEAN);
+async function initalizeUsersForToken(token, users, amount) {
+    const bean = await ethers.getContractAt('MockToken', token);
   for (let i = 0; i < users.length; i++) {
-    if(approve) {
-        await bean.connect(users[i]).approve(BEANSTALK, MAX_UINT256);
-    }
-    if (mint) {
-      await bean.mint(users[i].address, to6('10000'));
-    }
+    await bean.connect(users[i]).approve(BEANSTALK, MAX_UINT256);
+    await bean.mint(users[i].address, amount);
   }
 }
 
@@ -30,5 +26,40 @@ async function endGermination() {
     await mockBeanstalk.siloSunrise(to6('0'))
 }
 
+/**
+ * ends germination for the beanstalk, by elasping 2 seasons. 
+ * Also ends total germination for a specific token.
+ * @dev mockBeanstalk should be initalized prior to calling this function.
+ */
+async function endGerminationWithMockToken(token) {
+  await mockBeanstalk.siloSunrise(to6('0'))
+  await mockBeanstalk.siloSunrise(to6('0'))
+  await mockBeanstalk.mockEndTotalGerminationForToken(token);
+}
+
+/**
+ * @notice Mints and adds the underlying token to the unripe.
+ * @dev Used in `SiloToken.test.js`.
+ */
+async function addMockUnderlying(
+  unripeToken,
+  underlyingToken,
+  amount,
+  user
+) {
+  token = await ethers.getContractAt("MockToken", underlyingToken);
+  await token.mint(user.address, amount);
+  if ((await beanstalk.getUnderlyingToken(unripeToken)) != underlyingToken) {
+    await beanstalk.switchUnderlyingToken(unripeToken, underlyingToken);
+  }
+  await token.connect(user).approve(BEANSTALK, MAX_UINT256);
+  await mockBeanstalk.connect(user).addUnderlying(
+    unripeToken,
+    amount
+  );
+}
+
+exports.addMockUnderlying = addMockUnderlying;
 exports.endGermination = endGermination;
-exports.initalizeUsers = initalizeUsers;
+exports.endGerminationWithMockToken = endGerminationWithMockToken;
+exports.initalizeUsersForToken = initalizeUsersForToken;

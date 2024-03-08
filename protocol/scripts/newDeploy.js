@@ -29,7 +29,7 @@ const {
 } = require("./impersonate.js");
 
 const { deployBasin } = require("./basin");
-const { whitelistWell } = require("../utils/well");
+const { whitelistWell, deployMockWellWithMockPump } = require("../utils/well");
 
 /**
  * @notice deploys a new instance of beanstalk. 
@@ -47,14 +47,14 @@ async function main(
   oracle = true, // if true, deploy and impersonate oracles
   curve = true, // if true, deploy and impersonate curve
   basin = true, // if true, deploy and impersonate basin
-  mockPump = true, // if true, deploy a mockPump rather than multiFlow pump.
+  mockPump = true // if true, deploy a mockPump rather than multiFlow pump.
 ) {
   if (verbose) {
     console.log("MOCKS ENABLED: ", mock);
   }
 
   // Disable forking / reset hardhat network.
-  // https://hardhat.org/hardhat-network/docs/reference
+  https://hardhat.org/hardhat-network/docs/reference
   if (mock && reset) {
     await network.provider.request({
       method: "hardhat_reset",
@@ -106,6 +106,8 @@ async function main(
       true, // just deploys the well (does not add liquidity)
       mockPump // deploys a regular or mock multiFlow Pump.
     ) // Basin deployment. Also deploys a bean-eth Well.
+
+    // deploy bean-wstETH well.
     await impersonateUnripe() // Unripe
   }
 
@@ -168,7 +170,7 @@ async function addUnderlyingToUnripe(
   contract = BEANSTALK,
   amount = [0,0],
 ) {
-  if(address == undefined) { 
+  if (address == undefined) { 
     address = await this.beanstalk.owner();
   }
 

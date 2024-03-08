@@ -6,8 +6,9 @@ pragma solidity =0.7.6;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage, Storage} from "contracts/beanstalk/AppStorage.sol";
-import {InitalizeDiamond} from "contracts/beanstalk/init/InitalizeDiamond.sol";
+import "contracts/beanstalk/init/InitalizeDiamond.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
@@ -19,27 +20,36 @@ import "hardhat/console.sol";
  * @notice MockInitDiamond initializes the Beanstalk Diamond.
  * @dev MockInitDiamond additionally: 
  * - Sets the barn raise well. 
+ * - Whitelists the bean:wsteth well.
  * - Whitelists unripe assets.
 **/
 contract MockInitDiamond is InitalizeDiamond {
 
-    uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 0;
+    // min 1micro stalk earned per season due to germination.
+    uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 1;
+    uint32 constant INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON = 4e6;
+    uint32 constant INIT_TOKEN_WURLP_POINTS = 100e6;
+    uint32 constant INIT_BEAN_WURLP_PERCENT_TARGET = 50e6;
+
 
     function init() external {
+        
         // initalize the default state of the diamond.
         // {see. InitalizeDiamond.initalizeDiamond()}
         initalizeDiamond(C.BEAN, C.BEAN_ETH_WELL);
-
+        
         // initalizes unripe assets.
         // sets the underlying LP token of unripeLP to the Bean:wstETH well.
-        initalizeUnripeAssets();
+        address underlyingUrLPWell = C.BEAN_WSTETH_WELL;
+        whitelistUnderlyingUrLPWell(underlyingUrLPWell);
+        initalizeUnripeAssets(underlyingUrLPWell);
     }
 
-    function initalizeUnripeAssets() internal {
+    function initalizeUnripeAssets(address well) internal {
         (
             address[] memory unripeTokens, 
             address[] memory underlyingTokens
-        ) = getInitalUnripeAndUnderlyingTokens();
+        ) = getInitalUnripeAndUnderlyingTokens(well);
 
         // set the underlying unripe tokens.
         setUnderlyingUnripe(
@@ -101,7 +111,7 @@ contract MockInitDiamond is InitalizeDiamond {
     ){
         siloSettings = new Storage.SiloSettings[](2);
         siloSettings[0] = Storage.SiloSettings({
-                selector: BDVFacet.unripeLPToBDV.selector,
+                selector: BDVFacet.unripeBeanToBDV.selector,
                 stalkEarnedPerSeason: INIT_UR_BEAN_STALK_EARNED_PER_SEASON,
                 stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
                 milestoneSeason: s.season.current,
@@ -115,13 +125,15 @@ contract MockInitDiamond is InitalizeDiamond {
             });
         
         siloSettings[1] = siloSettings[0]; 
-        siloSettings[1].selector = BDVFacet.unripeLPToBDV.selector;
+
+        // note: for testing purposes, the bdv calculation is the same for both unripe tokens.
+        // siloSettings[1].selector = BDVFacet.unripeLPToBDV.selector;
     }
 
     /**
      * @notice returns the inital unripe and underlying tokens.
      */
-    function getInitalUnripeAndUnderlyingTokens() internal pure returns (
+    function getInitalUnripeAndUnderlyingTokens(address underlyingUrLPWell) internal pure returns (
         address[] memory unripeTokens,
         address[] memory underlyingTokens
     ) {
@@ -130,6 +142,34 @@ contract MockInitDiamond is InitalizeDiamond {
         unripeTokens[0] = C.UNRIPE_BEAN;
         unripeTokens[1] = C.UNRIPE_LP;
         underlyingTokens[0] = C.BEAN;
-        underlyingTokens[1] = C.BEAN_WSTETH_WELL; 
+        underlyingTokens[1] = underlyingUrLPWell; 
+    }
+
+    /**
+     * @notice if unripe assets are being whitelisted, the underlying
+     * well must be whitelisted.
+     */
+    function whitelistUnderlyingUrLPWell(address well) internal {
+        // whitelist bean:stETH well
+        // note: no error checking:
+        s.ss[well] = Storage.SiloSettings({
+            selector: BDVFacet.wellBdv.selector,
+            stalkEarnedPerSeason: INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON,
+            stalkIssuedPerBdv: INIT_STALK_ISSUED_PER_BDV,
+            milestoneSeason: s.season.current,
+            milestoneStem: 0,
+            encodeType: 0x01,
+            deltaStalkEarnedPerSeason: 0,
+            gpSelector: IGaugePointFacet.defaultGaugePointFunction.selector,
+            lwSelector: ILiquidityWeightFacet.maxWeight.selector,
+            gaugePoints: INIT_TOKEN_WURLP_POINTS,
+            optimalPercentDepositedBdv: INIT_BEAN_WURLP_PERCENT_TARGET
+        });
+
+        // updates the optimal percent deposited for bean:eth.
+        LibWhitelist.updateOptimalPercentDepositedBdvForToken(
+            C.BEAN_ETH_WELL,
+            INIT_BEAN_TOKEN_WELL_PERCENT_TARGET - INIT_BEAN_WURLP_PERCENT_TARGET
+        );
     }
 }
