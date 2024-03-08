@@ -518,12 +518,46 @@ contract ConvertFacet is ReentrancyGuard {
         uint256[] memory grownStalks // stalk grown previously by these deposits
     ) internal {
 
-        uint256 bdvOfAmount = LibTokenSilo.beanDenominatedValue(token, amount);
-        console.log('bdvOfAmount: ', bdvOfAmount);
+        // amount:  3162119562094783067
+        // bdvOfAmount:  199989951
+        // console.log('amount: ', amount);
 
-        uint256 bdvPerAmount = LibTokenSilo.beanDenominatedValue(token, amount).div(amount);
+        // uint256 bdvOfAmount = LibTokenSilo.beanDenominatedValue(token, amount);
+        // console.log('bdvOfAmount: ', bdvOfAmount);
 
-        console.log('bdvPerAmount: ', bdvPerAmount);
+
+        // uint256 amountPerBdv = amount.div(bdvOfAmount);
+        // console.log('amountPerBdv: ', amountPerBdv);
+
+        // //so let's calc for first bdv
+
+        // console.log('bdvs[0] :', bdvs[0]);
+
+        // uint256 amountRequiredForBdv = bdvs[0].mul(amountPerBdv);
+        // console.log('amountRequiredForBdv:', amountRequiredForBdv);
+
+        // uint256 bdvOfAmount = LibTokenSilo.beanDenominatedValue(token, amount);
+        // console.log('bdvOfAmount: ', bdvOfAmount);
+
+        uint256 amountPerBdv = amount.div(LibTokenSilo.beanDenominatedValue(token, amount));
+        // console.log('amountPerBdv: ', amountPerBdv);
+
+        //so let's calc for first bdv
+
+        // console.log('bdvs[0] :', bdvs[0]);
+
+        // uint256 amountRequiredForBdv = bdvs[0].mul(amountPerBdv);
+        // console.log('amountRequiredForBdv:', amountRequiredForBdv);
+
+
+/*
+amount:  3162119562094783067
+bdvOfAmount:  199989951
+amountPerBdv:  15811392253
+bdvs[0] : 200000000
+amountRequiredForBdv: 3162278450600000000
+*/
+
 
         //calculate stem index we need to deposit at from grownStalk and bdv
         //if we attempt to deposit at a half-season (a grown stalk index that would fall between seasons)
@@ -533,28 +567,25 @@ contract ConvertFacet is ReentrancyGuard {
         //loop through bdvs and calculate amount of token required to get that amount of bdv
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < bdvs.length; i++) {
-            uint256 bdv = bdvs[i];
-            require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
-            uint256 crateAmount = 
-                bdv.mul(bdvOfAmount).div(
-                    LibTokenSilo.beanDenominatedValue(token, bdv)
-                );
+            // uint256 bdv = bdvs[i];
+            require( bdvs[i] > 0 && amount > 0, "Convert: BDV or amount is 0.");
+            uint256 crateAmount = bdvs[i].mul(amountPerBdv);
             // console.log('crateAmount: ', crateAmount);
             totalAmount = totalAmount.add(crateAmount);
 
             //if we're on the last crate, deposit the rest of the amount
-            if (i == bdvs.length - 1) {
+            if (i == bdvs.length - 1 && bdvs.length > 1) {
                 crateAmount = amount.sub(totalAmount);
                 // console.log('remainder crateAmount:  ', crateAmount);
                 
             }
 
 
-            (uint256 grownStalk, int96 stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalks[i], bdv);
+            (uint256 grownStalk, int96 stem) = LibTokenSilo.calculateGrownStalkAndStem(token, grownStalks[i],  bdvs[i]);
 
-            LibSilo.mintStalk(LibTractor._getUser(), bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
+            LibSilo.mintStalk(LibTractor._getUser(),  bdvs[i].mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk));
 
-            LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
+            LibTokenSilo.incrementTotalDeposited(token, crateAmount,  bdvs[i]);
 
             // to properly support this event, we need to pass into this function the originating from token amount for each crate
             // emit Convert(LibTractor._getUser(), inputToken, outputToken, totalAmountIn, crateAmount);
@@ -563,8 +594,8 @@ contract ConvertFacet is ReentrancyGuard {
                 LibTractor._getUser(),
                 token,
                 stem,
-                amount,
-                bdv,
+                crateAmount,
+                bdvs[i],
                 LibTokenSilo.Transfer.emitTransferSingle
             );
         }
