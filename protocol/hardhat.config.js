@@ -268,6 +268,16 @@ module.exports = {
         : undefined,
       allowUnlimitedContractSize: true
     },
+    anvil: {
+      allowUnlimitedContractSize: true,
+      chainId: 1337,
+      url: "http://127.0.0.1:8545/",
+      forking: {
+        url: process.env.FORKING_RPC,
+        blockNumber: 19398596
+      },
+      timeout: 100000,
+    },
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
