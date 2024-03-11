@@ -1,15 +1,16 @@
 import { Card, Tab, Tabs } from '@mui/material';
 
 import Crosses from '~/components/Analytics/Bean/Crosses';
-import DeltaB from '~/components/Analytics/Bean/DeltaB';
+import DeltaBInstant from '~/components/Analytics/Bean/DeltaBInstant';
+import DeltaBWeighted from '~/components/Analytics/Bean/DeltaBWeighted';
 import { FC } from '~/types';
 import Liquidity from '~/components/Analytics/Bean/Liquidity';
 import MarketCap from '~/components/Analytics/Bean/MarketCap';
-import Price from './Price';
 import React from 'react';
 import Supply from '~/components/Analytics/Bean/Supply';
 import VolumeChart from '~/components/Analytics/Bean/VolumeChart';
 import useTabs from '~/hooks/display/useTabs';
+import Price from './Price';
 import LiquiditySupplyRatio from './LiquiditySupplyRatio';
 
 const SLUGS = [
@@ -20,7 +21,8 @@ const SLUGS = [
   'supply',
   'crosses',
   'inst_delta_b',
-  'liquiditysupplyratio'
+  'weigh_delta_b',
+  'liquiditysupplyratio',
 ];
 
 const BeanAnalytics: FC<{}> = () => {
@@ -40,6 +42,7 @@ const BeanAnalytics: FC<{}> = () => {
         <Tab label="Supply" />
         <Tab label="Crosses" />
         <Tab label="Inst. deltaB" />
+        <Tab label="Weighted deltaB" />
         <Tab label="L2SR" />
       </Tabs>
       {/* 
@@ -54,8 +57,9 @@ const BeanAnalytics: FC<{}> = () => {
       {tab === 3 && <MarketCap height={CHART_HEIGHT} />}
       {tab === 4 && <Supply height={CHART_HEIGHT} />}
       {tab === 5 && <Crosses height={CHART_HEIGHT} />}
-      {tab === 6 && <DeltaB height={CHART_HEIGHT} />}
-      {tab === 7 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
+      {tab === 6 && <DeltaBInstant height={CHART_HEIGHT} />}
+      {tab === 7 && <DeltaBWeighted height={CHART_HEIGHT} />}
+      {tab === 8 && <LiquiditySupplyRatio height={CHART_HEIGHT} />}
     </Card>
   );
 };

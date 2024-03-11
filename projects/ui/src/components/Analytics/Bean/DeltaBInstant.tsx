@@ -6,15 +6,15 @@ import SeasonPlot, {
 } from '~/components/Common/Charts/SeasonPlot';
 import { BEAN } from '~/constants/tokens';
 import {
-  SeasonalDeltaBDocument,
-  SeasonalDeltaBQuery,
+  SeasonalInstantDeltaBDocument,
+  SeasonalInstantDeltaBQuery,
 } from '~/generated/graphql';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 import { toTokenUnitsBN } from '~/util';
 
 import { FC } from '~/types';
 
-const getValue = (season: SnapshotData<SeasonalDeltaBQuery>) =>
+const getValue = (season: SnapshotData<SeasonalInstantDeltaBQuery>) =>
   toTokenUnitsBN(season.instantaneousDeltaB, BEAN[1].decimals).toNumber();
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-us', { maximumFractionDigits: 2 })}`;
@@ -35,9 +35,11 @@ const lineChartProps: Partial<LineChartProps> = {
   horizontalLineNumber: 0,
 };
 
-const DeltaB: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => (
-  <SeasonPlot<SeasonalDeltaBQuery>
-    document={SeasonalDeltaBDocument}
+const DeltaBInstant: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
+  height,
+}) => (
+  <SeasonPlot<SeasonalInstantDeltaBQuery>
+    document={SeasonalInstantDeltaBDocument}
     height={height}
     getValue={getValue}
     formatValue={formatValue}
@@ -48,4 +50,4 @@ const DeltaB: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => (
   />
 );
 
-export default DeltaB;
+export default DeltaBInstant;
